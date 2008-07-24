@@ -462,7 +462,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CXX AR AR_FLAGS lofar_root lofar_root_libdir lofar_use_root lofar_compiler lofar_variant lofar_top_srcdir lofar_sharedir LOFAR_DEPEND CPPFLAGS LDFLAGS LOFARROOT CC CFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAKE_RPMS CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL RPM_RELEASE RPMBUILD_PROG RPM_PROG RPM_DIR RPM_TARGET RPM_ARGS RPM_TARBALL RPM_CONFIGURE_ARGS HAVE_SHMEM_TRUE HAVE_SHMEM_FALSE doxygen_found doxygen_dot_found DOXYGEN lofar_doctool HAVE_DOXYGEN_TRUE HAVE_DOXYGEN_FALSE docpp_found DOCPP DOCPPFLAGS HAVE_DOCPP_TRUE HAVE_DOCPP_FALSE HAVE_LOG4CPLUS_TRUE HAVE_LOG4CPLUS_FALSE AIPSPP HAVE_PLC_TRUE HAVE_PLC_FALSE HAVE_APS_TRUE HAVE_APS_FALSE HAVE_BOOST_TRUE HAVE_BOOST_FALSE LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CXX AR AR_FLAGS lofar_root lofar_root_libdir lofar_use_root lofar_compiler lofar_variant lofar_top_srcdir lofar_sharedir LOFAR_DEPEND CPPFLAGS LDFLAGS LOFARROOT CC CFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAKE_RPMS CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL RPM_RELEASE RPMBUILD_PROG RPM_PROG RPM_DIR RPM_TARGET RPM_ARGS RPM_TARBALL RPM_CONFIGURE_ARGS HAVE_SHMEM_TRUE HAVE_SHMEM_FALSE doxygen_found doxygen_dot_found DOXYGEN lofar_doctool HAVE_DOXYGEN_TRUE HAVE_DOXYGEN_FALSE docpp_found DOCPP DOCPPFLAGS HAVE_DOCPP_TRUE HAVE_DOCPP_FALSE HAVE_LOG4CPLUS_TRUE HAVE_LOG4CPLUS_FALSE HAVE_LOG4CXX_TRUE HAVE_LOG4CXX_FALSE AIPSPP HAVE_PLC_TRUE HAVE_PLC_FALSE HAVE_APS_TRUE HAVE_APS_FALSE HAVE_BOOST_TRUE HAVE_BOOST_FALSE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1022,6 +1022,7 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-lib64          use lib or lib64 (default is system dependent)
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --enable-shared[=PKGS]
@@ -1069,10 +1070,14 @@ Optional Packages:
   --with-log4cplus-libdir=PFX   specific library dir for log4cplus library
   --with-log4cplus-version=PFX  specific version for log4cplus
   --with-searchpath="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"   package searchpath
-  --with-aipspp=PFX         enable use of AIPS++ (via AIPSPATH or explicit path)
-  --with-casa=PFX           enable use of casa (via casapath or explicit path)
+  --with-log4cxx[=PFX]        path to log4cxx directory
+  --with-log4cxx-libdir=PFX   specific library dir for log4cxx library
+  --with-log4cxx-version=PFX  specific version for log4cxx
+  --with-casacore=PFX         enable use of casacore (via explicit path)
+  --with-aipspp=PFX           enable use of AIPS++ (via explicit path)
   --with-pgplot=PFX         enable use of PGPLOT if needed by AIPS++
   --with-wcs=PFX            specific path for wcslib if needed by AIPS++
+  --with-wcs-libdir=PFX     specific path for wcslib library if needed by AIPS++
   --with-plc[=PFX]        path to PLC directory
   --with-plc-libdir=PFX   specific library dir for PLC library
   --with-plc-version=PFX  specific version for PLC
@@ -3094,7 +3099,42 @@ if test "${with_lofar_libdir+set}" = set; then
   lofar_root_libdir="$withval"
 fi;
 
+# Check whether --enable-lib64 or --disable-lib64 was given.
+if test "${enable_lib64+set}" = set; then
+  enableval="$enable_lib64"
+  enable_lib64="$enableval"
+else
+  enable_lib64="default"
+fi;
 
+  # Determine the shared library extension.
+  lofar_shared_ext=so
+  case `uname -s` in
+    Darwin*) lofar_shared_ext=dylib;;
+    HP-UX)   lofar_shared_ext=sl;;
+  esac
+
+  # Determine if -rpath cannot be given.
+  lofar_no_rpath=0
+  if test -n "$CATAMOUNT_DIR"; then
+    lofar_no_rpath=1       # Cray XT
+  else
+    case `uname -s` in
+      Darwin*) lofar_no_rpath=1;;
+    esac
+  fi
+
+  # Determine if lib64 has to be used.
+  lofar_libdirext=lib
+  if [ "$enable_lib64" = "yes" ]; then
+    lofar_libdirext=lib64
+  elif [ "$enable_lib64" = "default" ]; then
+    if test "`uname -m`" = "x86_64"; then
+      lofar_libdirext=lib64
+    fi
+  fi
+
+  # Handle lofar root
   LOFARROOT=$prefix
   if test "$with_lofar" != ""  -a  "$with_lofar" != "no"  -a \
           "$with_lofar" != "yes"; then
@@ -3152,7 +3192,7 @@ echo "$as_me: error: Directory name LOFAR should be used only once in your path"
   case "$lfr_curvar1" in
   */*)
     # root = something/build/variant
-    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`;
+    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`
     ;;
   *)
     # root = something
@@ -3209,6 +3249,30 @@ echo "$as_me: WARNING: $CXX is an unknown compiler for LOFAR; assuming gnu" >&2;
     fi
   fi
 
+  # Get the major gcc version.
+  lofar_gcc_major=0
+  if [ "$lofar_compiler" = "gnu" ]; then
+    version=`$CXX -v 2>&1 | tail -1`
+    # A typical version strings looks like this:
+    #   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
+    if echo $version | grep -iq gcc; then
+      # We'll assume that the first word starting with one or more digits is
+      # the version number, so strip off the rest.
+      version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
+      # We only need the major version number.
+      lofar_gcc_major=`echo $version | cut -s -d'.' -f1`
+    fi
+  fi
+
+  # Find out if libg2c exists.
+  lofar_have_libg2c=0
+  lfr_flib=`echo $CXX | sed -e 's%bin/.*%lib%'`
+  if [ -e $lfr_flib/libg2c.$lofar_shared_ext ]; then
+    lofar_have_libg2c=1
+  elif [ -e $lfr_flib/libg2c.a ]; then
+    lofar_have_libg2c=1
+  fi
+
   # Check if compiler matches build variant.
   if test "x$lfr_buildcomp" != "x"; then
     if test "x$lfr_buildcomp" != "x$lofar_compiler"; then
@@ -3244,7 +3308,7 @@ echo "$as_me: WARNING: compiler $CXX mismatches build variant $lfr_curvar" >&2;}
     *_*)
       ;;
     *)
-      lofar_variant=${lofar_compiler}_$lofar_variant;
+      lofar_variant=${lofar_compiler}_$lofar_variant
       ;;
     esac
   fi
@@ -3258,40 +3322,32 @@ echo "$as_me: WARNING: compiler $CXX mismatches build variant $lfr_curvar" >&2;}
   else
     case "$lofar_root" in
     ~*)
-      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`;
+      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`
       ;;
     */*)
       ;;
     ?*)
-      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant;
+      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant
       ;;
     esac
   fi
   LOFARROOT=$lofar_root
   if test "x$lfr_libdir" = "x"; then
-    lfr_libdir=$lofar_root/lib;
+    lfr_libdir=$lofar_root/$lofar_libdirext;
   fi
   if test "x$lofar_root_libdir" = "x"; then
     lofar_root_libdir=$lfr_libdir;
   fi
 
-  # Create pkginc (used by lofar_package.m4) if not existing yet.
-  # Create a symlink to the source directory of the package being configured.
-  # Do the same for the build directory (for files created from e.g. idl).
-  if [ ! -d pkginc ]; then
-    mkdir pkginc;
-  fi
-  lfr_srcdir=`cd $srcdir && pwd`;
-  lfr_pkg=`basename $lfr_srcdir`;
-  \rm -f pkginc/$lfr_pkg;
-  ln -s $lfr_srcdir/src pkginc/$lfr_pkg;
-  if [ ! -d pkgbldinc ]; then
-    mkdir pkgbldinc;
-  fi
-  \rm -f pkgbldinc/$lfr_pkg;
-  ln -s $lfr_curwd/src pkgbldinc/$lfr_pkg;
+  # Create the pkgext files to remember configure settings.
   \rm -f pkgext*
   touch pkgext pkgextcppflags pkgextcxxflags pkgextldflags pkgextobjs
+
+  # Create a symlink from the buld directory to srcdir/src in case
+  # header files are in src instead of include/PACKAGE.
+  # Note that the build directory is part of the -I path.
+  \rm -f ${PACKAGE}
+  ln -s $srcdir/src ${PACKAGE}
 
   # We have to deal with creating a file lofar_config.h which is the
   # common include file to be used in LOFAR software.
@@ -3309,7 +3365,7 @@ echo "$as_me: WARNING: compiler $CXX mismatches build variant $lfr_curvar" >&2;}
   # 1. An #endif has to be inserted at the end.
   # 2. If the new lofar_config.h file is the same as the old one,
   #    the old one should be used to avoid recompilations.
-  # Both problems are tackled in lofar_int and lofar_package by
+  # Both problems are tackled in lofar_init and lofar_package by
   # having a lofar_config.old-h for the old lofar_config.h file
   # and a lofar_config.h-pkg to be added to.
 
@@ -3329,9 +3385,9 @@ echo "$as_me: WARNING: compiler $CXX mismatches build variant $lfr_curvar" >&2;}
   echo "#include <config.h>" >> lofar_config.h-pkg
   echo "#endif" >> lofar_config.h-pkg
   echo "" >> lofar_config.h-pkg
+  # PACKAGE is the package name which is defined by the auto tools.
   # Define a line for the package being configured.
-  # Strip after a -, which is added by make distcheck.
-  lfr_upkg=`echo $lfr_pkg | sed -e "s/-.*//" | tr a-z A-Z`
+  lfr_upkg=`echo $PACKAGE | tr a-z A-Z`
   echo "#define HAVE_LOFAR_$lfr_upkg 1" >> lofar_config.h-pkg
   echo "" >> lofar_config.h-pkg;
   # Define the package also for the lofarlogger.
@@ -3349,95 +3405,82 @@ echo "$as_me: WARNING: compiler $CXX mismatches build variant $lfr_curvar" >&2;}
     cp -p lofar_config.old-h lofar_config.h
   fi
 
+  # Similarly files FillPackage__VersionInc/Func.h are created to contain
+  # the body of the fillInfo function.
+  # It is included in Package__Version.cc created by the makeversion script.
+  touch FillPackage__VersionInc.old-h
+  if [ -f FillPackage__VersionInc.h ]; then
+    mv FillPackage__VersionInc.h FillPackage__VersionInc.old-h
+  fi
+  # Create the FillPackage__VersionInc.h file.
+  \rm -f FillPackage__VersionInc.h*
+  echo "/* Generated by lofar_init.m4 */" >> FillPackage__VersionInc.h
+  echo "" >> FillPackage__VersionInc.h
+  # If the current FillPackage__VersionInc.h is the same as the old one,
+  # copy the old one back, while preserving creation date and time.
+  diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
+  if [ $? = 0 ]; then
+    cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
+  fi
+
+  touch FillPackage__VersionFunc.old-h
+  if [ -f FillPackage__VersionFunc.h ]; then
+    mv FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h
+  fi
+  # Create the FillPackage__VersionFunc.h file.
+  \rm -f FillPackage__VersionFunc.h*
+  cat > FillPackage__VersionFunc.h-pkg <<EOF
+/* Generated by lofar_init.m4 */
+
+namespace LOFAR {
+  std::string ${PACKAGE}Version::getBuildTime()
+    { return "`date`"; }
+  std::string ${PACKAGE}Version::getBuildUser()
+    { return "`whoami`"; }
+  std::string ${PACKAGE}Version::getBuildMachine()
+    { return "`uname -n`"; }
+
+  void ${PACKAGE}Version::fillInfo
+                        (int level, std::vector<Version::PkgInfo>& vec)
+  {
+    // Add info of this package if needed.
+    vec.push_back (Version::PkgInfo(level, &getInfo));
+    // Add info of packages being used.
+EOF
+  # Do the finalization (in case no lofar_internal is used).
+  cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
+  echo '  }' >> FillPackage__VersionFunc.h
+  echo '}' >> FillPackage__VersionFunc.h
+  # If the current FillPackage__VersionFunc.h is the same as the old one,
+  # copy the old one back, while preserving creation date and time.
+  diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
+  if [ $? = 0 ]; then
+    cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
+  fi
+
   # Use absolute path (make distcheck sets srcdir to ..).
   srcdirx=`cd $srcdir && pwd`
-  CPPFLAGS="$CPPFLAGS -I$lfr_curwd/pkginc -I$lfr_curwd/pkgbldinc -I$lfr_curwd -I$srcdirx/include"
+  CPPFLAGS="$CPPFLAGS -I$lfr_curwd -I$srcdirx/include"
   LOFAR_DEPEND=
-
-as_ac_File=`echo "ac_cv_file_$lofar_root" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lofar_root" >&5
-echo $ECHO_N "checking for $lofar_root... $ECHO_C" >&6
-if eval "test \"\${$as_ac_File+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  test "$cross_compiling" = yes &&
-  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
-echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
-   { (exit 1); exit 1; }; }
-if test -r "$lofar_root"; then
-  eval "$as_ac_File=yes"
-else
-  eval "$as_ac_File=no"
-fi
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
-if test `eval echo '${'$as_ac_File'}'` = yes; then
-  lfr_root=yes
-else
-  lfr_root=no
-fi
-
-  if test $lfr_root = no; then
-    { echo "$as_me:$LINENO: WARNING: Could not find LOFAR in $lofar_root" >&5
-echo "$as_me: WARNING: Could not find LOFAR in $lofar_root" >&2;}
-  fi
 
   case $lofar_root_libdir in
   */build/*)
-    lfr_find=$lofar_root_libdir/LCS/Common;
-    lofar_root_libdir="$lofar_root_libdir/<package>";
+    lfr_find=$lofar_root_libdir/LCS/Common
+    lofar_root_libdir="$lofar_root_libdir/<package>"
     ;;
   *)
-    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant;
-    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant";
+    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant
+    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant"
     ;;
   esac
 
 
-as_ac_File=`echo "ac_cv_file_$lfr_find" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lfr_find" >&5
-echo $ECHO_N "checking for $lfr_find... $ECHO_C" >&6
-if eval "test \"\${$as_ac_File+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  test "$cross_compiling" = yes &&
-  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
-echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
-   { (exit 1); exit 1; }; }
-if test -r "$lfr_find"; then
-  eval "$as_ac_File=yes"
-else
-  eval "$as_ac_File=no"
-fi
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
-if test `eval echo '${'$as_ac_File'}'` = yes; then
-  lfr_var=yes
-else
-  lfr_var=no
-fi
+  # Make sure that, if needed, libraries are installed in lib64.
+  if test "$libdir" = '${exec_prefix}/lib'; then
+    libdir='${exec_prefix}/'$lofar_libdirext
+    libdir="$libdir"
 
-  if test $lfr_var = no; then
-    { echo "$as_me:$LINENO: WARNING: Could not find libdir $lfr_find" >&5
-echo "$as_me: WARNING: Could not find libdir $lfr_find" >&2;};
-
-    lofar_root_libdir="/home/lofar/stable/LOFAR/<package>/build/${lofar_compiler}_opt";
-
-    { echo "$as_me:$LINENO: WARNING:    set to /home/lofar/stable/LOFAR/${lofar_compiler}_opt" >&5
-echo "$as_me: WARNING:    set to /home/lofar/stable/LOFAR/${lofar_compiler}_opt" >&2;}
   fi
-
-  # Make sure that libraries are installed in lib64 on x86_64 architectures.
-  if test "`arch`" == "x86_64"; then
-    if test "$libdir" = '${exec_prefix}/lib'; then
-      libdir='${exec_prefix}/lib64'
-      libdir="$libdir"
-
-    fi
-  fi
-
 
 
 
@@ -4779,7 +4822,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4782 "configure"' > conftest.$ac_ext
+  echo '#line 4825 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5914,7 +5957,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5917:" \
+echo "$as_me:5960:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6977,11 +7020,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6980: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7023: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6984: \$? = $ac_status" >&5
+   echo "$as_me:7027: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7245,11 +7288,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7248: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7291: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7252: \$? = $ac_status" >&5
+   echo "$as_me:7295: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7349,11 +7392,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7352: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7395: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7356: \$? = $ac_status" >&5
+   echo "$as_me:7399: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9694,7 +9737,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9697 "configure"
+#line 9740 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9794,7 +9837,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9797 "configure"
+#line 9840 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12134,11 +12177,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12137: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12180: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12141: \$? = $ac_status" >&5
+   echo "$as_me:12184: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12238,11 +12281,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12241: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12284: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12245: \$? = $ac_status" >&5
+   echo "$as_me:12288: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13808,11 +13851,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13811: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13854: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13815: \$? = $ac_status" >&5
+   echo "$as_me:13858: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13912,11 +13955,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13915: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13958: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13919: \$? = $ac_status" >&5
+   echo "$as_me:13962: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16115,11 +16158,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16118: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16161: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16122: \$? = $ac_status" >&5
+   echo "$as_me:16165: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16383,11 +16426,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16386: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16429: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16390: \$? = $ac_status" >&5
+   echo "$as_me:16433: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16487,11 +16530,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16490: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16533: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16494: \$? = $ac_status" >&5
+   echo "$as_me:16537: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20042,6 +20085,246 @@ MAKE_RPMS=$make_rpms
 
 
 
+  echo "$as_me:$LINENO: checking whether sys/types.h defines ushort" >&5
+echo $ECHO_N "checking whether sys/types.h defines ushort... $ECHO_C" >&6
+  if test "${lofar_cv_have_ushort+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+int
+main ()
+{
+ushort a;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  lofar_cv_have_ushort=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+lofar_cv_have_ushort=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+fi
+
+  echo "$as_me:$LINENO: result: $lofar_cv_have_ushort" >&5
+echo "${ECHO_T}$lofar_cv_have_ushort" >&6
+  if test "$lofar_cv_have_ushort" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_USHORT 1
+_ACEOF
+
+  fi
+  echo "USHORT" >> pkgext;
+
+
+
+
+  echo "$as_me:$LINENO: checking whether sys/types.h defines uint" >&5
+echo $ECHO_N "checking whether sys/types.h defines uint... $ECHO_C" >&6
+  if test "${lofar_cv_have_uint+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+int
+main ()
+{
+uint a;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  lofar_cv_have_uint=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+lofar_cv_have_uint=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+fi
+
+  echo "$as_me:$LINENO: result: $lofar_cv_have_uint" >&5
+echo "${ECHO_T}$lofar_cv_have_uint" >&6
+  if test "$lofar_cv_have_uint" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_UINT 1
+_ACEOF
+
+  fi
+  echo "UINT" >> pkgext;
+
+
+
+
+  echo "$as_me:$LINENO: checking whether sys/types.h defines ulong" >&5
+echo $ECHO_N "checking whether sys/types.h defines ulong... $ECHO_C" >&6
+  if test "${lofar_cv_have_ulong+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+int
+main ()
+{
+ulong a;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  lofar_cv_have_ulong=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+lofar_cv_have_ulong=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+    ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+fi
+
+  echo "$as_me:$LINENO: result: $lofar_cv_have_ulong" >&5
+echo "${ECHO_T}$lofar_cv_have_ulong" >&6
+  if test "$lofar_cv_have_ulong" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ULONG 1
+_ACEOF
+
+  fi
+  echo "ULONG" >> pkgext;
+
+
+
+
   echo "$as_me:$LINENO: checking whether ${CXX} supports long long" >&5
 echo $ECHO_N "checking whether ${CXX} supports long long... $ECHO_C" >&6
   if test "${lofar_cv_have_long_long+set}" = set; then
@@ -21241,11 +21524,10 @@ if test "$enable_doxygen" = "yes"; then
  fi
 fi
 
-lfr_option=0
 lfr_pkgnam=log4cplus
 
 
-lfr_option=$lfr_option
+lfr_option=0
 lfr_hdr=log4cplus/logger.h
 lfr_libs=log4cplus
 lfr_search=""
@@ -21297,6 +21579,7 @@ if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_s
   lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
 fi
 lfr_search="$lfr_search $lfr_ext_searchp"
+
 ##
 ## Set version to blank if it is yes or no.
 ##
@@ -21309,6 +21592,7 @@ fi
 ## Also determine the given search path.
 ##
 lfr_ext_name=log4cplus
+external_search=
 enable_external=no
 if test "$lfr_option" = "1"; then
   enable_external=yes
@@ -21323,14 +21607,11 @@ echo "$as_me: error: --with-log4cplus=no cannot be given; LOG4CPLUS package is m
   fi
 else
   if test "$with_external" = ""; then
-    external_search=
-    if test "$with_external_libdir" != ""; then
+    if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
-    if test "$with_external" = "yes"; then
-      external_search=
-    else
+    if test "$with_external" != "yes"; then
       external_search=$with_external
     fi
     enable_external=yes
@@ -21462,14 +21743,17 @@ else
 ## Assume that libraries are in similar directory structure as headers.
 ## (thus in lib subdirectory if header is in include subdirectory)
 
-## Use different lib directory on 64 bit systems.
-  lfr_libdext=lib
-  if test "`arch`" = "x86_64"; then
-    lfr_libdext=lib64;
-  fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
-## Search for header if given, otherwise for library (.a or .so).
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
+## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
     lfr_searchfil=$lfr_hdr
@@ -21477,11 +21761,11 @@ else
   else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
-      lfr_searchfil="$lfr_sfil.so $lfr_sfil.a"
-      lfr_searchext=$lfr_libdext
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
+      lfr_searchext=$lofar_libdirext
     fi
   fi
-## Now fo the actual search.
+## Now do the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
   lfr_pkg_rootdir=
@@ -21515,7 +21799,7 @@ fi
 
       if test "$lfr_ext_dir" != "no" ; then
         if test "$lfr_external_libdir" = ""; then
-          lfr_external_libdir=$bdir/$lfr_libdext;
+          lfr_external_libdir=$bdir/$lofar_libdirext;
         fi
         break;
       fi
@@ -21555,16 +21839,18 @@ fi
       break
     fi
   done
+
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
-  if test "$lfr_external_libdir" != ""; then
-    for lib in $lfr_libsc
-    do
-      if test "$lfr_ext_lib" != "no" ; then
-        as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.so" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.so" >&5
-echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.so... $ECHO_C" >&6
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -21572,7 +21858,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$lfr_external_libdir/lib$lib.so"; then
+if test -r "$lfr_external_libdir/lib$lib.$lofar_shared_ext"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -21586,8 +21872,8 @@ else
   lfr_ext_lib=no
 fi
 
-        if test "$lfr_ext_lib" == "no" ; then
-          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
+          if test "$lfr_ext_lib" == "no" ; then
+            as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.a" >&5
 echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.a... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -21611,12 +21897,15 @@ else
   lfr_ext_lib=no
 fi
 
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
-        else
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.so"
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
         fi
-      fi
-    done
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
   fi
   if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
     EXTERNAL_CPPFLAGS=
@@ -21630,9 +21919,11 @@ fi
       fi
     fi
     if test "$lfr_ext_lib" != "" ; then
-      EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_compiler" != "pgi"; then
-        EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
       fi
     fi
     for lib in $lfr_libsc
@@ -21642,8 +21933,14 @@ fi
 
     EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
     EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
-    EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
-    EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi
 
     echo LOG4CPLUS >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
@@ -21680,18 +21977,32 @@ fi
     # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
     # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
     # Use tr to translate any newline into a space.
-    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
-    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
 
     # Finally, update the flags that will be exported. Remove any remaining
-    # duplicate tokens. Note that this will sort the flags.
-    # Do not sort LIBS since the order is usually important.
-    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
-             sort | uniq | tr $'\n' " "`
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
+    fi
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
@@ -21724,10 +22035,545 @@ else
 fi
 
 
+enable_log4cplus=$enable_external
+lfr_pkgnam=log4cxx
+
+
+lfr_option=0
+lfr_hdr=log4cxx/logger.h
+lfr_libs=log4cxx
+lfr_search=""
+
+# Check whether --with-LOFAR_EXT_LIB or --without-LOFAR_EXT_LIB was given.
+if test "${with_log4cxx+set}" = set; then
+  withval="$with_log4cxx"
+  with_external=$withval
+         if test "${with_external}" = yes; then
+            with_external=
+         fi
+else
+  with_external=
+fi;
+
+
+# Check whether --with-LOFAR_EXT_LIB[-libdir] or --without-LOFAR_EXT_LIB[-libdir] was given.
+if test "${with_log4cxx_libdir+set}" = set; then
+  withval="$with_log4cxx_libdir"
+  lfr_external_libdir="$withval"
+else
+  lfr_external_libdir=
+fi;
+
+
+# Check whether --with-LOFAR_EXT_LIB[-version] or --without-LOFAR_EXT_LIB[-version] was given.
+if test "${with_log4cxx_version+set}" = set; then
+  withval="$with_log4cxx_version"
+  lfr_ext_version="$withval"
+else
+  lfr_ext_version=
+fi;
+
+
+# Check whether --with-[searchpath] or --without-[searchpath] was given.
+if test "${with_searchpath+set}" = set; then
+  withval="$with_searchpath"
+  lfr_ext_searchp="$withval"
+else
+  lfr_ext_searchp=
+fi;
+
+
+##
+## Set default searchpath if not given.
+## Append to search path given in 'call'.
+##
+if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_searchp" = "no"; then
+  lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
+fi
+lfr_search="$lfr_search $lfr_ext_searchp"
+
+##
+## Set version to blank if it is yes or no.
+##
+if test "$lfr_ext_version" = "no"  -o  "$lfr_ext_version" = "yes"; then
+  lfr_ext_version=;
+fi
+##
+## Look if an external package is used.
+## It is if mandatory or if given by user.
+## Also determine the given search path.
+##
+lfr_ext_name=log4cxx
+external_search=
+enable_external=no
+if test "$lfr_option" = "1"; then
+  enable_external=yes
+fi
+if test "$with_external" = "no"; then
+  if test "$enable_external" = "yes"; then
+
+    { { echo "$as_me:$LINENO: error: --with-log4cxx=no cannot be given; LOG4CXX package is mandatory" >&5
+echo "$as_me: error: --with-log4cxx=no cannot be given; LOG4CXX package is mandatory" >&2;}
+   { (exit 1); exit 1; }; }
+
+  fi
+else
+  if test "$with_external" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      enable_external=yes
+    fi
+  else
+    if test "$with_external" != "yes"; then
+      external_search=$with_external
+    fi
+    enable_external=yes
+  fi
+##
+## Get build compiler and type
+##
+  lfr_buildcomp=`echo $lofar_variant | sed -e "s/_.*//"`
+  lfr_buildtype=`echo $lofar_variant | sed -e "s/.*_//"`
+##
+## Get the extra flags, possibly compiler dependent.
+##
+  lfr_cpp=
+  lfr_cxx=
+  lfr_ld=
+  lfr_lb=
+
+  lfr_extra_cpp=
+  for flag in $lfr_cpp
+  do
+    flagv=`echo $flag | sed -e "s/.*://"`
+    flagc=`echo $flag | sed -e "s/:.*//"`
+    if [ "$flagc" = "$flagv" ]; then
+      flagc="";
+    fi
+    flagcc=`echo $flagc | sed -e "s/_.*//"`
+    flagct=`echo $flagc | sed -e "s/.*_//"`
+    if [ "$flagct" = "$flagcc" ]; then
+      flagct="";
+    fi
+    if [ "$flagcc" = "" -o "$flagcc" = "$lfr_buildcomp" ]; then
+      if [ "$flagct" = "" -o "$flagct" = "$lfr_buildtype" ]; then
+        lfr_extra_cpp="$lfr_extra_cpp $flagv";
+      fi
+    fi
+  done
+
+  lfr_extra_cxx=
+  for flag in $lfr_cxx
+  do
+    flagv=`echo $flag | sed -e "s/.*://"`
+    flagc=`echo $flag | sed -e "s/:.*//"`
+    if [ "$flagc" = "$flagv" ]; then
+      flagc="";
+    fi
+    flagcc=`echo $flagc | sed -e "s/_.*//"`
+    flagct=`echo $flagc | sed -e "s/.*_//"`
+    if [ "$flagct" = "$flagcc" ]; then
+      flagct="";
+    fi
+    if [ "$flagcc" = "" -o "$flagcc" = "$lfr_buildcomp" ]; then
+      if [ "$flagct" = "" -o "$flagct" = "$lfr_buildtype" ]; then
+        lfr_extra_cxx="$lfr_extra_cxx $flagv";
+      fi
+    fi
+  done
+
+  lfr_extra_ld=
+  for flag in $lfr_ld
+  do
+    flagv=`echo $flag | sed -e "s/.*://"`
+    flagc=`echo $flag | sed -e "s/:.*//"`
+    if [ "$flagc" = "$flagv" ]; then
+      flagc="";
+    fi
+    flagcc=`echo $flagc | sed -e "s/_.*//"`
+    flagct=`echo $flagc | sed -e "s/.*_//"`
+    if [ "$flagct" = "$flagcc" ]; then
+      flagct="";
+    fi
+    if [ "$flagcc" = "" -o "$flagcc" = "$lfr_buildcomp" ]; then
+      if [ "$flagct" = "" -o "$flagct" = "$lfr_buildtype" ]; then
+        lfr_extra_ld="$lfr_extra_ld $flagv";
+      fi
+    fi
+  done
+
+  lfr_extra_libs=
+  for flag in $lfr_lb
+  do
+    flagv=`echo $flag | sed -e "s/.*://"`
+    flagc=`echo $flag | sed -e "s/:.*//"`
+    if [ "$flagc" = "$flagv" ]; then
+      flagc="";
+    fi
+    flagcc=`echo $flagc | sed -e "s/_.*//"`
+    flagct=`echo $flagc | sed -e "s/.*_//"`
+    if [ "$flagct" = "$flagcc" ]; then
+      flagct="";
+    fi
+    if [ "$flagcc" = "" -o "$flagcc" = "$lfr_buildcomp" ]; then
+      if [ "$flagct" = "" -o "$flagct" = "$lfr_buildtype" ]; then
+        lfr_extra_libs="$lfr_extra_libs $flagv";
+      fi
+    fi
+  done
+
+##
+## Replace +prefix, +root, +pkg, +vers and +comp in search list.
+##
+  external_slist=$external_search;
+  if test "$external_slist" = ""; then
+    external_slist="$lfr_search";
+  fi
+  if test "$external_slist" = ""; then
+    external_slist="/usr/local /usr";
+  fi
+  lfr_slist=
+  for bdir in $external_slist
+  do
+    lfr_a0=`echo $bdir | sed -e "s%+prefix%$prefix%g"`
+    lfr_a0=`echo $lfr_a0 | sed -e "s%+root%$LOFARROOT%g"`
+    lfr_a0=`echo $lfr_a0 | sed -e "s%+pkg%$lfr_ext_name%g"`
+    lfr_a=`echo $lfr_a0 | sed -e "s%+vers%$lfr_ext_version%g"`
+    if test "$lfr_buildcomp" != ""; then
+      lfr_b=`echo $lfr_a | sed -e "s%+comp%$lfr_buildcomp%"`
+      lfr_slist="$lfr_slist $lfr_b"
+    fi
+    if test "$lfr_a" != "$lfr_b"; then
+      if test "$lfr_buildcomp" != "$lofar_compiler"; then
+        lfr_b=`echo $lfr_a | sed -e "s%+comp%$lofar_compiler%"`
+        lfr_slist="$lfr_slist $lfr_b"
+      fi
+    fi
+  done
+
+## Look for the header file or first library in directories of the search list
+## and in its include or lib subdirectories.
+## Assume that libraries are in similar directory structure as headers.
+## (thus in lib subdirectory if header is in include subdirectory)
+
+## Put possible version into the library names.
+  lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
+## Search for header if given, otherwise for library (shared or static).
+  lfr_searchfil=
+  if test "$lfr_hdr" != ""; then
+    lfr_searchfil=$lfr_hdr
+    lfr_searchext=include
+  else
+    if test "$lfr_libsc" != ""; then
+      lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
+      lfr_searchext=$lofar_libdirext
+    fi
+  fi
+## Now do the actual search.
+## Stop if a file is found.
+  lfr_ext_dir=
+  lfr_pkg_rootdir=
+  for bdir in $lfr_slist
+  do
+    for bfil in $lfr_searchfil
+    do
+      as_ac_File=`echo "ac_cv_file_$bdir/$lfr_searchext/$bfil" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $bdir/$lfr_searchext/$bfil" >&5
+echo $ECHO_N "checking for $bdir/$lfr_searchext/$bfil... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$bdir/$lfr_searchext/$bfil"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=$bdir/$lfr_searchext
+else
+  lfr_ext_dir=no
+fi
+
+      if test "$lfr_ext_dir" != "no" ; then
+        if test "$lfr_external_libdir" = ""; then
+          lfr_external_libdir=$bdir/$lofar_libdirext;
+        fi
+        break;
+      fi
+      as_ac_File=`echo "ac_cv_file_$bdir/$bfil" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $bdir/$bfil" >&5
+echo $ECHO_N "checking for $bdir/$bfil... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$bdir/$bfil"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=$bdir
+else
+  lfr_ext_dir=no
+fi
+
+      if test "$lfr_ext_dir" != "no" ; then
+        if test "$lfr_external_libdir" = ""; then
+          lfr_external_libdir=$bdir;
+        fi
+        break;
+      fi
+    done
+    if test "$lfr_ext_dir" != "no" ; then
+      lfr_pkg_rootdir=$bdir
+      break
+    fi
+  done
+
+# Now search for the libraries.
+  lfr_depend=
+  lfr_ext_lib=
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$lfr_external_libdir/lib$lib.$lofar_shared_ext"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_lib=$lfr_external_libdir
+else
+  lfr_ext_lib=no
+fi
+
+          if test "$lfr_ext_lib" == "no" ; then
+            as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.a" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.a... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$lfr_external_libdir/lib$lib.a"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_lib=$lfr_external_libdir
+else
+  lfr_ext_lib=no
+fi
+
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
+        fi
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
+  fi
+  if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
+    EXTERNAL_CPPFLAGS=
+    EXTERNAL_CXXFLAGS=
+    EXTERNAL_LDFLAGS=
+    EXTERNAL_LIBS=
+    if test "$lfr_hdr" != ""; then
+      if test "$lfr_ext_dir" != "/usr/include" -a \
+              "$lfr_ext_dir" != "/usr/local/include" ; then
+        EXTERNAL_CPPFLAGS="-I$lfr_ext_dir"
+      fi
+    fi
+    if test "$lfr_ext_lib" != "" ; then
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
+      fi
+    fi
+    for lib in $lfr_libsc
+    do
+      EXTERNAL_LIBS="$EXTERNAL_LIBS -l$lib"
+    done
+
+    EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
+    EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi
+
+    echo LOG4CXX >> pkgext
+    echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
+    echo "$EXTERNAL_CXXFLAGS" >> pkgextcxxflags
+    echo "$EXTERNAL_LDFLAGS" >> pkgextldflags
+
+    # Get all new external packages used by this package and their flags.
+    lfr_pkgcfgdir=$lfr_pkg_rootdir/config/$lfr_pkgnam
+    $lofar_sharedir/makeext pkgext $lfr_pkgcfgdir
+    $lofar_sharedir/makeext pkgextcppflags $lfr_pkgcfgdir
+    $lofar_sharedir/makeext pkgextldflags $lfr_pkgcfgdir
+
+    # Define which external packages are used by this package.
+    for pkg in `cat pkgext_diff`
+    do
+      echo "" >> lofar_config.h-pkg;
+      echo "#if !defined(HAVE_$pkg)" >> lofar_config.h-pkg
+      echo "# define HAVE_$pkg 1" >> lofar_config.h-pkg;
+      echo "#endif" >> lofar_config.h-pkg;
+    done
+
+    # Do the finalization
+    cp lofar_config.h-pkg lofar_config.h
+    echo "" >> lofar_config.h
+    echo "#endif" >> lofar_config.h
+
+    # If the current lofar_config.h is the same as the old one, copy the
+    # old one back, while preserving creation date and time.
+    diff lofar_config.h lofar_config.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p lofar_config.old-h lofar_config.h
+    fi
+
+    # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
+    # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
+    # Use tr to translate any newline into a space.
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
+
+    # Finally, update the flags that will be exported. Remove any remaining
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
+    fi
+    LIBS="$LIBS $EXTERNAL_LIBS"
+    LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
+
+    enable_external=yes
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_LOG4CXX 1
+_ACEOF
+
+  else
+    if test "$enable_external" = "yes" ; then
+
+      { { echo "$as_me:$LINENO: error: Could not find LOG4CXX headers or library in $lfr_slist" >&5
+echo "$as_me: error: Could not find LOG4CXX headers or library in $lfr_slist" >&2;}
+   { (exit 1); exit 1; }; }
+
+    fi
+    enable_external=no
+  fi
+fi
+
+
+if test "$enable_external" = "yes"; then
+  HAVE_LOG4CXX_TRUE=
+  HAVE_LOG4CXX_FALSE='#'
+else
+  HAVE_LOG4CXX_TRUE='#'
+  HAVE_LOG4CXX_FALSE=
+fi
+
+
+enable_logger=$enable_external
+
+enable_logger=0
+if test "$enable_log4cplus" = "yes"; then
+  enable_logger=${enable_logger}1
+fi
+if test "$enable_log4cxx" = "yes"; then
+  enable_logger=${enable_logger}1
+fi
+if test $enable_logger -gt 1; then
+
+    { { echo "$as_me:$LINENO: error: Cannot use more than one LOGGER implementation." >&5
+echo "$as_me: error: Cannot use more than one LOGGER implementation." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 
 lfr_option=1
-lfr_aipslibs="-ltasking -lms -lfits -lmeasures -ltables -lscimath -lscimath_f -lcasa -lglish -lsos -lnpd"
+lfr_aipslibs="-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa"
+
+# Check whether --with-casacore or --without-casacore was given.
+if test "${with_casacore+set}" = set; then
+  withval="$with_casacore"
+  with_casacore="$withval"
+else
+  with_casacore=""
+fi;
 
 # Check whether --with-aipspp or --without-aipspp was given.
 if test "${with_aipspp+set}" = set; then
@@ -21735,14 +22581,6 @@ if test "${with_aipspp+set}" = set; then
   with_aipspp="$withval"
 else
   with_aipspp=""
-fi;
-
-# Check whether --with-casa or --without-casa was given.
-if test "${with_casa+set}" = set; then
-  withval="$with_casa"
-  with_casa="$withval"
-else
-  with_casa=""
 fi;
 
 # Check whether --with-pgplot or --without-pgplot was given.
@@ -21761,197 +22599,264 @@ else
   with_wcs=""
 fi;
 
+# Check whether --with-wcs-libdir or --without-wcs-libdir was given.
+if test "${with_wcs_libdir+set}" = set; then
+  withval="$with_wcs_libdir"
+  with_wcs_libdir="$withval"
+else
+  with_wcs_libdir=""
+fi;
 
 
+
+if test "$with_casacore" = ""; then
+    with_casacore=no;
+fi
+if test "$with_aipspp" = ""; then
+    with_aipspp=no;
+fi
 if test "$with_pgplot" = ""; then
     with_pgplot=no;
 fi
 if test "$with_wcs" = ""; then
     with_wcs=yes;
+    if test "$with_casacore" = "no" -a "$with_aipspp" = "no"; then
+        with_wcs=no;
+    else
+        lfr_al=`echo "$lfr_aipslibs " | sed -e 's/-lcoordinates //'`
+        if test "lfr_al" = "lfr_aipslibs "; then
+            with_wcs=no
+        fi
+    fi
 fi
 
 # the path where the libraries can be found
-AIPSPP_LIB_PATH=""
+CASAC_LIB_PATH=
+AIPSPP_LIB_PATH=
 # the path where the include files can be found
-AIPSPP_INC_PATH=""
+CASAC_INC_PATH=
+AIPSPP_INC_PATH=
 
-# if casa and aips are both set, casa will be used
-# check the --with-casa option
-if test "$with_casa" = ""; then
-  # --with-casa was not given, so look in casapath if it exists
-  echo "$as_me:$LINENO: checking whether casapath environment variable is set" >&5
-echo $ECHO_N "checking whether casapath environment variable is set... $ECHO_C" >&6
-  if test "${casapath}set" != "set"; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${casapath}"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${casapath}/include/casa"
-  else
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
+AIPSPP_CPPFLAGS=
+AIPSPP_LDFLAGS=
+AIPSPP_LIBS=
+
+lfr_use_casa=0
+# check the --with-casacore option
+if test "$with_casacore" != "no"; then
+  lfr_use_casa=1
+  AIPSPP=$with_casacore
+  CASAC_LIB_PATH=$with_casacore/lib
+  CASAC_INC_PATH=$with_casacore/include/casacore
+  as_ac_File=`echo "ac_cv_file_$CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=yes
+else
+  lfr_ext_dir=no
+fi
+
+  if test "$lfr_ext_dir" = "no" ; then
+    as_ac_File=`echo "ac_cv_file_$CASAC_LIB_PATH/libcasa_casa.a" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $CASAC_LIB_PATH/libcasa_casa.a" >&5
+echo $ECHO_N "checking for $CASAC_LIB_PATH/libcasa_casa.a... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$CASAC_LIB_PATH/libcasa_casa.a"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=yes
+else
+  lfr_ext_dir=no
+fi
+
   fi
-elif test "$with_casa" = "no"; then
-  # do nothing
-  echo
-elif test "$with_casa" = "yes"; then
-  # --with-casa was given, so look in casapath if it exists otherwise give an error
-  echo "$as_me:$LINENO: checking whether casapath environment variable is set" >&5
-echo $ECHO_N "checking whether casapath environment variable is set... $ECHO_C" >&6
-  if test "${casapath}set" != "set"; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${casapath}"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${casapath}/include/casa"
-  else
-    echo
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    { { echo "$as_me:$LINENO: error: --with-casa=yes has been given, but casapath has not been set" >&5
-echo "$as_me: error: --with-casa=yes has been given, but casapath has not been set" >&2;}
+  if test "$lfr_ext_dir" = "no" ; then
+    { { echo "$as_me:$LINENO: error: Could not find casacore library libcasa_casa in $CASAC_LIB_PATH" >&5
+echo "$as_me: error: Could not find casacore library libcasa_casa in $CASAC_LIB_PATH" >&2;}
    { (exit 1); exit 1; }; }
   fi
+  as_ac_File=`echo "ac_cv_file_$CASAC_INC_PATH/casa/aips.h" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $CASAC_INC_PATH/casa/aips.h" >&5
+echo $ECHO_N "checking for $CASAC_INC_PATH/casa/aips.h... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  # the casa path was given manually so look there
-  AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${AIPSPP_LIB_PATH} ${with_casa}"
-  AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${AIPSPP_INC_PATH} ${with_casa}/include/casa"
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$CASAC_INC_PATH/casa/aips.h"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=yes
+else
+  lfr_ext_dir=no
+fi
+
+  if test "$lfr_ext_dir" = "no" ; then
+    { { echo "$as_me:$LINENO: error: Could not find casacore header casa/aips.h in $CASAC_INC_PATH" >&5
+echo "$as_me: error: Could not find casacore header casa/aips.h in $CASAC_INC_PATH" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$CASAC_INC_PATH"
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$CASAC_LIB_PATH"
+  if test "$lofar_no_rpath" = 0; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$CASAC_LIB_PATH"
+  fi
 fi
 
 # check the --with-aipspp option
-if test "$with_aipspp" = ""; then
-  # --with-aips was not given, so look in AIPSPATH if it exists
-  echo "$as_me:$LINENO: checking whether AIPSPATH environment variable is set" >&5
-echo $ECHO_N "checking whether AIPSPATH environment variable is set... $ECHO_C" >&6
-  if test "${AIPSPATH}set" != "set"; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/`expr "$AIPSPATH" : ".* \(.*\) .* .*"`"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/code/include"
-  else
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-  fi
-elif test "$with_aipspp" = "no"; then
-  # do nothing
-  echo
-elif test "$with_aipspp" = "yes"; then
-  # --with-aips was given, so look in AIPSPATH if it exists otherwise give an error
-  echo "$as_me:$LINENO: checking whether AIPSPATH environment variable is set" >&5
-echo $ECHO_N "checking whether AIPSPATH environment variable is set... $ECHO_C" >&6
-  if test "${AIPSPATH}set" != "set"; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/`expr "$AIPSPATH" : ".* \(.*\) .* .*"`"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/code/include"
-  else
-    echo
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    { { echo "$as_me:$LINENO: error: --with-aipspp=yes has been given, but AIPSPATH has not been set" >&5
-echo "$as_me: error: --with-aipspp=yes has been given, but AIPSPATH has not been set" >&2;}
+if test "$with_aipspp" != "no"; then
+  lfr_use_casa=1
+  AIPSPP=$with_aipspp
+  AIPSPP_LIB_PATH=$with_aipspp/lib
+  AIPSPP_INC_PATH=`dirname $with_aipspp`/code/include
+  # Look for lib directory.
+  as_ac_File=`echo "ac_cv_file_$AIPSPP_LIB_PATH" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $AIPSPP_LIB_PATH" >&5
+echo $ECHO_N "checking for $AIPSPP_LIB_PATH... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$AIPSPP_LIB_PATH"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=yes
+else
+  lfr_ext_dir=no
+fi
+
+  if test "$lfr_ext_dir" = "no" ; then
+    { { echo "$as_me:$LINENO: error: Could not find AIPS++ library directory $AIPSPP_LIB_PATH" >&5
+echo "$as_me: error: Could not find AIPS++ library directory $AIPSPP_LIB_PATH" >&2;}
    { (exit 1); exit 1; }; }
   fi
+  as_ac_File=`echo "ac_cv_file_$AIPSPP_INC_PATH" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $AIPSPP_INC_PATH" >&5
+echo $ECHO_N "checking for $AIPSPP_INC_PATH... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  # the aips path was given manually so look there
-  AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${with_aipspp}";
-  AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `dirname $with_aipspp`/code/include";
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$AIPSPP_INC_PATH"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_ext_dir=yes
+else
+  lfr_ext_dir=no
+fi
+
+  if test "$lfr_ext_dir" = "no" ; then
+    { { echo "$as_me:$LINENO: error: Could not find AIPS++ include directory $AIPSPP_INC_PATH" >&5
+echo "$as_me: error: Could not find AIPS++ include directory $AIPSPP_INC_PATH" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$AIPSPP_INC_PATH"
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$AIPSPP_LIB_PATH"
+  if test "$lofar_no_rpath" = 0; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$AIPSPP_LIB_PATH"
+  fi
+##  AIPSPP_LIBS="$AIPSPP_LIBS $AIPSPP_LIB_PATH/version.o"
 fi
 
 # Do we have enough info?
-if test "$AIPSPP_LIB_PATH" = ""; then
+if test "$CASAC_LIB_PATH" = "" -a "$AIPSPP_LIB_PATH" = ""; then
   if test "$lfr_option" != "0"; then
-    { { echo "$as_me:$LINENO: error: AIPS++ is needed, but casapath and AIPSPATH have not been set and  --with-aipspp=path and --with-casa=path have not been given" >&5
-echo "$as_me: error: AIPS++ is needed, but casapath and AIPSPATH have not been set and  --with-aipspp=path and --with-casa=path have not been given" >&2;}
+    { { echo "$as_me:$LINENO: error: AIPS++ is needed, but neither --with-casacore=path nor --with-aipspp=path has been given" >&5
+echo "$as_me: error: AIPS++ is needed, but neither --with-casacore=path nor --with-aipspp=path has been given" >&2;}
    { (exit 1); exit 1; }; }
   fi
-else
-  # Now we have the paths and we can start searching for the aips installation
-
-  # I don't know a nicer way to do a for loop over two lists
-  INDEX=0
-  for dummy in $AIPSPP_LIB_PATH; do
-    let "INDEX += 1"
-    AIP=`echo $AIPSPP_INC_PATH | awk '{print $'$INDEX'}'`
-    ALP=`echo $AIPSPP_LIB_PATH | awk '{print $'$INDEX'}'`
-
-    ALL_FOUND="yes"
-    as_ac_File=`echo "ac_cv_file_$AIP" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $AIP" >&5
-echo $ECHO_N "checking for $AIP... $ECHO_C" >&6
-if eval "test \"\${$as_ac_File+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  test "$cross_compiling" = yes &&
-  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
-echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
-   { (exit 1); exit 1; }; }
-if test -r "$AIP"; then
-  eval "$as_ac_File=yes"
-else
-  eval "$as_ac_File=no"
-fi
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
-if test `eval echo '${'$as_ac_File'}'` = yes; then
-  :
-else
-  ALL_FOUND="no"
 fi
 
-    as_ac_File=`echo "ac_cv_file_$ALP/lib" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $ALP/lib" >&5
-echo $ECHO_N "checking for $ALP/lib... $ECHO_C" >&6
-if eval "test \"\${$as_ac_File+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  test "$cross_compiling" = yes &&
-  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
-echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
-   { (exit 1); exit 1; }; }
-if test -r "$ALP/lib"; then
-  eval "$as_ac_File=yes"
-else
-  eval "$as_ac_File=no"
+# Set build variables.
+if [ "$lfr_use_casa" = 1 ]; then
+  case `uname -s` in
+    SunOS)   darch="-DAIPS_SOLARIS";;
+    Linux)   darch="-DAIPS_LINUX";;
+    IRIX32)  darch="-DAIPS_IRIX";;
+    IRIX64)  darch="-DAIPS_IRIX";;
+    Darwin*) darch="-DAIPS_DARWIN";;
+    *)       darch=;;
+  esac
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS $darch -DAIPS_STDLIB"
+  if test "$CASAC_LIB_PATH" = ""; then
+    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_NO_TEMPLATE_SRC"
+  fi
+  # Check if we're on a x86-64 bit system.
+  if test "`uname -m`" = "x86_64"; then
+    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
+  fi
+
+  # For casacore, add casa_ to the libraries.
+  if test "$CASAC_LIB_PATH" != ""; then
+    clibs=`ls $CASAC_LIB_PATH/libcasa_* | sed -e 's%.*/%%g' -e 's%libcasa_%%g' -e 's%\..*%%g' | sort | uniq`
+    for LIB in $clibs
+    do
+      lfr_aipslibs=`echo "$lfr_aipslibs " | sed -e "s/-l$LIB /-lcasa_$LIB /"`
+    done
+  fi
+  AIPSPP_LIBS="$AIPSPP_LIBS $lfr_aipslibs"
 fi
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
-if test `eval echo '${'$as_ac_File'}'` = yes; then
-  :
-else
-  ALL_FOUND="no"
-fi
 
-    if test "$ALL_FOUND" = "yes"; then
-      # we have a winner
-      break
-    fi
-  done
-
-  if test "$ALL_FOUND" = "no"; then
-    # the paths do not contain the needed files/dirs
-    if test "$lfr_option" != "0"; then
-      { { echo "$as_me:$LINENO: error: AIPS++ installation not found" >&5
-echo "$as_me: error: AIPS++ installation not found" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-  else
-    case `uname -s` in
-      SunOS)  arch=SOLARIS;;
-      Linux)  arch=LINUX;;
-      IRIX32) arch=IRIX;;
-      IRIX64) arch=IRIX;;
-      *)      arch=UNKNOWN;;
-    esac
-
-
-    # Define the CPP flags.
-    AIPSPP_CPPFLAGS="-I$AIP"
-    if [ "$with_wcs" != "no" ]; then
-      if [ "$with_wcs" = "yes" ]; then
-        with_wcs=`echo $AIP | sed -e 's%/include.*%/casa%'`
-      fi
-      as_ac_File=`echo "ac_cv_file_$with_wcs/wcslib/wcs.h" | $as_tr_sh`
+# Test for wcs.
+if [ "$with_wcs" != "no" ]; then
+  if [ "$with_wcs" = "yes" ]; then
+    with_wcs=`echo $AIPSPP_INC_PATH | sed -e 's%/include$%/casa%'`
+  fi
+  as_ac_File=`echo "ac_cv_file_$with_wcs/wcslib/wcs.h" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $with_wcs/wcslib/wcs.h" >&5
 echo $ECHO_N "checking for $with_wcs/wcslib/wcs.h... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -21970,50 +22875,114 @@ fi
 echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
 echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
 if test `eval echo '${'$as_ac_File'}'` = yes; then
-  lfr_wcs=yes
+  lfr_wcs=$with_wcs
 else
   lfr_wcs=no
 fi
 
-      if test $lfr_wcs = no; then
-        { { echo "$as_me:$LINENO: error: WCS directory not found" >&5
-echo "$as_me: error: WCS directory not found" >&2;}
+  if test $lfr_wcs = no; then
+    as_ac_File=`echo "ac_cv_file_$with_wcs/include/wcslib/wcs.h" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $with_wcs/include/wcslib/wcs.h" >&5
+echo $ECHO_N "checking for $with_wcs/include/wcslib/wcs.h... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-      fi
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$with_wcs"
-    fi
-    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_$arch -DAIPS_NO_TEMPLATE_SRC"
-    # Check if we're on a x86-64 bit system.
-    if test "`arch`" = "x86_64"; then
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
-    fi
-    if test "$lofar_compiler" = "kcc"; then
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_KAICC"
-    fi
-    AIPSPP_LDFLAGS="-L$ALP/lib"
-    if test "$lofar_compiler" != "pgi"; then
-      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$ALP/lib"
-    fi
-    AIPSPP_LIBS="$ALP/lib/version.o $lfr_aipslibs"
+if test -r "$with_wcs/include/wcslib/wcs.h"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_wcs=$with_wcs/include
+else
+  lfr_wcs=no
+fi
 
-    # If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS.
-    # This should be handled by the AIPS++ build environment IMHO.
-    version=`$CXX -v 2>&1 | tail -1`
-    # A typical version strings looks like this:
-    #   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
-    if echo $version | grep -iq gcc; then
-      # We'll assume that the first word starting with one or more digits is
-      # the version number, so strip off the rest.
-      version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
-      # We only need the major version number.
-      major=`echo $version | cut -s -d'.' -f1`
-      if test $major -ge 4; then
-        AIPSPP_LIBS="$AIPSPP_LIBS -lgfortran"
-      fi
+    if test $lfr_wcs = no; then
+      { { echo "$as_me:$LINENO: error: wcs.h not found in WCS directory $with_wcs" >&5
+echo "$as_me: error: wcs.h not found in WCS directory $with_wcs" >&2;}
+   { (exit 1); exit 1; }; }
     fi
+  fi
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$lfr_wcs"
+  if [ "$with_wcs_libdir" = "" ]; then
+    if [ "$AIPSPP_LIB_PATH" != "" ]; then
+      with_wcs_libdir=$AIPSPP_LIB_PATH
+    else
+      with_wcs_libdir=$with_wcs/lib
+    fi
+  fi
+  as_ac_File=`echo "ac_cv_file_$with_wcs_libdir/libwcs.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $with_wcs_libdir/libwcs.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $with_wcs_libdir/libwcs.$lofar_shared_ext... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$with_wcs_libdir/libwcs.$lofar_shared_ext"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_wcs_dir=yes
+else
+  lfr_wcs_dir=no
+fi
 
-    if test "$with_pgplot" != "no"; then
-      as_ac_File=`echo "ac_cv_file_$with_pgplot" | $as_tr_sh`
+  if test "$lfr_wcs_dir" = "no" ; then
+    as_ac_File=`echo "ac_cv_file_$with_wcs_libdir/libwcs.a" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $with_wcs_libdir/libwcs.a" >&5
+echo $ECHO_N "checking for $with_wcs_libdir/libwcs.a... $ECHO_C" >&6
+if eval "test \"\${$as_ac_File+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  test "$cross_compiling" = yes &&
+  { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
+echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
+   { (exit 1); exit 1; }; }
+if test -r "$with_wcs_libdir/libwcs.a"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_File'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_File'}'`" >&6
+if test `eval echo '${'$as_ac_File'}'` = yes; then
+  lfr_wcs_dir=yes
+else
+  lfr_wcs_dir=no
+fi
+
+  fi
+  if test "$lfr_wcs_dir" = "no" ; then
+    { { echo "$as_me:$LINENO: error: Could not find libwcs in $with_wcs_libdir" >&5
+echo "$as_me: error: Could not find libwcs in $with_wcs_libdir" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  if [ "$with_wcs_libdir" != "$AIPSPP_LIB_PATH" ]; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_wcs_libdir"
+  fi
+  AIPSPP_LIBS="$AIPSPP_LIBS -lwcs"
+fi
+
+# Test for pgplot.
+if test "$with_pgplot" != "no"; then
+  as_ac_File=`echo "ac_cv_file_$with_pgplot" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $with_pgplot" >&5
 echo $ECHO_N "checking for $with_pgplot... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -22037,37 +23006,47 @@ else
   lfr_pg=no
 fi
 
-      if test $lfr_pg = no; then
-        { { echo "$as_me:$LINENO: error: given PGPLOT directory not found" >&5
+  if test $lfr_pg = no; then
+    { { echo "$as_me:$LINENO: error: given PGPLOT directory not found" >&5
 echo "$as_me: error: given PGPLOT directory not found" >&2;}
    { (exit 1); exit 1; }; }
-      fi
-      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_pgplot"
-      AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
-    fi
+  fi
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_pgplot"
+  AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
+fi
 
-    echo AIPSPP >> pkgext
-    echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
-
-    CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
-    if test "$lofar_compiler" = "gnu"; then
-      CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
-      echo "-Wno-non-template-friend" >> pkgextcxxflags
-    fi
-    LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
-    LIBS="$LIBS $AIPSPP_LIBS"
-    AIPSPP="$ALP"
-
-
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_AIPSPP 1
-_ACEOF
-
+# If we're using GCC 4.x, we need to replace -lg2c by -lgfortran.
+if test $lofar_gcc_major -ge 4; then
+  if test $lofar_have_libg2c = 1; then
+    AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+  else
+    AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
   fi
 fi
 
+if [ "$lfr_use_casa" = 1 ]; then
+  echo AIPSPP >> pkgext
+  echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
 
+  CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
+  LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
+  LIBS="$LIBS $AIPSPP_LIBS"
+
+  if test "$lofar_compiler" = "gnu"; then
+    CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
+    echo "-Wno-non-template-friend" >> pkgextcxxflags
+  fi
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_AIPSPP $lfr_use_casa
+_ACEOF
+
+fi
+
+
+lfr_pkgnam_intv=PLC
+lfr_hdrfile=PLC/ProcessControl.h
 lfr_pkgnam=PLC
 
 
@@ -22123,6 +23102,7 @@ if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_s
   lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
 fi
 lfr_search="$lfr_search $lfr_ext_searchp"
+
 ##
 ## Set version to blank if it is yes or no.
 ##
@@ -22135,6 +23115,7 @@ fi
 ## Also determine the given search path.
 ##
 lfr_ext_name=plc
+external_search=
 enable_external=no
 if test "$lfr_option" = "1"; then
   enable_external=yes
@@ -22149,14 +23130,11 @@ echo "$as_me: error: --with-plc=no cannot be given; PLC package is mandatory" >&
   fi
 else
   if test "$with_external" = ""; then
-    external_search=
-    if test "$with_external_libdir" != ""; then
+    if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
-    if test "$with_external" = "yes"; then
-      external_search=
-    else
+    if test "$with_external" != "yes"; then
       external_search=$with_external
     fi
     enable_external=yes
@@ -22288,14 +23266,17 @@ else
 ## Assume that libraries are in similar directory structure as headers.
 ## (thus in lib subdirectory if header is in include subdirectory)
 
-## Use different lib directory on 64 bit systems.
-  lfr_libdext=lib
-  if test "`arch`" = "x86_64"; then
-    lfr_libdext=lib64;
-  fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
-## Search for header if given, otherwise for library (.a or .so).
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
+## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
     lfr_searchfil=$lfr_hdr
@@ -22303,11 +23284,11 @@ else
   else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
-      lfr_searchfil="$lfr_sfil.so $lfr_sfil.a"
-      lfr_searchext=$lfr_libdext
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
+      lfr_searchext=$lofar_libdirext
     fi
   fi
-## Now fo the actual search.
+## Now do the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
   lfr_pkg_rootdir=
@@ -22341,7 +23322,7 @@ fi
 
       if test "$lfr_ext_dir" != "no" ; then
         if test "$lfr_external_libdir" = ""; then
-          lfr_external_libdir=$bdir/$lfr_libdext;
+          lfr_external_libdir=$bdir/$lofar_libdirext;
         fi
         break;
       fi
@@ -22381,16 +23362,18 @@ fi
       break
     fi
   done
+
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
-  if test "$lfr_external_libdir" != ""; then
-    for lib in $lfr_libsc
-    do
-      if test "$lfr_ext_lib" != "no" ; then
-        as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.so" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.so" >&5
-echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.so... $ECHO_C" >&6
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -22398,7 +23381,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$lfr_external_libdir/lib$lib.so"; then
+if test -r "$lfr_external_libdir/lib$lib.$lofar_shared_ext"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -22412,8 +23395,8 @@ else
   lfr_ext_lib=no
 fi
 
-        if test "$lfr_ext_lib" == "no" ; then
-          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
+          if test "$lfr_ext_lib" == "no" ; then
+            as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.a" >&5
 echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.a... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -22437,12 +23420,15 @@ else
   lfr_ext_lib=no
 fi
 
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
-        else
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.so"
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
         fi
-      fi
-    done
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
   fi
   if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
     EXTERNAL_CPPFLAGS=
@@ -22456,9 +23442,11 @@ fi
       fi
     fi
     if test "$lfr_ext_lib" != "" ; then
-      EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_compiler" != "pgi"; then
-        EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
       fi
     fi
     for lib in $lfr_libsc
@@ -22468,8 +23456,14 @@ fi
 
     EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
     EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
-    EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
-    EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi
 
     echo PLC >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
@@ -22506,18 +23500,32 @@ fi
     # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
     # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
     # Use tr to translate any newline into a space.
-    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
-    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
 
     # Finally, update the flags that will be exported. Remove any remaining
-    # duplicate tokens. Note that this will sort the flags.
-    # Do not sort LIBS since the order is usually important.
-    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
-             sort | uniq | tr $'\n' " "`
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
+    fi
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
@@ -22551,6 +23559,41 @@ fi
 
 
 
+  # Get the include path of the header file.
+  # This will be used for the include path of Package_Version.h.
+  if test "$lfr_hdrfile" = ""; then
+    lfr_hdrpath=$lfr_pkgnam_intv
+  else
+    lfr_hdrpath=`dirname $lfr_hdrfile`
+  fi
+  # If this package was configured in, add the statements to get the
+  # version of this package.
+  # The Tools package is special and not handled.
+  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
+    echo "#include \"${lfr_hdrpath}/Package__Version.h\"" >> FillPackage__VersionInc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
+    # old one back, while preserving creation date and time.
+    diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
+    fi
+
+    echo "    ${lfr_pkgnam_intv}Version::fillInfo (level+1, vec);"  >> FillPackage__VersionFunc.h-pkg
+    # Do the finalization.
+    cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
+    echo '  }' >> FillPackage__VersionFunc.h
+    echo '}' >> FillPackage__VersionFunc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one,
+    # copy the old one back, while preserving creation date and time.
+    diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
+    fi
+  fi
+
+
+lfr_pkgnam_intv=APS
+lfr_hdrfile=APS/ParameterSet.h
 lfr_pkgnam=APS
 
 
@@ -22606,6 +23649,7 @@ if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_s
   lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
 fi
 lfr_search="$lfr_search $lfr_ext_searchp"
+
 ##
 ## Set version to blank if it is yes or no.
 ##
@@ -22618,6 +23662,7 @@ fi
 ## Also determine the given search path.
 ##
 lfr_ext_name=aps
+external_search=
 enable_external=no
 if test "$lfr_option" = "1"; then
   enable_external=yes
@@ -22632,14 +23677,11 @@ echo "$as_me: error: --with-aps=no cannot be given; APS package is mandatory" >&
   fi
 else
   if test "$with_external" = ""; then
-    external_search=
-    if test "$with_external_libdir" != ""; then
+    if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
-    if test "$with_external" = "yes"; then
-      external_search=
-    else
+    if test "$with_external" != "yes"; then
       external_search=$with_external
     fi
     enable_external=yes
@@ -22771,14 +23813,17 @@ else
 ## Assume that libraries are in similar directory structure as headers.
 ## (thus in lib subdirectory if header is in include subdirectory)
 
-## Use different lib directory on 64 bit systems.
-  lfr_libdext=lib
-  if test "`arch`" = "x86_64"; then
-    lfr_libdext=lib64;
-  fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
-## Search for header if given, otherwise for library (.a or .so).
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
+## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
     lfr_searchfil=$lfr_hdr
@@ -22786,11 +23831,11 @@ else
   else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
-      lfr_searchfil="$lfr_sfil.so $lfr_sfil.a"
-      lfr_searchext=$lfr_libdext
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
+      lfr_searchext=$lofar_libdirext
     fi
   fi
-## Now fo the actual search.
+## Now do the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
   lfr_pkg_rootdir=
@@ -22824,7 +23869,7 @@ fi
 
       if test "$lfr_ext_dir" != "no" ; then
         if test "$lfr_external_libdir" = ""; then
-          lfr_external_libdir=$bdir/$lfr_libdext;
+          lfr_external_libdir=$bdir/$lofar_libdirext;
         fi
         break;
       fi
@@ -22864,16 +23909,18 @@ fi
       break
     fi
   done
+
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
-  if test "$lfr_external_libdir" != ""; then
-    for lib in $lfr_libsc
-    do
-      if test "$lfr_ext_lib" != "no" ; then
-        as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.so" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.so" >&5
-echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.so... $ECHO_C" >&6
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -22881,7 +23928,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$lfr_external_libdir/lib$lib.so"; then
+if test -r "$lfr_external_libdir/lib$lib.$lofar_shared_ext"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -22895,8 +23942,8 @@ else
   lfr_ext_lib=no
 fi
 
-        if test "$lfr_ext_lib" == "no" ; then
-          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
+          if test "$lfr_ext_lib" == "no" ; then
+            as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.a" >&5
 echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.a... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -22920,12 +23967,15 @@ else
   lfr_ext_lib=no
 fi
 
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
-        else
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.so"
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
         fi
-      fi
-    done
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
   fi
   if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
     EXTERNAL_CPPFLAGS=
@@ -22939,9 +23989,11 @@ fi
       fi
     fi
     if test "$lfr_ext_lib" != "" ; then
-      EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_compiler" != "pgi"; then
-        EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
       fi
     fi
     for lib in $lfr_libsc
@@ -22951,8 +24003,14 @@ fi
 
     EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
     EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
-    EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
-    EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi
 
     echo APS >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
@@ -22989,18 +24047,32 @@ fi
     # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
     # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
     # Use tr to translate any newline into a space.
-    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
-    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
 
     # Finally, update the flags that will be exported. Remove any remaining
-    # duplicate tokens. Note that this will sort the flags.
-    # Do not sort LIBS since the order is usually important.
-    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
-             sort | uniq | tr $'\n' " "`
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
+    fi
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
@@ -23032,6 +24104,39 @@ else
   HAVE_APS_FALSE=
 fi
 
+
+
+  # Get the include path of the header file.
+  # This will be used for the include path of Package_Version.h.
+  if test "$lfr_hdrfile" = ""; then
+    lfr_hdrpath=$lfr_pkgnam_intv
+  else
+    lfr_hdrpath=`dirname $lfr_hdrfile`
+  fi
+  # If this package was configured in, add the statements to get the
+  # version of this package.
+  # The Tools package is special and not handled.
+  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
+    echo "#include \"${lfr_hdrpath}/Package__Version.h\"" >> FillPackage__VersionInc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
+    # old one back, while preserving creation date and time.
+    diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
+    fi
+
+    echo "    ${lfr_pkgnam_intv}Version::fillInfo (level+1, vec);"  >> FillPackage__VersionFunc.h-pkg
+    # Do the finalization.
+    cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
+    echo '  }' >> FillPackage__VersionFunc.h
+    echo '}' >> FillPackage__VersionFunc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one,
+    # copy the old one back, while preserving creation date and time.
+    diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
+    fi
+  fi
 
 
 lfr_pkgnam=boost
@@ -23089,6 +24194,7 @@ if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_s
   lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
 fi
 lfr_search="$lfr_search $lfr_ext_searchp"
+
 ##
 ## Set version to blank if it is yes or no.
 ##
@@ -23101,6 +24207,7 @@ fi
 ## Also determine the given search path.
 ##
 lfr_ext_name=boost
+external_search=
 enable_external=no
 if test "$lfr_option" = "1"; then
   enable_external=yes
@@ -23115,14 +24222,11 @@ echo "$as_me: error: --with-boost=no cannot be given; BOOST package is mandatory
   fi
 else
   if test "$with_external" = ""; then
-    external_search=
-    if test "$with_external_libdir" != ""; then
+    if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
-    if test "$with_external" = "yes"; then
-      external_search=
-    else
+    if test "$with_external" != "yes"; then
       external_search=$with_external
     fi
     enable_external=yes
@@ -23254,14 +24358,17 @@ else
 ## Assume that libraries are in similar directory structure as headers.
 ## (thus in lib subdirectory if header is in include subdirectory)
 
-## Use different lib directory on 64 bit systems.
-  lfr_libdext=lib
-  if test "`arch`" = "x86_64"; then
-    lfr_libdext=lib64;
-  fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
-## Search for header if given, otherwise for library (.a or .so).
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
+## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
     lfr_searchfil=$lfr_hdr
@@ -23269,11 +24376,11 @@ else
   else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
-      lfr_searchfil="$lfr_sfil.so $lfr_sfil.a"
-      lfr_searchext=$lfr_libdext
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
+      lfr_searchext=$lofar_libdirext
     fi
   fi
-## Now fo the actual search.
+## Now do the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
   lfr_pkg_rootdir=
@@ -23307,7 +24414,7 @@ fi
 
       if test "$lfr_ext_dir" != "no" ; then
         if test "$lfr_external_libdir" = ""; then
-          lfr_external_libdir=$bdir/$lfr_libdext;
+          lfr_external_libdir=$bdir/$lofar_libdirext;
         fi
         break;
       fi
@@ -23347,16 +24454,18 @@ fi
       break
     fi
   done
+
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
-  if test "$lfr_external_libdir" != ""; then
-    for lib in $lfr_libsc
-    do
-      if test "$lfr_ext_lib" != "no" ; then
-        as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.so" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.so" >&5
-echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.so... $ECHO_C" >&6
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.$lofar_shared_ext" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext" >&5
+echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.$lofar_shared_ext... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -23364,7 +24473,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$lfr_external_libdir/lib$lib.so"; then
+if test -r "$lfr_external_libdir/lib$lib.$lofar_shared_ext"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -23378,8 +24487,8 @@ else
   lfr_ext_lib=no
 fi
 
-        if test "$lfr_ext_lib" == "no" ; then
-          as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
+          if test "$lfr_ext_lib" == "no" ; then
+            as_ac_File=`echo "ac_cv_file_$lfr_external_libdir/lib$lib.a" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $lfr_external_libdir/lib$lib.a" >&5
 echo $ECHO_N "checking for $lfr_external_libdir/lib$lib.a... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
@@ -23403,12 +24512,15 @@ else
   lfr_ext_lib=no
 fi
 
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
-        else
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.so"
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
         fi
-      fi
-    done
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
   fi
   if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
     EXTERNAL_CPPFLAGS=
@@ -23422,9 +24534,11 @@ fi
       fi
     fi
     if test "$lfr_ext_lib" != "" ; then
-      EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_compiler" != "pgi"; then
-        EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
       fi
     fi
     for lib in $lfr_libsc
@@ -23434,8 +24548,14 @@ fi
 
     EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
     EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
-    EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
-    EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi
 
     echo BOOST >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
@@ -23472,18 +24592,32 @@ fi
     # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
     # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
     # Use tr to translate any newline into a space.
-    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
-    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
 
     # Finally, update the flags that will be exported. Remove any remaining
-    # duplicate tokens. Note that this will sort the flags.
-    # Do not sort LIBS since the order is usually important.
-    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
-             sort | uniq | tr $'\n' " "`
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
+    fi
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
@@ -23655,6 +24789,13 @@ if test -z "${HAVE_LOG4CPLUS_TRUE}" && test -z "${HAVE_LOG4CPLUS_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"HAVE_LOG4CPLUS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"HAVE_LOG4CPLUS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${HAVE_LOG4CXX_TRUE}" && test -z "${HAVE_LOG4CXX_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"HAVE_LOG4CXX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"HAVE_LOG4CXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -24315,6 +25456,8 @@ s,@HAVE_DOCPP_TRUE@,$HAVE_DOCPP_TRUE,;t t
 s,@HAVE_DOCPP_FALSE@,$HAVE_DOCPP_FALSE,;t t
 s,@HAVE_LOG4CPLUS_TRUE@,$HAVE_LOG4CPLUS_TRUE,;t t
 s,@HAVE_LOG4CPLUS_FALSE@,$HAVE_LOG4CPLUS_FALSE,;t t
+s,@HAVE_LOG4CXX_TRUE@,$HAVE_LOG4CXX_TRUE,;t t
+s,@HAVE_LOG4CXX_FALSE@,$HAVE_LOG4CXX_FALSE,;t t
 s,@AIPSPP@,$AIPSPP,;t t
 s,@HAVE_PLC_TRUE@,$HAVE_PLC_TRUE,;t t
 s,@HAVE_PLC_FALSE@,$HAVE_PLC_FALSE,;t t
