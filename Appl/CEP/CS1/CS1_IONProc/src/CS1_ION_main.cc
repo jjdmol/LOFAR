@@ -82,7 +82,7 @@ static void checkParset(const CS1_Parset &parset)
 }
 
 
-void createClientTHs(unsigned nrClients)
+void createClientTHs(unsigned nrClients, string &transportType)
 {
 #if defined HAVE_FCNP && defined __PPC__
   FCNP_ION::init();
@@ -91,22 +91,30 @@ void createClientTHs(unsigned nrClients)
   clientTHs.resize(nrClients);
 
   for (unsigned core = 0; core < nrClients; core ++) {
+    if (transportType == "ZOID") {
 #if defined HAVE_ZOID
-    clientTHs[core] = new TH_ZoidServer(core);
-#elif 0 && defined HAVE_FCNP && defined __PPC__
-    clientTHs[core] = new TH_FCNP_Server(core);
-#elif 0
-    clientTHs[core] = new TH_Null;
-#elif 1
-    clientTHs[core] = new TH_Socket(boost::lexical_cast<string>(5000 + core));
-
-    while (!clientTHs[core]->init())
-      usleep(10000);
+      clientTHs[core] = new TH_ZoidServer(core);
 #else
-    std::string filename(std::string("/tmp/sock.") + boost::lexical_cast<string>(core));
-    mknod(filename.c_str(), 0666 | S_IFIFO, 0);
-    clientTHs[core] = new TH_File(filename, TH_File::Write);
-#endif
+      std::cerr << "Missing ZOID on BGL" << std::endl;
+#endif    
+    } else if (transportType == "FCNP") {
+#if defined HAVE_FCNP && defined __PPC__
+      clientTHs[core] = new TH_FCNP_Server(core);
+#else
+      std::cerr << "Missing FCNP protocol on BGP" << std::endl;
+#endif 
+    } else if (transportType == "NULL") {
+      clientTHs[core] = new TH_Null;
+    } else if (transportType == "TCP") {
+      clientTHs[core] = new TH_Socket(boost::lexical_cast<string>(5000 + core));
+
+      while (!clientTHs[core]->init())
+        usleep(10000);
+    } else {
+      std::string filename(std::string("/tmp/sock.") + boost::lexical_cast<string>(core));
+      mknod(filename.c_str(), 0666 | S_IFIFO, 0);
+      clientTHs[core] = new TH_File(filename, TH_File::Write);
+    }
   }
 }
 
@@ -252,7 +260,8 @@ void *master_thread(void *)
 
 #if !defined HAVE_ZOID
     nrCoresPerPset = cs1_parset.nrCoresPerPset();
-    createClientTHs(nrCoresPerPset);
+    string transportType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
+    createClientTHs(nrCoresPerPset, transportType);
 #endif
 
     configureCNs(cs1_parset);
