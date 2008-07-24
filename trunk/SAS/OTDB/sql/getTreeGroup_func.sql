@@ -44,6 +44,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 	DECLARE
 		vRecord			RECORD;
 		TSscheduled		CONSTANT	INT2 := 400;
+		TSqueued		CONSTANT	INT2 := 500;
 		TSfinished		CONSTANT	INT2 := 1000;
 		TThierarchy		CONSTANT	INT2 := 30;
 		TCoperational	CONSTANT	INT2 := 3;
@@ -52,7 +53,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 	BEGIN
 	  vQuery := \'\';
 	  IF $1 = 1 THEN
-		vQuery := \' AND t.state = \' || TSscheduled;
+		vQuery := \' AND (t.state = \' || TSscheduled || \' OR t.state = \' || TSqueued || \') \';
 --		vQuery := vQuery || \' AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
 		vQuery := vQuery || \' AND t.starttime >= now() AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
 	  ELSE 
