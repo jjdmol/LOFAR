@@ -15,6 +15,9 @@ OLAP.OLAP_Conn.BGLProc_Storage_Ports = [8300..8363]
 # should be one of NULL(inputFromMemory), FILE, TCP, UDP, ETHERNET
 OLAP.OLAP_Conn.station_Input_Transport = UDP
 
+# should be one of ZOID, FCNP, TCP, NULL, PIPE
+OLAP.OLAP_Conn.IONProc_BGLProc_Transport = TCP
+
 OLAP.OLAP_Conn.rawDataServers = ["10.181.0.4"]
 OLAP.OLAP_Conn.rawDataPorts = [4000]
 

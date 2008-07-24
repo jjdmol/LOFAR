@@ -48,6 +48,9 @@ def doObservation(obsID, parset):
 	#Flagger(parset, listfen)
         })
 
+    if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
+	parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] = 'NULL'
+    
     if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
 	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
     else:
