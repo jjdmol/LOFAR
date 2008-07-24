@@ -108,6 +108,7 @@ public:
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
+	string         getTransportType(const string& prefix) const;
 	uint32         nrBeams() const;
 	vector<int32>  beamlet2beams(uint32 rspid=0) const;
 	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
@@ -149,6 +150,11 @@ inline double CS1_Parset::stopTime() const
 inline string CS1_Parset::stationName(const int index) const
 {
   return getStringVector("OLAP.storageStationNames")[index];
+}
+
+inline string CS1_Parset::getTransportType(const string& prefix) const
+{
+  return getString(prefix + "_Transport");
 }
 
 inline uint32 CS1_Parset::nrStations() const
