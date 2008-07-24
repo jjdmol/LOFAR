@@ -20,9 +20,7 @@
 
 #include <lofar_config.h>
 
-#if 0
 #include <CS1_Interface/CS1_Parset.h>
-#else
 #include <Common/Exception.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
@@ -33,7 +31,6 @@
 #include <CS1_BGLProc/TH_ZoidClient.h>
 #if defined HAVE_FCNP && defined HAVE_BGP
 #include <fcnp_cn.h>
-#endif
 #endif
 #include <CS1_BGLProc/LocationInfo.h>
 #include <CS1_BGLProc/BGL_Processing.h>
@@ -63,48 +60,66 @@ int main(int argc, char **argv)
     }
 
     LocationInfo   locationInfo;
+    
+    std::clog << "trying to use " << argv[1] << " as ParameterSet" << std::endl;
+    ACC::APS::ParameterSet parameterSet(argv[1]);
+    CS1_Parset cs1_parset(&parameterSet);
 
+    cs1_parset.adoptFile("OLAP.parset");
+    
+    TransportHolder *th = 0;
+    string transportType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
+    
+    if (transportType == "ZOID") {
 #if defined HAVE_ZOID && defined HAVE_BGL
-    TH_ZoidClient  th;
-#elif 0 && defined HAVE_FCNP && defined HAVE_BGP
-    std::vector<unsigned> psetDimensions(3);
-
-    psetDimensions[0] = 4;
-    psetDimensions[1] = 2;
-    psetDimensions[2] = 2;
-
-    FCNP_CN::init(psetDimensions);
-    TH_FCNP_Client th;
-#elif 0
-    TH_Null	   th;
-#elif 1
-    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
-
-    std::clog << "creating connection ..." << std::endl;
-    TH_Socket	   th("127.0.0.1", boost::lexical_cast<string>(5000 + locationInfo.rankInPset()));
-    std::clog << "waiting for connection ..." << std::endl;
-
-    while (!th.init())
-      sleep(1);
-    std::clog << "connection successful" << std::endl;
+      th = new TH_ZoidClient();
 #else
-    TH_File	   th(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
+      std::cerr << "Missing ZOID on BGL" << std::endl;
+#endif    
+    } else if (transportType == "FCNP") {
+#if defined HAVE_FCNP && defined HAVE_BGP
+      std::vector<unsigned> psetDimensions(3);
 
-    while (!th.init())
-      sleep(1);
-#endif
+      psetDimensions[0] = 4;
+      psetDimensions[1] = 2;
+      psetDimensions[2] = 2;
 
-    BGL_Processing proc(&th, locationInfo);
+      FCNP_CN::init(psetDimensions);
+      th = new TH_FCNP_Client();
+#else
+      std::cerr << "Missing FCNP protocol on BGP" << std::endl;
+#endif 
+    } else if (transportType == "NULL") {
+      th = new TH_Null();
+    } else if (transportType == "TCP") {
+      usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
+
+      std::clog << "creating connection ..." << std::endl;
+      th = new TH_Socket("127.0.0.1", boost::lexical_cast<string>(5000 + locationInfo.rankInPset()));
+      std::clog << "waiting for connection ..." << std::endl;
+
+      while (!th->init())
+        sleep(1);
+      std::clog << "connection successful" << std::endl;
+    } else {
+      //TH_File th(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
+      th = new TH_File(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
+
+      while (!th->init())
+        sleep(1);
+    }
+
+    BGL_Processing proc(th, locationInfo);
     BGL_Command	   command;
 
     do {
-      command.read(&th);
+      command.read(th);
 
       switch (command.value()) {
 	case BGL_Command::PREPROCESS :	{
 					  BGL_Configuration configuration;
 
-					  configuration.read(&th);
+					  configuration.read(th);
 					  proc.preprocess(configuration);
 					}
 					break;
@@ -119,10 +134,12 @@ int main(int argc, char **argv)
       }
     } while (command.value() != BGL_Command::STOP);
 
+    delete th; th = 0;
+    
 #if defined HAVE_MPI
     TH_MPI::finalize();
 #endif
-
+    
     //abort(); // quickly release the partition
     return 0;
   } catch (Exception &ex) {
