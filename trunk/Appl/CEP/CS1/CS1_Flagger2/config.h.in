@@ -30,6 +30,9 @@
 /* Define if LOG4CPLUS is installed */
 #undef HAVE_LOG4CPLUS
 
+/* Define if LOG4CXX is installed */
+#undef HAVE_LOG4CXX
+
 /* Define if `long long' is supported */
 #undef HAVE_LONG_LONG
 
@@ -66,8 +69,17 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if `uint' is supported */
+#undef HAVE_UINT
+
+/* Define if `ulong' is supported */
+#undef HAVE_ULONG
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define if `ushort' is supported */
+#undef HAVE_USHORT
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF

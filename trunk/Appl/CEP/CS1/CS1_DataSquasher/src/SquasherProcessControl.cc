@@ -86,7 +86,6 @@ namespace LOFAR
 
         // Need FLAG to make it a valid MS
         temptable.deepCopy(itsOutMS, Table::NewNoReplace);
-        if (temptable.tableDesc().isColumn("WEIGHT_SPECTRUM")) cout << "Kiekeboe" << endl;
         MeasurementSet inMS  = MeasurementSet(itsInMS);
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
 
@@ -102,7 +101,9 @@ namespace LOFAR
         std::cout << "New shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
         IPosition data_ipos(temp_pos);
 
-        tdesc.removeColumn("WEIGHT_SPECTRUM");
+        if (tdesc.isColumn("WEIGHT_SPECTRUM"))
+        { tdesc.removeColumn("WEIGHT_SPECTRUM");
+        }
         tdesc.addColumn(ArrayColumnDesc<Float>("WEIGHT_SPECTRUM", "Added by datasquasher",
                                                data_ipos, ColumnDesc::FixedShape));
 

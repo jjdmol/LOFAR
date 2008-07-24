@@ -126,14 +126,14 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 HAVE_APS_FALSE = @HAVE_APS_FALSE@
 HAVE_APS_TRUE = @HAVE_APS_TRUE@
-HAVE_BOOST_FALSE = @HAVE_BOOST_FALSE@
-HAVE_BOOST_TRUE = @HAVE_BOOST_TRUE@
 HAVE_DOCPP_FALSE = @HAVE_DOCPP_FALSE@
 HAVE_DOCPP_TRUE = @HAVE_DOCPP_TRUE@
 HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_LOG4CPLUS_FALSE = @HAVE_LOG4CPLUS_FALSE@
 HAVE_LOG4CPLUS_TRUE = @HAVE_LOG4CPLUS_TRUE@
+HAVE_LOG4CXX_FALSE = @HAVE_LOG4CXX_FALSE@
+HAVE_LOG4CXX_TRUE = @HAVE_LOG4CXX_TRUE@
 HAVE_PLC_FALSE = @HAVE_PLC_FALSE@
 HAVE_PLC_TRUE = @HAVE_PLC_TRUE@
 HAVE_SHMEM_FALSE = @HAVE_SHMEM_FALSE@
@@ -239,11 +239,16 @@ CS1_DFTImager_SOURCES = Imager.cc \
 CS1_DFTImager_LDADD = 
 CS1_DFTImager_DEPENDENCIES = $(LOFAR_DEPEND)
 #CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
+
+# DISTCLEANFILES also removes the md5 check files created by rub,
+# so configure is executed again.
 DISTCLEANFILES = \
       pkgext*\
       lofar_config.*\
+      FillPackage__Version* \
       .doxygenrc \
       *.spec \
+      *.md5-check \
       *.err
 
 
