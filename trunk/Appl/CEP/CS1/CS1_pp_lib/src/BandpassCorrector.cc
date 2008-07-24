@@ -417,11 +417,13 @@ void BandpassCorrector::ProcessTimeslot(DataBuffer& data, MsInfo& info, RunDetai
 {
   NumChannels      = info.NumChannels;
   NumPolarizations = info.NumPolarizations;
+  Matrix<Complex> In;
+  Matrix<Complex> Out;
 
   for (int i = 0; i < info.NumBands * info.NumPairs; i++)
   {
-    Matrix<Complex> In  = data.Data[i].xyPlane(data.Position);
-    Matrix<Complex> Out = data.Data[i].xyPlane(data.Position);
+    In.reference(data.Data[i].xyPlane(data.Position));
+    Out.reference(data.Data[i].xyPlane(data.Position));
     ProcessBaselineBand(In, Out, details.Fixed);
   }
 }

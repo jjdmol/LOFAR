@@ -31,6 +31,7 @@
 #include "BandpassCorrector.h"
 #include "Flagger.h"
 #include "ComplexMedianFlagger.h"
+#include "ComplexMedianFlagger2.h"
 #include "FrequencyFlagger.h"
 #include "MADFlagger.h"
 #include "DataSquasher.h"
@@ -75,16 +76,12 @@ namespace LOFAR
       myDetails->Step         = ParamSet->getInt32("step");       // DataSquasher
       myDetails->Skip         = ParamSet->getBool("skipflags");   // DataSquasher
       myDetails->Columns      = ParamSet->getBool("allcolumns");  // DataSquasher
-
-//      itsFlagData = ParamSet->getBool("flagdata");
-//      itsFlagRMS  = ParamSet->getBool("flagrms");
-//      itsCrosspol = ParamSet->getBool("crosspol");
-
-      itsInMS     = ParamSet->getString("msin");
-      itsOutMS    = ParamSet->getString("msout");
-      itsBandpass     = ParamSet->getInt32("bandpass");
-      itsFlagger      = ParamSet->getInt32("flagger");
-      itsSquasher     = ParamSet->getInt32("squasher");
+      itsInMS                 = ParamSet->getString("msin");
+      itsOutMS                = ParamSet->getString("msout");
+      itsBandpass             = ParamSet->getInt32("bandpass");
+      itsFlagger              = ParamSet->getInt32("flagger");
+      itsSquasher             = ParamSet->getInt32("squasher");
+      myDetails->PrintInfo();
       return true;
     }
 
@@ -131,8 +128,8 @@ namespace LOFAR
         switch (itsFlagger)
         {
           case 1:  myFlagger = new ComplexMedianFlagger(); break;
-  //        case 2:  myFlagger = new ComplexMedian2Flagger(); break;
-  //        case 3:  myFlagger = new FrequencyFlagger(); break;
+          case 2:  myFlagger = new ComplexMedianFlagger2(); break;
+          case 3:  myFlagger = new FrequencyFlagger(); break;
           case 4:  myFlagger = new MADFlagger(); break;
         }
         switch (itsSquasher)
