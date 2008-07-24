@@ -29,15 +29,14 @@ PANEL,-1 -1 1071 110 N "_3DFace" 1
 }
 
 void initialize() {
-  
-  if (dpExists(DPNAME_NAVIGATOR +\".alarms\")) {
-    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR +\".alarms.time\");
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\")) {
+    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\");
   } else {
-    LOG_ERROR(\"navigator_alerts.pnl:initialize|Error connecting to alarms point in nav.\");
+    LOG_ERROR(\"navigator_alerts.pnl:initialize|Error connecting to alarmsTriggerpoint in navigator Instance.\");
   }
 }
 
-void alarmTrigger(string dp1, dyn_time aT) {
+void alarmTrigger(string dp1, bool T) {
   LOG_TRACE(\"navigator_alerts.pnl:initialize|alarmTrigger received.\");
   // set selected Row to the last entry that triggered this alarm
   redraw_table(dynlen(g_alarms[ \"TIME\" ]));
@@ -249,7 +248,8 @@ void rClick(int row) {
       if (dpExists(sys+\"__navObjectState\")) {
 		  dpSet(sys+\"__navObjectState.DPName\",dp,
                       sys+\"__navObjectState.stateNr\",state,
-                      sys+\"__navObjectState.message\",message);
+                      sys+\"__navObjectState.message\",message,
+                      sys+\"__navObjectState.force\",true);
       }    
     }
   } else if (answer == 2) {

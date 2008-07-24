@@ -38,8 +38,9 @@
 #uses "GCFLogging.ctl"
 
 //the Database name & number for the Mainsystem (== MainCU)
-const string MainDBName = "MCU001:";
-const unsigned MainDBID = 61;
+const string   MainDBName        = "MCU001:";
+const unsigned MainDBID          = 61;
+const string   DPNAME_NAVIGATOR  = "__navigator";
 
 global mapping stateColor;
 global mapping stateName;

@@ -104,7 +104,7 @@ void navigator_handleEventInitialize()
   navigator_clearWorkDPs();  
         
   // Initilaize the alarm system
-  initAlarmSystem();
+  initNavigatorAlarms();
 
   // set initialized ready
   g_initializing = false;

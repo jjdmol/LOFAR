@@ -34,7 +34,7 @@
 #uses "GCFLogging.ctl"
 #uses "navigator.ctl"
 
-global string   DPNAME_NAVIGATOR                = "__navigator";
+
 global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "NavigatorInstance";
 global int      g_navigatorID 			= 0;
 
