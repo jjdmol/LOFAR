@@ -32,6 +32,7 @@
 #include <vector>
 #include <string>
 #include <complex>
+#include <cstring>
 
 namespace LOFAR {
 

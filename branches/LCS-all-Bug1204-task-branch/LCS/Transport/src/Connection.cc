@@ -36,9 +36,9 @@ int Connection::theirNextTag = 0;
 
 Connection::Connection (const string& name, DataHolder* dhSource, DataHolder* dhDest,
 			TransportHolder* th, bool blockingComm)
-  : itsName            (name), 
-    itsSourceDH        (dhSource),
+  : itsSourceDH        (dhSource),
     itsDestDH          (dhDest),
+    itsName            (name), 
     itsTransportHolder (th),
     itsIsBlocking      (blockingComm),
     itsReadState       (Idle),

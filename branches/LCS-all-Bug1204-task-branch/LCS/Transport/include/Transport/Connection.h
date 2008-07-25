@@ -49,7 +49,7 @@ class Connection
 {
  public:
 
-  typedef enum State{Error, Busy, Finished}; 
+  enum State{Error, Busy, Finished}; 
 
   /// Construct the Connection object.
   // It connects a source DataHolder to a destination DataHolder with a 
@@ -108,7 +108,7 @@ protected:
 
 private:
 
-  typedef enum ReadState{Idle, TotalLength, Header, Message};
+  enum ReadState{Idle, TotalLength, Header, Message};
 
   /// Private helper methods;
   bool readBlocking();

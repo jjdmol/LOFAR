@@ -28,6 +28,7 @@
 #include <AMCImpl/ConverterProcess.h>
 #include <AMCBase/Exceptions.h>
 #include <Common/StringUtil.h>
+#include <cstdlib>
 
 namespace LOFAR
 {
