@@ -105,6 +105,7 @@ public:
 	uint32	       nrInputsPerStorageNode() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
+	vector<uint32> psetDimensions() const;
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
@@ -305,6 +306,11 @@ inline vector<uint32> CS1_Parset::inputPsets() const
 inline vector<uint32> CS1_Parset::outputPsets() const
 {
   return getUint32Vector("OLAP.BGLProc.outputPsets");
+}
+
+inline vector<uint32> CS1_Parset::psetDimensions() const
+{
+  return getUint32Vector("OLAP.BGLProc.psetDimensions");
 }
 
 inline int CS1_Parset::inputPsetIndex(uint32 pset) const
