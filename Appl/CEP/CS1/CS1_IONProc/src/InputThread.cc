@@ -87,7 +87,6 @@ InputThread::~InputThread()
 
 void InputThread::sigHandler(int)
 {
-  std::clog << "sigHandler" << std::endl;
 }
 
 
