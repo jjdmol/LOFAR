@@ -37,7 +37,7 @@
 #include <CS1_Interface/SparseSet.h>
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
@@ -61,8 +61,8 @@ class BeamletBuffer
     void     writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
-    void     sendSubband(TransportHolder *, unsigned subband, unsigned currentBeam) /*const*/;
-    void     sendUnalignedSubband(TransportHolder *, unsigned subband, unsigned currentBeam) /*const*/;
+    void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
+    void     sendUnalignedSubband(Stream *, unsigned subband, unsigned currentBeam) const;
     unsigned alignmentShift(unsigned beam) const;
     void     readFlags(SparseSet<unsigned> &flags, unsigned beam);
     void     stopReadTransaction();

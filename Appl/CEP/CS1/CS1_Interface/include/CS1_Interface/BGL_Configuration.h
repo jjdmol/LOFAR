@@ -23,7 +23,7 @@
 #ifndef LOFAR_CS1_INTERFACE_BGL_CONFIGURATION_H
 #define LOFAR_CS1_INTERFACE_BGL_CONFIGURATION_H
 
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 
 #include <vector>
 
@@ -47,8 +47,8 @@ class BGL_Configuration
     std::vector<signed>   &beamlet2beams();
     std::vector<unsigned> &subband2Index();
 
-    void		  read(TransportHolder *);
-    void		  write(TransportHolder *);
+    void		  read(Stream *);
+    void		  write(Stream *);
 
     static const unsigned MAX_PSETS    = 64;
     static const unsigned MAX_SUBBANDS = 54;

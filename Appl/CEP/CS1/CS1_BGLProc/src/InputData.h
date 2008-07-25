@@ -5,7 +5,7 @@
 #include <Common/DataConvert.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/ION_to_CN.h>
-#include <Transport/TH_Null.h>
+#include <Stream/Stream.h>
 
 #include <CS1_Interface/Allocator.h>
 #include <TH_ZoidClient.h>
@@ -22,7 +22,7 @@ class InputData
     InputData(const Arena &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
     ~InputData();
 
-    void read(TransportHolder *th, const unsigned nrBeams);
+    void read(Stream *, const unsigned nrBeams);
 
     static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc);
 
@@ -58,13 +58,13 @@ inline InputData::~InputData()
 }
 
 
-inline void InputData::read(TransportHolder *th, const unsigned nrBeams)
+inline void InputData::read(Stream *str, const unsigned nrBeams)
 {
-  metaData.read(th, nrBeams);
+  metaData.read(str, nrBeams);
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time
-  th->recvBlocking(samples.origin(), samples.num_elements() * sizeof(SampleType), 0, 0, 0);
+  str->read(samples.origin(), samples.num_elements() * sizeof(SampleType));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, samples.origin(), samples.num_elements());

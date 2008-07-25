@@ -13,8 +13,7 @@ PPF.h			\
 Transpose.h		\
 Correlator.h		\
 BGL_Processing.h	\
-TH_FCNP_Client.h	\
-TH_ZoidClient.h
+FCNP_ClientStream.h
 
 NOINSTHDRS 		=
 
@@ -44,8 +43,7 @@ PPF.cc				\
 Correlator.cc			\
 CS1_BGL_Processing_main.cc 	\
 BGL_Processing.cc		\
-TH_FCNP_Client.cc		\
-TH_ZoidClient.cc
+FCNP_ClientStream.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\

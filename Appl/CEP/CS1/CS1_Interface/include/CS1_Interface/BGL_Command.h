@@ -23,7 +23,7 @@
 #ifndef LOFAR_CS1_INTERFACE_BGL_COMMAND_H
 #define LOFAR_CS1_INTERFACE_BGL_COMMAND_H
 
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 
 
 namespace LOFAR {
@@ -44,8 +44,8 @@ class BGL_Command
 
     enum Command &value();
 
-    void	 read(TransportHolder *);
-    void	 write(TransportHolder *);
+    void	 read(Stream *);
+    void	 write(Stream *) const;
 
   private:
     struct MarshalledData
@@ -69,14 +69,14 @@ inline enum BGL_Command::Command &BGL_Command::value()
   return itsMarshalledData.value;
 }
 
-inline void BGL_Command::read(TransportHolder *th)
+inline void BGL_Command::read(Stream *str)
 {
-  th->recvBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0, 0);
+  str->read(&itsMarshalledData, sizeof itsMarshalledData);
 }
 
-inline void BGL_Command::write(TransportHolder *th)
+inline void BGL_Command::write(Stream *str) const
 {
-  th->sendBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0);
+  str->write(&itsMarshalledData, sizeof itsMarshalledData);
 }
 
 
