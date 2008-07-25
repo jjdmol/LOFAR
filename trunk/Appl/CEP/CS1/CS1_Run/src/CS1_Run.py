@@ -48,6 +48,11 @@ def doObservation(obsID, parset):
 	#Flagger(parset, listfen)
         })
 
+    if parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'TCP' or  parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'FCNP':
+        if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
+	    print 'IONProc_BGLProc_TransportType = %s' % parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] + ', enable section(s) IONProcSection/BGLProcSection in CS1_Run.py'
+	    sys.exit(0)
+
     if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
 	parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] = 'NULL'
     
@@ -87,7 +92,6 @@ def doObservation(obsID, parset):
         for section in sectionTable:
             print ('Starting ' + sectionTable.get(section).package)
             runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
-	    print runlog
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does

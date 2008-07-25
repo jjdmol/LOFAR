@@ -43,7 +43,6 @@ romein      = UserId(bgfen0,'romein')
 lofarsystem = UserId(bgfen0,'lofarsystem')
 broekema    = UserId(bgfen0,'broekema')
 
-
 IONodes = dict({ \
   'R000-B00' : [ \
     '10.170.0.1', \
@@ -78,5 +77,23 @@ IONodes = dict({ \
     '10.170.0.58', \
     '10.170.0.61', \
     '10.170.0.62', \
+  ], \
+})
+
+psetDimensions = dict({ \
+  'R000-B00' : [ \
+    4, 2, 2, \
+  ], \
+  'R000-B01' : [ \
+    4, 2, 2, \
+  ], \
+  'R000-B02' : [ \
+    4, 2, 2, \
+  ], \
+  'R000-B03' : [ \
+    4, 2, 2, \
+  ], \
+  'R000_256_1' : [ \
+    4, 2, 2, \
   ], \
 })

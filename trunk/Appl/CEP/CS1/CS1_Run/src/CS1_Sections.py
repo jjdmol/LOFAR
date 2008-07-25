@@ -106,6 +106,7 @@ class Section(object):
 
 	parset['OLAP.BGLProc.inputPsets']  = inputPsets
 	parset['OLAP.BGLProc.outputPsets'] = outputPsets
+	parset['OLAP.BGLProc.psetDimensions'] = psetDimensions.get(self.partition)
 	
 class StorageSection(Section):
     def __init__(self, parset, host):
