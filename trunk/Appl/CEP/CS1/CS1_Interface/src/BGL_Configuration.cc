@@ -29,9 +29,9 @@ namespace LOFAR {
 namespace CS1 {
 
 
-void BGL_Configuration::read(TransportHolder *th)
+void BGL_Configuration::read(Stream *str)
 {
-  th->recvBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0, 0);
+  str->read(&itsMarshalledData, sizeof itsMarshalledData);
 
   itsInputPsets.resize(itsMarshalledData.itsInputPsetsSize);
   memcpy(&itsInputPsets[0], itsMarshalledData.itsInputPsets, itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
@@ -50,7 +50,7 @@ void BGL_Configuration::read(TransportHolder *th)
 }
 
 
-void BGL_Configuration::write(TransportHolder *th)
+void BGL_Configuration::write(Stream *str)
 {
   itsMarshalledData.itsInputPsetsSize = itsInputPsets.size();
   assert(itsMarshalledData.itsInputPsetsSize <= MAX_PSETS);
@@ -72,7 +72,7 @@ void BGL_Configuration::write(TransportHolder *th)
   assert(itsMarshalledData.itsSubband2IndexSize <= MAX_SUBBANDS);
   memcpy(itsMarshalledData.itsSubband2Index, &itsSubband2Index[0], itsMarshalledData.itsSubband2IndexSize * sizeof(unsigned));
 
-  th->sendBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0);
+  str->write(&itsMarshalledData, sizeof itsMarshalledData);
 }
 
 

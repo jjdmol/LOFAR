@@ -24,7 +24,7 @@
 #define LOFAR_CS1_INTERFACE_ION_TO_CN_H
 
 #include <CS1_Interface/SparseSet.h>
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 
 #include <cassert>
 
@@ -39,13 +39,13 @@ class ION_to_CN
     float		&delayAtBegin(const unsigned beam), &delayAfterEnd(const unsigned beam);
     unsigned		&alignmentShift(const unsigned beam);
 
-    void		read(TransportHolder *, const unsigned nrBeams);
-    void		write(TransportHolder *, const unsigned nrBeams);
+    void		read(Stream *, const unsigned nrBeams);
+    void		write(Stream *, const unsigned nrBeams);
     
     static const unsigned MAX_BEAMLETS    = 8;
 
   private:
-    std::vector<SparseSet<unsigned> >	itsFlags;
+    std::vector<SparseSet<unsigned> > itsFlags;
 
     struct MarshalledData
     {
@@ -80,22 +80,23 @@ inline unsigned &ION_to_CN::alignmentShift(const unsigned beam)
   return itsMarshalledData[beam].alignmentShift;
 }
 
-inline void ION_to_CN::read(TransportHolder *th, const unsigned nrBeams)
+inline void ION_to_CN::read(Stream *str, const unsigned nrBeams)
 {
-  th->recvBlocking(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams, 1, 0, 0);
-  for(unsigned beam = 0; beam < nrBeams; beam++){
+  str->read(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams);
+
+  for (unsigned beam = 0; beam < nrBeams; beam ++)
     itsFlags[beam].unmarshall(itsMarshalledData[beam].flagsBuffer);
-  }  
 }
 
-inline void ION_to_CN::write(TransportHolder *th, const unsigned nrBeams)
+inline void ION_to_CN::write(Stream *str, const unsigned nrBeams)
 {
-  for(unsigned beam = 0; beam < nrBeams; beam++){
+  for (unsigned beam = 0; beam < nrBeams; beam ++) {
     ssize_t size = itsFlags[beam].marshall(&itsMarshalledData[beam].flagsBuffer, sizeof itsMarshalledData[beam].flagsBuffer);
     
     assert(size >= 0);
   }  
-  th->sendBlocking(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams, 1, 0);
+
+  str->write(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams);
 }
 
 } // namespace CS1

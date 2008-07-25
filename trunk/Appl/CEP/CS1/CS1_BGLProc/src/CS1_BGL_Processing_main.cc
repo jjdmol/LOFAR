@@ -24,10 +24,10 @@
 #include <Common/Exception.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
-#include <TH_FCNP_Client.h>
-#include <Transport/TH_File.h>
-#include <Transport/TH_Null.h>
-#include <Transport/TH_Socket.h>
+#include <FCNP_ClientStream.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
 #include <CS1_BGLProc/TH_ZoidClient.h>
 #if defined HAVE_FCNP && defined HAVE_BGP
 #include <fcnp_cn.h>
@@ -59,25 +59,28 @@ int main(int argc, char **argv)
       Version::show<CS1_BGLProcVersion> (std::cout, "CS1_BGLProc", type);
     }
 
-    LocationInfo   locationInfo;
+    LocationInfo locationInfo;
     
     std::clog << "trying to use " << argv[1] << " as ParameterSet" << std::endl;
     ACC::APS::ParameterSet parameterSet(argv[1]);
-    CS1_Parset cs1_parset(&parameterSet);
+    CS1_Parset cs1_parset(&parameterSet); // FIXME: Do not read parsets on CN!
 
     cs1_parset.adoptFile("OLAP.parset");
     
-    TransportHolder *th = 0;
-    string transportType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
+    string streamType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
     
-    if (transportType == "ZOID") {
+    std::clog << "creating connection to ION ..." << std::endl;
+
+    Stream *ionStream;
+
 #if defined HAVE_ZOID && defined HAVE_BGL
-      th = new TH_ZoidClient();
-#else
-      std::cerr << "Missing ZOID on BGL" << std::endl;
-#endif    
-    } else if (transportType == "FCNP") {
+    if (streamType == "ZOID") {
+      ionStream = new ZoidClientStream;
+    } else
+#endif
+    
 #if defined HAVE_FCNP && defined HAVE_BGP
+    if (streamType == "FCNP") {
       std::vector<unsigned> psetDimensions(3);
 
       psetDimensions[0] = 4;
@@ -85,41 +88,33 @@ int main(int argc, char **argv)
       psetDimensions[2] = 2;
 
       FCNP_CN::init(psetDimensions);
-      th = new TH_FCNP_Client();
-#else
-      std::cerr << "Missing FCNP protocol on BGP" << std::endl;
-#endif 
-    } else if (transportType == "NULL") {
-      th = new TH_Null();
-    } else if (transportType == "TCP") {
+      ionStream = new FCNP_ClientStream;
+    } else
+#endif
+
+    if (streamType == "NULL") {
+      ionStream = new NullStream;
+    } else if (streamType == "TCP") {
       usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
-      std::clog << "creating connection ..." << std::endl;
-      th = new TH_Socket("127.0.0.1", boost::lexical_cast<string>(5000 + locationInfo.rankInPset()));
-      std::clog << "waiting for connection ..." << std::endl;
-
-      while (!th->init())
-        sleep(1);
-      std::clog << "connection successful" << std::endl;
+      ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
     } else {
-      //TH_File th(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
-      th = new TH_File(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
-
-      while (!th->init())
-        sleep(1);
+      throw std::runtime_error("unknown Stream type between ION and CN");
     }
 
-    BGL_Processing proc(th, locationInfo);
+    std::clog << "connection successful" << std::endl;
+
+    BGL_Processing proc(ionStream, locationInfo);
     BGL_Command	   command;
 
     do {
-      command.read(th);
+      command.read(ionStream);
 
       switch (command.value()) {
 	case BGL_Command::PREPROCESS :	{
 					  BGL_Configuration configuration;
 
-					  configuration.read(th);
+					  configuration.read(ionStream);
 					  proc.preprocess(configuration);
 					}
 					break;
@@ -134,21 +129,18 @@ int main(int argc, char **argv)
       }
     } while (command.value() != BGL_Command::STOP);
 
-    delete th; th = 0;
+    delete ionStream;
     
 #if defined HAVE_MPI
     TH_MPI::finalize();
 #endif
     
-    //abort(); // quickly release the partition
     return 0;
   } catch (Exception &ex) {
     std::cerr << "Uncaught Exception: " << ex.what() << std::endl;
-    //abort(); // quickly release the partition
     return 1;
   } catch (std::exception &ex) {
     std::cerr << "Uncaught exception: " << ex.what() << std::endl;
-    //abort(); // quickly release the partition
     return 1;
   }
 }

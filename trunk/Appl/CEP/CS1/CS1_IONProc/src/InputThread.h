@@ -24,7 +24,7 @@
 #define LOFAR_CS1_INPUTSECTION_INPUTTHREAD_H
 
 // \file
-// The thread that reads from a TH and places data into the buffer of the input section
+// The thread that reads from a Stream and places data into the buffer of the input section
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -39,7 +39,6 @@ namespace LOFAR
 {
   //# Forward Declarations
   class NSTimer;
-  class TransportHolder;
     
   namespace CS1 
   {
@@ -49,7 +48,7 @@ namespace LOFAR
     // TODO: this information doesn't have to be in a struct
     struct ThreadArgs {
       BeamletBuffer	*BBuffer;
-      TransportHolder	*th; 
+      Stream		*stream; 
 
       int		frameSize;
       int		ipHeaderSize;

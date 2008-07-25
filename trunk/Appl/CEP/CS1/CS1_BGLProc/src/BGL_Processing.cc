@@ -80,9 +80,9 @@ static NSTimer computeTimer("computing", true);
 char **BGL_Processing::original_argv;
 
 
-BGL_Processing::BGL_Processing(TransportHolder *th, const LocationInfo &locationInfo)
+BGL_Processing::BGL_Processing(Stream *str, const LocationInfo &locationInfo)
 :
-  itsTransportHolder(th),
+  itsStream(str),
   itsLocationInfo(locationInfo),
   itsInputData(0),
   itsTransposedData(0),
@@ -345,7 +345,7 @@ void BGL_Processing::process()
 
     static NSTimer readTimer("receive timer", true);
     readTimer.start();
-    itsInputData->read(itsTransportHolder, itsNrBeams);
+    itsInputData->read(itsStream, itsNrBeams);
     readTimer.stop();
   }
 
@@ -388,7 +388,7 @@ MPI_Barrier(itsTransposeGroup);
 
     static NSTimer writeTimer("send timer", true);
     writeTimer.start();
-    itsCorrelatedData->write(itsTransportHolder);
+    itsCorrelatedData->write(itsStream);
     writeTimer.stop();
   }
 

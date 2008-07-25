@@ -145,7 +145,7 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
 }
 
 
-void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, unsigned currentBeam) /*const*/
+void BeamletBuffer::sendSubband(Stream *str, unsigned subband, unsigned currentBeam) const
 {
   // Align to 32 bytes and make multiple of 32 bytes by prepending/appending
   // extra data.  Always send 32 bytes extra, even if data was already aligned.
@@ -156,24 +156,24 @@ void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, unsigned 
     // the data wraps around the allocated memory, so copy in two parts
     unsigned firstChunk = itsSize - startI;
 
-    th->sendBlocking(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]), 0, 0);
-    th->sendBlocking(itsSBBuffers[subband][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]), 0, 0);
+    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
   } else {
-    th->sendBlocking(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]), 0, 0);
+    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
   }
 }
 
 
-void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband, unsigned currentBeam) /*const*/
+void BeamletBuffer::sendUnalignedSubband(Stream *str, unsigned subband, unsigned currentBeam) const
 {
   if (itsEndI[currentBeam] < itsStartI[currentBeam]) {
     // the data wraps around the allocated memory, so copy in two parts
     unsigned firstChunk = itsSize - itsStartI[currentBeam];
 
-    th->sendBlocking(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]), 0, 0);
-    th->sendBlocking(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI[currentBeam]][NR_POLARIZATIONS]), 0, 0);
+    str->write(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI[currentBeam]][NR_POLARIZATIONS]));
   } else {
-    th->sendBlocking(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[itsEndI[currentBeam] - itsStartI[currentBeam]][NR_POLARIZATIONS]), 0, 0);
+    str->write(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[itsEndI[currentBeam] - itsStartI[currentBeam]][NR_POLARIZATIONS]));
   }
 }
 

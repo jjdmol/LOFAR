@@ -23,50 +23,20 @@
 #ifndef LOFAR_CS1_INPUTSECTION_CONNECTOR_H
 #define LOFAR_CS1_INPUTSECTION_CONNECTOR_H
 
-// \file
-// one line description.
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
-//# Includes
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 #include <CS1_Interface/CS1_Parset.h>
 #include <CEPFrame/Step.h>
 
-namespace LOFAR 
+namespace LOFAR {
+namespace CS1 {
+
+class Connector
 {
-  namespace CS1 
-  {
+  public:
+    static Stream *getInputStream(const CS1_Parset *ps, const string &key);
+};
 
-    // \addtogroup CS1_InputSection
-    // @{
-
-    //# Forward Declarations
-    //class forward;
-
-
-    // Description of class.
-    class Connector
-    {
-    public:
-      Connector();
-      ~Connector();
-
-      static TransportHolder* readTH(const CS1_Parset *ps, const string& key);
-      void connectSteps(Step* src, int srcDH, Step* dst, int dstDH);
-
-    private:
-      // Copying is not allowed
-      Connector (const Connector& that);
-      Connector& operator= (const Connector& that);
-
-      //# Datamembers
-
-    };
-
-    // @}
-
-  } // namespace CS1
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

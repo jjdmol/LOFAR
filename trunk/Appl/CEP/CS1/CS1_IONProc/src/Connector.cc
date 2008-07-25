@@ -25,142 +25,51 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Transport/TH_Mem.h>
-#include <Transport/TH_Ethernet.h>
-#include <Transport/TH_MPI.h>
-#include <Transport/TH_File.h>
-#include <Transport/TH_Null.h>
-#include <Transport/TH_Socket.h>
-#include <Transport/TH_ShMem.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
 #include <Connector.h>
 
+#include <boost/lexical_cast.hpp>
+
 namespace LOFAR {
-  namespace CS1 {
+namespace CS1 {
 
-    Connector::Connector()
-    {}
-
-    Connector::~Connector()
-    {}
-
-    TransportHolder* Connector::readTH(const CS1_Parset *ps, const string& key) {
-      TransportHolder* theTH = 0;
-      string transportType = ps->getString("OLAP.OLAP_Conn.station_Input_Transport");
+Stream *Connector::getInputStream(const CS1_Parset *ps, const string &key)
+{
+  string streamType = ps->getString("OLAP.OLAP_Conn.station_Input_Transport");
 #if 0
-      if (transportType=="ETHERNET") {
-	string interface = ps.getString(key + ".interface");
-	string srcMac = ps.getString(key + ".sourceMac");
-	string dstMac = ps.getString(key + ".destinationMac");
-	// we are using UDP now, so the eth type is 0x0008
-	theTH = new TH_Ethernet(interface, 
-				srcMac,
-				dstMac, 
-				0x0008,
-				16 * 1024 * 1024);
-      } else if (transportType=="FILE") {
-	string file = ps.getString(key + ".inputFile");
-	if (isReceiver) {
-	  theTH = new TH_File(file, TH_File::Read);
-	} else {
-	  theTH = new TH_File(file, TH_File::Write);
-	}	  
-      } else 
+  if (streamType=="ETHERNET") {
+    string interface = ps.getString(key + ".interface");
+    string srcMac = ps.getString(key + ".sourceMac");
+    string dstMac = ps.getString(key + ".destinationMac");
+    // we are using UDP now, so the eth type is 0x0008
+    theTH = new TH_Ethernet(interface, 
+			    srcMac,
+			    dstMac, 
+			    0x0008,
+			    16 * 1024 * 1024);
+  } else
 #endif      
-      if (transportType=="NULL") {
-	theTH = new TH_Null();
-      } else if (transportType=="TCP") {
-	string service = ps->inputPortnr(key);
-	theTH = new TH_Socket(service, 
-		              true, 
-			      Socket::TCP, 
-			      5, 
-			      false);
-	} 
-#if 0	
-	else {
-	  string host = ps.getString(key + ".host");
-	  theTH = new TH_Socket(host,
-				service,
-				true,
-				Socket::TCP,
-				false);
-	}
-      } 
-#endif      
-      else if (transportType == "UDP") {
-	string service = ps->inputPortnr(key);
-	std::clog << "creating UDP socket, service = " << service << std::endl;
-	theTH = new TH_Socket(service,
-			      true, 
-			      Socket::UDP, 
-			      5,
-			      false,
-			      8 * 1024 * 1024, 
-			      -1);
+  if (streamType == "FILE") {
+    string file = ps->getString(key + ".inputFile");
+    std::clog << "receive from FILE stream " << file << std::endl;
+    return new FileStream(file.c_str());
+  } else if (streamType == "NULL") {
+    std::clog << "receive from NULL stream" << std::endl;
+    return new NullStream;
+  } else if (streamType == "TCP") {
+    short port = boost::lexical_cast<short>(ps->inputPortnr(key));
+    std::clog << "receive from TCP socket, port = " << port << std::endl;
+    return new SocketStream("0.0.0.0", port, SocketStream::TCP, SocketStream::Server);
+  } else if (streamType == "UDP") {
+    short port = boost::lexical_cast<short>(ps->inputPortnr(key));
+    std::clog << "receive from UDP socket, port = " << port << std::endl;
+    return new SocketStream("0.0.0.0", port, SocketStream::UDP, SocketStream::Server);
+  } else {
+    ASSERTSTR(false, "Stream " << streamType << " unknown to Connector");
+  }
+}
 
-#if 0	
-	else { 
-	  string host = ps.getString(key+".host");
-	  theTH = new TH_Socket(host, 
-				service, 
-				true, 
-				Socket::UDP, 
-				false,
-				-1, 
-				8 * 1024 * 1024);
-	}
-#endif      
-      } 
-      else {
-	ASSERTSTR(false, "TransportHolder " << transportType << " unknown to Connector");
-      }
-      return theTH;
-    }
-
-    void Connector::connectSteps(Step* src, int srcDH, Step* dst, int dstDH) {
-      // TransportHolders (best first)
-      // TH_Mem -> use this one if on same node and same process
-      // TH_ShMem -> use this one if on same host (cannot check for that right now)
-      // TH_MPI -> use this one if we have MPI and are not on the same node
-      // TH_Socket -> use this one in other cases (cannot use it because we need more info then)
-
-      // Special TransportHolders:
-      // TH_Null -> does not send any data
-      // TH_Ethernet -> uses raw Ethernet
-      // TH_File -> uses a file for in or output
-
-      if (src->getNode() == dst->getNode()) {
-	dst->connect(dstDH,
-		    src,
-		    srcDH,
-		    1,
-		    new TH_Mem(),
-		    false);
-#ifdef HAVE_MPI
-      } else if (src->getNode() != dst->getNode()) {
-	dst->connect(dstDH,
-		    src,
-		    srcDH,
-		    1,
-		    new TH_MPI(src->getNode(), dst->getNode()),
-		    true);
-#endif
-      } else {
-	ASSERTSTR(false, "Cannot find a suitable TransportHolder to connect with");
-      }
-    }
-
-
-    // Remove lines or remove comments for copy constructor and assignment.
-    ////Connector::Connector (const Connector& that)
-    ////{}
-    ////Connector& Connector::operator= (const Connector& that)
-    ////{
-    ////  if (this != &that) {
-    ////    ... copy members ...
-    ////  }
-    ////  return *this;
-    ////}
-
-  } // namespace CS1
+} // namespace CS1
 } // namespace LOFAR

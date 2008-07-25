@@ -1,4 +1,5 @@
-//#  InputThread.cc: the thread that reads from a TH and places data into the buffer of the input section
+//#  InputThread.cc: the thread that reads from a Stream and places data into
+//#  the buffer of the input section
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,14 +29,12 @@
 #include <Common/hexdump.h>
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
-#include <Transport/TransportHolder.h>
+#include <Stream/NullStream.h>
+#include <Stream/SystemCallException.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 
-#if defined __linux__
-#include <sched.h>
-#endif
-
+#include <errno.h>
 #include <signal.h>
 
 
@@ -163,17 +162,17 @@ void InputThread::mainLoop()
   unsigned previousSeqid = 0;
   bool previousSeqidIsAccepted = false;
   
+#if 0
   if (itsArgs.th->getType() == "TH_Ethernet") {
     // only with TH_Ethernet there is an IPHeader
     // but also when we have recorded it from the rsp boards!
     recvframe += itsArgs.ipHeaderSize;
     frameSize += itsArgs.ipHeaderSize;
   };
-
-  ASSERTSTR(itsArgs.th->init(), "Could not init TransportHolder");
+#endif
 
   NSTimer writeTimer("writeTimer", true);
-  bool dataShouldContainValidStamp = (itsArgs.th->getType() != "TH_Null");
+  bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
 
   std::clog << "InputThread::mainLoop() entering loop" << std::endl;
 
@@ -181,11 +180,13 @@ void InputThread::mainLoop()
     // interruptible read, to allow stopping this thread even if the station
     // does not send data
 
-    try { // stupid TH returns false or throws exception depending on error
-      if (!itsArgs.th->recvBlocking(totRecvframe, frameSize, 0))
+    try {
+      itsArgs.stream->read(totRecvframe, frameSize);
+    } catch (SystemCallException &ex) {
+      if (ex.error == EINTR)
 	break;
-    } catch (...) {
-      break;
+      else
+	throw ex;
     }
 
     ++ nrPacketsReceived;

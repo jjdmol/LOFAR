@@ -25,7 +25,7 @@
 #define C_IMPLEMENTATION
 #endif
 
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 #include <CS1_Interface/CS1_Config.h>
 #if 0
 #include <CS1_Interface/CS1_Parset.h>
@@ -59,7 +59,7 @@ namespace CS1 {
 
 class BGL_Processing {
   public:
-			BGL_Processing(TransportHolder *, const LocationInfo &);
+			BGL_Processing(Stream *, const LocationInfo &);
 			~BGL_Processing();
 
 #if 0
@@ -89,7 +89,7 @@ class BGL_Processing {
     void		printSubbandList() const;
 #endif
 
-    TransportHolder	*itsTransportHolder;
+    Stream		*itsStream;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;

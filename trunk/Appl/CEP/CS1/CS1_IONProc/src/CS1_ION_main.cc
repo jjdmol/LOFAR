@@ -28,10 +28,10 @@
 #include <CS1_Interface/CS1_Parset.h>
 #include <InputSection.h>
 #include <AH_ION_Gather.h>
-#include <Transport/TH_File.h>
-#include <Transport/TH_Null.h>
-#include <Transport/TH_Socket.h>
-#include <TH_ZoidServer.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
+//#include <TH_ZoidServer.h>
 #include <Package__Version.h>
 
 #include <sys/types.h>
@@ -50,7 +50,7 @@ extern "C" {
 #endif
 
 #if defined HAVE_FCNP && defined __PPC__
-#include <TH_FCNP_Server.h>
+#include <FCNP_ServerStream.h>
 #include <fcnp_ion.h>
 #endif
 
@@ -63,7 +63,7 @@ static char	   **global_argv;
 static std::string blockID;
 static unsigned    myPsetNumber, nrPsets, nrCoresPerPset;
 static unsigned    nrInputSectionRuns;
-static std::vector<TransportHolder *> clientTHs;
+static std::vector<Stream *> clientStreams;
 
 
 static void checkParset(const CS1_Parset &parset)
@@ -82,47 +82,42 @@ static void checkParset(const CS1_Parset &parset)
 }
 
 
-void createClientTHs(unsigned nrClients, string &transportType)
+void createClientStreams(unsigned nrClients, const std::string &streamType)
 {
 #if defined HAVE_FCNP && defined __PPC__
   FCNP_ION::init();
 #endif
 
-  clientTHs.resize(nrClients);
+  clientStreams.resize(nrClients);
+
 
   for (unsigned core = 0; core < nrClients; core ++) {
-    if (transportType == "ZOID") {
 #if defined HAVE_ZOID
-      clientTHs[core] = new TH_ZoidServer(core);
-#else
-      std::cerr << "Missing ZOID on BGL" << std::endl;
-#endif    
-    } else if (transportType == "FCNP") {
-#if defined HAVE_FCNP && defined __PPC__
-      clientTHs[core] = new TH_FCNP_Server(core);
-#else
-      std::cerr << "Missing FCNP protocol on BGP" << std::endl;
-#endif 
-    } else if (transportType == "NULL") {
-      clientTHs[core] = new TH_Null;
-    } else if (transportType == "TCP") {
-      clientTHs[core] = new TH_Socket(boost::lexical_cast<string>(5000 + core));
+    if (streamType == "ZOID")
+      clientStreams[core] = new ZoidServerStream(core);
+    else
+#endif
 
-      while (!clientTHs[core]->init())
-        usleep(10000);
-    } else {
-      std::string filename(std::string("/tmp/sock.") + boost::lexical_cast<string>(core));
-      mknod(filename.c_str(), 0666 | S_IFIFO, 0);
-      clientTHs[core] = new TH_File(filename, TH_File::Write);
-    }
+#if defined HAVE_FCNP && defined __PPC__
+    if (streamType == "FCNP")
+      clientStreams[core] = new FCNP_ServerStream(core);
+    else
+#endif
+
+    if (streamType == "NULL")
+      clientStreams[core] = new NullStream;
+    else if (streamType == "TCP")
+      clientStreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
+    else
+      throw std::runtime_error("unknown Stream type between ION and CN");
   }
 }
 
 
-void deleteClientTHs()
+void deleteClientStreams()
 {
-  for (unsigned core = 0; core < clientTHs.size(); core ++)
-    delete clientTHs[core];
+  for (unsigned core = 0; core < clientStreams.size(); core ++)
+    delete clientStreams[core];
 
 #if defined HAVE_FCNP && defined __PPC__
   FCNP_ION::end();
@@ -155,15 +150,15 @@ static void configureCNs(const CS1_Parset &parset)
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     std::clog << ' ' << core;
     std::clog.flush();
-    command.write(clientTHs[core]);
-    configuration.write(clientTHs[core]);
+    command.write(clientStreams[core]);
+    configuration.write(clientStreams[core]);
   }
 
   std::clog << " done" << std::endl;
 }
 
 
-static void unconfigureCNs(CS1_Parset &parset)
+static void unconfigureCNs()
 {
   std::clog << "unconfiguring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
@@ -173,7 +168,7 @@ static void unconfigureCNs(CS1_Parset &parset)
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     std::clog << ' ' << core;
     std::clog.flush();
-    command.write(clientTHs[core]);
+    command.write(clientStreams[core]);
   }
 
   std::clog << " done" << std::endl;
@@ -188,7 +183,7 @@ static void stopCNs()
   BGL_Command command(BGL_Command::STOP);
 
   for (unsigned core = 0; core < nrCoresPerPset; core ++)
-    command.write(clientTHs[core]);
+    command.write(clientStreams[core]);
 
   std::clog << "done" << std::endl;
 }
@@ -199,7 +194,7 @@ void *input_thread(void *parset)
   std::clog << "starting input thread" << std::endl;
 
   try {
-    InputSection inputSection(clientTHs, myPsetNumber);
+    InputSection inputSection(clientStreams, myPsetNumber);
 
     inputSection.preprocess(static_cast<CS1_Parset *>(parset));
 
@@ -225,7 +220,7 @@ void *gather_thread(void *argv)
   std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
 
   try {
-    AH_ION_Gather myAH(clientTHs);
+    AH_ION_Gather myAH(clientStreams);
     ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
     ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
   } catch (Exception &ex) {
@@ -253,20 +248,20 @@ void *master_thread(void *)
 
     std::clog << "trying to use " << global_argv[1] << " as ParameterSet" << std::endl;
     ACC::APS::ParameterSet parameterSet(global_argv[1]);
-    CS1_Parset cs1_parset(&parameterSet);
+    CS1_Parset parset(&parameterSet);
 
-    cs1_parset.adoptFile("OLAP.parset");
-    checkParset(cs1_parset);
+    parset.adoptFile("OLAP.parset");
+    checkParset(parset);
 
 #if !defined HAVE_ZOID
-    nrCoresPerPset = cs1_parset.nrCoresPerPset();
-    string transportType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
-    createClientTHs(nrCoresPerPset, transportType);
+    nrCoresPerPset = parset.nrCoresPerPset();
+    string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
+    createClientStreams(nrCoresPerPset, streamType);
 #endif
 
-    configureCNs(cs1_parset);
+    configureCNs(parset);
 
-    if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
+    if (parset.inputPsetIndex(myPsetNumber) >= 0) {
 #if 0
       static char nrRuns[16], *argv[] = {
 	global_argv[0],
@@ -275,7 +270,7 @@ void *master_thread(void *)
 	0
       };
 
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset());
+      sprintf(nrRuns, "%u", atoi(global_argv[2]) * parset.nrCoresPerPset() / parset.nrSubbandsPerPset());
 
       if (pthread_create(&input_thread_id, 0, input_thread, argv) != 0) {
 	perror("pthread_create");
@@ -283,16 +278,16 @@ void *master_thread(void *)
       }
 #else
       // Passing this via a global variable is a real hack
-      nrInputSectionRuns = atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset();
+      nrInputSectionRuns = atoi(global_argv[2]) * parset.nrCoresPerPset() / parset.nrSubbandsPerPset();
 
-      if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&cs1_parset)) != 0) {
+      if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&parset)) != 0) {
 	perror("pthread_create");
 	exit(1);
       }
 #endif
     }
 
-    if (cs1_parset.useGather() && cs1_parset.outputPsetIndex(myPsetNumber) >= 0) {
+    if (parset.useGather() && parset.outputPsetIndex(myPsetNumber) >= 0) {
       static char nrRuns[16], *argv[] = {
 	global_argv[0],
 	global_argv[1],
@@ -300,7 +295,7 @@ void *master_thread(void *)
 	0
       };
 
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset());
+      sprintf(nrRuns, "%u", atoi(global_argv[2]) * parset.nrCoresPerPset());
 
       if (pthread_create(&gather_thread_id, 0, gather_thread, argv) != 0) {
 	perror("pthread_create");
@@ -313,11 +308,11 @@ void *master_thread(void *)
 
       BGL_Command command(BGL_Command::PROCESS);
       unsigned	  nrRuns  = atoi(global_argv[2]);
-      unsigned	  nrCores = cs1_parset.nrCoresPerPset();
+      unsigned	  nrCores = parset.nrCoresPerPset();
 
       for (unsigned run = 0; run < nrRuns; run ++)
 	for (unsigned core = 0; core < nrCores; core ++)
-	  command.write(clientTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+	  command.write(clientStreams[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
     }
 
     if (input_thread_id != 0) {
@@ -329,7 +324,7 @@ void *master_thread(void *)
       std::clog << "lofar__fini: input thread joined" << std::endl;
     }
 
-    unconfigureCNs(cs1_parset);
+    unconfigureCNs();
     stopCNs();
 
     if (gather_thread_id != 0) {
@@ -434,7 +429,7 @@ void lofar__init(int nrComputeCores)
   redirect_output();
   std::clog << "begin of lofar__init" << std::endl;
 
-  createClientTHs(nrComputeCores);
+  createClientStreams(nrComputeCores, "ZOID");
 
   global_argv = 0;
 }
@@ -476,7 +471,7 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 void lofar__fini(void)
 {
   std::clog << "begin of lofar__fini" << std::endl;
-  deleteClientTHs();
+  deleteClientStreams();
   std::clog << "end of lofar__fini" << std::endl;
 }
 
@@ -493,7 +488,7 @@ int main(int argc, char **argv)
 
   tryToGetPersonality();
   master_thread(0);
-  deleteClientTHs();
+  deleteClientStreams();
   return 0;
 }
 

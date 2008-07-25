@@ -4,7 +4,7 @@
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/Allocator.h>
-#include <Transport/TH_Null.h>
+#include <Stream/Stream.h>
 
 #include <TH_ZoidClient.h>
 
@@ -21,7 +21,7 @@ class CorrelatedData
     ~CorrelatedData();
 
     static size_t requiredSize(unsigned nrBaselines);
-    void	  write(TransportHolder *) /*const*/;
+    void	  write(Stream *) const;
 
   private:
     SparseSetAllocator	  allocator;
@@ -83,11 +83,11 @@ inline CorrelatedData::~CorrelatedData()
 }
 
 
-inline void CorrelatedData::write(TransportHolder *th) /*const*/
+inline void CorrelatedData::write(Stream *str) const
 {
-  th->sendBlocking(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex), 0, 0);
-  th->sendBlocking(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short), 0, 0);
-  //th->sendBlocking(centroids, itsNrBaselines * sizeof(float), 0, 0);
+  str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
+  str->write(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+  //str->write(centroids, itsNrBaselines * sizeof(float));
 }
 
 

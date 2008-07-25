@@ -23,7 +23,7 @@
 
 #include <CS1_Interface/DH_Visibilities.h>
 #include <tinyCEP/WorkHolder.h>
-#include <Transport/TransportHolder.h>
+#include <Stream/Stream.h>
 #include <APS/ParameterSet.h>
 
 #include <vector>
@@ -35,7 +35,7 @@ namespace CS1 {
 class WH_ION_Gather : public WorkHolder
 {
   public:
-	     WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps, const std::vector<TransportHolder *> &clientTHs);
+	     WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps, const std::vector<Stream *> &clientStreams);
     virtual  ~WH_ION_Gather();
 
     //static WorkHolder *construct(const string &name, const ACC::APS::ParameterSet &);
@@ -60,7 +60,7 @@ class WH_ION_Gather : public WorkHolder
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
 
     const CS1_Parset		*itsPS;
-    const std::vector<TransportHolder *> &itsClientTHs;
+    const std::vector<Stream *> &itsClientStreams;
 };
 
 }

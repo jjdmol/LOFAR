@@ -32,35 +32,35 @@
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
 #include <ION_Allocator.h>
-#include <TH_ZoidServer.h>
+//#include <TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
-#include <CS1_Interface/CS1_Parset.h>
-#include <CS1_Interface/RSPTimeStamp.h>
-#include <Transport/TransportHolder.h>
+#include <Stream/NullStream.h>
 
 #include <sys/time.h>
+
+#include <stdexcept>
 
 #undef DUMP_RAW_DATA
 //#define DUMP_RAW_DATA
 
 #if defined DUMP_RAW_DATA
-#include <Transport/TH_Socket.h>
+#include <Stream/SocketStream.h>
 #endif
 
 namespace LOFAR {
 namespace CS1 {
 
 #if defined DUMP_RAW_DATA
-static TransportHolder *rawDataTH;
+static Stream *rawDataStream;
 #endif
 
 
-InputSection::InputSection(const std::vector<TransportHolder *> &clientTHs, unsigned psetNumber)
+InputSection::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
 :
   itsInputThread(0),
-  itsInputTH(0),
-  itsClientTHs(clientTHs),
+  itsInputStream(0),
+  itsClientStreams(clientStreams),
   itsPsetNumber(psetNumber),
   itsBBuffer(0),
   itsDelayComp(0),
@@ -83,7 +83,7 @@ void InputSection::startThread()
   ThreadArgs args;
 
   args.BBuffer            = itsBBuffer;
-  args.th                 = itsInputTH;
+  args.stream             = itsInputStream;
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
@@ -104,7 +104,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   std::string stationName = ps->stationName(itsStationNr);
   std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
 
-  itsInputTH		= Connector::readTH(ps, stationName);
+  itsInputStream	= Connector::getInputStream(ps, stationName);
   itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
   itsNSamplesPerSec	= ps->nrSubbandSamples();
 
@@ -131,7 +131,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   
   itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
-  double startTime = itsInputTH->getType() == "TH_Null" ? 0 : ps->startTime(); // UTC
+  double startTime = dynamic_cast<NullStream *>(itsInputStream) ? 0 : ps->startTime();
 
   int sampleFreq = (int) ps->sampleRate();
   int seconds	 = (int) floor(startTime);
@@ -177,7 +177,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   }
 
   std::clog << "trying to connect raw data stream to " << rawDataServers[itsStationNr] << ':' << rawDataPorts[itsStationNr] << std::endl;
-  rawDataTH = new TH_Socket(rawDataServers[itsStationNr], std::string(rawDataPorts[itsStationNr]));
+  rawDataStream = new SocketStream(rawDataServers[itsStationNr], rawDataPorts[itsStationNr], SocketStream::TCP, SocketStream::Client);
   std::clog << "raw data stream connected" << std::endl;
 #endif
 
@@ -333,7 +333,7 @@ void InputSection::process()
     for (unsigned beam = 0; beam < itsBeamlet2beams.size(); beam ++)
       fileHeader.beamlet2beams[beam] = itsBeamlet2beams[beam];
 
-    rawDataTH->sendBlocking(&fileHeader, sizeof fileHeader, 0, 0);
+    rawDataStream->write(&fileHeader, sizeof fileHeader);
     fileHeaderWritten = true;
   }
 
@@ -359,24 +359,24 @@ void InputSection::process()
     itsIONtoCNdata.flags(beam).marshall(reinterpret_cast<char *>(&blockHeader.nrFlagsRanges[beam]), sizeof blockHeader.nrFlagsRanges[beam] + sizeof blockHeader.flagsRanges[beam][0]);
   }
   
-  rawDataTH->sendBlocking(&blockHeader, sizeof blockHeader, 0, 0);
+  rawDataStream->write(&blockHeader, sizeof blockHeader);
 
   for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
-    itsBBuffer->sendUnalignedSubband(rawDataTH, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
+    itsBBuffer->sendUnalignedSubband(rawDataStream, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
 
 #else
 
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
-    unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-    TransportHolder *th  = itsClientTHs[core];
+    unsigned core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    Stream   *str = itsClientStreams[core];
 
-    command.write(th);
-    itsIONtoCNdata.write(th, itsCS1PS->nrBeams());
+    command.write(str);
+    itsIONtoCNdata.write(str, itsCS1PS->nrBeams());
 
     for (unsigned pset = 0; pset < itsCS1PS->nrPsets(); pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
 
-      itsBBuffer->sendSubband(th, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
+      itsBBuffer->sendSubband(str, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
     }
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
@@ -397,7 +397,7 @@ void InputSection::postprocess()
   std::clog << "InputSection::postprocess" << std::endl;
 
   delete itsInputThread;	itsInputThread	= 0;
-  delete itsInputTH;		itsInputTH	= 0;
+  delete itsInputStream;	itsInputStream	= 0;
   delete itsBBuffer;		itsBBuffer	= 0;
   delete itsDelayComp;		itsDelayComp	= 0;
 
