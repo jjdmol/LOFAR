@@ -3,6 +3,7 @@
 
 #include <cerrno>
 #include <stdexcept>
+#include <string>
 
 
 namespace LOFAR {
@@ -14,6 +15,9 @@ class SystemCallException : public std::runtime_error
     virtual		~SystemCallException() throw();
 
     const int		error;
+
+  private:
+    static std::string	errorMessage(int error);
 };
 
 } // namespace LOFAR
