@@ -55,6 +55,7 @@ namespace LOFAR
       int		frameHeaderSize;
       int		nTimesPerFrame;
       int		nSubbandsPerFrame;
+      TimeStamp		startTime;
     };
   
     class InputThread

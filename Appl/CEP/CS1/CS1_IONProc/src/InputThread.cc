@@ -151,7 +151,7 @@ void InputThread::mainLoop()
     exit(1);
   }
 
-  TimeStamp actualstamp = -itsArgs.nTimesPerFrame;
+  TimeStamp actualstamp = itsArgs.startTime - itsArgs.nTimesPerFrame;
 
   // buffer for incoming rsp data
   int frameSize = itsArgs.frameSize;

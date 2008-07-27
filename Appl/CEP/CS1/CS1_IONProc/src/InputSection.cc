@@ -35,7 +35,6 @@
 //#include <TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
-#include <Stream/NullStream.h>
 
 #include <sys/time.h>
 
@@ -89,6 +88,7 @@ void InputSection::startThread()
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
   args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
+  args.startTime	  = itsSyncedStamp;
 
   itsInputThread = new InputThread(args);
 }
@@ -131,7 +131,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   
   itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
-  double startTime = dynamic_cast<NullStream *>(itsInputStream) ? 0 : ps->startTime();
+  double startTime = ps->startTime();
 
   int sampleFreq = (int) ps->sampleRate();
   int seconds	 = (int) floor(startTime);
