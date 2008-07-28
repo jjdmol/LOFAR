@@ -61,12 +61,12 @@ void CS1_Parset::IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &
     
   for (uint i = 0; i < snames.size(); i++) {
     rspdest_ports = getStringVector("PIC.Core." + snames[i].substr(0, snames[i].length()-1) + ".dest.ports")[atoi(snames[i].substr(snames[i].length()-1,snames[i].length()).c_str())];
-    if ((rspdest_ports.substr(0,5).compare("file:") == 0) || (rspdest_ports.substr(0,5).compare("FILE:") == 0)) {
+    if (rspdest_ports.substr(0,5) == "file:" || rspdest_ports.substr(0,5) == "FILE:") {
       RSPDestPort.push_back(pair<string, string>(rspdest_ports.substr(rspdest_ports.find(":")+1),""));
     }
-    else if ((rspdest_ports.substr(0,4).compare("udp:") == 0) || (rspdest_ports.substr(0,4).compare("UDP:") == 0) ||
-             (rspdest_ports.substr(0,4).compare("tcp:") == 0) || (rspdest_ports.substr(0,4).compare("TCP:") == 0)) {
-        RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[1], rspdest_ports.substr(rspdest_ports.rfind(":")+1)));
+    else if (rspdest_ports.substr(0,4) == "udp:" || rspdest_ports.substr(0,4) == "UDP:" ||
+             rspdest_ports.substr(0,4) == "tcp:" || rspdest_ports.substr(0,4) == "TCP:") {
+      RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[1], rspdest_ports.substr(rspdest_ports.rfind(":")+1)));
     }
     else if (rspdest_ports.find(":") != string::npos){
       // udp
