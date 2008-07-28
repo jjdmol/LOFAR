@@ -76,7 +76,6 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
 
   previous  = end;
   previousI = endI;
-  itsWriteTimer.stop();
 
   // in synchronous mode, do not overrun tail of reader
   itsSynchronizedReaderWriter->startWrite(begin, end);
@@ -94,15 +93,16 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
     }
   } else {
     for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-#if 0
-      memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-#else
-      double *dst = reinterpret_cast<double *>(itsSBBuffers[sb][startI].origin());
-      const double *src = reinterpret_cast<const double *>(data);
+      if (sizeof(SampleType[NR_POLARIZATIONS]) == sizeof(double)) {
+	double *dst = reinterpret_cast<double *>(itsSBBuffers[sb][startI].origin());
+	const double *src = reinterpret_cast<const double *>(data);
 
-      for (unsigned time = 0; time < nrElements; time ++)
-	dst[time] = src[time];
-#endif
+	for (unsigned time = 0; time < nrElements; time ++)
+	  dst[time] = src[time];
+      } else {
+	memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
+      }
+
       data += nrElements;		
     }
   }
@@ -118,6 +118,7 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
 
   itsLockedRanges.unlock(startI, endI, itsSize);
   itsSynchronizedReaderWriter->finishedWrite(end);
+  itsWriteTimer.stop();
 }
 
 
