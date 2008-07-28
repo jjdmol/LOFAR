@@ -20,7 +20,6 @@
 
 #include <lofar_config.h>
 
-#include <CS1_Interface/CS1_Parset.h>
 #include <Common/Exception.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
@@ -61,46 +60,30 @@ int main(int argc, char **argv)
 
     LocationInfo locationInfo;
     
-    std::clog << "trying to use " << argv[1] << " as ParameterSet" << std::endl;
-    ACC::APS::ParameterSet parameterSet(argv[1]);
-    CS1_Parset cs1_parset(&parameterSet); // FIXME: Do not read parsets on CN!
-
-    cs1_parset.adoptFile("OLAP.parset");
-    
-    string streamType = cs1_parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
-    
     std::clog << "creating connection to ION ..." << std::endl;
 
     Stream *ionStream;
 
 #if defined HAVE_ZOID && defined HAVE_BGL
-    if (streamType == "ZOID") {
-      ionStream = new ZoidClientStream;
-    } else
-#endif
-    
-#if defined HAVE_FCNP && defined HAVE_BGP
-    if (streamType == "FCNP") {
-      std::vector<unsigned> psetDimensions(3);
+    ionStream = new ZoidClientStream;
+#elif 1 &&  defined HAVE_FCNP && defined HAVE_BGP
+    std::vector<unsigned> psetDimensions(3);
 
-      psetDimensions[0] = 4;
-      psetDimensions[1] = 2;
-      psetDimensions[2] = 2;
+    psetDimensions[0] = 4;
+    psetDimensions[1] = 2;
+    psetDimensions[2] = 2;
 
-      FCNP_CN::init(psetDimensions);
-      ionStream = new FCNP_ClientStream;
-    } else
-#endif
+    FCNP_CN::init(psetDimensions);
+    ionStream = new FCNP_ClientStream;
+#elif 0
+    ionStream = new NullStream;
+#elif 0   
+    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
-    if (streamType == "NULL") {
-      ionStream = new NullStream;
-    } else if (streamType == "TCP") {
-      usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
-
-      ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
-    } else {
-      throw std::runtime_error("unknown Stream type between ION and CN");
-    }
+    ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
+#else
+    throw std::runtime_error("unknown Stream type between ION and CN");
+#endif    
 
     std::clog << "connection successful" << std::endl;
 
