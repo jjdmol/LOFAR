@@ -171,67 +171,67 @@ void InputThread::mainLoop()
   };
 #endif
 
-  NSTimer writeTimer("writeTimer", true);
   bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
 
   std::clog << "InputThread::mainLoop() entering loop" << std::endl;
 
-  while (!theirShouldStop) {
-    // interruptible read, to allow stopping this thread even if the station
-    // does not send data
+  WallClockTime wallClockTime;
 
-    try {
+  try {
+    while (!theirShouldStop) {
+      // interruptible read, to allow stopping this thread even if the station
+      // does not send data
+
       itsArgs.stream->read(totRecvframe, frameSize);
-    } catch (SystemCallException &ex) {
-      if (ex.error == EINTR)
-	break;
-      else
-	throw ex;
-    }
 
-    ++ nrPacketsReceived;
-
-    // get the actual timestamp of first EPApacket in frame
-    if (dataShouldContainValidStamp) {
-      unsigned seqid   = * ((unsigned *) &recvframe[8]);
-      unsigned blockid = * ((unsigned *) &recvframe[12]);
+      // get the actual timestamp of first EPApacket in frame
+      if (dataShouldContainValidStamp) {
+	unsigned seqid   = * ((unsigned *) &recvframe[8]);
+	unsigned blockid = * ((unsigned *) &recvframe[12]);
 
 #if defined WORDS_BIGENDIAN
-      seqid   = byteSwap(seqid);
-      blockid = byteSwap(blockid);
+	seqid   = byteSwap(seqid);
+	blockid = byteSwap(blockid);
 #endif
 
-      //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
-      if (seqid == ~0U) {
-        ++ nrPacketsRejected;
-        continue;
-      }
+	//if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
+	if (seqid == ~0U) {
+	  ++ nrPacketsRejected;
+	  continue;
+	}
 
-      // Sanity check on seqid. Note, that seqid is in seconds,
-      // so a value which is greater than the previous one with more 
-      // than (say) 10 seconds probably means that the sequence number 
-      // in the packet is wrong. This can happen, since communication is not
-      // reliable.
-      if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
-      	previousSeqidIsAccepted = false;
-      	++ nrPacketsRejected;
-      	continue;
-      }
+	// Sanity check on seqid. Note, that seqid is in seconds,
+	// so a value which is greater than the previous one with more 
+	// than (say) 10 seconds probably means that the sequence number 
+	// in the packet is wrong. This can happen, since communication is not
+	// reliable.
+	if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
+	  previousSeqidIsAccepted = false;
+	  ++ nrPacketsRejected;
+	  continue;
+	}
 
-      // accept seqid
-      previousSeqidIsAccepted = true;
-      previousSeqid	      = seqid;
+	// accept seqid
+	previousSeqidIsAccepted = true;
+	previousSeqid	      = seqid;
 	  
-      actualstamp.setStamp(seqid, blockid);
-    } else {
-      actualstamp += itsArgs.nTimesPerFrame; 
-    }
+	actualstamp.setStamp(seqid, blockid);
+      } else {
+	actualstamp += itsArgs.nTimesPerFrame; 
+	wallClockTime.waitUntil(actualstamp);
+      }
   
-    // expected packet received so write data into corresponding buffer
-    writeTimer.start();
-    itsArgs.BBuffer->writeElements((Beamlet *) &recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame);
-    writeTimer.stop();
+      // expected packet received so write data into corresponding buffer
+      itsArgs.BBuffer->writeElements((Beamlet *) &recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame);
+    }
+  } catch (SystemCallException &ex) {
+    if (ex.error != EINTR) {
+      std::cerr << "caught system call exception: " << ex.what() << std::endl;
+      exit(1);
+    }
   }
+
+  ++ nrPacketsReceived;
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
 
