@@ -324,7 +324,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 			if (rcu % (NR_RCUS_PER_TBBOARD) == 0) {
 				TBB++;
 				string	PSname(formatString(tbboardNameMask.c_str(), cabinet, subrack, TBB));
-				itsTBBs[TBB] = new RTDBPropertySet(PSname, PST_TB_BOARD, PSAT_WO, this);
+				itsTBBs[TBB] = new RTDBPropertySet(PSname, PST_TB_BOARD, PSAT_WO | PSAT_CW, this);
 				itsTBBs[TBB]->setConfirmation(false);
 			}
 
@@ -335,7 +335,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
+			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
 			itsRCUs[rcu]->setConfirmation(false);
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
