@@ -318,26 +318,26 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			if (rcu % (NR_RCUS_PER_CABINET) == 0) {
 				cabinet++;
 				string	PSname(formatString(cabinetNameMask.c_str(), cabinet));
-				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
+				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
 			}
 
 			// new subrack?
 			if (rcu % (NR_RCUS_PER_SUBRACK) == 0) {
 				subrack++;
 				string	PSname(formatString(subrackNameMask.c_str(), cabinet, subrack));
-				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO, this);
+				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
 			}
 
 			// new RSPboard?
 			if (rcu % (NR_RCUS_PER_RSPBOARD) == 0) {
 				RSP++;
 				string	PSname(formatString(rspboardNameMask.c_str(), cabinet, subrack, RSP));
-				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
+				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
 			}
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
+			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
