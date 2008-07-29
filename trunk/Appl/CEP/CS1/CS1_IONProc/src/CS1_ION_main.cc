@@ -65,6 +65,10 @@ static unsigned    myPsetNumber, nrPsets, nrCoresPerPset;
 static unsigned    nrInputSectionRuns;
 static std::vector<Stream *> clientStreams;
 
+#if defined HAVE_FCNP && defined __PPC__
+static bool	   fcnp_inited;
+#endif
+
 
 static void checkParset(const CS1_Parset &parset)
 {
@@ -85,7 +89,10 @@ static void checkParset(const CS1_Parset &parset)
 void createClientStreams(unsigned nrClients, const std::string &streamType)
 {
 #if defined HAVE_FCNP && defined __PPC__
-  FCNP_ION::init();
+  if (streamType == "FCNP") {
+    FCNP_ION::init();
+    fcnp_inited = true;
+  }
 #endif
 
   clientStreams.resize(nrClients);
@@ -120,7 +127,10 @@ void deleteClientStreams()
     delete clientStreams[core];
 
 #if defined HAVE_FCNP && defined __PPC__
-  FCNP_ION::end();
+  if (fcnp_inited) {
+    FCNP_ION::end();
+    fcnp_inited = false;
+  }
 #endif
 }
 
