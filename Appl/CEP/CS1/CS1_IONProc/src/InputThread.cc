@@ -183,6 +183,7 @@ void InputThread::mainLoop()
       // does not send data
 
       itsArgs.stream->read(totRecvframe, frameSize);
+      ++ nrPacketsReceived;
 
       // get the actual timestamp of first EPApacket in frame
       if (dataShouldContainValidStamp) {
@@ -230,8 +231,6 @@ void InputThread::mainLoop()
       exit(1);
     }
   }
-
-  ++ nrPacketsReceived;
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
 
