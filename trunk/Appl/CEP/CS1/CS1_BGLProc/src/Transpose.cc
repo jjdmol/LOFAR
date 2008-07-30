@@ -4,7 +4,6 @@
 #include <Transpose.h>
 
 #include <Common/Timer.h>
-#include <Transport/TH_MPI.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/PrintVector.h>
 
@@ -74,7 +73,7 @@ void Transpose::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locati
     for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++)
       ranks.push_back(locationInfo.remapOnTree(*pset, core));
 
-    if (TH_MPI::getCurrentRank() == 0)
+    if (locationInfo.rank() == 0)
       std::clog << "Transpose :: group " << core << " contains cores " << ranks << std::endl;
 
     if (MPI_Group_incl(all, ranks.size(), &ranks[0], &group) != MPI_SUCCESS) {
@@ -97,7 +96,7 @@ void Transpose::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locati
 #endif
 
 
-void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *inputData, TransposedData *transposedData)
+void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *inputData, TransposedData *transposedData)
 {
   std::set<unsigned> psets; // ordered list of all psets
   std::set_union(inputPsets.begin(), inputPsets.end(),
@@ -110,7 +109,7 @@ void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, co
   for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++, groupIndex ++)
     psetToGroupIndex[*pset] = groupIndex;
 
-  if (TH_MPI::getCurrentRank() == 0)
+  if (locationInfo.rank() == 0)
     for (std::map<unsigned, unsigned>::const_iterator it = psetToGroupIndex.begin(); it != psetToGroupIndex.end(); it ++)
       std::clog << "pset " << it->first << " maps to group index " << it->second << std::endl;
 

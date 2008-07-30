@@ -28,15 +28,17 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <CS1_BGLProc/TH_ZoidClient.h>
-#if defined HAVE_FCNP && defined HAVE_BGP
-#include <fcnp_cn.h>
-#endif
 #include <CS1_BGLProc/LocationInfo.h>
 #include <CS1_BGLProc/BGL_Processing.h>
 #include <CS1_BGLProc/Package__Version.h>
-#include <Transport/TH_MPI.h>
 
 #include <boost/lexical_cast.hpp>
+#include <mpi.h>
+
+#if defined HAVE_FCNP && defined HAVE_BGP
+#include <fcnp_cn.h>
+#endif
+
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
@@ -49,17 +51,16 @@ int main(int argc, char **argv)
     BGL_Processing::original_argv = argv;
 
 #if defined HAVE_MPI
-    TH_MPI::initMPI(argc, argv);
-
-    if (TH_MPI::getCurrentRank() == 0)
+    MPI_Init(&argc, &argv);
 #endif
-    {
+
+    LocationInfo locationInfo;
+    
+    if (locationInfo.rank() == 0) {
       std::string type = "brief";
       Version::show<CS1_BGLProcVersion> (std::cout, "CS1_BGLProc", type);
     }
 
-    LocationInfo locationInfo;
-    
     std::clog << "creating connection to ION ..." << std::endl;
 
     Stream *ionStream;
@@ -115,7 +116,7 @@ int main(int argc, char **argv)
     delete ionStream;
     
 #if defined HAVE_MPI
-    TH_MPI::finalize();
+    MPI_Finalize();
 #endif
     
     return 0;

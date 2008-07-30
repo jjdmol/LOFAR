@@ -270,12 +270,6 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
   weightTimer.stop();
 #endif  
 
-#if 0
-static unsigned count;
-nrValidSamples[0][0] = itsCurrentSubband;
-nrValidSamples[0][1] = TH_MPI::getCurrentRank();
-nrValidSamples[0][2] = count ++;
-#endif
   correlateTimer.stop();
 }
 

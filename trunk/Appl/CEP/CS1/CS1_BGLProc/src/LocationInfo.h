@@ -28,6 +28,8 @@ class LocationInfo
 
     unsigned remapOnTree(unsigned pset, unsigned core) const;
 
+    unsigned rank() const;
+    unsigned nrNodes() const;
     unsigned psetNumber() const;
     unsigned rankInPset() const;
 
@@ -39,15 +41,28 @@ class LocationInfo
 #if defined HAVE_BGP
     _BGP_Personality_t    itsPersonality;
     std::vector<unsigned> itsPsetNumbers;
-    unsigned		  itsPsetNumber, itsRankInPset;
 #endif
 
 #if defined HAVE_BGL
     BGLPersonality        itsPersonality;
-    std::vector<unsigned>  itsPsetNumbers;
-    unsigned               itsPsetNumber, itsRankInPset;
+    std::vector<unsigned> itsPsetNumbers;
 #endif
+
+    unsigned              itsPsetNumber, itsRankInPset;
+    unsigned              itsRank, itsNrNodes;
 };
+
+
+inline unsigned LocationInfo::rank() const
+{
+  return itsRank;
+}
+
+
+inline unsigned LocationInfo::nrNodes() const
+{
+  return itsNrNodes;
+}
 
 
 inline unsigned LocationInfo::psetNumber() const

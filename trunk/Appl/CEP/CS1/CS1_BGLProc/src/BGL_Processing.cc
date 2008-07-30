@@ -27,7 +27,6 @@
 #include <FIR_Asm.h>
 
 #include <Common/Timer.h>
-#include <Transport/TH_MPI.h>
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 
@@ -51,12 +50,12 @@ extern "C" {
 #endif
 
 #if defined HAVE_MPI
-#if defined HAVE_BGP || defined HAVE_BGL
+#if 0 && (defined HAVE_BGP || defined HAVE_BGL)
 #define LOG_CONDITION	(itsCurrentSubband == itsFirstSubband)
 #else
-#define LOG_CONDITION	(itsRankInPset == 0)
+#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
 #endif
-//#define LOG_CONDITION	(TH_MPI::getCurrentRank() == 0)
+//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
 #else
 #define LOG_CONDITION	1
 #endif
@@ -124,7 +123,7 @@ void BGL_Processing::getPersonality()
   int retval = rts_get_personality(&itsPersonality, sizeof itsPersonality);
   assert(retval == 0);
 
-  if (TH_MPI::getCurrentRank() == 0)
+  if (itsLocationInfo.rank() == 0)
     std::clog << "topology = ("
 	      << itsPersonality.getXsize() << ','
 	      << itsPersonality.getYsize() << ','
@@ -134,17 +133,17 @@ void BGL_Processing::getPersonality()
 	      << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')'
 	      << std::endl;
 
-  itsRankInPset = itsPersonality.rankInPset() + itsPersonality.numNodesInPset() * (TH_MPI::getCurrentRank() / itsPersonality.numComputeNodes());
+  itsRankInPset = itsPersonality.rankInPset() + itsPersonality.numNodesInPset() * (itsLocationInfo.rank() / itsPersonality.numComputeNodes());
 
   Location myLocation = {
     itsPersonality.getPsetNum(), itsRankInPset
   };
 
-  std::vector<Location> allLocations(TH_MPI::getNumberOfNodes());
+  std::vector<Location> allLocations(itsLocationInfo.nrNodes());
 
   MPI_Gather(&myLocation, 2, MPI_INT, &allLocations[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
 
-  if (TH_MPI::getCurrentRank() == 0) {
+  if (itsLocationInfo.rank() == 0) {
     unsigned nrCoresPerPset = itsPersonality.numNodesInPset() * (itsPersonality.isVirtualNodeMode() ? 2 : 1);
     std::vector<std::vector<unsigned> > cores(itsPersonality.numPsets(), std::vector<unsigned>(nrCoresPerPset));
 
@@ -217,7 +216,7 @@ void BGL_Processing::checkConsistency(CS1_Parset *parset) const
 
 void BGL_Processing::printSubbandList() const
 {
-  std::clog << "node " << TH_MPI::getCurrentRank() << " filters and correlates subbands ";
+  std::clog << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
 
   unsigned sb = itsCurrentSubband; 
 
@@ -326,7 +325,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     itsTranspose = new Transpose(itsIsTransposeInput, itsIsTransposeOutput, myCore, nrStations, itsNrBeams);
-    itsTranspose->setupTransposeParams(inputPsets, outputPsets, itsInputData, itsTransposedData);
+    itsTranspose->setupTransposeParams(itsLocationInfo, inputPsets, outputPsets, itsInputData, itsTransposedData);
   }
 #endif
 }
@@ -340,7 +339,7 @@ void BGL_Processing::process()
   if (itsIsTransposeInput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
 #endif
 
     static NSTimer readTimer("receive timer", true);
@@ -352,7 +351,7 @@ void BGL_Processing::process()
   if (itsIsTransposeInput || itsIsTransposeOutput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << TH_MPI::getCurrentRank() << ": start transpose at " << MPI_Wtime() << '\n';
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start transpose at " << MPI_Wtime() << '\n';
 
 #if 0
 MPI_Barrier(itsTransposeGroup);
@@ -370,7 +369,7 @@ MPI_Barrier(itsTransposeGroup);
   if (itsIsTransposeOutput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << TH_MPI::getCurrentRank() << ": start processing at " << MPI_Wtime() << '\n';
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
 #endif
 
     computeTimer.start();
@@ -383,7 +382,7 @@ MPI_Barrier(itsTransposeGroup);
 
 #if defined HAVE_MPI
     if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << TH_MPI::getCurrentRank() << ": start writing at " << MPI_Wtime() << '\n';
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime() << '\n';
 #endif
 
     static NSTimer writeTimer("send timer", true);
@@ -395,13 +394,13 @@ MPI_Barrier(itsTransposeGroup);
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput)
     if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << TH_MPI::getCurrentRank() << ": start idling at " << MPI_Wtime() << '\n';
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime() << '\n';
 #endif
 
 #if 0
   static unsigned count = 0;
 
-  if (TH_MPI::getCurrentRank() == 5 && ++ count == 9)
+  if (itsLocationInfo.rank() == 5 && ++ count == 9)
     for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
       ;
 #endif
