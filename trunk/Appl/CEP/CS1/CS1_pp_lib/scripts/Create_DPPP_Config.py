@@ -10,7 +10,7 @@ storage = sys.stdin.readline()
 if len(storage) <= 1: storage = 9
 else: storage = int(storage)
 
-sys.stdout.write("Give the number of bands nodes[36]: ")
+sys.stdout.write("Give the number of bands[36]: ")
 bands = sys.stdin.readline()
 if len(bands) <= 1: bands = 36
 else: bands = int(bands)
@@ -26,7 +26,7 @@ output = """## Example usage
 # destination_directory is the directory where the MS will be copied into
 # ms_location_host is the machine where the original measurement is located (from where you are going to copy it).
 # full ms name is the full name of the measurement set with full path
-# Remember that if you want to run more than one subband on one node 
+# Remember that if you want to run more than one subband on one node
 ##  Destination_hostname:destination_directory   ms_location_host:full_ms_name\n"""
 
 for b in range(bands):

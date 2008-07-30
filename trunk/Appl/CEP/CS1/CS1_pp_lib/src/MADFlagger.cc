@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <lofar_config.h>
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 #include "MADFlagger.h"
@@ -62,7 +63,7 @@ void MADFlagger::ComputeThreshold(Cube<Complex>& Values,
     }
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z
-  Z2 = medianInPlace(Medians - Z1); // Median (Vt - Z) = Z'
+  Z2 = medianInPlace(abs(Medians - Z1)); // Median (Vt - Z) = Z'
   if (isNaN(Z2)) //If there are NaN in the data, then what?
   { Z1 = 0.0;
     Z2 = 0.0;
@@ -83,7 +84,7 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
   double Z1        = 0.0;
   double Z2        = 0.0;
   int    flagcount = 0;
-  double MAD       = 1.4;
+  double MAD       = 1.4826;
   for (int i = NumChannels-1; i >= 0; i--)
   {
     bool FlagAllPolarizations = false;
