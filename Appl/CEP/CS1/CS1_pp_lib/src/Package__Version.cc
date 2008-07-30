@@ -23,11 +23,11 @@ namespace LOFAR {
   std::string CS1_IDPPPVersion::getConfVersion()
     { return "1.0"; }
   std::string CS1_IDPPPVersion::getRevision()
-    { return "11309"; }
+    { return "11501"; }
   std::string CS1_IDPPPVersion::getPackageRevision()
-    { return "11280"; }
+    { return "11473"; }
   std::string CS1_IDPPPVersion::getNrChangedFiles()
-    { return "0"; }
+    { return "3"; }
 }
 
 //# fillversion.h is generated in build area by lofar_internal.m4
