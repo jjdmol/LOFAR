@@ -30,12 +30,8 @@ class Transpose {
     Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations,unsigned nrBeams);
     ~Transpose();
 
-    void setupTransposeParams(const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *, TransposedData *);
+    void setupTransposeParams(const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *, TransposedData *);
 
-/* #if defined HAVE_BGL */
-/*     static void	getMPIgroups(unsigned nrCoresPerPset, const BGLPersonality &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets); */
-/*     static unsigned remapOnTree(unsigned pset, unsigned core, const struct BGLPersonality &); */
-/* #elif defined HAVE_BGP */
 #if defined HAVE_BGL || HAVE_BGP
     static void	getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets);
     static unsigned remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers);
@@ -44,7 +40,7 @@ class Transpose {
     void transpose(const InputData *, TransposedData *);
     void transposeMetaData(/*const*/ InputData *, TransposedData *, const unsigned currentBeam);
 
-  private:
+ private:
     bool     itsIsTransposeInput, itsIsTransposeOutput;
     unsigned itsNrStations;
     unsigned itsNrBeams;

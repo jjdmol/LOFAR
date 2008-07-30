@@ -4,7 +4,6 @@
 
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/PrintVector.h>
-#include <Transport/TH_MPI.h>
 
 #if defined HAVE_BGP
 #include <common/bgp_personality_inlines.h>
@@ -20,14 +19,22 @@ namespace CS1 {
 
 LocationInfo::LocationInfo()
 {
+#if defined HAVE_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&itsRank));
+  MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&itsNrNodes));
+#else
+  itsRank    = 0;
+  itsNrNodes = 1;
+#endif
+
 #if defined HAVE_BGP || defined HAVE_BGL
   getPersonality();
 #endif
-
 }
 
 
 #if defined HAVE_BGP
+
 void LocationInfo::getPersonality()
 {
   if (Kernel_GetPersonality(&itsPersonality, sizeof itsPersonality) != 0) {
@@ -35,7 +42,7 @@ void LocationInfo::getPersonality()
     exit(1);
   }
 
-  if (TH_MPI::getCurrentRank() == 0)
+  if (itsRank == 0)
     std::clog << "topology = ("
 	      << BGP_Personality_xSize(&itsPersonality) << ','
 	      << BGP_Personality_ySize(&itsPersonality) << ','
@@ -45,22 +52,22 @@ void LocationInfo::getPersonality()
 	      << (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')'
 	      << std::endl;
 
-  itsPsetNumbers.resize(TH_MPI::getNumberOfNodes());
+  itsPsetNumbers.resize(itsNrNodes);
   itsPsetNumber = BGP_Personality_psetNum(&itsPersonality);
-  itsPsetNumbers[TH_MPI::getCurrentRank()] = itsPsetNumber;
+  itsPsetNumbers[itsRank] = itsPsetNumber;
 
-  for (int core = 0; core < TH_MPI::getNumberOfNodes(); core ++)
+  for (unsigned core = 0; core < itsNrNodes; core ++)
     MPI_Bcast(&itsPsetNumbers[core], 1, MPI_INT, core, MPI_COMM_WORLD);
 
   itsRankInPset = 0;
 
-  for (int rank = 0; rank < TH_MPI::getCurrentRank(); rank ++)
+  for (unsigned rank = 0; rank < itsRank; rank ++)
     if (itsPsetNumbers[rank] == itsPsetNumber)
       ++ itsRankInPset;
 
-  //usleep(100000 * TH_MPI::getCurrentRank());
+  //usleep(100000 * itsRank);
 
-  if (TH_MPI::getCurrentRank() == 0) {
+  if (itsRank == 0) {
     std::vector<std::vector<unsigned> > cores(BGP_Personality_numIONodes(&itsPersonality));
 
     for (unsigned rank = 0; rank < itsPsetNumbers.size(); rank ++)
@@ -74,6 +81,7 @@ void LocationInfo::getPersonality()
 #endif
 
 #if defined HAVE_BGL
+
 void LocationInfo::getPersonality()
 {
   if (rts_get_personality(&itsPersonality, sizeof(itsPersonality)) != 0) {
@@ -81,7 +89,7 @@ void LocationInfo::getPersonality()
     exit(1);
   }
   
-  if (TH_MPI::getCurrentRank == 0)
+  if (itsRank= 0)
     std::clog << "topology = ("
 	      << itsPersonality.getXsize() << ','
 	      << itsPersonality.getYsize() << ','
@@ -91,22 +99,22 @@ void LocationInfo::getPersonality()
 	      << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')'
 	      << std::endl;
   
-  itsPsetNumbers.resize(TH_MPI::getNumberOfNodes());
+  itsPsetNumbers.resize(itsNrNodes);
   itsPsetNumber = itsPersonality.getPsetNum();
-  itsPsetNumbers[TH_MPI::getCurrentRank()] = itsPsetNumber;
+  itsPsetNumbers[itsRank] = itsPsetNumber;
 
-  for (int core = 0; core < TH_MPI::getNumberOfNodes(); core ++)
+  for (unsigned core = 0; core < itsNrNodes; core ++)
     MPI_Bcast(&itsPsetNumbers[core], 1, MPI_INT, core, MPI_COMM_WORLD);
 
   itsRankInPset = 0;
 
-  for (int rank = 0; rank < TH_MPI::getCurrentRank(); rank ++)
+  for (unsigned rank = 0; rank < itsRank; rank ++)
     if (itsPsetNumbers[rank] == itsPsetNumber)
       ++ itsRankInPset;
 
-  //usleep(100000 * TH_MPI::getCurrentRank());
+  //usleep(100000 * itsRank);
     
-  if (TH_MPI::getCurrentRank() == 0) {
+  if (itsRank == 0) {
     std::vector<std::vector<unsigned> > cores(itsPersonality.numIONodes());
 
     for (unsigned rank = 0; rank < itsPsetNumbers.size(); rank ++)
