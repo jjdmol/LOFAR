@@ -148,6 +148,8 @@ RSPDriverFiles = \
 	SetBypassCmd.cc \
 	GetBypassCmd.h \
 	GetBypassCmd.cc \
+	GetSPUStatusCmd.h \
+	GetSPUStatusCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \

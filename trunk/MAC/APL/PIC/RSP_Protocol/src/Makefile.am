@@ -41,6 +41,7 @@ librsp_protocol_la_SOURCES = Package__Version.cc  \
 	MEPData.cc \
 	RCUSettings.cc \
 	RSUSettings.cc \
+	SPUStatus.cc \
 	Statistics.cc \
 	SubbandSelection.cc \
 	SystemStatus.cc \
