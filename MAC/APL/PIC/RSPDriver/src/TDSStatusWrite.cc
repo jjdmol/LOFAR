@@ -33,92 +33,109 @@
 
 #include <netinet/in.h>
 
-using namespace LOFAR;
-using namespace RSP;
-using namespace EPA_Protocol;
 
 namespace LOFAR {
   namespace RSP {
 
-    static uint8 tds_readstatus[  TDS_READ_LOCKDETECT_SIZE
-                                + TDS_C_END_SIZE ] =
-      {
+using namespace EPA_Protocol;
+
+static uint8 tds_readstatus[  TDS_READ_LOCKDETECT_SIZE
+							+ TDS_READ_VOLT_SIZE
+							+ TDS_READ_SPU_SIZE
+							+ TDS_C_END_SIZE ] = {
 	// read lock detect
 	TDS_READ_LOCKDETECT,
+	TDS_READ_VOLT,
+	TDS_READ_SPU,
 	TDS_C_END,
-      };
-
-    uint8 tds_readstatus_result[  TDS_READ_LOCKDETECT_RESULT_SIZE
-                                + TDS_C_END_RESULT_SIZE] =
-      {
-	0x00, 0x00,
-        0x00
-      };
-
-  };
 };
 
-TDSStatusWrite::TDSStatusWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+uint8 tds_readstatus_result[  TDS_READ_LOCKDETECT_RESULT_SIZE
+							+ TDS_READ_VOLT_RESULT_SIZE
+							+ TDS_READ_SPU_RESULT_SIZE
+							+ TDS_C_END_RESULT_SIZE] = {
+	0x00, 0x00,
+	TDS_READ_VOLT_RESULT,
+	TDS_READ_SPU_RESULT,
+	0x00
+};
+
+
+//
+// TDSStatusWrite(port, boardID)
+//
+TDSStatusWrite::TDSStatusWrite(GCFPortInterface& board_port, int board_id): 
+	SyncAction(board_port, board_id, 1)
 {
-  memset(&m_hdr, 0, sizeof(MEPHeader));
+	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
+//
+// ~TDSStatusWrite()
+//
 TDSStatusWrite::~TDSStatusWrite()
 {
-  /* TODO: delete event? */
+	/* TODO: delete event? */
 }
 
+//
+// sendrequest
+//
 void TDSStatusWrite::sendrequest()
 {
-  char* buf = 0;
+	char* buf = 0;
 
-  // always perform this action
+	// always perform this action
+	uint32 tds_control = 0;
+	sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
 
-  uint32 tds_control = 0;
-  sscanf(GET_CONFIG_STRING("RSPDriver.TDS_CONTROL"), "%x", &tds_control);
+	// only one RSPboard controls the TD, find out if this is the one.
+	if (!(tds_control & (1 << getBoardId()))) {
+		Cache::getInstance().getState().tdstatuswrite().write_ack(getBoardId());
+		setContinue(true);
+		return;
+	}
 
-  if (!(tds_control & (1 << getBoardId()))) {
-    Cache::getInstance().getState().tdstatuswrite().write_ack(getBoardId());
-    setContinue(true);
+	EPATdsProtocolEvent tdsprotocol;
+	buf = (char*)tds_readstatus;
+	tdsprotocol.hdr.set(MEPHeader::TDS_PROTOCOL_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, sizeof(tds_readstatus), 0);
+	tdsprotocol.protocol.setBuffer((char*)buf, sizeof(tds_readstatus));
 
-    return;
-  }
+	m_hdr = tdsprotocol.hdr; // remember header to match with ack
 
-  EPATdsProtocolEvent tdsprotocol;
-
-  buf = (char*)tds_readstatus;
-  tdsprotocol.hdr.set(MEPHeader::TDS_PROTOCOL_HDR, MEPHeader::DST_RSP, MEPHeader::WRITE, sizeof(tds_readstatus), 0);
-  tdsprotocol.protocol.setBuffer((char*)buf, sizeof(tds_readstatus));
-
-  m_hdr = tdsprotocol.hdr; // remember header to match with ack
-
-  getBoardPort().send(tdsprotocol);
+	getBoardPort().send(tdsprotocol);
 }
 
+//
+// sendrequest_status()
+//
 void TDSStatusWrite::sendrequest_status()
 {
-  // intentionally left empty
+	// intentionally left empty
 }
 
+//
+// handleack(event, port)
+//
 GCFEvent::TResult TDSStatusWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
-    LOG_WARN("TDSStatusWrite::handleack:: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
-  
-  EPAWriteackEvent ack(event);
+	if (EPA_WRITEACK != event.signal) {
+		LOG_WARN("TDSStatusWrite::handleack:: unexpected ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
-    LOG_ERROR("TDSStatusWrite::handleack: invalid ack");
-    Cache::getInstance().getState().tdstatuswrite().write_error(getBoardId());
-    return GCFEvent::NOT_HANDLED;
-  }
+	EPAWriteackEvent ack(event);		// convert to specific event.
 
-  Cache::getInstance().getState().tdstatuswrite().write_ack(getBoardId());
+	if (!ack.hdr.isValidAck(m_hdr)) {
+		LOG_ERROR("TDSStatusWrite::handleack: invalid ack");
+		Cache::getInstance().getState().tdstatuswrite().write_error(getBoardId());
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  return GCFEvent::HANDLED;
+	Cache::getInstance().getState().tdstatuswrite().write_ack(getBoardId());
+
+	return GCFEvent::HANDLED;
 }
+
+  }; // namespace RSP
+}; // namespace LOFAR

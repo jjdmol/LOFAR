@@ -7,6 +7,7 @@ INSTHDRS = \
 	MEPData.h \
 	RCUSettings.h \
 	RSUSettings.h \
+	SPUStatus.h \
 	Statistics.h \
 	SubbandSelection.h \
 	SystemStatus.h \

@@ -30,7 +30,7 @@
 // initialize I2C expander 1, PLL control
 // initialize I2C expander 1, Clock select/LED/Lock Detect
 // initialize I2C expander 2, LED
-// initialize I2C expadner 2, revision number
+// initialize I2C expander 2, revision number
 #define TDS_INIT						\
       0x06, 0x42 >> 1, 0x06, 0x00, 0x07, 0x42 >> 1, 0x06,	\
       0x06, 0x42 >> 1, 0x02, 0x93, 0x07, 0x42 >> 1, 0x02,	\
@@ -358,6 +358,44 @@
 #define TDS_C_WAIT_RESULT      0x00
 #define TDS_C_WAIT_RESULT_SIZE 1
 
+// Define bytesequences for reading the TDS board voltages
+// write byte config; read byte 2v5; read byte 3v3 ; read byte temp 
+#define TDS_READ_VOLT	\
+		0x06, 0x14, 0x40, 0x11,	\
+		0x07, 0x14, 0x20, \
+		0x07, 0x14, 0x22, \
+		0x07, 0x14, 0x27
+#define TDS_READ_VOLT_SIZE	13
+
+// write result ; 2v5 ; 3v3 ; temp
+#define TDS_READ_VOLT_RESULT	\
+		0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00
+#define TDS_READ_VOLT_RESULT_SIZE	7
+
+// Define bytesequences for reading the SPU board voltages
+// write byte config; read byte 2v5 ; read byte 3v3; read byte 12v ; read byte vcc ; read byte temp 
+#define TDS_READ_SPU	\
+		0x06, 0x15, 0x40, 0x11,	\
+		0x07, 0x15, 0x20, \
+		0x07, 0x15, 0x22, \
+		0x07, 0x15, 0x21, \
+		0x07, 0x15, 0x23, \
+		0x07, 0x15, 0x27
+#define TDS_READ_SPU_SIZE	19
+
+// write result ; 2v5 ; 3v3 ; 12v ; vcc ; temp
+#define TDS_READ_SPU_RESULT	\
+		0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00,	\
+		0xAA, 0x00
+#define TDS_READ_SPU_RESULT_SIZE	11
+
 //
 // Uncommand next line to prevent programming of PLL
 // 
@@ -366,26 +404,30 @@
 namespace LOFAR {
   namespace RSP {
 
-    extern uint8 tds_160MHz_result[
+	extern uint8 tds_160MHz_result[
 #ifndef DISABLE_PROGRAMPLL
-				     TDS_INIT_RESULT_SIZE
-				   + TDS_PROGRAMPLLS_RESULT_SIZE
+					  TDS_INIT_RESULT_SIZE
+					+ TDS_PROGRAMPLLS_RESULT_SIZE
 #endif
-				   + TDS_160MHZ_RESULT_SIZE
-				   + TDS_C_END_RESULT_SIZE];
-    extern uint8 tds_200MHz_result[ 
-#ifndef DISABLE_PROGRAMPLL
-				     TDS_INIT_RESULT_SIZE
-				   + TDS_PROGRAMPLLS_RESULT_SIZE
-#endif
-				   + TDS_200MHZ_RESULT_SIZE
-				   + TDS_C_END_RESULT_SIZE];
-    extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
-				+ TDS_OFF_RESULT_SIZE
-				+ TDS_C_END_RESULT_SIZE];
+					+ TDS_160MHZ_RESULT_SIZE
+					+ TDS_C_END_RESULT_SIZE];
 
-    extern uint8 tds_readstatus_result[  TDS_READ_LOCKDETECT_RESULT_SIZE
-                                       + TDS_C_END_RESULT_SIZE];
+	extern uint8 tds_200MHz_result[ 
+#ifndef DISABLE_PROGRAMPLL
+					  TDS_INIT_RESULT_SIZE
+					+ TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
+					+ TDS_200MHZ_RESULT_SIZE
+					+ TDS_C_END_RESULT_SIZE];
+
+	extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
+								+ TDS_OFF_RESULT_SIZE
+								+ TDS_C_END_RESULT_SIZE];
+
+	extern uint8 tds_readstatus_result[ TDS_READ_LOCKDETECT_RESULT_SIZE
+									  + TDS_READ_VOLT_RESULT_SIZE
+									  + TDS_READ_SPU_RESULT_SIZE
+									  + TDS_C_END_RESULT_SIZE];
   };
 };
      

@@ -27,6 +27,7 @@ include = '<APL/RSP_Protocol/SubbandSelection.h>';
 include = '<APL/RSP_Protocol/SystemStatus.h>';
 include = '<APL/RSP_Protocol/TBBSettings.h>';
 include = '<APL/RSP_Protocol/TDStatus.h>';
+include = '<APL/RSP_Protocol/SPUStatus.h>';
 include = '<APL/RSP_Protocol/Versions.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
@@ -150,6 +151,9 @@ static const int FAILURE         = 0;
 // SETBYPASSACK			(timestamp, status)
 // GETBYPASS			(timestamp, rcumask,cache)
 // GETBYPASSACK			(timestamp, status, settings)
+
+// GETSPUSTATUS			(timestamp,	cache)
+// GETSPUSTATUSACK		(timestamp,	status,	spustatus)
 
 PRELUDE_END;
 
@@ -1816,3 +1820,37 @@ event = {
     userdefined;
   };
 };
+
+event = {
+	signal = GETSPUSTATUS;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+event = {
+	signal = GETSPUSTATUSACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "spustatus";
+		type = "SPUStatus";
+		userdefined;
+	};
+};
+

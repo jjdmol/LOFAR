@@ -81,6 +81,7 @@
 #include "GetTBBCmd.h"
 #include "SetBypassCmd.h"
 #include "GetBypassCmd.h"
+#include "GetSPUStatusCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -137,11 +138,11 @@
 #define ETHERTYPE_EPA 0x10FA
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
-using namespace blitz;
-using namespace std;
-using namespace LOFAR;
-using namespace RSP;
-using namespace RTC;
+namespace LOFAR {
+  namespace RSP {
+	using namespace blitz;
+	using namespace std;
+	using namespace RTC;
 
 static const uint8 g_CR_SOFTCLEAR   = 0x1;
 static const uint8 g_CR_SOFTSYNC    = 0x1;
@@ -685,9 +686,11 @@ void RSPDriver::addAllSyncActions()
 //
 void RSPDriver::openBoards()
 {
-  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
-    if (!m_board[boardid].isConnected()) m_board[boardid].open();
-  }
+	for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
+		if (!m_board[boardid].isConnected())  {
+			m_board[boardid].open();
+		}
+	}
 }
 
 //
@@ -876,10 +879,16 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 		m_acceptor.open();
 	  }
 
+	  // when not using the hard PPS at least sync to the whole second at startup.
       if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE) {
-        /* Start the update timer after 1 second */
-        m_board[0].setTimer(1.0,
-                            GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
+		LOG_INFO("Using software sync, waiting for whole second");
+
+		float	syncItv = GET_CONFIG("RSPDriver.SYNC_INTERVAL", f);
+		struct timeval		sysTime;
+		gettimeofday(&sysTime, 0);
+		usleep (1999000 - sysTime.tv_usec);		// try to wait for a second passage
+        m_board[0].setTimer(1.0, syncItv); 		// Start the update timer after 1 second 
+		LOG_INFO("Hopefully on whole second now");
       }
       else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) {
         //
@@ -936,21 +945,17 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     }
     break;
 
-    case F_CONNECTED:
-    {
+    case F_CONNECTED: {
       LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
     }
     break;
 
-    case F_DATAIN:
-    {
+    case F_DATAIN: {
 #if 0
-      if (&port == &m_clock)
-      {
+      if (&port == &m_clock) {
         status = clock_tick(port);
       }
-      else
-      {
+      else {
 #endif
         status = RawEvent::dispatch(*this, port);
 #if 0
@@ -959,180 +964,52 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     }
     break;
     
-    case RSP_SETWEIGHTS:
-      rsp_setweights(event, port);
-      break;
+    case RSP_SETWEIGHTS: 			rsp_setweights(event, port); 		break;
+    case RSP_GETWEIGHTS: 			rsp_getweights(event, port); 		break;
+    case RSP_SETSUBBANDS: 			rsp_setsubbands(event, port); 		break;
+    case RSP_GETSUBBANDS: 			rsp_getsubbands(event, port); 		break;
+    case RSP_SUBSUBBANDS: 			rsp_subsubbands(event, port); 		break;
+    case RSP_UNSUBSUBBANDS: 		rsp_unsubsubbands(event, port); 	break;
+    case RSP_SETRCU: 				rsp_setrcu(event, port); 			break;
+    case RSP_GETRCU: 				rsp_getrcu(event, port); 			break;
+    case RSP_SUBRCU: 				rsp_subrcu(event, port); 			break;
+    case RSP_UNSUBRCU: 				rsp_unsubrcu(event, port); 			break; 
+    case RSP_SETHBA: 				rsp_sethba(event, port); 			break; 
+    case RSP_GETHBA: 				rsp_gethba(event, port); 			break; 
+    case RSP_READHBA: 				rsp_readhba(event, port); 			break; 
+    case RSP_SUBHBA: 				rsp_subhba(event, port); 			break; 
+    case RSP_UNSUBHBA: 				rsp_unsubhba(event, port); 			break; 
+    case RSP_SETRSU: 				rsp_setrsu(event, port); 			break; 
+    case RSP_SETWG: 				rsp_setwg(event, port); 			break; 
+    case RSP_GETWG: 				rsp_getwg(event, port); 			break; 
+    case RSP_SUBSTATUS: 			rsp_substatus(event, port); 		break; 
+    case RSP_UNSUBSTATUS: 			rsp_unsubstatus(event, port); 		break; 
+    case RSP_GETSTATUS: 			rsp_getstatus(event, port); 		break; 
+    case RSP_SUBSTATS: 				rsp_substats(event, port); 			break; 
+    case RSP_UNSUBSTATS: 			rsp_unsubstats(event, port); 		break; 
+    case RSP_GETSTATS: 				rsp_getstats(event, port); 			break; 
+    case RSP_SUBXCSTATS: 			rsp_subxcstats(event, port); 		break; 
+    case RSP_UNSUBXCSTATS: 			rsp_unsubxcstats(event, port); 		break; 
+    case RSP_GETXCSTATS: 			rsp_getxcstats(event, port); 		break; 
+    case RSP_GETVERSION: 			rsp_getversions(event, port); 		break; 
+    case RSP_GETCONFIG: 			rsp_getconfig(event, port); 		break; 
+    case RSP_SETCLOCK: 				rsp_setclock(event, port); 			break; 
+    case RSP_GETCLOCK: 				rsp_getclock(event, port); 			break; 
+    case RSP_SUBCLOCK: 				rsp_subclock(event, port); 			break; 
+    case RSP_UNSUBCLOCK: 			rsp_unsubclock(event, port); 		break; 
+    case RSP_SUBTDSTATUS: 			rsp_subtdstatus(event, port); 		break; 
+    case RSP_UNSUBTDSTATUS: 		rsp_unsubtdstatus(event, port); 	break; 
+    case RSP_GETTDSTATUS: 			rsp_gettdstatus(event, port); 		break; 
+    case RSP_GETREGISTERSTATE: 		rsp_getregisterstate(event, port); 	break; 
+    case RSP_SUBREGISTERSTATE: 		rsp_subregisterstate(event, port); 	break; 
+    case RSP_UNSUBREGISTERSTATE: 	rsp_unsubregisterstate(event, port);break; 
+    case RSP_SETBYPASS: 			rsp_setbypass(event, port); 		break; 
+    case RSP_GETBYPASS: 			rsp_getbypass(event, port); 		break; 
+    case RSP_SETTBB: 				rsp_settbb(event, port); 			break; 
+    case RSP_GETTBB: 				rsp_gettbb(event, port); 			break; 
+    case RSP_GETSPUSTATUS: 			rsp_getspustatus(event, port); 		break; 
 
-    case RSP_GETWEIGHTS:
-      rsp_getweights(event, port);
-      break;
-
-    case RSP_SETSUBBANDS:
-      rsp_setsubbands(event, port);
-      break;
-
-    case RSP_GETSUBBANDS:
-      rsp_getsubbands(event, port);
-      break;
-
-    case RSP_SUBSUBBANDS:
-      rsp_subsubbands(event, port);
-      break;
-      
-    case RSP_UNSUBSUBBANDS:
-      rsp_unsubsubbands(event, port);
-      break;
-
-    case RSP_SETRCU:
-      rsp_setrcu(event, port);
-      break;
-
-    case RSP_GETRCU:
-      rsp_getrcu(event, port);
-      break;
-      
-    case RSP_SUBRCU:
-      rsp_subrcu(event, port);
-      break;
-      
-    case RSP_UNSUBRCU:
-      rsp_unsubrcu(event, port);
-      break;
-      
-    case RSP_SETHBA:
-      rsp_sethba(event, port);
-      break;
-
-    case RSP_GETHBA:
-      rsp_gethba(event, port);
-      break;
-      
-    case RSP_READHBA:
-      rsp_readhba(event, port);
-      break;
-
-    case RSP_SUBHBA:
-      rsp_subhba(event, port);
-      break;
-      
-    case RSP_UNSUBHBA:
-      rsp_unsubhba(event, port);
-      break;
-      
-    case RSP_SETRSU:
-      rsp_setrsu(event, port);
-      break;
-
-    case RSP_SETWG:
-      rsp_setwg(event, port);
-      break;
-      
-    case RSP_GETWG:
-      rsp_getwg(event, port);
-      break;
-      
-    case RSP_SUBSTATUS:
-      rsp_substatus(event, port);
-      break;
-      
-    case RSP_UNSUBSTATUS:
-      rsp_unsubstatus(event, port);
-      break;
-
-    case RSP_GETSTATUS:
-      rsp_getstatus(event, port);
-      break;
-      
-    case RSP_SUBSTATS:
-      rsp_substats(event, port);
-      break;
-      
-    case RSP_UNSUBSTATS:
-      rsp_unsubstats(event, port);
-      break;
-      
-    case RSP_GETSTATS:
-      rsp_getstats(event, port);
-      break;
-
-    case RSP_SUBXCSTATS:
-      rsp_subxcstats(event, port);
-      break;
-
-    case RSP_UNSUBXCSTATS:
-      rsp_unsubxcstats(event, port);
-      break;
-
-    case RSP_GETXCSTATS:
-      rsp_getxcstats(event, port);
-      break;
-
-    case RSP_GETVERSION:
-      rsp_getversions(event, port);
-      break;
-
-    case RSP_GETCONFIG:
-      rsp_getconfig(event, port);
-      break;
-
-    case RSP_SETCLOCK:
-      rsp_setclock(event, port);
-      break;
-
-    case RSP_GETCLOCK:
-      rsp_getclock(event, port);
-      break;
-
-    case RSP_SUBCLOCK:
-      rsp_subclock(event, port);
-      break;
-
-    case RSP_UNSUBCLOCK:
-      rsp_unsubclock(event, port);
-      break;
-     
-    case RSP_SUBTDSTATUS:
-      rsp_subtdstatus(event, port);
-      break;
-      
-    case RSP_UNSUBTDSTATUS:
-      rsp_unsubtdstatus(event, port);
-      break;
-
-    case RSP_GETTDSTATUS:
-      rsp_gettdstatus(event, port);
-      break;
-      
-    case RSP_GETREGISTERSTATE:
-      rsp_getregisterstate(event, port);
-      break;
-    
-    case RSP_SUBREGISTERSTATE:
-      rsp_subregisterstate(event, port);
-      break;
-    
-    case RSP_UNSUBREGISTERSTATE:
-      rsp_unsubregisterstate(event, port);
-      break;
-
-    case RSP_SETBYPASS:
-      rsp_setbypass(event, port);
-      break;
-
-    case RSP_GETBYPASS:
-      rsp_getbypass(event, port);
-      break;
-
-    case RSP_SETTBB:
-      rsp_settbb(event, port);
-      break;
-
-    case RSP_GETTBB:
-      rsp_gettbb(event, port);
-      break;
-
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (&port == &m_board[0]) {
         //
         // If SYNC_MODE == SOFTWARE|FAST then run the scheduler
@@ -2615,8 +2492,37 @@ void RSPDriver::rsp_gettbb(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
+// rsp_getspustatus (event, port)
+//
+void RSPDriver::rsp_getspustatus(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<GetSPUStatusCmd> command = new GetSPUStatusCmd(event, port, Command::READ);
+
+	if (!command->validate()) {
+		command->ack_fail();
+		return;
+	}
+
+	// if null timestamp get value from the cache and acknowledge immediately
+	if ((command->getTimestamp() == Timestamp(0,0)) && command->readFromCache()) {
+		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+		command->ack(Cache::getInstance().getFront());
+	}
+	else {
+		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	}
+}
+
+  } // namespace RSP
+} // namespace LOFAR
+
+
+//
 // main (argc, argv)
 //
+using namespace LOFAR;
+using namespace LOFAR::RSP;
+
 int main(int argc, char** argv)
 {
 	GCFTask::init(argc, argv, "RSPDriver");    // initializes log system

@@ -70,6 +70,7 @@ namespace LOFAR {
       RSP_Protocol::Versions&          getVersions();
       uint32&                          getClock();
       RSP_Protocol::TDStatus&          getTDStatus();
+      RSP_Protocol::SPUStatus&         getSPUStatus();
       RSP_Protocol::TBBSettings&       getTBBSettings();
       RSP_Protocol::BypassSettings&    getBypassSettings();
       /*@}*/
@@ -114,6 +115,7 @@ namespace LOFAR {
       RSP_Protocol::Versions         m_versions;
       uint32                         m_clock;
       RSP_Protocol::TDStatus         m_tdstatus;
+      RSP_Protocol::SPUStatus        m_spustatus;
       RSP_Protocol::TBBSettings      m_tbbsettings;
       RSP_Protocol::BypassSettings   m_bypasssettings;
 

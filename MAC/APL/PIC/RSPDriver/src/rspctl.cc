@@ -25,6 +25,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
+#include <Common/hexdump.h>
 
 #include <MACIO/MACServiceInfo.h>
 
@@ -53,13 +54,14 @@
 
 #include "rspctl.h"
 
-using namespace std;
-using namespace blitz;
-using namespace LOFAR;
-using namespace EPA_Protocol;
-using namespace RSP_Protocol;
-using namespace rspctl;
-using namespace RTC;
+namespace LOFAR {
+  namespace rspctl {
+	using namespace std;
+	using namespace blitz;
+	using namespace EPA_Protocol;
+	using namespace RSP_Protocol;
+//	using namespace RSP;
+	using namespace RTC;
 
 // declare class constants
 double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 << 11)) * (uint32)(1 << 31);
@@ -893,6 +895,9 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
+//
+// TD status
+//
 TDStatusCommand::TDStatusCommand(GCFPortInterface& port) : 
 	Command(port),
 	m_board()
@@ -917,41 +922,47 @@ void TDStatusCommand::send()
 
 GCFEvent::TResult TDStatusCommand::ack(GCFEvent& event)
 {
-  if (RSP_GETTDSTATUSACK == event.signal) {
+	if (RSP_GETTDSTATUSACK == event.signal) {
+		RSPGettdstatusackEvent ack(event);
+		bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
 
-    RSPGettdstatusackEvent ack(event);
-    bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
-    
-    if (ack.status != SUCCESS) {
-      logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
-    } else {
-
-      logMessage(cout,formatString(    "        10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz"));
-      BOARD_ITERATOR_BEGIN {
-	TDBoardStatus& boardstatus = ack.tdstatus.board()(boardin);
-	if (!boardstatus.invalid) {
-	  if (!boardstatus.unknown) {
-	    logMessage(cout,formatString("RSP[%2d]    %3s      |      %3d     |    %3s    | %10s | %10s", boardout,
-					 (boardstatus.input_10MHz  ? "SMA" : "INF"),
-					 (boardstatus.output_clock ? 200   : 160),
-					 (boardstatus.pps_input    ? "INF" : "SMA"),
-					 (boardstatus.pll_160MHz_locked ? "LOCKED" : "not locked"),
-					 (boardstatus.pll_200MHz_locked ? "LOCKED" : "not locked")));
-	  } else {
-	    logMessage(cout,formatString("RSP[%2d]    %3s      |      %3s     |    %3s    | %10s | %10s", boardout,
-					 "?", "?", "?", "?", "?"));
-	  }
-	} else {
-	  logMessage(cout,formatString("RSP[%2d] not controlling TD board", boardout));
+		if (ack.status != SUCCESS) {
+			logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
+		} 
+		else {
+			logMessage(cout,formatString("RSP |   10MHz input | output clock | PPS input | PLL 160MHZ | PLL 200MHz | V3.3 | V5.0 | Temperature"));
+			BOARD_ITERATOR_BEGIN {
+				TDBoardStatus& boardstatus = ack.tdstatus.board()(boardin);
+				if (boardstatus.invalid) {
+					logMessage(cout,formatString(" %2d | Not controlling the TD board", boardout));
+				}
+				else {
+					if (boardstatus.unknown) {
+						logMessage(cout,formatString(" %2d |      %3s      |      %3s     |    %3s    | %10s | %10s | %4.1f | %4.1f | %2d", 
+								boardout,
+								"?", "?", "?", "?", "?", 0, 0, 0));
+					}
+					else {
+						logMessage(cout,formatString(" %2d |      %3s      |      %3d     |    %3s    | %10s | %10s | %4.1f | %4.1f | %2d", 
+								boardout,
+								(boardstatus.input_10MHz  ? "SMA" : "INF"),
+								(boardstatus.output_clock ? 200   : 160),
+								(boardstatus.pps_input    ? "INF" : "SMA"),
+								(boardstatus.pll_160MHz_locked ? "LOCKED" : "not locked"),
+								(boardstatus.pll_200MHz_locked ? "LOCKED" : "not locked"),
+								(boardstatus.v3_3 * 3.3) / 192.0,
+								(boardstatus.v2_5 * 5.0) / 192.0,
+								boardstatus.temperature));
+					} 
+				} 
+				BOARD_ITERATOR_NEXT;
+			} 
+			BOARD_ITERATOR_END;
+		}
 	}
 
-	BOARD_ITERATOR_NEXT;
-      } BOARD_ITERATOR_END;
-    }
-  }
-
-  GCFTask::stop();
-  return GCFEvent::HANDLED;
+	GCFTask::stop();
+	return GCFEvent::HANDLED;
 }
 
 TBBCommand::TBBCommand(GCFPortInterface& port) : Command(port), m_type(0)
@@ -1265,6 +1276,65 @@ void RegisterStateCommand::stop()
   }
 }
 
+//
+// SPU status
+//
+SPUStatusCommand::SPUStatusCommand(GCFPortInterface& port) : 
+	Command(port),
+	itsSPUs()
+{
+}
+
+// send()
+void SPUStatusCommand::send()
+{
+	// check mode
+	if (!getMode()) { 
+		logMessage(cerr,"Setting SPUstatus is not possible");
+		return;
+	}
+
+	// construct message
+	RSPGetspustatusEvent getspustatus;
+	getspustatus.timestamp = Timestamp(0,0);
+	getspustatus.cache = true;
+
+	// and send it.
+	m_rspport.send(getspustatus);
+}
+
+// ack()
+GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
+{
+	if (event.signal == RSP_GETSPUSTATUSACK) {
+		RSPGetspustatusackEvent ack(event);
+
+		if (ack.status != SUCCESS) {
+			logMessage(cerr,"Error: RSP_GETSPUSTATUS command failed.");
+		} 
+		else {
+			logMessage(cout,"Subrack | RCU 5.0V | LBA 8.0V | HBA 48V | SPU 3.3V | Temperature");
+			int		nrSubracks = ack.spustatus.subrack().size();
+			for (int sr = 0; sr < nrSubracks; sr++) {
+				SPUBoardStatus&		SPUstat = ack.spustatus.subrack()(sr);
+				logMessage(cout,formatString("   %2d   |    %4.1f  |    %4.1f  |   %4.1f  |    %4.1f  | %2d",
+						sr,
+						(SPUstat.v2_5 * 1.0) * 2.5  / 192.0 * 2.0,
+						(SPUstat.v3_3 * 1.0) * 3.3  / 192.0 * 3.0,
+						(SPUstat.v12  * 1.0) * 12.0 / 192.0 * 4.01,
+						(SPUstat.vcc  * 1.0) * 5.0  / 192.0,
+						SPUstat.temperature));
+			}
+		}
+	}
+
+	GCFTask::stop();
+	return (GCFEvent::HANDLED);
+}
+
+//
+// Weights
+//
 WGCommand::WGCommand(GCFPortInterface& port) :
   Command(port),
   m_mode(0),
@@ -2261,6 +2331,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETTBBACK:
 	case RSP_GETBYPASSACK:
 	case RSP_SETBYPASSACK:
+	case RSP_GETSPUSTATUSACK:
 		status = m_command->ack(e); // handle the acknowledgement
 	break;
 
@@ -2490,6 +2561,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "realdelays",     optional_argument, 0, 'R' },
 		{ "regstate",       no_argument,       0, 'S' },
 		{ "tbbmode",        optional_argument, 0, 'T' },
+		{ "spustate",       no_argument, 	   0, 'V' },
 
 		{ 0, 0, 0, 0 },
 	};
@@ -2808,6 +2880,16 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				delete command;
 			TDStatusCommand* tdstatuscommand = new TDStatusCommand(m_server);
 			command = tdstatuscommand;
+			command->set_ndevices(m_nrspboards);
+		}
+		break;
+
+		case 'V': // --spustatus
+		{
+			if (command) 
+				delete command;
+			SPUStatusCommand* spustatuscommand = new SPUStatusCommand(m_server);
+			command = spustatuscommand;
 			command->set_ndevices(m_nrspboards);
 		}
 		break;
@@ -3179,6 +3261,16 @@ void RSPCtl::logMessage(ostream& stream, const string& message)
     stream << message << endl;
   }
 }
+
+  } // namespace rspctl
+} // namespace LOFAR
+
+//
+// MAIN
+//
+
+using namespace LOFAR;
+using namespace LOFAR::rspctl;
 
 int main(int argc, char** argv)
 {

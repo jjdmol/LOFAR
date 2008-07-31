@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
 
 #include "StationSettings.h"
@@ -73,6 +74,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_tdstatus.board().size()     =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
+  LOG_DEBUG_STR("m_spustatus.subrack().size()  =" << m_spustatus.subrack().size()  * sizeof(EPA_Protocol::SPUBoardStatus));
   LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
   LOG_DEBUG_STR("m_bypasssettings().size()     =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
 
@@ -91,6 +93,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_versions.bp().size()       
 	       + m_versions.ap().size()       
 	       + m_tdstatus.board().size()    
+	       + m_spustatus.subrack().size()    
 	       + m_tbbsettings().size()
 	       + m_bypasssettings().size()));
 }
@@ -112,6 +115,7 @@ CacheBuffer::~CacheBuffer()
   m_versions.bp().free();
   m_versions.ap().free();
   m_tdstatus.board().free();
+  m_spustatus.subrack().free();
   m_tbbsettings().free();
   m_bypasssettings().free();
 }
@@ -215,6 +219,13 @@ void CacheBuffer::reset(void)
   tdstatusinit.unknown = 1;
   m_tdstatus.board() = tdstatusinit;
 
+  // SPUBoardStatus
+  m_spustatus.subrack().resize(1 + StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK);
+  LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
+  SPUBoardStatus spustatusinit;
+  memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
+  m_spustatus.subrack() = spustatusinit;
+
   // TBBSettings
   m_tbbsettings().resize(StationSettings::instance()->nrRcus());
   bitset<MEPHeader::N_SUBBANDS> bandsel;
@@ -301,6 +312,11 @@ uint32& CacheBuffer::getClock()
 TDStatus& CacheBuffer::getTDStatus()
 {
   return m_tdstatus;
+}
+
+SPUStatus& CacheBuffer::getSPUStatus()
+{
+  return m_spustatus;
 }
 
 TBBSettings& CacheBuffer::getTBBSettings()
