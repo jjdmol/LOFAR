@@ -9,7 +9,7 @@
 #include <FIR.h>
 #include <TransposedData.h>
 #include <FilteredData.h>
-#include <CacheAlignedAllocator.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
 
 #include <boost/multi_array.hpp>
 
@@ -55,9 +55,9 @@ class PPF
     boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
     boost::multi_array<fcomplex, 3> itsFFTinData; //[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
 #else
-    boost::multi_array<fcomplex, 2, CacheAlignedAllocator<fcomplex> > itsTmp; //[4][itsNrSamplesPerIntegration]
-    boost::multi_array<fcomplex, 3, CacheAlignedAllocator<fcomplex> > itsFFTinData; //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]
-    boost::multi_array<fcomplex, 3, CacheAlignedAllocator<fcomplex> > itsFFToutData; //[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+    boost::multi_array<fcomplex, 2, AlignedStdAllocator<fcomplex, 32> > itsTmp; //[4][itsNrSamplesPerIntegration]
+    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFTinData; //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]
+    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFToutData; //[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
 #endif
 
 #if defined HAVE_FFTW3

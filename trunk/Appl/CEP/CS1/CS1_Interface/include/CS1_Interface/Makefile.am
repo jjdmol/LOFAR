@@ -1,4 +1,5 @@
 pkginclude_HEADERS = Package__Version.h \
+		     AlignedStdAllocator.h \
 		     Allocator.h \
 		     BGL_Command.h \
 		     BGL_Configuration.h \

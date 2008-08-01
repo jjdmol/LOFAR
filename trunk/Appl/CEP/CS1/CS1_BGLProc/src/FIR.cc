@@ -3,7 +3,6 @@
 
 //# Includes
 #include <FIR.h>
-#include <CacheAlignedAllocator.h>
 
 namespace LOFAR {
 namespace CS1 {
@@ -15,7 +14,7 @@ namespace CS1 {
 // This is efficiently achieved by negating the FIR filter constants of all
 // uneven FIR filters.
 
-const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] CACHE_ALIGNED = {
+const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] __attribute__ ((aligned(32))) = {
 #if NR_SUBBAND_CHANNELS == 256 && NR_TAPS == 16
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
@@ -1047,7 +1046,7 @@ const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] CACHE_ALIGNED = {
 };
 
 
-const float FIR::bandPassCorrectionFactors[NR_SUBBAND_CHANNELS] CACHE_ALIGNED = {
+const float FIR::bandPassCorrectionFactors[NR_SUBBAND_CHANNELS] __attribute__ ((aligned(32))) = {
 #if NR_SUBBAND_CHANNELS == 256 && NR_TAPS == 16
 #if 1
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
