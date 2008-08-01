@@ -33,6 +33,7 @@
 #include <InputThread.h>
 #include <ION_Allocator.h>
 //#include <TH_ZoidServer.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/SubbandMetaData.h>
@@ -381,7 +382,7 @@ void InputSection::process()
 
     command.write(str);
 
-    std::vector<SubbandMetaData> metaDataPerComputeNode(itsNrPsets);
+    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaDataPerComputeNode(itsNrPsets);
 
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;

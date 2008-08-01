@@ -26,11 +26,14 @@
 #if defined HAVE_FCNP && defined __PPC__
 
 #include <Common/Timer.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
 #include <FCNP_ServerStream.h>
 
 #include <fcnp_ion.h>
 
 #include <algorithm>
+#include <cstring>
+#include <vector>
 
 
 namespace LOFAR {
@@ -83,10 +86,10 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
 
   if (reinterpret_cast<size_t>(buf) % 16 != 0 || size % 16 != 0) {
     size_t alignedSize = (size + 15) & ~ (size_t) 15;
-    char   tmp[alignedSize] __attribute__ ((aligned(16)));
+    std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
-    memcpy(tmp, buf, size);
-    FCNP_ION::IONtoCN_ZeroCopy(itsCore, tmp, alignedSize);
+    memcpy(&alignedBuffer[0], buf, size);
+    FCNP_ION::IONtoCN_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
   } else {
     FCNP_ION::IONtoCN_ZeroCopy(itsCore, const_cast<const void *>(buf), size);
   }
@@ -99,10 +102,10 @@ void FCNP_ServerStream::read(void *buf, size_t size)
 
   if (reinterpret_cast<size_t>(buf) % 16 != 0 || size % 16 != 0) {
     size_t alignedSize = (size + 15) & ~ (size_t) 15;
-    char   tmp[alignedSize] __attribute__ ((aligned(16)));
+    std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
-    FCNP_ION::CNtoION_ZeroCopy(itsCore, tmp, alignedSize);
-    memcpy(buf, tmp, size);
+    FCNP_ION::CNtoION_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
+    memcpy(buf, &alignedBuffer[0], size);
   } else {
     FCNP_ION::CNtoION_ZeroCopy(itsCore, buf, size);
   }
