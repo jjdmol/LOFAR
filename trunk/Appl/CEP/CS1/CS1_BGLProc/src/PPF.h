@@ -42,9 +42,9 @@ class PPF
     void init_fft(), destroy_fft();
 
 #if defined PPF_C_IMPLEMENTATION
-    fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, const TransposedData::DelayIntervalType &delay) const;
+    fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
 #else
-    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const TransposedData::DelayIntervalType &delay, double baseFrequency) const;
+    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const;
 #endif
 
     unsigned itsNrStations, itsNrSamplesPerIntegration;

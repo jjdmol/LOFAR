@@ -31,7 +31,6 @@
 //# Includes
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/RSPTimeStamp.h>
-#include <CS1_Interface/ION_to_CN.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <WH_DelayCompensation.h>
@@ -44,11 +43,9 @@
 namespace LOFAR {
 namespace CS1 {
 
-// This class is the workholder that receives data from the RSP boards
-// and distributes it per subband to the Blue Gene/L
 class InputSection {
   public:
-    InputSection(const std::vector<Stream *> &, unsigned psetNumber);
+    InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber);
     ~InputSection();
   
     void preprocess(const CS1_Parset *ps);
@@ -56,49 +53,45 @@ class InputSection {
     void postprocess();
     
   private:
-    void limitFlagsLength(SparseSet<unsigned> &flags);
+    static void limitFlagsLength(SparseSet<unsigned> &flags);
+    void	startThreads();
 
-    bool itsDelayCompensation, itsIsSynchronous;
-    std::vector<int32>  itsBeamlet2beams;
-    std::vector<uint32> itsSubband2Index;
+    bool		 itsDelayCompensation, itsIsRealTime;
+    std::vector<int32>	 itsBeamlet2beams;
+    std::vector<uint32>	 itsSubband2Index;
 
-    ION_to_CN itsIONtoCNdata;
+    std::vector<InputThread *>	itsInputThreads;
 
-    // writer thread
-    InputThread *itsInputThread;
-
-    Stream *itsInputStream;
+    std::vector<Stream *>	itsInputStreams;
     const std::vector<Stream *> &itsClientStreams;
-    unsigned itsStationNr;
+    std::vector<std::pair<std::string, unsigned> > itsStationsAndRSPboardNumbers;
     
-    const CS1_Parset *itsCS1PS;
+    const CS1_Parset	 *itsCS1PS;
     
-    // synced stamp
-    TimeStamp itsSyncedStamp;
+    TimeStamp		 itsSyncedStamp;
    
-    double   itsSampleDuration;
-    std::vector<double> itsDelaysAtBegin;
-    std::vector<double> itsDelaysAfterEnd;
-    std::vector<double> itsNrCalcDelaysForEachTimeNrDirections;
-    //std::vector<double> itsNrCalcIntTimes;
-    unsigned            itsNrCalcDelays;
-    unsigned            itsCounter;
+    std::vector<double>  itsDelaysAtBegin;
+    std::vector<double>  itsDelaysAfterEnd;
+    std::vector<double>  itsNrCalcDelaysForEachTimeNrDirections;
+    unsigned             itsNrCalcDelays;
+    unsigned             itsCounter;
+    unsigned		 itsNrPsets;
     
-    unsigned itsMaxNetworkDelay;
-    unsigned itsNSubbandsPerPset;
-    unsigned itsNSamplesPerSec;
-    unsigned itsNHistorySamples;
+    unsigned		 itsMaxNetworkDelay; // in samples
+    unsigned		 itsNSubbandsPerPset;
+    unsigned		 itsNSamplesPerSec;
+    unsigned		 itsNHistorySamples;
+    unsigned		 itsNrBeams;
 
-    unsigned itsCurrentComputeCore, itsNrCoresPerPset;
-    unsigned itsPsetNumber;
+    unsigned		 itsCurrentComputeCore, itsNrCoresPerPset;
+    unsigned		 itsPsetNumber;
    
     BeamletBuffer        *itsBBuffer;
     WH_DelayCompensation *itsDelayComp;
-    double	          itsSampleRate;
+    double	         itsSampleRate, itsSampleDuration;
     
-    NSTimer itsDelayTimer;
+    NSTimer		 itsDelayTimer;
     
-    void startThread();
 };
     
 } // namespace CS1

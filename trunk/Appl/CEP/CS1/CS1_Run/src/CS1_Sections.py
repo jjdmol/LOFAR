@@ -171,8 +171,8 @@ class BGLProcSection(Section):
         coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
         subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
         actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
-        if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
-            raise Exception('illegal number of runs')
+        #if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
+            #raise Exception('illegal number of runs')
         Section.run(self, runlog, actualRuns, runCmd)        
 
 class GeneratorSection(Section):

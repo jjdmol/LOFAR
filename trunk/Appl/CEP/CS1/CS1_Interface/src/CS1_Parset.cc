@@ -31,10 +31,15 @@
 //#include <APL/APLCommon/APLUtilities.h>
 #include <CS1_Interface/CS1_Parset.h>
 
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include <algorithm>
 
 namespace LOFAR {
@@ -78,6 +83,55 @@ void CS1_Parset::IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &
     }
   }
 }
+
+
+vector<pair<string, unsigned> > CS1_Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
+{
+  vector<string> inputs = getStringVector(string("PIC.Core.IONProc.") + partitionName() + '[' + boost::lexical_cast<string>(psetNumber) + "].inputs");
+  vector<pair<string, unsigned> > stationsAndRSPs(inputs.size());
+
+  for (unsigned i = 0; i < inputs.size(); i ++) {
+    vector<string> split = StringUtil::split(inputs[i], '/');
+
+    if (split.size() != 2 || split[1].substr(0, 3) != "RSP")
+      throw std::runtime_error(string("expected stationname/RSPn pair in \"") + inputs[i] + '"');
+
+    string   &stationName   = split[0];
+    unsigned rspBoardNumber = boost::lexical_cast<unsigned>(split[1].substr(3));
+
+    stationsAndRSPs[i] = pair<string, unsigned>(stationName, rspBoardNumber);
+  }
+
+  return stationsAndRSPs;
+}
+
+
+string CS1_Parset::getInputDescription(const string &stationName, unsigned rspBoardNumber) const
+{
+  return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports")[rspBoardNumber];
+}
+
+
+Stream *CS1_Parset::createStream(const string &description, bool asReader)
+{
+  vector<string> split = StringUtil::split(description, ':');
+
+  if (description == "null:")
+    return new NullStream;
+  else if (split.size() == 3 && split[0] == "udp")
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+  else if (split.size() == 3 && split[0] == "tcp")
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asReader ? SocketStream::Server : SocketStream::Client);
+  else if (split.size() == 2 && split[0] == "file")
+    return asReader ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
+  else if (split.size() == 2)
+    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asReader ? SocketStream::Server : SocketStream::Client);
+  else if (split.size() == 1)
+    return asReader ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
+  else
+    throw std::runtime_error(string("unrecognized connector format: \"" + description + '"'));
+}
+
 
 uint32 CS1_Parset::nrSubbands() const
 {
@@ -246,24 +300,6 @@ vector<double> CS1_Parset::getPhaseCentresOf(const string& name) const
   list = getDoubleVector(locateModule(name.substr(0,index)) + name.substr(0,index)  + ".phaseCenter");
  
   return list; 
-}
-
-vector<double> CS1_Parset::refFreqs(uint32 rspid) const
-{
-  vector<uint32> sb2Index   = subband2Index(rspid);
-  vector<int32> subbandIDs = beamlet2subbands(rspid);
-  vector<double> refFreqs;
-  
-  refFreqs.resize(subbandIDs.size(), -1);
-
-  for (uint i = 0; i < subbandIDs.size(); i++)
-  {
-    if (subbandIDs[i] != -1) 
-      refFreqs[i] = ((itsObservation.nyquistZone - 1 )*(getUint32("Observation.sampleClock")*1000000/2) + 
-                      sampleRate()*subbandIDs[sb2Index[i]]);
-  }
-  
-  return refFreqs;
 }
 
 string CS1_Parset::getMSname(unsigned sb) const

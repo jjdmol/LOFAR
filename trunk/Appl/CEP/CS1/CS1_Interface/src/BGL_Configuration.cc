@@ -41,12 +41,6 @@ void BGL_Configuration::read(Stream *str)
 
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
-  
-  itsBeamlet2beams.resize(itsMarshalledData.itsBeamlet2beamsSize);
-  memcpy(&itsBeamlet2beams[0], itsMarshalledData.itsBeamlet2beams, itsMarshalledData.itsBeamlet2beamsSize * sizeof(signed));
-  
-  itsSubband2Index.resize(itsMarshalledData.itsSubband2IndexSize);
-  memcpy(&itsSubband2Index[0], itsMarshalledData.itsSubband2Index, itsMarshalledData.itsSubband2IndexSize * sizeof(unsigned));
 }
 
 
@@ -64,14 +58,6 @@ void BGL_Configuration::write(Stream *str)
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
   memcpy(itsMarshalledData.itsRefFreqs, &itsRefFreqs[0], itsMarshalledData.itsRefFreqsSize * sizeof(double));
   
-  itsMarshalledData.itsBeamlet2beamsSize = itsBeamlet2beams.size();
-  assert(itsMarshalledData.itsBeamlet2beamsSize <= MAX_SUBBANDS);
-  memcpy(itsMarshalledData.itsBeamlet2beams, &itsBeamlet2beams[0], itsMarshalledData.itsBeamlet2beamsSize * sizeof(signed));
-  
-  itsMarshalledData.itsSubband2IndexSize = itsSubband2Index.size();
-  assert(itsMarshalledData.itsSubband2IndexSize <= MAX_SUBBANDS);
-  memcpy(itsMarshalledData.itsSubband2Index, &itsSubband2Index[0], itsMarshalledData.itsSubband2IndexSize * sizeof(unsigned));
-
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
 }
 

@@ -4,9 +4,10 @@
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/Allocator.h>
 #include <CS1_Interface/CS1_Config.h>
-#include <CS1_Interface/SparseSet.h>
+#include <CS1_Interface/SubbandMetaData.h>
 
 #include <boost/multi_array.hpp>
+#include <vector>
 
 
 namespace LOFAR {
@@ -27,7 +28,9 @@ class TransposedData
 
   public:
     boost::multi_array_ref<SampleType, 3> samples; //[itsNrStations][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
+    std::vector<SubbandMetaData>	  metaData; //[itsNrStations]
 
+#if 0
     SparseSet<unsigned> *flags; //[itsNrStations]
 
     typedef struct {
@@ -36,6 +39,7 @@ class TransposedData
     
     DelayIntervalType *delays; // [itsNrStations]
     unsigned          *alignmentShifts; // [itsNrStations]
+#endif
 };
 
 
@@ -43,9 +47,12 @@ inline TransposedData::TransposedData(const Arena &arena, unsigned nrStations, u
 :
   allocator(arena),
   samples(static_cast<SampleType *>(allocator.allocate(requiredSize(nrStations, nrSamplesToBGLProc), 32)), boost::extents[nrStations][nrSamplesToBGLProc][NR_POLARIZATIONS]),
+  metaData(nrStations)
+#if 0
   flags(new SparseSet<unsigned>[nrStations]),
   delays(new DelayIntervalType[nrStations]),
   alignmentShifts(new unsigned[nrStations])
+#endif
 {
 }
 
@@ -53,9 +60,11 @@ inline TransposedData::TransposedData(const Arena &arena, unsigned nrStations, u
 inline TransposedData::~TransposedData()
 {
   allocator.deallocate(samples.origin());
+#if 0
   delete [] flags;
   delete [] alignmentShifts;
   delete [] delays;
+#endif
 }
 
 

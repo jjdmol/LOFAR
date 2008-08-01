@@ -37,6 +37,7 @@
 #include <Common/LofarLogger.h> 
 #include <CS1_Interface/CS1_Config.h>
 #include <ApplCommon/Observation.h>
+#include <Stream/Stream.h>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
 
@@ -90,7 +91,7 @@ public:
 	uint32         nrSubbands() const;
 	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
-	vector<double> refFreqs(uint32 rspid=0) const;
+	vector<double> refFreqs() const;
 	double         chanWidth() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         inputPortnr(const string& aKey) const;
@@ -115,9 +116,15 @@ public:
 	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
 	vector<uint32> subband2Index(uint32 rspid=0) const;
 	int32          nrSubbandsPerFrame() const;
+	string         partitionName() const;
+	bool           realTime() const;
 	
 	vector<double> getBeamDirection(const unsigned currentBeam) const;
 	string         getBeamDirectionType(const unsigned currentBeam) const;
+
+	vector<pair<string, unsigned> > getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
+	string         getInputDescription(const string &stationName, unsigned rspBoardNumber) const;
+	static Stream  *createStream(const string &description, bool asReader);
 
 	//# Datamembers
 	string	       name;
@@ -268,6 +275,11 @@ inline uint32 CS1_Parset::nrCoresPerPset() const
   return getUint32("OLAP.BGLProc.coresPerPset");
 }  
  
+inline vector<double> CS1_Parset::refFreqs() const
+{
+  return getDoubleVector("Observation.RefFreqs");
+}
+
 inline double CS1_Parset::chanWidth() const
 {
   return sampleRate() / nrChannelsPerSubband();
@@ -328,9 +340,19 @@ inline uint32 CS1_Parset::nrBeams() const
   return getUint32("Observation.nrBeams");
 }
 
-inline int32  CS1_Parset::nrSubbandsPerFrame() const
+inline int32 CS1_Parset::nrSubbandsPerFrame() const
 {
   return getInt32("OLAP.nrSubbandsPerFrame");
+}
+
+inline string CS1_Parset::partitionName() const
+{
+  return getString("OLAP.BGLProc.partition");
+}
+
+inline bool CS1_Parset::realTime() const
+{
+  return getBool("OLAP.realTime");
 }
 
 

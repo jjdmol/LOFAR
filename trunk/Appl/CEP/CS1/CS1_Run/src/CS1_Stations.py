@@ -212,7 +212,7 @@ CS016  = [Station('CS016')]
 # CS0XX_4dipoles_2 =  CS0XX_dipole2 + CSXX_dipole6 + CS0XX_dipole10 + CS0XX_dipole14
 
 AllStations      = CS001 + CS010 + CS016
-AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
+AllMicroStations = CS010_4us + CS001_4us + CS016_4us
 AllDipoles       = CS010_4dipoles_1 + CS001_4dipoles_1 + CS008_4dipoles_1 + CS016_4dipoles_1
 AllDipolesMixed  = CS010_4dipoles_1 + CS001_4dipoles_2 + CS008_4dipoles_2 + CS016_4dipoles_2
 AllHBAs          = CS010_4HBAs + CS001_4HBAs + CS008_4HBAs + CS016_4HBAs
