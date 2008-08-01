@@ -180,7 +180,7 @@ namespace LOFAR
 
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
 	// compensate for the half-channel shift introduced by the PPF
-	double refFreq = refFreqs[sb2Index[itsSubbandIDs[sb]]] - chanWidth / 2;
+	double refFreq = refFreqs[itsSubbandIDs[sb]] - chanWidth / 2;
 	itsBandIDs[sb] = itsWriters[sb]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
       }
       

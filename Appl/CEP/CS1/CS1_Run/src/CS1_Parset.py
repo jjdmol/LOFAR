@@ -30,7 +30,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
 	    self['OLAP.BGLProc.integrationSteps'] = 768
-	    #self['OLAP.BGLProc.integrationSteps'] = 16
+	    #self['OLAP.BGLProc.integrationSteps'] = 384
+	    #self['OLAP.BGLProc.integrationSteps'] = 192
         self.updateSBValues()
        
     def getClockString(self):
@@ -43,6 +44,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
     
     def setPartition(self, partition):
         self.partition = partition
+	self['OLAP.BGLProc.partition'] = partition
 	
     def getPartition(self):
         return self.partition

@@ -4,7 +4,7 @@ import sys
 
 listfen   = ClusterFEN(name = 'listfen'    ,
                        address = '129.125.99.50')
-listfen.setSlavesByPattern('list%03d', '10.181.0.%d', [4])
+listfen.setSlavesByPattern('list%03d', '10.181.0.%d', [3,4])
 #listfen.slaves.append(ClusterSlave('lifs001', '10.182.0.1'))
 #listfen.slaves.append(ClusterSlave('lifs002', '10.182.0.2'))
 #listfen.slaves.append(ClusterSlave('lifs003', '10.182.0.3'))

@@ -64,7 +64,7 @@ class BeamletBuffer
     void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
     void     sendUnalignedSubband(Stream *, unsigned subband, unsigned currentBeam) const;
     unsigned alignmentShift(unsigned beam) const;
-    void     readFlags(SparseSet<unsigned> &flags, unsigned beam);
+    SparseSet<unsigned> readFlags(unsigned beam);
     void     stopReadTransaction();
     
     static const unsigned MAX_BEAMLETS    = 8;
@@ -85,6 +85,10 @@ class BeamletBuffer
     std::vector<size_t>			  itsStartI, itsEndI;
     size_t                                itsMinStartI, itsMaxEndI;
     TimeStamp                             itsMinEnd;
+
+    // write internals
+    TimeStamp				  itsPreviousTimeStamp;
+    unsigned				  itsPreviousI;
 
     NSTimer				  itsReadTimer, itsWriteTimer;
 };

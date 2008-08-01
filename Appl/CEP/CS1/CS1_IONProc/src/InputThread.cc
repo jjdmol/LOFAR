@@ -219,7 +219,9 @@ void InputThread::mainLoop()
 	actualstamp.setStamp(seqid, blockid);
       } else {
 	actualstamp += itsArgs.nTimesPerFrame; 
-	wallClockTime.waitUntil(actualstamp);
+
+	if (itsArgs.isRealTime)
+	  wallClockTime.waitUntil(actualstamp);
       }
   
       // expected packet received so write data into corresponding buffer

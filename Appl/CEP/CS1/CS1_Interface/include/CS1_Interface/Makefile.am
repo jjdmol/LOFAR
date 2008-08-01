@@ -6,7 +6,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     CS1_Config.h \
 		     CS1_Parset.h \
 		     DH_Visibilities.h \
-		     ION_to_CN.h \
+		     SubbandMetaData.h \
 		     PrintVector.h \
 		     RSPTimeStamp.h \
 		     SparseSet.h \

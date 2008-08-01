@@ -4,13 +4,15 @@
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
 #include <CS1_Interface/CS1_Config.h>
-#include <CS1_Interface/ION_to_CN.h>
+#include <CS1_Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
 
 #include <CS1_Interface/Allocator.h>
 #include <TH_ZoidClient.h>
 
 #include <boost/multi_array.hpp>
+
+#include <vector>
 
 
 namespace LOFAR {
@@ -22,7 +24,7 @@ class InputData
     InputData(const Arena &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
     ~InputData();
 
-    void read(Stream *, const unsigned nrBeams);
+    void read(Stream *);
 
     static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc);
 
@@ -34,7 +36,7 @@ class InputData
   public:
     boost::multi_array_ref<SampleType, 3> samples; //[outputPsets.size()][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
 
-    ION_to_CN				  metaData;
+    std::vector<SubbandMetaData>	  metaData; //[outputPsets.size()]
 };
 
 
@@ -47,7 +49,8 @@ inline size_t InputData::requiredSize(unsigned nrSubbands, unsigned nrSamplesToB
 inline InputData::InputData(const Arena &arena, unsigned nrSubbands, unsigned nrSamplesToBGLProc)
 :
   allocator(arena),
-  samples(static_cast<SampleType *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS])
+  samples(static_cast<SampleType *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS]),
+  metaData(nrSubbands)
 {
 }
 
@@ -58,9 +61,10 @@ inline InputData::~InputData()
 }
 
 
-inline void InputData::read(Stream *str, const unsigned nrBeams)
+inline void InputData::read(Stream *str)
 {
-  metaData.read(str, nrBeams);
+  // read all metadata
+  str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time

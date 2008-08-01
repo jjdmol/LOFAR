@@ -153,7 +153,8 @@ void PPF::computeFlags(const TransposedData *transposedData, FilteredData *filte
 #else
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     filteredData->flags[stat].reset();
-    const SparseSet<unsigned>::Ranges &ranges = transposedData->flags[stat].getRanges();
+    SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
+    const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
     for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
       unsigned begin = std::max(0, (signed) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
@@ -170,9 +171,9 @@ void PPF::computeFlags(const TransposedData *transposedData, FilteredData *filte
 
 #if defined PPF_C_IMPLEMENTATION
 
-fcomplex PPF::phaseShift(unsigned time, unsigned chan, double baseFrequency, const TransposedData::DelayIntervalType &delay) const
+fcomplex PPF::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
-  double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delay.delayAfterEnd - delay.delayAtBegin);
+  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
   double frequency	       = baseFrequency + chan * itsChannelBandwidth;
   double phaseShift	       = timeInterpolatedDelay * frequency;
   double phi		       = -2 * M_PI * phaseShift;
@@ -182,10 +183,10 @@ fcomplex PPF::phaseShift(unsigned time, unsigned chan, double baseFrequency, con
 
 #else
 
-void PPF::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const TransposedData::DelayIntervalType &delay, double baseFrequency) const
+void PPF::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const
 {
-  double   phiBegin = -2 * M_PI * delay.delayAtBegin;
-  double   phiEnd   = -2 * M_PI * delay.delayAfterEnd;
+  double   phiBegin = -2 * M_PI * delayAtBegin;
+  double   phiEnd   = -2 * M_PI * delayAfterEnd;
   double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
   dcomplex v	    = cosisin(phiBegin * baseFrequency);
   dcomplex dv       = cosisin(phiBegin * itsChannelBandwidth);
@@ -214,7 +215,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
 #endif
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-    unsigned alignmentShift = transposedData->alignmentShifts[stat];
+    unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
 
 #if 0
     std::clog << setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
@@ -259,7 +260,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
 
 	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	    if (itsDelayCompensation) {
-	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->delays[stat]);
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd);
 	    }
 
 	    filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
@@ -298,7 +299,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
     struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
     if (itsDelayCompensation) {
-      computePhaseShifts(phaseShifts, transposedData->delays[stat], baseFrequency);
+      computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
     }
 
     const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();

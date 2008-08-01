@@ -35,6 +35,7 @@
 //#include <TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
+#include <CS1_Interface/SubbandMetaData.h>
 
 #include <sys/time.h>
 
@@ -57,8 +58,6 @@ static Stream *rawDataStream;
 
 InputSection::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
 :
-  itsInputThread(0),
-  itsInputStream(0),
   itsClientStreams(clientStreams),
   itsPsetNumber(psetNumber),
   itsBBuffer(0),
@@ -74,7 +73,7 @@ InputSection::~InputSection()
 }
 
 
-void InputSection::startThread()
+void InputSection::startThreads()
 {
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
@@ -82,15 +81,21 @@ void InputSection::startThread()
   ThreadArgs args;
 
   args.BBuffer            = itsBBuffer;
-  args.stream             = itsInputStream;
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
   args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
+  args.isRealTime	  = itsCS1PS->realTime();
   args.startTime	  = itsSyncedStamp;
 
-  itsInputThread = new InputThread(args);
+  itsInputThreads.resize(itsStationsAndRSPboardNumbers.size());
+
+  for (unsigned thread = 0; thread < 1; thread ++) { // FIXME
+    args.stream		  = itsInputStreams[thread];
+
+    itsInputThreads[thread] = new InputThread(args);
+  }
 }
 
 
@@ -99,14 +104,26 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsCS1PS = ps;
   itsSampleRate = ps->sampleRate();
   TimeStamp::setMaxBlockId(itsSampleRate);
-  itsStationNr = ps->inputPsetIndex(itsPsetNumber);
+  itsStationsAndRSPboardNumbers = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
 
-  std::string stationName = ps->stationName(itsStationNr);
-  std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
+  itsInputStreams.resize(itsStationsAndRSPboardNumbers.size());
 
-  itsInputStream	= Connector::getInputStream(ps, stationName);
+  std::clog << "input list:" << std::endl;
+
+  for (unsigned i = 0; i < itsStationsAndRSPboardNumbers.size(); i ++) {
+    string    &station = itsStationsAndRSPboardNumbers[i].first;
+    unsigned  rspBoard = itsStationsAndRSPboardNumbers[i].second;
+    string    input    = ps->getInputDescription(station, rspBoard);
+
+    std::cout << "  " << i << ": station \"" << station << "\", RSP board " << rspBoard << ", reads from \"" << input << '"' << std::endl;
+
+    itsInputStreams[i] = CS1_Parset::createStream(input, true);
+  }
+
   itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
   itsNSamplesPerSec	= ps->nrSubbandSamples();
+  itsNrBeams		= ps->nrBeams();
+  itsNrPsets		= ps->nrPsets();
 
 #if defined DUMP_RAW_DATA
   itsNHistorySamples	= 0;
@@ -144,7 +161,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
     itsDelaysAfterEnd.resize(ps->nrBeams());
     itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * ps->nrBeams());
     
-    itsDelayComp = new WH_DelayCompensation(ps, ps->stationName(itsStationNr));
+    itsDelayComp = new WH_DelayCompensation(ps, itsStationsAndRSPboardNumbers[0].first); // FIXME
 
     std::vector<double> startTimes(itsNrCalcDelays);
 
@@ -162,10 +179,10 @@ void InputSection::preprocess(const CS1_Parset *ps)
   }
    
   unsigned cyclicBufferSize = ps->nrSamplesToBuffer();
-  itsIsSynchronous    = ps->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
+  itsIsRealTime       = ps->realTime();
   itsMaxNetworkDelay  = ps->maxNetworkDelay();
-  std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << std::endl;
-  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, itsIsSynchronous, itsMaxNetworkDelay);
+  std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples" << std::endl;
+  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataServers = ps->getStringVector("OLAP.OLAP_Conn.rawDataServers");
@@ -181,7 +198,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   std::clog << "raw data stream connected" << std::endl;
 #endif
 
-  startThread();
+  startThreads();
 }
 
 
@@ -196,16 +213,10 @@ void InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 
 void InputSection::process() 
 {
-  BGL_Command command(BGL_Command::PROCESS);
+  std::vector<TimeStamp>	delayedStamps(itsNrBeams, itsSyncedStamp - itsNHistorySamples);
+  std::vector<int>		samplesDelay(itsNrBeams);
+  std::vector<SubbandMetaData>	metaDataPerBeam(itsNrBeams);
   
-  std::vector<TimeStamp> delayedStamp(itsCS1PS->nrBeams());
-  
-  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
-    delayedStamp[beam] = itsSyncedStamp - itsNHistorySamples;
-  }
-  
-  std::vector<int> samplesDelay(itsCS1PS->nrBeams());
-
   // set delay
   if (itsDelayCompensation) {    
     itsCounter ++;
@@ -223,19 +234,17 @@ void InputSection::process()
 
       itsCounter = 0;
       
-      for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+      for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
 	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
       }	
     } else {
-      unsigned firstBeam = itsCounter * itsCS1PS->nrBeams();
-      for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+      unsigned firstBeam = itsCounter * itsNrBeams;
+      for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
 	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[firstBeam++];
       }	
     }
    
-    std::vector<float> fineDelayAtBegin(itsCS1PS->nrBeams()), fineDelayAfterEnd(itsCS1PS->nrBeams());
-    
-    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       // The coarse delay will be determined for the center of the current
       // time interval and will be expressed in \e samples.
       int coarseDelay = (int) floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
@@ -244,35 +253,33 @@ void InputSection::process()
       // time interval and will be expressed in seconds.
       double d = coarseDelay * itsSampleDuration;
     
-      fineDelayAtBegin[beam] = (float)(itsDelaysAtBegin[beam] - d);
-      fineDelayAfterEnd[beam]= (float)(itsDelaysAfterEnd[beam] - d);
-    
-      delayedStamp[beam] += coarseDelay;
+      delayedStamps[beam] += coarseDelay;
       samplesDelay[beam]  = +coarseDelay;
-      itsIONtoCNdata.delayAtBegin(beam)  = fineDelayAtBegin[beam];
-      itsIONtoCNdata.delayAfterEnd(beam) = fineDelayAfterEnd[beam];
+      metaDataPerBeam[beam].delayAtBegin  = (float)(itsDelaysAtBegin[beam] - d);
+      metaDataPerBeam[beam].delayAfterEnd = (float)(itsDelaysAfterEnd[beam] - d);
     }
   } else {
-    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
-      itsIONtoCNdata.delayAtBegin(beam)  = 0;
-      itsIONtoCNdata.delayAfterEnd(beam) = 0;
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+      metaDataPerBeam[beam].delayAtBegin  = 0;
+      metaDataPerBeam[beam].delayAfterEnd = 0;
       samplesDelay[beam] = 0;
     }  
   }
 
-  itsBBuffer->startReadTransaction(delayedStamp, itsNSamplesPerSec + itsNHistorySamples);
+  itsBBuffer->startReadTransaction(delayedStamps, itsNSamplesPerSec + itsNHistorySamples);
 
-  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
-    itsIONtoCNdata.alignmentShift(beam) = itsBBuffer->alignmentShift(beam);
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    metaDataPerBeam[beam].alignmentShift = itsBBuffer->alignmentShift(beam);
  
     // set flags
-    itsBBuffer->readFlags(itsIONtoCNdata.flags(beam), beam);
-    limitFlagsLength(itsIONtoCNdata.flags(beam));
+    SparseSet<unsigned> flags = itsBBuffer->readFlags(beam);
+    limitFlagsLength(flags);
+    metaDataPerBeam[beam].setFlags(flags);
   }  
   
   std::clog << itsSyncedStamp;
 
-  if (!itsIsSynchronous) {
+  if (itsIsRealTime) {
     struct timeval tv;
 
     gettimeofday(&tv, 0);
@@ -284,13 +291,13 @@ void InputSection::process()
   }
 
   if (itsDelayCompensation) {
-    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++)
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       std::clog << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
 
     std::clog << "]";
   }
 
-  std::clog << ", flags: " << itsIONtoCNdata.flags(0) << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags(0).count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl; // not really correct; beam(0) may be shifted
+  std::clog << ", flags: " << metaDataPerBeam[0].getFlags() << " (" << std::setprecision(3) << (100.0 * metaDataPerBeam[0].getFlags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl; // not really correct; beam(0) may be shifted
 
   NSTimer timer;
   timer.start();
@@ -323,7 +330,7 @@ void InputSection::process()
     fileHeader.sampleRate = itsSampleRate;
     memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], 54 * sizeof(double));
  
-    for (unsigned beam = 1; beam < itsCS1PS->nrBeams()+1; beam ++){
+    for (unsigned beam = 1; beam < itsNrBeams+1; beam ++){
       vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
    
       fileHeader.beamDirections[beam][0] = beamDir[0];
@@ -351,8 +358,8 @@ void InputSection::process()
   } blockHeader;  
 
   blockHeader.magic = 0x2913D852;
-  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
-    blockHeader.time[beam] = delayedStamp[beam];
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    blockHeader.time[beam] = delayedStamps[beam];
     blockHeader.coarseDelayApplied[beam] = samplesDelay[beam];
     blockHeader.fineDelayRemainingAtBegin[beam] = itsIONtoCNdata.delayAtBegin(beam);
     blockHeader.fineDelayRemainingAfterEnd[beam] = itsIONtoCNdata.delayAfterEnd(beam);
@@ -366,17 +373,31 @@ void InputSection::process()
 
 #else
 
+  BGL_Command command(BGL_Command::PROCESS);
+  
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
     Stream   *str = itsClientStreams[core];
 
     command.write(str);
-    itsIONtoCNdata.write(str, itsCS1PS->nrBeams());
 
-    for (unsigned pset = 0; pset < itsCS1PS->nrPsets(); pset ++) {
+    std::vector<SubbandMetaData> metaDataPerComputeNode(itsNrPsets);
+
+    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned beam    = itsBeamlet2beams[itsSubband2Index[subband]] - 1;
 
-      itsBBuffer->sendSubband(str, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
+      metaDataPerComputeNode[pset] = metaDataPerBeam[beam];
+    }
+
+    // send all metadata in one "large" message
+    str->write(&metaDataPerComputeNode[0], metaDataPerComputeNode.size() * sizeof(SubbandMetaData));
+
+    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
+      unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned beam    = itsBeamlet2beams[itsSubband2Index[subband]] - 1;
+
+      itsBBuffer->sendSubband(str, subband, beam);
     }
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
@@ -396,10 +417,18 @@ void InputSection::postprocess()
 {
   std::clog << "InputSection::postprocess" << std::endl;
 
-  delete itsInputThread;	itsInputThread	= 0;
-  delete itsInputStream;	itsInputStream	= 0;
-  delete itsBBuffer;		itsBBuffer	= 0;
-  delete itsDelayComp;		itsDelayComp	= 0;
+  for (unsigned i = 0; i < itsInputThreads.size(); i ++)
+    delete itsInputThreads[i];
+
+  itsInputThreads.resize(0);
+
+  for (unsigned i = 0; i < itsInputStreams.size(); i ++)
+    delete itsInputStreams[i];
+
+  itsInputStreams.resize(0);
+
+  delete itsBBuffer;	itsBBuffer	= 0;
+  delete itsDelayComp;	itsDelayComp	= 0;
 
   itsDelayTimer.print(std::clog);
 }

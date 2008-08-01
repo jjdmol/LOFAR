@@ -34,14 +34,15 @@
 //#include <TH_ZoidServer.h>
 #include <Package__Version.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <boost/lexical_cast.hpp>
 #include <cstdlib>
 #include <cstring>
-#include <boost/lexical_cast.hpp>
+#include <fcntl.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #if defined HAVE_ZOID
 extern "C" {
@@ -86,7 +87,7 @@ static void checkParset(const CS1_Parset &parset)
 }
 
 
-void createClientStreams(unsigned nrClients, const std::string &streamType)
+static void createClientStreams(unsigned nrClients, const std::string &streamType)
 {
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP") {
@@ -121,7 +122,7 @@ void createClientStreams(unsigned nrClients, const std::string &streamType)
 }
 
 
-void deleteClientStreams()
+static void deleteClientStreams()
 {
   for (unsigned core = 0; core < clientStreams.size(); core ++)
     delete clientStreams[core];
@@ -141,7 +142,6 @@ static void configureCNs(const CS1_Parset &parset)
   BGL_Configuration configuration;
 
   configuration.nrStations()              = parset.nrStations();
-  configuration.nrBeams()                 = parset.nrBeams();
   configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
@@ -151,8 +151,6 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
   configuration.refFreqs()                = parset.refFreqs();
-  configuration.beamlet2beams()           = parset.beamlet2beams();
-  configuration.subband2Index()           = parset.subband2Index();
 
   std::clog << "configuring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
@@ -199,7 +197,7 @@ static void stopCNs()
 }
 
 
-void *input_thread(void *parset)
+static void *input_thread(void *parset)
 {
   std::clog << "starting input thread" << std::endl;
 
@@ -225,7 +223,7 @@ void *input_thread(void *parset)
 }
 
 
-void *gather_thread(void *argv)
+static void *gather_thread(void *argv)
 {
   std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
 
@@ -246,12 +244,29 @@ void *gather_thread(void *argv)
 }
 
 
+static void enableCoreDumps()
+{
+  struct rlimit rlimit;
+
+  rlimit.rlim_cur = RLIM_INFINITY;
+  rlimit.rlim_max = RLIM_INFINITY;
+
+  if (setrlimit(RLIMIT_CORE, &rlimit) < 0)
+    perror("warning: setrlimit on unlimited core size failed");
+
+  if (system("echo /tmp/%e.core >/proc/sys/kernel/core_pattern") < 0)
+    std::cerr << "warning: could not change /proc/sys/kernel/core_pattern" << std::endl;
+}
+
+
 void *master_thread(void *)
 {
   std::string type = "brief";
   Version::show<CS1_IONProcVersion> (std::clog, "CS1_IONProc", type);
   
   std::clog << "starting master_thread" << std::endl;
+
+  enableCoreDumps();
 
   try {
     pthread_t input_thread_id = 0, gather_thread_id = 0;

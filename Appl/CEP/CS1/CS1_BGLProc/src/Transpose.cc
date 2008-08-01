@@ -23,12 +23,10 @@ static NSTimer transposeTimer("transpose()", true);
 std::vector<MPI_Comm> Transpose::allTransposeGroups;
 
 
-Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations, unsigned nrBeams)
+Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore)
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
-  itsNrStations(nrStations),
-  itsNrBeams(nrBeams),
   itsTransposeGroup(allTransposeGroups[myCore])
 {
 }
@@ -122,25 +120,19 @@ void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std
   itsTransposeMetaParams.receive.counts.resize(nrPsetsUsed, 0);
   itsTransposeMetaParams.receive.displacements.resize(nrPsetsUsed);
 
-  itsOutputMetaData.resize(boost::extents[inputPsets.size()][itsNrBeams]);
-  itsInputMetaData.resize(itsNrBeams);
-  
-  if (itsIsTransposeInput) {
+  if (itsIsTransposeInput)
     for (unsigned psetIndex = 0; psetIndex < outputPsets.size(); psetIndex ++) {
       unsigned pset  = outputPsets[psetIndex];
       unsigned index = psetToGroupIndex[pset];
 
-      if (1 /* FIXME: psetIndex % itsCS1PS->nrRSPboardsPerStation() == 0 */) {
-	const boost::detail::multi_array::sub_array<InputData::SampleType, 2> &slice = inputData->samples[psetIndex];
+      const boost::detail::multi_array::sub_array<InputData::SampleType, 2> &slice = inputData->samples[psetIndex];
 
-	itsTransposeParams.send.counts[index] = slice.num_elements() * sizeof(InputData::SampleType);
-	itsTransposeParams.send.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(inputData->samples.origin());
+      itsTransposeParams.send.counts[index] = slice.num_elements() * sizeof(InputData::SampleType);
+      itsTransposeParams.send.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(inputData->samples.origin());
 
-	itsTransposeMetaParams.send.counts[index] = itsNrBeams * sizeof(struct metaData);
-	itsTransposeMetaParams.send.displacements[index] = 0;
-      }
+      itsTransposeMetaParams.send.counts[index] = sizeof(SubbandMetaData);
+      itsTransposeMetaParams.send.displacements[index] = reinterpret_cast<const char *>(&inputData->metaData[psetIndex]) - reinterpret_cast<const char *>(&inputData->metaData[0]);
     }
-  }
 
   if (itsIsTransposeOutput)
     for (unsigned psetIndex = 0; psetIndex < inputPsets.size(); psetIndex ++) {
@@ -151,8 +143,8 @@ void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std
       itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(TransposedData::SampleType);
       itsTransposeParams.receive.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(transposedData->samples.origin());
 
-      itsTransposeMetaParams.receive.counts[index] = itsNrBeams * sizeof(struct metaData);
-      itsTransposeMetaParams.receive.displacements[index] = psetIndex * itsNrBeams * sizeof(struct metaData);
+      itsTransposeMetaParams.receive.counts[index] = sizeof(SubbandMetaData);
+      itsTransposeMetaParams.receive.displacements[index] = reinterpret_cast<const char *>(&transposedData->metaData[psetIndex]) - reinterpret_cast<const char *>(&transposedData->metaData[0]);
     }
 
 #if 0
@@ -216,23 +208,19 @@ void Transpose::transpose(const InputData *inputData, TransposedData *transposed
 }
 
 
-void Transpose::transposeMetaData(/*const*/ InputData *inputData, TransposedData *transposedData, const unsigned currentBeam)
+void Transpose::transposeMetaData(const InputData *inputData, TransposedData *transposedData)
 {
-  if (itsIsTransposeInput) {
-    for (unsigned beam = 0; beam < itsNrBeams; beam++) {
-      itsInputMetaData[beam].delayAtBegin   = inputData->metaData.delayAtBegin(beam);
-      itsInputMetaData[beam].delayAfterEnd  = inputData->metaData.delayAfterEnd(beam);
-      itsInputMetaData[beam].alignmentShift = inputData->metaData.alignmentShift(beam);
-      assert(inputData->metaData.flags(beam).marshall(&itsInputMetaData[beam].flagsBuffer, sizeof itsInputMetaData[beam].flagsBuffer) >= 0);
-    }
-  }
+#if 0
+  // no need to marshall itsInputMetaData; it has not been unmarshalled
+  // after reading from ION
+#endif
 
   if (MPI_Alltoallv(
-	&itsInputMetaData[0],
+	itsIsTransposeInput ? (void *) &inputData->metaData[0] : 0,
 	&itsTransposeMetaParams.send.counts[0],
 	&itsTransposeMetaParams.send.displacements[0],
 	MPI_BYTE,
-	&itsOutputMetaData[0][0],
+	itsIsTransposeOutput ? &transposedData->metaData[0] : 0,
 	&itsTransposeMetaParams.receive.counts[0],
 	&itsTransposeMetaParams.receive.displacements[0],
 	MPI_BYTE,
@@ -242,14 +230,11 @@ void Transpose::transposeMetaData(/*const*/ InputData *inputData, TransposedData
     exit(1);
   }
   
-  if (itsIsTransposeOutput) {
-    for (unsigned station = 0; station < itsNrStations; station ++) {
-      transposedData->delays[station].delayAtBegin  = itsOutputMetaData[station][currentBeam].delayAtBegin;
-      transposedData->delays[station].delayAfterEnd = itsOutputMetaData[station][currentBeam].delayAfterEnd;
-      transposedData->alignmentShifts[station]      = itsOutputMetaData[station][currentBeam].alignmentShift;
-      transposedData->flags[station].unmarshall(itsOutputMetaData[station][currentBeam].flagsBuffer);
-    }
-  }
+#if 0
+  if (itsIsTransposeOutput)
+    for (unsigned station = 0; station < transposedData->metaData.size(); station ++)
+      transposedData->metaData[station].unmarshall();
+#endif
 }
 
 #endif

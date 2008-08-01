@@ -44,7 +44,7 @@ def doObservation(obsID, parset):
     sectionTable = dict({\
         'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition),
 	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	'StorageSection': StorageSection(parset, listfen)
+	#'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
 
@@ -131,9 +131,9 @@ if __name__ == '__main__':
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
     parser.add_option('--partition'      , dest='partition'      , default='R000_128_0T',type='string', help='name of the BGL partion [%default]')
-    parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
+    parser.add_option('--clock'          , dest='clock'          , default='200MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
-    parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 90), type='int', help='start of measurement in UTC seconds [now + 90s]')
+    parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 30), type='int', help='start of measurement in UTC seconds [now + 30]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
     parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010_4dipoles0_4_8_12', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
