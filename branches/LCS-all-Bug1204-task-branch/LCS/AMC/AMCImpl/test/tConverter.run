@@ -26,22 +26,22 @@ if [ "$TYPE" = "client" ]
 then
 
   # This is the AMC server executable
-  SERVER="`dirname $0`/../src/amcserver"
+  SERVER="`dirname $0`/../src/AMCServer"
 
   # The AMC server process needs its own log_prop file. We will copy 
   # tConverter.log_prop so that the same logging levels are set.
   if [ -f tConverter.log_prop ]
   then
-    sed -e "s/tConverter_tmp/amcserver_tmp/" \
+    sed -e "s/tConverter_tmp/AMCServer_tmp/" \
       tConverter.log_prop > $SERVER.log_prop
   fi
 
   # Exit and interrupt handler. $! is the process id of the last background 
   # process started, i.e. the converter server.
   trap 'if [ $STATUS != 0 ] && [ $STATUS != 2 ]; then \
-          mv -f amcserver_tmp.log amcserver.err 2>/dev/null; \
+          mv -f AMCServer_tmp.log AMCServer.err 2>/dev/null; \
         else \
-          rm -f amcserver_tmp.log amcserver.err; \
+          rm -f AMCServer_tmp.log AMCServer.err; \
         fi; \
         if kill -0 $! 2>/dev/null; then kill -9 $! 2>/dev/null; fi; \
         rm -f $SERVER.log_prop; \

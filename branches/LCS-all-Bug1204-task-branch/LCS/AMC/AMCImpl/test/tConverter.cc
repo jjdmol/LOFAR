@@ -36,6 +36,7 @@
 #include <Common/Exception.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_fstream.h>
+#include <limits>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
