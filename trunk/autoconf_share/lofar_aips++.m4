@@ -251,6 +251,7 @@ fi
 if [ "$lfr_use_casa" = 1 ]; then
   echo AIPSPP >> pkgext
   echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
+  echo "$AIPSPP_LDFLAGS" >> pkgextldflags
 
   CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
   LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
