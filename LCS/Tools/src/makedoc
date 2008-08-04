@@ -38,7 +38,7 @@
     echo "Check your working directory is somewhere in the LOFAR tree."
     exit 1
   fi
-  targetdir="$1"
+  targetdir=$(echo "$1" | sed 's%/$%%')
   if [ "$targetdir" = "" ]; then
     targetdir=$lfrdir/installed/doc/html
   fi
@@ -48,25 +48,25 @@
 
   # Try to find out which doxygen to use from the variants file.
   doxline=
-  if [ -f $confdir/variants.$lfr_host ]; then
+  if [ -r $confdir/variants.$lfr_host ]; then
     doxline=`grep with-doxygen= $confdir/variants.$lfr_host`
   fi
-  if [ "$doxline" = ""  -a  -f $confdir/variants ]; then
+  if [ "$doxline" = ""  -a  -r $confdir/variants ]; then
     doxline=`grep with-doxygen= $confdir/variants`
   fi
   doxdir=`echo $doxline | sed 's/.*--with-doxygen=\([^ ]\+\).*/\1/'`
-  if [ "$doxdir" != ""  -a  -f $doxdir/doxygen ]; then
+  if [ "$doxdir" != ""  -a  -x $doxdir/doxygen ]; then
     doxcmd=$doxdir/doxygen
   else
     doxcmd=`which doxygen`
-    if [ ! -f "$doxcmd" ]; then
+    if [ ! -x "$doxcmd" ]; then
       echo "error: doxygen cannot be found"
       exit 1
     fi
   fi
 
   # Rename target if already existing.
-  if [ -e $targetdir ]; then
+  if [ -d $targetdir ]; then
     \rm -rf $targetdir.bak
     mv $targetdir $targetdir.bak
     echo "Old $targetdir renamed to $targetdir.bak"
@@ -78,7 +78,7 @@
   sed -e "s%/home/lofar/weekly/LOFAR/autoconf_share%$confdir%" $confdir/doxygen.cfg > doxygen.cfg
 
   DOXYGENDOT=`which dot 2>&1`
-  if [ -f "$DOXYGENDOT" ]; then
+  if [ -x "$DOXYGENDOT" ]; then
     DOXYGENDOT=`dirname $DOXYGENDOT`
     echo "HAVE_DOT                = YES" >> doxygen.cfg
     echo "DOT_PATH                = $DOXYGENDOT" >> doxygen.cfg
