@@ -199,7 +199,7 @@ static void stopCNs()
 
 static void *input_thread(void *parset)
 {
-  std::clog << "starting input thread" << std::endl;
+  std::clog << "starting input section" << std::endl;
 
   try {
     InputSection inputSection(clientStreams, myPsetNumber);
@@ -211,14 +211,14 @@ static void *input_thread(void *parset)
 
     inputSection.postprocess();
   } catch (Exception &ex) {
-    std::cerr << "input thread caught Exception: " << ex << std::endl;
+    std::cerr << "input section caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
-    std::cerr << "input thread caught std::exception: " << ex.what() << std::endl;
+    std::cerr << "input section caught std::exception: " << ex.what() << std::endl;
   } catch (...) {
-    std::cerr << "input thread caught non-std::exception: " << std::endl;
+    std::cerr << "input section caught non-std::exception: " << std::endl;
   }
 
-  std::clog << "input thread finished" << std::endl;
+  std::clog << "input section finished" << std::endl;
   return 0;
 }
 
@@ -228,7 +228,7 @@ static void *gather_thread(void *argv)
   std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
 
   try {
-    AH_ION_Gather myAH(clientStreams);
+    AH_ION_Gather myAH(clientStreams, myPsetNumber);
     ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
     ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
   } catch (Exception &ex) {
@@ -346,7 +346,7 @@ void *master_thread(void *)
 	exit(1);
       }
 
-      std::clog << "lofar__fini: input thread joined" << std::endl;
+      std::clog << "lofar__fini: input section joined" << std::endl;
     }
 
     unconfigureCNs();
