@@ -30,7 +30,7 @@ Correlator::Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration)
   itsCorrelationWeights[0] = 0.0;
 
   for (unsigned i = 1; i <= nrSamplesPerIntegration; i ++) {
-#if INPUT_TYPE == I4COMPLEX_TYPE
+#if NR_BITS_PER_SAMPLE == 4
     itsCorrelationWeights[i] = 1.0 / i;
 #else
     itsCorrelationWeights[i] = 1.0e-6 / i;
