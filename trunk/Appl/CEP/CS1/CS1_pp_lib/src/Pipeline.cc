@@ -36,18 +36,18 @@ using namespace casa;
 //===============>>>  Pipeline::Pipeline  <<<===============
 
 Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
-                   BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher)
-
+                   BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher):
+  myInfo(info),
+  myFile(msfile),
+  myDetails(details),
+  myBandpass(bandpass),
+  myFlagger(flagger),
+  mySquasher(squasher),
+  BandpassData(0),
+  FlaggerData(0),
+  SquasherData(0),
+  myStatistics(0)
 {
-  myInfo       = info;
-  myFile       = msfile;
-  myDetails    = details;
-  myBandpass   = bandpass;
-  myFlagger    = flagger;
-  mySquasher   = squasher;
-  BandpassData = NULL;
-  FlaggerData  = NULL;
-  SquasherData = NULL;
   myStatistics = new FlaggerStatistics(*myInfo);
 }
 
@@ -56,29 +56,32 @@ Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
 Pipeline::~Pipeline()
 {
   delete myStatistics;
-  if (BandpassData)
-  {
-    delete BandpassData;
-    BandpassData = NULL;
+  delete BandpassData;
+  if (FlaggerData != BandpassData)
+  { delete FlaggerData;
   }
-  if (FlaggerData)
-  {
-    delete FlaggerData;
-    FlaggerData = NULL;
-  }
-  if (SquasherData)
-  {
-    delete SquasherData;
-    SquasherData = NULL;
+  if (SquasherData != FlaggerData)
+  { delete SquasherData;
   }
 }
 
 //===============>>>  Pipeline::~Pipeline  <<<===============
 
-void Pipeline::MirrorBuffer(DataBuffer& buffer, MsInfo& info)
+void Pipeline::MirrorBuffer(DataBuffer& buffer, MsInfo& info, int step)
 {
+  int from_pos;
+  int to_pos;
+  if (step) //end of the read sequence
+  { from_pos = (buffer.WindowSize + buffer.Position - 2*step) % buffer.WindowSize;
+    to_pos   = buffer.Position;
+  }
+  else //start of the read sequence
+  { from_pos = buffer.Position;
+    to_pos   = (buffer.WindowSize - buffer.Position) % buffer.WindowSize;
+  }
+  cout << from_pos << " : " << to_pos << endl;
   for (int i = 0; i < info.NumBands * info.NumPairs; i++)
-  { buffer.Data[i].xyPlane(buffer.WindowSize - buffer.Position) = buffer.Data[i].xyPlane(buffer.Position);
+  { buffer.Data[i].xyPlane(to_pos) = buffer.Data[i].xyPlane(from_pos);
   }
 }
 
@@ -112,14 +115,12 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
     if (myBandpass)
     { myBandpass->ProcessTimeslot(*BandpassData, *myInfo, *myDetails);
     }
+    if (TimeCounter > 0 && TimeCounter <= (BandpassData->WindowSize - 1)/2)
+    { MirrorBuffer(*BandpassData, *myInfo, 0);
+    }
     if (TimeCounter >= (BandpassData->WindowSize - 1)/2)
     { if (myFlagger)
       { myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
-      }
-    }
-    else
-    { if (TimeCounter > 0)
-      { MirrorBuffer(*BandpassData, *myInfo);
       }
     }
     if (TimeCounter >= (BandpassData->WindowSize - 1))
@@ -139,18 +140,17 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
   }
   for (int i = 1; i <= (BandpassData->WindowSize - 1); i++) //write the last couple of values
   {
-    if (myFlagger && i <= (BandpassData->WindowSize - 1)/2)
-    { MirrorBuffer(*BandpassData, *myInfo);
+    if (myFlagger && (i <= (BandpassData->WindowSize - 1)/2))
+    { MirrorBuffer(*BandpassData, *myInfo, i);
       myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
-      BandpassData->Position = ++(BandpassData->Position) % BandpassData->WindowSize;
     }
+    BandpassData->Position = ++(BandpassData->Position) % BandpassData->WindowSize;
     if (mySquasher)
-    { SquasherData->Position = (SquasherData->Position + 1) % SquasherData->WindowSize;
+    { SquasherData->Position = ++(SquasherData->Position) % SquasherData->WindowSize;
       mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
     }
     myFile->WriteData(write_iter, *SquashedInfo, *SquasherData);
     write_iter++;
-    SquasherData->Position = (SquasherData->Position + 1) % SquasherData->WindowSize;
     if (row++ % step == 0) // to tell the user how much % we have processed,
     { cout << (row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
     }

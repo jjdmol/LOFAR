@@ -120,7 +120,7 @@ void ComplexMedianFlagger::ProcessTimeslot(DataBuffer& data,
         treshold = (details.MinThreshold + (details.MaxThreshold - details.MinThreshold)
                     * info.BaselineLengths[info.BaselineIndex[baseline_t(j, k)]]
                     / info.MaxBaselineLength
-                    ) * info.NoiseLevel;
+                   ) * info.NoiseLevel;
         flags.reference(data.Flags[index].xyPlane(pos));
 //        if ((BaselineLengths[BaselineIndex[pairii(j, k)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
         stats(i, j, k) = FlagBaselineBand(flags,
