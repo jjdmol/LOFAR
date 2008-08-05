@@ -60,7 +60,7 @@ namespace LOFAR
           else {
             LOG_DEBUG_STR(progName + " running (noRuns=" << noRuns << ")");
             if (noRuns > 0) 
-              do err = err || !run(); while (inRunState() && noRuns-- > 0);
+              do err = err || !run(); while (inRunState() && --noRuns > 0);
             else
               do err = err || !run(); while (inRunState());
             if (err) LOG_ERROR("Error during run()");
