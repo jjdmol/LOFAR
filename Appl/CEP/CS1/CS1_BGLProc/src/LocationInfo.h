@@ -26,7 +26,6 @@ class LocationInfo
   public:
 	     LocationInfo();
 
-    unsigned remapOnTree(unsigned pset, unsigned core) const;
 
     unsigned rank() const;
     unsigned nrNodes() const;
@@ -36,6 +35,7 @@ class LocationInfo
   private:
 #if defined HAVE_BGP || defined HAVE_BGL
     void getPersonality();
+    unsigned remapOnTree(unsigned pset, unsigned core) const;
 #endif
 
 #if defined HAVE_BGP

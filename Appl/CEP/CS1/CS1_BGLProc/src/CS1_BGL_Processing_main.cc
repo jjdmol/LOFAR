@@ -33,7 +33,10 @@
 #include <CS1_BGLProc/Package__Version.h>
 
 #include <boost/lexical_cast.hpp>
+
+#if defined HAVE_MPI
 #include <mpi.h>
+#endif
 
 #if defined HAVE_FCNP && defined HAVE_BGP
 #include <fcnp_cn.h>
