@@ -26,6 +26,9 @@ class LocationInfo
   public:
 	     LocationInfo();
 
+#if defined HAVE_BGP || defined HAVE_BGL
+    unsigned remapOnTree(unsigned pset, unsigned core) const;
+#endif
 
     unsigned rank() const;
     unsigned nrNodes() const;
