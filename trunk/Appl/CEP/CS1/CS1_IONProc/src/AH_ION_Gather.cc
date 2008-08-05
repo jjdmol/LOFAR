@@ -34,11 +34,12 @@ namespace LOFAR {
 namespace CS1 {
 
 
-AH_ION_Gather::AH_ION_Gather(const std::vector<Stream *> &clientStreams) 
+AH_ION_Gather::AH_ION_Gather(const std::vector<Stream *> &clientStreams, unsigned myPsetNumber) 
 :
   itsCS1PS(0),
   itsWH(0),
   itsVisibilitiesStub(0),
+  itsPsetNumber(myPsetNumber),
   itsClientStreams(clientStreams)
 {
 }
@@ -54,13 +55,7 @@ void AH_ION_Gather::define(const KeyValueMap&)
 {
   itsCS1PS = new CS1_Parset(&itsParamSet);
 
-#if defined HAVE_BGLPERSONALITY
-  unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
-#else
-  unsigned myPsetNumber = 0;
-#endif
-
-  itsWH = new WH_ION_Gather("ION_Gather", myPsetNumber, itsCS1PS, itsClientStreams);
+  itsWH = new WH_ION_Gather("ION_Gather", itsPsetNumber, itsCS1PS, itsClientStreams);
   itsWH->runOnNode(0);
 
   DataManager *dm = new DataManager(itsWH->getDataManager());
@@ -69,7 +64,7 @@ void AH_ION_Gather::define(const KeyValueMap&)
 
   itsVisibilitiesStub = new Stub_BGL(true, false, "BGLProc_Storage", itsCS1PS);
 
-  unsigned myPsetIndex	     = itsCS1PS->outputPsetIndex(myPsetNumber);
+  unsigned myPsetIndex	     = itsCS1PS->outputPsetIndex(itsPsetNumber);
   unsigned nrPsetsPerStorage = itsCS1PS->nrPsetsPerStorage();
   unsigned storage_host	     = myPsetIndex / nrPsetsPerStorage;
   unsigned storage_port      = myPsetIndex % nrPsetsPerStorage;

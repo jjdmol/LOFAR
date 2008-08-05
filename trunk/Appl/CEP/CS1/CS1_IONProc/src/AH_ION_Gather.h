@@ -33,7 +33,7 @@ namespace CS1 {
 class AH_ION_Gather : public ApplicationHolder
 {
   public:
-		 AH_ION_Gather(const std::vector<Stream *> &clientTHs);
+		 AH_ION_Gather(const std::vector<Stream *> &clientTHs, unsigned myPsetNumber);
     virtual	 ~AH_ION_Gather();
     virtual void undefine();
     virtual void define(const KeyValueMap&);
@@ -45,6 +45,7 @@ class AH_ION_Gather : public ApplicationHolder
     CS1_Parset	  *itsCS1PS;
     WH_ION_Gather *itsWH;
     Stub_BGL	  *itsVisibilitiesStub;
+    unsigned	  itsPsetNumber;
 
     const std::vector<Stream *> &itsClientStreams;
 };
