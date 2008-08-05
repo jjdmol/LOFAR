@@ -36,7 +36,8 @@ using namespace casa;
 
 //===============>>>  MsFile::MsFile  <<<===============
 
-MsFile::MsFile(const std::string& msin, const std::string& msout)
+MsFile::MsFile(const std::string& msin, const std::string& msout):
+  InMS(0), OutMS(0)
 {
   InName  = msin;
   OutName = msout;

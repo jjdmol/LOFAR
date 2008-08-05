@@ -45,14 +45,15 @@ namespace LOFAR
   {
     //===============>>> PipelineProcessControl::PipelineProcessControl  <<<===============
     PipelineProcessControl::PipelineProcessControl()
-    : ProcessControl()
+    : ProcessControl(),
+      myPipeline(0),
+      myFile(0),
+      myInfo(0),
+      myBandpass(0),
+      myFlagger(0),
+      mySquasher(0),
+      myDetails(0)
     {
-      myPipeline = NULL;
-      myFile     = NULL;
-      myInfo     = NULL;
-      myBandpass = NULL;
-      myFlagger  = NULL;
-      mySquasher = NULL;
     }
 
     //===============>>> PipelineProcessControl::~PipelineProcessControl  <<<==============
@@ -65,23 +66,24 @@ namespace LOFAR
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       myDetails  = new RunDetails();
-      myDetails->Fixed        = ParamSet->getInt32("fixed");      // BandpassCorrector
-      myDetails->FreqWindow   = ParamSet->getInt32("freqwindow"); // FrequencyFlagger, MADFlagger
-      myDetails->TimeWindow   = ParamSet->getInt32("timewindow"); // ComplexMedianFlagger, MADFlagger
-      myDetails->Treshold     = ParamSet->getInt32("treshold");   // FrequencyFlagger
-      myDetails->MinThreshold = ParamSet->getDouble("min");       // ComplexMedianFlagger
-      myDetails->MaxThreshold = ParamSet->getDouble("max");       // ComplexMedianFlagger
-      myDetails->Existing     = ParamSet->getBool("existing");    // all flaggers
-      myDetails->NChan        = ParamSet->getInt32("nchan");      // DataSquasher
-      myDetails->Start        = ParamSet->getInt32("start");      // DataSquasher
-      myDetails->Step         = ParamSet->getInt32("step");       // DataSquasher
-      myDetails->Skip         = ParamSet->getBool("skipflags");   // DataSquasher
-      myDetails->Columns      = ParamSet->getBool("allcolumns");  // DataSquasher
+      myDetails->Fixed        = ParamSet->getInt32("fixed", 0);         // BandpassCorrector
+      myDetails->FreqWindow   = ParamSet->getInt32("freqwindow", 1);    // FrequencyFlagger, MADFlagger
+      myDetails->TimeWindow   = ParamSet->getInt32("timewindow", 1);    // ComplexMedianFlagger, MADFlagger
+      myDetails->Treshold     = ParamSet->getDouble("treshold", 1.0);   // FrequencyFlagger, MADFlagger
+      myDetails->Algorithm    = ParamSet->getInt32("algorithm", 0);     // FrequencyFlagger
+      myDetails->MinThreshold = ParamSet->getDouble("min", 1.0);        // ComplexMedianFlagger
+      myDetails->MaxThreshold = ParamSet->getDouble("max", 1.0);        // ComplexMedianFlagger
+      myDetails->Existing     = ParamSet->getBool("existing", false);   // all flaggers
+      myDetails->NChan        = ParamSet->getInt32("nchan");            // DataSquasher
+      myDetails->Start        = ParamSet->getInt32("start");            // DataSquasher
+      myDetails->Step         = ParamSet->getInt32("step");             // DataSquasher
+      myDetails->Skip         = ParamSet->getBool("skipflags", false);  // DataSquasher
+      myDetails->Columns      = ParamSet->getBool("allcolumns", false); // DataSquasher
       itsInMS                 = ParamSet->getString("msin");
       itsOutMS                = ParamSet->getString("msout");
-      itsBandpass             = ParamSet->getInt32("bandpass");
-      itsFlagger              = ParamSet->getInt32("flagger");
-      itsSquasher             = ParamSet->getInt32("squasher");
+      itsBandpass             = ParamSet->getInt32("bandpass", 0);
+      itsFlagger              = ParamSet->getInt32("flagger", 0);
+      itsSquasher             = ParamSet->getInt32("squasher", 0);
       myDetails->PrintInfo();
       return true;
     }
@@ -150,48 +152,32 @@ namespace LOFAR
 
     //===============>>> PipelineProcessControl::pause  <<<===============================
     tribool PipelineProcessControl::pause(const std::string&)
-    { return false;
+    {
+      return indeterminate;
     }
 
     //===============>>> PipelineProcessControl::quit  <<<================================
     tribool PipelineProcessControl::quit()
     {
-      if (myPipeline)
-      {
-        delete myPipeline;
-        myPipeline = NULL;
-      }
-      if (myFile)
-      {
-        delete myFile;
-        myFile = NULL;
-      }
-      if (myInfo)
-      {
-        delete myInfo;
-        myInfo = NULL;
-      }
-      if (myBandpass)
-      {
-        delete myBandpass;
-        myBandpass = NULL;
-      }
-      if (myFlagger)
-      {
-        delete myFlagger;
-        myFlagger = NULL;
-      }
-      if (mySquasher)
-      {
-        delete mySquasher;
-        mySquasher = NULL;
-      }
       return true;
     }
 
     //===============>>> PipelineProcessControl::release  <<<=============================
     tribool PipelineProcessControl::release()
-    { return false;
+    {
+      delete myPipeline;
+      myPipeline = 0;
+      delete myFile;
+      myFile = 0;
+      delete myInfo;
+      myInfo = 0;
+      delete myBandpass;
+      myBandpass = 0;
+      delete myFlagger;
+      myFlagger = 0;
+      delete mySquasher;
+      mySquasher = 0;
+      return true;
     }
 
     //===============>>> PipelineProcessControl::recover  <<<=============================
