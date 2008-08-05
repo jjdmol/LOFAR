@@ -127,6 +127,7 @@ void LocationInfo::getPersonality()
 
 #endif
 
+#if defined HAVE_BGL || defined HAVE_BGP
 
 unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
 {
@@ -137,6 +138,7 @@ unsigned LocationInfo::remapOnTree(unsigned pset, unsigned core) const
       return rank;
 }
 
+#endif
 
 } // namespace CS1
 } // namespace LOFAR
