@@ -1,5 +1,7 @@
 SUBDIRS=src
 
+ACLOCAL_AMFLAGS = -I $(top_srcdir)/autoconf_share
+
 EXTRA_DIST = \
       Makefile.common \
       CUDaemons.spec \
