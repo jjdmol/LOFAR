@@ -96,18 +96,23 @@ EXCEPTION_CLASS(AssertError,Exception);
 
 // If the condition of assert is NOT met a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
-#define ASSERT(cond) \
-	if (!(cond))  THROW(::LOFAR::AssertError, "Assertion: " #cond)
+#define ASSERT(cond) do { \
+	if (!(cond)) THROW(::LOFAR::AssertError, "Assertion: " #cond); \
+	} while(0)
+
 
 // If the condition of assert is NOT met, a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
-#define ASSERTSTR(cond,stream) \
-	if (!(cond))  THROW(::LOFAR::AssertError, "Assertion: " #cond "; " << stream)
+#define ASSERTSTR(cond,stream) do { \
+	if (!(cond)) THROW(::LOFAR::AssertError, \
+			   "Assertion: " #cond "; " << stream); \
+	} while(0)
 
 // If the condition of failwhen is met, a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
-#define FAILWHEN(cond) \
-	if (cond)  THROW(::LOFAR::AssertError, "Failtest: " #cond)
+#define FAILWHEN(cond) do { \
+	if (cond) THROW(::LOFAR::AssertError, "Failtest: " #cond); \
+	} while(0)
 
 #ifdef ENABLE_DBGASSERT
 #define DBGASSERT(cond)				ASSERT(cond)

@@ -221,31 +221,36 @@ public: \
 	std::ostringstream	lfr_log_oss; \
 	lfr_log_oss << stream
 
-#define	cLog(level,levelname,message) \
+#define	cLog(level,levelname,message) do { \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< std::endl
+		<< std::endl; \
+	} while(0)
 
 #define cLogstr(level,levelname,stream) do { \
 		constructStream(stream); \
 		cLog(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
-#define	cDebug(level,levelname,message) \
+#define	cDebug(level,levelname,message) do { \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << std::endl
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ \
+		<< std::endl; \
+	} while(0)
 
 #define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream); \
 		cDebug(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
-#define cTrace(level,message) \
+#define cTrace(level,message) do { \
 	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
 		<< " TRC." << getLFDebugContext().name() \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << std::endl
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ \
+		<< std::endl; \
+	} while(0)
 
 #define cTracestr(level,stream) do { \
 		constructStream(stream); \
