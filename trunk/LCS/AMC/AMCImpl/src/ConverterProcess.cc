@@ -95,7 +95,8 @@ namespace LOFAR
         } 
         catch (LOFAR::Exception& e) {
           LOG_DEBUG_STR(e);
-          status = ConverterStatus(ConverterStatus::ERROR, e.what());
+          status = ConverterStatus(ConverterStatus::ERROR, 
+                                   string("AMCServer error: ") + e.what());
         }   
         
         // Send the conversion result to the client. If the send fails, the
