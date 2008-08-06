@@ -53,29 +53,37 @@ namespace LOFAR
         uint   noRuns   = arg.getUint32("NoRuns", 0);
 
         LOG_DEBUG(progName + " starting define");
-        if (err = err || !define()) LOG_ERROR("Error during define()");
-        else {
+        if (err = err || !define()) {
+	  LOG_ERROR("Error during define()");
+        } else {
           LOG_DEBUG(progName + " initializing");
-          if (err = err || !init()) LOG_ERROR("Error during init()");
-          else {
+          if (err = err || !init()) {
+	    LOG_ERROR("Error during init()");
+          } else {
             LOG_DEBUG_STR(progName + " running (noRuns=" << noRuns << ")");
             if (noRuns > 0) 
               do err = err || !run(); while (inRunState() && --noRuns > 0);
             else
               do err = err || !run(); while (inRunState());
-            if (err) LOG_ERROR("Error during run()");
-            else {
+            if (err) {
+	      LOG_ERROR("Error during run()");
+            } else {
               LOG_DEBUG(progName + " pausing now");
-              if (err = err || !pause(PAUSE_OPTION_NOW))
+              if (err = err || !pause(PAUSE_OPTION_NOW)) {
                 LOG_ERROR("Error during pause()");
+	      }
             }
           }
         }
         LOG_DEBUG(progName + " releasing");
-        if (err = err || !release()) LOG_ERROR("Error during release()");
+        if (err = err || !release()) {
+	  LOG_ERROR("Error during release()");
+	}
 
         LOG_DEBUG(progName + " quitting");
-        if (err = err || !quit()) LOG_ERROR("Error during quit()");
+        if (err = err || !quit()) {
+	  LOG_ERROR("Error during quit()");
+	}
 
         return (err);
       }
