@@ -54,6 +54,7 @@ AHC_Storage::AHC_Storage(TinyApplicationHolder& AH, int noRuns)
 AHC_Storage::~AHC_Storage()
 {};
 
+/* todo: check this code during SAS/MAC tests
 tribool AHC_Storage::pause    (const	string&	)
 {
   LOG_TRACE_FLOW("Pause called");
@@ -106,5 +107,7 @@ tribool AHC_Storage::quit  	 ()
   LOG_TRACE_FLOW("Quit ready");
   return true;
 }
+
+*/
   }
 }  
