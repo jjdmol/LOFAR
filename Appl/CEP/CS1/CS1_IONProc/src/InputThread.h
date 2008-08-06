@@ -32,56 +32,47 @@
 #include <Common/lofar_vector.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <BeamletBuffer.h>
+#include <LogThread.h>
 
 #include <pthread.h>
 
-namespace LOFAR 
+namespace LOFAR {
+namespace CS1 {
+
+  struct ThreadArgs {
+    BeamletBuffer	*BBuffer;
+    Stream		*stream; 
+
+    unsigned		threadID;
+    unsigned		frameSize;
+    unsigned		ipHeaderSize;
+    unsigned		frameHeaderSize;
+    unsigned		nTimesPerFrame;
+    unsigned		nSubbandsPerFrame;
+    LogThread::Counters	*packetCounters;
+    bool		isRealTime;
+    TimeStamp		startTime;
+  };
+
+class InputThread
 {
-  //# Forward Declarations
-  class NSTimer;
-    
-  namespace CS1 
-  {
-    // \addtogroup CS1_InputSection
-    // @{
+  public:
+    InputThread(ThreadArgs args);
+    ~InputThread();
 
-    // TODO: this information doesn't have to be in a struct
-    struct ThreadArgs {
-      BeamletBuffer	*BBuffer;
-      Stream		*stream; 
+    static void *mainLoopStub(void *inputThread);
+    void	  mainLoop();
 
-      int		frameSize;
-      int		ipHeaderSize;
-      int		frameHeaderSize;
-      int		nTimesPerFrame;
-      int		nSubbandsPerFrame;
-      bool		isRealTime;
-      TimeStamp		startTime;
-    };
+  private:
+    static void sigHandler(int);
   
-    class InputThread
-    {
-    public:
-      InputThread(const ThreadArgs &args);
-      ~InputThread();
+    static volatile bool theirShouldStop;
 
-      static void *mainLoopStub(void *inputThread);
-      void	  mainLoop();
+    ThreadArgs itsArgs;
+    pthread_t  thread;
+  };
 
-    private:
-      static void *logThread(void *);
-      static void sigHandler(int);
-    
-      //# Datamembers
-      static volatile bool theirShouldStop;
-      static volatile unsigned nrPacketsReceived, nrPacketsRejected;
-      ThreadArgs itsArgs;
-      pthread_t	 thread;
-    };
-
-    // @}
-
-  } // namespace CS1
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

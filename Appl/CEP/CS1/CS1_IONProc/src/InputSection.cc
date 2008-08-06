@@ -38,8 +38,10 @@
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/SubbandMetaData.h>
 
+#include <pthread.h>
 #include <sys/time.h>
 
+#include <cstdio>
 #include <stdexcept>
 
 #undef DUMP_RAW_DATA
@@ -61,10 +63,11 @@ InputSection::InputSection(const std::vector<Stream *> &clientStreams, unsigned 
 :
   itsClientStreams(clientStreams),
   itsPsetNumber(psetNumber),
-  itsBBuffer(0),
   itsDelayComp(0),
+  itsLogThread(0),
   itsDelayTimer("delay")
 {
+  raisePriority();
 }
 
 
@@ -74,14 +77,26 @@ InputSection::~InputSection()
 }
 
 
+void InputSection::raisePriority()
+{
+  struct sched_param sched_param;
+
+  sched_param.sched_priority = 99;
+
+  if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sched_param) < 0)
+    perror("pthread_setschedparam");
+}
+
+
 void InputSection::startThreads()
 {
+  itsLogThread = new LogThread(itsStationsAndRSPboardNumbers.size());
+
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
 
   ThreadArgs args;
 
-  args.BBuffer            = itsBBuffer;
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
@@ -92,8 +107,11 @@ void InputSection::startThreads()
 
   itsInputThreads.resize(itsStationsAndRSPboardNumbers.size());
 
-  for (unsigned thread = 0; thread < 1; thread ++) { // FIXME
-    args.stream		  = itsInputStreams[thread];
+  for (unsigned thread = 0; thread < itsStationsAndRSPboardNumbers.size(); thread ++) {
+    args.threadID	    = thread;
+    args.stream		    = itsInputStreams[thread];
+    args.BBuffer            = itsBBuffers[thread];
+    args.packetCounters     = &itsLogThread->itsCounters[thread];
 
     itsInputThreads[thread] = new InputThread(args);
   }
@@ -137,15 +155,18 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsSampleDuration     = ps->sampleDuration();
 
   // create the buffer controller.
-  int subbandsToReadFromFrame = ps->subbandsToReadFromFrame();
   std::clog << "nrSubbands = "<< ps->nrSubbands() << std::endl;
   std::clog << "nrStations = "<< ps->nrStations() << std::endl;
-  std::clog << "nrRSPboards = "<< ps->nrRSPboards() << std::endl;
-  ASSERTSTR(subbandsToReadFromFrame <= ps->nrSubbandsPerFrame(), subbandsToReadFromFrame << " < " << ps->nrSubbandsPerFrame());
 
   itsDelayCompensation = ps->getBool("OLAP.delayCompensation");
+#if 0
   itsBeamlet2beams = ps->beamlet2beams();
   itsSubband2Index = ps->subband2Index();
+#else
+  itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
+  itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
+  itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
+#endif
   
   itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
@@ -158,9 +179,9 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsSyncedStamp = TimeStamp(seconds, samples);
  
   if (itsDelayCompensation) {
-    itsDelaysAtBegin.resize(ps->nrBeams());
-    itsDelaysAfterEnd.resize(ps->nrBeams());
-    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * ps->nrBeams());
+    itsDelaysAtBegin.resize(itsNrBeams);
+    itsDelaysAfterEnd.resize(itsNrBeams);
+    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * itsNrBeams);
     
     itsDelayComp = new WH_DelayCompensation(ps, itsStationsAndRSPboardNumbers[0].first); // FIXME
 
@@ -173,17 +194,20 @@ void InputSection::preprocess(const CS1_Parset *ps)
     
     itsCounter = 0;
     
-    for (unsigned beam = 0; beam < ps->nrBeams(); beam ++)
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
     
     itsDelaysAtBegin = itsDelaysAfterEnd;
   }
    
-  unsigned cyclicBufferSize = ps->nrSamplesToBuffer();
   itsIsRealTime       = ps->realTime();
   itsMaxNetworkDelay  = ps->maxNetworkDelay();
   std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples" << std::endl;
-  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
+
+  itsBBuffers.resize(itsStationsAndRSPboardNumbers.size());
+
+  for (unsigned rsp = 0; rsp < itsStationsAndRSPboardNumbers.size(); rsp ++)
+    itsBBuffers[rsp] = new BeamletBuffer(ps->inputBufferSize(), ps->nrSubbandsPerFrame(), itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataServers = ps->getStringVector("OLAP.OLAP_Conn.rawDataServers");
@@ -215,8 +239,9 @@ void InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 void InputSection::process() 
 {
   std::vector<TimeStamp>	delayedStamps(itsNrBeams, itsSyncedStamp - itsNHistorySamples);
-  std::vector<int>		samplesDelay(itsNrBeams);
-  std::vector<SubbandMetaData>	metaDataPerBeam(itsNrBeams);
+  std::vector<signed int>	samplesDelay(itsNrBeams);
+  std::vector<float>		fineDelaysAtBegin(itsNrBeams), fineDelaysAfterEnd(itsNrBeams);
+  boost::multi_array<SparseSet<unsigned>, 2> flags(boost::extents[itsStationsAndRSPboardNumbers.size()][itsNrBeams]);
   
   // set delay
   if (itsDelayCompensation) {    
@@ -248,36 +273,35 @@ void InputSection::process()
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       // The coarse delay will be determined for the center of the current
       // time interval and will be expressed in \e samples.
-      int coarseDelay = (int) floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
+      signed int coarseDelay = (signed int) floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
     
       // The fine delay will be determined for the boundaries of the current
       // time interval and will be expressed in seconds.
       double d = coarseDelay * itsSampleDuration;
     
-      delayedStamps[beam] += coarseDelay;
-      samplesDelay[beam]  = +coarseDelay;
-      metaDataPerBeam[beam].delayAtBegin  = (float)(itsDelaysAtBegin[beam] - d);
-      metaDataPerBeam[beam].delayAfterEnd = (float)(itsDelaysAfterEnd[beam] - d);
+      delayedStamps[beam]     += coarseDelay;
+      samplesDelay[beam]       = +coarseDelay; // FIXME: or - ?
+      fineDelaysAtBegin[beam]  = (float) (itsDelaysAtBegin[beam] - d);
+      fineDelaysAfterEnd[beam] = (float) (itsDelaysAfterEnd[beam] - d);
     }
   } else {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      metaDataPerBeam[beam].delayAtBegin  = 0;
-      metaDataPerBeam[beam].delayAfterEnd = 0;
-      samplesDelay[beam] = 0;
+      samplesDelay[beam]       = 0;
+      fineDelaysAtBegin[beam]  = 0;
+      fineDelaysAfterEnd[beam] = 0;
     }  
   }
 
-  itsBBuffer->startReadTransaction(delayedStamps, itsNSamplesPerSec + itsNHistorySamples);
+  for (unsigned rsp = 0; rsp < itsStationsAndRSPboardNumbers.size(); rsp ++) {
+    itsBBuffers[rsp]->startReadTransaction(delayedStamps, itsNSamplesPerSec + itsNHistorySamples);
 
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    metaDataPerBeam[beam].alignmentShift = itsBBuffer->alignmentShift(beam);
- 
-    // set flags
-    SparseSet<unsigned> flags = itsBBuffer->readFlags(beam);
-    limitFlagsLength(flags);
-    metaDataPerBeam[beam].setFlags(flags);
-  }  
-  
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      /*if (itsMustComputeFlags[rsp][beam])*/ { // TODO
+	flags[rsp][beam] = itsBBuffers[rsp]->readFlags(beam);
+	limitFlagsLength(flags[rsp][beam]);
+      }
+  }
+
   std::clog << itsSyncedStamp;
 
   if (itsIsRealTime) {
@@ -298,7 +322,10 @@ void InputSection::process()
     std::clog << "]";
   }
 
-  std::clog << ", flags: " << metaDataPerBeam[0].getFlags() << " (" << std::setprecision(3) << (100.0 * metaDataPerBeam[0].getFlags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl; // not really correct; beam(0) may be shifted
+  for (unsigned rsp = 0; rsp < itsStationsAndRSPboardNumbers.size(); rsp ++)
+    std::clog << ", flags " << rsp << ": " << flags[rsp][0] << '(' << std::setprecision(3) << (100.0 * flags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
+  
+  std::clog << std::endl;
 
   NSTimer timer;
   timer.start();
@@ -329,7 +356,7 @@ void InputSection::process()
     fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
     strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr).c_str(), 16);
     fileHeader.sampleRate = itsSampleRate;
-    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], 54 * sizeof(double));
+    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->subbandToFrequencyMapping()[0], 54 * sizeof(double));
  
     for (unsigned beam = 1; beam < itsNrBeams+1; beam ++){
       vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
@@ -370,7 +397,7 @@ void InputSection::process()
   rawDataStream->write(&blockHeader, sizeof blockHeader);
 
   for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
-    itsBBuffer->sendUnalignedSubband(rawDataStream, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
+    itsBBuffers[0]->sendUnalignedSubband(rawDataStream, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1); // FIXME!!!
 
 #else
 
@@ -382,23 +409,37 @@ void InputSection::process()
 
     command.write(str);
 
-    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaDataPerComputeNode(itsNrPsets);
+    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData(itsNrPsets);
 
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
-      unsigned beam    = itsBeamlet2beams[itsSubband2Index[subband]] - 1;
+      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+      unsigned beam     = itsSubbandToBeamMapping[subband];
 
-      metaDataPerComputeNode[pset] = metaDataPerBeam[beam];
+      metaData[pset].delayAtBegin   = fineDelaysAtBegin[beam];
+      metaData[pset].delayAfterEnd  = fineDelaysAfterEnd[beam];
+      metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
+
+#if 0
+      // TODO: cache flags; readFlags(beam) is expensive
+      SparseSet<unsigned> flags     = itsBBuffers[rspBoard]->readFlags(beam);
+      limitFlagsLength(flags);
+      metaData[pset].setFlags(flags);
+#else
+      metaData[pset].setFlags(flags[rspBoard][beam]);
+#endif
     }
 
     // send all metadata in one "large" message
-    str->write(&metaDataPerComputeNode[0], metaDataPerComputeNode.size() * sizeof(SubbandMetaData));
+    str->write(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
 
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
-      unsigned beam    = itsBeamlet2beams[itsSubband2Index[subband]] - 1;
+      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+      unsigned rspSlot	= itsSubbandToRSPslotMapping[subband];
+      unsigned beam     = itsSubbandToBeamMapping[subband];
 
-      itsBBuffer->sendSubband(str, subband, beam);
+      itsBBuffers[rspBoard]->sendSubband(str, rspSlot, beam);
     }
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
@@ -406,7 +447,9 @@ void InputSection::process()
   }
 #endif
 
-  itsBBuffer->stopReadTransaction();
+  for (unsigned rsp = 0; rsp < itsStationsAndRSPboardNumbers.size(); rsp ++)
+    itsBBuffers[rsp]->stopReadTransaction();
+
   itsSyncedStamp += itsNSamplesPerSec;
 
   timer.stop();
@@ -423,13 +466,23 @@ void InputSection::postprocess()
 
   itsInputThreads.resize(0);
 
+
   for (unsigned i = 0; i < itsInputStreams.size(); i ++)
     delete itsInputStreams[i];
 
   itsInputStreams.resize(0);
 
-  delete itsBBuffer;	itsBBuffer	= 0;
+  for (unsigned i = 0; i < itsBBuffers.size(); i ++)
+    delete itsBBuffers[i];
+
+  itsBBuffers.resize(0);
+
+  delete itsLogThread;	itsLogThread	= 0;
   delete itsDelayComp;	itsDelayComp	= 0;
+
+  itsSubbandToBeamMapping.resize(0);
+  itsSubbandToRSPboardMapping.resize(0);
+  itsSubbandToRSPslotMapping.resize(0);
 
   itsDelayTimer.print(std::clog);
 }

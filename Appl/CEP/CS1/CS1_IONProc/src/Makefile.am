@@ -5,6 +5,7 @@ Connector.h			\
 InputThread.h			\
 ION_Allocator.h			\
 LockedRanges.h			\
+LogThread.h			\
 ReaderWriterSynchronization.h	\
 SlidingPointer.h		\
 WallClockTime.h			\
@@ -21,6 +22,7 @@ CS1_ION_main.cc		 	\
 Connector.cc			\
 InputThread.cc			\
 ION_Allocator.cc		\
+LogThread.cc			\
 ReaderWriterSynchronization.cc	\
 InputSection.cc			\
 WH_DelayCompensation.cc		\

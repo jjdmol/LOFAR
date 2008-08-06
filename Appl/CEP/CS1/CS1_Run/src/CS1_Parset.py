@@ -167,11 +167,13 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	return self.sb2index    
 
     def getNrSubbands(self):
-        if not self.doObservation:
-	    self.observation()
-	return self.nrSubbands   
+	return len(self.getInt32Vector('Observation.subbandList'))
+        #if not self.doObservation:
+	    #self.observation()
+	#return self.nrSubbands   
 	
     def observation(self):
+	return
         self.doObservation = True
         bl2beamsArray = zeros(4*54)
 	bl2subbandsArray = zeros(4*54)
@@ -210,7 +212,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	# nrSubbands, check the number of subbands of each RSP
 	nSubbands = 0
-	for i in range(0,54):
+	for i in range(0,4*54):
 	    if bl2subbandsArray[i] != -1:
 	        nSubbands += 1
 	
@@ -223,7 +225,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         sbList = list()
         
 	b2s = self.getBeamlet2subbands()
-	for i in range(0,54):
+	for i in range(0,4*54):
 	    if b2s[i] != -1:
 	        sbList.append(b2s[i])
 	    
@@ -255,21 +257,22 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	return 1
     
     def checkCS1Parset(self):
-        if not self.isDefined('Observation.Beam[1].beamletList') and self.getInt32('Observation.nrBeams') == 1:
-	    sbString = self.expandedArrayString(self.getString('Observation.Beam[1].subbandList'))
-	    self.__setitem__('x',sbString);
-	    subbands = self.getInt32Vector('x')
-	    self['Observation.Beam[1].beamletList'] = '[0..%s]' % str(len(subbands) - 1)
+	print 'checkCS1Parset skipped'
+        #if not self.isDefined('Observation.Beam[1].beamletList') and self.getInt32('Observation.nrBeams') == 1:
+	    #sbString = self.expandedArrayString(self.getString('Observation.Beam[1].subbandList'))
+	    #self.__setitem__('x',sbString);
+	    #subbands = self.getInt32Vector('x')
+	    #self['Observation.Beam[1].beamletList'] = '[0..%s]' % str(len(subbands) - 1)
 		    
-	b2b = self.getBeamlet2beams()
-        nBeamlets = 0
-	for i in range(0,53):
-	    if b2b[i] != 0:
-	        nBeamlets += 1
+	#b2b = self.getBeamlet2beams()
+        #nBeamlets = 0
+	#for i in range(0,53):
+	    #if b2b[i] != 0:
+	        #nBeamlets += 1
 
-	if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
-	    print 'NrBeamlets(%d)' % nBeamlets + ' > OLAP.nrSubbandsPerFrame(%d)' %  self.getInt32('OLAP.nrSubbandsPerFrame')
-	    sys.exit(0)
+	#if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
+	    #print 'NrBeamlets(%d)' % nBeamlets + ' > OLAP.nrSubbandsPerFrame(%d)' %  self.getInt32('OLAP.nrSubbandsPerFrame')
+	    #sys.exit(0)
 
     def addkeys_IONodeRSP(self):
 	interfaces = IONodes.get(self.partition)
@@ -321,19 +324,19 @@ class CS1_Parset(LOFAR_Parset.Parset):
             subbandwidth = 195312.5
 
 	#note: this is only true when the number of subbands in the 4 ranges(0..53,54..107,108..161,162..215) are equal!
-	subbandIDs = self.subbandList()
+	#subbandIDs = self.subbandList()
         
-	nyquistZone = self.nyquistzoneFromFilter(self.getString('Observation.bandFilter'))
+	#nyquistZone = self.nyquistzoneFromFilter(self.getString('Observation.bandFilter'))
 	
- 	sbs = list()
-        for sb in range(0, self.getNrSubbands()):
-            sbs.append((nyquistZone -1 )*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[sb] * subbandwidth)
+ 	#sbs = list()
+        #for sb in range(0, self.getNrSubbands()):
+            #sbs.append((nyquistZone -1 )*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[sb] * subbandwidth)
 
         # create the frequencies for all subbands
-        self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
-        self['Observation.NSubbands'] = self.getNrSubbands()
+        #self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
+        #self['Observation.NSubbands'] = self.getNrSubbands()
 
-        #the number of subbands should be dividable by the number of subbands per pset
-        if not self.getNrSubbands() % self.getInt32('OLAP.subbandsPerPset') == 0:
-            raise Exception('Number of subbandIDs(%d) in not dividable by the number of subbands per pset (%d).' % self.getNrSubbands(), self['OLAP.subbandsPerPset'])
+        #the number of subbands should be divisible by the number of subbands per pset
+        #if not self.getNrSubbands() % self.getInt32('OLAP.subbandsPerPset') == 0:
+            #raise Exception('Number of subbandIDs(%d) in not divisible by the number of subbands per pset (%d).' % self.getNrSubbands(), self['OLAP.subbandsPerPset'])
             

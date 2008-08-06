@@ -23,8 +23,8 @@ OLAP.OLAP_Conn.rawDataServers = ["10.181.0.4"]
 OLAP.OLAP_Conn.rawDataPorts = [4000]
 
 # Variables for Storage
-OLAP.subbandsPerPset = 3
-OLAP.psetsPerStorage = 8
+OLAP.subbandsPerPset = 9
+OLAP.psetsPerStorage = 2
 OLAP.realTime = T
 OLAP.BGLProc.integrationSteps = 608  #768 at 200MHz
 OLAP.BGLProc.nrPPFTaps=16
@@ -45,7 +45,7 @@ OLAP.DelayComp.nrCalcDelays = 16
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16
 OLAP.nrTimesInFrame = 16
-OLAP.nrSubbandsPerFrame = 48
+OLAP.nrSubbandsPerFrame = 36
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5 # 1 second extra added to compensate for timestamp bug
@@ -63,13 +63,13 @@ Observation.bandFilter = LBL_30_80
 
 #Observation.Beam[1].angle1 = 0                  # NCP
 #Observation.Beam[1].angle2 = 1.570796327
-Observation.Beam[1].angle1 = 5.2336866848083394 # Cygnus
-Observation.Beam[1].angle2 = 0.71094251447010637
+Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
+Observation.Beam[0].angle2 = 0.71094251447010637
 #Observation.Beam[1].angle1 = 6.1234876806221052 # Cas A
 #Observation.Beam[1].angle2 = 1.0265153995604648
 #Observation.Beam[1].angle1 = 0                  # NCP
-#Observation.Beam[1].angle2 = 1.570796327
-#Observation.Beam[1].angle1 = 0.9293405574       # pulsar
+Observation.Beam[1].angle2 = 1.570796327
+Observation.Beam[1].angle1 = 0.9293405574       # pulsar
 #Observation.Beam[1].angle2 = 0.9525774347
 #Observation.Beam[1].angle1 = 4.5192832066722115 # Jupiter
 #Observation.Beam[1].angle2 = 5.893698795
@@ -78,12 +78,22 @@ Observation.Beam[1].angle2 = 0.71094251447010637
 #Observation.Beam[8].angle1 = 0                  # Test
 #Observation.Beam[8].angle2 = 0
 
-Observation.nrBeams = 1
+#Observation.nrBeams = 1
+Observation.Beam[0].directionTypes = J2000
 Observation.Beam[1].directionTypes = J2000
-Observation.Beam[1].subbandList = [300..347]
-Observation.Beam[1].beamletList = [0..47]
-#Observation.Beam[1].subbandList = [257]
-#Observation.Beam[1].beamletList = [0]
+#Observation.Beam[0].subbandList = [300..335]
+#Observation.Beam[1].beamletList = [0..1, 54..55, 108..109, 162..163]
+#Observation.Beam[0].beamletList = [0..35]
+
+Observation.subbandList  = [300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335]
+Observation.beamList     = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+Observation.rspBoardList = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+Observation.rspSlotList  = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
+
+#Observation.subbandList  = [300..331]
+#Observation.beamList     = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+#Observation.rspBoardList = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3]
+#Observation.rspSlotList  = [0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7]
 
 # example 2 beams:
 #Observation.nrBeams = 2

@@ -150,7 +150,7 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.sampleRate()              = parset.sampleRate();
   configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
-  configuration.refFreqs()                = parset.refFreqs();
+  configuration.refFreqs()                = parset.subbandToFrequencyMapping();
 
   std::clog << "configuring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
@@ -269,6 +269,8 @@ void *master_thread(void *)
   enableCoreDumps();
 
   try {
+    setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
+
     pthread_t input_thread_id = 0, gather_thread_id = 0;
 
     std::clog << "trying to use " << global_argv[1] << " as ParameterSet" << std::endl;

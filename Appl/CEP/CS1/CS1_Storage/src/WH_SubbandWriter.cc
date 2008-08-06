@@ -71,7 +71,7 @@ namespace LOFAR
       itsNStations = itsCS1PS->nrStations();
       itsNBaselines = itsNStations * (itsNStations +1)/2;
       itsNChannels = itsCS1PS->nrChannelsPerSubband();
-      itsNBeams = itsCS1PS->getUint32("Observation.nrBeams");
+      itsNBeams = itsCS1PS->nrBeams();
       uint pols = itsCS1PS->getUint32("Observation.nrPolarisations");
       itsNPolSquared = pols*pols;
 
@@ -150,8 +150,12 @@ namespace LOFAR
       unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage");
       itsWriters.resize(mssesPerStorage);
       
+#if 0
       vector<int32>  bl2beams = itsCS1PS->beamlet2beams();
       vector<uint32> sb2Index = itsCS1PS->subband2Index();
+#else
+      vector<unsigned> subbandToBeamMapping = itsCS1PS->subbandToBeamMapping();
+#endif
       
       for (unsigned i = 0; i < mssesPerStorage; i ++) {
 #if defined HAVE_MPI
@@ -165,11 +169,17 @@ namespace LOFAR
 	  itsNPolSquared, itsNStations, antPos,
 	  storageStationNames, itsTimesToIntegrate);
 
+#if 0
         vector<double> beamDir = itsCS1PS->getBeamDirection(bl2beams[sb2Index[currentSubband]]);
 	itsWriters[i]->addField(beamDir[0], beamDir[1], bl2beams[sb2Index[currentSubband]]);
+#else
+	unsigned       beam    = subbandToBeamMapping[currentSubband];
+        vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
+	itsWriters[i]->addField(beamDir[0], beamDir[1], beam); // FIXME add 1???
+#endif
       }
 
-      vector<double> refFreqs= itsCS1PS->refFreqs();
+      vector<double> refFreqs = itsCS1PS->subbandToFrequencyMapping();
 
       // Now we must add \a itsNrSubbandsPerStorage to the measurement set. The
       // correct indices for the reference frequencies are in the vector of

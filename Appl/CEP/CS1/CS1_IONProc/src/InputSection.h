@@ -35,6 +35,7 @@
 #include <BeamletBuffer.h>
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
+#include <LogThread.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
@@ -53,12 +54,18 @@ class InputSection {
     void postprocess();
     
   private:
+    static void raisePriority();
     static void limitFlagsLength(SparseSet<unsigned> &flags);
     void	startThreads();
 
     bool		 itsDelayCompensation, itsIsRealTime;
+#if 0
     std::vector<int32>	 itsBeamlet2beams;
     std::vector<uint32>	 itsSubband2Index;
+#else
+    std::vector<unsigned> itsSubbandToBeamMapping;
+    std::vector<unsigned> itsSubbandToRSPboardMapping, itsSubbandToRSPslotMapping;
+#endif
 
     std::vector<InputThread *>	itsInputThreads;
 
@@ -86,10 +93,11 @@ class InputSection {
     unsigned		 itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned		 itsPsetNumber;
    
-    BeamletBuffer        *itsBBuffer;
+    std::vector<BeamletBuffer *> itsBBuffers;
     WH_DelayCompensation *itsDelayComp;
     double	         itsSampleRate, itsSampleDuration;
     
+    LogThread		 *itsLogThread;
     NSTimer		 itsDelayTimer;
     
 };
