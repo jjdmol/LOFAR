@@ -47,10 +47,11 @@ public:
 
   // Destructor
   ~AHC_Storage();
-
+/* todo: check this code during SAS/MAC tests
   // Command to control the application processes.
   tribool	pause    (const	string&	condition) ;
   tribool	quit  	 ();
+*/  
   
 protected:
   // Copying is not allowed
