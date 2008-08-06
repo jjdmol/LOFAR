@@ -29,7 +29,7 @@
 // Definition of the AMCBase specific exception classes
 
 //# Includes
-#include <Common/Exception.h>
+#include <Common/Exceptions.h>
 
 namespace LOFAR
 {
@@ -45,13 +45,6 @@ namespace LOFAR
     // This exception is thrown when an error occurs within the conversion
     // methods.
     EXCEPTION_CLASS(ConverterException, Exception);
-
-    // This exception is thrown when a network I/O error occurs
-    EXCEPTION_CLASS(IOException, Exception);
-
-    // This exception is thrown when a math error occurs (e.g. division by
-    // zero).
-    EXCEPTION_CLASS(MathException, Exception);
 
     // This exception is thrown when there is a mismatch between (coordinate)
     // reference types.
