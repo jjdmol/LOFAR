@@ -49,7 +49,7 @@ namespace LOFAR
     WH_DelayCompensation::WH_DelayCompensation(const CS1_Parset *ps,
                                                const string &stationName) :      
       itsCS1PS     (ps),
-      itsNrBeams   (ps->getUint32("Observation.nrBeams")),
+      itsNrBeams   (ps->nrBeams()),
       itsStationName(stationName),
       itsConverter (0)
     {
@@ -107,12 +107,11 @@ namespace LOFAR
       // Currently, we support J2000, ITRF, and AZEL.
       Direction::Types dirType(Direction::INVALID);
       
-       // Reserve space in \a itsBeamDirections to avoid reallocations.
-      itsBeamDirections.reserve(itsNrBeams);
+      itsBeamDirections.resize(itsNrBeams);
       
       // Get the source directions from the parameter set. 
       // Split the \a dir vector into separate Direction objects.
-      for (uint beam = 1; beam < itsNrBeams+1; ++beam) {
+      for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
         string str = toUpper(itsCS1PS->getBeamDirectionType(beam));
         
 	if      (str == "J2000") dirType = Direction::J2000;
@@ -123,7 +122,7 @@ namespace LOFAR
 
         vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
 	
-        itsBeamDirections.push_back(Direction(beamDir[0], beamDir[1], dirType));
+        itsBeamDirections[beam] = Direction(beamDir[0], beamDir[1], dirType);
 	LOG_TRACE_VAR_STR(" [" << beam << "] = " << itsBeamDirections[beam]);
       }
     }

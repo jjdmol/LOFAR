@@ -3,6 +3,7 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
@@ -36,7 +37,7 @@ class InputData
   public:
     boost::multi_array_ref<SampleType, 3> samples; //[outputPsets.size()][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
 
-    std::vector<SubbandMetaData>	  metaData; //[outputPsets.size()]
+    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData; //[outputPsets.size()]
 };
 
 

@@ -135,16 +135,20 @@ Stream *CS1_Parset::createStream(const string &description, bool asReader)
 
 uint32 CS1_Parset::nrSubbands() const
 {
+#if 0
   uint32 nrSubbands(0);
   vector<int32> b2s = beamlet2subbands();
   
-  for (uint i = 0; i < 54; i++) {
+  for (uint i = 0; i < 4*54; i++) {
     if (b2s[i] != -1) {
       nrSubbands++;
     }  
   }
 	
   return nrSubbands;
+#else
+  return subbandToBeamMapping().size();
+#endif
 }
 
 uint32 CS1_Parset::rspId(const string& stationName) const
@@ -160,6 +164,9 @@ string CS1_Parset::inputPortnr(const string& s) const
   
   return destPorts.substr(i+1, 4);  
 }
+
+
+#if 0
 
 vector<int32>  CS1_Parset::beamlet2beams(uint32 rspid) const
 {
@@ -265,6 +272,70 @@ vector<uint32>  CS1_Parset::subband2Index(uint32 rspid) const
   return subband2Index;
 }
 
+#else
+
+unsigned CS1_Parset::nyquistZone() const
+{
+  string bandFilter = getString("Observation.bandFilter");
+
+  if (bandFilter == "LBL_10_80" ||
+      bandFilter == "LBL_30_80" ||
+      bandFilter == "LBH_10_80" ||
+      bandFilter == "LBH_30_80")
+    return 1;
+
+  if (bandFilter == "HB_100_190")
+    return 2;
+
+  if (bandFilter == "HB_170_230" ||
+      bandFilter == "HB_210_240")
+    return 3;
+
+  throw std::runtime_error(string("unknown band filter \"" + bandFilter + '"'));
+}
+
+
+unsigned CS1_Parset::nrBeams() const
+{
+  vector<unsigned> beamMapping = subbandToBeamMapping();
+
+  return *std::max_element(beamMapping.begin(), beamMapping.end()) + 1;
+}
+
+
+vector<unsigned> CS1_Parset::subbandToBeamMapping() const
+{
+  return getUint32Vector("Observation.beamList");
+}
+
+
+vector<double> CS1_Parset::subbandToFrequencyMapping() const
+{
+  unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
+  vector<unsigned> subbandIds	 = getUint32Vector("Observation.subbandList");
+  vector<double>   subbandFreqs(subbandIds.size());
+
+  for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
+    subbandFreqs[subband] = sampleRate() * (subbandIds[subband] + subbandOffset);
+
+  return subbandFreqs;
+}
+
+
+vector<unsigned> CS1_Parset::subbandToRSPboardMapping() const
+{
+  return getUint32Vector("Observation.rspBoardList");
+}
+
+
+vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
+{
+  return getUint32Vector("Observation.rspSlotList");
+}
+
+#endif
+
+
 vector<double> CS1_Parset::positions() const
 {
   vector<string> stNames = getStringVector("OLAP.storageStationNames");
@@ -334,25 +405,25 @@ vector<string> CS1_Parset::getPortsOf(const string& aKey) const
   return pParset.getStringVector("ports");
 }
 
-vector<double> CS1_Parset::getBeamDirection(const unsigned currentBeam) const
+vector<double> CS1_Parset::getBeamDirection(const unsigned beam) const
 {
   char buf[50];
   std::vector<double> beamDirs(2);
  
-  sprintf(buf,"Observation.Beam[%d].angle1",currentBeam);
+  sprintf(buf,"Observation.Beam[%d].angle1", beam);
   beamDirs[0] = getDouble(buf);
-  sprintf(buf,"Observation.Beam[%d].angle2",currentBeam);
+  sprintf(buf,"Observation.Beam[%d].angle2", beam);
   beamDirs[1] = getDouble(buf);
 
   return beamDirs;
 }
 
-string CS1_Parset::getBeamDirectionType(const unsigned currentBeam) const
+string CS1_Parset::getBeamDirectionType(const unsigned beam) const
 {
   char buf[50];
   string beamDirType;
  
-  sprintf(buf,"Observation.Beam[%d].directionTypes",currentBeam);
+  sprintf(buf,"Observation.Beam[%d].directionTypes", beam);
   beamDirType = getString(buf);
 
   return beamDirType;

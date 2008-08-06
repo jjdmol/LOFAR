@@ -105,11 +105,15 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
     }
   }
 
-  // forget old ValidData; add new ValidData
+  // forget old ValidData
   pthread_mutex_lock(&itsValidDataMutex);
   itsValidData.exclude(0, end - itsSize);
 
-  //if (itsValidData.getRanges().size() < 64) // avoid long computations on too long range list
+  unsigned rangesSize = itsValidData.getRanges().size();
+
+  // add new ValidData (except if range list will grow too long, to avoid long
+  // computations)
+  if (rangesSize < 64 || itsValidData.getRanges()[rangesSize - 1].end == begin) 
     itsValidData.include(begin, end);
 
   pthread_mutex_unlock(&itsValidDataMutex);

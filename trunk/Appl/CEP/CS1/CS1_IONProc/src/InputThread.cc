@@ -42,9 +42,8 @@ namespace LOFAR {
 namespace CS1 {
 
 volatile bool InputThread::theirShouldStop = false;
-volatile unsigned InputThread::nrPacketsReceived, InputThread::nrPacketsRejected;
 
-InputThread::InputThread(const ThreadArgs &args)
+InputThread::InputThread(ThreadArgs args /* call by value, other thread read it! */)
 :
   itsArgs(args)
 {
@@ -89,37 +88,8 @@ void InputThread::sigHandler(int)
 }
 
 
-// log from separate thread, since printing from a signal handler causes deadlocks
-
-void *InputThread::logThread(void *)
-{
-  std::clog << "InputThread::logThread()" << std::endl;
-  while (!theirShouldStop) {
-#if 0
-    static unsigned count;
-
-    if ((++ count & 63) == 0)
-      system("cat /proc/meminfo");
-#endif
-
-    std::clog << "received " << nrPacketsReceived << " packets";
-
-    if (nrPacketsRejected > 0)
-      std::clog << ", rejected " << nrPacketsRejected << " packets";
-
-    std::clog << std::endl;
-    nrPacketsReceived = nrPacketsRejected = 0; // race conditions, but who cares
-    sleep(1);
-  }
-
-  std::clog << "InputThread::logThread() finished" << std::endl;
-  return 0;
-}
-
 void *InputThread::mainLoopStub(void *inputThread)
 {
-  std::clog << "InputThread::mainLoopStub()" << std::endl;
-
 #if 1 && __linux__
   cpu_set_t cpu_set;
 
@@ -141,16 +111,6 @@ void *InputThread::mainLoopStub(void *inputThread)
 
 void InputThread::mainLoop()
 {
-  std::clog << "InputThread::mainLoop()" << std::endl;
-  LOG_TRACE_FLOW_STR("WH_RSPInput WriterThread");   
-
-  pthread_t logThreadId;
-
-  if (pthread_create(&logThreadId, 0, logThread, 0) != 0) {
-    std::cerr << "could not create log thread " << std::endl;
-    exit(1);
-  }
-
   TimeStamp actualstamp = itsArgs.startTime - itsArgs.nTimesPerFrame;
 
   // buffer for incoming rsp data
@@ -173,7 +133,7 @@ void InputThread::mainLoop()
 
   bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
 
-  std::clog << "InputThread::mainLoop() entering loop" << std::endl;
+  std::clog << "input thread " << itsArgs.threadID << " entering loop" << std::endl;
 
   WallClockTime wallClockTime;
 
@@ -183,7 +143,7 @@ void InputThread::mainLoop()
       // does not send data
 
       itsArgs.stream->read(totRecvframe, frameSize);
-      ++ nrPacketsReceived;
+      ++ itsArgs.packetCounters->nrPacketsReceived;
 
       // get the actual timestamp of first EPApacket in frame
       if (dataShouldContainValidStamp) {
@@ -197,7 +157,7 @@ void InputThread::mainLoop()
 
 	//if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
 	if (seqid == ~0U) {
-	  ++ nrPacketsRejected;
+	  ++ itsArgs.packetCounters->nrPacketsRejected;
 	  continue;
 	}
 
@@ -208,7 +168,7 @@ void InputThread::mainLoop()
 	// reliable.
 	if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
 	  previousSeqidIsAccepted = false;
-	  ++ nrPacketsRejected;
+	  ++ itsArgs.packetCounters->nrPacketsRejected;
 	  continue;
 	}
 
@@ -235,11 +195,6 @@ void InputThread::mainLoop()
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
-
-  if (pthread_join(logThreadId, 0) != 0) {
-    std::cerr << "could not join log thread" << std::endl;
-    exit(1);
-  }
 }
 
 } // namespace CS1
