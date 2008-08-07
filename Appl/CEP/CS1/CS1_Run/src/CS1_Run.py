@@ -44,10 +44,13 @@ def doObservation(obsID, parset):
     sectionTable = dict({\
         'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition),
 	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	'StorageSection': StorageSection(parset, listfen)
+	#'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
-
+    
+    sectionList = sectionTable.keys()
+    sectionList.sort()
+    
     if parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'TCP' or  parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'FCNP':
         if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
 	    print 'IONProc_BGLProc_TransportType = %s' % parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] + ', enable section(s) IONProcSection/BGLProcSection in CS1_Run.py'
@@ -89,10 +92,10 @@ def doObservation(obsID, parset):
         listfen.sput('/tmp/' + obsID + '.parset', logdir + obsID + '/' + obsID + '.parset')
     
     try:
-        for section in sectionTable:
+        for section in sectionList:
             print ('Starting ' + sectionTable.get(section).package)
             runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
-
+            
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
@@ -113,14 +116,14 @@ def doObservation(obsID, parset):
 		listfen.executeAsync(commandstr).waitForDone()
  
  	    sectionTable.get(section).run(runlog, noRuns)
-
-        for section in sectionTable:
+ 
+        for section in sectionList:
             print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')
             ret = sectionTable.get(section).isRunSuccess()
             print (ret)
             print
     except KeyboardInterrupt:
-        for s in sectionTable:
+        for s in sectionList:
             print ('Aborting ' + sectionTable.get(s).package)
             sectionTable.get(s).abortRun()
 
