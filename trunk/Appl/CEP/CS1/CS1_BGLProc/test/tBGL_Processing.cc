@@ -82,6 +82,7 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
     transposedData->metaData[stat].delayAtBegin   = 0;
     transposedData->metaData[stat].delayAfterEnd  = 0;
     transposedData->metaData[stat].alignmentShift = 0;
+    transposedData->metaData[stat].setFlags(SparseSet<unsigned>());
   }
 
   for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
