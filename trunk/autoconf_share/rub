@@ -676,7 +676,21 @@ do
       # Use the switch command to do this.
       part="trunk"
       if [ "$vers" != "" ]; then
-        part="branches/$vers"
+        # $vers can be either in tags or in branches; try both
+        for dir in tags branches
+        do
+          part="$dir/$vers"
+          # if list command succeeds, we've got the correct value for $part
+          if $command list $svnurl/$part/$pkg > /dev/null 2>&1; then
+            break
+          else
+            part=
+          fi
+        done
+        if [ "$part" = "" ]; then
+          echo "Error: version $vers of $pkg not found"
+          exit 1
+        fi
       fi
       echo "(cd $pkg  &&  $command switch $svnurl/$part/$pkg)" >> rub.log 2>&1
       (cd $pkg  &&  $command switch $svnurl/$part/$pkg) >> rub.log 2>&1
