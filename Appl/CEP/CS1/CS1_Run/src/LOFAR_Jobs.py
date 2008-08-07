@@ -36,7 +36,7 @@ class Job(object):
 	self.host.sput(parsetfile, self.workingDir + 'CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
 	self.host.sput('BootBGP.py', self.workingDir)
-	bgsn.executeAsync(self.workingDir + 'BootBGP.py').waitForDone()
+	bgsn.executeAsync(self.workingDir + 'BootBGP.py --partition=' + self.partition).waitForDone()
 	
 	interfaces = IONodes.get(self.partition)
 	

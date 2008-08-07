@@ -142,10 +142,16 @@ if __name__ == '__main__':
         options.partition = 'R000-B01'
     
     print 'User: %s' % options.user
+    print 'Partition: %s' % options.partition
    
     if not partition_exist(remote):
         boot_block(remote)
-    
+    else:
+ 	if block_status(remote)	== 'B' or block_status(remote)	== 'A':
+	    while block_status(remote)!= 'I':
+	        print block_status(remote)
+	        time.sleep(1)
+		    
     print 'Socket closed'
     remote.close()
 
