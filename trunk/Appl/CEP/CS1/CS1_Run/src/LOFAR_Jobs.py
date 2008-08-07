@@ -44,7 +44,7 @@ class Job(object):
             ionode = Host(name = IONode, \
                           address = IONode)
 	    runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1].rstrip('CS1_IONProc') + 'IONProc')
-	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[2] + ' ' + str(noRuns) + ') &> ' + '/tmp/run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
+	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[2] + ' ' + str(noRuns) + ') &> ' + self.workingDir + 'run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
 
     def isDone(self):
         ret = self.runCommand.isDone()
@@ -62,11 +62,10 @@ class Job(object):
 	    if (self.name == 'CS1_IONProc'):
 	        interfaces = IONodes.get(self.partition)
                 for IONode in interfaces:
-	            remoteRunLogIONProc = '/tmp/run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) )
+	            remoteRunLogIONProc = self.workingDir + 'run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) )
 		    runlogIONProc = '/' + self.runlog.split('/')[1] + '/' + self.runlog.split('/')[2] + '/CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ) + '.runlog'
 		    ionode = Host(name = IONode, \
                                   address = IONode)
-		    ionode.sget(remoteRunLogIONProc, remoteRunLogIONProc)
 		    listfen.sput(remoteRunLogIONProc,runlogIONProc)
 	    else:		    
                 listfen.sput(self.remoteRunLog, self.runlog)
