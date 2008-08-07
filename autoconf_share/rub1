@@ -125,7 +125,7 @@ if [ "$pkgline" = "" ]; then
       # Remove the part '-release-branch' leaving the CVS tag name.
       getvers=`cvs log $pkgname/configure.in 2>&1 | grep release-branch | head -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
     else
-      getvers=`svn list $svnurl/branches 2>&1 | grep $pkgnmvers | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
+      getvers=`svn list $svnurl/branches 2>&1 | grep $pkgnmvers | grep release-branch | tail -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
     fi
   fi
 
@@ -211,7 +211,21 @@ if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
         # in version is also handled.
         part="trunk"
         if [ "$getvers" != "" ]; then
-          part="branches/$getvers"
+          # $getvers can be either in tags or in branches; try both
+          for dir in tags branches
+          do
+            part="$dir/$getvers"
+            # if list command succeeds, we've got the correct value for $part
+            if $command list $svnurl/$part/$pkgname > /dev/null 2>&1; then
+              break
+            else
+              part=
+            fi
+          done
+          if [ "$part" = "" ]; then
+            echo "Error: version $getvers of $pkgname not found"
+            exit 1
+          fi
         fi
         echo "(cd $pkgname  &&  $command switch $svnurl/$part/$pkgname)" >> rub.log 2>&1
         (cd $pkgname  &&  $command switch $svnurl/$part/$pkgname) >> rub.log 2>&1
@@ -253,7 +267,21 @@ if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
         # Check out the leaf.
         part=trunk
         if [ "$getvers" != "" ]; then
-          part="branches/$getvers"
+          # $getvers can be either in tags or in branches; try both
+          for dir in tags branches
+          do
+            part="$dir/$getvers"
+            # if list command succeeds, we've got the correct value for $part
+            if $command list $svnurl/$part/$pkgname > /dev/null 2>&1; then
+              break
+            else
+              part=
+            fi
+          done
+          if [ "$part" = "" ]; then
+            echo "Error: version $getvers of $pkgname not found"
+            exit 1
+          fi
         fi
         # Find out if it is a leaf package or super package by testing
 	# if it has a configure.in file.
