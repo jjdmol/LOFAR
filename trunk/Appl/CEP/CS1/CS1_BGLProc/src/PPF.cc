@@ -228,7 +228,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-	  i16complex tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
+	  TransposedData::SampleType tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
 	  dataConvert(LittleEndian, &tmp, 1);
