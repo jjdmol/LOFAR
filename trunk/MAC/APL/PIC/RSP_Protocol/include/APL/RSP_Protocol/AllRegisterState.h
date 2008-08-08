@@ -34,214 +34,225 @@
 namespace LOFAR {
   namespace RSP_Protocol {
 
-    /**
-     * This class is used to contain the RegisterState of all registers.
-     *
-     * It is used in the following events:
-     * GETREGISTERSTATEACK
-     * UPDREGISTERSTATE
-     *
-     */
-    class AllRegisterState
-      {
-      public:
-
-	/**
-	 * Constructors for a AllRegisterState object.
-	 */
+// This class is used to contain the RegisterState of all registers.
+//
+// It is used in the following events:
+// GETREGISTERSTATEACK
+// UPDREGISTERSTATE
+//
+class AllRegisterState
+{
+public:
+	// Constructors for a AllRegisterState object.
 	AllRegisterState() : m_nrcus(0) {}
-
-	/* Destructor for AllRegisterState. */
 	virtual ~AllRegisterState() {}
 
-      public:
-
+	//
+	// init(nrRSP, nrBLP, nrRCU)
+	//
 	void init(int nrRspBoards, int nrBlps, int nrRcus) {
+		m_nrcus = nrRcus;
 
-	  m_nrcus = nrRcus;
-
-	  //
-	  // resize to appropriate size and mark modified
-	  // to force initial update
-	  //
-	  sys_state.resize(nrRspBoards);
-	  bf_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_PHASE); // XR, XI, YR, YI
-	  ss_state.resize(nrBlps);
-	  rcusettings_state.resize(nrRcus);
-	  rcuprotocol_state.resize(nrRcus);
-	  hbaprotocol_state.resize(nrRcus);
-	  rsuclear_state.resize(nrRspBoards);
-	  diagwgsettings_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_DIAG_WG_REGISTERS);
-	  sst_state.resize(nrBlps * EPA_Protocol::MEPHeader::SST_N_FRAGMENTS);
-	  bst_state.resize(nrRspBoards);
-	  xst_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::XST_NR_STATS);
-	  cdo_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::N_CDO_REGISTERS);
-	  bs_state.resize(nrBlps);
-	  tdclear_state.resize(nrRspBoards);
-	  tdwrite_state.resize(nrRspBoards);
-	  tdread_state.resize(nrRspBoards);
-	  rad_state.resize(nrRspBoards);
-	  ts_state.resize(nrRspBoards);
-	  tdstatuswrite_state.resize(nrRspBoards);
-	  tdstatusread_state.resize(nrRspBoards);
-	  tbbsettings_state.resize(nrRcus);
-	  tbbbandsel_state.resize(nrRcus);
-	  bypasssettings_state.resize(nrBlps);
+		//
+		// resize to appropriate size and mark modified
+		// to force initial update
+		//
+		sys_state.resize(nrRspBoards);
+		bf_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_PHASE); // XR, XI, YR, YI
+		ss_state.resize(nrBlps);
+		rcusettings_state.resize(nrRcus);
+		rcuprotocol_state.resize(nrRcus);
+		hbaprotocol_state.resize(nrRcus);
+		rsuclear_state.resize(nrRspBoards);
+		diagwgsettings_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_DIAG_WG_REGISTERS);
+		sst_state.resize(nrBlps * EPA_Protocol::MEPHeader::SST_N_FRAGMENTS);
+		bst_state.resize(nrRspBoards);
+		xst_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::XST_NR_STATS);
+		cdo_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::N_CDO_REGISTERS);
+		bs_state.resize(nrBlps);
+		tdclear_state.resize(nrRspBoards);
+		tdwrite_state.resize(nrRspBoards);
+		tdread_state.resize(nrRspBoards);
+		rad_state.resize(nrRspBoards);
+		ts_state.resize(nrRspBoards);
+		tdstatuswrite_state.resize(nrRspBoards);
+		tdstatusread_state.resize(nrRspBoards);
+		tbbsettings_state.resize(nrRcus);
+		tbbbandsel_state.resize(nrRcus);
+		bypasssettings_state.resize(nrBlps);
+		rawdatawrite_state.resize(nrRspBoards);
+		rawdataread_state.resize(nrRspBoards);
 	}
 
-	/*
-	 * Force update of some (not all) register.
-	 * Register excluded from update are 
-	 * tds, bs, rsuclear
-	 */
+	// Force update of some (not all) register.
+	// Register excluded from update are 
+	// tds, bs, rsuclear
+	//
+	// force()
+	//
 	void force() {
-	  sys_state.reset();
-	  bf_state.reset();
-	  ss_state.reset();
-	  rcusettings_state.reset();
-	  rcuprotocol_state.reset();
-	  hbaprotocol_state.reset();
-	  rsuclear_state.reset();
-	  diagwgsettings_state.reset();
-	  sst_state.reset();
-	  bst_state.reset();
-	  xst_state.reset();
-	  cdo_state.reset();
-	  bs_state.reset();
-	  tdclear_state.reset();
-	  tdwrite_state.reset();
-	  tdread_state.reset();
-	  rad_state.reset();
-	  ts_state.reset();
-	  tdstatuswrite_state.reset();
-	  tdstatusread_state.reset();
-	  tbbsettings_state.reset();
-	  tbbbandsel_state.reset();
-	  bypasssettings_state.reset();
+		sys_state.reset();
+		bf_state.reset();
+		ss_state.reset();
+		rcusettings_state.reset();
+		rcuprotocol_state.reset();
+		hbaprotocol_state.reset();
+		rsuclear_state.reset();
+		diagwgsettings_state.reset();
+		sst_state.reset();
+		bst_state.reset();
+		xst_state.reset();
+		cdo_state.reset();
+		bs_state.reset();
+		tdclear_state.reset();
+		tdwrite_state.reset();
+		tdread_state.reset();
+		rad_state.reset();
+		ts_state.reset();
+		tdstatuswrite_state.reset();
+		tdstatusread_state.reset();
+		tbbsettings_state.reset();
+		tbbbandsel_state.reset();
+		bypasssettings_state.reset();
+		rawdatawrite_state.reset();
+		rawdataread_state.reset();
 
-	  sys_state.read();
-	  bf_state.write();
-	  ss_state.write();
-	  rcusettings_state.write();
-	  rcuprotocol_state.write();
-	  hbaprotocol_state.write();
-	  rsuclear_state.check();
-	  diagwgsettings_state.write();
-	  sst_state.read();
-	  bst_state.read();
-	  xst_state.read();
-	  cdo_state.check();
-	  bs_state.check();
-	  tdclear_state.check();
-	  tdwrite_state.check();
-	  tdread_state.check();
-	  rad_state.write();
-	  ts_state.write();
-	  tdstatuswrite_state.write();
-	  tdstatusread_state.read();
-	  tbbsettings_state.check();
-	  tbbbandsel_state.check();
-	  bypasssettings_state.write(); // REO: When is this function called???
+		sys_state.read();
+		bf_state.write();
+		ss_state.write();
+		rcusettings_state.write();
+		rcuprotocol_state.write();
+		hbaprotocol_state.write();
+		rsuclear_state.check();
+		diagwgsettings_state.write();
+		sst_state.read();
+		bst_state.read();
+		xst_state.read();
+		cdo_state.check();
+		bs_state.check();
+		tdclear_state.check();
+		tdwrite_state.check();
+		tdread_state.check();
+		rad_state.write();
+		ts_state.write();
+		tdstatuswrite_state.write();
+		tdstatusread_state.read();
+		tbbsettings_state.check();
+		tbbbandsel_state.check();
+		bypasssettings_state.write(); // REO: When is this function called???
+		rawdatawrite_state.check();
+		rawdataread_state.check();
 	}
 
+	//
+	// schedule()
+	//
 	void schedule() {
-	  sys_state.read();
-	  bf_state.write(); // always write bf
-	  ss_state.write(); // always write ss
-	  rcusettings_state.check();
-	  rcuprotocol_state.check();
-	  hbaprotocol_state.check();
-	  rsuclear_state.check();
-	  diagwgsettings_state.check();
-	  sst_state.read();
-	  bst_state.read();
-	  xst_state.read();
-	  cdo_state.check();
-	  bs_state.check();
-	  tdclear_state.check();
-	  tdwrite_state.check();
-	  tdread_state.check();
-	  rad_state.check();
-	  ts_state.write(); // always write timestamp
-	  tdstatuswrite_state.write();
-	  tdstatusread_state.read();
-	  tbbsettings_state.check();
-	  tbbbandsel_state.check();
-	  bypasssettings_state.check(); // REO ?
+		sys_state.read();
+		bf_state.write(); // always write bf
+		ss_state.write(); // always write ss
+		rcusettings_state.check();
+		rcuprotocol_state.check();
+		hbaprotocol_state.check();
+		rsuclear_state.check();
+		diagwgsettings_state.check();
+		sst_state.read();
+		bst_state.read();
+		xst_state.read();
+		cdo_state.check();
+		bs_state.check();
+		tdclear_state.check();
+		tdwrite_state.check();
+		tdread_state.check();
+		rad_state.check();
+		ts_state.write(); // always write timestamp
+		tdstatuswrite_state.write();
+		tdstatusread_state.read();
+		tbbsettings_state.check();
+		tbbbandsel_state.check();
+		bypasssettings_state.check(); // REO ?
+		rawdatawrite_state.check();
+		rawdataread_state.check();
 	}
 
+	//
+	// clear()
+	//
 	void clear() {
-	  sys_state.clear();
-	  bf_state.clear();
-	  ss_state.clear();
-	  rcusettings_state.clear();
-	  rcuprotocol_state.clear();
-	  hbaprotocol_state.clear();
-	  rsuclear_state.clear();
-	  diagwgsettings_state.clear();
-	  sst_state.clear();
-	  bst_state.clear();
-	  xst_state.clear();
-	  cdo_state.clear();
-	  bs_state.clear();
-	  tdclear_state.clear();
-	  tdwrite_state.clear();
-	  tdread_state.clear();
-	  rad_state.clear();
-	  ts_state.clear();
-	  tdstatuswrite_state.clear();
-	  tdstatusread_state.clear();
-	  tbbsettings_state.clear();
-	  tbbbandsel_state.clear();
-	  bypasssettings_state.clear();
+		sys_state.clear();
+		bf_state.clear();
+		ss_state.clear();
+		rcusettings_state.clear();
+		rcuprotocol_state.clear();
+		hbaprotocol_state.clear();
+		rsuclear_state.clear();
+		diagwgsettings_state.clear();
+		sst_state.clear();
+		bst_state.clear();
+		xst_state.clear();
+		cdo_state.clear();
+		bs_state.clear();
+		tdclear_state.clear();
+		tdwrite_state.clear();
+		tdread_state.clear();
+		rad_state.clear();
+		ts_state.clear();
+		tdstatuswrite_state.clear();
+		tdstatusread_state.clear();
+		tbbsettings_state.clear();
+		tbbbandsel_state.clear();
+		bypasssettings_state.clear();
+		rawdatawrite_state.clear();
+		rawdataread_state.clear();
 	}
 
+	//
+	// print(os)
+	//
 	void print(std::ostream& out) const {
-	  out << "                  ";
-	  for (int i = 0; i < m_nrcus * EPA_Protocol::MEPHeader::N_POL; i++) {
-	    out << (i % 10) << " ";
-	  }
-	  out << endl;
-	  out << "System Status     "; sys_state.print(out);
-	  out << "BF                "; bf_state.print(out);
-	  out << "Subband Selection "; ss_state.print(out);
-	  out << "RCUSettings       "; rcusettings_state.print(out);
-	  out << "RCUProtocol       "; rcuprotocol_state.print(out);
-	  out << "HBAProtocol       "; hbaprotocol_state.print(out);
-	  out << "RSUClear          "; rsuclear_state.print(out);
-	  out << "DIAGWGSettings    "; diagwgsettings_state.print(out);
-	  out << "SubbandStats      "; sst_state.print(out);
-	  out << "BeamletStats      "; bst_state.print(out);
-	  out << "XCorrelationStats "; xst_state.print(out);
-	  out << "CDO               "; cdo_state.print(out);
-	  out << "BS                "; bs_state.print(out);
-	  out << "TDSClear          "; tdclear_state.print(out);
-	  out << "TDSWrite          "; tdwrite_state.print(out);
-	  out << "TDSRead           "; tdread_state.print(out);
-	  out << "RAD               "; rad_state.print(out);
-	  out << "Timestamp         "; ts_state.print(out);
-	  out << "TDS Status (write)"; tdstatuswrite_state.print(out);
-	  out << "TDS Status (read) "; tdstatusread_state.print(out);
-	  out << "TBBSettings       "; tbbsettings_state.print(out);
-	  out << "TBBBandsel        "; tbbbandsel_state.print(out);
-	  out << "DIAGBypassSettings"; bypasssettings_state.print(out);
-	  out << endl;
+		out << "                  ";
+		for (int i = 0; i < m_nrcus * EPA_Protocol::MEPHeader::N_POL; i++) {
+		out << (i % 10) << " ";
+		}
+		out << endl;
+		out << "System Status       "; sys_state.print(out);
+		out << "BF                  "; bf_state.print(out);
+		out << "Subband Selection   "; ss_state.print(out);
+		out << "RCUSettings         "; rcusettings_state.print(out);
+		out << "RCUProtocol         "; rcuprotocol_state.print(out);
+		out << "HBAProtocol         "; hbaprotocol_state.print(out);
+		out << "RSUClear            "; rsuclear_state.print(out);
+		out << "DIAGWGSettings      "; diagwgsettings_state.print(out);
+		out << "SubbandStats        "; sst_state.print(out);
+		out << "BeamletStats        "; bst_state.print(out);
+		out << "XCorrelationStats   "; xst_state.print(out);
+		out << "CDO                 "; cdo_state.print(out);
+		out << "BS                  "; bs_state.print(out);
+		out << "TDSClear            "; tdclear_state.print(out);
+		out << "TDSWrite            "; tdwrite_state.print(out);
+		out << "TDSRead             "; tdread_state.print(out);
+		out << "RAD                 "; rad_state.print(out);
+		out << "Timestamp           "; ts_state.print(out);
+		out << "TDS Status (write)  "; tdstatuswrite_state.print(out);
+		out << "TDS Status (read)   "; tdstatusread_state.print(out);
+		out << "TBBSettings         "; tbbsettings_state.print(out);
+		out << "TBBBandsel          "; tbbbandsel_state.print(out);
+		out << "DIAGBypassSettings  "; bypasssettings_state.print(out);
+		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
+		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
+		out << endl;
 	}
 
 	/*@{*/
-	/**
-	 * marshalling methods
-	 */
+	// marshalling methods
 	unsigned int getSize();
 	unsigned int pack  (void* buffer);
 	unsigned int unpack(void *buffer);
 	/*@}*/
 
-      public:
+public:
 	/*@{*/
-	/**
-	 * Accessor methods
-	 */
+	// Accessor methods
 	RTC::RegisterState& sys()            { return sys_state; }
 	RTC::RegisterState& bf()             { return bf_state; }
 	RTC::RegisterState& ss()             { return ss_state; }
@@ -265,9 +276,13 @@ namespace LOFAR {
 	RTC::RegisterState& tbbsettings()    { return tbbsettings_state; }
 	RTC::RegisterState& tbbbandsel()     { return tbbbandsel_state; }
 	RTC::RegisterState& bypasssettings() { return bypasssettings_state; }
+	RTC::RegisterState& rawdatawrite()   { return rawdatawrite_state; }
+	RTC::RegisterState& rawdataread()    { return rawdataread_state; }
+
 	/*@}*/
 
-      private:
+private:
+	// ----- data members -----
 	RTC::RegisterState sys_state;            // RSR state
 	RTC::RegisterState bf_state;             // BF weights state
 	RTC::RegisterState ss_state;             // SS state
@@ -291,10 +306,13 @@ namespace LOFAR {
 	RTC::RegisterState tbbsettings_state;    // TBB settings state
 	RTC::RegisterState tbbbandsel_state;     // TBB bandsel state
 	RTC::RegisterState bypasssettings_state; // Bypass (specinv) state
+	RTC::RegisterState rawdatawrite_state;	 // Write userdefined datablock
+	RTC::RegisterState rawdataread_state;	 // Read userdefined datablock
 
 	int m_nrcus;
-      };
-  };
+};
+
+  }; // namespace RSP_Protocol
 }; // namespace LOFAR
 
 #endif /* ALLREGISTERSTATE_H_ */

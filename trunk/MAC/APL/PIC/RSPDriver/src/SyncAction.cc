@@ -82,53 +82,53 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
 
 GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal) {
-    case F_ENTRY: {
-      for (;;) {
-	if (!m_atinit && Sequencer::getInstance().isActive()) {
-	  // skip this action and continue with the next
-	  setContinue(true); // continue with next action
-	} else {
-	  // send initial request
-	  setContinue(false); // initialize on each entry
-	  sendrequest();
+	switch (event.signal) {
+	case F_ENTRY: {
+		for (;;) {
+			if (!m_atinit && Sequencer::getInstance().isActive()) {
+				// skip this action and continue with the next
+				setContinue(true); // continue with next action
+			} else {
+				// send initial request
+				setContinue(false); // initialize on each entry
+				sendrequest();
+			}
+
+			// if sendrequest calls setContinue(true), then no event
+			// has been sent, move on to next index
+			if (doContinue()) {
+				// OK, move on to the next index
+				m_current_index++;
+				m_retries = 0;
+				if (m_current_index >= m_n_indices) {
+					// done
+					setCompleted(true);
+					TRAN(SyncAction::idle_state);
+					break; // break the loop
+				}
+			}
+			else {
+				TRAN(SyncAction::waitack_state);
+				break; // break the loop
+			}
+		}
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_FATAL("missed real-time deadline");
+		exit(EXIT_FAILURE);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
 	}
 
-	// if sendrequest calls setContinue(true), then no event
-	// has been sent, move on to next index
-	if (doContinue()) {
-	  // OK, move on to the next index
-	  m_current_index++;
-	  m_retries = 0;
-	  if (m_current_index >= m_n_indices) {
-	    // done
-	    setCompleted(true);
-	    TRAN(SyncAction::idle_state);
-	    break; // break the loop
-	  }
-	}
-	else {
-	  TRAN(SyncAction::waitack_state);
-	  break; // break the loop
-	}
-      }
-    }
-    break;
-
-    case F_TIMER: {
-      LOG_FATAL("missed real-time deadline");
-      exit(EXIT_FAILURE);
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
+	return GCFEvent::HANDLED;
 }
 
 GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& port)

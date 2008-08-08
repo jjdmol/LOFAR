@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -709,103 +710,104 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
 
 #if 0
-  cout << " sizeof(RawFrame)              =" << sizeof(RawFrame) << endl
-       << " sizeof(GCFEvent)              =" << sizeof(GCFEvent) << endl
-       << " sizeof(MEPHeader::FieldsType) =" << sizeof(MEPHeader::FieldsType) << endl
-       << " sizeof(payload)               =" << sizeof(buf.payload) << endl;
+	cout << " sizeof(RawFrame)              =" << sizeof(RawFrame) << endl
+		 << " sizeof(GCFEvent)              =" << sizeof(GCFEvent) << endl
+		 << " sizeof(MEPHeader::FieldsType) =" << sizeof(MEPHeader::FieldsType) << endl
+		 << " sizeof(payload)               =" << sizeof(buf.payload) << endl;
 #endif
 
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  // Receive a raw packet
-  ssize_t size = port.recv(&buf.mephdr, ETH_DATA_LEN);
+	// Receive a raw packet
+	ssize_t size = port.recv(&buf.mephdr, ETH_DATA_LEN);
 
-  if (size < (ssize_t)sizeof(buf.mephdr)) return GCFEvent::NOT_HANDLED;
+	// always need at least header_size bytes.
+	if (size < (ssize_t)sizeof(buf.mephdr)) {
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, status=%d, frame_length=%d, "
-			 "addr=(0x%04x 0x%02x 0x%02x), payload_length=%d, "
-			 "seqnr=%d",
-			 buf.mephdr.type,
-			 buf.mephdr.status,
-			 buf.mephdr.frame_length,
-			 buf.mephdr.addr.dstid,
-			 buf.mephdr.addr.pid,
-			 buf.mephdr.addr.regid,
-			 buf.mephdr.payload_length,
-			 buf.mephdr.seqnr));
+	LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, status=%d, frame_length=%d, "
+					"addr=(0x%04x 0x%02x 0x%02x), payload_length=%d, seqnr=%d",
+					buf.mephdr.type,
+					buf.mephdr.status,
+					buf.mephdr.frame_length,
+					buf.mephdr.addr.dstid,
+					buf.mephdr.addr.pid,
+					buf.mephdr.addr.regid,
+					buf.mephdr.payload_length,
+					buf.mephdr.seqnr));
 
-  unsigned short signal = 0; // signal == 0 indicates unrecognised or invalid MEP message
+	unsigned short signal = 0; // signal == 0 indicates unrecognised or invalid MEP message
 
-  //
-  // Decode the header fields
-  //
-  if (   buf.mephdr.type       >= MEPHeader::MIN_TYPE
-      && buf.mephdr.type       <= MEPHeader::MAX_TYPE
-      && buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
-      && buf.mephdr.addr.pid   <= MEPHeader::MAX_PID
-      && buf.mephdr.addr.regid <= MEPHeader::MAX_REGID)
-      /* always true due to limited range of datatype
-	 && buf.mephdr.addr.regid >= MEPHeader::MIN_REGID */
-  {
-    //
-    // If no error, lookup signal number, else assign ACK_ERROR signal number
-    //
-    if (0 == buf.mephdr.status)
-    {
-      signal = signal_lut[buf.mephdr.addr.pid - MEPHeader::MIN_PID][buf.mephdr.addr.regid][buf.mephdr.type];
-    }
-    else 
-    {
-      if (MEPHeader::READACK == buf.mephdr.type) signal = EPA_READACK_ERROR;
-      else if (MEPHeader::WRITEACK == buf.mephdr.type) signal = EPA_WRITEACK_ERROR;
-      else 
-      {
-	LOG_WARN("Protocol violation: received message other than MEPHeader::READACK or MEPHeader::WRITEACK with error != 0 set.");
-      }
-    }
-  } else {
-    LOG_WARN("Received message with out-of-range header fields");
-  }
-  
-  if (signal) // signal == 0 indicates unrecognised or invalid MEP message
-  {
-    (void)new((void*)&buf.event) GCFEvent(signal); // placement new does in place construction
+	//
+	// Decode the header fields
+	//
+	if (   buf.mephdr.type       >= MEPHeader::MIN_TYPE
+		&& buf.mephdr.type       <= MEPHeader::MAX_TYPE
+		&& buf.mephdr.addr.pid   >= MEPHeader::MIN_PID
+		&& buf.mephdr.addr.pid   <= MEPHeader::MAX_PID
+		&& buf.mephdr.addr.regid <= MEPHeader::MAX_REGID) {
+		/* always true due to limited range of datatype
+		&& buf.mephdr.addr.regid >= MEPHeader::MIN_REGID */
+		//
+		// If no error, lookup signal number, else assign ACK_ERROR signal number
+		//
+		if (buf.mephdr.status == 0) {
+			signal = signal_lut[buf.mephdr.addr.pid - MEPHeader::MIN_PID][buf.mephdr.addr.regid][buf.mephdr.type];
+		}
+		else {
+			if (MEPHeader::READACK == buf.mephdr.type) {
+				signal = EPA_READACK_ERROR;
+			}
+			else if (MEPHeader::WRITEACK == buf.mephdr.type) {
+				signal = EPA_WRITEACK_ERROR;
+			}
+			else {
+				LOG_WARN("Protocol violation: received message other than MEPHeader::READACK or MEPHeader::WRITEACK with error != 0 set.");
+			}
+		} // status
+	} else {
+		LOG_WARN("Received message with out-of-range header fields");
+		string	hDump;
+		hexdump (hDump, (char*)&buf.mephdr, sizeof(buf.mephdr));
+		LOG_INFO (hDump);
+	}
 
-    // set the event length
-    buf.event.length = sizeof(buf.mephdr) + buf.mephdr.payload_length;
+	if (signal) { // signal == 0 indicates unrecognised or invalid MEP message
+		(void)new((void*)&buf.event) GCFEvent(signal); // placement new does in place construction
 
-    // check if there is more data than needed
-    if (size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType)) > 0)
-    {
-      LOG_DEBUG(formatString("discarding %d bytes", size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType))));
-    }
+		// set the event length
+		buf.event.length = sizeof(buf.mephdr) + buf.mephdr.payload_length;
 
-    //
-    // Print debugging info
-    // 
+		// check if there is more data than needed
+		if (size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType)) > 0) {
+			LOG_DEBUG(formatString("discarding %d bytes", size - (sizeof(GCFEvent) + sizeof(MEPHeader::FieldsType))));
+		}
+
+		//
+		// Print debugging info
+		// 
 #if 0
-    if ((F_DATAIN != buf.event.signal) && 
+		if ((F_DATAIN != buf.event.signal) && 
 			(F_DATAOUT != buf.event.signal) &&
 			(F_EVT_PROTOCOL(buf.event) != F_FSM_PROTOCOL) &&
-			(F_EVT_PROTOCOL(buf.event) != F_PORT_PROTOCOL))
-    {
-      LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
-			     task.getName().c_str(), 
-			     task.evtstr(buf.event), port.getName().c_str()));
-    }
+			(F_EVT_PROTOCOL(buf.event) != F_PORT_PROTOCOL)) {
+				LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
+				task.getName().c_str(), 
+				task.evtstr(buf.event), port.getName().c_str()));
+		}
 #endif
 
-    //
-    // dispatch the MEP message as a GCFEvent (which it now is)
-    //
-    status = task.dispatch(buf.event, port);
-  }
-  else
-  {
-    LOG_WARN("F_DATAIN: Discarding unknown message.");
-  }
+		//
+		// dispatch the MEP message as a GCFEvent (which it now is)
+		//
+		status = task.dispatch(buf.event, port);
+	}
+	else {
+		LOG_WARN("F_DATAIN: Discarding unknown message.");
+	}
 
-  return status;
+	return (status);
 }
  
 

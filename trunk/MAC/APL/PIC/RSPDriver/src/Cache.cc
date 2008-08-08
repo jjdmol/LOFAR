@@ -77,6 +77,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_spustatus.subrack().size()  =" << m_spustatus.subrack().size()  * sizeof(EPA_Protocol::SPUBoardStatus));
   LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
   LOG_DEBUG_STR("m_bypasssettings().size()     =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
+  LOG_DEBUG_STR("m_rawDataBlock.size()         =" << ETH_DATA_LEN + sizeof (uint16));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
@@ -95,7 +96,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_tdstatus.board().size()    
 	       + m_spustatus.subrack().size()    
 	       + m_tbbsettings().size()
-	       + m_bypasssettings().size()));
+	       + m_bypasssettings().size()
+		   + ETH_DATA_LEN + sizeof(uint16)));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -237,6 +239,12 @@ void CacheBuffer::reset(void)
   m_bypasssettings().resize(StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
   BypassSettings::Control	control;
   m_bypasssettings() = control;
+
+	// clear rawdatablock
+	itsRawDataBlock.address = 0;
+	itsRawDataBlock.offset  = 0;
+	itsRawDataBlock.dataLen = 0;
+	memset(itsRawDataBlock.data, 0, RSP_RAW_BLOCK_SIZE);
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
@@ -329,75 +337,75 @@ BypassSettings& CacheBuffer::getBypassSettings()
   return m_bypasssettings;
 }
 
+RawDataBlock_t&	CacheBuffer::getRawDataBlock()
+{
+	return (itsRawDataBlock);
+}
+
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
 {
   m_timestamp = timestamp;
 }
 
-/**
- * Cache implementation
- */
-
+//
+// Cache implementation
+//
 Cache& Cache::getInstance()
 {
-  if (0 == m_instance)
-  {
-    m_instance = new Cache;
-    return *m_instance;
-  }
-  else return *m_instance;
+	if (!m_instance) {
+		m_instance = new Cache;
+	}
+	return (*m_instance);
 }
 
 Cache::Cache() : m_front(0), m_back(0)
 {
-  //
-  // initialize preset waveforms
-  //
-  WGSettings::initWaveformPresets();
+	// initialize preset waveforms
+	WGSettings::initWaveformPresets();
 
-  m_front = new CacheBuffer(this); ASSERT(m_front);
-  m_back = new CacheBuffer(this);  ASSERT(m_back);
+	m_front = new CacheBuffer(this); ASSERT(m_front);
+	m_back = new CacheBuffer(this);  ASSERT(m_back);
 
-  getState().init(StationSettings::instance()->nrRspBoards(),
-		  StationSettings::instance()->nrBlps(),
-		  StationSettings::instance()->nrRcus());
+	getState().init(StationSettings::instance()->nrRspBoards(),
+					StationSettings::instance()->nrBlps(),
+					StationSettings::instance()->nrRcus());
 
-  // start by writing the correct clock setting
-  Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
+	// start by writing the correct clock setting
+	Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
 }
 
 Cache::~Cache()
 {
-  if (m_front) delete m_front;
-  if (m_back) delete m_back;
+	if (m_front) delete m_front;
+	if (m_back) delete m_back;
 }
 
 void Cache::reset(void)
 {
-  m_front->reset();
-  m_back->reset();
+	m_front->reset();
+	m_back->reset();
 }
 
 void Cache::swapBuffers()
 {
-  if (GET_CONFIG("RSPDriver.XC_FILL", i)) {
-    // fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
-    Array<complex<double>, 4> xc(m_back->getXCStats()());
-    firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
-    xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(j,i,l,k)), xc(i,j,k,l));
-  }
+	if (GET_CONFIG("RSPDriver.XC_FILL", i)) {
+		// fill xcorr array by copying and taking complex conjugate of values mirrored in the diagonal
+		Array<complex<double>, 4> xc(m_back->getXCStats()());
+		firstIndex  i; secondIndex j; thirdIndex  k; fourthIndex  l;
+		xc = where(xc(i,j,k,l)==complex<double>(0,0), conj(xc(j,i,l,k)), xc(i,j,k,l));
+	}
 
-  CacheBuffer *tmp = m_front;
-  m_front = m_back;
-  m_back  = tmp;
+	CacheBuffer *tmp = m_front;
+	m_front = m_back;
+	m_back  = tmp;
 }
 
 CacheBuffer& Cache::getFront()
 {
-  return *m_front;
+	return *m_front;
 }
 
 CacheBuffer& Cache::getBack()
 {
-  return *m_back;
+	return *m_back;
 }

@@ -62,3 +62,8 @@ void* MEPData::getBuffer() const
   return m_dataptr;
 }
 
+size_t MEPData::getDataLen() const
+{
+  return m_count;
+}
+

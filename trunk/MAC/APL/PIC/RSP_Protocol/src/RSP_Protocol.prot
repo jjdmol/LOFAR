@@ -36,9 +36,10 @@ prelude = << PRELUDE_END
 
 typedef	void*	memptr_t;
 
-static const int MAX_N_RSPBOARDS = 24;
-static const int SUCCESS         = 1;
-static const int FAILURE         = 0;
+static const int MAX_N_RSPBOARDS 	= 24;
+static const int SUCCESS         	= 1;
+static const int FAILURE         	= 0;
+static const int RSP_RAW_BLOCK_SIZE = 1480;
 
 // The protocol implements the following messages.
 // SETWEIGHTS			(timestamp,	rcumask,weights)
@@ -154,6 +155,11 @@ static const int FAILURE         = 0;
 
 // GETSPUSTATUS			(timestamp,	cache)
 // GETSPUSTATUSACK		(timestamp,	status,	spustatus)
+
+// SETBLOCK				(timestamp, boardID, address, offset, datalen, data)
+// SETBLOCKACK			(timestamp, boardID, status);
+// GETBLOCK				(timestamp, boardID, address, offset, datalen)
+// GETBLOCKACK			(timestamp, boardID, status, datalen, data);
 
 PRELUDE_END;
 
@@ -1854,3 +1860,106 @@ event = {
 	};
 };
 
+// SETBLOCK (timestamp, boardID, procID, pid, regid, offset, datalen, data)
+event = {
+	signal = SETBLOCK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "address";
+		type = "uint32";
+	};
+	param = {
+		name = "offset";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+	param = {
+		name = "data";
+		type = "uint8[RSP_RAW_BLOCK_SIZE]";
+	};
+};
+ 	
+// SETBLOCKACK (timestamp, boardID, status);
+event = {
+	signal = SETBLOCKACK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "status";
+		type = "uint16";
+	};
+};
+
+// GETBLOCK (timestamp, boardID, procID, pid, regid, offset, datalen)
+event = {
+	signal = GETBLOCK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "address";
+		type = "uint32";
+	};
+	param = {
+		name = "offset";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+};
+ 	
+// GETBLOCKACK (timestamp, boardID, status, datalen, data);
+event = {
+	signal = GETBLOCKACK;
+	dir = IN;
+	param = { 
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "boardID";
+		type = "uint16";
+	};
+	param = {
+		name = "status";
+		type = "uint16";
+	};
+	param = {
+		name = "dataLen";
+		type = "uint16";
+	};
+	param = {
+		name = "data";
+		type = "uint8[RSP_RAW_BLOCK_SIZE]";
+	};
+};

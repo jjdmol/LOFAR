@@ -33,59 +33,58 @@
 namespace LOFAR {
   namespace RSP {
 
-    class Cache; // forward declaration
-    class CacheBuffer
-    {
-    public:
-      /**
-       * Constructors for a Cache object.
-       */
-      CacheBuffer(Cache* cache);
+class Cache; // forward declaration
 
-      /* Destructor for Cache. */
-      virtual ~CacheBuffer();
+typedef struct {
+	uint32		address;
+	uint16		offset;
+	uint16		dataLen;
+	uint8		data [RSP_RAW_BLOCK_SIZE];
+} RawDataBlock_t;
 
-      /*
-       * Reset cache to default values.
-       * Also called by constructor to initialize the cache.
-       */
-      void reset(void);
+class CacheBuffer
+{
+public:
+	// Constructors for a Cache object.
+	CacheBuffer(Cache* cache);
 
-      /*@{*/
-      /**
-       * Data access methods.
-       */
-      RTC::Timestamp                   getTimestamp() const;
-      RSP_Protocol::BeamletWeights&    getBeamletWeights();
-      RSP_Protocol::SubbandSelection&  getSubbandSelection();
-      RSP_Protocol::RCUSettings&       getRCUSettings();
-      RSP_Protocol::HBASettings&       getHBASettings();
-      RSP_Protocol::HBASettings&       getHBAReadings();
-      RSP_Protocol::RSUSettings&       getRSUSettings();
-      RSP_Protocol::WGSettings&        getWGSettings();
-      RSP_Protocol::SystemStatus&      getSystemStatus();
-      RSP_Protocol::Statistics&        getSubbandStats();
-      RSP_Protocol::Statistics&        getBeamletStats();
-      RSP_Protocol::XCStatistics&      getXCStats();
-      RSP_Protocol::Versions&          getVersions();
-      uint32&                          getClock();
-      RSP_Protocol::TDStatus&          getTDStatus();
-      RSP_Protocol::SPUStatus&         getSPUStatus();
-      RSP_Protocol::TBBSettings&       getTBBSettings();
-      RSP_Protocol::BypassSettings&    getBypassSettings();
-      /*@}*/
+	// Destructor for Cache. 
+	virtual ~CacheBuffer();
 
-      /**
-       * update timestamp
-       */
-      void setTimestamp(const RTC::Timestamp& timestamp);
+	// Reset cache to default values.
+	// Also called by constructor to initialize the cache.
+	void reset(void);
 
-      /**
-       * Get const pointer to parent cache.
-       */
-      Cache& getCache() { return *m_cache; }
+	/*@{*/
+	// Data access methods.
+	RTC::Timestamp                   getTimestamp() const;
+	RSP_Protocol::BeamletWeights&    getBeamletWeights();
+	RSP_Protocol::SubbandSelection&  getSubbandSelection();
+	RSP_Protocol::RCUSettings&       getRCUSettings();
+	RSP_Protocol::HBASettings&       getHBASettings();
+	RSP_Protocol::HBASettings&       getHBAReadings();
+	RSP_Protocol::RSUSettings&       getRSUSettings();
+	RSP_Protocol::WGSettings&        getWGSettings();
+	RSP_Protocol::SystemStatus&      getSystemStatus();
+	RSP_Protocol::Statistics&        getSubbandStats();
+	RSP_Protocol::Statistics&        getBeamletStats();
+	RSP_Protocol::XCStatistics&      getXCStats();
+	RSP_Protocol::Versions&          getVersions();
+	uint32&                          getClock();
+	RSP_Protocol::TDStatus&          getTDStatus();
+	RSP_Protocol::SPUStatus&         getSPUStatus();
+	RSP_Protocol::TBBSettings&       getTBBSettings();
+	RSP_Protocol::BypassSettings&    getBypassSettings();
+	RawDataBlock_t&					 getRawDataBlock();
+	/*@}*/
 
-    private:
+	// update timestamp
+	void setTimestamp(const RTC::Timestamp& timestamp);
+
+	// Get const pointer to parent cache.
+	Cache& getCache() { return *m_cache; }
+
+private:
 	// NOTE [reo]: The relation between the RSPprotocol classes,
 	//	the EPAProtocol classes and the cache is not implemented 
 	//	in the right way. The Cache should consist of (blitz)
@@ -97,92 +96,73 @@ namespace LOFAR {
 	//	indicates that the RSP class can contain many elements,
 	//	which is never the case.
 
-      CacheBuffer(); // prevent default construction
+	CacheBuffer(); // prevent default construction
 
-      RTC::Timestamp                 m_timestamp;
+	// --- datamembers ---
+	RTC::Timestamp                 m_timestamp;
+	RSP_Protocol::BeamletWeights   m_beamletweights;
+	RSP_Protocol::SubbandSelection m_subbandselection;
+	RSP_Protocol::RCUSettings      m_rcusettings;
+	RSP_Protocol::HBASettings      m_hbasettings;
+	RSP_Protocol::HBASettings      m_hbareadings;
+	RSP_Protocol::RSUSettings      m_rsusettings;
+	RSP_Protocol::WGSettings       m_wgsettings;
+	RSP_Protocol::Statistics       m_subbandstats;
+	RSP_Protocol::Statistics       m_beamletstats;
+	RSP_Protocol::XCStatistics     m_xcstats;
+	RSP_Protocol::SystemStatus     m_systemstatus;
+	RSP_Protocol::Versions         m_versions;
+	uint32                         m_clock;
+	RSP_Protocol::TDStatus         m_tdstatus;
+	RSP_Protocol::SPUStatus        m_spustatus;
+	RSP_Protocol::TBBSettings      m_tbbsettings;
+	RSP_Protocol::BypassSettings   m_bypasssettings;
+	RawDataBlock_t				   itsRawDataBlock;
 
-      RSP_Protocol::BeamletWeights   m_beamletweights;
-      RSP_Protocol::SubbandSelection m_subbandselection;
-      RSP_Protocol::RCUSettings      m_rcusettings;
-      RSP_Protocol::HBASettings      m_hbasettings;
-      RSP_Protocol::HBASettings      m_hbareadings;
-      RSP_Protocol::RSUSettings      m_rsusettings;
-      RSP_Protocol::WGSettings       m_wgsettings;
-      RSP_Protocol::Statistics       m_subbandstats;
-      RSP_Protocol::Statistics       m_beamletstats;
-      RSP_Protocol::XCStatistics     m_xcstats;
-      RSP_Protocol::SystemStatus     m_systemstatus;
-      RSP_Protocol::Versions         m_versions;
-      uint32                         m_clock;
-      RSP_Protocol::TDStatus         m_tdstatus;
-      RSP_Protocol::SPUStatus        m_spustatus;
-      RSP_Protocol::TBBSettings      m_tbbsettings;
-      RSP_Protocol::BypassSettings   m_bypasssettings;
-
-      Cache* m_cache;
-    };
-
-    /**
-     * Singleton class containing the data caches.
-     */
-    class Cache
-    {
-    public:
-      /*@{*/
-      /**
-       * Constructor/destructor
-       */
-      static Cache& getInstance();
-      virtual ~Cache();
-      /*@}*/
-
-      /*
-       * Reset cache front and back buffers.
-       */
-      void reset(void);
-
-      /**
-       * Swap the front and back buffers.
-       */
-      void swapBuffers();
-
-      /**
-       * Get front/back buffers.
-       */
-      CacheBuffer& getFront();
-      CacheBuffer& getBack();
-
-      /**
-       * Get register states.
-       */
-      AllRegisterState& getState() { return m_allstate; }
-
-    private:
-
-      /**
-       * Direct construction not allowed.
-       */
-      Cache();
-
-      /**
-       * Keep register update state.
-       */
-      AllRegisterState m_allstate; // communication status of all register
-
-      /*@{*/
-      /**
-       * Front and back buffers.
-       */
-      CacheBuffer* m_front;
-      CacheBuffer* m_back;
-      /*@}*/
-
-      /**
-       * Singleton class.
-       */
-      static Cache* m_instance;
-    };
-  };
+	Cache* m_cache;		// pointer to container
 };
+
+// Singleton class containing the data caches.
+class Cache
+{
+public:
+	/*@{*/
+	// Constructor/destructor
+	static Cache& getInstance();
+	virtual ~Cache();
+	/*@}*/
+
+	// Reset cache front and back buffers.
+	void reset(void);
+
+	// Swap the front and back buffers.
+	void swapBuffers();
+
+	// Get front/back buffers.
+	CacheBuffer& getFront();
+	CacheBuffer& getBack();
+
+	// Get register states.
+	AllRegisterState& getState() { return m_allstate; }
+
+private:
+	// Direct construction not allowed.
+	Cache();
+
+	// Keep register update state.
+	AllRegisterState m_allstate; // communication status of all register
+
+	/*@{*/
+	// Front and back buffers.
+	CacheBuffer* m_front;
+	CacheBuffer* m_back;
+	/*@}*/
+
+	// Singleton class.
+	static Cache* m_instance;
+};
+
+  }; // namespace 
+}; // namespace LOFAR
      
 #endif /* CACHE_H_ */
