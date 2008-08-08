@@ -49,59 +49,55 @@ class InputSection {
     InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber);
     ~InputSection();
   
-    void preprocess(const CS1_Parset *ps);
-    void process();
-    void postprocess();
+    void			 preprocess(const CS1_Parset *ps);
+    void			 process();
+    void			 postprocess();
     
   private:
-    static void raisePriority();
-    static void limitFlagsLength(SparseSet<unsigned> &flags);
-    void	startThreads();
+    static void			 raisePriority();
+    static void			 limitFlagsLength(SparseSet<unsigned> &flags);
+    void			 startThreads();
 
-    bool		 itsDelayCompensation, itsIsRealTime;
-#if 0
-    std::vector<int32>	 itsBeamlet2beams;
-    std::vector<uint32>	 itsSubband2Index;
-#else
-    std::vector<unsigned> itsSubbandToBeamMapping;
-    std::vector<unsigned> itsSubbandToRSPboardMapping, itsSubbandToRSPslotMapping;
-#endif
+    bool			 itsDelayCompensation;
+    bool			 itsIsRealTime;
+    std::vector<unsigned>	 itsSubbandToBeamMapping;
+    std::vector<unsigned>	 itsSubbandToRSPboardMapping;
+    std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    std::vector<InputThread *>	itsInputThreads;
+    std::vector<InputThread *>	 itsInputThreads;
 
-    std::vector<Stream *>	itsInputStreams;
-    const std::vector<Stream *> &itsClientStreams;
-    std::vector<std::pair<std::string, unsigned> > itsStationsAndRSPboardNumbers;
+    std::vector<Stream *>	 itsInputStreams;
+    const std::vector<Stream *>  &itsClientStreams;
     
-    const CS1_Parset	 *itsCS1PS;
+    const CS1_Parset		 *itsCS1PS;
     
-    TimeStamp		 itsSyncedStamp;
+    TimeStamp			 itsSyncedStamp;
    
-    std::vector<double>  itsDelaysAtBegin;
-    std::vector<double>  itsDelaysAfterEnd;
-    std::vector<double>  itsNrCalcDelaysForEachTimeNrDirections;
-    unsigned             itsNrCalcDelays;
-    unsigned             itsCounter;
-    unsigned		 itsNrPsets;
+    std::vector<double>		 itsDelaysAtBegin;
+    std::vector<double>		 itsDelaysAfterEnd;
+    std::vector<double>		 itsNrCalcDelaysForEachTimeNrDirections;
+    unsigned			 itsNrCalcDelays;
+    unsigned			 itsCounter;
+    unsigned			 itsNrPsets;
     
-    unsigned		 itsMaxNetworkDelay; // in samples
-    unsigned		 itsNSubbandsPerPset;
-    unsigned		 itsNSamplesPerSec;
-    unsigned		 itsNHistorySamples;
-    unsigned		 itsNrBeams;
+    unsigned			 itsMaxNetworkDelay; // in samples
+    unsigned			 itsNSubbandsPerPset;
+    unsigned			 itsNSamplesPerSec;
+    unsigned			 itsNHistorySamples;
+    unsigned			 itsNrInputs;
+    unsigned			 itsNrBeams;
 
-    unsigned		 itsCurrentComputeCore, itsNrCoresPerPset;
-    unsigned		 itsPsetNumber;
+    unsigned			 itsCurrentComputeCore, itsNrCoresPerPset;
+    unsigned			 itsPsetNumber;
    
     std::vector<BeamletBuffer *> itsBBuffers;
-    WH_DelayCompensation *itsDelayComp;
-    double	         itsSampleRate, itsSampleDuration;
+    WH_DelayCompensation	 *itsDelayComp;
+    double			 itsSampleRate, itsSampleDuration;
     
-    LogThread		 *itsLogThread;
-    NSTimer		 itsDelayTimer;
-    
+    LogThread			 *itsLogThread;
+    NSTimer			 itsDelayTimer;
 };
-    
+
 } // namespace CS1
 } // namespace LOFAR
 

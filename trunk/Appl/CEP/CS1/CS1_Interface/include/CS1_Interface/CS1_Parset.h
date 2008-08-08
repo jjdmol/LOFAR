@@ -85,18 +85,12 @@ public:
 	uint32	       maxNetworkDelay() const;
 	uint32         nrPPFTaps() const;
 	uint32         nrChannelsPerSubband() const;
-	uint32         nrSubbands() const;
 	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
-#if 0
-	vector<double> refFreqs() const; // obsolete
-#endif
 	double         chanWidth() const;
 	vector<string> getPortsOf(const string& aKey) const;
-	string         inputPortnr(const string& aKey) const;
 	void           IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &RSPDestPort) const; 
 	string         stationName(const int index) const;
-	uint32         rspId(const string& stationName) const;
 	static string  expandedArrayString(const string& orgStr);
 	bool	       useScatter() const;
 	bool	       useGather() const;
@@ -110,19 +104,16 @@ public:
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
 	string         getTransportType(const string& prefix) const;
-#if 0
-	uint32         nrBeams() const;
-	vector<int32>  beamlet2beams(uint32 rspid=0) const;
-	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
-	vector<uint32> subband2Index(uint32 rspid=0) const;
-#else
+
+	unsigned         nrSubbands() const;
+	unsigned         nrBeams() const;
 	unsigned	 nyquistZone() const;
-	unsigned	 nrBeams() const;
+
 	vector<unsigned> subbandToBeamMapping() const;
 	vector<double>	 subbandToFrequencyMapping() const;
 	vector<unsigned> subbandToRSPboardMapping() const;
 	vector<unsigned> subbandToRSPslotMapping() const;
-#endif
+
 	int32          nrSubbandsPerFrame() const;
 	string         partitionName() const;
 	bool           realTime() const;
@@ -130,11 +121,16 @@ public:
 	vector<double> getBeamDirection(unsigned beam) const;
 	string         getBeamDirectionType(unsigned beam) const;
 
-	vector<pair<string, unsigned> > getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
-	string         getInputDescription(const string &stationName, unsigned rspBoardNumber) const;
+	struct StationRSPpair {
+	  string   station;
+	  unsigned rsp;
+	};
+	
+	vector<StationRSPpair> getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
+
+	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 	static Stream  *createStream(const string &description, bool asReader);
 
-	//# Datamembers
 	string	       name;
 	vector<double> itsStPositions;
 	
@@ -268,12 +264,27 @@ inline uint32 CS1_Parset::nrCoresPerPset() const
   return getUint32("OLAP.BGLProc.coresPerPset");
 }  
  
-#if 0
-inline vector<double> CS1_Parset::refFreqs() const
+inline unsigned CS1_Parset::nrSubbands() const
 {
-  return getDoubleVector("Observation.RefFreqs");
+  return subbandToBeamMapping().size();
+} 
+
+inline vector<unsigned> CS1_Parset::subbandToBeamMapping() const
+{
+  return getUint32Vector("Observation.beamList");
 }
-#endif
+
+inline vector<unsigned> CS1_Parset::subbandToRSPboardMapping() const
+{
+  return getUint32Vector("Observation.rspBoardList");
+}
+
+
+inline vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
+{
+  return getUint32Vector("Observation.rspSlotList");
+}
+
 
 inline double CS1_Parset::chanWidth() const
 {
@@ -329,13 +340,6 @@ inline int CS1_Parset::outputPsetIndex(uint32 pset) const
 {
   return findIndex(pset, outputPsets());
 }
-
-#if 0
-inline uint32 CS1_Parset::nrBeams() const
-{
-  return getUint32("Observation.nrBeams");
-}
-#endif
 
 inline int32 CS1_Parset::nrSubbandsPerFrame() const
 {

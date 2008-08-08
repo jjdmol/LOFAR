@@ -1,7 +1,6 @@
 pkginclude_HEADERS = Package__Version.h \
 BeamletBuffer.h			\
 BGL_Personality.h		\
-Connector.h			\
 InputThread.h			\
 ION_Allocator.h			\
 LockedRanges.h			\
@@ -19,7 +18,6 @@ liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
 BeamletBuffer.cc		\
 BGL_Personality.cc		\
 CS1_ION_main.cc		 	\
-Connector.cc			\
 InputThread.cc			\
 ION_Allocator.cc		\
 LogThread.cc			\
