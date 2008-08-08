@@ -645,6 +645,29 @@ private:
 };
 
 //
+// class RawBlockCommand
+//
+class RawBlockCommand : public Command
+{
+public:
+	RawBlockCommand(GCFPortInterface& port);
+	virtual ~RawBlockCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void	setAddressInfo(uint16 RSPboard, uint32 address, uint16 offset);
+	void	setDataInfo   (const string& filename, uint16 dataLen, uint8*	dataPtr);
+	void	getAddressInfo(uint16* RSPboard, uint32* address, uint16* offset);
+	void	getDataInfo   (const string& filename, uint16* dataLen, uint8** dataHandle);
+private:
+	uint16	itsRSPboard;
+	uint32	itsAddress;
+	uint16	itsOffset;
+	uint16	itsDataLen;
+	string	itsFileName;
+	uint8	itsData[ETH_DATA_LEN];
+};
+
+//
 // class VersionCommand
 //
 class VersionCommand : public Command

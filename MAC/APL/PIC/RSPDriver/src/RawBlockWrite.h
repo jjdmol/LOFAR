@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  MEPData.h: MEP Payload object.
+//#  RawBlockWrite.h: Synchronize HBA settings with HBA hardware via RCU interface.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,40 +22,36 @@
 //#
 //#  $Id$
 
-#ifndef MEPDATA_H_
-#define MEPDATA_H_
+#ifndef RAWBLOCKWRITE_H_
+#define RAWBLOCKWRITE_H_
 
-#include <unistd.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
+
+#include "SyncAction.h"
 
 namespace LOFAR {
-  namespace EPA_Protocol {
+  namespace RSP {
 
-class MEPData
+class RawBlockWrite : public SyncAction
 {
 public:
-	// Constructors for a MEPData object.
-	MEPData() : m_dataptr(0), m_count(0) { }
-	virtual ~MEPData() {}
+	// Constructors for a RawBlockWrite object.
+	RawBlockWrite(GCFPortInterface& board_port, int board_id);
+	virtual ~RawBlockWrite();
 
-	// Member access.
-	void  	setBuffer(void* buf, size_t size);
-	void* 	getBuffer() const;
-	size_t	getDataLen() const;
+	// Send the write message.
+	virtual void sendrequest();
 
-	/*@{*/
-	// marshalling methods
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
-	/*@}*/
+	// Send the read request.
+	virtual void sendrequest_status();
+
+	// Handle the read result.
+	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
 private:
-	// MEP Payload data
-	void*  m_dataptr; // pointer to user data, not owned by this class
-	size_t m_count;
+	EPA_Protocol::MEPHeader m_hdr;
 };
-
-  }; // namepsace EPA_Protocol
+  }; // namespace RSP
 }; // namespace LOFAR
-
-#endif /* MEPDATA_H_ */
+     
+#endif /* RAWBLOCKWRITE_H_ */

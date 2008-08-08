@@ -257,6 +257,8 @@ prelude = << PRELUDE_END
 		uint8	temperature;
 	};
 
+#define	RSP_RAW_DATABLOCK_SIZE		1480
+
 PRELUDE_END;
 
 //

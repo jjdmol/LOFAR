@@ -150,6 +150,10 @@ RSPDriverFiles = \
 	GetBypassCmd.cc \
 	GetSPUStatusCmd.h \
 	GetSPUStatusCmd.cc \
+	GetRawBlockCmd.h \
+	GetRawBlockCmd.cc \
+	SetRawBlockCmd.h \
+	SetRawBlockCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \
@@ -175,6 +179,10 @@ RSPDriverFiles = \
 	RCUResultRead.cc \
 	RCURead.h \
 	RCURead.cc \
+	RawBlockRead.h \
+	RawBlockRead.cc \
+	RawBlockWrite.h \
+	RawBlockWrite.cc \
 	StatusRead.h \
 	StatusRead.cc \
 	SstRead.h \

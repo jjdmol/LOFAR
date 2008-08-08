@@ -169,6 +169,9 @@ namespace LOFAR {
       void rsp_getbypass(GCFEvent& event, GCFPortInterface &port);
 
       void rsp_getspustatus(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_getRawBlock(GCFEvent& event, GCFPortInterface &port);
+      void rsp_setRawBlock(GCFEvent& event, GCFPortInterface &port);
       /*@}*/
 
     private:
@@ -184,7 +187,7 @@ namespace LOFAR {
 
       // ports
       GCFTCPPort                   m_acceptor;     // listen for clients on this port
-      GCFETHRawPort*               m_board;        // array of ports, one for each RSP board
+      GCFETHRawPort*               m_boardPorts;   // array of ports, one for each RSP board
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_dead_clients; // list of clients to cleanup
 
