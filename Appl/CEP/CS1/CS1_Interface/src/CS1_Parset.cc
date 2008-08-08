@@ -85,10 +85,10 @@ void CS1_Parset::IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &
 }
 
 
-vector<pair<string, unsigned> > CS1_Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
+vector<CS1_Parset::StationRSPpair> CS1_Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
 {
   vector<string> inputs = getStringVector(string("PIC.Core.IONProc.") + partitionName() + '[' + boost::lexical_cast<string>(psetNumber) + "].inputs");
-  vector<pair<string, unsigned> > stationsAndRSPs(inputs.size());
+  vector<StationRSPpair> stationsAndRSPs(inputs.size());
 
   for (unsigned i = 0; i < inputs.size(); i ++) {
     vector<string> split = StringUtil::split(inputs[i], '/');
@@ -96,17 +96,15 @@ vector<pair<string, unsigned> > CS1_Parset::getStationNamesAndRSPboardNumbers(un
     if (split.size() != 2 || split[1].substr(0, 3) != "RSP")
       throw std::runtime_error(string("expected stationname/RSPn pair in \"") + inputs[i] + '"');
 
-    string   &stationName   = split[0];
-    unsigned rspBoardNumber = boost::lexical_cast<unsigned>(split[1].substr(3));
-
-    stationsAndRSPs[i] = pair<string, unsigned>(stationName, rspBoardNumber);
+    stationsAndRSPs[i].station = split[0];
+    stationsAndRSPs[i].rsp     = boost::lexical_cast<unsigned>(split[1].substr(3));
   }
 
   return stationsAndRSPs;
 }
 
 
-string CS1_Parset::getInputDescription(const string &stationName, unsigned rspBoardNumber) const
+string CS1_Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
 {
   return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports")[rspBoardNumber];
 }
@@ -132,147 +130,6 @@ Stream *CS1_Parset::createStream(const string &description, bool asReader)
     throw std::runtime_error(string("unrecognized connector format: \"" + description + '"'));
 }
 
-
-uint32 CS1_Parset::nrSubbands() const
-{
-#if 0
-  uint32 nrSubbands(0);
-  vector<int32> b2s = beamlet2subbands();
-  
-  for (uint i = 0; i < 4*54; i++) {
-    if (b2s[i] != -1) {
-      nrSubbands++;
-    }  
-  }
-	
-  return nrSubbands;
-#else
-  return subbandToBeamMapping().size();
-#endif
-}
-
-uint32 CS1_Parset::rspId(const string& stationName) const
-{
-  return(getUint32("PIC.Core." + stationName + ".RSP"));
-}
-
-string CS1_Parset::inputPortnr(const string& s) const
-{
-  uint32 index = s.find("_");
-  string destPorts = getStringVector("PIC.Core." + s.substr(0, index) + "_RSP.dest.ports")[rspId(s)];
-  uint32 i = destPorts.find(":");
-  
-  return destPorts.substr(i+1, 4);  
-}
-
-
-#if 0
-
-vector<int32>  CS1_Parset::beamlet2beams(uint32 rspid) const
-{
-  vector<int32> b2b;
-  
-  switch (rspid) {
-    case 0 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[0]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[54]);
-		  
-		  std::copy(begin,end,std::back_inserter(b2b));
-		}
-		
-		return b2b;
-		
-    case 1 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[54]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[108]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
-		}
-		
-		return b2b;
-		
-    case 2 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[108]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[162]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
- 		}
-		  
-		return b2b;
-		
-    case 3 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[162]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[216]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
- 		}
-		
-		return b2b;
-		 
-    default :	return b2b;
-  }
-}
-
-vector<int32>  CS1_Parset::beamlet2subbands(uint32 rspid) const
-{
-  vector<int32> b2s;
-  
-  switch (rspid) {
-    case 0 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[0]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[54]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
- 		}  
-		
-		return b2s;
-		
-    case 1 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[54]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[108]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
-   		}  
-		
-		return b2s;
-    
-    case 2 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[108]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[162]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
-		}  
-		
-		return b2s;
-   
-    case 3 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[162]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[216]);
-		  
-		  std::copy(begin,end,std::back_inserter(b2s));
-		}
-		
-		return b2s;
-		 
-    default :	return b2s;
-  }
-}
-
-vector<uint32>  CS1_Parset::subband2Index(uint32 rspid) const
-{
-  vector<int32> s2b = beamlet2subbands(rspid);
-  vector<uint32> subband2Index;
-  
-  for (uint i = 0; i < s2b.size(); i++) {
-    if (s2b[i] != -1) {
-      subband2Index.push_back(i);
-    }  
-  }
-
-  return subband2Index;
-}
-
-#else
 
 unsigned CS1_Parset::nyquistZone() const
 {
@@ -303,12 +160,6 @@ unsigned CS1_Parset::nrBeams() const
 }
 
 
-vector<unsigned> CS1_Parset::subbandToBeamMapping() const
-{
-  return getUint32Vector("Observation.beamList");
-}
-
-
 vector<double> CS1_Parset::subbandToFrequencyMapping() const
 {
   unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
@@ -320,20 +171,6 @@ vector<double> CS1_Parset::subbandToFrequencyMapping() const
 
   return subbandFreqs;
 }
-
-
-vector<unsigned> CS1_Parset::subbandToRSPboardMapping() const
-{
-  return getUint32Vector("Observation.rspBoardList");
-}
-
-
-vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
-{
-  return getUint32Vector("Observation.rspSlotList");
-}
-
-#endif
 
 
 vector<double> CS1_Parset::positions() const
