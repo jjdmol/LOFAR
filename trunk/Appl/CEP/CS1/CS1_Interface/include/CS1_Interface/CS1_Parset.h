@@ -63,6 +63,8 @@ public:
 	itsObservation(aParSet)
          {}
 	 
+	void           check() const;
+
 	double         startTime() const;
 	double         stopTime() const;
 	uint32	       nrStations() const;
@@ -87,16 +89,11 @@ public:
 	uint32         nrChannelsPerSubband() const;
 	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
-	double         chanWidth() const;
+	double         channelWidth() const;
 	vector<string> getPortsOf(const string& aKey) const;
-	void           IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &RSPDestPort) const; 
 	string         stationName(const int index) const;
 	static string  expandedArrayString(const string& orgStr);
-	bool	       useScatter() const;
-	bool	       useGather() const;
 	uint32	       nrPsetsPerStorage() const;
-	uint32	       nrOutputsPerInputNode() const;
-	uint32	       nrInputsPerStorageNode() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
 	vector<uint32> psetDimensions() const;
@@ -138,6 +135,7 @@ private:
 	void           addPosition(string stName);
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
+	void           checkSubbandCount(const char *key) const;
 	
 	Observation    itsObservation;
 };
@@ -266,7 +264,7 @@ inline uint32 CS1_Parset::nrCoresPerPset() const
  
 inline unsigned CS1_Parset::nrSubbands() const
 {
-  return subbandToBeamMapping().size();
+  return getUint32Vector("Observation.subbandList").size();
 } 
 
 inline vector<unsigned> CS1_Parset::subbandToBeamMapping() const
@@ -286,34 +284,14 @@ inline vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
 }
 
 
-inline double CS1_Parset::chanWidth() const
+inline double CS1_Parset::channelWidth() const
 {
   return sampleRate() / nrChannelsPerSubband();
-}
-
-inline bool CS1_Parset::useScatter() const
-{
-  return getBool("OLAP.IONProc.useScatter");
-}
-
-inline bool CS1_Parset::useGather() const
-{
-  return getBool("OLAP.IONProc.useGather");
 }
 
 inline uint32 CS1_Parset::nrPsetsPerStorage() const
 {
   return getUint32("OLAP.psetsPerStorage");
-}
-
-inline uint32 CS1_Parset::nrOutputsPerInputNode() const
-{
-  return useScatter() ? 1 : nrCoresPerPset();
-}
-
-inline uint32 CS1_Parset::nrInputsPerStorageNode() const
-{
-  return (useGather() ? 1 : nrCoresPerPset()) * nrPsetsPerStorage();
 }
 
 inline vector<uint32> CS1_Parset::inputPsets() const

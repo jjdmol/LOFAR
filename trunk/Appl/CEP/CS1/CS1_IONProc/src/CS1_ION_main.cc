@@ -314,7 +314,7 @@ void *master_thread(void *)
 #endif
     }
 
-    if (parset.useGather() && parset.outputPsetIndex(myPsetNumber) >= 0) {
+    if (parset.outputPsetIndex(myPsetNumber) >= 0) {
       static char nrRuns[16], *argv[] = {
 	global_argv[0],
 	global_argv[1],

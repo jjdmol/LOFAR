@@ -292,9 +292,6 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   }
 
   if (itsIsTransposeOutput) {
-    // TODO: !useGather not implemented
-    //ASSERT(parset->getBool("OLAP.IONProc.useGather"));
-
     unsigned nrSubbandsPerPset	= configuration.nrSubbandsPerPset();
     unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
     // TODO: logicalNode assumes output psets are consecutively numbered
