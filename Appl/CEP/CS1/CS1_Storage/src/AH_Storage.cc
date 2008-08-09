@@ -69,8 +69,6 @@ namespace LOFAR
       ASSERT(nrSubbands > 0);
       uint nrSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
       ASSERT(nrSubbandsPerPset > 0);
-      uint nrInputChannels = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
-      ASSERT(nrInputChannels > 0);
       uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
       ASSERT(nrSubbands % nrSubbandsPerPset == 0);
       ASSERT(nrSubbands / nrSubbandsPerPset % nrPsetsPerStorage == 0);
@@ -79,7 +77,6 @@ namespace LOFAR
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerPset
       // to an AIPS++ Measurement Set.
       uint nrWriters = nrSubbands / nrSubbandsPerPset / nrPsetsPerStorage;
-      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
       LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
 
       for (unsigned nw = 0; nw < nrWriters; ++nw)
@@ -106,19 +103,9 @@ namespace LOFAR
         // Each writer will run on a separate node.
         step.runOnNode(nw);
         // Connect to BG output
-	for (unsigned pset = 0; pset < nrPsetsPerStorage; pset ++) {
-	  vector<int> channels;
-	  for (unsigned core = 0; core < nrInputChannels; core++) {
-	    int channel = pset * nrInputChannels + core;
-	    step.getInDataManager(channel).setInBuffer(channel, false, 10);
-	    itsStub->connect(nw, channel, step.getInDataManager(channel), channel);
-	    channels.push_back(channel);
-	  }
-	  // limit the number of concurrent incoming connections
-	  // actually, we would like to set the number of concurrent
-	  // communications for all psets together, but we cannot express this
-	  // thus we do this for each pset
-	  step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
+	for (unsigned channel = 0; channel < nrPsetsPerStorage; channel ++) {
+	  step.getInDataManager(channel).setInBuffer(channel, false, 10);
+	  itsStub->connect(nw, channel, step.getInDataManager(channel), channel);
 	}
       }
 #ifdef HAVE_MPI

@@ -50,38 +50,26 @@ using namespace ACC::APS;
 CS1_Parset::CS1_Parset() :
 	name()
 {
+  check();
 }
 
 CS1_Parset::~CS1_Parset()
 {
 }
 
-void CS1_Parset::IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &RSPDestPort) const
+
+void CS1_Parset::checkSubbandCount(const char *key) const
 {
-  char buf[50];
-  
-  sprintf(buf,"PIC.Core.IONode[%d].RSP",pset);
-  vector<string> snames = getStringVector(buf);
-  string rspdest_ports;
-    
-  for (uint i = 0; i < snames.size(); i++) {
-    rspdest_ports = getStringVector("PIC.Core." + snames[i].substr(0, snames[i].length()-1) + ".dest.ports")[atoi(snames[i].substr(snames[i].length()-1,snames[i].length()).c_str())];
-    if (rspdest_ports.substr(0,5) == "file:" || rspdest_ports.substr(0,5) == "FILE:") {
-      RSPDestPort.push_back(pair<string, string>(rspdest_ports.substr(rspdest_ports.find(":")+1),""));
-    }
-    else if (rspdest_ports.substr(0,4) == "udp:" || rspdest_ports.substr(0,4) == "UDP:" ||
-             rspdest_ports.substr(0,4) == "tcp:" || rspdest_ports.substr(0,4) == "TCP:") {
-      RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[1], rspdest_ports.substr(rspdest_ports.rfind(":")+1)));
-    }
-    else if (rspdest_ports.find(":") != string::npos){
-      // udp
-      RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[0], StringUtil::split(rspdest_ports, ':')[1]));
-    }
-    else {
-      // file
-      RSPDestPort.push_back(pair<string, string>(rspdest_ports,""));
-    }
-  }
+  if (getUint32Vector(key).size() != nrSubbands())
+    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(getUint32Vector(key).size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
+}
+
+
+void CS1_Parset::check() const
+{
+  checkSubbandCount("Observation.beamList");
+  checkSubbandCount("Observation.rspBoardList");
+  checkSubbandCount("Observation.rspSlotList");
 }
 
 
@@ -247,9 +235,9 @@ vector<double> CS1_Parset::getBeamDirection(const unsigned beam) const
   char buf[50];
   std::vector<double> beamDirs(2);
  
-  sprintf(buf,"Observation.Beam[%d].angle1", beam);
+  sprintf(buf, "Observation.Beam[%d].angle1", beam);
   beamDirs[0] = getDouble(buf);
-  sprintf(buf,"Observation.Beam[%d].angle2", beam);
+  sprintf(buf, "Observation.Beam[%d].angle2", beam);
   beamDirs[1] = getDouble(buf);
 
   return beamDirs;

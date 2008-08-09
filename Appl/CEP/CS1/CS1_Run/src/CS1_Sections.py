@@ -128,8 +128,7 @@ class StorageSection(Section):
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
     def run(self, runlog, noRuns, runCmd = None):
-	if self.parset.getBool("OLAP.IONProc.useGather"):
-	    noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
+	noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
         Section.run(self, runlog, noRuns, runCmd)
 
 class IONProcSection(Section):

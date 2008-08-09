@@ -32,7 +32,6 @@
 // Application specific includes
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CS1_Interface/DH_Visibilities.h>
-#include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Storage/MSWriter.h>
 #include <tinyCEP/Sel_RoundRobin.h>
 #include <Transport/TH_MPI.h>
@@ -52,7 +51,7 @@ namespace LOFAR
     WH_SubbandWriter::WH_SubbandWriter(const string& name, 
                                        const vector<uint>& subbandID,
 				       CS1_Parset *pset) 
-      : WorkHolder(pset->nrInputsPerStorageNode(), 0, name, "WH_SubbandWriter"),
+      : WorkHolder(pset->nrPsetsPerStorage(), 0, name, "WH_SubbandWriter"),
         itsCS1PS(pset),
         itsSubbandIDs(subbandID),
         itsTimeCounter(0),
@@ -142,8 +141,6 @@ namespace LOFAR
                 antPos.size() << " == " << 3 * itsNStations);
       itsNrSubbandsPerPset	= itsCS1PS->nrSubbandsPerPset();
       itsNrSubbandsPerStorage	= itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage();
-      itsNrInputChannelsPerPset = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
-      itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerPset, 0);
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
       vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 
@@ -185,7 +182,7 @@ namespace LOFAR
       // correct indices for the reference frequencies are in the vector of
       // subbandIDs.      
       itsBandIDs.resize(itsNrSubbandsPerStorage);
-      double chanWidth = itsCS1PS->chanWidth();
+      double chanWidth = itsCS1PS->channelWidth();
       LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
 
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
@@ -241,14 +238,8 @@ namespace LOFAR
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
         // find out from which input channel we should read
 	unsigned pset = sb / itsNrSubbandsPerPset;
-	unsigned core = itsCurrentInputs[pset];
 
-	if (!itsCS1PS->useGather())
-	  core = BGL_Mapping::mapCoreOnPset(core, pset);
-
-	unsigned inputChannel = core + pset * itsNrInputChannelsPerPset;
-
-	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
+	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(pset));
         DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
   	DH_Visibilities::VisibilityType     *newVis	= &inputDH->getVisibility(0, 0, 0, 0);
        
@@ -299,11 +290,7 @@ namespace LOFAR
 	}
 #endif
 
-	getDataManager().readyWithInHolder(inputChannel);
-
-	// select next channel
-	if (++ itsCurrentInputs[pset] == itsNrInputChannelsPerPset)
-	  itsCurrentInputs[pset] = 0;
+	getDataManager().readyWithInHolder(pset);
       }
 
       // Update the time counter.

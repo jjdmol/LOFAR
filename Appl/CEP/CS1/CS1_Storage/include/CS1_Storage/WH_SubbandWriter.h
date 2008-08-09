@@ -87,9 +87,7 @@ namespace LOFAR
 
       uint itsNrSubbandsPerPset;
       uint itsNrSubbandsPerStorage;
-      uint itsNrInputChannelsPerPset;
 
-      vector<uint> itsCurrentInputs;
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
       uint itsTimeCounter;       ///< Counts the time
       uint itsTimesToIntegrate;  ///< Number of timeSteps to integrate

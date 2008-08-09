@@ -12,9 +12,6 @@
 
 OLAP.OLAP_Conn.BGLProc_Storage_Ports = [8300..8363]
 
-# should be one of NULL(inputFromMemory), FILE, TCP, UDP, ETHERNET
-OLAP.OLAP_Conn.station_Input_Transport = NULL
-
 # should be one of ZOID, FCNP, TCP, NULL
 # BGLProc doesn't open the parset file!
 OLAP.OLAP_Conn.IONProc_BGLProc_Transport = FCNP
@@ -31,7 +28,6 @@ OLAP.BGLProc.nrPPFTaps=16
 OLAP.BGLProc.coresPerPset = 64
 OLAP.BGLProc.maxConcurrentComm = 1
 
-OLAP.IONProc.useGather = T
 OLAP.IONProc.integrationSteps = 1
 
 OLAP.StorageProc.integrationSteps = 60
@@ -49,7 +45,7 @@ OLAP.nrSubbandsPerFrame = 36
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5 # 1 second extra added to compensate for timestamp bug
-OLAP.delayCompensation = F
+OLAP.delayCompensation = T
 
 Observation.sampleClock = 160
 
@@ -61,15 +57,15 @@ Observation.bandFilter = LBL_30_80
 #Observation.bandFilter = HB_170_230
 #Observation.bandFilter = HB_210_240
 
+Observation.Beam[0].angle1 = 0                  # NCP
+Observation.Beam[0].angle2 = 1.570796327
+Observation.Beam[1].angle1 = 5.2336866848083394 # Cygnus
+Observation.Beam[1].angle2 = 0.71094251447010637
+Observation.Beam[2].angle1 = 6.1234876806221052 # Cas A
+Observation.Beam[2].angle2 = 1.0265153995604648
 #Observation.Beam[1].angle1 = 0                  # NCP
 #Observation.Beam[1].angle2 = 1.570796327
-Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
-Observation.Beam[0].angle2 = 0.71094251447010637
-#Observation.Beam[1].angle1 = 6.1234876806221052 # Cas A
-#Observation.Beam[1].angle2 = 1.0265153995604648
-#Observation.Beam[1].angle1 = 0                  # NCP
-Observation.Beam[1].angle2 = 1.570796327
-Observation.Beam[1].angle1 = 0.9293405574       # pulsar
+#Observation.Beam[1].angle1 = 0.9293405574       # pulsar
 #Observation.Beam[1].angle2 = 0.9525774347
 #Observation.Beam[1].angle1 = 4.5192832066722115 # Jupiter
 #Observation.Beam[1].angle2 = 5.893698795
@@ -81,12 +77,18 @@ Observation.Beam[1].angle1 = 0.9293405574       # pulsar
 #Observation.nrBeams = 1
 Observation.Beam[0].directionTypes = J2000
 Observation.Beam[1].directionTypes = J2000
+Observation.Beam[2].directionTypes = J2000
 #Observation.Beam[0].subbandList = [300..335]
 #Observation.Beam[1].beamletList = [0..1, 54..55, 108..109, 162..163]
 #Observation.Beam[0].beamletList = [0..35]
 
+#Observation.subbandList  = [300]
+#Observation.beamList     = [0]
+#Observation.rspBoardList = [0]
+#Observation.rspSlotList  = [0]
+
 Observation.subbandList  = [300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335]
-Observation.beamList     = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+Observation.beamList     = [0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 Observation.rspBoardList = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 Observation.rspSlotList  = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
 

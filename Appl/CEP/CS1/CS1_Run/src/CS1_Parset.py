@@ -71,12 +71,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)
 
     def setIntegrationTime(self, integrationTime):
-	if self.getBool('OLAP.IONProc.useGather'):
-	  self['OLAP.IONProc.integrationSteps']     = integrationTime
-	  self['OLAP.StorageProc.integrationSteps'] = 1
-	else:
-	  self['OLAP.IONProc.integrationSteps']     = 1
-	  self['OLAP.StorageProc.integrationSteps'] = integrationTime
+	self['OLAP.IONProc.integrationSteps']     = integrationTime
+	self['OLAP.StorageProc.integrationSteps'] = 1
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName
