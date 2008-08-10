@@ -41,12 +41,13 @@ enum CorrelationTypes {None=0,I=1,Q=2,U=3,V=4,RR=5,RL=6,LR=7,LL=8,XX=9,XY=10,YX=
 
 //===============>>>  DataBuffer::DataBuffer  <<<===============
 
-DataBuffer::DataBuffer(MsInfo* info, int TimeWindow, bool Columns): myInfo(0)
+DataBuffer::DataBuffer(MsInfo* info, int TimeWindow, bool Columns):
+  Position(-1),
+  NumSlots(0),
+  WindowSize(TimeWindow),
+  myInfo(info)
 {
-  myInfo     = info;
-  Position   = -1;
   NumSlots   = myInfo->NumPairs * myInfo->NumBands;
-  WindowSize = TimeWindow;
   Init(Columns);
 }
 

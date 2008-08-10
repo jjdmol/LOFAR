@@ -33,10 +33,10 @@ using namespace casa;
 
 //===============>>>  MADFlagger::MADFlagger  <<<===============
 /* initialize some meta data and get the datastorage the right size. */
-MADFlagger::MADFlagger()
+MADFlagger::MADFlagger():
+  NumChannels(0),
+  NumPolarizations(0)
 {
-  NumChannels      = 0;
-  NumPolarizations = 0;
 }
 
 //===============>>>  MADFlagger::~MADFlagger  <<<===============

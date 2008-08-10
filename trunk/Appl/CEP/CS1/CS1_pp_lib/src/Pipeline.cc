@@ -43,10 +43,10 @@ Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
   myBandpass(bandpass),
   myFlagger(flagger),
   mySquasher(squasher),
-  BandpassData(0),
-  FlaggerData(0),
-  SquasherData(0),
-  myStatistics(0)
+  BandpassData(NULL),
+  FlaggerData(NULL),
+  SquasherData(NULL),
+  myStatistics(NULL)
 {
   myStatistics = new FlaggerStatistics(*myInfo);
 }
@@ -79,7 +79,6 @@ void Pipeline::MirrorBuffer(DataBuffer& buffer, MsInfo& info, int step)
   { from_pos = buffer.Position;
     to_pos   = (buffer.WindowSize - buffer.Position) % buffer.WindowSize;
   }
-  cout << from_pos << " : " << to_pos << endl;
   for (int i = 0; i < info.NumBands * info.NumPairs; i++)
   { buffer.Data[i].xyPlane(to_pos) = buffer.Data[i].xyPlane(from_pos);
   }

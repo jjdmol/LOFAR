@@ -31,19 +31,19 @@ using namespace casa;
 
 //===============>>>  Ms_Info::Ms_Info  <<<===============
 
-MsInfo::MsInfo(const std::string& msname)
+MsInfo::MsInfo(const std::string& msname):
+  NumSamples(0),
+  NumAntennae(0),
+  NumFields(0),
+  NumBands(0),
+  NumChannels(0),
+  NumPolarizations(0),
+  NumPairs(0),
+  NumTimeslots(0),
+  NoiseLevel(0.0),
+  MaxBaselineLength(0.0),
+  MsName(msname)
 {
-  MsName = msname;
-  MaxBaselineLength = 0.0;
-  NumSamples        = 0;
-  NumAntennae       = 0;
-  NumFields         = 0;
-  NumBands          = 0;
-  NumChannels       = 0;
-  NumPolarizations  = 0;
-  NumPairs          = 0;
-  NumTimeslots      = 0;
-  NoiseLevel        = 0.0;
 }
 
 //===============>>>  Ms_Info::~Ms_Info  <<<===============
