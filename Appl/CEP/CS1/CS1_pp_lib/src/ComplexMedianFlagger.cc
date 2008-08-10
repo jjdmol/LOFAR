@@ -34,10 +34,10 @@ using namespace casa;
 
 //===============>>>  ComplexMedianFlagger::ComplexMedianFlagger  <<<===============
 /* initialize some meta data and get the datastorage the right size. */
-ComplexMedianFlagger::ComplexMedianFlagger()
+ComplexMedianFlagger::ComplexMedianFlagger(void):
+  NumChannels(0),
+  NumPolarizations(0)
 {
-  NumChannels      = 0;
-  NumPolarizations = 0;
 }
 
 //===============>>>  ComplexMedianFlagger::~ComplexMedianFlagger  <<<===============

@@ -368,10 +368,10 @@ using namespace casa;
 
 //===============>>>  BandpassCorrector::BandpassCorrector  <<<===============
 /* initialize some meta data and get the datastorage the right size. */
-BandpassCorrector::BandpassCorrector(void)
+BandpassCorrector::BandpassCorrector(void):
+  NumChannels(0),
+  NumPolarizations(0)
 {
-  NumChannels      = 0;
-  NumPolarizations = 0;
 }
 
 //===============>>>  BandpassCorrector::~BandpassCorrector  <<<===============

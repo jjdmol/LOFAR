@@ -54,13 +54,13 @@ namespace LOFAR
       int          itsFlagger;
       int          itsSquasher;
 
+      Pipeline*          myPipeline;
       MsFile*            myFile;
       MsInfo*            myInfo;
-      RunDetails*        myDetails;
       BandpassCorrector* myBandpass;
       Flagger*           myFlagger;
       DataSquasher*      mySquasher;
-      Pipeline*          myPipeline;
+      RunDetails*        myDetails;
     public:
       PipelineProcessControl(void);
 

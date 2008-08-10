@@ -33,10 +33,10 @@ using namespace casa;
 
 //===============>>>  FrequencyFlagger::FrequencyFlagger  <<<===============
 /* initialize some meta data and get the datastorage the right size. */
-FrequencyFlagger::FrequencyFlagger()
+FrequencyFlagger::FrequencyFlagger():
+  NumChannels(0),
+  NumPolarizations(0)
 {
-  NumChannels      = 0;
-  NumPolarizations = 0;
 }
 
 //===============>>>  FrequencyFlagger::~FrequencyFlagger  <<<===============
