@@ -328,10 +328,9 @@ int main(int /*argc*/, const char* const argv[])
 {
   INIT_LOGGER(argv[0]);
 
-  Converter* conv = createConverter();
-  if (conv == 0) return 1;
-
+  Converter* conv;
   try {
+    ASSERT(conv = createConverter());
     checkPreConditions(conv);
     checkConverter(conv);
   }
