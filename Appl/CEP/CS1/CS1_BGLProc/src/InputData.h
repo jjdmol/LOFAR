@@ -9,7 +9,6 @@
 #include <Stream/Stream.h>
 
 #include <CS1_Interface/Allocator.h>
-#include <TH_ZoidClient.h>
 
 #include <boost/multi_array.hpp>
 
