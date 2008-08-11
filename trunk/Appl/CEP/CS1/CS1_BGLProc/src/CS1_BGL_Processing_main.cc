@@ -27,7 +27,6 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
-#include <CS1_BGLProc/TH_ZoidClient.h>
 #include <CS1_BGLProc/LocationInfo.h>
 #include <CS1_BGLProc/BGL_Processing.h>
 #include <CS1_BGLProc/Package__Version.h>
