@@ -1,0 +1,88 @@
+
+<h3>Example: Selecting records from a view using a sql_iterator</h3>
+<pre><code>
+<span class="codeComment">// Define an object to hold our row data -- used for joined table examples</span>
+class JoinExample
+{
+public:                    // tablename.columnname:
+ int exampleInt;           // DB_EXAMPLE.INT_VALUE
+ string exampleStr;        // DB_EXAMPLE.STRING_VALUE
+ double exampleDouble;     // DB_EXAMPLE.DOUBLE_VALUE
+ unsigned long sampleLong; // DB_SAMPLE.SAMPLE_LONG
+ double extraDouble;       // DB_SAMPLE.EXTRA_FLOAT
+};
+
+<span class="codeComment">// Here we define a custom parameter object for use with our JoinExample </span>
+class JoinParamObj
+{
+public:
+ int intValue;
+ string strValue;
+ int sampleInt;
+ string sampleStr;
+};
+
+<span class="codeComment">// BCA for JoinExample ... needed to store bindings between
+// query fields and members in JoinExample objects</span>
+class BCAJoinExample
+{
+public:
+ void operator()(BoundIOs &amp;cols, JoinExample &amp;row)
+ {
+  cols["INT_VALUE"]    &gt;&gt; row.exampleInt;
+  cols["STRING_VALUE"] &gt;&gt; row.exampleStr;
+  cols["DOUBLE_VALUE"] &gt;&gt; row.exampleDouble;
+  cols["SAMPLE_LONG"]  &gt;&gt; row.sampleLong;
+  cols["EXTRA_FLOAT"]  &gt;&gt; row.extraDouble;
+ }
+};
+
+<span class="codeComment">// BPA for JoinParamObj ... set SQL Query parameters from object</span>
+class BPAJoinParamObj
+{
+public:
+ void operator()(BoundIOs &amp;params, JoinParamObj &amp;paramObj)
+ {
+  params[0] &lt;&lt; paramObj.intValue;
+  params[1] &lt;&lt; paramObj.strValue;
+  params[2] &lt;&lt; paramObj.sampleInt;
+  params[3] &lt;&lt; paramObj.sampleStr;
+ }
+};
+
+<span class="codeComment">// Read JoinExample objects from the database using a query that
+// joins the DB_EXAMPLE and DB_SAMPLE tables</span>
+vector<joinexample> ReadJoinedData()
+{
+ vector<joinexample> results;
+
+ <span class="codeComment">// construct view
+ // note here that we use a custom parameter class for JoinExample
+ // rather than DefaultParamObj<JoinExample></span>
+
+ DBView&lt;JoinExample, ParamObj&gt; view("SELECT INT_VALUE, STRING_VALUE, DOUBLE_VALUE, "
+    "SAMPLE_LONG, EXTRA_FLOAT FROM DB_EXAMPLE, DB_SAMPLE WHERE (INT_VALUE = (?) AND STRING_VALUE = (?)) AND "
+    "(SAMPLE_INT = (?) OR SAMPLE_STR = (?)) "
+    "ORDER BY SAMPLE_LONG", BCAJoinExample(), "",
+    BPAJoinParamObj());
+
+
+ <span class="codeComment">// loop through query results and add them to our vector</span>
+ DBView&lt;JoinExample, JoinParamObj&gt;::sql_iterator read_it  = view.begin();
+
+ <span class="codeComment">// assign paramteter values as represented by the (?) placeholders
+ // in the where clause for our view</span>
+ read_it.Params().intValue = 3;
+ read_it.Params().strValue = "Join Example";
+ read_it.Params().sampleInt = 1;
+ read_it.Params().sampleStr = "Joined Tables";
+
+ for ( ; read_it != view.end(); ++read_it)
+ { 
+  results.push_back(*read_it);
+ }
+
+ return results;
+}
+</code></pre>
+</h3>

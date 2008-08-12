@@ -1,0 +1,112 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1013 750 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint;
+  database = dpSubStr(baseDP,DPSUB_SYS);
+  
+  // set the hardware selectable items
+  dyn_string result=\"\";  
+  
+  // There are no further hardware elements below that can be selected, so empty
+  // the list in the database
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"StorageAppl.pnl:main|processList found: \"+ result); 
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"AtorageAppl.pnl\",\"Update\");
+  
+
+  // no selection, so no trigger mechanism needed in this panel.   
+}
+" 0
+ E E E E 1 -1 -1 0  49 92
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string database=\"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+1 1 0 "" 0
+0
+1 2 0 "0" 1
+0
+1 3 0 "" 2
+0
+1 4 0 "" 3
+0
+1 5 0 "" 7
+0
+1 6 0 "" 8
+0
+1 7 0 "" 9
+0
+1 8 0 "" 10
+0
+1 9 0 "" 11
+0
+1 10 0 "" 12
+0
+1 11 0 "" 13
+0
+1 12 0 "" 15
+0
+1 13 0 "" 16
+0
+1 14 0 "" 17
+0
+1 15 0 "" 18
+0
+1 16 0 "" 19
+0
+1 17 0 "" 20
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
+1
+"$ctrlName""StorageAppl"
+0

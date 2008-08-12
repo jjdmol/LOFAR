@@ -1,0 +1,1069 @@
+2006-01-18 11:45  loose
+
+	* Makefile.am, include/Transport/Makefile.am: BugID: 596
+
+	  * Removed any references to nobase_.	* Removed "local" variable
+	  INSTHDRS as it is not useful anymore.  * Added few missing
+	  --with-<package>=$(prefix) lines.
+
+2006-01-02 13:03  diepen
+
+	* Transport.spec.in, configure.in,
+	  include/Transport/DataBlobExtra.h,
+	  include/Transport/DataHolder.h, src/DataBlobExtra.cc,
+	  src/DataHolder.cc, src/TH_ShMem.cc, src/TransportHolder.cc,
+	  test/ExampleBlMem.cc, test/ExampleEthernet.cc,
+	  test/ExampleMPI.cc, test/ExampleMem.cc,
+	  test/ExampleNonBlocking.cc, test/ExampleShMem.cc,
+	  test/ExampleVarBuf.cc: BugID: 556 Blob code has been moved to a
+	  separate package
+
+2005-12-27 11:02  loose
+
+	* include/Transport/: CSConnection.h, Connection.h,
+	  ConnectionPool.h, DataBlobExtra.h, DataHolder.h, TH_Ethernet.h,
+	  TH_File.h, TH_MPI.h, TH_Mem.h, TH_Null.h, TH_ShMem.h,
+	  TH_Socket.h, TransportHolder.h: BugID: 394
+
+	  Removed argument to the Doxygen \file command. It caused subtle
+	  documentation bugs and it defaults to the current filename
+	  anyway.
+
+2005-12-16 10:06  diepen
+
+	* include/Transport/DataHolder.h, src/DataHolder.cc: BugID: 537
+	  Added alignment argument to function addField.
+
+2005-12-12 10:47  zwart
+
+	* src/TH_Ethernet.cc: BugID: 524
+
+	  Splitted init routines, changed remote and own mac to src and
+	  dest mac
+
+2005-12-12 10:45  zwart
+
+	* include/Transport/TH_Ethernet.h: BugID: 514
+
+	  Splitted init routine
+
+2005-11-30 16:38  zwart
+
+	* include/Transport/Makefile.am, include/Transport/TH_Ethernet.h,
+	  include/Transport/TH_Null.h, src/TH_Ethernet.cc: BugID: 514
+
+	  The size of the socketbuffers can be given to the constructor.
+	  They will be set during init.
+
+	  Also added TH_Null. This is useful if you do not want a
+	  connection but you do need an TH-object.
+
+2005-11-28 12:00  meijeren
+
+	* src/TH_MPI.cc: BugID:480
+
+	  Changed type.
+
+2005-11-25 10:54  romein
+
+	* src/TH_MPI.cc: BugID: 225 Use MPI_Get_count instead of reading
+	  private field (which does not work on newer mpiches).
+
+2005-11-22 09:44  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Merged relevant changes in release 2.2 with the main development
+	  line.
+
+2005-11-18 18:02  loose
+
+	* NEWS: BugID: 327
+
+	  Added extra release info for release 2.2
+
+2005-11-16 17:15  loose
+
+	* configure.in: BugID: 327
+
+	  Prepare for release 2.2
+
+2005-11-16 17:12  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Prepare for release 2.2
+
+2005-10-27 12:29  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Merged relevant changes of the 2.1 release branch into the main
+	  development line.
+
+2005-10-24 14:15  lofar
+
+	* package.doc, package.dox: BugID: 271 moved al doxygen related
+	  .doc file to .dox
+
+2005-10-07 09:30  diepen
+
+	* Transport.spec.in: BugID: 396 Transport does not depend on a
+	  specific Common version
+
+2005-10-04 14:19  diepen
+
+	* Makefile.am, Transport.spec.in, configure.in,
+	  include/Makefile.am, include/Transport/Makefile.am,
+	  src/Makefile.am, test/Makefile.am: BugID: 396 Changed files for
+	  makedistcheck and rpm
+
+2005-10-04 14:15  cvs
+
+	* src/: BaseSim.h, Connection.h, ConnectionPool.h, CSConnection.h,
+	  DataBlobExtra.h, DataHolder.h, TH_Ethernet.h, TH_File.h,
+	  TH_Mem.h, TH_MPI.h, TH_ShMem.h, TH_Socket.h, TransportHolder.h:
+	  %lofarcvsmv%: Moved to LOFAR/LCS/Transport/include/Transport
+
+2005-10-04 14:15  cvs
+
+	* include/Transport/: BaseSim.h, Connection.h, ConnectionPool.h,
+	  CSConnection.h, DataBlobExtra.h, DataHolder.h, TH_Ethernet.h,
+	  TH_File.h, TH_Mem.h, TH_MPI.h, TH_ShMem.h, TH_Socket.h,
+	  TransportHolder.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Transport/src, creating new revision
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/Makefile.am: BugId: 396 Use
+	  $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-28 17:03  loose
+
+	* src/TH_Socket.cc: BugID: 405
+
+	  Socket is now always destroyed when it is "owned", after peer has
+	  closed the connection.
+
+2005-09-26 17:16  loose
+
+	* src/TH_Socket.cc: BugID: 405
+
+	  Socket is now always destroyed when it is "owned", after peer has
+	  closed the connection.
+
+2005-09-19 13:34  loose
+
+	* test/ExampleSocket.cc: BugID: 349
+
+	  When HAVE_BGL is defined, the test program exits with code 3
+	  (meaning: test skipped).
+
+2005-08-16 12:40  zwart
+
+	* src/: TH_Socket.cc, TH_Socket.h: BugID: 272
+
+	  Added argument to constructor that determines if the socket is
+	  made in the constructor.  MPI-CEPFrame applications can use this
+	  argument to postpone the creation of the socket until
+	  TH_Socket::init() is called.
+
+2005-08-01 11:48  zwart
+
+	* test/ExampleEthernet.cc: BugID: 238
+
+	  Included an empty main. Now ExampleEthernet compiles for fakebgl
+
+2005-08-01 11:46  zwart
+
+	* test/ExampleEthernet.cc: BugID: 238
+
+	  Disabled raw ethernet test on BGL
+
+2005-07-28 11:27  diepen
+
+	* src/: DataHolder.cc, DataHolder.h: BugID: 147 Removed implicit
+	  call to createDataBlock; use DBGASSERT where applicable
+
+2005-07-25 15:04  zwart
+
+	* test/: DH_Ethernet.cc, DH_Ethernet.h, ExampleEthernet.cc,
+	  Makefile.am: BugID: 195
+
+	  Ported ExampleEthernet to the new libTransport
+
+2005-07-25 14:00  diepen
+
+	* src/DataHolder.cc: BugID: 147 Also test of itsData in
+	  resizeBuffer
+
+2005-07-22 11:42  diepen
+
+	* src/: DataHolder.cc, DataHolder.h: BugID: 147 Improved by calling
+	  createDataBlock if not done yet
+
+2005-07-22 11:30  diepen
+
+	* src/DataHolder.cc: BugID: 147 Assert that itsData is set
+
+2005-07-05 15:37  loose
+
+	* src/TH_Socket.cc: %[PR: 174]%
+
+	  Added assertion for OK status of data socket in the TH_Socket
+	  constructor.	Otherwise, we might erroneously assume that socket
+	  creation was successful.
+
+2005-07-05 15:32  loose
+
+	* test/ExampleSocket.run: %[PR: 174]%
+
+	  Run script now correctly returns a non-zero return status.
+
+2005-06-27 15:50  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Merged changes on LCS-Transport-2_0-release-branch with main
+	  development line.
+
+2005-06-27 15:45  loose
+
+	* src/Makefile.am: %[PR: 173]%
+
+	  Moved CyclicBuffer stuff to CEP/CEPFrame, because it uses
+	  threads.
+
+2005-06-24 17:21  loose
+
+	* src/: CyclicBuffer.h, Lock.h: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-24 11:57  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0 Fixed incorrect usage of lofar_INTERNAL
+	  macro.
+
+2005-06-23 16:01  loose
+
+	* INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-23 15:11  loose
+
+	* src/: CyclicBuffer.cc, CyclicBuffer.h, Lock.h, Makefile.am: %[ER:
+	  0]%
+
+	  Preparation for release 2.0.	Moved CyclicBuffer stuff to
+	  CEP/CEPFrame, because it uses threads.
+
+2005-06-17 17:24  loose
+
+	* AUTHORS, COPYING, ChangeLog, NEWS, README: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:46  meijeren
+
+	* NEWS, README: %[ER: 0]% Added some more info.
+
+2005-06-17 14:33  loose
+
+	* AUTHORS, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 12:23  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-15 13:57  overeem
+
+	* test/ExampleSocket.cc: %[ER:231]% Deleting Listener Socket after
+	  test has finished.
+
+2005-06-14 14:45  meijeren
+
+	* src/: CSConnection.h, Connection.h, Lock.h: %[ER: 231]% Added
+	  doxygen tags.
+
+2005-06-13 11:31  meijeren
+
+	* src/: TH_MPI.cc, TransportHolder.h: %[ER: 231]% Added code to
+	  readTotalMsgLengthNonBlocking.
+
+2005-06-10 16:41  loose
+
+	* test/: ExampleBlMem_test.sh, ExampleMPI_test.sh,
+	  ExampleMem_test.sh, ExampleNonBlocking_test.sh,
+	  ExampleShMem_test.sh, ExampleSocket_test.sh,
+	  ExampleVarBuf_test.sh, Example_test.sh,
+	  TestBidirectional_test.sh: %[ER: 231]%
+
+	  Removed some remnants of an unintentional merge with development
+	  code
+
+2005-06-08 14:34  lang
+
+	* src/: Makefile.am, TH_Ethernet.cc, TH_Ethernet.h: %[ER:231]%
+	  Merge with branch ER231_development.
+
+2005-06-08 11:20  meijeren
+
+	* test/TestBidirectional.cc: %[ER: 231]% Added comment.
+
+2005-06-07 14:01  meijeren
+
+	* src/: TH_ShMem.cc, TH_ShMem.h: %[ER: ]% Added an #ifdef
+	  HAVE_SHMEM.
+
+2005-06-06 15:46  broekema
+
+	* src/TH_Mem.cc: %[ER: 160]% Don't return a value in a void
+	  function. This only shows up when threads are not used.
+
+2005-06-06 12:12  meijeren
+
+	* configure.in, src/BaseSim.h, src/CSConnection.cc,
+	  src/CSConnection.h, src/Connection.cc, src/Connection.h,
+	  src/ConnectionPool.cc, src/ConnectionPool.h, src/CyclicBuffer.h,
+	  src/DataBlobExtra.cc, src/DataBlobExtra.h, src/DataHolder.cc,
+	  src/DataHolder.h, src/Lock.h, src/Makefile.am, src/Socket.cc,
+	  src/Socket.h, src/TH_Ethernet.cc, src/TH_Ethernet.h,
+	  src/TH_File.cc, src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h,
+	  src/TH_Mem.cc, src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h,
+	  src/TH_Socket.cc, src/TH_Socket.h, src/TransportHolder.cc,
+	  src/TransportHolder.h, src/Transporter.cc, src/Transporter.h,
+	  test/DH_Example.cc, test/DH_Example.h, test/DH_ExampleExtra.cc,
+	  test/DH_ExampleExtra.h, test/DH_Socket.cc, test/DH_Socket.h,
+	  test/DH_VarBuf.cc, test/DH_VarBuf.h, test/Example.cc,
+	  test/ExampleBlMem.cc, test/ExampleBlMem_test.sh,
+	  test/ExampleMPI.cc, test/ExampleMPI_test.sh, test/ExampleMem.cc,
+	  test/ExampleMem_test.sh, test/ExampleNonBlocking.cc,
+	  test/ExampleNonBlocking_test.sh, test/ExampleShMem.cc,
+	  test/ExampleShMem.run, test/ExampleShMem_test.sh,
+	  test/ExampleSocket.cc, test/ExampleSocket_test.sh,
+	  test/ExampleVarBuf.cc, test/ExampleVarBuf_test.sh,
+	  test/Example_test.sh, test/Makefile.am,
+	  test/TestBidirectional.cc, test/TestBidirectional_test.sh,
+	  test/tClient.cc, test/tServer.cc: %[ER: 231]% Merge with branch
+	  ER231_development.
+
+2005-06-03 12:00  overeem
+
+	* src/: CSConnection.cc, TH_Socket.cc: %[ER:231]% Solved bug in
+	  internal administration of TH_Socket in combi with CSConnection.
+
+2005-06-02 09:37  meijeren
+
+	* src/DataHolder.h: %[ER: 231]% Made pack() and unpack() methods
+	  virtual.
+
+2005-06-01 17:16  meijeren
+
+	* src/: CSConnection.h, Connection.h, CyclicBuffer.h,
+	  DataBlobExtra.h, DataHolder.h, Lock.h, TH_Ethernet.h, TH_File.h,
+	  TH_MPI.h, TH_Mem.h, TH_ShMem.h, TH_Socket.h, TransportHolder.h:
+	  %[ER: 231]% Updated guard.
+
+2005-06-01 14:25  diepen
+
+	* configure.in: Added check for LONG_LONG and LOG4CPLUS
+
+2005-05-30 09:42  lang
+
+	* src/TH_Ethernet.cc, src/TH_Ethernet.h, test/ExampleEthernet.cc:
+	  %[ER:269 'dataholder headersize offset' deleted (will not be used
+	  anymore) ]%
+
+2005-05-27 17:03  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed lofar_PACKAGE into lofar_INTERNAL.
+
+2005-05-18 16:59  meijeren
+
+	* src/DataHolder.cc: %[ER: 231]% Added check on null pointer.
+
+2005-05-18 15:25  meijeren
+
+	* src/TH_ShMem.cc, test/DH_Example.cc, test/DH_Example.h,
+	  test/ExampleMem.cc, test/ExampleShMem.cc, test/ExampleShMem.run:
+	  %[ER: 231]% Added a test of reset functionality in ExampleMem and
+	  ExampleShMem
+
+2005-05-18 15:18  meijeren
+
+	* src/DataHolder.cc: %[ER: 231]% Fixed bug in copy constructor.
+
+2005-05-18 13:29  meijeren
+
+	* src/Connection.h, src/TH_File.cc, src/TH_File.h, src/TH_MPI.h,
+	  src/TH_Mem.cc, src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h,
+	  src/TH_Socket.h, src/TransportHolder.h, test/ExampleMPI.cc,
+	  test/ExampleShMem.cc, test/ExampleShMem.run: %[ER: 231]% -
+	  removed MPI dependency from TH_ShMem - added reset method to
+	  TransportHolders
+
+2005-05-18 12:31  meijeren
+
+	* src/: DataHolder.cc, DataHolder.h: %[ER: 231]% Fixed bug in
+	  copying of BlobStringType.
+
+2005-05-13 16:52  overeem
+
+	* src/CSConnection.cc, src/CSConnection.h, src/Connection.cc,
+	  src/Connection.h, src/DataHolder.cc, src/DataHolder.h,
+	  src/Makefile.am, src/TH_Ethernet.h, src/TH_File.cc,
+	  src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h, src/TH_Socket.cc,
+	  src/TH_Socket.h, src/TransportHolder.h, test/ExampleBlMem.cc,
+	  test/ExampleBlMem_test.sh, test/ExampleMPI_test.sh,
+	  test/ExampleMem_test.sh, test/ExampleNonBlocking.cc,
+	  test/ExampleNonBlocking_test.sh, test/ExampleShMem_test.sh,
+	  test/ExampleSocket_test.sh, test/ExampleVarBuf_test.sh,
+	  test/Example_test.sh, test/TestBidirectional_test.sh: %[ER:231]%
+	  Connection was split into Connection and CSConnection due to
+	  PR154.  The new Connection is like the old Connection: as
+	  unidirectional 'pipe'.  The new CSConnection can be used for
+	  ClientServer (multiple non-blocking reads on a connection). The
+	  CSConnection needs to be redefined in the very near future to
+	  better meet the requirements for ClientServer. The CSConnection
+	  is for now almost equal to Connection.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, package.doc, src/BaseSim.h, src/Connection.cc,
+	  src/Connection.h, src/ConnectionPool.cc, src/ConnectionPool.h,
+	  src/CyclicBuffer.h, src/DataBlobExtra.cc, src/DataBlobExtra.h,
+	  src/DataHolder.cc, src/DataHolder.h, src/Makefile.am,
+	  src/Socket.cc, src/Socket.h, src/TH_Ethernet.cc,
+	  src/TH_Ethernet.h, src/TH_File.cc, src/TH_File.h, src/TH_MPI.cc,
+	  src/TH_MPI.h, src/TH_Mem.cc, src/TH_Mem.h, src/TH_ShMem.cc,
+	  src/TH_ShMem.h, src/TH_Socket.cc, src/TH_Socket.h,
+	  src/TransportHolder.cc, src/TransportHolder.h,
+	  src/Transporter.cc, src/Transporter.h, test/DH_Ethernet.cc,
+	  test/DH_Ethernet.h, test/DH_Example.cc, test/DH_Example.h,
+	  test/DH_ExampleExtra.cc, test/DH_ExampleExtra.h,
+	  test/DH_Socket.cc, test/DH_Socket.h, test/DH_VarBuf.cc,
+	  test/DH_VarBuf.h, test/Example.cc, test/ExampleBlMem.cc,
+	  test/ExampleEthernet.cc, test/ExampleEthernet.run,
+	  test/ExampleEthernet_test.sh, test/ExampleMPI.cc,
+	  test/ExampleMem.cc, test/ExampleNonBlocking.cc,
+	  test/ExampleShMem.cc, test/ExampleSocket.cc,
+	  test/ExampleSocketPerf.cc, test/ExampleVarBuf.cc,
+	  test/Makefile.am, test/StopWatch.cc, test/StopWatch.h,
+	  test/TestBidirectional.cc, test/tClient.cc, test/tServer.cc,
+	  test/tTH_Socket.cc: all changes so far for the lofar_PACKAGE to
+	  lofar_INTERNAL step.	beware!!!  this branch also contains the
+	  ER231 changes , and those are NOT wanted in the main development
+	  tree....  Only take the configure.in stuff
+
+2005-05-10 15:56  meijeren
+
+	* configure.in, src/Makefile.am, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile.am,
+	  src/Corba/TH_Corba.cc, src/Corba/TH_Corba.h: %[PR: 163]% Removed
+	  Corba related stuff
+
+2005-05-10 14:29  meijeren
+
+	* src/: CyclicBuffer.h, Lock.h, Makefile.am: %[ER: 231]% Removed
+	  (identical) CyclicBuffer and Lock.h from CEPFrame package. Added
+	  Lock.h, this is needed by the CyclicBuffer.
+
+2005-05-09 13:53  coolen
+
+	* src/: BaseSim.h, DataBlobExtra.h, DataHolder.h, TH_Ethernet.h,
+	  TH_File.h, TH_MPI.h, TH_Mem.h, TH_Socket.h, TransportHolder.h,
+	  Transporter.h: %[ER: 273]% added LOFAR_ to include guard to make
+	  code compatible with ER 231
+
+2005-05-09 10:56  coolen
+
+	* configure.in: %[ER: 273]% minor bugs removed && PACKAGE ..
+	  INTERNAL changed in configure.in files
+
+2005-05-02 14:53  meijeren
+
+	* src/: TH_MPI.cc, TH_MPI.h: %[ER: 231]% Fixed omission of const.
+
+2005-05-02 13:13  loose
+
+	* configure.in, src/Makefile.am, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile.am,
+	  src/Corba/TH_Corba.cc, src/Corba/TH_Corba.h: %[PR: 163]%
+
+	  Removed antiquated Corba stuff.
+
+2005-04-29 13:04  loose
+
+	* src/DataBlobExtra.cc, src/DataHolder.cc, src/Makefile.am,
+	  src/Socket.cc, src/TH_File.cc, src/TH_Mem.cc, src/TH_Socket.cc,
+	  src/TransportHolder.cc, src/Transporter.cc,
+	  src/Corba/BS_Corba.cc, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaController.cc, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaTransport.cc, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/TH_Corba.cc,
+	  test/DH_Ethernet.cc, test/DH_Example.cc, test/DH_Socket.cc,
+	  test/DH_VarBuf.cc, test/Example.cc, test/ExampleBlMem.cc,
+	  test/ExampleEthernet.cc, test/ExampleMPI.cc, test/ExampleMem.cc,
+	  test/ExampleNonBlocking.cc, test/ExampleShMem.cc,
+	  test/ExampleSocket.cc, test/ExampleSocketPerf.cc,
+	  test/ExampleVarBuf.cc, test/StopWatch.cc,
+	  test/TestBidirectional.cc, test/tTH_Socket.cc: %[PR: 100]%
+
+	  Merged changes of development branch into main development line.
+
+2005-04-29 12:39  loose
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h, TH_ShMem.cc: %[PR: 100]%
+
+	  Merged changes of the main development line into the branch.
+
+2005-04-28 12:32  loose
+
+	* src/TH_Socket.cc, src/Corba/BS_Corba.cc,
+	  src/Corba/CorbaController.cc, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaTransport.cc, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/TH_Corba.cc,
+	  test/DH_Ethernet.cc, test/DH_Example.cc, test/DH_Socket.cc,
+	  test/DH_VarBuf.cc: %[PR: 100]%
+
+	  Repaired result of stupid bug in sed script which caused multiple
+	  insertions of the line '#include <lofar_config.h>'
+
+2005-04-28 09:53  lang
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h: %[PR:159]% ifndef HAVE_BGL
+	  added for compiling on BlueGene
+
+2005-04-27 17:56  loose
+
+	* src/DataBlobExtra.cc, src/DataHolder.cc, src/Makefile.am,
+	  src/Socket.cc, src/TH_File.cc, src/TH_Mem.cc, src/TH_ShMem.cc,
+	  src/TH_Socket.cc, src/TransportHolder.cc, src/Transporter.cc,
+	  src/Corba/BS_Corba.cc, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaController.cc, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaTransport.cc, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/TH_Corba.cc,
+	  test/ExampleMPI.cc, test/ExampleShMem.cc: %[PR: 100]%
+
+	  Added line #include <lofar_config.h> to all .cc files.  Updated
+	  test/ExampleMPI.cc and test/ExampleShMem.cc to work with new
+	  complex (ref. ER 247).
+
+2005-04-27 17:50  loose
+
+	* test/: DH_Ethernet.cc, DH_Example.cc, DH_Socket.cc, DH_VarBuf.cc,
+	  Example.cc, ExampleBlMem.cc, ExampleEthernet.cc, ExampleMPI.cc,
+	  ExampleMem.cc, ExampleNonBlocking.cc, ExampleShMem.cc,
+	  ExampleSocket.cc, ExampleSocketPerf.cc, ExampleVarBuf.cc,
+	  Makefile.am, StopWatch.cc, TestBidirectional.cc, tTH_Socket.cc:
+	  %[PR: 100]%
+
+	  Added line #include <lofar_config.h> to all .cc files.
+
+2005-04-26 09:29  zwart
+
+	* src/TH_ShMem.cc: %[PR: 100]%
+
+	  #include <lofar_config.h> was removed from header, now it was
+	  added to .cc
+
+2005-04-20 14:31  loose
+
+	* test/Makefile.am: %[ER: ]%
+
+	  Removed ExampleEthernet from the list of test programs, as it can
+	  only be run successfully by user root.
+
+2005-04-15 12:18  loose
+
+	* test/StopWatch.h: %[PR: 100]%
+
+	  Removed all `#include <config.h>' and `#include <lofar_config.h>'
+	  from .h and .tcc files. Added `#include <lofar_config.h>' to .cc
+	  files where necessary.
+
+2005-04-14 23:59  loose
+
+	* test/StopWatch.h: %[PR: 100]%
+
+	  Removed `#include <config.h>' and `#include <lofar_config.h>'
+	  from .h and .tcc files. Added `#include <lofar_config.h> to .cc
+	  files where necessary.
+
+2005-04-13 16:45  loose
+
+	* src/BaseSim.h, src/CyclicBuffer.h, src/DataBlobExtra.h,
+	  src/DataHolder.h, src/Socket.h, src/TH_Ethernet.h, src/TH_File.h,
+	  src/TH_MPI.h, src/TH_Mem.h, src/TH_ShMem.h, src/TH_Socket.h,
+	  src/TransportHolder.h, src/Transporter.h, src/Corba/BS_Corba.h,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.h,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportOut.h, src/Corba/MTCircularBuffer.h,
+	  test/DH_Ethernet.h, test/DH_Example.h, test/DH_Socket.h,
+	  test/DH_VarBuf.h: %[PR: 100]%
+
+	  Removed #include <config.h> and #include <lofar_config.h> from
+	  header files
+
+2005-04-11 16:05  meijeren
+
+	* src/: BaseSim.h, Connection.cc, Connection.h, TH_Ethernet.cc,
+	  TH_Ethernet.h, TH_File.cc, TH_File.h, TH_MPI.cc, TH_MPI.h,
+	  TH_Mem.cc, TH_Mem.h, TH_ShMem.cc, TH_ShMem.h, TH_Socket.h,
+	  TransportHolder.cc, TransportHolder.h: %[ER: 231]% Added a
+	  isClonable() and clone() method to TransportHolders. This is
+	  needed by CEPFrame when connecting multiple channels in one
+	  connect call.
+
+2005-04-06 17:34  loose
+
+	* src/: TH_Socket.cc, TH_Socket.h: %[ER: 231]%
+
+	  If you fix a bug you gotta fix it right ;-).
+	  TH_Socket::shutdown() should of course take a reference to a
+	  socket pointer and not the pointer itself; otherwise setting the
+	  pointer to zero has no effect outside the scope of
+	  TH_Socket::shutdown().
+
+2005-04-06 11:34  loose
+
+	* src/: TH_Socket.cc, TH_Socket.h: %[ER: 231]%
+
+	  Fixed a nasty bug in recv[Non]Blocking that caused a double
+	  delete of a private Socket object. The acts of shutdown and
+	  destroy are now merged into a new private shutdown(Socket*)
+	  method.
+
+2005-04-05 15:49  meijeren
+
+	* src/TH_MPI.cc, src/TH_MPI.h, src/TH_ShMem.h, test/ExampleMPI.cc,
+	  test/ExampleShMem.cc: %[ER: 231]% Now also working with gnu_mpich
+
+2005-04-05 13:27  meijeren
+
+	* src/: Connection.cc, Connection.h, DataHolder.cc, DataHolder.h,
+	  TH_Mem.cc, TH_Mem.h, TransportHolder.cc, TransportHolder.h: %[ER:
+	  231]% Changes needed by tinyCEP.
+
+2005-03-30 15:21  meijeren
+
+	* test/: DH_Example.cc, DH_Example.h, DH_ExampleExtra.cc,
+	  DH_ExampleExtra.h, DH_VarBuf.cc, DH_VarBuf.h, Example.cc,
+	  ExampleBlMem.cc, ExampleMem.cc, ExampleNonBlocking.cc,
+	  ExampleVarBuf.cc, TestBidirectional.cc: %[ER: 231]% Modified to
+	  use built-in complex.
+
+2005-03-24 16:49  meijeren
+
+	* test/TestBidirectional.cc: %[ER: 231]% Added comment.
+
+2005-03-23 16:48  lang
+
+	* test/: DH_Ethernet.cc, DH_Ethernet.h, ExampleEthernet.cc,
+	  ExampleEthernet.run, ExampleEthernet_test.sh, Makefile.am: %[ER:
+	  ]% introduction of TH_Ethernet test program
+
+2005-03-22 13:48  diepen
+
+	* test/: DH_Example.cc, DH_Example.h, DH_VarBuf.cc, DH_VarBuf.h,
+	  Example.cc, ExampleBlMem.cc, ExampleMem.cc,
+	  ExampleNonBlocking.cc, ExampleSocket.cc, ExampleSocketPerf.cc,
+	  ExampleVarBuf.cc, TestBidirectional.cc: %[ER: 247]% Use builtin
+	  complex
+
+2005-03-17 14:11  meijeren
+
+	* src/Connection.cc, src/DataHolder.cc, src/DataHolder.h,
+	  test/Makefile.am: %[ER: 231]% Added a check on DataHolder
+	  initialisation in Connection::read/write.
+
+2005-03-17 13:56  romein
+
+	* src/TH_Ethernet.cc: %[ER: ]% Avoid non-standard C++
+
+2005-03-16 16:34  lang
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h: %[ER:242 ]% Constructor
+	  arguments changed from char* to (lofar)string
+
+2005-03-16 15:22  loose
+
+	* configure.in: %[ER: 30]%
+
+	  Updated version number to 1.1
+
+2005-03-16 14:59  lang
+
+	* src/TH_Ethernet.h: %[ER:242 ]% Initialization of datamember
+	  itsDHHeader changed from true to false
+
+2005-03-16 14:52  lang
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h: %[ER:242 ]%
+	  Dataholder::Headersize call introduced for offset in databuffer
+	  if necessary
+
+2005-03-16 09:37  loose
+
+	* configure.in: %[ER: 30]%
+
+	  Updated version number to 1.1
+
+2005-03-15 12:21  loose
+
+	* src/: Socket.cc, Socket.h: %[ER: 231]%
+
+	  Removed the temporary copies of LCS/ACC/Socket.{h,cc}, which are
+	  themselves obsolete as well.
+
+2005-03-14 16:33  overeem
+
+	* test/ExampleSocket.cc: %[ER:231]% ExampleSocket now replaces
+	  tTH_Socket.
+
+2005-03-14 16:20  overeem
+
+	* test/: tClient.cc, tServer.cc: %[ER:231]% Manual testprograms for
+	  testing client-server functionality.
+
+2005-03-14 16:01  overeem
+
+	* test/Makefile.am: %[ER:231]% Update for ExampleSocket and
+	  tServer+tClient.
+
+2005-03-14 15:58  overeem
+
+	* test/DH_Socket.cc: %[ER:231]% Small invocation change.
+
+2005-03-14 15:38  overeem
+
+	* src/: Connection.cc, Connection.h, ConnectionPool.cc,
+	  ConnectionPool.h, Makefile.am, TH_Socket.cc, TH_Socket.h:
+	  %[ER:231]% Modified assert in Connection to meet Client/Server
+	  requirements.  Rewrote TH_Socket.  Added ConnectionPool for
+	  Servers.
+
+2005-03-11 16:44  loose
+
+	* package.doc: %[ER: 236]%
+
+	  Added group Transport to group LCS.
+
+2005-03-03 15:55  lang
+
+	* src/: Makefile.am, TH_Ethernet.cc, TH_Ethernet.h: %[ER: 243]
+	  Enhancements after review by Ruud Overeem
+
+2005-02-21 13:15  overeem
+
+	* test/tTH_Socket.cc: %[ER:128]% Made test more robust in
+	  connecting to the other side.
+
+2005-02-18 09:24  overeem
+
+	* src/: TH_Socket.cc, TH_Socket.h: %[ER:182]% Formal accessor
+	  functions for setting/getting the ListenerSocket.  Datamembers
+	  are private again.
+
+2005-02-17 18:59  overeem
+
+	* src/TH_Socket.h: %[ER:182]% Datamembers not private for BG test.
+
+2005-02-11 14:32  meijeren
+
+	* src/: BaseSim.h, Connection.h, CyclicBuffer.h, DataBlobExtra.h,
+	  DataHolder.h, Socket.h, TH_Ethernet.h, TH_File.h, TH_MPI.h,
+	  TH_Mem.h, TH_ShMem.h, TH_Socket.h, TransportHolder.h: %[ER: 231]%
+	  Removed includes of lofar_config.h from header files.
+
+2005-02-10 13:42  meijeren
+
+	* src/: Connection.h, DataHolder.h: %[ER: 231]% Minor changes
+	  needed by TransportPL.
+
+2005-02-10 13:00  loose
+
+	* package.doc, src/CyclicBuffer.h, src/DataBlobExtra.h,
+	  src/DataHolder.h, src/TH_Ethernet.h, src/TH_File.h, src/TH_MPI.h,
+	  src/TH_Mem.h, src/TH_ShMem.h, src/TH_Socket.h,
+	  src/TransportHolder.h, src/Transporter.h: %[ER: 236]%
+
+	  Enhanced the documentation: - Defined a number of groups within
+	  the package group "Common".  - Added (sub)grouping to several
+	  source files.  - Updated comment style to C++ // style.
+
+2005-02-09 12:09  meijeren
+
+	* src/DataHolder.cc, src/DataHolder.h, test/DH_Example.h,
+	  test/DH_ExampleExtra.h: %[ER: 231]% Changed comments.
+
+2005-02-09 09:50  meijeren
+
+	* test/ExampleMPI.cc: %[ER: 231]% Fixed bidirectional MPI test.
+
+2005-02-08 16:38  meijeren
+
+	* src/: TH_ShMem.cc, TH_ShMem.h: %[ER: 231]% Updated TH_ShMem
+
+2005-02-08 14:23  lang
+
+	* src/TH_Ethernet.cc: Socket filter update
+
+2005-02-08 14:02  lang
+
+	* src/TH_Ethernet.h: Changed comment
+
+2005-02-08 14:01  lang
+
+	* src/TH_Ethernet.cc: Possibility to ignore Dataholder header
+
+2005-02-01 09:55  meijeren
+
+	* src/Connection.cc, src/Connection.h, src/DataHolder.cc,
+	  src/DataHolder.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h,
+	  src/TransportHolder.h, test/Example.cc, test/ExampleBlMem.cc,
+	  test/ExampleMPI.cc, test/ExampleMem.cc,
+	  test/ExampleNonBlocking.cc, test/ExampleShMem.cc,
+	  test/ExampleVarBuf.cc, test/Makefile.am,
+	  test/TestBidirectional.cc: %[ER: 231]% Various (small) changes.
+
+2005-01-27 16:27  meijeren
+
+	* test/ExampleNonBlocking.cc: %[ER: 231]% Adjusted
+	  ExampleNonBlocking to new Transport structure.
+
+2005-01-27 15:58  meijeren
+
+	* src/Connection.cc, src/Connection.h, src/DataBlobExtra.cc,
+	  src/DataBlobExtra.h, src/DataHolder.cc, src/DataHolder.h,
+	  src/Makefile.am, src/TH_File.cc, src/TH_File.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h, src/TH_Socket.h,
+	  src/TransportHolder.cc, src/TransportHolder.h,
+	  src/Transporter.cc, src/Transporter.h, test/DH_Example.cc,
+	  test/DH_Example.h, test/DH_ExampleExtra.cc,
+	  test/DH_ExampleExtra.h, test/DH_Socket.cc, test/DH_Socket.h,
+	  test/DH_VarBuf.cc, test/DH_VarBuf.h, test/Example.cc,
+	  test/ExampleBlMem.cc, test/ExampleMem.cc, test/ExampleVarBuf.cc,
+	  test/Makefile.am, test/TestBidirectional.cc: %[ER: 231]%
+	  Restructured dependencies and interfaces.
+
+2005-01-12 11:12  meijeren
+
+	* test/: DH_VarBuf.cc, DH_VarBuf.h, ExampleVarBuf.cc,
+	  ExampleVarBuf_test.sh, Makefile.am, Readme.txt: %[ER: 159]% Added
+	  test of a variable size datafield in the main blob.
+
+2005-01-11 12:07  loose
+
+	* test/Makefile.am: %[ER: 177]%
+
+	  Shared memory can now be enabled or disabled using
+	  --with-shmem=[yes|no] during configure. Furthermore,
+	  --with-shmem=yes has been made the default for the standard
+	  variant (e.g. debug, opt, mpich, etc.); the bgl and fakebgl
+	  variants use --with-shmem=no by default.
+
+2005-01-07 09:33  broekema
+
+	* src/Makefile.am: %[ER: 177]% Solve a bootstrapping problem by
+	  adding the shmem code differently
+
+2005-01-06 18:02  loose
+
+	* src/Makefile.am: %[ER: 177]%
+
+	  Shared memory can now be enabled or disabled using
+	  --with-shmem=[yes|no] during configure. Furthermore,
+	  --with-shmem=yes has been made the default for the standard
+	  variant (e.g. debug, opt, mpich, etc.); the bgl and fakebgl
+	  variants use --with-shmem=no by default.
+
+2004-12-27 09:25  lang
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h: Handle messages containing
+	  more bytes than maximum ethernetframe length
+
+2004-12-23 11:14  broekema
+
+	* src/TH_Mem.cc: %[ER: 182]% Cosmetic fix of a unused variable
+	  warning
+
+2004-12-22 09:45  overeem
+
+	* test/ExampleSocket.cc: %[ER:30]% Changed portnr for test to 8924
+	  to not interfere with test Example3 with occasionally hangs.
+
+2004-12-21 13:41  lang
+
+	* src/: TH_Ethernet.cc, TH_Ethernet.h: First release of Ethernet
+	  TransportHolder
+
+2004-12-20 11:43  meijeren
+
+	* src/: DataHolder.cc, DataHolder.h, Transporter.cc, Transporter.h:
+	  %[ER: 159]% Fixed return values of init() and write() and removed
+	  basePreprocess method.
+
+2004-12-16 15:18  broekema
+
+	* src/TH_MPI.h: %[ER: 182]% Add an include for mpe.h when HAVE_MPE
+	  is defined
+
+2004-12-16 14:00  overeem
+
+	* test/tTH_Socket.cc: %[ER:30]% Using a different portnr in each
+	  test.
+
+2004-12-16 13:22  meijeren
+
+	* src/DataHolder.h: %[ER: 159]% Made read and write calls virtual.
+
+2004-12-15 16:00  overeem
+
+	* test/: tTH_Socket.cc, tTH_Socket.run: %[ER:30]% Removing result
+	  file in testscript. Using another portnumber that other tests.
+
+2004-12-15 14:13  overeem
+
+	* src/: TH_Socket.cc, TH_Socket.h: %[ER:30]% Updated Socket to the
+	  Blue Gene which has no netdb.h functions. Embellished the logging
+	  messages and made sure the sockets use the right blockingmode
+	  directly after creation.
+
+	  Modified TH_Socket to implement real non-blocking
+	  connect/accept/read-calls.
+
+2004-12-14 10:48  meijeren
+
+	* test/: DH_Example.h, DH_Socket.h: %[ER: 159]% Minor updates.
+
+2004-12-06 16:13  overeem
+
+	* test/tTH_Socket.cc: %[ER:30]% While-loop around read call because
+	  it may be non-blocking.
+
+2004-12-06 10:21  overeem
+
+	* src/TH_Socket.cc: %[ER:30]% dos2unix converted.
+
+2004-12-03 14:35  meijeren
+
+	* test/ExampleNonBlocking.cc: %[ER: 159]% Added a sleep to be sure
+	  writing has finished.
+
+2004-12-03 14:24  meijeren
+
+	* test/: ExampleNonBlocking.cc, ExampleNonBlocking_test.sh,
+	  Makefile.am, Readme.txt: %[ER: 159]% Added a non-blocking example
+	  to illustrate the effects of non-blocking communication.
+
+2004-12-03 13:16  meijeren
+
+	* test/: DH_Example.cc, DH_Example.h, Example.cc, ExampleMem.cc:
+	  %[ER: 159]% Addition of getBufferElement() method.
+
+2004-12-01 12:34  meijeren
+
+	* test/: ExampleSocket.cc, Readme.txt: %[ER: 157]% Added a test of
+	  bidirectional connect with TH_Socket.
+
+2004-11-30 17:15  meijeren
+
+	* src/TH_MPI.cc, src/TH_MPI.h, src/Transporter.cc,
+	  test/ExampleMPI.cc, test/Readme.txt: %[ER: 157]% Added a test of
+	  a bidirectional connect with TH_MPI.
+
+2004-11-24 14:42  diepen
+
+	* src/DataHolder.h: %[ER: 148]% Improved comments on setMaxDataSize
+
+2004-11-24 09:04  diepen
+
+	* test/ExampleBlMem.cc: %[ER: 70]% Check if threads can be used
+
+2004-11-22 16:22  meijeren
+
+	* test/Readme.txt: %[ER: 159]% Removed description of PL tests.
+
+2004-11-10 08:48  diepen
+
+	* configure.in: Removed PL
+
+2004-11-10 08:47  diepen
+
+	* Makefile.am, bootstrap, configure.in, src/BaseSim.h,
+	  src/CyclicBuffer.cc, src/CyclicBuffer.h, src/DataBlobExtra.cc,
+	  src/DataBlobExtra.h, src/DataHolder.cc, src/DataHolder.h,
+	  src/Makefile.am, src/Socket.cc, src/Socket.h, src/TH_File.cc,
+	  src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/TH_ShMem.cc, src/TH_ShMem.h, src/TH_Socket.cc,
+	  src/TH_Socket.h, src/TransportHolder.cc, src/TransportHolder.h,
+	  src/Transporter.cc, src/Transporter.h, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile.am,
+	  src/Corba/TH_Corba.cc, src/Corba/TH_Corba.h, test/DH_Example.cc,
+	  test/DH_Example.h, test/DH_Socket.cc, test/DH_Socket.h,
+	  test/Example.cc, test/ExampleBlMem.cc, test/ExampleBlMem_test.sh,
+	  test/ExampleMPI.cc, test/ExampleMPI.run, test/ExampleMPI_test.sh,
+	  test/ExampleMem.cc, test/ExampleMem_test.sh,
+	  test/ExampleShMem.cc, test/ExampleShMem.run,
+	  test/ExampleShMem_test.sh, test/ExampleSocket.cc,
+	  test/ExampleSocket.run, test/ExampleSocketPerf.cc,
+	  test/ExampleSocketPerf.run, test/ExampleSocket_test.sh,
+	  test/Example_test.sh, test/Makefile.am, test/Readme.txt,
+	  test/StopWatch.cc, test/StopWatch.h, test/TestBidirectional.cc,
+	  test/TestBidirectional_test.sh, test/tTH_Socket.cc,
+	  test/tTH_Socket.log_prop, test/tTH_Socket.run,
+	  test/tTH_Socket_test.sh: %[ER: 70]% Moved Transport from CEP to
+	  LCS and split off the PL part
+

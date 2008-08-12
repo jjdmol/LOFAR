@@ -1,0 +1,19 @@
+###########################
+# Maintenance
+###########################
+versionnr=1.0
+qualification=development
+logicalDeviceType=8
+allocatedCCU=saturnus
+name=MAINTENANCE1
+parentHost=saturnus
+parentPort=27100
+parentTask=MACScheduler
+propertysetBaseName=VIC_MAINTENANCE1
+propertysetDetailsType=TAplVicMaintenanceVI
+claimTime=+2
+prepareTime=+4
+startTime=+10
+stopTime=+20
+resources=[CCU1:PIC_Rack0_SubRack0,CCU1:PIC_Rack0_SubRack1]
+childs=

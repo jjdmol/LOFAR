@@ -1,0 +1,47 @@
+Enabling craft on wop38 (wsrtweb)
+
+In MySQL:
+
+- Create new database "lofar-craft"
+- Read sql dumpfile van Henk: 
+ mysql -hwop37.nfra.nl -P3306 -uroot -proot -D lofar-craft < lofar-craft.sql
+
+Toegang middels account:
+- sysadmin, admin
+
+PHP-Code naar wop38:
+
+Code gezet in /raid/www/LOFAR-craft
+
+Noodzakelijke code changes:
+
+Replaced:
+
+date_default_timezone_set ("Europe/Amsterdam");
+with 
+setenv("TZ=Europe/Amsterdam");
+
+in files:
+algemene_functionaliteit/comp_bewerken.php
+algemene_functionaliteit/comp_toevoegen_leverancier.php
+algemene_functionaliteit/comp_toevoegen.php
+algemene_functionaliteit/melding_toevoegen.php
+main_statistieken/componenten.php
+main_statistieken/historie.php
+
+Reden: date_default_timezone_set  is een PHP5.1 functie; wij draaien op wop38 PHP 5.0.4
+
+Added:
+
+Two soft-links ''includes -> ../includes''
+in directories:
+- includes
+- main
+Reden: Pad niet bekend in PHP_PATH (in php.ini); gaf errors
+
+Changed:
+
+Veranderingen in php.ini (/etc/php5/apache2/php.ini):
+allow_call_time_pass_reference = On
+
+Reden: Warnings (niet fataal) in apache logfile: /var/log/apache2/error_log

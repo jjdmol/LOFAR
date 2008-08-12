@@ -1,0 +1,26 @@
+<pre><code>
+<span class="codeComment">// example showing how to call aggregate functions such as count(*), sum(*)</span>
+
+class Aggregator
+{
+   int count;
+   double sum;
+};
+
+void AggregateExample()
+{
+<span class="codeComment">
+   // count # of records in table DB_EXAMPLE
+   // and grab sum of the DOUBLE_VALUE column
+</span>
+   Aggregator rowbuf;
+   DBView&lt;Aggregator&gt; view_agg(&quot;DB_EXAMPLE&quot;, BCA(rowbuf, 
+      COLS[&quot;COUNT(*)&quot;] &gt;&gt; rowbuf.count &amp;&amp; 
+      COLS[&quot;SUM(DOUBLE_VALUE)&quot;] &gt;&gt; rowbuf.sum)
+   );
+
+   Aggregator result = *view_agg.begin();
+   cout &lt;&lt; &quot;There are &quot; &lt;&lt; result.count &lt;&lt; &quot; records in DB_EXAMPLE&quot; &lt;&lt; endl;
+   cout &lt;&lt; &quot;The sum of the DOUBLE_VALUE column is &quot; &lt;&lt; result.sum &lt;&lt; endl; 
+}
+</code></pre>

@@ -1,0 +1,197 @@
+V 10
+1
+LANG:1 6 RESULT
+PANEL,-1 -1 800 648 N "_3DFace" 0
+"main()
+{
+  strNames = dpNames( \"*.ChildAlarm\" );
+  
+ 
+  LIST.items = strNames;
+  
+  RESULT.text = dynlen( strNames ) + \" items\";
+}" 0
+ E E E E 1 -1 -1 0  40 24
+""0  1
+E "
+dyn_string strNames;" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"PRIMITIVE_TEXT1"
+""
+1 16 8 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 16 8 152 40
+0 2 2 "0s" 0 0 0 64 0 0  16 8 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 32 Assign sumalarm for 'ChildAlarm'
+17 2
+"LIST"
+""
+1 16 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 14 38 562 594
+0
+
+E
+E
+E
+
+0 0
+2 3
+"PRIMITIVE_TEXT2"
+""
+1 24 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 24 600 408 624
+0 2 2 "0s" 0 0 0 64 0 0  24 600 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 0 
+14 4
+"RESULT"
+""
+1 24 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 22 598 554 626
+3 "0s" 0 0 0 0 0 -1  E E E
+13 5
+"PUSH_BUTTON1"
+""
+1 584 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 582 38 706 114
+
+T 
+1
+LANG:1 16 Assign
+sum
+alarm
+"
+void main()
+{
+  
+ 
+  this.enabled = false;
+
+//  for( int t = 1; t <= 1; t++)
+  for( int t = 1; t <= dynlen( strNames ); t++)  
+  {
+     AssignAlarmClass_Childalarm( strNames[t] );
+  }  
+
+  this.enabled = true;
+}
+
+void AssignAlarmClass_Childalarm( string strDP )
+{
+  string strFather = dpSubStr( strDP, DPSUB_DP );
+  
+  dyn_string strChildren = dpNames( strFather + \"_*\" );
+  
+  // when there are no children, then it is useless to define a sum alert
+  if( !dynlen( strChildren ) )
+    return;
+
+  DebugN( \"Children = \" + strChildren );
+ 
+  dpSet( 
+    strDP + \":_alert_hdl.._type\", DPCONFIG_SUM_ALERT,
+    strDP + \":_alert_hdl.._dp_pattern\", strFather + \"_*.state\",
+    strDP + \":_alert_hdl.._text1\", \"\",
+    strDP + \":_alert_hdl.._text0\", \"\",
+    strDP + \":_alert_hdl.._prio_pattern\", \"0-100\" );
+  
+  dpSet( 
+    strDP + \":_alert_hdl.._active\", true );
+
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

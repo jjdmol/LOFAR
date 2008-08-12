@@ -1,0 +1,27 @@
+#ObservationControl.dpdef
+claim				:Claim
+receiverBitmap		string
+
+claimPeriod			int
+preparePeriod		int
+startTime			string
+stopTime			string
+bandFilter			string
+nyquistzone			int
+antennaArray		string
+receiverList		string
+sampleClock			int
+
+measurementSet		string
+
+stationList			string
+inputNodeList		string
+BGLNodeList			string
+storageNodeList		string
+
+Beams.angle1		doubleArr
+Beams.angle2		doubleArr
+#Beams.angleTimes	uintArr
+Beams.directionType	stringArr
+Beams.beamletList	stringArr
+Beams.subbandList	stringArr

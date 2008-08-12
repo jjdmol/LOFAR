@@ -1,0 +1,147 @@
+
+Measurement Set: test.ms
+Parameter database:
+. Instrument table: test.mep
+. Local sky table: test.gsm
+. History table: test.his
+Strategy:
+. Input data: INDATA
+. Region of interest:
+. . Frequency: []
+. . Time: []
+. Chunk size: 0
+. Correlation:
+. . Selection: ALL
+. . Type: ["XX","YY"]
+. Integration:
+. . Delta frequency: 1 (Hz)
+. . Delta time: 0.1 (s)
+. Stations: ["CS*","RS1*","RS2*","DE*"]
+. Step: MultiStep
+. . Name: xyz1
+. . Full name: xyz1
+. . Baselines:
+. . . Station1: ["CS*","CS*","CS*","RS1*","RS1*","RS2*"]
+. . . Station2: ["CS*","RS1*","RS2*","RS1*","RS2*","RS2*"]
+. . Correlation:
+. . . Selection: CROSS
+. . . Type: ["XX","XY","YX","YY"]
+. . Integration:
+. . . Delta frequency: 2 (Hz)
+. . . Delta time: 0.5 (s)
+. . Sources: ["3C343"]
+. . Extra sources: ["M81"]
+. . Instrument models: ["Bandpass","DirGain","Phase"]
+. . Step: Solve
+. . . Name: sl1
+. . . Full name: xyz1.sl1
+. . . Baselines:
+. . . . Station1: ["CS*","RS1*"]
+. . . . Station2: ["RS1*","RS2*"]
+. . . Correlation:
+. . . . Selection: CROSS
+. . . . Type: ["XX","XY","YX","YY"]
+. . . Integration:
+. . . . Delta frequency: 2 (Hz)
+. . . . Delta time: 0.5 (s)
+. . . Sources: ["3C343"]
+. . . Extra sources: ["M81"]
+. . . Instrument models: ["Bandpass","Phase"]
+. . . Output data: OUTDATA1
+. . . Solve: 
+. . . . Solvable parameters: ["GAIN:{11,22}:*"]
+. . . . Excluded parameters: []
+. . . . Kernel groups: [1,1]
+. . . . Cell size:
+. . . . . No. of channels: 1000
+. . . . . No. of timeslots: 1
+. . . . Cell chunk size: 0
+. . . . Propagate solutions: false
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
+. . Step: Correct
+. . . Name: sl2
+. . . Full name: xyz1.sl2
+. . . Baselines:
+. . . . Station1: ["CS*","CS*","CS*","RS1*","RS1*","RS2*"]
+. . . . Station2: ["CS*","RS1*","RS2*","RS1*","RS2*","RS2*"]
+. . . Correlation:
+. . . . Selection: CROSS
+. . . . Type: ["XX","XY","YX","YY"]
+. . . Integration:
+. . . . Delta frequency: 2 (Hz)
+. . . . Delta time: 0.5 (s)
+. . . Sources: ["3C343"]
+. . . Extra sources: ["M81"]
+. . . Instrument models: ["DirGain","Phase"]
+. . . Output data: OUTDATA2
+. Step: MultiStep
+. . Name: xyz2
+. . Full name: xyz2
+. . Baselines:
+. . . Station1: ["CS*","CS*","RS1*"]
+. . . Station2: ["CS*","RS1*","RS1*"]
+. . Correlation:
+. . . Selection: NONE
+. . . Type: []
+. . Integration:
+. . . Delta frequency: 0 (Hz)
+. . . Delta time: 0 (s)
+. . Sources: ["3C343"]
+. . Extra sources: []
+. . Instrument models: ["Bandpass"]
+. . Step: Solve
+. . . Name: sl1
+. . . Full name: xyz2.sl1
+. . . Baselines:
+. . . . Station1: ["CS*","RS1*"]
+. . . . Station2: ["RS1*","RS2*"]
+. . . Correlation:
+. . . . Selection: NONE
+. . . . Type: []
+. . . Integration:
+. . . . Delta frequency: 0 (Hz)
+. . . . Delta time: 0 (s)
+. . . Sources: ["3C343"]
+. . . Extra sources: []
+. . . Instrument models: ["Bandpass","Phase"]
+. . . Output data: OUTDATA1
+. . . Solve: 
+. . . . Solvable parameters: ["GAIN:{11,22}:*"]
+. . . . Excluded parameters: []
+. . . . Kernel groups: [1,1]
+. . . . Cell size:
+. . . . . No. of channels: 1000
+. . . . . No. of timeslots: 1
+. . . . Cell chunk size: 0
+. . . . Propagate solutions: false
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
+. . Step: Predict
+. . . Name: sl3
+. . . Full name: xyz2.sl3
+. . . Baselines:
+. . . . Station1: ["CS*","CS*","RS1*"]
+. . . . Station2: ["CS*","RS1*","RS1*"]
+. . . Correlation:
+. . . . Selection: NONE
+. . . . Type: []
+. . . Integration:
+. . . . Delta frequency: 0 (Hz)
+. . . . Delta time: 0 (s)
+. . . Sources: ["3C343"]
+. . . Extra sources: []
+. . . Instrument models: ["Phase"]
+. . . Output data: OUTDATA3
