@@ -1,0 +1,22 @@
+
+LCS/AMC/AMCImpl package
+=======================
+
+This package is one of two packages that together form the Astronomical
+Measures Conversions (AMC) package. It contains the implementation of the
+conversion methods. Furthermore, it contains the implementation of the server
+side of the AMC client/server.
+
+
+
+Required packages:
+-----------------
+
+internal: 
+  LCS/Common (2.2)
+  LCS/Transport (2.0)
+  LCS/AMC/AMCBase (1.0)
+
+external:
+  AIPS++ (1.9)
+
