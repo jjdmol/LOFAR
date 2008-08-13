@@ -7,7 +7,6 @@ FIR_Asm.h		\
 InputData.h		\
 FilteredData.h		\
 TransposedData.h	\
-CorrelatedData.h	\
 FIR.h			\
 PPF.h			\
 Transpose.h		\

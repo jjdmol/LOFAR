@@ -5,9 +5,7 @@ libcs1_interface_la_SOURCES	= Package__Version.cc \
 				  BGL_Configuration.cc \
 				  BGL_Mapping.cc \
 				  CS1_Parset.cc \
-				  DH_Visibilities.cc \
-				  RSPTimeStamp.cc \
-				  Stub_BGL.cc 
+				  RSPTimeStamp.cc
 
 configfilesdir			= $(bindir)
 

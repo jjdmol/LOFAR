@@ -24,18 +24,12 @@
 #define LOFAR_CS1_INTERFACE_RSPTIMESTAMP_H
 
 #include <Common/lofar_iosfwd.h>
-#include <Common/DataConvert.h>
+#include <Common/LofarTypes.h>
+
 
 #define EVEN_SECOND_HAS_MORE_SAMPLES
 
 namespace LOFAR {
-
-  // This is needed to be able to put the TimeStamp in a Blob
-  namespace CS1 {
-    class TimeStamp;
-  }
-  void dataConvert(DataFormat fmt, CS1::TimeStamp* inout, uint nrval);
-
   namespace CS1 {
 
     class TimeStamp {
@@ -72,25 +66,10 @@ namespace LOFAR {
 
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
-      // This is needed to be able to put the TimeStamp in a Blob
-      friend void ::LOFAR::dataConvert(DataFormat fmt, TimeStamp* inout, uint nrval);
-
     protected:
       int64	    itsTime;
       static double theirMaxBlockId, theirInvMaxBlockId;
     };
-
-  } // namespace CS1
-
-  // This is needed to be able to put the TimeStamp in a Blob
-  inline void dataConvert(DataFormat fmt, CS1::TimeStamp* inout, uint nrval)
-    {
-      for (uint i=0; i<nrval ;i++) {
- 	dataConvert64(fmt, &(inout[i].itsTime));
-      }
-    }
-
-  namespace CS1 {
 
     typedef TimeStamp timestamp_t;
 

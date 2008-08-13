@@ -24,8 +24,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_INTERFACE_BITSET_H
 #define LOFAR_APPL_CEP_CS1_CS1_INTERFACE_BITSET_H
 
-#include <Blob/BlobOStream.h>
-#include <Blob/BlobIStream.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <cassert>
@@ -66,9 +65,6 @@ template <typename T> class SparseSet {
     SparseSet<T> subset(T first, T last) const;
 
     const Ranges &getRanges() const;
-
-    void write(BlobOStream &) const;
-    void read(BlobIStream &);
 
     ssize_t marshall(void *ptr, size_t maxSize) const;
     void    unmarshall(const void *ptr);
@@ -265,36 +261,15 @@ template <typename T> SparseSet<T> &SparseSet<T>::operator -= (size_t count)
 }
 
 
-template <typename T> void SparseSet<T>::write(BlobOStream &bos) const
-{
-  bos << (uint32) ranges.size();
-
-  for (const_iterator it = ranges.begin(); it != ranges.end(); it ++)
-    bos << it->begin << it->end;
-}
-
-
-template <typename T> void SparseSet<T>::read(BlobIStream &bis)
-{
-  uint32 size;
-
-  bis >> size;
-  ranges.resize(size);
-
-  for (iterator it = ranges.begin(); it != ranges.end(); it ++)
-    bis >> it->begin >> it->end;
-}
-
-
 template <typename T> ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
 {
-  size_t size = sizeof(uint32) + ranges.size() * sizeof(range);
+  size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
 
   if (size > maxSize)
     return -1;
 
-  * (uint32 *) ptr = ranges.size();
-  memcpy((uint32 *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
+  * (uint32_t *) ptr = ranges.size();
+  memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
 
   return size;
 }
@@ -302,8 +277,8 @@ template <typename T> ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) 
 
 template <typename T> void SparseSet<T>::unmarshall(const void *ptr)
 {
-  ranges.resize(* (uint32 *) ptr);
-  memcpy(&ranges[0], (uint32 *) ptr + 1, ranges.size() * sizeof(range));
+  ranges.resize(* (uint32_t *) ptr);
+  memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
 }
 
 

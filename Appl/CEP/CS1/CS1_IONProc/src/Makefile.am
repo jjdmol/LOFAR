@@ -1,31 +1,29 @@
 pkginclude_HEADERS = Package__Version.h \
 BeamletBuffer.h			\
 BGL_Personality.h		\
+InputSection.h			\
 InputThread.h			\
 ION_Allocator.h			\
 LockedRanges.h			\
 LogThread.h			\
+OutputSection.h			\
 ReaderWriterSynchronization.h	\
 SlidingPointer.h		\
 WallClockTime.h			\
-InputSection.h			\
 WH_DelayCompensation.h		\
-AH_ION_Gather.h			\
-WH_ION_Gather.h			\
 FCNP_ServerStream.h
 
 liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
 BeamletBuffer.cc		\
 BGL_Personality.cc		\
 CS1_ION_main.cc		 	\
+InputSection.cc			\
 InputThread.cc			\
 ION_Allocator.cc		\
 LogThread.cc			\
+OutputSection.cc		\
 ReaderWriterSynchronization.cc	\
-InputSection.cc			\
 WH_DelayCompensation.cc		\
-AH_ION_Gather.cc		\
-WH_ION_Gather.cc		\
 FCNP_ServerStream.cc		\
 Package__Version.cc
 

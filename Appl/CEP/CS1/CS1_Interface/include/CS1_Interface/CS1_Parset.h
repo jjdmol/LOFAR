@@ -68,6 +68,7 @@ public:
 	double         startTime() const;
 	double         stopTime() const;
 	uint32	       nrStations() const;
+	uint32	       nrBaselines() const;
 	double         sampleRate() const;
 	double         sampleDuration() const;
 	vector<double> positions() const;
@@ -170,6 +171,13 @@ inline string CS1_Parset::getTransportType(const string& prefix) const
 inline uint32 CS1_Parset::nrStations() const
 {
   return getStringVector("OLAP.storageStationNames").size();
+} 
+  
+inline uint32 CS1_Parset::nrBaselines() const
+{
+  unsigned stations = nrStations();
+
+  return stations * (stations + 1) / 2;
 } 
   
 inline double CS1_Parset::sampleRate() const

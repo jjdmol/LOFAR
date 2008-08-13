@@ -34,6 +34,7 @@
 #include <boost/lexical_cast.hpp>
 
 #if defined HAVE_MPI
+#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 #endif
 

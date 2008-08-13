@@ -1,4 +1,4 @@
-//#  WH_ION_Gather.h: simple processing on BG/L I/O nodes
+//#  OutputSection.h: Collects data from CNs and sends data to Storage
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,13 +18,15 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPL_CEP_CS1_CS1_ION_PROC_WH_ION_GATHER_H
-#define LOFAR_APPL_CEP_CS1_CS1_ION_PROC_WH_ION_GATHER_H
+#ifndef LOFAR_APPL_CEP_CS1_CS1_ION_PROC_OUTPUT_SECTION_H
+#define LOFAR_APPL_CEP_CS1_CS1_ION_PROC_OUTPUT_SECTION_H
 
-#include <CS1_Interface/DH_Visibilities.h>
-#include <tinyCEP/WorkHolder.h>
+#include <CS1_Interface/CorrelatedData.h>
+#include <CS1_Interface/CS1_Parset.h>
+#include <CS1_Interface/Queue.h>
 #include <Stream/Stream.h>
-#include <APS/ParameterSet.h>
+
+#include <pthread.h>
 
 #include <vector>
 
@@ -32,35 +34,36 @@
 namespace LOFAR {
 namespace CS1 {
 
-class WH_ION_Gather : public WorkHolder
+class OutputSection
 {
   public:
-	     WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps, const std::vector<Stream *> &clientStreams);
-    virtual  ~WH_ION_Gather();
+    OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs);
+   ~OutputSection();
 
-    //static WorkHolder *construct(const string &name, const ACC::APS::ParameterSet &);
-    virtual WH_ION_Gather *make(const string &name);
-
-    virtual void preprocess();
-    virtual void process();
-    virtual void postprocess();
+    void			preprocess(const CS1_Parset *);
+    void			process();
+    void			postprocess();
 
   private:
-    // forbid copy constructor
-    WH_ION_Gather(const WH_ION_Gather &);
+    static void			*sendThreadStub(void *);
+    void			sendThread();
+    void			connectToStorage(const CS1_Parset *);
 
-    // forbid assignment
-    WH_ION_Gather &operator = (const WH_ION_Gather &);
+    static const unsigned	maxSendQueueSize = 3;
 
-    vector<DH_Visibilities *>	itsSumDHs;
-    DH_Visibilities		*itsTmpDH;
+    Arena			*itsArena;
+    std::vector<CorrelatedData *> itsVisibilitySums;
+    CorrelatedData		*itsTmpSum;
+    Queue<CorrelatedData *>	itsFreeQueue, itsSendQueue;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset, itsCurrentSubband;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
 
-    const CS1_Parset		*itsPS;
-    const std::vector<Stream *> &itsClientStreams;
+    const std::vector<Stream *> &itsStreamsFromCNs;
+    Stream			*itsStreamToStorage;
+
+    pthread_t			itsSendThread;
 };
 
 }

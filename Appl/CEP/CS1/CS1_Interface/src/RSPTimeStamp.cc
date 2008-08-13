@@ -22,7 +22,6 @@
 
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
-#include <Blob/BlobField.tcc>
 
 namespace LOFAR {
   namespace CS1 {
@@ -35,8 +34,4 @@ namespace LOFAR {
     }
 
   } // namespace CS1
-
-  // This is needed to be able to put the TimeStamp in a Blob
-  template class BlobField<CS1::TimeStamp>;
-
 } // namespace LOFAR
