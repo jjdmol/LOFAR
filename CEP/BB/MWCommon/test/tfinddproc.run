@@ -1,3 +1,0 @@
-#!/bin/sh
-
-../src/finddproc tfinddproc.in_vd tfinddproc.in_cd
