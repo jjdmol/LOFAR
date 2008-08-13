@@ -172,13 +172,13 @@ ParmDB::ParmDB (const ParmDBMeta& ptm, bool forceNew)
 ParmDB::ParmDB (ParmDBRep* rep)
 : itsRep (rep)
 {
-  itsRep->link();
+  if(!isNull()) itsRep->link();
 }
 
 ParmDB::ParmDB (const ParmDB& that)
 : itsRep (that.itsRep)
 {
-  itsRep->link();
+  if(!isNull()) itsRep->link();
 }
 
 ParmDB& ParmDB::operator= (const ParmDB& that)
@@ -186,14 +186,14 @@ ParmDB& ParmDB::operator= (const ParmDB& that)
   if (this != &that) {
     decrCount();
     itsRep = that.itsRep;
-    itsRep->link();
+    if(!isNull()) itsRep->link();
   }
   return *this;
 }
 
 void ParmDB::decrCount()
 {
-  if (itsRep->unlink() == 0) {
+  if (!isNull() && itsRep->unlink() == 0) {
     string tabName = itsRep->getParmDBMeta().getTableName();
     map<string,int>::iterator pos = theirDBNames.find (tabName);
     ASSERTSTR (pos != theirDBNames.end(),

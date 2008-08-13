@@ -201,6 +201,11 @@ private:
 class ParmDB
 {
 public:
+  // Create a null ParmDB
+  ParmDB()
+    : itsRep(0)
+  {}
+  
   // Create the ParmDB object for the given database type.
   // It gets added to the map of open parmDBs.
   explicit ParmDB (const ParmDBMeta& ptm, bool forceNew=false);
@@ -210,10 +215,14 @@ public:
 
   // Delete underlying object if no more references to it.
   ~ParmDB()
-    { decrCount(); }
+  { decrCount(); }
 
   // Assignment has reference semantics.
   ParmDB& operator= (const ParmDB&);
+
+  // Is the underlying object available?
+  bool isNull() const
+  { return itsRep == 0; }
 
   // Lock and unlock the database tables.
   // The user does not need to lock/unlock, but it can increase performance
