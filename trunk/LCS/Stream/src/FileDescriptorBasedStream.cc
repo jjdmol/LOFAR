@@ -29,7 +29,7 @@ void FileDescriptorBasedStream::read(void *ptr, size_t size)
       throw std::logic_error("read: premature end of file");
 
     size -= bytes;
-    ptr   = static_cast<char *>(ptr) + size;
+    ptr   = static_cast<char *>(ptr) + bytes;
   }
 }
 
