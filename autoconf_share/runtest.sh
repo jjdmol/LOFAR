@@ -86,9 +86,10 @@ if test -f "$prefix/lofarinit.sh"; then
 else
   lofarinitdir=`pwd | sed -e 's%/LOFAR/.*%/LOFAR/LCS/Tools/src%'`
 fi
+
 if test -r "$lofarinitdir/lofarinit.sh"; then
   cd "$lofarinitdir"
-  . lofarinit.sh
+  . ./lofarinit.sh
 fi
 cd $curwd
 
