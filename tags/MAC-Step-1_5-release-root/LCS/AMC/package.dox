@@ -1,0 +1,34 @@
+// \ingroup LCS
+// \defgroup AMC Astronomical Measures Conversions (AMC)
+//
+// The purpose of this package is to provide a means of converting
+// astronomical measures. For example, to convert a sky coordinate from J2000
+// to azimuth/elevation.
+// 
+// The package is split into two sub-packages: AMCBase and AMCImpl.
+//
+// \image html amc_package.png "Package view of the AMC sub-packages" 
+//
+// The relation between the most important classes of these sub-packages is
+// shown in the class diagram below.
+//
+// \image html amc_main_classes.png "Class diagram showing the most important classes of the AMC sub-packages"
+
+// @{
+
+//   \defgroup AMCBase AMCBase
+//
+//   AMCBase contains the interface definition of the conversion methods and
+//   some basic classes that define sky coordinates, earth coordinates
+//   (position on earth) and time. Furthermore, it contains the implementation
+//   of the client side of the AMC client/server, plus a number of classes
+//   needed for data transfer between client and server.
+
+//   \defgroup AMCImpl AMCImpl
+//
+//   AMCImpl contains the implementation of the conversion methods.
+//   Furthermore it contains the implementation of the server side of the AMC
+//   client/server.
+
+// @}
+
