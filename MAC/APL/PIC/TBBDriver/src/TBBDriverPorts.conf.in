@@ -1,0 +1,17 @@
+#
+# Configuration of the TBBDriver communication ports.
+#
+
+#
+# TBBDriver configuration
+#
+#mac.ns.TBBDriver.server.type=TCP
+#mac.ns.TBBDriver.spid.port=0
+#mac.ns.TBBDriver.spid.deviceName=/dev/spid0
+#mac.ns.TBBDriver.acceptor_v3.type=TCP
+
+#
+# TBBTest configuration
+#
+#mac.ns.TBBTest.server.type=TCP
+#mac.top.TBBTest.server.remoteservice=TBBDriver:acceptor_v3
