@@ -23,8 +23,16 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <CS1_Interface/BGL_Configuration.h>
+#include <Common/DataConvert.h>
+#include <Common/Exception.h>
+#include <Common/Timer.h>
+#include <PPF.h>
+#include <Correlator.h>
+
 #if defined HAVE_MPI
-#include <Transport/TH_MPI.h>
+#define MPICH_IGNORE_CXX_SEEK
+#include <mpi.h>
 #endif
 
 #if defined HAVE_BGL
@@ -32,16 +40,10 @@
 #include <rts.h>
 #endif
 
-#include <CS1_Interface/BGL_Configuration.h>
-#include <Common/DataConvert.h>
-#include <Common/Exception.h>
-#include <Common/Timer.h>
-#include <Transport/TH_Null.h>
-#include <PPF.h>
-#include <Correlator.h>
 #include <cmath>
 #include <cstring>
 #include <exception>
+
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
@@ -248,7 +250,7 @@ int main (int argc, char **argv)
 #endif
 
 #if defined HAVE_MPI
-  TH_MPI::initMPI(argc, argv);
+  MPI_Init(&argc, &argv);
 #else
   argc = argc; argv = argv;    // Keep compiler happy ;-)
 #endif
@@ -267,7 +269,7 @@ int main (int argc, char **argv)
   }
 
 #if defined HAVE_MPI
-  TH_MPI::finalize();
+  MPI_Finalize();
 #endif
 
   return retval;

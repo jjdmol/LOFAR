@@ -38,7 +38,7 @@
 #include <InputData.h>
 #include <FilteredData.h>
 #include <TransposedData.h>
-#include <CorrelatedData.h>
+#include <CS1_Interface/CorrelatedData.h>
 
 #include <Transpose.h>
 #include <PPF.h>

@@ -26,7 +26,11 @@
 #include <lofar_config.h>
 
 #if defined HAVE_AIPSPP
+
+#include <AMCBase/Epoch.h>
+#include <Common/LofarLogger.h>
 #include <CS1_Storage/MSWriterImpl.h>
+
 #include <ms/MeasurementSets.h>
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/StandardStMan.h>
@@ -59,9 +63,11 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Slicer.h>
-#include <AMCBase/Epoch.h>
-#include <Common/LofarLogger.h>
-#include <Transport/TH_MPI.h>
+
+#if defined HAVE_MPI
+#include <mpi.h>
+#endif
+
 
 namespace LOFAR
 {
@@ -305,7 +311,9 @@ namespace LOFAR
       msspw.addRow();
       msspwCol.numChan().put (rownr, nchannels);
 #if defined HAVE_MPI
-      int nrSubband = TH_MPI::getCurrentRank() + (rownr);
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      int nrSubband = rank + rownr; // FIXME: is this correct???
       msspwCol.name().put (rownr, "SB-" + String::toString(nrSubband));
 #else
       msspwCol.name().put (rownr, "SB-0");     

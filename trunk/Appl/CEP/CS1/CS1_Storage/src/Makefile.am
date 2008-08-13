@@ -1,9 +1,8 @@
 lib_LTLIBRARIES			= libcs1_storage.la
 
-libcs1_storage_la_SOURCES	= Package__Version.cc  AH_Storage.cc           \
-				  WH_SubbandWriter.cc     \
-				  AHC_Storage.cc          \
-				  MSWriter.cc             \
+libcs1_storage_la_SOURCES	= Package__Version.cc \
+				  SubbandWriter.cc \
+				  MSWriter.cc \
 				  MSWriterImpl.cc
 
 bin_PROGRAMS			= versioncs1_storage CS1_Storage
@@ -15,7 +14,6 @@ CS1_Storage_DEPENDENCIES	= libcs1_storage.la $(LOFAR_DEPEND)
 configfilesdir			= $(bindir)
 configfiles_DATA                = CS1_Storage.machinefile \
 				  CS1_Storage.log_prop \
-				  typeStruct_TTeraFlopCorrelator.dpl \
 				  PropertyInterface.conf
 
 versioncs1_storage_SOURCES      = versioncs1_storage.cc

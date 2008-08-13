@@ -2,11 +2,13 @@
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_CORRELATED_DATA_H
 
 #include <Common/lofar_complex.h>
-#include <CS1_Interface/CS1_Config.h>
+#include <Common/DataConvert.h>
 #include <CS1_Interface/Allocator.h>
+#include <CS1_Interface/CS1_Config.h>
 #include <Stream/Stream.h>
 
 #include <boost/multi_array.hpp>
+#include <stdexcept>
 
 
 namespace LOFAR {
@@ -19,7 +21,10 @@ class CorrelatedData
     ~CorrelatedData();
 
     static size_t requiredSize(unsigned nrBaselines);
+    void	  read(Stream *);
     void	  write(Stream *) const;
+
+    CorrelatedData &operator += (const CorrelatedData &);
 
   private:
     SparseSetAllocator	  allocator;
@@ -31,6 +36,8 @@ class CorrelatedData
     float				      *centroids; //[itsNrBaselines]
 
   private:
+    void	  checkEndianness();
+
     static size_t visibilitiesSize(unsigned nrBaselines);
     static size_t nrValidSamplesSize(unsigned nrBaselines);
     static size_t centroidSize(unsigned nrBaselines);
@@ -81,14 +88,62 @@ inline CorrelatedData::~CorrelatedData()
 }
 
 
+inline void CorrelatedData::read(Stream *str)
+{
+  str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
+  str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+  //str->read(centroids, itsNrBaselines * sizeof(float));
+
+  checkEndianness();
+}
+
+
 inline void CorrelatedData::write(Stream *str) const
 {
+#if !defined WORDS_BIGENDIAN
+  throw std::logic_error("not implemented: think about endianness");
+#endif
+
   str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->write(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->write(centroids, itsNrBaselines * sizeof(float));
 }
 
 
+inline void CorrelatedData::checkEndianness()
+{
+#if !defined WORDS_BIGENDIAN
+  dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
+  dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
+  // dataConvert(LittleEndian, centroids, itsNrBaselines);
+#endif
+}
+
+
+inline CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
+{
+  // add visibilities
+  {
+    fcomplex	 *dst	= visibilities.origin();
+    const fcomplex *src	= other.visibilities.origin();
+    unsigned	 count	= visibilities.num_elements();
+
+    for (unsigned i = 0; i < count; i ++)
+      dst[i] += src[i];
+  }
+
+  // add nr. valid samples
+  {
+    unsigned short       *dst  = nrValidSamples.origin();
+    const unsigned short *src  = other.nrValidSamples.origin();
+    unsigned		 count = nrValidSamples.num_elements();
+
+    for (unsigned i = 0; i < count; i ++)
+      dst[i] += src[i];
+  }
+
+  return *this;
+}
 
 } // namespace CS1
 } // namespace LOFAR

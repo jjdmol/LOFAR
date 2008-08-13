@@ -7,7 +7,7 @@
 
 
 #include <FilteredData.h>
-#include <CorrelatedData.h>
+#include <CS1_Interface/CorrelatedData.h>
 
 #include <cassert>
 

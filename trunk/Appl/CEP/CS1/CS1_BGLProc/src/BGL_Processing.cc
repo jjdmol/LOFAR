@@ -49,12 +49,8 @@ extern "C" {
 
 #endif
 
-#if defined HAVE_MPI
-#if 0 && (defined HAVE_BGP || defined HAVE_BGL)
-#define LOG_CONDITION	(itsCurrentSubband == itsFirstSubband)
-#else
+#if (defined HAVE_BGP || defined HAVE_BGL)
 #define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-#endif
 //#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
 #else
 #define LOG_CONDITION	1

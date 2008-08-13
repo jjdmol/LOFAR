@@ -21,13 +21,12 @@
 #include <lofar_config.h>
 
 #include <PLC/ACCmain.h>
-#include <tinyCEP/ApplicationHolderController.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/CS1_Parset.h>
 #include <InputSection.h>
-#include <AH_ION_Gather.h>
+#include <OutputSection.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -63,7 +62,7 @@ using namespace LOFAR::CS1;
 static char	   **global_argv;
 static std::string blockID;
 static unsigned    myPsetNumber, nrPsets, nrCoresPerPset;
-static unsigned    nrInputSectionRuns;
+static unsigned    nrInputSectionRuns, nrOutputSectionRuns;
 static std::vector<Stream *> clientStreams;
 
 #if defined HAVE_FCNP && defined __PPC__
@@ -197,7 +196,7 @@ static void stopCNs()
 }
 
 
-static void *input_thread(void *parset)
+static void *inputSection(void *parset)
 {
   std::clog << "starting input section" << std::endl;
 
@@ -223,23 +222,28 @@ static void *input_thread(void *parset)
 }
 
 
-static void *gather_thread(void *argv)
+static void *outputSection(void *parset)
 {
-  std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
+  std::clog << "starting output section" << std::endl;
 
   try {
-    AH_ION_Gather myAH(clientStreams, myPsetNumber);
-    ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-    ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+    OutputSection outputSection(myPsetNumber, clientStreams);
+
+    outputSection.preprocess(static_cast<CS1_Parset *>(parset));
+
+    for (unsigned run = 0; run < nrOutputSectionRuns; run ++)
+      outputSection.process();
+
+    outputSection.postprocess();
   } catch (Exception &ex) {
-    std::cerr << "gather thread caught Exception: " << ex << std::endl;
+    std::cerr << "output section caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
-    std::cerr << "gather thread caught std::exception: " << ex.what() << std::endl;
+    std::cerr << "output section caught std::exception: " << ex.what() << std::endl;
   } catch (...) {
-    std::cerr << "gather thread caught non-std::exception: " << std::endl;
+    std::cerr << "output section caught non-std::exception: " << std::endl;
   }
 
-  std::clog << "gather thread finished" << std::endl;
+  std::clog << "output section finished" << std::endl;
   return 0;
 }
 
@@ -271,14 +275,16 @@ void *master_thread(void *)
   try {
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
 
-    pthread_t input_thread_id = 0, gather_thread_id = 0;
-
+    pthread_t input_thread_id, output_thread_id;
     std::clog << "trying to use " << global_argv[1] << " as ParameterSet" << std::endl;
     ACC::APS::ParameterSet parameterSet(global_argv[1]);
     CS1_Parset parset(&parameterSet);
 
     parset.adoptFile("OLAP.parset");
     checkParset(parset);
+
+    bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
+    bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
 
 #if !defined HAVE_ZOID
     nrCoresPerPset = parset.nrCoresPerPset();
@@ -288,49 +294,25 @@ void *master_thread(void *)
 
     configureCNs(parset);
 
-    if (parset.inputPsetIndex(myPsetNumber) >= 0) {
-#if 0
-      static char nrRuns[16], *argv[] = {
-	global_argv[0],
-	global_argv[1],
-	nrRuns,
-	0
-      };
-
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * parset.nrCoresPerPset() / parset.nrSubbandsPerPset());
-
-      if (pthread_create(&input_thread_id, 0, input_thread, argv) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
-#else
-      // Passing this via a global variable is a real hack
+    if (hasInputSection) {
       nrInputSectionRuns = atoi(global_argv[2]) * parset.nrCoresPerPset() / parset.nrSubbandsPerPset();
 
-      if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&parset)) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
-#endif
-    }
-
-    if (parset.outputPsetIndex(myPsetNumber) >= 0) {
-      static char nrRuns[16], *argv[] = {
-	global_argv[0],
-	global_argv[1],
-	nrRuns,
-	0
-      };
-
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * parset.nrCoresPerPset());
-
-      if (pthread_create(&gather_thread_id, 0, gather_thread, argv) != 0) {
+      if (pthread_create(&input_thread_id, 0, inputSection, static_cast<void *>(&parset)) != 0) {
 	perror("pthread_create");
 	exit(1);
       }
     }
 
-    if (gather_thread_id != 0 && input_thread_id == 0) {
+    if (hasOutputSection) {
+      nrOutputSectionRuns = atoi(global_argv[2]) * parset.nrCoresPerPset();
+
+      if (pthread_create(&output_thread_id, 0, outputSection, static_cast<void *>(&parset)) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
+    }
+
+    if (!hasInputSection && hasOutputSection) {
       // quick hack to send PROCESS commands to CNs
 
       BGL_Command command(BGL_Command::PROCESS);
@@ -342,7 +324,7 @@ void *master_thread(void *)
 	  command.write(clientStreams[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
     }
 
-    if (input_thread_id != 0) {
+    if (hasInputSection) {
       if (pthread_join(input_thread_id, 0) != 0) {
 	perror("pthread join");
 	exit(1);
@@ -354,13 +336,13 @@ void *master_thread(void *)
     unconfigureCNs();
     stopCNs();
 
-    if (gather_thread_id != 0) {
-      if (pthread_join(gather_thread_id, 0) != 0) {
+    if (hasOutputSection) {
+      if (pthread_join(output_thread_id, 0) != 0) {
 	perror("pthread join");
 	exit(1);
       }
 
-      std::clog << "lofar__fini: gather thread joined" << std::endl;
+      std::clog << "lofar__fini: output thread joined" << std::endl;
     }
   } catch (Exception &ex) {
     std::cerr << "main thread caught Exception: " << ex << std::endl;

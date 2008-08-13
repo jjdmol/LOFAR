@@ -56,11 +56,11 @@ lofar_MPI
 lofar_AIPSPP(0,"-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa")
 
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
+dnl lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase,,1,AMCBase/Epoch.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
-lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
+dnl lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
+dnl lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/DH_Visibilities.h,,)
 dnl The property interface is not used right now
 dnl lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_PVString.h,gcfcommon)
