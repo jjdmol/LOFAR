@@ -55,12 +55,12 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	int myRank = TH_MPI::getCurrentRank();
 
 	// The MPI standard does not demand that the commandline
-	// arguments are distributed, so we do it ourselves. 
+	// arguments are distributed, so we do it ourselves.
 
 	// Broadcast number of arguments
 	MPI_Bcast(&argc, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	// Some MPI implementations block on the Bcast. Synchronize
-	// the nodes to avoid deadlock. 
+	// the nodes to avoid deadlock.
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (myRank != 0) {
@@ -83,7 +83,7 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 			argv[arg] = new char[arglen];
 		}
 		// Broadcast the argument;
-		MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);	
+		MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);
 	}
 #endif
 
@@ -102,7 +102,14 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	try {
 		// Read in the parameterset.
 		ConfigLocator	CL;
-		string	ParsetFile = CL.locate(argv[1 + (ACCmode ? 1 : 0)]);
+		string ParsetFile;
+    if (argc > 1) {
+      ParsetFile = CL.locate(argv[1 + (ACCmode ? 1 : 0)]);
+    }
+    else {
+      ParsetFile = CL.locate(programName + ".parset");
+    }
+
 		ASSERTSTR(!ParsetFile.empty(), "Could not find parameterset " << argv[1]);
 		LOG_INFO_STR("Using parameterset " << ParsetFile);
 		globalParameterSet()->adoptFile(ParsetFile);
@@ -111,34 +118,39 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
                 ParameterSet arg;
                 arg.add("ProgramName", programName);
 
-                // Create the correct ProcCtrlProxy and start it. 
+                // Create the correct ProcCtrlProxy and start it.
                 if (ACCmode) {
                   arg.add("ProcID", argv[3]);
                   result = (ProcCtrlRemote(theProcess))(arg);
-                } 
+                }
                 else {
-                  arg.add("NoRuns", argv[argc-1]);
+                  if (argc > 1) {
+                    arg.add("NoRuns", argv[argc-1]);
+                  }
+                  else {
+                     arg.add("NoRuns", "1");
+                  }
                   result = (ProcCtrlCmdLine(theProcess))(arg);
                 }
-	} 
+	}
 	catch (Exception& ex) {
 		LOG_FATAL_STR("Caught exception: " << ex << endl);
 		result = 1;
-	} 
+	}
 	catch (std::exception& ex) {
 		LOG_FATAL_STR("Caught std::exception: " << ex.what());
 		result = 1;
-	} 
+	}
 	catch (...) {
 		LOG_FATAL_STR("Caught unknown exception.");
 		result = 1;
-	}  
+	}
 
 #ifdef HAVE_MPI
 	TH_MPI::finalize();
 #endif
 
-	LOG_INFO(programName + " terminated " + 
+	LOG_INFO(programName + " terminated " +
                  (result ? "with an error" : "normally"));
 
 	return result;
