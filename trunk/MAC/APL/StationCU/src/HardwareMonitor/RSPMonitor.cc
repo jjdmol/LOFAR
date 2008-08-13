@@ -21,6 +21,7 @@
 //#  $Id: RSPMonitor.cc 10505 2007-09-07 17:14:57Z overeem $
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
