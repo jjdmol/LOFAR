@@ -60,19 +60,20 @@ if test "$with_pvss" != "no"; then
 ##
   pvss_inclist=$pvss_prefix;
   if test "$pvss_prefix" = ""; then
-    pvss_inclist="/opt/pvss/pvss2_v3.0/api/include"
+    pvss_inclist="/opt/pvss/pvss2_v3.7/api/include"
   fi
   for bdir in $pvss_inclist
   do
     ]AC_CHECK_FILE([$bdir/Basics/Utilities/Util.hxx],
-			[lfr_lib_pvssd=$bdir/../lib.linux_RH90],
+			[lfr_lib_pvssd=$bdir/../../bin],
 			[lfr_lib_pvssd=no])[
   done
 
   INCL_ROOT=$pvss_inclist
-  PVSS_CPPFLAGS="-D__UNIX -D__PC -DHAS_TEMPLATES=1 -DBC_DESTRUCTOR -Dbcm_boolean_h -DOS_LINUX -DLINUX -DLINUX2 -DDLLEXP_BASICS= -DDLLEXP_CONFIGS= -DDLLEXP_DATAPOINT= -DDLLEXP_MESSAGES= -DDLLEXP_MANAGER= -DDLLEXP_CTRL= -I${INCL_ROOT}/Basics/Variables -I${INCL_ROOT}/Basics/Utilities -I${INCL_ROOT}/Basics/NoPosix -I${INCL_ROOT}/BCMNew -I${INCL_ROOT}/Configs -I${INCL_ROOT}/Datapoint -I${INCL_ROOT}/Messages -I${INCL_ROOT}/Manager"
+  PVSS_CPPFLAGS="-D__UNIX -D__PC -DHAS_TEMPLATES=1 -DBC_DESTRUCTOR -Dbcm_boolean_h -DOS_LINUX -DLINUX -DLINUX2 -DDLLEXP_BASICS= -DDLLEXP_CONFIGS= -DDLLEXP_DATAPOINT= -DDLLEXP_MESSAGES= -DDLLEXP_MANAGER= -DDLLEXP_CTRL= -I${INCL_ROOT}/Basics/DpBasics -I${INCL_ROOT}/Basics/Variables -I${INCL_ROOT}/Basics/Utilities -I${INCL_ROOT}/Basics/NoPosix -I${INCL_ROOT}/BCMNew -I${INCL_ROOT}/Configs -I${INCL_ROOT}/Datapoint -I${INCL_ROOT}/Messages -I${INCL_ROOT}/Manager"
   PVSS_CXXFLAGS="-fmessage-length=0"
-  PVSS_VERSION=V30_876_RH90
+#  PVSS_VERSION=V30_876_RH90
+  PVSS_VERSION=V37_304
   if test "$lfr_lib_pvssd" != "no"; then
     ]AC_CHECK_FILE([$lfr_lib_pvssd/libBasics$PVSS_VERSION.so],
 			[lfr_lib_pvss=$lfr_lib_pvssd],
@@ -80,9 +81,11 @@ if test "$with_pvss" != "no"; then
   fi
 
   if test "$lfr_lib_pvss" != "no" ; then
+    lfr_lib_linux_pvss=$lfr_lib_pvss/../api/lib.linux
     PVSS_LDFLAGS="-L$lfr_lib_pvss"
-		PVSS_OBJS="$lfr_lib_pvss/DpConfig.o $lfr_lib_pvss/DpConfigManager.o"
-    PVSS_LIBS="$PVSS_OBJS -lManager$PVSS_VERSION -lMessages$PVSS_VERSION -lDatapoint$PVSS_VERSION -lBasics$PVSS_VERSION -lbcm$PVSS_VERSION -ldl -lwklin -lPVSSUtil_RH90"
+##    PVSS_OBJS="$lfr_lib_linux_pvss/DpConfig.o $lfr_lib_linux_pvss/DpConfigManager.o"
+##    PVSS_LIBS="$PVSS_OBJS -lManager$PVSS_VERSION -lMessages$PVSS_VERSION -lDatapoint$PVSS_VERSION -lBasics$PVSS_VERSION -lbcm$PVSS_VERSION -ldl -lwklin -lPVSSUtil_RH90"
+    PVSS_LIBS="$PVSS_OBJS -lManager$PVSS_VERSION -lMessages$PVSS_VERSION -lDatapoint$PVSS_VERSION -lBasics$PVSS_VERSION -lbcm$PVSS_VERSION -ldl"
 
     echo "PVSS" >> pkgext
     echo "$PVSS_CPPFLAGS" >> pkgextcppflags
