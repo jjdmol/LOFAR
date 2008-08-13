@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <lofar_config.h>
 #include<casa/aips.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>

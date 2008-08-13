@@ -19,9 +19,7 @@
  ***************************************************************************/
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 #include <libgen.h>
 #include <PLC/ACCmain.h>
 #include <casa/Exceptions.h>

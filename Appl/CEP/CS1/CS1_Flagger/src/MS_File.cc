@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
+#include <lofar_config.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Arrays.h>
 //#include <casa/Quanta/MVTime.h>
