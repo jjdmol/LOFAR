@@ -1,0 +1,11 @@
+# -- PermSW--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  PermSW     1.0.0  development 'node constraint'  "Permanent Software"
+
+#      name          vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses   MACScheduler  1.0.0  development 1                  "Mac Scheduler"
