@@ -68,7 +68,7 @@ namespace LOFAR {
 	 *            reset          read          |
 	 *               \     +--------------->  READ ------+ read_ack
 	 *                \    |                    *        |
-	 *                 *   |           schedule_|read    *       clear
+	 *                 .   |           schedule_|read    *       clear
 	 * UNDEFINED ---> IDLE + <---+              |       DONE --------------->+
 	 *                 ^   | not_|modified      |        ^                   |
 	 *                 |   |     |              |        |                   |
