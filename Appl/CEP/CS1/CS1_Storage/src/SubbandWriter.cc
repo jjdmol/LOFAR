@@ -50,7 +50,6 @@ SubbandWriter::SubbandWriter(const CS1_Parset *ps, unsigned rank)
   itsCS1PS(ps),
   itsRank(rank),
   itsArena(0),
-  itsCorrelatedData(0),
   itsTimeCounter(0),
   itsTimesToIntegrate(ps->storageIntegrationSteps()),
   itsFlagsBuffers(0),
@@ -129,6 +128,62 @@ void SubbandWriter::createInputStreams()
 }
 
 
+void *SubbandWriter::inputThreadStub(void *arg)
+{
+  try {
+    static_cast<SubbandWriter *>(arg)->inputThread();
+  } catch (Exception &ex) {
+    std::cerr << "caught Exception: " << ex.what() << std::endl;
+  } catch (std::exception &ex) {
+    std::cerr << "caught std::exception: " << ex.what() << std::endl;
+  } catch (...) {
+    std::cerr << "caught non-std::exception" << std::endl;
+  } 
+
+  return 0;
+}
+
+
+void SubbandWriter::inputThread()
+{
+  bool nullInput = dynamic_cast<NullStream *>(itsInputStreams[0]) != 0;
+
+  do {
+    for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
+      // find out from which input channel we should read
+      unsigned	     pset  = sb / itsNrSubbandsPerPset;
+      CorrelatedData *data = itsFreeQueue.remove();
+
+      try {
+	data->read(itsInputStreams[pset]);
+      } catch (Stream::EndOfStreamException &) {
+	itsReceiveQueue.append(0); // signal main thread that this was the last
+	itsFreeQueue.append(data);
+	return;
+      }
+
+      itsReceiveQueue.append(data);
+    }
+  } while (!nullInput);  // prevent infinite loop when using NullStream
+}
+
+
+void SubbandWriter::createInputThread()
+{
+  if (pthread_create(&itsInputThread, 0, inputThreadStub, this) != 0) {
+    std::cerr << "could not create input thread" << std::endl;
+    exit(1);
+  }
+}
+
+
+void SubbandWriter::stopInputThread()
+{
+  if (pthread_join(itsInputThread, 0) != 0)
+    std::cerr << "could not join input thread";
+}
+
+
 void SubbandWriter::preprocess() 
 {
 #if defined HAVE_AIPSPP
@@ -143,8 +198,10 @@ void SubbandWriter::preprocess()
   };
 #endif
 
-  itsArena	    = new MallocedArena(1 * CorrelatedData::requiredSize(itsNBaselines), 32);
-  itsCorrelatedData = new CorrelatedData(*itsArena, itsNBaselines);
+  itsArena	    = new MallocedArena(nrInputBuffers * CorrelatedData::requiredSize(itsNBaselines), 32);
+
+  for (unsigned i = 0; i < nrInputBuffers; i ++)
+    itsFreeQueue.append(new CorrelatedData(*itsArena, itsNBaselines));
 
   double startTime = itsCS1PS->startTime();
   LOG_TRACE_VAR_STR("startTime = " << startTime);
@@ -205,6 +262,7 @@ void SubbandWriter::preprocess()
 #endif // defined HAVE_AIPSPP
 
   createInputStreams();
+  createInputThread();
 }
 
 
@@ -219,11 +277,12 @@ void SubbandWriter::clearAllSums()
 }
 
 
-void SubbandWriter::process() 
+void SubbandWriter::writeLogMessage()
 {
   static int counter = 0;
-  time_t now = time(0);
-  char buf[26];
+  time_t     now     = time(0);
+  char	     buf[26];
+
   ctime_r(&now, buf);
   buf[24] = '\0';
 
@@ -232,78 +291,94 @@ void SubbandWriter::process()
 	  ", rank = " << itsRank <<
 #endif
 	  ", count = " << counter ++ << endl;
+}
+
+
+bool SubbandWriter::processSubband(unsigned sb)
+{
+  CorrelatedData *data = itsReceiveQueue.remove();
+
+  if (data == 0)
+    return false;
 
 #if defined HAVE_AIPSPP
-  if (itsTimesToIntegrate > 1 && itsTimeCounter % itsTimesToIntegrate == 0) {
-    clearAllSums();
-  }
-#endif
+  // Write one set of visibilities of size
+  // fcomplex[itsNBaselines][itsNChannels][npol][npol]
 
-  // Write the visibilities for all subbands per pset.
-  for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
-    // find out from which input channel we should read
-    unsigned pset = sb / itsNrSubbandsPerPset;
+  unsigned short *valSamples = data->nrValidSamples.origin();
+  fcomplex	 *newVis     = data->visibilities.origin();
+ 
+  if (itsTimesToIntegrate > 1) {
+    for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
+      itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
+      bool flagged = valSamples[i] == 0;
+      itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
+      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
+      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
+      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
+      // Currently we just add the samples, this way the time centroid stays in place
+      // We could also divide by the weight and multiple the sum by the total weight.
+      itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
+      itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
+      itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
+      itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
+    }
 
-    itsCorrelatedData->read(itsInputStreams[pset]); // TODO: prefetch in separate thread
-
-    unsigned short *valSamples = itsCorrelatedData->nrValidSamples.origin();
-    fcomplex	   *newVis     = itsCorrelatedData->visibilities.origin();
-   
-    // Write one set of visibilities of size
-    // fcomplex[itsNBaselines][itsNChannels][npol][npol]
-
-#if defined HAVE_AIPSPP
-    if (itsTimesToIntegrate > 1) {
-      for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
-	itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
-	bool flagged = valSamples[i] == 0;
-	itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
-	itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
-	itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
-	itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
-	// Currently we just add the samples, this way the time centroid stays in place
-	// We could also divide by the weight and multiple the sum by the total weight.
-	itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
-	itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
-	itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
-	itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
-      }
-
-      if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
-	itsWriteTimer.start();
-	itsWriters[sb]->write(itsBandIDs[sb],
-	  0, itsNChannels, itsTimeCounter, itsNVisibilities,
-	  &itsVisibilities[sb * itsNVisibilities],
-	  &itsFlagsBuffers[sb * itsNVisibilities], 
-	  &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
-	itsWriteTimer.stop();
-      }
-    } else {
-      for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
-	itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
-	bool flagged = valSamples[i] == 0;
-	itsFlagsBuffers[4 * i    ] = flagged;
-	itsFlagsBuffers[4 * i + 1] = flagged;
-	itsFlagsBuffers[4 * i + 2] = flagged;
-	itsFlagsBuffers[4 * i + 3] = flagged;
-      }
-
+    if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
       itsWriteTimer.start();
-      itsWriters[sb]->write(itsBandIDs[sb],
-	0, itsNChannels, itsTimeCounter, itsNVisibilities,
-	newVis, itsFlagsBuffers, itsWeightsBuffers);
+      itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, itsTimeCounter,
+			    itsNVisibilities,
+			    &itsVisibilities[sb * itsNVisibilities],
+			    &itsFlagsBuffers[sb * itsNVisibilities], 
+	&itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
       itsWriteTimer.stop();
     }
-#endif
-  }
+  } else {
+    for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
+      itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
+      bool flagged = valSamples[i] == 0;
+      itsFlagsBuffers[4 * i    ] = flagged;
+      itsFlagsBuffers[4 * i + 1] = flagged;
+      itsFlagsBuffers[4 * i + 2] = flagged;
+      itsFlagsBuffers[4 * i + 3] = flagged;
+    }
 
-  // Update the time counter.
-  itsTimeCounter++;
+    itsWriteTimer.start();
+    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, itsTimeCounter,
+			  itsNVisibilities, newVis, itsFlagsBuffers,
+			  itsWeightsBuffers);
+    itsWriteTimer.stop();
+  }
+#endif
+
+  itsFreeQueue.append(data);
+  return true;
+}
+
+
+void SubbandWriter::process() 
+{
+  while (true) {
+    writeLogMessage();
+
+#if defined HAVE_AIPSPP
+    if (itsTimesToIntegrate > 1 && itsTimeCounter % itsTimesToIntegrate == 0)
+      clearAllSums();
+#endif
+
+    for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb)
+      if (!processSubband(sb))
+	return;
+
+    ++ itsTimeCounter;
+  }
 }
 
 
 void SubbandWriter::postprocess() 
 {
+  stopInputThread();
+
   for (unsigned i = 0; i < itsInputStreams.size(); i ++)
     delete itsInputStreams[i];
 
@@ -319,7 +394,9 @@ void SubbandWriter::postprocess()
   itsWriters.clear();
 #endif
 
-  delete itsCorrelatedData;	itsCorrelatedData = 0;
+  for (unsigned i = 0; i < nrInputBuffers; i ++)
+    delete itsFreeQueue.remove();
+
   delete itsArena;		itsArena	  = 0;
   delete itsVisibilities;	itsVisibilities   = 0;
 

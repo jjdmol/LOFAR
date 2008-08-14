@@ -36,7 +36,11 @@
 #include <Common/lofar_vector.h>
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/CorrelatedData.h>
+#include <CS1_Interface/Queue.h>
 #include <Stream/Stream.h>
+
+#include <pthread.h>
+
 
 namespace LOFAR {
 namespace CS1 {
@@ -46,46 +50,57 @@ class MSWriter;
 class SubbandWriter
 {
   public:
-    SubbandWriter(const CS1_Parset *, unsigned rank);
-    ~SubbandWriter();
+			    SubbandWriter(const CS1_Parset *, unsigned rank);
+			    ~SubbandWriter();
 
-    void preprocess();
-    void process();
-    void postprocess();
+    void		    preprocess();
+    void		    process();
+    void		    postprocess();
 
   private:
-    void clearAllSums();
-    void createInputStreams();
+    void		    clearAllSums();
+    void		    createInputStreams();
+    void		    writeLogMessage();
+    bool		    processSubband(unsigned sb);
+
+    void		    createInputThread();
+    void		    stopInputThread();
+    static void		    *inputThreadStub(void *);
+    void		    inputThread();
+
   
-    const CS1_Parset	  *itsCS1PS;
-    unsigned		  itsRank;
+    const CS1_Parset	    *itsCS1PS;
+    unsigned		    itsRank;
 
-    std::vector<Stream *> itsInputStreams;
-    Arena		  *itsArena;
-    CorrelatedData	  *itsCorrelatedData;
+    std::vector<Stream *>   itsInputStreams;
 
-    unsigned  itsNStations;
-    unsigned  itsNBaselines;
-    unsigned  itsNChannels;
-    unsigned  itsNBeams;
-    unsigned  itsNPolSquared;
-    unsigned  itsNVisibilities;
+    static const unsigned   nrInputBuffers = 10;
+    Queue<CorrelatedData *> itsFreeQueue, itsReceiveQueue;
+    Arena		    *itsArena;
+    pthread_t		    itsInputThread;
 
-    vector <MSWriter *> itsWriters;
+    unsigned		    itsNStations;
+    unsigned		    itsNBaselines;
+    unsigned		    itsNChannels;
+    unsigned		    itsNBeams;
+    unsigned		    itsNPolSquared;
+    unsigned		    itsNVisibilities;
 
-    unsigned itsNrSubbandsPerPset;
-    unsigned itsNrSubbandsPerStorage;
+    vector<MSWriter *>	    itsWriters;
 
-    vector<unsigned> itsBandIDs;   ///< MS IDs of the frequency bands
-    unsigned itsTimeCounter;       ///< Counts the time
-    unsigned itsTimesToIntegrate;  ///< Number of timeSteps to integrate
-    bool *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-    float *itsWeightsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS];
-    fcomplex *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+    unsigned		    itsNrSubbandsPerPset;
+    unsigned		    itsNrSubbandsPerStorage;
 
-    float itsWeightFactor;
+    vector<unsigned>	    itsBandIDs;
+    unsigned		    itsTimeCounter;
+    unsigned		    itsTimesToIntegrate;
+    bool		    *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+    float		    *itsWeightsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS];
+    fcomplex		    *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
-    NSTimer itsWriteTimer;
+    float		    itsWeightFactor;
+
+    NSTimer		    itsWriteTimer;
 
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;

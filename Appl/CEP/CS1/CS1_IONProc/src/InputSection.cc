@@ -94,7 +94,7 @@ void InputSection::startThreads()
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
 
-  ThreadArgs args;
+  InputThread::ThreadArgs args;
 
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");

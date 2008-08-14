@@ -39,37 +39,38 @@
 namespace LOFAR {
 namespace CS1 {
 
-  struct ThreadArgs {
-    BeamletBuffer	*BBuffer;
-    Stream		*stream; 
-
-    unsigned		threadID;
-    unsigned		frameSize;
-    unsigned		ipHeaderSize;
-    unsigned		frameHeaderSize;
-    unsigned		nTimesPerFrame;
-    unsigned		nSubbandsPerFrame;
-    LogThread::Counters	*packetCounters;
-    bool		isRealTime;
-    TimeStamp		startTime;
-  };
-
 class InputThread
 {
   public:
-    InputThread(ThreadArgs args);
-    ~InputThread();
+    struct ThreadArgs {
+      BeamletBuffer	  *BBuffer;
+      Stream		  *stream; 
 
-    static void *mainLoopStub(void *inputThread);
-    void	  mainLoop();
+      unsigned		  threadID;
+      unsigned		  frameSize;
+      unsigned		  ipHeaderSize;
+      unsigned		  frameHeaderSize;
+      unsigned		  nTimesPerFrame;
+      unsigned		  nSubbandsPerFrame;
+      LogThread::Counters *packetCounters;
+      bool		  isRealTime;
+      TimeStamp		  startTime;
+    };
+
+			  InputThread(ThreadArgs args);
+			  ~InputThread();
+
+    static void		  *mainLoopStub(void *inputThread);
+    void		  mainLoop();
 
   private:
-    static void sigHandler(int);
+    static void		  sigHandler(int);
+    static void		  setAffinity();
   
-    static volatile bool theirShouldStop;
+    volatile bool	  stop, stopped;
 
-    ThreadArgs itsArgs;
-    pthread_t  thread;
+    ThreadArgs		  itsArgs;
+    pthread_t		  thread;
   };
 
 } // namespace CS1

@@ -21,7 +21,6 @@
 #include <mpi.h>
 #endif
 
-#include <boost/lexical_cast.hpp>
 #include <stdexcept>
 
 
@@ -50,8 +49,10 @@ int main(int argc, char *argv[])
 #endif
 
   try {
-    if (argc != 3)
-      throw std::runtime_error(std::string("usage: ") + argv[0] + " parset nr_runs");
+    if (argc == 3)
+      std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+    else if (argc != 2)
+      throw std::runtime_error(std::string("usage: ") + argv[0] + " parset");
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
     ACC::APS::ParameterSet parameterSet(argv[1]);
@@ -59,14 +60,9 @@ int main(int argc, char *argv[])
     parset.adoptFile("OLAP.parset");
 
     SubbandWriter subbandWriter(&parset, rank);
+
     subbandWriter.preprocess();
-
-    unsigned nrRuns = boost::lexical_cast<unsigned>(argv[2]);
-    std::clog << "number of runs: " << nrRuns << std::endl;
-
-    for (unsigned i = 0; i < nrRuns; i ++)
-      subbandWriter.process();
-
+    subbandWriter.process();
     subbandWriter.postprocess();
   } catch (Exception &ex) {
     std::cerr << "caught Exception: " << ex.what() << std::endl;
