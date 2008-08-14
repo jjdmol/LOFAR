@@ -9,6 +9,9 @@ namespace LOFAR {
 class Stream
 {
   public:
+    class EndOfStreamException {
+    };
+
     virtual	 ~Stream();
 
     virtual void read(void *ptr, size_t size) = 0;
