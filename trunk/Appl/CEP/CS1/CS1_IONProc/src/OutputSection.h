@@ -57,7 +57,7 @@ class OutputSection
     Queue<CorrelatedData *>	itsFreeQueue, itsSendQueue;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
-    unsigned			itsNrSubbandsPerPset, itsCurrentSubband;
+    unsigned			itsNrSubbandsPerPset;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
 
     const std::vector<Stream *> &itsStreamsFromCNs;

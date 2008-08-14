@@ -41,9 +41,8 @@
 namespace LOFAR {
 namespace CS1 {
 
-volatile bool InputThread::theirShouldStop = false;
 
-InputThread::InputThread(ThreadArgs args /* call by value, other thread read it! */)
+InputThread::InputThread(ThreadArgs args /* call by value! */)
 :
   itsArgs(args)
 {
@@ -60,21 +59,28 @@ InputThread::InputThread(ThreadArgs args /* call by value, other thread read it!
     exit(1);
   }
 
+  stop = stopped = false;
+
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
     std::cerr << "could not create input thread" << std::endl;
     exit(1);
   }
 }
 
+
 InputThread::~InputThread()
 {
   std::clog << "InputThread::~InputThread()" << std::endl;
 
-  theirShouldStop = true;
+  stop = true;
 
-  if (pthread_kill(thread, SIGUSR1) != 0) { // interrupt read() system call
-    perror("pthread_kill");
-    exit(1);
+  while (!stopped) {
+    if (pthread_kill(thread, SIGUSR1) != 0) { // interrupt read() system call
+      perror("pthread_kill");
+      exit(1);
+    }
+
+    usleep(25000);
   }
 
   if (pthread_join(thread, 0) != 0) {
@@ -83,12 +89,13 @@ InputThread::~InputThread()
   }
 }
 
+
 void InputThread::sigHandler(int)
 {
 }
 
 
-void *InputThread::mainLoopStub(void *inputThread)
+void InputThread::setAffinity()
 {
 #if 1 && __linux__
   cpu_set_t cpu_set;
@@ -103,14 +110,30 @@ void *InputThread::mainLoopStub(void *inputThread)
     perror("sched_setaffinity");
   }
 #endif
+}
 
-  reinterpret_cast<InputThread *>(inputThread)->mainLoop();
+
+void *InputThread::mainLoopStub(void *inputThread)
+{
+  try {
+    static_cast<InputThread *>(inputThread)->mainLoop();
+  } catch (Exception &ex) {
+    std::cerr << "caught Exception: " << ex.what() << std::endl;
+  } catch (std::exception &ex) {
+    std::cerr << "caught std::exception: " << ex.what() << std::endl;
+  } catch (...) {
+    std::cerr << "caught non-std:exception" << std::endl;
+  }
+
+  static_cast<InputThread *>(inputThread)->stopped = true;
   return 0;
 }
 
 
 void InputThread::mainLoop()
 {
+  setAffinity();
+
   TimeStamp actualstamp = itsArgs.startTime - itsArgs.nTimesPerFrame;
 
   // buffer for incoming rsp data
@@ -137,61 +160,62 @@ void InputThread::mainLoop()
 
   WallClockTime wallClockTime;
 
-  try {
-    while (!theirShouldStop) {
+  while (!stop) {
+    try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
       itsArgs.stream->read(totRecvframe, frameSize);
-      ++ itsArgs.packetCounters->nrPacketsReceived;
+    } catch (SystemCallException &ex) {
+      if (ex.error == EINTR)
+	break;
+      else
+	throw ex;
+    }
 
-      // get the actual timestamp of first EPApacket in frame
-      if (dataShouldContainValidStamp) {
-	unsigned seqid   = * ((unsigned *) &recvframe[8]);
-	unsigned blockid = * ((unsigned *) &recvframe[12]);
+    ++ itsArgs.packetCounters->nrPacketsReceived;
+
+    // get the actual timestamp of first EPApacket in frame
+    if (dataShouldContainValidStamp) {
+      unsigned seqid   = * ((unsigned *) &recvframe[8]);
+      unsigned blockid = * ((unsigned *) &recvframe[12]);
 
 #if defined WORDS_BIGENDIAN
-	seqid   = byteSwap(seqid);
-	blockid = byteSwap(blockid);
+      seqid   = byteSwap(seqid);
+      blockid = byteSwap(blockid);
 #endif
 
-	//if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
-	if (seqid == ~0U) {
-	  ++ itsArgs.packetCounters->nrPacketsRejected;
-	  continue;
-	}
-
-	// Sanity check on seqid. Note, that seqid is in seconds,
-	// so a value which is greater than the previous one with more 
-	// than (say) 10 seconds probably means that the sequence number 
-	// in the packet is wrong. This can happen, since communication is not
-	// reliable.
-	if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
-	  previousSeqidIsAccepted = false;
-	  ++ itsArgs.packetCounters->nrPacketsRejected;
-	  continue;
-	}
-
-	// accept seqid
-	previousSeqidIsAccepted = true;
-	previousSeqid	      = seqid;
-	  
-	actualstamp.setStamp(seqid, blockid);
-      } else {
-	actualstamp += itsArgs.nTimesPerFrame; 
-
-	if (itsArgs.isRealTime)
-	  wallClockTime.waitUntil(actualstamp);
+      //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
+      if (seqid == ~0U) {
+	++ itsArgs.packetCounters->nrPacketsRejected;
+	continue;
       }
-  
-      // expected packet received so write data into corresponding buffer
-      itsArgs.BBuffer->writeElements((Beamlet *) &recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame);
+
+      // Sanity check on seqid. Note, that seqid is in seconds,
+      // so a value which is greater than the previous one with more 
+      // than (say) 10 seconds probably means that the sequence number 
+      // in the packet is wrong. This can happen, since communication is not
+      // reliable.
+      if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
+	previousSeqidIsAccepted = false;
+	++ itsArgs.packetCounters->nrPacketsRejected;
+	continue;
+      }
+
+      // accept seqid
+      previousSeqidIsAccepted = true;
+      previousSeqid	      = seqid;
+	
+      actualstamp.setStamp(seqid, blockid);
+    } else {
+      actualstamp += itsArgs.nTimesPerFrame; 
+
+      if (itsArgs.isRealTime)
+	wallClockTime.waitUntil(actualstamp);
     }
-  } catch (SystemCallException &ex) {
-    if (ex.error != EINTR) {
-      std::cerr << "caught system call exception: " << ex.what() << std::endl;
-      exit(1);
-    }
+
+    // expected packet received so write data into corresponding buffer
+    itsArgs.BBuffer->writeElements((Beamlet *) &recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame);
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;

@@ -33,7 +33,7 @@
 //#include <TH_ZoidServer.h>
 #include <Package__Version.h>
 
-#include <boost/lexical_cast.hpp>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
@@ -61,8 +61,7 @@ using namespace LOFAR::CS1;
 
 static char	   **global_argv;
 static std::string blockID;
-static unsigned    myPsetNumber, nrPsets, nrCoresPerPset;
-static unsigned    nrInputSectionRuns, nrOutputSectionRuns;
+static unsigned    myPsetNumber, nrPsets, nrCoresPerPset, nrRuns;
 static std::vector<Stream *> clientStreams;
 
 #if defined HAVE_FCNP && defined __PPC__
@@ -205,7 +204,7 @@ static void *inputSection(void *parset)
 
     inputSection.preprocess(static_cast<CS1_Parset *>(parset));
 
-    for (unsigned run = 0; run < nrInputSectionRuns; run ++)
+    for (unsigned run = 0; run < nrRuns; run ++)
       inputSection.process();
 
     inputSection.postprocess();
@@ -231,7 +230,7 @@ static void *outputSection(void *parset)
 
     outputSection.preprocess(static_cast<CS1_Parset *>(parset));
 
-    for (unsigned run = 0; run < nrOutputSectionRuns; run ++)
+    for (unsigned run = 0; run < nrRuns; run ++)
       outputSection.process();
 
     outputSection.postprocess();
@@ -283,6 +282,9 @@ void *master_thread(void *)
     parset.adoptFile("OLAP.parset");
     checkParset(parset);
 
+    nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.BGLintegrationTime()));
+    std::clog << "nrRuns = " << nrRuns << std::endl;
+
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
     bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
 
@@ -294,34 +296,28 @@ void *master_thread(void *)
 
     configureCNs(parset);
 
-    if (hasInputSection) {
-      nrInputSectionRuns = atoi(global_argv[2]) * parset.nrCoresPerPset() / parset.nrSubbandsPerPset();
-
-      if (pthread_create(&input_thread_id, 0, inputSection, static_cast<void *>(&parset)) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
+    if (hasInputSection && pthread_create(&input_thread_id, 0, inputSection, static_cast<void *>(&parset)) != 0) {
+      perror("pthread_create");
+      exit(1);
     }
 
-    if (hasOutputSection) {
-      nrOutputSectionRuns = atoi(global_argv[2]) * parset.nrCoresPerPset();
-
-      if (pthread_create(&output_thread_id, 0, outputSection, static_cast<void *>(&parset)) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
+    if (hasOutputSection && pthread_create(&output_thread_id, 0, outputSection, static_cast<void *>(&parset)) != 0) {
+      perror("pthread_create");
+      exit(1);
     }
 
     if (!hasInputSection && hasOutputSection) {
       // quick hack to send PROCESS commands to CNs
 
       BGL_Command command(BGL_Command::PROCESS);
-      unsigned	  nrRuns  = atoi(global_argv[2]);
-      unsigned	  nrCores = parset.nrCoresPerPset();
+      unsigned	  core = 0;
 
-      for (unsigned run = 0; run < nrRuns; run ++)
-	for (unsigned core = 0; core < nrCores; core ++)
-	  command.write(clientStreams[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+      for (int count = nrRuns * parset.nrSubbandsPerPset(); -- count >= 0;) {
+	command.write(clientStreams[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+
+	if (++ core == nrCoresPerPset)
+	  core = 0;
+      }
     }
 
     if (hasInputSection) {
@@ -463,7 +459,9 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 
   global_argv[argc] = 0; // terminating zero pointer
 
-  if (argc != 3) {
+  if (argc == 3) {
+    std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+  } else if (argc != 2) {
     std::cerr << "unexpected number of arguments" << std::endl;
     exit(1);
   }
@@ -490,7 +488,9 @@ int main(int argc, char **argv)
 {
   global_argv = argv;
 
-  if (argc != 3) {
+  if (argc == 3) {
+    std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+  } else if (argc != 2) {
     std::cerr << "unexpected number of arguments" << std::endl;
     exit(1);
   }

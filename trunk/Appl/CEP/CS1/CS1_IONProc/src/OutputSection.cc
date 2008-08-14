@@ -77,9 +77,9 @@ void *OutputSection::sendThreadStub(void *arg)
 
 void OutputSection::sendThread()
 {
-  while (1) { // FIXME: stop thread
-    CorrelatedData *data = itsSendQueue.remove();
+  CorrelatedData *data;
 
+  while ((data = itsSendQueue.remove()) != 0) {
     data->write(itsStreamToStorage);
     itsFreeQueue.append(data);
   }
@@ -123,7 +123,6 @@ void OutputSection::preprocess(const CS1_Parset *ps)
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
-  itsCurrentSubband	    = 0;
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
 
@@ -151,51 +150,56 @@ void OutputSection::process()
   bool firstTime = itsCurrentIntegrationStep == 0;
   bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-  std::clog << "itsCurrentComputeCore = " << itsCurrentComputeCore << ", itsCurrentSubband = " << itsCurrentSubband << ", itsCurrentIntegrationStep = " << itsCurrentIntegrationStep << ", firstTime = " << firstTime << ", lastTime = " << lastTime << std::endl;
-  CorrelatedData *data	 = lastTime ? itsFreeQueue.remove() : firstTime ? itsVisibilitySums[itsCurrentSubband] : itsTmpSum;
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    // TODO: make sure that there are more free buffers than subbandsPerPset
+
+    CorrelatedData *data   = lastTime ? itsFreeQueue.remove() : firstTime ? itsVisibilitySums[subband] : itsTmpSum;
   
-  unsigned	 channel = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    unsigned	   channel = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
-  data->read(itsStreamsFromCNs[channel]);
+    data->read(itsStreamsFromCNs[channel]);
 
-  if (!firstTime)
+    if (!firstTime)
+      if (lastTime)
+	*data += *itsVisibilitySums[subband];
+      else
+	*itsVisibilitySums[subband] += *itsTmpSum;
+
     if (lastTime)
-      *data += *itsVisibilitySums[itsCurrentSubband];
-    else
-      *itsVisibilitySums[itsCurrentSubband] += *itsTmpSum;
+      itsSendQueue.append(data);
 
-  if (lastTime)
-    itsSendQueue.append(data);
-
-  if (++ itsCurrentComputeCore == itsNrComputeCores)
-    itsCurrentComputeCore = 0;
-
-  if (++ itsCurrentSubband == itsNrSubbandsPerPset) {
-    itsCurrentSubband = 0;
-
-    if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps)
-      itsCurrentIntegrationStep = 0;
+    if (++ itsCurrentComputeCore == itsNrComputeCores)
+      itsCurrentComputeCore = 0;
   }
+
+  if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps)
+    itsCurrentIntegrationStep = 0;
 }
 
 
 void OutputSection::postprocess()
 {
+  itsSendQueue.append(0); // 0 indicates that no more messages will be sent
+
+  if (pthread_join(itsSendThread, 0) != 0)
+    throw std::runtime_error("could not join send thread");
+
+  delete itsStreamToStorage; // closes stream, stopping the Storage section
+  itsStreamToStorage = 0;
+
   for (unsigned subband = 0; subband < itsVisibilitySums.size(); subband ++)
     delete itsVisibilitySums[subband];
 
   itsVisibilitySums.resize(0);
 
-  delete itsTmpSum; itsTmpSum = 0;
+  delete itsTmpSum;
+  itsTmpSum = 0;
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     delete itsFreeQueue.remove();
 
-  if (pthread_join(itsSendThread, 0) != 0)
-    throw std::runtime_error("could not join send thread");
-
-  delete itsArena;		itsArena = 0;
-  delete itsStreamToStorage;	itsStreamToStorage = 0;
+  delete itsArena;
+  itsArena = 0;
 }
 
 }
