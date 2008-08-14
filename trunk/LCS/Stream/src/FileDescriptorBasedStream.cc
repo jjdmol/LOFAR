@@ -43,7 +43,7 @@ void FileDescriptorBasedStream::write(const void *ptr, size_t size)
       throw SystemCallException("write");
 
     size -= bytes;
-    ptr   = static_cast<const char *>(ptr) + size;
+    ptr   = static_cast<const char *>(ptr) + bytes;
   }
 }
 
