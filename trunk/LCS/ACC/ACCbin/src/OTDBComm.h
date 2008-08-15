@@ -35,7 +35,7 @@
 
 namespace LOFAR {
   namespace ACC {
-    namespace ACCbin
+    namespace ACCbin {
 // \addtogroup ACCbin
 // @{
 
