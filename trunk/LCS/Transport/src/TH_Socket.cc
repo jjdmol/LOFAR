@@ -140,11 +140,11 @@ TH_Socket::~TH_Socket()
 	bool isSameSocket = itsDataSocket == itsServerSocket;
 
 	// Shutdown sockets.
-	LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
+	LOG_TRACE_OBJ("TH_Socket:shutdown datasocket");
 	shutdown(itsDataSocket);
 
 	if (!isSameSocket) {
-		LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
+		LOG_TRACE_OBJ("TH_Socket:shutdown listensocket");
 		shutdown(itsServerSocket);
 	}
 }
@@ -501,7 +501,7 @@ void TH_Socket::shutdown(Socket*& aSocket)
 {
 	LOG_TRACE_OBJ("TH_Socket::shutdown");
 
-	if (aSocket) {
+	if (aSocket && aSocket->getSid() >= 0) {
 		aSocket->shutdown();
 		itsIsShutDown = true;
 		if (itsIsOwner) {

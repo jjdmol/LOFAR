@@ -26,8 +26,9 @@
 //# Includes
 #include <Common/Process.h>
 #include <Common/LofarLogger.h>
-#include <unistd.h>    // for fork()
+#include <unistd.h>    // for fork(), and getpid()
 #include <sys/wait.h>  // for waitpid()
+#include <sys/types.h>
 #include <cerrno>      // for errno
 #include <cstring>     // for strerror()
 #include <cstdlib>     // for exit()
@@ -38,7 +39,7 @@ namespace LOFAR
 {
 
   Process::Process() : 
-    itsPid(-1)
+    itsPid(getpid())
   {
   }
     
@@ -50,6 +51,7 @@ namespace LOFAR
 
   bool Process::spawn(bool avoidZombies)
   {
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     if (doSpawn(avoidZombies)) {
       if (isChild()) child();
       else if (isParent()) parent();
