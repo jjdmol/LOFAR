@@ -96,7 +96,6 @@ void InputSection::startThreads()
 
   InputThread::ThreadArgs args;
 
-  args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
   args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
