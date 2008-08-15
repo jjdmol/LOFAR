@@ -460,7 +460,7 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
   global_argv[argc] = 0; // terminating zero pointer
 
   if (argc == 3) {
-    std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+    std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
   } else if (argc != 2) {
     std::cerr << "unexpected number of arguments" << std::endl;
     exit(1);
@@ -489,7 +489,7 @@ int main(int argc, char **argv)
   global_argv = argv;
 
   if (argc == 3) {
-    std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+    std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
   } else if (argc != 2) {
     std::cerr << "unexpected number of arguments" << std::endl;
     exit(1);
