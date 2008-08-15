@@ -94,8 +94,8 @@ namespace LOFAR
         exit(0);
       }
 
-      // If we get here, we're the parent process; we should delete the
-      // dataSocket object.
+      // If we get here, we're the parent process; we should close the
+      // dataSocket and delete it.
       dataSocket->close();
       delete dataSocket;
 
