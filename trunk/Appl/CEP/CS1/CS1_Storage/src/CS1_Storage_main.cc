@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
   try {
     if (argc == 3)
-      std::cerr << "WARNING: specifying nrRuns is depricated --- ignored" << std::endl;
+      std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
     else if (argc != 2)
       throw std::runtime_error(std::string("usage: ") + argv[0] + " parset");
 
