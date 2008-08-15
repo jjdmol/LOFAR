@@ -44,12 +44,18 @@ else
     # Take care that a possible . is preceeded by a backslash.
     if ($?LOFARROOT) then
         set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
-        set a_bin = "$a_path/bin"
-        setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
-        set a_lib = "$a_path/lib"
-        setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
-        set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
-        setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+	if ($?PATH) then
+            set a_bin = "$a_path/bin"
+            setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+        endif
+        if ($?LD_LIBRARY_PATH) then
+            set a_lib = "$a_path/lib"
+            setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+        endif
+        if ($?PYTHONPATH) then
+            set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+            setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+        endif
     endif
 
     # Now define the new LOFARROOT
@@ -58,13 +64,19 @@ else
     # Also strip this path from the current paths (in case it is contained in
     # it).
     set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    set a_bin = "$a_path/bin"
-    setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
-    set a_lib = "$a_path/lib"
-    setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
-    set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
-    setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
-    
+    if ($?PATH) then
+        set a_bin = "$a_path/bin"
+        setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+    endif
+    if ($?LD_LIBRARY_PATH) then
+        set a_lib = "$a_path/lib"
+        setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+    endif
+    if ($?PYTHONPATH) then
+        set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+        setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+    endif
+
     # Add the path to the standard paths.
     if (! $?PATH) then
         setenv PATH $LOFARROOT/bin
