@@ -1,5 +1,6 @@
 #include <lofar_config.h>
 
+#include <CS1_Interface/Align.h>
 #include <CS1_Interface/Allocator.h>
 
 #include <malloc.h>
@@ -64,7 +65,7 @@ void *SparseSetAllocator::allocate(size_t size, unsigned alignment)
 #endif
 
   for (SparseSet<void *>::const_iterator it = freeList.getRanges().begin(); it != freeList.getRanges().end(); it ++) {
-    void *begin = (void *) (((size_t) it->begin + alignment - 1) & ~ (size_t) (alignment - 1));
+    void *begin = align(it->begin, alignment);
 
     if ((char *) it->end - (char *) begin >= (ptrdiff_t) size) {
       freeList.exclude(begin, (void *) ((char *) begin + size));

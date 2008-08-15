@@ -26,6 +26,7 @@
 #if defined HAVE_FCNP && defined HAVE_BGP
 
 #include <Common/Timer.h>
+#include <CS1_Interface/Align.h>
 #include <CS1_Interface/AlignedStdAllocator.h>
 #include <FCNP_ClientStream.h>
 
@@ -48,8 +49,8 @@ void FCNP_ClientStream::read(void *ptr, size_t size)
 {
   //std::clog << "FCNP_ClientStream::read(" << std::hex << ptr << ", " << std::dec << size << ", ...)" << std::endl;
 
-  if (reinterpret_cast<size_t>(ptr) % 16 != 0 || size % 16 != 0) {
-    size_t alignedSize = (size + 15) & ~ (size_t) 15;
+  if (!aligned(ptr, 16) || !aligned(size, 16)) {
+    size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     FCNP_CN::IONtoCN_ZeroCopy(&alignedBuffer[0], alignedSize);
@@ -64,8 +65,8 @@ void FCNP_ClientStream::write(const void *ptr, size_t size)
 {
   //std::clog << "FCNP_ClientStream::write(" << std::hex << ptr << ", " << std::dec << size << ", ...)" << std::endl;
 
-  if (reinterpret_cast<size_t>(ptr) % 16 != 0 || size % 16 != 0) {
-    size_t alignedSize = (size + 15) & ~ (size_t) 15;
+  if (!aligned(ptr, 16) || !aligned(size, 16)) {
+    size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     memcpy(&alignedBuffer[0], ptr, size);
