@@ -48,7 +48,6 @@ class InputThread
 
       unsigned		  threadID;
       unsigned		  frameSize;
-      unsigned		  ipHeaderSize;
       unsigned		  frameHeaderSize;
       unsigned		  nTimesPerFrame;
       unsigned		  nSubbandsPerFrame;

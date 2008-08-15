@@ -136,23 +136,10 @@ void InputThread::mainLoop()
 
   TimeStamp actualstamp = itsArgs.startTime - itsArgs.nTimesPerFrame;
 
-  // buffer for incoming rsp data
-  int frameSize = itsArgs.frameSize;
-  // reserve space in case there is an ip header in front of the packet
-  char totRecvframe[frameSize + itsArgs.ipHeaderSize];
-  char *recvframe = totRecvframe;
-
   unsigned previousSeqid = 0;
   bool previousSeqidIsAccepted = false;
   
-#if 0
-  if (itsArgs.th->getType() == "TH_Ethernet") {
-    // only with TH_Ethernet there is an IPHeader
-    // but also when we have recorded it from the rsp boards!
-    recvframe += itsArgs.ipHeaderSize;
-    frameSize += itsArgs.ipHeaderSize;
-  };
-#endif
+  char packet[8192] __attribute__ ((aligned(16))); // Max RSP packet size
 
   bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
 
@@ -165,7 +152,7 @@ void InputThread::mainLoop()
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(totRecvframe, frameSize);
+      itsArgs.stream->read(packet, itsArgs.frameSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -177,8 +164,8 @@ void InputThread::mainLoop()
 
     // get the actual timestamp of first EPApacket in frame
     if (dataShouldContainValidStamp) {
-      unsigned seqid   = * ((unsigned *) &recvframe[8]);
-      unsigned blockid = * ((unsigned *) &recvframe[12]);
+      unsigned seqid   = * reinterpret_cast<unsigned *>(packet + 8);
+      unsigned blockid = * reinterpret_cast<unsigned *>(packet + 12);
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
@@ -215,7 +202,7 @@ void InputThread::mainLoop()
     }
 
     // expected packet received so write data into corresponding buffer
-    itsArgs.BBuffer->writeElements((Beamlet *) &recvframe[itsArgs.frameHeaderSize], actualstamp, itsArgs.nTimesPerFrame);
+    itsArgs.BBuffer->writeElements(reinterpret_cast<Beamlet *>(packet), actualstamp, itsArgs.nTimesPerFrame);
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
