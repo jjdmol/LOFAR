@@ -83,18 +83,26 @@ else
         setenv PYTHONPATH ${a_pyt}:$PYTHONPATH
     endif
 
+    # Now define the new LOFARDATAROOT (if possible).
+    # First try as data directory of the LOFAR install directory.
+    set data_path = `echo $LOFARROOT | sed -e 's%/installed.*%%'`
+    if ( "$data_path" != ""  &&  -d $data_path/data ) then
+        setenv LOFARDATAROOT $data_path/data
+    else
+        # Try it as the LOFARDATA directory (part of the source tree).
+        set data_path = `echo $LOFARROOT | sed -e 's%/LOFAR/.*%/LOFAR%'`
+        if ( "$data_path" != ""  &&  -d ${data_path}DATA ) then
+            setenv LOFARDATAROOT ${data_path}DATA
+        else
+            setenv LOFARDATAROOT /opt/lofar/data
+        endif
+    endif
+
     # Create a .glishrc.post in the HOME directory to append
     # the LOFAR libexec to the glish path.
     if ( -f $HOME/.glishrc.post ) then
         mv $HOME/.glishrc.post $HOME/.glishrc.post-old
     endif
     echo "system.path.include := [system.path.include, '$LOFARROOT/libexec/glish']" > $HOME/.glishrc.post
-
-    # Now define the new LOFARDATAROOT
-    set data_path = `echo $LOFARROOT | sed -e 's/\/installed.*$//'`
-    if ( ! -d $data_path/data ) then
-       mkdir $data_path/data
-    endif
-    setenv LOFARDATAROOT $data_path/data
 
 endif
