@@ -97,6 +97,9 @@ class Section(object):
 
 	inputPsets = [interfaces.index(i) for i in inputNodes]
 	outputPsets = range(nPsets)
+
+	if nPsets > len(interfaces):
+	  raise Exception('need too many output psets --- increase nrSubbandsPerPset')
 	
 	if not parset.isDefined('OLAP.BGLProc.inputPsets') and not parset.isDefined('OLAP.BGLProc.outputPsets'):
 	    print 'inputNodes = ', inputNodes
