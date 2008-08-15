@@ -3,6 +3,7 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
+#include <CS1_Interface/Align.h>
 #include <CS1_Interface/Allocator.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <Stream/Stream.h>
@@ -58,8 +59,7 @@ inline size_t CorrelatedData::nrValidSamplesSize(unsigned nrBaselines)
 
 inline size_t CorrelatedData::centroidSize(unsigned nrBaselines)
 {
-  size_t unalignedSize = sizeof(float) * nrBaselines;
-  return (unalignedSize + 31) & ~31;
+  return align(sizeof(float) * nrBaselines, 32);
 }
 
 

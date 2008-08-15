@@ -26,6 +26,7 @@
 #if defined HAVE_FCNP && defined __PPC__
 
 #include <Common/Timer.h>
+#include <CS1_Interface/Align.h>
 #include <CS1_Interface/AlignedStdAllocator.h>
 #include <FCNP_ServerStream.h>
 
@@ -84,8 +85,8 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
 {
   //std::clog << "FCNP_ServerStream::write(" << std::hex << buf << ", " << std::dec << size << ") to " << itsCore << std::endl;
 
-  if (reinterpret_cast<size_t>(buf) % 16 != 0 || size % 16 != 0) {
-    size_t alignedSize = (size + 15) & ~ (size_t) 15;
+  if (!aligned(buf, 16) || !aligned(size, 16)) {
+    size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     memcpy(&alignedBuffer[0], buf, size);
@@ -100,8 +101,8 @@ void FCNP_ServerStream::read(void *buf, size_t size)
 {
   //std::clog << std::dec << "FCNP_ServerStream::read(" << std::hex << buf << ", " << std::dec << size << ") from " << itsCore << std::endl;
 
-  if (reinterpret_cast<size_t>(buf) % 16 != 0 || size % 16 != 0) {
-    size_t alignedSize = (size + 15) & ~ (size_t) 15;
+  if (!aligned(buf, 16) || !aligned(size, 16)) {
+    size_t alignedSize = align(size, 16);
     std::vector<char, AlignedStdAllocator<char, 16> > alignedBuffer(alignedSize);
 
     FCNP_ION::CNtoION_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
