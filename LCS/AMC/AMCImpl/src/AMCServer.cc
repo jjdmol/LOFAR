@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <AMCImpl/ConverterServer.h>
+#include <cstdlib>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;

@@ -36,6 +36,8 @@
 #include <Common/Exception.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_smartptr.h>
+#include <limits>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
@@ -328,11 +330,11 @@ int main(int /*argc*/, const char* const argv[])
 {
   INIT_LOGGER(argv[0]);
 
-  Converter* conv;
   try {
-    ASSERT(conv = createConverter());
-    checkPreConditions(conv);
-    checkConverter(conv);
+    scoped_ptr<Converter> conv(createConverter());
+    ASSERT(conv);
+    checkPreConditions(conv.get());
+    checkConverter(conv.get());
   }
   catch (LOFAR::Exception& e) {
     LOG_ERROR_STR(e);

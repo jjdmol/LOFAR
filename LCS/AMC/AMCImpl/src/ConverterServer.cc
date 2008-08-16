@@ -28,6 +28,7 @@
 #include <AMCImpl/ConverterProcess.h>
 #include <AMCBase/Exceptions.h>
 #include <Common/StringUtil.h>
+#include <cstdlib>
 
 namespace LOFAR
 {
@@ -69,29 +70,33 @@ namespace LOFAR
         return;
       }
 
-      // The converter process will handle all client conversion requests.
-      ConverterProcess proc(dataSocket);
+      {
+	// The converter process will handle all client conversion requests.
+	// Note: we must create the ConverterProcess object within a new
+	// scope, otherwise proc will outlive dataSocket!
+	ConverterProcess proc(dataSocket);
       
-      // Let the converter process run as a separate process. We don't
-      // want to fetch the child's exit status, so add \c true to avoid
-      // zombies.
-      proc.spawn(true);
+	// Let the converter process run as a separate process. We don't
+	// want to fetch the child's exit status, so add \c true to avoid
+	// zombies.
+	proc.spawn(true);
       
-      // If we are the child process ...
-      if (proc.isChild()) {
+	// If we are the child process ...
+	if (proc.isChild()) {
 
-        LOG_TRACE_FLOW("This is the child process");
+	  LOG_TRACE_FLOW("This is the child process");
         
-        // we should close the listen socket ...
-        LOG_TRACE_STAT("Closing listen socket ...");
-        itsListenSocket.close();
+	  // we should close the listen socket ...
+	  LOG_TRACE_STAT("Closing listen socket ...");
+	  itsListenSocket.close();
         
-        // and handle all client requests, until client disconnects.
-        LOG_TRACE_STAT("Start handling client requests ...");
-        proc.handleRequests();
+	  // and handle all client requests, until client disconnects.
+	  LOG_TRACE_STAT("Start handling client requests ...");
+	  proc.handleRequests();
         
-        // The child should NEVER return, but ALWAYS exit.
-        exit(0);
+	  // The child should NEVER return, but ALWAYS exit.
+	  exit(0);
+	}
       }
 
       // If we get here, we're the parent process; we should close the
