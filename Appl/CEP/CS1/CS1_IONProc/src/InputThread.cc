@@ -134,7 +134,8 @@ void InputThread::mainLoop()
 {
   setAffinity();
 
-  TimeStamp actualstamp = itsArgs.startTime - itsArgs.nTimesPerFrame;
+  TimeStamp actualstamp = itsArgs.startTime - itsArgs.nrTimesPerPacket;
+  unsigned  packetSize	= 16 + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
 
   unsigned previousSeqid = 0;
   bool previousSeqidIsAccepted = false;
@@ -152,7 +153,7 @@ void InputThread::mainLoop()
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(packet, itsArgs.frameSize);
+      itsArgs.stream->read(packet, packetSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -195,14 +196,14 @@ void InputThread::mainLoop()
 	
       actualstamp.setStamp(seqid, blockid);
     } else {
-      actualstamp += itsArgs.nTimesPerFrame; 
+      actualstamp += itsArgs.nrTimesPerPacket; 
 
       if (itsArgs.isRealTime)
 	wallClockTime.waitUntil(actualstamp);
     }
 
     // expected packet received so write data into corresponding buffer
-    itsArgs.BBuffer->writeElements(reinterpret_cast<Beamlet *>(packet), actualstamp, itsArgs.nTimesPerFrame);
+    itsArgs.BBuffer->writeElements(reinterpret_cast<Beamlet *>(packet + 16), actualstamp, itsArgs.nrTimesPerPacket);
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;

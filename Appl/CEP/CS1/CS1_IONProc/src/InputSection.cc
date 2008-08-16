@@ -96,12 +96,10 @@ void InputSection::startThreads()
 
   InputThread::ThreadArgs args;
 
-  args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
-  args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
-  args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
-  args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
-  args.isRealTime	  = itsCS1PS->realTime();
-  args.startTime	  = itsSyncedStamp;
+  args.nrTimesPerPacket    = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
+  args.nrSubbandsPerPacket = itsCS1PS->nrSubbandsPerFrame();
+  args.isRealTime	   = itsCS1PS->realTime();
+  args.startTime	   = itsSyncedStamp;
 
   itsInputThreads.resize(itsNrInputs);
 

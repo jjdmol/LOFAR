@@ -47,10 +47,8 @@ class InputThread
       Stream		  *stream; 
 
       unsigned		  threadID;
-      unsigned		  frameSize;
-      unsigned		  frameHeaderSize;
-      unsigned		  nTimesPerFrame;
-      unsigned		  nSubbandsPerFrame;
+      unsigned		  nrTimesPerPacket;
+      unsigned		  nrSubbandsPerPacket;
       LogThread::Counters *packetCounters;
       bool		  isRealTime;
       TimeStamp		  startTime;
