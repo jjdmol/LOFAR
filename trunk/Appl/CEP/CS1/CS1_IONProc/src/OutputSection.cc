@@ -130,15 +130,18 @@ void OutputSection::preprocess(const CS1_Parset *ps)
 
   unsigned nrBuffers   = itsNrSubbandsPerPset + 1 /* itsTmpSum */ + maxSendQueueSize;
   unsigned nrBaselines = ps->nrBaselines();
+  unsigned arena       = 0;
 
-  itsArena  = new MallocedArena(nrBuffers * CorrelatedData::requiredSize(nrBaselines), 32);
-  itsTmpSum = new CorrelatedData(*itsArena, nrBaselines);
+  for (unsigned i = 0; i < nrBuffers; i ++)
+    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(nrBaselines), 32));
+
+  itsTmpSum = new CorrelatedData(*itsArenas[arena ++], nrBaselines);
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsVisibilitySums.push_back(new CorrelatedData(*itsArena, nrBaselines));
+    itsVisibilitySums.push_back(new CorrelatedData(*itsArenas[arena ++], nrBaselines));
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(*itsArena, nrBaselines));
+    itsFreeQueue.append(new CorrelatedData(*itsArenas[arena ++], nrBaselines));
 
   if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
     throw std::runtime_error("could not create send thread");
@@ -163,10 +166,13 @@ void OutputSection::process()
       if (lastTime)
 	*data += *itsVisibilitySums[subband];
       else
-	*itsVisibilitySums[subband] += *itsTmpSum;
+	*itsVisibilitySums[subband] += *data;
 
-    if (lastTime)
+    if (lastTime) {
+      for (unsigned ch = 1; ch < 256; ch ++)
+	std::clog << std::setprecision(7) << ch << ' ' << abs(data->visibilities[0][ch][0][0]) << std::endl;
       itsSendQueue.append(data);
+    }
 
     if (++ itsCurrentComputeCore == itsNrComputeCores)
       itsCurrentComputeCore = 0;
@@ -198,8 +204,10 @@ void OutputSection::postprocess()
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     delete itsFreeQueue.remove();
 
-  delete itsArena;
-  itsArena = 0;
+  for (unsigned i = 0; i < itsArenas.size(); i ++)
+    delete itsArenas[i];
+
+  itsArenas.resize(0);
 }
 
 }
