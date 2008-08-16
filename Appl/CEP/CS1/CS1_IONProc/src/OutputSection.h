@@ -51,7 +51,7 @@ class OutputSection
 
     static const unsigned	maxSendQueueSize = 3;
 
-    Arena			*itsArena;
+    std::vector<Arena *>	itsArenas;
     std::vector<CorrelatedData *> itsVisibilitySums;
     CorrelatedData		*itsTmpSum;
     Queue<CorrelatedData *>	itsFreeQueue, itsSendQueue;

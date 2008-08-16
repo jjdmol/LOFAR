@@ -49,7 +49,6 @@ SubbandWriter::SubbandWriter(const CS1_Parset *ps, unsigned rank)
 :
   itsCS1PS(ps),
   itsRank(rank),
-  itsArena(0),
   itsTimeCounter(0),
   itsTimesToIntegrate(ps->storageIntegrationSteps()),
   itsFlagsBuffers(0),
@@ -198,10 +197,10 @@ void SubbandWriter::preprocess()
   };
 #endif
 
-  itsArena	    = new MallocedArena(nrInputBuffers * CorrelatedData::requiredSize(itsNBaselines), 32);
-
-  for (unsigned i = 0; i < nrInputBuffers; i ++)
-    itsFreeQueue.append(new CorrelatedData(*itsArena, itsNBaselines));
+  for (unsigned i = 0; i < nrInputBuffers; i ++) {
+    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(itsNBaselines), 32));
+    itsFreeQueue.append(new CorrelatedData(*itsArenas.back(), itsNBaselines));
+  }
 
   double startTime = itsCS1PS->startTime();
   LOG_TRACE_VAR_STR("startTime = " << startTime);
@@ -394,10 +393,12 @@ void SubbandWriter::postprocess()
   itsWriters.clear();
 #endif
 
-  for (unsigned i = 0; i < nrInputBuffers; i ++)
+  for (unsigned i = 0; i < nrInputBuffers; i ++) {
     delete itsFreeQueue.remove();
+    delete itsArenas[i];
+  }
 
-  delete itsArena;		itsArena	  = 0;
+  itsArenas.clear();
   delete itsVisibilities;	itsVisibilities   = 0;
 
   cout<<itsWriteTimer<<endl;
