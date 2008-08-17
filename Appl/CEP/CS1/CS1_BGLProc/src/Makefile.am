@@ -1,5 +1,6 @@
 INSTHDRS         	=\
 Package__Version.h      \
+BandPass.h		\
 LocationInfo.h		\
 CorrelatorAsm.h		\
 FFT_Asm.h		\
@@ -32,6 +33,7 @@ CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
 Package__Version.cc             \
+BandPass.cc			\
 LocationInfo.cc			\
 CorrelatorAsm.S			\
 FIR_Asm.S			\

@@ -5,7 +5,6 @@
 
 #include <Correlator.h>
 #include <CorrelatorAsm.h>
-#include <FIR.h>
 
 #include <map>
 
@@ -265,7 +264,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, FIR::bandPassCorrectionFactors, itsNrBaselines * NR_SUBBAND_CHANNELS);
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.correctionFactors(), itsNrBaselines * NR_SUBBAND_CHANNELS);
 #endif
   weightTimer.stop();
 #endif  
