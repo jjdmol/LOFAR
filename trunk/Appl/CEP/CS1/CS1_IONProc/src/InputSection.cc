@@ -131,7 +131,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
     unsigned  rsp	 = inputs[i].rsp;
     string    streamName = ps->getInputStreamName(station, rsp);
 
-    std::cout << "  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"' << std::endl;
+    std::clog << "  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"' << std::endl;
 
     if (station != inputs[0].station)
       throw std::runtime_error("inputs from multiple stations on one I/O node not supported (yet)");
