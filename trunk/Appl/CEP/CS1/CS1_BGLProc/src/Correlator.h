@@ -6,6 +6,7 @@
 #endif
 
 
+#include <BandPass.h>
 #include <FilteredData.h>
 #include <CS1_Interface/CorrelatedData.h>
 
@@ -30,6 +31,7 @@ class Correlator
   private:
     unsigned	    itsNrStations, itsNrBaselines, itsNrSamplesPerIntegration;
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
+    BandPass	    itsBandPass;
 
     double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
 };
