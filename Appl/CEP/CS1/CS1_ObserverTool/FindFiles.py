@@ -25,11 +25,12 @@ from optparse import OptionParser
 def main(sources, name):
     results = []
     for s in sources:
-        result = os.popen('ssh %s "ls %s/%s"' % (s[0], s[1], name))
+        result = os.popen('ssh %s "ls %s/%s*"' % (s[0], s[1], name))
         lines  = result.readlines()
         for l in lines:
             if l.find(".MS"):
-                results.append(s[0] + ':' + s[1] + '/' + name + '/' + l)
+                if l.find(".cksum") < 0:
+                    results.append(s[0] + ':' + s[1] + '/' + name + '/' + l.rstrip())
     return results
 
 if __name__ == "__main__":

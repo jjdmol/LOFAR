@@ -20,23 +20,31 @@
 
 import sys, os, os.path
 from qt import *
+from FindFiles import *
+from ReorderData import *
 
 class ReshuffleData(QDialog):
     def __init__(self, parent):
         QDialog.__init__(self, parent, "Reorder a dataset across the storage", True)
-        self.dataset = QLineEdit("L2008_06100", self)
-        self.dataset.setMinimumWidth(190)
-        self.dataset.move(100, 15)
-        l = QLabel("Dataset name:", self)
+        self.source = QLineEdit("lifs001:/data/L2008_06100", self)
+        self.source.setMinimumWidth(190)
+        self.source.move(100, 15)
+        l = QLabel("Source: ", self)
         l.move(15, 15)
         l.setMaximumWidth(80)
-        self.resize(300, 150)
+        self.destination= QLineEdit("/data/L2008_06100", self)
+        self.destination.setMinimumWidth(190)
+        self.destination.move(100, 55)
+        l = QLabel("Destination: ", self)
+        l.move(15, 55)
+        l.setMaximumWidth(80)
+        self.resize(300, 180)
         b = QPushButton("Reshuffle", self)
-        b.move(100, 55)
+        b.move(100, 90)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.goFind)
         b = QPushButton("Close", self)
-        b.move(100, 90)
+        b.move(100, 125)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.accept)
 
@@ -45,7 +53,7 @@ class ReshuffleData(QDialog):
         q.resize(300, 150)
         l = QLabel("Finished re-ordering data for: " + name, q)
         l.move(15, 15)
-        l.setMaximumWidth(80)
+        l.setMaximumWidth(280)
         b = QPushButton("Close", q)
         b.move(100, 90)
         b.show()
@@ -54,10 +62,18 @@ class ReshuffleData(QDialog):
 
 
     def goFind(self):
-        files = []
+        self.setCursor(Qt.busyCursor)
+        host, path = os.path.dirname(str(self.source.text())).split(':')
+        location   = os.path.basename(str(self.source.text()))
+        try:
+            reload(FindFiles)
+        except:
+            import FindFiles
+        files = FindFiles.main([(host, path)], location)
         try:
             reload(ReorderData)
         except:
             import ReorderData
-        ReorderData.main(files)
-        self.showResults(name)
+        ReorderData.main(files, self.destination.text())
+        self.unsetCursor()
+        self.showResults(self.destination.text())
