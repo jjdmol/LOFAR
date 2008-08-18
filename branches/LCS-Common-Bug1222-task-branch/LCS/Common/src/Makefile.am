@@ -6,6 +6,7 @@ lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= Package__Version.cc \
 	Allocator.cc \
+	Backtrace.cc \
 	DataConvert.cc \
 	Exception.cc \
 	FileLocator.cc \
@@ -20,6 +21,7 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	Stopwatch.cc \
 	StreamUtil.cc \
 	StringUtil.cc \
+	SymbolTable.cc \
 	SystemUtil.cc \
 	Timer.cc \
 	TypeNames.cc \

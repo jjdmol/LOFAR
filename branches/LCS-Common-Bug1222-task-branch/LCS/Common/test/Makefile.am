@@ -3,7 +3,8 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 			tFileLocator tStringUtil tStreamUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric tSingleton \
-			tObjectFactory tSystemUtil tSaxpy tPrettyUnits
+			tObjectFactory tSystemUtil tSaxpy tPrettyUnits \
+			tSymbolTable tBacktrace
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
@@ -102,5 +103,13 @@ tSaxpy_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 tPrettyUnits_SOURCES		= tPrettyUnits.cc
 tPrettyUnits_LDADD		= ../src/libcommon.la	
 tPrettyUnits_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tSymbolTable_SOURCES		= tSymbolTable.cc
+tSymbolTable_LDADD		= ../src/libcommon.la -lbfd -liberty
+tSymbolTable_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tBacktrace_SOURCES		= tBacktrace.cc
+tBacktrace_LDADD		= ../src/libcommon.la -lbfd -liberty
+tBacktrace_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
