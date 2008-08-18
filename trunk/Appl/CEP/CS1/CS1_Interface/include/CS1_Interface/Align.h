@@ -29,15 +29,26 @@ namespace LOFAR {
 namespace CS1 {
 
 
+template <typename T> inline static bool powerOfTwo(T n)
+{
+  return (n | (n - 1)) == 2 * n - 1;
+}
+
+
 template <typename T> inline static T align(T value, size_t alignment)
 {
-  return (value + alignment - 1) & ~(alignment - 1);
+#if defined __GNUC__
+  if (__builtin_constant_p(alignment) && powerOfTwo(alignment))
+    return (value + alignment - 1) & ~(alignment - 1);
+  else
+#endif
+    return (value + alignment - 1) / alignment * alignment;
 }
 
 
 template <typename T> inline static T *align(T *value, size_t alignment)
 {
-  return reinterpret_cast<T *>((reinterpret_cast<size_t>(value) + alignment - 1) & ~(alignment - 1));
+  return reinterpret_cast<T *>(align(reinterpret_cast<size_t>(value), alignment));
 }
 
 
