@@ -14,12 +14,14 @@
 import sys, os, os.path, time
 from qt import *
 from StorageDetails import *
+from ShowNodes import *
 from GuessSize import *
 from CopyData import *
 from FindData import *
 from ReshuffleData import *
+from ShowGrid import *
 
-VERSION = "0.11"
+VERSION = "0.23"
 
 def load_QPixMap(fileName):
     f = open(os.path.join(sys.path[0],fileName),"r")
@@ -37,28 +39,36 @@ class ObserverUI(QMainWindow):
         self.initMenu()
         self.initMainWidget()
         self.setCaption(self.appTitle)
-        b = QPushButton("Update Info", self)
+        b = QPushButton("&Update Info", self)
         b.move(30, 35)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotGetInfo)
-        b = QPushButton("GuessSize", self)
+        b = QPushButton("Show &Nodes", self)
         b.move(30, 70)
+        b.show()
+        self.connect(b, SIGNAL("clicked()"), self.slotShowNodes)
+        b = QPushButton("Guess Size", self)
+        b.move(30, 105)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotGuessSize)
         b = QPushButton("Copy Data", self)
-        b.move(30, 105)
+        b.move(30, 140)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotCopyData)
         b = QPushButton("Reshuffle Data", self)
-        b.move(30, 140)
+        b.move(30, 175)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotReshuffleData)
         b = QPushButton("Find Data", self)
-        b.move(30, 175)
+        b.move(30, 210)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotFindData)
+        b = QPushButton("GRID", self)
+        b.move(30, 245)
+        b.show()
+        self.connect(b, SIGNAL("clicked()"), self.slotShowGrid)
         b = QPushButton("Close", self)
-        b.move(30, 210)
+        b.move(30, 315)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.slotClose)
 
@@ -69,10 +79,12 @@ class ObserverUI(QMainWindow):
         self.menu = [
             ('&Actions',
               [('&Update Info', self.slotGetInfo),
-               ('&Guess Size', self.slotGuessSize),
+               ('Show &Nodes', self.slotShowNodes),
+               ('Guess &Size', self.slotGuessSize),
                ('&Copy Data', self.slotCopyData),
                ('&Reshuffle Data', self.slotReshuffleData),
-              ('&Find Data', self.slotFindData),
+               ('&Find Data', self.slotFindData),
+               ('&GRID functions', self.slotShowGrid),
                (None,),
                ('&Close', self.slotClose)]),
              ('&Help',
@@ -83,10 +95,10 @@ class ObserverUI(QMainWindow):
 
         self.fsButtons = []
         self.stButtons = []
-        self.config    = {'nrListNodes':4, 'nrLifsNodes':12}
+        self.config    = {'nrListNodes':4, 'nrLifsNodes':12, 'nrLioffNodes':30}
 
     def initMainWidget(self):
-        self.statusBar().message("Ready", 2000)
+        self.statusBar().message("Ready")
         self.resize(600, 550)
 
     def initIcons(self):
@@ -152,7 +164,9 @@ class ObserverUI(QMainWindow):
         qbred    = QBrush(QColor('red'))
         qbyellow = QBrush(QColor('yellow'))
         qbgreen  = QBrush(QColor('green'))
-        if value < 50: qb = qbgreen
+        qbpurple = QBrush(QColor('purple'))
+        if value < 0: qb = qbpurple
+        elif value < 50: qb = qbgreen
         elif value <75: qb = qbyellow
         else: qb = qbred
         return qb
@@ -187,6 +201,9 @@ class ObserverUI(QMainWindow):
         self.statusBar().message("Finished update: " + time.ctime())
         ##r = os.spawnl(os.P_WAIT, 'GetStorageCapacity.py -rlifs004')
 
+    def slotShowNodes(self):
+        g = ShowNodes(self)
+        g.show()
 
     def slotGuessSize(self):
         g = GuessSize(self)
@@ -202,6 +219,10 @@ class ObserverUI(QMainWindow):
 
     def slotFindData(self):
         g = FindData(self)
+        g.show()
+
+    def slotShowGrid(self):
+        g = ShowGrid(self)
         g.show()
 
     def slotClose(self):
@@ -227,7 +248,7 @@ class ObserverUI(QMainWindow):
 def main(args):
     app=QApplication(args)
     mainWindow = ObserverUI()
-    os.chdir( app.applicationDirPath())
+    os.chdir( str(app.applicationDirPath()))
     mainWindow.show()
     app.connect(app, SIGNAL("lastWindowClosed()"), app, SLOT("quit()"))
     app.exec_loop()

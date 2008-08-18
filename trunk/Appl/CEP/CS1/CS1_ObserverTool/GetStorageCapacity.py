@@ -28,7 +28,7 @@ def main(name, ldir):
     try:
         capacity = int(lines[1].split()[-2][:-1])
     except:
-        capacity = 100
+        capacity = -1
     return capacity
 
 if __name__ == "__main__":

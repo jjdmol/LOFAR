@@ -18,27 +18,28 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-import sys, os, os.path
+import sys, os, os.path, time
 from qt import *
+from StorageDetails import *
 
-class FindData(QDialog):
+class ShowGrid(QMainWindow):
     def __init__(self, parent):
-        QDialog.__init__(self, parent, "Storage Details", True)
+        QMainWindow.__init__(self, parent, "GRID functions", True)
+        self.statusBar().message("Ready")
+        self.Buttons = []
+        self.config  = {'nrListNodes':4, 'nrLifsNodes':12, 'nrLioffNodes':30}
+        self.resize(650, 480)
         self.dataset = QLineEdit("L2008_06100", self)
         self.dataset.setMinimumWidth(190)
-        self.dataset.move(100, 15)
-        l = QLabel("Dataset name:", self)
-        l.move(15, 15)
-        l.setMaximumWidth(80)
-        self.resize(300, 150)
-        b = QPushButton("Find", self)
-        b.move(100, 55)
+        self.dataset.move(150, 20)
+        b = QPushButton("Find MS", self)
+        b.move(30, 20)
         b.show()
-        self.connect(b, SIGNAL("clicked()"), self.goFind)
+        self.connect(b, SIGNAL("clicked()"), self.slotFindFile)
         b = QPushButton("Close", self)
-        b.move(100, 90)
+        b.move(260, 420)
         b.show()
-        self.connect(b, SIGNAL("clicked()"), self.accept)
+        self.connect(b, SIGNAL("clicked()"), self.close)
 
     def showResults(self, lines):
         q = QDialog(self, "Found data", True)
@@ -65,23 +66,11 @@ class FindData(QDialog):
         self.connect(b, SIGNAL("clicked()"), q.accept)
         q.show()
 
-    def goFind(self):
+    def slotFindFile(self):
+        self.statusBar().message("Retrieving data...")
         self.setCursor(Qt.busyCursor)
-        try:
-            reload(FindFiles)
-        except:
-            import FindFiles
-        config = {'nrListNodes':4, 'nrLifsNodes':12}
+        self.showResults(['test 1', 'test 2'])
 
-        sources = []
-        for i in range(config['nrListNodes']):
-            name  = "list%03d" % (i+1)
-            sources.append((name,"/data"))
-        for i in range(config['nrLifsNodes']):
-            name  = "lifs%03d" % (i+1)
-            sources.append((name,"/data"))
-            sources.append((name,"/data/archive"))
-
-        lines = FindFiles.main(sources, str(self.dataset.text()))
         self.unsetCursor()
-        self.showResults(lines)
+        self.statusBar().message("Finished update: " + time.ctime())
+        ##r = os.spawnl(os.P_WAIT, 'GetStorageCapacity.py -rlifs004')
