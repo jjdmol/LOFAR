@@ -92,7 +92,7 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
     memcpy(&alignedBuffer[0], buf, size);
     FCNP_ION::IONtoCN_ZeroCopy(itsCore, &alignedBuffer[0], alignedSize);
   } else {
-    FCNP_ION::IONtoCN_ZeroCopy(itsCore, const_cast<const void *>(buf), size);
+    FCNP_ION::IONtoCN_ZeroCopy(itsCore, buf, size);
   }
 }
 
