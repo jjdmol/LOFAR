@@ -253,6 +253,8 @@ void objectStateTriggered(string dp1, string trigger,
   // the remainder is used as path
   datapoint = (substr(trigger,0,start));
 
+  
+  
   if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.
   if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
@@ -296,7 +298,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (state > -1) {
+    if (state > -1 && state != aVal) {
       if (force) {
         dpSet(datapoint+"."+element,state);
       } else {

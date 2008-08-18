@@ -7,7 +7,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(baseDP + \".claimPeriod\")) {
+  if (dpExists(baseDP + \".antennaArray\")) {
     dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
 		               baseDP + \".preparePeriod\",
                                baseDP + \".startTime\",

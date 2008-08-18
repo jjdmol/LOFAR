@@ -123,7 +123,12 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   
   if (dynlen(aResult) <= 0) {
     return;
+  } 
+  
+  if (dynlen(aResult > 2)) {
+    DebugTN("ERROR: More results found, software handles only 1 now!!!!!!!!");
   }
+  
   //get the stateNr and DP that go with this message
   time aTime     = getCurrentTime();
   string aDP     = aResult[2][2];
