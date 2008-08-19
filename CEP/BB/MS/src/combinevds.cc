@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <MWCommon/VdsDesc.h>
+#include <Common/LofarLogger.h>
 #include <casa/OS/Path.h>
 #include<stdexcept>
 #include <iostream>
@@ -96,6 +97,7 @@ int main(int argc, const char* argv[])
 
     }
     ofstream ostr(argv[1]);
+    ASSERTSTR (ostr, "File " << argv[1] << " could not be created");
     gdesc.write (ostr);
 
   } catch (exception& x) {
