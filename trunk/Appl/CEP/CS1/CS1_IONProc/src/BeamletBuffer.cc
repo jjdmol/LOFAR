@@ -51,7 +51,7 @@ BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, uns
   itsWriteTimer("buffer write", true)
 {
   if (nrTimesPerPacket != this->nrTimesPerPacket)
-    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(nrTimesPerPacket));
+    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(this->nrTimesPerPacket));
 
   pthread_mutex_init(&itsValidDataMutex, 0);
 
