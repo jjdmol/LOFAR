@@ -191,7 +191,7 @@ fd = open("CS1_IDPPP.log_prop", 'w')
 fd.write(log_prop)
 fd.close()
 
-os.system("/app/LOFAR/stable/CS1_IDPPP CS1_IDPPP.parset")
+os.system("/app/LOFAR/stable/CS1_IDPPP")
 add_log(options, 'CS1_IDPPP finished')
 
 # Doesn't work on 64 bit systems
