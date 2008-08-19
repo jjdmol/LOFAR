@@ -1,13 +1,13 @@
 import sys
-print "Script for generating DPPP config file"
-sys.stdout.write("Give the number of processing nodes [18]: ")
+print "Script for generating DPPP config file (Lioffen version!)"
+sys.stdout.write("Give the number of processing nodes [9] (counting up from liof022): ")
 nodes = sys.stdin.readline()
-if len(nodes) <= 1: nodes = 18
+if len(nodes) <= 1: nodes = 9
 else: nodes = int(nodes)
 
-sys.stdout.write("Give the number of storage nodes[(9]: ")
+sys.stdout.write("Give the number of storage nodes[12]: ")
 storage = sys.stdin.readline()
-if len(storage) <= 1: storage = 9
+if len(storage) <= 1: storage = 12
 else: storage = int(storage)
 
 sys.stdout.write("Give the number of bands[36]: ")

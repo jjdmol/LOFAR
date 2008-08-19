@@ -14,8 +14,10 @@ def split_remote_path(path):
     if path[-1] == '/':
         path = path[:-1]
     tmp = path.split(':')
-    assert len(tmp) == 2
-    return (tmp[0], tmp[1])
+    if len(tmp) == 2:
+        return (tmp[0], tmp[1])
+    else:
+        return ("", path)
 
 def read_file_list(filename):
     flist = []
