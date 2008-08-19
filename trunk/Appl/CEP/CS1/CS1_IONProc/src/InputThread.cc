@@ -38,6 +38,8 @@
 #include <errno.h>
 #include <signal.h>
 
+#include <cstddef>
+
 
 namespace LOFAR {
 namespace CS1 {
@@ -165,12 +167,19 @@ void InputThread::mainLoop()
     ++ itsArgs.packetCounters->nrPacketsReceived;
 
     if (dataShouldContainValidStamp) {
+#if defined __PPC__
+      unsigned seqid, blockid;
+
+      asm volatile ("lwbrx %0,%1,%2" : "=r" (seqid)   : "b" (&packet), "r" (offsetof(RSP, header.timestamp)));
+      asm volatile ("lwbrx %0,%1,%2" : "=r" (blockid) : "b" (&packet), "r" (offsetof(RSP, header.blockSequenceNumber)));
+#else
       unsigned seqid   = packet.header.timestamp;
       unsigned blockid = packet.header.blockSequenceNumber;
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
       blockid = byteSwap(blockid);
+#endif
 #endif
 
       //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
