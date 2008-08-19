@@ -169,8 +169,11 @@ void OutputSection::process()
 	*itsVisibilitySums[subband] += *data;
 
     if (lastTime) {
+#if 0
       for (unsigned ch = 1; ch < 256; ch ++)
 	std::clog << std::setprecision(7) << ch << ' ' << abs(data->visibilities[0][ch][0][0]) << std::endl;
+#endif
+
       itsSendQueue.append(data);
     }
 
