@@ -8,8 +8,9 @@ def add_log(options, line):
     logfile.close()
 
 parser = OptionParser(usage='%prog [options] -m<MS name> -r<remote_host>')
-parser.add_option("-r", "--remote_host", dest="remote_host", default="",
-                  help="Host name")
+# use when the location of the MS is not mounted locally, or on a slow NFS
+#parser.add_option("-r", "--remote_host", dest="remote_host", default="",
+#                  help="Host name")
 parser.add_option("-m", "--ms", dest="ms", default="",
                   help="Measurementset name")
 parser.add_option("-l", "--log", dest="log", default="",
@@ -29,16 +30,15 @@ os.chdir(options.directory)
 os.system('rm -rf *.MS *.parset *.debug *.log')
 add_log(options, 'Cleaned up old data:')
 
-add_log(options, 'scp -r ' + options.remote_host + ':' + options.ms + ' .')
-result = os.system('scp -r ' + options.remote_host + ':' + options.ms + ' .')
-add_log(options, 'Completed copying data:')
+# use when the location of the MS is not mounted locally, or on a slow NFS
+#add_log(options, 'scp -r ' + options.remote_host + ':' + options.ms + ' .')
+#result = os.system('scp -r ' + options.remote_host + ':' + options.ms + ' .')
+#add_log(options, 'Completed copying data:')
+#MS=os.path.split(options.ms)[1]
+MS=options.ms
 
 add_log(options, "Preparations done")
 sys.stdout.flush
-
-print str(result == 0) + str(result)
-
-MS=os.path.split(options.ms)[1]
 
 print 'Start processing: ' + MS
 sys.stdout.flush
@@ -94,7 +94,7 @@ except:
 #fd.write("Everything 20\n")
 #fd.close()
 
-# Unsure if these are usefull imager parameters, probably onlt around 60 MHz
+## These are useful imager parameters only around 60 MHz, for other frequencies you need to change some values
 #Imager_parset  = Parset()
 #Imager_parset['ms']            = MS
 #Imager_parset['compress']      = "False"
@@ -133,20 +133,20 @@ IDPPP_parset  = Parset()
 (head, tail) = os.path.split(MS)
 IDPPP_parset['inms']          = MS
 IDPPP_parset['outms']         = tail + "s"
-IDPPP_parset['bandpass']      = 0 ##which bandpass to use
-IDPPP_parset['flagger']       = 0 ##which flagger to use
-IDPPP_parset['squasher']      = 0 ##which squasher to use
-IDPPP_parset['fixed']         = 0 ##bandpass selctor
-IDPPP_parset['freqwindow']    = 0 ##FrequencyFlagger, MADFlagger
-IDPPP_parset['timewindow']    = 0 ##ComplexMedianFlagger(2), MADFlagger
-IDPPP_parset['threshold']     = 1 ##FrequencyFlagger, MADFlagger
+IDPPP_parset['bandpass']      = 1 ##which bandpass to use
+IDPPP_parset['flagger']       = 4 ##which flagger to use
+IDPPP_parset['squasher']      = 1 ##which squasher to use
+IDPPP_parset['fixed']         = 5 ##bandpass selctor
+IDPPP_parset['freqwindow']    = 9 ##FrequencyFlagger, MADFlagger
+IDPPP_parset['timewindow']    = 7 ##ComplexMedianFlagger(2), MADFlagger
+IDPPP_parset['threshold']     = 4 ##FrequencyFlagger, MADFlagger
 IDPPP_parset['min']           = 1 ##ComplexMedianFlagger(2)
 IDPPP_parset['max']           = 1 ##ComplexMedianFlagger(2)
 IDPPP_parset['existing']      = False ##All flaggers
-IDPPP_parset['nchan']         = 256 ##Squasher
-IDPPP_parset['start']         = 0 ##Squasher
-IDPPP_parset['step']          = 1 ##Squasher
-IDPPP_parset['skipflags']     = False ##Squasher
+IDPPP_parset['nchan']         = 224 ##Squasher
+IDPPP_parset['start']         = 16 ##Squasher
+IDPPP_parset['step']          = 64 ##Squasher
+IDPPP_parset['skipflags']     = True ##Squasher
 IDPPP_parset['allcolumns']    = False ##Squasher
 IDPPP_parset.writeToFile("CS1_IDPPP.parset")
 fd = open("CS1_IDPPP.debug", 'w')
@@ -194,11 +194,14 @@ fd.close()
 os.system("/app/LOFAR/stable/CS1_IDPPP CS1_IDPPP.parset")
 add_log(options, 'CS1_IDPPP finished')
 
-os.system("glish -l /app/LOFAR/stable/flag_auto.g " + MS)
-add_log(options, "Flagging auto correlations done")
+# Doesn't work on 64 bit systems
+#os.system("glish -l /app/LOFAR/stable/flag_auto.g " + MS)
+#add_log(options, "Flagging auto correlations done")
 
+#Messes up if we don't flag the auto correlations
 #os.system("/app/LOFAR/stable/CS1_Imager")
 #add_log(options, "Imager done")
 
-os.system('rm -rf ' +  MS)
-add_log(options, 'Deleting MS finished')
+# Not using this when testing
+#os.system('rm -rf ' +  MS)
+#add_log(options, 'Deleting MS finished')
