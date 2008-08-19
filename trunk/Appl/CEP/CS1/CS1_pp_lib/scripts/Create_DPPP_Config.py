@@ -15,7 +15,7 @@ bands = sys.stdin.readline()
 if len(bands) <= 1: bands = 36
 else: bands = int(bands)
 
-sys.stdout.write("Give the  name of the dataset [L2008_05199]: ")
+sys.stdout.write("Give the name/location of the dataset in /data [L2008_05199]: ")
 location = sys.stdin.readline()
 if len(location) <= 1: location = "L2008_05199"
 
@@ -29,9 +29,15 @@ output = """## Example usage
 # Remember that if you want to run more than one subband on one node
 ##  Destination_hostname:destination_directory   ms_location_host:full_ms_name\n"""
 
+#listfen variant
+#for b in range(bands):
+  #output += "lioff%(n)03d:/lifs%(s)03d/pipeline lifs%(s)03d:/data/%(l)s/SB%(b)d.MS\n" % \
+   #{'n':b%nodes+1, 's':b%storage+1, 'l':location[:-1], 'b':b}
+
+#lioffen variant
 for b in range(bands):
-  output += "lioff%(n)03d:/lifs%(s)03d/pipeline lifs%(s)03d:/data/%(l)s/SB%(b)d.MS\n" % \
-   {'n':b%nodes+1, 's':b%storage+1, 'l':location[:-1], 'b':b}
+  output += "lioff%(n)03d:/data/scratch /lifs%(s)03d/%(l)s/%(l)s_SB%(b)d.MS\n" % \
+   {'n':(b%nodes+1) + 21, 's':b%storage+1, 'l':location[:-1], 'b':b}
 
 print output + "\n\n"
 

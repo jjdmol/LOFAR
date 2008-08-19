@@ -50,10 +50,10 @@ def spawn(dest, src, log):
         ##Run the node script on every node
 ##        os.system('ssh -A -t ' + dest[0] + ' "cd /local/renting;time >> pipeline.log"')
         os.system('ssh -A -t ' + dest[0] + ' "setenv PYTHONPATH /app/LOFAR/stable;' +
-        'source /app/scripts/doUnstableAIPS++; cd '+ dest[1] + ';python ' +
+        'source /app/scripts/doStableAIPS++; cd '+ dest[1] + ';python ' +
         'CS1_Offline_pipeline_node.py -r' + src[0] + ' -m' + src[1] + ' -d' + dest[0] +
         ' -l' + log + ' >> pipeline.log"')
-## bash version
+## bash version for Pandey
 ##        os.system('ssh -A -t ' + dest[0] + ' "export PYTHONPATH=/app/LOFAR/stable;' +
 ##        '. /app/aips++/Unstable/aipsinit.sh; cd '+ dest[1] + ';python ' +
 ##        'CS1_Offline_pipeline_node.py -r ' + src[0] + ' -m ' + src[1] + ' > pipeline.log"')
@@ -104,9 +104,9 @@ while len(joblist):
             proclist.append(job[0])
         else:
             print "queueing for later execution: " + str(job)
-        time.sleep(2) ## If we start all node scripts at the same time, the file server has problems
+        time.sleep(2) ## If we start all node scripts at the same time, we run into DoS mitigation measures stopping us.
     #
-    time.sleep(10) ## wait for childs to spawn
+    time.sleep(10) ## wait for childs to spawn, maybe a niceer way to do this?
     #
     for p in pidlist: ## wait for the clients to finish
         (pid, status) = os.waitpid(p[0], 0)
@@ -145,7 +145,28 @@ fd.write("Global 20\n")
 fd.write("Everything 20\n")
 fd.close()
 
-## Unsure if these are usefull imager parameters, probably onlt around 60 MHz
+# The old BBS is no longer available. Needs replacing.
+#BBS_parset  = Parset()
+#BBS_parset['user']                = 'renting'
+#BBS_parset['instrumentPDB']       = '/dop58_0/3C343.instr_model'
+#BBS_parset['skyPDB']              = '/dop58_0/3C343.sky_model'
+#BBS_parset['measurementSet']      = '/dop58_0/CS1-3_12h_256fr.MS'
+#BBS_parset['instrumentModelType'] = 'DIPOLE' ##Other options are TOTALEJ,PATCHEJ,REALIMAG,DIPOLE,BANDPASS, sytax for multiple is: DIPOLE.BANDPASS, also TOTALGAIN seems to exist
+#BBS_parset['calcUVW']             = false ##this crashes BBS if set to true
+#BBS_parset['operation']           = 'solve'
+#BBS_parset['columnNameIn']        = 'CORRECTED_DATA'
+#BBS_parset['columnNameOut']       = 'MODEL_DATA'
+#BBS_parset['timeDomainSize']      = 60
+#BBS_parset['startChan']           = 0
+#BBS_parset['endChan']             = 255
+#BBS_parset['solvParms']           = '[gain:*]'
+#BBS_parset['exclParms']           = '[phase:RT0]'
+#BBS_parset['nrSolveInterval']     = '[1,6]' ##frequency domain subdivision, time domain subdivision
+#BBS_parset['nriter']              = 10
+#BBS_parset['saveSolution']        = true
+
+
+## These are useful imager parameters only around 60 MHz, for other frequencies you need to change some values
 #Imager_parset  = Parset()
 #Imager_parset['ms']            = MS
 #Imager_parset['compress']      = "False"
@@ -183,11 +204,13 @@ add_log(options, "Combiner done")
 print "Combiner done "
 sys.stdout.flush
 
+#Not working on 64 bit systems
 #os.system("glish -l /app/LOFAR/stable/flag_auto.g " + MS)
 #add_log(options, "Flagging auto correlations done")
 #print "Flagging auto correlations done "
 #sys.stdout.flush
 
+#Messes up if we don't flag the auto correlations
 #os.system("/app/LOFAR/stable/CS1_Imager")
 #add_log("Imager done")
 #print "Imager done "
