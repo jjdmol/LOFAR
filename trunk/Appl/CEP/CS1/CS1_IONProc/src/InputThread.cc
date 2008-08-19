@@ -33,6 +33,7 @@
 #include <Stream/SystemCallException.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
+#include <RSP.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -135,12 +136,12 @@ void InputThread::mainLoop()
   setAffinity();
 
   TimeStamp actualstamp = itsArgs.startTime - itsArgs.nrTimesPerPacket;
-  unsigned  packetSize	= 16 + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
+  unsigned  packetSize	= sizeof(struct RSP::header) + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
 
   unsigned previousSeqid = 0;
   bool previousSeqidIsAccepted = false;
   
-  char packet[8192] __attribute__ ((aligned(16))); // Max RSP packet size
+  RSP packet __attribute__ ((aligned(16))); // Max RSP packet size
 
   bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
 
@@ -153,7 +154,7 @@ void InputThread::mainLoop()
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(packet, packetSize);
+      itsArgs.stream->read(&packet, packetSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -163,10 +164,9 @@ void InputThread::mainLoop()
 
     ++ itsArgs.packetCounters->nrPacketsReceived;
 
-    // get the actual timestamp of first EPApacket in frame
     if (dataShouldContainValidStamp) {
-      unsigned seqid   = * reinterpret_cast<unsigned *>(packet + 8);
-      unsigned blockid = * reinterpret_cast<unsigned *>(packet + 12);
+      unsigned seqid   = packet.header.timestamp;
+      unsigned blockid = packet.header.blockSequenceNumber;
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
@@ -203,7 +203,7 @@ void InputThread::mainLoop()
     }
 
     // expected packet received so write data into corresponding buffer
-    itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(packet + 16), actualstamp);
+    itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(&packet.data), actualstamp);
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
