@@ -48,17 +48,24 @@ namespace CS1 {
 
 typedef INPUT_SAMPLE_TYPE SampleType;
 
-struct Beamlet {
-  SampleType Xpol, Ypol;
-};
+// define a "simple" type of which the size equals the size of two samples
+// (X and Y polarizations)
+
+#if NR_BITS_PER_SAMPLE == 16
+typedef double Beamlet;
+#elif NR_BITS_PER_SAMPLE == 8
+typedef int32_t Beamlet;
+#elif NR_BITS_PER_SAMPLE == 4
+typedef int16_t Beamlet;
+#endif
 
 class BeamletBuffer
 {
   public:
-	     BeamletBuffer(unsigned bufferSize, unsigned nrSubbands, unsigned history, bool isSynchronous, unsigned maxNetworkDelay);
+	     BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay);
 	     ~BeamletBuffer();
 
-    void     writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements);
+    void     writePacketData(Beamlet *data, const TimeStamp &begin);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
     void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
@@ -67,7 +74,7 @@ class BeamletBuffer
     SparseSet<unsigned> readFlags(unsigned beam);
     void     stopReadTransaction();
     
-    static const unsigned MAX_BEAMLETS    = 8;
+    const static unsigned nrTimesPerPacket = 16;
 
   private:
     unsigned mapTime2Index(TimeStamp time) const;
@@ -79,6 +86,8 @@ class BeamletBuffer
     ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
     boost::multi_array_ref<SampleType, 3> itsSBBuffers;
+    int					  itsOffset;
+    const static unsigned		  itsAlignment = 32 / sizeof(Beamlet);
 
     // read internals
     std::vector<TimeStamp>		  itsBegin, itsEnd;
@@ -89,6 +98,7 @@ class BeamletBuffer
     // write internals
     TimeStamp				  itsPreviousTimeStamp;
     unsigned				  itsPreviousI;
+    size_t				  itsStride;
 
     NSTimer				  itsReadTimer, itsWriteTimer;
 };
@@ -96,13 +106,13 @@ class BeamletBuffer
 
 inline unsigned BeamletBuffer::alignmentShift(unsigned beam) const
 {
-  return itsStartI[beam] % (32 / sizeof(Beamlet));
+  return itsStartI[beam] % itsAlignment;
 }
 
 inline unsigned BeamletBuffer::mapTime2Index(TimeStamp time) const
 { 
   // TODO: this is very slow because of the %
-  return time % itsSize;
+  return time % itsSize + itsOffset;
 }
 
 } // namespace CS1

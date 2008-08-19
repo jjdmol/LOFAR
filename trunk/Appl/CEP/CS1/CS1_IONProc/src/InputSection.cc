@@ -200,7 +200,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsBBuffers.resize(itsNrInputs);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer(ps->inputBufferSize(), ps->nrSubbandsPerFrame(), itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
+    itsBBuffers[rsp] = new BeamletBuffer(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSubbandsPerFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataServers = ps->getStringVector("OLAP.OLAP_Conn.rawDataServers");

@@ -3,6 +3,7 @@ BeamletBuffer.h			\
 BGL_Personality.h		\
 InputSection.h			\
 InputThread.h			\
+InputThreadAsm.h		\
 ION_Allocator.h			\
 LockedRanges.h			\
 LogThread.h			\
@@ -19,6 +20,7 @@ BGL_Personality.cc		\
 CS1_ION_main.cc		 	\
 InputSection.cc			\
 InputThread.cc			\
+InputThreadAsm.S		\
 ION_Allocator.cc		\
 LogThread.cc			\
 OutputSection.cc		\

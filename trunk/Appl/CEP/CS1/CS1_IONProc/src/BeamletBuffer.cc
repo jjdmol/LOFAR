@@ -23,32 +23,46 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <CS1_Interface/Align.h>
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
+#include <InputThreadAsm.h>
+
+#include <boost/lexical_cast.hpp>
+#include <stdexcept>
 
 
 namespace LOFAR {
 namespace CS1 {
 
-BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrSubbands, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+// The buffer size is a multiple of the input packet size.  By setting
+// itsOffset to a proper value, we can assure that input packets never
+// wrap around the circular buffer
+
+BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
 :
   itsNSubbands(nrSubbands),
-  itsSize(bufferSize),
+  itsSize(align(bufferSize, nrTimesPerPacket)),
   itsHistorySize(history),
-  itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nrSubbands * bufferSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nrSubbands][bufferSize][NR_POLARIZATIONS]),
+  itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nrSubbands * itsSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS]),
+  itsOffset(0),
+  itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
   itsReadTimer("buffer read", true),
   itsWriteTimer("buffer write", true)
 {
+  if (nrTimesPerPacket != this->nrTimesPerPacket)
+    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(nrTimesPerPacket));
+
   pthread_mutex_init(&itsValidDataMutex, 0);
 
   if (isSynchronous)
-    itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(bufferSize);
+    itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(itsSize);
   else
     itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);  
 
-  itsEnd.reserve(MAX_BEAMLETS);
-  itsStartI.reserve(MAX_BEAMLETS);
-  itsEndI.reserve(MAX_BEAMLETS);
+  itsEnd.resize(nrBeams);
+  itsStartI.resize(nrBeams);
+  itsEndI.resize(nrBeams);
 }
 
 
@@ -60,14 +74,33 @@ BeamletBuffer::~BeamletBuffer()
 }
 
 
-void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements)
+void BeamletBuffer::writePacketData(Beamlet *data, const TimeStamp &begin)
 {
-  TimeStamp end = begin + nrElements;
+  TimeStamp end = begin + nrTimesPerPacket;
   itsWriteTimer.start();
 
   // cache previous index, to avoid expensive mapTime2Index()
-  unsigned startI = (begin == itsPreviousTimeStamp) ? itsPreviousI : mapTime2Index(begin);
-  unsigned endI   = startI + nrElements;
+  unsigned startI;
+
+  if (begin == itsPreviousTimeStamp) {
+    startI = itsPreviousI;
+  } else {
+    startI = mapTime2Index(begin);
+
+    if (!aligned(startI, nrTimesPerPacket)) {
+      // RSP board reset?  Recompute itsOffset and clear the entire buffer.
+      itsOffset = - (startI % nrTimesPerPacket);
+      startI    = mapTime2Index(begin);
+
+      pthread_mutex_lock(&itsValidDataMutex);
+      itsValidData.reset();
+      pthread_mutex_unlock(&itsValidDataMutex);
+    }
+
+    //std::clog << "timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset << std::endl;
+  }
+
+  unsigned endI = startI + nrTimesPerPacket;
 
   if (endI >= itsSize)
     endI -= itsSize;
@@ -80,30 +113,29 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
   // do not write in circular buffer section that is being read
   itsLockedRanges.lock(startI, endI, itsSize);
 
-  if (endI < startI) {
-    // the data wraps around the allocated memory, so do it in two parts
-    
-    unsigned chunk1 = itsSize - startI;
-    for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-      memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
-      memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
-      data += nrElements;		
-    }
-  } else {
-    for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-      if (sizeof(SampleType[NR_POLARIZATIONS]) == sizeof(double)) {
-	double *dst = reinterpret_cast<double *>(itsSBBuffers[sb][startI].origin());
-	const double *src = reinterpret_cast<const double *>(data);
+#if defined HAVE_BGP
+  void *dst = itsSBBuffers[0][startI].origin();
+  
+#if NR_BITS_PER_SAMPLE == 16
+  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, data, itsNSubbands);
+#elif NR_BITS_PER_SAMPLE == 8
+  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, data, itsNSubbands);
+#elif NR_BITS_PER_SAMPLE == 4
+  _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, data, itsNSubbands);
+#else
+#error Not implemented
+#endif
+#else
+  Beamlet *dst = reinterpret_cast<Beamlet *>(itsSBBuffers[0][startI].origin());
+  size_t stride = reinterpret_cast<Beamlet *>(itsSBBuffers[1][startI].origin()) - dst;
+  
+  for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+    for (unsigned time = 0; time < nrTimesPerPacket; time ++)
+      dst[time] = *data ++;
 
-	for (unsigned time = 0; time < nrElements; time ++)
-	  dst[time] = src[time];
-      } else {
-	memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-      }
-
-      data += nrElements;		
-    }
+    dst += stride;
   }
+#endif
 
   // forget old ValidData
   pthread_mutex_lock(&itsValidDataMutex);
@@ -131,9 +163,9 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
   itsBegin = begin;
 
   for (unsigned beam = 0; beam < begin.size(); beam++) {
-    itsEnd.push_back(begin[beam] + nrElements);
-    itsStartI.push_back(mapTime2Index(begin[beam]));
-    itsEndI.push_back(mapTime2Index(itsEnd[beam]));
+    itsEnd[beam]    = begin[beam] + nrElements;
+    itsStartI[beam] = mapTime2Index(begin[beam]);
+    itsEndI[beam]   = mapTime2Index(itsEnd[beam]);
   }
  
   TimeStamp minBegin = *std::min_element(itsBegin.begin(),  itsBegin.end());
@@ -153,8 +185,8 @@ void BeamletBuffer::sendSubband(Stream *str, unsigned subband, unsigned beam) co
 {
   // Align to 32 bytes and make multiple of 32 bytes by prepending/appending
   // extra data.  Always send 32 bytes extra, even if data was already aligned.
-  unsigned startI = itsStartI[beam] & ~(32 / sizeof(Beamlet) - 1); // round down
-  unsigned endI   = (itsEndI[beam] + 32 / sizeof(Beamlet)) & ~(32 / sizeof(Beamlet) - 1); // round up, possibly adding 32 bytes
+  unsigned startI = align(itsStartI[beam] - itsAlignment + 1, itsAlignment); // round down
+  unsigned endI   = align(itsEndI[beam] + 1, itsAlignment); // round up, possibly adding 32 bytes
   
   if (endI < startI) {
     // the data wraps around the allocated memory, so copy in two parts
@@ -204,10 +236,6 @@ void BeamletBuffer::stopReadTransaction()
   // subtract 16 extra; due to alignment restrictions and the changing delays,
   // it is hard to predict where the next read will begin.
   
-  itsStartI.clear();
-  itsEndI.clear();
-  itsEnd.clear();
-
   itsReadTimer.stop();
 }
 

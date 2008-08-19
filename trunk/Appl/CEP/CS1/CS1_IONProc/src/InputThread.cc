@@ -203,7 +203,7 @@ void InputThread::mainLoop()
     }
 
     // expected packet received so write data into corresponding buffer
-    itsArgs.BBuffer->writeElements(reinterpret_cast<Beamlet *>(packet + 16), actualstamp, itsArgs.nrTimesPerPacket);
+    itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(packet + 16), actualstamp);
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
