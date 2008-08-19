@@ -9,8 +9,8 @@ def add_log(options, line):
 
 parser = OptionParser(usage='%prog [options] -m<MS name> -r<remote_host>')
 # use when the location of the MS is not mounted locally, or on a slow NFS
-#parser.add_option("-r", "--remote_host", dest="remote_host", default="",
-#                  help="Host name")
+parser.add_option("-r", "--remote_host", dest="remote_host", default="",
+                  help="Host name")
 parser.add_option("-m", "--ms", dest="ms", default="",
                   help="Measurementset name")
 parser.add_option("-l", "--log", dest="log", default="",
