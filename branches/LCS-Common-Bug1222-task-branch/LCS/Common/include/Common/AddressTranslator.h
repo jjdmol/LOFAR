@@ -29,49 +29,55 @@
 // one line description.
 
 //# Includes
-#include <bfd.h>
-#include <Common/lofar_string.h>
+#include <Common/Backtrace.h>
 #include <Common/lofar_vector.h>
+#include <bfd.h>
 
 namespace LOFAR
 {
   //# Forward declarations
-  class SymbolTable;
 
   // \addtogroup Common
   // @{
-
-  // Layout of a trace line
-  struct TraceLine {
-    std::string function;
-    std::string file;
-    unsigned line;
-  };
 
   // Description of class.
   class AddressTranslator {
   public:
     AddressTranslator();
     ~AddressTranslator();
-    TraceLine translate(size_t addr) const;
+
+    // Translate the \a size addresses specified in \a addr to \a size
+    // trace lines, containing function name, filename, and line number, iff
+    // that information can be retrieved from the program's symbol table.
+    // \param[out] trace vector containing the trace lines
+    // \param[in]  addr C-array of return addresses
+    // \param[in]  size number of return addresses in \a addr
+    // \return     \c true if successfull, otherwise \c false
+    bool operator()(vector<Backtrace::TraceLine>& trace, 
+                    void* const* addr, int size);
+
   private:
-    // private member functions
-    bool get_addresses();
+    // The workhorse that translates addresses 
     bool translate_addresses();
+
+    // Helper function to "convert" the member function
+    // do_find_addresss_in_section() to a void(*), which can be passed as
+    // argument to bfd_map_over_sections().
+    // \see BFD documentation for details (<tt>info bfd</tt>).
     static void find_address_in_section(bfd*, asection*, void*);
+
+    // Find the source code line nearest to 
     void do_find_address_in_section(bfd*, asection*);
 
-    // private member data
-    unsigned long level;
-    std::vector<unsigned long> addr;
-    std::vector<TraceLine> itsTrace;
-
-    // Local variables used by translate_addresses() and find_address_in_section()
+    // Local variables used by translate_addresses() and
+    // find_address_in_section().
+    // @{
     bfd_vma pc;
     const char* filename;
     const char* functionname;
     unsigned int line;
     bool found;
+    // @}
 
   };
 

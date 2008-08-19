@@ -46,22 +46,74 @@ namespace LOFAR
   {
   }
 
-
-  TraceLine AddressTranslator::translate(size_t addr)
+  bool AddressTranslator::operator()(vector<Backtrace::TraceLine>& trace,
+				     void* const* addr, int size) 
   {
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    // Allocate enough storage for the tracelines to avoid reallocations.
+    trace.resize(size);
+  
+    for (int i = 0; i < size; i++) {
+      pc = reinterpret_cast<bfd_vma>(addr[i]);
+      found = false;
+
+      bfd* abfd = SymbolTable::instance().getBfd();
+      if (!abfd) return false;
+
+      bfd_map_over_sections(abfd, find_address_in_section, this);
+    
+      if (!found) {
+        trace[i].function = "??";
+        trace[i].file = "??";
+        trace[i].line = 0;
+      } 
+      else {
+        if (functionname == 0 || *functionname == '\0') {
+          trace[i].function = "??";
+        } 
+        else {
+          char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
+          if (res == 0) {
+            trace[i].function = functionname;
+          }
+          else {
+            trace[i].function = res;
+            free(res);
+          }
+        }
+        if (filename == 0) {
+          trace[i].file = "??";
+        }
+        else {
+          char* h = strrchr(filename,'/');
+          if (h != 0)
+            filename = h+1;
+          trace[i].file = filename;
+        }
+        trace[i].line = line;
+      }
+      //     if (trace[i].function == "main")
+      //       break;
+    }
+    //  printf("level = %d\n",level);
+    //   return level;
+    return true;
   }
 
 
+  //##----  P r i v a t e   f u n c t i o n s  ----##//
+
   void AddressTranslator::find_address_in_section(bfd*      abfd,
-                                          asection* section,
-                                          void*     data)
+						  asection* section,
+						  void*     data)
   {
     AddressTranslator* obj = static_cast<AddressTranslator*>(data);
     obj->do_find_address_in_section(abfd, section);
   }
 
   void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
-                                             asection*  section)
+						     asection*  section)
   {
     bfd_vma vma;
     bfd_size_type size;
@@ -85,65 +137,5 @@ namespace LOFAR
                                    pc - vma, &filename, &functionname, &line);
   }
     
-
-
-  bool AddressTranslator::translate_addresses()
-  {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  
-    for (unsigned i = 0; i < addr.size(); i++) {
-      ostringstream oss;
-      oss << hex << addr[i];
-      pc = bfd_scan_vma(oss.str().c_str(), 0, 16);
-
-      found = false;
-      bfd* abfd = SymbolTable::instance().getBfd();
-      bfd_map_over_sections(abfd, find_address_in_section, this);
-    
-      //     for (asection* p = abfd->sections; p != 0; p = p->next) {
-      //       find_address_in_section(abfd, p, 0);
-      //     }
-    
-      TraceLine aTraceLine;
-      aTraceLine.address = addr[i];
-    
-      if (!found) {
-        aTraceLine.function = "??";
-        aTraceLine.file = "??";
-        aTraceLine.line = 0;
-      } 
-      else {
-        if (functionname == 0 || *functionname == '\0') {
-          aTraceLine.function = "??";
-        } 
-        else {
-          char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
-          if (res == 0) {
-            aTraceLine.function = functionname;
-          }
-          else {
-            aTraceLine.function = res;
-            free(res);
-          }
-        }
-        if (filename == 0) {
-          aTraceLine.file = "??";
-        }
-        else {
-          char* h = strrchr(filename,'/');
-          if (h != 0)
-            filename = h+1;
-          aTraceLine.file = filename;
-        }
-        aTraceLine.line = line;
-      }
-      itsTrace.push_back(aTraceLine);
-      //     if (aTraceLine.function == "main")
-      //       break;
-    }
-    //  printf("level = %d\n",level);
-    //   return level;
-    return (level != 0);
-  }
 
 } // namespace LOFAR

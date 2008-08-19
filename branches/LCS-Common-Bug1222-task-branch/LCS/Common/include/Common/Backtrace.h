@@ -30,6 +30,7 @@
 
 //# Includes
 #include <bfd.h>
+#include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
@@ -45,41 +46,54 @@ namespace LOFAR
 
   class Backtrace {
   public:
-    // Maximum number of levels backtrace will return
-    static const unsigned maxStackAddr = 50;
-    Backtrace();
-    ~Backtrace();
-    friend std::ostream& operator<<( std::ostream& os, const Backtrace& st );
-  private:
-    // disallow copying and assingment
-    Backtrace(const Backtrace&);
-    Backtrace& operator=(const Backtrace&);
     // Layout of a trace line
     struct TraceLine {
-      long address;
-      std::string function;
-      std::string file;
-      long line;
+      string function;
+      string file;
+      unsigned line;
     };
-    // private member functions
-    bool get_addresses();
+    // Maximum number of return addresses that we are willing to handle.
+    static const unsigned maxNrAddr = 50;
+
+    // Constructor. Calls get_addresses() to fill \c itsAddr with the return
+    // addresses of the current program state.
+    Backtrace();
+
+    ~Backtrace();
+
+    void print(ostream& os) const;
+
+  private:
+//     // disallow copying and assingment
+//     Backtrace(const Backtrace&);
+//     Backtrace& operator=(const Backtrace&);
+
+    // Initialize our data structures by zeroing them.
+    void init();
+
+    // Get the return addresses of the current program state, and store them
+    // in \c itsAddr.
+    // \return The number of return addresses.
+    int get_addresses();
+
+    // Translate each return addresses into function name, filename and line
+    // number. Uses helper class AddressTranslator to do the real work.
     bool translate_addresses();
-    static void find_address_in_section(bfd*, asection*, void*);
-    void do_find_address_in_section(bfd*, asection*);
 
-    // private member data
-    unsigned long level;
-    std::vector<unsigned long> addr;
-    std::vector<TraceLine> itsTrace;
 
-    // Local variables used by translate_addresses() and find_address_in_section()
-    bfd_vma pc;
-    const char* filename;
-    const char* functionname;
-    unsigned int line;
-    bool found;
+    // C-array of return addresses. It will be filled by get_addresses().
+    void* itsAddr[maxNrAddr];
+
+    // Actual number of return addresses returned by get_addresses().
+    int itsNrAddr;
+
+    // Traceback info containing function name, filename, and line number.
+    // This vector will be filled by AddressTranslator.translate().
+    mutable vector<TraceLine> itsTrace;
 
   };
+
+  ostream& operator<<(ostream& os, const Backtrace& st);
 
   // @}
 
