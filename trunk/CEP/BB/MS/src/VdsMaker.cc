@@ -227,5 +227,6 @@ void VdsMaker::create (const string& msName, const string& outName,
   msd.setTimes (startTime, endTime, stepTime);
   // Write into the vds file.
   ofstream ostr(outName.c_str());
+  ASSERTSTR (ostr, "File " + outName + " could not be created");
   msd.write (ostr, "");
 }
