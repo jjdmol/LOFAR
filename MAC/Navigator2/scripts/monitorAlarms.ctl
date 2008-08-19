@@ -125,7 +125,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     return;
   } 
   
-  if (dynlen(aResult > 2)) {
+  if (dynlen(aResult) > 2) {
     DebugTN("ERROR: More results found, software handles only 1 now!!!!!!!!");
   }
   
