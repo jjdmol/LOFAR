@@ -35,11 +35,14 @@
 namespace LOFAR {
 namespace CS1 {
 
+const unsigned BeamletBuffer::nrTimesPerPacket;
+
+
 // The buffer size is a multiple of the input packet size.  By setting
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned timesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
 :
   itsNSubbands(nrSubbands),
   itsSize(align(bufferSize, nrTimesPerPacket)),
@@ -50,8 +53,8 @@ BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, uns
   itsReadTimer("buffer read", true),
   itsWriteTimer("buffer write", true)
 {
-  if (nrTimesPerPacket != this->nrTimesPerPacket)
-    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(this->nrTimesPerPacket));
+  if (timesPerPacket != nrTimesPerPacket)
+    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(nrTimesPerPacket));
 
   pthread_mutex_init(&itsValidDataMutex, 0);
 
@@ -74,10 +77,11 @@ BeamletBuffer::~BeamletBuffer()
 }
 
 
-void BeamletBuffer::writePacketData(Beamlet *data, const TimeStamp &begin)
+void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
 {
-  TimeStamp end = begin + nrTimesPerPacket;
   itsWriteTimer.start();
+
+  TimeStamp end = begin + nrTimesPerPacket;
 
   // cache previous index, to avoid expensive mapTime2Index()
   unsigned startI;
