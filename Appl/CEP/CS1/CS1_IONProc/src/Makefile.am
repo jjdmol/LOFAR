@@ -9,6 +9,7 @@ LockedRanges.h			\
 LogThread.h			\
 OutputSection.h			\
 ReaderWriterSynchronization.h	\
+RSP.h				\
 SlidingPointer.h		\
 WallClockTime.h			\
 WH_DelayCompensation.h		\
