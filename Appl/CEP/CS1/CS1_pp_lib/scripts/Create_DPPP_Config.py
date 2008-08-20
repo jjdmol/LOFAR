@@ -19,6 +19,10 @@ sys.stdout.write("Give the name/location of the dataset in /data [L2008_05199]: 
 location = sys.stdin.readline()
 if len(location) <= 1: location = "L2008_05199"
 
+sys.stdout.write("Give the local scratch directory on the nodes [/data/scratch]: ")
+scratch = sys.stdin.readline()
+if len(scratch) <= 1: scratch = "/data/scratch"
+
 sys.stdout.write("Give the prefix of the dataset in /data/%s if MS names aren't just SBx.MS [L2008_05199_]: " % location)
 prefix = sys.stdin.readline()
 if len(prefix) <= 1: prefix = "L2008_05199_"
@@ -40,8 +44,8 @@ output = """## Example usage
 
 #lioffen variant
 for b in range(bands):
-  output += "lioff%(n)03d:/data/scratch /lifs%(s)03d/%(l)s/%(p)sSB%(b)d.MS\n" % \
-   {'n':(b%nodes+1) + 21, 's':b%storage+1, 'l':location[:-1], 'p':prefix[:-1], 'b':b}
+  output += "lioff%(n)03d:%(c)s /lifs%(s)03d/%(l)s/%(p)sSB%(b)d.MS\n" % \
+   {'n':(b%nodes+1) + 21, 'c':scratch[:-1], 's':b%storage+1, 'l':location[:-1], 'p':prefix[:-1], 'b':b}
 
 print output + "\n\n"
 

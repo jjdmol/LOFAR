@@ -47,19 +47,19 @@ def spawn(dest, src, log):
         os._exit(1)
     if pid == 0: ## the new client
         ##Copy node script so we are sure we are running the right version
+        os.system('ssh ' + dest[0] + '"mkdir '+ dest[1] + '"')
         os.system('scp CS1_Offline_pipeline_node.py ' + dest[0] + ':' + dest[1] +
         '/CS1_Offline_pipeline_node.py')
         ##Run the node script on every node
-##        os.system('ssh -A -t ' + dest[0] + ' "cd /local/renting;time >> pipeline.log"')
         if src[0]:
-            os.system('ssh -A -t ' + dest[0] + ' "setenv PYTHONPATH /app/LOFAR/stable;' +
-            'source /app/scripts/doStableAIPS++; cd '+ dest[1] + ';python ' +
-            'CS1_Offline_pipeline_node.py -r' + src[0] + ' -m' + src[1] + ' -d' + dest[0] +
+            os.system('ssh -A -t ' + dest[0] + ' "source /app/scripts/doPython;' +
+            'source /app/scripts/doStableAIPS++; source /app/scripts/doPyrap; cd '+ dest[1] +
+            ';python CS1_Offline_pipeline_node.py -r' + src[0] + ' -m' + src[1] + ' -d' + dest[0] +
             ' -l' + log + ' >> pipeline.log"')
         else:
             os.system('ssh -A -t ' + dest[0] + ' "setenv PYTHONPATH /app/LOFAR/stable;' +
-            'source /app/scripts/doStableAIPS++; cd '+ dest[1] + ';python ' +
-            'CS1_Offline_pipeline_node.py  -m' + src[1] + ' -d' + dest[0] +
+            'source /app/scripts/doStableAIPS++; source /app/scripts/doPyrap; cd '+ dest[1] +
+            ';python CS1_Offline_pipeline_node.py  -m' + src[1] + ' -d' + dest[0] +
             ' -l' + log + ' >> pipeline.log"')
 ## bash version for Pandey
 ##        os.system('ssh -A -t ' + dest[0] + ' "export PYTHONPATH=/app/LOFAR/stable;' +
