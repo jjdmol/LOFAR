@@ -141,7 +141,8 @@ void VdsMaker::getDataFileInfo (MS& ms, string& name, bool& regular,
   }
 }
 
-string findFileSys (const std::string& fileName, const ClusterDesc& cdesc)
+string VdsMaker::findFileSys (const std::string& fileName,
+			      const ClusterDesc& cdesc)
 {
   // Find the file system by looking for a matching mountpoint.
   const std::vector<NodeDesc>& nodes = cdesc.getNodes();

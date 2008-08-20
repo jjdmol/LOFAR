@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-
+#include <MWCommon/ClusterDesc.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Vector.h>
 
@@ -65,6 +65,10 @@ namespace LOFAR {
     static void getDataFileInfo (casa::MS& ms, string& name, bool& regular,
 				 vector<int>& tileShape,
 				 vector<int>& cubeShape);
+
+    // Find the file system on which the given file is located.
+    static string findFileSys (const std::string& fileName,
+			       const CEP::ClusterDesc& cdesc);
   };
 
 }
