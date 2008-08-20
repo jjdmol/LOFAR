@@ -50,12 +50,12 @@ namespace LOFAR
 
       protected:
       private:
-        void ComputeThreshold(casa::Cube<casa::Complex>& Values,
+        void ComputeThreshold(const casa::Cube<casa::Complex>& Values,
                               int TWindowSize, int FWindowSize,
                               int TimePos, int ChanPos, int PolPos,
-                              double& Z1, double& Z2);
+                              double& Z1, double& Z2, Matrix<Float>& Medians);
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
-                             casa::Cube<casa::Complex>& Data,
+                             const casa::Cube<casa::Complex>& Data,
                              int flagCounter,
                              double Level,
                              int Position, bool Existing,
