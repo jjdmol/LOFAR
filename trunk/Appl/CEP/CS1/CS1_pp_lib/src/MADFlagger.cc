@@ -22,6 +22,7 @@
 #include <tables/Tables/TableIter.h>
 #include "MADFlagger.h"
 #include <casa/Quanta/MVEpoch.h>
+#include <casa/Arrays/ArrayMath.h>
 
 #include "MsInfo.h"
 #include "RunDetails.h"
@@ -50,7 +51,7 @@ MADFlagger::~MADFlagger()
 void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
                                   int TWindowSize, int FWindowSize,
                                   int TimePos, int ChanPos, int PolPos,
-                                  double& Z1, double& Z2, Matrix<Float>& Medians)
+                                  float& Z1, float& Z2, Matrix<Float>& Medians)
 {
   int temp = 0;
   for (int j = -FWindowSize/2; j <= FWindowSize/2; j++)
@@ -81,11 +82,12 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
                                  int Position, bool Existing,
                                  int TWindowSize, int FWindowSize)
 {
-  double Z1        = 0.0;
-  double Z2        = 0.0;
+  float Z1         = 0.0;
+  float Z2         = 0.0;
   int    flagcount = 0;
   double MAD       = 1.4826;
-  Matrix<Float> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace  for (int i = NumChannels-1; i >= 0; i--)
+  Matrix<Float> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace
+  for (int i = NumChannels-1; i >= 0; i--)
   {
     bool FlagAllPolarizations = false;
     for (int j = NumPolarizations-1; j >= 0; j--)
