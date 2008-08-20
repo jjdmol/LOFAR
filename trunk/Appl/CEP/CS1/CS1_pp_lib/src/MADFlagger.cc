@@ -47,23 +47,23 @@ MADFlagger::~MADFlagger()
 
 //===============>>> ComplexMedianFlagger2::ComputeThreshold  <<<============
 /*Compute Thresholds */
-void MADFlagger::ComputeThreshold(Cube<Complex>& Values,
+void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
                                   int TWindowSize, int FWindowSize,
                                   int TimePos, int ChanPos, int PolPos,
-                                  double& Z1, double& Z2)
+                                  double& Z1, double& Z2, Matrix<Float>& Medians)
 {
-  Matrix<Double> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace
   int temp = 0;
   for (int j = -FWindowSize/2; j <= FWindowSize/2; j++)
   {
     for (int i = -TWindowSize/2; i <= TWindowSize/2; i++)
     {
       temp = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? -j : j); //have the channels wrap back upon themselves.
-      Medians(i+ TWindowSize/2, j+ FWindowSize/2) = abs(Values(PolPos, ChanPos + temp, TimePos + i%TWindowSize)); //Fill the Matrix.
+      Medians(i+ TWindowSize/2, j+ FWindowSize/2) = abs(Values(PolPos, ChanPos + temp, TimePos + (i+TWindowSize)%TWindowSize)); //Fill the Matrix.
     }
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z
-  Z2 = medianInPlace(abs(Medians - Z1)); // Median (Vt - Z) = Z'
+  Medians -= Z1;
+  Z2 = medianInPlace(abs(Medians)); // Median (Vt - Z) = Z'
   if (isNaN(Z2)) //If there are NaN in the data, then what?
   { Z1 = 0.0;
     Z2 = 0.0;
@@ -75,7 +75,7 @@ void MADFlagger::ComputeThreshold(Cube<Complex>& Values,
 and flags on complexe distance, then determines to flag the entire baseline-band
 based on the RMS of the points it didn't flag.*/
 int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
-                                 Cube<Complex>& Data,
+                                 const Cube<Complex>& Data,
                                  int flagCounter,
                                  double Threshold,
                                  int Position, bool Existing,
@@ -85,14 +85,14 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
   double Z2        = 0.0;
   int    flagcount = 0;
   double MAD       = 1.4826;
-  for (int i = NumChannels-1; i >= 0; i--)
+  Matrix<Float> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace  for (int i = NumChannels-1; i >= 0; i--)
   {
     bool FlagAllPolarizations = false;
     for (int j = NumPolarizations-1; j >= 0; j--)
     { //we need to loop twice, once to determine FlagAllCorrelations
       if (!FlagAllPolarizations /*&& PolarizationsToCheck[j]*/)
       {
-        ComputeThreshold(Data, TWindowSize, FWindowSize, Position, i, j, Z1, Z2);
+        ComputeThreshold(Data, TWindowSize, FWindowSize, Position, i, j, Z1, Z2, Medians);
         FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(abs(Data(j, i, Position)) - Z1);
       }
     }
