@@ -65,7 +65,7 @@ class BeamletBuffer
 	     BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay);
 	     ~BeamletBuffer();
 
-    void     writePacketData(Beamlet *data, const TimeStamp &begin);
+    void     writePacketData(const Beamlet *data, const TimeStamp &begin);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
     void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
