@@ -42,9 +42,11 @@ namespace LOFAR {
   {
   public:
     // Create the description for the given MS and put it in a file
-    // with the given name.
+    // with the given name on the given host.
+    // If the host name is empty, gethostname() will be used.
     static void create (const string& msName, const string& outName,
-			const string& clusterDescName);
+			const string& clusterDescName,
+			const string& hostName = string());
 
   private:
     // Get the frequency info for each spectral window in the MS.
@@ -67,8 +69,10 @@ namespace LOFAR {
 				 vector<int>& cubeShape);
 
     // Find the file system on which the given file is located.
-    static string findFileSys (const std::string& fileName,
-			       const CEP::ClusterDesc& cdesc);
+    // If the host name is empty, gethostname() will be used.
+    static string findFileSys (const string& fileName,
+			       const CEP::ClusterDesc& cdesc,
+			       const string& hostName);
   };
 
 }

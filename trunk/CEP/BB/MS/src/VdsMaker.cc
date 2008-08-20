@@ -141,13 +141,17 @@ void VdsMaker::getDataFileInfo (MS& ms, string& name, bool& regular,
   }
 }
 
-string VdsMaker::findFileSys (const std::string& fileName,
-			      const ClusterDesc& cdesc)
+string VdsMaker::findFileSys (const string& fileName,
+			      const ClusterDesc& cdesc,
+			      const string& hostName)
 {
   // Find the file system by looking for a matching mountpoint.
-  const std::vector<NodeDesc>& nodes = cdesc.getNodes();
+  const vector<NodeDesc>& nodes = cdesc.getNodes();
   // First find the NodeDesc for this node.
-  string nodeName = HostInfo::hostName();
+  string nodeName(hostName);
+  if (nodeName.empty()) {
+    nodeName = HostInfo::hostName();
+  }
   uint i=0;
   for (; i<nodes.size(); ++i) {
     if (nodes[i].getName() == nodeName) {
@@ -161,7 +165,7 @@ string VdsMaker::findFileSys (const std::string& fileName,
 
 
 void VdsMaker::create (const string& msName, const string& outName,
-		       const string& clusterDescName)
+		       const string& clusterDescName, const string& hostName)
 {
   // Open the table.
   MS ms(msName);
@@ -177,7 +181,7 @@ void VdsMaker::create (const string& msName, const string& outName,
     msd.setName (absName, "unknown");
   } else {
     ClusterDesc cdesc((ParameterSet(clusterDescName)));
-    msd.setName (absName, findFileSys(absName, cdesc));
+    msd.setName (absName, findFileSys(absName, cdesc, hostName));
   }
   // Get freq info.
   // Fill in correlation info.
