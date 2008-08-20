@@ -131,8 +131,8 @@ except:
 
 IDPPP_parset  = Parset()
 (head, tail) = os.path.split(MS)
-IDPPP_parset['inms']          = MS
-IDPPP_parset['outms']         = tail + "s"
+IDPPP_parset['msin']          = MS
+IDPPP_parset['msout']         = tail + "s"
 IDPPP_parset['bandpass']      = 1 ##which bandpass to use
 IDPPP_parset['flagger']       = 4 ##which flagger to use
 IDPPP_parset['squasher']      = 1 ##which squasher to use
