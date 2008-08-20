@@ -7,11 +7,13 @@
 #include <lofar_config.h>
 #include <MWControl/PredifferBBS.h>
 #include <BBSKernel/Prediffer.h>
+#include <BBSKernel/MeasurementAIPS.h>
+#include <ParmDB/ParmDB.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobString.h>
 
 using namespace LOFAR::BBS;
-
+using LOFAR::ParmDB::ParmDBMeta;
 
 namespace LOFAR { namespace CEP {
 
@@ -34,13 +36,15 @@ namespace LOFAR { namespace CEP {
   {
     delete itsPrediffer;
     itsPrediffer = 0;
-    itsPrediffer = new Prediffer (dataPartName,
-				  parset.getInt32 ("SubBandID", 0),
-				  parset.getString("InputData", "DATA"),
-				  parset.getString("ParmDB.LocalSky"),
-				  parset.getString("ParmDB.Instrument"),
-				  parset.getString("ParmDB.History"),
-				  parset.getBool  ("CalcUVW", false));
+    Measurement::Pointer ms(new MeasurementAIPS(dataPartName,
+						parset.getInt32 ("ObsID", 0),
+						parset.getInt32 ("SubBandID", 0),
+						parset.getInt32 ("FieldID", 0)));
+    LOFAR::ParmDB::ParmDB instDB
+      (ParmDBMeta(parset.getString("ParmDB.Instrument"), "aips"));
+    LOFAR::ParmDB::ParmDB skyDB
+      (ParmDBMeta(parset.getString("ParmDB.LocalSky"), "aips"));
+    itsPrediffer = new Prediffer (ms, instDB, skyDB);
   }
 
   int PredifferBBS::process (int operation, int streamId,
