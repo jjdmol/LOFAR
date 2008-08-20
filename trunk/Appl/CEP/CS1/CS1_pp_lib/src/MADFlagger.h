@@ -53,7 +53,7 @@ namespace LOFAR
         void ComputeThreshold(const casa::Cube<casa::Complex>& Values,
                               int TWindowSize, int FWindowSize,
                               int TimePos, int ChanPos, int PolPos,
-                              double& Z1, double& Z2, Matrix<Float>& Medians);
+                              double& Z1, double& Z2, casa::Matrix<Float>& Medians);
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
                              const casa::Cube<casa::Complex>& Data,
                              int flagCounter,
