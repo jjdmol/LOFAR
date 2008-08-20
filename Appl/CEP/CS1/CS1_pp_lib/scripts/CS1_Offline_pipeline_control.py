@@ -47,7 +47,7 @@ def spawn(dest, src, log):
         os._exit(1)
     if pid == 0: ## the new client
         ##Copy node script so we are sure we are running the right version
-        os.system('ssh ' + dest[0] + '"mkdir '+ dest[1] + '"')
+        os.system('ssh -A -t ' + dest[0] + ' "mkdir '+ dest[1] + '"')
         os.system('scp CS1_Offline_pipeline_node.py ' + dest[0] + ':' + dest[1] +
         '/CS1_Offline_pipeline_node.py')
         ##Run the node script on every node
@@ -112,9 +112,9 @@ while len(joblist):
             proclist.append(job[0])
         else:
             print "queueing for later execution: " + str(job)
-        time.sleep(2) ## If we start all node scripts at the same time, we run into DoS mitigation measures stopping us.
+        time.sleep(1) ## If we start all node scripts at the same time, we run into DoS mitigation measures stopping us.
     #
-    time.sleep(10) ## wait for childs to spawn, maybe a niceer way to do this?
+    time.sleep(5) ## wait for childs to spawn, maybe a niceer way to do this?
     #
     for p in pidlist: ## wait for the clients to finish
         (pid, status) = os.waitpid(p[0], 0)
