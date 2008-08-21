@@ -40,8 +40,8 @@ namespace LOFAR {
       TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
       unsigned	    getSeqId() const;
       unsigned	    getBlockId() const;
-      static double getMaxBlockId();
-      static void   setMaxBlockId(double nMBID);
+
+      static void    setStationClockSpeed(unsigned speed);
 
       template <typename T> TimeStamp &operator += (T increment);
       template <typename T> TimeStamp &operator -= (T decrement);
@@ -67,11 +67,9 @@ namespace LOFAR {
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
     protected:
-      int64	    itsTime;
-      static double theirMaxBlockId, theirInvMaxBlockId;
+      int64	      itsTime;
+      static unsigned clockSpeed;
     };
-
-    typedef TimeStamp timestamp_t;
 
     inline TimeStamp::TimeStamp(int64 time)
       {
@@ -81,18 +79,18 @@ namespace LOFAR {
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId)
       {
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+	itsTime = ((int64) seqId * clockSpeed + 512) / 1024 + blockId;
 #else
-	itsTime = (int64) (seqId * theirMaxBlockId) + blockId;
+	itsTime = ((int64) seqId * clockSpeed) / 1024 + blockId;
 #endif
       }
 
     inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
       {
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-	itsTime = (int64) (seqId * theirMaxBlockId + .5) + blockId;
+	itsTime = ((int64) seqId * clockSpeed + 512) / 1024 + blockId;
 #else
-	itsTime = (int64) (seqId * theirMaxBlockId) + blockId;
+	itsTime = ((int64) seqId * clockSpeed) / 1024 + blockId;
 #endif
 	return *this;
       }
@@ -100,30 +98,24 @@ namespace LOFAR {
     inline unsigned TimeStamp::getSeqId() const
       {
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-	return (unsigned) (itsTime * theirInvMaxBlockId);
+	return (unsigned) (1024 * itsTime / clockSpeed);
 #else
-	return (unsigned) ((itsTime - 0.5) * theirInvMaxBlockId);
+	return (unsigned) ((1024 * itsTime + 512) / clockSpeed);
 #endif
       }
 
     inline unsigned TimeStamp::getBlockId() const
       {
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-	return itsTime - (int64) (theirMaxBlockId * getSeqId() + .5);
+	return (unsigned) (1024 * itsTime % clockSpeed / 1024);
 #else
-	return itsTime - (int64) (theirMaxBlockId * getSeqId());
+	return (unsigned) ((1024 * itsTime + 512) % clockSpeed / 1024);
 #endif
       }
 
-    inline double TimeStamp::getMaxBlockId()
+    inline void TimeStamp::setStationClockSpeed(unsigned speed)
       {
-	return theirMaxBlockId;
-      }
-
-    inline void TimeStamp::setMaxBlockId(double nMBID)
-      {
-	theirMaxBlockId    = nMBID;
-	theirInvMaxBlockId = 1 / nMBID;
+	clockSpeed = speed;
       }
 
     template <typename T> inline TimeStamp &TimeStamp::operator += (T increment)
@@ -186,10 +178,11 @@ namespace LOFAR {
 
     inline TimeStamp::operator struct timespec () const
       {
+	int64		ns = (int64) (itsTime * 1024 * 1e9 / clockSpeed);
 	struct timespec ts;
 
-	ts.tv_sec  = getSeqId();
-	ts.tv_nsec = (int) (getBlockId() * theirInvMaxBlockId * 1e9);
+	ts.tv_sec  = ns / 1000000000ULL;
+	ts.tv_nsec = ns % 1000000000ULL;
 
 	return ts;
       }
