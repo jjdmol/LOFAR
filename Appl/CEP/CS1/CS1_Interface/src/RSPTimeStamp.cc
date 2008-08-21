@@ -24,14 +24,14 @@
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR {
-  namespace CS1 {
+namespace CS1 {
 
-    double TimeStamp::theirMaxBlockId = 156250, TimeStamp::theirInvMaxBlockId = 1.0 / 156250;
+unsigned TimeStamp::clockSpeed = 20000000;
 
-    ostream &operator << (ostream &os, const TimeStamp &ss)
-    {
-      return os << "["<<ss.getSeqId() << "s, " << ss.getBlockId()<<"]";
-    }
+ostream &operator << (ostream &os, const TimeStamp &ts)
+{
+  return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";
+}
 
-  } // namespace CS1
+} // namespace CS1
 } // namespace LOFAR
