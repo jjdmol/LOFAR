@@ -168,12 +168,16 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	// make sure there is a parameterSet for the program.
 	// search observation-parset for controller name and determine prefix
 	// NOTE: this name must be the same as in the MACScheduler.
+	string	baseSetName(observationParset(anObsID));
 	if (anObsID == 0  && isSharedController(aCntlrType)) {
-		LOG_DEBUG_STR("Startup of shared controller" << cntlrName << 
-									". Skipping creation of observation parset.");
+		LOG_DEBUG_STR("Startup of shared controller " << cntlrName << 
+									". Skipping creation of observation-based parset.");
+		// just copy the base-file if child runs on another system
+		if (hostname != myHostname(false)  && hostname != myHostname(true)) {
+			APLUtilities::remoteCopy(baseSetName, hostname, baseSetName);
+		}
 	}
-	else {
-		string	baseSetName(observationParset(anObsID));
+	else {	// Observation-based controller, make special parset.
 		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
 		ParameterSet	wholeSet (baseSetName);
 		LOG_DEBUG_STR (wholeSet.size() << " elements in parameterfile");

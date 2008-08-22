@@ -57,12 +57,12 @@ RTDBobjState_t	objStateTable[] = {
 // can be given a new state.
 bool setObjectState(const string&	who,
 					const string&	objectName,
-				    uint32			newState,
+				    uint32			newStateIndex,
 					bool			force)
 {
 	// check newState value
-	if (newState >= RTDB_OBJ_STATE_NR_OF_VALUES) {
-		LOG_ERROR_STR(newState << " is not a legal object-state, " << objectName 
+	if (newStateIndex >= RTDB_OBJ_STATE_NR_OF_VALUES) {
+		LOG_ERROR_STR(newStateIndex << " is not a legal objectStateIndex, " << objectName 
 						<< " will be left unchanged");
 		return (false);
 	}
@@ -77,14 +77,26 @@ bool setObjectState(const string&	who,
 	fields.push_back("message");
 	fields.push_back("force");
 	values.push_back(new GCFPVString(objectName+".status.state"));
-	values.push_back(new GCFPVInteger(objStateTable[newState].RTDBvalue));
+	values.push_back(new GCFPVInteger(objStateTable[newStateIndex].RTDBvalue));
 	values.push_back(new GCFPVString(who));
 	values.push_back(new GCFPVBool(force));
 
-	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newState].name);
+	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
 
 	return (aDPservice.setValue("__navObjectState", fields, values, 0.0, false) == SA_NO_ERROR);
 }
+
+//
+// objectStateIndex2Value(stateIndex)
+//
+int32 objectStateIndex2Value(uint32	stateIndex)
+{
+	if (stateIndex >= RTDB_OBJ_STATE_NR_OF_VALUES) {
+		return (-1);
+	}
+	return (objStateTable[stateIndex].RTDBvalue);
+}
+
 
 
     } // namespace RTDBCommon

@@ -84,18 +84,14 @@ void APLUtilities::string2Vector(const string& parametersString, vector<int>& pa
   unsigned int parametersStringLen=parametersString.length();
   unsigned int delim(0);
   unsigned int nextDelim;
-  do
-  {
+  do {
     nextDelim=parametersString.find(delimiter,delim);
-    if(nextDelim==string::npos)
-    {
+    if(nextDelim==string::npos) {
       nextDelim=parametersStringLen; // no delim found
     }
-    if(nextDelim>delim)
-    {
+    if(nextDelim>delim) {
       string param(parametersString.substr(delim,nextDelim-delim));
-      if(param.length()>0)
-      {
+      if(param.length()>0) {
         parameters.push_back(atoi(param.c_str()));
       }
       delim=nextDelim+1;
@@ -111,18 +107,14 @@ void APLUtilities::string2Vector(const string& parametersString, vector<int16>& 
   unsigned int parametersStringLen=parametersString.length();
   unsigned int delim(0);
   unsigned int nextDelim;
-  do
-  {
+  do {
     nextDelim=parametersString.find(delimiter,delim);
-    if(nextDelim==string::npos)
-    {
+    if(nextDelim==string::npos) {
       nextDelim=parametersStringLen; // no delim found
     }
-    if(nextDelim>delim)
-    {
+    if(nextDelim>delim) {
       string param(parametersString.substr(delim,nextDelim-delim));
-      if(param.length()>0)
-      {
+      if(param.length()>0) {
         parameters.push_back(atoi(param.c_str()));
       }
       delim=nextDelim+1;
@@ -137,13 +129,11 @@ void APLUtilities::vector2String(const vector<int16>& parameters, string& parame
 {
   parametersString = "";
   vector<int16>::const_iterator it=parameters.begin();
-  while(it!=parameters.end())
-  {
+  while(it!=parameters.end()) {
     stringstream parstream;
     parstream << *it;
     ++it;
-    if(it!=parameters.end())
-    {
+    if(it!=parameters.end()) {
       parstream << delimiter;
     }
     parametersString += parstream.str();
@@ -322,6 +312,7 @@ string byteSize(double	nrBytes)
 
 	return (formatString ("%.0fB", nrBytes));
 }
+
 
   } // namespace APLCommon
 } // namespace LOFAR

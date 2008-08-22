@@ -210,7 +210,8 @@ public:
 	static const uint16 N_POL            = 2;                    // number of polarizations
 	static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
 	static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
-	static const uint16 MAX_N_RCUS       = 128 * MEPHeader::N_POL;
+//	static const uint16 MAX_N_RCUS       = 128 * MEPHeader::N_POL; // in hardware
+	static const uint16 MAX_N_RCUS       = 96 * MEPHeader::N_POL;	// in real
 	static const uint16 N_BLPS           = 4;                    // number of BLP's per RSP board
 	static const uint16 N_SUBBANDS       = 512;
 	static const uint16 N_REMOTE_XLETS   = 54; 

@@ -1,4 +1,4 @@
-check_PROGRAMS				= tControllerDefines tAPLUtilities tOutOfBand tStationInfo
+check_PROGRAMS				= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tStationInfo
 
 tControllerDefines_SOURCES	= tControllerDefines.cc
 tControllerDefines_LDADD	= ../src/libaplcommon.la
@@ -7,6 +7,10 @@ tControllerDefines_DEPENCIES= ../src/libaplcommon.la $(LOFAR_DEPEND)
 tAPLUtilities_SOURCES		= tAPLUtilities.cc
 tAPLUtilities_LDADD			= ../src/libaplcommon.la
 tAPLUtilities_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+
+tbitsetUtil_SOURCES			= tbitsetUtil.cc
+tbitsetUtil_LDADD			= ../src/libaplcommon.la
+tbitsetUtil_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 tOutOfBand_SOURCES			= tOutOfBand.cc
 tOutOfBand_LDADD			= ../src/libaplcommon.la

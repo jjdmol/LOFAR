@@ -26,7 +26,9 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_bitset.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 #include <ApplCommon/Observation.h>
 
 //# ACC Includes
@@ -36,6 +38,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/RTDB/DPservice.h>
 
 //# Application includes
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -59,6 +62,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFPort;
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
+	using	GCF::RTDB::DPservice;
 
 
 class StationControl : public GCFTask
@@ -75,6 +79,7 @@ private:
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state     (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult connect_state     (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribe2HWstates(GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult operational_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult finishing_state   (GCFEvent& e, GCFPortInterface& p);
 
@@ -85,16 +90,24 @@ private:
 
 	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 
-	uint16	_addObservation		(const string&   	name);
-   	void	_disconnectedHandler(GCFPortInterface&	port);
-   	void	_databaseEventHandler(GCFEvent& event);
-	ObsIter	_searchObsByTimerID (uint32				aTimerID);
+	// helper methods
+	void	_initAntennaMasks	 ();
+	void	_updateAntennaMasks  ();
+	uint16	_addObservation		 (const string&   	name);
+   	void	_disconnectedHandler (GCFPortInterface&	port);
+   	void	_databaseEventHandler(GCFEvent& 		event);
+	void	_handleQueryEvent	 (GCFEvent&			event);
+	ObsIter	_searchObsByTimerID	 (uint32			aTimerID);
 
 	// Data members
    	RTDBPropertySet*		itsClockPropSet;
    	RTDBPropertySet*		itsOwnPropSet;
 	bool					itsClockPSinitialized;
 	bool					itsOwnPSinitialized;
+
+	// PVSS query related
+	DPservice*				itsDPservice;			// for the queries.
+	uint32					itsQueryID;				// ID of query connected to HW state-changes
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
@@ -114,6 +127,14 @@ private:
 
 	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
+
+	// Availability information of Antenna's and circuit boards.
+	bitset<MAX_RCUS / N_POL * 2>			itsLBAmask;		// LBA's are tight to LBL AND LBH!!!
+	bitset<MAX_RCUS / N_POL>				itsHBAmask;
+	bitset<MAX_RCUS>						itsRCUmask;
+	bitset<MAX_RCUS / NR_RCUS_PER_TBBOARD>	itsTBmask;
+	uint32										itsNrLBAs;
+	uint32										itsNrHBAs;
 };
 
   };//StationCU

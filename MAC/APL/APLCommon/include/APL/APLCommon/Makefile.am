@@ -3,6 +3,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	APLCommonExceptions.h \
 	APL_Defines.h \
 	APLUtilities.h \
+	bitsetUtil.tcc \
 	ControllerDefines.h \
 	StationInfo.h \
 	CTState.h \
