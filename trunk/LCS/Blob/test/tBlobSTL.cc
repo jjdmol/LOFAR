@@ -74,12 +74,12 @@ void doIn (BlobIBuffer& bb)
   ASSERT (seq1[2] == double(-3.1));
   // Read the list as a set.
   std::set<std::string> seq2;
-  seq2.insert ("");         // should be cleared by operator>>
+  seq2.insert ("sss2");         // should be cleared by operator>>
   bs >> seq2;
   ASSERT (seq2.size() == 2);
   ASSERT (seq2.find("s1") != seq2.end());
   ASSERT (seq2.find("st2") != seq2.end());
-  ASSERT (seq2.find("s2") == seq2.end());
+  ASSERT (seq2.find("sss2") == seq2.end());
   // Read the first map.
   std::map<std::string, std::vector<std::string> > m;
   bs >> m;
