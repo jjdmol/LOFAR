@@ -30,7 +30,8 @@
 
 namespace LOFAR {
 	static const int N_POL					  = 2;				// Number of polarizations
-	static const int MAX_RCUS				  = 96  * N_POL;	// Max number of RCU's in one station
+	static const int MAX_ANTENNAS			  = 96;				// Max number antenna's of each type.
+	static const int MAX_RCUS				  = MAX_ANTENNAS * N_POL;	// Max number of RCU's in one station
 	static const int MAX_SUBBANDS			  = 512;			// Number of subbands that are created
 	static const int MAX_BEAMLETS			  = 216;			// Max number of beamlets comming from one station
 	static const int MAX_BEAMLETS_PER_RSP	  = 54;				// Max number of beamlets comming from one RSPboard
