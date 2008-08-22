@@ -56,6 +56,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
+	realPVSSdatapoint = aParSet->getString("_DPname","NOT_THE_REAL_DPNAME");
 #if !defined HAVE_BGL
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));

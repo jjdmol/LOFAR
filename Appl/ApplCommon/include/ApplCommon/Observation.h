@@ -33,6 +33,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
+#include <Common/LofarConstants.h>
 
 namespace LOFAR {
 
@@ -63,7 +64,7 @@ public:
 	ostream& print (ostream&	os) const;
 
 	// data types
-	typedef bitset<256> 	  RCUset_t;
+	typedef bitset<MAX_RCUS> 	  RCUset_t;
 
 	class Beam {
 	public:
@@ -90,6 +91,7 @@ public:
 	int32			sampleClock;
 	string			filter;
 	string			MSNameMask;
+	string			realPVSSdatapoint;
 
 	// old way of specifying antennas
 	string			antennaArray;
