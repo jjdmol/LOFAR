@@ -96,7 +96,8 @@ string	controllerName (uint16			cntlrType,
 		theHostname = myHostname(false);
 	}
 
-	if (ObservationNr == 0) {		// used when starting up shared controllers
+//	if (ObservationNr == 0) {		// used when starting up shared controllers
+	if (ObservationNr == 0 && isSharedController(cntlrType)) {
 		return (formatString("%s:%s", theHostname.c_str(),
 									  controllerTable[cntlrType].cntlrName));
 	}

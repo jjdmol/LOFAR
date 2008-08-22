@@ -25,6 +25,8 @@
 //
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
+#include <Common/LofarConstants.h>
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
 
@@ -32,11 +34,14 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/bitsetUtil.tcc>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <GCF/RTDB/DPservice.h>
 #include <APL/APLCommon/StationInfo.h>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
 #include "ActiveObs.h"
@@ -47,6 +52,7 @@
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
+using namespace LOFAR::APL::RTDBCommon;
 using namespace std;
 
 namespace LOFAR {
@@ -66,6 +72,8 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsOwnPropSet		(0),
 	itsClockPSinitialized(false),
 	itsOwnPSinitialized (false),
+	itsDPservice		(0),
+	itsQueryID			(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -99,9 +107,22 @@ StationControl::StationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
+	// for doing PVSS queries
+	itsDPservice = new DPservice(this);
+	ASSERTSTR(itsDPservice, "Can't allocate DataPoint Service for PVSS");
+
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+
+	// reset some mappings.
+	itsRCUmask.reset();
+	itsTBmask.reset();
+
+	LOG_DEBUG_STR("sizeof itsLBAmask: " << itsLBAmask.size());
+	LOG_DEBUG_STR("sizeof itsHBAmask: " << itsHBAmask.size());
+	LOG_DEBUG_STR("sizeof itsRCUmask: " << itsRCUmask.size());
+	LOG_DEBUG_STR("sizeof itsTBmask: "  << itsTBmask.size());
 }
 
 
@@ -111,6 +132,14 @@ StationControl::StationControl(const string&	cntlrName) :
 StationControl::~StationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+
+	if (itsDPservice) {
+		if  (itsQueryID) {
+			itsDPservice->cancelQuery(itsQueryID);
+			itsQueryID = 0;
+		}
+		delete itsDPservice;
+	}
 
 	// ...
 }
@@ -135,39 +164,6 @@ void StationControl::finish()
 	TRAN(StationControl::finishing_state);
 }
 
-
-//
-// _databaseEventHandler(event)
-//
-void StationControl::_databaseEventHandler(GCFEvent& event)
-{
-	LOG_TRACE_FLOW_STR ("_databaseEventHandler:" << eventName(event));
-
-	switch(event.signal) {
-	case DP_CHANGED:  {
-		DPChangedEvent		dpEvent(event);
-		if (strstr(dpEvent.DPname.c_str(), PN_SCK_CLOCK) != 0) {
-			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
-			break;
-		}
-
-		// don't watch state and error fields.
-		if ((strstr(dpEvent.DPname.c_str(), PN_OBJ_STATE) != 0) || 
-			(strstr(dpEvent.DPname.c_str(), PN_FSM_ERROR) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PN_FSM_CURRENT_ACTION) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PN_FSM_LOG_MSG) != 0)) {
-			return;
-		}
- 
-		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << dpEvent.DPname);
-	}
-	break;
-
-	default:
-		break;
-	}  
-}
 
 
 //
@@ -291,7 +287,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		// start DigitalBoardController
 		LOG_DEBUG_STR("Starting DigitalBoardController");
 		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
-							   		0,			// treeID, 
+							   		0,			// treeID, force 'shared' by using 0
 							   		0,			// instanceNr,
 							   		myHostname(false));
 		// will result in CONTROL_STARTED (and CONTROL_CONNECTED if no error).
@@ -302,7 +298,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		CONTROLStartedEvent		msg(event);
 //		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
 //							"Started event of unknown controller: " << msg.cntlrName);
-// note: hostname is now in controller.
+// note: need more complex test because the hostname is now in controllername.
 			if (msg.successful) {
 				LOG_INFO_STR("Startup of " << msg.cntlrName << 
 											" succesful, waiting for connection");
@@ -322,7 +318,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		CONTROLConnectedEvent		msg(event);
 //		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
 //							"Connect event of unknown controller: " << msg.cntlrName);
-// note: hostname is now in controller.
+// note: need more complex test because the hostname is now in controllername.
 
 		// inform parent the chain is up
 		CONTROLConnectedEvent	answer;
@@ -330,11 +326,8 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		answer.result    = CT_RESULT_NO_ERROR;
 		itsParentPort->send(answer);
 
-		LOG_DEBUG ("Attached to DigitalBoardControl, enabling ParentControl task");
-		itsParentPort = itsParentControl->registerTask(this);
-
-		LOG_DEBUG ("All initialisation done, going to operational state");
-		TRAN(StationControl::operational_state);			// go to next state.
+		LOG_DEBUG ("Attached to DigitalBoardControl, taking a subscription on the hardware states");
+		TRAN(StationControl::subscribe2HWstates);
 		}
 		break;
 
@@ -357,6 +350,69 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 	return (status);
 }
 
+//
+// subscribe2HWstates(event, port)
+//
+// Take a subscribtion to the states of the hardware so we can construct correct
+// masks that reflect the availability of the LBA and HBA antenna's.
+//
+GCFEvent::TResult StationControl::subscribe2HWstates(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("subscribe2HWstate:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	switch (event.signal) {
+	case F_ENTRY:
+		// setup initial masks for the LBA and HBA antenna's
+		_initAntennaMasks();
+		// !!! NO BREAK !!! 
+
+	case F_TIMER: {
+		// take subscribtion on *.state
+		LOG_DEBUG("Taking subscription on all state fields");
+		PVSSresult  result = itsDPservice->query("'LOFAR_PIC_*.status.state'", "");
+		if (result != SA_NO_ERROR) {
+			LOG_ERROR ("Taking subscription on PVSS-states failed, retry in 10 seconds");
+			itsTimerPort->setTimer(10.0);
+			break;
+		}
+		// wait for DP event
+		LOG_DEBUG ("Waiting for subscription answer");
+	}
+	break;
+
+	case DP_QUERY_SUBSCRIBED: {
+		DPQuerySubscribedEvent  answer(event);
+		if (answer.result != SA_NO_ERROR) {
+			LOG_ERROR_STR ("Taking subscription on PVSS-states failed (" << answer.result  <<
+							"), retry in 10 seconds");
+			itsTimerPort->setTimer(10.0);
+			break;
+		}
+		itsQueryID = answer.QryID;
+		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
+					"), going to operational mode");
+
+		itsTimerPort->cancelAllTimers();
+		TRAN(StationControl::operational_state);			// go to next state.
+	}
+	break;
+
+	case DP_QUERY_CHANGED:
+		// don't expect this event here right now, but you never know.
+		_handleQueryEvent(event);
+		itsTimerPort->cancelAllTimers();					// in case DP_QUERY_SUBSCRIBED is skipped.
+		TRAN(StationControl::operational_state);			// go to next state.
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
+	}
+
+	return (status);
+}
+
 
 //
 // operational_state(event, port)
@@ -375,6 +431,9 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
+		LOG_DEBUG ("All initialisation done, enabling ParentControl task");
+		itsParentPort = itsParentControl->registerTask(this);
+
 		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
 		itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
 	}
@@ -388,6 +447,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case DP_CHANGED:
 		_databaseEventHandler(event);
 		break;
+
+	case DP_QUERY_CHANGED:
+		_handleQueryEvent(event);
+	break;
 
 	case F_TIMER:  {
 		// try to map the timer on portname to an Observation
@@ -434,7 +497,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	// ------------ EVENTS RECEIVED FROM CHILD AND PARENT CONTROL --------------
 
 	// The events from the child-task may be of the DigBoardCtlr or one of the
-	// BeamCtlrs or CalCntrls of the active observations.
+	// BeamCtlrs or CalCtrls of the active observations.
 	case CONTROL_CONNECTED:		// from ChildITCport
 	case CONTROL_SCHEDULED:
 	case CONTROL_CLAIMED:
@@ -454,7 +517,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		// All the events have the problem that the controller can be StationControl,
 		// CalibrationControl or BeamControl. But what they all have in common is
 		// the instancenumber and treeID. So we can substract instanceNr and treeID 
-		// form the name and contruct the StationControl-name which we use for the
+		// from the name and contruct the StationControl-name which we use for the
 		// registration of the Active Obs.
 		CONTROLCommonEvent	ObsEvent(event);		// we just need the name
 		uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
@@ -468,6 +531,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		}
 
 		// Clock changes are done in the claim state and require an extra action
+		// TODO: CHECK ALL OTHERS OBSs ARE DOWN OTHERWISE WE MAY NOT SWITCH THE CLOCK
 		if (event.signal == CONTROL_CLAIM && 
 								itsClock != theObs->second->obsPar()->sampleClock) {
 			itsClock = theObs->second->obsPar()->sampleClock;
@@ -596,7 +660,139 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 }
 
 //
-// addObservation(name)
+// _databaseEventHandler(event)
+//
+void StationControl::_databaseEventHandler(GCFEvent& event)
+{
+	LOG_TRACE_FLOW_STR ("_databaseEventHandler:" << eventName(event));
+
+	switch(event.signal) {
+	case DP_CHANGED:  {
+		DPChangedEvent		dpEvent(event);
+		if (strstr(dpEvent.DPname.c_str(), PN_SCK_CLOCK) != 0) {
+			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
+			break;
+		}
+
+		// don't watch state and error fields.
+		if ((strstr(dpEvent.DPname.c_str(), PN_OBJ_STATE) != 0) || 
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_ERROR) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_CURRENT_ACTION) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_LOG_MSG) != 0)) {
+			return;
+		}
+ 
+		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << dpEvent.DPname);
+	}
+	break;
+
+	default:
+		break;
+	}  
+}
+
+//
+// _handleQueryEvent(event)
+//
+void StationControl::_handleQueryEvent(GCFEvent& event)
+{
+	LOG_TRACE_FLOW_STR ("_handleQueryEvent:" << eventName(event));
+	
+	DPQueryChangedEvent		DPevent(event);
+	if (DPevent.result != SA_NO_ERROR) {
+		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for query " << itsQueryID << 
+				", cannot determine actual state of the hardware! Assuming everything is available.");
+		return;
+	}
+
+	// remember QueryID if not yet set
+	if (!itsQueryID) {
+		itsQueryID = DPevent.QryID;
+	}
+
+	// The selected datapoints are delivered with full PVSS names, like:
+	// CS001:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU5.status.state
+	// Each event may contain more than one DP.
+	int     nrDPs = ((GCFPVDynArr*)(DPevent.DPnames._pValue))->getValue().size();
+	GCFPVDynArr*    DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
+	GCFPVDynArr*    DPvalues = (GCFPVDynArr*)(DPevent.DPvalues._pValue);
+	// GCFPVDynArr*    DPtimes  = (GCFPVDynArr*)(DPevent.DPtimes._pValue);
+
+	for (int    idx = 0; idx < nrDPs; ++idx) {
+		// Get the name and figure out what circuitboard we are talking about
+		string  nameStr(DPnames->getValue()[idx]->getValueAsString());				// DP name
+		uint32	newState(((GCFPVInteger*)(DPvalues->getValue()[idx]))->getValue());	// value
+		size_t	pos;
+
+		uint32	modeOff(objectStateIndex2Value(RTDB_OBJ_STATE_OFF));
+		uint32	modeOperational(objectStateIndex2Value(RTDB_OBJ_STATE_OPERATIONAL));
+		// test for RCU
+		if ((pos = nameStr.find("_RCU")) != string::npos) {
+			int		rcu;
+			if (sscanf(nameStr.substr(pos).c_str(), "_RCU%d.status.state", &rcu) != 1) {
+				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
+								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			LOG_INFO_STR("New state of RCU " << rcu << " is " << newState);
+			// RCU's in de mode OFF and OPERATIONAL may be used in observations.
+			if (newState == modeOff || newState == modeOperational) {
+				itsRCUmask.set(rcu);
+			}
+			else {	// all other modes
+				itsRCUmask.reset(rcu);
+			}
+		}
+
+		// test for RSPBoard
+		else if ((pos = nameStr.find("_RSPBoard")) != string::npos) {
+			int		rsp;
+			if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.status.state", &rsp) != 1) {
+				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
+								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			LOG_INFO_STR("New state of RSPBoard " << rsp << " is " << newState);
+			int rcubase = rsp * NR_RCUS_PER_RSPBOARD;
+			for (int i = 0; i < NR_RCUS_PER_RSPBOARD; i++) {
+				if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
+					itsRCUmask.reset(rcubase + i);
+				}
+				else {
+					itsRCUmask.set(rcubase + i);
+				}
+			}
+		}
+
+		// test for TBBoard
+		else if ((pos = nameStr.find("_TBBoard")) != string::npos) {
+			int		tbb;
+			if (sscanf(nameStr.substr(pos).c_str(), "_TBBoard%d.status.state", &tbb) != 1) {
+				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
+								". AVAILABILITY OF TBBOARD'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			LOG_INFO_STR("New state of TBBoard " << tbb << " is " << newState);
+			if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
+				itsTBmask.reset(tbb);
+			}
+			else {
+				itsTBmask.set(tbb);
+			}
+		}
+
+		else {
+			LOG_DEBUG_STR("State of unknown component received: " << nameStr);
+		}
+	} // for
+
+	_updateAntennaMasks();	// translate new RCU mask to the LBA and HBA masks.
+}
+
+
+//
+// _addObservation(name)
 //
 uint16 StationControl::_addObservation(const string&	name)
 {
@@ -608,9 +804,25 @@ uint16 StationControl::_addObservation(const string&	name)
 
 	// find and read parameterset of this observation
 	ParameterSet	theObsPS;
-	LOG_TRACE_OBJ_STR("Trying to readfile " << LOFAR_SHARE_LOCATION << "/" << name);
-	theObsPS.adoptFile(string(LOFAR_SHARE_LOCATION) + "/" + name);
+	string			filename(string(LOFAR_SHARE_LOCATION) + "/" + name);
+	LOG_DEBUG_STR("Trying to readfile " << filename);
+	theObsPS.adoptFile(filename);
+	Observation		theObs(&theObsPS);
+LOG_DEBUG_STR("theOBS=" << theObs);
+	// Create a bitset containing the available receivers for this oberservation.
+	Observation::RCUset_t	realReceivers = Observation(&theObsPS).RCUset & itsRCUmask;
 
+	// Write the corrected set back into the ParameterSetfile.
+	string prefix = theObsPS.locateModule("Observation") + "Observation.";
+	// save original under different name (using 'replace' is 'add' simplifies testing)
+	theObsPS.replace(prefix+"originalReceiverList", theObs.receiverList);
+	// replace orignal
+	theObsPS.replace(prefix+"receiverList", bitset2CompactedArrayString(realReceivers));
+	// modify base parsetfile and my own parsetfile too, to prevent confusion
+	theObsPS.writeFile(observationParset(theObs.obsID));
+	theObsPS.writeFile(filename);
+
+	// create an activeObservation object that will manage the child controllers.
 	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
@@ -628,6 +840,76 @@ uint16 StationControl::_addObservation(const string&	name)
 	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
 	
 	return (CT_RESULT_NO_ERROR);
+}
+
+//      
+// _initAntennaMasks
+//      
+// setup masks that contain the available antennas.
+//      
+void StationControl::_initAntennaMasks()
+{
+	// reset all variables
+	itsLBAmask.reset();
+	itsHBAmask.reset();
+
+	// Try to find the configurationfile
+	ConfigLocator   CL;
+	string          fileName(CL.locate("RemoteStation.conf"));
+	if (fileName.empty()) {
+		LOG_ERROR("Cannot find file 'RemoteStation.conf', assuming I have 96 antennas");
+		itsNrLBAs = 96;
+		itsNrHBAs = 96;
+	}   
+	else {  // read info from configfile
+		ParameterSet    StationInfo(fileName);
+		int defaultValue = 4 * StationInfo.getUint32("RS.N_RSPBOARDS", 24);   // key must be present for RSPDriver.
+		itsNrLBAs = StationInfo.getUint32("RS.N_LBAS", defaultValue);          // step5 key
+		itsNrHBAs = StationInfo.getUint32("RS.N_HBAS", defaultValue);          // step5 key
+	}
+
+	LOG_INFO(formatString("Stations has %d LBA and %d HBA antennas", itsNrLBAs, itsNrHBAs));
+	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
+			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
+
+	// set the right bits.
+	for (uint i = 0; i < itsNrLBAs; i++) {
+		itsLBAmask.set(i);
+	}   
+	for (uint i = 0; i < itsNrHBAs; i++) {
+		itsHBAmask.set(i);
+	}
+
+	// The masks are now initialized with the static information. The _handleQueryEvent routine
+	// corrects the sets with the life information from PVSS. We assume that PVSS always has the 
+	// correct and latest state.
+}       
+
+//
+// _updateAntennaMasks()
+//
+// Translates the RCU mask to the LBA and HBA masks.
+// This routine is familiar with mapping of the antennas on the RCU's.
+//
+void StationControl::_updateAntennaMasks()
+{
+	// Note: the definition in StationControl.h and the ASSERT in _initAntennaMasks assure
+	//		 that we never exceed the boundaries of the bitmaps here.
+	for (int rcu = 0; rcu < MAX_RCUS ; rcu+=2) {
+		if (itsRCUmask[rcu] && itsRCUmask[rcu+1]) {		// X and Y
+			itsLBAmask.set(rcu/2);
+			itsLBAmask.set(48+(rcu/2));
+			itsHBAmask.set(rcu/2);
+		}
+		else {
+			itsLBAmask.reset(rcu/2);
+			itsLBAmask.reset(48+(rcu/2));
+			itsHBAmask.reset(rcu/2);
+		}
+	}
+	LOG_DEBUG_STR("itsRCU:" << string(itsRCUmask.to_string<char,char_traits<char>,allocator<char> >()));
+	LOG_DEBUG_STR("itsLBA:" << string(itsLBAmask.to_string<char,char_traits<char>,allocator<char> >()));
+	LOG_DEBUG_STR("itsHBA:" << string(itsHBAmask.to_string<char,char_traits<char>,allocator<char> >()));
 }
 
 //

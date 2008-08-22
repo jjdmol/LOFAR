@@ -163,8 +163,8 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 	case CONTROL_STARTED: {
 			CONTROLStartedEvent msg(event);
 			if (msg.successful) {
-				cout << endl << "Startdaemon reports succesful startup.";
-				cout << "Waiting for connection with controller ...";
+				cout << endl << "Startdaemon reports succesful startup." << endl;
+				cout << "Waiting for connection with controller ..." << endl;
 			}
 			else {
 				cout << endl << "StartDaemon could not start the controller, bailing out." << endl;
@@ -543,8 +543,8 @@ void ControllerMenu::_doStartMenu()
 {
 	cout << endl;
 	cout << "You need an exportFile from OTDB containing an Observation." << endl;
-	cout << "Its name has the format /opt/lofar/share/Observation_<nr>." << endl;
-	string	command("ls -1 /opt/lofar/share/Observation_*");
+	cout << "Its name has the format /opt/lofar/share/Observation<nr>." << endl;
+	string	command("ls -1 /opt/lofar/share/Observation[0-9]*");
 	system(command.c_str());
 
 	int32	obsnr(-1);
@@ -558,7 +558,7 @@ void ControllerMenu::_doStartMenu()
 			return;
 		}
 		ifstream	iFile;
-		string obsFileName(formatString("/opt/lofar/share/Observation_%d", obsnr));
+		string obsFileName(formatString("/opt/lofar/share/Observation%d", obsnr));
 		iFile.open(obsFileName.c_str(), ifstream::in);
 		if (!iFile) {
 			cout << endl << "Cannot open file " << obsFileName << endl;

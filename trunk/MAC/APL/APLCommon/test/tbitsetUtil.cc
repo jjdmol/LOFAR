@@ -1,6 +1,6 @@
-//#  ControllerMenuMain.cc: Main entry for the ControllerMenu program.
+//#  tbitsetUtil.cc
 //#
-//#  Copyright (C) 2006
+//#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,27 +19,51 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-//#
+
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
+//# Includes
 #include <Common/LofarLogger.h>
+#include <APL/APLCommon/bitsetUtil.tcc>
 
-#include "ControllerMenu.h"
+using namespace LOFAR;
+using namespace LOFAR::APLCommon;
 
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::Test;
-
-int main(int argc, char* argv[])
+int main (int	argc, char* argv[]) 
 {
-	GCFTask::init(argc, argv, "ControllerMenu");
+	INIT_LOGGER(argv[0]);
+	
+	bitset<256>		bs1;
+	bs1.reset();
+	cout << bitset2CompactedArrayString(bs1) << endl;
 
-	ChildControl*	cc = ChildControl::instance();
-	cc->start();	// make initial transition
+	for (int i = 5; i < 20; i++) {
+		bs1.set(i);
+	}
+	cout << bitset2CompactedArrayString(bs1) << endl;
 
-	ControllerMenu	tc(argc == 2 ? atoi(argv[1]) : 0);
-	tc.start(); // make initial transition
+	for (int i =25; i < 29; i++) {
+		bs1.set(i);
+	}
+	cout << bitset2CompactedArrayString(bs1) << endl;
 
-	GCFTask::run();
+	bs1.reset(7);
+	bs1.reset(8);
+	bs1.reset(10);
+	bs1.reset(12);
+	bs1.reset(14);
+	cout << bitset2CompactedArrayString(bs1) << endl;
 
-	return 0;
+	bs1.set();
+	cout << bitset2CompactedArrayString(bs1) << endl;
+
+	// does it also work with other size bitsets?
+	bitset<32>	bs2;
+	bs2.reset();
+	bs2.set(5);
+	cout << bitset2CompactedArrayString(bs2) << endl;
+	
+	return (0);
 }
 

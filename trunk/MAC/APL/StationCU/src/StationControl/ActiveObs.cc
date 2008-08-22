@@ -116,10 +116,9 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 
 	case F_INIT: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_OBSERVATION, itsName));
-		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
-		itsPropertySet = new RTDBPropertySet(propSetName,
-											 PST_OBSERVATION,
+		LOG_DEBUG_STR ("Activating PropertySet: " << itsObsPar.realPVSSdatapoint);
+		itsPropertySet = new RTDBPropertySet(itsObsPar.realPVSSdatapoint,
+											 PST_STN_OBSERVATION,
 											 PSAT_WO,
 											 itsTask);
 #if 0
@@ -661,6 +660,7 @@ ostream& ActiveObs::print (ostream& os) const
 	os << "sampleClock       : " << itsObsPar.sampleClock << endl;
 	os << "filter            : " << itsObsPar.filter << endl;
 	os << "antennaArray      : " << itsObsPar.antennaArray << endl;
+	os << "receiverList      : " << itsObsPar.receiverList << endl;
 	os << "BeamCntlr ready   : " << itsBeamCntlrReady << endl;
 	os << "CalCntlr ready    : " << itsCalCntlrReady << endl;
 	if (itsUsesTBB) {

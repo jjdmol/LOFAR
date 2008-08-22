@@ -2460,6 +2460,7 @@ static void usage(bool exportMode)
   cout << "rspctl --version             [--select=<set>]  # get version information" << endl;
   cout << "rspctl --status              [--select=<set>]  # get status of RSP boards" << endl;
   cout << "rspctl --tdstatus            [--select=<set>]  # get status of TD boards" << endl;
+  cout << "rspctl --spustatus           [--select=<set>]  # get status of SPU board" << endl;
   cout << "rspctl --realdelays[=<list>] [--select=<set>]  # get the installed 16 delays of one or more HBA's" << endl;
   cout << "rspctl --regstate                              # show update status of all registers once every second" << endl;
   cout << endl;

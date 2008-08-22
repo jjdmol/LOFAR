@@ -48,7 +48,7 @@ namespace LOFAR {
 // requests.
 
 
-// The states each softwaremodule and hardwarecomponent can have.
+// Indexes for the states each softwaremodule and hardwarecomponent can have.
 enum {
 	RTDB_OBJ_STATE_OFF = 0,
 	RTDB_OBJ_STATE_OPERATIONAL,
@@ -70,8 +70,14 @@ enum {
 //				that 'worsen' the state.
 bool	setObjectState(const string&	who,
 					   const string&	objectName,
-					   uint32			newState,
+					   uint32			newStateIndex,
 					   bool				force = false);
+
+// Converts an objectState-index to the value that is st in the database.
+// @param stateIndex	indexvalue (RTDB_OBJ_STATE_...)
+// Returns the database value or -1 in case of an illegal index.
+int32	objectStateIndex2Value(uint32	stateIndex);
+
 
 
 
