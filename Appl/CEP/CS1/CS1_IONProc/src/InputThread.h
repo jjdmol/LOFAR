@@ -60,6 +60,8 @@ class InputThread
     static void		  *mainLoopStub(void *inputThread);
     void		  mainLoop();
 
+    static const unsigned packetBuffersSize = 128;
+
   private:
     static void		  sigHandler(int);
     static void		  setAffinity();

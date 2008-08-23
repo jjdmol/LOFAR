@@ -66,6 +66,7 @@ class BeamletBuffer
 	     ~BeamletBuffer();
 
     void     writePacketData(const Beamlet *data, const TimeStamp &begin);
+    void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
     void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
@@ -74,7 +75,7 @@ class BeamletBuffer
     SparseSet<unsigned> readFlags(unsigned beam);
     void     stopReadTransaction();
     
-    const static unsigned nrTimesPerPacket = 16;
+    const static unsigned		  itsNrTimesPerPacket = 16;
 
   private:
     unsigned mapTime2Index(TimeStamp time) const;
@@ -82,6 +83,7 @@ class BeamletBuffer
     pthread_mutex_t			  itsValidDataMutex;
     SparseSet<TimeStamp>		  itsValidData;
     unsigned				  itsNSubbands;
+    size_t				  itsPacketSize;
     unsigned				  itsSize, itsHistorySize;
     ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
@@ -96,9 +98,17 @@ class BeamletBuffer
     TimeStamp                             itsMinEnd;
 
     // write internals
+    void				  writePacket(Beamlet *dst, const Beamlet *src);
+    void				  updateValidData(const TimeStamp &begin, const TimeStamp &end);
+    void				  writeConsecutivePackets(unsigned count);
+    void				  resetCurrentTimeStamp(const TimeStamp &);
+
     TimeStamp				  itsPreviousTimeStamp;
     unsigned				  itsPreviousI;
+    TimeStamp				  itsCurrentTimeStamp;
+    unsigned				  itsCurrentI;
     size_t				  itsStride;
+    const char				  *itsCurrentPacketPtr;
 
     NSTimer				  itsReadTimer, itsWriteTimer;
 };
