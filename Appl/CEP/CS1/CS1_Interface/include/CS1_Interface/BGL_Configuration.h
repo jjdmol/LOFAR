@@ -48,7 +48,7 @@ class BGL_Configuration
     void		  write(Stream *);
 
     static const unsigned MAX_PSETS    = 64;
-    static const unsigned MAX_SUBBANDS = 54;
+    static const unsigned MAX_SUBBANDS = 248;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets;
