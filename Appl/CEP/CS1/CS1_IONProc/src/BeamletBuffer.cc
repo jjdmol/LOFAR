@@ -167,12 +167,17 @@ void BeamletBuffer::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
 
   if (!aligned(itsCurrentI, itsNrTimesPerPacket)) {
     // RSP board reset?  Recompute itsOffset and clear the entire buffer.
+
+    itsLockedRanges.lock(0, itsSize, itsSize); // avoid reset while other thread reads
+
     itsOffset = - (itsCurrentI % itsNrTimesPerPacket);
     itsCurrentI = mapTime2Index(newTimeStamp);
 
     pthread_mutex_lock(&itsValidDataMutex);
     itsValidData.reset();
     pthread_mutex_unlock(&itsValidDataMutex);
+
+    itsLockedRanges.unlock(0, itsSize, itsSize);
 
     std::clog << "reset BeamletBuffer" << std::endl;
   }
