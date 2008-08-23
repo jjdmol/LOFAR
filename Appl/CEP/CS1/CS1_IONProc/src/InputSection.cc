@@ -118,7 +118,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
 {
   itsCS1PS = ps;
   itsSampleRate = ps->sampleRate();
-  TimeStamp::setStationClockSpeed(1024 * itsSampleRate);
+  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * itsSampleRate));
   std::vector<CS1_Parset::StationRSPpair> inputs = ps->getStationNamesAndRSPboardNumbers(itsPsetNumber);
   itsNrInputs = inputs.size();
 
