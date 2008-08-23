@@ -27,6 +27,7 @@
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <InputThreadAsm.h>
+#include <RSP.h>
 
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
@@ -35,26 +36,31 @@
 namespace LOFAR {
 namespace CS1 {
 
-const unsigned BeamletBuffer::nrTimesPerPacket;
+const unsigned BeamletBuffer::itsNrTimesPerPacket;
 
 
 // The buffer size is a multiple of the input packet size.  By setting
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned timesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
 :
   itsNSubbands(nrSubbands),
-  itsSize(align(bufferSize, nrTimesPerPacket)),
+  itsPacketSize(sizeof(struct RSP::header) + nrTimesPerPacket * nrSubbands * sizeof(Beamlet)),
+  itsSize(align(bufferSize, itsNrTimesPerPacket)),
   itsHistorySize(history),
   itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nrSubbands * itsSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS]),
   itsOffset(0),
+#if defined HAVE_BGP
   itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
+#else
+  itsStride(reinterpret_cast<Beamlet *>(itsSBBuffers[1].origin()) - reinterpret_cast<Beamlet *>(itsSBBuffers[0].origin())),
+#endif
   itsReadTimer("buffer read", true),
   itsWriteTimer("buffer write", true)
 {
-  if (timesPerPacket != nrTimesPerPacket)
-    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(nrTimesPerPacket));
+  if (nrTimesPerPacket != itsNrTimesPerPacket)
+    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
   pthread_mutex_init(&itsValidDataMutex, 0);
 
@@ -77,11 +83,128 @@ BeamletBuffer::~BeamletBuffer()
 }
 
 
+inline void BeamletBuffer::writePacket(Beamlet *dst, const Beamlet *src)
+{
+#if defined HAVE_BGP
+#if NR_BITS_PER_SAMPLE == 16
+  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, src, itsNSubbands);
+#elif NR_BITS_PER_SAMPLE == 8
+  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, src, itsNSubbands);
+#elif NR_BITS_PER_SAMPLE == 4
+  _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, src, itsNSubbands);
+#else
+#error Not implemented
+#endif
+#else
+  for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+    for (unsigned time = 0; time < itsNrTimesPerPacket; time ++)
+      dst[time] = *src ++;
+
+    dst += itsStride;
+  }
+#endif
+}
+
+
+inline void BeamletBuffer::updateValidData(const TimeStamp &begin, const TimeStamp &end)
+{
+  pthread_mutex_lock(&itsValidDataMutex);
+  itsValidData.exclude(0, end - itsSize);  // forget old ValidData
+
+  // add new ValidData (except if range list will grow too long, to avoid long
+  // computations)
+
+  const SparseSet<TimeStamp>::Ranges &ranges = itsValidData.getRanges();
+
+  if (ranges.size() < 64 || ranges.back().end == begin) 
+    itsValidData.include(begin, end);
+
+  pthread_mutex_unlock(&itsValidDataMutex);
+}
+
+
+void BeamletBuffer::writeConsecutivePackets(unsigned count)
+{
+  unsigned  nrTimes = count * itsNrTimesPerPacket;
+  TimeStamp begin   = itsCurrentTimeStamp, end  = begin + nrTimes;
+  unsigned  startI  = itsCurrentI,	   endI = startI + nrTimes;
+
+  if (endI >= itsSize)
+    endI -= itsSize;
+
+  Beamlet *dst = reinterpret_cast<Beamlet *>(itsSBBuffers[0][startI].origin());
+  
+  // in synchronous mode, do not overrun tail of reader
+  itsSynchronizedReaderWriter->startWrite(begin, end);
+  // do not write in circular buffer section that is being read
+  itsLockedRanges.lock(startI, endI, itsSize);
+
+  while (itsCurrentI != endI) {
+    writePacket(dst, reinterpret_cast<const Beamlet *>(itsCurrentPacketPtr));
+    itsCurrentPacketPtr += itsPacketSize;
+    dst			+= itsNrTimesPerPacket;
+
+    if ((itsCurrentI += itsNrTimesPerPacket) == itsSize) {
+      itsCurrentI = 0;
+      dst	  = reinterpret_cast<Beamlet *>(itsSBBuffers.origin());
+    }
+  }
+
+  itsCurrentTimeStamp = end;
+  updateValidData(begin, end);
+
+  itsLockedRanges.unlock(startI, endI, itsSize);
+  itsSynchronizedReaderWriter->finishedWrite(end);
+}
+
+
+void BeamletBuffer::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
+{
+  // A packet with unexpected timestamp was received.  Handle accordingly.
+
+  itsCurrentTimeStamp = newTimeStamp;
+  itsCurrentI	      = mapTime2Index(newTimeStamp);
+
+  if (!aligned(itsCurrentI, itsNrTimesPerPacket)) {
+    // RSP board reset?  Recompute itsOffset and clear the entire buffer.
+    itsOffset = - (itsCurrentI % itsNrTimesPerPacket);
+    itsCurrentI = mapTime2Index(newTimeStamp);
+
+    pthread_mutex_lock(&itsValidDataMutex);
+    itsValidData.reset();
+    pthread_mutex_unlock(&itsValidDataMutex);
+
+    std::clog << "reset BeamletBuffer" << std::endl;
+  }
+}
+
+
+void BeamletBuffer::writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &timeStamps)
+{
+  itsWriteTimer.start();
+  itsCurrentPacketPtr = reinterpret_cast<const char *>(rspData) + sizeof(struct RSP::header);
+
+  for (unsigned first = 0, last; first < timeStamps.size();) {
+    if (timeStamps[first] != itsCurrentTimeStamp)
+      resetCurrentTimeStamp(timeStamps[first]);
+
+    // find a series of consecutively timed packets
+    for (last = first + 1; last < timeStamps.size() && timeStamps[last] == timeStamps[last - 1] + itsNrTimesPerPacket; last ++)
+      ;
+
+    writeConsecutivePackets(last - first);
+    first = last;
+  }
+
+  itsWriteTimer.stop();
+}
+
+
 void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
 {
   itsWriteTimer.start();
 
-  TimeStamp end = begin + nrTimesPerPacket;
+  TimeStamp end = begin + itsNrTimesPerPacket;
 
   // cache previous index, to avoid expensive mapTime2Index()
   unsigned startI;
@@ -91,9 +214,9 @@ void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
   } else {
     startI = mapTime2Index(begin);
 
-    if (!aligned(startI, nrTimesPerPacket)) {
+    if (!aligned(startI, itsNrTimesPerPacket)) {
       // RSP board reset?  Recompute itsOffset and clear the entire buffer.
-      itsOffset = - (startI % nrTimesPerPacket);
+      itsOffset = - (startI % itsNrTimesPerPacket);
       startI    = mapTime2Index(begin);
 
       pthread_mutex_lock(&itsValidDataMutex);
@@ -104,7 +227,7 @@ void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
     //std::clog << "timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset << std::endl;
   }
 
-  unsigned endI = startI + nrTimesPerPacket;
+  unsigned endI = startI + itsNrTimesPerPacket;
 
   if (endI >= itsSize)
     endI -= itsSize;
@@ -131,13 +254,12 @@ void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
 #endif
 #else
   Beamlet *dst = reinterpret_cast<Beamlet *>(itsSBBuffers[0][startI].origin());
-  size_t stride = reinterpret_cast<Beamlet *>(itsSBBuffers[1][startI].origin()) - dst;
   
   for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-    for (unsigned time = 0; time < nrTimesPerPacket; time ++)
+    for (unsigned time = 0; time < itsNrTimesPerPacket; time ++)
       dst[time] = *data ++;
 
-    dst += stride;
+    dst += itsStride;
   }
 #endif
 

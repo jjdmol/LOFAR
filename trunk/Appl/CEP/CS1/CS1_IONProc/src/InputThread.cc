@@ -29,6 +29,7 @@
 #include <Common/hexdump.h>
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
 #include <Stream/NullStream.h>
 #include <Stream/SystemCallException.h>
 #include <BeamletBuffer.h>
@@ -39,6 +40,8 @@
 #include <signal.h>
 
 #include <cstddef>
+
+#include <boost/multi_array.hpp>
 
 
 namespace LOFAR {
@@ -137,26 +140,30 @@ void InputThread::mainLoop()
 {
   setAffinity();
 
-  TimeStamp actualstamp = itsArgs.startTime - itsArgs.nrTimesPerPacket;
-  unsigned  packetSize	= sizeof(struct RSP::header) + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
+  const unsigned maxNrPackets = 128;
+  TimeStamp	 actualstamp  = itsArgs.startTime - itsArgs.nrTimesPerPacket;
+  unsigned	 packetSize   = sizeof(struct RSP::header) + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
 
-  unsigned previousSeqid = 0;
-  bool previousSeqidIsAccepted = false;
+  std::vector<TimeStamp> timeStamps(maxNrPackets);
+  boost::multi_array<char, 2, AlignedStdAllocator<char, 32> > packets(boost::extents[maxNrPackets][packetSize]);
+
+  char		*currentPacketPtr	    = packets.origin();
+  unsigned	currentPacket		    = 0;
+
+  unsigned	previousSeqid		    = 0;
+  bool		previousSeqidIsAccepted	    = false;
   
-  RSP packet __attribute__ ((aligned(16))); // Max RSP packet size
-
-  bool dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
+  bool		dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
+  WallClockTime wallClockTime;
 
   std::clog << "input thread " << itsArgs.threadID << " entering loop" << std::endl;
-
-  WallClockTime wallClockTime;
 
   while (!stop) {
     try {
       // interruptible read, to allow stopping this thread even if the station
       // does not send data
 
-      itsArgs.stream->read(&packet, packetSize);
+      itsArgs.stream->read(currentPacketPtr, packetSize);
     } catch (SystemCallException &ex) {
       if (ex.error == EINTR)
 	break;
@@ -170,11 +177,11 @@ void InputThread::mainLoop()
 #if defined __PPC__
       unsigned seqid, blockid;
 
-      asm volatile ("lwbrx %0,%1,%2" : "=r" (seqid)   : "b" (&packet), "r" (offsetof(RSP, header.timestamp)));
-      asm volatile ("lwbrx %0,%1,%2" : "=r" (blockid) : "b" (&packet), "r" (offsetof(RSP, header.blockSequenceNumber)));
+      asm volatile ("lwbrx %0,%1,%2" : "=r" (seqid)   : "b" (currentPacketPtr), "r" (offsetof(RSP, header.timestamp)));
+      asm volatile ("lwbrx %0,%1,%2" : "=r" (blockid) : "b" (currentPacketPtr), "r" (offsetof(RSP, header.blockSequenceNumber)));
 #else
-      unsigned seqid   = packet.header.timestamp;
-      unsigned blockid = packet.header.blockSequenceNumber;
+      unsigned seqid   = reinterpret_cast<RSP *>(currentPacketPtr)->header.timestamp;
+      unsigned blockid = reinterpret_cast<RSP *>(currentPacketPtr)->header.blockSequenceNumber;
 
 #if defined WORDS_BIGENDIAN
       seqid   = byteSwap(seqid);
@@ -212,7 +219,16 @@ void InputThread::mainLoop()
     }
 
     // expected packet received so write data into corresponding buffer
-    itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(&packet.data), actualstamp);
+    //itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(&packet.data), actualstamp);
+
+    timeStamps[currentPacket] = actualstamp;
+    currentPacketPtr += packetSize;
+
+    if (++ currentPacket == maxNrPackets) {
+      itsArgs.BBuffer->writeMultiplePackets(packets.origin(), timeStamps);
+      currentPacket    = 0;
+      currentPacketPtr = packets.origin();
+    }
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
