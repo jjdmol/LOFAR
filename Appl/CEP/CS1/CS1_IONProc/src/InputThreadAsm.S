@@ -67,17 +67,17 @@ _copy_pkt_to_bbuffer_128_bytes:
 1:	lfpdux	0,5,8
 	lfpdux	1,5,8
 	lfpdux	2,5,8
-	stfpdux	0,3,4
-	stfpdux	1,3,8
-	stfpdux	2,3,8
 	lfpdux	3,5,8
 	lfpdux	4,5,8
 	lfpdux	5,5,8
+	lfpdux	6,5,8
+	lfpdux	7,5,8
+	stfpdux	0,3,4
+	stfpdux	1,3,8
+	stfpdux	2,3,8
 	stfpdux	3,3,8
 	stfpdux	4,3,8
 	stfpdux	5,3,8
-	lfpdux	6,5,8
-	lfpdux	7,5,8
 	stfpdux	6,3,8
 	stfpdux	7,3,8
 	bdnz	1b
