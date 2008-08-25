@@ -160,9 +160,16 @@ void MeqDipoleBeamExternal::evaluate(const MeqRequest &request,
     // external functions).
     vector<dcomplex> xParms(8, makedcomplex(0.0, 0.0));
     vector<dcomplex> yParms(8, makedcomplex(0.0, 0.0));
+
+    // TODO: Inside external function, these parameters are added to the
+    // azimuth. The resulting azimuth is therefore:
+    //
+    // az = az + orientation (- pi / 2.0)
+    //
+    // Whereas it seems to me that the orientation should be subtracted
+    // instead of added. It probably does not matter much, because the
+    // beam pattern is symmetric with respect to azimuth.
     xParms[7] = makedcomplex(in_orientation.getDouble(0, 0), 0.0);
-    // TODO: Why is pi/2 subtracted instead of added (see global_model.py in
-    // makebeam_hba_{phi, theta}?
     yParms[7] =
         makedcomplex(in_orientation.getDouble(0, 0) - casa::C::pi_2, 0.0);
         
@@ -174,12 +181,14 @@ void MeqDipoleBeamExternal::evaluate(const MeqRequest &request,
         xParms[1] = makedcomplex(freq, 0.0);
         yParms[1] = makedcomplex(freq, 0.0);
 
-        // TODO: Where does the -pi/4 term come from (see global_model.py in
-        // EJones_HBA)? Is this just the default dipole orientation? If so, the
-        // term should be removed in favor of setting a correct dipole
-        // orientation in the parameter database (such that the orientation in
-        // the parameter database corresponds 1:1 with the real orientation).
-        xParms[2] = yParms[2] = makedcomplex(az[t] - casa::C::pi_4, 0.0);
+        // TODO: Where does the -pi/4 term in azimuth come from (see
+        // global_model.py in EJones_HBA)? Is this just the default dipole
+        // orientation? If so, the term should be removed in favor of setting
+        // a correct dipole orientation in the parameter database (such that
+        // the orientation in the parameter database corresponds 1:1 with the
+        // real orientation).
+//        xParms[2] = yParms[2] = makedcomplex(az[t] - casa::C::pi_4, 0.0);
+        xParms[2] = yParms[2] = makedcomplex(az[t], 0.0);
         xParms[3] = yParms[3] = makedcomplex(el[t], 0.0);
                     
         for(int f = 0; f < request.nx(); ++f)

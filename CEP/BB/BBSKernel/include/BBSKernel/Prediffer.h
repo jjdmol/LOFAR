@@ -64,7 +64,6 @@ namespace BBS
 // It subtracts them from each other and calculates the derivatives.
 // These results can be sent to the solver to find better parameter values.
 
-
 class Prediffer
 {
 public:
@@ -96,9 +95,7 @@ public:
         const vector<string> &stations2,
         const vector<string> &polarizations);
     
-    void setModelConfig(OperationType operation,
-        const vector<string> &components,
-        const vector<string> &sources);
+    void setModelConfig(OperationType operation, const ModelConfig &config);
         
     // Operations that can be performed on the data. The setModelConfig()
     // function should be called prior to calling any of these functions. This

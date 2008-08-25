@@ -41,6 +41,7 @@ namespace LOFAR
 {
 namespace BBS
 {
+class ModelConfig;
 class Instrument;
 class MeqParmGroup;
 class MeqPhaseRef;
@@ -49,6 +50,7 @@ class MeqStation;
 class MeqStatUVW;
 class MeqLMN;
 class MeqJonesExpr;
+class BeamCoeff;
 
 class Model
 {
@@ -60,9 +62,7 @@ public:
         BANDPASS = 0,
         GAIN,
         DIRECTIONAL_GAIN,
-        DIPOLE_BEAM_LBA,
-        DIPOLE_BEAM_HBA,
-        PHASORS,
+        BEAM,
         N_ModelComponent
     };
 
@@ -79,10 +79,10 @@ public:
 
     void setStationUVW(const Instrument &instrument, VisData::Pointer buffer);
 
-    void makeEquations(EquationType type, const vector<string> &components,
-        const vector<baseline_t> &baselines, const vector<string> &sources,
-        MeqParmGroup &parmGroup, ParmDB::ParmDB *instrumentDBase,
-        MeqPhaseRef *phaseRef, VisData::Pointer buffer);
+    void makeEquations(EquationType type, const ModelConfig &config,
+        const vector<baseline_t> &baselines, MeqParmGroup &parmGroup,
+        ParmDB::ParmDB *instrumentDBase, MeqPhaseRef *phaseRef,
+        VisData::Pointer buffer);
 
     void clearEquations();
     
@@ -98,6 +98,12 @@ private:
         const MeqPhaseRef &phaseRef);
 
     void makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef);
+
+    void makeBeamNodes(const ModelConfig &config,
+        LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
+        vector<vector<MeqJonesExpr> > &result) const;
+
+    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
     scoped_ptr<MeqSourceList>           itsSourceList;
     vector<shared_ptr<MeqStation> >     itsStationNodes;

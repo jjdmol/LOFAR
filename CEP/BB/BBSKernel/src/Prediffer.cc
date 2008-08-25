@@ -378,8 +378,7 @@ bool Prediffer::setSelection(const string &filter,
 
 
 void Prediffer::setModelConfig(OperationType operation,
-    const vector<string> &components,
-    const vector<string> &sources)
+    const ModelConfig &config)
 {
     // Reset state.
     resetState();
@@ -404,8 +403,8 @@ void Prediffer::setModelConfig(OperationType operation,
     ASSERT(type != Model::UNSET);
 
     // Construct model equations.
-    itsModel->makeEquations(type, components, itsBaselineSelection, sources,
-        itsParameters, &itsInstrumentDb, &itsPhaseRef, itsChunk);
+    itsModel->makeEquations(type, config, itsBaselineSelection, itsParameters,
+        &itsInstrumentDb, &itsPhaseRef, itsChunk);
 
     // Initialize all funklets that intersect the chunk.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
