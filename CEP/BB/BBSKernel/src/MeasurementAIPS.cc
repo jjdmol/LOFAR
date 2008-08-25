@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementAIPS.h>
+#include <BBSKernel/Exceptions.h>
 
 #include <cstring>
 #include <Common/Timer.h>
@@ -124,10 +125,8 @@ MeasurementAIPS::~MeasurementAIPS()
 VisDimensions
 MeasurementAIPS::getDimensions(const VisSelection &selection) const
 {
-    TableExprNode taqlExpr = getTAQLExpression(selection);
     Slicer slicer = getCellSlicer(selection);
-
-    Table tab_selection = itsMS(taqlExpr);
+    Table tab_selection = getTableSelection(itsMS, selection);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
     return getDimensionsImpl(tab_selection, slicer);
@@ -140,13 +139,12 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
     NSTimer readTimer, copyTimer;
 
     Slicer slicer = getCellSlicer(selection);
-    TableExprNode taqlExpr = getTAQLExpression(selection);
-    Table tab_selection = itsMS(taqlExpr);
+    Table tab_selection = getTableSelection(itsMS, selection);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
     VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
     VisData::Pointer buffer(new VisData(visDims));
-    
+
     const VisDimensions &dims = buffer->getDimensions();    
     const size_t nChannels = dims.getChannelCount();
     const size_t nPolarizations = dims.getPolarizationCount();
@@ -284,21 +282,23 @@ void MeasurementAIPS::write(const VisSelection &selection,
 
         // Added column should get the same shape as the other data columns in
         // the MS.
-        ArrayColumnDesc<Complex> descriptor(column,
-            IPosition(2, getPolarizationCount(), getChannelCount()),
+        ArrayColumnDesc<Complex> columnDescriptor(column,
+            IPosition(2, itsDimensions.getPolarizationCount(),
+                itsDimensions.getChannelCount()),
             ColumnDesc::FixedShape);
-        TiledColumnStMan storageManager("Tiled_" + column,
-            IPosition(3, getPolarizationCount(), getChannelCount(), 1));
 
-        itsMS.addColumn(descriptor, storageManager);
+        TiledColumnStMan storageManager("Tiled_" + column,
+            IPosition(3, itsDimensions.getPolarizationCount(),
+                itsDimensions.getChannelCount(), 1));
+
+        itsMS.addColumn(columnDescriptor, storageManager);
         itsMS.flush();
     }
 */
     LOG_DEBUG_STR("Writing to column: " << column);
 
     Slicer slicer = getCellSlicer(selection);
-    TableExprNode taqlExpr = getTAQLExpression(selection);
-    Table tab_selection = itsMS(taqlExpr);
+    Table tab_selection = getTableSelection(itsMS, selection);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
     const VisDimensions &dims = buffer->getDimensions();
@@ -584,66 +584,90 @@ void MeasurementAIPS::initFieldInfo(const ROMSFieldColumns &field, uint id)
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
 // within a specialization of VisSelection or VisData.
-TableExprNode
-MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
+Table MeasurementAIPS::getTableSelection(const Table &table,
+    const VisSelection &selection) const
 {
+    // If no selection criteria are specified, return immediately.
+    if(selection.empty())
+    {
+        return table;
+    }
+
     TableExprNode filter(true);
 
     const pair<double, double> &timeRange = selection.getTimeRange();
     if(selection.isSet(VisSelection::TIME_START))
     {
-        filter = filter &&
-            itsMS.col("TIME") >= timeRange.first;
+        filter = filter && table.col("TIME") >= timeRange.first;
     }
 
     if(selection.isSet(VisSelection::TIME_END))
     {
-        filter = filter
-            && itsMS.col("TIME") <= timeRange.second;
+        filter = filter && table.col("TIME") <= timeRange.second;
     }
 
     if(selection.isSet(VisSelection::STATIONS))
     {
-        set<string> stations = selection.getStations();
-        ASSERT(stations.size() > 0);
+        const set<string> &regexSet = selection.getStations();
+        set<size_t> stationSelection;
 
-        set<size_t> selection;
-        for(set<string>::const_iterator it = stations.begin();
-            it != stations.end();
-            ++it)
+        try
         {
-            Regex regex = Regex::fromPattern(*it);
-
-            // If the name of a station matches the pattern, add it to the
-            // selection.
-            for(size_t i = 0; i < itsInstrument.stations.size(); ++i)
+            for(set<string>::const_iterator it = regexSet.begin();
+                it != regexSet.end();
+                ++it)
             {
-                String name(itsInstrument.stations[i].name);
-                if(name.matches(regex))
+                Regex regex(Regex::fromPattern(*it));
+
+                // If the name of a station matches the pattern, add it to the
+                // selection.
+                for(size_t i = 0; i < itsInstrument.stations.size(); ++i)
                 {
-                    selection.insert(i);
+                    String name(itsInstrument.stations[i].name);
+
+                    if(name.matches(regex))
+                    {
+                        stationSelection.insert(i);
+                    }
                 }
             }
         }
-
-        TableExprNodeSet selectionExpr;
-        for(set<size_t>::const_iterator it = selection.begin();
-            it != selection.end();
-            ++it)
+        catch(std::exception &ex)
         {
-            selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(*it)));
+            THROW(BBSKernelException, "Encountered an invalid station"
+               " selection criterium.");
         }
+        
+        if(stationSelection.empty())
+        {
+            LOG_WARN_STR("Station selection criteria did not maych any"
+                " station in the MS; criteria will be ignored.");
+        }
+        else
+        {
+            TableExprNodeSet selectionExpr;
+            for(set<size_t>::const_iterator it = stationSelection.begin();
+                it != stationSelection.end();
+                ++it)
+            {
+                selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(*it)));
+            }
 
-        filter = filter && itsMS.col("ANTENNA1").in(selectionExpr)
-            && itsMS.col("ANTENNA2").in(selectionExpr);
+            filter = filter && table.col("ANTENNA1").in(selectionExpr)
+                && table.col("ANTENNA2").in(selectionExpr);
+        }
     }
 
     if(selection.isSet(VisSelection::BASELINE_FILTER))
     {
         if(selection.getBaselineFilter() == VisSelection::AUTO)
-            filter = filter && (itsMS.col("ANTENNA1") == itsMS.col("ANTENNA2"));
+        {
+            filter = filter && (table.col("ANTENNA1") == table.col("ANTENNA2"));
+        }
         else if(selection.getBaselineFilter() == VisSelection::CROSS)
-            filter = filter && (itsMS.col("ANTENNA1") != itsMS.col("ANTENNA2"));
+        {
+            filter = filter && (table.col("ANTENNA1") != table.col("ANTENNA2"));
+        }
     }
 
     if(selection.isSet(VisSelection::POLARIZATIONS))
@@ -652,7 +676,7 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             " polarizations will be used.");
     }
 
-    return filter;
+    return table(filter);
 }
 
 
@@ -773,7 +797,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     vector<baseline_t> baselines(nBaselines);
     for(uInt i = 0; i < nBaselines; ++i)
     {
-        baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
+        baselines[i] = baseline_t(antenna1[i], antenna2[i]);
     }    
     dims.setBaselines(baselines);
 
