@@ -67,6 +67,8 @@ public:
     bool isSet(FieldEnum field) const
     { return itsFieldFlags[field]; }
 
+    bool empty() const;
+    
     void setStartChannel(size_t start);
     void setEndChannel(size_t end);
     void setChannelRange(size_t start, size_t end)

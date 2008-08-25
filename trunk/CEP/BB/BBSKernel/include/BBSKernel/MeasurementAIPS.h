@@ -72,7 +72,8 @@ private:
         uint id);
     void initFieldInfo(const casa::ROMSFieldColumns &field, uint id);
 
-    casa::TableExprNode getTAQLExpression(const VisSelection &selection) const;
+    casa::Table getTableSelection(const casa::Table &table,
+        const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
     VisDimensions getDimensionsImpl(const casa::Table tab_selection,
         const casa::Slicer slicer) const;

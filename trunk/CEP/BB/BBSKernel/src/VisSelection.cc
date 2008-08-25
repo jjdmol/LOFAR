@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/VisSelection.h>
+#include <Common/lofar_algorithm.h>
 
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>
@@ -39,6 +40,12 @@ using casa::Double;
 VisSelection::VisSelection()
 {
     itsFieldFlags.resize(N_FieldEnum, false);
+}
+
+
+bool VisSelection::empty() const
+{
+    return count(itsFieldFlags.begin(), itsFieldFlags.end(), true) == 0;
 }
 
 
