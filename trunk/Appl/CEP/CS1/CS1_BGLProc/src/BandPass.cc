@@ -2095,11 +2095,11 @@ void BandPass::computeCorrectionFactors()
   // This is the square of the bandpass, since the correlator multiplies two
   // bandpasses.  The following matlab functions are used:
 
-  // f=fftshift(fft(Coeffs16384Kaiser-quant,262144))
+  // f=fftshift(fft(Coeffs16384Kaiser_quant,262144))
   // m=f(131073-128:131073+127)
   // r=f(131073-128+256:131073+127+256)
   // l=f(131073-128-256:131073+127-256)
-  // plot(2^50./((abs(m).^2+abs(l).^2+abs(r).^2)./2.^50))
+  // plot(2^50./(abs(m).^2+abs(l).^2+abs(r).^2))
 
   // it is not worth to use the more complex R2C FFTW method
   std::vector<fcomplex, AlignedStdAllocator<fcomplex, 16> > in(262144, 0.0), out(262144);
