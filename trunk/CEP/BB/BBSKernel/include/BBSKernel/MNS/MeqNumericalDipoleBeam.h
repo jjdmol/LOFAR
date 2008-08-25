@@ -42,6 +42,25 @@ namespace BBS
 // \addtogroup MNS
 // @{
 
+class BeamCoeff
+{
+public:
+    BeamCoeff()
+        : freqAvg(0.0), freqRange(1.0)
+    {}
+
+    BeamCoeff(double avg, double range,
+        const shared_ptr<const boost::multi_array<dcomplex, 4> > &ptr)
+        :   freqAvg(avg),
+            freqRange(range),
+            coeff(ptr)
+    {}
+
+    double  freqAvg, freqRange;
+    shared_ptr<const boost::multi_array<dcomplex, 4> > coeff;
+};
+
+
 class MeqNumericalDipoleBeam: public MeqJonesExprRep
 {
 public:
@@ -52,10 +71,8 @@ public:
         N_InputPort
     } InputPort;
     
-    typedef boost::multi_array<dcomplex, 4> BeamCoeffType;
-
-    MeqNumericalDipoleBeam(shared_ptr<const BeamCoeffType> coeff, MeqExpr azel,
-        MeqExpr orientation);
+    MeqNumericalDipoleBeam(const BeamCoeff &coeff, const MeqExpr &azel,
+        const MeqExpr &orientation);
 
     virtual MeqJonesResult getJResult(const MeqRequest &request);
 
@@ -64,15 +81,12 @@ public:
         MeqMatrix &out_E11, MeqMatrix &out_E12, 
         MeqMatrix &out_E21, MeqMatrix &out_E22);
 
-private:
-    inline void evalProjectionMatrix(size_t harmonic,
-        const vector<double> &theta, const vector<double> &freq, dcomplex P[]);
-
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
 
-    shared_ptr<const BeamCoeffType>   itsCoeff;
+private:
+    BeamCoeff   itsBeamCoeff;
 };
 
 // @}

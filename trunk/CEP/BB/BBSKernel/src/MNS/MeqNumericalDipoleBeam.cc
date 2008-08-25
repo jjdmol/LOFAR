@@ -31,13 +31,17 @@ namespace LOFAR
 namespace BBS 
 {
 
-MeqNumericalDipoleBeam::MeqNumericalDipoleBeam
-    (shared_ptr<const BeamCoeffType> coeff, MeqExpr azel, MeqExpr orientation)
-    : itsCoeff(coeff)
+MeqNumericalDipoleBeam::MeqNumericalDipoleBeam(const BeamCoeff &coeff,
+    const MeqExpr &azel, const MeqExpr &orientation)
+    : itsBeamCoeff(coeff)
 {
+    ASSERT(itsBeamCoeff.coeff);
+    ASSERT(itsBeamCoeff.coeff->size() > 0);
+    
     addChild(azel);
     addChild(orientation);
 }
+
 
 MeqJonesResult MeqNumericalDipoleBeam::getJResult(const MeqRequest &request)
 {
@@ -136,54 +140,68 @@ void MeqNumericalDipoleBeam::evaluate(const MeqRequest &request,
     out_E22.dcomplexStorage(E22_re, E22_im);
     
     // Evaluate beam.
-    const size_t nHarmonics = itsCoeff->shape()[1];
-    const size_t nTheta = itsCoeff->shape()[2];
-    const size_t nFreq = itsCoeff->shape()[3];
+    const size_t nHarmonics = itsBeamCoeff.coeff->shape()[1];
+    const size_t nTheta = itsBeamCoeff.coeff->shape()[2];
+    const size_t nFreq = itsBeamCoeff.coeff->shape()[3];
 
-    vector<double> thetaExp(nTheta);
-    vector<double> freqExp(nFreq);
+    const boost::multi_array<dcomplex, 4> &coeff = *itsBeamCoeff.coeff;
 
     size_t sample = 0;
     for(size_t t = 0; t < static_cast<size_t>(request.ny()); ++t)
     {
         double freq = request.domain().startX() + 0.5 * request.stepX();
-        const double theta = casa::C::pi_2 - el[t];
 
-        // Compute vector of powers of the current _zenith angle_ theta.
-        thetaExp[0] = 1.0;
-        for(size_t i = 1; i < thetaExp.size(); ++i)
-        {
-            thetaExp[i] = thetaExp[i - 1] * theta;
-        }
+        // Correct azimuth for dipole orientation.
+        const double phi = az[t] - orientation;
+
+        // NB: The model is parameterized in terms of zenith angle. The
+        // appropriate conversion is taken care of below.
+        const double theta = casa::C::pi_2 - el[t];
 
         for(size_t f = 0; f < static_cast<size_t>(request.nx()); ++f)
         {
-            // Compute vector of powers of the current frequency.
-            freqExp[0] = 1.0;
-            for(size_t i = 1; i < freqExp.size(); ++i)
-            {
-                freqExp[i] = freqExp[i - 1] * freq;
-            }
+            // NB: The model is parameterized in terms of a normalized
+            // frequency in the range [-1, 1]. The appropriate conversion is
+            // taken care of below.
+            const double scaledFreq = (freq - itsBeamCoeff.freqAvg)
+                / itsBeamCoeff.freqRange;
 
-            dcomplex P[2], J[2][2];
+            // J-jones matrix (2x2 complex matrix)
+            dcomplex J[2][2];
             J[0][0] = J[0][1] = J[1][0] = J[1][1] = makedcomplex(0.0, 0.0);
             
             for(size_t k = 0; k < nHarmonics; ++k)
             {
-                // Compute P for the current harmonic.
-                evalProjectionMatrix(k, thetaExp, freqExp, P);
+                // Compute diagonal projection matrix P for the current
+                // harmonic.
+                dcomplex P[2];
+                P[0] = P[1] = makedcomplex(0.0, 0.0);
+
+                dcomplex inner[2];
+                for(long i = nTheta - 1; i >= 0; --i)
+                {
+                    inner[0] = coeff[0][k][i][nFreq - 1];
+                    inner[1] = coeff[1][k][i][nFreq - 1];
+
+                    for(long j = nFreq - 2; j >= 0; --j)
+                    {
+                        inner[0] = inner[0] * scaledFreq + coeff[0][k][i][j];
+                        inner[1] = inner[1] * scaledFreq + coeff[1][k][i][j];
+                    }
+                    P[0] = P[0] * theta + inner[0];
+                    P[1] = P[1] * theta + inner[1];
+                }
+
+                // Compute J-jonex matrix for this harmonic by rotating
+                // P over kappa * phi and add it to the result.
+                const double kappa = ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
+                const double cphi = std::cos(kappa * phi);
+                const double sphi = std::sin(kappa * phi);
                 
-                const double kappa = ((k + 1) % 2 == 0 ? 1 : -1) * (2 * k + 1);
-                const double phi = kappa * (az[t] - orientation);
-                
-                const double cosphi = std::cos(phi);
-                const double sinphi = std::sin(phi);
-                
-                // R(kappa(k) * phi) * Pk(theta).
-                J[0][0] += cosphi * P[0];
-                J[0][1] += -sinphi * P[1];
-                J[1][0] += sinphi * P[0];
-                J[1][1] += cosphi * P[1];
+                J[0][0] += cphi * P[0];
+                J[0][1] += -sphi * P[1];
+                J[1][0] += sphi * P[0];
+                J[1][1] += cphi * P[1];
             }
 
             E11_re[sample] = real(J[0][0]);
@@ -202,31 +220,6 @@ void MeqNumericalDipoleBeam::evaluate(const MeqRequest &request,
             ++sample;
         }
     }
-}
-
-
-void MeqNumericalDipoleBeam::evalProjectionMatrix(size_t harmonic,
-    const vector<double> &theta, const vector<double> &freq, dcomplex P[])
-{
-    typedef boost::multi_array<dcomplex, 4>::index_range range;
-    boost::multi_array<dcomplex, 4>::const_array_view<2>::type coeff00 =
-        (*itsCoeff)[boost::indices[0][harmonic][range()][range()]];
-    boost::multi_array<dcomplex, 4>::const_array_view<2>::type coeff11 =
-        (*itsCoeff)[boost::indices[1][harmonic][range()][range()]];
-
-    dcomplex inner[2];
-    P[0] = P[1] = makedcomplex(0.0, 0.0);
-    for(size_t i = 0; i < theta.size(); ++i)
-    {
-        inner[0] = inner[1] = makedcomplex(0.0, 0.0);
-        for(size_t j = 0; j < freq.size(); ++j)
-        {
-            inner[0] += coeff00[i][j] * freq[j];
-            inner[1] += coeff11[i][j] * freq[j];
-        }
-        P[0] += inner[0] * theta[i];
-        P[1] += inner[1] * theta[i];
-    }        
 }
 
 
