@@ -301,8 +301,7 @@ void CommandExecutor::visit(const PredictStep &command)
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SIMULATE, command.instrumentModels(),
-        command.sources());
+    itsKernel->setModelConfig(Prediffer::SIMULATE, command.modelConfig());
         
     // Compute simulated visibilities.
     itsKernel->simulate();
@@ -338,8 +337,7 @@ void CommandExecutor::visit(const SubtractStep &command)
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SUBTRACT, command.instrumentModels(),
-        command.sources());
+    itsKernel->setModelConfig(Prediffer::SUBTRACT, command.modelConfig());
         
     // Subtract the simulated visibilities from the observed visibilities.
     itsKernel->subtract();
@@ -375,8 +373,7 @@ void CommandExecutor::visit(const CorrectStep &command)
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CORRECT, command.instrumentModels(),
-        command.sources());
+    itsKernel->setModelConfig(Prediffer::CORRECT, command.modelConfig());
         
     // Correct the visibilities.
     itsKernel->correct();
@@ -446,8 +443,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
-        command.sources());
+    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.modelConfig());
 
     if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
     {
@@ -639,8 +635,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
-        command.sources());
+    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.modelConfig());
 
     if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
     {

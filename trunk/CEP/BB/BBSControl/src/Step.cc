@@ -35,6 +35,7 @@
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -82,12 +83,12 @@ namespace LOFAR
       // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
       // \a name is a MultiStep, otherwise it is a SingleStep.
       if (parset.isDefined("Step." + name + ".Steps")) {
-	LOG_TRACE_COND_STR(name << " is a MultiStep");
-	step.reset(new MultiStep(name, parset, parent));
+        LOG_TRACE_COND_STR(name << " is a MultiStep");
+      	step.reset(new MultiStep(name, parset, parent));
       } else {
-	LOG_TRACE_COND_STR(name << " is a SingleStep");
-	// We'll have to figure out what kind of SingleStep we must
-	// create. The key "Operation" contains this information.
+      	LOG_TRACE_COND_STR(name << " is a SingleStep");
+      	// We'll have to figure out what kind of SingleStep we must
+      	// create. The key "Operation" contains this information.
         try {
           string oper = 
             toUpper(parset.getString("Step." + name + ".Operation"));
@@ -136,23 +137,57 @@ namespace LOFAR
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       const string prefix = "Step." + itsName + ".";
       ps.replace(prefix + "Baselines.Station1",
-                 toString(itsBaselines.station1));
+                  toString(itsBaselines.station1));
       ps.replace(prefix + "Baselines.Station2",
-                 toString(itsBaselines.station2));
+                  toString(itsBaselines.station2));
       ps.replace(prefix + "Correlation.Selection",
-                 itsCorrelation.selection);
+                  itsCorrelation.selection);
       ps.replace(prefix + "Correlation.Type",
-                 toString(itsCorrelation.type));
+                  toString(itsCorrelation.type));
       ps.replace(prefix + "Integration.Freq",
-                 toString(itsIntegration.deltaFreq));
+                  toString(itsIntegration.deltaFreq));
       ps.replace(prefix + "Integration.Time",
-                 toString(itsIntegration.deltaTime));
-      ps.replace(prefix + "Sources",
-                 toString(itsSources));
-      ps.replace(prefix + "ExtraSources",
-                 toString(itsExtraSources));
-      ps.replace(prefix + "InstrumentModel",
-                 toString(itsInstrumentModels));
+                  toString(itsIntegration.deltaTime));
+      ps.replace(prefix + "Model.UsePhasors",
+                  toString(itsModelConfig.usePhasors));
+      ps.replace(prefix + "Model.Sources",
+                  toString(itsModelConfig.sources));
+      ps.replace(prefix + "Model.Components",
+                  toString(itsModelConfig.components));
+      
+      // Cancel any inherited beam type. If we did inherit, this key will
+      // be replaced again below (this is related to bug 1054).
+      ps.replace(prefix + "Model.Beam.Type", "");
+
+      if(itsModelConfig.beamConfig)
+      {
+        ps.replace(prefix + "Model.Beam.Type",
+                  itsModelConfig.beamConfig->type());
+
+        if(itsModelConfig.beamConfig->type() == "HamakerDipole")
+        {
+          HamakerDipoleConfig::ConstPointer config =
+            dynamic_pointer_cast<const HamakerDipoleConfig>
+              (itsModelConfig.beamConfig);
+          ASSERT(config);
+              
+          ps.replace(prefix + "Model.Beam.CoeffFile",
+                  config->coeffFile);
+        }
+        else if(itsModelConfig.beamConfig->type() == "YatawattaDipole")
+        {
+          YatawattaDipoleConfig::ConstPointer config =
+            dynamic_pointer_cast<const YatawattaDipoleConfig>
+              (itsModelConfig.beamConfig);
+          ASSERT(config);
+
+          ps.replace(prefix + "Model.Beam.ModuleTheta",
+                  config->moduleTheta);
+          ps.replace(prefix + "Model.Beam.ModulePhi",
+                  config->modulePhi);
+        }
+      }
+
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -180,17 +215,64 @@ namespace LOFAR
       itsIntegration.deltaTime = 
         ps.getDouble("Integration.Time", itsIntegration.deltaTime);
 
-      // Get the sources for the current patch.
-      itsSources = 
-        ps.getStringVector("Sources", itsSources);
+      // Get the model configuration.
+      itsModelConfig.usePhasors =
+        ps.getBool("Model.UsePhasors", itsModelConfig.usePhasors);
+      itsModelConfig.sources =
+        ps.getStringVector("Model.Sources", itsModelConfig.sources);
+      itsModelConfig.components =
+        ps.getStringVector("Model.Components", itsModelConfig.components);
+        
+      if(ps.isDefined("Model.Beam.Type")) {
+        string beamType(ps.getString("Model.Beam.Type"));
 
-      // Get the extra source, outside the current patch.
-      itsExtraSources = 
-        ps.getStringVector("ExtraSources", itsExtraSources);
+        if(beamType.empty()) {
+          itsModelConfig.beamConfig.reset();
+        }
+        else if(beamType == "HamakerDipole") {
+          HamakerDipoleConfig::ConstPointer parentConfig =
+            dynamic_pointer_cast<const HamakerDipoleConfig>
+              (itsModelConfig.beamConfig);
+                
+          HamakerDipoleConfig::Pointer config(new HamakerDipoleConfig());
 
-      // Get the instrument model(s) used.
-      itsInstrumentModels = 
-        ps.getStringVector("InstrumentModel", itsInstrumentModels);
+          config->coeffFile = ps.getString("Model.Beam.CoeffFile",
+            parentConfig ? parentConfig->coeffFile : string());
+          if(config->coeffFile.empty()) {
+            THROW(BBSControlException, "Model.Beam.CoeffFile expected but not"
+              " found.");
+          }
+        
+          itsModelConfig.beamConfig = config;
+        }
+        else if(beamType == "YatawattaDipole") {
+          YatawattaDipoleConfig::ConstPointer parentConfig =
+            dynamic_pointer_cast<const YatawattaDipoleConfig>
+              (itsModelConfig.beamConfig);
+          
+          YatawattaDipoleConfig::Pointer config(new YatawattaDipoleConfig());
+
+          config->moduleTheta = ps.getString("Model.Beam.ModuleTheta",
+            parentConfig ? parentConfig->moduleTheta : string());
+          if(config->moduleTheta.empty()) {
+            THROW(BBSControlException, "Model.Beam.ModuleTheta expected but not"
+              " found.");
+          }
+
+          config->modulePhi = ps.getString("Model.Beam.ModulePhi",
+            parentConfig ? parentConfig->modulePhi : string());
+          if(config->modulePhi.empty()) {
+            THROW(BBSControlException, "Model.Beam.ModulePhi expected but not"
+              " found.");
+          }
+
+          itsModelConfig.beamConfig = config;
+        }
+        else {
+          THROW(BBSControlException, "Unknown beam model type " << beamType
+            << " encountered.");
+        }
+      }        
     }
 
 
@@ -200,13 +282,11 @@ namespace LOFAR
       os << "Step: " << type();
       Indent id;  // add an extra indentation level
       os << endl << indent << "Name: " << itsName
-         << endl << indent << "Full name: " << fullName()
-	 << endl << indent << itsBaselines
-	 << endl << indent << itsCorrelation
-	 << endl << indent << itsIntegration
-	 << endl << indent << "Sources: " << itsSources
-	 << endl << indent << "Extra sources: " << itsExtraSources
-	 << endl << indent << "Instrument models: " << itsInstrumentModels;
+        << endl << indent << "Full name: " << fullName()
+    	  << endl << indent << itsBaselines
+    	  << endl << indent << itsCorrelation
+    	  << endl << indent << itsIntegration
+        << endl << indent << itsModelConfig;
     }
 
 

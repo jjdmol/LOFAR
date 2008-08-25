@@ -29,6 +29,7 @@
 //# Includes
 #include <BBSControl/Command.h>
 #include <BBSControl/Types.h>
+#include <BBSKernel/ModelConfig.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -119,14 +120,8 @@ namespace LOFAR
       // Return the amount of integration that must be applied to the data.
       Integration integration() const { return itsIntegration; }
 
-      // Return the sources in the source model for the current patch.
-      vector<string> sources() const { return itsSources; }
-
-      // Return the extra sources outside the current patch.
-      vector<string> extraSources() const { return itsExtraSources; }
-
-      // Return a list of instrument models to be used for this step.
-      vector<string> instrumentModels() const { return itsInstrumentModels; }
+      // Return the model configuration
+      ModelConfig modelConfig() const { return itsModelConfig; }
 
       // @}
 
@@ -166,7 +161,7 @@ namespace LOFAR
       // except the top-level Step object. The parent reference is used,
       // among other things, to initialize the data members of the child
       // object with those of its parent.
-      const Step*         itsParent;
+      const Step*            itsParent;
 
       // Selection of baselines for this step.
       Baselines              itsBaselines;
@@ -180,16 +175,8 @@ namespace LOFAR
       // data.
       Integration            itsIntegration;
 
-      // The sources in the source model for the current patch.
-      vector<string>         itsSources;
-
-      // Extra sources outside the current patch that may contribute to the
-      // current patch. They should be taken into account in order to improve
-      // the predictions of source parameters for the current patch.
-      vector<string>         itsExtraSources;
-
-      // A list of instrument models to be used for this step.
-      vector<string>         itsInstrumentModels;
+      // Model configuration options as specified in the parameter set file.
+      ModelConfig            itsModelConfig;
 
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);
