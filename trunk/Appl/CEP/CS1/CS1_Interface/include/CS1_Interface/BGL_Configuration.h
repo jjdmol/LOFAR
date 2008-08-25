@@ -40,6 +40,7 @@ class BGL_Configuration
     unsigned		  &nrUsedCoresPerPset();
     unsigned		  &nrSubbandsPerPset();
     bool		  &delayCompensation();
+    bool		  &correctBandPass();
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets();
     std::vector<double>	  &refFreqs();
@@ -62,6 +63,7 @@ class BGL_Configuration
       unsigned		  itsNrUsedCoresPerPset;
       unsigned		  itsNrSubbandsPerPset;
       bool		  itsDelayCompensation;
+      bool		  itsCorrectBandPass;
       double		  itsSampleRate;
       unsigned		  itsInputPsetsSize, itsOutputPsetsSize;
       unsigned		  itsRefFreqsSize;
@@ -99,6 +101,11 @@ inline unsigned &BGL_Configuration::nrSubbandsPerPset()
 inline bool &BGL_Configuration::delayCompensation()
 {
   return itsMarshalledData.itsDelayCompensation;
+}
+
+inline bool &BGL_Configuration::correctBandPass()
+{
+  return itsMarshalledData.itsCorrectBandPass;
 }
 
 inline double &BGL_Configuration::sampleRate()

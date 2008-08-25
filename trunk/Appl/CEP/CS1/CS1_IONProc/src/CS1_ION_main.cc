@@ -144,7 +144,8 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
   configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
-  configuration.delayCompensation()       = parset.getBool("OLAP.delayCompensation");
+  configuration.delayCompensation()       = parset.delayCompensation();
+  configuration.correctBandPass()	  = parset.correctBandPass();
   configuration.sampleRate()              = parset.sampleRate();
   configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");

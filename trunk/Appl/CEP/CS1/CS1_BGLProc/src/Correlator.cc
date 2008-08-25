@@ -18,12 +18,13 @@ static NSTimer correlateTimer("Correlator::correlate()", true);
 static NSTimer weightTimer("Correlator::weight()", true);
 
 
-Correlator::Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration)
+Correlator::Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration, bool correctBandPass)
 :
   itsNrStations(nrStations),
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
-  itsCorrelationWeights(new float[nrSamplesPerIntegration + 1])
+  itsCorrelationWeights(new float[nrSamplesPerIntegration + 1]),
+  itsBandPass(correctBandPass)
 {
 
   itsCorrelationWeights[0] = 0.0;

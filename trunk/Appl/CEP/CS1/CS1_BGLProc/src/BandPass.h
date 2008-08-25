@@ -7,12 +7,14 @@ namespace CS1 {
 
 class BandPass {
   public:
-			BandPass();
+			BandPass(bool correct);
 			~BandPass();
 
     const float		*correctionFactors() const;
 
   private:
+    void		computeCorrectionFactors();
+
     static const float	stationFilterConstants[65536];
     
     float		*factors;

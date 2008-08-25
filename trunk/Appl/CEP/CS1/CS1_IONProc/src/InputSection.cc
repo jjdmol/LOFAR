@@ -154,10 +154,10 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsNrCoresPerPset	= ps->nrCoresPerPset();
   itsSampleDuration     = ps->sampleDuration();
 
-  std::clog << "nrSubbands = "<< ps->nrSubbands() << std::endl;
-  std::clog << "nrStations = "<< ps->nrStations() << std::endl;
+  std::clog << "nrSubbands = " << ps->nrSubbands() << std::endl;
+  std::clog << "nrStations = " << ps->nrStations() << std::endl;
 
-  itsDelayCompensation	      = ps->getBool("OLAP.delayCompensation");
+  itsDelayCompensation	      = ps->delayCompensation();
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();

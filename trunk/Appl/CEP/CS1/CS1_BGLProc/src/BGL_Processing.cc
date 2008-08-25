@@ -307,7 +307,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines);
 
     itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
-    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration);
+    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI
