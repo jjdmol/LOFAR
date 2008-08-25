@@ -2078,7 +2078,19 @@ const float BandPass::stationFilterConstants[65536] =
 };
 
 
-BandPass::BandPass()
+BandPass::BandPass(bool correct)
+:
+  factors(new float[NR_SUBBAND_CHANNELS])
+{
+  if (correct)
+    computeCorrectionFactors();
+  else
+    for (unsigned i = 0; i < NR_SUBBAND_CHANNELS; i ++)
+      factors[i] = 1.0;
+}
+
+
+void BandPass::computeCorrectionFactors()
 {
   // This is the square of the bandpass, since the correlator multiplies two
   // bandpasses.  The following matlab functions are used:
@@ -2106,8 +2118,6 @@ BandPass::BandPass()
 #else
 #error need FFTW2 or FFTW3
 #endif
-
-  factors = new float[NR_SUBBAND_CHANNELS];
 
   for (unsigned i = 0; i < NR_SUBBAND_CHANNELS; i ++) {
     fcomplex m = out[(i - NR_SUBBAND_CHANNELS / 2) % 262144U];

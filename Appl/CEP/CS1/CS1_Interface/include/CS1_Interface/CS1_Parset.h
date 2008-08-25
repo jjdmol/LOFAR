@@ -91,6 +91,8 @@ public:
 	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
 	double         channelWidth() const;
+	bool	       delayCompensation() const;
+	bool	       correctBandPass() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         stationName(const int index) const;
 	static string  expandedArrayString(const string& orgStr);
@@ -295,6 +297,16 @@ inline vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
 inline double CS1_Parset::channelWidth() const
 {
   return sampleRate() / nrChannelsPerSubband();
+}
+
+inline bool CS1_Parset::delayCompensation() const
+{
+  return getBool("OLAP.delayCompensation");
+}
+
+inline bool CS1_Parset::correctBandPass() const
+{
+  return getBool("OLAP.correctBandPass");
 }
 
 inline uint32 CS1_Parset::nrPsetsPerStorage() const
