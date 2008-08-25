@@ -124,9 +124,9 @@ inline CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
 {
   // add visibilities
   {
-    fcomplex	 *dst	= visibilities.origin();
-    const fcomplex *src	= other.visibilities.origin();
-    unsigned	 count	= visibilities.num_elements();
+    fcomplex	   *dst	 = visibilities.origin();
+    const fcomplex *src	 = other.visibilities.origin();
+    unsigned	   count = visibilities.num_elements();
 
     for (unsigned i = 0; i < count; i ++)
       dst[i] += src[i];
