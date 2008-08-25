@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 #include <BBSKernel/Model.h>
 
+#include <BBSKernel/Exceptions.h>
+#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
 #include <BBSKernel/MNS/MeqPhaseRef.h>
@@ -38,8 +40,9 @@
 #include <BBSKernel/MNS/MeqJonesSum.h>
 #include <BBSKernel/MNS/MeqJonesVisData.h>
 #include <BBSKernel/MNS/MeqAzEl.h>
-//#include <BBSKernel/MNS/MeqDipoleBeam.h>
+//include <BBSKernel/MNS/MeqDipoleBeam.h>
 #include <BBSKernel/MNS/MeqDipoleBeamExternal.h>
+#include <BBSKernel/MNS/MeqNumericalDipoleBeam.h>
 
 #include <BBSKernel/MNS/MeqStation.h>
 #include <BBSKernel/MNS/MeqStatUVW.h>
@@ -54,6 +57,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_fstream.h>
+#include <Common/lofar_sstream.h>
+#include <Common/lofar_complex.h>
+#include <Common/lofar_smartptr.h>
 
 #include <measures/Measures/MDirection.h>
 #include <casa/Quanta/Quantum.h>
@@ -80,18 +87,21 @@ Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
 }
 
 
-void Model::makeEquations(EquationType type, const vector<string> &components,
-    const vector<baseline_t> &baselines, const vector<string> &sources,
-    MeqParmGroup &parmGroup, ParmDB *instrumentDBase, MeqPhaseRef *phaseRef,
-    VisData::Pointer buffer)
+void Model::makeEquations(EquationType type, const ModelConfig &config,
+    const vector<baseline_t> &baselines, MeqParmGroup &parmGroup,
+    ParmDB *instrumentDBase, MeqPhaseRef *phaseRef, VisData::Pointer buffer)
 {
     // Parse component names.
     vector<bool> mask(N_ModelComponent, false);
-    for(vector<string>::const_iterator it = components.begin();
-        it != components.end();
+    for(vector<string>::const_iterator it = config.components.begin();
+        it != config.components.end();
         ++it)
     {
-        if(*it == "GAIN")
+        if(*it == "BANDPASS")
+        {
+            mask[BANDPASS] = true;
+        }
+        else if(*it == "GAIN")
         {
             mask[GAIN] = true;
         }
@@ -99,21 +109,9 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         {
             mask[DIRECTIONAL_GAIN] = true;
         }
-        else if(*it == "DIPOLE_BEAM_LBA" && type == SIMULATE)
+        else if(*it == "BEAM" && type == SIMULATE)
         {
-            mask[DIPOLE_BEAM_LBA] = true;
-        }
-        else if(*it == "DIPOLE_BEAM_HBA" && type == SIMULATE)
-        {
-            mask[DIPOLE_BEAM_HBA] = true;
-        }
-        else if(*it == "BANDPASS")
-        {
-            mask[BANDPASS] = true;
-        }
-        else if(*it == "PHASORS")
-        {
-            mask[PHASORS] = true;
+            mask[BEAM] = true;
         }
         else
         {
@@ -121,21 +119,18 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         }
     }
     
-    ASSERTSTR(!(mask[DIPOLE_BEAM_LBA] && mask[DIPOLE_BEAM_HBA]),
-        "Using both DIPOLE_BEAM_LBA and DIPOLE_BEAM_HBA is not supported.");
-
-    string part1(mask[PHASORS] ? "ampl:" : "real:");
-    string part2(mask[PHASORS] ? "phase:" : "imag:");
+    string part1(config.usePhasors ? "ampl:" : "real:");
+    string part2(config.usePhasors ? "phase:" : "imag:");
 
     // Clear all equations.
     clearEquations();
     itsEquationType = type;
 
     // Make nodes for all specified sources (use all if none specified).
-    if(sources.empty())
+    if(config.sources.empty())
         makeSourceNodes(itsSourceList->getSourceNames(), phaseRef);
     else
-        makeSourceNodes(sources, phaseRef);
+        makeSourceNodes(config.sources, phaseRef);
 
     // Make baseline equations.
     size_t nStations = itsStationNodes.size();
@@ -145,7 +140,8 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 
     vector<MeqExpr> azel(nSources);
     vector<MeqExpr> dft(nStations * nSources);
-    vector<MeqJonesExpr> bandpass, gain, dir_gain, dipole_beam;
+    vector<MeqJonesExpr> bandpass, gain, dir_gain;
+    vector<vector<MeqJonesExpr> > beam;
 
     if(mask[BANDPASS])
     {
@@ -162,18 +158,9 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         dir_gain.resize(nStations * nSources);
     }
 
-    if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
+    if(mask[BEAM])
     {
-        dipole_beam.resize(nStations * nSources);
-
-        // TODO: Use station 0 as reference position on earth (see
-        // global_model.py in EJones_HBA). Is this accurate enough?
-        azel.resize(nSources);
-        for(size_t i = 0; i < nSources; ++i)
-        {
-            azel[i] =
-                new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
-        }                    
+        makeBeamNodes(config, instrumentDBase, parmGroup, beam);
     }
 
     for(size_t i = 0; i < nStations; ++i)
@@ -220,7 +207,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             MeqExpr J22_part2(MeqParmFunklet::create("gain:22:" + part2
                 + suffix, parmGroup, instrumentDBase));
 
-            if(mask[PHASORS])
+            if(mask[config.usePhasors])
             {
                 J11 = new MeqExprAPToComplex(J11_part1, J11_part2);
                 J12 = new MeqExprAPToComplex(J12_part1, J12_part2);
@@ -266,7 +253,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 MeqExpr J22_part2(MeqParmFunklet::create("gain:22:" + part2
                     + suffix, parmGroup, instrumentDBase));
 
-                if(mask[PHASORS])
+                if(mask[config.usePhasors])
                 {
                     J11 = new MeqExprAPToComplex(J11_part1, J11_part2);
                     J12 = new MeqExprAPToComplex(J12_part1, J12_part2);
@@ -288,33 +275,6 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 // direction of the first source (patch).
 //                if(j == 0)
 //                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
-            }
-        }
-
-        if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
-        {
-            string suffix = itsStationNodes[i]->getName();
-            MeqExpr orientation(MeqParmFunklet::create("orientation:" + suffix,
-                parmGroup, instrumentDBase));
-
-            string moduleTheta(mask[DIPOLE_BEAM_LBA] ? "beam_dr_theta.so"
-                : "hba_beam_theta.so");
-            string modulePhi(mask[DIPOLE_BEAM_LBA] ? "beam_dr_phi.so"
-                : "hba_beam_phi.so");
-
-            // TODO: Where is this scale factor coming from (see global_model.py
-            // in EJones_droopy_comp and EJones_HBA)?
-            double scaleFactor = mask[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
-                : 1.0 / 600.0;
-
-            // Make an E-jones expression per station per source.
-            for(size_t j = 0; j < nSources; ++j)
-            {
-    //                dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
-    //                    casa::C::pi / 4.001, -casa::C::pi_4);
-                dipole_beam[i * nSources + j] =
-                    new MeqDipoleBeamExternal(moduleTheta, modulePhi, azel[j],
-                        orientation, scaleFactor);
             }
         }
     }
@@ -420,12 +380,12 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 sourceExpr = new MeqJonesMul(sourceExpr, shift);
                 
                 // Apply image plane effects if required.
-                if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
+                if(mask[BEAM])
                 {
                     sourceExpr = new MeqJonesCMul3
-                        (dipole_beam[baseline.first * nSources + j],
+                        (beam[baseline.first][j],
                         sourceExpr,
-                        dipole_beam[baseline.second * nSources + j]);
+                        beam[baseline.second][j]);
                 }
 
                 if(mask[DIRECTIONAL_GAIN])
@@ -693,5 +653,178 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
     }
 }
 
-} //# namespace BBS
-} //# namespace LOFAR
+
+void Model::makeBeamNodes(const ModelConfig &config,
+    LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
+    vector<vector<MeqJonesExpr> > &result) const
+{
+    ASSERT(config.beamConfig);
+    ASSERT(config.beamConfig->type() == "HamakerDipole"
+        || config.beamConfig->type() == "YatawattaDipole");
+    
+    // Create AzEl node for each source-station combination.
+    vector<MeqExpr> azel(itsSourceNodes.size());
+    for(size_t i = 0; i < itsSourceNodes.size(); ++i)
+    {
+        // TODO: This code uses station 0 as reference position on earth
+        // (see global_model.py in EJones_HBA). Is this accurate enough?
+        azel[i] =
+            new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
+    }
+
+    if(config.beamConfig->type() == "HamakerDipole")
+    {
+        HamakerDipoleConfig::ConstPointer beamConfig =
+            dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
+        ASSERT(beamConfig);
+        
+        // Read beam model coefficients.
+        BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
+
+        // Create a beam node for each source-station combination.
+        result.resize(itsStationNodes.size());
+        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        {
+            // Get dipole orientation.
+            MeqExpr orientation(MeqParmFunklet::create("orientation:"
+                + itsStationNodes[i]->getName(), group, db));
+
+            result[i].resize(itsSourceNodes.size());
+            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            {
+                result[i][j] = new MeqNumericalDipoleBeam(coeff, azel[j],
+                    orientation);
+            }
+        }
+    }
+    else if(config.beamConfig->type() == "YatawattaDipole")
+    {
+        YatawattaDipoleConfig::ConstPointer beamConfig =
+            dynamic_pointer_cast<const YatawattaDipoleConfig>
+                (config.beamConfig);
+        ASSERT(beamConfig);
+
+        // TODO: Where is this scale factor coming from (see global_model.py
+        // in EJones_droopy_comp and EJones_HBA)?
+//        const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
+//            : 1.0 / 600.0;
+
+        // Create a beam node for each source-station combination.
+        result.resize(itsStationNodes.size());
+        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        {
+            // Get dipole orientation.
+            MeqExpr orientation(MeqParmFunklet::create("orientation:"
+                + itsStationNodes[i]->getName(), group, db));
+
+            result[i].resize(itsSourceNodes.size());
+            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            {
+//                result[i][j] = new MeqDipoleBeam(azel[j], 1.706, 1.38,
+//                    casa::C::pi / 4.001, -casa::C::pi_4);
+                result[i][j] =
+                    new MeqDipoleBeamExternal(beamConfig->moduleTheta,
+                        beamConfig->modulePhi, azel[j], orientation, 1.0);
+            }
+        }
+    }
+    else
+    {
+        ASSERT(false);
+    }
+}
+
+
+BeamCoeff Model::readBeamCoeffFile(const string &filename) const
+{
+    LOG_DEBUG_STR("Reading beam coefficients...");
+
+    // Open file.
+    ifstream in(filename.c_str());
+    if(!in)
+    {
+        THROW(BBSKernelException, "Unable to open file: " << filename << ".");
+    }
+
+    // Read file header.
+    string header, token0, token1, token2, token3, token4, token5;
+    getline(in, header);
+    
+    size_t nElements, nHarmonics, nPowerTime, nPowerFreq;
+    double freqAvg, freqRange;
+    
+    istringstream iss(header);
+    iss >> token0 >> nElements >> token1 >> nHarmonics >> token2 >> nPowerTime
+        >> token3 >> nPowerFreq >> token4 >> freqAvg >> token5 >> freqRange;
+
+    if(!in || !iss || token0 != "d" || token1 != "k" || token2 != "pwrT"
+        || token3 != "pwrF" || token4 != "freqAvg" || token5 != "freqRange")
+    {
+        THROW(BBSKernelException, "Unable to parse header");
+    }
+
+    if(nElements * nHarmonics * nPowerTime * nPowerFreq == 0)
+    {
+        THROW(BBSKernelException, "The number of coefficients should be larger"
+            " than zero.");
+    }
+
+    LOG_DEBUG_STR("nElements: " << nElements << " nHarmonics: " << nHarmonics
+        << " nPowerTime: " << nPowerTime << " nPowerFreq: " << nPowerFreq);
+
+    // Allocate coefficient matrix.
+    shared_ptr<boost::multi_array<dcomplex, 4> > coeff
+        (new boost::multi_array<dcomplex, 4>(boost::extents[nElements]
+            [nHarmonics][nPowerTime][nPowerFreq]));
+
+    size_t nCoeff = 0;
+    while(in.good())
+    {
+        // Read line from file.
+        string line;
+        getline(in, line);
+
+        // Skip lines that contain only whitespace.
+        if(line.find_last_not_of(" ") == string::npos)
+        {
+            continue;
+        }
+
+        // Parse line. 
+        size_t element, harmonic, powerTime, powerFreq;
+        double re, im;
+       
+        iss.str(line);
+        iss >> element >> harmonic >> powerTime >> powerFreq >> re >> im;
+        
+        if(!iss || element >= nElements || harmonic >= nHarmonics
+            || powerTime >= nPowerTime || powerFreq >= nPowerFreq)
+        {
+            THROW(BBSKernelException, "Error reading file.");
+        }
+        
+        // Store coefficient.
+        (*coeff)[element][harmonic][powerTime][powerFreq] =
+            makedcomplex(re, im);
+
+        // Update coefficient counter.
+        ++nCoeff;
+    }
+
+    if(!in.eof())
+    {
+        THROW(BBSKernelException, "Error reading file.");
+    }
+
+    if(nCoeff != nElements * nHarmonics * nPowerTime * nPowerFreq)
+    {
+        THROW(BBSKernelException, "Number of coefficients in header does not"
+            " match number of coefficients in file.");
+    }
+
+    return BeamCoeff(freqAvg, freqRange, coeff);
+}
+
+
+} // namespace BBS
+} // namespace LOFAR

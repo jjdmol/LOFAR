@@ -10,6 +10,7 @@ pkginclude_HEADERS = Package__Version.h 		\
 	MeasurementAIPS.h	\
 	MetaMeasurement.h	\
 	Model.h			\
+	ModelConfig.h  \
 	Prediffer.h		\
 	Solver.h		\
 	SolverInterfaceTypes.h	\
