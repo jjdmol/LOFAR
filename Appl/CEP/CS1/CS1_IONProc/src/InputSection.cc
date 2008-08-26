@@ -44,7 +44,6 @@
 #include <stdexcept>
 
 #undef DUMP_RAW_DATA
-//#define DUMP_RAW_DATA
 
 #if defined DUMP_RAW_DATA
 #include <Stream/SocketStream.h>
@@ -203,17 +202,15 @@ void InputSection::preprocess(const CS1_Parset *ps)
     itsBBuffers[rsp] = new BeamletBuffer(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSubbandsPerFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
-  vector<string> rawDataServers = ps->getStringVector("OLAP.OLAP_Conn.rawDataServers");
-  vector<string> rawDataPorts = ps->getStringVector("OLAP.OLAP_Conn.rawDataPorts");
+  vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
+  unsigned	 psetIndex	= ps->inputPsetIndex(itsPsetNumber);
 
-  if (itsStationNr >= rawDataServers.size() || itsStationNr >= rawDataPorts.size()) {
-    std::cerr << "too many stations for too few raw data servers/ports" << std::endl;
-    exit(1);
-  }
+  if (psetIndex >= rawDataOutputs.size())
+    throw std::runtime_error("there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
-  std::clog << "trying to connect raw data stream to " << rawDataServers[itsStationNr] << ':' << rawDataPorts[itsStationNr] << std::endl;
-  rawDataStream = new SocketStream(rawDataServers[itsStationNr], rawDataPorts[itsStationNr], SocketStream::TCP, SocketStream::Client);
-  std::clog << "raw data stream connected" << std::endl;
+  string rawDataOutput = rawDataOutputs[psetIndex];
+  std::clog << "writing raw data to " << rawDataOutput << std::endl;
+  rawDataStream = CS1_Parset::createStream(rawDataOutput, false);
 #endif
 
   startThreads();
@@ -326,40 +323,46 @@ void InputSection::process()
 #if defined DUMP_RAW_DATA
   static bool fileHeaderWritten = false;
 
+  vector<unsigned> subbandToBeamMapping     = itsCS1PS->subbandToBeamMapping();
+  vector<unsigned> subbandToRSPboardMapping = itsCS1PS->subbandToRSPboardMapping();
+  vector<unsigned> subbandToRSPslotMapping  = itsCS1PS->subbandToRSPslotMapping();
+  unsigned	   nrSubbands		    = itsCS1PS->nrSubbands();
+
   if (!fileHeaderWritten) {
+    if (nrSubbands > 54)
+      throw std::runtime_error("too many subbands for raw data format");
+
     struct FileHeader {
       uint32	magic;		// 0x3F8304EC, also determines endianness
       uint8	bitsPerSample;
       uint8	nrPolarizations;
-      uint16	nrBeamlets;
+      uint16	nrSubbands;
       uint32	nrSamplesPerBeamlet;
       char	station[20];
       double	sampleRate;	// typically 156250 or 195312.5
       double	subbandFrequencies[54];
       double	beamDirections[8][2];
-      int16     beamlet2beams[54];
+      int16     subbandToBeamMapping[54];
       int32     pad;
       
     } fileHeader;  
 
+    memset(&fileHeader, 0, sizeof fileHeader);
+
     fileHeader.magic = 0x3F8304EC;
     fileHeader.bitsPerSample = 16;
     fileHeader.nrPolarizations = 2;
-    fileHeader.nrBeamlets = itsCS1PS->nrSubbands();
+    fileHeader.nrSubbands = nrSubbands;
     fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
-    strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr).c_str(), 16);
+    strncpy(fileHeader.station, itsCS1PS->getStationNamesAndRSPboardNumbers(itsPsetNumber)[0].station.c_str(), sizeof fileHeader.station);
     fileHeader.sampleRate = itsSampleRate;
-    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->subbandToFrequencyMapping()[0], 54 * sizeof(double));
- 
-    for (unsigned beam = 1; beam < itsNrBeams+1; beam ++){
-      vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
-   
-      fileHeader.beamDirections[beam][0] = beamDir[0];
-      fileHeader.beamDirections[beam][1] = beamDir[1];
-    }
-     
-    for (unsigned beam = 0; beam < itsBeamlet2beams.size(); beam ++)
-      fileHeader.beamlet2beams[beam] = itsBeamlet2beams[beam];
+    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->subbandToFrequencyMapping()[0], nrSubbands * sizeof(double));
+
+    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+      memcpy(fileHeader.beamDirections[beam], &itsCS1PS->getBeamDirection(beam)[0], sizeof fileHeader.beamDirections[beam]);
+
+    for (unsigned subband = 0; subband < nrSubbands; subband ++)
+      fileHeader.subbandToBeamMapping[subband] = subbandToBeamMapping[subband];
 
     rawDataStream->write(&fileHeader, sizeof fileHeader);
     fileHeaderWritten = true;
@@ -371,26 +374,34 @@ void InputSection::process()
     int32       pad;
     double	fineDelayRemainingAtBegin[8], fineDelayRemainingAfterEnd[8];
     int64	time[8]; // compatible with TimeStamp class.
-    uint32      nrFlagsRanges[8];
-    struct range {
-      uint32    begin; // inclusive
-      uint32    end;   // exclusive
-    } flagsRanges[8][16]; 
+    struct marshalledFlags {
+      uint32	nrRanges;
+      struct range {
+	uint32  begin; // inclusive
+	uint32  end;   // exclusive
+      } flagsRanges[16]; 
+    } flags[8];
   } blockHeader;  
 
+  memset(blockHeader, 0, sizeof blockHeader);
+
   blockHeader.magic = 0x2913D852;
+
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    blockHeader.time[beam] = delayedStamps[beam];
-    blockHeader.coarseDelayApplied[beam] = samplesDelay[beam];
-    blockHeader.fineDelayRemainingAtBegin[beam] = itsIONtoCNdata.delayAtBegin(beam);
-    blockHeader.fineDelayRemainingAfterEnd[beam] = itsIONtoCNdata.delayAfterEnd(beam);
-    itsIONtoCNdata.flags(beam).marshall(reinterpret_cast<char *>(&blockHeader.nrFlagsRanges[beam]), sizeof blockHeader.nrFlagsRanges[beam] + sizeof blockHeader.flagsRanges[beam][0]);
+    blockHeader.coarseDelayApplied[beam]	 = samplesDelay[beam];
+    blockHeader.fineDelayRemainingAtBegin[beam]	 = fineDelaysAtBegin[beam];
+    blockHeader.fineDelayRemainingAfterEnd[beam] = fineDelaysAfterEnd[beam];
+    blockHeader.time[beam]			 = delayedStamps[beam];
+
+    // FIXME: the current BlockHeader format does not provide space for
+    // the flags from multiple RSP boards --- use the flags of RSP board 0
+    flags[0][beam].marshall(reinterpret_cast<char *>(&blockHeader.flags[beam]), sizeof(struct BlockHeader::marshalledFlags));
   }
   
   rawDataStream->write(&blockHeader, sizeof blockHeader);
 
-  for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
-    itsBBuffers[0]->sendUnalignedSubband(rawDataStream, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1); // FIXME!!!
+  for (unsigned subband = 0; subband < nrSubbands; subband ++)
+    itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
 
 #else
 

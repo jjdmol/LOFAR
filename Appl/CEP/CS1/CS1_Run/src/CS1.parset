@@ -16,8 +16,7 @@ OLAP.OLAP_Conn.BGLProc_Storage_Ports = [8300..8363]
 # BGLProc doesn't open the parset file!
 OLAP.OLAP_Conn.IONProc_BGLProc_Transport = FCNP
 
-OLAP.OLAP_Conn.rawDataServers = ["10.181.0.4"]
-OLAP.OLAP_Conn.rawDataPorts = [4000]
+OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.4:4000]
 
 # Variables for Storage
 OLAP.subbandsPerPset = 9
