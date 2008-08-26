@@ -122,7 +122,11 @@ int main (int, char *argv[]) {
 	// We should always start with this.
 	//INIT_LOGGER_AND_WATCH("testLogger", 10000);
 	//INIT_VAR_LOGGER("testLogger", "testfile.log");
+#ifdef HAVE_LOG4CXX
 	INIT_LOGGER("testLogger.in_log4cxx");
+#else
+	INIT_LOGGER("testLogger");
+#endif
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
