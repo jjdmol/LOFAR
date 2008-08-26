@@ -73,6 +73,7 @@ node  OLAP         1.0.6  development 'node constraint'  "OLAP"
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par delayCompensation		I   bool    -       10  0		true					-		'???'
+par correctBandPass			I   bool    -       10  0		true					-		'???'
 par IPHeaderSize			I	int		-		10	0		32						-		'???'
 par EPAHeaderSize			I	int		-		10	0		16						-		'???'
 par nrBitsPerSample			I	int		-		10	0		16						-		'???'
