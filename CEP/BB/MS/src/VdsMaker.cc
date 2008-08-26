@@ -31,12 +31,17 @@
 #include <ms/MeasurementSets/MSMainColumns.h>
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSField.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSPolarization.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSDataDescription.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <measures/measures/MDirection.h>
+#include <measures/measures/MCDirection.h>
+#include <casa/Quanta/MVAngle.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -73,6 +78,21 @@ void VdsMaker::getFreqInfo (MS& ms, vector<int>& nrchan,
     nrchan.push_back    (chanFreq.size());
     startFreq.push_back (chanFreq - chanWidth/2.);
     endFreq.push_back   (chanFreq + chanWidth/2.);
+  }
+}
+
+void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec)
+{
+  MSField mssub(ms.field());
+  ROMSFieldColumns mssubc(mssub);
+  int nrf = mssub.nrow();
+  ra.resize  (nrf);
+  dec.resize (nrf);
+  for (int i=0; i<nrf; ++i) {
+    Array<MDirection> mds = mssubc.delayDirMeasCol().convert
+      (i, MDirection::J2000);
+    ra[i]  = mds.data()->getValue().get()[0];
+    dec[i] = mds.data()->getValue().get()[1];
   }
 }
 
@@ -200,12 +220,34 @@ void VdsMaker::create (const string& msName, const string& outName,
     endFreq[i].tovector   (efreq);
     msd.addBand (nchan[i], sfreq, efreq);
   }
+  // Write the field directions (in J2000).
+  vector<double> ra, dec;
+  getFields (ms, ra, dec);
+  int nrfield = ra.size();
+  ostringstream oss2a, oss2b;
+  oss2a << '[';
+  oss2b << '[';
+  for (int i=0; i<nrfield; ++i) {
+    if (i > 0) {
+      oss2a << ',';
+      oss2b << ',';
+    }
+    oss2a << MVAngle::Format(MVAngle::TIME, 9)
+	  << MVAngle(Quantity(ra[i], "rad"));
+    oss2b << MVAngle::Format(MVAngle::ANGLE, 9)
+	  << MVAngle(Quantity(dec[i], "rad"));
+  }
+  oss2a << ']';
+  oss2b << ']';
+  msd.addParm ("FieldDirectionRa",  oss2a.str());
+  msd.addParm ("FieldDirectionDec", oss2b.str());
+  msd.addParm ("FieldDirectionType", "J2000");
   // Fill in station names.
   vector<string> antNames;
   getAntNames (ms, antNames);
   ostringstream oss2;
   oss2 << antNames;
-  msd.addParm ("Stationnames", oss2.str());
+  msd.addParm ("StationNames", oss2.str());
   // Get the data file name.
   string dfName;
   bool dfRegular;

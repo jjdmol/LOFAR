@@ -55,6 +55,10 @@ namespace LOFAR {
 			     vector<casa::Vector<double> >& startFreq,
 			     vector<casa::Vector<double> >& endFreq);
 
+    // Get the directions of the fields.
+    static void getFields (casa::MS& ms,
+			   vector<double>& ra, vector<double>& dec);
+
     // Get the names of the antennae (stations).
     static void getAntNames (casa::MS& ms, vector<string>& antNames);
 
