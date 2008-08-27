@@ -50,9 +50,9 @@ namespace LOFAR
     private:
       std::string  itsInMS;
       std::string  itsOutMS;
-      int          itsBandpass;
-      int          itsFlagger;
-      int          itsSquasher;
+      unsigned int itsBandpass;
+      unsigned int itsFlagger;
+      unsigned int itsSquasher;
 
       Pipeline*          myPipeline;
       MsFile*            myFile;
