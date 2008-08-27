@@ -1,0 +1,145 @@
+//
+//  CCU_increment1.btsw: Testscript for increment 1 of the CCU software.
+//
+//  Copyright (C) 2005
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+// ------------------------------------------------------------------------------
+// Description:
+//
+//
+//
+// ------------------------------------------------------------------------------
+
+[statemachines]
+
+Statemachine_SAS (SM1_stop, SM2_ready) =
+{
+  s000 : CONNECTION_ESTABLISHED ; s001.
+  s001 : TIMER(10) ; s010.
+// ------------------------------------------------------------------------------
+  s010 : F_SAS_SCHEDULE(0x00000014,
+                        0x0012,"MAINTENANCE1.param") ; s020.
+  s020 : E_SAS_RESPONSE(,0x00000000,,) ; s030.
+  s020 : E_SAS_RESPONSE(,,,) ; error.
+  s030 : TIMER(60); timeout.
+  s030 : R_SIG(SM2_ready); finish.
+// ------------------------------------------------------------------------------
+
+  finish : S_SIG ( SM1_stop) ; OK.
+  OK     : TIMER(5) ; OK.
+
+  timeout : TERMINATE ; timeout.
+  error   : TERMINATE ; error.
+}
+
+WaitUntilTestEnd (SM1_ready) =
+{
+  s010   : R_SIG (SM1_ready) ; finish.
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_THPVSSBridge  ( ready ) =
+{
+
+ s000 : CONNECTION_ESTABLISHED ; s001.
+ s001 : TIMER(1) ; s005.
+// s001 : TIMER(1) ; s900.
+
+// test maintenance scheduling
+  s005   : F_THPVSSBRIDGE_SET_VALUE ( 0x00000030,
+                                      0x0023,"CCU1:PIC_Rack0_SubRack0_Maintenance",
+                                      0x0006,"status",
+                                      0x0001,"0" ) ; s006.
+  s006   : E_THPVSSBRIDGE_SET_VALUE_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"status" ) ; s007.
+  s006   : E_THPVSSBRIDGE_SET_VALUE_RESPONSE( ,,,,, ) ; error.
+  
+  s007   : F_THPVSSBRIDGE_SET_VALUE ( 0x00000030,
+                                      0x0023,"CCU1:PIC_Rack0_SubRack1_Maintenance",
+                                      0x0006,"status",
+                                      0x0001,"0" ) ; s008.
+  s008   : E_THPVSSBRIDGE_SET_VALUE_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"status" ) ; s010.
+  s008   : E_THPVSSBRIDGE_SET_VALUE_RESPONSE( ,,,,, ) ; error.
+
+	// subscribe status  
+  s010   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002D,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack0_Maintenance",
+                                               0x0006,"status" ) ; s020.
+  s020   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"status" ) ; s021.
+  s020   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+	// subscribe fromTime
+  s021   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002F,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack0_Maintenance",
+                                               0x0008,"fromTime" ) ; s022.
+  s022   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"fromTime" ) ; s023.
+  s022   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+	// subscribe toTime
+  s023   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002D,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack0_Maintenance",
+                                               0x0006,"toTime" ) ; s024.
+  s024   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"toTime" ) ; s030.
+  s024   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+	// subscribe status
+  s030   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002D,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack1_Maintenance",
+                                               0x0006,"status" ) ; s040.
+  s040   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"status" ) ; s041.
+  s040   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+	// subscribe fromTime
+  s041   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002F,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack1_Maintenance",
+                                               0x0008,"fromTime" ) ; s042.
+  s042   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"fromTime" ) ; s043.
+  s042   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+	// subscribe toTime
+  s043   : F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY ( 0x0000002D,
+                                               0x0023,"CCU1:PIC_Rack0_SubRack1_Maintenance",
+                                               0x0006,"toTime" ) ; s044.
+  s044   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE ( ,0x00000000,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"toTime" ) ; s050.
+  s044   : E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE( ,,,,, ) ; error.
+
+	// wait until the maintenance status of subrack0 or subrack1 is 1
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"status",,"1" ) ; s060.
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"fromTime",, ) ; s050.
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"fromTime",, ) ; s050.
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"toTime",, ) ; s050.
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"toTime",, ) ; s050.
+  s050   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"status",,"1" ) ; s070.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"fromTime",, ) ; s060.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"fromTime",, ) ; s060.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"toTime",, ) ; s060.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"toTime",, ) ; s060.
+  s060   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+	// wait until the maintenance status of subrack0 or subrack1 is reset to 0
+  s070   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,"status",,"0" ) ; s080.
+  s070   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,,, ) ; s070.
+  s070   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,,, ) ; s070.
+  s070   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,"status",,"0" ) ; s900.
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack0_Maintenance",,,, ) ; s080.
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,"CCU1:PIC_Rack0_SubRack1_Maintenance",,,, ) ; s080.
+  s080   : E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE( ,,,,,, ) ; error.
+
+  s900   : F_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS
+           S_SIG( ready ) ; finish.
+
+  error  : F_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS
+  				 TERMINATE ; error.
+     
+  finish : TERMINATE ; finish.
+}
+
+
+
+[testscript]
+VAR     SM1_done, SM2_done.
+
+COM1 :  Statemachine_SAS (SM1_done, SM2_done)
+        WaitUntilTestEnd (SM1_done).
+
+COM2 :  Statemachine_THPVSSBridge (SM2_done).
+

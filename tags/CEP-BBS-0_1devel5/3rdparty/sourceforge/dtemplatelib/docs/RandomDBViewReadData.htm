@@ -1,0 +1,55 @@
+<pre><code><span class="codeComment">//Create a quick DBView called db_example.
+//Rows in this view will be of type db_example_row.
+//See <a href="table.htm">DTL_TABLE</a> for details.</span>
+DTL_TABLE3(db_example,
+   int, int_value,
+   string, string_value,
+   double, double_value
+);
+
+
+<span class="codeComment">// Random access container example</span>
+void RandomDBViewExample()
+{
+   RandomDBView&lt;db_example_row&gt; view(db_example);
+
+   cout &lt;&lt; &quot;Objects read from DB:&quot; &lt;&lt; endl;
+   copy(view.begin(), view.end(), ostream_iterator&lt;db_example_row&gt;(cout, &quot;\n&quot;));
+
+   cout &lt;&lt; &quot;\nElements in reverse order:&quot; &lt;&lt; endl;
+   copy(view.rbegin(), view.rend(), ostream_iterator&lt;db_example_row&gt;(cout, &quot;\n&quot;));
+
+   <span class="codeComment">// modify the third row in the table</span>
+   RandomDBView&lt;db_example_row&gt;::iterator it = view.begin();
+   db_example_row row(it[2]);
+   row.int_value++;
+   *it = row;
+   
+   <span class="codeComment">// NOTE THAT FOR THE MODIFIED ROW TO SHOW UP WE MUST CALL ReQuery().
+   // Note that there is no guarantee that the third row will show the updated record,
+   // since other users may have modified the database or the DB may return records in a different
+   // order.  See the ReQuery() function for details.</span>
+   cout &lt;&lt; &quot;Show updated result row:&quot; &lt;&lt; endl;
+   view.ReQuery();
+   cout &lt;&lt; it[2] &lt;&lt; endl;
+ 
+   <span class="codeComment">// show distance functions </span>
+   cout &lt;&lt; &quot;Distance from first to last: &quot; &lt;&lt; view.end() - view.begin() &lt;&lt; endl;
+   cout &lt;&lt; &quot;Container size: &quot; &lt;&lt; view.size() &lt;&lt; endl;
+
+   <span class="codeComment">// insert and delete rows</span>
+   db_example_row row_insert(it[2]);
+   row_insert.int_value = 666;
+   view.insert(row_insert);
+   view.erase(it+(ptrdiff_t)2);
+   cout &lt;&lt; &quot;Show result set with inserted/deleted row:&quot; &lt;&lt; endl;
+   view.ReQuery();
+   copy(view.begin(), view.end(), ostream_iterator&lt;db_example_row&gt;(cout, &quot;\n&quot;));
+
+   <span class="codeComment">// show container comparison operators</span>
+   RandomDBView&lt;db_example_row&gt; view2(view);
+   cout &lt;&lt; boolalpha;
+   cout &lt;&lt; &quot;view == view2 : &quot; &lt;&lt; (view == view2) &lt;&lt; endl;
+   cout &lt;&lt; &quot;view &lt; view2 : &quot; &lt;&lt; (view &lt; view2) &lt;&lt; endl;
+}
+</code></pre>

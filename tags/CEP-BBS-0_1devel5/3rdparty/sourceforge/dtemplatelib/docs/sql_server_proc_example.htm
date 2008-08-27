@@ -1,0 +1,122 @@
+<h3>Example: Use of MoreResults() with a stored procedure</h3>
+<pre><code>
+<span class="codeComment">// *** Note: This example is specific to SQL Server ***</span>
+<span class="codeComment">// for more information on processing return values from
+// SQL Server stored procedures, see this <a href="http://msdn.microsoft.com/library/psdk/sql/ht_odbcht10_7183.htm">documentation</a></span>
+
+<span class="codeComment">// stored procedure being called in this example
+#if 0
+DROP PROCEDURE TestParm 
+
+-- Example procedure returns three things:
+-- 1. A set of records from the select statement: "SELECT STRING_VALUE FROM DB_EXAMPLE"
+-- After all records have been retrieved, output paramenters are returned:
+-- 2. OutParm
+-- 3. Return value for function
+CREATE PROCEDURE TestParm @OutParm int OUTPUT AS
+SELECT STRING_VALUE FROM db_example
+SELECT @OutParm = 66
+RETURN 99
+
+
+DECLARE @RetVal INT
+
+DECLARE @Param INT
+
+  
+
+-- Execute the procedure, which returns
+
+-- the result set from the first SELECT.
+
+EXEC @RetVal = TestParm @OutParm = @Param OUTPUT
+
+  
+
+-- Use the return code and output parameter.
+
+PRINT 'The return value from the procedure was: ' +
+
+                 CONVERT(CHAR(6), @RetVal)
+
+PRINT 'The value of the output parameter in the procedure was: ' +
+
+                 CONVERT(CHAR(6), @Param)
+
+#endif
+</span>
+
+class TestParmBCA {
+public:
+ void operator()(BoundIOs &amp;cols, variant_row &amp;row)
+ {
+  cols["STRING_VALUE"] == row._string();
+  cols[0] &gt;&gt; row._int();
+  cols[1] &gt;&gt; row._int();
+
+  cols.BindVariantRow(row);
+ }
+};
+
+<span class="codeComment">// Read the contents of a table and print the resulting rows</span>
+void StoredProcReadTestParm() {
+
+ DBView&lt;variant_row&gt; view("{? = call TestParm(?)}",
+  TestParmBCA());
+
+<span class="codeComment">
+ // NOTE: We need to construct r from the view itself since we
+ // don't know what fields the table will contain.
+ // We therefore make a call to the DataObj() function to have the
+ // table return us a template row with the correct number of fields
+ // and field types.
+ // We use this construction since we can't be guaranteed that the table
+ // is non-empty & we want to still display column names in this case.
+</span>
+ variant_row s(view.GetDataObj());
+
+ <span class="codeComment">// Print out the column names</span>
+ vector&lt;string&gt; colNames = s.GetNames();
+ for (vector&lt;string&gt;::iterator name_it = colNames.begin(); name_it !=
+      colNames.end(); ++name_it)
+        cout << (*name_it) << " ";
+ cout &lt;&lt; endl;
+
+ <span class="codeComment">// Print out all rows and columns from our query</span>
+ DBView&lt;variant_row&gt;::sql_iterator print_it = view;
+
+<span class="codeComment">
+ // By default DTL uses server side cursors for SQL Server so that more than
+ // one iterator can be active at a time.  This is set in the constructor
+ // for DBStmt.
+ // Here we require a client side cursor because our stored procedure returns
+ // multiple result sets.  Therfore we clear out the setting to use server
+ // side cursors in which case SQL server will default to a client side cursor.
+ // For details on server side versus client side cursors
+ // see <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/oledbsql/9_ole_07_212r.asp">Rowsets and SQL Server Cursors</a>
+ </span>
+ print_it.GetStmt().ClearStmtAttrs();
+
+ variant_row r = view.GetDataObj();
+ r[0] = 0;
+ r[1] = 0;
+
+ for (++print_it; print_it != view.end(); ++print_it)
+ {
+  r = *print_it;
+  for (size_t i = 0; i &lt; r.size(); ++i)
+    cout &lt;&lt; r[i] &lt;&lt; " ";
+  cout &lt;&lt; endl;
+ }
+
+ cout &lt;&lt; endl;
+ cout &lt;&lt; "After call to MoreResults(), "
+  "SQL-Server gives results in output parameters & return code." << endl;
+ print_it.MoreResults();
+ r = *print_it;
+ for (size_t i = 0; i &lt; r.size(); ++i)
+    cout &lt;&lt; r[i] &lt;&lt; " ";
+ cout &lt;&lt; endl;
+
+}
+</code></pre>

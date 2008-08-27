@@ -1,0 +1,86 @@
+//#  CM_Protocol.prot: Protocol definition for the ClaimManager results
+//#
+//#  Copyright (C) 2008
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id: CM_Protocol.prot 11023 2008-03-18 08:07:14Z overeem $
+
+autogen definitions protocol;
+
+description = "Protocol for the Claim Manager results";
+prefix = "CM"; // for the signal names
+id = "(LOFAR::MACIO::F_GCF_PROTOCOL + 4)";
+
+// specify extra include files
+// include = '<someFile.h>';
+
+prelude = << PRELUDE_END
+
+// The following messages are defined in the servicebroker protocol
+//
+// CLAIM_RESULT (uint16 seqnr, string servicename);
+//
+PRELUDE_END;
+
+//
+// Define the errors
+//
+error = {
+	id = NO;
+	msg = "No errors";
+};
+error = {
+	id = NO_CONNECTION;
+	msg = "No connection with the ClaimManager in PVSS";
+};
+error = {
+	id = UNKNOWN_TYPE;
+	msg = "ObjectType unknown";
+};
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = CLAIM_RESULT;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+	param = {
+		name = "typeName";
+		type = "string";
+	};
+	param = {
+		name = "nameInAppl";
+		type = "string";
+	};
+	param = {
+		name = "DPname";
+		type = "string";
+	};
+	param = {
+		name = "claimDate";
+		type = "string";
+	};
+};
+

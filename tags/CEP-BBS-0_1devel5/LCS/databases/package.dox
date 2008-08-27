@@ -1,0 +1,4 @@
+// \ingroup LCS
+// \defgroup databases Database Access
+//
+// This module contains packages related to database access.

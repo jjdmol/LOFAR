@@ -1,0 +1,633 @@
+V 10
+1
+LANG:1 14 19inch_Subrack
+PANEL,605 352 182 113 N "_3DFace" 6
+"$RSPBoardNr"
+"$RackNr"
+"$SubrackNr"
+"$configDatapoint"
+"$datapoint"
+"$referenceDatapoint"
+"main()
+{
+  EP_setBackColor();	
+	setValue(\"txt_boardName\",\"text\",\"Board \"+$RSPBoardNr);
+  $configDatapoint;
+  $referenceDatapoint;
+}
+
+EP_setBackColor()
+{
+  dyn_errClass err;
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  rect_Subrack.toolTipText = dpPrefix;
+  icon_maintenance.toolTipText = dpPrefix;
+  if( !dpAccessable( dpPrefix + \".AP0.RCU0.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP0.RCU1.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP1.RCU0.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP1.RCU1.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP2.RCU0.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP2.RCU1.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP3.RCU0.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP3.RCU1.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP0.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP1.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP2.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".AP3.status:_online.._value\") ||
+      !dpAccessable( dpPrefix + \".BP.status:_online.._value\"))
+  {                 
+    setValue(\"rect_Subrack\", \"backCol\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  //startThread(\"navViewPanelStationLoadSubRack\");
+
+  dpConnect(\"EP_setBackColorCB\", 
+            dpPrefix + \".AP0.RCU0.status:_online.._value\",
+            dpPrefix + \".AP0.RCU1.status:_online.._value\",
+            dpPrefix + \".AP1.RCU0.status:_online.._value\",
+            dpPrefix + \".AP1.RCU1.status:_online.._value\",
+            dpPrefix + \".AP2.RCU0.status:_online.._value\",
+            dpPrefix + \".AP2.RCU1.status:_online.._value\",
+            dpPrefix + \".AP3.RCU0.status:_online.._value\",
+            dpPrefix + \".AP3.RCU1.status:_online.._value\",
+            dpPrefix + \".AP0.status:_online.._value\",
+            dpPrefix + \".AP1.status:_online.._value\",
+            dpPrefix + \".AP2.status:_online.._value\",
+            dpPrefix + \".AP3.status:_online.._value\",
+            dpPrefix + \".BP.status:_online.._value\",
+            dpPrefix + \".state:_online.._invalid\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+  {
+    setValue(\"rect_Subrack\", \"backCol\", \"_dpdoesnotexist\");
+  }
+
+}
+
+
+navViewPanelStationLoadSubRack()
+{
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  //Load the property set for the following dpNames:
+  navPMLloadPropertySet(dpPrefix + \".AP0.RCU0.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP0.RCU1.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP1.RCU0.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP1.RCU1.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP2.RCU0.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP2.RCU1.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP3.RCU0.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP3.RCU1.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP0.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP1.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP2.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".AP3.status:_online.._value\");
+  navPMLloadPropertySet(dpPrefix + \".BP.status:_online.._value\");
+}
+
+EP_setBackColorCB(string dpSource1,  unsigned AP0_RCU0_stat,
+									string dpSource3,  unsigned AP0_RCU1_stat,
+									string dpSource5,  unsigned AP1_RCU0_stat,
+									string dpSource7,  unsigned AP1_RCU1_stat,
+									string dpSource9,  unsigned AP2_RCU0_stat,
+									string dpSource11, unsigned AP2_RCU1_stat,
+									string dpSource13, unsigned AP3_RCU0_stat,
+									string dpSource15, unsigned AP3_RCU1_stat,
+									string dpSource17, unsigned AP0_stat,
+									string dpSource18, unsigned AP1_stat,
+									string dpSource19, unsigned AP2_stat,
+									string dpSource20, unsigned AP3_stat,
+									string dpSource21, unsigned BP_stat,
+									string dpInvalid, bool invalid)
+{
+  // check if device still is valid
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"_3DFace\";	  
+  }
+
+  setValue(\"\", \"color\", SymbolCol);
+  
+	//Declaration of temporary variables
+	int AP0_RCU0_health, AP0_RCU1_health, AP1_RCU0_health, AP1_RCU1_health;
+	int AP2_RCU0_health, AP2_RCU1_health, AP3_RCU0_health, AP3_RCU1_health;
+	int AP0_health, AP1_health, AP2_health, AP3_health;
+	int BP_health;
+	int Subrack_health;
+	int SR_health = 1;	// Subrack_maintenance status
+  	//Calculate the Error/Health value for each variable
+	if ((AP0_RCU0_stat)==0) AP0_RCU0_health=1; else AP0_RCU0_health=0;
+	if ((AP0_RCU1_stat)==0) AP0_RCU1_health=1; else AP0_RCU1_health=0;
+	if ((AP1_RCU0_stat)==0) AP1_RCU0_health=1; else AP1_RCU0_health=0;
+	if ((AP1_RCU1_stat)==0) AP1_RCU1_health=1; else AP1_RCU1_health=0;
+	if ((AP2_RCU0_stat)==0) AP2_RCU0_health=1; else AP2_RCU0_health=0;
+	if ((AP2_RCU1_stat)==0) AP2_RCU1_health=1; else AP2_RCU1_health=0;
+	if ((AP3_RCU0_stat)==0) AP3_RCU0_health=1; else AP3_RCU0_health=0;
+	if ((AP3_RCU1_stat)==0) AP3_RCU1_health=1; else AP3_RCU1_health=0;
+	
+	if (AP0_stat ==0 ) AP0_health=1; else AP0_health=0;
+	if (AP1_stat ==0 ) AP1_health=1; else AP1_health=0;
+	if (AP2_stat ==0 ) AP2_health=1; else AP2_health=0;
+	if (AP3_stat ==0 ) AP3_health=1; else AP3_health=0;
+		
+	if ((BP_stat)==0) BP_health=1; else BP_health=0;
+
+	// Calculate the subtrack health value
+	Subrack_health =	(SR_health * BP_health *	(	AP0_health * (AP0_RCU0_health + AP0_RCU1_health) +
+																	AP1_health * (AP1_RCU0_health + AP1_RCU1_health) +
+																	AP2_health * (AP2_RCU0_health + AP2_RCU1_health) +
+																	AP3_health * (AP3_RCU0_health + AP3_RCU1_health)
+																) * 100) / 8; 
+
+	// Display the subtrack health value into the six LED's
+    if (Subrack_health == 100)
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_1\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 86 && ((Subrack_health) <= 100))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 74 && ((Subrack_health) <= 86))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 61 && ((Subrack_health) <= 74))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Yellow\");
+      setValue(\"LED_3\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 49 && ((Subrack_health) <= 61))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Yellow\");
+      setValue(\"LED_3\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_4\", \"backCol\", \"Yellow\");
+      setValue(\"LED_4\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 36 && ((Subrack_health) <= 49))
+	  {
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 24 && ((Subrack_health) <= 36))
+	  {
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 11 && ((Subrack_health) <= 24))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Red\");
+      setValue(\"LED_7\", \"foreCol\", \"Red\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) >= 0 && ((Subrack_health) <= 11))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Red\");
+      setValue(\"LED_7\", \"foreCol\", \"Red\");
+      setValue(\"LED_8\", \"backCol\", \"Red\");
+      setValue(\"LED_8\", \"foreCol\", \"Red\");
+    }
+
+	//Set visibility for Maintenance Sign if BP in Maintenance
+    //setValue(\"icon_maintenance\", \"visible\", (Subrack_main == 1));
+    //if (Subrack_main == 1)
+    //{
+    //  setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
+  	//}
+    //else
+    //{
+    //  setValue(\"rect_Subrack\", \"backCol\", \"white\");
+    //}
+
+}" 0
+"main()
+{
+ //startThread(\"navViewPanelStationUnloadSubRack\");
+}
+
+navViewPanelStationUnloadSubRack()
+{
+  string dpPrefix = $datapoint + \"_Cabinet\"+ $RackNr +\"_Subrack\"+ $SubrackNr +\"_RSPBoard\"+ $RSPBoardNr;
+  //Unload the property set for the following dpNames:
+  navPMLunloadPropertySet(dpPrefix + \"AP0.RCU0.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP0.RCU1.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP1.RCU0.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP1.RCU1.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP2.RCU0.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP2.RCU1.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP3.RCU0.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP3.RCU1.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP0.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP1.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP2.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"AP3.status:_online.._value\");
+  navPMLunloadPropertySet(dpPrefix + \"BP.status:_online.._value\");
+}" 0
+E E E 1 -1 -1 0  25 85
+"" 0 1
+E"
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"rect_Subrack"
+""
+1 30 68 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ "main()
+{
+  stsSubRackHandleContextMenu();
+}" 0
+ E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  DebugTN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+}
+" 0
+ 0 1 1 0 1 E U  1 E 30 30 158 72
+7 2
+"Ellipse56"
+""
+1 33.5 60.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.25 0 1.25  -8.875 -15.625  1 E 35.5 62.5 2 2
+7 3
+"Ellipse57"
+""
+1 152.5 27.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.25 0 1.25  -38.625 -7.375  1 E 154.5 29.5 2 2
+7 4
+"Ellipse58"
+""
+1 152.5 60.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.25 0 1.25  -38.625 -15.625  1 E 154.5 62.5 2 2
+6 44
+"LED_1"
+""
+1 47 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 47 52 54 59
+6 45
+"LED_2"
+""
+1 55 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 55 52 62 59
+6 46
+"LED_3"
+""
+1 63 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 63 52 70 59
+6 47
+"LED_4"
+""
+1 71 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 71 52 78 59
+6 48
+"LED_5"
+""
+1 79 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 79 52 86 59
+6 49
+"LED_6"
+""
+1 87 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 87 52 94 59
+6 50
+"LED_8"
+""
+1 103 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 103 52 110 59
+6 51
+"LED_7"
+""
+1 95 59 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 95 52 102 59
+6 54
+"Border1"
+""
+1 46 59 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 46 52 111 59
+6 55
+"icon_maintenance"
+""
+1 117 70 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  stsSubRackHandleContextMenu();
+}" 0
+ E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  Debug_TN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+}" 0
+ 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 117 31 157 71
+7 1
+"Ellipse55"
+""
+1 33.5 27.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.25 0 1.25  -8.875 -7.375  1 E 35.5 29.5 2 2
+2 56
+"txt_boardName"
+""
+1 45 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  DebugTN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $SubrackNr, \"Station_Subrack-CS1.pnl\");
+}" 0
+ 0 1 1 0 1 E U  0 E 47 33 108 49
+0 2 0 "s" 0 0 0 64 0 0  47 33
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Board x
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

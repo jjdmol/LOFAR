@@ -1,0 +1,116 @@
+ 
+<pre><code><span class="codeComment">// example illustrating use of auto key for select_update_iterator</span>
+
+vector&lt;variant_row&gt; DynamicReadAndUpdateDataAutoKey()
+{
+ vector&lt;variant_row&gt; results;
+
+ DynamicDBView&lt;&gt; view(
+ 	 DynamicDBView&lt;&gt;::Args().tables(&quot;DB_EXAMPLE&quot;).fields(&quot;*&quot;).handler(AlwaysThrowsHandler<variant_row>())
+ );
+
+ DynamicDBView&lt;&gt;::select_update_iterator read_it = view.begin();
+
+ variant_row row = *read_it;
+ <span class="codeComment">
+ // note that the call to SetKey() is commented out
+ // thus, *exactly* the first 5 records in the view will be updated
+
+ // read_it.SetKey(&quot;STRING_VALUE&quot;);
+ </span>
+
+ for ( int i = 0; i&lt;5 &amp;&amp; read_it != view.end(); ++i)
+ {
+  row = *read_it;
+  row[&quot;STRING_VALUE&quot;] = string(&quot;Fizzle&quot;);
+  row[&quot;DOUBLE_VALUE&quot;] = 0.5;
+  *read_it = row;
+  ++read_it;
+ }
+}
+
+<span class="codeComment">
+/* output looks like:
+!!!!!!!!!!!!!!!!!!!!! Begin Example DynamicReadAndUpdateDataAutoKey() !!!!!!!!!!!!!!!!!!!!
+INT_VALUE STRING_VALUE DOUBLE_VALUE EXAMPLE_LONG EXAMPLE_DATE ROWID
+1 Example 3 56 JAN-01-2000 AAAu0WAANAAAfeGAAA
+2 Foozle 7.7 12 DEC-04-1998 AAAu0WAANAAAfeGAAB
+3 Bedazzled 12 99 JAN-01-2000 AAAu0WAANAAAfeGAAC
+4 Example 11.11 44 FEB-28-1999 AAAu0WAANAAAfeGAAD
+7 Example 21.11 21 JAN-01-2000 AAAu0WAANAAAfeGAAE
+10 Settled 100.11 -1 NOV-11-1999 AAAu0WAANAAAfeGAAF
+11 Example 0 0 OCT-31-2001 AAAu0WAANAAAfeGAAG
+12 Mirror Image 31.13 22 DEC-04-1998 AAAu0WAANAAAfeGAAH
+6 Find Me 22.22 22 JAN-01-2000 AAAu0WAANAAAfeGAAI
+10 Find Me 34.44 41 JAN-01-2000 AAAu0WAANAAAfeGAAJ
+6 Jordan 1000.1 1 NOV-11-1999 AAAu0WAANAAAfeGAAK
+8 Corwin 99.99 100 JAN-01-2000 AAAu0WAANAAAfeGAAL
+17 To find 213 34 NOV-11-1999 AAAu0WAANAAAfeGAAM
+18 Duped -12.22 -99 FEB-13-1988 AAAu0WAANAAAfeGAAO
+19 Mike -43334 2122 FEB-13-1988 AAAu0WAANAAAfeGAAZ
+20 To find 2020.2 2 NOV-11-1999 AAAu0WAANAAAfeGAAd
+21 Do not find 22 22 FEB-13-1988 AAAu0WAANAAAfeGAAg
+22 To find 443.33 32 DEC-04-1998 AAAu0WAANAAAfeGAAl
+23 Who? 0 0 FEB-13-1988 AAAu0WAANAAAfeGAAm
+28 To find 11.11 38 DEC-04-1998 AAAu0WAANAAAfeGAAn
+29 Prayer 912.22 -3 NOV-11-1999 AAAu0WAANAAAfeGAAo
+30 The Reliable, Red Caminus Bouncy Ball 1000.11 10 NOV-11-1999 AAAu0WAANAAAfeGAAp
+31 To find 0 110 FEB-13-1988 AAAu0WAANAAAfeGAAq
+32 Example 1 109 FEB-13-1988 AAAu0WAANAAAfeGAAs
+3 Join Example 33 33 JAN-01-2000 AAAu0WAANAAAfeGAAt
+3 Join Example 333 333 NOV-11-1999 AAAu0WAANAAAfeGAAu
+1 Find Me 44.44 44 JAN-01-2000 AAAu0WAANAAAfeGAAv
+15 Find Me 11 25 DEC-04-1998 AAAu0WAANAAAfeGAAw
+3 Find Me 88.88 88 JAN-01-2000 AAAu0WAANAAAfeGAAx
+23 To find 54.21 9 FEB-13-1988 AAAu0WAANAAAfeGAAy
+28 To find 1.11 1 FEB-13-1988 AAAu0WAANAAAfeGAAz
+77 Blah 3.21 2 JUL-07-2000 AAAu0WAANAAAfeGAA0
+After update:
+1 Fizzle 0.5 56 JAN-01-2000 AAAu0WAANAAAfeGAAA
+2 Fizzle 0.5 12 DEC-04-1998 AAAu0WAANAAAfeGAAB
+3 Fizzle 0.5 99 JAN-01-2000 AAAu0WAANAAAfeGAAC
+4 Fizzle 0.5 44 FEB-28-1999 AAAu0WAANAAAfeGAAD
+7 Fizzle 0.5 21 JAN-01-2000 AAAu0WAANAAAfeGAAE
+10 Settled 100.11 -1 NOV-11-1999 AAAu0WAANAAAfeGAAF
+11 Example 0 0 OCT-31-2001 AAAu0WAANAAAfeGAAG
+12 Mirror Image 31.13 22 DEC-04-1998 AAAu0WAANAAAfeGAAH
+6 Find Me 22.22 22 JAN-01-2000 AAAu0WAANAAAfeGAAI
+10 Find Me 34.44 41 JAN-01-2000 AAAu0WAANAAAfeGAAJ
+6 Jordan 1000.1 1 NOV-11-1999 AAAu0WAANAAAfeGAAK
+8 Corwin 99.99 100 JAN-01-2000 AAAu0WAANAAAfeGAAL
+17 To find 213 34 NOV-11-1999 AAAu0WAANAAAfeGAAM
+18 Duped -12.22 -99 FEB-13-1988 AAAu0WAANAAAfeGAAO
+19 Mike -43334 2122 FEB-13-1988 AAAu0WAANAAAfeGAAZ
+20 To find 2020.2 2 NOV-11-1999 AAAu0WAANAAAfeGAAd
+21 Do not find 22 22 FEB-13-1988 AAAu0WAANAAAfeGAAg
+22 To find 443.33 32 DEC-04-1998 AAAu0WAANAAAfeGAAl
+23 Who? 0 0 FEB-13-1988 AAAu0WAANAAAfeGAAm
+28 To find 11.11 38 DEC-04-1998 AAAu0WAANAAAfeGAAn
+29 Prayer 912.22 -3 NOV-11-1999 AAAu0WAANAAAfeGAAo
+30 The Reliable, Red Caminus Bouncy Ball 1000.11 10 NOV-11-1999 AAAu0WAANAAAfeGAAp
+31 To find 0 110 FEB-13-1988 AAAu0WAANAAAfeGAAq
+32 Example 1 109 FEB-13-1988 AAAu0WAANAAAfeGAAs
+3 Join Example 33 33 JAN-01-2000 AAAu0WAANAAAfeGAAt
+3 Join Example 333 333 NOV-11-1999 AAAu0WAANAAAfeGAAu
+1 Find Me 44.44 44 JAN-01-2000 AAAu0WAANAAAfeGAAv
+15 Find Me 11 25 DEC-04-1998 AAAu0WAANAAAfeGAAw
+3 Find Me 88.88 88 JAN-01-2000 AAAu0WAANAAAfeGAAx
+23 To find 54.21 9 FEB-13-1988 AAAu0WAANAAAfeGAAy
+28 To find 1.11 1 FEB-13-1988 AAAu0WAANAAAfeGAAz
+77 Blah 3.21 2 JUL-07-2000 AAAu0WAANAAAfeGAA0
+deleted / changed items:
+1 Example 3 56 JAN-01-2000 AAAu0WAANAAAfeGAAA
+2 Foozle 7.7 12 DEC-04-1998 AAAu0WAANAAAfeGAAB
+3 Bedazzled 12 99 JAN-01-2000 AAAu0WAANAAAfeGAAC
+4 Example 11.11 44 FEB-28-1999 AAAu0WAANAAAfeGAAD
+7 Example 21.11 21 JAN-01-2000 AAAu0WAANAAAfeGAAE
+inserted / changed items:
+1 Fizzle 0.5 56 JAN-01-2000 AAAu0WAANAAAfeGAAA
+2 Fizzle 0.5 12 DEC-04-1998 AAAu0WAANAAAfeGAAB
+3 Fizzle 0.5 99 JAN-01-2000 AAAu0WAANAAAfeGAAC
+4 Fizzle 0.5 44 FEB-28-1999 AAAu0WAANAAAfeGAAD
+7 Fizzle 0.5 21 JAN-01-2000 AAAu0WAANAAAfeGAAE
+
+********************************
+
+*/</span></code></pre>

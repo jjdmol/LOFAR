@@ -1,0 +1,503 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,560 404 954 748 N "_3DFace" 0
+EEE E E 1 -1 -1 0  30 60
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"Text1"
+""
+1 560 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 562 122 624 138
+0 2 0 "s" 0 0 0 192 0 0  562 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Time From
+2 3
+"Text2"
+""
+1 560 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 562 162 608 178
+0 2 0 "s" 0 0 0 192 0 0  562 162
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Time To
+2 12
+"Text3"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 12 118 28
+0 2 0 "s" 0 0 0 64 0 0  12 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 Archive values for: 
+2 13
+"dollarDatapoint"
+""
+1 120 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 122 12 228 28
+0 2 0 "s" 0 0 0 64 0 0  122 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+30 14
+"Frame1"
+""
+1 20 250 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 90 540 250
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Time configuration 
+2 15
+"Text5"
+""
+1 170 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 122 298 138
+0 2 0 "s" 0 0 0 64 0 0  172 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/11 14:58:16
+2 16
+"Text6"
+""
+1 320 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 322 122 448 138
+0 2 0 "s" 0 0 0 64 0 0  322 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/12 12:03:00
+2 17
+"Text7"
+""
+1 170 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 162 298 178
+0 2 0 "s" 0 0 0 64 0 0  172 162
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/11 14:58:16
+2 18
+"Text8"
+""
+1 320 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 322 192 448 208
+0 2 0 "s" 0 0 0 64 0 0  322 192
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/12 12:03:00
+2 19
+"Text9"
+""
+1 170 220 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 222 298 238
+0 2 0 "s" 0 0 0 64 0 0  172 222
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/11 14:58:16
+2 20
+"Text10"
+""
+1 320 220 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 322 222 448 238
+0 2 0 "s" 0 0 0 64 0 0  322 222
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 2005/07/12 12:03:00
+4 21
+"Line1"
+""
+1 30 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  30 150 450 150
+4 22
+"Line2"
+""
+1 310 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  310 240 310 110
+4 23
+"Line3"
+""
+1 160 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  160 240 160 110
+4 24
+"Line4"
+""
+1 30 186 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  30 186 450 186
+4 25
+"Line5"
+""
+1 30 216 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  30 216 450 216
+13 1
+"Button1"
+""
+1 830 120 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+828 118 867 145
+T 
+1
+LANG:1 3 Cfg
+E E E E
+13 5
+"Button2"
+""
+1 830 160 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+828 158 867 185
+T 
+1
+LANG:1 3 Cfg
+E E E E
+13 8
+"Button5"
+""
+1 30 160 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 158 152 185
+T 
+1
+LANG:1 10 Query From
+E E E E
+13 9
+"Button6"
+""
+1 30 190 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 188 152 215
+T 
+1
+LANG:1 8 Query To
+E E E E
+13 10
+"Button7"
+""
+1 30 220 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 218 152 245
+T 
+1
+LANG:1 15 Query From - To
+E E E E
+25 11
+"Table1"
+""
+1 20 550 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+18 548 242 742
+E E 0 0 1 1 1 "#1" 0 1 1 "s" 1
+LANG:1 2 #1
+E1
+LANG:1 0 
+ 128 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 1 3 0
+1 0
+25 26
+"timeTable"
+""
+1 109 186 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+148 258 539 447
+"main()
+{
+  timeTable.appendLine(\"1\", \"\", \"2\", \"Time From\", \"3\", \"Time To\");
+  timeTable.appendLine(\"1\", \"\", \"2\", \"11-07-2005 12:07:03\", \"3\", \"12-07-2005 12:07:03\");
+  timeTable.appendLine(\"1\", \"\", \"2\", \"\", \"3\", \"\");
+  timeTable.appendLine(\"1\", \"Query From\", \"2\", \"11-07-2005 12:07:03\", \"3\", \"\");
+  timeTable.appendLine(\"1\", \"Query To\", \"2\", \"\", \"3\", \"12-07-2005 12:07:03\");
+  timeTable.appendLine(\"1\", \"Query From - To\", \"2\", \"11-07-2005 12:07:03\", \"3\", \"12-07-2005 12:07:03\");
+  timeTable.cellBackColRC(\"0\", \"1\", \"_3DFace\");
+  timeTable.cellBackColRC(\"0\", \"2\", \"_3DFace\");
+  timeTable.cellBackColRC(\"0\", \"3\", \"_3DFace\");
+  timeTable.cellBackColRC(\"1\", \"1\", \"_3DFace\");
+  timeTable.cellBackColRC(\"2\", \"1\", \"_3DFace\");
+  timeTable.cellBackColRC(\"2\", \"2\", \"_3DFace\");
+  timeTable.cellBackColRC(\"2\", \"3\", \"_3DFace\");
+  timeTable.cellBackColRC(\"3\", \"1\", \"_3DFace\");
+  //timeTable.cellBackColRC(\"3\", \"3\", \"_3DFace\");
+  timeTable.cellBackColRC(\"4\", \"1\", \"_3DFace\");
+  timeTable.cellBackColRC(\"5\", \"1\", \"_3DFace\");
+
+
+}" 0
+ E 0 0 1 3 1 "1" 0 1 0 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 128 "2" 0 1 0 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 128 "3" 0 1 0 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 128 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

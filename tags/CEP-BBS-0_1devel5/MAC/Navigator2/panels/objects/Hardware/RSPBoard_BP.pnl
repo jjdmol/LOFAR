@@ -1,0 +1,183 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 328 89 N "_3DFace" 0
+"main()
+{
+  
+  baseDP = g_currentDatapoint + \".BP\";
+  bp.toolTipText = baseDP;
+  if(dpExists(baseDP + \".version:_online.._value\"))
+  {
+    dpConnect(\"navPanel_showVersion\", baseDP + \".version:_online.._value\");
+    dpConnect(\"navPanel_showTemp\", baseDP + \".temperature:_online.._value\");
+  }
+  else
+  {
+    setValue(\"txt_temperature\", \"text\", \"xxxx\");
+    setValue(\"txt_temperature\", \"visible\", FALSE);
+  }
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}
+
+" 0
+ E E E E 1 -1 -1 0  20 60
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"bp"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 20 300 61
+2 3
+"Text1"
+""
+1 40 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 42 33 60 50
+0 2 0 "0s" 0 0 0 192 0 0  42 33 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 2 BP
+2 5
+"txt_version"
+""
+1 258 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 260 47 297 62
+0 2 0 "0s" 0 0 0 194 0 0  297 47 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 ver: x.x
+6 6
+"Border1"
+""
+1 245 45 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 245 25 295 45
+2 7
+"label_temperature"
+""
+1 276 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 278 27 292 44
+0 2 0 "0s" 0 0 0 194 0 0  292 27 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 2 °C
+2 8
+"txt_temperature"
+""
+1 267 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 269 27 276 44
+0 2 0 "3.0f" 4 0 0 194 0 0  276 27 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 x
+1 9 0 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState"
+"objects\\lofar_self_state.pnl" 12 32 T 7 1 0 1 11 7
+0
+0

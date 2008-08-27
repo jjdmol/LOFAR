@@ -1,0 +1,5 @@
+inms=/mnt/flaggerdata/test.MS
+outms=/data/test2.MS
+start=13
+step=1
+nchan=128

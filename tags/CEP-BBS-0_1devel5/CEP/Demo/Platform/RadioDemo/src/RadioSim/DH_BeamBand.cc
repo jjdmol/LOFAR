@@ -1,0 +1,20 @@
+// DH_BeamBand.cpp: implementation of the DH_beam class.
+//
+//////////////////////////////////////////////////////////////////////
+
+
+#include "DH_BeamBand.h"
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+
+DH_BeamBand::DH_BeamBand (const string& name)
+: DataHolder (name, "DH_BeamBand")
+{
+  setDataPacket(&itsDataPacket,sizeof(itsDataPacket));
+}
+
+DH_BeamBand::~DH_BeamBand () {
+
+}
