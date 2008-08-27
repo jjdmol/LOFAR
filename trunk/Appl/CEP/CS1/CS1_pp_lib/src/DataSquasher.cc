@@ -52,11 +52,13 @@ void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
   int outcounter = 0;
   bool flagnew   = true;
   Vector<Complex> values(itsNumPolarizations, 0);
+  Vector<Complex> allvalues(itsNumPolarizations, 0);
   Vector<Float>   weights(itsNumPolarizations, 0);
   while (incounter < NChan)
   {
     for (int i = 0; i < itsNumPolarizations; i++)
     {
+      allvalues(i) += oldData(i, Start + incounter);
       if (!oldFlags(i, Start + incounter))
       { //existing weight <> 1 is not handled here, maybe sometime in the future?
         values(i) += oldData(i, Start + incounter);
@@ -67,30 +69,21 @@ void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
     incounter++;
     if ((incounter) % Step == 0)
     {
-/*      if (flagnew)
-      {
-        newWeights.column(outcounter) = 1.0;
-        for (int i = 0; i < itsNumPolarizations; i++)
-          newData(i, outcounter)      = values(i)/Step;
-      }
-      else
-      {
-        for (int i = 0; i < itsNumPolarizations; i++)
+      for (int i = 0; i < itsNumPolarizations; i++)
+      { if (flagnew)
+        { values(i) = allvalues(i);
+          newWeights(i, outcounter) = 1.0;
+        }
+        else
         { values(i) = values(i) / weights(i);
           newWeights(i, outcounter) = abs(weights(i)) / Step;
         }
-        newData.column(outcounter)  = values;
-        newFlags.column(outcounter) = flagnew;
-      }*/
-      for (int i = 0; i < itsNumPolarizations; i++)
-      { values(i) = values(i) / weights(i);
-        newWeights(i, outcounter) = abs(weights(i)) / Step;
-//        newWeights.column(outcounter) = weights/Float(Step);
       }
       newData.column(outcounter)  = values;
       newFlags.column(outcounter) = flagnew;
-      values  = 0;
-      weights = 0;
+      allvalues = 0;
+      values    = 0;
+      weights   = 0;
       outcounter++;
       flagnew = true;
     }
@@ -102,9 +95,9 @@ void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
 void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
                                    MsInfo& Info, RunDetails& Details)
 {
-  //Data.Position is the last filled timeslot, the middle is 1/2 a window behind it
-  int inpos  = (InData.Position + (InData.WindowSize+1)/2) % InData.WindowSize;
-  int outpos = (OutData.Position + 1) % OutData.WindowSize;
+  //Data.Position is the last filled timeslot, we need to process the one just in front of it.
+  int inpos  = (InData.Position + 1) % InData.WindowSize;
+  int outpos = 0; //(OutData.Position + 1) % OutData.WindowSize;
   Matrix<Complex> myOldData;
   Matrix<Complex> myNewData;
   Matrix<Bool>    myOldFlags;

@@ -39,6 +39,17 @@ RunDetails::~RunDetails()
 
 //===============>>> RunDetails::PrintInfo  <<<===============
 
+bool RunDetails::CheckValues(void)
+{
+  bool result = false;
+  if (!((FreqWindow %2) && (TimeWindow % 2)))
+  { std::cout << "The window sizes need to be uneven" << std::endl;
+    result = true;
+  }
+  return result;
+}
+//===============>>> RunDetails::PrintInfo  <<<===============
+
 void RunDetails::PrintInfo(void)
 {
   std::cout << "Fixed:             " << Fixed << std::endl;;        // BandpassCorrector

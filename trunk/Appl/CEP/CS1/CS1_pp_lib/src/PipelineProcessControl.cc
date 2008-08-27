@@ -66,25 +66,28 @@ namespace LOFAR
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       myDetails  = new RunDetails();
-      myDetails->Fixed        = ParamSet->getInt32("fixed", 0);         // BandpassCorrector
-      myDetails->FreqWindow   = ParamSet->getInt32("freqwindow", 1);    // FrequencyFlagger, MADFlagger
-      myDetails->TimeWindow   = ParamSet->getInt32("timewindow", 1);    // ComplexMedianFlagger, MADFlagger
+      myDetails->Fixed        = ParamSet->getUint32("fixed", 0);         // BandpassCorrector
+      myDetails->FreqWindow   = ParamSet->getUint32("freqwindow", 1);    // FrequencyFlagger, MADFlagger
+      myDetails->TimeWindow   = ParamSet->getUint32("timewindow", 1);    // ComplexMedianFlagger, MADFlagger
       myDetails->Treshold     = ParamSet->getDouble("treshold", 1.0);   // FrequencyFlagger, MADFlagger
-      myDetails->Algorithm    = ParamSet->getInt32("algorithm", 0);     // FrequencyFlagger
+      myDetails->Algorithm    = ParamSet->getUint32("algorithm", 0);     // FrequencyFlagger
       myDetails->MinThreshold = ParamSet->getDouble("min", 1.0);        // ComplexMedianFlagger
       myDetails->MaxThreshold = ParamSet->getDouble("max", 1.0);        // ComplexMedianFlagger
       myDetails->Existing     = ParamSet->getBool("existing", false);   // all flaggers
-      myDetails->NChan        = ParamSet->getInt32("nchan");            // DataSquasher
-      myDetails->Start        = ParamSet->getInt32("start");            // DataSquasher
-      myDetails->Step         = ParamSet->getInt32("step");             // DataSquasher
+      myDetails->NChan        = ParamSet->getUint32("nchan");            // DataSquasher
+      myDetails->Start        = ParamSet->getUint32("start");            // DataSquasher
+      myDetails->Step         = ParamSet->getUint32("step");             // DataSquasher
       myDetails->Skip         = ParamSet->getBool("skipflags", false);  // DataSquasher
       myDetails->Columns      = ParamSet->getBool("allcolumns", false); // DataSquasher
       itsInMS                 = ParamSet->getString("msin");
       itsOutMS                = ParamSet->getString("msout");
-      itsBandpass             = ParamSet->getInt32("bandpass", 0);
-      itsFlagger              = ParamSet->getInt32("flagger", 0);
-      itsSquasher             = ParamSet->getInt32("squasher", 0);
+      itsBandpass             = ParamSet->getUint32("bandpass", 0);
+      itsFlagger              = ParamSet->getUint32("flagger", 0);
+      itsSquasher             = ParamSet->getUint32("squasher", 0);
       myDetails->PrintInfo();
+      if (myDetails->CheckValues())
+      { return false;
+      }
       return true;
     }
 
