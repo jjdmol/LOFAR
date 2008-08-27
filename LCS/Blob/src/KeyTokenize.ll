@@ -44,10 +44,12 @@ DEXP      [Ee][+-]?{INT}
 DOUBLE    [+-]?({INT}{DEXP}|{INT}"."{DIGIT}*({DEXP})?|{DIGIT}*"."{INT}({DEXP})?)
 DBINT     {DOUBLE}|{INT}
 FLOAT     {DBINT}[fF]
-COMPLEX   {FLOAT}"+"{FLOAT}"i"
-DCOMPLEX  {DBINT}"+"{DBINT}"i"
-IMAG      {FLOAT}"i"
-DIMAG     {DBINT}"i"
+COMPLEX   {FLOAT}"+"{FLOAT}[ij]
+DCOMPLEX  {DBINT}"+"{DBINT}[ij]
+NCOMPLEX  {FLOAT}"-"{FLOAT}[ij]
+NDCOMPLEX {DBINT}"-"{DBINT}[ij]
+IMAG      {FLOAT}[ij]
+DIMAG     {DBINT}[ij]
 TRUE      T
 FALSE     F
 DMS       ({INT})?"."({INT})?"."({INT}|{FLOAT}|{DOUBLE})?
@@ -85,28 +87,42 @@ COMMENT   "#".*"\n"
 {COMPLEX} {
             KeyParser::position() += yyleng;
             float valr,vali;
-	    sscanf(KeyTokenizetext, "%f%*c+%f%*ci", &valr, &vali);
+	    sscanf(KeyTokenizetext, "%f%*c+%f%*c", &valr, &vali);
             lvalp->val = new KeyValue (makefcomplex(valr, vali));
-	    return LITERAL;
-	  }
-{IMAG} {
-            KeyParser::position() += yyleng;
-            float vali;
-	    sscanf(KeyTokenizetext, "%f%*ci", &vali);
-            lvalp->val = new KeyValue (makefcomplex(0., vali));
 	    return LITERAL;
 	  }
 {DCOMPLEX} {
             KeyParser::position() += yyleng;
             double valr,vali;
-	    sscanf(KeyTokenizetext, "%lf+%lfi", &valr, &vali);
+	    sscanf(KeyTokenizetext, "%lf+%lf", &valr, &vali);
             lvalp->val = new KeyValue (makedcomplex(valr, vali));
+	    return LITERAL;
+	  }
+{NCOMPLEX} {
+            KeyParser::position() += yyleng;
+            float valr,vali;
+	    sscanf(KeyTokenizetext, "%f%*c-%f%*c", &valr, &vali);
+            lvalp->val = new KeyValue (makefcomplex(valr, -vali));
+	    return LITERAL;
+	  }
+{NDCOMPLEX} {
+            KeyParser::position() += yyleng;
+            double valr,vali;
+	    sscanf(KeyTokenizetext, "%lf-%lf", &valr, &vali);
+            lvalp->val = new KeyValue (makedcomplex(valr, -vali));
+	    return LITERAL;
+	  }
+{IMAG} {
+            KeyParser::position() += yyleng;
+            float vali;
+	    sscanf(KeyTokenizetext, "%f%*c", &vali);
+            lvalp->val = new KeyValue (makefcomplex(0., vali));
 	    return LITERAL;
 	  }
 {DIMAG} {
             KeyParser::position() += yyleng;
             double vali;
-	    sscanf(KeyTokenizetext, "%lfi", &vali);
+	    sscanf(KeyTokenizetext, "%lf", &vali);
             lvalp->val = new KeyValue (makedcomplex(0., vali));
 	    return LITERAL;
 	  }
