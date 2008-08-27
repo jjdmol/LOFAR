@@ -162,12 +162,12 @@ def createRemoteStationFile(resultDir, stationName):
 
 # MAIN
 for stationName in sys.argv[1:]:
-    resultDir = "output/"+stationName
+    resultDir = "output/"+stationName+"/etc"
     if os.path.exists(resultDir):
         for oldfile in os.listdir(resultDir):
             os.remove(resultDir+"/"+oldfile)
     else:
-        os.mkdir(resultDir)
+        os.makedirs(resultDir)
     createRSPDriverFile    (resultDir, stationName) 
     createTBBDriverFile    (resultDir, stationName)
     createRemoteStationFile(resultDir, stationName)
