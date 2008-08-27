@@ -41,6 +41,14 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self.stationList = stationList
         self['OLAP.nrRSPboards'] = len(stationList)
         self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
+	
+	for station in stationList:
+	  self['PIC.Core.Station.' + station.name + '.RSP.ports'] = station.inputs
+	for pset in range(len(IONodes.get(station.partition))):
+	  self['PIC.Core.IONProc.' + self.getPartition() + '[' + str(pset) + '].inputs'] = [station.name + '/RSP' + str(rsp) for station in stationList if station.pset == pset for rsp in range(len(station.inputs))]
+
+    def getStations(self):
+	return self.stationList
     
     def setPartition(self, partition):
         self.partition = partition

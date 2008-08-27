@@ -92,17 +92,20 @@ class Section(object):
         self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
 
-        inputNodes = parset.getInputNodes()
+	stations = parset.getStations()
+
+        #inputNodes = parset.getInputNodes()
 	interfaces = IONodes.get(self.partition)
 
-	inputPsets = [interfaces.index(i) for i in inputNodes]
+	#inputPsets = [interfaces.index(i) for i in inputNodes]
+	inputPsets = [i.pset for i in stations]
 	outputPsets = range(nPsets)
 
 	if nPsets > len(interfaces):
 	  raise Exception('need too many output psets --- increase nrSubbandsPerPset')
 	
 	if not parset.isDefined('OLAP.BGLProc.inputPsets') and not parset.isDefined('OLAP.BGLProc.outputPsets'):
-	    print 'inputNodes = ', inputNodes
+	    #print 'inputNodes = ', inputNodes
 	    print 'interfaces = ', interfaces
 	    print 'inputPsets = ', inputPsets
 	    print 'outputPsets = ', outputPsets
