@@ -253,7 +253,6 @@ void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
   data.getColumn(tempData); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.
   flags.getColumn(tempFlags);
 
-  Buffer.Position = ++(Buffer.Position) % Buffer.WindowSize;
   for (int i = 0; i < rowcount; i++)
   {
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];

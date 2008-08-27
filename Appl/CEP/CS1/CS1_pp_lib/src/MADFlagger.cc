@@ -53,13 +53,17 @@ void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
                                   int TimePos, int ChanPos, int PolPos,
                                   float& Z1, float& Z2, Matrix<Float>& Medians)
 {
-  int temp = 0;
-  for (int j = -FWindowSize/2; j <= FWindowSize/2; j++)
+  int tempF = 0;
+  int tempT = 0;
+  int F = FWindowSize/2;
+  int T = TWindowSize/2;
+  for (int i = -T; i <= T; i++)
   {
-    for (int i = -TWindowSize/2; i <= TWindowSize/2; i++)
+    for (int j = -F; j <= F; j++)
     {
-      temp = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? -j : j); //have the channels wrap back upon themselves.
-      Medians(i+ TWindowSize/2, j+ FWindowSize/2) = abs(Values(PolPos, ChanPos + temp, TimePos + (i+TWindowSize)%TWindowSize)); //Fill the Matrix.
+      tempF = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? ChanPos-j : ChanPos+j); //have the channels wrap back upon themselves.
+      tempT = (TimePos + i + TWindowSize) % TWindowSize;
+      Medians(i+T, j+F) = abs(Values(PolPos, tempF, tempT)); //Fill the Matrix.
     }
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z

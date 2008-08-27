@@ -30,19 +30,20 @@ namespace LOFAR
       RunDetails();
       ~RunDetails();
 
-      int    Fixed;        // BandpassCorrector
-      int    FreqWindow;   // FrequencyFlagger, MADFlagger
-      int    TimeWindow;   // ComplexMedianFlagger, MADFlagger
-      double Treshold;     // FrequencyFlagger
-      double MinThreshold; // ComplexMedianFlagger
-      double MaxThreshold; // ComplexMedianFlagger
-      int    Algorithm;    // FrequencyFlagger
-      bool   Existing;     // all flaggers
-      int    NChan;        // DataSquasher
-      int    Start;        // DataSquasher
-      int    Step;         // DataSquasher
-      bool   Skip;         // DataSquasher
-      bool   Columns;      // DataSquasher
+      unsigned int Fixed;        // BandpassCorrector
+      unsigned int FreqWindow;   // FrequencyFlagger, MADFlagger
+      unsigned int TimeWindow;   // ComplexMedianFlagger, MADFlagger
+      double       Treshold;     // FrequencyFlagger
+      double       MinThreshold; // ComplexMedianFlagger
+      double       MaxThreshold; // ComplexMedianFlagger
+      unsigned int Algorithm;    // FrequencyFlagger
+      bool         Existing;     // all flaggers
+      unsigned int NChan;        // DataSquasher
+      unsigned int Start;        // DataSquasher
+      unsigned int Step;         // DataSquasher
+      bool         Skip;         // DataSquasher
+      bool         Columns;      // DataSquasher
+      bool CheckValues(void);
       void PrintInfo(void);
 
     protected:
