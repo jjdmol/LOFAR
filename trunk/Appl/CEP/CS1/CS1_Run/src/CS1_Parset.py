@@ -44,8 +44,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	for station in stationList:
 	  self['PIC.Core.Station.' + station.name + '.RSP.ports'] = station.inputs
-	for pset in range(len(IONodes.get(station.partition))):
-	  self['PIC.Core.IONProc.' + self.getPartition() + '[' + str(pset) + '].inputs'] = [station.name + '/RSP' + str(rsp) for station in stationList if station.pset == pset for rsp in range(len(station.inputs))]
+	for pset in range(len(IONodes.get(self.partition))):
+	  self['PIC.Core.IONProc.' + self.partition + '[' + str(pset) + '].inputs'] = [station.name + '/RSP' + str(rsp) for station in stationList if station.getPset(self.partition) == pset for rsp in range(len(station.inputs))]
 
     def getStations(self):
 	return self.stationList

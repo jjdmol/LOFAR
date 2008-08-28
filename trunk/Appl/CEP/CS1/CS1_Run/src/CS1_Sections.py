@@ -98,7 +98,7 @@ class Section(object):
 	interfaces = IONodes.get(self.partition)
 
 	#inputPsets = [interfaces.index(i) for i in inputNodes]
-	inputPsets = [i.pset for i in stations]
+	inputPsets = [station.getPset(self.partition) for station in stations]
 	outputPsets = range(nPsets)
 
 	if nPsets > len(interfaces):
