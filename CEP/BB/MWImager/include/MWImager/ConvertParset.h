@@ -38,6 +38,17 @@ namespace LOFAR {
     // The output parset is written if the output name is not empty.
     static ACC::APS::ParameterSet convertParset (const ACC::APS::ParameterSet&,
 						 const std::string& nameOut);
+
+    // Append the parameters of in to the output.
+    // They are prefixed with the given prefix.
+    // Parameter names in the <src>old2newNameMap</src> are renamed.
+    // Parameters defined in the <src>defaults</src> are written in the output
+    // if not defined in the input.
+    static void convert (ACC::APS::ParameterSet& out,
+			 const ACC::APS::ParameterSet& in,
+			 const std::map<std::string,std::string>& old2NewNameMap,
+			 const std::map<std::string,std::string>& defaults,
+			 const std::string& prefix);
   };
 
 }  //# namespace LOFAR

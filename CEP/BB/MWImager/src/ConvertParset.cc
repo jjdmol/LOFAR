@@ -28,8 +28,42 @@
 #include <iostream>
 
 using namespace std;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
+
+  void MWImager::convert (ParameterSet& out,
+			  const ParameterSet& in,
+			  const map<string,string>& old2NewNameMap,
+			  const map<string,string>& defaults,
+			  const string& prefix)
+  {
+    // Copy all given keywords to the output.
+    // If needed, replace a name.
+    for (ParameterSet::const_iterator iter=in.begin();
+	 iter != in.end(); ++iter) {
+      string name = iter->first;
+      map<string,string>::const_iterator loc = old2NewNameMap.find(name);
+      if (loc != old2NewNameMap.end()) {
+	name = loc->second;
+      }
+      out.add (prefix + name, iter->second);
+    }
+    // Now insert defaults if a keyword is not given.
+    // The keyword name in the map must be the old name.
+    for (map<string,string>::const_iterator iter=defaults.begin();
+	 iter != defaults.end(); ++iter) {
+      string name = iter->first;
+      // Insert default if not part of input paramters.
+      if (! in.isDefined (name)) {
+	map<string,string>::const_iterator loc = old2NewNameMap.find(name);
+	if (loc != old2NewNameMap.end()) {
+	  name = loc->second;
+	}
+	out.add (prefix + name, iter->second);
+      }
+    }
+  }
 
   ACC::APS::ParameterSet MWImager::convertParset (const string& nameIn,
 						  const string& nameOut)
@@ -37,96 +71,82 @@ namespace LOFAR {
     return convertParset (ACC::APS::ParameterSet(nameIn), nameOut);
   }
 
-  ACC::APS::ParameterSet MWImager::convertParset (const ACC::APS::ParameterSet& in,
+  ACC::APS::ParameterSet MWImager::convertParset (const ACC::APS::ParameterSet& parset,
 						  const string& nameOut)
   {
+    map<string,string> emptyMap;
     ACC::APS::ParameterSet out;
-    string outname;
-    {
-      string datacolumn  = in.getString ("datacolumn");
-      string dataset     = in.getString ("dataset");
-      string minUV       = in.getString ("minUV");
-      string ncycles     = in.getString ("ncycles");
-      string restore     = in.getString ("restore");
-      vector<double> restoreBeam = in.getDoubleVector ("restore_beam");
-      out.add ("Cimager.dataset",    dataset);
-      out.add ("Cimager.datacolumn", datacolumn);
-      out.add ("Cimager.MinUV",      minUV);
-      out.add ("Cimager.ncycles",    ncycles);
-      out.add ("Cimager.restore",    restore);
-      vector<string> restoreBeamStr (restoreBeam.size());
-      for (unsigned i=0; i<restoreBeam.size(); ++i) {
-	ostringstream os;
-	os << restoreBeam[i];
-	restoreBeamStr[i] = os.str() + "deg";
-      }
-      ostringstream osvec;
-      osvec << restoreBeamStr;
-      out.add ("Cimager.restore.beam", osvec.str());
-      // The output name is the base MS name minus the possible extension.
-      outname = dataset;
-      string::size_type pos = outname.rfind ('.');
-      if (pos != string::npos) {
-	outname = outname.substr (0, pos);
-      }
-      pos = outname.rfind ('/');
-      if (pos != string::npos) {
-	outname = outname.substr (pos+1);
-      }
+    ACC::APS::ParameterSet in (parset);
+    // The output name is the base MS name minus the possible extension
+    // and directory.
+    string outname = in.getString ("dataset");
+    string::size_type pos = outname.rfind ('.');
+    if (pos != string::npos) {
+      outname = outname.substr (0, pos);
     }
+    pos = outname.rfind ('/');
+    if (pos != string::npos) {
+      outname = outname.substr (pos+1);
+    }
+    // Convert the gridder keywords.
     {
       ACC::APS::ParameterSet grin = in.makeSubset ("Gridder.");
-      string cutoff       = grin.getString ("cutoff");
-      string nfacets      = grin.getString ("nfacets");
-      string nwplanes     = grin.getString ("nwplanes");
-      string oversample   = grin.getString ("oversample");
-      string wmax         = grin.getString ("wmax");
-      string maxsupport   = grin.getString ("maxsupport");
-      string limitsupport = grin.getString ("limitsupport", "0");
-      string type         = grin.getString ("type");
-      string name = "Cimager.gridder." + type;
-      out.add ("Cimager.gridder",      type);
-      out.add (name + ".wmax",         wmax);
-      out.add (name + ".nwplanes",     nwplanes);
-      out.add (name + ".oversample",   oversample);
-      out.add (name + ".cutoff",       cutoff);
-      out.add (name + ".maxsupport",   maxsupport);
-      out.add (name + ".limitsupport", limitsupport);
+      in.substractSubset ("Gridder.");
+      // Get the gridder type.
+      string type = grin.getString ("type");
+      out.add ("Cimager.gridder", type);
+      grin.remove ("type");
+      convert (out, grin, emptyMap, emptyMap, "Cimager.gridder."+type+'.');
     }
+    // Convert the solver keywords.
     {
       ACC::APS::ParameterSet soin = in.makeSubset ("Solver.");
-      string algorithm = soin.getString ("algorithm");
-      string gain      = soin.getString ("gain");
-      string niter     = soin.getString ("niter");
-      string type      = soin.getString ("type");
-      string verbose   = soin.getString ("verbose");
-      string scales    = soin.getString ("scales");
+      in.substractSubset ("Solver.");
+      // Get the solver type (dirty, clean).
+      string type = soin.getString ("type");
+      soin.remove ("type");
       out.add ("Cimager.solver", type);
-      out.add ("Cimager.solver.Clean.algorithm", algorithm);
-      out.add ("Cimager.solver.Clean.niter",     niter);
-      out.add ("Cimager.solver.Clean.gain",      gain);
-      out.add ("Cimager.solver.Clean.verbose",   verbose);
-      out.add ("Cimager.solver.Clean.scales",    scales);
       outname += '_' + type;
+      convert (out, soin, emptyMap, emptyMap, "Cimager.solver.Clean.");
     }
+    // Convert the images keywords.
     {
       ACC::APS::ParameterSet imin = in.makeSubset ("Images.");
+      in.substractSubset ("Images.");
+      // Combine ra,dec,type into a single string.
       string angle1    = imin.getString ("ra");
       string angle2    = imin.getString ("dec");
       string dirType   = imin.getString ("directionType");
+      imin.remove ("ra");
+      imin.remove ("dec");
+      imin.remove ("directionType");
+      vector<string> dirVec(3);
+      dirVec[0] = angle1;
+      dirVec[1] = angle2;
+      dirVec[2] = dirType;
+      ostringstream dirVecStr;
+      dirVecStr << dirVec;
+      // Get nchan, frequencies, cellsizes, and stokes.
+      // If needed add unit arcsec to cellsize.
       string nchan     = imin.getString ("nchan", "1");
-      string shape     = imin.getString ("shape");
       string frequency = imin.getString ("frequency");
-      vector<string> stokes   = imin.getStringVector ("stokes");
-      vector<int32>  cellSize = imin.getInt32Vector  ("cellSize");
-      vector<string> cellSizeVec (cellSize.size());
+      vector<string> cellSize = imin.getStringVector ("cellSize");
+      vector<string> stokes   = imin.getStringVector ("stokes",
+						      vector<string>(1,"I"));
+      imin.remove ("nchan");
+      imin.remove ("frequency");
+      imin.remove ("cellSize");
+      imin.remove ("stokes");
       for (unsigned i=0; i<cellSize.size(); ++i) {
-	ostringstream os;
-	os << cellSize[i] << "arcsec";
-	cellSizeVec[i] = os.str();
+	char last = cellSize[i][cellSize[i].size()-1];
+	if (last < 'a'  || last > 'z') {
+	  cellSize[i] += "arcsec";
+	}
       }
       ostringstream cellSizeStr;
-      cellSizeStr << cellSizeVec;
+      cellSizeStr << cellSize;
+      out.add ("Cimager.Images.cellsize", cellSizeStr.str());
+      // Form the image names.
       vector<string> names(stokes.size());
       for (unsigned i=0; i<stokes.size(); ++i) {
 	stokes[i] = toLower(stokes[i]);
@@ -135,20 +155,37 @@ namespace LOFAR {
       ostringstream namesStr;
       namesStr << names;
       out.add ("Cimager.Images.Names",    namesStr.str());
-      out.add ("Cimager.Images.shape",    shape);
-      out.add ("Cimager.Images.cellsize", cellSizeStr.str());
-      vector<string> dirVec(3);
-      dirVec[0] = angle1;
-      dirVec[1] = angle2;
-      dirVec[2] = dirType;
-      ostringstream dirVecStr;
-      dirVecStr << dirVec;
+      // Create individual keywords for freq, nchan, and direction.
       for (unsigned i=0; i<stokes.size(); ++i) {
 	string name = "Cimager.Images.image." + stokes[i] + '.' + outname + '.';
 	out.add (name+"frequency", frequency);
 	out.add (name+"nchan",     nchan);
 	out.add (name+"direction", dirVecStr.str());
       }
+      // Convert the remaining keywords.
+      convert (out, imin, emptyMap, emptyMap, "Cimager.Images.");
+    }
+    {
+      // If needed add unit deg to beamshape.
+      vector<string> beam = in.getStringVector ("restore_beam",
+						vector<string>(3,"1"));
+      in.remove ("restore_beam");
+      for (unsigned i=0; i<beam.size(); ++i) {
+	char last = beam[i][beam[i].size()-1];
+	if (last < 'a'  || last > 'z') {
+	  beam[i] += "deg";
+	}
+      }
+      ostringstream beamStr;
+      beamStr << beam;
+      out.add ("Cimager.restore.beam", beamStr.str());
+      map<string,string> defaults;
+      defaults["restore"] = "false";
+      defaults["ncycles"] = "1";
+      map<string,string> old2new;
+      old2new["minUV"] = "MinUV";
+      old2new["maxUV"] = "MaxUV";
+      convert (out, in, old2new, defaults, "Cimager.");
     }
     // Write into a parset file if output name is given.
     if (! nameOut.empty()) {
