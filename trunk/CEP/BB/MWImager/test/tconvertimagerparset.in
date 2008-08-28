@@ -4,7 +4,7 @@ Images.cellSize = [240, 240]
 Images.frequency = [12345678, 12345679]
 Images.nchan = 1
 Images.ra = 230.35
-Images.dec = -10,345
+Images.dec = -10.345
 Images.directionType = J2000
 
 Solver.type = Dirty
