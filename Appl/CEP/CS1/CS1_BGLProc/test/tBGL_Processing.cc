@@ -225,7 +225,7 @@ void doWork()
     CorrelatedData correlatedData(arena1, nrBaselines);
 
     PPF		   ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
-    Correlator     correlator(nrStations, nrSamplesPerIntegration);
+    Correlator     correlator(nrStations, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
     ppf.computeFlags(&transposedData, &filteredData);
