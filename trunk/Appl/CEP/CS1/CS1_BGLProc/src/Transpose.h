@@ -24,20 +24,21 @@ namespace CS1 {
 
 #if defined HAVE_MPI
 
-class Transpose {
+template <typename SAMPLE_TYPE> class Transpose
+{
   public:
     Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore);
     ~Transpose();
 
-    void setupTransposeParams(const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *, TransposedData *);
+    void setupTransposeParams(const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData<SAMPLE_TYPE> *, TransposedData<SAMPLE_TYPE> *);
 
 #if defined HAVE_BGL || HAVE_BGP
     static void	getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets);
     static unsigned remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers);
 #endif
 
-    void transpose(const InputData *, TransposedData *);
-    void transposeMetaData(const InputData *, TransposedData *);
+    void transpose(const InputData<SAMPLE_TYPE> *, TransposedData<SAMPLE_TYPE> *);
+    void transposeMetaData(const InputData<SAMPLE_TYPE> *, TransposedData<SAMPLE_TYPE> *);
 
  private:
     bool itsIsTransposeInput, itsIsTransposeOutput;

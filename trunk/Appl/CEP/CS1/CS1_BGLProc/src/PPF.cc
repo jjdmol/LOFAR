@@ -40,7 +40,7 @@ static NSTimer FFTtimer("PPF::FFT", true);
 static NSTimer PPFtimer("PPF::filter()", true);
 
 
-PPF::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
@@ -61,9 +61,14 @@ PPF::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBa
 #endif
 {
   init_fft();
+  initConstantTable();
+}
 
-#if !defined PPF_C_IMPLEMENTATION
-#if NR_BITS_PER_SAMPLE == 4
+
+template <> void PPF<i4complex>::initConstantTable()
+{
+  extern fcomplex _FIR_fp_table[16][16];
+
   static const float map[] = {
      0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5, 
     -7.5, -6.5, -5.5, -4.5, -3.5, -2.5, -1.5, -0.5,
@@ -72,19 +77,32 @@ PPF::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBa
   for (unsigned i = 0; i < 16; i ++)
     for (unsigned j = 0; j < 16; j ++)
       _FIR_fp_table[i][j] = makefcomplex(map[j], map[i]);
-#elif NR_BITS_PER_SAMPLE == 8
+}
+
+
+template <> void PPF<i8complex>::initConstantTable()
+{
+  // This takes up pretty much space (.5 MB)
+  extern fcomplex _FIR_fp_table[256][256];
+
   for (unsigned i = 0; i < 256; i ++)
     for (unsigned j = 0; j < 256; j ++)
       _FIR_fp_table[i][j] = makefcomplex((float) (signed char) i, (float) (signed char) j);
-#elif 0 && NR_BITS_PER_SAMPLE == 16
+}
+
+
+template <> void PPF<i16complex>::initConstantTable()
+{
+#if 0
+  extern float _FIR_fp_table[65536];
+
   for (unsigned i = 0; i < 65536; i ++)
     _FIR_fp_table[i] = (float) byteSwap((signed short) i);
-#endif
 #endif
 }
 
 
-PPF::~PPF()
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::~PPF()
 {
   destroy_fft();
 }
@@ -116,7 +134,7 @@ static void FFTtest()
 #endif
 
 
-void PPF::init_fft()
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::init_fft()
 {
 #if defined HAVE_FFTW3
   fftwf_complex cbuf1[NR_SUBBAND_CHANNELS], cbuf2[NR_SUBBAND_CHANNELS];
@@ -134,7 +152,7 @@ void PPF::init_fft()
 }
 
 
-void PPF::destroy_fft()
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::destroy_fft()
 {
 #if defined HAVE_FFTW3
   fftwf_destroy_plan(itsFFTWPlan);
@@ -144,7 +162,7 @@ void PPF::destroy_fft()
 }
 
 
-void PPF::computeFlags(const TransposedData *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   computeFlagsTimer.start();
 
@@ -171,7 +189,7 @@ void PPF::computeFlags(const TransposedData *transposedData, FilteredData *filte
 
 #if defined PPF_C_IMPLEMENTATION
 
-fcomplex PPF::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
+template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
   double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
   double frequency	       = baseFrequency + chan * itsChannelBandwidth;
@@ -183,7 +201,7 @@ fcomplex PPF::phaseShift(unsigned time, unsigned chan, double baseFrequency, dou
 
 #else
 
-void PPF::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const
 {
   double   phiBegin = -2 * M_PI * delayAtBegin;
   double   phiEnd   = -2 * M_PI * delayAfterEnd;
@@ -202,7 +220,7 @@ void PPF::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerInt
 #endif
 
 
-void PPF::filter(double centerFrequency, const TransposedData *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   PPFtimer.start();
 
@@ -228,7 +246,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-	  TransposedData::SampleType tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
+	  SAMPLE_TYPE tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
 	  dataConvert(LittleEndian, &tmp, 1);
@@ -356,6 +374,10 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
 
   PPFtimer.stop();
 }
+
+template class PPF<i4complex>;
+template class PPF<i8complex>;
+template class PPF<i16complex>;
 
 } // namespace CS1
 } // namespace LOFAR

@@ -36,25 +36,25 @@
 namespace LOFAR {
 namespace CS1 {
 
-const unsigned BeamletBuffer::itsNrTimesPerPacket;
+template<typename SAMPLE_TYPE> const unsigned BeamletBuffer<SAMPLE_TYPE>::itsNrTimesPerPacket;
 
 
 // The buffer size is a multiple of the input packet size.  By setting
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
 :
   itsNSubbands(nrSubbands),
-  itsPacketSize(sizeof(struct RSP::header) + nrTimesPerPacket * nrSubbands * sizeof(Beamlet)),
+  itsPacketSize(sizeof(struct RSP::header) + nrTimesPerPacket * nrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
   itsSize(align(bufferSize, itsNrTimesPerPacket)),
   itsHistorySize(history),
-  itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nrSubbands * itsSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS]),
+  itsSBBuffers(reinterpret_cast<SAMPLE_TYPE *>(ION_Allocator().allocate(nrSubbands * itsSize * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE), 32)), boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS]),
   itsOffset(0),
 #if defined HAVE_BGP
   itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
 #else
-  itsStride(reinterpret_cast<Beamlet *>(itsSBBuffers[1].origin()) - reinterpret_cast<Beamlet *>(itsSBBuffers[0].origin())),
+  itsStride(reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[1].origin()) - reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[0].origin())),
 #endif
   itsReadTimer("buffer read", true),
   itsWriteTimer("buffer write", true)
@@ -75,7 +75,7 @@ BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, uns
 }
 
 
-BeamletBuffer::~BeamletBuffer()
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
 {      
   delete itsSynchronizedReaderWriter;
   pthread_mutex_destroy(&itsValidDataMutex);
@@ -83,30 +83,38 @@ BeamletBuffer::~BeamletBuffer()
 }
 
 
-inline void BeamletBuffer::writePacket(Beamlet *dst, const Beamlet *src)
-{
 #if defined HAVE_BGP
-#if NR_BITS_PER_SAMPLE == 16
-  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, src, itsNSubbands);
-#elif NR_BITS_PER_SAMPLE == 8
-  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, src, itsNSubbands);
-#elif NR_BITS_PER_SAMPLE == 4
+
+template<> inline void BeamletBuffer<i4complex>::writePacket(i4complex *dst, const i4complex *src)
+{
   _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, src, itsNSubbands);
-#else
-#error Not implemented
+}
+
+template<> inline void BeamletBuffer<i8complex>::writePacket(i8complex *dst, const i8complex *src)
+{
+  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, src, itsNSubbands);
+}
+
+template<> inline void BeamletBuffer<i16complex>::writePacket(i16complex *dst, const i16complex *src)
+{
+  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, src, itsNSubbands);
+}
+
 #endif
-#else
+
+
+template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src)
+{
   for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-    for (unsigned time = 0; time < itsNrTimesPerPacket; time ++)
-      dst[time] = *src ++;
+    for (unsigned i = 0; i < itsNrTimesPerPacket * NR_POLARIZATIONS; i ++)
+      dst[i] = *src ++;
 
     dst += itsStride;
   }
-#endif
 }
 
 
-inline void BeamletBuffer::updateValidData(const TimeStamp &begin, const TimeStamp &end)
+template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::updateValidData(const TimeStamp &begin, const TimeStamp &end)
 {
   pthread_mutex_lock(&itsValidDataMutex);
   itsValidData.exclude(0, end - itsSize);  // forget old ValidData
@@ -123,7 +131,7 @@ inline void BeamletBuffer::updateValidData(const TimeStamp &begin, const TimeSta
 }
 
 
-void BeamletBuffer::writeConsecutivePackets(unsigned count)
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeConsecutivePackets(unsigned count)
 {
   unsigned  nrTimes = count * itsNrTimesPerPacket;
   TimeStamp begin   = itsCurrentTimeStamp, end  = begin + nrTimes;
@@ -132,7 +140,7 @@ void BeamletBuffer::writeConsecutivePackets(unsigned count)
   if (endI >= itsSize)
     endI -= itsSize;
 
-  Beamlet *dst = reinterpret_cast<Beamlet *>(itsSBBuffers[0][startI].origin());
+  SAMPLE_TYPE *dst = itsSBBuffers[0][startI].origin();
   
   // in synchronous mode, do not overrun tail of reader
   itsSynchronizedReaderWriter->startWrite(begin, end);
@@ -140,13 +148,13 @@ void BeamletBuffer::writeConsecutivePackets(unsigned count)
   itsLockedRanges.lock(startI, endI, itsSize);
 
   while (itsCurrentI != endI) {
-    writePacket(dst, reinterpret_cast<const Beamlet *>(itsCurrentPacketPtr));
+    writePacket(dst, reinterpret_cast<const SAMPLE_TYPE *>(itsCurrentPacketPtr));
     itsCurrentPacketPtr += itsPacketSize;
-    dst			+= itsNrTimesPerPacket;
+    dst			+= itsNrTimesPerPacket * NR_POLARIZATIONS;
 
     if ((itsCurrentI += itsNrTimesPerPacket) == itsSize) {
       itsCurrentI = 0;
-      dst	  = reinterpret_cast<Beamlet *>(itsSBBuffers.origin());
+      dst	  = itsSBBuffers.origin();
     }
   }
 
@@ -158,7 +166,7 @@ void BeamletBuffer::writeConsecutivePackets(unsigned count)
 }
 
 
-void BeamletBuffer::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
 {
   // A packet with unexpected timestamp was received.  Handle accordingly.
 
@@ -184,7 +192,7 @@ void BeamletBuffer::resetCurrentTimeStamp(const TimeStamp &newTimeStamp)
 }
 
 
-void BeamletBuffer::writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &timeStamps)
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &timeStamps)
 {
   itsWriteTimer.start();
   itsCurrentPacketPtr = reinterpret_cast<const char *>(rspData) + sizeof(struct RSP::header);
@@ -205,7 +213,7 @@ void BeamletBuffer::writeMultiplePackets(const void *rspData, const std::vector<
 }
 
 
-void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin)
 {
   itsWriteTimer.start();
 
@@ -258,11 +266,11 @@ void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
 #error Not implemented
 #endif
 #else
-  Beamlet *dst = reinterpret_cast<Beamlet *>(itsSBBuffers[0][startI].origin());
+  SAMPLE_TYPE *dst = itsSBBuffers[0][startI].origin();
   
   for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-    for (unsigned time = 0; time < itsNrTimesPerPacket; time ++)
-      dst[time] = *data ++;
+    for (unsigned i = 0; i < itsNrTimesPerPacket * NR_POLARIZATIONS; i ++)
+      dst[i] = *data ++;
 
     dst += itsStride;
   }
@@ -287,7 +295,7 @@ void BeamletBuffer::writePacketData(const Beamlet *data, const TimeStamp &begin)
 }
 
 
-void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements)
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements)
 {
   itsReadTimer.start();
 
@@ -312,7 +320,7 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
 }
 
 
-void BeamletBuffer::sendSubband(Stream *str, unsigned subband, unsigned beam) const
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::sendSubband(Stream *str, unsigned subband, unsigned beam) const
 {
   // Align to 32 bytes and make multiple of 32 bytes by prepending/appending
   // extra data.  Always send 32 bytes extra, even if data was already aligned.
@@ -323,28 +331,28 @@ void BeamletBuffer::sendSubband(Stream *str, unsigned subband, unsigned beam) co
     // the data wraps around the allocated memory, so copy in two parts
     unsigned firstChunk = itsSize - startI;
 
-    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
-    str->write(itsSBBuffers[subband][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SAMPLE_TYPE[firstChunk][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][0].origin(),      sizeof(SAMPLE_TYPE[endI][NR_POLARIZATIONS]));
   } else {
-    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][startI].origin(), sizeof(SAMPLE_TYPE[endI - startI][NR_POLARIZATIONS]));
   }
 }
 
 
-void BeamletBuffer::sendUnalignedSubband(Stream *str, unsigned subband, unsigned beam) const
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::sendUnalignedSubband(Stream *str, unsigned subband, unsigned beam) const
 {
   if (itsEndI[beam] < itsStartI[beam]) {
     // the data wraps around the allocated memory, so copy in two parts
     unsigned firstChunk = itsSize - itsStartI[beam];
 
-    str->write(itsSBBuffers[subband][itsStartI[beam]].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
-    str->write(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI[beam]][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][itsStartI[beam]].origin(), sizeof(SAMPLE_TYPE[firstChunk][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][0].origin(),		sizeof(SAMPLE_TYPE[itsEndI[beam]][NR_POLARIZATIONS]));
   } else {
-    str->write(itsSBBuffers[subband][itsStartI[beam]].origin(), sizeof(SampleType[itsEndI[beam] - itsStartI[beam]][NR_POLARIZATIONS]));
+    str->write(itsSBBuffers[subband][itsStartI[beam]].origin(), sizeof(SAMPLE_TYPE[itsEndI[beam] - itsStartI[beam]][NR_POLARIZATIONS]));
   }
 }
 
-SparseSet<unsigned> BeamletBuffer::readFlags(unsigned beam)
+template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::readFlags(unsigned beam)
 {
   pthread_mutex_lock(&itsValidDataMutex);
   SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin[beam], itsEnd[beam]);
@@ -360,7 +368,7 @@ SparseSet<unsigned> BeamletBuffer::readFlags(unsigned beam)
   return flags;
 }
 
-void BeamletBuffer::stopReadTransaction()
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransaction()
 {
   itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
   itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
@@ -369,6 +377,11 @@ void BeamletBuffer::stopReadTransaction()
   
   itsReadTimer.stop();
 }
+
+
+template class BeamletBuffer<i4complex>;
+template class BeamletBuffer<i8complex>;
+template class BeamletBuffer<i16complex>;
 
 } // namespace CS1
 } // namespace LOFAR

@@ -44,7 +44,7 @@
 namespace LOFAR {
 namespace CS1 {
 
-class InputSection {
+template <typename SAMPLE_TYPE> class InputSection {
   public:
     InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber);
     ~InputSection();
@@ -64,7 +64,7 @@ class InputSection {
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    std::vector<InputThread *>	 itsInputThreads;
+    std::vector<InputThread<SAMPLE_TYPE> *> itsInputThreads;
 
     std::vector<Stream *>	 itsInputStreams;
     const std::vector<Stream *>  &itsClientStreams;
@@ -90,7 +90,7 @@ class InputSection {
     unsigned			 itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned			 itsPsetNumber;
    
-    std::vector<BeamletBuffer *> itsBBuffers;
+    std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBBuffers;
     WH_DelayCompensation	 *itsDelayComp;
     double			 itsSampleRate, itsSampleDuration;
     

@@ -28,23 +28,21 @@
 #include <rts.h>
 #endif
 
-namespace LOFAR
-{
-namespace CS1
-{
+namespace LOFAR {
+namespace CS1 {
 
 struct phase_shift {
   dcomplex v0, dv;
 };
 
 
-extern "C" {
-  void _filter(fcomplex delayLine[NR_TAPS],
-	       const float weights[NR_TAPS],
-	       const INPUT_SAMPLE_TYPE samples[],
-	       fcomplex out[],
-	       int nr_samples_div_16);
+template <typename SAMPLE_TYPE> extern void _filter(fcomplex delayLine[NR_TAPS],
+						    const float weights[NR_TAPS],
+						    const SAMPLE_TYPE samples[],
+						    fcomplex out[],
+						    int nr_samples_div_16);
 
+extern "C" {
   void _transpose_4x8(fcomplex *out,
 		      const fcomplex *in,
 		      int length,
@@ -61,7 +59,6 @@ extern "C" {
   void _prefetch(const void *src, size_t count, size_t stride);
 
   extern struct {
-    unsigned nr_bits_per_sample;
     unsigned nr_subband_channels;
     unsigned nr_taps;
     unsigned nr_polarizations;
@@ -72,15 +69,7 @@ extern "C" {
 #endif
 
   unsigned long long _rdtsc();
-
-#if NR_BITS_PER_SAMPLE == 4
-  extern fcomplex _FIR_fp_table[16][16];
-#elif NR_BITS_PER_SAMPLE == 8
-  extern fcomplex _FIR_fp_table[256][256];
-#elif NR_BITS_PER_SAMPLE == 16
-  extern float _FIR_fp_table[65536];
-#endif
-};
+}
 
 } // namespace CS1
 } // namespace LOFAR

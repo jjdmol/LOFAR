@@ -30,7 +30,6 @@
 
 .global	_FIR_constants_used
 _FIR_constants_used:
-	.long	NR_BITS_PER_SAMPLE
 	.long	NR_SUBBAND_CHANNELS
 	.long	NR_TAPS
 	.long	NR_POLARIZATIONS
@@ -40,9 +39,9 @@ _FIR_constants_used:
 .global _bgl_mutex_lock
 _bgl_mutex_lock:
 	sync
-loop5:	lwz	0,0(3)
+0:	lwz	0,0(3)
 	cmpwi	0,0
-	bne-	loop5
+	bne-	0b
 	sync
 	blr
 
@@ -56,11 +55,11 @@ _bgl_mutex_unlock:
 
 .global _rdtsc
 _rdtsc:
-loop6:	mfspr	3,269
+0:	mfspr	3,269
 	mfspr	4,268
 	mfspr	5,269
 	cmpw	5,3
-	bne-	loop6
+	bne-	0b
 	blr
 	
 .align	5
@@ -68,10 +67,10 @@ loop6:	mfspr	3,269
 _prefetch:
 	mtctr	4
 
-loop2:
+0:
 	dcbt	0,3
 	add	3,3,5
-	bdnz	loop2
+	bdnz	0b
 
 	blr
 
@@ -210,13 +209,17 @@ L5:
 	blr
 
 
-#if NR_BITS_PER_SAMPLE == 4
+#	this is a union of all possible constant tables
 
-.align	5
-.comm	_FIR_fp_table,16*16*FCOMPLEX_SIZE,8
+.global	_ZN5LOFAR3CS113_FIR_fp_tableE
+.comm	_ZN5LOFAR3CS113_FIR_fp_tableE,256*256*FCOMPLEX_SIZE,32
 
-.global	_filter
-_filter:
+
+
+#	filter for i4complex
+
+.global	_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i
+_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i:
 #	filters all samples for one station, one polarization
 
 #	arguments:
@@ -230,7 +233,7 @@ _filter:
 #	internally used:
 #	r9 :	  8
 #	r10 :	  512
-#	r11 :	  pointer to _FIR_fp_table
+#	r11 :	  pointer to _ZN5LOFAR3CS113_FIR_fp_tableE
 #	r28-r31 : prefetched samples
 #	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
 #	f16-f23 : weights (these are real values alternately stored in primary
@@ -269,8 +272,8 @@ _filter:
 	# convert 15 i4complex numbers to fcomplex
 	li	10,I4COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
 				; lbzx	 29,0,5	# fetch FIR history samples
-	lis     11,_FIR_fp_table@ha	; lbzux  30,5,10
-	la      11,_FIR_fp_table@l(11);lbzux	 31,5,10
+	lis     11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha	; lbzux  30,5,10
+	la      11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11);lbzux	 31,5,10
 	slwi	29,29,3		; lbzux	 28,5,10
 				; lfpsx  1,11,29
 	slwi	30,30,3		; lbzux	 29,5,10
@@ -314,7 +317,7 @@ _filter:
 	fxpmul	 27,18,15	; lbzux  29,5,10
 	fxsmul	 28,18,15	; lbzux  30,5,10
 	fxpmul	 29,19,15	; lbzux  31,5,10
-loop:
+0:
 	# time steps 0-5
 
 	fxcsmadd 24,23,1,24	; slwi	 28,28,3
@@ -627,7 +630,7 @@ loop:
 	fxpmul	 27,18,15	; stfpsux 28,6,9
 	fxsmul	 28,18,15
 
-	bdnz	loop
+	bdnz	0b
 
 	la	8,16(1)	# restore call-saved registers
 	li	9,DCOMPLEX_SIZE
@@ -653,13 +656,11 @@ loop:
 	addi	1,1,272		# restore stack pointer
 	blr			# return
 
-#elif NR_BITS_PER_SAMPLE == 8
 
-.align	5
-.comm	_FIR_fp_table,256*256*FCOMPLEX_SIZE,8
+# 	filter for i8complex
 
-.global	_filter
-_filter:
+.global	_ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i
+_ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i:
 #	filters all samples for one station, one polarization
 
 #	arguments:
@@ -711,9 +712,9 @@ _filter:
 	subi	1,1,16
 	stmw	28,0(1)	# save r28 ... r31
 
-	lis	11,_FIR_fp_table@ha
+	lis	11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha
 	li	9,FCOMPLEX_SIZE
-	la	11,_FIR_fp_table@l(11)
+	la	11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11)
 	li	10,I8COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
 	subi	6,6,FCOMPLEX_SIZE
 
@@ -822,7 +823,7 @@ _filter:
 	fxpmul	 30,23,8
 	fxsmul	 31,23,8
 
-loop:
+0:
 	# time steps 0-7
 
 	# load 0
@@ -1135,7 +1136,8 @@ loop:
 	fxsmul	 29,22,8	; stfpsux 30,6,9
 	fxpmul	 30,23,8	; stfpsux 31,6,9
 	fxsmul	 31,23,8
-	bdnz	loop
+
+	bdnz	 0b
 
 #if 0
 	addi	3,3,-120	# store delay line
@@ -1182,13 +1184,12 @@ loop:
 	addi	1,1,16		# restore stack pointer
 	blr			# return
 
-#elif 0 && NR_BITS_PER_SAMPLE == 16
+#if 0
 
-.align	5
-.comm	_FIR_fp_table,65536*FLOAT_SIZE,4
+#	filter for i16complex
 
-.global	_filter
-_filter:
+.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i
+_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 #	filters all samples for one station, one polarization
 
 #	arguments:
@@ -1240,9 +1241,9 @@ _filter:
 	subi	1,1,16
 	stmw	28,0(1)	# save r28 ... r31
 
-	lis	11,_FIR_fp_table@ha
+	lis	11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha
 	li	9,FCOMPLEX_SIZE
-	la	11,_FIR_fp_table@l(11)
+	la	11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11)
 	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
 	subi	6,6,FCOMPLEX_SIZE
 
@@ -1381,7 +1382,7 @@ _filter:
 	fxpmul	 30,23,8
 	fxsmul	 31,23,8
 
-loop:
+0:
 	# time steps 0-7
 
 	# load 0
@@ -1694,7 +1695,8 @@ loop:
 	fxsmul	 29,22,8	; stfpsux 30,6,9
 	fxpmul	 30,23,8	; stfpsux 31,6,9
 	fxsmul	 31,23,8
-	bdnz	loop
+
+	bdnz	 0b
 
 #if 0
 	addi	3,3,-120	# store delay line
@@ -1741,15 +1743,17 @@ loop:
 	addi	1,1,16		# restore stack pointer
 	blr			# return
 
-#elif NR_BITS_PER_SAMPLE == 16
+#else
+
+#	filter for i16complex
 
 .align	5
 sub_value:
 	.long	 0x43300000,0x00008000,0x43300000,0x00008000
 
 
-.global	_filter
-_filter:
+.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i
+_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 #	filters all samples for one station, one polarization
 
 #	arguments:
@@ -1989,7 +1993,7 @@ _filter:
 	fxsmul	 28,18,15
 	fxpmul	 29,19,15
 
-loop:
+0:
 	# time steps 0-5
 
 	fxcsmadd 24,23,1,24	; xor	 28,28,12
@@ -2320,7 +2324,7 @@ loop:
 	fxpmul	 27,18,15	; stfpsux 28,6,9
 	fxsmul	 28,18,15
 
-	bdnz	loop
+	bdnz	 0b
 
 #if 0
 	addi	3,3,-120	# store delay line
@@ -2366,8 +2370,6 @@ loop:
 
 	addi	1,1,16		# restore stack pointer
 	blr			# return
-#else
-#error unsupported NR_BITS_PER_SAMPLE
 #endif
 
 #if 0
@@ -2397,7 +2399,7 @@ _compute_flags:		# does not work anymore
 	li	11,128
 	lmw	24,0(3)
 
-L7:	
+0:	
 #if NR_SAMPLES_PER_INTEGRATION % 32 == 0
 	lhz	6,NR_SAMPLES_PER_INTEGRATION/8+2+4(4)
 #else
@@ -2405,7 +2407,7 @@ L7:
 #endif
 	li	7,0
 
-L6:	
+1:	
 	dcbt	3,11
 	addi	3,3,32
 	or	24,24,25
@@ -2416,21 +2418,21 @@ L6:
 	or	28,28,30
 	or.	24,24,28
 	lmw	24,0(3)
-	beq+	0,L3
+	beq+	0,2f
 
 	ori	6,6,65535
 
-L3:	slwi	0,6,31
+2:	slwi	0,6,31
 	srwi	6,6,1
 	srwi	5,5,1
 	or	5,5,0
 
 	addi	7,7,1
 	andi.	0,7,31
-	bne+	0,L8
+	bne+	0,3f
 	stwux	5,4,9
-L8:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
-	bne+	0,L6
+3:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
+	bne+	0,1b
 
 #if NR_SAMPLES_PER_INTEGRATION % 32 == 16
 	sthux	6,4,9
@@ -2441,7 +2443,7 @@ L8:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
 #endif
 
 	addic.	10,10,-1
-	bne+	0,L7
+	bne+	0,0b
 
 	lmw	24,0(1)
 	addi	1,1,32
@@ -2463,7 +2465,7 @@ _memzero:
 	lfpsx	0,0,5		; li	8,16
 	subi	3,3,16
 
-L1:	stfpdux	0,3,8
+0:	stfpdux	0,3,8
 	stfpdux	0,3,8
 	stfpdux	0,3,8
 	stfpdux	0,3,8
@@ -2471,7 +2473,7 @@ L1:	stfpdux	0,3,8
 	stfpdux	0,3,8
 	stfpdux	0,3,8
 	stfpdux	0,3,8
-	bdnz	L1
+	bdnz	0b
 #else
 	srwi	4,4,7
 	mtctr	4
@@ -2480,12 +2482,12 @@ L1:	stfpdux	0,3,8
 	li	6,96
 	li	7,128
 
-L1:	dcbz	0,3
+0:	dcbz	0,3
 	dcbz	3,4
 	dcbz	3,5
 	dcbz	3,6
 	add	3,3,7
-	bdnz	L1
+	bdnz	0b
 #endif
 	blr
 
@@ -2521,7 +2523,7 @@ _fast_memcpy:
 	sub	3,3,8
 	sub	4,4,8
 
-L0:
+0:
 	lfpdux	0,4,8
 	lfpdux	1,4,8
 	lfpdux	2,4,8
@@ -2586,7 +2588,7 @@ L0:
 	stfpdux	29,3,8
 	stfpdux	30,3,8
 	stfpdux	31,3,8
-	bdnz	L0
+	bdnz	0b
 
 	lfpdx	31,0,1
 	lfpdux	30,1,8

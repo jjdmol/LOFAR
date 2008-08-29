@@ -57,7 +57,7 @@ static Stream *rawDataStream;
 #endif
 
 
-InputSection::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std::vector<Stream *> &clientStreams, unsigned psetNumber)
 :
   itsClientStreams(clientStreams),
   itsPsetNumber(psetNumber),
@@ -69,13 +69,13 @@ InputSection::InputSection(const std::vector<Stream *> &clientStreams, unsigned 
 }
 
 
-InputSection::~InputSection() 
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
   std::clog << "InputSection::~InputSection" << std::endl;
 }
 
 
-void InputSection::raisePriority()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::raisePriority()
 {
   struct sched_param sched_param;
 
@@ -86,14 +86,14 @@ void InputSection::raisePriority()
 }
 
 
-void InputSection::startThreads()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startThreads()
 {
   itsLogThread = new LogThread(itsNrInputs);
 
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
 
-  InputThread::ThreadArgs args;
+  typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
 
   args.nrTimesPerPacket    = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
   args.nrSubbandsPerPacket = itsCS1PS->nrSubbandsPerFrame();
@@ -108,12 +108,12 @@ void InputSection::startThreads()
     args.BBuffer            = itsBBuffers[thread];
     args.packetCounters     = &itsLogThread->itsCounters[thread];
 
-    itsInputThreads[thread] = new InputThread(args);
+    itsInputThreads[thread] = new InputThread<SAMPLE_TYPE>(args);
   }
 }
 
 
-void InputSection::preprocess(const CS1_Parset *ps)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const CS1_Parset *ps)
 {
   itsCS1PS = ps;
   itsSampleRate = ps->sampleRate();
@@ -155,6 +155,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
 
   std::clog << "nrSubbands = " << ps->nrSubbands() << std::endl;
   std::clog << "nrStations = " << ps->nrStations() << std::endl;
+  std::clog << "nrBitsPerSample = " << ps->nrBitsPerSample() << std::endl;
 
   itsDelayCompensation	      = ps->delayCompensation();
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
@@ -199,7 +200,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsBBuffers.resize(itsNrInputs);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSubbandsPerFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
+    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSubbandsPerFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
@@ -217,7 +218,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
 }
 
 
-void InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::limitFlagsLength(SparseSet<unsigned> &flags)
 {
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
@@ -226,7 +227,7 @@ void InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 }
 
 
-void InputSection::process() 
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process() 
 {
   std::vector<TimeStamp>	delayedStamps(itsNrBeams, itsSyncedStamp - itsNHistorySamples);
   std::vector<signed int>	samplesDelay(itsNrBeams);
@@ -455,7 +456,7 @@ void InputSection::process()
 }
 
 
-void InputSection::postprocess()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
 {
   std::clog << "InputSection::postprocess" << std::endl;
 
@@ -483,6 +484,11 @@ void InputSection::postprocess()
 
   itsDelayTimer.print(std::clog);
 }
+
+
+template class InputSection<i4complex>;
+template class InputSection<i8complex>;
+template class InputSection<i16complex>;
 
 } // namespace CS1
 } // namespace LOFAR

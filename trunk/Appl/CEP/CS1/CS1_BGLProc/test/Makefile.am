@@ -9,6 +9,7 @@ AM_CXXFLAGS = \
 
 tBGL_Processing_SOURCES =			\
 tBGL_Processing.cc				\
+../src/BandPass.cc				\
 ../src/BGL_Processing.cc			\
 ../src/Correlator.cc				\
 ../src/CorrelatorAsm.S				\

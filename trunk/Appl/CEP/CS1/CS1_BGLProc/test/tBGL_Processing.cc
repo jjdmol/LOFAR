@@ -49,24 +49,34 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 
-inline TransposedData::SampleType toComplex(double phi)
+template <typename T> void toComplex(double phi, T &z);
+
+template <> inline void toComplex<i4complex>(double phi, i4complex &z)
 {
     double s, c;
 
     sincos(phi, &s, &c);
-#if NR_BITS_PER_SAMPLE == 4
-    return makei4complex(8 * c, 8 * s);
-#elif NR_BITS_PER_SAMPLE == 8
-    return makei8complex((int) rint(127 * c), (int) rint(127 * s));
-#elif NR_BITS_PER_SAMPLE == 16
-    return makei16complex((int) rint(32767 * c), (int) rint(32767 * s));
-#else
-#error Unknown NR_BITS_PER_SAMPLE
-#endif
+    z = makei4complex(8 * c, 8 * s);
+}
+
+template <> inline void toComplex<i8complex>(double phi, i8complex &z)
+{
+    double s, c;
+
+    sincos(phi, &s, &c);
+    z = makei8complex((int) rint(127 * c), (int) rint(127 * s));
+}
+
+template <> inline void toComplex<i16complex>(double phi, i16complex &z)
+{
+    double s, c;
+
+    sincos(phi, &s, &c);
+    z = makei16complex((int) rint(32767 * c), (int) rint(32767 * s));
 }
 
 
-void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
+template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE_TYPE> *transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
@@ -89,7 +99,8 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
 
   for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
     double phi = 2 * M_PI * signalFrequency * time / sampleRate;
-    TransposedData::SampleType sample = toComplex(phi);
+    SAMPLE_TYPE sample;
+    toComplex(phi, sample);
 
     for (unsigned stat = 0; stat < nrStations; stat ++) {
       transposedData->samples[stat][time][0] = sample;
@@ -97,7 +108,7 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
     }
 
     if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
-      transposedData->samples[1][time][1]     = toComplex(phi + phaseShift);
+      toComplex(phi + phaseShift, transposedData->samples[1][time][1]);
       transposedData->metaData[1].delayAtBegin  = distance / signalFrequency;
       transposedData->metaData[1].delayAfterEnd = distance / signalFrequency;
     }
@@ -180,7 +191,7 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 }
 
 
-void doWork()
+template <typename SAMPLE_TYPE> void doWork()
 {
 #if defined HAVE_BGL
   // only test on the one or two cores of the first compute node
@@ -200,7 +211,7 @@ void doWork()
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
     double     signalFrequency	= refFreq + 73 * sampleRate / NR_SUBBAND_CHANNELS; // channel 73
-    unsigned   nrSamplesToBGLProc = NR_SUBBAND_CHANNELS * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(TransposedData::SampleType[NR_POLARIZATIONS]);
+    unsigned   nrSamplesToBGLProc = NR_SUBBAND_CHANNELS * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
     unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
 
     const char *env;
@@ -212,7 +223,7 @@ void doWork()
     std::clog << "base frequency = " << refFreq << std::endl;
     std::clog << "signal frequency = " << signalFrequency << std::endl;
 
-    size_t transposedDataSize = TransposedData::requiredSize(nrStations, nrSamplesToBGLProc);
+    size_t transposedDataSize = TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToBGLProc);
     size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrSamplesPerIntegration);
     size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines);
 
@@ -220,12 +231,12 @@ void doWork()
     MallocedArena arena0(filteredDataSize, 32);
     MallocedArena arena1(std::max(transposedDataSize, correlatedDataSize), 32);
 
-    TransposedData transposedData(arena1, nrStations, nrSamplesToBGLProc);
+    TransposedData<SAMPLE_TYPE> transposedData(arena1, nrStations, nrSamplesToBGLProc);
     FilteredData   filteredData(arena0, nrStations, nrSamplesPerIntegration);
     CorrelatedData correlatedData(arena1, nrBaselines);
 
-    PPF		   ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
-    Correlator     correlator(nrStations, nrSamplesPerIntegration, true);
+    PPF<SAMPLE_TYPE> ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
+    Correlator       correlator(nrStations, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
     ppf.computeFlags(&transposedData, &filteredData);
@@ -256,7 +267,7 @@ int main (int argc, char **argv)
 #endif
 
   try {
-    doWork();
+    doWork<i16complex>();
   } catch (Exception& e) {
     std::cerr << "Caught exception: " << e.what() << std::endl;
     retval = 1;

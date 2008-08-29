@@ -46,26 +46,17 @@
 namespace LOFAR {
 namespace CS1 {
 
-typedef INPUT_SAMPLE_TYPE SampleType;
-
 // define a "simple" type of which the size equals the size of two samples
 // (X and Y polarizations)
 
-#if NR_BITS_PER_SAMPLE == 16
-typedef double Beamlet;
-#elif NR_BITS_PER_SAMPLE == 8
-typedef int32_t Beamlet;
-#elif NR_BITS_PER_SAMPLE == 4
-typedef int16_t Beamlet;
-#endif
 
-class BeamletBuffer
+template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
 	     BeamletBuffer(unsigned bufferSize, unsigned nrTimesPerPacket, unsigned nrSubbands, unsigned nrBeams, unsigned history, bool isSynchronous, unsigned maxNetworkDelay);
 	     ~BeamletBuffer();
 
-    void     writePacketData(const Beamlet *data, const TimeStamp &begin);
+    void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
     void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
@@ -87,9 +78,9 @@ class BeamletBuffer
     unsigned				  itsSize, itsHistorySize;
     ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
-    boost::multi_array_ref<SampleType, 3> itsSBBuffers;
+    boost::multi_array_ref<SAMPLE_TYPE, 3> itsSBBuffers;
     int					  itsOffset;
-    const static unsigned		  itsAlignment = 32 / sizeof(Beamlet);
+    const static unsigned		  itsAlignment = 32 / (NR_POLARIZATIONS * sizeof(SAMPLE_TYPE));
 
     // read internals
     std::vector<TimeStamp>		  itsBegin, itsEnd;
@@ -98,7 +89,7 @@ class BeamletBuffer
     TimeStamp                             itsMinEnd;
 
     // write internals
-    void				  writePacket(Beamlet *dst, const Beamlet *src);
+    void				  writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src);
     void				  updateValidData(const TimeStamp &begin, const TimeStamp &end);
     void				  writeConsecutivePackets(unsigned count);
     void				  resetCurrentTimeStamp(const TimeStamp &);
@@ -114,12 +105,12 @@ class BeamletBuffer
 };
 
 
-inline unsigned BeamletBuffer::alignmentShift(unsigned beam) const
+template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::alignmentShift(unsigned beam) const
 {
   return itsStartI[beam] % itsAlignment;
 }
 
-inline unsigned BeamletBuffer::mapTime2Index(TimeStamp time) const
+template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::mapTime2Index(TimeStamp time) const
 { 
   // TODO: this is very slow because of the %
   return time % itsSize + itsOffset;

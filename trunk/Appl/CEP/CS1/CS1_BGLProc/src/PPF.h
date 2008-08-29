@@ -29,17 +29,18 @@
 namespace LOFAR {
 namespace CS1 {
 
-class PPF
+template <typename SAMPLE_TYPE> class PPF
 {
   public:
     PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation);
     ~PPF();
 
-    void computeFlags(const TransposedData *, FilteredData *);
-    void filter(double centerFrequency, const TransposedData *, FilteredData *);
+    void computeFlags(const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void filter(double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
   private:
     void init_fft(), destroy_fft();
+    void initConstantTable();
 
 #if defined PPF_C_IMPLEMENTATION
     fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;

@@ -51,8 +51,6 @@ int main(int argc, char **argv)
   std::clog.rdbuf(std::cout.rdbuf());
 
   try {
-    BGL_Processing::original_argv = argv;
-
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
 #endif
@@ -91,25 +89,36 @@ int main(int argc, char **argv)
 
     std::clog << "connection successful" << std::endl;
 
-    BGL_Processing proc(ionStream, locationInfo);
-    BGL_Command	   command;
+    BGL_Configuration	configuration;
+    BGL_Processing_Base	*proc = 0;
+    BGL_Command		command;
 
     do {
       command.read(ionStream);
 
       switch (command.value()) {
-	case BGL_Command::PREPROCESS :	{
-					  BGL_Configuration configuration;
+	case BGL_Command::PREPROCESS :	configuration.read(ionStream);
 
-					  configuration.read(ionStream);
-					  proc.preprocess(configuration);
+					switch (configuration.nrBitsPerSample()) {
+					  case 4:  proc = new BGL_Processing<i4complex>(ionStream, locationInfo);
+						   break;
+
+					  case 8:  proc = new BGL_Processing<i8complex>(ionStream, locationInfo);
+						   break;
+
+					  case 16: proc = new BGL_Processing<i16complex>(ionStream, locationInfo);
+						   break;
 					}
+
+					proc->preprocess(configuration);
 					break;
 
-	case BGL_Command::PROCESS :	proc.process();
+	case BGL_Command::PROCESS :	proc->process();
 					break;
 
-	case BGL_Command::POSTPROCESS :	proc.postprocess();
+	case BGL_Command::POSTPROCESS :	proc->postprocess();
+					delete proc;
+					proc = 0;
 					break;
 
 	default :			break;

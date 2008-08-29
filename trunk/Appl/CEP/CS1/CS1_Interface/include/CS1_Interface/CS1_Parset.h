@@ -71,6 +71,7 @@ public:
 	uint32	       nrBaselines() const;
 	double         sampleRate() const;
 	double         sampleDuration() const;
+	uint32	       nrBitsPerSample() const;
 	vector<double> positions() const;
 	vector<double> getRefPhaseCentres() const;
 	vector<double> getPhaseCentresOf(const string& name) const;	
@@ -191,6 +192,11 @@ inline double CS1_Parset::sampleDuration() const
 {
   return 1.0 / sampleRate();
 } 
+
+inline uint32 CS1_Parset::nrBitsPerSample() const
+{
+  return getUint32("OLAP.nrBitsPerSample");
+}
 
 inline uint32 CS1_Parset::BGLintegrationSteps() const
 {
