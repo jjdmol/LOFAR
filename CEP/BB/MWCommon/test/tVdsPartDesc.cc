@@ -29,15 +29,15 @@ void check (const VdsPartDesc& vds)
   ASSERT (vds.getStartFreqs().size() == 5);
   ASSERT (vds.getStartFreqs()[0] == 20);
   ASSERT (vds.getStartFreqs()[1] == 60);
-  ASSERT (vds.getStartFreqs()[2] == 120);
-  ASSERT (vds.getStartFreqs()[3] == 180);
-  ASSERT (vds.getStartFreqs()[4] == 240);
+  ASSERT (vds.getStartFreqs()[2] == 123456789);
+  ASSERT (vds.getStartFreqs()[3] == 123456790);
+  ASSERT (vds.getStartFreqs()[4] == 123456791);
   ASSERT (vds.getEndFreqs().size() == 5);
   ASSERT (vds.getEndFreqs()[0] == 60);
   ASSERT (vds.getEndFreqs()[1] == 100);
-  ASSERT (vds.getEndFreqs()[2] == 180);
-  ASSERT (vds.getEndFreqs()[3] == 240);
-  ASSERT (vds.getEndFreqs()[4] == 300);
+  ASSERT (vds.getEndFreqs()[2] == 123456790);
+  ASSERT (vds.getEndFreqs()[3] == 123456791);
+  ASSERT (vds.getEndFreqs()[4] == 123456792);
   ASSERT (vds.getParms().size() == 1);
   ASSERT (vds.getParms().getString("key1") == "value1");
 }
@@ -48,7 +48,7 @@ void doIt()
   vds.setName ("/usr/local/xyx", "node1:/usr");
   vds.setTimes (0, 1, 0.5);
   vds.addBand (2, 20, 100);
-  vds.addBand (3, 120, 300);
+  vds.addBand (3, 123456789, 123456792);
   vds.addParm ("key1", "value1");
   check(vds);
   // Write into parset file.
