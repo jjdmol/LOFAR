@@ -33,7 +33,7 @@ def doObservation(obsID, parset):
         rsp.selectRCUs([0, 1, 2, 8, 9])
         rsp.setWG([2], 60e6)
 
-    mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema})
+    mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema, 'nieuwpoo': nieuwpoo})
     logname = os.environ.get("LOGNAME", os.environ.get("USERNAME"))
     if mapTable.has_key(logname):
         userId = mapTable.get(logname)
