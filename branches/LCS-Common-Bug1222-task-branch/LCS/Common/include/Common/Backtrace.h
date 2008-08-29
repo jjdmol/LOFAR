@@ -68,13 +68,13 @@ namespace LOFAR
 //     Backtrace(const Backtrace&);
 //     Backtrace& operator=(const Backtrace&);
 
-    // Initialize our data structures by zeroing them.
-    void init();
+//     // Initialize our data structures by zeroing them.
+//     void init();
 
-    // Get the return addresses of the current program state, and store them
-    // in \c itsAddr.
-    // \return The number of return addresses.
-    int get_addresses();
+//     // Get the return addresses of the current program state, and store them
+//     // in \c itsAddr.
+//     // \return The number of return addresses.
+//     int get_addresses();
 
     // Translate each return addresses into function name, filename and line
     // number. Uses helper class AddressTranslator to do the real work.

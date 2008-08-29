@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/SymbolTable.h>
-#include <Common/LofarLogger.h>
 #include <cstdlib>
 
 namespace LOFAR
@@ -44,14 +43,12 @@ namespace LOFAR
     itsBfd(0),
     itsSymbols(0)
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     init() && read();
   }
 
 
   SymbolTable::~SymbolTable()
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     cleanup();
   }
 
@@ -65,15 +62,12 @@ namespace LOFAR
 
   bool SymbolTable::init()
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     bfd_init();
     if ((itsBfd = bfd_openr(bfdFile,0)) == 0) {
-      cerr << __PRETTY_FUNCTION__ << ": " << flush;
       bfd_perror(bfdFile);
       return false;
     }
     if (!bfd_check_format(itsBfd, bfd_object)) {
-      cerr << __PRETTY_FUNCTION__ << ": " << flush;
       bfd_perror(bfdFile);
       return false;
     }
@@ -83,10 +77,8 @@ namespace LOFAR
 
   bool SymbolTable::read()
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     if ((bfd_get_file_flags(itsBfd) & HAS_SYMS) == 0) {
-      cerr << __PRETTY_FUNCTION__ << ": " << bfdFile 
-           << ": no symbols" << endl;
+      bfd_perror(bfdFile);
       return true;
     }
     unsigned int size;
@@ -96,8 +88,7 @@ namespace LOFAR
       symcount = bfd_read_minisymbols(itsBfd, true, (void**) &itsSymbols, &size);
     }
     if (symcount < 0) {
-      cerr << __PRETTY_FUNCTION__ << ": bfd_read_minisymbols() failed" 
-           << endl;
+      bfd_perror(bfdFile);
       return false;
     }
     return true;
@@ -106,7 +97,6 @@ namespace LOFAR
 
   void SymbolTable::cleanup()
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     if (itsSymbols) {
       free(itsSymbols);
       itsSymbols = 0;
