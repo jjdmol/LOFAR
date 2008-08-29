@@ -240,12 +240,12 @@ inline uint32 CS1_Parset::nrHistorySamples() const
 
 inline uint32 CS1_Parset::nrSamplesToBGLProc() const
 {
-  return nrSubbandSamples() + nrHistorySamples() + 32 / sizeof(INPUT_SAMPLE_TYPE[NR_POLARIZATIONS]);
+  return nrSubbandSamples() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
 }
 
 inline uint32 CS1_Parset::inputBufferSize() const
 {
-  return (uint32) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate()) & ~(32 / sizeof(INPUT_SAMPLE_TYPE[NR_POLARIZATIONS]) - 1);
+  return (uint32) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate());
 }
 
 inline uint32 CS1_Parset::maxNetworkDelay() const
