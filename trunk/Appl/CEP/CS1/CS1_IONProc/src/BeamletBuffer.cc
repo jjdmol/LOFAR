@@ -253,29 +253,8 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   // do not write in circular buffer section that is being read
   itsLockedRanges.lock(startI, endI, itsSize);
 
-#if defined HAVE_BGP
-  void *dst = itsSBBuffers[0][startI].origin();
+  writePacket(itsSBBuffers[0][startI].origin(), data);
   
-#if NR_BITS_PER_SAMPLE == 16
-  _copy_pkt_to_bbuffer_128_bytes(dst, itsStride, data, itsNSubbands);
-#elif NR_BITS_PER_SAMPLE == 8
-  _copy_pkt_to_bbuffer_64_bytes(dst, itsStride, data, itsNSubbands);
-#elif NR_BITS_PER_SAMPLE == 4
-  _copy_pkt_to_bbuffer_32_bytes(dst, itsStride, data, itsNSubbands);
-#else
-#error Not implemented
-#endif
-#else
-  SAMPLE_TYPE *dst = itsSBBuffers[0][startI].origin();
-  
-  for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-    for (unsigned i = 0; i < itsNrTimesPerPacket * NR_POLARIZATIONS; i ++)
-      dst[i] = *data ++;
-
-    dst += itsStride;
-  }
-#endif
-
   // forget old ValidData
   pthread_mutex_lock(&itsValidDataMutex);
   itsValidData.exclude(0, end - itsSize);
