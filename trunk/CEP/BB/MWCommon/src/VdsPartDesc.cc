@@ -54,8 +54,10 @@ namespace LOFAR { namespace CEP {
     os << prefix << "StepTime   = " << itsStepTime << endl;
     if (! itsNChan.empty()) {
       os << prefix << "NChan      = " << itsNChan << endl;
+      streamsize oldPrec = os.precision (12);
       os << prefix << "StartFreqs = " << itsStartFreqs << endl;
       os << prefix << "EndFreqs   = " << itsEndFreqs << endl;
+      os.precision (oldPrec);
     }
     // Prepend the extra parameters with Extra..
     ParameterSet parms;
