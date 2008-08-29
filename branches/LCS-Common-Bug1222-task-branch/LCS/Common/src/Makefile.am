@@ -5,6 +5,7 @@ endif
 lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= Package__Version.cc \
+	AddressTranslator.cc \
 	Allocator.cc \
 	Backtrace.cc \
 	DataConvert.cc \
