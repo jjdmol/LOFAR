@@ -39,8 +39,8 @@
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <measures/measures/MDirection.h>
-#include <measures/measures/MCDirection.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
