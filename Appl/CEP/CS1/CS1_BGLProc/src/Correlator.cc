@@ -26,16 +26,10 @@ Correlator::Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration, bo
   itsCorrelationWeights(new float[nrSamplesPerIntegration + 1]),
   itsBandPass(correctBandPass)
 {
-
   itsCorrelationWeights[0] = 0.0;
 
-  for (unsigned i = 1; i <= nrSamplesPerIntegration; i ++) {
-#if NR_BITS_PER_SAMPLE == 4
-    itsCorrelationWeights[i] = 1.0 / i;
-#else
+  for (unsigned i = 1; i <= nrSamplesPerIntegration; i ++)
     itsCorrelationWeights[i] = 1.0e-6 / i;
-#endif
-  }
 }
 
 

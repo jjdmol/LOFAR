@@ -57,20 +57,26 @@ namespace LOFAR {
 namespace CS1 {
 
 
-class BGL_Processing {
+class BGL_Processing_Base // untemplated helper class
+{
+  public:
+    virtual		~BGL_Processing_Base();    
+
+    virtual void	preprocess(BGL_Configuration &) = 0;
+    virtual void	process() = 0;
+    virtual void	postprocess() = 0;
+};
+
+
+template <typename SAMPLE_TYPE> class BGL_Processing : public BGL_Processing_Base
+{
   public:
 			BGL_Processing(Stream *, const LocationInfo &);
 			~BGL_Processing();
 
-#if 0
-    void		preprocess(CS1_Parset *parset);
-#else
-    void		preprocess(BGL_Configuration &);
-#endif
-    void		process();
-    void		postprocess();
-
-    static char		**original_argv;
+    virtual void	preprocess(BGL_Configuration &);
+    virtual void	process();
+    virtual void	postprocess();
 
   private:
 #if 0
@@ -96,15 +102,15 @@ class BGL_Processing {
     bool		itsIsTransposeInput, itsIsTransposeOutput;
     
     Arena		*itsArenas[2];
-    InputData		*itsInputData;
-    TransposedData	*itsTransposedData;
+    InputData<SAMPLE_TYPE>	*itsInputData;
+    TransposedData<SAMPLE_TYPE>	*itsTransposedData;
     FilteredData	*itsFilteredData;
     CorrelatedData	*itsCorrelatedData;
 
 #if defined HAVE_MPI
-    Transpose		*itsTranspose;
+    Transpose<SAMPLE_TYPE> *itsTranspose;
 #endif
-    PPF			*itsPPF;
+    PPF<SAMPLE_TYPE>	*itsPPF;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

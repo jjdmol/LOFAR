@@ -18,7 +18,7 @@
 namespace LOFAR {
 namespace CS1 {
 
-class InputData
+template <typename SAMPLE_TYPE> class InputData
 {
   public:
     InputData(const Arena &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
@@ -28,47 +28,45 @@ class InputData
 
     static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc);
 
-    typedef INPUT_SAMPLE_TYPE		  SampleType;
-
   private:
-    SparseSetAllocator			  allocator;
+    SparseSetAllocator			   allocator;
 
   public:
-    boost::multi_array_ref<SampleType, 3> samples; //[outputPsets.size()][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
+    boost::multi_array_ref<SAMPLE_TYPE, 3> samples; //[outputPsets.size()][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
 
     std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData; //[outputPsets.size()]
 };
 
 
-inline size_t InputData::requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc)
+template <typename SAMPLE_TYPE> inline size_t InputData<SAMPLE_TYPE>::requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc)
 {
-  return sizeof(SampleType) * nrSubbands * nrSamplesToBGLProc * NR_POLARIZATIONS;
+  return sizeof(SAMPLE_TYPE) * nrSubbands * nrSamplesToBGLProc * NR_POLARIZATIONS;
 }
 
 
-inline InputData::InputData(const Arena &arena, unsigned nrSubbands, unsigned nrSamplesToBGLProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const Arena &arena, unsigned nrSubbands, unsigned nrSamplesToBGLProc)
 :
   allocator(arena),
-  samples(static_cast<SampleType *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS]),
+  samples(static_cast<SAMPLE_TYPE *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS]),
   metaData(nrSubbands)
 {
 }
 
 
-inline InputData::~InputData()
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::~InputData()
 {
   allocator.deallocate(samples.origin());
 }
 
 
-inline void InputData::read(Stream *str)
+template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::read(Stream *str)
 {
   // read all metadata
   str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time
-  str->read(samples.origin(), samples.num_elements() * sizeof(SampleType));
+  str->read(samples.origin(), samples.num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, samples.origin(), samples.num_elements());

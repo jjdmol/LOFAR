@@ -39,11 +39,11 @@
 namespace LOFAR {
 namespace CS1 {
 
-class InputThread
+template<typename SAMPLE_TYPE> class InputThread
 {
   public:
     struct ThreadArgs {
-      BeamletBuffer	  *BBuffer;
+      BeamletBuffer<SAMPLE_TYPE> *BBuffer;
       Stream		  *stream; 
 
       unsigned		  threadID;
@@ -70,7 +70,7 @@ class InputThread
 
     ThreadArgs		  itsArgs;
     pthread_t		  thread;
-  };
+};
 
 } // namespace CS1
 } // namespace LOFAR

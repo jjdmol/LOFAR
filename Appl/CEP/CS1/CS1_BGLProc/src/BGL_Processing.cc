@@ -72,10 +72,13 @@ inline static dcomplex cosisin(double x)
 static NSTimer transposeTimer("transpose()", true);
 static NSTimer computeTimer("computing", true);
 
-char **BGL_Processing::original_argv;
+
+BGL_Processing_Base::~BGL_Processing_Base()
+{
+}
 
 
-BGL_Processing::BGL_Processing(Stream *str, const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> BGL_Processing<SAMPLE_TYPE>::BGL_Processing(Stream *str, const LocationInfo &locationInfo)
 :
   itsStream(str),
   itsLocationInfo(locationInfo),
@@ -101,7 +104,7 @@ BGL_Processing::BGL_Processing(Stream *str, const LocationInfo &locationInfo)
 }
 
 
-BGL_Processing::~BGL_Processing()
+template <typename SAMPLE_TYPE> BGL_Processing<SAMPLE_TYPE>::~BGL_Processing()
 {
 }
 
@@ -114,7 +117,7 @@ struct Location {
 };
 
 
-void BGL_Processing::getPersonality()
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::getPersonality()
 {
   int retval = rts_get_personality(&itsPersonality, sizeof itsPersonality);
   assert(retval == 0);
@@ -156,7 +159,7 @@ void BGL_Processing::getPersonality()
 
 #if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
 
-void BGL_Processing::initIONode() const
+void BGL_Processing<SAMPLE_TYPE>::initIONode() const
 {
   // one of the compute cores in each Pset has to initialize its I/O node
 
@@ -177,7 +180,7 @@ void BGL_Processing::initIONode() const
 
 
 #if 0
-void BGL_Processing::checkConsistency(CS1_Parset *parset) const
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::checkConsistency(CS1_Parset *parset) const
 {
   ASSERT(parset->nrPPFTaps()				 == NR_TAPS);
   ASSERT(parset->getInt32("Observation.nrPolarisations") == NR_POLARIZATIONS);
@@ -186,7 +189,6 @@ void BGL_Processing::checkConsistency(CS1_Parset *parset) const
 #if !defined C_IMPLEMENTATION
   ASSERT(parset->BGLintegrationSteps() % 16		 == 0);
 
-  ASSERT(_FIR_constants_used.nr_bits_per_sample		 == NR_BITS_PER_SAMPLE);
   ASSERT(_FIR_constants_used.nr_subband_channels	 == NR_SUBBAND_CHANNELS);
   ASSERT(_FIR_constants_used.nr_taps			 == NR_TAPS);
   ASSERT(_FIR_constants_used.nr_polarizations		 == NR_POLARIZATIONS);
@@ -210,7 +212,7 @@ void BGL_Processing::checkConsistency(CS1_Parset *parset) const
 
 #if defined HAVE_MPI
 
-void BGL_Processing::printSubbandList() const
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::printSubbandList() const
 {
   std::clog << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
 
@@ -230,7 +232,7 @@ void BGL_Processing::printSubbandList() const
 #endif
 
 
-void BGL_Processing::preprocess(BGL_Configuration &configuration)
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL_Configuration &configuration)
 {
   //checkConsistency(parset);	TODO
 
@@ -253,7 +255,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
 // #if defined HAVE_BGL
 //   Transpose::getMPIgroups(usedCoresPerPset, itsPersonality, inputPsets, outputPsets);
 #if defined HAVE_BGP || defined HAVE_BGL
-  Transpose::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
+  Transpose<SAMPLE_TYPE>::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
 #endif
 
   std::vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
@@ -275,8 +277,8 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   // Allocators for a single arena, but the Allocators are hidden in the
   // implementations of InputData, TransposedData, etc.
 
-  size_t inputDataSize      = itsIsTransposeInput  ? InputData::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
-  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
+  size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
+  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
   size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrSamplesPerIntegration) : 0;
   size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines) : 0;
 
@@ -284,7 +286,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
 
   if (itsIsTransposeInput) {
-    itsInputData = new InputData(*itsArenas[0], outputPsets.size(), nrSamplesToBGLProc);
+    itsInputData = new InputData<SAMPLE_TYPE>(*itsArenas[0], outputPsets.size(), nrSamplesToBGLProc);
   }
 
   if (itsIsTransposeOutput) {
@@ -302,24 +304,24 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     printSubbandList();
 #endif
 
-    itsTransposedData = new TransposedData(*itsArenas[1], nrStations, nrSamplesToBGLProc);
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(*itsArenas[1], nrStations, nrSamplesToBGLProc);
     itsFilteredData   = new FilteredData(*itsArenas[0], nrStations, nrSamplesPerIntegration);
     itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines);
 
-    itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
+    itsPPF	      = new PPF<SAMPLE_TYPE>(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
     itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
-    itsTranspose = new Transpose(itsIsTransposeInput, itsIsTransposeOutput, myCore);
+    itsTranspose = new Transpose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, myCore);
     itsTranspose->setupTransposeParams(itsLocationInfo, inputPsets, outputPsets, itsInputData, itsTransposedData);
   }
 #endif
 }
 
 
-void BGL_Processing::process()
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 {
   NSTimer totalTimer("total", LOG_CONDITION);
   totalTimer.start();
@@ -400,7 +402,7 @@ MPI_Barrier(itsTransposeGroup);
 }
 
 
-void BGL_Processing::postprocess()
+template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::postprocess()
 {
   if (itsIsTransposeInput) {
     delete itsInputData;
@@ -423,6 +425,11 @@ void BGL_Processing::postprocess()
     delete itsArenas[1];
   }
 }
+
+
+template class BGL_Processing<i4complex>;
+template class BGL_Processing<i8complex>;
+template class BGL_Processing<i16complex>;
 
 } // namespace CS1
 } // namespace LOFAR

@@ -140,6 +140,7 @@ static void configureCNs(const CS1_Parset &parset)
   BGL_Configuration configuration;
 
   configuration.nrStations()              = parset.nrStations();
+  configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
   configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
@@ -196,19 +197,38 @@ static void stopCNs()
 }
 
 
+template<typename SAMPLE_TYPE> static void inputTask(CS1_Parset *parset)
+{
+  InputSection<SAMPLE_TYPE> inputSection(clientStreams, myPsetNumber);
+
+  inputSection.preprocess(parset);
+
+  for (unsigned run = 0; run < nrRuns; run ++)
+    inputSection.process();
+
+  inputSection.postprocess();
+}
+
+
 static void *inputSection(void *parset)
 {
   std::clog << "starting input section" << std::endl;
 
   try {
-    InputSection inputSection(clientStreams, myPsetNumber);
+    CS1_Parset *ps = static_cast<CS1_Parset *>(parset);
 
-    inputSection.preprocess(static_cast<CS1_Parset *>(parset));
+    switch (ps->nrBitsPerSample()) {
+      case 4  : inputTask<i4complex>(ps);
+		break;
 
-    for (unsigned run = 0; run < nrRuns; run ++)
-      inputSection.process();
+      case 8  : inputTask<i8complex>(ps);
+		break;
 
-    inputSection.postprocess();
+      case 16 : inputTask<i16complex>(ps);
+		break;
+
+      default : throw std::runtime_error("unsupported number of bits per sample");
+    }
   } catch (Exception &ex) {
     std::cerr << "input section caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {

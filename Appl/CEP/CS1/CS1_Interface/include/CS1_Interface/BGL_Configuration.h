@@ -35,6 +35,7 @@ class BGL_Configuration
 {
   public:
     unsigned		  &nrStations();
+    unsigned		  &nrBitsPerSample();
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesToBGLProc();
     unsigned		  &nrUsedCoresPerPset();
@@ -58,6 +59,7 @@ class BGL_Configuration
     struct MarshalledData
     {
       unsigned		  itsNrStations;
+      unsigned		  itsNrBitsPerSample;
       unsigned		  itsNrSamplesPerIntegration;
       unsigned		  itsNrSamplesToBGLProc;
       unsigned		  itsNrUsedCoresPerPset;
@@ -76,6 +78,11 @@ class BGL_Configuration
 inline unsigned &BGL_Configuration::nrStations()
 {
   return itsMarshalledData.itsNrStations;
+}
+
+inline unsigned &BGL_Configuration::nrBitsPerSample()
+{
+  return itsMarshalledData.itsNrBitsPerSample;
 }
 
 inline unsigned &BGL_Configuration::nrSamplesPerIntegration()

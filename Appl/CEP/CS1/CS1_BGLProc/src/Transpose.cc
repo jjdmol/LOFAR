@@ -20,10 +20,10 @@ namespace CS1 {
 static NSTimer transposeTimer("transpose()", true);
 
 
-std::vector<MPI_Comm> Transpose::allTransposeGroups;
+template <typename SAMPLE_TYPE> std::vector<MPI_Comm> Transpose<SAMPLE_TYPE>::allTransposeGroups;
 
 
-Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore)
+template <typename SAMPLE_TYPE> Transpose<SAMPLE_TYPE>::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore)
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
@@ -32,14 +32,14 @@ Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myC
 }
 
 
-Transpose::~Transpose()
+template <typename SAMPLE_TYPE> Transpose<SAMPLE_TYPE>::~Transpose()
 {
 }
 
 
 #if defined HAVE_BGL || defined HAVE_BGP
 
-unsigned Transpose::remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers)
+template <typename SAMPLE_TYPE> unsigned Transpose<SAMPLE_TYPE>::remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers)
 {
   core = BGL_Mapping::mapCoreOnPset(core, pset);
 
@@ -49,7 +49,7 @@ unsigned Transpose::remapOnTree(unsigned pset, unsigned core, const std::vector<
 }
 
 
-void Transpose::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
+template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
 {
   allTransposeGroups.resize(nrCoresPerPset);
 
@@ -94,7 +94,7 @@ void Transpose::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locati
 #endif
 
 
-void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *inputData, TransposedData *transposedData)
+template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParams(const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData<SAMPLE_TYPE> *inputData, TransposedData<SAMPLE_TYPE> *transposedData)
 {
   std::set<unsigned> psets; // ordered list of all psets
   std::set_union(inputPsets.begin(), inputPsets.end(),
@@ -125,9 +125,9 @@ void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std
       unsigned pset  = outputPsets[psetIndex];
       unsigned index = psetToGroupIndex[pset];
 
-      const boost::detail::multi_array::sub_array<InputData::SampleType, 2> &slice = inputData->samples[psetIndex];
+      const boost::detail::multi_array::sub_array<SAMPLE_TYPE, 2> &slice = inputData->samples[psetIndex];
 
-      itsTransposeParams.send.counts[index] = slice.num_elements() * sizeof(InputData::SampleType);
+      itsTransposeParams.send.counts[index] = slice.num_elements() * sizeof(SAMPLE_TYPE);
       itsTransposeParams.send.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(inputData->samples.origin());
 
       itsTransposeMetaParams.send.counts[index] = sizeof(SubbandMetaData);
@@ -138,9 +138,9 @@ void Transpose::setupTransposeParams(const LocationInfo &locationInfo, const std
     for (unsigned psetIndex = 0; psetIndex < inputPsets.size(); psetIndex ++) {
       unsigned pset  = inputPsets[psetIndex];
       unsigned index = psetToGroupIndex[pset];
-      const boost::detail::multi_array::sub_array<TransposedData::SampleType, 2> &slice = transposedData->samples[psetIndex];
+      const boost::detail::multi_array::sub_array<SAMPLE_TYPE, 2> &slice = transposedData->samples[psetIndex];
 
-      itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(TransposedData::SampleType);
+      itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(SAMPLE_TYPE);
       itsTransposeParams.receive.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(transposedData->samples.origin());
 
       itsTransposeMetaParams.receive.counts[index] = sizeof(SubbandMetaData);
@@ -189,7 +189,7 @@ std::clog << std::endl;
 }
 
 
-void Transpose::transpose(const InputData *inputData, TransposedData *transposedData)
+template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::transpose(const InputData<SAMPLE_TYPE> *inputData, TransposedData<SAMPLE_TYPE> *transposedData)
 {
   if (MPI_Alltoallv(
 	itsIsTransposeInput ? (void *) inputData->samples.origin() : 0,
@@ -208,7 +208,7 @@ void Transpose::transpose(const InputData *inputData, TransposedData *transposed
 }
 
 
-void Transpose::transposeMetaData(const InputData *inputData, TransposedData *transposedData)
+template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::transposeMetaData(const InputData<SAMPLE_TYPE> *inputData, TransposedData<SAMPLE_TYPE> *transposedData)
 {
 #if 0
   // no need to marshall itsInputMetaData; it has not been unmarshalled
@@ -238,6 +238,11 @@ void Transpose::transposeMetaData(const InputData *inputData, TransposedData *tr
 }
 
 #endif
+
+template class Transpose<i4complex>;
+template class Transpose<i8complex>;
+template class Transpose<i16complex>;
+
 
 } // namespace CS1
 } // namespace LOFAR

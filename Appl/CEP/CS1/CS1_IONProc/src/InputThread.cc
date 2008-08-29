@@ -48,7 +48,7 @@ namespace LOFAR {
 namespace CS1 {
 
 
-InputThread::InputThread(ThreadArgs args /* call by value! */)
+template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
   itsArgs(args)
 {
@@ -74,7 +74,7 @@ InputThread::InputThread(ThreadArgs args /* call by value! */)
 }
 
 
-InputThread::~InputThread()
+template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   std::clog << "InputThread::~InputThread()" << std::endl;
 
@@ -96,12 +96,12 @@ InputThread::~InputThread()
 }
 
 
-void InputThread::sigHandler(int)
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::sigHandler(int)
 {
 }
 
 
-void InputThread::setAffinity()
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::setAffinity()
 {
 #if 1 && __linux__
   cpu_set_t cpu_set;
@@ -119,10 +119,10 @@ void InputThread::setAffinity()
 }
 
 
-void *InputThread::mainLoopStub(void *inputThread)
+template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(void *inputThread)
 {
   try {
-    static_cast<InputThread *>(inputThread)->mainLoop();
+    static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->mainLoop();
   } catch (Exception &ex) {
     std::cerr << "caught Exception: " << ex.what() << std::endl;
   } catch (std::exception &ex) {
@@ -131,18 +131,18 @@ void *InputThread::mainLoopStub(void *inputThread)
     std::cerr << "caught non-std:exception" << std::endl;
   }
 
-  static_cast<InputThread *>(inputThread)->stopped = true;
+  static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->stopped = true;
   return 0;
 }
 
 
-void InputThread::mainLoop()
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
   setAffinity();
 
   const unsigned maxNrPackets = 128;
   TimeStamp	 actualstamp  = itsArgs.startTime - itsArgs.nrTimesPerPacket;
-  unsigned	 packetSize   = sizeof(struct RSP::header) + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * sizeof(Beamlet);
+  unsigned	 packetSize   = sizeof(struct RSP::header) + itsArgs.nrSubbandsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
 
   std::vector<TimeStamp> timeStamps(maxNrPackets);
   boost::multi_array<char, 2, AlignedStdAllocator<char, 32> > packets(boost::extents[maxNrPackets][packetSize]);
@@ -219,7 +219,7 @@ void InputThread::mainLoop()
     }
 
     // expected packet received so write data into corresponding buffer
-    //itsArgs.BBuffer->writePacketData(reinterpret_cast<Beamlet *>(&packet.data), actualstamp);
+    //itsArgs.BBuffer->writePacketData(reinterpret_cast<SAMPLE_TYPE *>(&packet.data), actualstamp);
 
     timeStamps[currentPacket] = actualstamp;
     currentPacketPtr += packetSize;
@@ -233,6 +233,11 @@ void InputThread::mainLoop()
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
 }
+
+
+template class InputThread<i4complex>;
+template class InputThread<i8complex>;
+template class InputThread<i16complex>;
 
 } // namespace CS1
 } // namespace LOFAR
