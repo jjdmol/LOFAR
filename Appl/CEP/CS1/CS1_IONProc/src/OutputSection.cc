@@ -130,18 +130,19 @@ void OutputSection::preprocess(const CS1_Parset *ps)
 
   unsigned nrBuffers   = itsNrSubbandsPerPset + 1 /* itsTmpSum */ + maxSendQueueSize;
   unsigned nrBaselines = ps->nrBaselines();
+  unsigned nrChannels  = ps->nrChannelsPerSubband();
   unsigned arena       = 0;
 
   for (unsigned i = 0; i < nrBuffers; i ++)
-    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(nrBaselines), 32));
+    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(nrBaselines, nrChannels), 32));
 
-  itsTmpSum = new CorrelatedData(*itsArenas[arena ++], nrBaselines);
+  itsTmpSum = new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels);
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsVisibilitySums.push_back(new CorrelatedData(*itsArenas[arena ++], nrBaselines));
+    itsVisibilitySums.push_back(new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels));
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(*itsArenas[arena ++], nrBaselines));
+    itsFreeQueue.append(new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels));
 
   if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
     throw std::runtime_error("could not create send thread");

@@ -36,7 +36,7 @@ struct phase_shift {
 };
 
 
-template <typename SAMPLE_TYPE> extern void _filter(fcomplex delayLine[NR_TAPS],
+template <typename SAMPLE_TYPE> extern void _filter(unsigned nrChannels,
 						    const float weights[NR_TAPS],
 						    const SAMPLE_TYPE samples[],
 						    fcomplex out[],
@@ -52,14 +52,14 @@ extern "C" {
   void _phase_shift_and_transpose(fcomplex *out,
 				  const fcomplex *in,
 				  const struct phase_shift *,
-				  int stride);
+				  int stride,
+				  unsigned nrChannels);
 
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
   void _prefetch(const void *src, size_t count, size_t stride);
 
   extern struct {
-    unsigned nr_subband_channels;
     unsigned nr_taps;
     unsigned nr_polarizations;
   } _FIR_constants_used;

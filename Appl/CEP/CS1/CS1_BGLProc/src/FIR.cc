@@ -14,8 +14,7 @@ namespace CS1 {
 // This is efficiently achieved by negating the FIR filter constants of all
 // uneven FIR filters.
 
-const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] __attribute__ ((aligned(32))) = {
-#if NR_SUBBAND_CHANNELS == 256 && NR_TAPS == 16
+const float FIR::weights[256][NR_TAPS] __attribute__ ((aligned(32))) = {
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
     -0.011661800,  0.009847130, -0.005852040,  0.000558600,
@@ -1040,9 +1039,6 @@ const float FIR::weights[NR_SUBBAND_CHANNELS][NR_TAPS] __attribute__ ((aligned(3
     -0.000558600,  0.005852040, -0.009847130,  0.011661800,
     -1.000000000,  0.015420900, -0.011598600,  0.006891530,
     -0.001219900, -0.005131880,  0.011535200, -0.011659500 },
-#else
-  0
-#endif
 };
 
 

@@ -30,7 +30,6 @@
 
 .global	_FIR_constants_used
 _FIR_constants_used:
-	.long	NR_SUBBAND_CHANNELS
 	.long	NR_TAPS
 	.long	NR_POLARIZATIONS
 
@@ -121,6 +120,7 @@ _phase_shift_and_transpose:
 #	r4 :	const fcomplex *in
 #	r5 :	const dcomplex phases[2][2]: v0, delta_v0, v1, delta_v1
 #	r6 :	stride
+#	r7 :	nrChannels
 
 #	f8 :	v0;
 #	f9 :	delta_v0
@@ -139,9 +139,9 @@ _phase_shift_and_transpose:
 	lfpdux	10,5,9
 	lfpdux	11,5,9
 
-	li	0,NR_SUBBAND_CHANNELS/2
-	li	7,FCOMPLEX_SIZE*NR_SUBBAND_CHANNELS
-	li	8,FCOMPLEX_SIZE*(1-3*NR_SUBBAND_CHANNELS)
+	mulli	8,7,24
+	srwi	0,7,1		# nrChannels / 2
+	slwi	7,7,3		# nrChannels * FCOMPLEX_SIZE
 	li	10,FCOMPLEX_SIZE
 	mtctr	0
 
@@ -151,6 +151,7 @@ _phase_shift_and_transpose:
 	lfpsux	3,4,7
 
 	sub	3,3,6
+	subfic	8,8,8		# FCOMPLEX_SIZE*(1-3*nrChannels)
 
 	fxpmul	12,0,8	
 	fxpmul	13,1,8 	
@@ -218,13 +219,12 @@ L5:
 
 #	filter for i4complex
 
-.global	_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i
-_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i:
+.global	_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvjPKfPKT_PSt7complexIfEi
+_ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvjPKfPKT_PSt7complexIfEi:
 #	filters all samples for one station, one polarization
 
 #	arguments:
-#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
-#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r3 :	  nrChannels
 #	r4 :	  pointer to weights line (const fcomplex[16])
 #	r5 :	  pointer to first sample (const i4complex[16*r7])
 #	r6 :	  pointer to result (fcomplex *)
@@ -270,7 +270,7 @@ _ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i:
 	stmw	28,0(1)		# save r28 ... r31
 
 	# convert 15 i4complex numbers to fcomplex
-	li	10,I4COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	slwi	10,3,2	# I4COMPLEX_SIZE*nrChannels*NR_POLARIZATIONS
 				; lbzx	 29,0,5	# fetch FIR history samples
 	lis     11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha	; lbzux  30,5,10
 	la      11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11);lbzux	 31,5,10
@@ -659,13 +659,12 @@ _ZN5LOFAR3CS17_filterINS_5TYPES9i4complexEEEvPSt7complexIfEPKfPKT_S6_i:
 
 # 	filter for i8complex
 
-.global	_ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i
-_ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i:
+.global	_ZN5LOFAR3CS17_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi
+_ZN5LOFAR3CS17_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi:
 #	filters all samples for one station, one polarization
 
 #	arguments:
-#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
-#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r3 :	  nrChannels
 #	r4 :	  pointer to weights line (const fcomplex[16])
 #	r5 :	  pointer to first sample (const i8complex[16*r7])
 #	r6 :	  pointer to result (fcomplex *)
@@ -715,7 +714,7 @@ _ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i:
 	lis	11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha
 	li	9,FCOMPLEX_SIZE
 	la	11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11)
-	li	10,I8COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	slwi	10,3,2	#I8COMPLEX_SIZE*nrChannels*NR_POLARIZATIONS
 	subi	6,6,FCOMPLEX_SIZE
 
 
@@ -1188,13 +1187,12 @@ _ZN5LOFAR3CS17_filterISt7complexIcEEEvPS2_IfEPKfPKT_S5_i:
 
 #	filter for i16complex
 
-.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i
-_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
+.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvjPKfPKT_PS2_IfEi
+_ZN5LOFAR3CS17_filterISt7complexIsEEEvjPKfPKT_PS2_IfEi:
 #	filters all samples for one station, one polarization
 
 #	arguments:
-#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
-#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r3 :	  nrChannels
 #	r4 :	  pointer to weights line (const fcomplex[16])
 #	r5 :	  pointer to first sample (const i16complex[16*r7])
 #	r6 :	  pointer to result (fcomplex *)
@@ -1244,27 +1242,9 @@ _ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 	lis	11,_ZN5LOFAR3CS113_FIR_fp_tableE@ha
 	li	9,FCOMPLEX_SIZE
 	la	11,_ZN5LOFAR3CS113_FIR_fp_tableE@l(11)
-	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	slwi	10,3,3	# I16COMPLEX_SIZE*nrChannels*NR_POLARIZATIONS
 	subi	6,6,FCOMPLEX_SIZE
 
-
-#if 0
-	lfpsx	1,0,3		# load delay line
-	lfpsux	2,3,9
-	lfpsux	3,3,9
-	lfpsux	4,3,9
-	lfpsux	5,3,9
-	lfpsux	6,3,9
-	lfpsux	7,3,9
-	lfpsux	8,3,9
-	lfpsux	9,3,9
-	lfpsux	10,3,9
-	lfpsux	11,3,9
-	lfpsux	12,3,9
-	lfpsux	13,3,9
-	lfpsux	14,3,9
-	lfpsux	15,3,9
-#endif
 
 	# convert 15 i16complex numbers to fcomplex
 	lwzx	29,0,5		# fetch FIR history samples
@@ -1698,25 +1678,6 @@ _ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 
 	bdnz	 0b
 
-#if 0
-	addi	3,3,-120	# store delay line
-	stfpsux	1,3,9
-	stfpsux	2,3,9
-	stfpsux	3,3,9
-	stfpsux	4,3,9
-	stfpsux	5,3,9
-	stfpsux	6,3,9
-	stfpsux	7,3,9
-	stfpsux	8,3,9
-	stfpsux	9,3,9
-	stfpsux	10,3,9
-	stfpsux	11,3,9
-	stfpsux	12,3,9
-	stfpsux	13,3,9
-	stfpsux	14,3,9
-	stfpsux	15,3,9
-#endif
-
 	li	9,DCOMPLEX_SIZE	# restore call-saved registers
 	lmw	28,0(1)	# restore r28 ... r31
 
@@ -1752,13 +1713,12 @@ sub_value:
 	.long	 0x43300000,0x00008000,0x43300000,0x00008000
 
 
-.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i
-_ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
+.global	_ZN5LOFAR3CS17_filterISt7complexIsEEEvjPKfPKT_PS2_IfEi
+_ZN5LOFAR3CS17_filterISt7complexIsEEEvjPKfPKT_PS2_IfEi:
 #	filters all samples for one station, one polarization
 
 #	arguments:
-#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
-#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r3 :	  nrChannels
 #	r4 :	  pointer to weights line (const fcomplex[16])
 #	r5 :	  pointer to first sample (const i16complex[16*r7])
 #	r6 :	  pointer to result (fcomplex *)
@@ -1823,7 +1783,7 @@ _ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 	andi.	0,8,0x01E0
 	li	9,FCOMPLEX_SIZE
 	mfcr	8
-	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	slwi	10,3,3	# I16COMPLEX_SIZE*nrChannels*NR_POLARIZATIONS
 	rlwinm	8,8,8,26,26
 	ori	12,12,0x0080
 	sub	6,6,9
@@ -2370,84 +2330,6 @@ _ZN5LOFAR3CS17_filterISt7complexIsEEEvPS2_IfEPKfPKT_S5_i:
 
 	addi	1,1,16		# restore stack pointer
 	blr			# return
-#endif
-
-#if 0
-.align 5
-.global _compute_flags
-
-#if NR_SUBBAND_CHANNELS != 256
-#error
-#endif
-
-#if NR_SAMPLES_PER_INTEGRATION % 16 != 0
-#error
-#endif
-
-#if NR_TAPS != 16
-#error
-#endif
-
-_compute_flags:		# does not work anymore
-
-	subi	1,1,32
-	stmw	24,0(1)
-
-	subi	4,4,4
-	li	9,4
-	li	10,NR_STATIONS
-	li	11,128
-	lmw	24,0(3)
-
-0:	
-#if NR_SAMPLES_PER_INTEGRATION % 32 == 0
-	lhz	6,NR_SAMPLES_PER_INTEGRATION/8+2+4(4)
-#else
-	lhz	6,NR_SAMPLES_PER_INTEGRATION/8-2+4(4)
-#endif
-	li	7,0
-
-1:	
-	dcbt	3,11
-	addi	3,3,32
-	or	24,24,25
-	or	26,26,27
-	or	28,28,29
-	or	30,30,31
-	or	24,24,26
-	or	28,28,30
-	or.	24,24,28
-	lmw	24,0(3)
-	beq+	0,2f
-
-	ori	6,6,65535
-
-2:	slwi	0,6,31
-	srwi	6,6,1
-	srwi	5,5,1
-	or	5,5,0
-
-	addi	7,7,1
-	andi.	0,7,31
-	bne+	0,3f
-	stwux	5,4,9
-3:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
-	bne+	0,1b
-
-#if NR_SAMPLES_PER_INTEGRATION % 32 == 16
-	sthux	6,4,9
-	srwi	5,5,16
-	sth	5,2(4)
-#else
-	stwux	6,4,9
-#endif
-
-	addic.	10,10,-1
-	bne+	0,0b
-
-	lmw	24,0(1)
-	addi	1,1,32
-	blr
 #endif
 
 

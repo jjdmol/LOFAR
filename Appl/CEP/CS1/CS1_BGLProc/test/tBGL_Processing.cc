@@ -132,26 +132,11 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(TransposedData<SAMPLE
 }
 
 
-#if 0
-void WH_BGL_ProcessingTest::setRFItestPattern(unsigned nrStations)
-{
-  DH_RFI_Mitigation::ChannelFlagsType *flags = get_DH_RFI_Mitigation()->getChannelFlags();
-
-  memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
-
-#if 0 && NR_SUBBAND_CHANNELS >= 256
-  if (nrStations >= 3)
-    (*flags)[2][255] = true;
-#endif
-}
-#endif
-
-
-void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned nrStations)
+void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned nrStations, unsigned nrChannels)
 {
   const boost::multi_array_ref<fcomplex, 4> &visibilities = correlatedData->visibilities;
 
-  static const int channels[] = { 1, 201, 255 };
+  static const unsigned channels[] = { 1, 201, 255 };
 
   for (unsigned stat1 = 0; stat1 < std::min(nrStations, 8U); stat1 ++) {
     for (unsigned stat2 = stat1; stat2 < std::min(nrStations, 8U); stat2 ++) {
@@ -159,14 +144,14 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 
       std::cout << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
 
-      for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+      for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	  std::cout << " " << (char) ('x' + pol1) << (char) ('x' + pol2) << ':';
 
 	  for (size_t chidx = 0; chidx < sizeof(channels) / sizeof(int); chidx ++) {
-	    int ch = channels[chidx];
+	    unsigned ch = channels[chidx];
 
-	    if (ch < NR_SUBBAND_CHANNELS) {
+	    if (ch < nrChannels) {
 	      std::cout << ' ' << visibilities[bl][ch][pol1][pol2] << '/' << correlatedData->nrValidSamples[bl][ch];
 	    }
 	  }
@@ -180,13 +165,13 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
   std::cout << "newgraph newcurve linetype solid marktype none pts\n";
   float max = 0.0;
 
-  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
+  for (unsigned ch = 1; ch < nrChannels; ch ++)
     if (abs(visibilities[0][ch][1][1]) > max)
       max = abs(visibilities[0][ch][1][1]);
 
   std::clog << "max = " << max << std::endl;
 
-  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
+  for (unsigned ch = 1; ch < nrChannels; ch ++)
     std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
 }
 
@@ -207,11 +192,12 @@ template <typename SAMPLE_TYPE> void doWork()
 #endif
   {
     unsigned   nrStations	= 77;
+    unsigned   nrChannels	= 256;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
-    double     signalFrequency	= refFreq + 73 * sampleRate / NR_SUBBAND_CHANNELS; // channel 73
-    unsigned   nrSamplesToBGLProc = NR_SUBBAND_CHANNELS * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
+    double     signalFrequency	= refFreq + 73 * sampleRate / nrChannels; // channel 73
+    unsigned   nrSamplesToBGLProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
     unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
 
     const char *env;
@@ -224,19 +210,19 @@ template <typename SAMPLE_TYPE> void doWork()
     std::clog << "signal frequency = " << signalFrequency << std::endl;
 
     size_t transposedDataSize = TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToBGLProc);
-    size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrSamplesPerIntegration);
-    size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines);
+    size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrChannels, nrSamplesPerIntegration);
+    size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines, nrChannels);
 
     std::clog << transposedDataSize << " " << filteredDataSize << " " << correlatedDataSize << std::endl;
     MallocedArena arena0(filteredDataSize, 32);
     MallocedArena arena1(std::max(transposedDataSize, correlatedDataSize), 32);
 
     TransposedData<SAMPLE_TYPE> transposedData(arena1, nrStations, nrSamplesToBGLProc);
-    FilteredData   filteredData(arena0, nrStations, nrSamplesPerIntegration);
-    CorrelatedData correlatedData(arena1, nrBaselines);
+    FilteredData   filteredData(arena0, nrStations, nrChannels, nrSamplesPerIntegration);
+    CorrelatedData correlatedData(arena1, nrBaselines, nrChannels);
 
-    PPF<SAMPLE_TYPE> ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
-    Correlator       correlator(nrStations, nrSamplesPerIntegration, true);
+    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
+    Correlator       correlator(nrStations, nrChannels, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
     ppf.computeFlags(&transposedData, &filteredData);
@@ -245,7 +231,7 @@ template <typename SAMPLE_TYPE> void doWork()
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
 
-    checkCorrelatorTestPattern(&correlatedData, nrStations);
+    checkCorrelatorTestPattern(&correlatedData, nrStations, nrChannels);
   }
 }
 

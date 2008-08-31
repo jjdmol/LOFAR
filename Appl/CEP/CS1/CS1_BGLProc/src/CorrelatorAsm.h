@@ -82,13 +82,9 @@ extern "C" {
 	fcomplex *visibilities,
 	unsigned short *nrValidSamplesCounted,
 	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
-	const float bandPassCorrectionFactors[NR_SUBBAND_CHANNELS],
-	unsigned nrBaselinesTimesNrChannels);
-
-  extern struct {
-    unsigned nr_subband_channels;
-    unsigned nr_polarizations;
-  } _correlator_constants_used;
+	const float bandPassCorrectionFactors[/*nrChannels*/],
+	unsigned nrBaselines,
+	unsigned NrChannels);
 };
 
 }

@@ -29,12 +29,6 @@
 #	fxcxma   1,16,21,1	# f1r += f21i*f16i, f1i += f21r*f16i
 
 
-.global _correlator_constants_used
-_correlator_constants_used:
-	.long	NR_SUBBAND_CHANNELS
-	.long	NR_POLARIZATIONS
-
-
 .align	5
 
 zero:	.long	0,0
@@ -118,7 +112,7 @@ _correlate_2x2:
 	fpmr	 14,0		; lfpsux	 28,5,11
 	fpmr	 15,0	
 
-loop1:	# loop over time
+0:	# loop over time
 
 	# S0 * ~S2, phase 1
 	fxcpnsma 0,16,20,0
@@ -216,7 +210,7 @@ loop1:	# loop over time
 	fxcxma   14,27,30,14
 	fxcxma   15,27,31,15
 
-	bdnz	 loop1
+	bdnz	 0b
 
 #if !defined HAVE_BGP
 	dcbz	 0,7
@@ -326,7 +320,7 @@ _correlate_3x2:
 	fpmr	 23,0
 
 
-loop2:
+0:
 	# S0 * ~S3, phase 1
 	fxcpnsma 0,24,28,0	; lfpsux	 31,7,11
 	fxcpnsma 1,24,29,1	; lfpsux	 27,4,11
@@ -471,7 +465,7 @@ loop2:
 	fxcxma   22,27,30,22	; lfpsux	 30,7,11
 	fxcxma   23,27,31,23
 
-	bdnz	 loop2
+	bdnz	 0b
 
 	lwz	 3,288+8(1)	# load function arguments 9-11
 	lwz	 4,288+12(1)
@@ -580,7 +574,7 @@ _auto_correlate_1:
 	lfpsx	 12,12,8	# f12r = 1, f12i = 1
 
 
-loop4:	# loop over time
+0:	# loop over time
 
 	lfpsux	 10,3,8		# f6:f7 = S0
 	fpmadd	 0,4,4,0	# S0 * ~S0
@@ -610,7 +604,7 @@ loop4:	# loop over time
 	fxcxma   2,10,11,2	# f2r += f11i*f10i, f2i += f11r*f10i
 	fpmadd	 3,11,11,3
 
-	bdnz	 loop4
+	bdnz	 0b
 
 	fxcsnsma 0,0,12,0	# f0r += 1*f0i, f0i += -1*f0i = 0
 	fpadd	 1,1,2
@@ -688,7 +682,7 @@ _auto_correlate_2:
 	lfpsux	 15,4,11
 	fpmr	 11,0
 
-loop3:	# loop over time
+0:	# loop over time
 
 	# S0 * ~S0, phase 1
 	fpmadd	 0,12,12,0	; lfpsux	 16,3,11
@@ -746,7 +740,7 @@ loop3:	# loop over time
 	# S1 * ~S1, phase 2
 	fxcxma   9,18,19,9
 
-	bdnz	 loop3
+	bdnz	 0b
 
 	lfpsx	 12,12,11	# f12r = 1, f12i = 1
 
@@ -886,7 +880,7 @@ _auto_correlate_3:
 	; lfpsux	 23,5,11
 	fpmr	 17,0
 
-loop7:	# loop over time
+0:	# loop over time
 	# S0 * ~S1, phase 1
 	fxcpnsma 0,18,20,0	; lfpsux	 24,3,11
 	fxcpnsma 1,18,21,1	; lfpsux	 25,3,11
@@ -991,7 +985,7 @@ loop7:	# loop over time
 	# S2 * ~S2, phase 2
 	fxcxma   16,28,29,16
 
-	bdnz	 loop7
+	bdnz	 0b
 
 	lfpsx	 18,12,11	# f18r = 1, f18i = 1
 
@@ -1204,13 +1198,14 @@ _clear_correlation:
 .global	_weigh_visibilities
 _weigh_visibilities:
 
-	srwi	7,7,1
-	li	8,8
-	mtctr	7
+	slwi	9,8,2		; mullw	7,7,8
+	addi	0,9,-1 		; li	8,8
 	li	11,SIZEOF_NR_VALID_SAMPLES
-	sub	7,3,8
+	srwi	7,7,1
 	sub	4,4,11
 	li	12,0
+	mtctr	7
+	sub	7,3,8
 
 #if SIZEOF_NR_VALID_SAMPLES == 1
 	lbzux	9,4,11
@@ -1229,7 +1224,7 @@ _weigh_visibilities:
 	lfpsux	2,3,8
 	lfpsux	3,3,8
 
-loop5:	
+0:	
 	fxpmul	0,9,0		; slwi	9,9,2
 	fxpmul	1,9,1		; lfsx	8,5,9
 
@@ -1252,7 +1247,7 @@ loop5:
 #endif
 
 	addi	12,12,8		; stfpsux 0,7,8
-	andi.	12,12,4*NR_SUBBAND_CHANNELS-1 ; stfpsux 1,7,8
+	and	12,12,0		; stfpsux 1,7,8
 				; stfpsux 2,7,8
 				; stfpsux 3,7,8
 
@@ -1281,7 +1276,7 @@ loop5:
 				; stfpsux 6,7,8
 				; stfpsux 7,7,8
 
-	bdnz	loop5
+	bdnz	0b
 	blr
 
 #endif

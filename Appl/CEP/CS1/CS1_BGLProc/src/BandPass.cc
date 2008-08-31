@@ -2078,19 +2078,19 @@ const float BandPass::stationFilterConstants[65536] =
 };
 
 
-BandPass::BandPass(bool correct)
+BandPass::BandPass(bool correct, unsigned nrChannels)
 :
-  factors(new float[NR_SUBBAND_CHANNELS])
+  factors(new float[nrChannels])
 {
   if (correct)
-    computeCorrectionFactors();
+    computeCorrectionFactors(nrChannels);
   else
-    for (unsigned i = 0; i < NR_SUBBAND_CHANNELS; i ++)
+    for (unsigned i = 0; i < nrChannels; i ++)
       factors[i] = 1.0;
 }
 
 
-void BandPass::computeCorrectionFactors()
+void BandPass::computeCorrectionFactors(unsigned nrChannels)
 {
   // This is the square of the bandpass, since the correlator multiplies two
   // bandpasses.  The following matlab functions are used:
@@ -2119,10 +2119,10 @@ void BandPass::computeCorrectionFactors()
 #error need FFTW2 or FFTW3
 #endif
 
-  for (unsigned i = 0; i < NR_SUBBAND_CHANNELS; i ++) {
-    fcomplex m = out[(i - NR_SUBBAND_CHANNELS / 2) % 262144U];
-    fcomplex l = out[(i - 3 * NR_SUBBAND_CHANNELS / 2) % 262144U];
-    fcomplex r = out[i + NR_SUBBAND_CHANNELS / 2];
+  for (unsigned i = 0; i < nrChannels; i ++) {
+    fcomplex m = out[(i - nrChannels / 2) % 262144U];
+    fcomplex l = out[(i - 3 * nrChannels / 2) % 262144U];
+    fcomplex r = out[i + nrChannels / 2];
 
     factors[i] = pow(2, 50) / abs(m * m + l * l + r * r);
   }
@@ -2142,9 +2142,9 @@ BandPass::~BandPass()
 int main()
 {
   LOFAR::CS1::BandPass bandpass;
-  const float *f = bandpass.correctionFactors();
+  const float *f = bandpass.correctionFactors(256);
 
-  for (unsigned i = 0; i < NR_SUBBAND_CHANNELS; i ++)
+  for (unsigned i = 0; i < 256; i ++)
     std::clog << i << ' ' << f[i] << std::endl;
 
   return 0;
