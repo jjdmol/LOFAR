@@ -15,10 +15,10 @@ namespace CS1 {
 class FilteredData
 {
   public:
-    FilteredData(const Arena &, unsigned nrStations, unsigned nrSamplesPerIntegration);
+    FilteredData(const Arena &, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
     ~FilteredData();
 
-    static size_t requiredSize(unsigned nrStations, unsigned nrSamplesPerIntegration);
+    static size_t requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
   private:
     SparseSetAllocator allocator;
@@ -27,21 +27,21 @@ class FilteredData
     // The "| 2" significantly improves transpose speeds for particular
     // numbers of stations due to cache conflict effects.  The extra memory
     // is not used.
-    boost::multi_array_ref<fcomplex, 4> samples; //[NR_SUBBAND_CHANNELS][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
+    boost::multi_array_ref<fcomplex, 4> samples; //[itsNrChannels][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
     SparseSet<unsigned>			*flags; //[itsNrStations]
 };
 
 
-inline size_t FilteredData::requiredSize(unsigned nrStations, unsigned nrSamplesPerIntegration)
+inline size_t FilteredData::requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 {
-  return sizeof(fcomplex) * NR_SUBBAND_CHANNELS * nrStations * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS;
+  return sizeof(fcomplex) * nrChannels * nrStations * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS;
 }
 
 
-inline FilteredData::FilteredData(const Arena &arena, unsigned nrStations, unsigned nrSamplesPerIntegration)
+inline FilteredData::FilteredData(const Arena &arena, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
   allocator(arena),
-  samples(static_cast<fcomplex *>(allocator.allocate(requiredSize(nrStations, nrSamplesPerIntegration), 32)), boost::extents[NR_SUBBAND_CHANNELS][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS]),
+  samples(static_cast<fcomplex *>(allocator.allocate(requiredSize(nrStations, nrChannels, nrSamplesPerIntegration), 32)), boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS]),
   flags(new SparseSet<unsigned>[nrStations])
 {
 }

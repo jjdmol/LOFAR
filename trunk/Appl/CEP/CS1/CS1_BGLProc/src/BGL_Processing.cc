@@ -184,17 +184,12 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::checkConsisten
 {
   ASSERT(parset->nrPPFTaps()				 == NR_TAPS);
   ASSERT(parset->getInt32("Observation.nrPolarisations") == NR_POLARIZATIONS);
-  ASSERT(parset->nrChannelsPerSubband()			 == NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
   ASSERT(parset->BGLintegrationSteps() % 16		 == 0);
 
-  ASSERT(_FIR_constants_used.nr_subband_channels	 == NR_SUBBAND_CHANNELS);
   ASSERT(_FIR_constants_used.nr_taps			 == NR_TAPS);
   ASSERT(_FIR_constants_used.nr_polarizations		 == NR_POLARIZATIONS);
-
-  ASSERT(_correlator_constants_used.nr_subband_channels	 == NR_SUBBAND_CHANNELS);
-  ASSERT(_correlator_constants_used.nr_polarizations	 == NR_POLARIZATIONS);
 #endif
 
 #if defined HAVE_BGL
@@ -266,6 +261,7 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
 
   unsigned nrStations	           = configuration.nrStations();
   unsigned nrBaselines		   = nrStations * (nrStations + 1) / 2;
+  unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToBGLProc	   = configuration.nrSamplesToBGLProc();
 
@@ -279,8 +275,8 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
 
   size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
   size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
-  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrSamplesPerIntegration) : 0;
-  size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines) : 0;
+  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrChannels, nrSamplesPerIntegration) : 0;
+  size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
 
   itsArenas[0] = new MallocedArena(std::max(inputDataSize, filteredDataSize), 32);
   itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
@@ -305,11 +301,11 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
 #endif
 
     itsTransposedData = new TransposedData<SAMPLE_TYPE>(*itsArenas[1], nrStations, nrSamplesToBGLProc);
-    itsFilteredData   = new FilteredData(*itsArenas[0], nrStations, nrSamplesPerIntegration);
-    itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines);
+    itsFilteredData   = new FilteredData(*itsArenas[0], nrStations, nrChannels, nrSamplesPerIntegration);
+    itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines, nrChannels);
 
-    itsPPF	      = new PPF<SAMPLE_TYPE>(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
-    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration, configuration.correctBandPass());
+    itsPPF	      = new PPF<SAMPLE_TYPE>(nrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
+    itsCorrelator     = new Correlator(nrStations, nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI

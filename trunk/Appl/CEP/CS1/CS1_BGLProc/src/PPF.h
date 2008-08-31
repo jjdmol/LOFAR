@@ -32,7 +32,7 @@ namespace CS1 {
 template <typename SAMPLE_TYPE> class PPF
 {
   public:
-    PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation);
+    PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation);
     ~PPF();
 
     void computeFlags(const TransposedData<SAMPLE_TYPE> *, FilteredData *);
@@ -49,16 +49,17 @@ template <typename SAMPLE_TYPE> class PPF
 #endif
 
     unsigned itsNrStations, itsNrSamplesPerIntegration;
+    unsigned itsNrChannels, itsLogNrChannels;
     double   itsChannelBandwidth;
     bool     itsDelayCompensation;
 
 #if defined PPF_C_IMPLEMENTATION
-    boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
-    boost::multi_array<fcomplex, 3> itsFFTinData; //[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+    boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]
+    boost::multi_array<fcomplex, 3> itsFFTinData; //[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][itsNrChannels]
 #else
     boost::multi_array<fcomplex, 2, AlignedStdAllocator<fcomplex, 32> > itsTmp; //[4][itsNrSamplesPerIntegration]
-    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFTinData; //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]
-    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFToutData; //[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFTinData; //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][itsNrChannels + 4]
+    boost::multi_array<fcomplex, 3, AlignedStdAllocator<fcomplex, 32> > itsFFToutData; //[2][NR_POLARIZATIONS][itsNrChannels]
 #endif
 
 #if defined HAVE_FFTW3

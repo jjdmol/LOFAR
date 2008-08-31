@@ -198,8 +198,8 @@ void SubbandWriter::preprocess()
 #endif
 
   for (unsigned i = 0; i < nrInputBuffers; i ++) {
-    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(itsNBaselines), 32));
-    itsFreeQueue.append(new CorrelatedData(*itsArenas.back(), itsNBaselines));
+    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(itsNBaselines, itsNChannels), 32));
+    itsFreeQueue.append(new CorrelatedData(*itsArenas.back(), itsNBaselines, itsNChannels));
   }
 
   double startTime = itsCS1PS->startTime();

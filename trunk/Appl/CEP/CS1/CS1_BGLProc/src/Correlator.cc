@@ -18,13 +18,14 @@ static NSTimer correlateTimer("Correlator::correlate()", true);
 static NSTimer weightTimer("Correlator::weight()", true);
 
 
-Correlator::Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration, bool correctBandPass)
+Correlator::Correlator(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, bool correctBandPass)
 :
   itsNrStations(nrStations),
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
+  itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsCorrelationWeights(new float[nrSamplesPerIntegration + 1]),
-  itsBandPass(correctBandPass)
+  itsBandPass(correctBandPass, nrChannels)
 {
   itsCorrelationWeights[0] = 0.0;
 
@@ -68,7 +69,7 @@ void Correlator::computeFlagsAndCentroids(const FilteredData *filteredData, Corr
       correlatedData->centroids[bl] = computeCentroidAndValidSamples(filteredData->flags[stat1] | filteredData->flags[stat2], nrValidSamples);
       correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
-      for (unsigned ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
+      for (unsigned ch = 1; ch < itsNrChannels; ch ++)
 	correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
     }
   }
@@ -89,7 +90,7 @@ void Correlator::computeFlags(const FilteredData *filteredData, CorrelatedData *
 
       correlatedData->nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
-      for (unsigned ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
+      for (unsigned ch = 1; ch < itsNrChannels; ch ++)
 	correlatedData->nrValidSamples[bl][ch] = nrValidSamples;
     }
   }
@@ -105,7 +106,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
   correlateTimer.start();
 
 #if defined CORRELATOR_C_IMPLEMENTATION
-  for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
       for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) { 
 	unsigned bl = baseline(stat1, stat2), nrValid = 0;
@@ -139,7 +140,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 #else
   // Blue Gene/L assembler version. 
 
-  for (unsigned ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
     // build a map of valid stations
     unsigned nrValidStations = 0, map[itsNrStations];
 
@@ -250,7 +251,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
   weightTimer.start();
 #if 0
   for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
-    for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	  itsCorrelatedData->visibilities[bl][ch][pol1][pol2] *= itsCorrelationWeights[(*nrValidSamples)[bl][ch]];
@@ -259,7 +260,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.correctionFactors(), itsNrBaselines * NR_SUBBAND_CHANNELS);
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.correctionFactors(), itsNrBaselines, itsNrChannels);
 #endif
   weightTimer.stop();
 #endif  

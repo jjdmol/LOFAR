@@ -20,7 +20,7 @@ namespace CS1 {
 class Correlator
 {
   public:
-    Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration, bool correctBandPass);
+    Correlator(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, bool correctBandPass);
     ~Correlator();
 
     void	    correlate(const FilteredData *, CorrelatedData *);
@@ -29,7 +29,7 @@ class Correlator
     static unsigned baseline(unsigned station1, unsigned station2);
 
   private:
-    unsigned	    itsNrStations, itsNrBaselines, itsNrSamplesPerIntegration;
+    unsigned	    itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
     BandPass	    itsBandPass;
 

@@ -6,11 +6,15 @@
 #include <FFT_Asm.h>
 #include <FIR_Asm.h>
 
+#include <CS1_Interface/Align.h>
+#include <CS1_Interface/AlignedStdAllocator.h>
+
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
 
 #include <complex>
 #include <cmath>
+#include <stdexcept>
 
 
 namespace LOFAR {
@@ -40,26 +44,36 @@ static NSTimer FFTtimer("PPF::FFT", true);
 static NSTimer PPFtimer("PPF::filter()", true);
 
 
-template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
+  itsNrChannels(nrChannels),
   itsChannelBandwidth(channelBandwidth),
   itsDelayCompensation(delayCompensation),
 
 #if defined PPF_C_IMPLEMENTATION
-  itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]),
-  itsFFTinData(boost::extents[NR_TAPS - 1 + nrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS])
+  itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][nrChannels]),
+  itsFFTinData(boost::extents[NR_TAPS - 1 + nrSamplesPerIntegration][NR_POLARIZATIONS][nrChannels])
 #else
   itsTmp(boost::extents[4][nrSamplesPerIntegration]),
-  itsFFTinData(boost::extents[nrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]),
-  itsFFToutData(boost::extents[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS])
+  itsFFTinData(boost::extents[nrSamplesPerIntegration][NR_POLARIZATIONS][nrChannels + 4]),
+  itsFFToutData(boost::extents[2][NR_POLARIZATIONS][nrChannels])
 #endif
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
 , mutex(rts_allocate_mutex())
 #endif
 {
+  if (!powerOfTwo(nrChannels))
+    throw std::runtime_error("nrChannels must be a power of 2");
+
+  if (nrChannels != 256)
+    throw std::runtime_error("nrChannels != 256 not yet implemented");
+
+  for (itsLogNrChannels = 0; 1U << itsLogNrChannels != itsNrChannels; itsLogNrChannels ++)
+    ;
+
   init_fft();
   initConstantTable();
 }
@@ -137,15 +151,10 @@ static void FFTtest()
 template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::init_fft()
 {
 #if defined HAVE_FFTW3
-  fftwf_complex cbuf1[NR_SUBBAND_CHANNELS], cbuf2[NR_SUBBAND_CHANNELS];
-  itsFFTWPlan = fftwf_plan_dft_1d(NR_SUBBAND_CHANNELS, cbuf1, cbuf2, FFTW_FORWARD, FFTW_ESTIMATE);
+  std::vector<fftwf_complex, AlignedStdAllocator<fftwf_complex, 32> > cbuf1(itsNrChannels), cbuf2(itsNrChannels);
+  itsFFTWPlan = fftwf_plan_dft_1d(itsNrChannels, &cbuf1[0], &cbuf2[0], FFTW_FORWARD, FFTW_ESTIMATE);
 #elif defined HAVE_FFTW2
-#if defined HAVE_BGL && NR_SUBBAND_CHANNELS == 256
-  fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 -1 0 1 1 1 352 0) (128 529 -1 0 1 1 0 2817 0) (64 529 -1 0 1 1 0 1409 0) (32 529 -1 0 1 1 0 705 0) (16 529 -1 0 1 1 0 353 0) (8 529 -1 0 1 1 0 177 0) (4 529 -1 0 1 1 0 89 0) (2 529 -1 0 1 1 0 45 0))");
-  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
-#else
-  itsFFTWPlan = fftw_create_plan(NR_SUBBAND_CHANNELS, FFTW_FORWARD, FFTW_ESTIMATE);
-#endif
+  itsFFTWPlan = fftw_create_plan(itsNrChannels, FFTW_FORWARD, FFTW_ESTIMATE);
 #endif
 
   //FFTtest();
@@ -166,22 +175,18 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const Transp
 {
   computeFlagsTimer.start();
 
-#if NR_SUBBAND_CHANNELS == 1
-#error Not implementated
-#else
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     filteredData->flags[stat].reset();
     SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
     const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
     for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-      unsigned begin = std::max(0, (signed) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
-      unsigned end   = std::min(itsNrSamplesPerIntegration, (it->end - 1) / NR_SUBBAND_CHANNELS + 1);
+      unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
+      unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
       filteredData->flags[stat].include(begin, end);
     }
   }
-#endif
 
   computeFlagsTimer.stop();
 }
@@ -224,7 +229,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 {
   PPFtimer.start();
 
-  double baseFrequency = centerFrequency - (NR_SUBBAND_CHANNELS / 2) * itsChannelBandwidth;
+  double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   // PPF puts a lot of pressure on the memory bus.  Avoid that both cores
@@ -240,13 +245,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    fcomplex fftOutData[NR_SUBBAND_CHANNELS] __attribute__ ((aligned(sizeof(fcomplex))));
+    std::vector<fcomplex, AlignedStdAllocator<fcomplex> > fftOutData(itsNrChannels);
 
     FIRtimer.start();
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+      for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-	  SAMPLE_TYPE tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
+	  SAMPLE_TYPE tmp = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
 	  dataConvert(LittleEndian, &tmp, 1);
@@ -262,21 +267,21 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	if (filteredData->flags[stat].test(time)) {
-	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
 	  }
 	} else {
 #if defined HAVE_FFTW3
 	  fftwf_execute_dft(itsFFTWPlan,
 			    (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-			    (fftwf_complex *) (void *) fftOutData);
+			    (fftwf_complex *) (void *) &fftOutData[0]);
 #else
 	  fftw_one(itsFFTWPlan,
 		   (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-		   (fftw_complex *) (void *) fftOutData);
+		   (fftw_complex *) (void *) &fftOutData[0]);
 #endif
 
-	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	    if (itsDelayCompensation) {
 	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd);
 	    }
@@ -290,7 +295,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 #else // assembly implementation
     int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
 
-    for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
+    for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if defined __GNUC__	// work around bug ???
 	for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
@@ -298,7 +303,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 	for (unsigned ch = 0; ch < 4; ch ++) {
 #endif
 	  FIRtimer.start();
-	  _filter(0, // itsFIRs[stat][pol][chan + ch].itsDelayLine,
+	  _filter(itsNrChannels,
 		  FIR::weights[chan + ch],
 		  &transposedData->samples[stat][chan + ch + alignmentShift][pol],
 		  itsTmp[ch].origin(),
@@ -310,7 +315,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 		       itsTmp.origin(),
 		       itsNrSamplesPerIntegration,
 		       sizeof(fcomplex) * itsNrSamplesPerIntegration,
-		       sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SUBBAND_CHANNELS + 4));
+		       sizeof(fcomplex) * NR_POLARIZATIONS * (itsNrChannels + 4));
       }
     }
 
@@ -330,7 +335,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 	FFTtimer.start();
 #if 0
 	_prefetch(itsFFTinData[time].origin(),
-		  sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
+		  sizeof(fcomplex[NR_POLARIZATIONS][itsNrChannels]) / CACHE_LINE_SIZE,
 		  CACHE_LINE_SIZE);
 #endif
 
@@ -355,12 +360,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
 	  _phase_shift_and_transpose(&filteredData->samples[0][stat][time - 1][0],
 				     itsFFToutData.origin(),
 				     &phaseShifts[time - 1],
-				     transpose_stride);
+				     transpose_stride,
+				     itsNrChannels);
 	} else {
 	  _transpose_4x8(&filteredData->samples[0][stat][time - 1][0],
 			 itsFFToutData.origin(),
-			 NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+			 itsNrChannels,
+			 sizeof(fcomplex) * itsNrChannels,
 			 transpose_stride);
 	}
       }

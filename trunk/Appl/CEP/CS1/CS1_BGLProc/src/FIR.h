@@ -23,7 +23,7 @@ class FIR {
     fcomplex itsDelayLine[NR_TAPS];
 #endif
 
-    static const float weights[NR_SUBBAND_CHANNELS][NR_TAPS];
+    static const float weights[256][NR_TAPS];
 };
 
 } // namespace CS1

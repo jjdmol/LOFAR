@@ -141,6 +141,7 @@ static void configureCNs(const CS1_Parset &parset)
 
   configuration.nrStations()              = parset.nrStations();
   configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
+  configuration.nrChannelsPerSubband()	  = parset.nrChannelsPerSubband();
   configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();

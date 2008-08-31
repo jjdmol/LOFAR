@@ -36,6 +36,7 @@ class BGL_Configuration
   public:
     unsigned		  &nrStations();
     unsigned		  &nrBitsPerSample();
+    unsigned		  &nrChannelsPerSubband();
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesToBGLProc();
     unsigned		  &nrUsedCoresPerPset();
@@ -60,6 +61,7 @@ class BGL_Configuration
     {
       unsigned		  itsNrStations;
       unsigned		  itsNrBitsPerSample;
+      unsigned		  itsNrChannelsPerSubband;
       unsigned		  itsNrSamplesPerIntegration;
       unsigned		  itsNrSamplesToBGLProc;
       unsigned		  itsNrUsedCoresPerPset;
@@ -83,6 +85,11 @@ inline unsigned &BGL_Configuration::nrStations()
 inline unsigned &BGL_Configuration::nrBitsPerSample()
 {
   return itsMarshalledData.itsNrBitsPerSample;
+}
+
+inline unsigned &BGL_Configuration::nrChannelsPerSubband()
+{
+  return itsMarshalledData.itsNrChannelsPerSubband;
 }
 
 inline unsigned &BGL_Configuration::nrSamplesPerIntegration()
