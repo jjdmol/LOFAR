@@ -128,21 +128,16 @@ void OutputSection::preprocess(const CS1_Parset *ps)
 
   connectToStorage(ps);
 
-  unsigned nrBuffers   = itsNrSubbandsPerPset + 1 /* itsTmpSum */ + maxSendQueueSize;
   unsigned nrBaselines = ps->nrBaselines();
   unsigned nrChannels  = ps->nrChannelsPerSubband();
-  unsigned arena       = 0;
 
-  for (unsigned i = 0; i < nrBuffers; i ++)
-    itsArenas.push_back(new MallocedArena(CorrelatedData::requiredSize(nrBaselines, nrChannels), 32));
-
-  itsTmpSum = new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels);
+  itsTmpSum = new CorrelatedData(nrBaselines, nrChannels);
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsVisibilitySums.push_back(new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels));
+    itsVisibilitySums.push_back(new CorrelatedData(nrBaselines, nrChannels));
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(*itsArenas[arena ++], nrBaselines, nrChannels));
+    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels));
 
   if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
     throw std::runtime_error("could not create send thread");
@@ -207,11 +202,6 @@ void OutputSection::postprocess()
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     delete itsFreeQueue.remove();
-
-  for (unsigned i = 0; i < itsArenas.size(); i ++)
-    delete itsArenas[i];
-
-  itsArenas.resize(0);
 }
 
 }

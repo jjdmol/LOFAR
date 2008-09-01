@@ -18,6 +18,7 @@ namespace CS1 {
 class CorrelatedData
 {
   public:
+    CorrelatedData(unsigned nrBaselines, unsigned nrChannels);
     CorrelatedData(const Arena &, unsigned nrBaselines, unsigned nrChannels);
     ~CorrelatedData();
 
@@ -28,8 +29,9 @@ class CorrelatedData
     CorrelatedData &operator += (const CorrelatedData &);
 
   private:
+    Arena		  *privateArena;
     SparseSetAllocator	  allocator;
-    unsigned	  itsNrBaselines;
+    unsigned		  itsNrBaselines;
 
   public:
     boost::multi_array_ref<fcomplex, 4>       visibilities; //[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
@@ -47,7 +49,7 @@ class CorrelatedData
 
 inline size_t CorrelatedData::visibilitiesSize(unsigned nrBaselines, unsigned nrChannels)
 {
-  return sizeof(fcomplex) * nrBaselines * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
+  return align(sizeof(fcomplex) * nrBaselines * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, 32);
 }
 
 
@@ -69,8 +71,21 @@ inline size_t CorrelatedData::requiredSize(unsigned nrBaselines, unsigned nrChan
 }
 
 
+inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels)
+:
+  privateArena(new MallocedArena(requiredSize(nrBaselines, nrChannels), 32)),
+  allocator(*privateArena),
+  itsNrBaselines(nrBaselines),
+  visibilities(static_cast<fcomplex *>(allocator.allocate(visibilitiesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]),
+  nrValidSamples(static_cast<unsigned short *>(allocator.allocate(nrValidSamplesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels]),
+  centroids(static_cast<float *>(allocator.allocate(centroidSize(nrBaselines), 32)))
+{
+}
+
+
 inline CorrelatedData::CorrelatedData(const Arena &arena, unsigned nrBaselines, unsigned nrChannels)
 :
+  privateArena(0),
   allocator(arena),
   itsNrBaselines(nrBaselines),
   visibilities(static_cast<fcomplex *>(allocator.allocate(visibilitiesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]),
@@ -85,6 +100,8 @@ inline CorrelatedData::~CorrelatedData()
   allocator.deallocate(visibilities.origin());
   allocator.deallocate(nrValidSamples.origin());
   allocator.deallocate(centroids);
+
+  delete privateArena;
 }
 
 

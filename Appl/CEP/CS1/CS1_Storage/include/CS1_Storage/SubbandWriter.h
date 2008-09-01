@@ -76,7 +76,6 @@ class SubbandWriter
 
     static const unsigned   nrInputBuffers = 10;
     Queue<CorrelatedData *> itsFreeQueue, itsReceiveQueue;
-    std::vector<Arena *>    itsArenas;
     pthread_t		    itsInputThread;
 
     unsigned		    itsNStations;
