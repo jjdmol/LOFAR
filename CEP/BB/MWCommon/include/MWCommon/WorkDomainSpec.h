@@ -1,13 +1,31 @@
-/// @file
-/// @brief Define the specifications of the work domain.
-///
-/// @copyright (c) 2007 ASKAP, All Rights Reserved.
-/// @author Ger van Diepen (diepen AT astron nl)
-///
+//# WorkDomainSpec.h: Define the specifications of the work domain
+//#
+//# Copyright (C) 2005
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
 //# $Id$
 
 #ifndef LOFAR_MWCOMMON_WORKDOMAINSPEC_H
 #define LOFAR_MWCOMMON_WORKDOMAINSPEC_H
+
+// @file
+// @brief Define the specifications of the work domain.
+// @author Ger van Diepen (diepen AT astron nl)
 
 #include <MWCommon/DomainShape.h>
 #include <Blob/BlobOStream.h>
@@ -17,44 +35,44 @@
 
 namespace LOFAR { namespace CEP {
 
-  /// @ingroup mwcommon
-  /// @brief Define the specifications of the work domain.
+  // @ingroup MWCommon
+  // @brief Define the specifications of the work domain.
 
-  /// This class defines the properties of a work domain. It contains:
-  /// <ul>
-  ///  <li> The size in time and freq.
-  ///  <li> The integration to be done in time and/or freq.
-  ///  <li> The input data column.
-  ///  <li> The antenna numbers or names to be selected.
-  ///  <li> If autocorrelations between antennas are to be selected.
-  ///  <li> The polarisation correlations to be selected.
-  /// </ul>
-  /// A work domain defines the amount of data a worker can hold in memory.
-  ///
-  /// The control will iterate over the entire data set in chunk of the
-  /// work domain size. For each chunk it will perform the steps as defined
-  /// by an MWMultiStep object on the data in the work domain or a subset
-  /// of them.
+  // This class defines the properties of a work domain. It contains:
+  // <ul>
+  //  <li> The size in time and freq.
+  //  <li> The integration to be done in time and/or freq.
+  //  <li> The input data column.
+  //  <li> The antenna numbers or names to be selected.
+  //  <li> If autocorrelations between antennas are to be selected.
+  //  <li> The polarisation correlations to be selected.
+  // </ul>
+  // A work domain defines the amount of data a worker can hold in memory.
+  //
+  // The control will iterate over the entire data set in chunk of the
+  // work domain size. For each chunk it will perform the steps as defined
+  // by an MWMultiStep object on the data in the work domain or a subset
+  // of them.
 
   class WorkDomainSpec
   {
   public:
-    /// Default constructor (for containers).
+    // Default constructor (for containers).
     WorkDomainSpec()
       : itsInColumn("DATA"),
 	itsAutoCorr(false)
     {}
 
-    /// Set/get work domain shape.
-    /// @{
+    // Set/get work domain shape.
+    // @{
     void setShape (const DomainShape& shape)
       { itsShape = shape; }
     const DomainShape& getShape() const
       { return itsShape; }
-    /// @}
+    // @}
 
-    /// Set/get integration interval in frequency or time.
-    /// @{
+    // Set/get integration interval in frequency or time.
+    // @{
     void setFreqIntegration (double hz)
       { itsFreqInt = hz; }
     void setTimeIntegration (double sec)
@@ -63,53 +81,53 @@ namespace LOFAR { namespace CEP {
       { return itsFreqInt; }
     double getTImeIntegration() const
       { return itsTimeInt; }
-    /// @}
+    // @}
 
-    /// Set/get the input data column to use.
-    /// @{
+    // Set/get the input data column to use.
+    // @{
     void setInColumn (const std::string& inColumn)
       { itsInColumn = inColumn; }
     const std::string& getInColumn() const
       { return itsInColumn; }
-    /// @}
+    // @}
 
-    /// Set/get the antennas to use (0-based numbers).
-    /// @{
+    // Set/get the antennas to use (0-based numbers).
+    // @{
     void setAntennas (const std::vector<int>& antNrs);
     const std::vector<int>& getAntennas() const
       { return itsAntNrs; }
-    /// @}
+    // @}
 
-    /// Set/get antennas by name patterns.
-    /// Each name can be a filename-like pattern.
-    /// @{
+    // Set/get antennas by name patterns.
+    // Each name can be a filename-like pattern.
+    // @{
     void setAntennaNames (const std::vector<std::string>& antNamePatterns);
     const std::vector<std::string>& getAntennaNames() const
       { return itsAntNames; }
-    /// @}
+    // @}
 
-    /// Set/get the autocorrelations flag.
-    /// @{
+    // Set/get the autocorrelations flag.
+    // @{
     void setAutoCorr (bool autoCorr)
       { itsAutoCorr = autoCorr; }
     bool getAutoCorr() const
       { return itsAutoCorr; }
-    /// @}
+    // @}
 
-    /// Set/get the correlations to use.
-    /// @{
+    // Set/get the correlations to use.
+    // @{
     void setCorr (const std::vector<bool>& corr);
     const std::vector<bool>& getCorr() const
       { return itsCorr; }
-    /// @}
+    // @}
 
-    /// Write or read the object into/from a blob stream.
-    /// @{
+    // Write or read the object into/from a blob stream.
+    // @{
     friend LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream&,
 					   const WorkDomainSpec&);
     friend LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream&,
 					   WorkDomainSpec&);
-    /// @}
+    // @}
 
   private:
     std::string              itsInColumn;
@@ -122,6 +140,6 @@ namespace LOFAR { namespace CEP {
     double                   itsTimeInt;
   };
 
-}} /// end namespaces
+}} //# end namespaces
 
 #endif

@@ -1,13 +1,31 @@
-/// @file
-/// @brief Description of a node in a cluster.
-///
-/// @copyright (c) 2007 ASKAP, All Rights Reserved.
-/// @author Ger van Diepen (diepen AT astron nl)
-///
+//# NodeDesc.h: Description of a node in a cluster
+//#
+//# Copyright (C) 2005
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
 //# $Id$
 
 #ifndef LOFAR_MWCOMMON_NODEDESC_H
 #define LOFAR_MWCOMMON_NODEDESC_H
+
+// @file
+// @brief Description of a node in a cluster.
+// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
 #include <MWCommon/ParameterHandler.h>
@@ -17,45 +35,45 @@
 
 namespace LOFAR { namespace CEP {
 
-  /// @ingroup mwcommon
-  /// @brief Description of a node in a cluster.
+  // @ingroup MWCommon
+  // @brief Description of a node in a cluster.
 
-  /// This class holds the basic description of a node.
-  /// It tells the name of the node and which file systems it has access to.
-  ///
-  /// Currently the information is made persistent in a LOFAR .parset file.
-  /// In the future it needs to use the Central Processor Resource Manager.
+  // This class holds the basic description of a node.
+  // It tells the name of the node and which file systems it has access to.
+  //
+  // Currently the information is made persistent in a LOFAR .parset file.
+  // In the future it needs to use the Central Processor Resource Manager.
 
   class NodeDesc
   {
   public:
-    /// Construct an empty object.
+    // Construct an empty object.
     NodeDesc()
       {}
 
-    /// Construct from the given parameterset.
+    // Construct from the given parameterset.
     explicit NodeDesc (const ParameterSet&);
 
-    /// Set node name.
+    // Set node name.
     void setName (const std::string& name)
       { itsName = name; }
 
-    /// Add a file system the node has access to.
+    // Add a file system the node has access to.
     // A possible leading /auto is removed from the mountPoint.
     void addFileSys (const std::string& fsName, const string& mountPoint);
 
-    /// Write it in parset format.
+    // Write it in parset format.
     void write (std::ostream& os, const std::string& prefix) const;
 
-    /// Get the name.
+    // Get the name.
     const std::string& getName() const
       { return itsName; }
 
-    /// Get the file systems it has access to.
+    // Get the file systems it has access to.
     const std::vector<std::string>& getFileSys() const
       { return itsFileSys; }
 
-    /// Get the mount points of the file systems.
+    // Get the mount points of the file systems.
     const std::vector<std::string>& getMountPoints() const
       { return itsMounts; }
 
@@ -71,6 +89,6 @@ namespace LOFAR { namespace CEP {
     std::vector<std::string> itsMounts;   //# and their mount points
   };
     
-}} /// end namespaces
+}} //# end namespaces
 
 #endif
