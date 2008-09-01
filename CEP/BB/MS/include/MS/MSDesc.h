@@ -23,8 +23,9 @@
 #ifndef BB_MS_MSDESC_H
 #define BB_MS_MSDESC_H
 
-// \file
+// @file
 // Struct to hold the description of an MS.
+// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
 #include <string>
@@ -36,6 +37,10 @@ namespace LOFAR {
   //# Forward Declarations
   class BlobOStream;
   class BlobIStream;
+
+  // @ingroup MS
+  // @brief Struct to hold the description of an MS.
+  // @{
 
   // This struct holds the basic description of an MS.
   // It is possible to write it into a blob and read it back.
@@ -70,7 +75,9 @@ namespace LOFAR {
 
   // Write it to an ostream.
   std::ostream& operator<< (std::ostream&, const MSDesc&);
+
+  // @}
     
-}
+} // end namespace
 
 #endif

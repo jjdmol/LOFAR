@@ -1,27 +1,31 @@
-/// MSCreate.h: Implementation for creating a MeasurementSet
-//
-//  Copyright (C) 2005
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
+//#  MSCreate.h: Class to create a MeasurementSet
+//#
+//#  Copyright (C) 2005
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
 #ifndef BB_MS_MSCREATE_H
 #define BB_MS_MSCREATE_H
+
+// @file
+// Class to create a MeasurementSet
+// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
 #include <Common/LofarTypes.h>
@@ -47,7 +51,14 @@ namespace casa
 namespace LOFAR
 {
 
-// Class for creating a MeasurementSet.
+// @ingroup MS
+// @brief Class to create a MeasurementSet
+// @{
+
+// Class for creating a MeasurementSet (part).
+// It creates an MS with all required meta info (like UVW) and the correct
+// shapes of the DATA and FLAG columns. The data in these columns is set to 0.
+// Simulator software (like BBS or MeqTrees) should fill in the data.
 
 class MSCreate
 {
@@ -168,6 +179,8 @@ private:
   casa::MSMainColumns*  itsMSCol;
 };
 
-} // namespace LOFAR
+// @}
+
+} // end namespace
 
 #endif
