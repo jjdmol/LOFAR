@@ -1,13 +1,31 @@
-/// @file
-/// @brief Description of a visibility data set or part thereof.
-///
-/// @copyright (c) 2007 ASKAP, All Rights Reserved.
-/// @author Ger van Diepen (diepen AT astron nl)
-///
+//# VdsPartDesc.h: Description of a visibility data set or part thereof
+//#
+//# Copyright (C) 2005
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
 //# $Id$
 
 #ifndef LOFAR_MWCOMMON_VDSPARTDESC_H
 #define LOFAR_MWCOMMON_VDSPARTDESC_H
+
+// @file
+// @brief Description of a visibility data set or part thereof.
+// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
 #include <APS/ParameterSet.h>
@@ -19,38 +37,38 @@
 
 namespace LOFAR { namespace CEP {
 
-  /// @ingroup mwcommon
-  /// @brief Description of a visibility data set or part thereof.
+  // @ingroup MWCommon
+  // @brief Description of a visibility data set or part thereof.
 
-  /// This class holds the description of a visibility data set (VDS) part.
-  /// It defines the name of the part and on which file system it is located.
-  /// Using the ClusterDesc object it can be derived on which node this
-  /// VDS part can be processed best. This is done by the WorkersDesc
-  /// class.
-  ///
-  /// The description of the VDS also contains info about the time,
-  /// frequency, and baseline domain of the visibility data.
-  ///
-  /// The information is made persistent in a LOFAR .parset file.
+  // This class holds the description of a visibility data set (VDS) part.
+  // It defines the name of the part and on which file system it is located.
+  // Using the ClusterDesc object it can be derived on which node this
+  // VDS part can be processed best. This is done by the WorkersDesc
+  // class.
+  //
+  // The description of the VDS also contains info about the time,
+  // frequency, and baseline domain of the visibility data.
+  //
+  // The information is made persistent in a LOFAR .parset file.
 
   class VdsPartDesc
   {
   public:
-    /// Construct an empty object.
+    // Construct an empty object.
     VdsPartDesc()
       : itsStartTime(0), itsStepTime(1)
       {}
 
-    /// Construct from the given parameterset.
+    // Construct from the given parameterset.
     explicit VdsPartDesc (const ACC::APS::ParameterSet&);
 
-    /// Set VDS name and file system.
+    // Set VDS name and file system.
     void setName (const std::string& name, const std::string& fileSys);
 
-    /// Set the start and end time.
+    // Set the start and end time.
     void setTimes (double startTime, double endTime, double stepTime);
 
-    /// Add a band.
+    // Add a band.
     // <group>
     void addBand (int nchan, double startFreq, double endFreq);
     void addBand (int nchan, const vector<double>& startFreq,
@@ -70,11 +88,11 @@ namespace LOFAR { namespace CEP {
     void clearParms()
       { itsParms.clear(); }
 
-    /// Write the VdsPartDesc object in parset format.
+    // Write the VdsPartDesc object in parset format.
     void write (std::ostream& os, const std::string& prefix) const;
 
-    /// Get the values.
-    /// @{
+    // Get the values.
+    // @{
     const std::string& getName() const
       { return itsName; }
     const std::string& getFileSys() const
@@ -93,7 +111,7 @@ namespace LOFAR { namespace CEP {
       { return itsStartFreqs; }
     const std::vector<double>& getEndFreqs() const
       { return itsEndFreqs; }
-    /// @}
+    // @}
 
   // Put/get the object to/from a blob.
   // <group>
@@ -121,6 +139,6 @@ namespace LOFAR { namespace CEP {
     { return vpd.fromBlob (bs); }
   // </group>
 
-}} /// end namespaces
+}} //# end namespaces
 
 #endif
