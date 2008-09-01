@@ -23,6 +23,10 @@
 #ifndef LOFAR_MS_VDSMAKER_H
 #define LOFAR_MS_VDSMAKER_H
 
+// @file
+// Class to create the description of an MS
+// @author Ger van Diepen (diepen AT astron nl)
+
 #include <lofar_config.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -32,10 +36,20 @@
 
 namespace LOFAR {
 
-  // Class to create the description of a MeasurementSet.
-  // The file is used by the pipeline software to determine on which nodes
-  // processses can be run.
-  // Furthermore it contains info for the RFI detection software of
+  // @ingroup MS
+  // @brief Class to create the description of an MS
+  // @{
+
+  // Class to create the description of a MeasurementSet (part).
+  // The output is a vds file written in parset format
+  // (vds = visibility data set).
+  // All vds files of an entire MeasurementSet can be combined into
+  // a gvds file which is used by the pipeline software to determine
+  // on which nodes processses can be run the process the various
+  // parts of an MS.
+  //
+  // The vds file can contain extra info. For example, the program
+  // extra information is added for the RFI detection software of
   // Peter Fridman.
 
   class VdsMaker
@@ -44,6 +58,9 @@ namespace LOFAR {
     // Create the description for the given MS and put it in a file
     // with the given name on the given host.
     // If the host name is empty, gethostname() will be used.
+    // The given ClusterDesc file will be used to find the file system
+    // on which the MS part os located. If the clusterDescName is empty,
+    // the file system will be set to unknown.
     static void create (const string& msName, const string& outName,
 			const string& clusterDescName,
 			const string& hostName = string());
@@ -79,6 +96,8 @@ namespace LOFAR {
 			       const string& hostName);
   };
 
-}
+  // @}
+
+} // end namespace
 
 #endif

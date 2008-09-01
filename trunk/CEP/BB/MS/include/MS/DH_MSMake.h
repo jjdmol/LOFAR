@@ -1,4 +1,4 @@
-//#  DH_MSMake.h: DataHolder for the MS info
+//#  DH_MSMake.h: DataHolder for the info needed to create a distributed MS
 //#
 //#  Copyright (C) 2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,10 @@
 #ifndef BB_MS_DH_MSINFO_H
 #define BB_MS_DH_MSINFO_H
 
+// @file
+// DataHolder for the info needed to create a distributed MS
+// @author Ger van Diepen (diepen AT astron nl)
+
 #include <Transport/DataHolder.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/Connection.h>
@@ -37,6 +41,14 @@ namespace casa {
 
 namespace LOFAR {
 
+  // @ingroup MS
+  // @brief DataHolder for the info needed to create a distributed MS
+  // @{
+
+  // This class conains the info to be sent over when creating a distributed
+  // MeasurementSet.
+  // The class is a DataHolder, so can be sent using the Transport framework.
+
   class DH_MSMake: public DataHolder
   {
   public:
@@ -47,12 +59,19 @@ namespace LOFAR {
     virtual void init();
     virtual void fillDataPointers();
 
+    // Set the frequency info.
     void setFreq (double start, double end, int nband, int nfreq)
       { itsFreqs[0]=start; itsFreqs[1]=end; *itsNBand=nband; *itsNFreq=nfreq; }
+
+    // Set the time info.
     void setTime (double start, double end, int n)
       { itsTimes[0]=start; itsTimes[1]=end; *itsNTime=n; }
+
+    // Set the tile shape to be used.
     void setTileSize (int tileSizeFreq, int tileSizeRest)
       { *itsTileSizeFreq = tileSizeFreq; *itsTileSizeRest = tileSizeRest; }
+
+    // Set the extra info needed.
     void fillExtra (const string& msName,
 		    const casa::Array<double>& ra,
 		    const casa::Array<double>& dec,
@@ -60,6 +79,8 @@ namespace LOFAR {
 		    const casa::Array<casa::String>& antNames,
 		    bool writeAutoCorr);
 
+    // Get the info.
+    // <group>
     void getFreq (double& start, double& end, int& nband, int& nfreq) const
       { start=itsFreqs[0]; end=itsFreqs[1]; nband=*itsNBand; nfreq=*itsNFreq; }
     void getTime (double& start, double& end, int& n) const
@@ -74,6 +95,7 @@ namespace LOFAR {
 		   casa::Array<double>& antPos,
 		   casa::Array<casa::String>& antNames,
 		   bool& writeAutoCorr);
+    // </group>
 
   private:
     // Forbid assignment.
@@ -100,6 +122,9 @@ namespace LOFAR {
 #endif
     std::vector<Connection*> conns;
   };
-}
+
+  // @}
+
+} // end namespace
 
 #endif
