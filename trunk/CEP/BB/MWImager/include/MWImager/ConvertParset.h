@@ -20,9 +20,22 @@
 //#
 //# $Id$
 
-#include <APS/ParameterSet.h>
+#ifndef LOFAR_MWIMAGER_CONVERTPARSET_H
+#define LOFAR_MWIMAGER_CONVERTPARSET_H
+
+// @file
+// @brief Convert a ParSet file from SAS to cimager format
+// @author Ger van Diepen (diepen AT astron nl)
+
+#include <MWCommon/MWStep.h>
 
 namespace LOFAR {
+
+  // @ingroup MWCommon
+  // @brief Convert a ParSet file from SAS to cimager format
+
+  // This class contains a few static functions to convert a parset file
+  // from the LOFAR SAS conventions to the cimager format.
 
   class MWImager
   {
@@ -51,4 +64,6 @@ namespace LOFAR {
 			 const std::string& prefix);
   };
 
-}  //# namespace LOFAR
+}  //# end namespace LOFAR
+
+#endif
