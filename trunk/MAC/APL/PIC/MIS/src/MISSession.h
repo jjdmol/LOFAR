@@ -24,6 +24,7 @@
 #define NODEMANAGERCLIENT_H
 
 #include <Common/lofar_bitset.h>
+#include <Common/LofarConstants.h>  //MAXMOD
 #include <GCF/TM/GCF_Control.h>
 #include <MACIO/MACServiceInfo.h>
 
@@ -100,6 +101,7 @@ private:
     GCFEvent*      _pRememberedEvent;
     uint16                  _nrOfRCUs;
     bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
+    //bitset<MAX_RCUS> _allRCUSMask;
     bitset<MAX_N_RSPBOARDS> _allRSPSMask;    
 };
 

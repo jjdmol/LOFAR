@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/hexdump.h>
 #include <Common/LofarConstants.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RTCCommon/PSAccess.h>
@@ -83,7 +84,7 @@ namespace LOFAR {
   }
 
    //MAXMOD
-   unsigned int i,j;
+   unsigned int i, j;
    
 //
 // MISSession(MISDaemon)
@@ -122,7 +123,7 @@ GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (e.signal) {
-    case F_INIT:
+    case F_INIT: 
       break;
 
     case F_ENTRY:
@@ -251,6 +252,7 @@ void MISSession::genericPingpong(GCFEvent& e)
   MISGenericPingpongEvent in(e);
   LOGMSGHDR(in);
        
+  //cout << "MAXMOD: in genericPingping, e.signal = " << e.signal << endl;
   MISGenericPingpongEvent out;
   out.seqnr = _curSeqNr++;
   out.replynr = in.seqnr;
@@ -289,10 +291,35 @@ void MISSession::getGenericIdentity(GCFEvent& e)
 void MISSession::setDiagnosis(GCFEvent& e)
 {
 	MISDiagnosisNotificationEvent	diagnose(e);
+	MISDiagnosisResponseEvent       ackout(e);
+	
+	ssize_t maxsend;
 
-	// setObjectState(message, datapoint, new state)
+	//MAXMOD debug
+	//cout << "MAXMOD: in setDiagnosis " << endl;
+	//cout << "MAXMOD: e.signal = " << e.signal << endl;
+	//cout << "MAXMOD: new_state = " << diagnose.new_state << endl;
+	//cout << "MAXMOD: component = " << diagnose.component << endl;
+	//cout << "MAXMOD: diagnosis_id = " << diagnose.diagnosis_id << endl;
+	LOG_INFO(formatString("MAXMOD: in setDiagnosis"));
+	LOG_INFO(formatString("MAXMOD: component = %s", diagnose.component.c_str()));
+	LOG_INFO(formatString("MAXMOD: diagnosis_id = %s", diagnose.diagnosis_id.c_str()));
+	
 	setObjectState("SHM:" + diagnose.diagnosis_id, diagnose.component, diagnose.new_state);
+	
+	// respond to SHM 
+	ackout.seqnr   =  _curSeqNr++;
+	ackout.replynr =  diagnose.seqnr;
+	ackout.response = "ACK";
+	setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
+	maxsend = _missPort.send(ackout);
 
+	LOG_INFO(formatString(
+			       "MAXMOD: setDiagnosisResponse Timestamp: %lu.%06lu",
+			       ackout.timestamp_sec,
+			       ackout.timestamp_nsec));
+	LOG_INFO(formatString("MAXMOD: setDiagnosis %d response of _missPort.send(ackout).size",maxsend));
+	//TRAN(MISSession::waiting_state);
 }
 
 
@@ -411,7 +438,8 @@ void MISSession::getRspStatus(GCFEvent& e)
 		  _allRCUSMask.reset(); // init all bits to false value
 		  _allRCUSMask.flip(); // flips all bits to the true value
 		  // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-		  for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+		  //for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+		  for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
 		    _allRCUSMask.set(i, false);
 		  }
 		  // idem for RSP mask [reo]
@@ -548,15 +576,20 @@ void MISSession::getSubbandStatistics(GCFEvent& e)
 			_allRCUSMask.reset(); // init all bits to false value
 			_allRCUSMask.flip(); // flips all bits to the true value
 			// if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-			for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+			//for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+			for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
 				_allRCUSMask.set(i, false);
+				LOG_DEBUG(formatString("MAXMOD: in _allRCUSMask loop, i = %d",i));
 			}
 			// idem for RSP mask [reo]
 			_allRSPSMask.reset();
 			_allRSPSMask.flip();
 			for (int b = GET_CONFIG("RS.N_RSPBOARDS",i); b < MAX_N_RSPBOARDS; b++) {
-				_allRSPSMask.set(b,false);
+			        _allRSPSMask.set(b,false);
 			}
+			LOG_DEBUG(formatString ("MAXMOD: NrOfRCUs %d, _allRCUSMask.count() = %d", _nrOfRCUs, _allRCUSMask.count()));
+			LOG_DEBUG(formatString ("MAXMOD: MAX_RCUS = %d,", MAX_RCUS));
+			LOG_DEBUG(formatString ("MAXMOD: MEPHeader::MAX_N_RCUS = %d,", MEPHeader::MAX_N_RCUS));
 		}
 		catch (...) {
 			SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (no RSP configuration available)");
@@ -664,6 +697,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       RSPGetrcuackEvent ack(e);
       
       if (SUCCESS != ack.status) {
+        LOG_DEBUG(formatString("RSP_GETRCUACK: ack.status = %d",ack.status));
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(MISSession::waiting_state);      
         break;
@@ -696,7 +730,11 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       RSPGetstatsackEvent ack(e);
 
       if (SUCCESS != ack.status) {
+	//MAXMOD debug
+	cout << "RSP ack.status: " <<   ack.status << endl;
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
+
+
         TRAN(MISSession::waiting_state);      
         break;
       }
@@ -754,12 +792,14 @@ void MISSession::getAntennaCorrelation(GCFEvent& e)
 	//MAXMOD I'm not sure the following is really nec.
 	if (_nrOfRCUs == 0) {
 	  try {
+	    //MAXMOD
 	    _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 	    LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 	    _allRCUSMask.reset(); // init all bits to false value
 	    _allRCUSMask.flip(); // flips all bits to the true value
 	    // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-	    for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+	    //for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
+	    for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
 	      _allRCUSMask.set(i, false);
 	    }
 	    // idem for RSP mask [reo]
@@ -768,6 +808,9 @@ void MISSession::getAntennaCorrelation(GCFEvent& e)
 	    for (int b = GET_CONFIG("RS.N_RSPBOARDS",i); b < MAX_N_RSPBOARDS; b++) {
 	      _allRSPSMask.set(b,false);
 	    }
+	    LOG_DEBUG(formatString ("MAXMOD: NrOfRCUs %d, _allRCUSMask.count() = %d", _nrOfRCUs, _allRCUSMask.count()));
+	    LOG_DEBUG(formatString ("MAXMOD: MAX_RCUS = %d,", MAX_RCUS));
+	    LOG_DEBUG(formatString ("MAXMOD: MEPHeader::MAX_N_RCUS = %d,", MEPHeader::MAX_N_RCUS));
 	  }
 	  catch (...) {
 	    SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (no RSP configuration available)");
@@ -867,7 +910,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         {
 	  ackout.invalid[rcuout] = 0;
 	}
-
+      
       RSPGetrcuEvent getrcu;
       
       getrcu.timestamp = Timestamp(0, 0);
@@ -899,6 +942,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
       setsubbands.timestamp = Timestamp(0,0);
       setsubbands.rcumask = _allRCUSMask;
+
       //MAXMOD the constant SubbandSelection::XLET is defined in LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/SubbandSelection.h
       //LOG_DEBUG(formatString("MAXMOD SubbandSelection::XLET is %d",SubbandSelection::XLET));
       setsubbands.subbands.setType(SubbandSelection::XLET);
@@ -906,14 +950,17 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       setsubbands.subbands().resize(1,1);
       list<int> subbandlist;
       for (int rcu = 0; rcu < _nrOfRCUs / N_POL; rcu++){
+	//for (int rcu = 0; rcu < _nrOfRCUs ; rcu++){
 	subbandlist.push_back(pIn->subband_selector);
 	LOG_DEBUG(formatString("MAXMOD rcu = %d", rcu));
       }
-      
+      LOG_DEBUG(formatString("MAXMOD subbands - type  %d ",setsubbands.subbands.getType()));
+      LOG_DEBUG(formatString("MAXMOD subbands - first dim %d ",setsubbands.subbands().extent(firstDim)));
+      LOG_DEBUG(formatString("MAXMOD subbands - second dim %d ",setsubbands.subbands().extent(secondDim)));
+      LOG_DEBUG_STR("itsRCU:" << string(setsubbands.rcumask.to_string<char,char_traits<char>,allocator<char> >()));
+
       std::list<int>::iterator it = subbandlist.begin();
       setsubbands.subbands() = (*it);
-      
-      //LOG_DEBUG_STR(setsubbands);
       
       if (!_rspDriverPort.send(setsubbands)) {
 	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
@@ -1042,6 +1089,7 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
     
     case MIS_DIAGNOSIS_NOTIFICATION:
 //      RETURN_NOACK_MSG(DiagnosisNotification, DiagnosisResponse, "BUSY");     
+      setDiagnosis(e);
       break;
 
     case MIS_RECONFIGURATION_REQUEST:

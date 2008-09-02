@@ -207,16 +207,31 @@ event = {
     signal = "DIAGNOSIS_NOTIFICATION";
     dir = IN; // SHM -> MAC
     param = {
+        name = "seqnr";
+        type = "uint64";
+    };    
+    param = {
+        name = "replynr"; // always zero
+        type = "uint64";
+    };
+    param = {
         name = "timestamp_sec";
         type = "int64";
     };
-
-    // PVSS property set name of the component being diagnosed.
     param = {
-        name = "component";  // e.g. "PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA"
-        type = "string";
+        name = "timestamp_nsec";
+        type = "uint32";
     };
 
+    // timestamp of diagnosis -- perhaps diagnoses will be cached in database or some such
+    param = {
+        name = "payload_timestamp_sec";
+        type = "int64";
+    };
+    param = {
+        name = "payload_timestamp_nsec";
+        type = "uint32";
+    };
     param = {
         name = "new_state";
         type = "int64";
@@ -240,6 +255,12 @@ event = {
     param = {
         name = "confidence";
         type = "uint16";
+    };
+
+    // PVSS property set name of the component being diagnosed.
+    param = {
+        name = "component";  // e.g. "PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA"
+        type = "string";
     };
 
     // The diagnosis_id can be used to get an explanation URI,
