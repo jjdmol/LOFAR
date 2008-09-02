@@ -57,11 +57,8 @@ class CS1_Parset: public ACC::APS::ParameterSet
 {
 public:
 	CS1_Parset();
+	CS1_Parset(ACC::APS::ParameterSet *aParSet);
 	~CS1_Parset();
-	explicit CS1_Parset (ACC::APS::ParameterSet* aParSet)
-	: ACC::APS::ParameterSet(*aParSet),
-	itsObservation(aParSet)
-         {}
 	 
 	void           check() const;
 
