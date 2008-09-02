@@ -92,9 +92,9 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
       iPos=dynlen(g_connections[ "SYSTEM" ]);
     }  
     // now store the values    
-    g_connections[ "NAME" ][iPos]     = name[iPos];
-    g_connections[ "UP" ][iPos]       = up[iPos];
-    g_connections[ "UPTIME" ][iPos]   = upTime[iPos];
-    g_connections[ "DOWNTIME" ][iPos] = downTime[iPos];
+    g_connections[ "NAME" ][iPos]     = name;
+    g_connections[ "UP" ][iPos]       = up;
+    g_connections[ "UPTIME" ][iPos]   = upTime;
+    g_connections[ "DOWNTIME" ][iPos] = downTime;
   }
 }
