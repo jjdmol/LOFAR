@@ -45,13 +45,22 @@
 namespace LOFAR {
 namespace CS1 {
 
-using namespace ACC::APS;
-
-CS1_Parset::CS1_Parset() :
-	name()
+CS1_Parset::CS1_Parset()
+:
+  name()
 {
   check();
 }
+
+
+CS1_Parset::CS1_Parset(ACC::APS::ParameterSet *aParSet) 
+:
+  ACC::APS::ParameterSet(*aParSet),
+  itsObservation(aParSet)
+{
+  check();
+}
+
 
 CS1_Parset::~CS1_Parset()
 {
@@ -70,6 +79,23 @@ void CS1_Parset::check() const
   checkSubbandCount("Observation.beamList");
   checkSubbandCount("Observation.rspBoardList");
   checkSubbandCount("Observation.rspSlotList");
+
+  unsigned		subbandsPerFrame = nrSubbandsPerFrame();
+  std::vector<unsigned> boards		 = subbandToRSPboardMapping();
+  std::vector<unsigned> slots		 = subbandToRSPslotMapping();
+  std::vector<unsigned> inputs		 = inputPsets();
+
+  for (unsigned subband = 0; subband < slots.size(); subband ++)
+    if (slots[subband] >= subbandsPerFrame)
+      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSubbandsPerFrame");
+
+  for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
+    unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
+
+    for (unsigned subband = 0; subband < boards.size(); subband ++)
+      if (boards[subband] >= nrRSPboards)
+	throw std::runtime_error("Observation.rspBoardList contains rsp board numbers that do not exist");
+  }
 }
 
 
