@@ -30,7 +30,7 @@ RSPDriver.SOFTPPS=0
 # Delay the driver some number of microseconds after it receives the PPS tick
 # this may be needed to synchronized the driver properly to the hardware
 #
-RSPDriver.PPS_DELAY=0
+RSPDriver.PPS_DELAY=1000
 
 #
 # PPS trigger is on ASSERT (1) or CLEAR (0)
@@ -299,6 +299,11 @@ RSPDriver.XC_FILL=1
 RSPDriver.DISABLE_INIT=0
 
 #
+# Ignore result of HBA i2c sequence
+#
+RSPDriver.HBA_RESULT_IGNORE=1
+
+#
 # The 'server address' is the address of the i2c server in the HBA tile.
 # By default a tile should have addresses 1-16 for the 16 delays.
 # The current HBA tile (connected to FTS-2 setup) has range 3-18
@@ -307,3 +312,10 @@ RSPDriver.DISABLE_INIT=0
 # Note: Addresses 0 indicates broadcast so a valid offset will be greater than 0.
 #
 RSPDriver.HBA_SERVER_ADDRESS_OFFSET=3
+
+#
+# Allow reading and writing raw data blocks from/to the boards.
+#
+RSPDriver.READ_RAW_DATA = 1
+RSPDriver.WRITE_RAW_DATA = 1
+
