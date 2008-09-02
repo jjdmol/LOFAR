@@ -17,7 +17,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	RemoteStation.conf \
 	RSPDriver.conf \
 	rspctl.conf \
 	RSPDriver.log_prop \
@@ -30,7 +29,6 @@ EXTRA_DIST = \
 	$(BUILT_SOURCES)
 
 sysconf_DATA = \
-	RemoteStation.conf \
 	RSPDriver.conf \
 	rspctl.conf \
 	RSPDriver.log_prop \
