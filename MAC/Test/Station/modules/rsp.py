@@ -851,8 +851,8 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
         tc.appendLog(applev, '  [%d:%d] statusTrig      = %d : Reconfiguration due to watchdog reset' % (c_cp_statusTrigHi, c_cp_statusTrigLo, c_cp_trig_WdRst))
       else:
         tc.appendLog(applev, '  [%d:%d] statusTrig      = %d : Unknown reconfiguration trigger' % (c_cp_statusTrigHi, c_cp_statusTrigLo, (rsu_cp_status >> c_cp_statusTrigLo) & c_cp_trig_mask))
-        cp_version = (((rsu_cp_status >> c_cp_statusVersion1) & 0x1) << 1) + ((rsu_cp_status >> c_cp_statusVersion0) & 0x1)
-        tc.appendLog(applev, '  [%d:%d] statusVersion   = %d : CP version number' % (c_cp_statusVersion1, c_cp_statusVersion0, cp_version))
+      cp_version = (((rsu_cp_status >> c_cp_statusVersion1) & 0x1) << 1) + ((rsu_cp_status >> c_cp_statusVersion0) & 0x1)
+      tc.appendLog(applev, '  [%d,%d] statusVersion   = %d : CP version number' % (c_cp_statusVersion1, c_cp_statusVersion0, cp_version))
       tc.appendLog(applev, '')
       ret.append([rsu_cp_status])
     elif procid == 'ado' or procid == 'all':
