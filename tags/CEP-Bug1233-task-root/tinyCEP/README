@@ -1,0 +1,12 @@
+*** README LOFAR/CEP/tinyCEP ***
+
+The TinyCEP package offers a basic framework for data processing applications.
+It has been designed for maximal performance and maximal portability (e.g. to
+BlueGene/L).
+
+The tinyCEP framework contains basic building blocks for data processing 
+applications. It introduces the WorkHolder class, which can be specialised 
+by the user to implement the desired data processing algorithm acting on input 
+data objects and resulting in output data objects.
+The LCS/Transport package is used to transport data between WorkHolder objects.
+
