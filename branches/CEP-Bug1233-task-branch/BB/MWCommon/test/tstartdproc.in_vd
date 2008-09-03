@@ -1,0 +1,36 @@
+Name = /usr/local/xyx
+FileSys = 
+StartTime = 0
+EndTime = 2
+StepTime = 0.5
+NChan = [64,128]
+StartFreqs = [20,120]
+EndFreqs = [100,300]
+NParts = 3
+
+Part0.Name = /usr/local/xyx0
+Part0.FileSys = node1:/usr
+Part0.StartTime = 0
+Part0.EndTime = 2
+Part0.StepTime = 0.5
+Part0.NChan = [64,128]
+Part0.StartFreqs = [20,120]
+Part0.EndFreqs = [100,300]
+
+Part1.Name = /usr/local/xyx1
+Part1.FileSys = node1:/usr
+Part1.StartTime = 0
+Part1.EndTime = 2
+Part1.StepTime = 0.5
+Part1.NChan = [64,128]
+Part1.StartFreqs = [20,120]
+Part1.EndFreqs = [100,300]
+
+Part2.Name = /usr/local/xyx2
+Part2.FileSys = node1:/usr
+Part2.StartTime = 0
+Part2.EndTime = 2
+Part2.StepTime = 0.5
+Part2.NChan = [64,128]
+Part2.StartFreqs = [20,120]
+Part2.EndFreqs = [100,300]
