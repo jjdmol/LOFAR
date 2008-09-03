@@ -235,18 +235,17 @@ class MepMessage:
     """
     if append == False:
       self.clearPayload()
-    i = 0
-    j = 0
+    j = -1
     for i in range(len(readData)):
-      if readData[i]=='\n':
-        j=50                               # found new line
-      elif readData[i]==':' and j == 50:
-        j=49                               # found data start
-      elif j > 0 and j < 50:
-        if readData[i]!=' ':               # read the data
+      if readData[i] == '\n':
+        j = 0                               # found new line
+      elif readData[i] != ':' and j == 5:
+        j = -1                              # check data start of ':' at pos 5
+      elif j > 5 and j < 55:
+        if readData[i] != ' ':              # read the data
           self.appendPayload(readData[i])
-        j = j-1
-      i = i+1
+      if j >= 0:
+        j = j+1
 
   def unpackPayload(self, width, sign='+'):
     """Unpack data list from hex payload string
