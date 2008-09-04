@@ -15,7 +15,6 @@
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Storage/SubbandWriter.h>
 #include <CS1_Storage/Package__Version.h>
-#include <PLC/ACCmain.h>
 
 #if defined HAVE_MPI
 #include <mpi.h>
