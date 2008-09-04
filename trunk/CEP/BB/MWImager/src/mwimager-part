@@ -55,32 +55,32 @@ if test "$wd" = ""  -o  "$wd" = "..."; then
 fi
 
 # Set to working directory.
-cd $wd
+cd $wd  ||  exit 1
 
 # If an MS name is given, create a temporary description file for it.
 if test -d "$msn"  -a  -e "$msn/table.dat"; then
-  makevds "" "$msn" "$msn.tmpvds"
+  makevds "" "$msn" "$msn.tmpvds"  ||  exit 1
   msn="$msn.tmpvds"
 fi
 
 # Add channel info to the parset file.
-cp $psn $psnbase.part$seqnr
+cp $psn $psnbase.part$seqnr  ||  exit 1
 schan=`getparsetvalue $psnbase.part$seqnr firstchan 2>/dev/null` || schan=0
 echan=`getparsetvalue $psnbase.part$seqnr lastchan  2>/dev/null` || echan=-1
 sfreq=`getparsetvalue $msn StartFreqs schan` || exit 1
 efreq=`getparsetvalue $msn EndFreqs   echan` || exit 1
 dname=`getparsetvalue $msn Name` || exit 1
 echo "Images.frequency = [$sfreq, $efreq]" >> $psnbase.part$seqnr
-sed -e "s%^ *dataset * =.*%dataset = $dname%" $psnbase.part$seqnr > $psnbase.part$seqnr-tmp
-mv $psn.part$seqnr-tmp $psn.part$seqnr
+sed -e "s%^ *dataset * =.*%dataset = $dname%" $psnbase.part$seqnr > $psnbase.part$seqnr-tmp  ||  exit 1
+mv $psn.part$seqnr-tmp $psn.part$seqnr  ||  exit 1
 
 # Convert parset file from SAS format to cimager format.
 # Normally convertimagerparset is in the same installed directory as the script,
 # but in case of 'make check' it is in the src directory.
 if test -e $pgmpath/convertimagerparset; then
-  $pgmpath/convertimagerparset $psnbase.part$seqnr $psnbase.part$seqnr.cvt
+  $pgmpath/convertimagerparset $psnbase.part$seqnr $psnbase.part$seqnr.cvt  ||  exit1
 else
-  ../src/convertimagerparset $psnbase.part$seqnr $psnbase.part$seqnr.cvt
+  ../src/convertimagerparset $psnbase.part$seqnr $psnbase.part$seqnr.cvt  ||  exit 1
 fi
 
 if test "$dry" = dry; then
