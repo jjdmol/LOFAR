@@ -108,7 +108,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		itsTPackE = new TPReadAckEvent(event);
 		// check if busy
 		if (itsTPackE->status == 2) {
-			LOG_DEBUG_STR("TBB busy, trying until free");
+			LOG_DEBUG_STR(formatString("TBB busy, %d pages left, trying until free", itsTPackE->pages_left));
 			setSleepTime(0.1);		
 		} else {
 			setDone(true);

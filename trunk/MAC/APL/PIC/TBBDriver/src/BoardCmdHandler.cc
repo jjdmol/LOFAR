@@ -77,6 +77,7 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 				LOG_DEBUG_STR("==== NEW CMD ==================================================");
 				itsClientPort = &port;
 				itsDone = false;
+				itsCmd->reset();
 				itsCmd->saveTbbEvent(event);
 				TRAN(BoardCmdHandler::send_state);
 			}	else {

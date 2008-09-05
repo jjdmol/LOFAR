@@ -65,7 +65,11 @@ libtbbdriver_la_SOURCES = Package__Version.cc \
 	WritewCmd.cc \
 	ReadrCmd.cc \
 	WriterCmd.cc \
-	ReadxCmd.cc		
+	ReadxCmd.cc	\
+	ArpCmd.cc \
+	ArpModeCmd.cc \
+	StopCepCmd.cc	\
+	TempLimitCmd.cc
 
 libtp_protocol_la_SOURCES = \
 	TP_Protocol.ph \
@@ -106,7 +110,11 @@ noinst_HEADERS = \
 	WritewCmd.h	\
 	ReadrCmd.h \
 	WriterCmd.h \
-	ReadxCmd.h
+	ReadxCmd.h	\
+	ArpCmd.h \
+	ArpModeCmd.h \
+	StopCepCmd.h \
+	TempLimitCmd.h	
 
 #NOINSTdir	=
 

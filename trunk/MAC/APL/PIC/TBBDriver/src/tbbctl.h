@@ -44,17 +44,7 @@ static const int BOARDCMD = 1;
 static const int RCUCMD = 2;
 
 // information about the flash memory
-static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_PAGES 				= 32; // 32 pages in flash
-static const int FL_N_SECTORS				= 512; // 512 sectors in flash
-static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
-
-static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
-static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
-static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
-
-static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
-static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
+static const int FL_N_IMAGES = 16; // 16 images in flash
 
 // register read/write table
 // 0 = not used, 1 = read only, 2 = write only, 3 = read/write
@@ -553,6 +543,56 @@ class ConfigCmd : public Command
 		void setImage(uint32 image)  {	itsImage = image;	}
 	private:
 		uint32	itsImage;
+};
+
+//-----------------------------------------------------------------------------
+class ArpCmd : public Command
+{
+public:
+	ArpCmd(GCFPortInterface& port);
+  virtual ~ArpCmd() { }
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+private:
+};
+
+//-----------------------------------------------------------------------------
+class ArpModeCmd : public Command
+{
+public:
+	ArpModeCmd(GCFPortInterface& port);
+  virtual ~ArpModeCmd() { }
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setMode(uint32 mode)  {	itsMode = mode;	}
+private:
+  uint32  itsMode;
+};
+
+//-----------------------------------------------------------------------------
+class StopCepCmd : public Command
+{
+public:
+	StopCepCmd(GCFPortInterface& port);
+  virtual ~StopCepCmd() { }
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+private:
+};
+
+//-----------------------------------------------------------------------------
+class TempLimitCmd : public Command
+{
+public:
+	TempLimitCmd(GCFPortInterface& port);
+  virtual ~TempLimitCmd() { }
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setLimitHigh(uint32 high)  {	itsLimitHigh = high;	}
+  void setLimitLow(uint32 low)  {	itsLimitLow = low;	}
+private:
+  uint32  itsLimitHigh;
+  uint32  itsLimitLow;
 };
 
 //-----------------------------------------------------------------------------
