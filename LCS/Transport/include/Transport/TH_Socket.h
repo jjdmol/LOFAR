@@ -107,9 +107,8 @@ private:
 	bool		connectToServer();
 	bool		connectToClient();
 
-	// Shutdown and destroy the socket \a aSocket.
-	// \post aSocket == 0
-	void		shutdown(Socket*& aSocket);
+	// Close socket \a aSocket; delete it when we \e own it.
+	void		close(Socket*& aSocket);
 
 	typedef enum {
 		CmdNone = 0,
@@ -120,7 +119,7 @@ private:
     Socket*		itsServerSocket;		// Listener socket (server only)
     Socket*		itsDataSocket;			// The transport channel.
 	bool		itsIsOwner;			// Owner of socket(s).
-	bool		itsIsShutDown;			// Has shutdown been called?
+	bool		itsIsClosed;			// Has close been called?
 	int32		itsReadOffset;			// For partial reads.
 
 	string itsHostName;
