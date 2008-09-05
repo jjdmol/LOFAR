@@ -623,11 +623,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
-        Date initialDate = getGMTTime(new Date());
-       if (stopTimeInput.getText().equals("")  || stopTimeInput.getText().equals("not-a-date-time") ) {
+       Date initialDate = getGMTTime(new Date());
+       String aS = stopTimeInput.getText(); 
+       if (!aS.equals("")  && !aS.equals("not-a-date-time") ) {
             try {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
-                initialDate = aD.parse(stopTimeInput.getText());
+                initialDate = aD.parse(aS);
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
@@ -639,13 +640,15 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
         Date initialDate = getGMTTime(new Date());
-        if (startTimeInput.getText().equals("")  || startTimeInput.getText().equals("not-a-date-time") ) {
+        String aS = startTimeInput.getText();
+        if (!aS.equals("")  && ! aS.equals("not-a-date-time") ) {
             try {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
-                initialDate = aD.parse(startTimeInput.getText());
+                initialDate = aD.parse(aS);
             } catch (ParseException ex) {
                 ex.printStackTrace();
             }
+        } else {
         }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
