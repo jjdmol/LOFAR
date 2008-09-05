@@ -63,6 +63,16 @@ void Command::setChannelNr(int32 channelnr)
 	itsBoard = TS->getChBoardNr(itsChannel); 
 }
 
+
+// ----------------------------------------------------------------------------
+void Command::reset()
+{
+	itsDone = false;
+  itsWaitAck = true;
+	itsBoard = -1;
+	itsChannel = -1;	
+}
+
 // ----------------------------------------------------------------------------
 void Command::setDone(bool done)
 {

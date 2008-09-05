@@ -185,6 +185,22 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.signal = TP_ALIVE_ACK;
   		buf.event.length = 12;
   		break;	
+   case TPARP:
+  		buf.event.signal = TP_ARP_ACK;
+  		buf.event.length = 8;
+  		break;
+   case TPARPMODE:
+  		buf.event.signal = TP_ARP_MODE_ACK;
+  		buf.event.length = 8;
+  		break;
+   case TPSTOPCEP:
+  		buf.event.signal = TP_STOP_CEP_ACK;
+  		buf.event.length = 8;
+  		break;
+   case TPTEMPLIMIT:
+  		buf.event.signal = TP_TEMP_LIMIT_ACK;
+  		buf.event.length = 8;
+  		break;					
   		
 	 default:
   		buf.event.signal = 0;

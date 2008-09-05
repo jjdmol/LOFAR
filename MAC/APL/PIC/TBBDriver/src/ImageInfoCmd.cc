@@ -32,20 +32,20 @@ using	namespace TBB;
 
 // information about the flash memory
 static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_PAGES 				= 32; // 32 pages in flash
-static const int FL_N_SECTORS				= 512; // 512 sectors in flash
+//static const int FL_N_SECTORS				= 512; // 512 sectors in flash
 static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
+static const int FL_N_IMAGES 				= 16; // 16 pages in flash
 
-static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
-static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
+static const int FL_IMAGE_SIZE 			= FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
+//static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
 static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
 
-static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
-static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
-static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
+//static const int FL_SECTORS_IN_PAGE	= FL_IMAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
+//static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
+static const int FL_BLOCKS_IN_IMAGE	= FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
 
-static const int IMAGE_SIZE					= 977489; // 977489 bytes in 1 image 
-static const int IMAGE_BLOCKS				= IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
+//static const int IMAGE_SIZE					= 977489; // 977489 bytes in 1 image 
+//static const int IMAGE_BLOCKS				= IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
 
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
@@ -97,7 +97,7 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ImageInfoCmd::sendTpEvent()
 {
-	itsBlock = (itsImage * FL_BLOCKS_IN_PAGE) + (FL_BLOCKS_IN_PAGE - 1);
+	itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
 	itsTPE->addr		= static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 	TS->boardPort(getBoardNr()).send(*itsTPE);
 	TS->boardPort(getBoardNr()).setTimer(0.5);
@@ -151,7 +151,7 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			//itsTBBackE->write_date[itsImage] = itsTPackE->data[1];		  		
 		
 			itsImage++;
-			if (itsImage == 32) {
+			if (itsImage == FL_N_IMAGES) {
 				setDone(true);
 			}
 		}

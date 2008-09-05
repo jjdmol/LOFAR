@@ -32,20 +32,20 @@ using	namespace TBB;
 
 // information about the flash memory
 static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_PAGES 				= 32; // 32 pages in flash
-static const int FL_N_SECTORS				= 512; // 512 sectors in flash
+static const int FL_N_IMAGES 				= 16; // 32 pages in flash
+//static const int FL_N_SECTORS				= 512; // 512 sectors in flash
 static const int FL_N_BLOCKS				= 65536; // 65536 blocks in flash
 
-static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
-static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
+static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
+//static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
 static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
 
-static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
-static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
+//static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
+//static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
 static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
 
-static const int IMAGE_SIZE					= 977489; // 977489 bytes in 1 image 
-static const int IMAGE_BLOCKS				= IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
+//static const int IMAGE_SIZE					= 977489; // 977489 bytes in 1 image 
+//static const int IMAGE_BLOCKS				= IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
 
 
 //--Constructors for a ReadfCmd object.----------------------------------------
@@ -96,7 +96,7 @@ void ReadfCmd::saveTbbEvent(GCFEvent& event)
 	itsTPE->opcode	= TPREADF;
 	itsTPE->status	=	0;
 	
-	itsFile = fopen("test.hex","wb");
+	itsFile = fopen("image.hex","wb");
 	delete itsTBBE;	
 }
 

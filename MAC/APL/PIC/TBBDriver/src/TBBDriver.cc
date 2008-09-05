@@ -28,10 +28,8 @@
 #include <APS/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <Common/hexdump.h>
-#include <Common/Version.h>
 
 #include <getopt.h>
-#include <errno.h>
 //#include <string>
 
 #include "TBBDriver.h"
@@ -65,7 +63,10 @@
 #include "ReadrCmd.h"
 #include "WriterCmd.h"
 #include "ReadxCmd.h"
-#include "Package__Version.h"
+#include "ArpCmd.h"
+#include "ArpModeCmd.h"
+#include "StopCepCmd.h"
+#include "TempLimitCmd.h"
 
 
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
@@ -121,8 +122,6 @@ void parseOptions(int argc, char** argv)
 TBBDriver::TBBDriver(string name)
   : GCFTask((State)&TBBDriver::init_state, name)
 {
-	LOG_INFO(Version::getInfo<TBBDriverVersion>("TBBDriver"));
-
 	// use TS->getXXX() tot get settings of the driver
 	TS	= TbbSettings::instance();
 	
@@ -481,7 +480,11 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		case TBB_READW:        
 		case TBB_WRITEW:       
 		case TBB_READR:        
-		case TBB_WRITER: {               
+		case TBB_WRITER:
+		case TBB_ARP:
+		case TBB_ARP_MODE:
+		case TBB_STOP_CEP:
+		case TBB_TEMP_LIMIT: {               
 			TBBDriverBusyAckEvent ack;    
 			port.send(ack);               
 		} break;                        
@@ -799,7 +802,11 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_WRITEW_ACK:
 		case TP_READR_ACK:
 		case TP_WRITER_ACK:
-		case TP_READX_ACK:	
+		case TP_READX_ACK:
+		case TP_ARP_ACK:
+		case TP_ARP_MODE_ACK:
+		case TP_STOP_CEP_ACK:
+		case TP_TEMP_LIMIT_ACK:	
 		{
 			status = cmdhandler->dispatch(event,port); // dispatch ack from boards	
 			if (cmdhandler->tpCmdDone()) {
@@ -836,7 +843,11 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TBB_READW:        
 		case TBB_WRITEW:       
 		case TBB_READR:        
-		case TBB_WRITER: {
+		case TBB_WRITER:
+		case TBB_ARP:
+		case TBB_ARP_MODE:
+		case TBB_STOP_CEP:
+		case TBB_TEMP_LIMIT: {
 			// put event on the queue
 			LOG_DEBUG_STR("Put event on queue");
 					
@@ -939,6 +950,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 				if ((TS->activeBoardsMask() & (1 << boardnr)) == 0) {
 					//itsNewBoards |= (1 << boardnr); // new board, setup is needed	
 					TS->setBoardState(boardnr,resetBoard);
+					//TS->setBoardState(boardnr,clearBoard);
 					LOG_INFO_STR("=NEW_BOARD=, TBB board " << boardnr << " is new");
 				}
 			}
@@ -1235,6 +1247,30 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 			cmdhandler->setTpCmd(cmd);
 		} break;
 		
+		case TBB_ARP:	{
+			ArpCmd *cmd;
+			cmd = new ArpCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_ARP_MODE:	{
+			ArpModeCmd *cmd;
+			cmd = new ArpModeCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_STOP_CEP:	{
+			StopCepCmd *cmd;
+			cmd = new StopCepCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
+		case TBB_TEMP_LIMIT:	{
+			TempLimitCmd *cmd;
+			cmd = new TempLimitCmd();
+			cmdhandler->setTpCmd(cmd);
+		} break;
+		
 		default: {
 			return (false);		
 		} break;
@@ -1253,51 +1289,48 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 //
 int main(int argc, char** argv)
 {
-	GCFTask::init(argc, argv, "TBBDriver");    // initializes log system
-
-	// Inform Logprocessor who we are
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_TBBDriver");
-
-	LOG_INFO(formatString("Starting up %s", argv[0]));
-
-	// adopt commandline switches
-	LOG_DEBUG_STR("Parsing options");
-	parseOptions (argc, argv);
-
-	// daemonize if required 
-	if (itsDaemonize) {
+  LOFAR::GCF::TM::GCFTask::init(argc, argv);    // initializes log system
+  
+	LOG_INFO_STR("Starting up " << argv[0]);
+  
+  // adopt commandline switches
+  LOG_DEBUG_STR("Parsing options");
+  parseOptions (argc, argv);
+  
+  // daemonize if required 
+  if (itsDaemonize) {
 		LOG_DEBUG_STR("background this process");
 		if (daemonize(false) == 0) {
-			cerr << "Failed to background this process: " << strerror(errno) << endl;
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	LOG_DEBUG_STR("Reading configuration files");
-	try {
-		LOFAR::ConfigLocator cl;
+		//cerr << "Failed to background this process: " << strerror(errno) << endl;
+		exit(EXIT_FAILURE);
+	 }
+  }
+	
+  LOG_DEBUG_STR("Reading configuration files");
+  try {
+  	LOFAR::ConfigLocator cl;
 		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
 	}
 	catch (LOFAR::Exception e) {
 		LOG_ERROR_STR("Failed to load configuration files: " << e.text());
 		exit(EXIT_FAILURE);
 	}
-
+  
 	LOFAR::TBB::TBBDriver tbb("TBBDriver");
-
+  
 	tbb.start(); // make initialsition
-
-	try {
+  
+  try {
 		LOFAR::GCF::TM::GCFTask::run();
 	}
 	catch (LOFAR::Exception e) {
 		LOG_ERROR_STR("Exception: " << e.text());
 		exit(EXIT_FAILURE);
 	}
-
-	LOG_INFO("Normal termination of program");
-
-	return(0);
+  
+  LOG_INFO("Normal termination of program");
+  
+  return(0);
 }
 
 // Remove lines or remove comments for copy constructor and assignment.

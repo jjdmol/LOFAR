@@ -63,6 +63,8 @@ namespace LOFAR {
 			
 			double	getSleepTime();
 			
+			void reset();
+			
 			bool isDone();
 			
 			void setDone(bool done);
