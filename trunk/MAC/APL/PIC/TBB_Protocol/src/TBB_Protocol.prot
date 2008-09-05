@@ -20,7 +20,7 @@ prelude = << PRELUDE_END
 		
 	static const int32 MAX_N_TBBBOARDS = 12; // standard 12 TBB boards
 	static const int32 MAX_N_RCUS = MAX_N_TBBBOARDS * 16; // 16 channels on 1 board, 192 RCU's
-	static const int32 MAX_N_IMAGES = 32; // max number of images in flash
+	static const int32 MAX_N_IMAGES = 16; // max number of images in flash
 	
 	static const uint32 TBB_MODE_TRANSIENT			= 0x00000001;
 	static const uint32 TBB_MODE_SUBBANDS				= 0x00000002;
@@ -527,7 +527,28 @@ event = {
     name = "status_mask";
     type = "uint32";
 	};
+	param = {
+    name = "page_index";
+    type = "uint32";
+  };
+  param = {
+    name = "pages_left";
+    type = "uint32";
+  };
+  param = {
+    name = "period_samples";
+    type = "uint32";
+  };
+  param = {
+    name = "period_seconds";
+    type = "uint32";
+  };
+  param = {
+    name = "page_offset";
+    type = "uint32";
+  };
 };
+
 
 event = {
   signal = MODE;
@@ -580,6 +601,24 @@ event = {
     type = "uint32";
   };
 };
+
+event = {
+  signal = STOP_CEP;
+  dir = IN;
+  param = {
+    name = "boardmask";
+    type = "uint32";
+  };
+};  
+
+event = {
+  signal = STOP_CEP_ACK;
+  dir = OUT;
+  param = {
+    name = "status_mask";
+    type = "uint32[MAX_N_TBBBOARDS]";
+  };
+};  
 
 event = {
   signal = VERSION;
@@ -719,6 +758,32 @@ event = {
     name = "Tmp3";
     type = "uint32[MAX_N_TBBBOARDS]";
   };	
+};
+
+event  = { 
+  signal = TEMP_LIMIT;
+  dir = IN;
+  param = {
+    name = "boardmask";
+    type = "uint32";
+  };
+  param = {
+    name = "high";
+    type = "uint32";
+  };
+  param = {
+    name = "low";
+    type = "uint32";
+  };
+};
+
+event  = {
+  signal = TEMP_LIMIT_ACK;
+  dir = OUT;
+  param = {
+    name = "status_mask";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
 };
 
 
@@ -1079,3 +1144,42 @@ event = {
 	};
 };
 
+event = {
+  signal = ARP;
+  dir = IN;
+  param = {
+    name = "boardmask";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = ARP_ACK;
+  dir = OUT;
+	param = {
+    name = "status_mask";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+};
+
+event = {
+  signal = ARP_MODE;
+  dir = IN;
+  param = {
+    name = "boardmask";
+    type = "uint32";
+  };
+  param = {
+    name = "mode";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = ARP_MODE_ACK;
+  dir = OUT;
+	param = {
+    name = "status_mask";
+    type = "uint32[MAX_N_TBBBOARDS]";
+	};
+};
