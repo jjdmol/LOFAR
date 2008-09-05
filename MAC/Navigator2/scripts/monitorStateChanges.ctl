@@ -28,7 +28,7 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = true;
+global bool bDebug = false;
 
 main () {
 
@@ -313,12 +313,13 @@ void setStates(string datapoint,string element,int state,string message,bool for
         }
       }
       
-      dp = navFunct_getPathLessOne(datapoint);
-      datapoint=dp;
     } else {
       if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");
-      return;
     }
+    
+    // But we still need to trigger a new childState update
+    dp = navFunct_getPathLessOne(datapoint);
+    datapoint=dp;
 
   } else if (element != "status.childState") {
     DebugN("monitorStateChanges.ctl:setStates|Error. unknown element in stateChange trigger: ", element);
@@ -370,16 +371,17 @@ bool setChildState(string Dp,int state) {
   // is executed. This give an error. So for now we do the query two times.
   // the 2nd one only if the first one gives a result > 1;
  
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state,"+Dp+"_*.status.childState,"+Dp+"_*.status.state}'";
-  int err = dpQuery(query, tab);
+// =====>>>> Should be fixed in 3.7
+//  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state}'";
+//  int err = dpQuery(query, tab);
 
-  if (err < 0 | dynlen(tab)< 2) {
-    return true;
-  }
+//  if (err < 0 | dynlen(tab)< 2) {
+//    return true;
+//  }
 
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state,"+Dp+"_*.status.childState,"+Dp+"_*.status.state}' SORT BY 1 DESC";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state}' SORT BY 1 DESC";
   if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Query: ",query);
-  err = dpQuery(query, tab);
+  int err = dpQuery(query, tab);
 
 
 

@@ -450,7 +450,7 @@ void navPanel_statePopup(string baseDP) {
   string bareDP = dpSubStr(baseDP,DPSUB_DP);
   if (state >= 0 ) {
     if (!recursive) {
-      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+ " (SINGLE)");
+      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+ " (SINGLE) on database: "+database);
       DPName=baseDP+".status.state";
       dpSet(database+"__navObjectState.DPName",DPName,
             database+"__navObjectState.stateNr",state,
@@ -461,7 +461,7 @@ void navPanel_statePopup(string baseDP) {
       // All existing stations, CCU's and MCU's will be connected to this point
       // via a ctl script that runs on each machine.
       // that script will do an update (if needed) for their own Database.
-      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+" (RECURSIVE)");
+      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+" (RECURSIVE) on database: "+database);
       dpSet(database+"__resetObjectState.DPName",baseDP,
             database+"__resetObjectState.stateNr",state,
             database+"__resetObjectState.message",message);

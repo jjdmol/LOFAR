@@ -70,7 +70,7 @@ void navigator_handleEventInitialize()
 
   // Set the global statecolors/colornames.
   initLofarColors();
-  
+ 
   // Init the connection Watchdog
   GCFCWD_Init();
 
@@ -106,6 +106,7 @@ void navigator_handleEventInitialize()
   // Initilaize the alarm system
   initNavigatorAlarms();
 
+  
   // set initialized ready
   g_initializing = false;
 
