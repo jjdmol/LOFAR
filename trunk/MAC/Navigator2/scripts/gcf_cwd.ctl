@@ -51,13 +51,18 @@ main() {
         
   // init the mapping
   g_connections[ "SYSTEM"   ] = makeDynInt();
+  g_connections[ "NAME"     ] = makeDynString();
   g_connections[ "UP"       ] = makeDynBool();
   g_connections[ "DOWNTIME" ] = makeDynTime();
   g_connections[ "UPTIME"   ] = makeDynTime();
   
 	// retrieve old settings
   
-	fillGlobalList(g_connections[ "SYSTEM"],g_connections[ "UP" ], g_connections[ "DOWNTIME"], g_connections[ "UPTIME"]);
+	fillGlobalList(g_connections[ "SYSTEM"],
+                       g_connections[ "NAME"],
+                       g_connections[ "UP" ], 
+                       g_connections[ "DOWNTIME"], 
+                       g_connections[ "UPTIME"]);
 	dpConnect("distSystemChanged", TRUE, "_DistManager.State.SystemNums");
 
 	LOG_DEBUG("gcf_cwd.ctl:main|Watch-dog started");
@@ -85,6 +90,7 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
     }
     
     // now store the values
+    g_connections[ "NAME" ][iPos]   = getSystemName(newDistSysList[i]);
     g_connections[ "UP" ][iPos]     = true;
     g_connections[ "UPTIME" ][iPos] = getCurrentTime();
  	}
@@ -101,22 +107,26 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
 
   // write configuration to datapoint
  	for (int i = 1; i <= dynlen(g_connections["SYSTEM"]); i++) {
-		fillWatchDog(g_connections[ "SYSTEM"],g_connections[ "UP" ], g_connections[ "DOWNTIME"], g_connections[ "UPTIME"]);
+          		fillWatchDog(g_connections[ "SYSTEM"],
+                                     g_connections[ "NAME"],
+                                     g_connections[ "UP" ], 
+                                     g_connections[ "DOWNTIME"], 
+                                     g_connections[ "UPTIME"]);
   }
 }
 
 void fillWatchDog(
-  dyn_int systems, dyn_bool up,
+  dyn_int systems, dyn_string names,dyn_bool up,
   dyn_time downtime, dyn_time uptime 
 )
 {
-  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
+  dpSet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
 }
 
 void fillGlobalList(
-  dyn_int &systems, dyn_bool &up,
+  dyn_int &systems, dyn_string &names,dyn_bool &up,
   dyn_time &downtime, dyn_time &uptime 
 )
 {
-  dpGet("__gcf_cwd.systemID",systems,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
+  dpGet("__gcf_cwd.systemID",systems,"__gcf_cwd.name",names,"__gcf_cwd.online",up,"__gcf_cwd.lastUptime",uptime,"__gcf_cwd.lastDowntime",downtime);
 }   

@@ -79,7 +79,12 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
                       string dp3, dyn_bool up,
                       string dp4, dyn_time upTime,
                       string dp5, dyn_time downTime) {
-  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|watchdog triggered systemchange");	
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|watchdog triggered systemchange");
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|systemID: ",systemID);	
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|name: ",name);	
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|up: ",up);	
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|upTime: ",upTime);	
+  LOG_DEBUG("GCFCWD.ctl:GCFCWD_connectWD|downTime: ",downTime);	
        
   int  iPos;
   // check all current systems and update mapping
@@ -92,9 +97,9 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
       iPos=dynlen(g_connections[ "SYSTEM" ]);
     }  
     // now store the values    
-    g_connections[ "NAME" ][iPos]     = name;
-    g_connections[ "UP" ][iPos]       = up;
-    g_connections[ "UPTIME" ][iPos]   = upTime;
-    g_connections[ "DOWNTIME" ][iPos] = downTime;
+    g_connections[ "NAME" ][iPos]     = name[i];
+    g_connections[ "UP" ][iPos]       = up[i];
+    g_connections[ "UPTIME" ][iPos]   = upTime[i];
+    g_connections[ "DOWNTIME" ][iPos] = downTime[i];
   }
 }
