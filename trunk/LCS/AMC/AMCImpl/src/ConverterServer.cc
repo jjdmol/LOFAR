@@ -95,13 +95,12 @@ namespace LOFAR
 	  proc.handleRequests();
         
 	  // The child should NEVER return, but ALWAYS exit.
-	  exit(0);
+          exit(0);
 	}
       }
 
-      // If we get here, we're the parent process; we should close the
-      // dataSocket and delete it.
-      dataSocket->close();
+      // If we get here, we're the parent process; we should delete the
+      // dataSocket object.
       delete dataSocket;
 
     }
