@@ -15,6 +15,7 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	Messages.cc \
 	MultiStep.cc \
 	NextChunkCommand.cc \
+	NoiseStep.cc \
 	pqutil.cc \
 	PredictStep.cc \
 	QueryBuilder/AddCommand.cc \

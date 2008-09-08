@@ -90,6 +90,29 @@ Strategy:
 . . . . . Type: HamakerDipole
 . . . . . Coefficient file: beam_coeff.txt
 . . . Output data: OUTDATA2
+. . Step: Noise
+. . . Name: sl4
+. . . Full name: xyz1.sl4
+. . . Baselines:
+. . . . Station1: ["CS*","CS*","CS*","RS1*","RS1*","RS2*"]
+. . . . Station2: ["CS*","RS1*","RS2*","RS1*","RS2*","RS2*"]
+. . . Correlation:
+. . . . Selection: CROSS
+. . . . Type: ["XX","XY","YX","YY"]
+. . . Integration:
+. . . . Delta frequency: 2 (Hz)
+. . . . Delta time: 0.5 (s)
+. . . Model configuration:
+. . . . Use phasors: false
+. . . . Sources: ["3C343"]
+. . . . Components: ["BANDPASS","DIRECTIONAL_GAIN","BEAM"]
+. . . . Beam:
+. . . . . Type: HamakerDipole
+. . . . . Coefficient file: beam_coeff.txt
+. . . Output data: OUTDATA4
+. . . Additive Gaussian noise:
+. . . . Mean: -3
+. . . . Sigma: 5
 . Step: MultiStep
 . . Name: xyz2
 . . Full name: xyz2

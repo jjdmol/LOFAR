@@ -28,7 +28,7 @@ ParmDB.Instrument       = test.mep          # instrument parameters (MS table)
 ParmDB.LocalSky         = test.gsm          # local sky parameters (MS table)
 ParmDB.History          = test.his          # history (MS table)
 
-Step.xyz1.Steps         = [ sl1, sl2 ]      # names of substeps
+Step.xyz1.Steps         = [ sl1, sl2, sl4 ] # names of substeps
 Step.xyz1.Baselines.Station1 =            \ # baselines to use 
       [ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
 Step.xyz1.Baselines.Station2 =            \ # (all if empty)
@@ -58,7 +58,7 @@ Step.xyz2.Model.Beam.ModulePhi = "beam_phi.so"
 Step.sl1.Baselines.Station1 = [ CS*,  RS1* ] # baselines to use
 Step.sl1.Baselines.Station2 = [ RS1*, RS2* ] # (all if empty)
 Step.sl1.Operation      = SOLVE           \ # one of SOLVE, SUBTRACT, CORRECT,
-                                            # PREDICT, SHIFT, REFIT
+                                            # PREDICT, SHIFT, REFIT, NOISE
 Step.sl1.OutputData     = OUTDATA1          # MS output data column
 Step.sl1.Solve.Options.MaxIter  = 10        # maximum number of iterations
 Step.sl1.Solve.Options.EpsValue  = 1e-7     # convergence threshold
@@ -76,13 +76,19 @@ Step.sl1.Model.Components = [ BANDPASS ]    # instrument model components
 Step.sl1.Model.Beam.Type = 
 
 Step.sl2.Operation      = CORRECT         \ # one of SOLVE, SUBTRACT, CORRECT,
-                                            # PREDICT, SHIFT, REFIT
+                                            # PREDICT, SHIFT, REFIT, NOISE
 Step.sl2.OutputData     = OUTDATA2          # MS output data column
 Step.sl2.Model.Components = \               # instrument model components
     [ BEAM ]
 
 Step.sl3.Operation      = PREDICT         \ # one of SOLVE, SUBTRACT, CORRECT,
-                                            # PREDICT, SHIFT, REFIT
+                                            # PREDICT, SHIFT, REFIT, NOISE
 Step.sl3.OutputData     = OUTDATA3          # MS output data column
 Step.sl3.Model.Components = \               # instrument model components
     [ DIRECTIONAL_GAIN, BEAM ]
+
+Step.sl4.Operation      = NOISE          \  # one of SOLVE, SUBTRACT, CORRECT,
+                                            # PREDICT, SHIFT, REFIT, NOISE
+Step.sl4.OutputData     = OUTDATA4          # MS output data column
+Step.sl4.Noise.Mean     = -3.0              # noise mean
+Step.sl4.Noise.Sigma    = 5.0               # noise sigma

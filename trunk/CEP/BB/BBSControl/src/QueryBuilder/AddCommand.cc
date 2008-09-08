@@ -38,6 +38,7 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
+#include <BBSControl/NoiseStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
@@ -190,6 +191,17 @@ namespace LOFAR
 
 
       void AddCommand::visit(const RefitStep &command)
+      {
+        LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
+      }
+
+
+      void AddCommand::visit(const NoiseStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 

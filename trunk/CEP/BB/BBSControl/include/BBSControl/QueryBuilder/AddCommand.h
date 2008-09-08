@@ -64,6 +64,7 @@ namespace LOFAR
         virtual void visit(const SolveStep &command);
         virtual void visit(const ShiftStep &command);
         virtual void visit(const RefitStep &command);
+        virtual void visit(const NoiseStep &command);
         // @}
 
         // Return the composed query.
