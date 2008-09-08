@@ -111,35 +111,38 @@ confcmd=
 premake=
 mainmake=date
 postmake=
+# If -k, continue in case of failure, so use ; to separate commands.
+ksep="&&"
+[ $kopt = 1 ] && ksep=";"
 if [ $clean = 1 ]; then
-  premake="make $kstr clean && "
+  premake="make $kstr clean $ksep "
 fi
 if [ $buildmake = 1 ]; then
-  mainmake="date && make $kstr $jobsopt "
+  mainmake="date $ksep make $kstr $jobsopt "
   if [ $bldtest = 1 ]; then
-    postmake="&& (if [ -d test ]; then cd test && make test; fi;)"
+    postmake="$ksep (if [ -d test ]; then cd test $ksep make test; fi;)"
   fi
   if [ $check = 1 ]; then
     if [ "$checktool" = "" ]; then
-      postmake="$postmake && make $kstr check"
+      postmake="$postmake $ksep make $kstr check"
     else
-      postmake="$postmake && make $kstr CHECKTOOL='$checktool' check"
+      postmake="$postmake $ksep make $kstr CHECKTOOL='$checktool' check"
     fi
   fi
   if [ $memcheck = 1 ]; then
-    postmake="$postmake && make $kstr memcheck"
+    postmake="$postmake $ksep make $kstr memcheck"
   fi
   if [ $install = 1 ]; then
-    postmake="$postmake && make $kstr install"
+    postmake="$postmake $ksep make $kstr install"
   fi
   if [ $dist = 1 ]; then
-    postmake="$postmake && make $kstr dist"
+    postmake="$postmake $ksep make $kstr dist"
   fi
   if [ $distcheck = 1 ]; then
-    postmake="$postmake && make $kstr distcheck"
+    postmake="$postmake $ksep make $kstr distcheck"
   fi
   if [ $rpm = 1 ]; then
-    postmake="$postmake && make $kstr rpm"
+    postmake="$postmake $ksep make $kstr rpm"
   fi
 fi
 
@@ -202,31 +205,30 @@ do
     # Instead variable confmsg1 is created from confmsgst prior to lofarconf.
     confmsgst=':::::: CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
     confmsgend=':::::: FINISHED CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
-    confcmd="(stat=0; chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; stat="'$?; echo $confmsg2; fi; exit $stat) && '
+    confcmd="(stat=0; chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; stat="'$?; echo $confmsg2; fi; exit $stat)'" $ksep "
   fi
   buildmsgst=':::::: BUILDING VARIANT $variant FOR PACKAGE $pkg'
   buildmsgend=':::::: FINISHED BUILDING VARIANT $variant FOR PACKAGE $pkg'
   if [ $clean = 2 ]; then
-    premake="make distclean && $srcdir/$pkg/lofarconf $confopt && "
+    premake="make distclean $ksep $srcdir/$pkg/lofarconf $confopt $ksep "
   fi
   makecmd="$premake $mainmake $postmake"
   if [ $dist = 1 ]; then
-    makecmd="$makecmd && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
+    makecmd="$makecmd $ksep mkdir -p $srcdir/installed/$variant/dist $ksep cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
   fi
   makecmd='(echo $buildmsg1; '"$makecmd"'; stat=$?; echo $buildmsg2; exit $stat)'
   # Log and execute the command.
   # Generate the correct configure and build messages.
-  echo "($initcmd && $confcmd $makecmd;)" >> $logfile
+  echo "($initcmd $ksep $confcmd $makecmd;)" >> $logfile
   confmsg1=`eval echo $confmsgst`
   confmsg2=`eval echo $confmsgend`
   buildmsg1=`eval echo $buildmsgst`
   buildmsg2=`eval echo $buildmsgend`
   if [ $buildmake = 1 ]; then
-    echo "($initcmd && $confcmd $makecmd && echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> ~/a.b
-    eval "($initcmd && $confcmd $makecmd && echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> $logfile 2>&1
+    eval "($initcmd $ksep $confcmd $makecmd $ksep echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> $logfile 2>&1
     stat=$?
   else
-    eval "($initcmd && $confcmd $makecmd; exit "'$?)' >> $logfile 2>&1
+    eval "($initcmd $ksep $confcmd $makecmd; exit "'$?)' >> $logfile 2>&1
     stat=$?
   fi
   # Stop if error and -k is not given.
