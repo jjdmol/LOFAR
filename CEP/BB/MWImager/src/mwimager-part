@@ -72,7 +72,7 @@ efreq=`getparsetvalue $msn EndFreqs   echan` || exit 1
 dname=`getparsetvalue $msn Name` || exit 1
 echo "Images.frequency = [$sfreq, $efreq]" >> $psnbase.part$seqnr
 sed -e "s%^ *dataset * =.*%dataset = $dname%" $psnbase.part$seqnr > $psnbase.part$seqnr-tmp  ||  exit 1
-mv $psn.part$seqnr-tmp $psn.part$seqnr  ||  exit 1
+mv $psnbase.part$seqnr-tmp $psnbase.part$seqnr  ||  exit 1
 
 # Convert parset file from SAS format to cimager format.
 # Normally convertimagerparset is in the same installed directory as the script,
