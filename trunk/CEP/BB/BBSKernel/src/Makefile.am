@@ -9,6 +9,7 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MetaMeasurement.cc	\
 	Model.cc		\
 	ModelConfig.cc \
+	NoiseGenerator.cc \
 	Prediffer.cc		\
 	Solver.cc		\
 	SolverInterfaceTypes.cc	\
