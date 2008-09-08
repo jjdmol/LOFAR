@@ -44,6 +44,7 @@ namespace LOFAR
     class SolveStep;
     class ShiftStep;
     class RefitStep;
+    class NoiseStep;
 
     // \addtogroup BBSControl
     // @{
@@ -75,6 +76,7 @@ namespace LOFAR
       virtual void visit(const SolveStep &command) = 0;
       virtual void visit(const ShiftStep &command) = 0;
       virtual void visit(const RefitStep &command) = 0;
+      virtual void visit(const NoiseStep &command) = 0;
     };
 
     //# Pure virtual destructor has to be defined...

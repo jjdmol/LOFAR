@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <libgen.h>
 #include <BBSControl/KernelProcessControl.h>
+#include <BBSControl/Package__Version.h>
 #include <PLC/ACCmain.h>
 
 using namespace LOFAR;
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
   const char* progName = basename(argv[0]);
   INIT_LOGGER(progName);
         
-  LOG_INFO_STR(progName << " is starting up ...");
+  LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
   try {
     KernelProcessControl myProcess;
     int result = ACCmain(argc, argv, &myProcess);

@@ -42,6 +42,7 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
+#include <BBSControl/NoiseStep.h>
 
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Solver.h>
@@ -425,6 +426,36 @@ void CommandExecutor::visit(const RefitStep &command)
     LOG_DEBUG_STR("Command: " << endl << command);
 
     itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
+}
+
+
+void CommandExecutor::visit(const NoiseStep &command)
+{
+    LOG_DEBUG("Handling a NoiseStep");
+    LOG_DEBUG_STR("Command: " << endl << command);
+
+    try
+    {
+        itsNoiseGenerator.setDistributionParms(command.mean(), command.sigma());
+        itsNoiseGenerator.attachChunk(itsChunk);
+        itsNoiseGenerator.process();
+        itsNoiseGenerator.detachChunk();
+
+        // Optionally write visibilities.
+        if(!command.outputData().empty())
+        {
+            itsMeasurement->write(itsChunkSelection, itsChunk,
+                command.outputData(), false);
+        }
+    }
+    catch(Exception &ex)
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Error during"
+           " processing: " + ex.message());
+        return;
+    }          
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 

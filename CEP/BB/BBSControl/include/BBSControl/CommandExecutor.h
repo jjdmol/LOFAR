@@ -34,6 +34,7 @@
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/MetaMeasurement.h>
 #include <BBSKernel/Measurement.h>
+#include <BBSKernel/NoiseGenerator.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
 
@@ -86,6 +87,7 @@ namespace LOFAR
       virtual void visit(const SolveStep &command);
       virtual void visit(const ShiftStep &command);
       virtual void visit(const RefitStep &command);
+      virtual void visit(const NoiseStep &command);
       // @}
 
       // Get result of the last executed command.
@@ -117,6 +119,9 @@ namespace LOFAR
       scoped_ptr<LOFAR::ParmDB::ParmDB>       itsSkyDb;
       scoped_ptr<LOFAR::ParmDB::ParmDB>       itsInstrumentDb;
 
+      // Noise generator (put here to keep state across chunks).
+      NoiseGenerator                          itsNoiseGenerator;
+      
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;
 
