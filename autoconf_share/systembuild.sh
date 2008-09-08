@@ -22,7 +22,7 @@ usage ()
   echo "  -s <source-dir>    root directory of the source code tree"
   echo "  -t <test-type>     run tests; n(o); c(heck); m(emcheck); d(istcheck)"
   echo "  -u <upload-dir>    upload directory for documentation and build"
-  echo "                       results; format [<user>@][<host>:][<dir>]"
+  echo "                       results; format <user>@<host>:[<dir>]"
   echo "  -v cvs|svn         version control system used"
   exit 1
 }
@@ -42,7 +42,7 @@ init ()
     case $opt in
       b) BUILDDIR="$OPTARG" ;;
       c) CFGFILE="$OPTARG" ;;
-      f) FORCE=1 ;;
+      f) FORCE="yes" ;;
       i) INSTALLDIR="$OPTARG" ;;
       r) VCSROOT="$OPTARG" ;;
       s) SOURCEDIR="$OPTARG" ;;
@@ -64,9 +64,9 @@ init ()
   SOURCEDIR=${SOURCEDIR:=${PWD}}
   BUILDDIR=${BUILDDIR:=${SOURCEDIR}}
   INSTALLDIR=${INSTALLDIR:=${BUILDDIR}/installed}
-  UPLOADDIR=${UPLOADDIR:=${INSTALLDIR}}
+#  UPLOADDIR=${UPLOADDIR:=${USER}@$(uname -n):${INSTALLDIR}}
   CFGFILE=${CFGFILE:=${SOURCEDIR}/LOFAR/autoconf_share/systembuild.$(uname -n)}
-  FORCE=${FORCE:=0}
+  FORCE=${FORCE:="no"}
   CHECK=${CHECK:=check}
   TEMPDIR=$(mktemp -d) || exit 1
   VCS=${VCS:=svn}
@@ -92,10 +92,10 @@ show ()
   echo "Source directory     : $SOURCEDIR"
   echo "Build root directory : $BUILDDIR"
   echo "Install directory    : $INSTALLDIR"
+  echo "Upload directory     : $UPLOADDIR"
   echo "Temporary directory  : $TEMPDIR"
   echo "Software repository  : $VCSROOT ($VCS)"
-  echo -n "Remove directories   : "
-  if [ $FORCE = 0 ]; then echo "no"; else echo "yes"; fi
+  echo "Remove directories   : $FORCE"
   echo "Checks to run        : $CHECK"
   echo ""
 }
@@ -114,10 +114,10 @@ prepare ()
   CFGFILE="$TEMPDIR/$(basename $CFGFILE)"
 
   # Check if any of the directories exist. They will only be removed if
-  # FORCE is set (i.e., by using the -f option)
+  # FORCE is set to "yes" (i.e., by using the -f option)
   for dir in "$SOURCEDIR" "$BUILDDIR" "$INSTALLDIR"
   do
-    if [ -d "$dir" -a $FORCE = 0 ]; then
+    if [ -d "$dir" -a "$FORCE" != "yes" ]; then
       echo "error: directory \`$dir' exists, use \`-f' to force removal."
       exit 1
     fi
@@ -174,8 +174,8 @@ build ()
                -build "$variant::$BUILDDIR" $packages 
         # Save contents of non-variant specific logfiles to a file in our
         # temporary directory.
-        cat "$SOURCEDIR/LOFAR/rub.log" >> $TEMPDIR/rub.log
-        cat "$SOURCEDIR/LOFAR/build.log" >> $TEMPDIR/build.log
+        cat "$SOURCEDIR/LOFAR/rub.log" >> "$TEMPDIR/rub.log"
+        cat "$SOURCEDIR/LOFAR/build.log" >> "$TEMPDIR/build.log"
 
 #      autoconf_share/rub -system -release=main \
 #        -confopt "--prefix=$INSTALLDIR/$variant" \
@@ -190,12 +190,33 @@ build ()
 postbuild () 
 {
   echo "--> Postbuild phase ..."
-  cd "$SOURCEDIR/LOFAR"
+
+  # Copy log files from the temporary directory to the build directory.
+  if [ -r $TEMPDIR/rub.log ]; then 
+    cp $TEMPDIR/rub.log $BUILDDIR
+  fi
+  if [ -r $TEMPDIR/build.log ]; then
+    cp $TEMPDIR/build.log $BUILDDIR
+  fi
+
+  cd "$SOURCEDIR"
+  opts="-d $SOURCEDIR/LOFAR"
   filebase="build.$(uname -n).$(echo $BUILDDIR | sed 's,[/@],_,g')"
-  uploadhost=$(echo $UPLOADDIR | sed -n "s/^\([^@]\+@[^@]\+\):.*$/\1/p")
-  uploaddir=$(echo $UPLOADDIR | sed -n "s/^$uploadhost://p")
-  autoconf_share/scanBuildLog -f "$filebase" -d "$SOURCEDIR" > /dev/null || exit 1
-  cd "$olddir"
+  opts="$opts -f $filebase"
+
+  host=$(echo $UPLOADDIR | sed -n "s/^\([^@]\+@[^@]\+\):.*$/\1/p")
+  if [ -n "$host" ]; then 
+    opts="$opts -t $host"
+    dir=$(echo $UPLOADDIR | sed -n "s/^$host:\?//p")
+    if [ -n "$dir" ]; then
+      opts="$opts -s $dir"
+    fi
+  else
+    opts="$opts -l"
+  fi
+  echo "opts=$opts"
+  echo "PWD=$PWD"
+  "$SOURCEDIR/LOFAR/autoconf_share/scanBuildLog" $opts #> /dev/null || exit 1
 }
 
 
@@ -218,11 +239,11 @@ trap 'cleanup; trap - 0; exit' 0 1 2 3 15
 init $*
 show
 echo "Build started at: $(date)"
-#prepare
-#prebuild
-#build
-#postbuild
-echo "Build  ended  at: $(date)"
+prepare
+prebuild
+build
+postbuild
+echo "Build ended at: $(date)"
 
 exit 0
 
