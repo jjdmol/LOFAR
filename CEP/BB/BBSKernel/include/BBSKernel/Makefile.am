@@ -11,6 +11,7 @@ pkginclude_HEADERS = Package__Version.h 		\
 	MetaMeasurement.h	\
 	Model.h			\
 	ModelConfig.h  \
+	NoiseGenerator.h \
 	Prediffer.h		\
 	Solver.h		\
 	SolverInterfaceTypes.h	\
