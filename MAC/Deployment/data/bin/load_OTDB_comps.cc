@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 //# Includes
 #define	HAVE_LOG4CPLUS
 #include <Common/LofarLogger.h>
