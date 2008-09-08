@@ -12,7 +12,7 @@ warnings = []
 #
 def setWarning(message):
     """
-    Adds the give warning to the list of warnings.
+    Adds the given warning to the list of warnings.
     """
     warnings.append(message)
 
@@ -173,7 +173,7 @@ for stationName in sys.argv[1:]:
     createRemoteStationFile(resultDir, stationName)
 
 if len(warnings) > 0:
-    print "To following warnings occured:"
+    print "The following warnings occured:"
     print warnings
 
 
