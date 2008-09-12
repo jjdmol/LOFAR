@@ -617,7 +617,7 @@ if [ $updas != 0 ]; then
     echo "Checkout of LOFAR/bootstrap"
     (cd .. && $chocomm LOFAR/bootstrap) >> rub.log 2>&1
   fi
-  $pgmpath/rub1 autoconf_share 2 h "" "" "$updas" "$recur" "$usesvn" "$command" || exit 1
+  $pgmpath/rub1 autoconf_share 2 h "" "" "$updas" "$recur" "$usesvn" "$command" || [ "$kopt" = "-k" ] || exit 1
 fi
 \rm -f allpkg.tmp
 touch allpkg.tmp
@@ -627,7 +627,7 @@ for PKG in $PKGS
 do
   pkg=`echo $PKG | sed -e 's%#-v.*%%'`
   vers=`echo $PKG | sed -e 's%.*#-v%%'`
-  $pgmpath/rub1 $pkg 1 "$verstype" "$vers" "$cutag" "$update" "$recur" "$usesvn" "$command" || exit 1
+  $pgmpath/rub1 $pkg 1 "$verstype" "$vers" "$cutag" "$update" "$recur" "$usesvn" "$command" || [ "$kopt" = "-k" ] || exit 1
 done
 
 # Convert allpkg.tmp to lofarconf.in.private
