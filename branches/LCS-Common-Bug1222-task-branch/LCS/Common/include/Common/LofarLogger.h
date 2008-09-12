@@ -70,19 +70,6 @@ EXCEPTION_CLASS(AssertError,Exception);
 # define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE
 #endif
 
-//#
-//# AUTO_FUNCTION_NAME
-//#
-// This macro will be resolved by the (pre)compiler to hold the name of the
-// function the macro was used in.
-#if defined(HAVE_PRETTY_FUNCTION)
-#	define AUTO_FUNCTION_NAME		__PRETTY_FUNCTION__
-#elif defined(HAVE_FUNCTION)
-#	define AUTO_FUNCTION_NAME		__FUNCTION__
-#else
-#	define AUTO_FUNCTION_NAME		"??"
-#endif
-
 // @}
 
 //#------------------------ Assert and FailWhen -------------------------------
