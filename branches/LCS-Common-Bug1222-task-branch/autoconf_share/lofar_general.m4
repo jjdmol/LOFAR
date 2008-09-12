@@ -53,6 +53,7 @@ lofar_CHECK_ULONG([])
 lofar_CHECK_LONG_LONG([])
 lofar_DEBUG_OPTIMIZE([])
 lofar_FUNCTION_NAME([])
+lofar_BACKTRACE([])
 lofar_CHECK_INSTALL_IF_MODIFIED([])
 lofar_QATOOLS([])
 lofar_DOCXX([])
@@ -275,6 +276,60 @@ AC_DEFUN([lofar_FUNCTION_NAME],[
                      __PRETTY_FUNCTION__, __FUNCTION__, or "<unknown>"])
 ])
 
+#
+# lofar_BACKTRACE
+#
+# Check whether the C library provides support for backtrace information.
+# The backtrace() function provides you with stack frame return addresses. 
+# In order to translate these return addresses to filename, line number
+# and function name, we need support from the binutils:
+#   - libbfd contains functions to do the address translation
+#   - liberty contains a function to demangle C++ function names.
+#
+AC_DEFUN([lofar_BACKTRACE],
+[
+  AC_ARG_ENABLE([backtrace],
+    AS_HELP_STRING([--disable-backtrace],
+                   [use traceback support for exceptions (default is NO)]),
+    [enable_backtrace="$enableval"],
+    [enable_backtrace="no"])
+  if test "$enable_backtrace" = "yes"; then
+    AC_DEFINE(USE_BACKTRACE, 1, [Define if backtrace support is enabled])
+    AC_CHECK_HEADER([execinfo.h],[
+      AC_CHECK_FUNC([backtrace],
+                    [lofar_have_backtrace=yes],
+                    [lofar_have_backtrace=no])
+    ])
+    if test "$lofar_have_backtrace" = yes; then
+      AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
+      AC_CHECK_HEADER([bfd.h],[
+        AC_CHECK_LIB([bfd], [bfd_init],
+                     [lofar_have_bfd=yes],
+                     [lofar_have_bfd=no])
+      ])
+      if test "$lofar_have_bfd" = yes; then
+        AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
+        AC_CHECK_HEADER([demangle.h],[
+          AC_CHECK_LIB([iberty], [cplus_demangle],
+                       [lofar_have_cplus_demangle=yes],
+                       [lofar_have_cplus_demangle=no])
+        ])
+        if test "$lofar_have_cplus_demangle" = yes; then
+          AC_DEFINE(HAVE_CPLUS_DEMANGLE, 1, 
+                    [Define if cplus_demangle() is available])
+        else
+          AC_MSG_WARN([C++ function name demangling is not available
+                    Please install the GNU binutils])
+        fi
+      else
+        AC_MSG_WARN([Function return address translation is not supported. 
+                    Please install the GNU binutils])
+      fi
+    else
+      AC_MSG_ERROR([Backtrace information is not available on this system])
+    fi
+  fi
+])
 
 #
 # lofar_CHECK_USHORT
