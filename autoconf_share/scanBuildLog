@@ -604,11 +604,11 @@ def main(argv):
   #
   # findthe PACKAGE(S) line to get all Packages being build
   #
-  packagePattern = re.compile('(PACKAGES *= *".*?")|(PACKAGES *= *[^ ]*)',re.IGNORECASE)
+  packagePattern = re.compile('(PACKAGES *= *.*$)',re.IGNORECASE)
   #
   # find the VARIANT(S) line to get the Variant being build
   #
-  variantPattern = re.compile('(VARIANTS *= *".*?")|(VARIANTS *= *[^ ]*)',re.IGNORECASE)
+  variantPattern = re.compile('(VARIANTS *= *.*$)',re.IGNORECASE)
   #
   # find the Compiletool line for compiling
   #
