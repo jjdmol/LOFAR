@@ -23,7 +23,7 @@
 #
 #  lofar_general.m4 contains the following m4 functions:
 #    lofar_DEBUG_OPTIMIZE
-#    lofar_FUNCTION_NAME
+#    lofar_CHECK_PRETTY_FUNCTION
 #    lofar_CHECK_USHORT
 #    lofar_CHECK_UINT
 #    lofar_CHECK_ULONG
@@ -52,7 +52,7 @@ lofar_CHECK_UINT([])
 lofar_CHECK_ULONG([])
 lofar_CHECK_LONG_LONG([])
 lofar_DEBUG_OPTIMIZE([])
-lofar_FUNCTION_NAME([])
+lofar_CHECK_PRETTY_FUNCTION([])
 lofar_CHECK_INSTALL_IF_MODIFIED([])
 lofar_QATOOLS([])
 lofar_DOCXX([])
@@ -253,28 +253,50 @@ AC_MSG_ERROR([Can not have both --with-debug and --with-optimize])
 ]])dnl
 
 #
-# lofar_FUNCTION_NAME
+# lofar_CHECK_PRETTY_FUNCTION
 #
-# Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
-# or "<unknown>", depending on compiler support for function name macro.
+# If the C++ compiler supports the __PRETTY_FUNCTION__ macro,
+#   define `HAVE_PRETTY_FUNCTION'
+# else if compiler supports the __FUNCTION__ macro, 
+#   define `HAVE_FUNCTION'
 #
-AC_DEFUN([lofar_FUNCTION_NAME],[
+# Based on ICE and DDD autoconf macros; added test for __FUNCTION__.
+#
+AC_DEFUN([lofar_CHECK_PRETTY_FUNCTION],[
   AC_PREREQ(2.13)
-  AC_MSG_CHECKING(for function name macro)
-  AC_TRY_LINK(
-    [#include <stdio.h>],
-    [puts(__PRETTY_FUNCTION__)],
-    lofar_function_name=__PRETTY_FUNCTION__,
+  AC_REQUIRE([AC_PROG_CXX])
+  AC_MSG_CHECKING(whether ${CXX} supports __PRETTY_FUNCTION__)
+  AC_CACHE_VAL(lofar_cv_have_pretty_function,[
+    AC_LANG_PUSH(C++)
     AC_TRY_LINK(
       [#include <stdio.h>],
-      [puts(__FUNCTION__)],
-      lofar_function_name=__FUNCTION__,
-      lofar_function_name="\"<unknown>\""))
-  AC_MSG_RESULT($lofar_function_name)
-  AC_DEFINE_UNQUOTED(AUTO_FUNCTION_NAME,$lofar_function_name,[Define as 
-                     __PRETTY_FUNCTION__, __FUNCTION__, or "<unknown>"])
+      [puts(__PRETTY_FUNCTION__);],
+      lofar_cv_have_pretty_function=yes,
+      lofar_cv_have_pretty_function=no)
+    AC_LANG_POP(C++)
+  ])
+  AC_MSG_RESULT($lofar_cv_have_pretty_function)
+  if test "$lofar_cv_have_pretty_function" = yes; then
+    AC_DEFINE(HAVE_PRETTY_FUNCTION,1,[Define if __PRETTY_FUNCTION__ is defined])
+    echo "PRETTY_FUNCTION" >> pkgext;
+  else
+    AC_MSG_CHECKING(whether ${CXX} supports __FUNCTION__)
+    AC_CACHE_VAL(lofar_cv_have_function,[
+      AC_LANG_PUSH(C++)
+      AC_TRY_LINK(
+        [#include <stdio.h>],
+        [puts(__FUNCTION__);],
+        lofar_cv_have_function=yes,
+        lofar_cv_have_function=no)
+      AC_LANG_POP(C++)
+    ])
+    AC_MSG_RESULT($lofar_cv_have_function)
+    if test "$lofar_cv_have_function" = yes; then
+      AC_DEFINE(HAVE_FUNCTION,1,[Define if __FUNCTION__ is defined])
+      echo "FUNCTION" >> pkgext;
+    fi
+  fi
 ])
-
 
 #
 # lofar_CHECK_USHORT
