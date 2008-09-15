@@ -40,87 +40,46 @@
 #include "Beamlet.h"
 #include "Package__Version.h"
 
-//#include <APS/ParameterSet.h>
+#include <getopt.h>
 #include <iostream>
 #include <sstream>
 #include <time.h>
-#include <string.h>
-#include <getopt.h>
 #include <fstream>
 
 #include <netinet/in.h>
-
 #include <APL/RTCCommon/PSAccess.h>
-
 #include <blitz/array.h>
-
 #include <AMCBase/ConverterClient.h>
 
-using namespace LOFAR;
 using namespace blitz;
-using namespace BS;
-//using namespace std;
-using namespace RTC;
-using namespace RSP_Protocol;
-using namespace GCF::TM;
+namespace LOFAR {
+  using namespace BS;
+  using namespace RTC;
+  using namespace RSP_Protocol;
+  using namespace GCF::TM;
+  namespace BS {
 
-//
 // global variable for beamformer gain
-//
-static int g_bf_gain = 0;
-
-//
-// parseOptions
-//
-void BeamServer::parseOptions(int		argc,
-							  char**	argv)
-{
-	static struct option long_options[] = {
-		{ "instance",   required_argument, 0, 'I' },
-		{ "daemonize",  optional_argument, 0, 'd' },
-		{ 0, 0, 0, 0 },
-	};
-
-	optind = 0; // reset option parsing
-	for(;;) {
-		int option_index = 0;
-		int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
-
-		if (c == -1) {
-			break;
-		}
-
-		switch (c) {
-		case 'I': 	// --instance
-			m_instancenr = atoi(optarg);
-			break;
-		case 'd':
-			break;
-		default:
-			LOG_FATAL (formatString("Unknown option %c", c));
-			ASSERT(false);
-		} // switch
-	} // for loop
-}
+int g_bf_gain = 0;
 
 //
 // BeamServer(name, argc, argv)
 //
-BeamServer::BeamServer(string name, int argc, char** argv)
-    : GCFTask((State)&BeamServer::initial, name),
-      m_beams_modified(false),
-      m_beams		  (MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
-      m_converter	  ("localhost"),
-	  	m_instancenr	  (-1),
-	  	itsUpdateInterval	(UPDATE_INTERVAL),
-	  	itsComputeInterval	(COMPUTE_INTERVAL),
-	  	itsHbaInterval	(COMPUTE_INTERVAL)
+BeamServer::BeamServer(string name, int argc, char** argv) : 
+	GCFTask((State)&BeamServer::initial, name),
+	m_beams_modified		(false),
+	m_beams		  			(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
+	m_converter	  			("localhost"),
+	m_instancenr	  		(-1),
+	itsUpdateInterval		(UPDATE_INTERVAL),
+	itsComputeInterval		(COMPUTE_INTERVAL)
 {
 	// adopt commandline switches
 	parseOptions(argc, argv);
 
 	LOG_INFO(Version::getInfo<BeamServerVersion>("BeamServer"));
 
+	// register protocols for debugging
 	registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
@@ -129,13 +88,32 @@ BeamServer::BeamServer(string name, int argc, char** argv)
 	if (m_instancenr >= 0) {
 		instanceID=formatString("(%d)", m_instancenr);
 	}
-	m_acceptor.init (*this, MAC_SVCMASK_BEAMSERVER+ instanceID, 
-										GCFPortInterface::MSPP, BS_PROTOCOL);
-	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER + instanceID, 
-										GCFPortInterface::SAP,  RSP_PROTOCOL);
-	m_calserver.init(*this, MAC_SVCMASK_CALSERVER + instanceID, 
-										GCFPortInterface::SAP,  CAL_PROTOCOL);
+
+	// startup TCP connections
+	m_acceptor.init (*this, MAC_SVCMASK_BEAMSERVER+ instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
+	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER + instanceID, GCFPortInterface::SAP,  RSP_PROTOCOL);
+	m_calserver.init(*this, MAC_SVCMASK_CALSERVER + instanceID, GCFPortInterface::SAP,  CAL_PROTOCOL);
+
+	// alloc a general purpose timer.
 	itsUpdateTimer = new GCFTimerPort(*this, "UpdateTimer");
+
+	// read config settings
+	itsSetHBAEnabled 	  = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETHBA") == 0);
+	itsSetSubbandsEnabled = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETSUBBANDS") == 0);
+	itsSetWeightsEnabled  = (globalParameterSet()->getInt32("BeamServer.DISABLE_SETWEIGHTS") == 0);
+
+	// get interval information
+	itsHbaInterval 		  = globalParameterSet()->getInt32("BeamServer.HBA_INTERVAL", COMPUTE_INTERVAL);
+	if (itsHbaInterval < 2) {
+		LOG_FATAL("HBA_INTERVAL to small, must be greater or equal to 2 seconds");
+		exit(EXIT_FAILURE);
+	}
+
+	// needed for HBA testing
+	if (itsHbaInterval < itsComputeInterval) {
+		itsComputeInterval = itsHbaInterval;
+		itsUpdateInterval = (long)(itsHbaInterval / 2);
+	}	
 }
 
 //
@@ -144,13 +122,7 @@ BeamServer::BeamServer(string name, int argc, char** argv)
 BeamServer::~BeamServer()
 {}
 
-//
-// isEnabled()
-//
-bool BeamServer::isEnabled()
-{
-	return (m_rspdriver.isConnected() && m_calserver.isConnected());
-}
+// ------------------------------ State machines ------------------------------
 
 //
 // initial(event, port)
@@ -167,28 +139,22 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	switch(event.signal) {
 	case F_INIT: {
 		ConfigLocator cl;
-		
-		//
-	  // load the HBA Deltas file
-	  //
-	  getAllHBADeltas(cl.locate(GET_CONFIG_STRING("BeamServer.HBADeltasFile")));
+
+		// load the HBA Deltas file
+		getAllHBADeltas(cl.locate(GET_CONFIG_STRING("BeamServer.HBADeltasFile")));
 		LOG_DEBUG_STR("Loading HBADeltas File");
-		
-		//
-	  // load the HBA Delays file
-	  //
-	  getAllHBAElementDelays(cl.locate(GET_CONFIG_STRING("BeamServer.HBAElementDelaysFile")));
+
+		// load the HBA Delays file
+		getAllHBAElementDelays(cl.locate(GET_CONFIG_STRING("BeamServer.HBAElementDelaysFile")));
 		LOG_DEBUG_STR("Loading HBADelays File");
-			  	  
+
 	} break;
 
 	case F_ENTRY: {
-		/**
-		* Check explicitly for S_DISCONNECTED state instead of !isConnected()
-		* because a transition from ::enabled into ::initial will have state S_CLOSING
-		* which is also !isConnected() but in this case we don't want to open the port
-		* until after we have handled F_CLOSED for that port.
-		*/
+		// Check explicitly for S_DISCONNECTED state instead of !isConnected()
+		// because a transition from ::enabled into ::initial will have state S_CLOSING
+		// which is also !isConnected() but in this case we don't want to open the port
+		// until after we have handled F_CLOSED for that port.
 		if (m_rspdriver.getState() == GCFPortInterface::S_DISCONNECTED) {
 			m_rspdriver.open();
 		}
@@ -206,21 +172,9 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	}
 	break;
 
-	case RSP_GETCONFIGACK:					// answer from RSPDriver
-	{
+	case RSP_GETCONFIGACK: {				// answer from RSPDriver
 		RSPGetconfigackEvent ack(event);
-	
-		itsHbaInterval = GET_CONFIG("BeamServer.HBA_INTERVAL", i);
-		if (itsHbaInterval < 2) {
-			LOG_FATAL("HBA_INTERVAL to small, must be greater or equal to 2 seconds");
-			exit(EXIT_FAILURE);
-		}
-		// needed for HBA testing
-		if (itsHbaInterval < itsComputeInterval) {
-			itsComputeInterval = itsHbaInterval;
-			itsUpdateInterval = (long)(itsHbaInterval / 2);
-		}	
-		
+
 		// resize our array to number of current RCUs
 		m_nrcus = ack.n_rcus;
 		m_weights.resize   (itsComputeInterval, m_nrcus, MEPHeader::N_BEAMLETS);
@@ -233,7 +187,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 		// start update timer and start accepting clients
 		LOG_DEBUG_STR("Starting Update timer with interval: " << itsUpdateInterval << " secs");
 		itsUpdateTimer->setTimer(0, 0, itsUpdateInterval, 0);
-		
+
 		if (m_acceptor.getState() == GCFPortInterface::S_DISCONNECTED) {
 			m_acceptor.open();
 		}
@@ -249,8 +203,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	case F_CLOSED: {
 		// try connecting again in 2 seconds
 		port.setTimer((long)2);
-		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", 
-								port.getName().c_str()));
+		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
 	}
 	break;
 
@@ -269,98 +222,6 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	}
 
 	return (status);
-}
-
-//
-// undertaker()
-//
-void BeamServer::undertaker()
-{
-	// cleanup old connections
-	for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
-											it != m_dead_clients.end(); it++) {
-		LOG_DEBUG_STR("undertaker: deleting '" << (*it)->getName() << "'");
-		delete (*it);
-	}
-	m_dead_clients.clear();
-}
-
-//
-// destroyAllBeams(port)
-//
-void BeamServer::destroyAllBeams(GCFPortInterface* port)
-{
-	ASSERT(port);
-
-	// deallocate all beams for this client
-	for (set<Beam*>::iterator beamit = m_client_beams[port].begin();
-								beamit != m_client_beams[port].end(); ++beamit) {
-		if (!m_beams.destroy(*beamit)) {
-			LOG_WARN("Beam not found...");
-		}
-	}
-	m_client_beams.erase(port);
-}
-
-//
-// newBeam(beamTransaction, port , name, subarray, beamletAllocation)
-//
-Beam* BeamServer::newBeam(BeamTransaction& 					bt, 
-						  GCFPortInterface* 				port,
-						  std::string 						name, 
-						  std::string 						subarrayname, 
-						  BS_Protocol::Beamlet2SubbandMap	allocation)
-{
-	LOG_TRACE_FLOW_STR("newBeam("<<port->getName()<<","<<name<<","<<subarrayname);
-
-	ASSERT(port);
-
-	// check for valid parameters
-	// returning 0 will result in a negative ACK
-	if (bt.getBeam() != 0 || bt.getPort() != 0) {
-		LOG_ERROR("Previous alloc is still in progress");
-		 return (0);
-	}
-	if (name.length() == 0) {
-		LOG_ERROR("Name of beam not set, cannot alloc new beam");
-		return (0);
-	}
-	if (subarrayname.length() == 0)  {
-		LOG_ERROR("SubArrayName not set, cannot alloc new beam");
-		return (0); 
-	}
-
-	Beam* beam = m_beams.create(name, subarrayname, allocation);
-
-	if (beam) { // register new beam
-		m_client_beams[port].insert(beam);
-		m_beams_modified = true;
-		bt.set(port, beam);
-	}
-
-	return (beam);
-}
-
-//
-// deleteBeam(beamTransaction)
-//
-void BeamServer::deleteBeam(BeamTransaction& bt)
-{
-	ASSERT(bt.getPort() && bt.getBeam());
-
-	// destroy beam
-	if (!m_beams.destroy(bt.getBeam())) {
-		LOG_WARN("Beam not found...");
-	}
-
-	// unregister beam
-	m_client_beams[bt.getPort()].erase(bt.getBeam());
-
-	bt.reset();
-
-	// update flag to trigger update of
-	// subband selection settings
-	m_beams_modified = true;
 }
 
 //
@@ -423,7 +284,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 			hbaPeriod += itsUpdateInterval; 
 			if (hbaPeriod >= itsHbaInterval) {
 				hbaPeriod = 0;
-				if (GET_CONFIG("BeamServer.DISABLE_SETHBA", i) == 0) {
+				if (itsSetHBAEnabled) {
 					LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
 					compute_HBAdelays(Timestamp(timer->sec,0) + LEADIN_TIME);
 					send_HBAdelays   (Timestamp(timer->sec,0) + LEADIN_TIME);
@@ -758,32 +619,169 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	return (status);
 }
 
+// ------------------------------ internal routines ------------------------------
+
+//
+// parseOptions
+//
+void BeamServer::parseOptions(int	argc, char**	argv)
+{
+	static struct option long_options[] = {
+		{ "instance",   required_argument, 0, 'I' },
+		{ "daemonize",  optional_argument, 0, 'd' },
+		{ 0, 0, 0, 0 },
+	};
+
+	optind = 0; // reset option parsing
+	for(;;) {
+		int option_index = 0;
+		int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
+
+		if (c == -1) {
+			break;
+		}
+
+		switch (c) {
+		case 'I': 	// --instance
+			m_instancenr = atoi(optarg);
+			break;
+		case 'd':
+			break;
+		default:
+			LOG_FATAL (formatString("Unknown option %c", c));
+			ASSERT(false);
+		} // switch
+	} // for loop
+}
+
+//
+// isEnabled()
+//
+bool BeamServer::isEnabled()
+{
+	return (m_rspdriver.isConnected() && m_calserver.isConnected());
+}
+
+//
+// undertaker()
+//
+void BeamServer::undertaker()
+{
+	// cleanup old connections
+	for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
+											it != m_dead_clients.end(); it++) {
+		LOG_DEBUG_STR("undertaker: deleting '" << (*it)->getName() << "'");
+		delete (*it);
+	}
+	m_dead_clients.clear();
+}
+
+//
+// destroyAllBeams(port)
+//
+void BeamServer::destroyAllBeams(GCFPortInterface* port)
+{
+	ASSERT(port);
+
+	// deallocate all beams for this client
+	for (set<Beam*>::iterator beamit = m_client_beams[port].begin();
+								beamit != m_client_beams[port].end(); ++beamit) {
+		if (!m_beams.destroy(*beamit)) {
+			LOG_WARN("Beam not found...");
+		}
+	}
+	m_client_beams.erase(port);
+}
+
+//
+// newBeam(beamTransaction, port , name, subarray, beamletAllocation)
+//
+Beam* BeamServer::newBeam(BeamTransaction& 					bt, 
+						  GCFPortInterface* 				port,
+						  std::string 						name, 
+						  std::string 						subarrayname, 
+						  BS_Protocol::Beamlet2SubbandMap	allocation)
+{
+	LOG_TRACE_FLOW_STR("newBeam(" << port->getName() << "," << name << "," << subarrayname);
+
+	ASSERT(port);
+
+	// check for valid parameters
+	// returning 0 will result in a negative ACK
+	if (bt.getBeam() != 0 || bt.getPort() != 0) {
+		LOG_ERROR("Previous alloc is still in progress");
+		 return (0);
+	}
+	if (name.length() == 0) {
+		LOG_ERROR("Name of beam not set, cannot alloc new beam");
+		return (0);
+	}
+	if (subarrayname.length() == 0)  {
+		LOG_ERROR("SubArrayName not set, cannot alloc new beam");
+		return (0); 
+	}
+
+	Beam* beam = m_beams.create(name, subarrayname, allocation);
+
+	if (beam) { // register new beam
+		m_client_beams[port].insert(beam);
+		m_beams_modified = true;
+		bt.set(port, beam);
+	}
+
+	return (beam);
+}
+
+//
+// deleteBeam(beamTransaction)
+//
+void BeamServer::deleteBeam(BeamTransaction& bt)
+{
+	ASSERT(bt.getPort() && bt.getBeam());
+
+	// destroy beam
+	if (!m_beams.destroy(bt.getBeam())) {
+		LOG_WARN("Beam not found...");
+	}
+
+	// unregister beam
+	m_client_beams[bt.getPort()].erase(bt.getBeam());
+
+	bt.reset();
+
+	// update flag to trigger update of
+	// subband selection settings
+	m_beams_modified = true;
+}
+
 //
 // getAllHBADeltas 
 //
 void BeamServer::getAllHBADeltas(string filename)
 {
-  ifstream itsFile;
-  string itsName;
-  			
-  // open new file
-  if (itsFile.is_open()) itsFile.close();
-  itsFile.open(filename.c_str());
-  
-  if (!itsFile.good()) {
-    itsFile.close();
-    return;
-  }
+	ifstream itsFile;
+	string itsName;
 
-  getline(itsFile, itsName); // read name
-  LOG_DEBUG_STR("HBADeltas Name = " << itsName);
-  if ("" == itsName) {
-    itsFile.close();
-    return;
-  }
+	// open new file
+	if (itsFile.is_open()) {
+		itsFile.close();
+	}
+	itsFile.open(filename.c_str());
 
-  itsFile >> itsTileRelPos; // read HBA deltas array
-  LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
+	if (!itsFile.good()) {
+		itsFile.close();
+		return;
+	}
+
+	getline(itsFile, itsName); // read name
+	LOG_DEBUG_STR("HBADeltas Name = " << itsName);
+	if ("" == itsName) {
+		itsFile.close();
+		return;
+	}
+
+	itsFile >> itsTileRelPos; // read HBA deltas array
+	LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
 }
 
 //
@@ -791,28 +789,30 @@ void BeamServer::getAllHBADeltas(string filename)
 //
 void BeamServer::getAllHBAElementDelays(string filename)
 {
-  ifstream itsFile;
-  string itsName;
-  			
-  // open new file
-  if (itsFile.is_open()) itsFile.close();
-  itsFile.open(filename.c_str());
-  
-  if (!itsFile.good()) {
-    itsFile.close();
-    return;
-  }
+	ifstream itsFile;
+	string itsName;
 
-  getline(itsFile, itsName); // read name
-  LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
-  if ("" == itsName) {
-    itsFile.close();
-    return;
-  }
+	// open new file
+	if (itsFile.is_open()) { 
+		itsFile.close();
+	}
+	itsFile.open(filename.c_str());
 
-  itsFile >> itsElementDelays; // read HBA element delays array
-  //itsElementDelays *= 1E-9; // convert from nSec to Secs
-  LOG_DEBUG_STR("HBA ElementDelays = " << itsElementDelays);
+	if (!itsFile.good()) {
+		itsFile.close();
+		return;
+	}
+
+	getline(itsFile, itsName); // read name
+	LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
+	if ("" == itsName) {
+		itsFile.close();
+		return;
+	}
+
+	itsFile >> itsElementDelays; // read HBA element delays array
+	//itsElementDelays *= 1E-9; // convert from nSec to Secs
+	LOG_DEBUG_STR("HBA ElementDelays = " << itsElementDelays);
 }
 
 //
@@ -899,9 +899,9 @@ bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
 
-/**
- * Convert the weights to 16-bits signed integer.
- */
+//
+// Convert the weights to 16-bits signed integer.
+//
 inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 {
 	return complex<int16_t>((int16_t)(round(cd.real() * g_bf_gain)),
@@ -917,8 +917,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 void BeamServer::compute_HBAdelays(Timestamp time)
 {
 	// calculate HBA delays for all HBA beams.
-	
-	m_beams.calculateHBAdelays(time, GET_CONFIG("BeamServer.HBA_INTERVAL", i), &m_converter, itsTileRelPos, itsElementDelays);
+	m_beams.calculateHBAdelays(time, itsHbaInterval, &m_converter, itsTileRelPos, itsElementDelays);
 }
 
 //
@@ -927,11 +926,10 @@ void BeamServer::compute_HBAdelays(Timestamp time)
 void BeamServer::send_HBAdelays(Timestamp	time)
 {
 	// We must loop over all beams, unfortunately we don't have such a list
-	// because only the beam-factory has access to all beams. So be must
+	// because only the beam-factory has access to all beams. So we must
 	// implement the sending of the HBA delays in the beamfactory!
 	LOG_INFO_STR("sending hba delays for interval " << time << " : " << time + (long)(itsComputeInterval-1));
 	m_beams.sendHBAdelays(time, m_rspdriver);
-
 }
 
 //
@@ -957,7 +955,7 @@ void BeamServer::compute_weights(Timestamp time)
 void BeamServer::send_weights(Timestamp time)
 {
 	//	LOG_DEBUG_STR("weights_uint16=" << m_weights16);
-	if (GET_CONFIG("BeamServer.DISABLE_SETWEIGHTS", i) == 1) {
+	if (!itsSetWeightsEnabled) {
 		return;
 	}
   
@@ -983,7 +981,7 @@ void BeamServer::send_weights(Timestamp time)
 //
 void BeamServer::send_sbselection()
 {
-	if (GET_CONFIG("BeamServer.DISABLE_SETSUBBANDS", i) == 1) {
+	if (!itsSetSubbandsEnabled) {
 		return;
 	}
 
@@ -1063,51 +1061,5 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 	return (status);
 }
 
-//
-// main
-//
-int main(int argc, char* argv[])
-{
-	/* daemonize if required */
-	if (argc >= 2) {
-		if (!strcmp(argv[1], "-d")) {
-			if (0 != daemonize(false)) {
-				cerr << "Failed to background this process: " << strerror(errno) << endl;
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
-
-	GCFTask::init(argc, argv, "BeamServer");
-
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_BeamServer");
-	LOG_INFO(formatString("Program %s has started", argv[0]));
-
-	try {
-		ConfigLocator cl;
-		globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
-
-		// set global bf_gain
-		g_bf_gain = GET_CONFIG("BeamServer.BF_GAIN", i);
-	}
-	catch (Exception e) {
-		LOG_FATAL_STR("Failed to load configuration files: " << e.text());
-		exit(EXIT_FAILURE);
-	}
-
-	try {
-		BeamServer beamserver("BeamServer", argc, argv);
-
-		beamserver.start(); // make initial transition
-
-		GCFTask::run();
-	}
-	catch (Exception e) {
-		LOG_FATAL_STR("Exception: " << e.text());
-		exit(EXIT_FAILURE);
-	}
-
-	LOG_INFO(formatString("Normal termination of program %s", argv[0]));
-
-	return (0);
-}
+  } // namespace BS;
+} // namespace LOFAR;

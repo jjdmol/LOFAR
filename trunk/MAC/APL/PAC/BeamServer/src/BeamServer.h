@@ -40,6 +40,8 @@
 namespace LOFAR {
   namespace BS {
 
+extern	int		g_bf_gain;
+
 class BeamServer : public GCFTask
 {
 private:
@@ -160,7 +162,7 @@ public:
 	GCFEvent::TResult recall(GCFPortInterface& p);
 
 private:
-	// member variables
+	// --- data members ---
 
 	// Weight array
 	blitz::Array<std::complex<double>,  3> m_weights;
@@ -182,24 +184,20 @@ private:
 
 	BeamTransaction	m_bt; // current beam transaction
 
-	GCFPort  		m_rspdriver;
-	GCFPort  		m_calserver;  
-	GCFTimerPort*  	itsUpdateTimer;  
-	bool     		m_beams_modified;
-
-	int      		m_nrcus;
-
-	Beams    		m_beams;
-
-	AMC::ConverterClient m_converter;
-
-	int32	 		m_instancenr;
-	
-	long			itsUpdateInterval;
-	
-	long			itsComputeInterval;
-	
-	long			itsHbaInterval;
+	GCFPort  				m_rspdriver;			// connection to RSPDriver
+	GCFPort  				m_calserver;  			// connection to CalServer
+	GCFTimerPort*  			itsUpdateTimer;  		//
+	bool     				m_beams_modified;		//
+	bool					itsSetHBAEnabled;		//
+	bool					itsSetWeightsEnabled;	//
+	bool					itsSetSubbandsEnabled;	//
+	int      				m_nrcus;				//
+	Beams    				m_beams;				//
+	AMC::ConverterClient 	m_converter;			//
+	int32	 				m_instancenr;			//
+	long					itsUpdateInterval;		//
+	long					itsComputeInterval;		//
+	long					itsHbaInterval;			//
 };
 
   }; //# namespace BS

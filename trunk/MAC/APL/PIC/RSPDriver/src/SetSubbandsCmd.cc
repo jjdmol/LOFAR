@@ -38,112 +38,116 @@ using namespace RTC;
 
 SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSetsubbandsEvent(event);
+	m_event = new RSPSetsubbandsEvent(event);
 
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
+	setOperation(oper);
+	setPeriod(0);
+	setPort(port);
 }
 
 SetSubbandsCmd::~SetSubbandsCmd()
 {
-  delete m_event;
+	delete m_event;
 }
 
 void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetsubbandsackEvent ack;
+	RSPSetsubbandsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
-  
-  getPort()->send(ack);
+	ack.timestamp = getTimestamp();
+	ack.status = SUCCESS;
+
+	getPort()->send(ack);
 }
 
 void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 {
-  Range dst_range;
+	Range dst_range;
 
-  switch (m_event->subbands.getType()) {
+	switch (m_event->subbands.getType()) {
 
-  case SubbandSelection::BEAMLET:
-    {
-      //dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
-      dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
-      for (int cache_rcu = 0;
-	   cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-	{
-	  if (m_event->rcumask[cache_rcu])
-	    {
-	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-	      cache.getSubbandSelection()()(cache_rcu, dst_range)
-		= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
-	
-	      LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
-	    }
+	case SubbandSelection::BEAMLET: {
+		//dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
+		dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
+		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+			if (m_event->rcumask[cache_rcu]) {
+				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+				cache.getSubbandSelection()()(cache_rcu, dst_range)
+					= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+
+				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+			}
+		}
 	}
-    }
-    break;
+	break;
 
-  case SubbandSelection::XLET:
-    {
-      dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-      for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-	{
-	  if (m_event->rcumask[cache_rcu])
-	    {
-	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-	      cache.getSubbandSelection()()(cache_rcu, dst_range)
-		= m_event->subbands()(0, 0) * MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
-	
-	      LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
-	    }
+	case SubbandSelection::XLET: {
+		dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+			if (m_event->rcumask[cache_rcu]) {
+				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+				cache.getSubbandSelection()()(cache_rcu, dst_range)
+					= m_event->subbands()(0, 0) * MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+
+				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+			}
+		}
 	}
-    }
-    break;
+	break;
 
-  default:
-    LOG_FATAL("invalid subbandselection type");
-    exit(EXIT_FAILURE);
-    break;
-  }
+	default:
+		LOG_FATAL("invalid subbandselection type");
+		exit(EXIT_FAILURE);
+		break;
+	}
 }
 
 void SetSubbandsCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetSubbandsCmd completed at time=" << getTimestamp());
+	LOG_INFO_STR("SetSubbandsCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetSubbandsCmd::getTimestamp() const
 {
-  return m_event->timestamp;
+	return m_event->timestamp;
 }
 
 void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 {
-  m_event->timestamp = timestamp;
+	m_event->timestamp = timestamp;
 }
 
 bool SetSubbandsCmd::validate() const
 {
-  bool valid = false;
+	bool valid = false;
 
-  switch (m_event->subbands.getType()) {
+	switch (m_event->subbands.getType()) {
 
-  case SubbandSelection::BEAMLET:
-    if (m_event->subbands().extent(secondDim) <= MEPHeader::N_BEAMLETS) valid = true;
-    break;
+	case SubbandSelection::BEAMLET:
+		if (m_event->subbands().extent(secondDim) <= MEPHeader::N_BEAMLETS) valid = true;
+		break;
 
-  case SubbandSelection::XLET:
-    if (1 == m_event->subbands().extent(secondDim)) valid = true;
-    break;
+	case SubbandSelection::XLET:
+		if (1 == m_event->subbands().extent(secondDim)) valid = true;
+		break;
 
-  default:
-    LOG_WARN("invalid SubbandSelection type");
-    break;
-  }
+	default:
+		LOG_WARN("invalid SubbandSelection type");
+		break;
+	}
 
-  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-	  && (2 == m_event->subbands().dimensions())
-	  && (1 == m_event->subbands().extent(firstDim)) && valid);
+	// return true when everything is right
+	if ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
+		&& (2 == m_event->subbands().dimensions())
+		&& (1 == m_event->subbands().extent(firstDim)) && valid) {
+		return (true);
+	}
+
+	// show our validation values.
+    LOG_DEBUG(formatString("cmd rcumask.count = %d",m_event->rcumask.count()));
+    LOG_DEBUG(formatString("nr Rcus           = %d",StationSettings::instance()->nrRcus()));
+    LOG_DEBUG(formatString("first dim         = %d",m_event->subbands().extent(firstDim)));
+    LOG_DEBUG(formatString("second dim        = %d",m_event->subbands().extent(secondDim)));
+    return (false);
+
 }

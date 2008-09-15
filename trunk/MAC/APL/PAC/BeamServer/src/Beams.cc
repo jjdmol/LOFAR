@@ -220,7 +220,7 @@ void Beams::calculateHBAdelays (RTC::Timestamp	 					timestamp,
 		LOG_DEBUG_STR("Beam " << bi->first->getName() << " is HBA");
 
 		//bi->first->calcNewTrack(timestamp, compute_interval, conv);
-		//if (GET_CONFIG("BeamServer.HBA_INTERVAL", i) < COMPUTE_INTERVAL) {
+		//if itsHbaInterval < COMPUTE_INTERVAL) {
 		//	bi->first->calcNewTrack(timestamp, 1, conv);
 		//	LOG_DEBUG_STR("calculating new track for HBA");
 		//}
