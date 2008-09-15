@@ -12,18 +12,14 @@ AUTOGEN 				= autogen
 SUFFIXES 				= .ph
 
 BUILT_SOURCES 			= BeamServer.conf \
-							beamctl.conf \
-						  BeamServer.log_prop \
-						  beamctl.log_prop \
+						  beamctl.conf \
 						  HBADeltas.conf \
 						  HBADelays.conf 
 
 EXTRA_DIST 				= $(BUILT_SOURCES)
 
 sysconf_DATA 			= BeamServer.conf \
-							beamctl.conf \
-						  BeamServer.log_prop \
-						  beamctl.log_prop \
+						  beamctl.conf \
 						  HBADeltas.conf \
 						  HBADelays.conf 
 
@@ -40,7 +36,7 @@ libabsdevel_la_SOURCES 	= Package__Version.cc \
 
 bin_PROGRAMS 			= versionbeamserver BeamServer beamctl
 
-BeamServer_SOURCES 		= BeamServer.h BeamServerConstants.h BeamServer.cc
+BeamServer_SOURCES 		= BeamServerMain.cc BeamServer.h BeamServerConstants.h BeamServer.cc
 BeamServer_LDADD 		= $(top_builddir)/src/libabsdevel.la
 BeamServer_DEPEND 		= $(LOFAR_DEPEND)
 

@@ -544,13 +544,14 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		// register because this is a cal_start
 		m_clients[start.name] = &port;		// register subarray and port
 
+		// Construct a 'select' array (nAntennas, nPol) that knows which antennas the user will use.
 		const Array<double, 3>& positions = parent->getAntennaPos();
 		Array<bool, 2> select;
 		select.resize(positions.extent(firstDim), positions.extent(secondDim));
 		select = false;
-
-		for (int i = 0; i < positions.extent(firstDim)*positions.extent(secondDim); i++) {
-		// subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
+		int		maxI(positions.extent(firstDim)*positions.extent(secondDim));
+		for (int i = 0; i < maxI; i++) {
+			// subset is one-dimensional (receiver), select is two-dimensional (antenna, polarization)
 			if (start.subset[i]) {
 				select(i/2,i%2) = true;
 			}
@@ -605,6 +606,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			RSPSetrcuEvent setrcu;
 			setrcu.timestamp = Timestamp(0,0); // immediate
 
+			// TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
 			// mask only available RCUs
 			bitset<MEPHeader::MAX_N_RCUS> validmask;
 			for (int i = 0; i < m_n_rcus; i++) {
