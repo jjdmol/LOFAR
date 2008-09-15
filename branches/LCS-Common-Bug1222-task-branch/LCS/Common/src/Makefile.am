@@ -2,12 +2,14 @@ if HAVE_SHMEM
 SUBDIRS	= shmem .
 endif
 
+if USE_BACKTRACE
+backtrace_SOURCES = AddressTranslator.cc Backtrace.cc SymbolTable.cc
+endif
+
 lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= Package__Version.cc \
-	AddressTranslator.cc \
 	Allocator.cc \
-	Backtrace.cc \
 	DataConvert.cc \
 	Exception.cc \
 	FileLocator.cc \
@@ -22,13 +24,14 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	Stopwatch.cc \
 	StreamUtil.cc \
 	StringUtil.cc \
-	SymbolTable.cc \
 	SystemUtil.cc \
 	Timer.cc \
 	TypeNames.cc \
 	Version.cc \
 	Net/FdSet.cc \
-	Net/Socket.cc 
+	Net/Socket.cc
+
+libcommon_la_SOURCES	+= $(backtrace_SOURCES)
 
 if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la

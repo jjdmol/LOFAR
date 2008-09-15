@@ -31,7 +31,10 @@
 //# Includes
 #include <Common/Backtrace.h>
 #include <Common/lofar_vector.h>
-#include <bfd.h>
+
+#ifdef HAVE_BFD
+# include <bfd.h>
+#endif
 
 namespace LOFAR
 {
@@ -56,6 +59,7 @@ namespace LOFAR
     bool operator()(vector<Backtrace::TraceLine>& trace, 
                     void* const* addr, int size);
 
+#ifdef HAVE_BFD
   private:
     // The workhorse that translates addresses 
     bool translate_addresses();
@@ -70,7 +74,7 @@ namespace LOFAR
     void do_find_address_in_section(bfd*, asection*);
 
     // Local variables used by translate_addresses() and
-    // find_address_in_section().
+    // do_find_address_in_section().
     // @{
     bfd_vma pc;
     const char* filename;
@@ -78,7 +82,7 @@ namespace LOFAR
     unsigned int line;
     bool found;
     // @}
-
+#endif
   };
 
   // @}

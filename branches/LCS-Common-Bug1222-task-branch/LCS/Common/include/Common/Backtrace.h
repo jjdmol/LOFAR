@@ -1,4 +1,4 @@
-//#  Backtrace.h: one line description
+//#  Backtrace.h: Store stack frame return addresses for self-debugging.
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,13 +23,20 @@
 #ifndef LOFAR_COMMON_BACKTRACE_H
 #define LOFAR_COMMON_BACKTRACE_H
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 // \file
-// one line description.
+// Store stack frame return addresses for self-debugging.
+
+#ifndef HAVE_BACKTRACE
+# error "Backtrace is not supported"
+#endif
+
+// \def BACKTRACE_MAX_RETURN_ADDRESSES Maximum number of stack frame return
+// addresses that will be stored by the Backtrace class (default=50).
+#ifndef BACKTRACE_MAX_RETURN_ADDRESSES
+# define BACKTRACE_MAX_RETURN_ADDRESSES 50
+#endif
 
 //# Includes
-#include <bfd.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -42,53 +49,37 @@ namespace LOFAR
   // \addtogroup Common
   // @{
 
-  // Description of class.
-
+  // Store stack frame return addresses for self-debugging and provide a way
+  // to print them in a human readable form.
   class Backtrace {
   public:
     // Layout of a trace line
     struct TraceLine {
+      TraceLine() : function("??"), file("??"), line(0) {}
       string function;
       string file;
       unsigned line;
     };
     // Maximum number of return addresses that we are willing to handle.
-    static const unsigned maxNrAddr = 50;
+    static const unsigned maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES;
 
-    // Constructor. Calls get_addresses() to fill \c itsAddr with the return
+    // Constructor. Calls backtrace() to fill \c itsAddr with the return
     // addresses of the current program state.
     Backtrace();
 
-    ~Backtrace();
-
+    // Print the current backtrace in human readable form into the output
+    // stream \a os.
     void print(ostream& os) const;
 
   private:
-//     // disallow copying and assingment
-//     Backtrace(const Backtrace&);
-//     Backtrace& operator=(const Backtrace&);
-
-//     // Initialize our data structures by zeroing them.
-//     void init();
-
-//     // Get the return addresses of the current program state, and store them
-//     // in \c itsAddr.
-//     // \return The number of return addresses.
-//     int get_addresses();
-
-    // Translate each return addresses into function name, filename and line
-    // number. Uses helper class AddressTranslator to do the real work.
-    bool translate_addresses();
-
-
-    // C-array of return addresses. It will be filled by get_addresses().
+    // C-array of return addresses.
     void* itsAddr[maxNrAddr];
 
     // Actual number of return addresses returned by get_addresses().
     int itsNrAddr;
 
     // Traceback info containing function name, filename, and line number.
-    // This vector will be filled by AddressTranslator.translate().
+    // This vector will be filled by AddressTranslator.operator().
     mutable vector<TraceLine> itsTrace;
 
   };

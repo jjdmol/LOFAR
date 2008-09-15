@@ -25,63 +25,67 @@
 
 #include <Common/Backtrace.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exceptions.h>
 
 using namespace LOFAR;
 
 Backtrace gs;
 
-void g()
-{
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  // Create a large object on the stack, pushing the stack boundaries.
-  char c[1000000];
-  Backtrace s;
-  std::cout << s;
-}
+struct G 
+{ 
+  void doIt() 
+  { 
+    cout << Backtrace() << endl; 
+    THROW (NotImplemented, "Ouch!"); 
+  }
+};
 
-void f()
+struct F 
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  g();
-}
+  void doIt() { g.doIt(); }
+  G g;
+};
 
-void e()
+struct E 
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  f();
-}
+  void doIt() { f.doIt(); }
+  F f; 
+};
 
-void d()
+struct D
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  e();
-}
+  void doIt() { e.doIt(); }
+  E e; 
+};
 
-void c()
+struct C 
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  d();
-}
+  void doIt() { d.doIt(); }
+  D d; 
+};
 
-void b()
+struct B 
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  c();
-}
+  void doIt() { c.doIt(); }
+  C c;
+};
 
-void a()
+struct A 
 {
-  LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-  b();
-}
-
+  void doIt() { b.doIt(); }
+  B b; 
+};
 
 int main()
 {
   INIT_LOGGER("tBacktrace");
   std::cout << gs;
   std::cout << "************" << std::endl;
-  a();
+  try {
+    A().doIt();
+  } catch (Exception& e) {
+    std::cerr << e << std::endl;
+  }
   std::cout << "************" << std::endl;
   return 0;
 }

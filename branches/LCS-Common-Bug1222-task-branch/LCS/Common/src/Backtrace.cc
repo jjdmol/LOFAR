@@ -26,14 +26,10 @@
 //# Includes
 #include <Common/Backtrace.h>
 #include <Common/AddressTranslator.h>
-#include <Common/LofarLogger.h>
-#include <Common/lofar_sstream.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
-#include <cstdlib>
 #include <cstring>
 #include <execinfo.h>
-#include <demangle.h>
 
 namespace LOFAR
 {
@@ -45,54 +41,19 @@ namespace LOFAR
     itsNrAddr = backtrace(itsAddr, maxNrAddr);
   }
 
-  Backtrace::~Backtrace()
-  {
-  }
-
-
-  void Backtrace::init()
-  {
-  }
-
-
-  int Backtrace::get_addresses()
-  {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    return itsNrAddr;
-  }
-
-  bool Backtrace::translate_addresses()
-  {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    if (itsTrace.empty()) {
-      AddressTranslator()(itsTrace, itsAddr, itsNrAddr);
-    }
-  }
-
   void Backtrace::print(ostream& os) const
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-#if 0
-    for (int i = 0; i < itsNrAddr; ++i) {
-      printf("%-16p\n", itsAddr[i]);
-    }
-#endif
     if (itsTrace.empty()) {
       AddressTranslator()(itsTrace, itsAddr, itsNrAddr);
     }
       
-//     translate_addresses();
-
     // Save the current fmtflags
     std::ios::fmtflags flags(os.flags());
 
-    os.setf(std::ios::showbase);
-    for(int i = 0; i < itsNrAddr; ++i) {
-      os << "#" << left << setw(4) << i;
-// 	 << ">>>";
-//       os.setf(std::ios::internal, std::ios::adjustfield);
-      os << right << setw(2+2*sizeof(void*)) << itsAddr[i]
-//       os << "<<<";
+    os.setf(std::ios::showbase | std::ios::left);
+    for(int i = 1; i < itsNrAddr; ++i) {
+      os << "#" << setw(2) << i-1
+	 << " " << hex << itsAddr[i] << dec
 	 << " in " << itsTrace[i].function
 	 << " at " << itsTrace[i].file
 	 << ":"    << itsTrace[i].line << endl;

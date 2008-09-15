@@ -290,11 +290,10 @@ AC_DEFUN([lofar_BACKTRACE],
 [
   AC_ARG_ENABLE([backtrace],
     AS_HELP_STRING([--disable-backtrace],
-                   [use traceback support for exceptions (default is NO)]),
+                   [use backtrace(3) reporting for exceptions (default=no)]),
     [enable_backtrace="$enableval"],
     [enable_backtrace="no"])
   if test "$enable_backtrace" = "yes"; then
-    AC_DEFINE(USE_BACKTRACE, 1, [Define if backtrace support is enabled])
     AC_CHECK_HEADER([execinfo.h],[
       AC_CHECK_FUNC([backtrace],
                     [lofar_have_backtrace=yes],
@@ -303,16 +302,16 @@ AC_DEFUN([lofar_BACKTRACE],
     if test "$lofar_have_backtrace" = yes; then
       AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
       AC_CHECK_HEADER([bfd.h],[
-        AC_CHECK_LIB([bfd], [bfd_init],
-                     [lofar_have_bfd=yes],
-                     [lofar_have_bfd=no])
+        AC_SEARCH_LIBS([bfd_init], [bfd],
+                       [lofar_have_bfd=yes],
+                       [lofar_have_bfd=no])
       ])
       if test "$lofar_have_bfd" = yes; then
         AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
         AC_CHECK_HEADER([demangle.h],[
-          AC_CHECK_LIB([iberty], [cplus_demangle],
-                       [lofar_have_cplus_demangle=yes],
-                       [lofar_have_cplus_demangle=no])
+          AC_SEARCH_LIBS([cplus_demangle], [iberty],
+                         [lofar_have_cplus_demangle=yes],
+                         [lofar_have_cplus_demangle=no])
         ])
         if test "$lofar_have_cplus_demangle" = yes; then
           AC_DEFINE(HAVE_CPLUS_DEMANGLE, 1, 
@@ -329,6 +328,7 @@ AC_DEFUN([lofar_BACKTRACE],
       AC_MSG_ERROR([Backtrace information is not available on this system])
     fi
   fi
+  AM_CONDITIONAL(USE_BACKTRACE, test "$enable_backtrace" = "yes")
 ])
 
 #

@@ -2,11 +2,15 @@ if HAVE_SHMEM
 SUBDIRS	= shmem .
 endif
 
+if USE_BACKTRACE
+backtrace_HEADERS = AddressTranslator.h Backtrace.h SymbolTable.h
+backtracedir = .
+endif
+
 pkginclude_Netdir = $(pkgincludedir)/Net
 
 pkginclude_HEADERS = Package__Version.h  \
 	Allocator.h \
-	Backtrace.h \
 	CheckConfig.h \
 	ComplexBuiltinFP.h \
 	ComplexBuiltinInt.h \
@@ -59,7 +63,6 @@ pkginclude_HEADERS = Package__Version.h  \
 	Stopwatch.h \
 	StreamUtil.h \
 	StringUtil.h \
-	SymbolTable.h \
 	SystemUtil.h \
 	Timer.h \
 	TypeNames.h \
@@ -70,6 +73,6 @@ pkginclude_Net_HEADERS = \
 	Net/FdSet.h \
 	Net/Socket.h 
 
-noinst_HEADERS =
+noinst_HEADERS = $(backtrace_HEADERS)
 
 include $(top_srcdir)/Makefile.common

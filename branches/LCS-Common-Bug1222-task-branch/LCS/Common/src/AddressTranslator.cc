@@ -26,14 +26,15 @@
 //# Includes
 #include <Common/AddressTranslator.h>
 #include <Common/SymbolTable.h>
-#include <Common/LofarLogger.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <cstdlib>
 #include <cstring>
-#include <execinfo.h>
-#include <demangle.h>
+
+#ifdef HAVE_CPLUS_DEMANGLE
+# include <demangle.h>
+#endif
 
 namespace LOFAR
 {
@@ -49,11 +50,10 @@ namespace LOFAR
   bool AddressTranslator::operator()(vector<Backtrace::TraceLine>& trace,
 				     void* const* addr, int size) 
   {
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
     // Allocate enough storage for the tracelines to avoid reallocations.
     trace.resize(size);
   
+#ifdef HAVE_BFD
     for (int i = 0; i < size; i++) {
       pc = reinterpret_cast<bfd_vma>(addr[i]);
       found = false;
@@ -73,6 +73,7 @@ namespace LOFAR
           trace[i].function = "??";
         } 
         else {
+#ifdef HAVE_CPLUS_DEMANGLE
           char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
           if (res == 0) {
             trace[i].function = functionname;
@@ -81,6 +82,9 @@ namespace LOFAR
             trace[i].function = res;
             free(res);
           }
+#else
+          trace[i].function = functionname;
+#endif
         }
         if (filename == 0) {
           trace[i].file = "??";
@@ -96,13 +100,17 @@ namespace LOFAR
       //     if (trace[i].function == "main")
       //       break;
     }
-    //  printf("level = %d\n",level);
-    //   return level;
     return true;
+#else
+    addr = addr;
+    return false;
+#endif
   }
 
 
   //##----  P r i v a t e   f u n c t i o n s  ----##//
+
+#ifdef HAVE_BFD
 
   void AddressTranslator::find_address_in_section(bfd*      abfd,
 						  asection* section,
@@ -137,5 +145,6 @@ namespace LOFAR
                                    pc - vma, &filename, &functionname, &line);
   }
     
+#endif
 
 } // namespace LOFAR
