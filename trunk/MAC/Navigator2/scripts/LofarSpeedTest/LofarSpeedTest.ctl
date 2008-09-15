@@ -192,6 +192,8 @@ void testTriggered(string dp1, string testName) {
     centralToOneStationPingPong1000Int();
   } else if (testName == "Pingpong between central and one station (1000 string)") { 
     centralToOneStationPingPong1000String();
+  } else if (testName == "reset") {
+    reset();  
   }else {
     DebugTN("Error, unsupported testname received: "+ testName );
     DebugTN("Supported testnames: One station to central(1000 int x 1)\n"+
@@ -2256,7 +2258,7 @@ void centralSingleTrigger(string dp1, anytype aVal) {
 //    DebugTN("starttijd: " + startTime);
 //    DebugTN("eindtijd: " + endTime);
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrReads",nrReads,
           "lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2295,7 +2297,7 @@ void centralCollectionTrigger(string dp1, anytype val1,
   if (nrReads == nrWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrReads",nrReads,
           "lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2331,7 +2333,7 @@ void stationSingleTrigger(string dp1, anytype aVal) {
   if (nrReads == nrWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("MCU001:lofarSpeedTest.result.nrReads",nrReads,
           "MCU001:lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2371,7 +2373,7 @@ void stationCollectionTrigger(string dp1, anytype val1,
   if (nrReads == nrWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("MCU001:lofarSpeedTest.result.nrReads",nrReads,
           "MCU001:lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2423,7 +2425,7 @@ void pingpongCentralIntTrigger(string dp1, int aVal) {
   if (nrReads == nrWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("MCU001:lofarSpeedTest.result.nrReads",nrReads,
           "MCU001:lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2473,7 +2475,7 @@ void pingpongCentralStringTrigger(string dp1, string aVal) {
   if (nrReads == nrWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("MCU001:lofarSpeedTest.result.nrReads",nrReads,
           "MCU001:lofarSpeedTest.result.readTime",tStr);
     isRunning=false;
@@ -2505,7 +2507,7 @@ void writeSingle(string machineName,string val) {
     }
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",1000,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2537,7 +2539,7 @@ void writeSingleToTwo(string machineName1,string machineName2,string val) {
     }
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",2000,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2629,7 +2631,7 @@ void writeCollection(string machineName,string val) {
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2678,7 +2680,7 @@ void writeSingleCollection(string machineName,string val) {
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2747,7 +2749,7 @@ void writeCollectionToTwo(string machineName1,string machineName2,string val) {
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2859,7 +2861,7 @@ void writeCollectionToFour(string machineName1,string machineName2,string machin
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -2935,7 +2937,7 @@ void writeSingleCollectionToTwo(string machineName1,string machineName2,string v
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -3056,7 +3058,7 @@ void writeSingleCollectionToFour(string machineName1,string machineName2,string 
     }      
     endTime = getCurrentTime();
     time timed=endTime-startTime;
-    string tStr=(hour(timed)-1)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"s";
+    string tStr=hour(timed)+"h "+minute(timed)+"m "+second(timed)+"s "+ milliSecond(timed)+"ms";
     dpSet("lofarSpeedTest.result.nrWrites",100,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
@@ -3122,4 +3124,9 @@ void fillStringArray() {
   for (int i=1;i<=1000;i++) {
     strArray[i] = "testing step"+i;
   }
+}
+
+void reset() {
+  emptyPoints();
+  isRunning=false;
 }

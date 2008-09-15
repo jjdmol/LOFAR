@@ -4,7 +4,19 @@ LANG:1 0
 PANEL,-1 -1 1065 784 N "_3DFace" 0
 E E E E E 1 -1 -1 0  180 50
 ""0  1
-E "#uses \"LofarSpeedTest/lofarSpeedTestCommon.ctl\"" 0
+E "#uses \"LofarSpeedTest/lofarSpeedTestCommon.ctl\"
+
+void reset(string station) {
+  
+  //create List with all involved databases
+  dyn_string dbList = makeDynString(station);
+  
+  // set test name
+  string testName=\"reset\";
+  
+  // start the test scripts
+  startScripts(dbList,testName);
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -112,7 +124,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 2 6
 "PRIMITIVE_TEXT4"
 ""
-1 656 56 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 658 56 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -122,8 +134,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 56 700 70
-0 2 2 "0s" 0 0 0 192 0 0  652 56 1
+E E 0 1 1 2 1 E U  1 E 654 56 702 70
+0 2 2 "0s" 0 0 0 192 0 0  654 56 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -132,7 +144,7 @@ LANG:1 9 testName:
 2 8
 "PRIMITIVE_TEXT6"
 ""
-1 654 76 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 652 76 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
 E E E
@@ -142,8 +154,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 656 76 703 90
-0 2 2 "0s" 0 0 0 192 0 0  656 76 1
+E E 0 1 1 2 1 E U  1 E 654 76 701 90
+0 2 2 "0s" 0 0 0 192 0 0  654 76 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -522,7 +534,7 @@ LANG:1 9 testName:
 2 23
 "PRIMITIVE_TEXT13"
 ""
-1 654 226 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 652 226 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 37 0 0 0 0 0
 E E E
@@ -532,8 +544,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 656 226 703 240
-0 2 2 "0s" 0 0 0 192 0 0  656 226 1
+E E 0 1 1 2 1 E U  1 E 654 226 701 240
+0 2 2 "0s" 0 0 0 192 0 0  654 226 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -936,7 +948,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 2 64
 "PRIMITIVE_TEXT25"
 ""
-1 652 357 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 357 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 119 0 0 0 0 0
 E E E
@@ -946,8 +958,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 357 700 371
-0 2 2 "0s" 0 0 0 192 0 0  652 357 1
+E E 0 1 1 2 1 E U  1 E 654 357 702 371
+0 2 2 "0s" 0 0 0 192 0 0  654 357 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -976,7 +988,7 @@ LANG:1 9 readTime:
 2 67
 "PRIMITIVE_TEXT28"
 ""
-1 652 396 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 396 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 125 0 0 0 0 0
 E E E
@@ -986,8 +998,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 396 700 410
-0 2 2 "0s" 0 0 0 192 0 0  652 396 1
+E E 0 1 1 2 1 E U  1 E 654 396 702 410
+0 2 2 "0s" 0 0 0 192 0 0  654 396 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -996,7 +1008,7 @@ LANG:1 10 writeTime:
 2 68
 "PRIMITIVE_TEXT29"
 ""
-1 652 416 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 416 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 127 0 0 0 0 0
 E E E
@@ -1006,8 +1018,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 416 695 430
-0 2 2 "0s" 0 0 0 192 0 0  652 416 1
+E E 0 1 1 2 1 E U  1 E 654 416 697 430
+0 2 2 "0s" 0 0 0 192 0 0  654 416 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1016,7 +1028,7 @@ LANG:1 8 nrReads:
 2 69
 "PRIMITIVE_TEXT30"
 ""
-1 652 436 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 436 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 129 0 0 0 0 0
 E E E
@@ -1026,8 +1038,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 436 694 450
-0 2 2 "0s" 0 0 0 192 0 0  652 436 1
+E E 0 1 1 2 1 E U  1 E 654 436 696 450
+0 2 2 "0s" 0 0 0 192 0 0  654 436 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1330,7 +1342,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 2 77
 "PRIMITIVE_TEXT32"
 ""
-1 652 507 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 507 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 145 0 0 0 0 0
 E E E
@@ -1340,8 +1352,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 507 700 521
-0 2 2 "0s" 0 0 0 192 0 0  652 507 1
+E E 0 1 1 2 1 E U  1 E 654 507 702 521
+0 2 2 "0s" 0 0 0 192 0 0  654 507 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1370,7 +1382,7 @@ LANG:1 9 readTime:
 2 80
 "PRIMITIVE_TEXT35"
 ""
-1 652 546 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 546 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 151 0 0 0 0 0
 E E E
@@ -1380,8 +1392,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 546 700 560
-0 2 2 "0s" 0 0 0 192 0 0  652 546 1
+E E 0 1 1 2 1 E U  1 E 654 546 702 560
+0 2 2 "0s" 0 0 0 192 0 0  654 546 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1390,7 +1402,7 @@ LANG:1 10 writeTime:
 2 81
 "PRIMITIVE_TEXT36"
 ""
-1 652 566 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 566 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 153 0 0 0 0 0
 E E E
@@ -1400,8 +1412,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 566 695 580
-0 2 2 "0s" 0 0 0 192 0 0  652 566 1
+E E 0 1 1 2 1 E U  1 E 654 566 697 580
+0 2 2 "0s" 0 0 0 192 0 0  654 566 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1410,7 +1422,7 @@ LANG:1 8 nrReads:
 2 82
 "PRIMITIVE_TEXT37"
 ""
-1 652 586 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 586 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 155 0 0 0 0 0
 E E E
@@ -1420,8 +1432,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 586 694 600
-0 2 2 "0s" 0 0 0 192 0 0  652 586 1
+E E 0 1 1 2 1 E U  1 E 654 586 696 600
+0 2 2 "0s" 0 0 0 192 0 0  654 586 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1724,7 +1736,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 2 90
 "PRIMITIVE_TEXT39"
 ""
-1 652 657 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 657 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 171 0 0 0 0 0
 E E E
@@ -1734,8 +1746,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 657 700 671
-0 2 2 "0s" 0 0 0 192 0 0  652 657 1
+E E 0 1 1 2 1 E U  1 E 654 657 702 671
+0 2 2 "0s" 0 0 0 192 0 0  654 657 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1764,7 +1776,7 @@ LANG:1 9 readTime:
 2 93
 "PRIMITIVE_TEXT42"
 ""
-1 652 696 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 696 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 177 0 0 0 0 0
 E E E
@@ -1774,8 +1786,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 696 700 710
-0 2 2 "0s" 0 0 0 192 0 0  652 696 1
+E E 0 1 1 2 1 E U  1 E 654 696 702 710
+0 2 2 "0s" 0 0 0 192 0 0  654 696 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1784,7 +1796,7 @@ LANG:1 10 writeTime:
 2 94
 "PRIMITIVE_TEXT43"
 ""
-1 652 716 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 716 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 179 0 0 0 0 0
 E E E
@@ -1794,8 +1806,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 716 695 730
-0 2 2 "0s" 0 0 0 192 0 0  652 716 1
+E E 0 1 1 2 1 E U  1 E 654 716 697 730
+0 2 2 "0s" 0 0 0 192 0 0  654 716 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -1804,7 +1816,7 @@ LANG:1 8 nrReads:
 2 95
 "PRIMITIVE_TEXT44"
 ""
-1 652 736 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 654 736 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 181 0 0 0 0 0
 E E E
@@ -1814,8 +1826,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 652 736 694 750
-0 2 2 "0s" 0 0 0 192 0 0  652 736 1
+E E 0 1 1 2 1 E U  1 E 654 736 696 750
+0 2 2 "0s" 0 0 0 192 0 0  654 736 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -4745,6 +4757,131 @@ LANG:1 11 test string
   startScripts(dbList,testName); 
 }
 " 0
+ E E E
+13 370
+"Central"
+""
+1 930 30 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+730 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 928 28 1002 54
+
+T 
+1
+LANG:1 5 Reset
+"main()
+{
+  reset(\"MCU001:\");
+}" 0
+ E E E
+13 371
+"PUSH_BUTTON180"
+""
+1 930 180 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+732 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 928 178 1002 204
+
+T 
+1
+LANG:1 5 Reset
+"main()
+{
+  reset(STATION1);
+}" 0
+ E E E
+13 372
+"PUSH_BUTTON181"
+""
+1 930 330 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+734 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 928 328 1002 354
+
+T 
+1
+LANG:1 5 Reset
+"main()
+{
+  reset(STATION2);
+}" 0
+ E E E
+13 373
+"PUSH_BUTTON182"
+""
+1 930 480 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+736 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 928 478 1002 504
+
+T 
+1
+LANG:1 5 Reset
+"main()
+{
+  reset(STATION3);
+}" 0
+ E E E
+13 374
+"PUSH_BUTTON183"
+""
+1 930 630 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+738 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 928 628 1002 654
+
+T 
+1
+LANG:1 5 Reset
+"main()
+{
+  reset(STATION4);
+}" 0
  E E E
 0
 LAYER, 1 
