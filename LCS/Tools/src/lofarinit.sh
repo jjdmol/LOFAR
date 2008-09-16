@@ -40,9 +40,12 @@ fi
 # Take care that a possible . is preceeded by a backslash (for the later sed).
 if [ "$LOFARROOT" != "" ]; then
     lfr_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    lfr_bin="$lfr_path/bin"
-    PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
-    export PATH
+    for bintp in bin sbin
+    do
+      lfr_bin="$lfr_path/$bintp"
+      PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
+      export PATH
+    done
     lfr_lib="$lfr_path/lib"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
@@ -62,9 +65,12 @@ else
 
     # Also strip root from the current paths (in case it is contained).
     lfr_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    lfr_bin="$lfr_path/bin"
-    PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
-    export PATH
+    for bintp in bin sbin
+    do
+      lfr_bin="$lfr_path/$bintp"
+      PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
+      export PATH
+    done
     lfr_lib="$lfr_path/lib"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
@@ -73,15 +79,15 @@ else
     export PYTHONPATH
 fi
 
-# Add to the paths if the bin directory exsists.
+# Add to the paths if the bin directory exists.
 if [ "$LOFARROOT" = ""  -o  ! -d $LOFARROOT/bin ]; then
     echo "No LOFARROOT defined"
 else
     # Add the path to the standard paths.
     if [ "$PATH" = "" ]; then
-        PATH=$LOFARROOT/bin
+        PATH=$LOFARROOT/bin:$LOFARROOT/sbin
     else
-        PATH=$LOFARROOT/bin:$PATH
+        PATH=$LOFARROOT/bin:$LOFARROOT/sbin:$PATH
     fi
     export PATH
     if [ "$LD_LIBRARY_PATH" = "" ]; then
