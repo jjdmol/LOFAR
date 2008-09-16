@@ -1,15 +1,15 @@
-bin_PROGRAMS      = LimitExec pkgdep
+sbin_PROGRAMS     = LimitExec pkgdep
 
 LimitExec_SOURCES = LimitExec.cc
 pkgdep_SOURCES    = pkgdep.cc
 
-scriptdir = $(bindir)
+scriptdir = $(sbindir)
 dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedep.sh finddep makedoc checkrun
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
 
-pythondir = $(bindir)
+pythondir = $(sbindir)
 dist_python_SCRIPTS = makePackage.py \
 		      makeClass.py \
                       makeTest.py

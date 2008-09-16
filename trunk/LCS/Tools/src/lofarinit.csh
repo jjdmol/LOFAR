@@ -45,8 +45,10 @@ else
     if ($?LOFARROOT) then
         set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
 	if ($?PATH) then
-            set a_bin = "$a_path/bin"
-            setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+	    foreach bintp (bin sbin)
+		set a_bin = "$a_path/$bintp"
+		setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+	    end
         endif
         if ($?LD_LIBRARY_PATH) then
             set a_lib = "$a_path/lib"
@@ -65,8 +67,10 @@ else
     # it).
     set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
     if ($?PATH) then
-        set a_bin = "$a_path/bin"
-        setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+	foreach bintp (bin sbin)
+	    set a_bin = "$a_path/$bintp"
+            setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+	end
     endif
     if ($?LD_LIBRARY_PATH) then
         set a_lib = "$a_path/lib"
@@ -79,9 +83,9 @@ else
 
     # Add the path to the standard paths.
     if (! $?PATH) then
-        setenv PATH $LOFARROOT/bin
+        setenv PATH $LOFARROOT/bin:$LOFARROOT/sbin
     else
-        setenv PATH $LOFARROOT/bin:$PATH
+        setenv PATH $LOFARROOT/bin:$LOFARROOT/sbin:$PATH
     endif
     if (! $?LD_LIBRARY_PATH) then
         setenv LD_LIBRARY_PATH $LOFARROOT/lib
