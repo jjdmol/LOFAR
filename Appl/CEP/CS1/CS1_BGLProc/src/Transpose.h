@@ -1,7 +1,7 @@
-
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_TRANSPOSE_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_TRANSPOSE_H
 
+#include <AsyncCommunication.h>
 #include <InputData.h>
 #include <LocationInfo.h>
 #include <TransposedData.h>
@@ -47,7 +47,7 @@ template <typename SAMPLE_TYPE> class Transpose
     // transpose is done between members of this group.
     struct {
       struct {
-	std::vector<int> counts, displacements;
+	std::vector<int> counts, displacements, psetIndex;
       } send, receive;
     } itsTransposeParams, itsTransposeMetaParams;
 

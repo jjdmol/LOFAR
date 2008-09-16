@@ -41,6 +41,7 @@
 #include <CS1_Interface/CorrelatedData.h>
 
 #include <Transpose.h>
+#include <AsyncTranspose.h>
 #include <PPF.h>
 #include <Correlator.h>
 
@@ -95,20 +96,24 @@ template <typename SAMPLE_TYPE> class BGL_Processing : public BGL_Processing_Bas
     void		printSubbandList() const;
 #endif
 
+    unsigned            itsNrStations;
+    unsigned            itsOutputPsetSize;
     Stream		*itsStream;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
     
-    Arena		*itsArenas[2];
+    Arena		*itsArenas[3];
     InputData<SAMPLE_TYPE>	*itsInputData;
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
     FilteredData	*itsFilteredData;
     CorrelatedData	*itsCorrelatedData;
 
 #if defined HAVE_MPI
+    bool                itsDoAsyncCommunication;
     Transpose<SAMPLE_TYPE> *itsTranspose;
+    AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
 #endif
     PPF<SAMPLE_TYPE>	*itsPPF;
     Correlator		*itsCorrelator;

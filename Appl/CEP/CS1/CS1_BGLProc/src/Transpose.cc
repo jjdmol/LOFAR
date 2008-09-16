@@ -68,11 +68,13 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::getMPIgroups(unsign
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     std::vector<int> ranks;
 
-    for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++)
+    for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++) {
       ranks.push_back(locationInfo.remapOnTree(*pset, core));
+    }
 
-    if (locationInfo.rank() == 0)
+    if (locationInfo.rank() == 0) {
       std::clog << "Transpose :: group " << core << " contains cores " << ranks << std::endl;
+    }
 
     if (MPI_Group_incl(all, ranks.size(), &ranks[0], &group) != MPI_SUCCESS) {
       std::cerr << "MPI_Group_incl() failed" << std::endl;
@@ -85,7 +87,7 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::getMPIgroups(unsign
     }
 
     if (MPI_Group_free(&group) != MPI_SUCCESS) {
-      std::cerr << "MPI_Group_incl() failed" << std::endl;
+      std::cerr << "MPI_Group_free() failed" << std::endl;
       exit(1);
     }
   }
@@ -115,6 +117,8 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParam
   itsTransposeParams.send.displacements.resize(nrPsetsUsed);
   itsTransposeParams.receive.counts.resize(nrPsetsUsed, 0);
   itsTransposeParams.receive.displacements.resize(nrPsetsUsed);
+  itsTransposeParams.receive.psetIndex.resize(nrPsetsUsed);
+
   itsTransposeMetaParams.send.counts.resize(nrPsetsUsed, 0);
   itsTransposeMetaParams.send.displacements.resize(nrPsetsUsed);
   itsTransposeMetaParams.receive.counts.resize(nrPsetsUsed, 0);
@@ -142,6 +146,7 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParam
 
       itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(SAMPLE_TYPE);
       itsTransposeParams.receive.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(transposedData->samples.origin());
+      itsTransposeParams.receive.psetIndex[index] = psetIndex;
 
       itsTransposeMetaParams.receive.counts[index] = sizeof(SubbandMetaData);
       itsTransposeMetaParams.receive.displacements[index] = reinterpret_cast<const char *>(&transposedData->metaData[psetIndex]) - reinterpret_cast<const char *>(&transposedData->metaData[0]);

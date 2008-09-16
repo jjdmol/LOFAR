@@ -11,9 +11,11 @@ TransposedData.h	\
 FIR.h			\
 PPF.h			\
 Transpose.h		\
+AsyncTranspose.h	\
 Correlator.h		\
 BGL_Processing.h	\
-FCNP_ClientStream.h
+FCNP_ClientStream.h     \
+AsyncCommunication.h
 
 NOINSTHDRS 		=
 
@@ -40,11 +42,13 @@ FIR_Asm.S			\
 FFT_Asm.S			\
 FIR.cc				\
 Transpose.cc			\
+AsyncTranspose.cc		\
 PPF.cc				\
 Correlator.cc			\
 CS1_BGL_Processing_main.cc 	\
 BGL_Processing.cc		\
-FCNP_ClientStream.cc
+FCNP_ClientStream.cc            \
+AsyncCommunication.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\
