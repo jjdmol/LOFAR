@@ -24,6 +24,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <cstring>
 
 #if !defined(USE_NOSOCKETS)
 // netdb is not available on Cray XT machines with Catamount.

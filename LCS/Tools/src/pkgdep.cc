@@ -350,7 +350,7 @@ bool writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
     string newIndent = indent + ' ';
     std::vector<bool> newParentIsLast(parentIsLast);
     newParentIsLast.push_back (isLast);
-    uint newSeqnr = 1;
+    unsigned int newSeqnr = 1;
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter, ++newSeqnr) {
@@ -398,7 +398,7 @@ void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
   // If it's a single package, only print its children if told so.
   set<string> uses = dep[pkg].itsUses;
   if (isLast && skipSingle && !uses.empty()) {
-    uint newSeqnr = 1;
+    unsigned int newSeqnr = 1;
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter, ++newSeqnr) {
@@ -540,7 +540,7 @@ int main(int argc, const char* argv[])
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
   // First count how many to write to find the last one.
-  uint nrout = 0;
+  unsigned int nrout = 0;
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
        ++iter) {
@@ -548,7 +548,7 @@ int main(int argc, const char* argv[])
       nrout++;
     }
   }
-  uint seqnr = 1;
+  unsigned int seqnr = 1;
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
        ++iter) {

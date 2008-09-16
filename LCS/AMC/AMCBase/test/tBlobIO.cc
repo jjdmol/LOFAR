@@ -36,6 +36,7 @@
 #include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_typeinfo.h>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
