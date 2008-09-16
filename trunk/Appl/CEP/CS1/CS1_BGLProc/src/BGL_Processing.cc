@@ -52,6 +52,7 @@ extern "C" {
 #if (defined HAVE_BGP || defined HAVE_BGL)
 #define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
 //#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+//#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -69,8 +70,9 @@ inline static dcomplex cosisin(double x)
 #endif
 
 
-static NSTimer transposeTimer("transpose()", true);
+//static NSTimer transposeTimer("transpose()", true); // Unused --Rob
 static NSTimer computeTimer("computing", true);
+static NSTimer totalProcessingTimer("global total processing", true);
 
 
 BGL_Processing_Base::~BGL_Processing_Base()
@@ -87,7 +89,9 @@ template <typename SAMPLE_TYPE> BGL_Processing<SAMPLE_TYPE>::BGL_Processing(Stre
   itsFilteredData(0),
   itsCorrelatedData(0),
 #if defined HAVE_BGL || defined HAVE_BGP
+  itsDoAsyncCommunication(false),
   itsTranspose(0),
+  itsAsyncTranspose(0),
 #endif
   itsPPF(0),
   itsCorrelator(0)
@@ -224,7 +228,7 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::printSubbandLi
   std::clog << ']' << std::endl;
 }
 
-#endif
+#endif // HAVE_MPI
 
 
 template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL_Configuration &configuration)
@@ -247,10 +251,10 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
 
-// #if defined HAVE_BGL
-//   Transpose::getMPIgroups(usedCoresPerPset, itsPersonality, inputPsets, outputPsets);
 #if defined HAVE_BGP || defined HAVE_BGL
-  Transpose<SAMPLE_TYPE>::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
+  if(!itsDoAsyncCommunication) {
+    Transpose<SAMPLE_TYPE>::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
+  }
 #endif
 
   std::vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
@@ -259,8 +263,9 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
   itsIsTransposeInput  = inputPsetIndex  != inputPsets.end();
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
-  unsigned nrStations	           = configuration.nrStations();
-  unsigned nrBaselines		   = nrStations * (nrStations + 1) / 2;
+  itsNrStations	                   = configuration.nrStations();
+  itsOutputPsetSize                = outputPsets.size();
+  unsigned nrBaselines		   = itsNrStations * (itsNrStations + 1) / 2;
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToBGLProc	   = configuration.nrSamplesToBGLProc();
@@ -274,12 +279,13 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
   // implementations of InputData, TransposedData, etc.
 
   size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
-  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
-  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrChannels, nrSamplesPerIntegration) : 0;
+  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToBGLProc) : 0;
+  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
   size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
 
-  itsArenas[0] = new MallocedArena(std::max(inputDataSize, filteredDataSize), 32);
+  itsArenas[0] = new MallocedArena(inputDataSize, 32);
   itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
+  itsArenas[2] = new MallocedArena(filteredDataSize, 32);
 
   if (itsIsTransposeInput) {
     itsInputData = new InputData<SAMPLE_TYPE>(*itsArenas[0], outputPsets.size(), nrSamplesToBGLProc);
@@ -298,90 +304,157 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
 
 #if defined HAVE_MPI
     printSubbandList();
-#endif
+#endif // HAVE_MPI
 
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(*itsArenas[1], nrStations, nrSamplesToBGLProc);
-    itsFilteredData   = new FilteredData(*itsArenas[0], nrStations, nrChannels, nrSamplesPerIntegration);
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(*itsArenas[1], itsNrStations, nrSamplesToBGLProc);
+    itsFilteredData   = new FilteredData(*itsArenas[2], itsNrStations, nrChannels, nrSamplesPerIntegration);
     itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines, nrChannels);
 
-    itsPPF	      = new PPF<SAMPLE_TYPE>(nrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
-    itsCorrelator     = new Correlator(nrStations, nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
+    itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
+    itsCorrelator     = new Correlator(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
-    itsTranspose = new Transpose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, myCore);
-    itsTranspose->setupTransposeParams(itsLocationInfo, inputPsets, outputPsets, itsInputData, itsTransposedData);
+    if(itsDoAsyncCommunication) {
+      itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
+							  usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, nrSamplesToBGLProc);
+    } else {
+      itsTranspose = new Transpose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, myCore);
+      itsTranspose->setupTransposeParams(itsLocationInfo, inputPsets, outputPsets, itsInputData, itsTransposedData);
+    }
   }
-#endif
+#endif // HAVE_MPI
 }
 
 
 template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 {
-  NSTimer totalTimer("total", LOG_CONDITION);
+  totalProcessingTimer.start();
+  NSTimer totalTimer("total processing", LOG_CONDITION);
   totalTimer.start();
+
+#if defined HAVE_MPI
+  if(itsDoAsyncCommunication) {
+    if (itsIsTransposeInput) {
+      itsInputData->readMetaData(itsStream); // sync read the meta data
+    }
+
+    if(itsIsTransposeOutput) {
+      NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
+      postAsyncReceives.start();
+      itsAsyncTranspose->postAllReceives(itsTransposedData);
+      postAsyncReceives.stop();
+    }
+  }
+#endif // HAVE_MPI
 
   if (itsIsTransposeInput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
-#endif
+#endif // HAVE_MPI
 
     static NSTimer readTimer("receive timer", true);
-    readTimer.start();
-    itsInputData->read(itsStream);
-    readTimer.stop();
-  }
 
-  if (itsIsTransposeInput || itsIsTransposeOutput) {
+    if(itsDoAsyncCommunication) {
+      NSTimer asyncSendTimer("async send", LOG_CONDITION);
+
+      for(unsigned i=0; i<itsOutputPsetSize; i++) {
+	readTimer.start();
+	itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
+	readTimer.stop();
+#if defined HAVE_MPI	
+	asyncSendTimer.start();
+	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
+	asyncSendTimer.stop();
+#endif
+      }
+    } else { // Synchronous
+	readTimer.start();
+	itsInputData->read(itsStream);
+	readTimer.stop();
+    }
+  } // itsIsTransposeInput
+
 #if defined HAVE_MPI
-    if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start transpose at " << MPI_Wtime() << '\n';
-
+  if(!itsDoAsyncCommunication) {
+    if (itsIsTransposeInput || itsIsTransposeOutput) {
+      if (LOG_CONDITION) {
+	std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start transpose at " << MPI_Wtime() << '\n';
+      }
 #if 0
-MPI_Barrier(itsTransposeGroup);
-MPI_Barrier(itsTransposeGroup);
+      MPI_Barrier(itsTransposeGroup);
+      MPI_Barrier(itsTransposeGroup);
 #endif
 
-    NSTimer transposeTimer("one transpose", LOG_CONDITION);
-    transposeTimer.start();
-    itsTranspose->transpose(itsInputData, itsTransposedData);
-    itsTranspose->transposeMetaData(itsInputData, itsTransposedData);
-    transposeTimer.stop();
-#endif
+      NSTimer transposeTimer("one transpose", LOG_CONDITION);
+      transposeTimer.start();
+      itsTranspose->transpose(itsInputData, itsTransposedData);
+      itsTranspose->transposeMetaData(itsInputData, itsTransposedData);
+      transposeTimer.stop();
+    }
   }
+#endif // HAVE_MPI
 
   if (itsIsTransposeOutput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
-#endif
+#endif // HAVE_MPI
+
+    if(itsDoAsyncCommunication) {
+      NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
+
+      for (unsigned i = 0; i < itsNrStations; i ++) {
+	asyncReceiveTimer.start();
+	unsigned stat = itsAsyncTranspose->waitForAnyReceive();
+	asyncReceiveTimer.stop();
+
+	computeTimer.start();
+	itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+	itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+	computeTimer.stop();
+      }
+    } else {
+      for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+	computeTimer.start();
+	itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+	itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+	computeTimer.stop();
+      }
+    }
 
     computeTimer.start();
-    itsPPF->computeFlags(itsTransposedData, itsFilteredData);
-    itsPPF->filter(itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
-
     computeTimer.stop();
 
 #if defined HAVE_MPI
     if (LOG_CONDITION)
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime() << '\n';
-#endif
+#endif // HAVE_MPI
 
     static NSTimer writeTimer("send timer", true);
     writeTimer.start();
     itsCorrelatedData->write(itsStream);
     writeTimer.stop();
-  }
+
+    if(itsDoAsyncCommunication && itsIsTransposeInput) {
+      NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
+      waitAsyncSendTimer.start();
+      itsAsyncTranspose->waitForAllSends();
+      waitAsyncSendTimer.stop();
+    }
+  } // itsIsTransposeOutput
 
 #if defined HAVE_MPI
-  if (itsIsTransposeInput || itsIsTransposeOutput)
-    if (LOG_CONDITION)
+  if (itsIsTransposeInput || itsIsTransposeOutput) {
+    if (LOG_CONDITION) {
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime() << '\n';
-#endif
+    }
+  }
+#endif // HAVE_MPI
 
 #if 0
   static unsigned count = 0;
@@ -391,10 +464,12 @@ MPI_Barrier(itsTransposeGroup);
       ;
 #endif
 
-  if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband)
+  if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband) {
     itsCurrentSubband -= itsLastSubband - itsFirstSubband;
+  }
 
   totalTimer.stop();
+  totalProcessingTimer.stop();
 }
 
 
@@ -406,8 +481,12 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::postprocess()
 
   if (itsIsTransposeInput || itsIsTransposeOutput) {
 #if defined HAVE_MPI
-    delete itsTranspose;
-#endif
+    if(itsDoAsyncCommunication) {
+      delete itsAsyncTranspose;
+    } else {
+      delete itsTranspose;
+    }
+#endif // HAVE_MPI
   }
 
   if (itsIsTransposeOutput) {
@@ -419,6 +498,7 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::postprocess()
 
     delete itsArenas[0];
     delete itsArenas[1];
+    delete itsArenas[2];
   }
 }
 

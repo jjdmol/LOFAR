@@ -171,11 +171,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::destroy_fft()
 }
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   computeFlagsTimer.start();
 
-  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+//  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     filteredData->flags[stat].reset();
     SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
     const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
@@ -186,7 +186,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const Transp
 
       filteredData->flags[stat].include(begin, end);
     }
-  }
+//  }
 
   computeFlagsTimer.stop();
 }
@@ -225,7 +225,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct
 #endif
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   PPFtimer.start();
 
@@ -237,7 +237,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
   _bgl_mutex_lock(mutex);
 #endif
 
-  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+//  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
 
 #if 0
@@ -372,7 +372,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(double centerFrequ
       }
     }
 #endif // PPF_C_IMPLEMENTATION
-  }
+//  }
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   _bgl_mutex_unlock(mutex);

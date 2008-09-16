@@ -35,8 +35,8 @@ template <typename SAMPLE_TYPE> class PPF
     PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation);
     ~PPF();
 
-    void computeFlags(const TransposedData<SAMPLE_TYPE> *, FilteredData *);
-    void filter(double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
   private:
     void init_fft(), destroy_fft();
