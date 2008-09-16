@@ -242,11 +242,12 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::transposeMetaData(c
 #endif
 }
 
-#endif
-
 template class Transpose<i4complex>;
 template class Transpose<i8complex>;
 template class Transpose<i16complex>;
+
+#endif // HAVE_MPI
+
 
 
 } // namespace CS1
