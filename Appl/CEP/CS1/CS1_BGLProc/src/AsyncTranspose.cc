@@ -113,11 +113,11 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::waitForAllSend
   itsAsyncComm->waitForAllWrites();
 }
 
-#endif // MPI
-
 template class AsyncTranspose<i4complex>;
 template class AsyncTranspose<i8complex>;
 template class AsyncTranspose<i16complex>;
+
+#endif // MPI
 
 } // namespace CS1
 } // namespace LOFAR

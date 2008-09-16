@@ -357,6 +357,7 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 
     static NSTimer readTimer("receive timer", true);
 
+#if defined HAVE_MPI	
     if(itsDoAsyncCommunication) {
       NSTimer asyncSendTimer("async send", LOG_CONDITION);
 
@@ -364,17 +365,20 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 	readTimer.start();
 	itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
-#if defined HAVE_MPI	
 	asyncSendTimer.start();
 	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
-#endif
       }
     } else { // Synchronous
 	readTimer.start();
 	itsInputData->read(itsStream);
 	readTimer.stop();
     }
+#else // NO MPI
+    readTimer.start();
+    itsInputData->read(itsStream);
+    readTimer.stop();
+#endif
   } // itsIsTransposeInput
 
 #if defined HAVE_MPI
@@ -401,7 +405,6 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 #if defined HAVE_MPI
     if (LOG_CONDITION)
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
-#endif // HAVE_MPI
 
     if(itsDoAsyncCommunication) {
       NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
@@ -424,6 +427,14 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
 	computeTimer.stop();
       }
     }
+#else // NO MPI
+    for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+      computeTimer.start();
+      itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+      itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+      computeTimer.stop();
+    }
+#endif // HAVE_MPI
 
     computeTimer.start();
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
@@ -440,12 +451,14 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::process()
     itsCorrelatedData->write(itsStream);
     writeTimer.stop();
 
+#if defined HAVE_MPI
     if(itsDoAsyncCommunication && itsIsTransposeInput) {
       NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
       waitAsyncSendTimer.start();
       itsAsyncTranspose->waitForAllSends();
       waitAsyncSendTimer.stop();
     }
+#endif
   } // itsIsTransposeOutput
 
 #if defined HAVE_MPI
