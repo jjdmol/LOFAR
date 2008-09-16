@@ -27,7 +27,8 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Common/FileLocator.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace LOFAR {
 

@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
+#include <cstring>
 
 using namespace LOFAR;
 

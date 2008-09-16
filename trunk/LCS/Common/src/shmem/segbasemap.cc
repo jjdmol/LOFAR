@@ -26,7 +26,7 @@
 #include <Common/shmem/segbasemap.h>
 #include <Common/lofar_map.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 using LOFAR::map;
 

@@ -31,6 +31,7 @@
 #include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
+#include <cstdlib>
 
 using namespace LOFAR;
 

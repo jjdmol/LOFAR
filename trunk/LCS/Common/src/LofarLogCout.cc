@@ -26,6 +26,7 @@
 #include <Common/LofarLogCout.h>
 #include <Common/lofar_fstream.h>
 #include <cstdarg>
+#include <cstdlib>
 #include <sys/time.h>
 
 

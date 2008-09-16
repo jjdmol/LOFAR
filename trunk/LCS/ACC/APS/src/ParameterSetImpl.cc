@@ -28,7 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/StreamUtil.h>
-
+#include <cstdlib>
 
 namespace LOFAR {
   namespace ACC {

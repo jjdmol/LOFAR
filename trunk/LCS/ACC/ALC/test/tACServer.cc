@@ -3,6 +3,7 @@
 #include <Common/hexdump.h>
 
 #include <ALC/ApplControlServer.h>
+#include <cstdlib>
 
 
 using namespace LOFAR;
