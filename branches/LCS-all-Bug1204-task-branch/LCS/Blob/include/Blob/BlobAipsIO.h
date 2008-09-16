@@ -60,7 +60,7 @@ namespace LOFAR {
     // when buffer expansion fails or is not possible.
     virtual void write (casa::uInt size, const void* buf);
 
-    // Read <src>size</src> bytes from the memory buffer. Returns the number of
+    // Read \a size bytes from the memory buffer. Returns the number of
     // bytes actually read. Will throw an Exception (AipsError) if the
     // requested number of bytes could not be read unless throwException is set
     // to False. Will always throw an exception if the buffer is not readable

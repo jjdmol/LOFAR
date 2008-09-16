@@ -77,7 +77,7 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  */
 
-/** @file
+/*
  *  This is a Standard C++ Library header.  You should @c #include this header
  *  in your programs, rather than any of the "st[dl]_*.h" implementation files.
  */
@@ -776,10 +776,10 @@ namespace LOFAR
 
     /**
      *  @brief  Use a subset of a string.
-     *  @param  s  A string of '0' and '1' characters.
-     *  @param  pos  Index of the first character in @a s to use; defaults
+     *  @param  __s  A string of '0' and '1' characters.
+     *  @param  __pos  Index of the first character in @a s to use; defaults
      *               to zero.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of @a s.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of @a __s.
      *  @throw  std::invalid_argument  If a character appears in the string
      *                                 which is neither '0' nor '1'.
     */
@@ -796,10 +796,10 @@ namespace LOFAR
 
     /**
      *  @brief  Use a subset of a string.
-     *  @param  s  A string of '0' and '1' characters.
-     *  @param  pos  Index of the first character in @a s to use.
-     *  @param  n    The number of characters to copy.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of @a s.
+     *  @param  __s  A string of '0' and '1' characters.
+     *  @param  __pos  Index of the first character in @a s to use.
+     *  @param  __n    The number of characters to copy.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of @a __s.
      *  @throw  std::invalid_argument  If a character appears in the string
      *                                 which is neither '0' nor '1'.
     */
@@ -817,7 +817,7 @@ namespace LOFAR
     //@{
     /**
      *  @brief  Operations on bitsets.
-     *  @param  rhs  A same-sized bitset.
+     *  @param  __rhs  A same-sized bitset.
      *
      *  These should be self-explanatory.
     */
@@ -846,7 +846,7 @@ namespace LOFAR
     //@{
     /**
      *  @brief  Operations on bitsets.
-     *  @param  pos  The number of places to shift.
+     *  @param  __pos  The number of places to shift.
      *
      *  These should be self-explanatory.
     */
@@ -936,9 +936,9 @@ namespace LOFAR
 
     /**
      *  @brief Sets a given bit to a particular value.
-     *  @param  pos  The index of the bit.
-     *  @param  val  Either true or false, defaults to true.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
+     *  @param  __pos  The index of the bit.
+     *  @param  __val  Either true or false, defaults to true.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of the %set.
     */
     bitset<_Nb>&
     set(size_t __pos, bool __val = true)
@@ -960,10 +960,10 @@ namespace LOFAR
 
     /**
      *  @brief Sets a given bit to false.
-     *  @param  pos  The index of the bit.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
+     *  @param  __pos  The index of the bit.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of the %set.
      *
-     *  Same as writing @c set(pos,false).
+     *  Same as writing @c set(__pos,false).
     */
     bitset<_Nb>&
     reset(size_t __pos)
@@ -986,8 +986,8 @@ namespace LOFAR
 
     /**
      *  @brief Toggles a given bit to its opposite value.
-     *  @param  pos  The index of the bit.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
+     *  @param  __pos  The index of the bit.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of the %set.
     */
     bitset<_Nb>&
     flip(size_t __pos)
@@ -1004,7 +1004,7 @@ namespace LOFAR
     //@{
     /**
      *  @brief  Array-indexing support.
-     *  @param  pos  Index into the %bitset.
+     *  @param  __pos  Index into the %bitset.
      *  @return  A bool for a 'const %bitset'.  For non-const bitsets, an
      *           instance of the reference proxy class.
      *  @note  These operators do no range checking and throw no exceptions,
@@ -1043,7 +1043,7 @@ namespace LOFAR
      *  an example).
      *
      *  Also note that you must specify the string's template parameters
-     *  explicitly.  Given a bitset @c bs and a string @s:
+     *  explicitly.  Given a bitset @c bs and a string @c s:
      *  @code
      *     s = bs.to_string<char,char_traits<char>,allocator<char> >();
      *  @endcode
@@ -1088,9 +1088,9 @@ namespace LOFAR
 
     /**
      *  @brief Tests the value of a bit.
-     *  @param  pos  The index of a bit.
-     *  @return  The value at @a pos.
-     *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
+     *  @param  __pos  The index of a bit.
+     *  @return  The value at @a __pos.
+     *  @throw  std::out_of_range  If @a __pos is bigger the size of the %set.
     */
     bool
     test(size_t __pos) const
@@ -1138,7 +1138,7 @@ namespace LOFAR
     /**
      *  @brief  Finds the index of the next "on" bit after prev.
      *  @return  The index of the next bit set, or size() if not found.
-     *  @param  prev  Where to start searching.
+     *  @param  __prev  Where to start searching.
      *  @ingroup SGIextensions
      *  @sa  _Find_first
     */
@@ -1186,8 +1186,8 @@ namespace LOFAR
   //@{
   /**
    *  @brief  Global bitwise operations on bitsets.
-   *  @param  x  A bitset.
-   *  @param  y  A bitset of the same size as @a x.
+   *  @param  __x  A bitset.
+   *  @param  __y  A bitset of the same size as @a __x.
    *  @return  A new bitset.
    *
    *  These should be self-explanatory.

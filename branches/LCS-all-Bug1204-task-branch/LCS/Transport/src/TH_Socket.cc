@@ -51,7 +51,7 @@ TH_Socket::TH_Socket (const string& service,
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (true),
-    itsIsShutDown  (false),
+    itsIsClosed    (false),
     itsReadOffset  (0),
     itsHostName    (),
     itsService     (service),
@@ -84,7 +84,7 @@ TH_Socket::TH_Socket (const string&	hostName,
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (true),
-    itsIsShutDown  (false),
+    itsIsClosed    (false),
     itsReadOffset  (0),
     itsHostName    (hostName),
     itsService     (service),
@@ -111,7 +111,7 @@ TH_Socket::TH_Socket (Socket*		aDataSocket) :
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (false),
-    itsIsShutDown  (false),
+    itsIsClosed    (false),
     itsReadOffset  (0),
     itsHostName    (),
     itsService     (),
@@ -139,13 +139,13 @@ TH_Socket::~TH_Socket()
 
 	bool isSameSocket = itsDataSocket == itsServerSocket;
 
-	// Shutdown sockets.
-	LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
-	shutdown(itsDataSocket);
+	// Close sockets.
+	LOG_TRACE_OBJ("TH_Socket:close datasocket");
+	close(itsDataSocket);
 
 	if (!isSameSocket) {
-		LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
-		shutdown(itsServerSocket);
+		LOG_TRACE_OBJ("TH_Socket:close listensocket");
+		close(itsServerSocket);
 	}
 }
 
@@ -178,8 +178,8 @@ bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	/*tag*/,
 	}
 
 	if (btsRead == Socket::PEERCLOSED) {	// peer closed connection.
-		LOG_DEBUG("TH_Socket:shutdown datasocket after read-error");
-		shutdown(itsDataSocket);
+		LOG_DEBUG("TH_Socket:close datasocket after read-error");
+		close(itsDataSocket);
 		itsLastCmd    = CmdNone;
 		itsReadOffset = 0;						// it's a total mess
 		return (false);
@@ -237,7 +237,7 @@ int32 TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/,
 		// It's a total mess, anything could have happend. Bail out.
 		LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
 		perror("Socket");
-		shutdown(itsDataSocket);
+		close(itsDataSocket);
 		itsLastCmd    = CmdNone;
 		itsReadOffset = 0;						// it's a total mess
 		return (false);
@@ -328,8 +328,8 @@ bool TH_Socket::init()
 
 	LOG_TRACE_RTTI("TH_Socket::init()");
 
-	if (itsIsShutDown) {
-		LOG_WARN("TH_Socket::init() called after socket shutdown");
+	if (itsIsClosed) {
+		LOG_WARN("TH_Socket::init() called after socket close");
 		return false;
 	}
 
@@ -497,15 +497,14 @@ bool TH_Socket::openSocket()
 
   
 
-void TH_Socket::shutdown(Socket*& aSocket)
+void TH_Socket::close(Socket*& aSocket)
 {
-	LOG_TRACE_OBJ("TH_Socket::shutdown");
-
-	if (aSocket) {
-		aSocket->shutdown();
-		itsIsShutDown = true;
+	if (aSocket && aSocket->getSid() >= 0) {
+		LOG_TRACE_OBJ("TH_Socket::close: closing open socket");
+		aSocket->close();
+		itsIsClosed = true;
 		if (itsIsOwner) {
-			LOG_TRACE_OBJ("TH_Socket::shutdown: deleting owned socket object");
+			LOG_TRACE_OBJ("TH_Socket::close: deleting owned socket object");
 			delete aSocket;
 			aSocket = 0;
 		}

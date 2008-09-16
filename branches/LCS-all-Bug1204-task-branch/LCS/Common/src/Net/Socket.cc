@@ -172,7 +172,7 @@ Socket::~Socket()
 {
 	LOG_TRACE_OBJ (formatString("~Socket(%d)", itsSocketID));
 
-        if (close() != SK_OK) {
+        if (itsSocketID >=0 && close() != SK_OK) {
           LOG_ERROR(formatString(errstr().c_str()));
         }
 

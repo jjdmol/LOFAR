@@ -44,12 +44,18 @@ else
     # Take care that a possible . is preceeded by a backslash.
     if ($?LOFARROOT) then
         set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
-        set a_bin = "$a_path/bin"
-        setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
-        set a_lib = "$a_path/lib"
-        setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
-        set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
-        setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+	if ($?PATH) then
+            set a_bin = "$a_path/bin"
+            setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+        endif
+        if ($?LD_LIBRARY_PATH) then
+            set a_lib = "$a_path/lib"
+            setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+        endif
+        if ($?PYTHONPATH) then
+            set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+            setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+        endif
     endif
 
     # Now define the new LOFARROOT
@@ -58,13 +64,19 @@ else
     # Also strip this path from the current paths (in case it is contained in
     # it).
     set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    set a_bin = "$a_path/bin"
-    setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
-    set a_lib = "$a_path/lib"
-    setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
-    set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
-    setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
-    
+    if ($?PATH) then
+        set a_bin = "$a_path/bin"
+        setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+    endif
+    if ($?LD_LIBRARY_PATH) then
+        set a_lib = "$a_path/lib"
+        setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+    endif
+    if ($?PYTHONPATH) then
+        set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+        setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
+    endif
+
     # Add the path to the standard paths.
     if (! $?PATH) then
         setenv PATH $LOFARROOT/bin
@@ -83,18 +95,26 @@ else
         setenv PYTHONPATH ${a_pyt}:$PYTHONPATH
     endif
 
+    # Now define the new LOFARDATAROOT (if possible).
+    # First try as data directory of the LOFAR install directory.
+    set data_path = `echo $LOFARROOT | sed -e 's%/installed.*%%'`
+    if ( "$data_path" != ""  &&  -d $data_path/data ) then
+        setenv LOFARDATAROOT $data_path/data
+    else
+        # Try it as the LOFARDATA directory (part of the source tree).
+        set data_path = `echo $LOFARROOT | sed -e 's%/LOFAR/.*%/LOFAR%'`
+        if ( "$data_path" != ""  &&  -d ${data_path}DATA ) then
+            setenv LOFARDATAROOT ${data_path}DATA
+        else
+            setenv LOFARDATAROOT /opt/lofar/data
+        endif
+    endif
+
     # Create a .glishrc.post in the HOME directory to append
     # the LOFAR libexec to the glish path.
     if ( -f $HOME/.glishrc.post ) then
         mv $HOME/.glishrc.post $HOME/.glishrc.post-old
     endif
     echo "system.path.include := [system.path.include, '$LOFARROOT/libexec/glish']" > $HOME/.glishrc.post
-
-    # Now define the new LOFARDATAROOT
-    set data_path = `echo $LOFARROOT | sed -e 's/\/installed.*$//'`
-    if ( ! -d $data_path/data ) then
-       mkdir $data_path/data
-    endif
-    setenv LOFARDATAROOT $data_path/data
 
 endif

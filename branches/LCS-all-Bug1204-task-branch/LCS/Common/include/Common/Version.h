@@ -28,11 +28,10 @@
 #include <ostream>
 #include <sstream>
 
-// Class to get info like version and revision of the package and the
-// packages it uses.
-
 namespace LOFAR {
 
+  // Class to get info like version and revision of the package and the
+  // packages it uses.
   class Version
   {
   public:

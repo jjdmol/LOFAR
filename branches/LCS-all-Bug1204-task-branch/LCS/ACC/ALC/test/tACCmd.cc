@@ -7,7 +7,7 @@ using namespace LOFAR::ACC::ALC;
 
 #define NAME_TEST(cmd)	cout <<	"value: " << (cmd) << " = " << ACCmdName(cmd) << endl;
 
-int main (int /*argc*/, char /* *argv[]*/) {
+int main (int /*argc*/, char** /* argv*/) {
 	NAME_TEST(ACCmdNone);
 	NAME_TEST(ACCmdBoot);
 	NAME_TEST(ACCmdQuit);
