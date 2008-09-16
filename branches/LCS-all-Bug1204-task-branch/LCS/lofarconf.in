@@ -1,6 +1,0 @@
-Tools         # Useful tools
-Common        # Common stuff
-Blob	      # Binary Large Objects
-Transport     # Low-level transport library
-ACC           # Application Configuration & Control
-AMC           # Astronomical Measures Conversions (successor of CRD)
