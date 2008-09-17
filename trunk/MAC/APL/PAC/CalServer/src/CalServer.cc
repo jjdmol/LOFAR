@@ -446,10 +446,11 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 			m_calthread->setACC(&m_accs.getFront());
 			m_calthread->run();
 #else
+			bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
 			if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-				m_subarrays.calibrate(0, m_accs.getFront());
+				m_subarrays.calibrate(0, m_accs.getFront(), writeGains);
 			} else {
-				m_subarrays.calibrate(m_cal, m_accs.getFront());
+				m_subarrays.calibrate(m_cal, m_accs.getFront(), writeGains);
 			}
 			m_subarrays.updateAll();
 #endif

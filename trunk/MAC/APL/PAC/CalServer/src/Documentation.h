@@ -220,9 +220,7 @@ files.
 There are two types of files:
 
 \li ParameterSet file. These files contains key value pairs separated
-by the equal sign (=). <em>Warning: The current ParameterSet parser is
-rather simple. Each key value pair must be defined on a single 
-line; line-breaks are not allowed.</em>
+by the equal sign (=). 
 \li Plain ASCII format containing an array in Blitz++ format and
 possibly other values. Line-breaks are allowed to spread the Blitz++
 array over multiple lines.
