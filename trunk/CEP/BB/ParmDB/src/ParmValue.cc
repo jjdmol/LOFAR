@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/ParmValue.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
 namespace ParmDB {
