@@ -501,6 +501,8 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		} 
 		else {
 			LOG_ERROR("Failed to subscribe to subarray");
+			LOG_DEBUG_STR("getNumSubbands()    = " << ack.subarray.getSPW().getNumSubbands());
+			LOG_DEBUG_STR("getAllocation.size()= " << (int)m_bt.getBeam()->getAllocation()().size());
 
 			// failed to subscribe
 			beamallocack.status = ERR_BEAMALLOC;

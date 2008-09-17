@@ -670,7 +670,7 @@ int main(int argc, char** argv)
   }
 
   cout << "Argument are ok, creating a task" << endl;
-  GCFTask::init(argc, argv);
+  GCFTask::init(argc, argv, "beamctl");
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, longitude, latitude, type);
