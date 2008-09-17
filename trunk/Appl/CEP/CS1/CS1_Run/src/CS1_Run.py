@@ -21,7 +21,6 @@ for i in range(0,1):
 
 from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
-from CS1_RSPCtl import RSPCtl
 from CS1_Sections import *
 from CS1_Stations import *
 
