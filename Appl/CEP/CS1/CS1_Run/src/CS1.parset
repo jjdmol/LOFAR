@@ -6,8 +6,6 @@ OLAP.OLAP_Conn.IONProc_BGLProc_Transport = FCNP
 
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.2:4000]
 
-OLAP.subbandsPerPset = 18
-OLAP.psetsPerStorage = 1
 OLAP.realTime = T
 # OLAP.BGLProc.integrationSteps = 608  #768 at 200MHz (generated)
 OLAP.BGLProc.nrPPFTaps=16
