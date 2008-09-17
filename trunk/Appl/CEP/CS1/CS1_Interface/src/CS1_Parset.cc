@@ -58,7 +58,7 @@ CS1_Parset::CS1_Parset(ACC::APS::ParameterSet *aParSet)
   ACC::APS::ParameterSet(*aParSet),
   itsObservation(aParSet)
 {
-  check();
+   check();
 }
 
 
@@ -69,8 +69,12 @@ CS1_Parset::~CS1_Parset()
 
 void CS1_Parset::checkSubbandCount(const char *key) const
 {
-  if (getUint32Vector(key).size() != nrSubbands())
-    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(getUint32Vector(key).size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
+  ParameterSet    pParset;
+  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
+  pParset.adoptBuffer(expandedStr);
+
+  if (getExpandedUint32Vector(key).size() != nrSubbands())
+    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(getExpandedUint32Vector(key).size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
 }
 
 
@@ -177,7 +181,8 @@ unsigned CS1_Parset::nrBeams() const
 vector<double> CS1_Parset::subbandToFrequencyMapping() const
 {
   unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
-  vector<unsigned> subbandIds	 = getUint32Vector("Observation.subbandList");
+  
+  vector<unsigned> subbandIds	 = getExpandedUint32Vector("Observation.subbandList");
   vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
@@ -248,12 +253,7 @@ string CS1_Parset::getMSname(unsigned sb) const
 
 vector<string> CS1_Parset::getPortsOf(const string& aKey) const
 {
-  ParameterSet    pParset;
-  
-  string portsString("ports=" + expandedArrayString(getString(aKey + "_Ports")));
-  pParset.adoptBuffer(portsString);
-  
-  return pParset.getStringVector("ports");
+  return getExpandedStringVector(aKey + "_Ports");
 }
 
 vector<double> CS1_Parset::getBeamDirection(const unsigned beam) const
@@ -286,102 +286,6 @@ int CS1_Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 
   return index != psets.size() ? (int) index : -1;
 }
-
-//
-// expandedArrayString(string)
-//
-// Given een array string ( '[ xx..xx, xx ]' ) this utility expands the string
-// by replacing ranges with the fill series.
-// Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
-//
-// ----------------------- ATTENTION !!!----------------------------------
-// This routine has been copied to the Navigator software
-// (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
-// if you change anything struktural change the Navigator part also please
-// -----------------------------------------------------------------------
-
-string CS1_Parset::expandedArrayString(const string& orgStr)
-{
-	// any ranges in the string?
-	if (orgStr.find("..",0) == string::npos) {
-		return (orgStr);						// no, just return original
-	}
-
-	string	baseString(orgStr);					// destroyable copy
-	ltrim(baseString, " 	[");				// strip of brackets
-	rtrim(baseString, " 	]");
-
-	// and split into a vector
-	vector<string>	strVector = StringUtil::split(baseString, ',');
-
-	// note: we assume that the format of each element is [xxxx]9999
-	string::size_type	firstDigit(strVector[0].find_first_of("0123456789"));
-	if (firstDigit == string::npos) {	// no digits? then return org string
-		return (orgStr);
-	}
-
-	// construct scanmask and outputmask.
-	string	elemName(strVector[0].substr(0,firstDigit));
-	string	scanMask(elemName+"%ld");
-	int		nrDigits;
-	if (strVector[0].find("..",0) != string::npos) {	// range element?
-		nrDigits = ((strVector[0].length() - 2)/2) - elemName.length();
-	}
-	else {
-		nrDigits = strVector[0].length() - elemName.length();
-	}
-	string	outMask (formatString("%s%%0%dld", elemName.c_str(), nrDigits));
-
-	// handle all elements
-	string 	result("[");
-	bool	firstElem(true);
-	int		nrElems(strVector.size());
-	for (int idx = 0; idx < nrElems; idx++) {
-		long	firstVal;
-		long	lastVal;
-		// should match scanmask.
-		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &firstVal) != 1) {
-			LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
-					    	<< scanMask << ". Returning orignal string");
-			return (orgStr);
-		}
-
-		// range element?
-		string::size_type	rangePos(strVector[idx].find("..",0));
-		if (rangePos == string::npos) {
-			lastVal = firstVal;
-		}
-		else {	// yes, try to get second element.
-			if (sscanf(strVector[idx].data()+rangePos+2, scanMask.c_str(), &lastVal) != 1) {
-				LOG_DEBUG_STR("Second part of element " << strVector[idx]
-							<< " does not match mask " << scanMask 
-							<< ". Returning orignal string");
-				return (orgStr);
-			}
-			// check range
-			if (lastVal < firstVal) {
-				LOG_DEBUG_STR("Illegal range specified in " << strVector[idx] <<
-								". Returning orignal string");
-				return (orgStr);
-			}
-		}
-
-		// finally construct one or more elements
-		for	(long val = firstVal ; val <= lastVal; val++) {
-			if (firstElem) {
-				result += formatString(outMask.c_str(), val);
-				firstElem = false;
-			}
-			else {
-				result += "," + formatString(outMask.c_str(), val);
-			}
-		}
-	}
-
-	return (result+"]");
-}
-
-
 
 } // namespace CS1
 } // namespace LOFAR

@@ -93,7 +93,6 @@ public:
 	bool	       correctBandPass() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         stationName(const int index) const;
-	static string  expandedArrayString(const string& orgStr);
 	uint32	       nrPsetsPerStorage() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
@@ -138,6 +137,9 @@ private:
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
 	void           checkSubbandCount(const char *key) const;
 	
+	vector<string>   getExpandedStringVector(const string& key) const;
+	vector<unsigned> getExpandedUint32Vector(const string& key) const;
+	
 	Observation    itsObservation;
 };
 
@@ -156,6 +158,24 @@ inline double CS1_Parset::startTime() const
 inline double CS1_Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
+}
+
+inline vector<string> CS1_Parset::getExpandedStringVector(const string& key) const
+{
+  ParameterSet    pParset;
+  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
+  pParset.adoptBuffer(expandedStr);
+
+  return pParset.getStringVector("expandedStr");
+}
+
+inline vector<unsigned> CS1_Parset::getExpandedUint32Vector(const string& key) const
+{
+  ParameterSet    pParset;
+  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
+  pParset.adoptBuffer(expandedStr);
+  
+  return pParset.getUint32Vector("expandedStr");  
 }
 
 inline string CS1_Parset::stationName(const int index) const
@@ -277,23 +297,23 @@ inline uint32 CS1_Parset::nrCoresPerPset() const
  
 inline unsigned CS1_Parset::nrSubbands() const
 {
-  return getUint32Vector("Observation.subbandList").size();
+  return getExpandedUint32Vector("Observation.subbandList").size();  
 } 
 
 inline vector<unsigned> CS1_Parset::subbandToBeamMapping() const
 {
-  return getUint32Vector("Observation.beamList");
+  return getExpandedUint32Vector("Observation.beamList");  
 }
 
 inline vector<unsigned> CS1_Parset::subbandToRSPboardMapping() const
 {
-  return getUint32Vector("Observation.rspBoardList");
+  return getExpandedUint32Vector("Observation.rspBoardList");  
 }
 
 
 inline vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
 {
-  return getUint32Vector("Observation.rspSlotList");
+  return getExpandedUint32Vector("Observation.rspSlotList");
 }
 
 
