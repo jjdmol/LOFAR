@@ -44,6 +44,7 @@
 #include <stdexcept>
 
 #undef DUMP_RAW_DATA
+//#define DUMP_RAW_DATA
 
 #if defined DUMP_RAW_DATA
 #include <Stream/SocketStream.h>
@@ -384,7 +385,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
     } flags[8];
   } blockHeader;  
 
-  memset(blockHeader, 0, sizeof blockHeader);
+  memset(&blockHeader, 0, sizeof blockHeader);
 
   blockHeader.magic = 0x2913D852;
 
