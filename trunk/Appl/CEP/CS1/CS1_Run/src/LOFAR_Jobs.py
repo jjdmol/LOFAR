@@ -35,8 +35,6 @@ class Job(object):
 	self.host.sput(parsetfile, self.workingDir)
 	self.host.sput(parsetfile, self.workingDir + 'CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
-	self.host.sput('BootBGP.py', self.workingDir)
-	bgsn.executeAsync(self.workingDir + 'BootBGP.py --partition=' + self.partition).waitForDone()
 	
 	interfaces = IONodes.get(self.partition)
 	
@@ -146,27 +144,3 @@ class BGLJob(Job):
 	self.host.sput('OLAP.parset', self.workingDir)
         #Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -mode VN -label -env DCMF_COLLECTIVES=0 -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
-
-
-class BuildJob(Job):
-    ''' A job that builds a LOFAR package '''
-    def __init__(self, package, host, buildvar, name, workingDir):
-        Job.__init__(self, name, host, None, workingDir)
-        self.buildvar = buildvar
-        self.package = package
-        self.remoteRunLog = workingDir + '/LOFAR/build.log'
-        
-    def run(self, cvsupdate, doBuild):
-        self.buildLogRetreived = False
-        cvsCommand = 'cvs -d :pserver:' + self.host.getCVSHost() + ':/cvs/cvsroot'
-        if not cvsupdate:
-            rubOptions = '-noupdate'
-        else:
-            rubOptions = ''
-        rubOptions = rubOptions + ' -cvs \'' + cvsCommand + '\' -distclean -release=main -build ' + self.buildvar + ' ' + self.package
-        if doBuild:
-            self.runCommand = self.host.executeAsync('cd ' + workingDir + '/LOFAR ; ./autoconf_share/rub ' + rubOptions)
-        else:
-            self.runCommand = self.host.executeAsync('echo build not done')
-
-    
