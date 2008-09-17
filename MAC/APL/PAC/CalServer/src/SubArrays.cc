@@ -205,7 +205,7 @@ void SubArrays::updateAll()
 //
 // calibrate(CalI/F*, ACC)
 //
-void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
+void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc, bool writeToFile)
 {
 	bool done = false;
 
@@ -222,7 +222,13 @@ void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
 				LOG_INFO_STR("finished calibration of subarray: " << subarray->getName());
 				done = true;
 			}
+			if (writeToFile) {
+				writeGains(subarray);
+			}
 		}
+	}
+	else {
+		LOG_DEBUG("SubArrays::calibrate: acc is invalid");
 	}
 	mutex_unlock();
 
@@ -319,6 +325,42 @@ SubArrayMap	SubArrays::getSubArrays(const string&	optionalName) {
 	}
 
 	return (answer);
+}
+
+//
+// writeGains(Subarray*		Subarray)
+//
+void SubArrays::writeGains(SubArray*	anSubArr)
+{
+	time_t now = time(0);
+	struct tm* t = gmtime(&now);
+	char filename[PATH_MAX];
+	AntennaGains*	gains;
+	anSubArr->getGains(gains, SubArray::FRONT);
+
+	snprintf(filename, PATH_MAX, "%s_%04d%02d%02d_%02d%02d%02d_gain_%dx%dx%d.dat",
+						anSubArr->getName().c_str(),
+						t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+						t->tm_hour, t->tm_min, t->tm_sec,
+						gains->getGains().extent(firstDim),
+						gains->getGains().extent(secondDim),
+						gains->getGains().extent(thirdDim));
+	LOG_DEBUG_STR("writeGains(" << anSubArr->getName() << ") to " << filename);
+
+	FILE* gainFile = fopen(filename, "w");
+
+	if (!gainFile) {
+		LOG_FATAL_STR("failed to open file: " << filename);
+		exit(EXIT_FAILURE);
+	}
+
+	if (fwrite(gains->getGains().data(), sizeof(complex<double>), gains->getGains().size(), gainFile) != 
+			(size_t)gains->getGains().size()) {
+		LOG_FATAL_STR("failed to write to file: " << filename);
+		exit(EXIT_FAILURE);
+	}
+
+	(void)fclose(gainFile);
 }
 
   } // namespace CAL

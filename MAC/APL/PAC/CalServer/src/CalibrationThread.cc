@@ -45,52 +45,66 @@ CalibrationThread::~CalibrationThread()
 {
 }
 
+//
+// setACC(ACC*)
+//
 void CalibrationThread::setACC(ACC* acc)
 {
-  acc->readLock();
-  m_acc = acc;
-  acc->readUnlock();
+	acc->readLock();
+	m_acc = acc;
+	acc->readUnlock();
 }
 
+//
+// run()
+//
 void CalibrationThread::run()
 {
-  if (0 != pthread_create(&m_thread, 0, &CalibrationThread::thread_main, (void*)this))
-  {
-    LOG_FATAL("Failed to start calibration thread");
-    exit(EXIT_FAILURE);
-  }
+	if (0 != pthread_create(&m_thread, 0, &CalibrationThread::thread_main, (void*)this)) {
+		LOG_FATAL("Failed to start calibration thread");
+		exit(EXIT_FAILURE);
+	}
 }
 
+//
+// thread_main(void*)
+//
 void* CalibrationThread::thread_main(void* thisthread)
 {
-  CalibrationThread* thread = (CalibrationThread*)thisthread;
+	CalibrationThread* thread = (CalibrationThread*)thisthread;
 
-  pthread_mutex_lock(&(thread->m_globallock));
-  thread->m_acc->readLock();
+	pthread_mutex_lock(&(thread->m_globallock));
+	thread->m_acc->readLock();
 
-  if (thread->m_acc) {
-    if (GET_CONFIG("CalServer.DisableCalibration", i)) {
-      thread->m_subarrays->calibrate(0, *thread->m_acc);
-    } else {
-      thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc);
-    }
-  }
+	if (thread->m_acc) {
+		bool	writeGains(GET_CONFIG("CalServer.WriteGainsToFile", i) == 1);
+		if (GET_CONFIG("CalServer.DisableCalibration", i)) {
+			thread->m_subarrays->calibrate(0, *thread->m_acc, writeGains);
+		} else {
+			thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc, writeGains);
+		}
+	}
 
-  thread->m_acc->readUnlock();
-  pthread_mutex_unlock(&(thread->m_globallock));
+	thread->m_acc->readUnlock();
+	pthread_mutex_unlock(&(thread->m_globallock));
 
-  return 0;
+	return 0;
 }
 
+//
+// join()
+//
 int CalibrationThread::join()
 {
-  int returncode = 0;
+	int returncode = 0;
 
-  if (m_thread) returncode = pthread_join(m_thread, 0);
-  if (0 != returncode) {
-    LOG_WARN_STR("pthread_join returned " << returncode);
-  }
-  return returncode;
+	if (m_thread) {
+		returncode = pthread_join(m_thread, 0);
+	}
+	if (0 != returncode) {
+		LOG_WARN_STR("pthread_join returned " << returncode);
+	}
+	return returncode;
 }	 
 
 #endif

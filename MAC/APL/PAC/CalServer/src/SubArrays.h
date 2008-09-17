@@ -76,10 +76,13 @@ public:
 	// @param cal Pointer to the calibration algorithm interface.
 	// @param acc Reference to the array correlation cube to use for
 	// calibration.
-	void calibrate(CalibrationInterface* cal, ACC& acc);
+	void calibrate(CalibrationInterface* cal, ACC& acc, bool writeToFile = false);
 
 	// Get a map with all active SubArrays.
 	SubArrayMap	getSubArrays(const string&	optionalName);
+
+	// Write the calculated gains and qualitites to a file.
+	void writeGains(SubArray*	SubArr);
 
 private:
 	// Remove subarray with the given name from the subarrays.

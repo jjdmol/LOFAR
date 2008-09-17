@@ -233,69 +233,66 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	RSPSetsubbandsEvent ss;
+  switch (e.signal) {
+    case F_ENTRY: {
+		RSPSetsubbandsEvent ss;
 
-	m_starttime.setNow();
-	m_starttime = m_starttime + (long)START_DELAY; // start START_DELAY seconds from now
+		m_starttime.setNow();
+		m_starttime = m_starttime + (long)START_DELAY; // start START_DELAY seconds from now
 
-	LOG_INFO_STR("starttime for ACM collection: " << m_starttime);
+		LOG_INFO_STR("starttime for ACM collection: " << m_starttime);
 
-	ss.timestamp = m_starttime;
-	ss.rcumask.reset();
-	for (int i = 0; i < m_nrcus; i++) {
-	  ss.rcumask.set(i);
-	}
+		ss.timestamp = m_starttime;
+		ss.rcumask.reset();
+		for (int i = 0; i < m_nrcus; i++) {
+		  ss.rcumask.set(i);
+		}
 
-	m_request_subband = 0;
-	m_update_subband = 0;
+		m_request_subband = 0;
+		m_update_subband = 0;
 
-	ss.subbands.setType(SubbandSelection::XLET);
-	ss.subbands().resize(1, 1);
-	ss.subbands() = m_request_subband;
+		ss.subbands.setType(SubbandSelection::XLET);
+		ss.subbands().resize(1, 1);
+		ss.subbands() = m_request_subband;
 
-	LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-	m_rspdriver.send(ss);
+		LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+		m_rspdriver.send(ss);
 
-	m_request_subband++;
+		m_request_subband++;
       }
       break;
 
-    case RSP_SETSUBBANDSACK:
-      {
-	RSPSetsubbandsackEvent ack(e);
+    case RSP_SETSUBBANDSACK: {
+		RSPSetsubbandsackEvent ack(e);
 
-	if (SUCCESS == ack.status) {
+		if (SUCCESS == ack.status) {
 
-	  if (m_request_subband < START_DELAY) {
-	    // request next subband
-	    RSPSetsubbandsEvent ss;
+		  if (m_request_subband < START_DELAY) {
+			// request next subband
+			RSPSetsubbandsEvent ss;
 	  
-	    ss.timestamp = m_starttime + (long)m_request_subband;
-	    ss.rcumask.reset();
-	    for (int i = 0; i < m_nrcus; i++) {
-	      ss.rcumask.set(i);
-	    }
+			ss.timestamp = m_starttime + (long)m_request_subband;
+			ss.rcumask.reset();
+			for (int i = 0; i < m_nrcus; i++) {
+			  ss.rcumask.set(i);
+			}
 	    
-	    ss.subbands.setType(SubbandSelection::XLET);
-	    ss.subbands().resize(1, 1);
-	    ss.subbands() = m_request_subband;
+			ss.subbands.setType(SubbandSelection::XLET);
+			ss.subbands().resize(1, 1);
+			ss.subbands() = m_request_subband;
 
-	    LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-	    port.send(ss);
+			LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+			port.send(ss);
 
-	    m_request_subband++;
+			m_request_subband++;
 
-	  } else {
-	    TRAN(ACMProxy::receiving);
-	  }
-	} else {
-	  LOG_FATAL("SETSUBBANDSACK returned error status");
-	  exit(EXIT_FAILURE);
-	}
+		  } else {
+			TRAN(ACMProxy::receiving);
+		  }
+		} else {
+		  LOG_FATAL("SETSUBBANDSACK returned error status");
+		  exit(EXIT_FAILURE);
+		}
       }
       break;
 
@@ -314,101 +311,95 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	// subscribe to statistics
-	RSPSubxcstatsEvent subxc;
+  switch (e.signal) {
+    case F_ENTRY: {
+		// subscribe to statistics
+		RSPSubxcstatsEvent subxc;
 
-	subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
-	subxc.period = 1;
+		subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
+		subxc.period = 1;
 
-	m_rspdriver.send(subxc);
+		m_rspdriver.send(subxc);
       }
       break;
 
-    case RSP_SUBXCSTATSACK:
-      {
-	RSPSubxcstatsackEvent ack(e);
+    case RSP_SUBXCSTATSACK: {
+		RSPSubxcstatsackEvent ack(e);
 
-	if (SUCCESS != ack.status) {
-	  LOG_FATAL("SUBCXSTATSACK returned error status");
-	  exit(EXIT_FAILURE);
-	}
+		if (SUCCESS != ack.status) {
+		  LOG_FATAL("SUBCXSTATSACK returned error status");
+		  exit(EXIT_FAILURE);
+		}
 
-	m_handle = ack.handle;
+		m_handle = ack.handle;
       }
       break;
 
-    case RSP_UPDXCSTATS:
-      {
-	RSPUpdxcstatsEvent upd(e);
+    case RSP_UPDXCSTATS: {
+		RSPUpdxcstatsEvent upd(e);
 
-	if (m_update_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
-	  if (m_handle == upd.handle) {
-	    if (SUCCESS == upd.status) {
+		if (m_update_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
+		  if (m_handle == upd.handle) {
+			if (SUCCESS == upd.status) {
 
-	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
-	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
+			  LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
+			  LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
-	      if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
-		LOG_WARN("incorrect timestamp on XC statistics");
-	      }
+			  if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
+				LOG_WARN("incorrect timestamp on XC statistics");
+			  }
 	      
-	      m_accs.getBack().updateACM(m_update_subband, upd.timestamp, upd.stats());
-	    } else {
-	      LOG_FATAL("UPDXCSTATS returned error code");
-	      exit(EXIT_FAILURE);
-	    }
-	  } else {
-	    LOG_WARN("Received UPDXCSTATS event with unknown handle.");
-	  }
-	  m_update_subband++;
-	} else {
-	  TRAN(ACMProxy::unsubscribing);
-	}
+			  m_accs.getBack().updateACM(m_update_subband, upd.timestamp, upd.stats());
+			} else {
+			  LOG_FATAL("UPDXCSTATS returned error code");
+			  exit(EXIT_FAILURE);
+			}
+		  } else {
+			LOG_WARN("Received UPDXCSTATS event with unknown handle.");
+		  }
+		  m_update_subband++;
+		} else {
+		  TRAN(ACMProxy::unsubscribing);
+		}
 
-	if (m_request_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
-	  // request next subband
-	  RSPSetsubbandsEvent ss;
-	  
-	  ss.timestamp = m_starttime + (long)m_request_subband;
-	  ss.rcumask.reset();
-	  for (int i = 0; i < m_nrcus; i++) {
-	    ss.rcumask.set(i);
-	  }
-	    
-	  ss.subbands.setType(SubbandSelection::XLET);
-	  ss.subbands().resize(1, 1);
-	  ss.subbands() = m_request_subband;
+		if (m_request_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
+		  // request next subband
+		  RSPSetsubbandsEvent ss;
+		  
+		  ss.timestamp = m_starttime + (long)m_request_subband;
+		  ss.rcumask.reset();
+		  for (int i = 0; i < m_nrcus; i++) {
+			ss.rcumask.set(i);
+		  }
+			
+		  ss.subbands.setType(SubbandSelection::XLET);
+		  ss.subbands().resize(1, 1);
+		  ss.subbands() = m_request_subband;
 
-	  LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-	  port.send(ss);
+		  LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+		  port.send(ss);
 
-	  m_request_subband++;
-	}
+		  m_request_subband++;
+		}
       }
       break;
 
-    case RSP_SETSUBBANDSACK:
-      {
-	RSPSetsubbandsackEvent ack(e);
-	if (SUCCESS != ack.status) {
-	  LOG_FATAL("SETSUBBANDSACK returned error status");
-	  exit(EXIT_FAILURE);
-	}
+    case RSP_SETSUBBANDSACK: {
+		RSPSetsubbandsackEvent ack(e);
+		if (SUCCESS != ack.status) {
+		  LOG_FATAL("SETSUBBANDSACK returned error status");
+		  exit(EXIT_FAILURE);
+		}
       }
       break;
 
-    case F_DISCONNECTED:
-      {
-	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-	port.close();
+    case F_DISCONNECTED: {
+		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+		port.close();
 
-	finalize(false);
+		finalize(false);
 
-	TRAN(ACMProxy::initial);
+		TRAN(ACMProxy::initial);
       }
       break;
 
@@ -424,41 +415,37 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	  RSPUnsubxcstatsEvent unsub;
-	  unsub.handle = m_handle;
-	  m_rspdriver.send(unsub);
+  switch (e.signal) {
+    case F_ENTRY: {
+		  RSPUnsubxcstatsEvent unsub;
+		  unsub.handle = m_handle;
+		  m_rspdriver.send(unsub);
       }
       break;
 
-    case RSP_UNSUBXCSTATSACK:
-      {
-	RSPUnsubxcstatsackEvent ack(e);
+    case RSP_UNSUBXCSTATSACK: {
+		RSPUnsubxcstatsackEvent ack(e);
 
-	if (SUCCESS != ack.status) {
-	  LOG_FATAL("UNSUBXCSTATSACK returned error status");
-	  exit(EXIT_FAILURE);
-	}
+		if (SUCCESS != ack.status) {
+		  LOG_FATAL("UNSUBXCSTATSACK returned error status");
+		  exit(EXIT_FAILURE);
+		}
 
-	// Finished collecting new ACC
-	finalize(true);
+		// Finished collecting new ACC
+		finalize(true);
 
-	LOG_INFO("finished collecting ACMs");
-	TRAN(ACMProxy::idle);
+		LOG_INFO("finished collecting ACMs");
+		TRAN(ACMProxy::idle);
       }
       break;
 
-    case F_DISCONNECTED:
-      {
-	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-	port.close();
+    case F_DISCONNECTED: {
+		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+		port.close();
 
-	finalize(false);
+		finalize(false);
 
-	TRAN(ACMProxy::initial);
+		TRAN(ACMProxy::initial);
       }
       break;
 
@@ -476,7 +463,9 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 void ACMProxy::finalize(bool success)
 {
   if (m_accs.getBack().isWriteLocked()) {
-    if (success) m_accs.getBack().validate(); // make valid
+    if (success) {
+		m_accs.getBack().validate(); // make valid
+	}
     m_accs.getBack().writeUnlock();
   } else {
     LOG_WARN("no writelock! this should not happen ");
