@@ -295,41 +295,21 @@ AC_DEFUN([lofar_BACKTRACE],
     [enable_backtrace="no"])
   if test "$enable_backtrace" = "yes"; then
     AC_CHECK_HEADER([execinfo.h],[
-      AC_CHECK_FUNC([backtrace],
-                    [lofar_have_backtrace=yes],
-                    [lofar_have_backtrace=no])
-    ])
-    if test "$lofar_have_backtrace" = yes; then
-      AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
-      # Need to check for -liberty first, because static library -lbfd depends
-      # on to -liberty; otherwise library order in $(LIBS) will be wrong.
-      AC_SEARCH_LIBS([xexit], [iberty])
-      AC_CHECK_HEADER([bfd.h],[
-        AC_SEARCH_LIBS([bfd_init], [bfd],
-                       [lofar_have_bfd=yes],
-                       [lofar_have_bfd=no])
-      ])
-      if test "$lofar_have_bfd" = yes; then
-        AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
-        AC_CHECK_HEADER([demangle.h],[
-          AC_CHECK_FUNC([cplus_demangle],
-                        [lofar_have_cplus_demangle=yes],
-                        [lofar_have_cplus_demangle=no])
-        ])
-        if test "$lofar_have_cplus_demangle" = yes; then
-          AC_DEFINE(HAVE_CPLUS_DEMANGLE, 1, 
-                    [Define if cplus_demangle() is available])
-        else
-          AC_MSG_WARN([C++ function name demangling is not available
-                    Please install the GNU binutils])
-        fi
-      else
-        AC_MSG_WARN([Function return address translation is not supported. 
-                    Please install the GNU binutils])
-      fi
-    else
-      AC_MSG_ERROR([Backtrace information is not available on this system])
-    fi
+      AC_CHECK_FUNCS([backtrace], [
+        AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
+        # Need to check for -liberty first, because static library -lbfd depends
+        # on to -liberty; otherwise library order in $(LIBS) will be wrong.
+        AC_SEARCH_LIBS([xexit], [iberty])
+        AC_CHECK_HEADER([bfd.h],[
+          AC_SEARCH_LIBS([bfd_init], [bfd], [
+            AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
+            AC_CHECK_HEADER([demangle.h],[
+              AC_CHECK_FUNCS([cplus_demangle],,[
+                AC_MSG_WARN([C++ function name demangling is not available
+                    Please install the GNU binutils])])])],[
+            AC_MSG_WARN([Function return address translation is not supported. 
+                    Please install the GNU binutils])])])],[
+        AC_MSG_ERROR([Backtrace information is not available on this system])])])
   fi
   AM_CONDITIONAL(USE_BACKTRACE, test "$enable_backtrace" = "yes")
 ])
