@@ -113,7 +113,7 @@ void doDFT2()
   cout << tots << ' ' << totc << endl;
 }
 
-int main (int argc)
+int main (int argc, char**)
 {
   INIT_LOGGER("tDFT");
   try {
