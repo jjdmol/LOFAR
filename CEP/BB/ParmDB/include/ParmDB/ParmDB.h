@@ -29,6 +29,7 @@
 //# Includes
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDBMeta.h>
+#include <Common/LofarTypes.h>
 #include <vector>
 #include <map>
 
