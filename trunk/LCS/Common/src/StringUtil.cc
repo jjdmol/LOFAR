@@ -33,6 +33,16 @@
 
 namespace LOFAR
 {
+
+enum rangeElementEnum
+{
+  PARENTHESIS,
+  ASTERISK,
+  DOTDOT
+};
+
+typedef std::map< std::string, rangeElementEnum > rangeElementTable;
+typedef rangeElementTable::const_iterator rangeElementLookup;
   
 vector<string> StringUtil::split(const string& s, char c)
 {
@@ -348,98 +358,181 @@ string compactedArrayString(const string&	orgStr)
 	return (result+"]");
 }
 
+string stripBraces(const string& orgStr)
+{
+  string baseString(orgStr); // destroyable copy
+  ltrim(baseString, " 	["); // strip of brackets
+  rtrim(baseString, " 	]");
+  
+  return baseString;
+}
+
+rangeElementTable buildRangeElementTable()
+{
+  rangeElementTable table;
+  table.insert(std::make_pair("(", PARENTHESIS));
+  table.insert(std::make_pair("*", ASTERISK));
+  table.insert(std::make_pair("..", DOTDOT));
+	
+  return table;
+}
+
+string findRangeElement(const string& orgStr)
+{
+  if (orgStr.find("(",0) != string::npos)
+    return "(";
+  if (orgStr.find("*",0) != string::npos)
+    return "*";
+  if (orgStr.find("..",0) != string::npos)
+    return "..";
+  
+  return orgStr;
+}
+
 //
 // expandedArrayString(string)
 //
 // Given een array string ( '[ xx..xx, xx ]' ) this utility expands the string
 // by replacing ranges with the fill series.
 // Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
-//
+//     [ 10*0         ] --> [ 0,0,0,0,0,0,0,0,0,0 ]
+//     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
+//     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
+//     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
+
 // ----------------------- ATTENTION !!!----------------------------------
 // This routine has been copied to the Navigator software
 // (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
 // if you change anything structural change the Navigator part also please
 // -----------------------------------------------------------------------
 
-string expandedArrayString(const string&	orgStr)
+string expandedArrayString(const string& orgStr)
 {
-	// any ranges in the string?
-	if (orgStr.find("..",0) == string::npos) {
-		return (orgStr);						// no, just return original
-	}
+  // any ranges in the string?
+  if (orgStr.find("..",0) == string::npos && orgStr.find("*",0) == string::npos) {
+    return (orgStr);      // no, just return original
+  }
+  
+  string baseString(stripBraces(orgStr));
 
-	string	baseString(orgStr);					// destroyable copy
-	ltrim(baseString, " 	[");				// strip of brackets
-	rtrim(baseString, " 	]");
+  // and split into a vector
+  vector<string> strVector = StringUtil::split(baseString, ',');
+	
+  // note: we assume that the format of each element is [xxxx]9999
+  string::size_type firstDigit(strVector[0].find_first_of("0123456789"));
+  if (firstDigit == string::npos) {	// no digits? then return org string
+    return (orgStr);
+  }
 
-	// and split into a vector
-	vector<string>	strVector = StringUtil::split(baseString, ',');
+  // construct scanmask and outputmask.
+  string elemName(strVector[0].substr(0,firstDigit));
+  string scanMask(elemName+"%ld");
+  string grpStr;
+  string outMask (formatString("%s%%0%dld", elemName.c_str(), 1));
+	
+  // handle all elements
+  string result("[");
+  int nrElems(strVector.size());
+  rangeElementTable rangeElement = buildRangeElementTable();
+  
+  for (int idx = 0; idx < nrElems; idx++) {
+    long  firstVal;
+    long  lastVal;
+    bool firstElem(true);
+    
+    // should match scanmask.
+    if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &firstVal) != 1) {
+      LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
+			       << scanMask << ". Returning orignal string");
+      return (orgStr);
+    }
 
-	// note: we assume that the format of each element is [xxxx]9999
-	string::size_type	firstDigit(strVector[0].find_first_of("0123456789"));
-	if (firstDigit == string::npos) {	// no digits? then return org string
-		return (orgStr);
-	}
+    rangeElementLookup rangeElementValue = rangeElement.find(findRangeElement(strVector[idx]));
 
-	// construct scanmask and outputmask.
-	string	elemName(strVector[0].substr(0,firstDigit));
-	string	scanMask(elemName+"%ld");
-	int		nrDigits;
-	if (strVector[0].find("..",0) != string::npos) {	// range element?
-		nrDigits = ((strVector[0].length() - 2)/2) - elemName.length();
-	}
-	else {
-		nrDigits = strVector[0].length() - elemName.length();
-	}
-	string	outMask (formatString("%s%%0%dld", elemName.c_str(), nrDigits));
+    switch (rangeElementValue->second) {
+      case PARENTHESIS /* '(' */    : { string::size_type rangePos(strVector[idx].find(rangeElementValue->first,0));
+				        grpStr = strVector[idx].substr(rangePos+1,(strVector[idx].length()-1-rangePos-1));
+                                        while (grpStr.find(";",0) != string::npos) {
+	                                  int n = grpStr.find(';');         // pos of ';'
+	                                  grpStr.replace(grpStr.begin()+n,  // start pointer
+                                          grpStr.begin()+n+1, // end pointer
+                                          ",");
+	                                }
+				      }	
+                                      break;
+      case ASTERISK    /* '*' */    : { string::size_type rangePos(strVector[idx].find(rangeElementValue->first,0));
+                                        if (sscanf(strVector[idx].data()+rangePos+1, scanMask.c_str(), &lastVal) != 1) {
+	                                  LOG_DEBUG_STR("Second part of element " << strVector[idx]
+					             << " does not match mask " << scanMask 
+						     << ". Returning orignal string");
+	                                  return (orgStr);
+                                        }
+				      }	
+                                      break;
+      case DOTDOT      /* .. */    :  { string::size_type rangePos(strVector[idx].find(rangeElementValue->first,0));
+                                        if (sscanf(strVector[idx].data()+rangePos+2, scanMask.c_str(), &lastVal) != 1) {
+	                                  LOG_DEBUG_STR("Second part of element " << strVector[idx]
+					             << " does not match mask " << scanMask 
+						     << ". Returning orignal string");
+	                                  return (orgStr);
+                                        }
+                                        // check range
+                                        if (lastVal < firstVal) {
+	                                  LOG_DEBUG_STR("Illegal range specified in " << strVector[idx] <<
+		                                        ". Returning orignal string");
+	                                  return (orgStr);
+                                        }
+				      }	
+                                      break;
+      default          /* orgStr */ : lastVal = firstVal;
+                                      break;
+    }
+    
+    // finally construct one or more elements
+    switch (rangeElementValue->second) {
+      case PARENTHESIS /* '(' */    : { string eStr;
+                                        for (long counter = 0 ; counter <= firstVal-1; counter++) {
+ 	                                  if (firstElem) {
+	                                    eStr = stripBraces(expandedArrayString(grpStr));
+	                                    result += eStr;
+	                                    firstElem = false;
+	                                  }
+	                                  else {
+	                                    result += "," + eStr;
+	                                  }
+	                                }
+                                      }  
+				      break;
+      case ASTERISK    /* '*' */    : { for (long counter = 0 ; counter <= firstVal-1; counter++) {
+                                          if (firstElem) {
+	                                    result += formatString(outMask.c_str(), lastVal);
+	                                    firstElem = false;
+                                          }
+                                          else {
+	                                    result += "," + formatString(outMask.c_str(), lastVal);
+                                          }
+                                        }
+				      }	
+                                      break;
+      case DOTDOT      /* .. */     :       
+      default          /* orgStr */ : { for (long val = firstVal ; val <= lastVal; val++) {
+                                          if (firstElem) {
+	                                    result += formatString(outMask.c_str(), val);
+	                                    firstElem = false;
+                                          }
+                                          else {
+	                                    result += "," + formatString(outMask.c_str(), val);
+                                          }
+                                        }
+				      }  
+                                      break;
+    }
+    if (idx != nrElems-1) {
+      result += ',';
+    }
+  }  
 
-	// handle all elements
-	string 	result("[");
-	bool	firstElem(true);
-	int		nrElems(strVector.size());
-	for (int idx = 0; idx < nrElems; idx++) {
-		long	firstVal;
-		long	lastVal;
-		// should match scanmask.
-		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &firstVal) != 1) {
-			LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
-						<< scanMask << ". Returning orignal string");
-			return (orgStr);
-		}
-
-		// range element?
-		string::size_type	rangePos(strVector[idx].find("..",0));
-		if (rangePos == string::npos) {
-			lastVal = firstVal;
-		}
-		else {	// yes, try to get second element.
-			if (sscanf(strVector[idx].data()+rangePos+2, scanMask.c_str(), &lastVal) != 1) {
-				LOG_DEBUG_STR("Second part of element " << strVector[idx]
-							<< " does not match mask " << scanMask 
-							<< ". Returning orignal string");
-				return (orgStr);
-			}
-			// check range
-			if (lastVal < firstVal) {
-				LOG_DEBUG_STR("Illegal range specified in " << strVector[idx] <<
-								". Returning orignal string");
-				return (orgStr);
-			}
-		}
-
-		// finally construct one or more elements
-		for	(long val = firstVal ; val <= lastVal; val++) {
-			if (firstElem) {
-				result += formatString(outMask.c_str(), val);
-				firstElem = false;
-			}
-			else {
-				result += "," + formatString(outMask.c_str(), val);
-			}
-		}
-	}
-
-	return (result+"]");
+  return (result+"]");
 }
 
 } // namespace LOFAR
