@@ -239,6 +239,17 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			theObsPS->setValue(PN_OBS_BGL_NODE_LIST, 	GCFPVString (theObs.BGLNodeList), 	  0.0, false);
 			theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
 
+			// the receiver bitmap can be derived from the RCUset.
+			int		nrReceivers(theObs.RCUset.size());
+			string	rbm;
+			rbm.resize(nrReceivers, '0');
+			for (int i = 0; i < nrReceivers; i++) {
+				if (theObs.RCUset[i]) {
+					rbm[i] = '1';
+				}
+			}
+			theObsPS->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm), 0.0, false);
+
 			// for the beams we have to construct dyn arrays first.
 			GCFPValueArray		subbandArr;
 			GCFPValueArray		beamletArr;

@@ -239,7 +239,6 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 		LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 		itsObsDPname = cmEvent.DPname;
 		itsTimerPort->cancelAllTimers();
-//		TRAN(ObservationControl::prepDB_state);				// go to next state.
 		TRAN(ObservationControl::starting_state);			// go to next state.
 	}
 	break;
@@ -250,97 +249,6 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 	break;
 	}    
 
-	return (status);
-}
-
-
-//
-// prepDB_state(event, port)
-//
-// Create top datapoint of this observation in PVSS.
-//
-// NOTE: This state becomes obsolete for Navigator 2
-//
-GCFEvent::TResult ObservationControl::prepDB_state(GCFEvent& event, 
-													GCFPortInterface& port)
-{
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-	
-#if 0  
-	uint32	gNrStations = 0;
-
-	LOG_DEBUG_STR ("prepDB:" << eventName(event) << "@" << port.getName());
-
-	switch (event.signal) {
-    case F_INIT:
-   		break;
-
-	case F_ENTRY: {
-		// Create 'Observation<nr>_<station>' datapoint for each station of the observation
-		Observation		theObs(globalParameterSet());
-		vector<string>		stations(theObs.stations);
-		vector<string>::iterator	iter = stations.begin();
-		vector<string>::iterator	end  = stations.end();
-		gNrStations = stations.size();
-		LOG_DEBUG_STR(gNrStations << " stations are used in this Observation.");
-		string	DPobsName(createPropertySetName(PSN_OBSERVATION, getName())+"_Core_");	// observation<nr>_
-		while (iter != end) {
-			string	stationName(PVSSDatabaseName(*iter));
-			LOG_DEBUG_STR ("Creating PropertySet: " << DPobsName+stationName);
-			itsStationDPs[stationName] = new RTDBPropertySet(DPobsName+stationName,
-															 PST_STATION,
-															 PSAT_RW | PSAT_TMP,
-															 this);
-			iter++;
-		}
-	}
-	break;
-	  
-	case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
-			// Always exit this event in a way that GCF can end the construction.
-			DPCreatedEvent	dpEvent(event);
-			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-			gNrStations--;
-			if (!gNrStations) {
-				itsTimerPort->cancelAllTimers();
-				itsTimerPort->setTimer(0.0);
-			}
-			else { 
-				LOG_DEBUG_STR("Still waiting for " << gNrStations << " stationDPs.");
-				itsTimerPort->setTimer(0.0);
-			}
-        }
-		break;
-	  
-	case F_TIMER: {		// must be timer that PropSet has set.
-		// update PVSS.
-		LOG_TRACE_FLOW ("Station DPs created, setting station reference values");
-		string	observationName(createPropertySetName(PSN_OBSERVATION, getName()));
-		map<string, RTDBPropertySet*>::iterator		iter = itsStationDPs.begin();
-		map<string, RTDBPropertySet*>::iterator		end  = itsStationDPs.end();
-		while (iter != end) {
-
-			// write station reference in Observation DP
-			iter->second->setValue("__childDp", iter->first+"="+iter->first+":"+observationName);
-			iter++;
-		}
-		TRAN(ObservationControl::starting_state);				// go to next state.
-	}
-	break;
-
-	case F_CONNECTED:
-		break;
-
-	case F_DISCONNECTED:
-		break;
-	
-	default:
-		LOG_DEBUG_STR ("prepDB, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-#endif
 	return (status);
 }
 

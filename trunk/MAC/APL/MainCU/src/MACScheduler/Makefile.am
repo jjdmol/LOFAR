@@ -29,19 +29,9 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir=$(bindir)
 configfiles_DATA 	= 
 
-sysconf_DATA		= MACScheduler.conf \
-					  MACScheduler.log_prop
-
-%.log_prop: %.log_prop.in
-	cp $< $@
+sysconf_DATA		= MACScheduler.conf
 
 %.conf: %.conf.in
 	cp $< $@
-
-%.ctl: %.ctl.in
-	cp $< $@
-
-clean-local:
-	rm -f *.ph
 
 include $(top_srcdir)/Makefile.common
