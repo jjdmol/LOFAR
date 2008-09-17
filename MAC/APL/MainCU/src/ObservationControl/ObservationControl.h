@@ -70,9 +70,6 @@ public:
 	// During this state the top DP LOFAR_ObsSW_<observation> is created
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
 	
-	// During this state station DP's wih references to the stations are created.
-   	GCFEvent::TResult prepDB_state (GCFEvent& e, GCFPortInterface& p);
-	
 	// During this state all connections with the other programs are made.
    	GCFEvent::TResult starting_state (GCFEvent& e, GCFPortInterface& p);
 	
