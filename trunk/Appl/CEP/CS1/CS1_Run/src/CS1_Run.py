@@ -92,7 +92,7 @@ def doObservation(obsID, parset):
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
-	    noRuns = ((sz+63)&~63) + 64
+	    timeOut = ((sz+63)&~63) + 64
 
             if isinstance(sectionTable.get(section), StorageSection):
 		s = ':'
@@ -103,11 +103,11 @@ def doObservation(obsID, parset):
 	            else:
 		        s = s + '%d' % int(machineNr)
 			
-		noRuns = (sz+63)&~63
+		timeOut = (sz+63)&~63
 	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
 		listfen.executeAsync(commandstr).waitForDone()
  
- 	    sectionTable.get(section).run(runlog, noRuns)
+ 	    sectionTable.get(section).run(runlog, timeOut)
  
         for section in sectionList:
             print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')

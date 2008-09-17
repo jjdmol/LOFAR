@@ -23,7 +23,7 @@ class Section(object):
     def getName(self):
         return self.package.split('/')[-1]
 
-    def run(self, runlog, noRuns, runCmd = None):
+    def run(self, runlog, timeOut, runCmd = None):
         if '_bgp' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
                                  self.host, \
@@ -51,14 +51,12 @@ class Section(object):
         if 'IONProc' in self.executable:
 	    self.runJob.runIONProc(runlog, 
                                    parsetfile,
-                                   100*noRuns,
-                                   noRuns,
+                                   100*timeOut,
                                    runCmd)
 	else:
 	    self.runJob.run(runlog, 
                             parsetfile,
-                            100*noRuns,
-                            noRuns,
+                            100*timeOut,
                             runCmd)
         os.remove(parsetfile)
 
@@ -122,9 +120,8 @@ class StorageSection(Section):
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
-    def run(self, runlog, noRuns, runCmd = None):
-	noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
-        Section.run(self, runlog, noRuns, runCmd)
+    def run(self, runlog, timeOut, runCmd = None):
+        Section.run(self, runlog, timeOut, runCmd)
 
 class IONProcSection(Section):
     def __init__(self, parset, host, partition):
@@ -137,13 +134,8 @@ class IONProcSection(Section):
 	
         self.inOutPsets(parset)
 	
-    def run(self, runlog, noRuns, runCmd = None):
-        coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
-        subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
-        actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
-        if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
-            raise Exception('illegal number of runs')
-        Section.run(self, runlog, actualRuns, runCmd)        
+    def run(self, runlog, timeOut, runCmd = None):
+        Section.run(self, runlog, timeOut, runCmd)        
 	
         
 class BGLProcSection(Section):
@@ -161,8 +153,5 @@ class BGLProcSection(Section):
         clock = parset.getClockString()
 	self.executable = 'CS1_BGL_Processing'
         
-    def run(self, runlog, noRuns, runCmd = None):
-        coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
-        subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
-        actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
-        Section.run(self, runlog, actualRuns, runCmd)
+    def run(self, runlog, timeOut, runCmd = None):
+        Section.run(self, runlog, timeOut, runCmd)
