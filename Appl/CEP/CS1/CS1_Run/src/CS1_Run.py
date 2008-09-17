@@ -33,7 +33,7 @@ def doObservation(obsID, parset):
         rsp.selectRCUs([0, 1, 2, 8, 9])
         rsp.setWG([2], 60e6)
 
-    mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema, 'nieuwpoo': nieuwpoo})
+    mapTable = dict({'gels': gels, 'lofarsys': lofarsys, 'romein': romein, 'broekema': broekema, 'nieuwpoo': nieuwpoo})
     logname = os.environ.get("LOGNAME", os.environ.get("USERNAME"))
     if mapTable.has_key(logname):
         userId = mapTable.get(logname)
@@ -45,17 +45,11 @@ def doObservation(obsID, parset):
         'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition),
 	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
 	'StorageSection': StorageSection(parset, listfen)
-	#Flagger(parset, listfen)
         })
     
     sectionList = sectionTable.keys()
     sectionList.sort()
     
-    #if parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'TCP' or  parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] == 'FCNP':
-        #if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
-	    #print 'IONProc_BGLProc_TransportType = %s' % parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] + ', enable section(s) IONProcSection/BGLProcSection in CS1_Run.py'
-	    #sys.exit(0)
-
     if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
 	parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] = 'NULL'
     
@@ -102,7 +96,6 @@ def doObservation(obsID, parset):
 	    noRuns = ((sz+63)&~63) + 64
 
             if isinstance(sectionTable.get(section), StorageSection):
-	        
 		s = ':'
 		for slave in listfen.getSlaves():
 		    machineNr = int(slave.getIntName()[len(slave.getIntName())-1])-1
@@ -149,11 +142,14 @@ if __name__ == '__main__':
 
     parset.readFromFile(options.parset)
 
-    parset.checkCS1Parset()
-
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime) 
-    parset.setPartition(options.partition) 
+    parset.setPartition(options.partition)
+    parset.subbandsPerPset()
+    parset.psetsPerStorage()
+    
+    parset.check()
+    
     if options.msname:
         parset.setMSName(options.msname)
 
@@ -171,8 +167,6 @@ if __name__ == '__main__':
         sys.exit(1)
     
     parset.setStations(stationList)
-    
-    #parset.addkeys_IONodeRSP()
     
     # see if we are using fake input
     if options.fakeinput > 0:

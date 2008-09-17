@@ -23,16 +23,6 @@ class Section(object):
     def getName(self):
         return self.package.split('/')[-1]
 
-    def build(self, cvsupdate, doBuild):
-        self.buildJob = BuildJob(self.package.split('/')[-1], \
-                                 self.host, \
-                                 self.buildvar, \
-                                 self.package)            
-        self.buildJob.build(cvsupdate, doBuild)
-
-    def isBuildSuccess(self):
-        return self.buildJob.isSuccess()
-    
     def run(self, runlog, noRuns, runCmd = None):
         if '_bgp' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
@@ -94,7 +84,6 @@ class Section(object):
 
 	stations = parset.getStations()
 
-        #inputNodes = parset.getInputNodes()
 	interfaces = IONodes.get(self.partition)
 
 	#inputPsets = [interfaces.index(i) for i in inputNodes]
@@ -105,7 +94,6 @@ class Section(object):
 	  raise Exception('need too many output psets --- increase nrSubbandsPerPset')
 	
 	if not parset.isDefined('OLAP.BGLProc.inputPsets') and not parset.isDefined('OLAP.BGLProc.outputPsets'):
-	    #print 'inputNodes = ', inputNodes
 	    print 'interfaces = ', interfaces
 	    print 'inputPsets = ', inputPsets
 	    print 'outputPsets = ', outputPsets
@@ -113,6 +101,7 @@ class Section(object):
 	parset['OLAP.BGLProc.inputPsets']  = inputPsets
 	parset['OLAP.BGLProc.outputPsets'] = outputPsets
 	parset['OLAP.BGLProc.psetDimensions'] = psetDimensions.get(self.partition)
+	parset.checkRspBoardList()
 	
 class StorageSection(Section):
     def __init__(self, parset, host):
@@ -176,21 +165,4 @@ class BGLProcSection(Section):
         coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
         subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
         actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
-        #if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
-            #raise Exception('illegal number of runs')
-        Section.run(self, runlog, actualRuns, runCmd)        
-
-class GeneratorSection(Section):
-    def __init__(self, parset, host):
-        Section.__init__(self, parset, \
-                         'Demo/CEP/TFlopCorrelator/TFC_Generator', \
-                         host = host, \
-                         buildvar = 'gnu_opt')
-
-class Flagger(Section):
-    def __init__(self, parset, host):
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_Flagger', \
-                         host = host, \
-                         buildvar = 'gnu_opt')
-
+        Section.run(self, runlog, actualRuns, runCmd)

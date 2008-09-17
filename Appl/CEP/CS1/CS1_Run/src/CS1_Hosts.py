@@ -40,7 +40,7 @@ localhost = Host(name = 'localhost', \
 
 gels        = UserId(bgfen0,'gels')
 romein      = UserId(bgfen0,'romein')
-lofarsystem = UserId(bgfen0,'lofarsystem')
+lofarsys    = UserId(bgfen0,'lofarsys')
 broekema    = UserId(bgfen0,'broekema')
 nieuwpoo    = UserId(bgfen0,'nieuwpoo')
 
