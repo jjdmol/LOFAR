@@ -30,7 +30,7 @@ RSPDriver.SOFTPPS=0
 # Delay the driver some number of microseconds after it receives the PPS tick
 # this may be needed to synchronized the driver properly to the hardware
 #
-RSPDriver.PPS_DELAY=0
+RSPDriver.PPS_DELAY=1000
 
 #
 # PPS trigger is on ASSERT (1) or CLEAR (0)
@@ -106,49 +106,31 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 #
 RSPDriver.LANE_0_BLET_OUT=0
 RSPDriver.LANE_0_XLET_OUT=0
-RSPDriver.LANE_0_SRCMAC=10:fa:00:%02x:00:01
-RSPDriver.LANE_0_SRCIP=10.10.0.1
-RSPDriver.LANE_0_DSTMAC=00:E0:81:34:93:3B
-RSPDriver.LANE_0_DSTIP=10.170.0.1
+RSPDriver.LANE_0_SRCMAC=10:fa:00:XX:00:01
+RSPDriver.LANE_0_SRCIP=10.10.XX.1
+RSPDriver.LANE_0_DSTMAC=00:00:00:00:00:00
+RSPDriver.LANE_0_DSTIP=10.170.0.XX
 
 RSPDriver.LANE_1_BLET_OUT=1
 RSPDriver.LANE_1_XLET_OUT=1
-RSPDriver.LANE_1_SRCMAC=10:fa:00:%02x:00:02
-RSPDriver.LANE_1_SRCIP=10.10.0.2
-RSPDriver.LANE_1_DSTMAC=00:E0:81:34:93:3B
-RSPDriver.LANE_1_DSTIP=10.170.0.2
+RSPDriver.LANE_1_SRCMAC=10:fa:00:XX:00:02
+RSPDriver.LANE_1_SRCIP=10.10.XX.2
+RSPDriver.LANE_1_DSTMAC=00:00:00:00:00:00
+RSPDriver.LANE_1_DSTIP=10.170.0.XX
 
 RSPDriver.LANE_2_BLET_OUT=2
 RSPDriver.LANE_2_XLET_OUT=2
-RSPDriver.LANE_2_SRCMAC=10:fa:00:%02x:00:03
-RSPDriver.LANE_2_SRCIP=10.10.0.3
-RSPDriver.LANE_2_DSTMAC=00:E0:81:31:B0:E1
-RSPDriver.LANE_2_DSTIP=10.170.0.3
+RSPDriver.LANE_2_SRCMAC=10:fa:00:XX:00:03
+RSPDriver.LANE_2_SRCIP=10.10.XX.3
+RSPDriver.LANE_2_DSTMAC=00:00:00:00:00:00
+RSPDriver.LANE_2_DSTIP=10.170.0.XX
 
 RSPDriver.LANE_3_BLET_OUT=3
 RSPDriver.LANE_3_XLET_OUT=3
-RSPDriver.LANE_3_SRCMAC=10:fa:00:%02x:00:04
-RSPDriver.LANE_3_SRCIP=10.10.0.4
-RSPDriver.LANE_3_DSTMAC=00:E0:81:31:B2:F5
-RSPDriver.LANE_3_DSTIP=10.170.0.4
-
-# CS01
-# RSPDriver.LANE_0_DSTMAC=00:E0:81:34:8C:D1
-# RSPDriver.LANE_1_DSTMAC=00:E0:81:34:8C:D1
-# RSPDriver.LANE_2_DSTMAC=00:E0:81:34:9B:87
-# RSPDriver.LANE_3_DSTMAC=00:E0:81:31:B3:27
-
-# CS08
-# RSPDriver.LANE_0_DSTMAC=00:E0:81:31:DE:8B
-# RSPDriver.LANE_1_DSTMAC=00:E0:81:31:DE:8B
-# RSPDriver.LANE_2_DSTMAC=00:E0:81:29:20:37
-# RSPDriver.LANE_3_DSTMAC=00:E0:81:31:DE:9B
-
-# CS16
-# RSPDriver.LANE_0_DSTMAC=00:E0:81:31:DF:D5
-# RSPDriver.LANE_1_DSTMAC=00:E0:81:31:DF:D5
-# RSPDriver.LANE_2_DSTMAC=00:E0:81:34:92:11
-# RSPDriver.LANE_3_DSTMAC=00:E0:81:31:B2:15
+RSPDriver.LANE_3_SRCMAC=10:fa:00:XX:00:04
+RSPDriver.LANE_3_SRCIP=10.10.XX.4
+RSPDriver.LANE_3_DSTMAC=00:00:00:00:00:00
+RSPDriver.LANE_3_DSTIP=10.170.0.XX
 
 #
 # IGNORE_REMOTE_DATA
@@ -299,6 +281,11 @@ RSPDriver.XC_FILL=1
 RSPDriver.DISABLE_INIT=0
 
 #
+# Ignore result of HBA i2c sequence
+#
+RSPDriver.HBA_RESULT_IGNORE=1
+
+#
 # The 'server address' is the address of the i2c server in the HBA tile.
 # By default a tile should have addresses 1-16 for the 16 delays.
 # The current HBA tile (connected to FTS-2 setup) has range 3-18
@@ -306,4 +293,4 @@ RSPDriver.DISABLE_INIT=0
 #
 # Note: Addresses 0 indicates broadcast so a valid offset will be greater than 0.
 #
-RSPDriver.HBA_SERVER_ADDRESS_OFFSET=3
+RSPDriver.HBA_SERVER_ADDRESS_OFFSET=1
