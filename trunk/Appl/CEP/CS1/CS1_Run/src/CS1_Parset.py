@@ -52,7 +52,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def subbandsPerPset(self):
 	if not self.isDefined('OLAP.subbandsPerPset'):
 	    nrSubbands = self.getNrSubbands()
-	    if nrSubbands == 1 : return nrSubbands
+	    if nrSubbands == 1 : self['OLAP.subbandsPerPset'] = nrSubbands
 	    elif nrSubbands % 2 != 0:
 	        print 'Number of subbands(%d) is not even.' %(nrSubbands)
 		sys.exit(0)
@@ -68,7 +68,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def psetsPerStorage(self):
         if not self.isDefined('OLAP.psetsPerStorage'):
             nrSubbands = self.getNrSubbands()
-	    if nrSubbands == 1 : return 1
+	    if nrSubbands == 1 : self['OLAP.psetsPerStorage'] = nrSubbands
 	    else:
 	        if not self.isDefined('OLAP.subbandsPerPset'):
 	            self.subbandsPerPset()
