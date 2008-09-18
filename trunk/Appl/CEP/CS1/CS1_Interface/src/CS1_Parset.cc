@@ -87,18 +87,22 @@ void CS1_Parset::check() const
   unsigned		subbandsPerFrame = nrSubbandsPerFrame();
   std::vector<unsigned> boards		 = subbandToRSPboardMapping();
   std::vector<unsigned> slots		 = subbandToRSPslotMapping();
-  std::vector<unsigned> inputs		 = inputPsets();
-
+  
   for (unsigned subband = 0; subband < slots.size(); subband ++)
     if (slots[subband] >= subbandsPerFrame)
       throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSubbandsPerFrame");
+  
+  // check not needed when using CS1_Storage
+  if (isDefined("OLAP.BGLProc.inputPsets")) {
+    std::vector<unsigned> inputs	 = inputPsets();
+    
+    for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
+      unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
 
-  for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {
-    unsigned nrRSPboards = getStationNamesAndRSPboardNumbers(*pset).size();
-
-    for (unsigned subband = 0; subband < boards.size(); subband ++)
-      if (boards[subband] >= nrRSPboards)
-	throw std::runtime_error("Observation.rspBoardList contains rsp board numbers that do not exist");
+      for (unsigned subband = 0; subband < boards.size(); subband ++)
+        if (boards[subband] >= nrRSPboards)
+	  throw std::runtime_error("Observation.rspBoardList contains rsp board numbers that do not exist");
+    }
   }
 }
 
