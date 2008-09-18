@@ -29,11 +29,11 @@ CalServer.ACCTestFile=ACC.txt
 
 #
 # Write ACC's to file for debugging?
-CalServer.WriteACCToFile=1
+CalServer.WriteACCToFile=0
 
 #
 # Write Gains to file for debugging?
-CalServer.WriteGainsToFile=1
+CalServer.WriteGainsToFile=0
 
 #
 # Disable invokation of calibration routine?
