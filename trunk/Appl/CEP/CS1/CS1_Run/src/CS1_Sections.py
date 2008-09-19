@@ -11,7 +11,7 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = os.getcwd()[:-len('LOFAR/Appl/CEP/CS1/CS1_Run/src')]):
+    def __init__(self, parset, package, host, workingDir, parsetfile, buildvar = 'gnu_opt'):
         self.workingDir = workingDir
         self.parset = parset
         self.package = package
@@ -19,6 +19,7 @@ class Section(object):
         self.buildvar = buildvar
         self.executable = self.package.split('/')[-1]
 	self.partition = parset.getPartition()
+	self.parsetfile = parsetfile
         
     def getName(self):
         return self.package.split('/')[-1]
@@ -27,38 +28,35 @@ class Section(object):
         if '_bgp' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
                                  self.host, \
-                                 executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
                                  partition = self.partition, \
                                  workingDir = self.workingDir)
         elif 'mpi' in self.buildvar:
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
-                                 executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                                 executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
                                  workingDir = self.workingDir,
 				 partition = self.partition)
         else:   
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
-                              executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                              executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                               workingDir = self.workingDir, \
 			      partition = self.partition)
 
-        parsetfile = '/tmp/' + self.executable + '.parset'
-        self.parset.writeToFile(parsetfile)
         # For now set the timeout on 100 times the number of seconds to process
         if 'IONProc' in self.executable:
 	    self.runJob.runIONProc(runlog, 
-                                   parsetfile,
+                                   self.parsetfile,
                                    100*timeOut,
                                    runCmd)
 	else:
 	    self.runJob.run(runlog, 
-                            parsetfile,
+                            self.parsetfile,
                             100*timeOut,
                             runCmd)
-        os.remove(parsetfile)
 
     def isRunDone(self):
         return self.runJob.isDone()
@@ -102,7 +100,7 @@ class Section(object):
 	parset.checkRspBoardList()
 	
 class StorageSection(Section):
-    def __init__(self, parset, host):
+    def __init__(self, parset, host, workingDir, parsetfile):
 
         nSubbands = parset.getNrSubbands()
         nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
@@ -115,7 +113,9 @@ class StorageSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
-                         buildvar = 'gnu_openmpi-opt')
+ 			 workingDir = workingDir, \
+			 parsetfile = parsetfile, \
+			 buildvar = 'gnu_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
@@ -124,22 +124,23 @@ class StorageSection(Section):
         Section.run(self, runlog, timeOut, runCmd)
 
 class IONProcSection(Section):
-    def __init__(self, parset, host, partition):
+    def __init__(self, parset, host, partition, workingDir, parsetfile):
         self.partition = partition
 
 	Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_IONProc', \
                          host = host, \
-                         buildvar = 'gnu_opt')
+			 workingDir = workingDir, \
+			 parsetfile = parsetfile, \
+			 buildvar = 'gnu_opt')
 	
         self.inOutPsets(parset)
 	
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)        
-	
         
 class BGLProcSection(Section):
-    def __init__(self, parset, host, partition):
+    def __init__(self, parset, host, partition, workingDir, parsetfile):
         self.partition = partition
 
         self.inOutPsets(parset)
@@ -147,7 +148,9 @@ class BGLProcSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
                          host = host, \
-                         buildvar = 'gnubgp_bgp')
+			 workingDir = workingDir, \
+			 parsetfile = parsetfile, \
+			 buildvar = 'gnubgp_bgp')
 
         nstations = parset.getNStations()
         clock = parset.getClockString()

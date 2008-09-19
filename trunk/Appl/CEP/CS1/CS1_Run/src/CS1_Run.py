@@ -5,6 +5,7 @@ import time
 import datetime
 import os
 import sys
+import shutil
 from optparse import OptionParser
 
 #check hostname
@@ -39,13 +40,15 @@ def doObservation(obsID, parset):
     else:
         print 'Invalid userId: ' + logname
 	sys.exit(1)
-
-    sectionTable = dict({\
-        'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition),
-	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	'StorageSection': StorageSection(parset, listfen)
-        })
     
+    parsetfile = workingDir + 'CS1.parset'
+    
+    sectionTable = dict({\
+        'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
+	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
+	'StorageSection': StorageSection(parset, listfen, workingDir, parsetfile)
+        })
+
     sectionList = sectionTable.keys()
     sectionList.sort()
     
@@ -66,24 +69,24 @@ def doObservation(obsID, parset):
     sz = int(math.ceil((time.mktime(stopTime.timetuple()) - time.mktime(startTime.timetuple())) / stepTime))
 
     logdir = '/log/'
-    logdirCommand = 'mkdir ' + logdir + obsID
-    
     if hostname == listfen.name:
 	if not os.access(logdir, os.W_OK):
             logdir = './'
-	    
-        if os.system(logdirCommand) != 0:
-            print 'Failed to create directory: ' + logdirstr
+        os.mkdir(logdir + obsID)
     else:
-         listfen.executeAsync(logdirCommand).waitForDone()
+         listfen.executeAsync('mkdir ' + logdir + obsID).waitForDone()
     
-    parset.writeToFile('/tmp/' + obsID + '.parset')
+    parset.writeToFile(workingDir + obsID + '.parset')
     if hostname == listfen.name:
-        if os.system('cp /tmp/' + obsID + '.parset ' + logdir + obsID + '/' + obsID + '.parset') != 0:
-	    print 'Failed: cp /tmp/' + obsID + '.parset ' + logdir + obsID + '/' + obsID + '.parset'
+        shutil.move(workingDir + obsID + '.parset',  logdir + obsID + '/' + obsID + '.parset')
     else:
-        listfen.sput('/tmp/' + obsID + '.parset', logdir + obsID + '/' + obsID + '.parset')
+        listfen.sput(workingDir + obsID + '.parset', logdir + obsID + '/' + obsID + '.parset')
+        os.remove(workingDir + obsID + '.parset')
     
+    # write parset files
+    parset.writeToFile(parsetfile)
+    shutil.copy('OLAP.parset', workingDir)
+	
     try:
         for section in sectionList:
             print ('Starting ' + sectionTable.get(section).package)
@@ -106,7 +109,7 @@ def doObservation(obsID, parset):
 		timeOut = (sz+63)&~63
 	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
 		listfen.executeAsync(commandstr).waitForDone()
- 
+		
  	    sectionTable.get(section).run(runlog, timeOut)
  
         for section in sectionList:
@@ -125,17 +128,19 @@ if __name__ == '__main__':
 
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
-    parser.add_option('--partition'      , dest='partition'      , default='R000_128_0T',type='string', help='name of the BGL partion [%default]')
+    parser.add_option('--partition'      , dest='partition'      , default='R000_256_1', type='string', help='name of the BGL partion [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='200MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
     parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 25), type='int', help='start of measurement in UTC seconds [now + 25]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
-    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010_4dipoles0_4_8_12', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
+    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010      ',type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
     parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
     # parse the options
     (options, args) = parser.parse_args()
-
+    
+    workingDir = os.getcwd()[:-len('LOFAR/Appl/CEP/CS1/CS1_Run/src')]
+    
     # create the parset
     parset = CS1_Parset() 
 
@@ -174,13 +179,9 @@ if __name__ == '__main__':
 
     # if the msname wasn't given, read the next number from the file
     if hostname != listfen.name:
-        if os.system('cp /log/nextMSNumber /tmp/') != 0:
-	    print 'Failed: cp /log/nextMSNumber /tmp/'
-		    
-        if os.system('cp /log/MSList /tmp/') != 0:
-	    print 'Failed: cp /log/MSList /tmp/'
-
-        path = '/tmp/'
+        shutil.copy('/log/nextMSNumber', workingDir)
+	shutil.copy('/log/MSList', workingDir)
+        path = workingDir
     else:
         path = '/log/'
     
@@ -214,7 +215,8 @@ if __name__ == '__main__':
 	if hostname != listfen.name:
 	    listfen.sput(runningNumberFile, '/app/log/')
 	    listfen.sput(MSdatabaseFile, '/app/log/')
-	
+	    os.remove(runningNumberFile)
+	    os.remove(MSdatabaseFile)
     except:
 	print 'caught exception'
 	sys.exit(1)
