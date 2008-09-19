@@ -34,6 +34,7 @@
 // navPanel_showLogging              : show logMsg and historical data if any
 // navPanel_updateLogging            : callback for showLogging
 // navPanel_addLogMsg                : adds a new log Msg to the logTable
+// navPanel_hardware2Obs             : Looks if a piece of hardware maps to an observation
 
 #uses "navigator.ctl"
 
@@ -78,6 +79,7 @@ void navPanel_initPanel(string objectName) {
   dynClear(g_RSPList);
   dynClear(g_TBBList);
   dynClear(g_RCUList);
+
   dynClear(g_observationsList);
   dynClear(g_processesList);
   
@@ -393,6 +395,13 @@ navPanel_addLogMessage(string aMsg)
   }
 }
 
+// ****************************************
+// Name: navPanel_statePopup   
+// ****************************************
+//    creates a popup whet the user can (recursively)
+//    set the states of objects.
+//           
+// ****************************************
 void navPanel_statePopup(string baseDP) {
   dyn_string popup;
 
@@ -470,3 +479,79 @@ void navPanel_statePopup(string baseDP) {
   }
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|end (re)set states reached");
 }
+
+// ****************************************
+// Name: navPanel_hardware2Obs   
+// ****************************************
+//     tries to determine if a certain piece of hardware resides 
+//     in an observation
+//           
+// Returns:
+//     true or false
+// ****************************************
+bool navPanel_hardware2Obs(string stationName, string observation, 
+                           string objectName, string strData, int intData) {
+  LOG_TRACE("navPanel.ctl:navPanel_hardware2Obs|stationName: " + stationName + 
+                                              " observation: " + observation +
+                                              " objectName : " + objectName +
+                                              " strDate    : " + strData +
+                                              " intData    : " + intData); 
+  bool flag = false;
+  
+  // check if Observation is available in list and get the corresponding 
+  iPos = dynContains( g_observations[ "NAME"         ], "LOFAR_ObsSW_"+observation );
+  if (iPos <=0) {
+    LOG_DEBUG("navPanel.ctl:navPanel_hardware2Obs|observation: "+ "LOFAR_ObsSW_"+observation+" not in g_observations.");     
+    return false;
+  }
+  dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
+  string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
+ 
+ 
+  // if station is not in stationList return false
+  if (!dynContains(obsStations,stationName)) {
+    flag = false;
+  } else { 
+    if (objectName == "Station") {
+      flag = true;
+    } else if (objectName == "Cabinet") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*64);
+      if (i >= 0 && i < (intData+1)*64) {
+        flag = true;
+      }  
+    } else if (objectName == "Subrack") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*32);
+      if (i >= 0 && i < (intData+1)*32) {
+        flag = true;
+      }  
+    } else if (objectName == "RSP") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*8);
+      if (i >= 0 && i < (intData+1)*8) {
+        flag = true;
+      }  
+    } else if (objectName == "TBB") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*16);
+      if (i >= 0 && i < (intData+1)*16) {
+        flag = true;
+      } 
+    } else if (objectName == "RCU") {
+      // if station is not in stationList return false
+      if (receiverBitmap[intData] == 1) {
+        flag = true;
+      }
+    } else if (objectName == "Antenna") {
+      if (receiverBitmap[(intData*2)] == 1 || receiverBitmap[((intData*2)+1)] == 1) {
+        flag = true;
+      } 
+    } else if (objectName == "SPU") {
+      flag = true;
+    } else if (objectName == "Clock") {
+      flag = true;
+    } else {
+      LOG_DEBUG("navPanel.ctl:navPanel_hardware2Obs|ERROR, Unknow hardware searched: "+ objectName);
+    }
+  }
+  
+  return flag;
+}
+

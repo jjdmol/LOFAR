@@ -115,13 +115,14 @@ void navFunct_queryConnectObservations()
 {
   
   
-  string strQuery = "SELECT '.claim.name:_original.._value, .status.state:_original.._value, .status.childState:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
+  string strQuery = "SELECT '.claim.name:_original.._value', '.status.state:_original.._value', '.status.childState:_original.._value', '.stationList:_original.._value', '.receiverBitmap:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \"Observation\" AND  '.claim.name:_original.._value' != \"\"";
   
   g_observations[ "DP"          ] = makeDynString();                    
   g_observations[ "NAME"        ] = makeDynString();
   g_observations[ "STATE"       ] = makeDynInt();
   g_observations[ "CHILDSTATE"  ] = makeDynInt();
   g_observations[ "STATIONLIST" ] = makeDynString();
+  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
   
   // Trigger a single query that gets an update when one 
   // observation changes
@@ -146,6 +147,7 @@ void navFunct_queryConnectObservations_Callback(
   int iPos;
   dyn_string strStationList;
   
+  
   LOG_TRACE( "navFunct.ctl:navFunct_queryConnectObservations_Callback| Number of observations in message = " + dynlen( aResult ) );
   
   for( int t = 2; t <= dynlen( aResult ); t++)
@@ -160,26 +162,14 @@ void navFunct_queryConnectObservations_Callback(
       iPos = dynlen( g_observations[ "DP" ] );
     }  
 
+    // Station list is opened and closed with []  we have to strip those
+    string stations = strltrim(strrtrim(aResult[t][5],"]"),"[");
     // Now store the values 
-    g_observations[ "NAME"        ][iPos] = aResult[t][2];
-    g_observations[ "STATE"       ][iPos] = aResult[t][3];
-    g_observations[ "CHILDSTATE"  ][iPos] = aResult[t][4];
-    
-           
-    if (aResult[t][2] != "") {
-      string dpName = claimManager_nameToRealName(aResult[t][2]);
-      //get stationList for this Observation from its ObsCtrl DP
-      LOG_TRACE("navFunct.ctl:navFunct_queryConnectObservations_Callback|Getting stationList for: "+aResult[t][2]+" ==> "+dpName + ".stationList");
-      if (dpExists(dpName + ".stationList")) {
-        dpGet(dpName + ".stationList",strStationList);
-        g_observations[ "STATIONLIST" ][iPos] = strStationList;
-        LOG_DEBUG("navFunct.ctl:navFunct_queryConnectObservations_Callback|StationList: "+g_observations["STATIONLIST"][iPos]);         
-      } else {
-        g_observations[ "STATIONLIST" ][iPos] = makeDynString();
-      }
-    } else {
-      g_observations[ "STATIONLIST" ][iPos] = makeDynString();
-    }
+    g_observations[ "NAME"           ][iPos] = aResult[t][2];
+    g_observations[ "STATE"          ][iPos] = aResult[t][3];
+    g_observations[ "CHILDSTATE"     ][iPos] = aResult[t][4];
+    g_observations[ "STATIONLIST"    ][iPos] = stations;
+    g_observations[ "RECEIVERBITMAP" ][iPos] = aResult[t][6];
   }
   
 }  
@@ -527,13 +517,26 @@ string navFunct_bareDBName(string aDBName) {
 // Name : navFunct_findFirstOne
 // ****************************************
 // Description:
-//    Returns the number of a given array that is true for a certain range
-//
+//   finds the first position of 1 in the receiverleist 
+//   starting at start index. 
 // 
 // Returns:  
-//    Returns a dynString
+//    Returns the position of the 1st one found in the array
 // ****************************************
-dyn_string navFunct_findFirstOne(dyn_anytype tab, int start,int end) {
+int navFunct_findFirstOne(string receiverList, int start) {
+
+  // make a substring from the startindex onwards
+  string aS= substr(receiverList,start);
+  
+  // find the first occurance of "1"
+  int pos = strpos(aS,"1");
+
+  // return startIndex + found pos
+  if (pos < 0) {
+    return pos;
+  } else {
+    return (start+pos);
+  }
 }
 
 // ****************************************
