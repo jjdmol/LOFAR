@@ -45,6 +45,9 @@ namespace LOFAR {
 // three routines that may be called when calling 'processACmsgFromServer'.
 class ACClientFunctions {
 public:
+	// Destructor.
+	virtual ~ACClientFunctions() {}
+
 	// An ACK of NACK message was received for command \c cmd. The \c result
 	// argument tell if it is an ACK or NACK, the \c info argument may contain
 	// extra information about the result.
