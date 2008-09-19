@@ -60,9 +60,6 @@ namespace LOFAR
       string file;
       unsigned line;
     };
-    // Maximum number of return addresses that we are willing to handle.
-    static const unsigned maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES;
-
     // Constructor. Calls backtrace() to fill \c itsAddr with the return
     // addresses of the current program state.
     Backtrace();
@@ -72,6 +69,9 @@ namespace LOFAR
     void print(ostream& os) const;
 
   private:
+    // Maximum number of return addresses that we are willing to handle.
+    static const unsigned maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES;
+
     // C-array of return addresses.
     void* itsAddr[maxNrAddr];
 
@@ -81,7 +81,6 @@ namespace LOFAR
     // Traceback info containing function name, filename, and line number.
     // This vector will be filled by AddressTranslator.operator().
     mutable vector<TraceLine> itsTrace;
-
   };
 
   ostream& operator<<(ostream& os, const Backtrace& st);

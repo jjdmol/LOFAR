@@ -27,25 +27,16 @@
 #include <sstream>
 
 namespace LOFAR {
-  
-  Exception::Exception(const std::string& text, const std::string& file,
-		       int line, const std::string& func) :
-    itsText(text), itsFile(file), itsLine(line), itsFunction(func)
-  {
-  }  
-  
-  Exception::~Exception() throw()
-  {
-  }
 
   const std::string Exception::message() const
   {
     std::ostringstream oss;
-
     oss << "[" << type() << ": " << text() << "]\n"
 	<< "in function " << (function().empty() ? "??" : function()) << "\n"
-	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")\n";
-
+	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")";
+#if defined(HAVE_BACKTRACE)
+    oss << "\nBacktrace follows:\n" << itsBacktrace;
+#endif
     return oss.str();
   }
   

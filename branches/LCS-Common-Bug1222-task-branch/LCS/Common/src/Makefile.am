@@ -3,7 +3,7 @@ SUBDIRS	= shmem .
 endif
 
 if USE_BACKTRACE
-backtrace_SOURCES = AddressTranslator.cc Backtrace.cc SymbolTable.cc
+backtrace_SRCS = AddressTranslator.cc Backtrace.cc SymbolTable.cc
 endif
 
 lib_LTLIBRARIES 	= libcommon.la
@@ -31,7 +31,7 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	Net/FdSet.cc \
 	Net/Socket.cc
 
-libcommon_la_SOURCES	+= $(backtrace_SOURCES)
+libcommon_la_SOURCES	+= $(backtrace_SRCS)
 
 if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la

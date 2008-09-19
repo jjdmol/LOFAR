@@ -12,8 +12,8 @@ log4cplus.appender.FILE.File=./%filename_en_nog_veel_meer
 log4cplus.appender.FILE.MaxFileSize=5MB
 log4cplus.appender.FILE.MaxBackupIndex=5
 log4cplus.appender.FILE.layout=log4cplus::PatternLayout
-log4cplus.appender.FILE.layout.ConversionPattern=%-5p [%x]%c{3] - %m%n
+log4cplus.appender.FILE.layout.ConversionPattern=%-5p [%x]%c{3} - %m%n
 
 # Define foo at level TRACE4
-#log4cplus.logger.TRC.foo=TRACE4
+log4cplus.logger.TRC.foo=TRACE4
 

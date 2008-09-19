@@ -26,12 +26,14 @@
 // \file
 // Interface to the log4cxx logging package.
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+//# Includes
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
-#include <Common/Exception.h>
 
-//# Includes
+#ifdef ENABLE_TRACER
+#include <Common/StringUtil.h>
+#endif
+
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 
@@ -326,7 +328,7 @@ do { \
   lfr_log_oss << stream;          \
   log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE ".EXCEPTION"); \
   LOG4CXX_DEBUG (logger, lfr_log_oss.str()); \
-  throw (exc(lfr_log_oss.str(), __HERE__)); \
+  throw (exc(lfr_log_oss.str(), THROW_ARGS)); \
  } while(0)
 
   // @}

@@ -23,20 +23,19 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/Backtrace.h>
+#ifdef HAVE_BACKTRACE
+# include <Common/Backtrace.h>
+#endif
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
 
 using namespace LOFAR;
 
-Backtrace gs;
-
 struct G 
 { 
   void doIt() 
   { 
-    cout << Backtrace() << endl; 
-    THROW (NotImplemented, "Ouch!"); 
+    ASSERTSTR(false, "Ouch!"); 
   }
 };
 
@@ -79,13 +78,10 @@ struct A
 int main()
 {
   INIT_LOGGER("tBacktrace");
-  std::cout << gs;
-  std::cout << "************" << std::endl;
   try {
     A().doIt();
   } catch (Exception& e) {
     std::cerr << e << std::endl;
   }
-  std::cout << "************" << std::endl;
   return 0;
 }

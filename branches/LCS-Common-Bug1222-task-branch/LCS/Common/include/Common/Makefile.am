@@ -3,14 +3,14 @@ SUBDIRS	= shmem .
 endif
 
 if USE_BACKTRACE
-backtrace_HEADERS = AddressTranslator.h Backtrace.h SymbolTable.h
-backtracedir = .
+backtrace_HDRS = AddressTranslator.h SymbolTable.h
 endif
 
 pkginclude_Netdir = $(pkgincludedir)/Net
 
 pkginclude_HEADERS = Package__Version.h  \
 	Allocator.h \
+	Backtrace.h \
 	CheckConfig.h \
 	ComplexBuiltinFP.h \
 	ComplexBuiltinInt.h \
@@ -73,6 +73,6 @@ pkginclude_Net_HEADERS = \
 	Net/FdSet.h \
 	Net/Socket.h 
 
-noinst_HEADERS = $(backtrace_HEADERS)
+noinst_HEADERS = $(backtrace_HDRS)
 
 include $(top_srcdir)/Makefile.common

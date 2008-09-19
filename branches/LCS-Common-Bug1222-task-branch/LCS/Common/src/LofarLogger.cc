@@ -24,9 +24,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <stdio.h>					// snprintf
+#include <cstdio>					// snprintf
 #include <unistd.h>					// readlink
 #include <libgen.h>				// basename
+#include <cstring>
 #include <Common/LofarLogger.h>
 
 #if defined(HAVE_LOG4CXX)
@@ -145,7 +146,7 @@ void initTraceModule (void) {
 	
 	//# Setup a property object to initialise the TRACE Logger
 	helpers::Properties		traceProp;		
-	traceProp.setProperty("log4cplus.logger.TRC", "TRACE1, STDERR");
+	traceProp.setProperty("log4cplus.logger.TRC", "DEBUG, STDERR");
 	traceProp.setProperty("log4cplus.additivity.TRC", "false");
 	traceProp.setProperty("log4cplus.appender.STDERR", "log4cplus::ConsoleAppender");
 	traceProp.setProperty("log4cplus.appender.STDERR.logToStdErr", "true");
