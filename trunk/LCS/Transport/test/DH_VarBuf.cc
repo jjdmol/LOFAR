@@ -20,6 +20,8 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
+#include <Common/lofar_vector.h>
 #include "DH_VarBuf.h"
 
 namespace LOFAR

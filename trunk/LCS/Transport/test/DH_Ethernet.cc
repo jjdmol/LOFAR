@@ -22,6 +22,7 @@
 
 #ifndef USE_NO_TH_ETHERNET
 
+#include <lofar_config.h>
 #include "DH_Ethernet.h"
 
 namespace LOFAR
