@@ -425,12 +425,13 @@ void claimCallback(
         // same only claimdate can be altered
         if (typeNames[i] == strTypeName &&
             newObjectNames[i] == strNewObjectName &&
-            DPNames[i] == substr(strDP,DPSUB_DP) && !found) {
+            DPNames[i] == dpSubStr(strDP,DPSUB_DP) && !found) {
           
           if (bDebug) DebugN("claim.ctl:claimCallback|Found type and Objectname and DPname are the same, refresh Cache entry Claimdate");
           dynRemove(  claimDates,i); 
           dynInsertAt(claimDates,claimDate,i);
           found = true;
+          exit;
         }
         
         // item has been reused
@@ -445,6 +446,7 @@ void claimCallback(
          	dynRemove(  newObjectNames,i);
          	dynInsertAt(newObjectNames,strNewObjectName,i);
           found=true;
+          exit;
        	}    
    		}       
       
