@@ -13,28 +13,23 @@ class Job(object):
         self.name = name
         self.host = host
         self.executable = executable
-        self.remoteRunLog = self.workingDir + '/run.' + name + '.' + partition + '.log'
+        self.remoteRunLog = self.workingDir + 'run.' + name + '.' + partition + '.log'
         self.runlog = None
 	self.partition = partition
 
     def run(self, runlog, parsetfile, timeOut, runCmd = None):
         self.runlog = runlog
         self.runLogRetreived = False
-        self.host.sput(parsetfile, '~/')
-	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
-	self.host.sput(tmp, '~/')
-	self.host.sput('OLAP.parset', '~/')
+	self.host.sput(self.workingDir + 'LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop', '~/')
         if runCmd == None:
             runCmd = self.executable
-        self.runCommand = self.host.executeAsync('( cd ~ ; ' + runCmd + ' ' + parsetfile.split('/')[2] + ') &> ' + self.remoteRunLog, timeout = timeOut)
+	    
+        self.runCommand = self.host.executeAsync('( cd '+ self.workingDir + '; ' + runCmd + ' ' + parsetfile.split('/')[-1] + ') &> ' + self.remoteRunLog, timeout = timeOut)
 
     def runIONProc(self, runlog, parsetfile, timeOut, runCmd = None):
 	self.runlog = runlog
         self.runLogRetreived = False
 	self.host.executeAsync('cp ' + self.executable.rstrip('CS1_IONProc') + 'IONProc' + ' ' + self.workingDir).waitForDone()
-	self.host.sput(parsetfile, self.workingDir)
-	self.host.sput(parsetfile, self.workingDir + 'CS1.parset')
-	self.host.sput('OLAP.parset', self.workingDir)
 	
 	interfaces = IONodes.get(self.partition)
 	
@@ -42,8 +37,8 @@ class Job(object):
             ionode = Host(name = IONode, \
                           address = IONode)
 	    runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1].rstrip('CS1_IONProc') + 'IONProc')
-	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[2] + ') &> ' + self.workingDir + 'run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
-
+	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[-1] + ') &> ' + self.workingDir + 'run.CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
+  
     def isDone(self):
         ret = self.runCommand.isDone()
         if not ret:
@@ -101,7 +96,7 @@ class MPIJob(Job):
         if runCmd == None:
             runCmd = self.executable
         Job.run(self, runlog, parsetfile, timeOut, 'mpirun -nolocal -np ' + str(self.noProcesses) + \
-                ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
+                ' -machinefile ' + self.workingDir + self.name + '.machinefile ' + runCmd)
     
     def abort(self):
         print('Aborting ' + self.name)
@@ -112,13 +107,13 @@ class MPIJob(Job):
         self.host.executeAsync('killall mpirun').waitForDone()
 
     def createMachinefile(self):
-        lmf = '/tmp/CS1_tmpfile'
+        lmf = self.workingDir + 'tmp.machinefile'
         slaves = self.host.getSlaves(self.noProcesses)
         outf = open(lmf, 'w')
         for slave in slaves:
             outf.write(slave.getIntName() + '\n')
         outf.close()
-        self.host.sput(lmf, '~/' + self.name + '.machinefile')
+        self.host.sput(lmf, self.workingDir + self.name + '.machinefile')
         os.remove(lmf)
 
 class BGLJob(Job):
@@ -130,13 +125,8 @@ class BGLJob(Job):
 
         # this can overwrite the values that were set before this line
         Job.__init__(self, name, host, executable, workingDir, partition)
-        self.tmplog = 'CS1_Run.tmplog'
         self.jobID = '0'
 
     def run(self, runlog, parsetfile, timeOut, runCmd):
-        print 'executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
         self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
-	self.host.sput(parsetfile, self.workingDir)
-	self.host.sput(parsetfile, self.workingDir + '/CS1.parset')
-	self.host.sput('OLAP.parset', self.workingDir)
         Job.run(self, runlog, parsetfile, timeOut, 'mpirun -partition ' + self.partition + ' -mode VN -label -env DCMF_COLLECTIVES=0 -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
