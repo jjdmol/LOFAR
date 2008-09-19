@@ -47,8 +47,8 @@ namespace LOFAR {
   class Exception : public std::exception
   {
   public:
-    Exception(const std::string& text, const std::string& file,
-	      int line, const std::string& func) :
+    Exception(const std::string& text, const std::string& file="",
+	      int line=0, const std::string& func="") :
       itsText(text), itsFile(file), itsLine(line), itsFunction(func)
     {}
       
@@ -135,7 +135,7 @@ namespace LOFAR {
 //  Define the \c THROW_ARGS macro, using \c AUTO_FUNCTION_NAME
 //
 #if defined(HAVE_BACKTRACE)
-# define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME, Backtrace()
+# define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME, ::LOFAR::Backtrace()
 #else
 # define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME
 #endif
