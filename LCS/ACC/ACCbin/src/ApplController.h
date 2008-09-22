@@ -38,7 +38,7 @@
 #include <ALC/ApplControlServer.h>	//# communication stub
 #include <PLC/DH_ProcControl.h>
 #include <APS/ParameterSet.h>
-#include <GCF/TM/EventPort.h>
+#include <MACIO/EventPort.h>
 #include "ACCmdImpl.h"				//# the real implementation
 #include "ACDaemonComm.h"
 #include "CmdStack.h"
@@ -103,7 +103,7 @@ private:
 	APAdminPool*		itsAPAPool;			// Communication with all AP's
 	ApplControlServer*	itsServerStub;		// Communication with AM
 	ACDaemonComm*		itsDaemonComm;    	// Communication with ACDaemon
-	GCF::TM::EventPort*	itsKVLogger;		// Connection to KeyValueLogger
+	MACIO::EventPort*	itsKVLogger;		// Connection to KeyValueLogger
 	time_t				itsCurTime;			// Current timestamp
 	bool				itsIsRunning;		// Alive or not
 
