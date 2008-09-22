@@ -30,10 +30,6 @@ SASGateway			-			C	P	Y	LOFAR_PermSW_Daemons_SASGateway
 KVLogger			-			C	P	Y	LOFAR_PermSW_Daemons_KVLogger
 SoftwareMonitor		-			C	P	Y	LOFAR_PermSW_SoftwareMonitor
 MACScheduler		MS			C	P	Y	LOFAR_PermSW_MACScheduler
-Ring				-			C	P	N	LOFAR_PermSW_@ring@
-Station				-			C	P	Y	LOFAR_PermSW_@ring@_@station@
-Cluster				-			C	P	N	LOFAR_PermSW_@cluster@
-Node				-			C	P	Y	LOFAR_PermSW_@cluster@_@node@
 ObsSW				-			C	P	N	LOFAR_ObsSW
 Observation			OBS			C	O	N	LOFAR_ObsSW_@observation@
 ObsCtrl				OBSCTRL		C	O	Y	LOFAR_ObsSW_@observation@_ObsCtrl
