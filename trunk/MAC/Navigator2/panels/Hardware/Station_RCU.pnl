@@ -4,11 +4,6 @@ LANG:1 19 station_subrack_rcu
 PANEL,-1 -1 870 803 N "_3DFace" 0
 "main()
 {
-  // empty the hardwareList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
-  }  
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -25,6 +20,9 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
   
   // set the hardware selectable items for this screen
   prepareHardwareList();
+  
+  // set the observation selectable items for this screen
+  prepareObservationsList();
   
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
@@ -112,14 +110,65 @@ void ShowDelay(string dp1, unsigned delayVal,
 void prepareHardwareList() {
   dyn_string result=\"\";  
   
-  g_stationList[1]=navFunct_bareDBName(sysName);
-  g_RCUList[1] = \"RCU\"+rcuNr;  
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  dynAppend(g_RCUList,\"RCU\"+rcuNr);  
   // There are no further hardware elements below RCU that can be selected, so empty
   // the list in the database
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 }
 
+void prepareObservationsList() {
+  
+  // get lists of all active,planned and finished observations to compare later
+  dyn_string aO;
+  dyn_string pO;
+  dyn_string fO;
+  dpGet(\"LOFAR_PermSW_MACScheduler.activeObservations\",aO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.plannedObservations\",pO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.finishedObservations\",fO);
+  
+  dynClear(g_observationsList);
+    
+  dyn_string result;
+  dynAppend(result,\",planned,planned\");
+  dynAppend(result,\",active,active\");
+  dynAppend(result,\",finished,finished\");
+
+  // check all available observations
+  for (int i = 1; i <= dynlen(g_observations[\"NAME\"]); i++) {
+    // loop through RCUList
+    for (int j=1; j<= dynlen(g_RCUList); j++) {
+      //test if one or more RCU's are  used in the observation
+      string bareRCU=g_RCUList[j];
+      strreplace(bareRCU,\"RCU\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"RCU\",\"\",bareRCU)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+  }
+  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
+}
 
 " 0
  E E E E 1 -1 -1 0  130 290

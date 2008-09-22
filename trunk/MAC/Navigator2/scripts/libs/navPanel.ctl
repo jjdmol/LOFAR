@@ -83,7 +83,20 @@ void navPanel_initPanel(string objectName) {
   dynClear(g_observationsList);
   dynClear(g_processesList);
   
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList",makeDynString(""));
+  }
   
+  // empty the observationsList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList",makeDynString(""));
+  }
+  
+  // empty the processesList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".processesList")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",makeDynString(""));
+  }
 }
 
 // ****************************************
@@ -491,22 +504,28 @@ void navPanel_statePopup(string baseDP) {
 // ****************************************
 bool navPanel_hardware2Obs(string stationName, string observation, 
                            string objectName, string strData, int intData) {
-  LOG_TRACE("navPanel.ctl:navPanel_hardware2Obs|stationName: " + stationName + 
-                                              " observation: " + observation +
-                                              " objectName : " + objectName +
-                                              " strDate    : " + strData +
-                                              " intData    : " + intData); 
   bool flag = false;
   
   // check if Observation is available in list and get the corresponding 
-  iPos = dynContains( g_observations[ "NAME"         ], "LOFAR_ObsSW_"+observation );
+  if (strpos(observation,"LOFAR_ObsSW_") < 0) {
+    observation = "LOFAR_ObsSW_"+observation;
+  }
+  
+  // remove : from station name if there
+  strreplace(stationName,":","");
+  
+  int iPos = dynContains( g_observations[ "NAME"         ], observation );
   if (iPos <=0) {
-    LOG_DEBUG("navPanel.ctl:navPanel_hardware2Obs|observation: "+ "LOFAR_ObsSW_"+observation+" not in g_observations.");     
+    LOG_DEBUG("navPanel.ctl:navPanel_hardware2Obs|observation: "+ observation+" not in g_observations.");     
     return false;
   }
+  
   dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
   string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
- 
+  // if receiverBitmap == "" return false
+  if (receiverBitmap == "") {
+    return false;
+  }  
  
   // if station is not in stationList return false
   if (!dynContains(obsStations,stationName)) {
@@ -535,12 +554,11 @@ bool navPanel_hardware2Obs(string stationName, string observation,
         flag = true;
       } 
     } else if (objectName == "RCU") {
-      // if station is not in stationList return false
-      if (receiverBitmap[intData] == 1) {
+      if (receiverBitmap[intData] == "1") {
         flag = true;
       }
     } else if (objectName == "Antenna") {
-      if (receiverBitmap[(intData*2)] == 1 || receiverBitmap[((intData*2)+1)] == 1) {
+      if (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1") {
         flag = true;
       } 
     } else if (objectName == "SPU") {

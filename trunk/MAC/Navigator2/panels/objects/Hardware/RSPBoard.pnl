@@ -1,13 +1,22 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 451 213 N "_3DFace" 0
+PANEL,-1 -1 652 213 N "_3DFace" 0
 "main()
 {
   baseDP=g_currentDatapoint;
   childStateBorder.toolTipText = baseDP;
   
-  if(dpExists(baseDP + \".version:_online.._value\"))
+  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
+  if (strpos(dpAr[dynlen(dpAr)],\"RSPBoard\") > -1) {
+    rspNr = substr(dpAr[dynlen(dpAr)],8,strlen(dpAr[dynlen(dpAr)]));
+  } else {
+    LOG_ERROR(\"RSPBoard.pnl:Initialize|No RSPBoard found in currentDatapoint.\");
+  }
+  
+  setValue(\"rspText\",\"text\",\"RSPBoard\"+rspNr);
+  
+    if(dpExists(baseDP + \".version:_online.._value\"))
   {
     dpConnect(\"navPanel_showVersion\", baseDP + \".version:_online.._value\");
   }
@@ -40,11 +49,56 @@ PANEL,-1 -1 451 213 N "_3DFace" 0
   showSelfState(baseDP);
 }
 " 0
- E E E E 1 -1 -1 0  10 170
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  10 170
 ""0  1
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
+int rspNr=-1;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"RSPBoard\"+rspNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"RSPBoard.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"RSPBoard\"+rspNr,\"ChangePanel\"); 
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"RSPBoard\"+rspNr,\"EventRightClick\");
+}
+
 
 BoardETHDetails(string dp1, float voltage12,
                 string dp2, float voltage25,
@@ -64,11 +118,61 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 39
+"rspHighLight"
+""
+1 150 40 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"RSPCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void RSPCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"RSPBoard.pnl:RSPCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"RSPBoard:RSPCallback|Found highlight : \" + highlight + \" Looking for: RSPBoard\" + rspNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"RSPBoard\"+rspNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"RSPBoard:RSPCallback|Highlight request: \"+bHighlight);
+  rspHighLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 5 5 425 175
 6 0
 "childStateBorder"
 ""
 1 10 170 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 1 0 0 0 0 0
 E E E
 0
@@ -77,9 +181,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 10 10 420 170
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 10 10 420 170
 2 4
-"Text11"
+"rspText"
 ""
 1 15 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
