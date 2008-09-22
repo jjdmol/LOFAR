@@ -29,8 +29,8 @@
 #include <Common/StringUtil.h>
 #include <ALC/ACCmd.h>
 #include <PLC/ProcControlComm.h>
-#include <GCF/GCF_ServiceInfo.h>
-#include <APL/APLProtocol/KVT_Protocol.ph>
+#include <MACIO/MACServiceInfo.h>
+#include <MACIO/KVT_Protocol.ph>
 #include "ApplController.h"
 #include "PR_Shell.h"			// TODO: factory!
 #include "PR_MPI.h"				// TODO: factory!
@@ -39,7 +39,7 @@
 #include "lofarDirs.h"
 
 namespace LOFAR {
-  using namespace GCF::TM;
+  using namespace MACIO;
   namespace ACC {
 
 //
