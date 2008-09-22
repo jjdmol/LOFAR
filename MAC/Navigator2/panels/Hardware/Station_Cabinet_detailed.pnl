@@ -4,11 +4,6 @@ LANG:1 7 Station
 PANEL,-1 -1 732 746 N "_3DFace" 0
 "main()
 {
-  // empty the hardwareList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
-  }  
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -24,7 +19,10 @@ PANEL,-1 -1 732 746 N "_3DFace" 0
   // set the hardware selectable items for this screen
   prepareHardwareList();
   
-  // trigger that the panel values are calculated and ready
+  // set the observation selectable items for this screen
+  prepareObservationsList();
+
+    // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Cabinet_Panel.pnl\",\"Update\");
   
   // connect to trigger to get a signal if some highlighting should be done.
@@ -116,7 +114,7 @@ void prepareHardwareList() {
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
   dynSortAsc(aDS);
       
-  g_stationList[1]=navFunct_bareDBName(sysName);
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
   
   for(z=1;z<=dynlen(aDS);z++){
     
@@ -125,14 +123,96 @@ void prepareHardwareList() {
 
     // Remainder should be *Cabinet?_Subrack? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
-    result[z]=\",\"+spl[dynlen(spl)]+\",\"+aS;
-    g_subrackList[z] = spl[dynlen(spl)];
+    dynAppend(result,\",\"+spl[dynlen(spl)]+\",\"+aS);
+    dynAppend(g_subrackList,spl[dynlen(spl)]);
   }
 
   LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareHardwareList|HardwareTree found: \"+ result);
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
+}
+
+void prepareObservationsList() {
+  
+  // get lists of all active,planned and finished observations to compare later
+  dyn_string aO;
+  dyn_string pO;
+  dyn_string fO;
+  dpGet(\"LOFAR_PermSW_MACScheduler.activeObservations\",aO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.plannedObservations\",pO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.finishedObservations\",fO);
+  
+  dynClear(g_observationsList);
+    
+  dyn_string result;
+  dynAppend(result,\",planned,planned\");
+  dynAppend(result,\",active,active\");
+  dynAppend(result,\",finished,finished\");
+
+  // check all available observations
+  for (int i = 1; i <= dynlen(g_observations[\"NAME\"]); i++) {
+    // loop through cabinetList
+    for (int j=1; j<= dynlen(g_cabinetList); j++) {
+      //test if one or more cabinets are  used in the observation
+      string bareCabinet=g_cabinetList[j];
+      strreplace(bareCabinet,\"Cabinet\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"Cabinet\",\"\",bareCabinet)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+    
+    // loop through subrackList
+    for (int j=1; j<= dynlen(g_subrackList); j++) {
+      //test if one or more subracks are  used in the observation
+      string bareSubrack=g_subrackList[j];
+      strreplace(bareSubrack,\"Subrack\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"Subrack\",\"\",bareSubrack)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+  }
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareObservationsList|ObservationsTree found: \"+ result);
+    
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
 }
 " 0
  E E E E 1 -1 -1 0  188 128

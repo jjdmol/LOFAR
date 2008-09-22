@@ -4,11 +4,6 @@ LANG:1 7 Subrack
 PANEL,-1 -1 986 776 N "_3DFace" 0
 "main()
 {
-  // empty the hardwareList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
-  }
-    
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -24,6 +19,9 @@ PANEL,-1 -1 986 776 N "_3DFace" 0
   // set the hardware selectable items for this screen
   prepareHardwareList();
   
+  // set the selectable observations for this screen
+  prepareObservationsList();
+
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_RSPBoard.pnl\",\"Update\");
   
@@ -47,9 +45,11 @@ void TriggerCallback(string dp1, bool aTrig) {
   dyn_string obsMatch      = dynPatternMatch(\"Observation*\",strHighlight);
   //dyn_string processMatch=dynPatternMatch(\"??\",strHighlight);
   dyn_string RCUMatch  = dynPatternMatch(\"RCU*\",strHighlight);
+  dyn_string RSPBoardMatch = dynPatternMatch(\"RSPBoard*\",strHighlight);
   
   LOG_DEBUG(\"Station_RSPBoard.pnl:TriggerCallback|from strHighlight obsMatch found: \"+obsMatch);
   LOG_DEBUG(\"Station_RSPBoard.pnl:TriggerCallback|from strHighlight RCUMatch found: \"+RCUMatch);
+  LOG_DEBUG(\"Station_RSPBoard.pnl:TriggerCallback|from strHighlight RSPBoardMatch found: \"+RSPBoardMatch);
   
   //get stations participating in Observation
 /*  for (int i = 1; i<= dynlen(obsMatch); i++) {
@@ -80,6 +80,10 @@ void TriggerCallback(string dp1, bool aTrig) {
     dynAppend(highlight,RCUMatch);
   }
      
+  //get RSPBoards from choice
+  if (dynlen(RSPBoardMatch) > 0) {
+    dynAppend(highlight,RSPBoardMatch);
+  }
   LOG_DEBUG(\"Station_RSPBoard.pnl:TriggerCallback|highlight contains: \"+highlight);
     
   // if highlight set, then kick objectTrigger
@@ -101,9 +105,11 @@ void prepareHardwareList() {
   dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RCU\\\"\", tab);
   LOG_TRACE(\"Station_RSPBoard.pnl:prepareHardwareList|tab: \"+tab);
 
-  g_stationList[1]=navFunct_bareDBName(sysName);  
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));  
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
   dynSortAsc(aDS);   
+  dynAppend(g_RSPList,\"RSPBoard\"+rspNr);
+  dynAppend(result,\",RSPBoard\"+rspNr+\",RSPBoard\"+rspNr);
   for(z=1;z<=dynlen(aDS);z++){
     
     // strip .status.state from result
@@ -115,14 +121,96 @@ void prepareHardwareList() {
     strreplace(aS,baseDP+\"_\",\"\");
     
     // Remainder should be _RCU? 
-    result[z]=\",\"+aS+\",\"+path;
-    g_RCUList[z]=aS;
+    dynAppend(result,\"RSPBoard\"+rspNr+\",\"+aS+\",\"+path);
+    dynAppend(g_RCUList,aS);
   }
 
   LOG_DEBUG(\"Station_RSPBoard.pnl:prepareHardwareList|HardwareTree found: \"+ result);
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
+}
+
+void prepareObservationsList() {
+  
+  // get lists of all active,planned and finished observations to compare later
+  dyn_string aO;
+  dyn_string pO;
+  dyn_string fO;
+  dpGet(\"LOFAR_PermSW_MACScheduler.activeObservations\",aO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.plannedObservations\",pO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.finishedObservations\",fO);
+  
+  dynClear(g_observationsList);
+    
+  dyn_string result;
+  dynAppend(result,\",planned,planned\");
+  dynAppend(result,\",active,active\");
+  dynAppend(result,\",finished,finished\");
+
+  // check all available observations
+  for (int i = 1; i <= dynlen(g_observations[\"NAME\"]); i++) {
+    // loop through RSPList
+    for (int j=1; j<= dynlen(g_RSPList); j++) {
+      //test if one or more RSPBoards are  used in the observation
+      string bareRSP=g_RSPList[j];
+      strreplace(bareRSP,\"RSPBoard\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"RSP\",\"\",bareRSP)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+    
+    // loop through rcuList
+    for (int j=1; j<= dynlen(g_RCUList); j++) {
+      //test if one or more rcu's are  used in the observation
+      string bareRCU=g_RCUList[j];
+      strreplace(bareRCU,\"RCU\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"RCU\",\"\",bareRCU)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+  }
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareObservationsList|ObservationsTree found: \"+ result);
+    
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
 }" 0
  E E E E 1 -1 -1 0  120 205
 ""0  1
@@ -1043,53 +1131,55 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  850 243 750 243
-1 793 42 "" 0
+1 793 42 "" 39
 0
-1 794 42 "" 4
+1 794 42 "" 0
 0
-1 795 42 "" 5
+1 795 42 "" 4
 0
-1 796 42 "" 12
+1 796 42 "" 5
 0
-1 797 42 "" 13
+1 797 42 "" 12
 0
-1 798 42 "" 14
+1 798 42 "" 13
 0
-1 799 42 "" 15
+1 799 42 "" 14
 0
-1 800 42 "" 16
+1 800 42 "" 15
 0
-1 801 42 "" 21
+1 801 42 "" 16
 0
-1 802 42 "" 22
+1 802 42 "" 21
 0
-1 803 42 "" 23
+1 803 42 "" 22
 0
-1 804 42 "" 26
+1 804 42 "" 23
 0
-1 805 42 "" 27
+1 805 42 "" 26
 0
-1 806 42 "" 28
+1 806 42 "" 27
 0
-1 807 42 "" 29
+1 807 42 "" 28
 0
-1 808 42 "0" 1
+1 808 42 "" 29
 0
-1 809 42 "11" 0
+1 809 42 "0" 1
 0
-1 810 42 "11" 1
+1 810 42 "11" 0
 0
-1 811 42 "11" 2
+1 811 42 "11" 1
 0
-1 812 42 "11" 3
+1 812 42 "11" 2
 0
-1 813 42 "11.0" 1
+1 813 42 "11" 3
 0
-1 814 42 "11" 7
+1 814 42 "11.0" 1
 0
-1 815 42 "11" 8
+1 815 42 "11" 7
 0
-1 816 42 "11" 9
+1 816 42 "11" 8
+0
+1 817 42 "11" 9
 0
 4 107
 "Line11"

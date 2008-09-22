@@ -4,11 +4,6 @@ LANG:1 14 Subrack Detail
 PANEL,-1 -1 914 686 N "_3DFace" 0
 "main()
 {
-  // empty the hardwareList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
-  }  
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -24,6 +19,9 @@ PANEL,-1 -1 914 686 N "_3DFace" 0
   // set the hardware selectable items
   prepareHardwareList();
     
+  // set the selectable observations
+  prepareObservationsList();
+
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Subrack\",\"Update\");
   
@@ -109,15 +107,12 @@ void prepareHardwareList() {
   int z;
   dyn_string result;
   
-  g_stationList[1]=navFunct_bareDBName(sysName);
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
   // For this panel RSPBoards & TBBBoards & RCU's should be selectable so we get them for the treelist
   dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RSPBoard\\\" OR _DPT=\\\"RCU\\\" OR _DPT=\\\"TBBoard\\\"\", tab);
   LOG_TRACE(\"Station_Subrack.pnl:prepareHardwareList|tab: \"+tab);
   
-  int rspCnt=1;
-  int tbbCnt=1;
-  int rcuCnt=1;
-  
+
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
   dynSortAsc(aDS);  
   for(z=1;z<=dynlen(aDS);z++){
@@ -135,14 +130,14 @@ void prepareHardwareList() {
     //                     TBBoard?, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
     if (dynlen(spl) > 1) { // RCU
-      result[z]=navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path;
-      g_RCUList[rcuCnt++]=spl[2];
+      dynAppend(result,navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path);
+      dynAppend(g_RCUList,spl[2]);
     } else if (strpos(spl[1],\"TBBoard\") > -1) {   // TBBoard
-      result[z]=\",\"+spl[1]+\",\"+path;
-      g_TBBList[tbbCnt++]=spl[1];
+      dynAppend(result,\",\"+spl[1]+\",\"+path);
+      dynAppend(g_TBBList,spl[1]);
     } else if (strpos(spl[1],\"RSPBoard\") > -1) {   // RSPBoard
-      result[z]=\",\"+spl[1]+\",\"+path;
-      g_RSPList[rspCnt++]=spl[1];
+      dynAppend(result,\",\"+spl[1]+\",\"+path);
+      dynAppend(g_RSPList,spl[1]);
     }
   }
 
@@ -151,6 +146,118 @@ void prepareHardwareList() {
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 
+}
+
+void prepareObservationsList() {
+  
+  // get lists of all active,planned and finished observations to compare later
+  dyn_string aO;
+  dyn_string pO;
+  dyn_string fO;
+  dpGet(\"LOFAR_PermSW_MACScheduler.activeObservations\",aO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.plannedObservations\",pO);
+  dpGet(\"LOFAR_PermSW_MACScheduler.finishedObservations\",fO);
+  
+  dynClear(g_observationsList);
+    
+  dyn_string result;
+  dynAppend(result,\",planned,planned\");
+  dynAppend(result,\",active,active\");
+  dynAppend(result,\",finished,finished\");
+
+  // check all available observations
+  for (int i = 1; i <= dynlen(g_observations[\"NAME\"]); i++) {
+    // loop through TBBList
+    for (int j=1; j<= dynlen(g_TBBList); j++) {
+      //test if one or more TBBoards are  used in the observation
+      string bareTBB=g_TBBList[j];
+      strreplace(bareTBB,\"TBBoard\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"TBB\",\"\",bareTBB)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+    
+    // loop through rspList
+    for (int j=1; j<= dynlen(g_RSPList); j++) {
+      //test if one or more rsp's are  used in the observation
+      string bareRSP=g_RSPList[j];
+      strreplace(bareRSP,\"RSPBoard\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"RSP\",\"\",bareRSP)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+
+    // loop through rcuList
+    for (int j=1; j<= dynlen(g_RCUList); j++) {
+      //test if one or more rcu's are  used in the observation
+      string bareRCU=g_RCUList[j];
+      strreplace(bareRCU,\"RCU\",\"\");
+      bool found =false;
+      if ( navPanel_hardware2Obs(sysName, g_observations[\"NAME\"][i],\"RCU\",\"\",bareRCU)) {
+        string shortObs=g_observations[\"NAME\"][i];
+        strreplace(shortObs,\"LOFAR_ObsSW_\",\"\");
+        string lvl;
+        // check in what lvl the searched obs is
+        if (dynContains(aO,shortObs)>0) {
+          lvl=\"active\";
+        } else if (dynContains(pO,shortObs)>0) {
+          lvl=\"planned\";
+        } else if (dynContains(fO,shortObs)>0) {
+          lvl=\"finished\";
+        }
+          
+        string aS=lvl+\",\"+shortObs+\",\"+g_observations[\"DP\"][i];
+        if (!dynContains(result,aS)){
+          dynAppend(result,aS);
+          dynAppend(g_observationsList,shortObs);
+        }
+        found=true;
+      }
+      if (found) break;
+    }
+    
+  }
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareObservationsList|ObservationsTree found: \"+ result);
+    
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
 }" 0
  E E E E 1 0 0 0  107 694
 ""0  1
