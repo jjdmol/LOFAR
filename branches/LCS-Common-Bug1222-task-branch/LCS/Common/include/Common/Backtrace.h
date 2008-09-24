@@ -46,7 +46,7 @@ namespace LOFAR
   //# Forward declarations
   class SymbolTable;
 
-  // \addtogroup Common
+  // \ingroup Common
   // @{
 
   // Store stack frame return addresses for self-debugging and provide a way
@@ -67,6 +67,10 @@ namespace LOFAR
     // Print the current backtrace in human readable form into the output
     // stream \a os.
     void print(ostream& os) const;
+
+    // Indicates whether we should stop printing a backtrace when we reach
+    // main(), or not.
+    static bool stopAtMain;
 
   private:
     // Maximum number of return addresses that we are willing to handle.

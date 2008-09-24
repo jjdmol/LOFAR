@@ -36,8 +36,13 @@ namespace LOFAR
 
   // \addtogroup Common
   // @{
-  //# Forward Declarations
-  // Description of class.
+
+  // Class holding the symbol table of the current executable program. It is
+  // implemented as a Singleton. So, any overhead will only be paid when this
+  // class is instantiated, which will normally happen when the first
+  // Backtrace is printed (\e not when the first exception is thrown).
+  //
+  // \note The code is based on the utility addr2line.c in GNU binutils 2.16.
   class SymbolTable {
 
   public:

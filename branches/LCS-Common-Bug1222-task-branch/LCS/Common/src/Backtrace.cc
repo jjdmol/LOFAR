@@ -34,6 +34,9 @@
 namespace LOFAR
 {
 
+  // Initialize to true, so that backtrace printing stop at main() function.
+  bool Backtrace::stopAtMain = true;
+
   Backtrace::Backtrace() :
     itsNrAddr(0)
   {
@@ -57,6 +60,7 @@ namespace LOFAR
 	 << " in " << itsTrace[i].function
 	 << " at " << itsTrace[i].file
 	 << ":"    << itsTrace[i].line << endl;
+      if (stopAtMain && itsTrace[i].function == "main") break;
     }
 
     // Restore the fmtflags

@@ -47,32 +47,24 @@ namespace LOFAR
   {
   }
 
-  bool AddressTranslator::operator()(vector<Backtrace::TraceLine>& trace,
-				     void* const* addr, int size) 
+  void AddressTranslator::operator()(vector<Backtrace::TraceLine>& trace,
+                                     void* const* addr, int size) 
   {
-    // Allocate enough storage for the tracelines to avoid reallocations.
+    // Initialize \a size elements of vector \a trace to avoid reallocations.
     trace.resize(size);
   
 #ifdef HAVE_BFD
+    bfd* abfd = SymbolTable::instance().getBfd();
+    if (!abfd) return;
+
     for (int i = 0; i < size; i++) {
       pc = reinterpret_cast<bfd_vma>(addr[i]);
       found = false;
 
-      bfd* abfd = SymbolTable::instance().getBfd();
-      if (!abfd) return false;
-
       bfd_map_over_sections(abfd, find_address_in_section, this);
     
-      if (!found) {
-        trace[i].function = "??";
-        trace[i].file = "??";
-        trace[i].line = 0;
-      } 
-      else {
-        if (functionname == 0 || *functionname == '\0') {
-          trace[i].function = "??";
-        } 
-        else {
+      if (found) {
+        if (functionname && *functionname) {
 #ifdef HAVE_CPLUS_DEMANGLE
           char* res = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
           if (res == 0) {
@@ -86,13 +78,11 @@ namespace LOFAR
           trace[i].function = functionname;
 #endif
         }
-        if (filename == 0) {
-          trace[i].file = "??";
-        }
-        else {
+        if (filename) {
           char* h = strrchr(filename,'/');
-          if (h != 0)
+          if (h) {
             filename = h+1;
+          }
           trace[i].file = filename;
         }
         trace[i].line = line;
@@ -100,11 +90,10 @@ namespace LOFAR
       //     if (trace[i].function == "main")
       //       break;
     }
-    return true;
 #else
-    addr = addr;
-    return false;
+    addr = addr;  // suppress `unused parameter' warning
 #endif
+    return;
   }
 
 

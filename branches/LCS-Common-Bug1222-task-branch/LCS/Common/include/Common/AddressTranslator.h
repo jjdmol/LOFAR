@@ -1,4 +1,4 @@
-//#  AddressTranslator.h: one line description
+//#  AddressTranslator.h: Translate return addresses to function, file, line.
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,7 +26,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 // \file
-// one line description.
+// Translate return addresses to function, file, line.
 
 //# Includes
 #include <Common/Backtrace.h>
@@ -38,12 +38,13 @@
 
 namespace LOFAR
 {
-  //# Forward declarations
-
-  // \addtogroup Common
+  // \ingroup Common
   // @{
 
-  // Description of class.
+  // Functor class for translating return addresses to function name,
+  // filename, and line number. 
+  //
+  // \note The code is based on the utility addr2line.c in the GNU binutils 2.16.
   class AddressTranslator {
   public:
     AddressTranslator();
@@ -55,8 +56,7 @@ namespace LOFAR
     // \param[out] trace vector containing the trace lines
     // \param[in]  addr C-array of return addresses
     // \param[in]  size number of return addresses in \a addr
-    // \return     \c true if successfull, otherwise \c false
-    bool operator()(vector<Backtrace::TraceLine>& trace, 
+    void operator()(vector<Backtrace::TraceLine>& trace, 
                     void* const* addr, int size);
 
 #ifdef HAVE_BFD
