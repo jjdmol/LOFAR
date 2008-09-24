@@ -155,6 +155,8 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
     return result;
   }
   // It should never come past this.
+ 
+  //MM:Why NOT????
   ASSERT(false);
 
   // Use a cache.
@@ -378,8 +380,35 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
   return result;
 }
 
+MeqExprPhaseToComplex::MeqExprPhaseToComplex (const MeqExpr& phase)
+  : itsPhase(phase)
+{
+  addChild (itsPhase);
+}
+
+MeqExprPhaseToComplex::~MeqExprPhaseToComplex()
+{}
+
+MeqResult MeqExprPhaseToComplex::getResult (const MeqRequest& request)
+{
+  MeqResult phaseRes;
+  const MeqResult& phase = itsPhase.getResultSynced (request, phaseRes);
+  MeqResult result(request.nspid());
+  MeqMatrixTmp matt (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
+  for (int spinx=0; spinx<request.nspid(); spinx++) {
+    if (phase.isDefined(spinx)) {
+      const MeqMatrix& ph = phase.getPerturbedValue(spinx);
+      result.setPerturbedValue (spinx,
+				tocomplex(cos(ph), sin(ph)));
+      result.setPerturbedParm (spinx, phase.getPerturbedParm(spinx));
+    }
+  }
+  result.setValue (matt );
+  return result;
+}
+
 #ifdef EXPR_GRAPH
-std::string MeqExprAPToComplex::getLabel()
+std::string MeqExprPhaseToComplex::getLabel()
 {
     return std::string("MeqExprToComplex\\namplitude / phase");
 }

@@ -45,6 +45,7 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqMatrixRealSca.cc	\
 	MNS/MeqMatrixRep.cc	\
 	MNS/MeqMatrixTmp.cc	\
+	MNS/MeqMIM.cc	\
 	MNS/MeqNumericalDipoleBeam.cc \
 	MNS/MeqParm.cc		\
 	MNS/MeqParmExpr.cc	\
@@ -56,6 +57,7 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqPointSource.cc	\
 	MNS/MeqPolc.cc		\
 	MNS/MeqPolcLog.cc	\
+	MNS/MeqPP.cc	\
 	MNS/MeqRequest.cc	\
 	MNS/MeqResult.cc	\
 	MNS/MeqResultVec.cc	\
