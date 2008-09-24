@@ -48,11 +48,11 @@ global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      // 
 global dyn_string g_stationList;       // holds valid stations for choices in the viewBox
-global dyn_string g_cabinetList;       // holds valid cabinets for choices in the viewBox
-global dyn_string g_subrackList;       // holds valid subracks for choices in the viewBox
-global dyn_string g_RSPList;           // holds valid RSP's for choices in the viewBox
-global dyn_string g_TBBList;           // holds valid TBB's for choices in the viewBox
-global dyn_string g_RCUList;           // holds valid RCU's for choices in the viewBox
+global dyn_int    g_cabinetList;       // holds valid cabinets for choices in the viewBox
+global dyn_int    g_subrackList;       // holds valid subracks for choices in the viewBox
+global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
+global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
+global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
 global dyn_string highlight;           // contains highlight info for objects

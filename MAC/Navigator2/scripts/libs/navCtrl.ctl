@@ -107,6 +107,27 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   }
   
   if (anEvent == "Update") {
+    
+    // The Viewbox signals that he is ready, so the global lists should be filled also,
+    // determine the missing parts and fill those based on the lists filled.
+    // so if g_observationsList is filled, fill hardware and processes based on this
+    // if g_processesList is filled, fill hardware and observations list based on this
+    // and if g_harwareList is filled, fill observation and processes List based on this
+    
+    if (dynlen(g_observationsList) > 0) {
+      navFunct_fillObservationsTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillProcessesList();
+    } else if (dynlen(g_processesList) > 0) {
+      navFunct_fillProcessesTree();
+      navFunct_fillHardwareLists();
+      navFunct_fillObservationsList();
+    } else {
+      navFunct_fillHardwareTree();
+      navFunct_fillProcessesList();
+      navFunct_fillObservationsList();
+    }
+    
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     dpSet(LOCATORACTIONDP,"Update");

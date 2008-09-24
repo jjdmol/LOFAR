@@ -3,7 +3,7 @@ V 10
 LANG:1 4 aLBA
 LANG:6 0 
 LANG:30 0 
-PANEL,-1 -1 120 54 N "_3DFace" 4
+PANEL,-1 -1 241 145 N "_3DFace" 4
 "$aH"
 "$aNB"
 "$aNr"
@@ -43,6 +43,7 @@ PANEL,-1 -1 120 54 N "_3DFace" 4
   antennaHighlight.toolTipText  = strToolTip;
   aNr.toolTipText   = strToolTip;
   LBA.toolTipText  = strToolTip;
+  antennaBG.toolTipText  = strToolTip;
 
   
   // check if the required datapoints for this view are enabled and accessible
@@ -138,10 +139,10 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 0
+7 7
 "antennaHighlight"
 ""
-1 80 20 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+1 70.08811188811188 80 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
  "main()
 {
   rClick();
@@ -151,7 +152,7 @@ LANG:1 6 Layer1
   dblClick();
 }" 0
 
-4 0 0 0 0 0
+6 0 0 0 0 0
 E E E
 0
 1
@@ -181,7 +182,7 @@ void StationCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -80 -20 1 E 80 20 130 70
+ 0 1 1 2 1 E 1.297052154195012 0 1.285714285714286 -65.83365079365082 -77.89714285714287 1 E 70 80 10 10
 4 2
 "Line1"
 ""
@@ -241,7 +242,7 @@ E "main()
 7 4
 "LBA"
 ""
-1 6 7 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
+1 6 7 E E E 1 E 1 E N "_Transparent" E N "White" E E
  E "main()
 {
     dblClick();
@@ -261,7 +262,7 @@ E "main()
 {
     click();
 }" 0
- 0 1 1 0 1 E 1 0 1 -6 -7 1 E 31 32 10 10
+ 0 1 1 0 1 E 1.003813124493654 0 1.003813124493654 -6.144542263029976 -7.14835538752363 1 E 31 32 10 10
 2 5
 "aNr"
 ""
@@ -304,6 +305,32 @@ LANG:30 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1
 LANG:1 2 nr
 LANG:6 2 nr
 LANG:30 2 nr
+6 6
+"antennaBG"
+""
+1 40 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -35 -65 1 E 40 70 80 110
 0
 LAYER, 1 
 1
