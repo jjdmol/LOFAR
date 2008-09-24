@@ -81,9 +81,10 @@ INSERT INTO measurement_method VALUES ('derived');
 -- personnel
 --
 CREATE TABLE personnel (
-	name		VARCHAR(20)		NOT NULL,
+	name		VARCHAR(30)		NOT NULL,
 	CONSTRAINT	personnel_uniq	UNIQUE(name)
 ) WITHOUT OIDS;
+INSERT INTO personnel VALUES ('');
 INSERT INTO personnel VALUES ('Brentjens');
 INSERT INTO personnel VALUES ('Overeem');
 

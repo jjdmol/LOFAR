@@ -27,8 +27,8 @@
 --
 CREATE SEQUENCE object_type_ID;
 CREATE TABLE object (
-	stationname		VARCHAR(10)		NOT NULL REFERENCES station(name),
-	type			VARCHAR(10)		NOT NULL REFERENCES object_type(name),
+	stationname		VARCHAR(10)		NOT NULL REFERENCES station(name),		-- CS001,...
+	type			VARCHAR(10)		NOT NULL REFERENCES object_type(name),	-- LBA,HBA,..
 	number			INT4			DEFAULT 0,
 	ID				INT4			DEFAULT nextval('object_type_ID'),
 	comment			TEXT,
@@ -48,15 +48,15 @@ CREATE TABLE reference_coord (
 	sigma_X			FLOAT8			NOT NULL,
 	sigma_Y			FLOAT8			NOT NULL,
 	sigma_Z			FLOAT8			NOT NULL,
-	ref_system		VARCHAR(10)		NOT NULL REFERENCES reference_system(name),
-	ref_frame		VARCHAR(10)		NOT NULL REFERENCES reference_frame(name),
-	method			VARCHAR(10)		NOT NULL REFERENCES measurement_method(name),
+	ref_system		VARCHAR(10)		NOT NULL REFERENCES reference_system(name),	  -- ETRS89,ITRS
+	ref_frame		VARCHAR(10)		NOT NULL REFERENCES reference_frame(name),	  -- ITRF2005,...
+	method			VARCHAR(10)		NOT NULL REFERENCES measurement_method(name), -- GPS,triangle,...
 	measure_date	DATE			NOT NULL,
 	abs_reference	VARCHAR(20),
 	derived_from	TEXT,
-	person1			VARCHAR(20)		NOT NULL REFERENCES personnel(name),
-	person2			VARCHAR(20)		REFERENCES personnel(name),
-	person3			VARCHAR(20)		REFERENCES personnel(name),
+	person1			VARCHAR(30)		NOT NULL REFERENCES personnel(name),
+	person2			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
+	person3			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
 	comment			TEXT,
 	
 	CONSTRAINT	reference_coord_uniq	UNIQUE(ID,measure_date)
