@@ -328,6 +328,23 @@ private:
   MeqExpr itsPhase;
 };
 
+class MeqExprPhaseToComplex: public MeqExprRep
+{
+public:
+  MeqExprPhaseToComplex (const MeqExpr& phase);
+
+  virtual ~MeqExprPhaseToComplex();
+
+  virtual MeqResult getResult (const MeqRequest&);
+
+private:
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
+
+  MeqExpr itsPhase;
+};
+
 // @}
 
 } // namespace BBS

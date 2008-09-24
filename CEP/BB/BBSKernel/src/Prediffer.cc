@@ -207,6 +207,8 @@ void Prediffer::resetState()
 
     // Reset model equations.
     itsModel->clearEquations();
+    //clearing equations doesnot reset the parms (eg. cleardone), do that here
+    resetParms();
 }
 
 
@@ -1625,6 +1627,16 @@ void Prediffer::resetTimers()
     }
 }
 
+void Prediffer::resetParms()
+{
+    LOG_TRACE_FLOW( "resetParms" );
+    for (MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
+        ++it)
+    {
+        it->second.clearDone();
+    }
+}
 
 void Prediffer::printTimers(const string &operation)
 {

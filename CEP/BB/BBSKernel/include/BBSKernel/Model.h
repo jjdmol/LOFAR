@@ -49,6 +49,7 @@ class MeqRequest;
 class MeqStation;
 class MeqStatUVW;
 class MeqLMN;
+class MeqAzEl;
 class MeqJonesExpr;
 class BeamCoeff;
 
@@ -62,6 +63,7 @@ public:
         BANDPASS = 0,
         GAIN,
         DIRECTIONAL_GAIN,
+        IONOSPHERE,
         BEAM,
         N_ModelComponent
     };
@@ -98,9 +100,10 @@ private:
         const MeqPhaseRef &phaseRef);
 
     void makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef);
+    void makeAzElNodes(vector<MeqExpr> & itsAzElNodes);
 
     void makeBeamNodes(const ModelConfig &config,
-        LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
+		       LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group, const vector<MeqExpr> & itsAzElNodes,
         vector<vector<MeqJonesExpr> > &result) const;
 
     BeamCoeff readBeamCoeffFile(const string &filename) const;

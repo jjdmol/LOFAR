@@ -183,6 +183,8 @@ private:
         
         uint32  start, end;                
     };
+    // Reset LevelDone for all parameters.
+    void resetParms();
 
     //# Copy construction and assignment are not allowed.
     Prediffer(const Prediffer& other);

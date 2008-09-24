@@ -40,9 +40,11 @@
 #include <BBSKernel/MNS/MeqJonesSum.h>
 #include <BBSKernel/MNS/MeqJonesVisData.h>
 #include <BBSKernel/MNS/MeqAzEl.h>
+#include <BBSKernel/MNS/MeqPP.h>
 //include <BBSKernel/MNS/MeqDipoleBeam.h>
 #include <BBSKernel/MNS/MeqDipoleBeamExternal.h>
 #include <BBSKernel/MNS/MeqNumericalDipoleBeam.h>
+#include <BBSKernel/MNS/MeqMIM.h>
 
 #include <BBSKernel/MNS/MeqStation.h>
 #include <BBSKernel/MNS/MeqStatUVW.h>
@@ -109,6 +111,10 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
         {
             mask[DIRECTIONAL_GAIN] = true;
         }
+        else if(*it == "IONOSPHERE")
+        {
+            mask[IONOSPHERE] = true;
+        }
         else if(*it == "BEAM" && type == SIMULATE)
         {
             mask[BEAM] = true;
@@ -132,15 +138,20 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
     else
         makeSourceNodes(config.sources, phaseRef);
 
+    //make AzElNodes if needed
+    vector<MeqExpr>                     itsAzElNodes;
+    if(mask[IONOSPHERE]||mask[BEAM])
+      makeAzElNodes(itsAzElNodes);
+
     // Make baseline equations.
     size_t nStations = itsStationNodes.size();
     size_t nSources = itsSourceNodes.size();
 
     ASSERT(nStations > 0 && nSources > 0);
-
-    vector<MeqExpr> azel(nSources);
+    MeqExpr ref_pp;
+    vector<MeqExpr> MIMParms;
     vector<MeqExpr> dft(nStations * nSources);
-    vector<MeqJonesExpr> bandpass, gain, dir_gain;
+    vector<MeqJonesExpr> bandpass, gain, dir_gain, dir_function;
     vector<vector<MeqJonesExpr> > beam;
 
     if(mask[BANDPASS])
@@ -157,10 +168,18 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
     {
         dir_gain.resize(nStations * nSources);
     }
-
+    if(mask[IONOSPHERE])
+    {
+      dir_function.resize(nStations * nSources);
+      MIMParms=MeqMIM::create_MIMParms(parmGroup,instrumentDBase);
+      //reference direction
+      ref_pp= new MeqPP(itsAzElNodes[0 ],
+			*(itsStationNodes[0].get()));
+    }
+    
     if(mask[BEAM])
     {
-        makeBeamNodes(config, instrumentDBase, parmGroup, beam);
+      makeBeamNodes(config, instrumentDBase, parmGroup,itsAzElNodes, beam);
     }
 
     for(size_t i = 0; i < nStations; ++i)
@@ -277,15 +296,30 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
 //                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
             }
         }
-    }
+    
 
+	if(mask[IONOSPHERE])
+	  {
+	    // Make a jones expression per station per source, which depends on a general function. Eventually,
+	    // patches of several sources will be supported as well.
+
+	    for(size_t j = 0; j < nSources; ++j)
+	      {
+		MeqExpr pp= new MeqPP(itsAzElNodes[i * nSources + j],
+				      *(itsStationNodes[i].get()));
+		dir_function[i * nSources + j] = new MeqMIM(pp,
+							    MIMParms,ref_pp);
+		
+	      }
+	  }
+    }
     if(type == CORRECT)
     {
-        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[BANDPASS],
-            "Need at least one of GAIN, DIRECTIONAL_GAIN, BANDPASS to"
+        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[IONOSPHERE] || mask[BANDPASS],
+            "Need at least one of GAIN, DIRECTIONAL_GAIN, IONOSPHERE,BANDPASS to"
             " correct for.");
             
-        vector<MeqJonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
+        vector<MeqJonesExpr> inv_bandpass, inv_gain, inv_dir_gain, inv_dir_function;
         
         if(mask[BANDPASS])
         {
@@ -315,6 +349,16 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             }
         }
 
+        if(mask[IONOSPHERE])
+        {
+            inv_dir_function.resize(nStations);
+            for(size_t i = 0; i < nStations; ++i)
+            {
+                // Always correct for the first source (direction).
+              //AppArantly the source order is set before according to user preferences??
+                inv_dir_function[i] = new MeqJonesInvert(dir_function[i * nSources]);
+            }
+        }
         for(vector<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
@@ -338,6 +382,11 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             {
                 vis = new MeqJonesCMul3(inv_dir_gain[baseline.first], vis,
                     inv_dir_gain[baseline.second]);
+            }
+            if(mask[IONOSPHERE])
+            {
+                vis = new MeqJonesCMul3(inv_dir_function[baseline.first], vis,
+                    inv_dir_function[baseline.second]);
             }
 
             itsEquations[baseline] = vis;
@@ -396,6 +445,13 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
                         dir_gain[baseline.second * nSources + j]);
                 }
                 
+                if(mask[IONOSPHERE])
+                {
+                    sourceExpr = new MeqJonesCMul3
+                        (dir_function[baseline.first * nSources + j],
+                        sourceExpr,
+                        dir_function[baseline.second * nSources + j]);
+                }
                 terms.push_back(sourceExpr);
             }
 
@@ -652,25 +708,32 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         }
     }
 }
+ 
 
+void Model::makeAzElNodes(vector<MeqExpr> & itsAzElNodes){
+    // Create AzEl node for each source-station combination.
+  size_t nStations = itsStationNodes.size();
+  size_t nSources = itsSourceNodes.size();
+  
+  
+  itsAzElNodes.resize(nSources * nStations);
+  for(size_t j = 0; j < nStations; ++j)
+    for(size_t i = 0; i < nSources; ++i)
+    {
+      itsAzElNodes[j*nSources+i] =
+	new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[j].get()));
+    }
+}
 
 void Model::makeBeamNodes(const ModelConfig &config,
-    LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
-    vector<vector<MeqJonesExpr> > &result) const
+			  LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
+			  const vector<MeqExpr> & itsAzElNodes,
+			  vector<vector<MeqJonesExpr> > &result) const
 {
     ASSERT(config.beamConfig);
     ASSERT(config.beamConfig->type() == "HamakerDipole"
         || config.beamConfig->type() == "YatawattaDipole");
     
-    // Create AzEl node for each source-station combination.
-    vector<MeqExpr> azel(itsSourceNodes.size());
-    for(size_t i = 0; i < itsSourceNodes.size(); ++i)
-    {
-        // TODO: This code uses station 0 as reference position on earth
-        // (see global_model.py in EJones_HBA). Is this accurate enough?
-        azel[i] =
-            new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
-    }
 
     if(config.beamConfig->type() == "HamakerDipole")
     {
@@ -692,7 +755,7 @@ void Model::makeBeamNodes(const ModelConfig &config,
             result[i].resize(itsSourceNodes.size());
             for(size_t j = 0; j < itsSourceNodes.size(); ++j)
             {
-                result[i][j] = new MeqNumericalDipoleBeam(coeff, azel[j],
+                result[i][j] = new MeqNumericalDipoleBeam(coeff, itsAzElNodes[j],
                     orientation);
             }
         }
@@ -720,11 +783,11 @@ void Model::makeBeamNodes(const ModelConfig &config,
             result[i].resize(itsSourceNodes.size());
             for(size_t j = 0; j < itsSourceNodes.size(); ++j)
             {
-//                result[i][j] = new MeqDipoleBeam(azel[j], 1.706, 1.38,
+//                result[i][j] = new MeqDipoleBeam(itsAzElNodes[j], 1.706, 1.38,
 //                    casa::C::pi / 4.001, -casa::C::pi_4);
                 result[i][j] =
                     new MeqDipoleBeamExternal(beamConfig->moduleTheta,
-                        beamConfig->modulePhi, azel[j], orientation, 1.0);
+                        beamConfig->modulePhi, itsAzElNodes[j], orientation, 1.0);
             }
         }
     }
@@ -756,7 +819,7 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
     istringstream iss(header);
     iss >> token0 >> nElements >> token1 >> nHarmonics >> token2 >> nPowerTime
         >> token3 >> nPowerFreq >> token4 >> freqAvg >> token5 >> freqRange;
-
+    iss.clear();
     if(!in || !iss || token0 != "d" || token1 != "k" || token2 != "pwrT"
         || token3 != "pwrF" || token4 != "freqAvg" || token5 != "freqRange")
     {
@@ -802,6 +865,7 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
         {
             THROW(BBSKernelException, "Error reading file.");
         }
+	iss.clear();
         
         // Store coefficient.
         (*coeff)[element][harmonic][powerTime][powerFreq] =
