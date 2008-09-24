@@ -73,7 +73,11 @@ void changeInfo(string aSelection) {
     if (aSelection == \"whatever\") {
       header += \" whatever\";
     } else {
-      header += \" \"+aSelection;
+      string name = claimManager_realNameToName(aSelection);
+      if (name == \"\") {
+        name = aSelection;
+      }
+      header += \" \"+name;
     }    
   } else if (ACTIVE_TAB == \"Hardware\") {
     header += \"Hardware\";

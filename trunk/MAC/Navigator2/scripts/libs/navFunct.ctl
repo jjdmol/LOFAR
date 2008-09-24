@@ -34,6 +34,11 @@
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
 // navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
 // navFunct_receiver2RSP                      : Returns the RSPNr for a RecieverNr
+// navFunct_RSP2Cabinet                       : Returns the CabinetNr for a given RSP
+// navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
+// navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
+// navFunct_TBB2Subrack                       : Returns the SubrackNr for a given TBB
+// navFunct_subrack2Cabinet                   : Returns the CabinetNr for a given Subrack
 // navFunct_dpStripLastElement                : Returns DP string without last element 
 // navFunct_dpGetLastElement                  : Returns last element from DP 
 // navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
@@ -44,6 +49,13 @@
 // navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
 // navFunct_getPathLessOne                    : Returns path less last leaf/node
+// navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
+// navFunct_fillHardwareLists                 : Fill g_StationList, g_CabinetList,g_SubrackList,gRSPList,g_RCUList and g_TBBList
+// navFunct_fillObservationsList              : Fill g_observationList
+// navFunct_fillProcessesList                 : Fill g_processList
+// navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
+// navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
+// navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -283,6 +295,76 @@ int navFunct_receiver2RSP(int receiverNr) {
 // ***************************************
 int navFunct_receiver2TBB(int receiverNr) {
   return floor(receiverNr/16);
+}
+
+// ****************************************
+// Name : navFunct_RSP2Cabinet
+// ****************************************
+// Description:
+//    Returns the cabinetNr to which a RSPBoard is connected 
+//
+// Returns:
+//    The cabinetnr
+// ***************************************
+
+int navFunct_RSP2Cabinet(int rspNr) {
+  return floor(rspNr/8);
+}
+
+// ****************************************
+// Name : navFunct_RSP2Subrack
+// ****************************************
+// Description:
+//    Returns the subrackNr to which a RSPBoard is connected 
+//
+// Returns:
+//    The Subracknr
+// ***************************************
+
+int navFunct_RSP2Subrack(int rspNr) {
+  return floor(rspNr/4);
+}
+
+// ****************************************
+// Name : navFunct_TBB2Cabinet
+// ****************************************
+// Description:
+//    Returns the cabinetNr to which a TBBoard is connected 
+//
+// Returns:
+//    The cabinetnr
+// ***************************************
+
+int navFunct_TBB2Cabinet(int tbbNr) {
+  return floor(tbbNr/4);
+}
+
+// ****************************************
+// Name : navFunct_TBB2Subrack
+// ****************************************
+// Description:
+//    Returns the subrackNr to which a TBBoard is connected 
+//
+// Returns:
+//    The Subracknr
+// ***************************************
+
+int navFunct_TBB2Subrack(int tbbNr) {
+  return floor(tbbNr/2);
+}
+
+// ****************************************
+// Name : navFunct_subrack2Cabinet
+// ****************************************
+// Description:
+//    Returns the cabinetNr to which a subrack is connected 
+//
+// Returns:
+//    The cabinetnr
+// ***************************************
+
+int navFunct_subrack2Cabinet(int subrackNr) {
+  return floor(subrackNr/2);
 }
 
 // ****************************************
@@ -610,3 +692,409 @@ string navFunct_getPathLessOne(string path) {
   return returnVal;
 }
 
+// ****************************************
+// Name: navFunct_hardware2Obs   
+// ****************************************
+//     tries to determine if a certain piece of hardware resides 
+//     in an observation
+//           
+// Returns:
+//     true or false
+// ****************************************
+bool navFunct_hardware2Obs(string stationName, string observation, 
+                           string objectName, string strData, int intData) {
+  bool flag = false;
+  
+  // check if Observation is available in list and get the corresponding 
+  if (strpos(observation,"LOFAR_ObsSW_") < 0) {
+    observation = "LOFAR_ObsSW_"+observation;
+  }
+  
+  // remove : from station name if there
+  strreplace(stationName,":","");
+  
+  int iPos = dynContains( g_observations[ "NAME"         ], observation );
+  if (iPos <=0) {
+    LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
+    return false;
+  }
+  
+  dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
+  string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
+  // if receiverBitmap == "" return false
+  if (receiverBitmap == "") {
+    return false;
+  }  
+ 
+  // if station is not in stationList return false
+  if (!dynContains(obsStations,stationName)) {
+    flag = false;
+  } else { 
+    if (objectName == "Station") {
+      flag = true;
+    } else if (objectName == "Cabinet") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*64);
+      if (i >= 0 && i < (intData+1)*64) {
+        flag = true;
+      }  
+    } else if (objectName == "Subrack") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*32);
+      if (i >= 0 && i < (intData+1)*32) {
+        flag = true;
+      }  
+    } else if (objectName == "RSP" || objectName == "RSPBoard") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*8);
+      if (i >= 0 && i < (intData+1)*8) {
+        flag = true;
+      }  
+    } else if (objectName == "TBB" || objectName == "TBBoard") {
+      int i = navFunct_findFirstOne(receiverBitmap,intData*16);
+      if (i >= 0 && i < (intData+1)*16) {
+        flag = true;
+      } 
+    } else if (objectName == "RCU") {
+      if (receiverBitmap[intData] == "1") {
+        flag = true;
+      }
+    } else if (objectName == "Antenna") {
+      if (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1") {
+        flag = true;
+      } 
+    } else if (objectName == "SPU") {
+      flag = true;
+    } else if (objectName == "Clock") {
+      flag = true;
+    } else {
+      LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|ERROR, Unknow hardware searched: "+ objectName);
+    }
+  }
+  return flag;
+}
+
+// ****************************************
+// Name: navFunct_fillHardwareLists   
+// ****************************************
+//     Fill Hardware lists based on Observations or processes, 
+//     depending on what list is filled by a panel
+//     also fill the db Point with the new tree          
+// ****************************************
+void navFunct_fillHardwareLists() {
+  // fill hardware based on available observations
+  if (dynlen(g_observationsList) > 0) {
+    for (int i=1; i<= dynlen(g_observationsList); i++) {
+      // get stationlist for this observation
+      string obsName = "LOFAR_ObsSW_"+g_observationsList[i];
+      int iPos = dynContains( g_observations[ "NAME"         ], obsName);
+      if (iPos <=0) {
+        LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareLists|Observation: "+ obsName+" not in g_observations.");     
+        return;
+      }
+  
+      dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
+    
+      // fill (unique) results in g_stationList
+      for (int j=1; j<= dynlen(obsStations); j++) {
+        if (!dynContains(g_stationList,obsStations[j])) {
+          dynAppend(g_stationList,obsStations[j]);
+        }
+      }
+    }
+
+    
+  // or based on processes
+
+  } else {
+    //to be done
+  }
+
+  dynSortAsc(g_stationList);
+
+  // now prepare the hardwareTree    
+  navFunct_fillHardwareTree();  
+}  
+
+
+// ****************************************
+// Name: navFunct_fillObservationList   
+// ****************************************
+//     Fill Observation lists based on hardware or processes, 
+//     depending on what list is filled by a panel
+//     also fill the db Point with the new tree          
+// ****************************************
+
+void navFunct_fillObservationsList() {
+
+  // check if processList is filled
+  if (dynlen(g_processesList) > 0) {
+    // to do
+  // otherwise hardware  
+  } else {
+    // check all available observations
+    for (int i = 1; i <= dynlen(g_observations["NAME"]); i++) {
+      bool found=false;
+      string shortObs=g_observations["NAME"][i];
+      strreplace(shortObs,"LOFAR_ObsSW_","");
+    
+      // If we are have more entries in the staion list we assume we are looking at a panle that has only stations
+      // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
+      // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
+      
+      if (dynlen(g_stationList) > 1) {           
+        // loop through stationList
+        for (int j=1; j<= dynlen(g_stationList); j++) {
+        
+          //test if station is used in the observation
+          if ( navFunct_hardware2Obs(g_stationList[j], g_observations["NAME"][i],"Station",g_stationList[j],0)) {
+            if (!dynContains(g_observationsList, shortObs)){
+              dynAppend(g_observationsList,shortObs);
+              found=true;
+            }
+          }
+          if (found) break;
+        }
+      } else {
+        string station = g_stationList[1];
+        found = false;
+        
+        // check cabinets
+        for (int c = 1; c<=dynlen(g_cabinetList); c++) {
+          if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Cabinet","",g_cabinetList[c])) {
+            // we found one involved cabinet, so obs can be included and we can skip the rest
+            found = true;
+          }
+          if (found) break;
+        }
+        
+        if (!found) {
+          // check subracks
+          for (int c = 1; c<=dynlen(g_subrackList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Subrack","",g_subrackList[c])) {
+              // we found one involved subrack, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+        
+        if (!found) {
+          // check RSPBoards
+          for (int c = 1; c<=dynlen(g_RSPList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"RSPBoard","",g_RSPList[c])) {
+              // we found one involved rspBoard, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+
+        if (!found) {
+          // check TBBoards
+          for (int c = 1; c<=dynlen(g_TBBList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"TBBoard","",g_TBBList[c])) {
+              // we found one involved TBBoard, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+
+        if (!found) {
+          // check RCU
+          for (int c = 1; c<=dynlen(g_RCUList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"RCU","",g_RCUList[c])) {
+              // we found one involved RCU, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+        if (found && !dynContains(g_observationsList, shortObs)){
+          dynAppend(g_observationsList,shortObs);
+        }
+      }      
+    }
+  }
+  // now prepare the ObservationTree    
+  navFunct_fillObservationsTree();  
+}
+
+// ****************************************
+// Name: navFunct_fillProcessesList   
+// ****************************************
+//     Fill Processes lists based on hardware or observations, 
+//     depending on what list is filled by a panel
+//     also fill the db Point with the new tree          
+// ****************************************
+
+void navFunct_fillProcessesList() {
+  
+  // to do
+}
+
+// ****************************************
+// Name: navFunct_fillHardwareTree   
+// ****************************************
+//     Fill Hardware Tree based on available Hardware in the global
+//     hardwareLists
+//
+// ****************************************
+navFunct_fillHardwareTree() {
+  dyn_string result;
+  string connectTo="";
+  string lvl="";
+  string station = g_stationList[1];
+  string dp="";
+  
+  // add Stations
+  if (dynlen(g_stationList) > 0 ) {
+    for (int i = 1; i <= dynlen(g_stationList); i++) {
+      dp = g_stationList[i]+":LOFAR";
+      dynAppend(result,connectTo+","+g_stationList[i]+","+dp);
+    }
+    lvl="Station";
+    connectTo=dp;
+  }
+  
+  // add Cabinets
+  if (dynlen(g_cabinetList) > 0) {
+    for (int i = 1; i <= dynlen(g_cabinetList); i++) {
+      dp = station+":LOFAR_PIC_Cabinet"+g_cabinetList[i];
+      dynAppend(result,connectTo+",Cabinet"+g_cabinetList[i]+","+dp);
+    }
+    lvl="Cabinet";
+  }
+  
+  // add Subracks
+  if (dynlen(g_subrackList) > 0) {
+    for (int i = 1; i <= dynlen(g_subrackList); i++) {
+      int cabinetNr=navFunct_subrack2Cabinet(g_subrackList[i]);
+      if (lvl == "Cabinet") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+      }
+      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+g_subrackList[i];
+      dynAppend(result,connectTo+",Subrack"+g_subrackList[i]+","+dp);
+    }
+    lvl="Subrack";
+  }
+  
+  // add RSPBoards
+  if (dynlen(g_RSPList) > 0) {
+    for (int i = 1; i <= dynlen(g_RSPList); i++) {
+      int cabinetNr=navFunct_RSP2Cabinet(g_RSPList[i]);
+      int subrackNr=navFunct_RSP2Subrack(g_RSPList[i]);
+      if (lvl == "Cabinet") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+      } else if (lvl == "Subrack") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+      }
+      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+g_RSPList[i];
+      dynAppend(result,connectTo+",RSPBoard"+g_RSPList[i]+","+dp);
+    }
+    lvl="RSPBoard";
+  }
+  
+  // add TBBoards
+  if (dynlen(g_TBBList) > 0) {
+    for (int i = 1; i <= dynlen(g_TBBList); i++) {
+      int cabinetNr=navFunct_TBB2Cabinet(g_TBBList[i]);
+      int subrackNr=navFunct_TBB2Subrack(g_TBBList[i]);
+      if (lvl == "Cabinet") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+      } else if (lvl == "Subrack") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+      }
+      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_TBBoard"+g_TBBList[i];
+      dynAppend(result,connectTo+",TBBoard"+g_TBBList[i]+","+dp);
+    }
+    lvl="RSPBoard";
+  }
+  
+  // add RCUs
+  if (dynlen(g_RCUList) > 0) {
+    for (int i = 1; i <= dynlen(g_RCUList); i++) {
+      int cabinetNr=navFunct_receiver2Cabinet(g_RCUList[i]);
+      int subrackNr=navFunct_receiver2Subrack(g_RCUList[i]);
+      int rspNr=navFunct_receiver2RSP(g_RCUList[i]);
+      if (lvl == "Cabinet") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+      } else if (lvl == "Subrack") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+      } else if (lvl == "RSPBoard") {
+        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr;
+      }
+      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr+"_RCU"+g_RCUList[i];
+      dynAppend(result,connectTo+",RCU"+g_RCUList[i]+","+dp);
+    }
+  }
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareTree|result: "+ result);     
+  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList",result);
+  
+}  
+
+// ****************************************
+// Name: navFunct_fillProcessesTree   
+// ****************************************
+//     Fill Processes Tree based on available Processes in the global
+//     processesLists
+//
+// ****************************************
+navFunct_fillProcessesTree() {
+  //to do
+}
+
+// ****************************************
+// Name: navFunct_fillObservationsTree   
+// ****************************************
+//     Fill Observations Tree based on available Observations in the global
+//     hardwareLists
+//
+// ****************************************
+navFunct_fillObservationsTree() {
+  dyn_string result;
+    
+  // get lists of all active,planned and finished observations to compare later
+  dyn_string aO;
+  dyn_string pO;
+  dyn_string fO;
+  dpGet("LOFAR_PermSW_MACScheduler.activeObservations",aO);
+  dpGet("LOFAR_PermSW_MACScheduler.plannedObservations",pO);
+  dpGet("LOFAR_PermSW_MACScheduler.finishedObservations",fO);
+    
+  dyn_string result;
+  dynAppend(result,",planned,planned");
+  dynAppend(result,",active,active");
+  dynAppend(result,",finished,finished");  
+  
+  //  loop over all involved observations
+  for (int i = 1; i <= dynlen(g_observationsList); i++) {
+    string obsName= "LOFAR_ObsSW_"+g_observationsList[i];
+                    
+    //check position in available observations
+    int iPos = dynContains(g_observations["NAME"],obsName);
+    if (iPos < 1) {
+      LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsTree|ERROR, couldn't find "+obsName+" in g_observations");
+      return;
+    }
+           
+    string lvl;
+    // check in what lvl the searched obs is
+    if (dynContains(aO,g_observationsList[i])>0) {
+      lvl="active";
+    } else if (dynContains(pO,g_observationsList[i])>0) {
+      lvl="planned";
+    } else if (dynContains(fO,g_observationsList[i])>0) {
+      lvl="finished";
+    }
+          
+    string aS=lvl+","+g_observationsList[i]+","+g_observations["DP"][iPos];
+    if (!dynContains(result,aS)){
+        dynAppend(result,aS);
+    }
+  }
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsTree|result: "+ result);     
+  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList",result);  
+}

@@ -24,6 +24,9 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   
   // connect for selfUpdates
   showSelfState(baseDP);
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Observations.pnl\",\"Update\");
 
 }
 
@@ -109,37 +112,14 @@ void updateObservationsList(string dp1, dyn_string plannedObs,
                             string dp3, dyn_string finishedObs,
                             string dp4, bool invalid)
 {
-  string obsDP;
-  dyn_string result;
-  int idx=1;
-  int obsCnt=1;
-  
   dynSortAsc(plannedObs);
   dynSortAsc(activeObs);
   dynSortAsc(finishedObs);
   
-  result [idx++]=\",Planned Observations,Planned Observations\";
-  for (int i=1; i<= dynlen(plannedObs); i++) {
-    // get real name from claimmanager
-    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+plannedObs[i]);    
-    result [idx++]=\"Planned Observations,\"+ plannedObs[i]+\",\"+obsDP;
-  }
-  
-  result [idx++]=\",Active Observations,Active Observations\";
-  for (int i=1; i<= dynlen(activeObs); i++) {
-    // get real name from claimmanager
-    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+activeObs[i]);    
-    result [idx++]=\"Active Observations,\"+ activeObs[i]+\",\"+obsDP;
-    g_observationsList[obsCnt++] = activeObs[i];
-  }
-    
-  result [idx++]=\",Finished Observations,Finished Observations\";
-  for (int i=1; i<= dynlen(finishedObs); i++) {
-    // get real name from claimmanager
-    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+finishedObs[i]);    
-    result [idx++]=\"Finished Observations,\"+ finishedObs[i]+\",\"+obsDP;
-  }
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
+  dynClear(g_observationsList);
+  dynAppend(g_observationsList,plannedObs);
+  dynAppend(g_observationsList,activeObs);
+  dynAppend(g_observationsList,finishedObs);
 }" 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
@@ -296,8 +276,7 @@ LANG:1 0
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 10 11 T 37 1 0 1 -4 -5
-1
-"$object""MACScheduler"
+0
 3 1 "plannedObservationsTable"
 "objects\\Observations\\Observation_small.pnl" 0 30 T 38 1 0 1 2 13
 1
