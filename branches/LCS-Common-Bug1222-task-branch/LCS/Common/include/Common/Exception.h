@@ -116,6 +116,23 @@ namespace LOFAR {
 
   };
 
+  inline const std::string Exception::message() const
+  {
+    std::ostringstream oss;
+    oss << "[" << type() << ": " << text() << "]\n"
+	<< "in function " << (function().empty() ? "??" : function()) << "\n"
+	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")\n";
+#if defined(HAVE_BACKTRACE)
+    oss << "Backtrace follows:\n" << itsBacktrace;
+#endif
+    return oss.str();
+  }
+  
+  inline const char* Exception::what() const throw()
+  {
+    return text().c_str();
+  }
+
   // Put the exception message into an ostream.
   inline std::ostream& operator<<(std::ostream& os, const Exception& ex)
   {
@@ -132,7 +149,8 @@ namespace LOFAR {
 //@{
 
 //
-//  Define the \c THROW_ARGS macro, using \c AUTO_FUNCTION_NAME
+// The macro \c THROW_ARGS contains the arguments for the Exception object
+// being constructed in the THROW macro.
 //
 #if defined(HAVE_BACKTRACE)
 # define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME, ::LOFAR::Backtrace()
@@ -176,8 +194,8 @@ namespace LOFAR {
 #endif
 
 //
-// Throw an exception of type \c excp; use \c strm for the message. 
-// Use this macro to insure that the  \c THROW_ARGS macro expands properly.
+// Throw an exception of type \c excp; use \c strm for the message,
+// and \c THROW_ARGS for the other constructor arguments.
 //
 #if !defined(THROW)
 # define THROW(excp,strm) \
