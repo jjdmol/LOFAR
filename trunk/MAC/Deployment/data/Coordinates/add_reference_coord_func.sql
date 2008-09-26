@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION add_ref_coord(VARCHAR(10), VARCHAR(10), INT4, FLOAT8,
 			VALUES		( vObjID, aX, aY, aZ, aSX, aSY, aSZ, aRefSys, aRefFrame, aMethod, aDate, aAbsRef, aDerived, aPerson1, aPerson2, aPerson3, aComment );
 		ELSE
 			UPDATE reference_coord
-			SET		X = aX, Y = aY, Z = aZ, sigma_X = aSX, sigma_Y = aSY, sigma_Z = aSZ, ref_system = aRefSys, ref_frame = aRefFrame, method = aMethod, abs_reference = aReference, derived_from = aDerived, person1 = aPerson1, person2 = aPerson2, person3 = aPerson3, commant = aComment
+			SET		X = aX, Y = aY, Z = aZ, sigma_X = aSX, sigma_Y = aSY, sigma_Z = aSZ, ref_system = aRefSys, ref_frame = aRefFrame, method = aMethod, abs_reference = aAbsRef, derived_from = aDerived, person1 = aPerson1, person2 = aPerson2, person3 = aPerson3, comment = aComment
 			WHERE  ID = vObjID AND measure_date = aDate;
 		END IF;
 		RETURN TRUE;

@@ -1,5 +1,5 @@
 --
---  get_objects_func.sql : get the objects of one station
+--  get_ref_objects_func.sql : get the objects of one station
 --
 --  Copyright (C) 2008
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,7 @@
 --
 -- get_objects(<stationname>|all, lba|hba|all)
 --
-CREATE OR REPLACE FUNCTION get_objects(VARCHAR(10), VARCHAR(10))
+CREATE OR REPLACE FUNCTION get_ref_objects(VARCHAR(10), VARCHAR(10))
   RETURNS SETOF GenCoord AS $$
 	DECLARE
 		aStation	ALIAS FOR $1;
@@ -55,11 +55,11 @@ CREATE OR REPLACE FUNCTION get_objects(VARCHAR(10), VARCHAR(10))
 		  SELECT o.stationname,
 				 o.type,
 				 o.number,
-				 g.x,
-				 g.y,
-				 g.z
+				 r.x,
+				 r.y,
+				 r.z
 		  FROM	 object o
-				 INNER JOIN generated_coord g ON g.id = o.id
+				 INNER JOIN reference_coord r ON r.id = o.id
 		  ' || vQuery
 		LOOP
 		  RETURN NEXT vRecord;
