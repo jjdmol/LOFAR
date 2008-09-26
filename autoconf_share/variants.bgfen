@@ -1,4 +1,4 @@
-gnu.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CCASFLAGS="-D HAVE_BGP" --with-cppflags="-D HAVE_BGP"
+gnu.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CCASFLAGS='-DHAVE_BGP -DFLAT_MEMORY' --with-cppflags='-DHAVE_BGP -DFLAT_MEMORY'
 gnubgp.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc
 
 gnu.compiler.aipspp.var: --with-casacore=/cephome/romein/packages/casacore-0.3.0/stage --without-wcs
