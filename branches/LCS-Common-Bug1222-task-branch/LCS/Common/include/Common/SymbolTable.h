@@ -29,7 +29,11 @@
 // one line description.
 
 //# Includes
-#include <bfd.h>
+#ifndef HAVE_BFD
+# warning Binary file descriptor (bfd) package is missing, \
+please install the GNU binutils.
+#else
+# include <bfd.h>
 
 namespace LOFAR
 {
@@ -94,5 +98,7 @@ namespace LOFAR
   // @}
 
 } // namespace LOFAR
+
+#endif /* HAVE_BFD */
 
 #endif

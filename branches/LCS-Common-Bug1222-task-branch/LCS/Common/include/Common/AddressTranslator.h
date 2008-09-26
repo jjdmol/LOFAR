@@ -32,7 +32,10 @@
 #include <Common/Backtrace.h>
 #include <Common/lofar_vector.h>
 
-#ifdef HAVE_BFD
+#ifndef HAVE_BFD
+# warning Binary file descriptor (bfd) package is missing, \
+please install the GNU binutils.
+#else
 # include <bfd.h>
 #endif
 

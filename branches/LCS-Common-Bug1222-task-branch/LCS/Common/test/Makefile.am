@@ -12,7 +12,7 @@ TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
 			tFileLocator.sh tStringUtil.sh tStreamUtil.sh \
 			tHexdump.sh testSocket.sh tComplex.sh tProcess.sh \
 			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
-			tObjectFactory.sh tPrettyUnits.sh tBacktrace.sh
+			tObjectFactory.sh tPrettyUnits.sh 
 
 TESTS		=	$(TESTSCRIPTS)
 

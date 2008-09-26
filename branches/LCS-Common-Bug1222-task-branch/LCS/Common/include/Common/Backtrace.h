@@ -27,7 +27,7 @@
 // Store stack frame return addresses for self-debugging.
 
 #ifndef HAVE_BACKTRACE
-# error "Backtrace is not supported"
+# error Backtrace is not supported.
 #endif
 
 // \def BACKTRACE_MAX_RETURN_ADDRESSES Maximum number of stack frame return
