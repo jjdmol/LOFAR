@@ -42,11 +42,12 @@ namespace LOFAR {
 namespace CS1 {
 
 #if !defined USE_ZOID_ALLOCATOR
-#if defined HAVE_ZOID
-FixedArena	   ION_Allocator::arena((void *) 0xA4002400, 0xBFFDC00);
-SparseSetAllocator ION_Allocator::allocator(ION_Allocator::arena);
+#if defined HAVE_ZOID || defined FLAT_MEMORY
+  //  FixedArena	   ION_Allocator::arena((void *) 0xA4002400, 0xBFFDC00);
+  FixedArena	     ION_Allocator::arena((void *) 0x40000000, 0x30000000);
+  SparseSetAllocator ION_Allocator::allocator(ION_Allocator::arena);
 #else
-HeapAllocator	   ION_Allocator::allocator;
+  HeapAllocator	   ION_Allocator::allocator;
 #endif
 #endif
 
@@ -62,6 +63,9 @@ void *ION_Allocator::allocate(size_t nbytes, unsigned alignment)
 #if defined USE_ZOID_ALLOCATOR
   void *ptr = __zoid_alloc(nbytes);
 #else
+//   void *ptr ;
+
+//   posix_memalign(&ptr, alignment, nbytes);
   void *ptr = allocator.allocate(nbytes, alignment);
 #endif
 
@@ -84,6 +88,7 @@ void ION_Allocator::deallocate(void *ptr)
 #if defined USE_ZOID_ALLOCATOR
     __zoid_free(ptr);
 #else
+    //free(ptr);
     allocator.deallocate(ptr);
 #endif
   }

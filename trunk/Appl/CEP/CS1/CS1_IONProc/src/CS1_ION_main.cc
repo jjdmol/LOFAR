@@ -40,8 +40,10 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #if defined HAVE_ZOID
 extern "C" {
@@ -53,7 +55,6 @@ extern "C" {
 #include <FCNP_ServerStream.h>
 #include <fcnp_ion.h>
 #endif
-
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
@@ -283,6 +284,72 @@ static void enableCoreDumps()
     std::cerr << "warning: could not change /proc/sys/kernel/core_pattern" << std::endl;
 }
 
+#ifdef FLAT_MEMORY
+static void cat(const char* fn)
+{
+  FILE* fp;
+  char buf[256];
+  printf("[%s]\n",fn);
+  fp = fopen( fn, "r");
+  if( !fp ) {
+    fprintf(stderr,"Fail to open %s\n", fn);
+    exit(1);
+  }
+  while( fgets( buf,sizeof(buf), fp)!= 0 ) {
+    printf("%s",buf);
+  }
+  fclose(fp);
+}
+
+static void * mmapFastMemory()
+  /* 
+
+  mmap a fixed area of flat memory space to increase performance. 
+  currently only 768 MiB can be allocated, we mmap() the maximum
+  available amount
+
+  */
+{
+  unsigned size = 0;
+  char buf[80];
+  FILE* fp;
+  int fd;
+  void *flatmem_mmap_addr;
+
+  fp = fopen( "/proc/meminfo", "r");
+  if( !fp ) {
+    perror("fopen");
+    exit(1);
+  }
+  while( fgets(buf,sizeof(buf),fp)!=(char*)0 ) {
+    if( strstr(buf, "FlatMem:") ) {
+      char* p = strtok( buf," \t\n");
+      p = strtok(NULL," \t\n");
+      size = atoi(p) * 1024*1024;
+      break;
+    }
+  }
+  fclose(fp);
+
+  /* get flatmem address */
+  fd = open("/dev/flatmem", O_RDONLY);
+  if (fd < 0) {
+    fprintf(stderr, "/dev/flatmem does not exist\n");
+    exit(1);
+  }
+  
+  /* 0x40000000 is usually the lowest virtual address of free vm start in 256MB alignment */
+  flatmem_mmap_addr = mmap((void*)0x40000000, size , PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+  if( flatmem_mmap_addr == MAP_FAILED) {
+    perror("mmap");
+    exit(1);
+  }
+  
+  cat("/proc/self/maps");
+
+  return flatmem_mmap_addr;
+}
+#endif
 
 void *master_thread(void *)
 {
@@ -291,7 +358,17 @@ void *master_thread(void *)
   
   std::clog << "starting master_thread" << std::endl;
 
-  enableCoreDumps();
+//   enableCoreDumps();
+
+  std::clog << "coredumps" << std::endl;
+
+#ifdef FLAT_MEMORY
+  void *flatmem_addr = mmapFastMemory();
+
+  std::clog << "Flatmem base address : " << flatmem_addr << std::endl;
+
+#endif
+
 
   try {
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME

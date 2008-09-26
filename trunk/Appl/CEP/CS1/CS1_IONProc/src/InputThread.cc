@@ -146,6 +146,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
   std::vector<TimeStamp> timeStamps(maxNrPackets);
   boost::multi_array<char, 2, AlignedStdAllocator<char, 32> > packets(boost::extents[maxNrPackets][packetSize]);
+  //boost::multi_array<char, 2, FlatMemoryAllocator<char> > packets(boost::extents[maxNrPackets][packetSize]);
 
   char		*currentPacketPtr	    = packets.origin();
   unsigned	currentPacket		    = 0;

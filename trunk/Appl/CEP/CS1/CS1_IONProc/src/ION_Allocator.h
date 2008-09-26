@@ -46,7 +46,7 @@ class ION_Allocator: public Allocator
     
   private:
 #if !defined USE_ZOID_ALLOCATOR
-#if defined HAVE_ZOID
+#if defined HAVE_ZOID || defined FLAT_MEMORY
     static FixedArena	      arena;
     static SparseSetAllocator allocator;
 #else
