@@ -37,9 +37,9 @@
 #endif
 
 //# Includes
-#include <Common/lofar_iosfwd.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <iosfwd>
+#include <string>
+#include <vector>
 
 namespace LOFAR
 {
@@ -56,8 +56,8 @@ namespace LOFAR
     // Layout of a trace line
     struct TraceLine {
       TraceLine() : function("??"), file("??"), line(0) {}
-      string function;
-      string file;
+      std::string function;
+      std::string file;
       unsigned line;
     };
     // Constructor. Calls backtrace() to fill \c itsAddr with the return
@@ -66,15 +66,17 @@ namespace LOFAR
 
     // Print the current backtrace in human readable form into the output
     // stream \a os.
-    void print(ostream& os) const;
+    void print(std::ostream& os) const;
 
     // Indicates whether we should stop printing a backtrace when we reach
     // main(), or not.
     static bool stopAtMain;
 
   private:
-    // Maximum number of return addresses that we are willing to handle.
-    static const unsigned maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES;
+    // Maximum number of return addresses that we are willing to handle. Add
+    // one to the compile time constant, because, later on, we will hide the
+    // first return address (being the construction of %Backtrace itself).
+    static const int maxNrAddr = BACKTRACE_MAX_RETURN_ADDRESSES + 1;
 
     // C-array of return addresses.
     void* itsAddr[maxNrAddr];
@@ -84,10 +86,11 @@ namespace LOFAR
 
     // Traceback info containing function name, filename, and line number.
     // This vector will be filled by AddressTranslator.operator().
-    mutable vector<TraceLine> itsTrace;
+    mutable std::vector<TraceLine> itsTrace;
   };
 
-  ostream& operator<<(ostream& os, const Backtrace& st);
+  // Print the backtrace \a st to the output stream \a os.
+  std::ostream& operator<<(std::ostream& os, const Backtrace& st);
 
   // @}
 

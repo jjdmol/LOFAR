@@ -31,12 +31,30 @@
 
 using namespace LOFAR;
 
-struct G 
+struct J
 { 
   void doIt() 
   { 
     ASSERTSTR(false, "Ouch!"); 
   }
+};
+
+struct I 
+{
+  void doIt() { j.doIt(); }
+  J j;
+};
+
+struct H
+{
+  void doIt() { i.doIt(); }
+  I i;
+};
+
+struct G
+{
+  void doIt() { h.doIt(); }
+  H h;
 };
 
 struct F 

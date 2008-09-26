@@ -26,13 +26,13 @@
 //# Includes
 #include <Common/Backtrace.h>
 #include <Common/AddressTranslator.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_iomanip.h>
-#include <cstring>
+#include <iomanip>
+#include <iostream>
 #include <execinfo.h>
 
 namespace LOFAR
 {
+  using namespace std;
 
   // Initialize to true, so that backtrace printing stop at main() function.
   bool Backtrace::stopAtMain = true;
@@ -51,12 +51,12 @@ namespace LOFAR
     }
       
     // Save the current fmtflags
-    std::ios::fmtflags flags(os.flags());
+    ios::fmtflags flags(os.flags());
 
-    os.setf(std::ios::showbase | std::ios::left);
+    os.setf(ios::left);
     for(int i = 1; i < itsNrAddr; ++i) {
       os << "#" << setw(2) << i-1
-	 << " " << hex << itsAddr[i] << dec
+	 << " " << itsAddr[i]
 	 << " in " << itsTrace[i].function
 	 << " at " << itsTrace[i].file
 	 << ":"    << itsTrace[i].line << endl;

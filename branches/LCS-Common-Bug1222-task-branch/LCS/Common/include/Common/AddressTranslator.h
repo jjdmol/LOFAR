@@ -30,7 +30,7 @@
 
 //# Includes
 #include <Common/Backtrace.h>
-#include <Common/lofar_vector.h>
+#include <vector>
 
 #ifndef HAVE_BFD
 # warning Binary file descriptor (bfd) package is missing, \
@@ -59,7 +59,7 @@ namespace LOFAR
     // \param[out] trace vector containing the trace lines
     // \param[in]  addr C-array of return addresses
     // \param[in]  size number of return addresses in \a addr
-    void operator()(vector<Backtrace::TraceLine>& trace, 
+    void operator()(std::vector<Backtrace::TraceLine>& trace, 
                     void* const* addr, int size);
 
 #ifdef HAVE_BFD

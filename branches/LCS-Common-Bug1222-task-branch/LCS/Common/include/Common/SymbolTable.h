@@ -23,8 +23,6 @@
 #ifndef LOFAR_COMMON_SYMBOLTABLE_H
 #define LOFAR_COMMON_SYMBOLTABLE_H
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 // \file
 // one line description.
 

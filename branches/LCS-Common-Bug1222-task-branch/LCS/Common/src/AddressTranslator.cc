@@ -25,10 +25,8 @@
 
 //# Includes
 #include <Common/AddressTranslator.h>
+#include <Common/Backtrace.h>
 #include <Common/SymbolTable.h>
-#include <Common/lofar_sstream.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_iomanip.h>
 #include <cstdlib>
 #include <cstring>
 
@@ -47,7 +45,7 @@ namespace LOFAR
   {
   }
 
-  void AddressTranslator::operator()(vector<Backtrace::TraceLine>& trace,
+  void AddressTranslator::operator()(std::vector<Backtrace::TraceLine>& trace,
                                      void* const* addr, int size) 
   {
     // Initialize \a size elements of vector \a trace to avoid reallocations.
