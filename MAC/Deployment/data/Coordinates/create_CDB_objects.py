@@ -27,13 +27,14 @@ def getStationList():
 #
 # MAIN
 #
-db = pg.connect(user="postgres", host="dop50", dbname="coordtest")
+if __name__ == '__main__':    
+    db = pg.connect(user="postgres", host="dop50", dbname="coordtest")
 
-for station in getStationList():
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
-    print "updating %s to the coordinate database" % station
-    for lba in xrange(0, int(nrLBA)):
-        db.query("select * from add_object('%s', '%s', %d)" % ( name, "LBA", lba ))
-    for hba in xrange(0, int(nrHBA)):
-        db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA", hba ))
+    for station in getStationList():
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
+        print "updating %s to the coordinate database" % station
+        for lba in xrange(0, int(nrLBA)):
+            db.query("select * from add_object('%s', '%s', %d)" % ( name, "LBA", lba ))
+        for hba in xrange(0, int(nrHBA)):
+            db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA", hba ))
 
