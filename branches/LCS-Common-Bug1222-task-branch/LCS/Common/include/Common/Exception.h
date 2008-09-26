@@ -53,7 +53,7 @@ namespace LOFAR {
     {}
       
 
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
     Exception(const std::string& text, const std::string& file,
 	      int line, const std::string& func,
               const Backtrace& bt) :
@@ -94,7 +94,7 @@ namespace LOFAR {
       return itsFunction;
     }
 
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
     // Return the backtrace from where the exception occurred.
     const Backtrace& backtrace() const {
       return itsBacktrace;
@@ -110,7 +110,7 @@ namespace LOFAR {
     std::string itsFile;
     int         itsLine;
     std::string itsFunction;
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
     Backtrace   itsBacktrace;
 #endif
 
@@ -122,7 +122,7 @@ namespace LOFAR {
     oss << "[" << type() << ": " << text() << "]\n"
 	<< "in function " << (function().empty() ? "??" : function()) << "\n"
 	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")\n";
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
     oss << "Backtrace follows:\n" << itsBacktrace;
 #endif
     return oss.str();
@@ -152,7 +152,7 @@ namespace LOFAR {
 // The macro \c THROW_ARGS contains the arguments for the Exception object
 // being constructed in the THROW macro.
 //
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
 # define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME, ::LOFAR::Backtrace()
 #else
 # define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME
@@ -162,7 +162,7 @@ namespace LOFAR {
 // Declare and define an exception class of type \c excp, which is derived
 // from the exception class \c super.
 //
-#if defined(HAVE_BACKTRACE)
+#ifdef HAVE_BACKTRACE
 # define EXCEPTION_CLASS(excp,super)                       \
   class excp : public super                                \
   {                                                        \

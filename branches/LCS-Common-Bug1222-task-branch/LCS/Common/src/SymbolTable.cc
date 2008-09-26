@@ -37,8 +37,8 @@ namespace LOFAR
 #elif defined(__sun__)
   static const char* bfdFile = "/proc/self/object/a.out";
 #else
-# error Alias for process's executable file, like /proc/self/exe \
-on linux, must be present.
+# error "Alias for process's executable file, like /proc/self/exe \
+on linux, must be present."
 #endif
 
 
