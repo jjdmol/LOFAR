@@ -305,11 +305,12 @@ AC_DEFUN([lofar_BACKTRACE],
             AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
             AC_CHECK_HEADER([demangle.h],[
               AC_CHECK_FUNCS([cplus_demangle],,[
-                AC_MSG_WARN([C++ function name demangling is not available
-                    Please install the GNU binutils])])])],[
-            AC_MSG_WARN([Function return address translation is not supported. 
-                    Please install the GNU binutils])])])],[
-        AC_MSG_ERROR([Backtrace information is not available on this system])])])
+                AC_MSG_WARN([cplus_demangle not found, please install the GNU binutils])])],[
+              AC_MSG_WARN([demangle.h not found, please install the GNU binutils])])],[
+            AC_MSG_WARN([bfd_init not found, please install the GNU binutils])])],[
+          AC_MSG_WARN([bfd.h not found, please install the GNU binutils])])],[
+        AC_MSG_ERROR([backtrace not found in glibc])])],[
+      AC_MSG_ERROR([execinfo.h not found, please install glibc-devel])])
   fi
   AM_CONDITIONAL(USE_BACKTRACE, test "$enable_backtrace" = "yes")
 ])
