@@ -4,6 +4,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/MWIos.h>
 
 namespace LOFAR { namespace CEP {

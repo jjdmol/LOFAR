@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 
 #include <MWCommon/MWBlobIO.h>
 #include <MWCommon/MWError.h>

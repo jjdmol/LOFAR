@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/WorkerProxy.h>
 #include <MWCommon/WorkerInfo.h>
 #include <MWCommon/MasterControl.h>

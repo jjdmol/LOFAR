@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/WorkDomainSpec.h>
 #include <MWCommon/MWError.h>
 #include <Blob/BlobArray.h>

@@ -26,12 +26,14 @@
 // \file
 // Interface to the log4cplus logging package.
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+//# Includes
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
-#include <Common/Exception.h>
 
-//# Includes
+#ifdef ENABLE_TRACER
+#include <Common/StringUtil.h>
+#endif
+
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 #include <log4cplus/global-init.h>
@@ -366,7 +368,7 @@ void	initTraceModule(void);
 	lfr_log_oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
 					log4cplus::DEBUG_LOG_LEVEL, lfr_log_oss.str(), __FILE__, __LINE__); \
-	throw (exc(lfr_log_oss.str(), __HERE__)); \
+	throw (exc(lfr_log_oss.str(), THROW_ARGS)); \
 	} while(0)
 
 // @}

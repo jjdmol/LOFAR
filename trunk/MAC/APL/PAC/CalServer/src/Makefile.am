@@ -90,7 +90,7 @@ juggle_acc_SOURCES = \
 calinfo_SOURCES = \
 	calinfo.cc
 
-CalServer_DEPEND = \
+CalServer_DEPENDENCIES = \
 	$(top_builddir)/src/libcaldevel.la \
 	$(top_builddir)/src/libcal_protocol.la \
 	$(LOFAR_DEPEND)

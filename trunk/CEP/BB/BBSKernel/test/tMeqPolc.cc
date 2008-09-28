@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-
+#include <lofar_config.h>
 #include <BBSKernel/MNS/MeqPolc.h>
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqResult.h>

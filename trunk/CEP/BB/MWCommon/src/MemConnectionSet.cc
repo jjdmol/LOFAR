@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/MemConnectionSet.h>
 #include <MWCommon/MWError.h>
 #include <Common/LofarLogger.h>

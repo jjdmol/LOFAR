@@ -4,6 +4,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/VdsPartDesc.h>
 #include <Blob/BlobString.h>
 #include <Blob/BlobOBufString.h>

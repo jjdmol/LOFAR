@@ -32,6 +32,9 @@
 #include <string>
 #include <sstream>
 
+#ifdef HAVE_BACKTRACE
+# include <Common/Backtrace.h>
+#endif
 
 namespace LOFAR {
 
@@ -45,9 +48,21 @@ namespace LOFAR {
   {
   public:
     Exception(const std::string& text, const std::string& file="",
-	      int line=0, const std::string& func="");
+	      int line=0, const std::string& func="") :
+      itsText(text), itsFile(file), itsLine(line), itsFunction(func)
+    {}
+      
 
-    virtual ~Exception() throw();
+#ifdef HAVE_BACKTRACE
+    Exception(const std::string& text, const std::string& file,
+	      int line, const std::string& func,
+              const Backtrace& bt) :
+      itsText(text), itsFile(file), itsLine(line), itsFunction(func), 
+      itsBacktrace(bt)
+    {}
+#endif
+
+    virtual ~Exception() throw() {}
 
     // Implementation of std::exception::what().
     // Returns the user-supplied text as C-style char array.
@@ -79,8 +94,15 @@ namespace LOFAR {
       return itsFunction;
     }
 
-    // Return exception type, user-supplied text, function name,
-    // filename, and line number as a formatted string.
+#ifdef HAVE_BACKTRACE
+    // Return the backtrace from where the exception occurred.
+    const Backtrace& backtrace() const {
+      return itsBacktrace;
+    }
+#endif
+
+    // Return exception type, user-supplied text, filename, line number, 
+    // function name, and (if available) backtrace as a formatted string.
     const std::string message() const;
     
   private:
@@ -88,8 +110,28 @@ namespace LOFAR {
     std::string itsFile;
     int         itsLine;
     std::string itsFunction;
+#ifdef HAVE_BACKTRACE
+    Backtrace   itsBacktrace;
+#endif
 
   };
+
+  inline const std::string Exception::message() const
+  {
+    std::ostringstream oss;
+    oss << "[" << type() << ": " << text() << "]\n"
+	<< "in function " << (function().empty() ? "??" : function()) << "\n"
+	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")\n";
+#ifdef HAVE_BACKTRACE
+    oss << "Backtrace follows:\n" << backtrace();
+#endif
+    return oss.str();
+  }
+  
+  inline const char* Exception::what() const throw()
+  {
+    return text().c_str();
+  }
 
   // Put the exception message into an ostream.
   inline std::ostream& operator<<(std::ostream& os, const Exception& ex)
@@ -107,45 +149,60 @@ namespace LOFAR {
 //@{
 
 //
-//  Define the \c __HERE__ macro, using \c __PRETTY_FUNCTION__ or
-//  \c __FUNCTION__ if available.
+// The macro \c THROW_ARGS contains the arguments for the Exception object
+// being constructed in the THROW macro.
 //
-#if defined(HAVE_PRETTY_FUNCTION)
-#define __HERE__ __FILE__,__LINE__,__PRETTY_FUNCTION__
-#elif defined(HAVE_FUNCTION)
-#define __HERE__ __FILE__,__LINE__,__FUNCTION__
+#ifdef HAVE_BACKTRACE
+# define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME, ::LOFAR::Backtrace()
 #else
-#define __HERE__ __FILE__,__LINE__
+# define THROW_ARGS __FILE__, __LINE__, AUTO_FUNCTION_NAME
 #endif
 
 //
 // Declare and define an exception class of type \c excp, which is derived
 // from the exception class \c super.
 //
-#define EXCEPTION_CLASS(excp,super) \
-class excp : public super \
-{ \
-public: \
-  excp( const std::string& text, const std::string& file="", \
-	int line=0, const std::string& function="" ) : \
-    super(text, file, line, function) {} \
-  virtual const std::string& type( void ) const \
-  { \
-    static const std::string itsType(#excp); \
-    return itsType; \
-  } \
-}
+#ifdef HAVE_BACKTRACE
+# define EXCEPTION_CLASS(excp,super)                       \
+  class excp : public super                                \
+  {                                                        \
+  public:                                                  \
+    excp(const std::string& text, const std::string& file, \
+         int line, const std::string& function,            \
+         const Backtrace& bt) :                            \
+      super(text, file, line, function, bt) {}             \
+      virtual const std::string& type() const              \
+      {                                                    \
+        static const std::string itsType(#excp);           \
+        return itsType;                                    \
+      }                                                    \
+  }
+#else
+# define EXCEPTION_CLASS(excp,super)                       \
+  class excp : public super                                \
+  {                                                        \
+  public:                                                  \
+    excp(const std::string& text, const std::string& file, \
+         int line, const std::string& function ) :         \
+      super(text, file, line, function) {}                 \
+      virtual const std::string& type() const              \
+      {                                                    \
+        static const std::string itsType(#excp);           \
+        return itsType;                                    \
+      }                                                    \
+  }
+#endif
 
 //
-// Throw an exception of type \c excp; use \c strm for the message. 
-// Use this macro to insure that the  \c __HERE__ macro expands properly.
+// Throw an exception of type \c excp; use \c strm for the message,
+// and \c THROW_ARGS for the other constructor arguments.
 //
 #if !defined(THROW)
 # define THROW(excp,strm) \
 do { \
   std::ostringstream oss; \
   oss << strm; \
-  throw excp(oss.str(),__HERE__); \
+  throw excp(oss.str(),THROW_ARGS); \
 } while(0)
 #endif
 

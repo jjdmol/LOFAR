@@ -6,6 +6,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <TFC_Interface/Stub_FIR.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>

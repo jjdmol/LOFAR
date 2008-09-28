@@ -5,7 +5,7 @@
 //#
 //# $Id$
 
-//#include <lofar_config.h>
+#include <lofar_config.h>
 
 #include <MWCommon/MPIConnection.h>
 #include <MWCommon/MWError.h>

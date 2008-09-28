@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/WorkersDesc.h>
 #include <algorithm>
 

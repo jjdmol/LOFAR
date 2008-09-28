@@ -29,6 +29,11 @@
 namespace LOFAR
 {
   //
+  // This exception will be thrown when an assertion fails.
+  //
+  EXCEPTION_CLASS(AssertError,Exception);
+
+  //
   // This exception will be thrown when an I/O error occurs.
   //
   EXCEPTION_CLASS(IOException, Exception);

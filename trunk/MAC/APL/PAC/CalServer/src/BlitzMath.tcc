@@ -413,7 +413,7 @@ T bmMedian(const blitz::Array<T,1>& x)
     
     for (int i = 0; i < d1-1; i++) {
       if (abs(xx(i)) > abs(xx(i+1))) {
-        blitz::swap(xx(i),xx(i+1));
+        ::blitz::swap(xx(i),xx(i+1));
         swapped = true;
       }
     }

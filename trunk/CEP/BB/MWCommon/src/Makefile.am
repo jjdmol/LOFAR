@@ -9,7 +9,6 @@ MPIConnectionSet.cc \
 MWBlobIO.cc \
 MWConnection.cc \
 MWConnectionSet.cc \
-MWError.cc \
 MWGlobalStep.cc \
 MWIos.cc \
 MWLocalStep.cc \

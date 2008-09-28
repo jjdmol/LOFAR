@@ -31,9 +31,10 @@
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <Common/Exception.h>
+
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
+#include <Common/StringUtil.h>
 #endif
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -202,7 +203,7 @@ public: \
 #define THROW(exc,msg) do { \
 	constructStream(msg); \
 	cLog(1, "EXCEPTION", lfr_log_oss.str()); \
-	throw(exc(lfr_log_oss.str(), __HERE__)); \
+	throw(exc(lfr_log_oss.str(), THROW_ARGS)); \
 	} while(0)
 
 //# ---------- implementation details generic part ----------
@@ -267,9 +268,6 @@ namespace LOFAR
     extern std::ostream * dbg_stream_p;
   
     inline std::ostream & getDebugStream () { return *dbg_stream_p; }
-
-    // Typedef the exception type, so we can change whenever needed.
-    EXCEPTION_CLASS(Fail,::LOFAR::Exception);
 
     // sets level of given context
     bool setLevel (const string &context,int level);
