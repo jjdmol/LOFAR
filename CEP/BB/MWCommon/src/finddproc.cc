@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/VdsDesc.h>
 #include <MWCommon/ClusterDesc.h>
 #include <MWCommon/WorkersDesc.h>

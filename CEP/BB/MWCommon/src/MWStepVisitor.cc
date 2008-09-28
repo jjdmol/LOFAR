@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/MWStepVisitor.h>
 #include <MWCommon/MWMultiStep.h>
 #include <MWCommon/MWGlobalStep.h>

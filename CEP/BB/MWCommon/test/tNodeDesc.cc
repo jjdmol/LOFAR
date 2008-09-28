@@ -4,6 +4,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/NodeDesc.h>
 #include <Common/LofarLogger.h>
 #include <ostream>

@@ -4,6 +4,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/SocketConnection.h>
 #include <MWCommon/SocketListener.h>
 #include <Common/LofarLogger.h>

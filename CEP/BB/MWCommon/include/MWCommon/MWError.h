@@ -37,17 +37,7 @@ namespace LOFAR { namespace CEP {
   // This class defines the basic MW exception.
   // Only this basic exception is defined so far. In the future, some more 
   // fine-grained exceptions might be derived from it.
-
-  class MWError: public Exception
-  {
-  public:
-    // Create the exception object with the given message.
-    explicit MWError (const std::string& text, const std::string& file="",
-		      int line=0, const std::string& func="");
-
-    virtual ~MWError() throw();
-  };
-
+  EXCEPTION_CLASS(MWError, LOFAR::Exception);
 
 }} //# end namespaces
 

@@ -7,3 +7,5 @@ gnu.compiler.aipspp.var:	--with-casacore=/opt/lofar/external/casacore/linux_gnu 
 gnu43.compiler.aipspp.var:	--with-casacore=/opt/lofar/external/casacore-dev/linux_gnu43 --with-wcs=/opt/lofar/external/wcslib
 
 lofar_root.var:			--with-lofar-default=weekly --with-doxygen-dot
+
+debug.var:			--with-debug='-g' --enable-backtrace

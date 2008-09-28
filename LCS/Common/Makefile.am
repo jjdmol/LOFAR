@@ -1,4 +1,4 @@
-SUBDIRS=include src test
+SUBDIRS=src test include
 
 ACLOCAL_AMFLAGS = -I $(top_srcdir)/autoconf_share
 

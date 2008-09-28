@@ -8,6 +8,7 @@
 //#
 ////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 #include <TFC_Interface/Stub_Corr.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>

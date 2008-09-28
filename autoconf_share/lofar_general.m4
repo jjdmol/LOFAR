@@ -23,7 +23,7 @@
 #
 #  lofar_general.m4 contains the following m4 functions:
 #    lofar_DEBUG_OPTIMIZE
-#    lofar_CHECK_PRETTY_FUNCTION
+#    lofar_FUNCTION_NAME
 #    lofar_CHECK_USHORT
 #    lofar_CHECK_UINT
 #    lofar_CHECK_ULONG
@@ -52,7 +52,8 @@ lofar_CHECK_UINT([])
 lofar_CHECK_ULONG([])
 lofar_CHECK_LONG_LONG([])
 lofar_DEBUG_OPTIMIZE([])
-lofar_CHECK_PRETTY_FUNCTION([])
+lofar_FUNCTION_NAME([])
+lofar_BACKTRACE([])
 lofar_CHECK_INSTALL_IF_MODIFIED([])
 lofar_QATOOLS([])
 lofar_DOCXX([])
@@ -253,49 +254,65 @@ AC_MSG_ERROR([Can not have both --with-debug and --with-optimize])
 ]])dnl
 
 #
-# lofar_CHECK_PRETTY_FUNCTION
+# lofar_FUNCTION_NAME
 #
-# If the C++ compiler supports the __PRETTY_FUNCTION__ macro,
-#   define `HAVE_PRETTY_FUNCTION'
-# else if compiler supports the __FUNCTION__ macro, 
-#   define `HAVE_FUNCTION'
+# Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
+# or "<unknown>", depending on compiler support for function name macro.
 #
-# Based on ICE and DDD autoconf macros; added test for __FUNCTION__.
-#
-AC_DEFUN([lofar_CHECK_PRETTY_FUNCTION],[
+AC_DEFUN([lofar_FUNCTION_NAME],[
   AC_PREREQ(2.13)
-  AC_REQUIRE([AC_PROG_CXX])
-  AC_MSG_CHECKING(whether ${CXX} supports __PRETTY_FUNCTION__)
-  AC_CACHE_VAL(lofar_cv_have_pretty_function,[
-    AC_LANG_PUSH(C++)
+  AC_MSG_CHECKING(for function name macro)
+  AC_TRY_LINK(
+    [#include <stdio.h>],
+    [puts(__PRETTY_FUNCTION__)],
+    lofar_function_name=__PRETTY_FUNCTION__,
     AC_TRY_LINK(
       [#include <stdio.h>],
-      [puts(__PRETTY_FUNCTION__);],
-      lofar_cv_have_pretty_function=yes,
-      lofar_cv_have_pretty_function=no)
-    AC_LANG_POP(C++)
-  ])
-  AC_MSG_RESULT($lofar_cv_have_pretty_function)
-  if test "$lofar_cv_have_pretty_function" = yes; then
-    AC_DEFINE(HAVE_PRETTY_FUNCTION,1,[Define if __PRETTY_FUNCTION__ is defined])
-    echo "PRETTY_FUNCTION" >> pkgext;
-  else
-    AC_MSG_CHECKING(whether ${CXX} supports __FUNCTION__)
-    AC_CACHE_VAL(lofar_cv_have_function,[
-      AC_LANG_PUSH(C++)
-      AC_TRY_LINK(
-        [#include <stdio.h>],
-        [puts(__FUNCTION__);],
-        lofar_cv_have_function=yes,
-        lofar_cv_have_function=no)
-      AC_LANG_POP(C++)
-    ])
-    AC_MSG_RESULT($lofar_cv_have_function)
-    if test "$lofar_cv_have_function" = yes; then
-      AC_DEFINE(HAVE_FUNCTION,1,[Define if __FUNCTION__ is defined])
-      echo "FUNCTION" >> pkgext;
-    fi
+      [puts(__FUNCTION__)],
+      lofar_function_name=__FUNCTION__,
+      lofar_function_name="\"<unknown>\""))
+  AC_MSG_RESULT($lofar_function_name)
+  AC_DEFINE_UNQUOTED(AUTO_FUNCTION_NAME,$lofar_function_name,[Define as 
+                     __PRETTY_FUNCTION__, __FUNCTION__, or "<unknown>"])
+])
+
+#
+# lofar_BACKTRACE
+#
+# Check whether the C library provides support for backtrace information.
+# The backtrace() function provides you with stack frame return addresses. 
+# In order to translate these return addresses to filename, line number
+# and function name, we need support from the binutils:
+#   - libbfd contains functions to do the address translation
+#   - liberty contains a function to demangle C++ function names.
+#
+AC_DEFUN([lofar_BACKTRACE],
+[
+  AC_ARG_ENABLE([backtrace],
+    AS_HELP_STRING([--disable-backtrace],
+                   [use backtrace(3) reporting for exceptions (default=no)]),
+    [enable_backtrace="$enableval"],
+    [enable_backtrace="no"])
+  if test "$enable_backtrace" = "yes"; then
+    AC_CHECK_HEADER([execinfo.h],[
+      AC_CHECK_FUNCS([backtrace], [
+        AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
+        # Need to check for -liberty first, because static library -lbfd depends
+        # on to -liberty; otherwise library order in $(LIBS) will be wrong.
+        AC_SEARCH_LIBS([xexit], [iberty])
+        AC_CHECK_HEADER([bfd.h],[
+          AC_SEARCH_LIBS([bfd_init], [bfd], [
+            AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
+            AC_CHECK_HEADER([demangle.h],[
+              AC_CHECK_FUNCS([cplus_demangle],,[
+                AC_MSG_WARN([cplus_demangle not found, please install the GNU binutils])])],[
+              AC_MSG_WARN([demangle.h not found, please install the GNU binutils])])],[
+            AC_MSG_WARN([bfd_init not found, please install the GNU binutils])])],[
+          AC_MSG_WARN([bfd.h not found, please install the GNU binutils])])],[
+        AC_MSG_ERROR([backtrace not found in glibc])])],[
+      AC_MSG_ERROR([execinfo.h not found, please install glibc-devel])])
   fi
+  AM_CONDITIONAL(USE_BACKTRACE, test "$enable_backtrace" = "yes")
 ])
 
 #

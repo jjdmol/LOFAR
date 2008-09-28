@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/MWLocalStep.h>
 
 namespace LOFAR { namespace CEP {

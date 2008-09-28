@@ -4,6 +4,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/WorkersDesc.h>
 #include <Common/LofarLogger.h>
 #include <ostream>

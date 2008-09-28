@@ -1,6 +1,6 @@
-//#  Exception.cc: implementation of the LOFAR Exception class
+//#  tSymbolTable.cc: one line description
 //#
-//#  Copyright (C) 2002
+//#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -23,35 +23,15 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/Exception.h>
-#include <sstream>
+//# Includes
+#include <Common/SymbolTable.h>
+#include <Common/LofarLogger.h>
 
-namespace LOFAR {
-  
-  Exception::Exception(const std::string& text, const std::string& file,
-		       int line, const std::string& func) :
-    itsText(text), itsFile(file), itsLine(line), itsFunction(func)
-  {
-  }  
-  
-  Exception::~Exception() throw()
-  {
-  }
+using namespace LOFAR;
 
-  const std::string Exception::message() const
-  {
-    std::ostringstream oss;
-
-    oss << "[" << type() << ": " << text() << "]\n"
-	<< "in function " << (function().empty() ? "??" : function()) << "\n"
-	<< "(" << (file().empty() ? "??" : file()) << ":" << line() << ")\n";
-
-    return oss.str();
-  }
-  
-  const char* Exception::what() const throw()
-  {
-    return text().c_str();
-  }
-
-} // namespace LOFAR
+int main()
+{
+  INIT_LOGGER("tSymbolTable");
+  SymbolTable::instance();
+  return 0;
+}

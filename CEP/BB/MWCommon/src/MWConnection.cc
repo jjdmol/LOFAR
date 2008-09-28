@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/MWConnection.h>
 #include <Blob/BlobString.h>
 #include <Blob/BlobHeader.h>

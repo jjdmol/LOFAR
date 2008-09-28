@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/VdsPartDesc.h>
 #include <MWCommon/ParameterHandler.h>
 #include <Blob/BlobArray.h>

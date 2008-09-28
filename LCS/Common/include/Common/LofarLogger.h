@@ -26,11 +26,8 @@
 // \file
 // Macro interface to the lofar logging package.
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-#include <Common/StringUtil.h>
-
-//# Dependent of the availability of the log4Cplus package one set of macro's
-//# or the other set of macro's is included.
+//# Include the correct set of macros, depending on the availability of the
+//# log4cplus or log4cxx packages.
 #if defined(HAVE_LOG4CPLUS)
 # include <Common/LofarLog4Cplus.h>
 #elif defined(HAVE_LOG4CXX)
@@ -39,15 +36,14 @@
 # include <Common/LofarLogCout.h>
 #endif
 
+#include <Common/Exceptions.h>
+
 namespace LOFAR 
 {
 
 // \ingroup Common
 // \addtogroup LofarLogger
   // @{
-
-  // Define the LOFAR::Exception class.
-EXCEPTION_CLASS(AssertError,Exception);
 
 
 //# --------------------- Common definitions ---------------
@@ -68,19 +64,6 @@ EXCEPTION_CLASS(AssertError,Exception);
 # define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE "." LOFARLOGGER_SUBPACKAGE
 #else
 # define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE
-#endif
-
-//#
-//# AUTO_FUNCTION_NAME
-//#
-// This macro will be resolved by the (pre)compiler to hold the name of the
-// function the macro was used in.
-#if defined(HAVE_PRETTY_FUNCTION)
-#	define AUTO_FUNCTION_NAME		__PRETTY_FUNCTION__
-#elif defined(HAVE_FUNCTION)
-#	define AUTO_FUNCTION_NAME		__FUNCTION__
-#else
-#	define AUTO_FUNCTION_NAME		"??"
 #endif
 
 // @}

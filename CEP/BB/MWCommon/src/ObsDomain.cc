@@ -5,6 +5,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <MWCommon/ObsDomain.h>
 
 namespace LOFAR { namespace CEP {
