@@ -30,6 +30,7 @@
 #include <AMCBase/Exceptions.h>
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
+#include <Common/StringUtil.h>
 
 
 namespace LOFAR
