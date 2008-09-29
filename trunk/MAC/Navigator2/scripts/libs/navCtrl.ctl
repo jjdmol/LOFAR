@@ -122,7 +122,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       navFunct_fillProcessesTree();
       navFunct_fillHardwareLists();
       navFunct_fillObservationsList();
-    } else {
+    } else if (dynlen(g_stationList) > 0) {
       navFunct_fillHardwareTree();
       navFunct_fillProcessesList();
       navFunct_fillObservationsList();
@@ -444,53 +444,112 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
               }
             }
           } else {
-             station=g_stationList[1];
-             for (int k = 1; k<= dynlen(g_cabinetList); k++) {
-               if (navFunct_hardware2Obs(station, longObs,"Cabinet","",g_cabinetList[k])) {
-                 if (!dynContains(highlight,g_cabinetList[k])) {
-                   dynAppend(highlight,"Cabinet"+g_cabinetList[k]);
-                 }
-               }
-             }
-             for (int k = 1; k<= dynlen(g_subrackList); k++) {
-               if (navFunct_hardware2Obs(station, longObs,"Subrack","",g_subrackList[k])) {
-                 if (!dynContains(highlight,g_subrackList[k])) {
-                   dynAppend(highlight,"Subrack"+g_subrackList[k]);
-                 }
-               }
-             }
-             for (int k = 1; k<= dynlen(g_RSPList); k++) {
-               if (navFunct_hardware2Obs(station, longObs,"RSPBoard","",g_RSPList[k])) {
-                 if (!dynContains(highlight,g_RSPList[k])) {
-                   dynAppend(highlight,"RSPBoard"+g_RSPList[k]);
-                 }
-               }
-             }
-             for (int k = 1; k<= dynlen(g_TBBList); k++) {
-               if (navFunct_hardware2Obs(station, longObs,"TBBoard","",g_TBBList[k])) {
-                 if (!dynContains(highlight,g_TBBList[k])) {
-                   dynAppend(highlight,"TBBoard"+g_TBBList[k]);
-                 }
-               }
-             }
-             for (int k = 1; k<= dynlen(g_RCUList); k++) {
-               if (navFunct_hardware2Obs(station, longObs,"RCU","",g_RCUList[k])) {
-                 if (!dynContains(highlight,g_RCUList[k])) {
-                   dynAppend(highlight,"RCU"+g_RCUList[k]);
-                 }
-               }
-             }
+            station=g_stationList[1];
+            for (int k = 1; k<= dynlen(g_cabinetList); k++) {
+              if (navFunct_hardware2Obs(station, longObs,"Cabinet","",g_cabinetList[k])) {
+                if (!dynContains(highlight,g_cabinetList[k])) {
+                  dynAppend(highlight,"Cabinet"+g_cabinetList[k]);
+                }
+              }
+            }
+            for (int k = 1; k<= dynlen(g_subrackList); k++) {
+              if (navFunct_hardware2Obs(station, longObs,"Subrack","",g_subrackList[k])) {
+                if (!dynContains(highlight,g_subrackList[k])) {
+                  dynAppend(highlight,"Subrack"+g_subrackList[k]);
+                }
+              }
+            }
+            for (int k = 1; k<= dynlen(g_RSPList); k++) {
+              if (navFunct_hardware2Obs(station, longObs,"RSPBoard","",g_RSPList[k])) {
+                if (!dynContains(highlight,g_RSPList[k])) {
+                  dynAppend(highlight,"RSPBoard"+g_RSPList[k]);
+                }
+              }
+            }
+            for (int k = 1; k<= dynlen(g_TBBList); k++) {
+              if (navFunct_hardware2Obs(station, longObs,"TBBoard","",g_TBBList[k])) {
+                if (!dynContains(highlight,g_TBBList[k])) {
+                  dynAppend(highlight,"TBBoard"+g_TBBList[k]);
+                }
+              }
+            }
+            for (int k = 1; k<= dynlen(g_RCUList); k++) {
+              if (navFunct_hardware2Obs(station, longObs,"RCU","",g_RCUList[k])) {
+                if (!dynContains(highlight,g_RCUList[k])) {
+                  dynAppend(highlight,"RCU"+g_RCUList[k]);
+                }
+              }
+            }
           }             
-        } else {  // Hardware or processes
+        } else if (sel[1] == "Hardware") {  // Hardware
+          if (!dynContains(highlight,sel[2])) {
+            dynAppend(highlight,sel[2]);
+          }
+
+          // check all available observations
+          for (int i = 1; i <= dynlen(g_observationsList);i++) {
+            string longObs="LOFAR_ObsSW_"+g_observationsList[i];
+        
+            string station = g_stationList[1];
+            string choice="";
+            string strSearch="";
+            int    iSearch=-1;
+
+          
+          
+            if (strpos(sel[2],"Cabinet") > -1) {
+              string c=sel[2];
+              strreplace(c,"Cabinet","");
+              iSearch=c;
+              choice = "Cabinet";
+            } else if (strpos(sel[2],"Subrack") > -1) {
+              string c=sel[2];
+              strreplace(c,"Subrack","");
+              iSearch=c;
+              choice = "Subrack";  
+            } else if (strpos(sel[2],"RSPBoard") > -1) {
+              string c=sel[2];
+              strreplace(c,"RSPBoard","");
+              iSearch=c;
+              choice = "RSPBoard";
+            } else if (strpos(sel[2],"TBBoard") > -1) {
+              string c=sel[2];
+              strreplace(c,"TBBoard","");
+              iSearch=c;
+              choice = "TBBoard";
+            } else if (strpos(sel[2],"RCU") > -1) {
+              string c=sel[2];
+              strreplace(c,"RCU","");
+              iSearch=c;
+              choice = "RCU"; 
+            } else {
+              station = sel[2];
+              choice = "Station";
+              strSearch=sel[2];
+            }
+            
+
+            if (navFunct_hardware2Obs(station, longObs,choice,strSearch,iSearch)){
+              if (!dynContains(highlight,g_observationsList[i])) {
+                // seems this observation is involved, add it to the list
+                dynAppend(highlight,g_observationsList[i]);
+              }
+            }
+          }
+          action+="|"+sel[1]+"|"+sel[2];
+        } else { // processes
           typeSelector=sel[1];
           observationType="";
           selection=sel[2];
           if (!dynContains(highlight,sel[2])) {
             dynAppend(highlight,sel[2]);
           }
+          
+          
+          
           action+="|"+sel[1]+"|"+sel[2];
         }
-      }
+      }          
     }   
     LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| highlight contains now: "+highlight);                          
     if (dynlen(highlight) > 0) {

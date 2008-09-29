@@ -12,14 +12,8 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
   TopLabel.text(database+\" \"+$daemonName);
   
   
-  // set the hardware selectable items
-  dyn_string result=\"\";  
-  
-  // There are no further hardware elements below RCU that can be selected, so empty
-  // the list in the database
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
-  
+  // set the selectable processes
+  prepareProcesses();
   
   // start the logging process
   navPanel_showLogging(baseDP);
@@ -82,6 +76,20 @@ updateStates(string dp1, string message,
     setValue(\"processStopTime\", \"text\", \"\");
     setValue(\"processID\", \"text\", \"\");
   }
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",\"+$daemonName+\",\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG($daemonName+\".pnl:prepareProcesses|processList found: \"+ result);    
+  
 }
 " 0
  E E E E 1 -1 -1 0  50 50
@@ -469,6 +477,5 @@ LANG:1 0
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 9.500000000000011 10.5 T 1 1 0 1 0.499999999999993 2.5
-1
-"$object""CTStartDaemon"
+0
 0

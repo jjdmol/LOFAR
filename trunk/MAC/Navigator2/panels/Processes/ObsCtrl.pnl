@@ -9,24 +9,30 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
+
+ // set the selectable processes
+  prepareProcesses();
   
-  // set the hardware selectable items
-  dyn_string result=\"\";  
-  
-  // There are no further hardware elements below that can be selected, so empty
-  // the list in the database
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
-  
-  LOG_DEBUG(\"ObsCtrl.pnl:main|processList found: \"+ result); 
-  
-  // trigger that the panel values are calculated and ready
+    // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"ObsCtrl.pnl\",\"Update\");
   
 
   // no selection, so no trigger mechanism needed in this panel.   
 }
-" 0
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",ObsCtrl,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"ObsCtrl.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}" 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
 E "#uses \"navPanel.ctl\"

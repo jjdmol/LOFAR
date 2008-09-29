@@ -35,6 +35,7 @@
 #uses "MainCU_Processes.ctl"
 
 global dyn_string station_result;
+global dyn_string station_procList;
 global string station_selectedObservation    = "";
 global string station_selectedStation        = "";
 global string station_obsBaseDP              = "";
@@ -54,6 +55,7 @@ bool Station_Processes_initList() {
   station_obsBaseDP="";
   
   dynClear(station_result);
+  dynClear(station_procList);
   
   int z;
   dyn_dyn_anytype tab;
@@ -84,9 +86,13 @@ bool Station_Processes_initList() {
     // Remainder should be PermsSW Programs + Daemons  split on _ 
     dyn_string spl=strsplit(aS,"_");
     if (dynlen(spl) > 1) { // Daemon
-      station_result[z]=navFunct_dpStripLastElement(path)+","+spl[2]+","+path;
+      dynAppend(station_result,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+      dynAppend(station_procList,path);
     } else {   // Program
-      station_result[z]=","+spl[1]+","+path;
+      dynAppend(station_result,","+spl[1]+","+path);
+      if (spl[1] != "Daemons") {
+        dynAppend(station_procList,path);
+      }
     }
   }
   
@@ -151,9 +157,9 @@ bool Station_Processes_UpdateProcessesList() {
   
   // copy old station_results from rest of the panel to the new list
   list=station_result;
+  g_processesList=station_procList;
   
   int z;
-  int idx=dynlen(list)+1;  // start index for adding new station_results
   dyn_dyn_anytype tab;
 
   // if an observation is chosen
@@ -167,7 +173,7 @@ bool Station_Processes_UpdateProcessesList() {
       obsDP=station_selectedStation+dpSubStr(obsDP,DPSUB_DP);
     }    
     // add Observation 
-    list[idx++]=","+station_selectedObservation+","+obsDP;
+    dynAppend(list,","+station_selectedObservation+","+obsDP);
 
     //select all Ctrl under Station:LOFAR_PermSW_'station_selectedObservation'
     string query="SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' REMOTE '"+station_selectedStation+"'";
@@ -192,9 +198,13 @@ bool Station_Processes_UpdateProcessesList() {
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
-        list[idx++]=navFunct_dpStripLastElement(path)+","+spl[2]+","+path;
+        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+        dynAppend(g_processesList,path);
       } else {   // Ctrl
-        list[idx++]=obsDP+","+spl[1]+","+path;
+        dynAppend(list,obsDP+","+spl[1]+","+path);
+        if (spl[1] != "OnlineCtrl") {
+          dynAppend(g_processesList,path);
+        }
       }
     }
     
