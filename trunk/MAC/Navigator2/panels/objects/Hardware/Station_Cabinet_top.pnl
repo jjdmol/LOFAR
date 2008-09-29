@@ -43,7 +43,7 @@ void click() {
     // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"LofarStation-Cabinet\",\"EventClick\");
+    navPanel_setEvent(\"LofarStation\",\"EventClick\");
   }
 }
 

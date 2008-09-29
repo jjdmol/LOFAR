@@ -44,7 +44,11 @@ void initialize() {
   LOG_TRACE(\"navigator_typeSelector.pnl:Initialize| \"+$name+\" start\");
 
   changeSelection(itsSelection);
-  
+  if (connected) {
+    dpDisconnect(\"doHighlight\",DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\");
+  }
+  dpConnect( \"doHighlight\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  connected = true;  
 }
 
 //
@@ -63,16 +67,6 @@ void doAction(string aDP, string anAction) {
   LOG_DEBUG(\"navigator_typeSelector.pnl:doAction|found actionString: \" + actionString);
   
   // check for actions and call right routine.
-  // Highlight
-
-  if (actionString[1]== \"Highlight\") {
-    if (dynRemove(actionString,1) < 0) {
-      LOG_ERROR(\"navigator_typeSelector.pnl:doAction| Error removing action from actionString\");
-    }
-    delay(0,75);
-    doHighlight(actionString);
-    return;
-  }
   
   // Initialize
   if (actionString[1]== \"Initialize\") {
@@ -92,31 +86,22 @@ void doAction(string aDP, string anAction) {
     updateObsList();
     return;
   }
+  
+  if (connected) {
+    dpDisconnect(\"doHighlight\",DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\");
+  }
+  dpConnect( \"doHighlight\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  connected = true;
 }
 
 
 
-void doHighlight(dyn_string actionString) {
-  LOG_TRACE(\"navigator_typeSelector.pnl:doHighlight| entered with: \"+actionString);
+void doHighlight(string dp1,bool aTrigger) {
+  LOG_TRACE(\"navigator_typeSelector.pnl:doHighlight| entered\");
   
-  // Highlight contains the names of the items in  the treelist that should be highlighted.
-  // make a list of them for parsing
-  
-  // check if tabname is in selection list (will be if triggered by detailselector) if so remove first
-  int i=dynContains(actionString,\"Hardware\");
-  if (i > 0) {
-    dynRemove(actionString,i);
-  }
-  int i=dynContains(actionString,\"Processes\");
-  if (i > 0) {
-    dynRemove(actionString,i);
-  }
-  int i=dynContains(actionString,\"Observations\");
-  if (i > 0) {
-    dynRemove(actionString,i);
-  }
-  
-  if (dynlen(actionString) < 1) {
+  // highlight contains the names of the items in  the treelist that should be highlighted.
+ 
+  if (dynlen(highlight) < 1) {
     return;
   }
   
@@ -127,21 +112,21 @@ void doHighlight(dyn_string actionString) {
     // which items in the current selectionlist make use of the processes asked for.
     
     shape aShape=getShape(\"processesTree\");
-    selectTreeItems(aShape,actionString,\"\");
+    selectTreeItems(aShape,\"\");
 
   } else if (itsSelection == \"Hardware\") {
     // action asked for highlighting of hardware components so we have to determine
     // which items in the current selectionlist make use of the components asked for.
 
     shape aShape=getShape(\"hardwareTree\");
-    selectTreeItems(aShape,actionString,\"\");
+    selectTreeItems(aShape,\"\");
     
   } else if (itsSelection == \"Observations\") {
     // action asked for highlighting of observations so we have to determine
     // which items in the current selectionlist make use of the components asked for.
     
     shape aShape=getShape(\"observationsTree\");
-    selectTreeItems(aShape,actionString,\"\");
+    selectTreeItems(aShape,\"\");
   } else {
     LOG_DEBUG(\"navigator_typeSelector.pnl:doHighlight|illegal call for Highlight: \" + tab);
   }
@@ -158,25 +143,21 @@ void doHighlight(dyn_string actionString) {
  * parent        - parent to start the search on
  *
  */
-void selectTreeItems(shape tree,dyn_string actionString,string parent) {
+void selectTreeItems(shape tree,string parent) {
 
-  LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered actionString: \"+actionString+\" parent: \"+parent);
+  LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered highlight: \"+highlight+\" parent: \"+parent);
   dyn_string ids = tree.children(parent);
   
   for (int i = 1; i<= dynlen(ids); i++) {
     // if node step down for search
     if (dynlen(tree.children(ids[i])) > 0) {
-      selectTreeItems(tree,actionString,ids[i]);
+      selectTreeItems(tree,ids[i]);
     }
 
-    bool found=false;
-    for (int j=1; j<= dynlen(actionString); j++) {
-      if (tree.getText(ids[i],0) == actionString[j] ){
-        found=true;
-        break;
-      }
-    }
-    if (found) {
+    // check if item is available in highlight list
+    int iPos = dynContains(highlight,tree.getText(ids[i],0));
+    
+    if (iPos > 0) {
       tree.ensureItemVisible(ids[i]);
       tree.setIcon(ids[i],0,\"16_hand_right.gif\");
     } else {
@@ -193,6 +174,7 @@ string 		itsActionDp     = \"\";
 string 		itsEventDp      = \"\";
 dyn_string 	itsSelectionDp  = \"\";
 bool            bDoubleClicked  = false;
+bool            connected       = false;
 
 
 string itsSelection = \"\";
@@ -441,8 +423,8 @@ LANG:1 9 Processes
 E
 "main()
 {
-  setEvent(typeSelector.text,\"|ChangeSelection\");
   changeSelection(typeSelector.text);
+  setEvent(typeSelector.text,\"ChangeSelection\");
 }
 
 " 0
