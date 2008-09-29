@@ -8,4 +8,4 @@ gnu43.compiler.aipspp.var:	--with-casacore=/opt/lofar/external/casacore-dev/linu
 
 lofar_root.var:			--with-lofar-default=weekly --with-doxygen-dot
 
-debug.var:			--with-debug='-g' --enable-backtrace
+backtrace.var:                  --enable-backtrace

@@ -25,8 +25,11 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/LofarTypes.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/wSpaceSplit.h>
 #include <OTDB/VICnodeDef.h>
@@ -54,7 +57,7 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 	try {
 		// remove ' chars from description
 		string	cleanDesc(aParam.description);
-		uint32	pos = 0;
+		size_t	pos = 0;
 		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
 			cleanDesc.erase(pos, 1);
 		}
@@ -242,7 +245,7 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 	try {
 		// remove ' chars from description
 		string	cleanDesc(aNode.description);
-		uint32	pos = 0;
+		size_t	pos = 0;
 		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
 			cleanDesc.erase(pos, 1);
 		}

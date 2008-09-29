@@ -26,6 +26,8 @@
 // \file
 // Collection of constants also available in the DB.
 
+#include <Common/LofarTypes.h>
+
 namespace LOFAR {
   namespace OTDB {
 

@@ -1,6 +1,7 @@
 #include <time.h>
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/hexdump.h>
 #include <myACClientFunctions.h>
 

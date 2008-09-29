@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #include "GTM_ETHSocket.h"
 #include "GTM_FileHandler.h"

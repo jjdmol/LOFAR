@@ -28,6 +28,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
 #include <ALC/ApplControlComm.h>
 #include <ALC/DH_ApplControl.h>

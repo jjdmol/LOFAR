@@ -32,6 +32,7 @@
 #include <Suite/test.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 using std::endl;
 

@@ -27,6 +27,7 @@
 #include <AMCBase/Coord3D.h>
 #include <Common/LofarLogger.h>
 #include <Common/Numeric.h>
+#include <cmath>
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
