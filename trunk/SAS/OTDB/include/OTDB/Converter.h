@@ -29,6 +29,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 #include <pqxx/pqxx>
 
 namespace LOFAR {

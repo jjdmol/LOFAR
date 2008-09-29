@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #define LOFARLOGGER_SUBPACKAGE "Timer"
 

@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Fsm.h>
 #include <GTM_Defines.h>
 

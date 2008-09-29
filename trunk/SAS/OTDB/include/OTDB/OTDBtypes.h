@@ -26,6 +26,8 @@
 // \file
 // Size definitions of database identifier-fields.
 
+#include <Common/LofarTypes.h>
+
 namespace LOFAR {
   namespace OTDB {
 

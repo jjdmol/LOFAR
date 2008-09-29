@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/Converter.h>
 

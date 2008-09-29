@@ -24,7 +24,7 @@ nolog4cplus.variant.conf: $(standard) $(debug) --without-log4cplus
 insure.variant.conf:      $(standard) --with-insuretools --with-cppflags="-D__INSURE__"
 insure.variant.make:      QA=insure
 
-standard.var:             $(lofar_root) $(searchpath) $(log4c) $(aipspp) $(sockets) $(zoid) $(threads) $(sse) $(shmem) $(python) $(boost) $(cppflags)
+standard.var:             $(lofar_root) $(searchpath) $(log4c) $(aipspp) $(sockets) $(zoid) $(threads) $(sse) $(shmem) $(python) $(boost) $(cppflags) $(backtrace)
 
 lofar_root.var:
 searchpath.var:           --with-searchpath="+prefix +root /opt/lofar/external/+pkg+vers/+comp /opt/lofar/external/+pkg+vers /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
@@ -38,6 +38,7 @@ shmem.var:                --with-shmem
 python.var:               --with-python-version=2.3 --with-python=/usr/include/+pkg+vers --with-python-libdir=/usr/lib
 boost.var:
 cppflags.var:
+backtrace.var:
 
 nothreads.var:            --with-threads=no  
 noshmem.var:              --with-shmem=no

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
 #include <Common/lofar_string.h>
 #include <fstream>
@@ -739,7 +740,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 	try {
 		// remove ' chars from description
 		string	cleanLimits(aNode.limits);
-		uint32	pos = 0;
+		size_t	pos = 0;
 		while((pos = cleanLimits.find_first_of("'",pos)) != string::npos) {
 			cleanLimits.erase(pos, 1);
 		}
@@ -782,7 +783,7 @@ bool	TreeMaintenance::saveNodeList(vector<OTDBnode>&	aNodeList)
 	LOG_TRACE_FLOW_STR("TM:saveNodeList(...)");
 
 	bool actionOK = true;
-	for (uint32 i = 0; i < aNodeList.size(); i++) {
+	for (size_t i = 0; i < aNodeList.size(); i++) {
 		actionOK &= saveNode(aNodeList[i]);
 	}
 
@@ -850,7 +851,7 @@ bool	TreeMaintenance::deleteNodeList(vector<OTDBnode>&	aNodeList)
 	LOG_TRACE_FLOW_STR("TM:deleteNodeList(...)");
 
 	bool	actionOK = true;
-	for (uint32 i = 0; i < aNodeList.size(); i++) {
+	for (size_t i = 0; i < aNodeList.size(); i++) {
 		actionOK &= deleteNode(aNodeList[i]);
 	}
 
@@ -1208,7 +1209,7 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 	try {
 		// remove ' chars from description
 		string	cleanDesc(aDescription);
-		uint32	pos = 0;
+		size_t	pos = 0;
 		while((pos = cleanDesc.find_first_of("'",pos)) != string::npos) {
 			cleanDesc.erase(pos, 1);
 		}

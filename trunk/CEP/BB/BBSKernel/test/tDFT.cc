@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
 #include <Common/Timer.h>
 #include <casa/BasicSL/Constants.h>
 #include <vector>

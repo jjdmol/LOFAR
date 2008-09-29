@@ -31,6 +31,7 @@
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/DataHolder.h>
 #include <Transport/Connection.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {

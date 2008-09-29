@@ -30,10 +30,9 @@ int main()
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-
-#include <lofar_config.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_iostream.h>
+#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>

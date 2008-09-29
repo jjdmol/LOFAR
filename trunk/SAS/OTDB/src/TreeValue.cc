@@ -106,7 +106,7 @@ bool TreeValue::addKVT (const string&	key,
 bool 	TreeValue::addKVTlist (vector<OTDBvalue>	theValues) 
 {
 	bool	result = true;
-	for (uint32 i = 0; i < theValues.size(); ++i) {
+	for (size_t i = 0; i < theValues.size(); ++i) {
 		result &= addKVT(theValues[i].name,
 						 theValues[i].value,
 						 theValues[i].time);

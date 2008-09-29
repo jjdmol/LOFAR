@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
 
 #include <MACIO/SB_Protocol.ph>

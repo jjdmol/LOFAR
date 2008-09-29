@@ -31,7 +31,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
-
+#include <Common/lofar_vector.h>
 #include <Common/lofar_list.h>
 #include <CEPFrame/BlockRep.h>
 #include <CEPFrame/VirtualMachine.h>
