@@ -1,6 +1,7 @@
 #include <lofar_config.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
+#include <Common/StringUtil.h>
 #include "PerformanceResponse.h"
 
 int		gDeleteCounter = 0;

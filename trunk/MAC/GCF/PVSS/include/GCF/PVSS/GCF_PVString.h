@@ -24,6 +24,7 @@
 #define GCF_PVSTRING_H
 
 #include <GCF/PVSS/GCF_PValue.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR 
 {

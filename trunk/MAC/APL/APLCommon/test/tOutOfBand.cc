@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
 #include <APL/APLCommon/CTState.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 

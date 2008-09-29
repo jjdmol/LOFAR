@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
-//#include <GCF/GCF_Defines.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR {
  namespace GCF {

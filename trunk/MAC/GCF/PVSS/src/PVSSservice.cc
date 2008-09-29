@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
+#include <Common/StringUtil.h>
 
 #include <DpMsgAnswer.hxx>
 #include <DpMsgHotLink.hxx>

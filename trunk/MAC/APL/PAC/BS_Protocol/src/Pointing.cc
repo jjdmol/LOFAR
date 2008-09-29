@@ -28,6 +28,8 @@
 #include <AMCBase/RequestData.h>
 #include <AMCBase/ResultData.h>
 
+#include <cmath>
+
 using namespace LOFAR;
 using namespace BS_Protocol;
 using namespace AMC;

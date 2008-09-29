@@ -21,9 +21,9 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <unistd.h>
 
-//#include <Common/lofar_strstream.h>
 #include "APL/APLCommon/APLUtilities.h"
 
 namespace LOFAR {

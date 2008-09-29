@@ -29,6 +29,7 @@
 #include <Datapoint.hxx>
 #include <DpContainer.hxx>
 #include <DpIdentification.hxx>
+#include <Common/StringUtil.h>
 
 namespace LOFAR {
  namespace GCF {
