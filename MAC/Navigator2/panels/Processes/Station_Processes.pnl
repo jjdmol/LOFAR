@@ -4,12 +4,6 @@ LANG:1 0
 PANEL,-1 -1 1016 729 N "_3DFace" 0
 "main()
 {
-  
-  // empty the processesList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",makeDynString(\"\"));
-  }  
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -19,88 +13,8 @@ PANEL,-1 -1 1016 729 N "_3DFace" 0
   // set the process selectable items
   Station_Processes_initList();
   
-  // connect to trigger to get a signal if some highlighting should be done.
-  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");
 }
-
-void TriggerCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|entered with on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|Found strHighlight : \" + strHighlight);
-  
-  // empty highlight
-  dynClear(highlight);
-  
-  // highlights for this screen can be triggered by :
-  // Observations
-  // processes
-  // hardware
-  dyn_string obsMatch=dynPatternMatch(\"Observation*\",strHighlight);
-  dyn_string processMatch=dynPatternMatch(\"LogProcessor\",strHighlight);
-  dynAppend(processMatch,dynPatternMatch(\"ServiceBroker\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"CTStartDaemon\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"SASGateway\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"RSPDriver\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"TBBDriver\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"AMCServer\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"CalServer\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"BeamServer\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"HardwareMonitor\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"SoftwareMonitor\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"TemperatureMonitor\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"StationCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"DigBoardCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"BeamCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"CalCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"TBBCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"MACInfoServer\",strHighlight));
-  
- 
-  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|from strHighlight ObsMatch found: \"+obsMatch);
-//  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|from strHighlight stationMatch found: \"+stationMatch);
-  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|from strHighlight processMatch found: \"+processMatch);
-  
-  //get processes participating in Observation
-//  for (int i = 1; i<= dynlen(obsMatch); i++) {
-    // get the real name from the claimed datapoint
-//    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
-    
-//    LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|Found ObsDP: \" + ObsDP);             
-//    if (ObsDP != \"\") {
-      // look if that name is available in the Observation List
-//      int i = dynContains(g_observations[\"DP\"],ObsDP);
-//      if ( i > 0) {
-        // get the Stationlist from that observation
-//    	string sts=g_observations[\"STATIONLIST\"][i];
-//        LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|Found Stationlist for this Observation: \"+ sts);
-        // add stationlist to highlight.
-//        dyn_string stations = strsplit(sts,\",\");
-//        if (dynlen(stations) > 0) {
-//          dynAppend(highlight,stations);
-//        }
-//      }
-//    }
-//  } 
-  
-  //get stations from choice
-//  if (dynlen(stationMatch) > 0) {
-//    dynAppend(highlight,stationMatch);
-//  }
-  
-  //get processes from choice
-  if (dynlen(processMatch) > 0) {
-    dynAppend(highlight,processMatch);
-  }
-  //empty strHighlight
-     
-  LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|highlight contains: \"+highlight);
-    
-  // if highlight set, then kick objectTrigger
-  if (dynlen(highlight) > 0) {
-    LOG_DEBUG(\"Station_Processes.pnl:Trigger Callback|Pushing objectTrigger\");
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
-  }   
-}" 0
+" 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
 E "#uses \"navPanel.ctl\"
@@ -391,65 +305,67 @@ LANG:1 6 logMsg
 0
 1 203 31 "22" 6
 0
-1 204 32 "" 4
+1 204 31 "" 97
 0
-1 205 32 "" 3
+1 205 32 "" 4
 0
-1 206 32 "0" 1
+1 206 32 "" 3
 0
-1 207 32 "" 2
+1 207 32 "0" 1
 0
-1 208 32 "" 6
+1 208 32 "" 2
 0
-1 209 34 "" 4
+1 209 32 "" 6
 0
-1 210 34 "" 3
+1 210 34 "" 4
 0
-1 211 34 "0" 1
+1 211 34 "" 3
 0
-1 212 34 "" 2
+1 212 34 "0" 1
 0
-1 213 34 "" 6
+1 213 34 "" 2
 0
-1 214 35 "" 4
+1 214 34 "" 6
 0
-1 215 35 "" 3
+1 215 35 "" 4
 0
-1 216 35 "0" 1
+1 216 35 "" 3
 0
-1 217 35 "" 2
+1 217 35 "0" 1
 0
-1 218 35 "" 6
+1 218 35 "" 2
 0
-1 219 36 "" 4
+1 219 35 "" 6
 0
-1 220 36 "" 3
+1 220 36 "" 4
 0
-1 221 36 "0" 1
+1 221 36 "" 3
 0
-1 222 36 "" 2
+1 222 36 "0" 1
 0
-1 223 36 "" 6
+1 223 36 "" 2
 0
-1 224 37 "" 4
+1 224 36 "" 6
 0
-1 225 37 "" 3
+1 225 37 "" 4
 0
-1 226 37 "0" 1
+1 226 37 "" 3
 0
-1 227 37 "" 2
+1 227 37 "0" 1
 0
-1 228 37 "" 6
+1 228 37 "" 2
 0
-1 229 38 "" 4
+1 229 37 "" 6
 0
-1 230 38 "" 3
+1 230 38 "" 4
 0
-1 231 38 "0" 1
+1 231 38 "" 3
 0
-1 232 38 "" 2
+1 232 38 "0" 1
 0
-1 233 38 "" 6
+1 233 38 "" 2
+0
+1 234 38 "" 6
 0
 0
 LAYER, 1 

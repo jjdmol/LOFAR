@@ -804,7 +804,16 @@ void navFunct_fillHardwareLists() {
   // or based on processes
 
   } else {
-    //to be done
+    // loop over all claimed processes in the global list and
+    // check if the database is not the MainCU
+    // if it is not the mainCU, and it is not allready in the global hardware lists, add it. 
+    for (int i=1; i <= dynlen(g_processesList);i++) {
+      string database=navFunct_bareDBName(dpSubStr(g_processesList[i],DPSUB_SYS));
+      if (database != navFunct_bareDBName(MainDBName) &&
+          !dynContains(g_stationList,database)) {
+        dynAppend(g_stationList,database);
+      }
+    }                  
   }
 
   dynSortAsc(g_stationList);
@@ -826,7 +835,25 @@ void navFunct_fillObservationsList() {
 
   // check if processList is filled
   if (dynlen(g_processesList) > 0) {
-    // to do
+    // loop over all claimed processes in the global list and
+    // check if the dp contains an observation
+    // if it is an observation, and it is not allready in the global observation lists, add it. 
+    for (int i=1; i <= dynlen(g_processesList);i++) {
+      // check if the dptype is of type (Stn)Observation
+      string process = navFunct_getPathLessOne(g_processesList[i]);
+      if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation") {
+        // get the real observation name
+        int iPos = dynContains(g_observations["DP"],MainDBName+dpSubStr(process,DPSUB_DP));
+        if (iPos > 0) {
+          string observation = g_observations["NAME"][iPos];
+          strreplace(observation,"LOFAR_ObsSW_","");
+          
+          if (!dynContains(g_observationsList,observation)) {
+            dynAppend(g_observationsList,observation);
+          }
+        }
+      }
+    }
   // otherwise hardware  
   } else {
     // check all available observations
@@ -942,88 +969,93 @@ navFunct_fillHardwareTree() {
   dyn_string result;
   string connectTo="";
   string lvl="";
-  string station = g_stationList[1];
+  string station ="";
   string dp="";
   
   // add Stations
-  if (dynlen(g_stationList) > 0 ) {
+  if (dynlen(g_stationList) > 1 ) {
     for (int i = 1; i <= dynlen(g_stationList); i++) {
       dp = g_stationList[i]+":LOFAR";
       dynAppend(result,connectTo+","+g_stationList[i]+","+dp);
     }
     lvl="Station";
+  } else if (dynlen(g_stationList) == 1) { 
+    dp = g_stationList[1]+":LOFAR";
+    dynAppend(result,connectTo+","+g_stationList[1]+","+dp);
+    station = g_stationList[1];
     connectTo=dp;
-  }
+      
   
-  // add Cabinets
-  if (dynlen(g_cabinetList) > 0) {
-    for (int i = 1; i <= dynlen(g_cabinetList); i++) {
-      dp = station+":LOFAR_PIC_Cabinet"+g_cabinetList[i];
-      dynAppend(result,connectTo+",Cabinet"+g_cabinetList[i]+","+dp);
-    }
-    lvl="Cabinet";
-  }
-  
-  // add Subracks
-  if (dynlen(g_subrackList) > 0) {
-    for (int i = 1; i <= dynlen(g_subrackList); i++) {
-      int cabinetNr=navFunct_subrack2Cabinet(g_subrackList[i]);
-      if (lvl == "Cabinet") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+    // add Cabinets
+    if (dynlen(g_cabinetList) > 0) {
+      for (int i = 1; i <= dynlen(g_cabinetList); i++) {
+        dp = station+":LOFAR_PIC_Cabinet"+g_cabinetList[i];
+        dynAppend(result,connectTo+",Cabinet"+g_cabinetList[i]+","+dp);
       }
-      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+g_subrackList[i];
-      dynAppend(result,connectTo+",Subrack"+g_subrackList[i]+","+dp);
+      lvl="Cabinet";
     }
-    lvl="Subrack";
-  }
   
-  // add RSPBoards
-  if (dynlen(g_RSPList) > 0) {
-    for (int i = 1; i <= dynlen(g_RSPList); i++) {
-      int cabinetNr=navFunct_RSP2Cabinet(g_RSPList[i]);
-      int subrackNr=navFunct_RSP2Subrack(g_RSPList[i]);
-      if (lvl == "Cabinet") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
-      } else if (lvl == "Subrack") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+    // add Subracks
+    if (dynlen(g_subrackList) > 0) {
+      for (int i = 1; i <= dynlen(g_subrackList); i++) {
+        int cabinetNr=navFunct_subrack2Cabinet(g_subrackList[i]);
+        if (lvl == "Cabinet") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+        }
+        dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+g_subrackList[i];
+        dynAppend(result,connectTo+",Subrack"+g_subrackList[i]+","+dp);
       }
-      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+g_RSPList[i];
-      dynAppend(result,connectTo+",RSPBoard"+g_RSPList[i]+","+dp);
+      lvl="Subrack";
     }
-    lvl="RSPBoard";
-  }
   
-  // add TBBoards
-  if (dynlen(g_TBBList) > 0) {
-    for (int i = 1; i <= dynlen(g_TBBList); i++) {
-      int cabinetNr=navFunct_TBB2Cabinet(g_TBBList[i]);
-      int subrackNr=navFunct_TBB2Subrack(g_TBBList[i]);
-      if (lvl == "Cabinet") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
-      } else if (lvl == "Subrack") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+    // add RSPBoards
+    if (dynlen(g_RSPList) > 0) {
+      for (int i = 1; i <= dynlen(g_RSPList); i++) {
+        int cabinetNr=navFunct_RSP2Cabinet(g_RSPList[i]);
+        int subrackNr=navFunct_RSP2Subrack(g_RSPList[i]);
+        if (lvl == "Cabinet") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+        } else if (lvl == "Subrack") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+        }
+        dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+g_RSPList[i];
+        dynAppend(result,connectTo+",RSPBoard"+g_RSPList[i]+","+dp);
       }
-      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_TBBoard"+g_TBBList[i];
-      dynAppend(result,connectTo+",TBBoard"+g_TBBList[i]+","+dp);
+      lvl="RSPBoard";
     }
-    lvl="RSPBoard";
-  }
   
-  // add RCUs
-  if (dynlen(g_RCUList) > 0) {
-    for (int i = 1; i <= dynlen(g_RCUList); i++) {
-      int cabinetNr=navFunct_receiver2Cabinet(g_RCUList[i]);
-      int subrackNr=navFunct_receiver2Subrack(g_RCUList[i]);
-      int rspNr=navFunct_receiver2RSP(g_RCUList[i]);
-      if (lvl == "Cabinet") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
-      } else if (lvl == "Subrack") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
-      } else if (lvl == "RSPBoard") {
-        connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr;
+    // add TBBoards
+    if (dynlen(g_TBBList) > 0) {
+      for (int i = 1; i <= dynlen(g_TBBList); i++) {
+        int cabinetNr=navFunct_TBB2Cabinet(g_TBBList[i]);
+        int subrackNr=navFunct_TBB2Subrack(g_TBBList[i]);
+        if (lvl == "Cabinet") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+        } else if (lvl == "Subrack") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+        }
+        dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_TBBoard"+g_TBBList[i];
+        dynAppend(result,connectTo+",TBBoard"+g_TBBList[i]+","+dp);
       }
-      dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr+"_RCU"+g_RCUList[i];
-      dynAppend(result,connectTo+",RCU"+g_RCUList[i]+","+dp);
+      lvl="RSPBoard";
+    }
+  
+    // add RCUs
+    if (dynlen(g_RCUList) > 0) {
+      for (int i = 1; i <= dynlen(g_RCUList); i++) {
+        int cabinetNr=navFunct_receiver2Cabinet(g_RCUList[i]);
+        int subrackNr=navFunct_receiver2Subrack(g_RCUList[i]);
+        int rspNr=navFunct_receiver2RSP(g_RCUList[i]);
+        if (lvl == "Cabinet") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr;
+        } else if (lvl == "Subrack") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr;
+        } else if (lvl == "RSPBoard") {
+          connectTo = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr;
+        }
+        dp = station+":LOFAR_PIC_Cabinet"+cabinetNr+"_Subrack"+subrackNr+"_RSPBoard"+rspNr+"_RCU"+g_RCUList[i];
+        dynAppend(result,connectTo+",RCU"+g_RCUList[i]+","+dp);
+      }
     }
   }
   

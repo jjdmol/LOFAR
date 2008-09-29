@@ -15,14 +15,9 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   // start the logging process
   showLogging(baseDP);
   
-  // set the hardware selectable items
-  dyn_string result=\"\";  
-  
-  // There are no further hardware elements below that can be selected, so empty
-  // the list in the database
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
-  
+  // set the selectable processes
+  prepareProcesses();
+      
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".status.message\")) {
     dpConnect(\"updateStates\", baseDP + \".status.message\",
@@ -132,6 +127,20 @@ updateTBB(string dp1, string connected,
   } else {
     setValue(\"TBBConnectedText\",\"backCol\",\"Lofar_invalid\");
   }
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",HardwareMonitor,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"HardwareMonitor.pnl:prepareProcesses|processList found: \"+ result);    
+  
 }" 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
@@ -885,6 +894,5 @@ LANG:1 0
 0
 3 4 "selfState"
 "objects\\lofar_self_state.pnl" 9.500000000000011 10.5 T 42 1 0 1 -0.4999999999999928 4.5
-1
-"$object""CTStartDaemon"
+0
 0

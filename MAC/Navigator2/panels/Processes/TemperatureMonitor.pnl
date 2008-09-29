@@ -10,18 +10,11 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
   
-  // set the hardware selectable items
-  dyn_string result=\"\";  
+  // set the selectable processes
+  prepareProcesses();
   
-  // There are no further hardware elements below that can be selected, so empty
-  // the list in the database
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
-  
-  LOG_DEBUG(\"TempCtrl.pnl:main|processList found: \"+ result);    
-
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"TempCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"TemperatureMonitor.pnl\",\"Update\");
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".setpoint\")) {
@@ -30,7 +23,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 		                    baseDP + \".ambient.highestTemp\",
 		                    baseDP + \".setpoint:_online.._invalid\");
   } else {
-    LOG_ERROR(\"TempCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"TemperatureMonitor.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"setpointText\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"tempLowText\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"tempHighText\", \"backCol\", \"_dpdoesnotexist\");
@@ -43,7 +36,7 @@ updateTempCtrl(string dp1, float setpoint,
                string dp3, float highTemp, 
                string dp4, bool invalid)
 {
-  LOG_DEBUG(\"TempCtrl.pnl:updateDigBrdCtrl|entered with setpoint: \"+ setpoint + 
+  LOG_DEBUG(\"TemperatureMonitor.pnl:updateDigBrdCtrl|entered with setpoint: \"+ setpoint + 
             \" lowTemp: \" + lowTemp +
             \" highTemp: \" + highTemp);  
   if (!invalid) {
@@ -56,7 +49,21 @@ updateTempCtrl(string dp1, float setpoint,
     setValue(\"tempHighText\", \"backCol\", \"Lofar_invalid\");
   }  
 }
-" 0
+
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",TemperatureMonitor,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"TemperatureMonitor.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}" 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
 E "#uses \"navPanel.ctl\"

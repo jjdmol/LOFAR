@@ -35,6 +35,7 @@
 #uses "GCFCommon.ctl"
 
 global dyn_string result;
+global dyn_string procList;
 global string selectedObservation    = "";
 global string selectedStation        = "";
 global string obsBaseDP              = "";
@@ -51,6 +52,9 @@ void MainCU_Processes_initList() {
   selectedObservation="";
   selectedStation="";
   obsBaseDP="";
+  
+  dynClear(result);
+  dynClear(procList);
   
   int z;
   dyn_dyn_anytype tab;
@@ -77,9 +81,13 @@ void MainCU_Processes_initList() {
     // Remainder should be PermsSW Programs + Daemons  split on _ 
     dyn_string spl=strsplit(aS,"_");
     if (dynlen(spl) > 1) { // Daemon
-      result[z]=navFunct_dpStripLastElement(path)+","+spl[2]+","+path;
+      dynAppend(result,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+      dynAppend(procList,path);
     } else {   // Program
-      result[z]=","+spl[1]+","+path;
+      dynAppend(result,","+spl[1]+","+path);
+      if (spl[1] != "Daemons") {
+        dynAppend(procList,path);
+      }
     }
   }
   
@@ -166,10 +174,10 @@ void MainCU_Processes_UpdateProcessesList() {
   
   // copy old results from rest of the panel to the new list
   list=result;
+  g_processesList = procList;
   
   
   int z;
-  int idx=dynlen(list)+1;  // start index for adding new results
   dyn_dyn_anytype tab;
 
   // if an observation is chosen
@@ -183,7 +191,7 @@ void MainCU_Processes_UpdateProcessesList() {
     dyn_string aDS=navFunct_getDynString(tab, 2,1);
     dynSortAsc(aDS);
       // create an entry for the observation
-    list[idx++]=","+selectedObservation+","+obsDP;
+    dynAppend(list,","+selectedObservation+","+obsDP);
 
     for(z=1;z<=dynlen(aDS);z++){
     
@@ -201,9 +209,13 @@ void MainCU_Processes_UpdateProcessesList() {
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
-        list[idx++]=navFunct_dpStripLastElement(path)+","+spl[2]+","+path;
+        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+        dynAppend(g_processesList,path);
       } else {   // Ctrl
-        list[idx++]=obsDP+","+spl[1]+","+path;
+        dynAppend(list,obsDP+","+spl[1]+","+path);
+        if (spl[1] != "OnlineCtrl") {
+          dynAppend(g_processesList,path);
+        }
       }
     }
     
@@ -213,7 +225,7 @@ void MainCU_Processes_UpdateProcessesList() {
       // strip system and add station
       string stationObsDP=selectedStation+":"+dpSubStr(obsDP,DPSUB_DP);
       // add station to selected Observation
-      list[idx++]=obsDP+","+selectedStation+","+stationObsDP;
+      dynAppend(list,obsDP+","+selectedStation+","+stationObsDP);
 
       //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+":'", tab);
@@ -237,9 +249,11 @@ void MainCU_Processes_UpdateProcessesList() {
         // Remainder should be Ctrl Programs, split on _ 
         dyn_string spl=strsplit(aS,"_");
         if (dynlen(spl) > 1) { // low level Ctrl
-          list[idx++]=navFunct_dpStripLastElement(path)+","+spl[2]+","+path;
+          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+          dynAppend(g_processesList,path);
         } else {   // Ctrl
-          list[idx++]=stationObsDP+","+spl[1]+","+path;
+          dynAppend(list,stationObsDP+","+spl[1]+","+path);
+          dynAppend(g_processesList,path);
         }
       }
     }

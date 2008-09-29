@@ -4,12 +4,6 @@ LANG:1 0
 PANEL,-1 -1 1000 735 N "_3DFace" 0
 "main()
 {
-  
-  // empty the processesList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",makeDynString(\"\"));
-  }  
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -17,88 +11,9 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   syst   = dpSubStr(baseDP,DPSUB_SYS);
     
   // set the process selectable items
-  MainCU_Processes_initList();
-  
-  // connect to trigger to get a signal if some highlighting should be done.
-  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");
+  MainCU_Processes_initList();  
 }
-
-void TriggerCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|entered with on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|Found strHighlight : \" + strHighlight);
-  
-  // empty highlight
-  dynClear(highlight);
-  
-  // highlights for this screen can be triggered by :
-  // Observations
-  // processes
-  // hardware
-  dyn_string obsMatch=dynPatternMatch(\"Observation*\",strHighlight);
-  dyn_string processMatch=dynPatternMatch(\"CTStartDaemon\",strHighlight);
-  dynAppend(processMatch,dynPatternMatch(\"KVLogger\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"LogProcessor\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"ServiceBroker\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"SASGateway\",strHighlight));  
-  dynAppend(processMatch,dynPatternMatch(\"MACScheduler\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"SoftwareMonitor\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"ObsCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"StorageAppl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"Correlator\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"BeamCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"CalCtrl\",strHighlight));
-  dynAppend(processMatch,dynPatternMatch(\"TBBCtrl\",strHighlight));
-  
-  if (syst != MainDBName) {
-    dynAppend(processMatch,dynPatternMatch(\"HardwareMonitor\",strHighlight));
-  }
-  
-  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|from strHighlight ObsMatch found: \"+obsMatch);
-//  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|from strHighlight stationMatch found: \"+stationMatch);
-  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|from strHighlight processMatch found: \"+processMatch);
-  
-  //get processes participating in Observation
-//  for (int i = 1; i<= dynlen(obsMatch); i++) {
-    // get the real name from the claimed datapoint
-//    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
-    
-//    LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|Found ObsDP: \" + ObsDP);             
-//    if (ObsDP != \"\") {
-      // look if that name is available in the Observation List
-//      int i = dynContains(g_observations[\"DP\"],ObsDP);
-//      if ( i > 0) {
-        // get the Stationlist from that observation
-//    	string sts=g_observations[\"STATIONLIST\"][i];
-//        LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|Found Stationlist for this Observation: \"+ sts);
-        // add stationlist to highlight.
-//        dyn_string stations = strsplit(sts,\",\");
-//        if (dynlen(stations) > 0) {
-//          dynAppend(highlight,stations);
-//        }
-//      }
-//    }
-//  } 
-  
-  //get stations from choice
-//  if (dynlen(stationMatch) > 0) {
-//    dynAppend(highlight,stationMatch);
-//  }
-  
-  //get processes from choice
-  if (dynlen(processMatch) > 0) {
-    dynAppend(highlight,processMatch);
-  }
-  //empty strHighlight
-     
-  LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|highlight contains: \"+highlight);
-    
-  // if highlight set, then kick objectTrigger
-  if (dynlen(highlight) > 0) {
-    LOG_DEBUG(\"MainCU_Processes.pnl:Trigger Callback|Pushing objectTrigger\");
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
-  }   
-}" 0
+" 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
 E "#uses \"navPanel.ctl\"
@@ -233,15 +148,17 @@ LANG:1 6 PermSW
 0
 1 175 12 "" 82
 0
-1 176 13 "" 4
+1 176 12 "" 113
 0
-1 177 13 "" 3
+1 177 13 "" 4
 0
-1 178 13 "0" 1
+1 178 13 "" 3
 0
-1 179 13 "" 2
+1 179 13 "0" 1
 0
-1 180 13 "" 6
+1 180 13 "" 2
+0
+1 181 13 "" 6
 0
 2 109
 "PRIMITIVE_TEXT7"
@@ -283,45 +200,45 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 0 ""
 1
 LANG:1 6 logMsg
-1 181 14 "" 4
+1 182 14 "" 4
 0
-1 182 14 "" 3
+1 183 14 "" 3
 0
-1 183 14 "0" 1
+1 184 14 "0" 1
 0
-1 184 14 "" 2
+1 185 14 "" 2
 0
-1 185 14 "" 6
+1 186 14 "" 6
 0
-1 186 15 "" 4
+1 187 15 "" 4
 0
-1 187 15 "" 3
+1 188 15 "" 3
 0
-1 188 15 "0" 1
+1 189 15 "0" 1
 0
-1 189 15 "" 2
+1 190 15 "" 2
 0
-1 190 15 "" 6
+1 191 15 "" 6
 0
-1 191 16 "" 4
+1 192 16 "" 4
 0
-1 192 16 "" 3
+1 193 16 "" 3
 0
-1 193 16 "0" 1
+1 194 16 "0" 1
 0
-1 194 16 "" 2
+1 195 16 "" 2
 0
-1 195 16 "" 6
+1 196 16 "" 6
 0
-1 196 19 "" 4
+1 197 19 "" 4
 0
-1 197 19 "" 3
+1 198 19 "" 3
 0
-1 198 19 "0" 1
+1 199 19 "0" 1
 0
-1 199 19 "" 2
+1 200 19 "" 2
 0
-1 200 19 "" 6
+1 201 19 "" 6
 0
 2 133
 "PRIMITIVE_TEXT11"
@@ -403,25 +320,25 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 0 ""
 1
 LANG:1 6 logMsg
-1 201 20 "" 4
+1 202 20 "" 4
 0
-1 202 20 "" 3
+1 203 20 "" 3
 0
-1 203 20 "0" 1
+1 204 20 "0" 1
 0
-1 204 20 "" 2
+1 205 20 "" 2
 0
-1 205 20 "" 6
+1 206 20 "" 6
 0
-1 206 21 "" 4
+1 207 21 "" 4
 0
-1 207 21 "" 3
+1 208 21 "" 3
 0
-1 208 21 "0" 1
+1 209 21 "0" 1
 0
-1 209 21 "" 2
+1 210 21 "" 2
 0
-1 210 21 "" 6
+1 211 21 "" 6
 0
 0
 LAYER, 1 
@@ -453,7 +370,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 12 "PANEL_REF13"
-"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -68 -27
+"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -65 -30
 0
 3 13 "PANEL_REF14"
 "objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -8

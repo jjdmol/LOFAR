@@ -25,6 +25,16 @@ void click(string originator) {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
+    // empty global listings
+    dynClear(g_stationList);
+    dynClear(g_cabinetList);
+    dynClear(g_subrackList);
+    dynClear(g_RSPList);
+    dynClear(g_TBBList);
+    dynClear(g_RCUList);
+
+    dynClear(g_observationsList);
+    dynClear(g_processesList);    
     if (originator == \"stationTree\") {
       navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
     } else if (originator == \"activeObs\") {
@@ -118,14 +128,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"resizeMode" "enum 0"
-"hScrollBarMode" "enum 0"
-"vScrollBarMode" "enum 0"
-"frameShape" "enum 6"
-"defaultRenameAction" "enum 0"
-"backgroundOrigin" "enum 0"
-"selectionMode" "enum 0"
 "frameShadow" "enum 48"
+"selectionMode" "enum 0"
+"backgroundOrigin" "enum 0"
+"defaultRenameAction" "enum 0"
+"frameShape" "enum 6"
+"vScrollBarMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"resizeMode" "enum 0"
  822 20 992 188
 10 TreeWidget
 7
@@ -272,35 +282,35 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,
 0 ""
 1
 LANG:1 7 station
-1 81 20 "" 4
+1 98 20 "" 4
 0
-1 82 20 "" 3
+1 99 20 "" 3
 0
-1 83 20 "0" 1
+1 100 20 "0" 1
 0
-1 84 20 "" 2
+1 101 20 "" 2
 0
-1 85 20 "" 6
+1 102 20 "" 6
 0
-1 86 21 "" 4
+1 103 21 "" 4
 0
-1 87 21 "" 3
+1 104 21 "" 3
 0
-1 88 21 "0" 1
+1 105 21 "0" 1
 0
-1 89 21 "" 2
+1 106 21 "" 2
 0
-1 90 21 "" 6
+1 107 21 "" 6
 0
-1 91 22 "" 4
+1 108 22 "" 4
 0
-1 92 22 "" 3
+1 109 22 "" 3
 0
-1 93 22 "0" 1
+1 110 22 "0" 1
 0
-1 94 22 "" 2
+1 111 22 "" 2
 0
-1 95 22 "" 6
+1 112 22 "" 6
 0
 2 97
 "stationObservationName"
