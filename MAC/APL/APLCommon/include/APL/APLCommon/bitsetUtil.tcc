@@ -25,6 +25,7 @@
 
 //# Common Includes
 #include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 

@@ -24,6 +24,7 @@
 #define PVSSINFO_H
 
 #include <GCF/PVSS/GCF_Defines.h>
+#include <Common/LofarTypes.h>
 
 // forward declaration
 

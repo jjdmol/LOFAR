@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <GCF/PVSS/GCF_PVChar.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR 
 {

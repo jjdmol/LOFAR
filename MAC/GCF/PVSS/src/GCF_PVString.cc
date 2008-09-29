@@ -25,7 +25,7 @@
 
 #include <GCF/PVSS/GCF_PVString.h>
 #include <Common/DataConvert.h>
-#include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR 
 {
