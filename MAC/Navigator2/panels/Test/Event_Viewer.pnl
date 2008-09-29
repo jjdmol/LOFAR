@@ -691,10 +691,10 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 
 T 
 1
-LANG:1 17 show strHighlight
+LANG:1 14 show highlight
 "main()
 {
-    LOG_DEBUG(\"Event_Viewer.pnl strHighlight contains: \" + strHighlight);
+    LOG_DEBUG(\"Event_Viewer.pnl strHighlight contains: \" + highlight);
 }" 0
  E E E
 13 180

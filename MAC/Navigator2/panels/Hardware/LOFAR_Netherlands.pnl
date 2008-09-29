@@ -13,68 +13,6 @@ PANEL,-1 -1 1009 745 N "_3DFace" 0
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
   
-  // connect to trigger to get a signal if some highlighting should be done.
-  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");
-}
-
-void TriggerCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|entered with on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|Found strHighlight : \" + strHighlight);
-  
-  // empty highlight
-  dynClear(highlight);
-  
-  // highlights for this screen can be triggered by :
-  // Observations
-  dyn_string obsMatch=dynPatternMatch(\"Observation*\",strHighlight);
-
-  // hardware
-  dyn_string stationMatch=dynPatternMatch(\"CS[0123456789][0123456789][0123456789]\",strHighlight);
-
-  // processes
-  //dyn_string processMatch=dynPatternMatch(\"??\",strHighlight);
-  
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|from strHighlight ObsMatch found: \"+obsMatch);
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|from strHighlight stationMatch found: \"+stationMatch);
-  
-  //get stations participating in Observation
-  for (int i = 1; i<= dynlen(obsMatch); i++) {
-    // get the real name from the claimed datapoint
-    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
-    
-    LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|Found ObsDP: \" + ObsDP);             
-    if (ObsDP != \"\") {
-      // look if that name is available in the Observation List
-      int i = dynContains(g_observations[\"DP\"],ObsDP);
-      if ( i > 0) {
-        // get the Stationlist from that observation
-    	string sts=g_observations[\"STATIONLIST\"][i];
-        LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|Found Stationlist for this Observation: \"+ sts);
-        // add stationlist to highlight.
-        dyn_string stations = strsplit(sts,\",\");
-        if (dynlen(stations) > 0) {
-          dynAppend(highlight,stations);
-        }
-      }
-    }
-  } 
-  
-  //get stations from choice
-  if (dynlen(stationMatch) > 0) {
-    dynAppend(highlight,stationMatch);
-  }
-  
-  //empty strHighlight
-  dynClear(strHighlight);
-     
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|highlight contains: \"+highlight);
-    
-  // if highlight set, then kick objectTrigger
-  if (dynlen(highlight) > 0) {
-    LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|Pushing objectTrigger\");
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
-  } 
 }
 
 void prepareHardwareList() {

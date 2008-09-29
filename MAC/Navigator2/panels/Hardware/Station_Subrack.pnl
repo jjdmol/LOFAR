@@ -22,81 +22,8 @@ PANEL,-1 -1 914 686 N "_3DFace" 0
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Subrack\",\"Update\");
   
-  // connect to trigger to get a signal if some highlighting should be done.
-  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");  
-  
 }
 
-void TriggerCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback| on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|Found strHighlight : \" + strHighlight);
-  
-  // empty highlight
-  dynClear(highlight);
-  
-  // highlights for this screen can be triggered by :
-  // Observations
-  // processes
-  // hardware
-  dyn_string obsMatch      = dynPatternMatch(\"Observation*\",strHighlight);
-  //dyn_string processMatch=dynPatternMatch(\"??\",strHighlight);
-  dyn_string RSPBoardMatch = dynPatternMatch(\"RSPBoard*\",strHighlight);
-  dyn_string TBBoardMatch  = dynPatternMatch(\"TBBoard*\",strHighlight);
-  dyn_string RCUMatch  = dynPatternMatch(\"RCU*\",strHighlight);
-  
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|from strHighlight obsMatch found: \"+obsMatch);
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|from strHighlight RSPBoardMatch found: \"+RSPBoardMatch);
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|from strHighlight TBBoardMatch found: \"+TBBoardMatch);
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|from strHighlight RCUMatch found: \"+RCUMatch);
-  
-  //get stations participating in Observation
-/*  for (int i = 1; i<= dynlen(obsMatch); i++) {
-    // get the real name from the claimed datapoint
-    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
-    
-   LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|Found ObsDP: \" + ObsDP);             
-    if (ObsDP != \"\") {
-      // look if that name is available in the Observation List
-      int i = dynContains(g_observations[\"DP\"],ObsDP);
-      if ( i > 0) {
-        // get the Stationlist from that observation
-    	string sts=g_observations[\"STATIONLIST\"][i];
-        LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|Found Stationlist for this Observation: \"+ sts);
-        // add stationlist to highlight.
-        dyn_string stations = strsplit(sts,\",\");
-        if (dynlen(stations) > 0) {
-          dynAppend(highlight,stations);
-        }
-      }
-    }
-  }
-  */ 
-  
-   //get RSPBoards from choice
-  if (dynlen(RSPBoardMatch) > 0) {
-    dynAppend(highlight,RSPBoardMatch);
-  }
-  
-    //get RCUs from choice
-  if (dynlen(RCUMatch) > 0) {
-    dynAppend(highlight,RCUMatch);
-  }
-  
-  //get TBBoards from choice
-  if (dynlen(TBBoardMatch) > 0) {
-    dynAppend(highlight,TBBoardMatch);
-  }
-     
-  LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|highlight contains: \"+highlight);
-    
-  // if highlight set, then kick objectTrigger
-  if (dynlen(highlight) > 0) {
-    LOG_DEBUG(\"Station_Subrack.pnl:TriggerCallback|Pushing objectTrigger\");
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
-  } 
-
-}
 
 void prepareHardwareList() {
   

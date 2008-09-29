@@ -139,28 +139,111 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   
   if (anEvent == "EventClick") {
     
+    // The viewbox gave an eventclick, this means we want to trigger the hightlight sequence
+    // for a piece of hardware, or an observation, or a process
+    // in case of a piece of hardware, we want to highlight the hardware itself,
+    // the processes involved with this piece of hardware and the observations that
+    // use this piece of hardware. In all cases the global lists should have been filled prior to this
+    // command, so if needed we can also use these lists to determine the involved parties.
+    
+        
     // Empty highlight string
-    dynClear(strHighlight);
     dynClear(highlight);
+        
+    // ACTIVE_TAB can be used to see if we are looking at Hardware, processes or observations
     
     for (int i=1;i<= dynlen(aSelection);i++){
       dyn_string sel = strsplit(aSelection[i],"|"); 
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|sel: "+sel); 
-      if (dynlen(sel) > 0) {
-        dynAppend(strHighlight,sel[1]);
-      }
-    }   
-    LOG_TRACE("navCtrl.ctl:navCtrl_handleViewBoxEvent| strHighlight contains now: "+strHighlight);                          
-    if (dynlen(strHighlight) > 0) {
-      LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Kick trigger");
-      dpSet(DPNAME_NAVIGATOR + g_navigatorID+".trigger",true);
+      for (int j = 1; j <= dynlen(sel); j++) {
+        if (!dynContains(highlight,sel[j])) {
+          dynAppend(highlight,sel[j]);
+        }
+         
+    
+        // if ACTIVE_TAB is hardware, we also want to look for all involved processes and observations
+        if (ACTIVE_TAB == "Hardware") {
+          // check all available observations
+          for (int i = 1; i <= dynlen(g_observationsList);i++) {
+            string longObs="LOFAR_ObsSW_"+g_observationsList[i];
+        
+            string station = g_stationList[1];
+            string choice="";
+            string strSearch="";
+            int    iSearch=-1;
+
+            // if more stations in lists, we are on a multiple station panel, and no other hardware is selectable
+            if (dynlen(g_stationList) > 1) {
+              station = sel[j];
+              choice = "Station";
+              strSearch=sel[j];
+            } else {
+              // in all other cases we need to determine the station involved in the panel
+              // and the hardware that triggered the click
+          
+          
+              if (strpos(sel[j],"Cabinet") > -1) {
+                string c=sel[j];
+                strreplace(c,"Cabinet","");
+                iSearch=c;
+                choice = "Cabinet";
+              } else if (strpos(sel[j],"Subrack") > -1) {
+                string c=sel[j];
+                strreplace(c,"Subrack","");
+                iSearch=c;
+                choice = "Subrack";  
+              } else if (strpos(sel[j],"RSPBoard") > -1) {
+                string c=sel[j];
+                strreplace(c,"RSPBoard","");
+                iSearch=c;
+                choice = "RSPBoard";
+              } else if (strpos(sel[j],"TBBoard") > -1) {
+                string c=sel[j];
+                strreplace(c,"TBBoard","");
+                iSearch=c;
+                choice = "TBBoard";
+              } else if (strpos(sel[j],"RCU") > -1) {
+                string c=sel[j];
+                strreplace(c,"RCU","");
+                iSearch=c;
+                choice = "RCU"; 
+              }
+            }
+            
+
+            if (navFunct_hardware2Obs(station, longObs,choice,strSearch,iSearch)){
+              if (!dynContains(highlight,g_observationsList[i])) {
+                // seems this observation is involved, add it to the list
+                dynAppend(highlight,g_observationsList[i]);
+              }
+            }
+          }
+        } else if (ACTIVE_TAB == "Observations") {
+          // We need to check what stations are involved in the Observations
+          string longObs="LOFAR_ObsSW_"+sel[j];
+          int iPos = dynContains(g_observations["NAME"],longObs);
+          if (iPos > 0) {
+            string s = g_observations["STATIONLIST"][iPos];
+            dyn_string stations=strsplit(s,",");
+            for (int k=1; k<= dynlen(stations); k++) {
+              if (!dynContains(highlight,stations[k])) {
+                dynAppend(highlight,stations[k]);
+              }
+            }
+          }
+        }
+      }         
+    }      
+                         
+    // we now have a list of items that need to be highlighted
+    LOG_TRACE("navCtrl.ctl:navCtrl_handleViewBoxEvent| highlightList contains now: "+highlight);                          
+    if (dynlen(highlight) > 0) {
+      LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Kick object highlight trigger");
+      dpSet(DPNAME_NAVIGATOR + g_navigatorID+".objectTrigger",true);
     }
     
     // inform headLines Object
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
-    // also fire highlight mechanism for detail selectors
-    dpSet(TOPDETAILSELECTIONACTIONDP,"Highlight|"+aSelection);
-    dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Highlight|"+aSelection);
     return;
   }
 }
@@ -320,13 +403,19 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     }    
   }
   
+  if (anEvent == "ChangeSelection") {
+    if (target == "bottom") {
+      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"update");
+    } else {
+      dpSet(TOPDETAILSELECTIONACTIONDP,"update");
+    }
+  }
   
   // Fill highlight string        
   string action = "Highlight";
   if (anEvent == "EventClick") { 
     // Empty highlight string
     dynClear(highlight);
-    dynClear(strHighlight);
     for (int i=1;i<= dynlen(aSelection);i++){
       dyn_string sel = strsplit(aSelection[i],"|"); 
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|sel: "+sel); 
@@ -335,21 +424,78 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           typeSelector=sel[1];
           observationType=sel[2];
           selection=sel[3];
-          dynAppend(strHighlight,sel[3]);
+          if (!dynContains(highlight,sel[3])) {
+            dynAppend(highlight,sel[3]);
+          }
           action+="|"+sel[1]+"|"+sel[2]+"|"+sel[3];
+          
+          // if selection == observation, add involved hardware
+          // loop through global hardware lists and add all hardware that is used by this observation
+          
+          // if more then one station available only stations need to be examend.
+          string longObs="LOFAR_ObsSW_"+sel[3];
+          string station="";  
+          if (dynlen(g_stationList) > 1) {
+            for (int k=1; k<= dynlen(g_stationList); k++) {
+              if (navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
+                if (!dynContains(highlight,g_stationList[k])) {
+                  dynAppend(highlight,g_stationList[k]);
+                }
+              }
+            }
+          } else {
+             station=g_stationList[1];
+             for (int k = 1; k<= dynlen(g_cabinetList); k++) {
+               if (navFunct_hardware2Obs(station, longObs,"Cabinet","",g_cabinetList[k])) {
+                 if (!dynContains(highlight,g_cabinetList[k])) {
+                   dynAppend(highlight,"Cabinet"+g_cabinetList[k]);
+                 }
+               }
+             }
+             for (int k = 1; k<= dynlen(g_subrackList); k++) {
+               if (navFunct_hardware2Obs(station, longObs,"Subrack","",g_subrackList[k])) {
+                 if (!dynContains(highlight,g_subrackList[k])) {
+                   dynAppend(highlight,"Subrack"+g_subrackList[k]);
+                 }
+               }
+             }
+             for (int k = 1; k<= dynlen(g_RSPList); k++) {
+               if (navFunct_hardware2Obs(station, longObs,"RSPBoard","",g_RSPList[k])) {
+                 if (!dynContains(highlight,g_RSPList[k])) {
+                   dynAppend(highlight,"RSPBoard"+g_RSPList[k]);
+                 }
+               }
+             }
+             for (int k = 1; k<= dynlen(g_TBBList); k++) {
+               if (navFunct_hardware2Obs(station, longObs,"TBBoard","",g_TBBList[k])) {
+                 if (!dynContains(highlight,g_TBBList[k])) {
+                   dynAppend(highlight,"TBBoard"+g_TBBList[k]);
+                 }
+               }
+             }
+             for (int k = 1; k<= dynlen(g_RCUList); k++) {
+               if (navFunct_hardware2Obs(station, longObs,"RCU","",g_RCUList[k])) {
+                 if (!dynContains(highlight,g_RCUList[k])) {
+                   dynAppend(highlight,"RCU"+g_RCUList[k]);
+                 }
+               }
+             }
+          }             
         } else {  // Hardware or processes
           typeSelector=sel[1];
           observationType="";
           selection=sel[2];
-          dynAppend(strHighlight,sel[2]);
+          if (!dynContains(highlight,sel[2])) {
+            dynAppend(highlight,sel[2]);
+          }
           action+="|"+sel[1]+"|"+sel[2];
         }
       }
     }   
-    LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| strHighlight contains now: "+strHighlight);                          
-    if (dynlen(strHighlight) > 0) {
+    LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| highlight contains now: "+highlight);                          
+    if (dynlen(highlight) > 0) {
       LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Kick trigger");
-      dpSet(DPNAME_NAVIGATOR + g_navigatorID+".trigger",true);
+      dpSet(DPNAME_NAVIGATOR + g_navigatorID+".objectTrigger",true);
          
       // Also prepare actions for the different objects that can do something
       // with this highlight.

@@ -22,9 +22,6 @@ PANEL,-1 -1 732 746 N "_3DFace" 0
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Cabinet_Panel.pnl\",\"Update\");
   
-  // connect to trigger to get a signal if some highlighting should be done.
-  dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");  
-  
   setValue(\"aCabinetTXT\", \"text\", \"Cabinet: \" + cNr);
 
   // pass baseDP to selfstate Object to work with
@@ -34,66 +31,6 @@ PANEL,-1 -1 732 746 N "_3DFace" 0
   showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
-}
-
-void TriggerCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback| on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found strHighlight : \" + strHighlight);
-  
-  // empty highlight
-  dynClear(highlight);
-  
-  // highlights for this screen can be triggered by :
-  // Observations
-  // processes
-  // hardware
-  dyn_string obsMatch     = dynPatternMatch(\"Observation*\",strHighlight);
-  dyn_string cabinetMatch = dynPatternMatch(\"Cabinet*\",strHighlight);
-  dyn_string subRackMatch = dynPatternMatch(\"Subrack*\",strHighlight);
-  //dyn_string processMatch=dynPatternMatch(\"??\",strHighlight);
-  
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight obsMatch found: \"+obsMatch);
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight cabinetMatch found: \"+cabinetMatch);
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|from strHighlight subRackMatch found: \"+subRackMatch);
-  
-  //get stations participating in Observation
-/*  for (int i = 1; i<= dynlen(obsMatch); i++) {
-    // get the real name from the claimed datapoint
-    string ObsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obsMatch[i]);
-    
-   LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found ObsDP: \" + ObsDP);             
-    if (ObsDP != \"\") {
-      // look if that name is available in the Observation List
-      int i = dynContains(g_observations[\"DP\"],ObsDP);
-      if ( i > 0) {
-        // get the Stationlist from that observation
-    	string sts=g_observations[\"STATIONLIST\"][i];
-        LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Found Stationlist for this Observation: \"+ sts);
-        // add stationlist to highlight.
-        dyn_string stations = strsplit(sts,\",\");
-        if (dynlen(stations) > 0) {
-          dynAppend(highlight,stations);
-        }
-      }
-    }
-  }
-  */ 
-  
- 
-  //get subRacks from choice
-  if (dynlen(subRackMatch) > 0) {
-    dynAppend(highlight,subRackMatch);
-  }
-     
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|highlight contains: \"+highlight);
-    
-  // if highlight set, then kick objectTrigger
-  if (dynlen(highlight) > 0) {
-    LOG_DEBUG(\"Station_Cabinet_detailed.pnl:TriggerCallback|Pushing objectTrigger\");
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
-  } 
-
 }
 
 void prepareHardwareList() {
