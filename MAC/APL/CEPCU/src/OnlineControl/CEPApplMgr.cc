@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/StringUtil.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include "CEPApplMgr.h"
 

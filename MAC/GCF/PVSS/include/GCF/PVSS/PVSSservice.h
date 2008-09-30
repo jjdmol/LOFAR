@@ -25,6 +25,7 @@
 
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/PVSS/GCF_PValue.h>
+#include <Common/LofarTypes.h>
 
 // PVSS forwards
 class DpMsgAnswer;
