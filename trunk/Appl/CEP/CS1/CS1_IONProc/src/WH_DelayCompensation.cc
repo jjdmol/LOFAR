@@ -27,6 +27,7 @@
 #include <WH_DelayCompensation.h>
 #include <AMCBase/Direction.h>
 #include <AMCBase/Position.h>
+#include <AMCBase/Coord3D.h>
 #include <AMCBase/Epoch.h>
 #include <AMCBase/ConverterClient.h>
 #include <AMCBase/RequestData.h>
@@ -142,14 +143,8 @@ namespace LOFAR
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
-      vector<double> refPos, pos;      
-      
-      refPos = itsCS1PS->getRefPhaseCentres();
-      const Position pRef(refPos[0], refPos[1], refPos[2], posType);
-      
-      pos = itsCS1PS->getPhaseCentresOf(itsStationName);
-      
-      const Position phaseCentres(pos[0], pos[1], pos[2], posType);
+      const Position pRef(Coord3D(itsCS1PS->getRefPhaseCentres()), posType);
+      const Position phaseCentres(Coord3D(itsCS1PS->getPhaseCentresOf(itsStationName)), posType);
       itsPhaseCentres = phaseCentres;
       
       itsPhasePositionDiffs = itsPhaseCentres - pRef;
