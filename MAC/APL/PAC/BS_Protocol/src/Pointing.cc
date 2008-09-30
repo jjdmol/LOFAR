@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
 #include <APL/BS_Protocol/Pointing.h>
 
 #include <AMCBase/Converter.h>

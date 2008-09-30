@@ -80,7 +80,7 @@ CalServer_SOURCES = \
 	ACMProxy.cc
 
 CalServer_LDADD = \
-	$(top_builddir)/src/libcaldevel.la
+	libcaldevel.la
 
 #	-lrtccommon
 
@@ -91,8 +91,7 @@ calinfo_SOURCES = \
 	calinfo.cc
 
 CalServer_DEPENDENCIES = \
-	$(top_builddir)/src/libcaldevel.la \
-	$(top_builddir)/src/libcal_protocol.la \
+	libcaldevel.la \
 	$(LOFAR_DEPEND)
 
 bin_SCRIPTS = \

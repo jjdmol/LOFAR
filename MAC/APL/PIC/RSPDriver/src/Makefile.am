@@ -234,7 +234,7 @@ RSPDriverFiles = \
 	Sequencer.cc
 
 RSPDriver_LDADD = \
-	$(top_builddir)/src/libepa.la \
+	libepa.la \
 	$(RTCCOMMON_LDADD)
 
 rspctl_SOURCES = \

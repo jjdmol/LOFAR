@@ -38,6 +38,7 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 using namespace std;
 using namespace blitz;

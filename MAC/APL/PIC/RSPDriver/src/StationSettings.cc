@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <StationSettings.h>
 

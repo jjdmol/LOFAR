@@ -30,6 +30,7 @@
 //# Includes
 #include <OTDB/OTDBtree.h>
 #include <OTDB/TreeState.h>
+#include <Common/lofar_vector.h>
 
 using namespace pqxx;
 
