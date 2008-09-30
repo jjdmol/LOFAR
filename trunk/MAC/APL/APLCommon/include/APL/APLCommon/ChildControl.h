@@ -31,6 +31,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_vector.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>

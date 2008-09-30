@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include "calinfo.h" 

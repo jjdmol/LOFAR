@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_vector.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/APLCommon/APL_Defines.h>

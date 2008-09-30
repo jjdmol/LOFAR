@@ -24,8 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<OTDB/wSpaceSplit.h>
+#include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <OTDB/wSpaceSplit.h>
 
 namespace LOFAR {
   namespace OTDB {

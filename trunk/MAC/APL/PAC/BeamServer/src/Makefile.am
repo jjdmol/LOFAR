@@ -38,7 +38,7 @@ bin_PROGRAMS 			= versionbeamserver BeamServer beamctl
 
 BeamServer_SOURCES 		= BeamServerMain.cc BeamServer.h BeamServerConstants.h BeamServer.cc
 BeamServer_LDADD 		= $(top_builddir)/src/libabsdevel.la
-BeamServer_DEPEND 		= $(LOFAR_DEPEND)
+BeamServer_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 beamctl_SOURCES 		= beamctl.h beamctl.cc
 
