@@ -393,12 +393,12 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     if (dynlen(sel) > 1) {
       if (sel[1] == "Observations") {
         typeSelector=sel[1];
-        observationType=sel[2];
-        selection=sel[3];
+        if (dynlen(sel) >= 2 ) observationType=sel[2];
+        if (dynlen(sel) >= 3 ) selection=sel[3];
       } else {
         typeSelector=sel[1];
         observationType="";
-        selection=sel[2];      
+        if (dynlen(sel) >= 2 ) selection=sel[2];      
       }
     }    
   }
