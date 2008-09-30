@@ -104,23 +104,32 @@ namespace LOFAR
       epoch.utc(startTime);
       itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
       
-      // Get the position of Westerbork in WGS84.
+      // Get the position of Westerbork.
       MPosition arrayPosTmp;
       AlwaysAssert (MeasTable::Observatory(arrayPosTmp, "WSRT"), AipsError);
       itsArrayPos = new MPosition;
-      *itsArrayPos = MPosition::Convert (arrayPosTmp, MPosition::WGS84) ();
+      MPosition *obsLofar   = new MPosition;
+
+      //Get list of all observatories in LOFAR network. 
+      cout << "List of all observatories in LOFAR network:" << MeasTable::Observatories() << endl;
+
+      //Todo: get the Observatory for LOFAR!!
+      AlwaysAssert (MeasTable::Observatory(*itsArrayPos, "WSRT"), AipsError);
+      cout << "Position observatory WSRT: " << *itsArrayPos << endl;
+      AlwaysAssert (MeasTable::Observatory(*obsLofar, "LOFAR"), AipsError);
+      cout << "Position observatory LOFAR: " << *obsLofar << endl;
+      delete obsLofar;
       
       Block<MPosition> antMPos(nantennas);
 
-      // Keep the antenna positions in WGS84 coordinates.
+      // Keep the antenna positions in ITRF coordinates as X,Y,Z in (m,m,m).
       try {
         for (int i=0; i<nantennas; i++) {
 
-          MPosition mpos(MPosition(MVPosition(Quantity(antPos[3*i+2], "m"), 
-	      	                              Quantity(antPos[3*i], "rad"), 
-			                      Quantity(antPos[3*i+1], "rad")),
-	                                      MPosition::ITRF));
-	  antMPos[i] = mpos;
+          antMPos[i] = MPosition(MVPosition(antPos[3*i], 
+	      	                            antPos[3*i+1], 
+			                    antPos[3*i+2]),
+	                                    MPosition::ITRF);
         }
       } catch (AipsError& e) {
         cout << "AipsError: " << e.what() << endl;
