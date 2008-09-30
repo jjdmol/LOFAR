@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_datetime.h>
+#include <Common/StringUtil.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>

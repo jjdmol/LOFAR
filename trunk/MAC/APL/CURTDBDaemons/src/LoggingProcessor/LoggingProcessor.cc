@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/Version.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/GCF_Event.h>
