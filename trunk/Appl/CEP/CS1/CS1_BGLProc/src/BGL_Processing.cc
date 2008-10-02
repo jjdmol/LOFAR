@@ -250,7 +250,8 @@ template <typename SAMPLE_TYPE> void BGL_Processing<SAMPLE_TYPE>::preprocess(BGL
 #endif
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
-
+  std::vector<unsigned> &tabList     = configuration.tabList();
+  
 #if defined HAVE_BGP || defined HAVE_BGL
   if(!itsDoAsyncCommunication) {
     Transpose<SAMPLE_TYPE>::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
