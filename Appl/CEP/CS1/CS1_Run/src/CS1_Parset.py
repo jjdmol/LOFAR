@@ -86,12 +86,57 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	for pset in range(len(IONodes.get(self.partition))):
 	  self['PIC.Core.IONProc.' + self.partition + '[' + str(pset) + '].inputs'] = [station.name + '/RSP' + str(rsp) for station in stationList if station.getPset(self.partition) == pset for rsp in range(len(station.inputs))]
 
+    def setTiedArrayStations(self):
+        tiedArrayStationList = list()
+ 	stationList = copy.deepcopy(self.stationList)
+	beamform = False
+	index=0
+	
+	while self.isDefined('Observation.Beamformer[' + str(index) + ']'):
+	    beamform = True
+	    tiedArrayStationList.append(string.replace(self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"'),',','+'))
+	    superStations = self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"').split(',')
+	    for sp in superStations:
+		for s in stationList:
+		    if s.getName() == sp:
+		       stationList.remove(s)
+		       break
+	    index +=1
+	
+	if (beamform):
+	    for p in stationList:
+	        tiedArrayStationList.append(p.getName())
+	
+	self['OLAP.tiedArrayStationNames'] = [sp for sp in tiedArrayStationList]
+
+    def tabMapping(self):
+	tabList = list()
+	
+	if len(self.getStringVector('OLAP.tiedArrayStationNames')) > 0:
+	    for s in self.stationList:
+	        tabStations = self.getStringVector('OLAP.tiedArrayStationNames')
+	        for tab in tabStations:
+		    if tab.find('+') != -1 :
+		       stations = tab.split('+')
+		       for st in stations:
+		           if s.getName() == st:
+		               tabList.append(tabStations.index(tab))
+		    else:
+		       if s.getName() == tab:
+		         tabList.append(tabStations.index(tab))  
+	    
+	    if len(tabList) != len(self.stationList):
+	        print 'tabList contains wrong number (' + str(len(tabList)) + ') of elements (expected '+ str(len(self.stationList)) + ')'
+		sys.exit(0)
+		
+	self['OLAP.BGLProc.tabList'] = [tab for tab in tabList]
+	
     def getStations(self):
 	return self.stationList
     
     def setPartition(self, partition):
         self.partition = partition
-	self['OLAP.BGLProc.partition'] = partition
+	self['OLAP.BGLProc.partition'] = partition	
 	
     def getPartition(self):
         return self.partition
@@ -147,6 +192,22 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	return stationsAndRSPs
     
+    def checkBeamformList(self):
+	index = 0
+
+	while self.isDefined('Observation.Beamformer[' + str(index) + ']'):
+	    superStations = self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"').split(',')    	
+            for sp in superStations:
+	        found = False
+		for s in self.stationList:
+		    if sp == s.getName():
+		        found = True
+		        break
+		if not (found):
+		    print 'invalid value: Observation.Beamformer[%d] = ' % index + sp
+		    sys.exit(0)
+	    index +=1
+	    
     def checkSubbandCount(self, key):
         if len(self.getExpandedInt32Vector(key)) != self.getNrSubbands():
 	    print key + ' contains wrong number (' + str(len(self.getExpandedInt32Vector(key))) + ') of subbands (expected ' + str(self.getNrSubbands()) + ')'
@@ -165,7 +226,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    if slots[subband] >= subbandsPerFrame:
 	        print 'Observation.rspSlotList contains slot numbers >= OLAP.nrSubbandsPerFrame'
 		sys.exit(0)
-    
+
     def inputPsets(self):
         return self.getInt32Vector('OLAP.BGLProc.inputPsets')
 	    
