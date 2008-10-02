@@ -169,7 +169,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       if (ex.error == EINTR)
 	break;
       else
-	throw ex;
+	throw;
     }
 
     ++ itsArgs.packetCounters->nrPacketsReceived;
