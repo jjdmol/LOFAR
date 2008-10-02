@@ -41,6 +41,10 @@ Observation.bandFilter = HB_100_190
 #Observation.bandFilter = HB_170_230
 #Observation.bandFilter = HB_210_240
 
+# Eg. tiedArray beamforming
+#Observation.Beamformer[0] = "B01_0,B01_1"
+#Observation.Beamformer[1] = "CS016_dipole0,CS016_dipole4"
+
 Observation.Beam[0].angle1 = 0                  # NCP
 Observation.Beam[0].angle2 = 1.570796327
 Observation.Beam[1].angle1 = 5.2336866848083394 # Cygnus

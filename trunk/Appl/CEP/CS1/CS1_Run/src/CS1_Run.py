@@ -145,7 +145,6 @@ if __name__ == '__main__':
     parset = CS1_Parset() 
 
     parset.readFromFile(options.parset)
-
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime) 
     parset.setPartition(options.partition)
@@ -171,6 +170,9 @@ if __name__ == '__main__':
         sys.exit(1)
     
     parset.setStations(stationList)
+    parset.checkBeamformList()
+    parset.setTiedArrayStations()
+    parset.tabMapping()
     
     # see if we are using fake input
     if options.fakeinput > 0:

@@ -166,6 +166,7 @@ class Parset(switch):
 
     def getStringVector(self, key):
         line = str(self.parameters[key])
+	if line == '[]' : return list()
 	line = string.replace(line,'\'','')
         line = line.strip('[').rstrip(']')
 	line = string.replace(line,' ','')
