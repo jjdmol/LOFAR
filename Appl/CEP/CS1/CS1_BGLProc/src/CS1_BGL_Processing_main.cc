@@ -32,6 +32,7 @@
 #include <CS1_BGLProc/Package__Version.h>
 
 #include <boost/lexical_cast.hpp>
+#include <execinfo.h>
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -42,15 +43,47 @@
 #include <fcnp_cn.h>
 #endif
 
+// if exceptions are not caught, an attempt is made to create a backtrace
+// from the place where the exception is thrown.
+#define CATCH_EXCEPTIONS
+
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
+
+
+#if !defined CATCH_EXCEPTIONS
+
+void terminate_with_backtrace()
+{
+  std::cerr << "terminate_with_backtrace()" << std::endl;
+
+  void *buffer[100];
+  int  nptrs	 = backtrace(buffer, 100);
+  char **strings = backtrace_symbols(buffer, nptrs);
+
+  for (int i = 0; i < nptrs; i ++)
+    std::cerr << i << ": " << strings[i] << std::endl;
+
+  free(strings);
+  abort();
+}
+
+#endif
+
 
 int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
 
+#if !defined CATCH_EXCEPTIONS
+  std::set_terminate(terminate_with_backtrace);
+#endif
+
+#if defined CATCH_EXCEPTIONS
   try {
+#endif
+
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
 #endif
@@ -135,6 +168,7 @@ int main(int argc, char **argv)
 #endif
     
     return 0;
+#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     std::cerr << "Uncaught Exception: " << ex.what() << std::endl;
     return 1;
@@ -142,4 +176,5 @@ int main(int argc, char **argv)
     std::cerr << "Uncaught exception: " << ex.what() << std::endl;
     return 1;
   }
+#endif
 }
