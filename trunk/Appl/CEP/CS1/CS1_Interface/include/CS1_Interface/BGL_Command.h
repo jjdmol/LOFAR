@@ -33,7 +33,7 @@ class BGL_Command
 {
   public:
     enum Command {
-      PREPROCESS,
+      PREPROCESS = 0x406e7404,
       PROCESS,
       POSTPROCESS,
       STOP,

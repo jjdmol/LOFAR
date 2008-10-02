@@ -121,7 +121,10 @@ int main(int argc, char **argv)
 					proc = 0;
 					break;
 
-	default :			break;
+	case BGL_Command::STOP :	break;
+
+	default :			std::cerr << "Bad command!" << std::endl;
+					abort();
       }
     } while (command.value() != BGL_Command::STOP);
 
