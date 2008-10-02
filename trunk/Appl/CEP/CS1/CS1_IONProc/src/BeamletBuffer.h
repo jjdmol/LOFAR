@@ -113,7 +113,7 @@ template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::align
 template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::mapTime2Index(TimeStamp time) const
 { 
   // TODO: this is very slow because of the %
-  return time % itsSize + itsOffset;
+  return (time + itsOffset) % itsSize;
 }
 
 } // namespace CS1
