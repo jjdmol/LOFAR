@@ -152,6 +152,7 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.sampleRate()              = parset.sampleRate();
   configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
+  configuration.tabList()                 = parset.getUint32Vector("OLAP.BGLProc.tabList");
   configuration.refFreqs()                = parset.subbandToFrequencyMapping();
 
   std::clog << "configuring " << nrCoresPerPset << " cores ...";
