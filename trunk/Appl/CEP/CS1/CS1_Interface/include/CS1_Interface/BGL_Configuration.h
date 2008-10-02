@@ -44,9 +44,9 @@ class BGL_Configuration
     bool		  &delayCompensation();
     bool		  &correctBandPass();
     double		  &sampleRate();
-    std::vector<unsigned> &inputPsets(), &outputPsets();
+    std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
     std::vector<double>	  &refFreqs();
-
+    
     void		  read(Stream *);
     void		  write(Stream *);
 
@@ -54,7 +54,7 @@ class BGL_Configuration
     static const unsigned MAX_SUBBANDS = 248;
 
   private:
-    std::vector<unsigned> itsInputPsets, itsOutputPsets;
+    std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
 
     struct MarshalledData
@@ -69,9 +69,9 @@ class BGL_Configuration
       bool		  itsDelayCompensation;
       bool		  itsCorrectBandPass;
       double		  itsSampleRate;
-      unsigned		  itsInputPsetsSize, itsOutputPsetsSize;
+      unsigned		  itsInputPsetsSize, itsOutputPsetsSize, itsTabListSize;
       unsigned		  itsRefFreqsSize;
-      unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS];
+      unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS], itsTabList[MAX_PSETS];
       double		  itsRefFreqs[MAX_SUBBANDS];
     } itsMarshalledData;
 };
@@ -135,6 +135,11 @@ inline std::vector<unsigned> &BGL_Configuration::inputPsets()
 inline std::vector<unsigned> &BGL_Configuration::outputPsets()
 {
   return itsOutputPsets;
+}
+
+inline std::vector<unsigned> &BGL_Configuration::tabList()
+{
+  return itsTabList;
 }
 
 inline std::vector<double> & BGL_Configuration::refFreqs()

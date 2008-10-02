@@ -96,6 +96,7 @@ public:
 	uint32	       nrPsetsPerStorage() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
+	vector<uint32> tabList() const;
 	vector<uint32> psetDimensions() const;
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
@@ -346,6 +347,12 @@ inline vector<uint32> CS1_Parset::outputPsets() const
 {
   return getUint32Vector("OLAP.BGLProc.outputPsets");
 }
+
+inline vector<uint32> CS1_Parset::tabList() const
+{
+  return getUint32Vector("OLAP.BGLProc.tabList");
+}
+
 
 inline vector<uint32> CS1_Parset::psetDimensions() const
 {

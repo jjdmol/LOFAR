@@ -24,7 +24,6 @@
 
 #include <cassert>
 
-
 namespace LOFAR {
 namespace CS1 {
 
@@ -38,6 +37,9 @@ void BGL_Configuration::read(Stream *str)
 
   itsOutputPsets.resize(itsMarshalledData.itsOutputPsetsSize);
   memcpy(&itsOutputPsets[0], itsMarshalledData.itsOutputPsets, itsMarshalledData.itsOutputPsetsSize * sizeof(unsigned));
+
+  itsTabList.resize(itsMarshalledData.itsTabListSize);
+  memcpy(&itsTabList[0], itsMarshalledData.itsTabList, itsMarshalledData.itsTabListSize * sizeof(unsigned));
 
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
@@ -53,6 +55,10 @@ void BGL_Configuration::write(Stream *str)
   itsMarshalledData.itsOutputPsetsSize = itsOutputPsets.size();
   assert(itsMarshalledData.itsOutputPsetsSize <= MAX_PSETS);
   memcpy(itsMarshalledData.itsOutputPsets, &itsOutputPsets[0], itsMarshalledData.itsOutputPsetsSize * sizeof(unsigned));
+
+  itsMarshalledData.itsTabListSize = itsTabList.size();
+  assert(itsMarshalledData.itsTabListSize <= MAX_PSETS);
+  memcpy(itsMarshalledData.itsTabList, &itsTabList[0], itsMarshalledData.itsTabListSize * sizeof(unsigned));
 
   itsMarshalledData.itsRefFreqsSize = itsRefFreqs.size();
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
