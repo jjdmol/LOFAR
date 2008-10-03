@@ -4,7 +4,7 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OnlineCtrl   1.0.2  development 'node constraint'  "Controller for the online datastream"
+node  OnlineCtrl   1.0.3  development 'node constraint'  "Controller for the online datastream"
 
 #    name               dir. type   unit   prun. vm   value                          constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -16,5 +16,5 @@ par  applOrder          I    vtext  -      10    0    [CorrAppl,StorageAppl]    
 uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
 uses  CorrAppl     1.0.1  development 1                  "Blue Gene Application"
 uses  StorageAppl  1.0.0  development 1                  "StorageSection Application"
-uses  OLAP         1.0.6  development 1                  "OLAP specific information"
+uses  OLAP         1.0.7  development 1                  "OLAP specific information"
 
