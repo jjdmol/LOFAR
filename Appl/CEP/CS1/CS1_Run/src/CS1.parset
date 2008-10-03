@@ -42,7 +42,6 @@ Observation.bandFilter = HB_100_190
 #Observation.bandFilter = HB_210_240
 
 # Eg. tiedArray beamforming
-# Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"
 #Observation.Beamformer[1].stationList = "B01_2,B01_3"
 
