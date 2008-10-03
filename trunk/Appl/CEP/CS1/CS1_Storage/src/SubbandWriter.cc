@@ -62,7 +62,11 @@ SubbandWriter::SubbandWriter(const CS1_Parset *ps, unsigned rank)
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  itsNStations = itsCS1PS->nrStations();
+  if (itsCS1PS->nrTabStations() > 0)
+    itsNStations = itsCS1PS->nrTabStations();
+  else
+    itsNStations = itsCS1PS->nrStations();
+  
   itsNBaselines = itsCS1PS->nrBaselines();
   itsNChannels = itsCS1PS->nrChannelsPerSubband();
   itsNBeams = itsCS1PS->nrBeams();
@@ -209,7 +213,11 @@ void SubbandWriter::preprocess()
   itsNrSubbandsPerPset	  = itsCS1PS->nrSubbandsPerPset();
   itsNrSubbandsPerStorage = itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage();
   LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
-  vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
+  vector<string> stationNames;
+  if (itsCS1PS->nrTabStations() > 0)
+    stationNames = itsCS1PS->getStringVector("OLAP.tiedArrayStationNames");
+  else 
+    stationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 
   itsWriters.resize(itsNrSubbandsPerStorage);
   
@@ -222,7 +230,7 @@ void SubbandWriter::preprocess()
       itsCS1PS->getMSname(currentSubband).c_str(),
       startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
-      storageStationNames, itsTimesToIntegrate);
+      stationNames, itsTimesToIntegrate);
 
     unsigned       beam    = subbandToBeamMapping[currentSubband];
     vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
