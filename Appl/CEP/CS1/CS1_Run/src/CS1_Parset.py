@@ -92,10 +92,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	beamform = False
 	index=0
 	
-	while self.isDefined('Observation.Beamformer[' + str(index) + ']'):
+	while self.isDefined('Observation.Beamformer[' + str(index) + '].stationList'):
 	    beamform = True
-	    tiedArrayStationList.append(string.replace(self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"'),',','+'))
-	    superStations = self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"').split(',')
+	    tiedArrayStationList.append(string.replace(self.getString('Observation.Beamformer[' + str(index) + '].stationList').strip('"').rstrip('"'),',','+'))
+	    superStations = self.getString('Observation.Beamformer[' + str(index) + '].stationList').strip('"').rstrip('"').split(',')
 	    for sp in superStations:
 		for s in stationList:
 		    if s.getName() == sp:
@@ -195,8 +195,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def checkBeamformList(self):
 	index = 0
 
-	while self.isDefined('Observation.Beamformer[' + str(index) + ']'):
-	    superStations = self.getString('Observation.Beamformer[' + str(index) + ']').strip('"').rstrip('"').split(',')    	
+	while self.isDefined('Observation.Beamformer[' + str(index) + '].stationList'):
+	    superStations = self.getString('Observation.Beamformer[' + str(index) + '].stationList').strip('"').rstrip('"').split(',')    	
             for sp in superStations:
 	        found = False
 		for s in self.stationList:
@@ -204,7 +204,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 		        found = True
 		        break
 		if not (found):
-		    print 'invalid value: Observation.Beamformer[%d] = ' % index + sp + ', or the station isn\'t found in the stationList.'
+		    print 'invalid value: Observation.Beamformer[%d].stationList = ' % index + sp + ', or the station isn\'t found in the stationList.'
 		    sys.exit(0)
 	    index +=1
 	    
