@@ -204,7 +204,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 		        found = True
 		        break
 		if not (found):
-		    print 'invalid value: Observation.Beamformer[%d] = ' % index + sp
+		    print 'invalid value: Observation.Beamformer[%d] = ' % index + sp + ', or the station isn\'t found in the stationList.'
 		    sys.exit(0)
 	    index +=1
 	    
