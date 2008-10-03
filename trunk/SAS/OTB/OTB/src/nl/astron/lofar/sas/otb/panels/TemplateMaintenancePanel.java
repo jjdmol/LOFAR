@@ -236,24 +236,27 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
             }
         } else if (evt.getActionCommand().equals("Duplicate")) {
-            String answer=JOptionPane.showInputDialog(this,"What is the index for the new subtree?","Enter indexNumber",JOptionPane.QUESTION_MESSAGE);
-            if (answer!=null || !answer.equals("")) {
-                short idx=Integer.valueOf(answer).shortValue();
-                if (idx < 0) {
-                    logger.debug("Index value smaller then 1 not allowed");
-                    return;
-                }
-                try {
-                    int aN=OtdbRmi.getRemoteMaintenance().dupNode(itsTreeID,itsSelectedNode.nodeID(),idx);
-                    if (aN>0) {
-                        logger.debug("Node duplicated");
-                        setNewRootNode();
-                    } else {
-                        logger.debug("Node duplication failed");
+            //Check  if the selected node isn't a leaf
+            if (itsSelectedNode != null && !itsSelectedNode.leaf) {
+                String answer=JOptionPane.showInputDialog(this,"What is the index for the new subtree?","Enter indexNumber",JOptionPane.QUESTION_MESSAGE);
+                if (answer!=null || !answer.equals("")) {
+                    short idx=Integer.valueOf(answer).shortValue();
+                    if (idx < 0) {
+                        logger.debug("Index value smaller then 1 not allowed");
+                        return;
                     }
-              } catch (RemoteException ex) {
-                    logger.debug("Error during duplication of Node: "+ex);
-              }
+                    try {
+                        int aN=OtdbRmi.getRemoteMaintenance().dupNode(itsTreeID,itsSelectedNode.nodeID(),idx);
+                        if (aN>0) {
+                            logger.debug("Node duplicated");
+                            setNewRootNode();
+                        } else {
+                            logger.debug("Node duplication failed");
+                        }
+                    } catch (RemoteException ex) {
+                        logger.debug("Error during duplication of Node: "+ex);
+                    }
+                }
             }
         } else if (evt.getActionCommand().equals("Change Status")) {
             int answer=JOptionPane.showConfirmDialog(this,"Altering the info wil automaticly close this Maintainance window. Do you want to continue ?","alert",JOptionPane.YES_NO_OPTION);
@@ -356,12 +359,16 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         }
         if (treePanel == null) {
             buttonPanel1.setButtonEnabled("Duplicate",false);
+            buttonPanel1.setButtonEnabled("Delete",false);
+
         } else {
             int[] selectedRows =treePanel.getSelectedRows();
-            if (selectedRows == null || selectedRows.length <=0 ||selectedRows[0] ==  0 ) {
+            if (selectedRows == null || selectedRows.length <=0 ||selectedRows[0] ==  0 || aNode.leaf ) {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
+                buttonPanel1.setButtonEnabled("Delete",false);
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",true);
+                buttonPanel1.setButtonEnabled("Delete",true);
             }
         }
         if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {

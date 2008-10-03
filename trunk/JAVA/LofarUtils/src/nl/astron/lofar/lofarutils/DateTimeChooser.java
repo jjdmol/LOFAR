@@ -52,6 +52,7 @@ public class DateTimeChooser
     protected Date initialDate = null;
     protected transient ChangeEvent changeEvent = null;
     protected EventListenerList lList = new EventListenerList();
+    protected Locale itsLocale;
     
     /** Creates a DateTimeChooser with the current date as an initial date */
     public DateTimeChooser() {
@@ -193,8 +194,8 @@ public class DateTimeChooser
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        Locale local = new Locale("en");
-        calendar = new com.toedter.calendar.JCalendar(local);
+        itsLocale= new Locale("en");
+        calendar = new com.toedter.calendar.JCalendar(itsLocale);
         hours = new JSpinField(0,23);
         hours.adjustWidthToMaximumValue();
         jLabel1 = new javax.swing.JLabel();
@@ -280,7 +281,7 @@ public class DateTimeChooser
     }//GEN-LAST:event_zeroActionPerformed
 
     private void nowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nowActionPerformed
-        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm");
+        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm");
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         Date aD = new Date();

@@ -78,8 +78,8 @@
   <SubComponents>
     <Component class="com.toedter.calendar.JCalendar" name="calendar">
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new com.toedter.calendar.JCalendar(local)"/>
-        <AuxValue name="JavaCodeGenerator_CreateCodePre" type="java.lang.String" value="Locale local = new Locale(&quot;en&quot;);"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new com.toedter.calendar.JCalendar(itsLocale)"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodePre" type="java.lang.String" value="itsLocale= new Locale(&quot;en&quot;);"/>
       </AuxValues>
     </Component>
     <Component class="com.toedter.components.JSpinField" name="hours">
