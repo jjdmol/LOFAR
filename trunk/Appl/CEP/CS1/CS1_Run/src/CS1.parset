@@ -42,8 +42,9 @@ Observation.bandFilter = HB_100_190
 #Observation.bandFilter = HB_210_240
 
 # Eg. tiedArray beamforming
-#Observation.Beamformer[0] = "B01_0,B01_1"
-#Observation.Beamformer[1] = "CS016_dipole0,CS016_dipole4"
+# Eg. tiedArray beamforming
+#Observation.Beamformer[0].stationList = "B01_0,B01_1"
+#Observation.Beamformer[1].stationList = "B01_2,B01_3"
 
 Observation.Beam[0].angle1 = 0                  # NCP
 Observation.Beam[0].angle2 = 1.570796327
