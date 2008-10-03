@@ -195,15 +195,54 @@ vector<double> CS1_Parset::subbandToFrequencyMapping() const
   return subbandFreqs;
 }
 
+vector<double> CS1_Parset::centroidPos(const string &stations) const
+{
+  vector<double> Centroid, posList, pos;
+  Centroid.resize(3);
+  
+  vector<string> stationList = StringUtil::split(stations, '+');
+  for (uint i = 0; i < stationList.size(); i++)
+  {   
+    pos = getDoubleVector("PIC.Core." + stationList[i] + ".position");
+    posList.insert(posList.end(), pos.begin(), pos.end()); 
+  }
+  
+  for (uint i = 0; i < posList.size()/3; i++)
+  {
+    Centroid[0] += posList[3*i];   // x in m
+    Centroid[1] += posList[3*i+1]; // y in m
+    Centroid[2] += posList[3*i+2]; // z in m
+  }  
+  
+  Centroid[0] /= posList.size()/3;
+  Centroid[1] /= posList.size()/3;
+  Centroid[2] /= posList.size()/3;
+   
+  return Centroid;
+}
 
 vector<double> CS1_Parset::positions() const
 {
-  vector<string> stNames = getStringVector("OLAP.storageStationNames");
+  vector<string> stNames;
   vector<double> pos, list;
+  unsigned nStations;
   
-  for (uint i = 0; i < nrStations(); i++)
+  if (nrTabStations() > 0) {
+    stNames = getStringVector("OLAP.tiedArrayStationNames");
+    nStations = nrTabStations();
+  }
+  else {
+    stNames = getStringVector("OLAP.storageStationNames");
+    nStations = nrStations();
+  }
+  
+  for (uint i = 0; i < nStations; i++)
   {
-    pos = getDoubleVector("PIC.Core." + stNames[i] + ".position");
+    if (stNames[i].find("+") != string::npos)
+      pos = centroidPos(stNames[i]);
+    else
+      pos = getDoubleVector("PIC.Core." + stNames[i] + ".position");
+    
     list.insert(list.end(), pos.begin(), pos.end());
   }
 

@@ -141,6 +141,7 @@ private:
 	
 	vector<string>   getExpandedStringVector(const string& key) const;
 	vector<unsigned> getExpandedUint32Vector(const string& key) const;
+	vector<double>   centroidPos(const string &stations) const;
 	
 	Observation    itsObservation;
 };
@@ -202,7 +203,12 @@ inline uint32 CS1_Parset::nrTabStations() const
 
 inline uint32 CS1_Parset::nrBaselines() const
 {
-  unsigned stations = nrStations();
+  unsigned stations;
+  
+  if (nrTabStations() > 0)
+    stations = nrTabStations();
+  else
+    stations = nrStations();
 
   return stations * (stations + 1) / 2;
 } 
