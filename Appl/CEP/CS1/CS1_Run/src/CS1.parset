@@ -58,9 +58,9 @@ Observation.Beam[4].angle2 = 5.893698795
 Observation.Beam[5].angle1 = 1.4596748494230258 # Taurus
 Observation.Beam[5].angle2 = 0.38422502336661052
 
-Observation.Beam[0].directionTypes = J2000
-Observation.Beam[1].directionTypes = J2000
-Observation.Beam[2].directionTypes = J2000
+Observation.Beam[0].directionType = J2000
+Observation.Beam[1].directionType = J2000
+Observation.Beam[2].directionType = J2000
 
 # Eg. [ 300..303, 40 ] --> [ 300,301,302,303,40 ]
 #     [ 10*0         ] --> [ 0,0,0,0,0,0,0,0,0,0 ]
