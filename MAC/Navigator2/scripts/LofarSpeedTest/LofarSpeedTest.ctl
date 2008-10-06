@@ -16,6 +16,7 @@ global time startTime;
 global time endTime;
 global int  nrReads=0;
 global int  nrWrites=0;
+global int  totalWrites = 0;
 global dyn_string strArray;
 global string stationName="";
 
@@ -290,6 +291,7 @@ void oneStationToCentral1000IntTo1() {
   DebugTN("oneStationToCentral1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -321,6 +323,7 @@ void oneStationToCentral1000StringTo1() {
   DebugTN("oneStationToCentral1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -352,6 +355,7 @@ void oneStationToCentral100IntTo10() {
   DebugTN("oneStationToCentral100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -383,6 +387,7 @@ void oneStationToCentral100StringTo10() {
   DebugTN("oneStationToCentral100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -414,6 +419,7 @@ void oneStationToCentral100IntTo10x1() {
   DebugTN("oneStationToCentral100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -445,6 +451,7 @@ void oneStationToCentral100StringTo10x1() {
   DebugTN("oneStationToCentral100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -480,6 +487,7 @@ void centralFromOneStation1000IntTo1() {
   DebugTN("centralFromOneStation1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -511,6 +519,7 @@ void centralFromOneStation1000StringTo1() {
   DebugTN("centralFromOneStation1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -542,6 +551,7 @@ void centralFromOneStation100IntTo10() {
   DebugTN("centralFromOneStation100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -573,6 +583,7 @@ void centralFromOneStation100StringTo10() {
   DebugTN("centralFromOneStation100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -604,6 +615,7 @@ void centralFromOneStation100IntTo10x1() {
   DebugTN("centralFromOneStation100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -635,6 +647,7 @@ void centralFromOneStation100StringTo10x1() {
   DebugTN("centralFromOneStation100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -669,7 +682,8 @@ void centralFromOneStation100StringTo10x1() {
 void twoStationsToCentral1000IntTo1() {
   DebugTN("twoStationsToCentral1000IntTo1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -700,7 +714,8 @@ void twoStationsToCentral1000IntTo1() {
 void twoStationsToCentral1000StringTo1() {
   DebugTN("twoStationsToCentral1000StringTo1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -731,7 +746,8 @@ void twoStationsToCentral1000StringTo1() {
 void twoStationsToCentral100IntTo10() {
   DebugTN("twoStationsToCentral100IntTo10 starting ");
   isRunning=true;
-  nrWrites=200;
+  nrWrites=100;
+  totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -762,7 +778,8 @@ void twoStationsToCentral100IntTo10() {
 void twoStationsToCentral100StringTo10() {
   DebugTN("twoStationsToCentral100StringTo10 starting ");
   isRunning=true;
-  nrWrites=200;
+  nrWrites=100;
+  totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -793,7 +810,8 @@ void twoStationsToCentral100StringTo10() {
 void twoStationsToCentral100IntTo10x1() {
   DebugTN("twoStationsToCentral100IntTo10x1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -824,7 +842,8 @@ void twoStationsToCentral100IntTo10x1() {
 void twoStationsToCentral100StringTo10x1() {
   DebugTN("twoStationsToCentral100StringTo10x1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -859,7 +878,8 @@ void twoStationsToCentral100StringTo10x1() {
 void centralFromTwoStations1000IntTo1() {
   DebugTN("centralFromTwoStations1000IntTo1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -890,7 +910,8 @@ void centralFromTwoStations1000IntTo1() {
 void centralFromTwoStations1000StringTo1() {
   DebugTN("centralFromTwoStations1000StringTo1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -921,7 +942,8 @@ void centralFromTwoStations1000StringTo1() {
 void centralFromTwoStations100IntTo10() {
   DebugTN("centralFromTwoStations100IntTo10 starting ");
   isRunning=true;
-  nrWrites=200;
+  nrWrites=100;
+  totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -954,7 +976,8 @@ void centralFromTwoStations100IntTo10() {
 void centralFromTwoStations100StringTo10() {
   DebugTN("centralFromTwoStations100StringTo10 starting ");
   isRunning=true;
-  nrWrites=200;
+  nrWrites=100;
+  totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -985,7 +1008,8 @@ void centralFromTwoStations100StringTo10() {
 void centralFromTwoStations100IntTo10x1() {
   DebugTN("centralFromTwoStations100IntTo10x1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1018,7 +1042,8 @@ void centralFromTwoStations100IntTo10x1() {
 void centralFromTwoStations100StringTo10x1() {
   DebugTN("centralFromTwoStations100StringTo10x1 starting ");
   isRunning=true;
-  nrWrites=2000;
+  nrWrites=1000;
+  totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1053,7 +1078,8 @@ void centralFromTwoStations100StringTo10x1() {
 void fourStationsToCentral1000IntTo1() {
   DebugTN("fourStationsToCentral1000IntTo1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1084,7 +1110,8 @@ void fourStationsToCentral1000IntTo1() {
 void fourStationsToCentral1000StringTo1() {
   DebugTN("fourStationsToCentral1000StringTo1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1115,7 +1142,8 @@ void fourStationsToCentral1000StringTo1() {
 void fourStationsToCentral100IntTo10() {
   DebugTN("fourStationsToCentral100IntTo10 starting ");
   isRunning=true;
-  nrWrites=400;
+  nrWrites=100;
+  totalWrites=400;
   nrReads=0;
   
   if (isStation) {
@@ -1146,7 +1174,8 @@ void fourStationsToCentral100IntTo10() {
 void fourStationsToCentral100StringTo10() {
   DebugTN("fourStationsToCentral100StringTo10 starting ");
   isRunning=true;
-  nrWrites=400;
+  nrWrites=100;
+  totalWrites=400;
   nrReads=0;
   
   if (isStation) {
@@ -1182,7 +1211,8 @@ void fourStationsToCentral100StringTo10() {
 void centralFromFourStations1000IntTo1() {
   DebugTN("centralFromFourStations1000IntTo1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1213,7 +1243,8 @@ void centralFromFourStations1000IntTo1() {
 void centralFromFourStations1000StringTo1() {
   DebugTN("centralFromFourStations1000StringTo1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1244,7 +1275,8 @@ void centralFromFourStations1000StringTo1() {
 void centralFromFourStations100IntTo10() {
   DebugTN("centralFromFourStation100IntTo10 starting ");
   isRunning=true;
-  nrWrites=400;
+  nrWrites=100;
+  totalWrites=400;
   nrReads=0;
   
   if (isStation) {
@@ -1279,7 +1311,8 @@ void centralFromFourStations100IntTo10() {
 void centralFromFourStations100StringTo10() {
   DebugTN("centralFromFourStations100StringTo10 starting ");
   isRunning=true;
-  nrWrites=400;
+  nrWrites=100;
+  totalWrites=400;
   nrReads=0;
   
   if (isStation) {
@@ -1310,7 +1343,8 @@ void centralFromFourStations100StringTo10() {
 void centralFromFourStations100IntTo10x1() {
   DebugTN("centralFromFourStation100IntTo10x1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1345,7 +1379,8 @@ void centralFromFourStations100IntTo10x1() {
 void centralFromFourStations100StringTo10x1() {
   DebugTN("centralFromFourStations100StringTo10x1 starting ");
   isRunning=true;
-  nrWrites=4000;
+  nrWrites=1000;
+  totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
@@ -1384,6 +1419,7 @@ void twoStationsFromCentral1000IntTo1() {
   DebugTN("twoStationsFromCentral1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1415,6 +1451,7 @@ void twoStationsFromCentral1000StringTo1() {
   DebugTN("twoStationsFromCentral1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1446,6 +1483,7 @@ void twoStationsFromCentral100IntTo10() {
   DebugTN("twoStationsFromCentral100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1477,6 +1515,7 @@ void twoStationsFromCentral100StringTo10() {
   DebugTN("twoStationsFromCentral100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1508,6 +1547,7 @@ void twoStationsFromCentral100IntTo10x1() {
   DebugTN("twoStationsFromCentral100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1539,6 +1579,7 @@ void twoStationsFromCentral100StringTo10x1() {
   DebugTN("twoStationsFromCentral100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1574,6 +1615,7 @@ void centralToTwoStations1000IntTo1() {
   DebugTN("centralToTwoStations1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1605,6 +1647,7 @@ void centralToTwoStations1000StringTo1() {
   DebugTN("centralToTwoStations1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1636,6 +1679,7 @@ void centralToTwoStations100IntTo10() {
   DebugTN("centralToTwoStations100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1667,6 +1711,7 @@ void centralToTwoStations100StringTo10() {
   DebugTN("centralToTwoStations100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1698,6 +1743,7 @@ void centralToTwoStations100IntTo10x1() {
   DebugTN("centralToTwoStations100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1729,6 +1775,7 @@ void centralToTwoStations100StringTo10x1() {
   DebugTN("centralToTwoStations100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
@@ -1763,6 +1810,7 @@ void fourStationsFromCentral1000IntTo1() {
   DebugTN("fourStationsFromCentral1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -1794,6 +1842,7 @@ void fourStationsFromCentral1000StringTo1() {
   DebugTN("fourStationsFromCentral1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -1825,6 +1874,7 @@ void fourStationsFromCentral100IntTo10() {
   DebugTN("fourStationsFromCentral100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation) {
@@ -1856,6 +1906,7 @@ void fourStationsFromCentral100StringTo10() {
   DebugTN("fourStationsFromCentral100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation) {
@@ -1887,6 +1938,7 @@ void fourStationsFromCentral100IntTo10x1() {
   DebugTN("fourStationsFromCentral100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -1918,6 +1970,7 @@ void fourStationsFromCentral100StringTo10x1() {
   DebugTN("fourStationsFromCentral100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -1954,6 +2007,7 @@ void centralToFourStations1000IntTo1() {
   DebugTN("centralToFourStations1000IntTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -1985,6 +2039,7 @@ void centralToFourStations1000StringTo1() {
   DebugTN("centralToFourStations1000StringTo1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -2016,6 +2071,7 @@ void centralToFourStations100IntTo10() {
   DebugTN("centralToFourStation100IntTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation) {
@@ -2048,6 +2104,7 @@ void centralToStations100StringTo10() {
   DebugTN("centralFromFourStations100StringTo10 starting ");
   isRunning=true;
   nrWrites=100;
+  totalWrites=100;
   nrReads=0;
   
   if (isStation) {
@@ -2079,6 +2136,7 @@ void centralToFourStations100IntTo10x1() {
   DebugTN("centralToFourStation100IntTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -2111,6 +2169,7 @@ void centralToStations100StringTo10x1() {
   DebugTN("centralFromFourStations100StringTo10x1 starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
@@ -2145,6 +2204,7 @@ void centralToOneStationPingPong1000Int() {
   DebugTN("centralToOneStationPingPong1000Int starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -2198,6 +2258,7 @@ void centralToOneStationPingPong1000String() {
   DebugTN("centralToOneStationPingPong1000String starting ");
   isRunning=true;
   nrWrites=1000;
+  totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
@@ -2255,7 +2316,7 @@ void centralSingleTrigger(string dp1, anytype aVal) {
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     endTime = getCurrentTime();
 //    DebugTN("starttijd: " + startTime);
 //    DebugTN("eindtijd: " + endTime);
@@ -2299,7 +2360,7 @@ void centralCollectionTrigger(string dp1, anytype val1,
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
@@ -2338,7 +2399,7 @@ void stationSingleTrigger(string dp1, anytype aVal) {
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
@@ -2382,7 +2443,7 @@ void stationCollectionTrigger(string dp1, anytype val1,
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
@@ -2414,7 +2475,7 @@ void stationCollectionTrigger(string dp1, anytype val1,
 // *******************************************
 void pingpongStationIntTrigger(string dp1, int aVal) {
   nrReads++;
-  if (nrReads >= nrWrites) {
+  if (nrReads >= totalWrites) {
     isRunning=false;
     if (dpDisconnect("pingpongStationIntTrigger",dp1) != 0) {
       DebugN("Error disconnecting pingpongStationIntTrigger, dp: " ,dp1, " Error: ",getLastError());
@@ -2442,7 +2503,7 @@ void pingpongCentralIntTrigger(string dp1, int aVal) {
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads >= nrWrites) {
+  if (nrReads >= totalWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
@@ -2470,7 +2531,7 @@ void pingpongCentralIntTrigger(string dp1, int aVal) {
 // *******************************************
 void pingpongStationStringTrigger(string dp1, string aVal) {
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     isRunning=false;
     if (dpDisconnect("pingpongStationStringTrigger",dp1) != 0) {
       DebugN("Error disconnecting pingpongStationStringTrigger, dp: " ,dp1, " Error: ",getLastError());
@@ -2498,7 +2559,7 @@ void pingpongCentralStringTrigger(string dp1, string aVal) {
     startTime = getCurrentTime();
   }
   nrReads++;
-  if (nrReads == nrWrites) {
+  if (nrReads == totalWrites) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
@@ -2537,7 +2598,7 @@ void writeSingle(string machineName,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",1000,
+    dpSet("lofarSpeedTest.result.nrWrites",nrWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2569,7 +2630,7 @@ void writeSingleToTwo(string machineName1,string machineName2,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",2000,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2661,7 +2722,7 @@ void writeCollection(string machineName,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2710,7 +2771,7 @@ void writeSingleCollection(string machineName,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2779,7 +2840,7 @@ void writeCollectionToTwo(string machineName1,string machineName2,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2891,7 +2952,7 @@ void writeCollectionToFour(string machineName1,string machineName2,string machin
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2967,7 +3028,7 @@ void writeSingleCollectionToTwo(string machineName1,string machineName2,string v
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -3088,7 +3149,7 @@ void writeSingleCollectionToFour(string machineName1,string machineName2,string 
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",100,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
