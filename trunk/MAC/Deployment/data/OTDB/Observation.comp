@@ -24,6 +24,7 @@ par  receiverList	         I	  text	 -   	10    0	     [0]                      
 par  MSNameMask              I    text   -      10    0      '/data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS' - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband'
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'
+par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
 par  nrSlotsInFrame	     I    int    -      10    100    48                                        - '???'
 
