@@ -59,8 +59,6 @@ node  StorageProc     1.0.2  development 'node constraint'  "???"
 par subbandsPerMS		I	int		-		10	0		1						-		'???'
 
 
-par station_Input_Transport	I	ptext	-	10	0	'File|TCP|UDP|Null;UDP'	- 	'Type of transport used between Station en InputSection.'
-
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
