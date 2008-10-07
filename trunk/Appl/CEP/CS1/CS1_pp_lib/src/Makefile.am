@@ -15,7 +15,7 @@ libcs1_pp_lib_la_SOURCES = Package__Version.cc  \
 		Pipeline.cc 
 
 
-bin_PROGRAMS = versioncs1_idppp CS1_IDPPP
+bin_PROGRAMS = versioncs1_pp_lib CS1_IDPPP
 
 CS1_IDPPP_SOURCES	= IDPPP.cc PipelineProcessControl.cc
 CS1_IDPPP_LDADD		= libcs1_pp_lib.la
@@ -25,8 +25,8 @@ pythondir = $(bindir)
 dist_python_SCRIPTS = 
 
 
-versioncs1_idppp_SOURCES      = versioncs1_idppp.cc
-versioncs1_idppp_LDADD        = libcs1_pp_lib.la
-versioncs1_idppp_DEPENDENCIES = libcs1_pp_lib.la $(LOFAR_DEPEND)
+versioncs1_pp_lib_SOURCES      = versioncs1_pp_lib.cc
+versioncs1_pp_lib_LDADD        = libcs1_pp_lib.la
+versioncs1_pp_lib_DEPENDENCIES = libcs1_pp_lib.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
