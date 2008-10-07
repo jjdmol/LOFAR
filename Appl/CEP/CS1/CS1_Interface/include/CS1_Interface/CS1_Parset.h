@@ -113,13 +113,13 @@ public:
 	vector<unsigned> subbandToRSPboardMapping() const;
 	vector<unsigned> subbandToRSPslotMapping() const;
 
-	int32          nrSubbandsPerFrame() const;
+	int32          nrSlotsInFrame() const;
 	string         partitionName() const;
 	bool           realTime() const;
 	
 	vector<double> getBeamDirection(unsigned beam) const;
 	string         getBeamDirectionType(unsigned beam) const;
-
+	
 	struct StationRSPpair {
 	  string   station;
 	  unsigned rsp;
@@ -138,6 +138,7 @@ private:
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
 	void           checkSubbandCount(const char *key) const;
+	void           checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const;
 	
 	vector<string>   getExpandedStringVector(const string& key) const;
 	vector<unsigned> getExpandedUint32Vector(const string& key) const;
@@ -310,23 +311,35 @@ inline uint32 CS1_Parset::nrCoresPerPset() const
  
 inline unsigned CS1_Parset::nrSubbands() const
 {
-  return getExpandedUint32Vector("Observation.subbandList").size();  
+  if (isDefined("Observation.subbandList"))
+    return getExpandedUint32Vector("Observation.subbandList").size();
+  else
+    return itsObservation.getSubbandList().size();   
 } 
 
 inline vector<unsigned> CS1_Parset::subbandToBeamMapping() const
 {
-  return getExpandedUint32Vector("Observation.beamList");  
+  if (isDefined("Observation.subbandList"))
+    return getExpandedUint32Vector("Observation.beamList");
+  else
+    return itsObservation.getBeamList();   
 }
 
 inline vector<unsigned> CS1_Parset::subbandToRSPboardMapping() const
 {
-  return getExpandedUint32Vector("Observation.rspBoardList");  
+  if (isDefined("Observation.subbandList"))
+    return getExpandedUint32Vector("Observation.rspBoardList");
+  else
+    return itsObservation.getRspBoardList();
 }
 
 
 inline vector<unsigned> CS1_Parset::subbandToRSPslotMapping() const
 {
-  return getExpandedUint32Vector("Observation.rspSlotList");
+  if (isDefined("Observation.subbandList"))
+    return getExpandedUint32Vector("Observation.rspSlotList");
+  else
+    return itsObservation.getRspSlotList();
 }
 
 
@@ -381,9 +394,9 @@ inline int CS1_Parset::outputPsetIndex(uint32 pset) const
   return findIndex(pset, outputPsets());
 }
 
-inline int32 CS1_Parset::nrSubbandsPerFrame() const
+inline int32 CS1_Parset::nrSlotsInFrame() const
 {
-  return getInt32("OLAP.nrSubbandsPerFrame");
+  return getInt32("OLAP.nrSlotsInFrame");
 }
 
 inline string CS1_Parset::partitionName() const

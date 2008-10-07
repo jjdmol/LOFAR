@@ -78,19 +78,33 @@ void CS1_Parset::checkSubbandCount(const char *key) const
 }
 
 
+void CS1_Parset::checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const
+{
+  if (list.size() != nrSubbands())
+    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(list.size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
+}
+
+
 void CS1_Parset::check() const
 {
-  checkSubbandCount("Observation.beamList");
-  checkSubbandCount("Observation.rspBoardList");
-  checkSubbandCount("Observation.rspSlotList");
+  if (isDefined("Observation.subbandList")) {
+    checkSubbandCount("Observation.beamList");
+    checkSubbandCount("Observation.rspBoardList");
+    checkSubbandCount("Observation.rspSlotList");
+  } 
+  else {
+    checkSubbandCountFromObservation("Observation.beamList", itsObservation.getBeamList());
+    checkSubbandCountFromObservation("Observation.rspBoardList", itsObservation.getRspBoardList());
+    checkSubbandCountFromObservation("Observation.rspSlotList", itsObservation.getRspSlotList());
+  }
 
-  unsigned		subbandsPerFrame = nrSubbandsPerFrame();
+  unsigned		slotsPerFrame = nrSlotsInFrame();
   std::vector<unsigned> boards		 = subbandToRSPboardMapping();
   std::vector<unsigned> slots		 = subbandToRSPslotMapping();
   
   for (unsigned subband = 0; subband < slots.size(); subband ++)
-    if (slots[subband] >= subbandsPerFrame)
-      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSubbandsPerFrame");
+    if (slots[subband] >= slotsPerFrame)
+      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSlotsInFrame");
   
   // check not needed when using CS1_Storage
   if (isDefined("OLAP.BGLProc.inputPsets")) {
@@ -186,7 +200,11 @@ vector<double> CS1_Parset::subbandToFrequencyMapping() const
 {
   unsigned	   subbandOffset = 512 * (nyquistZone() - 1);
   
-  vector<unsigned> subbandIds	 = getExpandedUint32Vector("Observation.subbandList");
+  vector<unsigned> subbandIds;
+  if (isDefined("Observation.subbandList"))
+    subbandIds = getExpandedUint32Vector("Observation.subbandList");
+  else
+    subbandIds = itsObservation.getSubbandList();
   vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
