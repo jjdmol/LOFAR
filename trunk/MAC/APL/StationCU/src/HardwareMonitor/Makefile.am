@@ -25,6 +25,6 @@ DOCHDRS						= $(pkginclude_HEADERS) $(BUILT_SOURCES)
 
 EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 
-sysconf_DATA				= HardwareMonitor.log_prop
+sysconf_DATA				= 
 
 include $(top_srcdir)/Makefile.common

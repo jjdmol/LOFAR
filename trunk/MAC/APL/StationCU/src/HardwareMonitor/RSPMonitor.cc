@@ -629,14 +629,16 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		// update PVSS
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating RSP info"));
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		longlong	one(1);
 		RSPGetrcuEvent	getStatus;
 		getStatus.timestamp.setNow();
 		getStatus.cache = true;
-		getStatus.rcumask = bitset<MEPHeader::MAX_N_RCUS>((one<<itsNrRCUs)-1);
+		getStatus.rcumask.reset();
+		for (uint32 r = 0; r < itsNrRCUs; r++) {	// construct bitset : move this to an 'its' variable?
+			getStatus.rcumask.set(r);
+		}
 		itsRSPDriver->send(getStatus);
-		LOG_DEBUG(formatString("MAX_N_RCUS=%d", MEPHeader::MAX_N_RCUS));
-		LOG_DEBUG(formatString("itsRCUs=%d, rcumask=%08lX", itsNrRCUs, getStatus.rcumask.to_uint32()));
+		LOG_DEBUG(formatString("MAX_RCUS=%d, itsRCUs=%d", MAX_RCUS, itsNrRCUs));
+		LOG_DEBUG_STR("rcumask=" << getStatus.rcumask);
 		break;
 	}
 
