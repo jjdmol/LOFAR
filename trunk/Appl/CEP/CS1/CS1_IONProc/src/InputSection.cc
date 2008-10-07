@@ -97,7 +97,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startThreads()
   typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
 
   args.nrTimesPerPacket    = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
-  args.nrSubbandsPerPacket = itsCS1PS->nrSubbandsPerFrame();
+  args.nrSlotsPerPacket    = itsCS1PS->nrSlotsInFrame();
   args.isRealTime	   = itsCS1PS->realTime();
   args.startTime	   = itsSyncedStamp;
 
@@ -201,7 +201,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsBBuffers.resize(itsNrInputs);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSubbandsPerFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
+    itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");

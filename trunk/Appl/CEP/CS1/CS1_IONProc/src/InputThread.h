@@ -48,7 +48,7 @@ template<typename SAMPLE_TYPE> class InputThread
 
       unsigned		  threadID;
       unsigned		  nrTimesPerPacket;
-      unsigned		  nrSubbandsPerPacket;
+      unsigned		  nrSlotsPerPacket;
       LogThread::Counters *packetCounters;
       bool		  isRealTime;
       TimeStamp		  startTime;
