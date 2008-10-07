@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,15 +17,15 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_FREQUENCYFLAGGER_H__
-#define __FLAGGER_FREQUENCYFLAGGER_H__
+#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
 
 #include <casa/Arrays.h>
 #include <utility>
 #include <vector>
 #include <list>
 #include <map>
-#include "Flagger.h"
+#include <CS1_pp_lib/Flagger.h>
 
 namespace LOFAR
 {
@@ -37,11 +37,11 @@ namespace LOFAR
     class RunDetails;
     class FlaggerStatistics;
 
-    class FrequencyFlagger: public Flagger
+    class ComplexMedianFlagger: public Flagger
     {
       public:
-        FrequencyFlagger();
-        ~FrequencyFlagger();
+        ComplexMedianFlagger(void);
+        ~ComplexMedianFlagger();
 
         void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
@@ -51,15 +51,15 @@ namespace LOFAR
       protected:
       private:
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
-                             casa::Matrix<casa::Complex>& Data,
+                             casa::Cube<casa::Complex>& Data,
                              int flagCounter,
                              double FlagThreshold,
-                             bool Existing,
-                             int Algorithm);
+                             int Position, bool Existing,
+                             int WindowSize);
         int NumChannels;
         int NumPolarizations;
-    }; // FrequencyFlagger
-  }; // namespace CS1
-}; // namespace LOFAR
+    }; // ComplexMedianFlagger
+  }; // CS1
+}; // namespace WSRT
 
-#endif //  __FLAGGER_FREQUENCYFLAGGER_H__
+#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__

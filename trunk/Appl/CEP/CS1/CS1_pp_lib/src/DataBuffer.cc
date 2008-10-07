@@ -21,8 +21,8 @@
 #include <lofar_config.h>
 #include <iostream>
 
-#include "DataBuffer.h"
-#include "MsInfo.h"
+#include <CS1_pp_lib/DataBuffer.h>
+#include <CS1_pp_lib/MsInfo.h>
 
 using namespace LOFAR::CS1;
 using namespace casa;

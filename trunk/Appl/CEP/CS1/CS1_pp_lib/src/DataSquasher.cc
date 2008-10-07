@@ -20,10 +20,10 @@
 
 #include <lofar_config.h>
 #include <casa/Arrays/ArrayMath.h>
-#include "DataSquasher.h"
-#include "MsInfo.h"
-#include "RunDetails.h"
-#include "DataBuffer.h"
+#include <CS1_pp_lib/DataSquasher.h>
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/RunDetails.h>
+#include <CS1_pp_lib/DataBuffer.h>
 
 
 using namespace LOFAR::CS1;

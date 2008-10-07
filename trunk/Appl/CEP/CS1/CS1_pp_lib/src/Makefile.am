@@ -1,27 +1,3 @@
-INSTHDRS = \
-		FlaggerStatistics.h \
-		MsInfo.h \
-		MsFile.h \
-		ComplexMedianFlagger.h \
-		FrequencyFlagger.h \
-		ComplexMedianFlagger2.h \
-		MADFlagger.h \
-		BandpassCorrector.h \
-		DataSquasher.h \
-		DataBuffer.h \
-		RunDetails.h \
-		Pipeline.h 
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES         = libcs1_pp_lib.la
 
 libcs1_pp_lib_la_SOURCES = Package__Version.cc  \

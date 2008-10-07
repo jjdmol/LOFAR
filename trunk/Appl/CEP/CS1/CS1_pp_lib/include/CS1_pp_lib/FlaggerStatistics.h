@@ -23,7 +23,7 @@
 #include <casa/Arrays.h>
 #include <iostream>
 #include <vector>
-#include "MsInfo.h"
+#include <CS1_pp_lib/MsInfo.h>
 
 namespace LOFAR
 {

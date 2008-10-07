@@ -23,19 +23,19 @@
 #include <casa/Inputs/Input.h>
 #include <ms/MeasurementSets.h>
 
-#include <CS1_IDPPP/PipelineProcessControl.h>
-#include "MsInfo.h"
-#include "MsFile.h"
-#include "RunDetails.h"
-#include "Pipeline.h"
+#include <CS1_pp_lib/PipelineProcessControl.h>
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/MsFile.h>
+#include <CS1_pp_lib/RunDetails.h>
+#include <CS1_pp_lib/Pipeline.h>
 
-#include "BandpassCorrector.h"
-#include "Flagger.h"
-#include "ComplexMedianFlagger.h"
-#include "ComplexMedianFlagger2.h"
-#include "FrequencyFlagger.h"
-#include "MADFlagger.h"
-#include "DataSquasher.h"
+#include <CS1_pp_lib/BandpassCorrector.h>
+#include <CS1_pp_lib/Flagger.h>
+#include <CS1_pp_lib/ComplexMedianFlagger.h>
+#include <CS1_pp_lib/ComplexMedianFlagger2.h>
+#include <CS1_pp_lib/FrequencyFlagger.h>
+#include <CS1_pp_lib/MADFlagger.h>
+#include <CS1_pp_lib/DataSquasher.h>
 
 #define PIPELINE_VERSION "0.22"
 
