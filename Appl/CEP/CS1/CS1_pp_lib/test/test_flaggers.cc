@@ -18,13 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "MsInfo.h"
-#include "DataBuffer.h"
-#include "RunDetails.h"
-#include "FlaggerStatistics.h"
-#include "MADFlagger.h"
-#include "ComplexMedianFlagger.h"
-#include "FrequencyFlagger.h"
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/DataBuffer.h>
+#include <CS1_pp_lib/RunDetails.h>
+#include <CS1_pp_lib/FlaggerStatistics.h>
+#include <CS1_pp_lib/MADFlagger.h>
+#include <CS1_pp_lib/ComplexMedianFlagger.h>
+#include <CS1_pp_lib/FrequencyFlagger.h>
 #include <casa/BasicMath.h>
 
 using namespace LOFAR::CS1;
