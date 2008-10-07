@@ -2,6 +2,7 @@
 TypeName
 Claim.Claim	1#1
 	claimDate	26#2
+	name	25#3
 
 TypeName
 AntennaArrays.AntennaArrays	1#1
