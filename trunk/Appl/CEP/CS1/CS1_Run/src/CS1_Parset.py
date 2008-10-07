@@ -8,6 +8,7 @@ import string
 import struct
 from Numeric import zeros
 from CS1_Hosts import *
+from sets import Set
 
 class StationRSPpair(object):
     def __init__(self, station, rsp):
@@ -167,8 +168,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
         subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
         return subbands / subbandsperpset
     
-    def nrSubbandsPerFrame(self):
-        return self.getInt32('OLAP.nrSubbandsPerFrame')
+    def nrSlotsInFrame(self):
+        return self.getInt32('OLAP.nrSlotsInFrame')
     
     def subbandToRSPboardMapping(self):
         return self.getExpandedInt32Vector('Observation.rspBoardList')
@@ -177,7 +178,17 @@ class CS1_Parset(LOFAR_Parset.Parset):
         return self.getExpandedInt32Vector('Observation.rspSlotList')
     
     def getNrSubbands(self):
-	return len(self.getExpandedInt32Vector('Observation.subbandList'))
+        if self.isDefined('Observation.subbandList'):
+	    return len(self.getExpandedInt32Vector('Observation.subbandList'))
+	else:
+	    index=0
+	    subbands = Set() 
+	    while self.isDefined('Observation.Beam[' + str(index) + '].subbandList'):
+	        subbandList = self.getExpandedInt32Vector('Observation.Beam[' + str(index) + '].subbandList')
+		for s in subbandList:
+		    subbands.add(s)
+		index +=1
+	    return len(subbands)
 
     def getStationNamesAndRSPboardNumbers(self, psetNumber):
 	inputs = self.getStringVector('PIC.Core.IONProc.' + self.getPartition() + '[' + str(psetNumber) + '].inputs')
@@ -214,32 +225,34 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    sys.exit(0)
 	    
     def check(self):
-        self.checkSubbandCount('Observation.beamList');
-        self.checkSubbandCount('Observation.rspBoardList');
-        self.checkSubbandCount('Observation.rspSlotList');
+        if self.isDefined('Observation.subbandList'):
+            self.checkSubbandCount('Observation.beamList');
+            self.checkSubbandCount('Observation.rspBoardList');
+            self.checkSubbandCount('Observation.rspSlotList');
 	
-	subbandsPerFrame = self.nrSubbandsPerFrame()
-	boards		 = self.subbandToRSPboardMapping()
-	slots		 = self.subbandToRSPslotMapping()
+	    slotsPerFrame        = self.nrSlotsInFrame()
+	    boards		 = self.subbandToRSPboardMapping()
+	    slots		 = self.subbandToRSPslotMapping()
 	
-	for subband in range(0, len(slots)):
-	    if slots[subband] >= subbandsPerFrame:
-	        print 'Observation.rspSlotList contains slot numbers >= OLAP.nrSubbandsPerFrame'
-		sys.exit(0)
+	    for subband in range(0, len(slots)):
+	        if slots[subband] >= slotsPerFrame:
+	            print 'Observation.rspSlotList contains slot numbers >= OLAP.nrSlotsInFrame'
+		    sys.exit(0)
 
     def inputPsets(self):
         return self.getInt32Vector('OLAP.BGLProc.inputPsets')
 	    
     def checkRspBoardList(self):
-	inputs		 = self.inputPsets()
-	boards		 = self.subbandToRSPboardMapping()
+        if self.isDefined('Observation.subbandList'):
+	    inputs		 = self.inputPsets()
+	    boards		 = self.subbandToRSPboardMapping()
 	
-	for pset in inputs:
-	    nrRSPboards = len(self.getStationNamesAndRSPboardNumbers(pset))
-	    for subband in range(0, len(boards)):
-		if boards[subband] >= nrRSPboards:
-		    print 'Observation.rspBoardList contains rsp board numbers that do not exist'
-		    sys.exit(0)
+	    for pset in inputs:
+	        nrRSPboards = len(self.getStationNamesAndRSPboardNumbers(pset))
+	        for subband in range(0, len(boards)):
+		    if boards[subband] >= nrRSPboards:
+		        print 'Observation.rspBoardList contains rsp board numbers that do not exist'
+		        sys.exit(0)
 		
 	
 	

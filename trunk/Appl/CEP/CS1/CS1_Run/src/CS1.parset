@@ -24,7 +24,7 @@ OLAP.DelayComp.nrCalcDelays = 16
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16
 OLAP.nrTimesInFrame = 16
-OLAP.nrSubbandsPerFrame = 36
+OLAP.nrSlotsInFrame = 36
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5
@@ -82,6 +82,15 @@ Observation.rspSlotList  = [0..35]
 #Observation.beamList     = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 #Observation.rspBoardList = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3]
 #Observation.rspSlotList  = [0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7]
+
+# Eg. SAS/MAC: uStation mode:
+#Observation.Beam[0].subbandList = [300..335,300..335,300..335,300..335]
+#Observation.Beam[0].beamletList = [0..35,36..71,72..107,108..143]
+
+# Eg. SAS/MAC: station mode:
+#Observation.Beam[0].subbandList = [300..331]
+#Observation.Beam[0].beamletList = [0..7,36..43,72..79,108..115]
+
 
 Observation.channelsPerSubband = 256
 Observation.nrPolarisations = 2
