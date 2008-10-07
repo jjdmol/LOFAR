@@ -28,6 +28,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/Observation.h>
+#include <Common/lofar_set.h>
 
 namespace LOFAR {
 	using namespace ACC::APS;
@@ -101,18 +102,18 @@ cout << "compacted stationList=" << stationList << endl;
 			}
 		}
 	}
-	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
-	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
 	// get the beams info
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
 	// allocate beamlet 2 beam mapping and reset to 0
-	beamlet2beams.resize(4*54, 0);
-	beamlet2subbands.resize(4*54, -1);
+	beamlet2beams.resize(4*aParSet->getUint32("OLAP.nrSlotsInFrame"), -1);
+	beamlet2subbands.resize(4*aParSet->getUint32("OLAP.nrSlotsInFrame"), -1);
+	
+	set<uint32> subbands;		
 
 	// loop over al beams
-	for (int32 beam(1) ; beam <= nrBeams; beam++) {
+	for (int32 beam(0) ; beam <= nrBeams; beam++) {
 		Beam	newBeam;
 		string	beamPrefix(prefix+formatString("Beam[%d].", beam));
 		// get all fields
@@ -130,7 +131,6 @@ cout << "compacted stationList=" << stationList << endl;
 		ParameterSet	blParset;
 		blParset.adoptBuffer(blString);
 		newBeam.beamlets = blParset.getInt32Vector("x");
-
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
@@ -141,14 +141,55 @@ cout << "compacted stationList=" << stationList << endl;
 		beams.push_back(newBeam);
 
 		// finally update beamlet 2 beam mapping.
-		for (int  i = newBeam.beamlets.size()-1 ; i >= 0; i--) {
-			if (beamlet2beams[newBeam.beamlets[i]] != 0) {
+		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
+			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
 				THROW (Exception, "beamlet " << i << " of beam " << beam << " clashes with beamlet of other beam"); 
 			}
 			beamlet2beams   [newBeam.beamlets[i]] = beam;
 			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
+			subbands.insert(newBeam.subbands[i]);
 		}
 	}
+	
+	// OLAP: uStation mode(y/n)
+	bool uStation(true);
+	for (uint32 s(0) ; s < aParSet->getUint32("OLAP.nrSlotsInFrame")-1; s++) {
+           if (beamlet2subbands[s] != beamlet2subbands[s+aParSet->getUint32("OLAP.nrSlotsInFrame")]) {
+	     uStation = false;
+	     break;
+	   }
+	}   	
+        
+	// OLAP: subbandList
+        for (set<uint32>::const_iterator sb = subbands.begin(); sb != subbands.end(); sb ++) {
+          subbandList.push_back(*sb);
+        }
+        // OLAP: beamList
+	for (uint32 sb(0) ; sb < subbandList.size(); sb++) {
+          for (uint32 s(0) ; s < beamlet2subbands.size(); s++) {
+	    if (subbandList[sb] == (unsigned)beamlet2subbands[s]) {
+	      beamList.push_back(beamlet2beams[s]);
+	      break;
+	    }  
+	  }    
+        }
+	
+	// OLAP: rspBoardList & rspSlotList
+        if (uStation) {
+	  for (uint32 s(0) ; s < subbandList.size(); s++) {
+	    rspBoardList.push_back(0);
+	    rspSlotList.push_back(s);
+	  }  
+	}
+	else {
+	  if (subbandList.size() % 4 != 0 )
+	    THROW (Exception, "Number of subbands(" << subbandList.size() << ") % 4 != 0");
+	    
+	  for (uint32 s(0) ; s < subbandList.size(); s++) {
+	    rspBoardList.push_back(s/(subbandList.size()/4));
+	    rspSlotList.push_back(s%(subbandList.size()/4));
+	  }  
+	}	
 }
 
 
@@ -165,6 +206,38 @@ Observation::~Observation()
 string Observation::getBeamName(uint32	beamIdx) const
 {
 	return (formatString("observation[%d]beam[%d]", obsID, beamIdx+1));
+}
+
+//
+// OLAP: getSubbandList(): vector<uint32>
+//
+vector<uint32> Observation::getSubbandList() const
+{
+  return subbandList;
+}
+
+//
+// OLAP: getBeamList(): vector<uint32>
+//
+vector<uint32> Observation::getBeamList() const
+{
+  return beamList;
+}
+
+//
+// OLAP: getRspBoardList(): vector<uint32>
+//
+vector<uint32> Observation::getRspBoardList() const
+{
+  return rspBoardList;
+}
+
+//
+// OLAP: getRspSlotList(): vector<uint32>
+//
+vector<uint32> Observation::getRspSlotList() const
+{
+  return rspSlotList;
 }
 
 //
@@ -208,20 +281,19 @@ ostream& Observation::print (ostream&	os) const
 
 	os << "Receivers    : " << receiverList << endl;
 	os << "Stations     : " << stationList << endl;
-	os << "BLG nodes    : " << BGLNodeList << endl;
-	os << "Storage nodes: " << storageNodeList << endl << endl;
 
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	i(0) ; i < beams.size(); i++) {
 		os << formatString("Beam[%d].pointing   : %f, %f, %s\n", i, beams[i].angle1, beams[i].angle2, beams[i].directionType.c_str());
-//		os << "Beam[" << i << "].subbandList: " << beams[i].subbands;
-//		os << "Beam[" << i << "].beamletList: " << beams[i].beamlets;
 		os << "Beam[" << i << "].subbandList: "; writeVector(os, beams[i].subbands, ",", "[", "]"); os << endl;
 		os << "Beam[" << i << "].beamletList: "; writeVector(os, beams[i].beamlets, ",", "[", "]"); os << endl;
 	}
-//	os << "beamlet2beams: " << beamlet2beams;
 	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
 	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl;
+	os << "subbandList     : "; writeVector(os, subbandList, ",", "[", "]"); os << endl;
+	os << "beamList        : "; writeVector(os, beamList, ",", "[", "]"); os << endl;
+	os << "rspBoardList    : "; writeVector(os, rspBoardList, ",", "[", "]"); os << endl;
+	os << "rspSlotList     : "; writeVector(os, rspSlotList, ",", "[", "]"); os << endl;
 
 	return (os);
 }
