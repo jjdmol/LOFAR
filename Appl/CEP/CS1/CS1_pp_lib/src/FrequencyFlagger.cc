@@ -20,13 +20,13 @@
 #include <lofar_config.h>
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
-#include "FrequencyFlagger.h"
+#include <CS1_pp_lib/FrequencyFlagger.h>
 #include <casa/Quanta/MVEpoch.h>
 
-#include "MsInfo.h"
-#include "RunDetails.h"
-#include "DataBuffer.h"
-#include "FlaggerStatistics.h"
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/RunDetails.h>
+#include <CS1_pp_lib/DataBuffer.h>
+#include <CS1_pp_lib/FlaggerStatistics.h>
 
 using namespace LOFAR::CS1;
 using namespace casa;

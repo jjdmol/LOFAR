@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 #include <iostream>
 
-#include "RunDetails.h"
+#include <CS1_pp_lib/RunDetails.h>
 
 using namespace LOFAR::CS1;
 

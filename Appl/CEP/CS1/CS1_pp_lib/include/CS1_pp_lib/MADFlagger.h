@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,40 +17,53 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __CS1_PP_DATABUFFER_H__
-#define __CS1_PP_DATABUFFER_H__
+#ifndef __FLAGGER_MADFLAGGER_H__
+#define __FLAGGER_MADFLAGGER_H__
 
 #include <casa/Arrays.h>
-
-#include "MsInfo.h"
+#include <utility>
+#include <vector>
+#include <list>
+#include <map>
+#include <CS1_pp_lib/Flagger.h>
 
 namespace LOFAR
 {
   namespace CS1
   {
-    class DataBuffer
+    //Foreward declarations
+    class DataBuffer;
+    class MsInfo;
+    class RunDetails;
+    class FlaggerStatistics;
+
+    class MADFlagger: public Flagger
     {
       public:
-         DataBuffer(MsInfo* info, int TimeWindow, bool Columns);
-         ~DataBuffer();
-        int Position;
-        int NumSlots;
-        int WindowSize;
+        MADFlagger();
+        ~MADFlagger();
 
-        std::vector< bool >                      PolarizationsToCheck;
-        std::vector< casa::Cube<casa::Complex> > Data;
-        std::vector< casa::Cube<casa::Complex> > ModelData;
-        std::vector< casa::Cube<casa::Complex> > CorrectedData;
-        std::vector< casa::Cube<casa::Bool> >    Flags;
-        std::vector< casa::Cube<casa::Float> >   Weights;
-        void DeterminePolarizationsToCheck(bool UseOnlyXpolarizations);
-        void PrintInfo(void);
+        void ProcessTimeslot(DataBuffer& data,
+                             MsInfo& info,
+                             RunDetails& details,
+                             FlaggerStatistics& stats);
 
+      protected:
       private:
-        MsInfo* myInfo;
-        void    Init(bool Columns);
-    }; // DataBuffer
-  }; //CS1
+        void ComputeThreshold(const casa::Cube<casa::Complex>& Values,
+                              int TWindowSize, int FWindowSize,
+                              int TimePos, int ChanPos, int PolPos,
+                              float& Z1, float& Z2, casa::Matrix<casa::Float>& Medians);
+        int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
+                             const casa::Cube<casa::Complex>& Data,
+                             int flagCounter,
+                             double Level,
+                             int Position, bool Existing,
+                             int TWindowSize, int FWindowSize);
+        int NumChannels;
+        int NumPolarizations;
+    }; // MADFlagger
+  }; // CS1
 }; // namespace LOFAR
 
-#endif // __CS1_PP_DATABUFFER_H__
+#endif //  __FLAGGER_MADFLAGGER_H__

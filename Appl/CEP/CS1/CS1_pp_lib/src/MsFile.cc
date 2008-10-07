@@ -26,9 +26,9 @@
 
 #include <iostream>
 
-#include "MsFile.h"
-#include "MsInfo.h"
-#include "RunDetails.h"
+#include <CS1_pp_lib/MsFile.h>
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/RunDetails.h>
 
 using namespace LOFAR::CS1;
 using namespace casa;

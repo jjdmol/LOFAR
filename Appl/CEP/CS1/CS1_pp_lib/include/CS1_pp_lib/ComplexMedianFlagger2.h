@@ -17,15 +17,15 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
-#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER2_H__
+#define __FLAGGER_COMPLEXMEDIANFLAGGER2_H__
 
 #include <casa/Arrays.h>
 #include <utility>
 #include <vector>
 #include <list>
 #include <map>
-#include "Flagger.h"
+#include <CS1_pp_lib/Flagger.h>
 
 namespace LOFAR
 {
@@ -37,11 +37,11 @@ namespace LOFAR
     class RunDetails;
     class FlaggerStatistics;
 
-    class ComplexMedianFlagger: public Flagger
+    class ComplexMedianFlagger2: public Flagger
     {
       public:
-        ComplexMedianFlagger(void);
-        ~ComplexMedianFlagger();
+        ComplexMedianFlagger2(void);
+        ~ComplexMedianFlagger2();
 
         void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
@@ -50,16 +50,17 @@ namespace LOFAR
 
       protected:
       private:
+        std::vector<double> ComputeThreshold(casa::Matrix<casa::Complex> Values);
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
                              casa::Cube<casa::Complex>& Data,
                              int flagCounter,
-                             double FlagThreshold,
+                             double Level,
                              int Position, bool Existing,
                              int WindowSize);
         int NumChannels;
         int NumPolarizations;
-    }; // ComplexMedianFlagger
+    }; // ComplexMedianFlagger2
   }; // CS1
-}; // namespace WSRT
+}; // namespace LOFAR
 
-#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER2_H__

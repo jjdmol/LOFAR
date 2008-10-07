@@ -21,12 +21,12 @@
 #include <lofar_config.h>
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
-#include "BandpassCorrector.h"
+#include <CS1_pp_lib/BandpassCorrector.h>
 #include <casa/Quanta/MVEpoch.h>
 
-#include "MsInfo.h"
-#include "RunDetails.h"
-#include "DataBuffer.h"
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/RunDetails.h>
+#include <CS1_pp_lib/DataBuffer.h>
 
 // Oo nice, hardcoded values. These are the bandpass shape. Source: andre Gunst
 static double StaticBandpass[5][256] = {

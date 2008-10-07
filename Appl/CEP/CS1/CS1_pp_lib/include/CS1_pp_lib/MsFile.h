@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
+ *   Copyright (C) 2007-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,53 +17,55 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_MADFLAGGER_H__
-#define __FLAGGER_MADFLAGGER_H__
+#ifndef __CS1_PP_MS_FILE_H__
+#define __CS1_PP_MS_FILE_H__
 
-#include <casa/Arrays.h>
-#include <utility>
-#include <vector>
-#include <list>
-#include <map>
-#include "Flagger.h"
+#include <ms/MeasurementSets.h>
+#include <tables/Tables.h>
+#include <tables/Tables/TableIter.h>
+#include <CS1_pp_lib/MsInfo.h>
+#include <CS1_pp_lib/DataBuffer.h>
 
 namespace LOFAR
 {
   namespace CS1
   {
-    //Foreward declarations
-    class DataBuffer;
+    //Foreward declaration
     class MsInfo;
     class RunDetails;
-    class FlaggerStatistics;
 
-    class MADFlagger: public Flagger
+    class MsFile
     {
-      public:
-        MADFlagger();
-        ~MADFlagger();
+    public:
+      MsFile(const std::string& msin, const std::string& msout);
+      ~MsFile();
 
-        void ProcessTimeslot(DataBuffer& data,
-                             MsInfo& info,
-                             RunDetails& details,
-                             FlaggerStatistics& stats);
+      casa::TableIterator TimeIterator();
+      void Init(MsInfo& Info, RunDetails& Details);
+      void PrintInfo(void);
+      void UpdateTimeslotData(casa::TableIterator& Data_iter,
+                              MsInfo& Info,
+                              DataBuffer& Buffer,
+                              std::vector<double>& TimeData);
+      void WriteData(casa::TableIterator& Data_iter,
+                     MsInfo& Info,
+                     DataBuffer& Buffer,
+                     std::vector<double>& TimeData);
 
-      protected:
-      private:
-        void ComputeThreshold(const casa::Cube<casa::Complex>& Values,
-                              int TWindowSize, int FWindowSize,
-                              int TimePos, int ChanPos, int PolPos,
-                              float& Z1, float& Z2, casa::Matrix<casa::Float>& Medians);
-        int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
-                             const casa::Cube<casa::Complex>& Data,
-                             int flagCounter,
-                             double Level,
-                             int Position, bool Existing,
-                             int TWindowSize, int FWindowSize);
-        int NumChannels;
-        int NumPolarizations;
-    }; // MADFlagger
+
+    protected:
+    private:
+      void TableResize(casa::TableDesc tdesc,
+                       casa::IPosition ipos,
+                       std::string name,
+                       casa::Table& table);
+      casa::Block<casa::String> SELECTblock;
+      std::string InName;
+      std::string OutName;
+      casa::MeasurementSet* InMS;
+      casa::MeasurementSet* OutMS;
+    }; // class MsFile
   }; // CS1
 }; // namespace LOFAR
 
-#endif //  __FLAGGER_MADFLAGGER_H__
+#endif // __CS1_PP_MS_FILE_H__
