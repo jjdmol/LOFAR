@@ -97,21 +97,19 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
   //  }
   FlaggerData = BandpassData;
   if (mySquasher)
-  { SquasherData = new DataBuffer(SquashedInfo, 1, Columns);
+  { SquasherData = new DataBuffer(SquashedInfo, 2, Columns); //two buffers, one for unflagged one for all data
   }
   else
   { SquasherData = FlaggerData;
   }
 
-  TableIterator read_iter   = (*myFile).ReadIterator();
-  TableIterator write_iter  = (*myFile).WriteIterator();
+  TableIterator time_iter   = (*myFile).TimeIterator();
   int           TimeCounter = 0;
   int           step        = myInfo->NumTimeslots / 100 + 1; //not exact but it'll do
   int           row         = 0;
-  while (!read_iter.pastEnd())
+  while (!time_iter.pastEnd())
   { BandpassData->Position = ++(BandpassData->Position) % BandpassData->WindowSize;
-    myFile->UpdateTimeslotData(read_iter, *myInfo, *BandpassData);
-    read_iter++;
+    myFile->UpdateTimeslotData(time_iter, *myInfo, *BandpassData, TimeData);
     if (myBandpass)
     { myBandpass->ProcessTimeslot(*BandpassData, *myInfo, *myDetails);
     }
@@ -125,19 +123,20 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
     }
     if (TimeCounter >= (FlaggerData->WindowSize - 1))
     { if (mySquasher)
-      { mySquasher->ProcessTimeslot(*FlaggerData, *SquasherData, *myInfo, *myDetails);
+      { mySquasher->ProcessTimeslot(*FlaggerData, *SquasherData, *myInfo, *myDetails, TimeData);
       }
-      myFile->WriteData(write_iter, *SquashedInfo, *SquasherData);
-      write_iter++;
-      /*if (mySquasher) //else SquasherData == FlaggerData
-      { SquasherData->Position = ++(SquasherData->Position) % SquasherData->WindowSize;
-      }*/
+      if ((TimeCounter+1) % myDetails->TimeStep == 0)
+      { myFile->WriteData(time_iter, *SquashedInfo, *SquasherData, TimeData);
+        TimeData.resize(0);
+      }
     }
+    time_iter++;
     TimeCounter++;
     if (row++ % step == 0) // to tell the user how much % we have processed,
     { cout << (row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
     }
   }
+  time_iter.reset(); //we still need a table as a template for writing the data
   for (int i = 1; i <= (FlaggerData->WindowSize - 1); i++) //write the last couple of values
   {
     FlaggerData->Position = ++(FlaggerData->Position) % FlaggerData->WindowSize;
@@ -146,11 +145,13 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
       myFlagger->ProcessTimeslot(*FlaggerData, *myInfo, *myDetails, *myStatistics);
     }
     if (mySquasher)
-    { //SquasherData->Position = ++(SquasherData->Position) % SquasherData->WindowSize;
-      mySquasher->ProcessTimeslot(*FlaggerData, *SquasherData, *myInfo, *myDetails);
+    { mySquasher->ProcessTimeslot(*FlaggerData, *SquasherData, *myInfo, *myDetails, TimeData);
     }
-    myFile->WriteData(write_iter, *SquashedInfo, *SquasherData);
-    write_iter++;
+    if ((TimeCounter+1) % myDetails->TimeStep == 0)
+    { myFile->WriteData(time_iter, *SquashedInfo, *SquasherData, TimeData);
+      TimeData.resize(0);
+    }
+    TimeCounter++;
     if (row++ % step == 0) // to tell the user how much % we have processed,
     { cout << (row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
     }

@@ -26,6 +26,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <vector>
 #include <ms/MeasurementSets.h>
 #include <casa/Arrays.h>
 #include <tables/Tables.h>
@@ -45,7 +46,8 @@ namespace LOFAR
       DataSquasher(void);
       ~DataSquasher(void);
       void ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
-                           MsInfo& Info, RunDetails& Details);
+                           MsInfo& Info, RunDetails& Details,
+                           std::vector<double>& TimeData);
     private:
       void Squash(casa::Matrix<casa::Complex>& oldData, casa::Matrix<casa::Complex>& newData,
                   casa::Matrix<casa::Bool>& oldFlags, casa::Matrix<casa::Bool>& newFlags,

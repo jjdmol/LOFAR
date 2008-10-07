@@ -79,6 +79,7 @@ namespace LOFAR
       myDetails->Step         = ParamSet->getUint32("step");             // DataSquasher
       myDetails->Skip         = ParamSet->getBool("skipflags", false);  // DataSquasher
       myDetails->Columns      = ParamSet->getBool("allcolumns", false); // DataSquasher
+      myDetails->TimeStep     = ParamSet->getUint32("timestep", 1);     //DataSquasher
       itsInMS                 = ParamSet->getString("msin");
       itsOutMS                = ParamSet->getString("msout");
       itsBandpass             = ParamSet->getUint32("bandpass", 0);

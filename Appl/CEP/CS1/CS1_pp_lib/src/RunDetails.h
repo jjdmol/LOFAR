@@ -43,6 +43,7 @@ namespace LOFAR
       unsigned int Step;         // DataSquasher
       bool         Skip;         // DataSquasher
       bool         Columns;      // DataSquasher
+      unsigned int TimeStep;     // DataSquasher
       bool CheckValues(void);
       void PrintInfo(void);
 

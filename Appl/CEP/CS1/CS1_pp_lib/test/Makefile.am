@@ -1,4 +1,4 @@
-check_PROGRAMS        =
+check_PROGRAMS        = test_flaggers
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        =
@@ -16,9 +16,19 @@ XFAIL_TESTS           =
 EXTRA_DIST            = $(TESTSCRIPTS) CS1_IDPPP.parset
 
 # Lines to build a test program testprg
-#testprg_SOURCES                = testprg.cc
-#testprg_LDADD                  = ../src/libcs1_inputsection.la
-#testprg_DEPENDENCIES           = ../src/libcs1_inputsection.la $(LOFAR_DEPEND)
+test_flaggers_SOURCES                = $(top_srcdir)/src/test_flaggers.cc \
+																			$(top_srcdir)/src/MsInfo.h \
+																			$(top_srcdir)/src/MsInfo.cc \
+																			$(top_srcdir)/src/DataBuffer.h \
+																			$(top_srcdir)/src/DataBuffer.cc \
+																			$(top_srcdir)/src/RunDetails.h \
+																			$(top_srcdir)/src/RunDetails.cc \
+																			$(top_srcdir)/src/FlaggerStatistics.h \
+																			$(top_srcdir)/src/FlaggerStatistics.cc \
+																			$(top_srcdir)/src/MADFlagger.h \
+																			$(top_srcdir)/src/MADFlagger.cc
+test_flaggers_LDADD                  =
+test_flaggers_DEPENDENCIES           = $(LOFAR_DEPEND)
 
 
 

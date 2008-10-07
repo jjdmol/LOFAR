@@ -59,14 +59,14 @@ void MsInfo::Update(void)
   MeasurementSet MS(MsName);
 
   //Number of samples
-  NumSamples                    = MS.nrow();
+  NumSamples                       = MS.nrow();
   //Number of Fields
   MSField fields                   = MS.field();
-  NumFields                     = fields.nrow();
+  NumFields                        = fields.nrow();
 
   //Number of Antennae
   MSAntenna antennae               = MS.antenna();
-  NumAntennae                   = antennae.nrow();
+  NumAntennae                      = antennae.nrow();
 
   //Antenna Names
   ROScalarColumn<String>           ANT_NAME_col(antennae, "NAME");
@@ -76,12 +76,12 @@ void MsInfo::Update(void)
   //Number of channels in the Band
   MSSpectralWindow spectral_window = MS.spectralWindow();
   ROScalarColumn<Int>              NUM_CHAN_col(spectral_window, "NUM_CHAN");
-  NumChannels                   = NUM_CHAN_col(0);
+  NumChannels                      = NUM_CHAN_col(0);
 
   //Number of polarizations
   MSPolarization      polarization = MS.polarization();
   ROScalarColumn<Int>              NUM_CORR_col(polarization, "NUM_CORR");
-  NumPolarizations              = NUM_CORR_col(0);
+  NumPolarizations                 = NUM_CORR_col(0);
   ROArrayColumn<Int>               CORR_TYPE_col(polarization, "CORR_TYPE");
   Polarizations.resize(NumPolarizations);
   CORR_TYPE_col.get(0, Polarizations);
@@ -93,7 +93,7 @@ void MsInfo::Update(void)
   ROScalarColumn<Double>           TOTAL_BANDWIDTH_col(spectral_window, "TOTAL_BANDWIDTH");
   Double bandwidth                 = TOTAL_BANDWIDTH_col(0) / NumChannels;
 
-  NoiseLevel                    = 1.0 / sqrt(bandwidth * exposure);
+  NoiseLevel                       = 1.0 / sqrt(bandwidth * exposure);
 
   //calculate number of timeslots
   ROScalarColumn<Double>           INTERVAL_col(MS, "INTERVAL");
@@ -104,13 +104,18 @@ void MsInfo::Update(void)
   Double firstdate                 = TIME_CENTROID_col(0);
   Double lastdate                  = TIME_CENTROID_col(NumSamples-1);
 
-  NumTimeslots                  = (int)((lastdate-firstdate)/Interval) + 1;
+  NumTimeslots                     = (int)((lastdate-firstdate)/Interval) + 1;
 
   //calculate number of baselines.
   NumPairs = (NumAntennae) * (NumAntennae + 1) / 2; //Triangular numbers formula
 
   //calculate number of Bands
-  NumBands                      = NumSamples / (NumPairs * NumTimeslots);
+  if (NumSamples)
+  { NumBands                       = NumSamples / (NumPairs * NumTimeslots);
+  }
+  else
+  { NumBands                       = spectral_window.nrow();
+  }
 
   PairsIndex.resize(NumPairs);
 
