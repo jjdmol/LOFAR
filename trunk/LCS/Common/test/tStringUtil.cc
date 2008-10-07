@@ -244,6 +244,10 @@ bool testExpandArray()
 
 	DO_EXPAND_TEST("[0..191]");
 	DO_EXPAND_TEST("[0,1,2,6,3,4,10..19,16]");
+	DO_EXPAND_TEST("[36*0]");
+	DO_EXPAND_TEST("[3*(0;1;2;3)]");
+	DO_EXPAND_TEST("[20*(300..303)]");
+	DO_EXPAND_TEST("[2*(5*0)]");
   } catch(Exception& e) {
 	LOG_ERROR_STR(e);
 	return (false);
@@ -261,9 +265,9 @@ int main()
     testCompare(true)  &&
     testTrim()         &&
     testCase()         &&
-    testToString()	   &&
-	testCompactArray() &&
-	testExpandArray();
+    testToString()     &&
+    testCompactArray() &&
+    testExpandArray();
 
   return (result ? 0 : 1);
 }
