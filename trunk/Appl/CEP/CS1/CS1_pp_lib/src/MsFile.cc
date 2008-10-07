@@ -22,6 +22,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/Arrays.h>
 #include <casa/Quanta/MVEpoch.h>
+#include <casa/Utilities/Assert.h>
 
 #include <iostream>
 
@@ -32,16 +33,40 @@
 using namespace LOFAR::CS1;
 using namespace casa;
 
-
-
 //===============>>>  MsFile::MsFile  <<<===============
 
 MsFile::MsFile(const std::string& msin, const std::string& msout):
+  SELECTblock(20),
   InMS(NULL),
   OutMS(NULL)
 {
   InName  = msin;
   OutName = msout;
+/* tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
+                string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
+                string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID FROM $1"),
+                Data_iter.table());*/
+
+  SELECTblock[0]  = "UVW";
+  SELECTblock[1]  = "FLAG_CATEGORY";
+  SELECTblock[2]  = "WEIGHT";
+  SELECTblock[3]  = "SIGMA";
+  SELECTblock[4]  = "ANTENNA1";
+  SELECTblock[5]  = "ANTENNA2";
+  SELECTblock[6]  = "ARRAY_ID";
+  SELECTblock[7]  = "DATA_DESC_ID";
+  SELECTblock[8]  = "EXPOSURE";
+  SELECTblock[9]  = "FEED1";
+  SELECTblock[10] = "FEED2";
+  SELECTblock[11] = "FIELD_ID";
+  SELECTblock[12] = "FLAG_ROW";
+  SELECTblock[13] = "INTERVAL";
+  SELECTblock[14] = "OBSERVATION_ID";
+  SELECTblock[15] = "PROCESSOR_ID";
+  SELECTblock[16] = "SCAN_NUMBER";
+  SELECTblock[17] = "STATE_ID";
+  SELECTblock[18] = "TIME";
+  SELECTblock[19] = "TIME_CENTROID";
 }
 
 //===============>>>  MsFile::~MsFile  <<<===============
@@ -70,12 +95,16 @@ void MsFile::TableResize(TableDesc tdesc, IPosition ipos, string name, Table& ta
 void MsFile::Init(MsInfo& Info, RunDetails& Details)
 {
   cout << "Please wait, preparing output MS" << endl;
-  Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
-                                  string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
-                                  string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,FLAG FROM ") + InName);
+  Block<String> tempblock(SELECTblock);
+  tempblock.resize(21);
+  tempblock[20] = "FLAG";
+  Table temptable = Table(InName).project(tempblock);
   // NOT copying WEIGHT_SPECTRUM as it only contains dummy data anyway
   // We do need FLAG to make it a valid MS
-  temptable.deepCopy(OutName, Table::NewNoReplace);
+  Table outtable = TableCopy::makeEmptyTable(OutName, Record(), temptable,
+                                             Table::NewNoReplace, Table::AipsrcEndian, true, true);
+  TableCopy::copyInfo(outtable, temptable);
+  TableCopy::copySubTables(outtable, temptable);
 
   InMS    = new MeasurementSet(InName);
   OutMS   = new MeasurementSet(OutName, Table::Update);
@@ -212,30 +241,21 @@ void MsFile::PrintInfo(void)
   std::cout << "Out MeasurementSet:   " << OutName << std::endl;
 }
 
-//===============>>> MsFile::BaselineIterator  <<<===============
+//===============>>> MsFile::TimeIterator  <<<===============
 
-TableIterator MsFile::ReadIterator()
+TableIterator MsFile::TimeIterator()
 {
   Block<String> ms_iteration_variables(1);
   ms_iteration_variables[0] = "TIME_CENTROID";
 
-  return TableIterator((*InMS), ms_iteration_variables);
-}
-
-//===============>>> MsFile::BaselineIterator  <<<===============
-
-TableIterator MsFile::WriteIterator()
-{
-  Block<String> ms_iteration_variables(1);
-  ms_iteration_variables[0] = "TIME_CENTROID";
-
-  return TableIterator((*OutMS), ms_iteration_variables);
+  return TableIterator((*InMS), ms_iteration_variables, TableIterator::Ascending);
 }
 
 //===============>>> MsFile::UpdateTimeslotData  <<<===============
 void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
                                 MsInfo& Info,
-                                DataBuffer& Buffer)
+                                DataBuffer& Buffer,
+                                std::vector<double>& TimeData)
 {
   Table         TimeslotTable = Data_iter.table();
   int           rowcount      = TimeslotTable.nrow();
@@ -244,6 +264,7 @@ void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
   ROTableVector<Int>            antenna2     (TimeslotTable, "ANTENNA2");
   ROTableVector<Int>            bandnr       (TimeslotTable, "DATA_DESC_ID");
   ROArrayColumn<Complex>        data         (TimeslotTable, "DATA");
+  ROTableVector<Double>         time         (TimeslotTable, "TIME_CENTROID");
 //  ROArrayColumn<Complex>        modeldata    (TimeslotTable, "MODEL_DATA");
 //  ROArrayColumn<Complex>        correcteddata(TimeslotTable, "CORRECTED_DATA");
   ROArrayColumn<Bool>           flags        (TimeslotTable, "FLAG");
@@ -252,6 +273,7 @@ void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
 
   data.getColumn(tempData); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.
   flags.getColumn(tempFlags);
+  TimeData.push_back(time(0));
 
   for (int i = 0; i < rowcount; i++)
   {
@@ -267,16 +289,23 @@ void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
 
 void MsFile::WriteData(casa::TableIterator& Data_iter,
                        MsInfo& Info,
-                       DataBuffer& Buffer)
+                       DataBuffer& Buffer,
+                       std::vector<double>& TimeData)
 {
-  Table DataTable = Data_iter.table();
-  int   rowcount  = DataTable.nrow();
+  Table DataTable = *OutMS;
+  int   rowcount  = Data_iter.table().nrow();
+  int   nrows     = DataTable.nrow();
   int   pos       = (Buffer.Position+1) % Buffer.WindowSize;
 //  bool  columns   = Buffer.ModelData.size() > 0;
+  Table temptable = Data_iter.table().project(SELECTblock);
+
+  DataTable.addRow(rowcount);
+  Table dummy = DataTable.project(SELECTblock);
+  TableCopy::copyRows(dummy, temptable, nrows, 0, rowcount);
   ROTableVector<Int>        antenna1     (DataTable, "ANTENNA1");
   ROTableVector<Int>        antenna2     (DataTable, "ANTENNA2");
   ROTableVector<Int>        bandnr       (DataTable, "DATA_DESC_ID");
-  //ROTableVector<Double>     temp        (DataTable, "TIME_CENTROID");
+  TableVector<Double>       time         (DataTable, "TIME_CENTROID");
   ArrayColumn  <Complex>    data         (DataTable, "DATA");
 //  ArrayColumn  <Complex>    modeldata    (DataTable, "MODEL_DATA");
 //  ArrayColumn  <Complex>    correcteddata(DataTable, "CORRECTED_DATA");
@@ -284,17 +313,22 @@ void MsFile::WriteData(casa::TableIterator& Data_iter,
   ArrayColumn  <Float>      weights      (DataTable, "WEIGHT_SPECTRUM");
   //cout << "Processing: " << MVTime(temp(0)/(24*3600)).string(MVTime::YMD) << endl; //for testing purposes
 
+  Double temp = 0.0;
+  for (unsigned int i = 0; i < TimeData.size(); i++)
+  { temp += TimeData[i];
+  }
+  temp = temp / TimeData.size();
+
   for (int i = 0; i < rowcount; i++)
   {
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
     int band  = bandnr(i);
     int index = (band % Info.NumBands) * Info.NumPairs + bi;
-//    Buffer.Data[index] = Complex(1.0,1.0);
-//    Buffer.Flags[index] = true;
-//    Buffer.Weights[index] = 1.0;
-    data.put(i, Buffer.Data[index].xyPlane(pos));
-    flags.put(i, Buffer.Flags[index].xyPlane(pos));
-    weights.put(i, Buffer.Weights[index].xyPlane(pos));
+
+    data.put(nrows + i, Buffer.Data[index].xyPlane(pos));
+    flags.put(nrows + i, Buffer.Flags[index].xyPlane(pos));
+    weights.put(nrows + i, Buffer.Weights[index].xyPlane(pos));
+    time.set(nrows + i, temp);
 //    if (columns)
 //    {
 //      data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
@@ -304,4 +338,3 @@ void MsFile::WriteData(casa::TableIterator& Data_iter,
 }
 
 //===============>>> MsFile  <<<===============
-

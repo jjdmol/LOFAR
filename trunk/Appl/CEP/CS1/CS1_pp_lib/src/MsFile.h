@@ -40,16 +40,17 @@ namespace LOFAR
       MsFile(const std::string& msin, const std::string& msout);
       ~MsFile();
 
-      casa::TableIterator ReadIterator();
-      casa::TableIterator WriteIterator();
+      casa::TableIterator TimeIterator();
       void Init(MsInfo& Info, RunDetails& Details);
       void PrintInfo(void);
       void UpdateTimeslotData(casa::TableIterator& Data_iter,
                               MsInfo& Info,
-                              DataBuffer& Buffer);
+                              DataBuffer& Buffer,
+                              std::vector<double>& TimeData);
       void WriteData(casa::TableIterator& Data_iter,
                      MsInfo& Info,
-                     DataBuffer& Buffer);
+                     DataBuffer& Buffer,
+                     std::vector<double>& TimeData);
 
 
     protected:
@@ -58,7 +59,7 @@ namespace LOFAR
                        casa::IPosition ipos,
                        std::string name,
                        casa::Table& table);
-
+      casa::Block<casa::String> SELECTblock;
       std::string InName;
       std::string OutName;
       casa::MeasurementSet* InMS;

@@ -68,7 +68,8 @@ void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z
   Medians -= Z1;
-  Z2 = medianInPlace(abs(Medians)); // Median (Vt - Z) = Z'
+  Medians = abs(Medians);
+  Z2 = medianInPlace(Medians); // Median abs(Vt - Z) = Z'
   if (isNaN(Z2)) //If there are NaN in the data, then what?
   { Z1 = 0.0;
     Z2 = 0.0;

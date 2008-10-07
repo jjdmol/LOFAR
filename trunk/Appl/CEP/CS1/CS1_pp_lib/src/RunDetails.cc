@@ -52,19 +52,20 @@ bool RunDetails::CheckValues(void)
 
 void RunDetails::PrintInfo(void)
 {
-  std::cout << "Fixed:             " << Fixed << std::endl;;        // BandpassCorrector
-  std::cout << "FreqWindow:        " << FreqWindow << std::endl;;   // FrequencyFlagger, MADFlagger
-  std::cout << "TimeWindow:        " << TimeWindow << std::endl;;   // ComplexMedianFlagger, MADFlagger
-  std::cout << "Treshold:          " << Treshold << std::endl;;     // FrequencyFlagger
-  std::cout << "MinThreshold:      " << MinThreshold << std::endl;; // ComplexMedianFlagger
-  std::cout << "MaxThreshold:      " << MaxThreshold << std::endl;; // ComplexMedianFlagger
-  std::cout << "Algorithm:         " << Algorithm << std::endl;;    // FrequencyFlagger
-  std::cout << "Existing:          " << Existing << std::endl;;     // all flaggers
-  std::cout << "NChan:             " << NChan << std::endl;;        // DataSquasher
-  std::cout << "Start:             " << Start << std::endl;;        // DataSquasher
-  std::cout << "Step:              " << Step << std::endl;;         // DataSquasher
-  std::cout << "Skip:              " << Skip << std::endl;;         // DataSquasher
-  std::cout << "Columns:           " << Columns << std::endl;;      // DataSquasher
+  std::cout << "Fixed:             " << Fixed << std::endl;        // BandpassCorrector
+  std::cout << "FreqWindow:        " << FreqWindow << std::endl;   // FrequencyFlagger, MADFlagger
+  std::cout << "TimeWindow:        " << TimeWindow << std::endl;   // ComplexMedianFlagger, MADFlagger
+  std::cout << "Treshold:          " << Treshold << std::endl;     // FrequencyFlagger
+  std::cout << "MinThreshold:      " << MinThreshold << std::endl; // ComplexMedianFlagger
+  std::cout << "MaxThreshold:      " << MaxThreshold << std::endl; // ComplexMedianFlagger
+  std::cout << "Algorithm:         " << Algorithm << std::endl;    // FrequencyFlagger
+  std::cout << "Existing:          " << Existing << std::endl;     // all flaggers
+  std::cout << "NChan:             " << NChan << std::endl;        // DataSquasher
+  std::cout << "Start:             " << Start << std::endl;        // DataSquasher
+  std::cout << "Step:              " << Step << std::endl;         // DataSquasher
+  std::cout << "Skip:              " << Skip << std::endl;         // DataSquasher
+  std::cout << "Columns:           " << Columns << std::endl;      // DataSquasher
+  std::cout << "TimeStep:          " << TimeStep << std::endl;     // DataSquasher
 }
 
 //===============>>> RunDetails  <<<===============

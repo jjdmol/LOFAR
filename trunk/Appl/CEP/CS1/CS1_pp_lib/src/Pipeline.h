@@ -20,6 +20,8 @@
 #ifndef __CS1_PP_PIPELINE_H__
 #define __CS1_PP_PIPELINE_H__
 
+#include <vector>
+
 namespace LOFAR
 {
   namespace CS1
@@ -44,16 +46,17 @@ namespace LOFAR
 
     protected:
     private:
-      MsInfo*            myInfo;
-      MsFile*            myFile;
-      RunDetails*        myDetails;
-      BandpassCorrector* myBandpass;
-      Flagger*           myFlagger;
-      DataSquasher*      mySquasher;
-      DataBuffer*        BandpassData;
-      DataBuffer*        FlaggerData;
-      DataBuffer*        SquasherData;
-      FlaggerStatistics* myStatistics;
+      MsInfo*             myInfo;
+      MsFile*             myFile;
+      RunDetails*         myDetails;
+      BandpassCorrector*  myBandpass;
+      Flagger*            myFlagger;
+      DataSquasher*       mySquasher;
+      DataBuffer*         BandpassData;
+      DataBuffer*         FlaggerData;
+      DataBuffer*         SquasherData;
+      FlaggerStatistics*  myStatistics;
+      std::vector<double> TimeData;
       void MirrorBuffer(DataBuffer& buffer, MsInfo& info, int step);
 
     }; // class Pipeline
