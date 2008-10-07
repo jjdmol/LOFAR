@@ -28,7 +28,7 @@
 
 
 namespace LOFAR {
-namespace ParmDB {
+namespace BBS {
 
   ParmDBMeta::ParmDBMeta()
   {}
@@ -66,5 +66,5 @@ namespace ParmDB {
     return bis;
   }   
 
-} // namespace ParmDB
+} // namespace BBS
 } // namespace LOFAR

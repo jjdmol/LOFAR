@@ -23,347 +23,319 @@
 #ifndef LOFAR_PARMDB_PARMDB_H
 #define LOFAR_PARMDB_PARMDB_H
 
-// \file
-// Object to hold parameters in a table.
+// @file
+// @brief Object to hold parameters in a table.
+// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <ParmDB/ParmValue.h>
+#include <ParmDB/ParmMap.h>
 #include <ParmDB/ParmDBMeta.h>
+#include <ParmDB/ParmSet.h>
 #include <vector>
 #include <map>
 
 
 namespace LOFAR {
-namespace ParmDB {
+namespace BBS {
 
-//# Forward Declarations
-class ParmDomain;
+  //# Forward Declarations
+  class ParmDomain;
 
 
-// \ingroup ParmDB
-// @{
+  // @ingroup ParmDB
+  // @{
 
-class ParmDBRep
-{
-public:
-  // Define the types for the tables to use.
-  enum TableType {
-    // Use the normal table containing the most recent values.
-    UseNormal,
-    // Use the history table containing the old values (after a refit, etc.).
-    UseHistory,
-  };
+  class ParmDBRep
+  {
+  public:
+    // Define the types for the tables to use.
+    enum TableType {
+      // Use the normal table containing the most recent values.
+      UseNormal,
+      // Use the history table containing the old values (after a refit, etc.).
+      UseHistory,
+    };
+    ParmDBRep()
+      : itsCount(0), itsSeqNr(-1), itsDefFilled (false)
+    {}
 
-  ParmDBRep()
-    : itsCount(0), itsSeqNr(-1), itsDefFilled (false)
-  {}
+    virtual ~ParmDBRep();
 
-  virtual ~ParmDBRep();
-
-  // Link to the DBRep by incrementing the count.
-  void link()
+    // Link to the DBRep by incrementing the count.
+    void link()
     { itsCount++; }
 
-  // Unlink by decrementing the count.
-  int unlink()
+    // Unlink by decrementing the count.
+    int unlink()
     { return --itsCount; }
 
-  // Writelock and unlock the database tables.
-  // The user does not need to lock/unlock, but it can increase performance
-  // if many small accesses have to be done.
-  // The default implementation does nothing.
-  // <group>
-  virtual void lock (bool lockForWrite);
-  virtual void unlock();
-  // </group>
+    // Writelock and unlock the database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // The default implementation does nothing.
+    // <group>
+    virtual void lock (bool lockForWrite);
+    virtual void unlock();
+    // </group>
 
-  // Get the domain range (time,freq) of the given parameters in the table.
-  // This is the minimum and maximum value of these axes for all parameters.
-  // An empty name pattern is the same as * (all parms).
-  // <group>
-  virtual ParmDomain getRange (const std::string& parmNamePattern) const = 0;
-  virtual ParmDomain getRange (const std::vector<std::string>& parmNames) const = 0;
-  // </group>
+    // Get the domain range (time,freq) of the given parameters in the table.
+    // This is the minimum and maximum value of these axes for all parameters.
+    // An empty name pattern is the same as * (all parms).
+    // <group>
+    virtual Box getRange (const std::string& parmNamePattern) const = 0;
+    virtual Box getRange (const std::vector<std::string>& parmNames) const = 0;
+    // </group>
 
-  // Get the parameter values for the given parameter and domain.
-  // Note that the requested domain may contain multiple values.
-  // A selection on parentId is done if >= 0.
-  virtual ParmValueSet getValues (const std::string& parmName,
-				  const ParmDomain& domain,
-				  int parentId,
-				  ParmDBRep::TableType) = 0;
+    // Get the parameter values for the given parameter and domain.
+    // Note that the requested domain may contain multiple values.
+    //    virtual ParmValueSet getValues (const std::string& parmName,
+    //				    const Box& domain) = 0;
 
-  // Get all values for a given domain and set of parm names.
-  // If the parm name vector is empty, all parm names are taken.
-  virtual void getValues (std::map<std::string,ParmValueSet>& result,
-			  const std::vector<std::string>& parmNames,
-			  const ParmDomain& domain,
-			  int parentId,
-			  ParmDBRep::TableType) = 0;
+    // Get all values for a given domain and set of parm names.
+    // If the parm name vector is empty, all parm names are taken.
+    //    virtual void getValues (ParmMap& result,
+    //			    const std::vector<std::string>& parmNames,
+    //			    const Box& domain) = 0;
 
-  // Get the parameter values for the given parameters and domain.
-  // Only * and ? should be used in the pattern (no [] and {}).
-  // A selection on parentId is done if >= 0.
-  virtual void getValues (std::map<std::string,ParmValueSet>& result,
-			  const std::string& parmNamePattern,
-			  const ParmDomain& domain,
-			  int parentId,
-			  ParmDBRep::TableType) = 0;
+    // Get the parameter values for the given parameters and domain.
+    // Only * and ? should be used in the pattern (no [] and {}).
+    //    virtual void getValues (ParmMap& result,
+    //			    const std::string& parmNamePattern,
+    //			    const Box& domain) = 0;
 
-  // Put the value for the given parameter and domain.
-  // overwriteMask=true indicates that the solvableMask might be changed
-  // and should be overwritten in an existing record.
-  virtual void putValue (const std::string& parmName,
-			 ParmValue& value,
-			 ParmDBRep::TableType,
-			 bool overwriteMask = true) = 0;
+    // Get the parameter values for the given parameters and domain.
+    // The parmids form the indices in the result vector.
+    virtual void getValues (vector<ParmValueSet>& values,
+			    const vector<uint>& nameIds,
+			    const vector<ParmId>& parmIds,
+			    const Box& domain) = 0;
 
-  // Put the value for the given parameters and domain.
-  // It only writes the parameters that have the same DBSeqNr as this ParmDB.
-  // overwriteMask=true indicates that the solvableMask might be changed
-  // and should be overwritten in an existing record.
-  virtual void putValues (std::map<std::string,ParmValueSet>& values,
-			  ParmDBRep::TableType,
-			  bool overwriteMask = true) = 0;
+    // Put the values for the given parameter name and id.
+    // If it is a new value, the new rowid will be stored in the ParmValueSet.
+    // If it is a new name, the nameId will be filled in.
+    virtual void putValues (const string& parmName, int& nameId,
+			    ParmValueSet& values) = 0;
 
-  // Delete the records for the given parameters and domain.
-  // If parentId>=0, only records with that parentid will be deleted.
-  virtual void deleteValues (const std::string& parmNamePattern,
-			     const ParmDomain& domain,
-			     int parentId,
-			     ParmDBRep::TableType) = 0;
+    // Put the value for the given parameters and domain.
+    // It only writes the parameters that have the same DBSeqNr as this ParmDB.
+    // overwriteMask=true indicates that the solvableMask might be changed
+    // and should be overwritten in an existing record.
+    //virtual void putValues (ParmMap& parmSet) = 0;
 
-  // Get the default value for the given parameter.
-  ParmValue getDefValue (const std::string& parmName);
+    // Delete the records for the given parameters and domain.
+    virtual void deleteValues (const std::string& parmNamePattern,
+			       const Box& domain) = 0;
 
-  // Get the default value for the given parameters.
-  // Only * and ? should be used in the pattern (no [] and {}).
-  virtual void getDefValues (std::map<std::string,ParmValueSet>& result,
-			     const std::string& parmNamePattern) = 0;
+    // Get the default value for the given parameter.
+    // If no default value is defined in the ParmDB, the given default value
+    // will be used.
+    ParmValueSet getDefValue (const std::string& parmName,
+			      const ParmValue& defaultValue);
 
-  // Put the default value.
-  virtual void putDefValue (const std::string& parmName,
-			    const ParmValue& value) = 0;
+    // Get the default value for the given parameters.
+    // Only * and ? should be used in the pattern (no [] and {}).
+    virtual void getDefValues (ParmMap& result,
+			       const std::string& parmNamePattern) = 0;
 
-  // Delete the default value records for the given parameters.
-  virtual void deleteDefValues (const std::string& parmNamePattern) = 0;
+    // Put the default value.
+    virtual void putDefValue (const string& parmName,
+			      const ParmValueSet& value) = 0;
 
-  // Get the names of all parms matching the given (filename like) pattern.
-  virtual std::vector<std::string> getNames (const std::string& pattern,
-					     ParmDBRep::TableType) = 0;
+    // Delete the default value records for the given parameters.
+    virtual void deleteDefValues (const std::string& parmNamePattern) = 0;
 
-  // Get the names of all parms in main and expression parms in default table
-  // matching the given (filename like) pattern.
-  std::vector<std::string> getAllNames (const std::string& pattern,
-					ParmDBRep::TableType);
+    // Get the names of all parms matching the given (filename like) pattern.
+    virtual std::vector<std::string> getNames (const std::string& pattern) = 0;
 
-  // Get the names of all expression parms in default table
-  // matching the given (filename like) pattern.
-  void getExprNames (const std::string& pattern, std::vector<std::string>&);
+    // Get the id of a parameter.
+    // If not found in the Names table, it returns -1.
+    virtual int getNameId (const std::string& parmName) = 0;
 
-  // Clear database or table
-  virtual void clearTables() = 0;
+    // Clear database or table
+    virtual void clearTables() = 0;
 
-  // Set or get the name and type.
-  // <group>
-  void setParmDBMeta (const ParmDBMeta& ptm)
-    { itsPTM = ptm;};
-  const ParmDBMeta& getParmDBMeta() const
-    { return itsPTM; };
-  // </group>
+    // Set or get the name and type.
+    // <group>
+    void setParmDBMeta (const ParmDBMeta& ptm)
+    { itsPTM = ptm; }
+    const ParmDBMeta& getParmDBMeta() const
+    { return itsPTM; }
+    // </group>
 
-  // Set or get ParmDB sequence nr.
-  // <group>
-  void setParmDBSeqNr (int seqnr)
+    // Set or get ParmDB sequence nr.
+    // <group>
+    void setParmDBSeqNr (int seqnr)
     { itsSeqNr = seqnr; }
-  int getParmDBSeqNr() const
+    int getParmDBSeqNr() const
     { return itsSeqNr; }
-  // </group>
+    // </group>
 
-  // Set the default value map to being not filled.
-  // This is needed after a delete, etc.
-  void clearDefFilled()
+    // Set the default value map to being not filled.
+    // This is needed after a delete, etc.
+    void clearDefFilled()
     { itsDefFilled = false; }
 
-private:
-  // Fill the map with default values.
-  virtual void fillDefMap (std::map<std::string,ParmValue>& defMap) = 0;
+  private:
+    // Fill the map with default values.
+    virtual void fillDefMap (ParmMap& defMap) = 0;
 
-  int        itsCount;
-  ParmDBMeta itsPTM;
-  int        itsSeqNr;
-  bool       itsDefFilled;
-  std::map<std::string,ParmValue> itsDefValues;
-};
+    int        itsCount;
+    ParmDBMeta itsPTM;
+    int        itsSeqNr;
+    bool       itsDefFilled;
+    ParmMap    itsDefValues;
+  };
 
 
 
-class ParmDB
-{
-public:
-  // Create a null ParmDB
-  ParmDB()
-    : itsRep(0)
-  {}
-  
-  // Create the ParmDB object for the given database type.
-  // It gets added to the map of open parmDBs.
-  explicit ParmDB (const ParmDBMeta& ptm, bool forceNew=false);
+  class ParmDB
+  {
+  public:
+    // Create the ParmDB object for the given database type.
+    // It gets added to the map of open parmDBs.
+    explicit ParmDB (const ParmDBMeta& ptm, bool forceNew=false);
 
-  // Copy contructor has reference semantics.
-  ParmDB (const ParmDB&);
+    // Copy contructor has reference semantics.
+    ParmDB (const ParmDB&);
 
-  // Delete underlying object if no more references to it.
-  ~ParmDB()
-  { decrCount(); }
+    // Delete underlying object if no more references to it.
+    ~ParmDB()
+      { decrCount(); }
 
-  // Assignment has reference semantics.
-  ParmDB& operator= (const ParmDB&);
+    // Assignment has reference semantics.
+    ParmDB& operator= (const ParmDB&);
 
-  // Is the underlying object available?
-  bool isNull() const
-  { return itsRep == 0; }
+    // Lock and unlock the database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // <group>
+    void lock (bool lockForWrite = true)
+      { itsRep->lock (lockForWrite); }
+    void unlock()
+      { itsRep->unlock(); }
 
-  // Lock and unlock the database tables.
-  // The user does not need to lock/unlock, but it can increase performance
-  // if many small accesses have to be done.
-  // <group>
-  void lock (bool lockForWrite = true)
-    { itsRep->lock (lockForWrite); }
-  void unlock()
-    { itsRep->unlock(); }
+    // Get the domain range (time,freq) of the given parameters in the table.
+    // This is the minimum and maximum value of these axes for all parameters.
+    // An empty name pattern is the same as * (all parms).
+    // <group>
+    Box getRange (const std::string& parmNamePattern = "") const
+      { return itsRep->getRange (parmNamePattern); }
+    Box getRange (const std::vector<std::string>& parmNames) const
+      { return itsRep->getRange (parmNames); }
+    // </group>
 
-  // Get the domain range (time,freq) of the given parameters in the table.
-  // This is the minimum and maximum value of these axes for all parameters.
-  // An empty name pattern is the same as * (all parms).
-  // <group>
-  ParmDomain getRange (const std::string& parmNamePattern = "") const
-    { return itsRep->getRange (parmNamePattern); }
-  ParmDomain getRange (const std::vector<std::string>& parmNames) const
-    { return itsRep->getRange (parmNames); }
-  // </group>
+//     // Get the parameter values for the given parameter and domain.
+//     // The matchDomain argument is set telling if the found parameter
+//     // matches the domain exactly.
+//     // Note that the requested domain may contain multiple values.
+//     // A selection on parentId is done if >= 0.
+//     ParmValueSet getValues (const std::string& parmName,
+// 			    const Box& domain) const
+//       { return itsRep->getValues (parmName, domain); }
 
-  // Get the parameter values for the given parameter and domain.
-  // The matchDomain argument is set telling if the found parameter
-  // matches the domain exactly.
-  // Note that the requested domain may contain multiple values.
-  // A selection on parentId is done if >= 0.
-  ParmValueSet getValues (const std::string& parmName,
-		  const ParmDomain& domain,
-		  int parentId = 0,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
-    { return itsRep->getValues (parmName, domain, parentId, tableType); }
+//     // Get the parameter values for the given parameters and domain.
+//     // An element in the returned vector belongs to the corresponding element
+//     // in the parmNames vector.
+//     // A selection on parentId is done if >= 0.
+//     void getValues (ParmMap& result,
+// 		    const std::vector<std::string>& parmNames,
+// 		    const Box& domain) const
+//       { itsRep->getValues (result, parmNames, domain); }
 
-  // Get the parameter values for the given parameters and domain.
-  // An element in the returned vector belongs to the corresponding element
-  // in the parmNames vector.
-  // A selection on parentId is done if >= 0.
-  void getValues (std::map<std::string,ParmValueSet>& result,
-		  const std::vector<std::string>& parmNames,
-		  const ParmDomain& domain,
-		  int parentId = 0,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
-    { itsRep->getValues (result, parmNames, domain,
-			 parentId, tableType); }
+//     // Get the parameter values for the given parameters and domain.
+//     // Only * and ? should be used in the pattern (no [] and {}).
+//     // A selection on parentId is done if >= 0.
+//     void getValues (ParmMap& result,
+// 		    const std::string& parmNamePattern,
+// 		    const Box& domain) const
+//       { itsRep->getValues (result, parmNamePattern, domain); }
 
-  // Get the parameter values for the given parameters and domain.
-  // Only * and ? should be used in the pattern (no [] and {}).
-  // A selection on parentId is done if >= 0.
-  void getValues (std::map<std::string,ParmValueSet>& result,
-		  const std::string& parmNamePattern,
-		  const ParmDomain& domain,
-		  int parentId = 0,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal) const
-    { itsRep->getValues (result, parmNamePattern, domain,
-			 parentId, tableType); }
+    // Get the parameter values for the given parameters and domain.
+    // The parmids form the indices in the result vector.
+    void getValues (vector<ParmValueSet>& values,
+		    const vector<uint>& nameIds,
+		    const vector<ParmId>& parmIds,
+		    const Box& domain)
+      { itsRep->getValues (values, nameIds, parmIds, domain); }
 
-  // Put the value for the given parameter and domain.
-  // If it is a new domain, the value ID might be set.
-  void putValue (const std::string& parmName,
-		 ParmValue& value,
-		 ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
-    { itsRep->putValue (parmName, value, tableType); }
+//     // Put the value for the given parameters and domain.
+//     // If it is a new value, the new rowid will be stored in the ParmValueSet.
+//     void putValues (ParmMap& values)
+//       { itsRep->putValues (values); }
 
-  // Put the value for the given parameters and domain.
-  // It only writes the parameters that have the same DBSeqNr as this ParmDB.
-  void putValues (std::map<std::string,ParmValueSet>& values,
-		  ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
-    { itsRep->putValues (values, tableType); }
+    // Put the values of a parameter.
+    // If it is a new value, the new rowid will be stored in the ParmValueSet.
+    // If it is a new name, the nameId will be filled in.
+    void putValues (const string& name, int& nameId,
+		    ParmValueSet& values)
+      { itsRep->putValues (name, nameId, values); }
 
-  // Delete the records for the given parameters and domain.
-  // If parentId>=0, only records with that parentid will be deleted.
-  void deleteValues (const std::string& parmNamePattern,
-		     const ParmDomain& domain,
-		     int parentId = -1,
-		     ParmDBRep::TableType tableType=ParmDBRep::UseNormal)
-    { itsRep->deleteValues (parmNamePattern, domain, parentId, tableType); }
+    // Delete the records for the given parameters and domain.
+    void deleteValues (const std::string& parmNamePattern,
+		       const Box& domain)
+      { itsRep->deleteValues (parmNamePattern, domain); }
 
-  // Get the initial value for the given parameter.
-  ParmValue getDefValue (const std::string& parmName) const
-    { return itsRep->getDefValue (parmName); }
+    // Get the initial value for the given parameter.
+    ParmValueSet getDefValue (const std::string& parmName,
+			      const ParmValue& defaultValue = ParmValue()) const
+      { return itsRep->getDefValue (parmName, defaultValue); }
 
-  // Get the default value for the given parameters.
-  // Only * and ? should be used in the pattern (no [] and {}).
-  void getDefValues (std::map<std::string,ParmValueSet>& result,
-		     const std::string& parmNamePattern) const
-    { itsRep->getDefValues (result, parmNamePattern); }
+    // Get the default value for the given parameters.
+    // Only * and ? should be used in the pattern (no [] and {}).
+    void getDefValues (ParmMap& result,
+		       const std::string& parmNamePattern) const
+      { itsRep->getDefValues (result, parmNamePattern); }
 
-  // Put the default value for the given parameter.
-  void putDefValue (const std::string& parmName, const ParmValue& value)
-    { itsRep->putDefValue (parmName, value); }
+    // Put the default value for the given parameter.
+    void putDefValue (const string& parmName, const ParmValueSet& value)
+      { itsRep->putDefValue (parmName, value); }
 
-  // Delete the default value records for the given parameters.
-  void deleteDefValues (const std::string& parmNamePattern)
-    { itsRep->deleteDefValues (parmNamePattern); }
+    // Delete the default value records for the given parameters.
+    void deleteDefValues (const std::string& parmNamePattern)
+      { itsRep->deleteDefValues (parmNamePattern); }
 
-  // Get the names matching the pattern in the table.
-  std::vector<std::string> getNames (const std::string& pattern,
-		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
-    { return itsRep->getNames (pattern, tableType); }
+    // Get the names matching the pattern in the table.
+    std::vector<std::string> getNames (const std::string& pattern) const
+      { return itsRep->getNames (pattern); }
 
-  // Get the names of all parms in main and expression parms in default table
-  // matching the given (filename like) pattern.
-  std::vector<std::string> getAllNames (const std::string& pattern,
-		 ParmDBRep::TableType tableType = ParmDBRep::UseNormal) const
-    { return itsRep->getAllNames (pattern, tableType); }
+    // Get the id of a parameter.
+    // If not found in the Names table, it returns -1.
+    int getNameId (const std::string& parmName)
+      { return itsRep->getNameId (parmName); }
 
-  // Get the names of all expression parms in default table
-  // matching the given (filename like) pattern.
-  std::vector<std::string> getExprNames (const std::string& pattern);
+    // Clear database tables (i.e. remove all rows from all tables).
+    void clearTables()
+      { itsRep->clearTables(); }
 
-  // Clear database or table
-  void clearTables()
-    { itsRep->clearTables(); }
+    // Get the name and type of the ParmDB.
+    const ParmDBMeta& getParmDBMeta() const
+      { return itsRep->getParmDBMeta(); }
 
-  // Get the name and type.
-  const ParmDBMeta& getParmDBMeta() const
-    { return itsRep->getParmDBMeta(); }
+    // Get ParmDB sequence nr.
+    int getParmDBSeqNr() const
+      { return itsRep->getParmDBSeqNr(); }
 
-  // Get ParmDB sequence nr.
-  int getParmDBSeqNr() const
-    { return itsRep->getParmDBSeqNr(); }
+    // Get the ParmDB object of the opened database for the given index.
+    // An exception is thrown if not found.
+    static ParmDB getParmDB (uint index);
 
-  // Get the ParmDB object of the opened database for the given index.
-  // An exception is thrown if not found.
-  static ParmDB getParmDB (uint index);
+  private:
+    // Create a ParmDB object for an existing ParmDBRep.
+    ParmDB (ParmDBRep*);
 
-private:
-  // Create a ParmDB object for an existing ParmDBRep.
-  ParmDB (ParmDBRep*);
+    // Decrement the refcount and delete if zero.
+    void decrCount();
 
-  // Decrement the refcount and delete if zero.
-  void decrCount();
+    ParmDBRep* itsRep;
 
-  ParmDBRep* itsRep;
+    //# Keep a list of all open ParmDBs.
+    static std::map<std::string,int> theirDBNames;
+    static std::vector<ParmDBRep*>   theirParmDBs;
+  };
 
-  //# Keep a list of all open ParmDBs.
-  static std::map<std::string,int> theirDBNames;
-  static std::vector<ParmDBRep*>   theirParmDBs;
-};
+  // @}
 
-// @}
-
-} // namespace ParmDB
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

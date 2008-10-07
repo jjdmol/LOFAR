@@ -41,7 +41,7 @@
 using namespace std;
 using namespace casa;
 using namespace LOFAR;
-using namespace ParmDB;
+using namespace BBS;
 
 LOFAR::ParmDB::ParmDB* parmtab;
 

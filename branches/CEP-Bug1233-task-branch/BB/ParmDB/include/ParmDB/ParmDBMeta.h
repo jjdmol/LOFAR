@@ -33,7 +33,7 @@ namespace LOFAR {
 class BlobOStream;
 class BlobIStream;
 
-namespace ParmDB {
+namespace BBS {
 
   // \addtogroup ParmDB
   // @{
@@ -86,7 +86,7 @@ namespace ParmDB {
 
   // @}
 
-} // namespace ParmDB
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

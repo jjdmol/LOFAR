@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmDBAIPS.h>
+#include <ParmDB/ParmDBCasa.h>
 #include <ParmDB/ParmDBPostgres.h>
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Regex.h>
@@ -38,7 +38,7 @@ using namespace std;
 using namespace casa;
 
 namespace LOFAR {
-namespace ParmDB {
+namespace BBS {
 
 map<string,int>    ParmDB::theirDBNames;
 vector<ParmDBRep*> ParmDB::theirParmDBs;
@@ -53,7 +53,8 @@ void ParmDBRep::lock (bool)
 void ParmDBRep::unlock()
 {}
 
-ParmValue ParmDBRep::getDefValue (const string& parmName)
+ParmValueSet ParmDBRep::getDefValue (const string& parmName,
+				     const ParmValue& defaultValue)
 {
   // Fill the map with default values if not done yet.
   if (!itsDefFilled) {
@@ -68,7 +69,7 @@ ParmValue ParmDBRep::getDefValue (const string& parmName)
   // So look up until found or until no more parts are left.
   string name = parmName;
   while (true) {
-    map<string,ParmValue>::const_iterator pos = itsDefValues.find (name);
+    ParmMap::const_iterator pos = itsDefValues.find (name);
     if (pos != itsDefValues.end()) {
       return pos->second;
     }
@@ -80,45 +81,8 @@ ParmValue ParmDBRep::getDefValue (const string& parmName)
     // Remove last part and try again.
     name = name.substr (0, idx);
   }
-  // Nothing found; return an empty ParmValue.
-  return ParmValue();
-}
-
-vector<string> ParmDBRep::getAllNames (const string& pattern,
-				       ParmDBRep::TableType tableType)
-{
-  // First get all names for the standard table.
-  vector<string> names = getNames (pattern, tableType);
-  // Now append with names from the default table.
-  getExprNames (pattern, names);
-  // Now sort the result uniquely.
-  // Most has already been sorted, so use insertion sort.
-  int nr = GenSort<string>::sort (&names[0], names.size(),
-				  Sort::Ascending,
-				  Sort::InsSort|Sort::NoDuplicates);
-  names.resize (nr);
-  return names;
-}
-
-void ParmDBRep::getExprNames (const string& pattern,
-			      vector<string>& names)
-{
-  // Fill the map with default values if not done yet.
-  if (!itsDefFilled) {
-    fillDefMap (itsDefValues);
-    itsDefFilled = true;
-  }
-  Regex regex(Regex::fromPattern(pattern));
-  for (map<string,ParmValue>::const_iterator iter = itsDefValues.begin();
-       iter != itsDefValues.end();
-       iter++) {
-    if (iter->second.rep().itsType == "parmexpr") {
-      String nm (iter->first);
-      if (nm.matches (regex)) {
-	names.push_back (iter->first);
-      }
-    }
-  }
+  // Nothing found; return the default ParmValue.
+  return ParmValueSet (defaultValue);
 }
 
 
@@ -133,12 +97,13 @@ ParmDB::ParmDB (const ParmDBMeta& ptm, bool forceNew)
     return;
   }
   // Open the correct ParmDB.
-  if (ptm.getType() == "aips") {
-    itsRep = new ParmDBAIPS (ptm.getTableName(), forceNew);
+  if (ptm.getType() == "casa") {
+    itsRep = new ParmDBCasa (ptm.getTableName(), forceNew);
     ///  } else if (ptm.getType() == "bdb") {
     ///itsRep = new ParmDBBDB (ptm, forceNew);
   } else if (ptm.getType() == "postgres") {
-#if defined(HAVE_PGSQL)
+//#if defined(HAVE_PGSQL)
+#if 0
     itsRep = new ParmDBPostgres(ptm.getDBName(),
         ptm.getUserName(),
         ptm.getDBPwd(),
@@ -172,13 +137,13 @@ ParmDB::ParmDB (const ParmDBMeta& ptm, bool forceNew)
 ParmDB::ParmDB (ParmDBRep* rep)
 : itsRep (rep)
 {
-  if(!isNull()) itsRep->link();
+  itsRep->link();
 }
 
 ParmDB::ParmDB (const ParmDB& that)
 : itsRep (that.itsRep)
 {
-  if(!isNull()) itsRep->link();
+  itsRep->link();
 }
 
 ParmDB& ParmDB::operator= (const ParmDB& that)
@@ -186,14 +151,14 @@ ParmDB& ParmDB::operator= (const ParmDB& that)
   if (this != &that) {
     decrCount();
     itsRep = that.itsRep;
-    if(!isNull()) itsRep->link();
+    itsRep->link();
   }
   return *this;
 }
 
 void ParmDB::decrCount()
 {
-  if (!isNull() && itsRep->unlink() == 0) {
+  if (itsRep->unlink() == 0) {
     string tabName = itsRep->getParmDBMeta().getTableName();
     map<string,int>::iterator pos = theirDBNames.find (tabName);
     ASSERTSTR (pos != theirDBNames.end(),
@@ -213,29 +178,6 @@ ParmDB ParmDB::getParmDB (uint index)
   return ParmDB(theirParmDBs[index]);
 }
 
-vector<string> ParmDB::getExprNames (const string& pattern)
-{
-  vector<string> names;
-  itsRep->getExprNames (pattern, names);
-  return names;
-}
 
-
-/*
-vector<ParmDBMeta> ParmDB::getAllParmDBMeta()
-{
-  vector<ParmDBMeta> res;
-  res.reserve (theirParmDBs.size());
-  for (uint i=0; i<theirParmDBs.size(); i++) {
-    if (theirParmDBs[i] == 0) {
-      res.push_back (ParmDBMeta());
-    } else {
-      res.push_back (theirParmDBs[i]->getParmDBMeta());
-    }
-  }
-  return res;
-}
-*/
-
-} // namespace ParmDB
+} // namespace BBS
 } // namespace LOFAR
