@@ -222,29 +222,29 @@ namespace LOFAR
           LOG_DEBUG("Retrieving command ...");
           itsCommand = itsCommandQueue->getNextCommand();
 
-          if (!itsCommand.first) {
-            LOG_DEBUG("Received empty command. Ignored");
-            setState(WAIT);
-            break;
-          }
-
-          // If Command is a SolveStep, we should initiate a solve operation.
-          shared_ptr<const SolveStep> solveStep = 
-            dynamic_pointer_cast<const SolveStep>(itsCommand.first);
-          if (solveStep) {
-            setSolveTasks(solveStep->kernelGroups(), 
-                          solveStep->solverOptions());
-            setState(SOLVE);
+          if(itsCommand.first)
+          {
+            // If Command is a SolveStep, we should initiate a solve operation.
+            shared_ptr<const SolveStep> solveStep = 
+              dynamic_pointer_cast<const SolveStep>(itsCommand.first);
+            if (solveStep) {
+              setSolveTasks(solveStep->kernelGroups(), 
+                            solveStep->solverOptions());
+              setState(SOLVE);
+            } 
+            else {
+              itsCommandQueue->
+                addResult(itsCommand.second, CommandResult::OK, itsSenderId);
+              // If we've received a "finalize" command, we should quit.
+              if (dynamic_pointer_cast<const FinalizeCommand>(itsCommand.first))
+                setState(QUIT);
+            }
           } 
           else {
-            itsCommandQueue->
-              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
-            // If we've received a "finalize" command, we should quit.
-            if (dynamic_pointer_cast<const FinalizeCommand>(itsCommand.first))
-              setState(QUIT);
-            else 
-              setState(WAIT);
+            LOG_DEBUG("Received empty command. Ignored");
+            setState(WAIT);
           }
+
           break;
         }
 
@@ -271,7 +271,7 @@ namespace LOFAR
           if(done) {
             itsCommandQueue->
               addResult(itsCommand.second, CommandResult::OK, itsSenderId);
-            setState(WAIT);
+            setState(GET_COMMAND);
           }
           break;
         }
