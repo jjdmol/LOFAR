@@ -1,4 +1,4 @@
-//# Box.h: Class representing a 2-dim box.
+//# Box.h: Class representing a 2-dim box
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Class representing a 2-dim box
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_BOX_H
 #define LOFAR_PARMDB_BOX_H
 
@@ -35,9 +39,10 @@ namespace BBS {
   typedef pair<double, double>    Point;
 
 
-  // --------------------------------------------------------------------------
-  // - Box: An axis aligned bounding box.                                     -
-  // --------------------------------------------------------------------------
+  // @ingroup ParmDB
+  // @{
+
+  // @brief Class representing a 2-dim box
   class Box;
   Box unite(const Box& lhs, const Box& rhs);
   Box intersect(const Box& lhs, const Box& rhs);
@@ -162,6 +167,8 @@ namespace BBS {
     Point itsStart;
     Point itsEnd;
   };
+
+  // @}
 
 } //# namespace BBS
 } //# namespace LOFAR

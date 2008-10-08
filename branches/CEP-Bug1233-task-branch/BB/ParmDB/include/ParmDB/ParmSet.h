@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Set of parameters to be used
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMSET_H
 #define LOFAR_PARMDB_PARMSET_H
 
@@ -40,6 +44,10 @@ namespace BBS {
   typedef uint ParmId;
 
 
+  // @ingroup ParmDB
+  // @{
+
+  // @brief Set of parameters to be used
   class ParmSet
   {
   public:
@@ -139,6 +147,7 @@ namespace BBS {
     map<string,int> itsNames;
   };
 
+  // @}
 
 } //# end namespace BBS
 } //# end namspace LOFAR

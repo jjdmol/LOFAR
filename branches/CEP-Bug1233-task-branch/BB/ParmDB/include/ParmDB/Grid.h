@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Class representing a regular or irregular 2-D grid.
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_GRID_H
 #define LOFAR_PARMDB_GRID_H
 
@@ -38,7 +42,10 @@ namespace BBS {
   typedef pair<size_t, size_t> Location;
 
 
-  // A 2-D grid with regular or irregular axes.                          -
+  // @ingroup ParmDB
+  // @{
+
+  // @brief The letter class for a 2-D grid with regular or irregular axes.
   class GridRep
   {
   public:
@@ -98,7 +105,7 @@ namespace BBS {
   };
 
 
-  // A 2-D grid with regular or irregular axes.                          -
+  // @brief The envelope class for a 2-D grid with regular or irregular axes.                          -
   class Grid
   {
   public:
@@ -259,6 +266,7 @@ namespace BBS {
     GridRep::ShPtr itsRep;
   };
 
+  // @}
 
 } //# namespace BBS
 } //# namespace LOFAR

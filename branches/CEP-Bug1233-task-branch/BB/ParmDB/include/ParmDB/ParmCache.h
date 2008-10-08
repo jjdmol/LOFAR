@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief A class dealing with caching and handling ParmDB entries
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMCACHE_H
 #define LOFAR_PARMDB_PARMCACHE_H
 
@@ -34,7 +38,10 @@ namespace BBS {
   //# Forward Declarations.
   class ParmDB;
 
+  // @ingroup ParmDB
+  // @{
 
+  // @brief A class dealing with caching and handling ParmDB entries
   // ParmCache caches the parm records for a given work domain.
   class ParmCache
   {
@@ -103,6 +110,7 @@ namespace BBS {
     AxisMappingCache     itsAxisCache;
   };
 
+  // @}
 
 } //# end namespace BBS
 } //# end namspace LOFAR

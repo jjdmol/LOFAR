@@ -1,4 +1,4 @@
-//# ParmDBCasa.h: Object to hold parameters in a Casa table.
+//# ParmDBCasa.h: Class to hold parameters in a Casa table
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,12 @@
 //#
 //# $Id$
 
+// @file
+// @brief Class to hold parameters in a Casa table
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMDBCASA_H
 #define LOFAR_PARMDB_PARMDBCASA_H
-
-// \file
-// Object to hold parameters in a Casa table.
 
 //# Includes
 #include <ParmDB/ParmDB.h>
@@ -42,9 +43,10 @@ namespace LOFAR {
 namespace BBS {
 
 
-  // \ingroup ParmDB
+  // @ingroup ParmDB
   // @{
 
+  // @brief Class to hold parameters in a Casa table
   class ParmDBCasa : public ParmDBRep
   {
   public:

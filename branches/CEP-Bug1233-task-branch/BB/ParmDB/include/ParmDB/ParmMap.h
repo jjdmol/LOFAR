@@ -1,4 +1,4 @@
-//# ParmMap.h: A map of parameter name to value set.
+//# ParmMap.h: A map of parameter name to value set
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief A map of parameter name to value set.
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMMAP_H
 #define LOFAR_PARMDB_PARMMAP_H
 
@@ -34,6 +38,10 @@ namespace BBS {
   class ParmDB;
 
 
+  // @ingroup ParmDB
+  // @{
+
+  // @brief A map of parameter name to value set.
   // ParmMap holds a map of name to ParmValueSet.
   // It is meant to hold the default values, but could be used for
   // other purposes as well.
@@ -81,6 +89,7 @@ namespace BBS {
     map<string, ParmValueSet> itsValueSets;
   };
 
+  // @}
 
 } //# end namespace BBS
 } //# end namspace LOFAR

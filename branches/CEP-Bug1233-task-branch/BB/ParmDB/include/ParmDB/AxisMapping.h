@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Map the cells of one axis to another
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_AXISMAPPING_H
 #define LOFAR_PARMDB_AXISMAPPING_H
 
@@ -30,6 +34,10 @@
 namespace LOFAR {
 namespace BBS {
 
+  // @ingroup ParmDB
+  // @{
+
+  // @brief Map the cells of one axis to another
   // This class defines the mapping of one axis to another.
   // It is meant for mapping the grid axes of a predict to the axes
   // of the domain grid, so it has to be calculated only once per predict.
@@ -152,6 +160,8 @@ namespace BBS {
 			    const Grid& src,
 			    const Grid& dest);
   };
+
+  // @}
 
 } //# namespace BBS
 } //# namespace LOFAR

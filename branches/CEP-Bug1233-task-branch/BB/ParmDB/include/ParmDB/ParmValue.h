@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief A class containing the values of a parameter
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMVALUE_H
 #define LOFAR_PARMDB_PARMVALUE_H
 
@@ -33,7 +37,10 @@
 namespace LOFAR {
 namespace BBS {
 
+  // @ingroup ParmDB
+  // @{
 
+  // @brief A class containing the values of a parameter,
   // ParmValue holds the values of a given parameter and domain.
   // The object does not hold the name and domain info itself. Instead its
   // parent object ParmValueSet holds this information.
@@ -127,6 +134,7 @@ namespace BBS {
 
 
 
+  // @brief A class holding information of multiple domains of a a parameter.
   // ParmValueSet holds the information of multiple domains of a parameter.
   // It has a grid defining the domains held.
   // <br>The object can be used by BBSKernel and kept in a MeqParmFunklet.
@@ -232,6 +240,7 @@ namespace BBS {
     bool                   itsDirty;
   };
 
+  // @}
 
 } //# end namespace BBS
 } //# end namspace LOFAR

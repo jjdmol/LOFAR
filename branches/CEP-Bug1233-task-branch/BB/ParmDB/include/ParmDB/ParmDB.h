@@ -1,4 +1,4 @@
-//# ParmDB.h: Object to hold parameters in a table.
+//# ParmDB.h: Base class for a table holding parameters
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,12 @@
 //#
 //# $Id$
 
+// @file
+// @brief Base class for a table holding parameters
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMDB_H
 #define LOFAR_PARMDB_PARMDB_H
-
-// @file
-// @brief Object to hold parameters in a table.
-// @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
 #include <ParmDB/ParmMap.h>
@@ -38,23 +38,13 @@
 namespace LOFAR {
 namespace BBS {
 
-  //# Forward Declarations
-  class ParmDomain;
-
-
   // @ingroup ParmDB
   // @{
 
+  // @brief Abstract base class for a table holding parameters.
   class ParmDBRep
   {
   public:
-    // Define the types for the tables to use.
-    enum TableType {
-      // Use the normal table containing the most recent values.
-      UseNormal,
-      // Use the history table containing the old values (after a refit, etc.).
-      UseHistory,
-    };
     ParmDBRep()
       : itsCount(0), itsSeqNr(-1), itsDefFilled (false)
     {}
@@ -187,7 +177,7 @@ namespace BBS {
   };
 
 
-
+  // @brief Envelope class for a table holding parameters
   class ParmDB
   {
   public:

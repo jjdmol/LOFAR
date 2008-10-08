@@ -1,4 +1,4 @@
-//#  ParmDBMeta.h: one line description
+//#  ParmDBMeta.h: Meta information for the name and type of a ParmDB
 //#
 //#  Copyright (C) 2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,12 @@
 //#
 //#  $Id$
 
+// @file
+// @brief Meta information for the name and type of a ParmDB
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMDBMETA_H
 #define LOFAR_PARMDB_PARMDBMETA_H
-
-// \file
-// one line description.
 
 #include <Common/lofar_string.h>
 
@@ -35,10 +36,10 @@ class BlobIStream;
 
 namespace BBS {
 
-  // \addtogroup ParmDB
+  // @ingroup ParmDB
   // @{
 
-  // Description of class.
+  // @brief Meta information for the name and type of a ParmDB
   class ParmDBMeta
   {
   public:

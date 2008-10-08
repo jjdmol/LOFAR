@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Class to hold a read or write lock on ParmDBs
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_PARMDBLOCKER_H
 #define LOFAR_PARMDB_PARMDBLOCKER_H
 
@@ -33,6 +37,10 @@ namespace BBS {
   class ParmSet;
   class ParmDB;
 
+  // @ingroup ParmDB
+  // @{
+
+  // @brief Class to hold a read or write lock on ParmDBs
   // This class locks a single ParmDB or all ParmDBs used by a ParmSet.
   // Because the destructor does the unlocking, this class is very well
   // suited for automatically managing the locks. Even in case of an
@@ -63,6 +71,7 @@ namespace BBS {
     vector<ParmDB*> itsDBs;
   };
 
+  // @}
 
 } //# end namespace BBS
 } //# end namspace LOFAR

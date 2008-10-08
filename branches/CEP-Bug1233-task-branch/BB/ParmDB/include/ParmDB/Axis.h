@@ -1,4 +1,4 @@
-//# Axis.h: Class templates that represent a regular or irregular axis.
+//# Axis.h: Classes representing a regular or irregular axis.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,6 +20,10 @@
 //#
 //# $Id$
 
+// @file
+// @brief Classes representing a regular or irregular axis.
+// @author Ger van Diepen (diepen AT astron nl)
+
 #ifndef LOFAR_PARMDB_AXIS_H
 #define LOFAR_PARMDB_AXIS_H
 
@@ -34,7 +38,10 @@ namespace BBS {
   using std::pair;
   using std::make_pair;
 
-  // Abstract base class for a cell centered axis.
+  // @ingroup ParmDB
+  // @{
+
+  // @brief Abstract base class for a cell centered axis.
   class Axis: public BlobStreamable
   {
   public:
@@ -138,7 +145,7 @@ namespace BBS {
   };
 
 
-  // Regularly strided cell centered axis.
+  // @brief Regularly strided cell centered axis.
   class RegularAxis: public Axis
   {
   public:
@@ -189,7 +196,7 @@ namespace BBS {
   };
 
 
-  // Base class for irregularly strided cell centered axis.
+  // @brief Base class for irregularly strided cell centered axis.
   class IrregularAxis: public Axis
   {
   public:
@@ -227,7 +234,7 @@ namespace BBS {
   };
 
 
-  // Irregularly strided cell centered axis.
+  // @brief Ordered rrregularly strided cell centered axis.
   // The cells are ordered and disjoint, but gaps may be present.
   class OrderedAxis: public IrregularAxis
   {
@@ -261,7 +268,7 @@ namespace BBS {
   };
 
 
-  // Irregularly strided cell centered axis.
+  // @brief Unordered irregularly strided cell centered axis.
   // The cells are unordered and need not be disjoint; but gaps may be present.
   class UnorderedAxis: public IrregularAxis
   {
@@ -296,6 +303,7 @@ namespace BBS {
     double itsEnd;
   };
 
+  // @}
 
 } //# namespace BBS
 } //# namespace LOFAR
