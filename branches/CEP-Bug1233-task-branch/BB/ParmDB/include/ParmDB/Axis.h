@@ -129,7 +129,7 @@ namespace BBS {
     // If all intervals have the same width, a RegularAxis object is made.
     // Otherwise an OrderedAxis object.
     // The intervals must be consecutive.
-    static Axis::ShPtr Axis::makeAxis (const vector<double>& low,
+    static Axis::ShPtr makeAxis (const vector<double>& low,
 				       const vector<double>& high);
 
     //# Unique seqnr of an Axis object. Used in class AxisMapping.

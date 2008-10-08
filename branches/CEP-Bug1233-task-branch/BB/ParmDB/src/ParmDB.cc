@@ -24,7 +24,9 @@
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBCasa.h>
+#if 0
 #include <ParmDB/ParmDBPostgres.h>
+#endif
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Regex.h>
 

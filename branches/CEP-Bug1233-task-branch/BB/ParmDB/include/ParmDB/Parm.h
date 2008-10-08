@@ -86,7 +86,7 @@ namespace BBS {
 
     // Get the perturbations for the coefficients.
     // The possible mask is applied.
-    const vector<double>& Parm::getPerturbations() const
+    const vector<double>& getPerturbations() const
       { return itsPerturbations; }
 
     // Get the result for the given grid. No perturbed values are calculated.
