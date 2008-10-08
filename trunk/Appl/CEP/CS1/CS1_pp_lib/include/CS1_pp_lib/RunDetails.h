@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2007-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,10 +20,21 @@
 #ifndef __CS1_PP_RUN_DETAILS_H__
 #define __CS1_PP_RUN_DETAILS_H__
 
+// @file
+// @brief Class to hold parameter settings for the steps in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
   {
+    // @ingroup CS1_pp_lib
+    //
+    // This class is basically a fancy struct of the variables that need to be set
+    // in the parameterset for IDPPP for the various steps.
+    // It has some extra functionality to validate and print the values.
+    // It isn't using setter/getter functions because that seemed overkill for the required use.
+
     class RunDetails
     {
     public:
@@ -44,8 +55,8 @@ namespace LOFAR
       bool         Skip;         // DataSquasher
       bool         Columns;      // DataSquasher
       unsigned int TimeStep;     // DataSquasher
-      bool CheckValues(void);
-      void PrintInfo(void);
+      bool CheckValues(void);    // Method to do some validity checks on the values
+      void PrintInfo(void);      // Prints all values to cout, mainly for debugging purposes
 
     protected:
     private:
