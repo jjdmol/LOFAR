@@ -67,17 +67,15 @@ namespace BBS {
     // For a new parm it creates the domains.
     void setSolveGrid (const Grid& solveGrid);
 
-    // Handle the coefficients for the given solve domain
-    // location. By default the solvable mask is applied.
-    // The solve domains must have been set.
-    // <group>
     // Get the nr of coefficients.
     uint getCoeffSize (bool useMask=true);
 
-    // Get the coefficients.
+    // Get the coefficients for the given location in the solve grid.
+    // The solve grid must have been set before.
     vector<double> getCoeff (const Location&, bool useMask=true);
 
-    // Set the coefficients.
+    // Set the coefficients for the given location in the solve grid.
+    // The solve grid must have been set before.
     void setCoeff (const Location&, const double* values, uint nvalues,
 		   bool useMask=true);
 

@@ -43,6 +43,7 @@ namespace BBS {
     // Assign a unique parm id.
     ParmId parmId = itsParms.size();
     itsParms.push_back (ParmKey(&parmdb, name, nameId, parmId));
+    itsNames.insert (make_pair(name, parmId));
     // If needed, add its ParmDB to the list of used ParmDBs.
     uint i;
     for (i=0; i<itsDBs.size(); ++i) {
@@ -59,9 +60,9 @@ namespace BBS {
   ParmId ParmSet::find (const string& name) const
   {
     map<string,int>::const_iterator pos = itsNames.find(name);
-    ASSERTSTR (pos == itsNames.end(), "Parm " << name
+    ASSERTSTR (pos != itsNames.end(), "Parm " << name
 	       << " not found in ParmSet");
-    return pos->second;
+    return itsParms[pos->second].getParmId();
   }
 
   void ParmSet::getValues (vector<ParmValueSet>& vsets,

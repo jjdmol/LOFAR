@@ -281,6 +281,60 @@ void testResultMultiScalar()
 {
 }
 
+void testAll()
+{
+  // Create parmdb and write default values in it.
+  ParmDB pdb(ParmDBMeta("casa", "tParm_tmp.tab1"), true);
+  // Create default values in it.
+  Array<double> coeff(IPosition(2,2,3));
+  indgen(coeff);
+  ParmValue defaultValue;
+  defaultValue.setCoeff (coeff);
+  pdb.putDefValue ("ra", ParmValueSet(defaultValue));
+  defaultValue.setCoeff (coeff+10.);
+  Array<bool> solvMask(coeff.shape());
+  solvMask = true;
+  solvMask(IPosition(2,1,2)) = false;
+  ParmValueSet pvset(defaultValue);
+  pvset.setSolvableMask(solvMask);
+  pdb.putDefValue ("dec", pvset);
+  // Create parmset.
+  ParmSet parmset;
+  parmset.addParm (pdb, "ra");
+  parmset.addParm (pdb, "dec");
+  Box workDomain(make_pair(3,4), make_pair(10,12));
+  // Create the cache and fill for the work domain.
+  ParmCache parmCache(parmset, workDomain);
+  // Create the parms.
+  Parm parmra(parmCache, "ra");
+  Parm parmdc(parmCache, "dec");
+  // Set a solve grid for some parameters (from (4,6) till (9,10))
+  Axis::ShPtr ax02 (new RegularAxis(4,1,3));
+  Axis::ShPtr ax12 (new RegularAxis(6,2,2));
+  Grid grid2(ax02, ax12);
+  parmra.setSolveGrid (grid2);
+  parmdc.setSolveGrid (grid2);
+  {
+    // Check the coeff of the first solve grid cell.
+    vector<double> coeffra = parmra.getCoeff (Location(0,0));
+    ASSERT (coeffra.size() == coeff.size());
+    for (uint i=0; i<coeffra.size(); ++i) {
+      ASSERT (coeffra[i] == i);
+    }
+    vector<double> coeffdc = parmdc.getCoeff (Location(0,0));
+    ASSERT (coeffdc.size() == coeff.size()-1);
+    for (uint i=0; i<coeffdc.size(); ++i) {
+      ASSERT (coeffdc[i] == i+10);
+    }
+    coeffdc = parmdc.getCoeff (Location(0,0), false);
+    ASSERT (coeffdc.size() == coeff.size());
+    for (uint i=0; i<coeffdc.size(); ++i) {
+      ASSERT (coeffdc[i] == i+10);
+    }
+  }
+  // Set coefficients 
+}
+
 int main()
 {
   try {
@@ -290,6 +344,7 @@ int main()
     testResultCoeff();
     testResultOneScalar();
     testResultMultiScalar();
+    testAll();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
