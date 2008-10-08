@@ -68,7 +68,7 @@ public:
 	vector<uint32> getRspBoardList() const;
         // OLAP: get the rspSlotList
 	vector<uint32> getRspSlotList() const;
-
+ 
 	// for operator <<
 	ostream& print (ostream&	os) const;
 
@@ -113,10 +113,12 @@ public:
 	vector<Beam>	beams;
 	vector<int32>	beamlet2beams;		// to which beam each beamlet belongs
 	vector<int32>	beamlet2subbands;	// which subband each beamlet uses.
+	uint32	        nrRSPboards;	        // the number of RSPboads.
 	vector<uint32>	subbandList;	        // OLAP: subband list.
 	vector<uint32>	beamList;	        // OLAP: beam list.
 	vector<uint32>	rspBoardList;           // OLAP: RSP board list.
-	vector<uint32>	rspSlotList;            // OLAP: RSP Slot list.
+	vector<uint32>	rspSlotList;            // OLAP: RSP Slot list
+	bool            uStation;               // use uStation mode?
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;

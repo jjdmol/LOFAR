@@ -150,9 +150,21 @@ cout << "compacted stationList=" << stationList << endl;
 			subbands.insert(newBeam.subbands[i]);
 		}
 	}
+
+        nrRSPboards=0;
+        for (uint32 i(0) ; i < 4; i++) {
+          uint32 bIndex = i * aParSet->getUint32("OLAP.nrSlotsInFrame");
+	  uint32 eIndex = bIndex + aParSet->getUint32("OLAP.nrSlotsInFrame");
+          for (; bIndex < eIndex; bIndex++) {
+	    if (beamlet2beams[bIndex] != -1) {
+	      nrRSPboards+=1;
+	      break;
+	    }  
+	  }
+        }
 	
 	// OLAP: uStation mode(y/n)
-	bool uStation(true);
+	uStation = true;
 	for (uint32 s(0) ; s < aParSet->getUint32("OLAP.nrSlotsInFrame")-1; s++) {
            if (beamlet2subbands[s] != beamlet2subbands[s+aParSet->getUint32("OLAP.nrSlotsInFrame")]) {
 	     uStation = false;
@@ -182,12 +194,12 @@ cout << "compacted stationList=" << stationList << endl;
 	  }  
 	}
 	else {
-	  if (subbandList.size() % 4 != 0 )
-	    THROW (Exception, "Number of subbands(" << subbandList.size() << ") % 4 != 0");
+	  if (subbandList.size() % nrRSPboards != 0 )
+	    THROW (Exception, "Number of subbands(" << subbandList.size() << ") % " << nrRSPboards << " != 0");
 	    
 	  for (uint32 s(0) ; s < subbandList.size(); s++) {
-	    rspBoardList.push_back(s/(subbandList.size()/4));
-	    rspSlotList.push_back(s%(subbandList.size()/4));
+	    rspBoardList.push_back(s/(subbandList.size()/nrRSPboards));
+	    rspSlotList.push_back(s%(subbandList.size()/nrRSPboards));
 	  }  
 	}	
 }
@@ -289,7 +301,9 @@ ostream& Observation::print (ostream&	os) const
 		os << "Beam[" << i << "].beamletList: "; writeVector(os, beams[i].beamlets, ",", "[", "]"); os << endl;
 	}
 	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
-	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl;
+	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
+	os << "uStation        : " << (uStation != 0 ? "True" : "False") << endl;
+	os << "nrRSPboards     : " << nrRSPboards << endl;
 	os << "subbandList     : "; writeVector(os, subbandList, ",", "[", "]"); os << endl;
 	os << "beamList        : "; writeVector(os, beamList, ",", "[", "]"); os << endl;
 	os << "rspBoardList    : "; writeVector(os, rspBoardList, ",", "[", "]"); os << endl;
