@@ -26,7 +26,7 @@
 //# Includes
 #include <ParmDB/ParmSet.h>
 #include <ParmDB/ParmValue.h>
-#include <Common/lofar_map.h>
+#include <ParmDB/AxisMapping.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -75,6 +75,10 @@ namespace BBS {
       { return itsValueSets[parmid]; }
     // </group>
 
+    // Get the AxisMappingCache object.
+    AxisMappingCache& getAxisMappingCache()
+      { return itsAxisCache; }
+
     // Check for a solvable parm if the domains in the value set match the
     // given solve domains. The solve domains can exceed the work domain.
     // If they exceed, they are limited to the work domain.
@@ -96,10 +100,7 @@ namespace BBS {
     ParmSet*             itsParmSet;
     Box                  itsWorkDomain;
     vector<ParmValueSet> itsValueSets;
-    //# Set of different grids used by the ParmValueSets.
-    //# The key in the map is the Grid's hash value. It makes it possible to
-    //# find matching grids very quickly.
-    map<int64,Grid>      itsDomainGrids;
+    AxisMappingCache     itsAxisCache;
   };
 
 

@@ -23,7 +23,7 @@
 #ifndef LOFAR_PARMDB_AXISMAPPING_H
 #define LOFAR_PARMDB_AXISMAPPING_H
 
-#include <ParmDB/Axis.h>
+#include <ParmDB/Grid.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
 
@@ -81,7 +81,7 @@ namespace BBS {
   // same axes are used for many parameters.
   class AxisMappingCache
   {
-  public:
+  private:
     // Define the key consisting of both id-s.
     struct AxisKey {
       AxisKey (uint fromId, uint toId)
@@ -98,13 +98,18 @@ namespace BBS {
 	    itsFrom==that.itsFrom && itsTo < that.itsTo; }
     };
 
+  public:
     // Get the number of elements.
     size_t size() const
       { return itsCache.size(); }
 
+    // Clear the cache.
+    void clear()
+      { itsCache.clear(); }
+
     // Find the possible mapping of axis 'from' to axis 'to'.
     // If no existing, create it.
-    const AxisMapping& get (const Axis& from,const Axis& to) const
+    const AxisMapping& get (const Axis& from,const Axis& to)
     {
       map<AxisKey,AxisMapping>::const_iterator iter =
 	itsCache.find(AxisKey(from.getId(), to.getId()));
@@ -113,10 +118,39 @@ namespace BBS {
 
   private:
     // Create a mapping of axis from to axis to and add it to the cache.
-    const AxisMapping& makeMapping (const Axis& from, const Axis& to) const;
+    const AxisMapping& makeMapping (const Axis& from, const Axis& to);
 
     //# Data members
-    mutable map<AxisKey,AxisMapping> itsCache;
+    map<AxisKey,AxisMapping> itsCache;
+  };
+
+
+  class GridMapping
+  {
+  public:
+    // Find the location in grid 'dest', given the location in grid 'src'.
+    static Location findLocation (AxisMappingCache& cache,
+				  const Location& location,
+				  const Grid& src,
+				  const Grid& dest);
+
+    // Find the location in grid 'dest', given the cellId in grid 'src'.
+    static Location findLocation (AxisMappingCache& cache,
+				  uint cellId,
+				  const Grid& src,
+				  const Grid& dest);
+
+    // Find the cellId in grid 'dest', given the location in grid 'src'.
+    static uint findCellId (AxisMappingCache& cache,
+			    const Location& location,
+			    const Grid& src,
+			    const Grid& dest);
+
+    // Find the cellId in grid 'dest', given the cellId in grid 'src'.
+    static uint findcellId (AxisMappingCache& cache,
+			    uint cellId,
+			    const Grid& src,
+			    const Grid& dest);
   };
 
 } //# namespace BBS

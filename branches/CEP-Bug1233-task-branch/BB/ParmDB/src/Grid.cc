@@ -26,9 +26,6 @@
 namespace LOFAR {
 namespace BBS {
 
-  // Initialize static.
-  int GridRep::theirId = 0;
-
 
   GridRep::GridRep()
     : itsIsDefault (true)
@@ -150,8 +147,6 @@ namespace BBS {
 
   void GridRep::init()
   {
-    // Set the unique id.
-    itsId = theirId++;
     // Calculate the hash value as a set of individual domains.
     // Thus add up the start and end values of all cells.
     const Axis& x = *itsAxes[0];

@@ -125,11 +125,17 @@ void checkCombAxis (const Axis& axis)
 
 void testRegular()
 {
-  check1  (RegularAxis());
-  check10 (RegularAxis(1,2,10), true, true);
+  RegularAxis axis1;
+  ASSERT (axis1.getId() == 0);
+  check1  (axis1);
+  RegularAxis axis2(1,2,10);
+  ASSERT (axis2.getId() == 3);      // check1 creates 2 Axis objects
+  check10 (axis2, true, true);
   RegularAxis axis(1,21,10,true);
-  check10 (axis, true, true);
+  ASSERT (axis.getId() == 7);
+  check10 (axis, true, true);       // check10 creates 3 Axis objects
   Axis::ShPtr clonedAxis(axis.clone());
+  ASSERT (clonedAxis->getId() == 7);
   check10 (*clonedAxis, true, true);
   int s1,s2,e1,e2;
   Axis::ShPtr combAxis = axis.combine(axis, s1, e1, s2, e2);

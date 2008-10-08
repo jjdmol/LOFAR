@@ -35,6 +35,7 @@ namespace BBS {
   class ParmCache;
   class ParmValue;
   class ParmValueSet;
+  class AxisMappingCache;
 
   // Parm makes it possible to get the parameter values for a given predict
   // domain. It uses a ParmCache to cache parameters for a work domain.
@@ -124,17 +125,20 @@ namespace BBS {
     static void getResultCoeff (casa::Array<double>* resultVec,
 				const Grid& predictGrid,
 				const ParmValueSet& pvset,
-				const vector<double>& perturbations);
+				const vector<double>& perturbations,
+				AxisMappingCache& axisMappingCache);
 
     // Get the result for a single ParmValue with an array of scalars.
     static void getResultScalar (casa::Array<double>& result,
 				 const Grid& predictGrid,
-				 const ParmValue& pval);
+				 const ParmValue& pval,
+				 AxisMappingCache& axisMappingCache);
 
     // Get the result for multiple ParmValues containing scalars.
     static void getResultScalar (casa::Array<double>& result,
 				 const Grid& predictGrid,
-				 const ParmValueSet& pvset);
+				 const ParmValueSet& pvset,
+				 AxisMappingCache& axisMappingCache);
 
     // Get the result for a single ParmValue.
     static void getResultPV (double* resData, int nrx, int stx, int sty,

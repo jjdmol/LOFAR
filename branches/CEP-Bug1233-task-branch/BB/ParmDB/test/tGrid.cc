@@ -69,17 +69,13 @@ void testGrid()
   Axis::ShPtr ax0 (new RegularAxis(0,2,5));
   Axis::ShPtr ax1 (new RegularAxis(20,10,8));
   Grid grid(ax0, ax1);
-  ASSERT (grid.getId() == 0);
   check (grid);
   // Check assignment.
   Grid grid2;
-  ASSERT (grid2.getId() == 1);
   grid2 = grid;
-  ASSERT (grid2.getId() == 0);
   check (grid2);
   // Check copy constructor.
   Grid grid3(grid);
-  ASSERT (grid3.getId() == 0);
   check (grid3);
 }
 

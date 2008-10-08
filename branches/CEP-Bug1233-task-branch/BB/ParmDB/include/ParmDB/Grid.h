@@ -65,10 +65,6 @@ namespace BBS {
     GridRep(const vector<Box>& domains, const uint* indexVector)
       { setup (domains, indexVector); }
 
-    // Get the unique id.
-    int getId() const
-      { return itsId; }
-
     // Is it the default grid?
     bool isDefault() const
       { return itsIsDefault; }
@@ -95,9 +91,6 @@ namespace BBS {
 
     //# Data members.
     Axis::ShPtr itsAxes[2];
-    //# Unique seqnr of a Grid object. Used in class AxisMapping.
-    int         itsId;
-    static int  theirId;
     //# The hash value of the grid (for faster comparison).
     int64       itsHash;
     // Is it the default grid?
@@ -151,10 +144,6 @@ namespace BBS {
     // Is it the default grid?
     bool isDefault() const
     { return itsRep->isDefault(); }
-
-    // Get the unique grid id.
-    int getId() const
-      { return itsRep->getId(); }
 
     // Get the given axis.
     const Axis::ShPtr getAxis (size_t n) const

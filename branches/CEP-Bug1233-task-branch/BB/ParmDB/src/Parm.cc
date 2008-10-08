@@ -70,11 +70,12 @@ namespace BBS {
 
   vector<double> Parm::getCoeff (const Location& where, bool useMask)
   {
-    /// Keep mapping of solvegrid to domain grid because solveGrid can be part
-    /// of the work domain.
-    /// Maybe better to have a function to get all coeff for all solve domains?
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-    uint cellId = pvset.getGrid().getCellId (where);
+    // Find the location in the ParmValueSet grid given the location in
+    // the solve grid.
+    uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+					   where, itsSolveGrid,
+					   pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
     return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
   }
@@ -107,7 +108,9 @@ namespace BBS {
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     pvset.setDirty();
     const Array<bool>& mask = pvset.getSolvableMask();
-    uint cellId = pvset.getGrid().getCellId (where);
+    uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+					   where, itsSolveGrid,
+					   pvset.getGrid());
     ParmValue& pv = pvset.getParmValue(cellId);
     Array<double> values (pv.getValues());
     ASSERT (values.contiguousStorage());
@@ -169,7 +172,8 @@ namespace BBS {
       ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
       if (pvset.getFirstParmValue().hasCoeff()) {
 	// It is a funklet, so evaluate it.
-	getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations);
+	getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
+			itsCache->getAxisMappingCache());
       } else {
 	// We have scalar values, thus only one perturbed value.
 	// First get result and add perturbed value to it.
@@ -186,7 +190,8 @@ namespace BBS {
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     if (pvset.getFirstParmValue().hasCoeff()) {
       // It is a funklet, so evaluate it.
-      getResultCoeff (&result, predictGrid, pvset, vector<double>());
+      getResultCoeff (&result, predictGrid, pvset, vector<double>(),
+		      itsCache->getAxisMappingCache());
     } else if (pvset.getGrid().size() == 1) {
       // Optimize for the often occurring case of a single ParmValue object.
       const ParmValue& pval = pvset.getFirstParmValue();
@@ -196,17 +201,20 @@ namespace BBS {
 	result = pval.getValues();
       } else {
 	// There are multiple values, so use the ParmValue's grid.
-	getResultScalar (result, predictGrid, pval);
+	getResultScalar (result, predictGrid, pval,
+			 itsCache->getAxisMappingCache());
       }
     } else {
       // The hardest case; multiple ParmValues, possibly each with its own grid.
-      getResultScalar (result, predictGrid, pvset);
+      getResultScalar (result, predictGrid, pvset,
+		       itsCache->getAxisMappingCache());
     }
   }
 
   void Parm::getResultCoeff (Array<double>* resultVec, const Grid& predictGrid,
 			     const ParmValueSet& pvset,
-			     const vector<double>& perturbations)
+			     const vector<double>& perturbations,
+			     AxisMappingCache& axisMappingCache)
   {
     Array<double>& result = *resultVec;
     const Axis& paxisx = *predictGrid.getAxis(0);
@@ -214,9 +222,8 @@ namespace BBS {
     const Axis& daxisx = *pvset.getGrid().getAxis(0);
     const Axis& daxisy = *pvset.getGrid().getAxis(1);
     // Get the x and y axis mapping of predict grid to domain grid.
-    /// const AxisMapping& mapx = AxisMapping::getMapping (axisx, pvset.getGrid().getAxis(0));
-    AxisMapping mapx (paxisx, daxisx);
-    AxisMapping mapy (paxisy, daxisy);
+    const AxisMapping& mapx = axisMappingCache.get (paxisx, daxisx);
+    const AxisMapping& mapy = axisMappingCache.get (paxisy, daxisy);
     int nrdx = daxisx.size();
     const double* cenx = mapx.getScaledCenters();
     const double* ceny = mapy.getScaledCenters();
@@ -310,15 +317,16 @@ namespace BBS {
   }
 
   void Parm::getResultScalar (Array<double>& result, const Grid& predictGrid,
-			      const ParmValue& pval)
+			      const ParmValue& pval,
+			      AxisMappingCache& axisMappingCache)
   {
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);
     const Axis& daxisx = *pval.getGrid().getAxis(0);
     const Axis& daxisy = *pval.getGrid().getAxis(1);
     // Get the x and y axis mapping of predict grid to domain grid.
-    AxisMapping mapx (paxisx, daxisx);
-    AxisMapping mapy (paxisy, daxisy);
+    const AxisMapping& mapx = axisMappingCache.get (paxisx, daxisx);
+    const AxisMapping& mapy = axisMappingCache.get (paxisy, daxisy);
     int nrdx = daxisx.size();
     const double* data = pval.getValues().data();
     // Size the array as needed and get an iterator for it.
@@ -338,15 +346,16 @@ namespace BBS {
   }
 
   void Parm::getResultScalar (Array<double>& result, const Grid& predictGrid,
-			      const ParmValueSet& pvset)
+			      const ParmValueSet& pvset,
+			      AxisMappingCache& axisMappingCache)
   {
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);
     const Axis& saxisx = *pvset.getGrid().getAxis(0);
     const Axis& saxisy = *pvset.getGrid().getAxis(1);
     // Get the x and y axis mapping of predict grid to the set's domain grid.
-    AxisMapping mapx (paxisx, saxisx);
-    AxisMapping mapy (paxisy, saxisy);
+    const AxisMapping& mapx = axisMappingCache.get (paxisx, saxisx);
+    const AxisMapping& mapy = axisMappingCache.get (paxisy, saxisy);
     int nrsx = saxisx.size();
     // Get a raw pointer to the result data.
     bool deleteIt;

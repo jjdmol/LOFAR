@@ -89,6 +89,7 @@ void testMakeCoeff()
 // Test evaluating a polc for a single and multiple ParmValues.
 void testResultCoeff()
 {
+  AxisMappingCache axisCache;
   {
     // Test a set with a single ParmValue.
     Matrix<double> coeff(2,3);
@@ -103,7 +104,7 @@ void testResultCoeff()
     Axis::ShPtr axis2(new RegularAxis(0.5,1,4));
     Grid grid(axis1, axis2);
     Matrix<double> result;
-    Parm::getResultCoeff (&result, grid, pvset, vector<double>());
+    Parm::getResultCoeff (&result, grid, pvset, vector<double>(), axisCache);
     ASSERT (result.shape() == IPosition(2,3,4));
     for (int j=0; j<4; ++j) {
       double y = (j+1 - 0.5) / 4.;
@@ -140,7 +141,7 @@ void testResultCoeff()
     Axis::ShPtr axis2(new RegularAxis(0.5,1,4));
     Grid grid(axis1, axis2);
     Matrix<double> result;
-    Parm::getResultCoeff (&result, grid, pvset, vector<double>());
+    Parm::getResultCoeff (&result, grid, pvset, vector<double>(), axisCache);
     ASSERT (result.shape() == IPosition(2,3,4));
     for (int j=0; j<4; ++j) {
       double   y = (j+1 - 0.5) / 2.;
@@ -183,7 +184,7 @@ void testResultCoeff()
     Axis::ShPtr axis2(new RegularAxis(0.5,1,4));
     Grid grid(axis1, axis2);
     Array<double> results[7];
-    Parm::getResultCoeff (results, grid, pvset, pertc);
+    Parm::getResultCoeff (results, grid, pvset, pertc, axisCache);
     const Array<double>& result = results[0];
     ASSERT (result.shape() == IPosition(2,3,4));
     for (int j=0; j<4; ++j) {
@@ -229,6 +230,7 @@ void testResultCoeff()
 // Test a single ParmValue containing a scalar array.
 void testResultOneScalar()
 {
+  AxisMappingCache axisCache;
   // Test a ParmValue with an array of scalars.
   Matrix<double> coeff(2,3);
   indgen (coeff, 1.);     // initialize with 1,2,3,...
@@ -243,7 +245,7 @@ void testResultOneScalar()
     Axis::ShPtr axis2(new RegularAxis(1,1,4));
     Grid grid(axis1, axis2);
     Matrix<double> result;
-    Parm::getResultScalar (result, grid, pval);
+    Parm::getResultScalar (result, grid, pval, axisCache);
     ASSERT (result.shape() == IPosition(2,4,4));
     for (int j=0; j<4; ++j) {
       int y = (j<3 ? 0:1);
@@ -261,7 +263,7 @@ void testResultOneScalar()
     Axis::ShPtr axis2(new RegularAxis(0.5,1,12));
     Grid grid(axis1, axis2);
     Matrix<double> result;
-    Parm::getResultScalar (result, grid, pval);
+    Parm::getResultScalar (result, grid, pval, axisCache);
     ASSERT (result.shape() == IPosition(2,6,12));
     for (int j=0; j<12; ++j) {
       int y = j/4;
@@ -282,7 +284,7 @@ void testResultMultiScalar()
 int main()
 {
   try {
-    INIT_LOGGER("tParmSet");
+    INIT_LOGGER("tParm");
     testBasic();
     testMakeCoeff();
     testResultCoeff();

@@ -39,7 +39,7 @@ namespace BBS {
   void ParmCache::clear()
   {
     itsValueSets.clear();
-    itsDomainGrids.clear();
+    itsAxisCache.clear();
   }
 
   void ParmCache::reset (const Box& workDomain)

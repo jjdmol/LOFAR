@@ -49,7 +49,7 @@ namespace BBS {
 
 
   const AxisMapping& AxisMappingCache::makeMapping (const Axis& from,
-						    const Axis& to) const
+						    const Axis& to)
   {
     pair<map<AxisKey,AxisMapping>::iterator, bool> result = 
       itsCache.insert (make_pair(AxisKey(from.getId(), to.getId()),
@@ -59,6 +59,42 @@ namespace BBS {
     // Return the new mapping.
     return result.first->second;
   }
+
+
+  Location GridMapping::findLocation (AxisMappingCache& cache,
+				      const Location& location,
+				      const Grid& src,
+				      const Grid& dest)
+  {
+    const AxisMapping& mapx = cache.get (*src.getAxis(0), *dest.getAxis(0));
+    const AxisMapping& mapy = cache.get (*src.getAxis(1), *dest.getAxis(1));
+    return Location (mapx[location.first], mapy[location.second]);
+  }
+
+  Location GridMapping::findLocation (AxisMappingCache& cache,
+				      uint cellId,
+				      const Grid& src,
+				      const Grid& dest)
+  {
+    return findLocation (cache, src.getCellLocation(cellId), src, dest);
+  }
+
+  uint GridMapping::findCellId (AxisMappingCache& cache,
+				const Location& location,
+				const Grid& src,
+				const Grid& dest)
+  {
+    return dest.getCellId (findLocation (cache, location, src, dest));
+  }
+
+  uint GridMapping::findcellId (AxisMappingCache& cache,
+				uint cellId,
+				const Grid& src,
+				const Grid& dest)
+  {
+    return dest.getCellId (findLocation (cache, cellId, src, dest));
+  }
+
 
 } // namespace BBS
 } // namespace LOFAR
