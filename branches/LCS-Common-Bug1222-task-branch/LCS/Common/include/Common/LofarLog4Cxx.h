@@ -37,6 +37,8 @@
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 
+#include <cstring>
+
 namespace LOFAR {
 
   // \ingroup Common

@@ -38,6 +38,8 @@
 #include <log4cplus/configurator.h>
 #include <log4cplus/global-init.h>
 
+#include <cstring>
+
 namespace LOFAR {
 
 // \ingroup Common

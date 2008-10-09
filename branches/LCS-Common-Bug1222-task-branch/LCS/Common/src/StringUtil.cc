@@ -26,9 +26,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
-#include <iostream>
-#include <stdarg.h>
-#include <time.h>
+#include <Common/lofar_algorithm.h>
+#include <Common/lofar_iostream.h>
+#include <cstring>
+#include <cstdarg>
+#include <ctime>
 
 namespace LOFAR
 {
