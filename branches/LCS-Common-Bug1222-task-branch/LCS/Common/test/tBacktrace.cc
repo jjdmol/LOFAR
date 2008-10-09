@@ -23,19 +23,46 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#ifdef HAVE_BACKTRACE
-# include <Common/Backtrace.h>
-#endif
-#include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+#include <stdexcept>
+#include <iostream>
+#include <typeinfo>
+#include <cstdlib>
 
 using namespace LOFAR;
+using namespace std;
+
+Exception::TerminateHandler t(Exception::terminate);
 
 struct J
 { 
+  ~J()
+  {
+  }
+
   void doIt() 
   { 
-    ASSERTSTR(false, "Ouch!"); 
+//     terminate();
+//     throw;
+//     throw 1;
+//     throw runtime_error("Oops!");
+//     THROW (AssertError, "Ouch!"); 
+    LOFAR::Exception* excp;
+    char* p;
+    cerr << "sizeof(AssertError) = " << sizeof(AssertError) << endl;
+    try {
+      ostringstream oss;
+      oss << "cat /proc/" << getpid() << "/status";
+      while (true) {
+        system(oss.str().c_str());
+        p = new char[2000000];
+      }
+    } catch (std::bad_alloc&) {
+//       cerr << "Out of memory" << endl;
+//       throw std::runtime_error("Out of memory");
+//       throw AssertError("Out of memory", THROW_ARGS);
+      THROW (AssertError, "Out of memory");
+    }
   }
 };
 
@@ -95,11 +122,11 @@ struct A
 
 int main()
 {
-  INIT_LOGGER("tBacktrace");
-  try {
-    A().doIt();
-  } catch (Exception& e) {
-    std::cerr << e << std::endl;
-  }
+  //   set_terminate(myterminate);
+  //   try {
+  A().doIt();
+  //   } catch (Exception& e) {
+  //     cerr << e << endl;
+  //   }
   return 0;
 }

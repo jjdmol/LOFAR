@@ -28,6 +28,7 @@
 #include <Common/AddressTranslator.h>
 #include <iomanip>
 #include <iostream>
+#include <cstring>
 #include <execinfo.h>
 
 namespace LOFAR
@@ -47,7 +48,9 @@ namespace LOFAR
   void Backtrace::print(ostream& os) const
   {
     if (itsTrace.empty()) {
-      AddressTranslator()(itsTrace, itsAddr, itsNrAddr);
+      try {
+        AddressTranslator()(itsTrace, itsAddr, itsNrAddr);
+      } catch (std::bad_alloc&) {}
     }
       
     // Save the current fmtflags
@@ -55,12 +58,15 @@ namespace LOFAR
 
     os.setf(ios::left);
     for(int i = 1; i < itsNrAddr; ++i) {
+      if (i > 1) os << endl;
       os << "#" << setw(2) << i-1
-	 << " " << itsAddr[i]
-	 << " in " << itsTrace[i].function
-	 << " at " << itsTrace[i].file
-	 << ":"    << itsTrace[i].line << endl;
-      if (stopAtMain && itsTrace[i].function == "main") break;
+         << " " << itsAddr[i];
+      if (i < itsTrace.size()) {
+        os << " in " << itsTrace[i].function
+           << " at " << itsTrace[i].file
+           << ":"    << itsTrace[i].line;
+        if (stopAtMain && itsTrace[i].function == "main") break;
+      }
     }
 
     // Restore the fmtflags
