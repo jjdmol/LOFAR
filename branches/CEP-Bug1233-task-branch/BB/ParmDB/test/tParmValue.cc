@@ -112,7 +112,8 @@ void testRegularSet()
       domains.push_back (Box(Point(j*2,i*3), Point(j*2+2,i*3+3)));
     }
   }
-  ParmValueSet pset(ParmValue::Polc, 2e-6, false, Grid(domains), values);
+  ParmValueSet pset(Grid(domains), values, ParmValue(),
+		    ParmValue::Polc, 2e-6, false);
   ASSERT (pset.size() == 12);
   ASSERT (!pset.isDirty());
   ASSERT (pset.getPerturbation() == 2e-6);

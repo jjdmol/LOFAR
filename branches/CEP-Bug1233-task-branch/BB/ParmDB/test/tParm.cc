@@ -98,7 +98,8 @@ void testResultCoeff()
     pvec[0]->setCoeff (coeff);
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   6, 1)),
 		    Axis::ShPtr(new RegularAxis(0.5, 4, 1)));
-    ParmValueSet pvset(ParmValue::Polc, 1e-6, true, domainGrid, pvec);
+    ParmValueSet pvset(domainGrid, pvec, ParmValue(),
+		       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     Axis::ShPtr axis1(new RegularAxis(1,2,3));
     Axis::ShPtr axis2(new RegularAxis(0.5,1,4));
@@ -133,7 +134,8 @@ void testResultCoeff()
     // Use 2 domains in both x and y.
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
 		    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
-    ParmValueSet pvset(ParmValue::Polc, 1e-6, true, domainGrid, pvec);
+    ParmValueSet pvset(domainGrid, pvec, ParmValue(),
+		       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     // Note that the center of the middle x-cell is right on the border of
     // the parmvalue domains. It should take the right one below.
@@ -176,7 +178,8 @@ void testResultCoeff()
     // Use 2 domains in both x and y.
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
 		    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
-    ParmValueSet pvset(ParmValue::Polc, 1e-6, true, domainGrid, pvec);
+    ParmValueSet pvset(domainGrid, pvec, ParmValue(),
+		       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     // Note that the center of the middle x-cell is right on the border of
     // the parmvalue domains. It should take the right one below.
@@ -232,13 +235,13 @@ void testResultOneScalar()
 {
   AxisMappingCache axisCache;
   // Test a ParmValue with an array of scalars.
-  Matrix<double> coeff(2,3);
-  indgen (coeff, 1.);     // initialize with 1,2,3,...
+  Matrix<double> scalars(2,3);
+  indgen (scalars, 1.);     // initialize with 1,2,3,...
   // Form the grid belonging to the values.
   Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
 		  Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
   ParmValue pval;
-  pval.setValues (domainGrid, coeff);
+  pval.setValues (domainGrid, scalars);
   {
     // Form a predict grid which is a subset of the domain grid.
     Axis::ShPtr axis1(new RegularAxis(2,1,4));
@@ -251,7 +254,7 @@ void testResultOneScalar()
       int y = (j<3 ? 0:1);
       for (int i=0; i<4; ++i) {
 	int x = i/2;
-	double v = coeff(x,y);
+	double v = scalars(x,y);
 	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
 	ASSERT (casa::near (result(i,j), v));
       }
@@ -269,7 +272,7 @@ void testResultOneScalar()
       int y = j/4;
       for (int i=0; i<6; ++i) {
 	int x = i/3;
-	double v = coeff(x,y);
+	double v = scalars(x,y);
 	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
 	ASSERT (casa::near (result(i,j), v));
       }
@@ -277,11 +280,80 @@ void testResultOneScalar()
   }
 }
 
+// Test a multiple ParmValues containing scalar arrays.
 void testResultMultiScalar()
 {
+  AxisMappingCache axisCache;
+  // Creaste a few ParmValues with an array of scalars.
+  vector<ParmValue::ShPtr> parmValues;
+  for (uint j=0; j<4; ++j) {
+    for (uint i=0; i<4; ++i) {
+      Matrix<double> scalars(2,3);
+      indgen (scalars, 10.*(i+4*j));
+      // Form the grid belonging to the values.
+      Grid domainGrid(Axis::ShPtr(new RegularAxis( 6*i+1, 3, 2)),
+		      Axis::ShPtr(new RegularAxis(12*j+5, 4, 3)));
+      ParmValue pval;
+      pval.setValues (domainGrid, scalars);
+      parmValues.push_back (ParmValue::ShPtr(new ParmValue(pval)));
+    }
+  }
+  // Form the grid of the ParmValues.
+  Grid parmGrid(Axis::ShPtr(new RegularAxis(1,  6, 4)),
+		Axis::ShPtr(new RegularAxis(5, 12, 4)));
+  ParmValueSet pvset(parmGrid, parmValues);
+  {
+    // Form a predict grid which is a subset of the parm grid.
+    // Note that the x-width of a scalar value is 3, while predict width is 1.
+    // In y it is 4 and 2. So every 3 predicted x-values and 2 y-values
+    // have the same value.
+    Axis::ShPtr axis1(new RegularAxis(2, 1,12));
+    Axis::ShPtr axis2(new RegularAxis(11,2,18));
+    Grid grid(axis1, axis2);
+    // Get the result for this predict grid.
+    Matrix<double> result;
+    Parm::getResultScalar (result, grid, pvset, axisCache);
+    ASSERT (result.shape() == IPosition(2,12,18));
+    // Now check the result.
+    for (int iy=0; iy<18; ++iy) {
+      int pvy = (3+iy)/6;             // 6 y-values per ParmValue
+      int y = (((3+iy)%6) / 2) * 2;   // y-value in ParmValue
+      for (int ix=0; ix<12; ++ix) {
+	int pvx = (1+ix)/6;           // 6 x-values per ParmValue
+	int x = ((1+ix)%6) / 3;       // x-value in ParmValue
+	double v = x + 10*pvx + y + 40*pvy;
+	//cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
+	ASSERT (casa::near (result(ix,iy), v));
+      }
+    }
+  }
+  {
+    // Form a predict grid for the entire domain grid.
+    Axis::ShPtr axis1(new RegularAxis(1,1,24));
+    Axis::ShPtr axis2(new RegularAxis(5,1,48));
+    Grid grid(axis1, axis2);
+    // Get the result for this predict grid.
+    Matrix<double> result;
+    Parm::getResultScalar (result, grid, pvset, axisCache);
+    ASSERT (result.shape() == IPosition(2,24,48));
+    // Now check the result.
+    for (int iy=0; iy<48; ++iy) {
+      int pvy = (iy)/12;             // 6 y-values per ParmValue
+      int y = (((iy)%12) / 4) * 2;   // y-value in ParmValue
+      for (int ix=0; ix<24; ++ix) {
+	int pvx = (ix)/6;            // 6 x-values per ParmValue
+	int x = ((ix)%6) / 3;        // x-value in ParmValue
+	double v = x + 10*pvx + y + 40*pvy;
+	//cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
+	ASSERT (casa::near (result(ix,iy), v));
+      }
+    }
+  }
 }
 
-void testAll()
+// Test the Parm::getCoeff and setCoeff functions.
+// It writes into the ParmDB, which is checked by testSetGetCoeff2.
+void testSetGetCoeff1()
 {
   // Create parmdb and write default values in it.
   ParmDB pdb(ParmDBMeta("casa", "tParm_tmp.tab1"), true);
@@ -333,6 +405,51 @@ void testAll()
     }
   }
   // Set coefficients 
+  vector<double> newCoeff(5);
+  for (uint i=0; i<newCoeff.size(); ++i) {
+    newCoeff[i] = (i+1)*0.1;
+  }
+  parmdc.setCoeff (Location(0,0), &(newCoeff[0]), newCoeff.size());
+  vector<double> coeffdc = parmdc.getCoeff (Location(0,0));
+  ASSERT (coeffdc.size() == newCoeff.size());
+  for (uint i=0; i<coeffdc.size(); ++i) {
+    ASSERT (coeffdc[i] == (i+1)*0.1);
+  }
+  parmCache.flush();
+}
+
+// Check if values were correctly written by testSetGetCoeff1.
+void testSetGetCoeff2()
+{
+  // Open the parmdb (written by testSetGetCoeff1).
+  ParmDB pdb(ParmDBMeta("casa", "tParm_tmp.tab1"));
+  // Create parmset.
+  ParmSet parmset;
+  parmset.addParm (pdb, "dec");
+  Box workDomain(make_pair(3,4), make_pair(10,12));
+  // Create the cache and fill for the work domain.
+  ParmCache parmCache(parmset, workDomain);
+  // Create the parms.
+  Parm parmdc(parmCache, "dec");
+  // Set a solve grid (from (4,6) till (9,10))
+  Axis::ShPtr ax02 (new RegularAxis(4,1,3));
+  Axis::ShPtr ax12 (new RegularAxis(6,2,2));
+  Grid grid2(ax02, ax12);
+  parmdc.setSolveGrid (grid2);
+  {
+    // Check the coeff of the non-first solve grid cell.
+    vector<double> coeffdc = parmdc.getCoeff (Location(1,1));
+    ASSERT (coeffdc.size() == 5);
+    for (uint i=0; i<coeffdc.size(); ++i) {
+      ASSERT (coeffdc[i] == i+10);
+    }
+    // Check the coeff of the first solve grid cell.
+    coeffdc = parmdc.getCoeff (Location(0,0));
+    ASSERT (coeffdc.size() == 5);
+    for (uint i=0; i<coeffdc.size(); ++i) {
+      ASSERT (coeffdc[i] == (i+1)*0.1);
+    }
+  }
 }
 
 int main()
@@ -344,7 +461,8 @@ int main()
     testResultCoeff();
     testResultOneScalar();
     testResultMultiScalar();
-    testAll();
+    testSetGetCoeff1();
+    testSetGetCoeff2();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

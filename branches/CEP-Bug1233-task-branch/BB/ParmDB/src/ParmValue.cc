@@ -59,6 +59,7 @@ namespace BBS {
 
   void ParmValue::copyOther (const ParmValue& that)
   {
+    itsGrid     = that.itsGrid;
     itsRowId    = that.itsRowId;
     itsHasCoeff = that.itsHasCoeff;
     itsValues.assign (that.itsValues);     // ensure a copy is made
@@ -113,11 +114,11 @@ namespace BBS {
       itsDirty        (false)
   {}
 
-  ParmValueSet::ParmValueSet (ParmValue::FunkletType type,
-			      double perturbation, bool pertRel,
-			      const Grid& domainGrid,
+  ParmValueSet::ParmValueSet (const Grid& domainGrid,
 			      const std::vector<ParmValue::ShPtr>& values,
-			      const ParmValue& defaultValue)
+			      const ParmValue& defaultValue,
+			      ParmValue::FunkletType type,
+			      double perturbation, bool pertRel)
     : itsType         (type),
       itsPerturbation (perturbation),
       itsPertRel      (pertRel),

@@ -84,10 +84,14 @@ namespace BBS {
 
     // Set the coefficients for the given location in the solve grid.
     // The solve grid must have been set before.
+    // It sets the dirty flag, so the data are written when the ParmCache
+    // is flushed.
     void setCoeff (const Location&, const double* values, uint nvalues,
 		   bool useMask=true);
 
     // Revert to the original coefficients (as on disk).
+    // (not implemented yet).
+    // It clears the dirty flag.
     void revertCoeff();
     // </group>
 

@@ -113,6 +113,6 @@ namespace BBS {
   // @}
 
 } //# end namespace BBS
-} //# end namspace LOFAR
+} //# end namespace LOFAR
 
 #endif

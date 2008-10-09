@@ -357,23 +357,26 @@ namespace BBS {
     const AxisMapping& mapx = axisMappingCache.get (paxisx, saxisx);
     const AxisMapping& mapy = axisMappingCache.get (paxisy, saxisy);
     int nrsx = saxisx.size();
-    // Get a raw pointer to the result data.
+    // Size the array as needed and get a raw pointer to the result data.
+    result.resize (IPosition(2, paxisx.size(), paxisy.size()));
     bool deleteIt;
-    double* resData= result.getStorage (deleteIt);
+    double* resData = result.getStorage (deleteIt);
     int nrx = result.shape()[0];
     // Loop through the cells of pvset's grid.
     // Each cell is a ParmValue with its own grid.
     // Fill a part of the result from the ParmValue.
     const vector<int>& bordersx = mapx.getBorders();
     const vector<int>& bordersy = mapy.getBorders();
-    int stx = 0;
     int sty = 0;
     for (uint iy=0; iy<bordersy.size(); ++iy) {
       int inxy = nrsx * mapy[sty];
+      int stx = 0;
       for (uint ix=0; ix<bordersx.size(); ++ix) {
 	getResultPV (resData, nrx, stx, sty, bordersx[ix], bordersy[iy],
 		     pvset.getParmValue (mapx[stx] + inxy), predictGrid);
+	stx = bordersx[ix];
       }
+      sty = bordersy[iy];
     }
     result.putStorage(resData, deleteIt);
   }
@@ -396,12 +399,12 @@ namespace BBS {
     int inxx = 0;
     for (int iy=sty; iy<endy; ++iy) {
       // Set result pointer to the beginning of this chunk.
-      resData += iy*nrx + stx;
+      double* rData = resData + iy*nrx + stx;
       inxy = daxisy.locate (paxisy.center(iy), true, inxy);
       const double* pData = data + inxy*nrdx;
       for (int ix=stx; ix<endx; ++ix) {
 	inxx = daxisx.locate (paxisx.center(ix), true, inxx);
-	*resData++ = pData[inxx];
+	*rData++ = pData[inxx];
       }
     }
   }

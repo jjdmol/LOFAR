@@ -141,10 +141,10 @@ void testPutValues()
       domains.push_back (Box(Point(j*2,i*3), Point(j*2+2,i*3+3)));
     }
   }
-  ParmValueSet pset1(ParmValue::Polc, 2e-6, false,
-		     Grid(domains), values1);
-  ParmValueSet pset2(ParmValue::Polc, 2e-6, true,
-		     Grid(domains), values2);
+  ParmValueSet pset1(Grid(domains), values1, ParmValue(),
+		     ParmValue::Polc, 2e-6, false);
+  ParmValueSet pset2(Grid(domains), values2, ParmValue(),
+		     ParmValue::Polc, 2e-6, true);
   // Write arrays, thus one row per domain will be used.
   int nameId = -1;             // test.ra1 is a new name
   pdb.putValues ("test1.ra1", nameId, pset1);

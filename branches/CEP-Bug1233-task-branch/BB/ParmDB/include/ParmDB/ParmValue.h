@@ -156,11 +156,12 @@ namespace BBS {
     // If not defined, get it from the default parameter values resulting
     // in a ParmValue with a single domain.
     // An exception is thrown if not found in the defaults either.
-    ParmValueSet (ParmValue::FunkletType type,
-		  double perturbation, bool pertRel,
-		  const Grid& domainGrid,
+    ParmValueSet (const Grid& domainGrid,
 		  const std::vector<ParmValue::ShPtr>& values,
-		  const ParmValue& defaultValue = ParmValue());
+		  const ParmValue& defaultValue = ParmValue(),
+		  ParmValue::FunkletType type = ParmValue::Polc,
+		  double perturbation = 1e-6,
+		  bool pertRel = true);
 
     // Create the parameterset for the given grid from the given ParmValueSet
     // which should have only one ParmValue.

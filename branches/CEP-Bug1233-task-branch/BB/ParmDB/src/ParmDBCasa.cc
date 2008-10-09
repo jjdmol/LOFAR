@@ -330,8 +330,8 @@ void ParmDBCasa::getValues (vector<ParmValueSet>& psets,
 	values.push_back (pval);
 	domains.push_back (Box(Point(sx,sy), Point(ex,ey)));
       }
-      pvset = ParmValueSet (type, pertCol(id), prelCol(id),
-			    domains, values);
+      pvset = ParmValueSet (domains, values, ParmValue(),
+			    type, pertCol(id), prelCol(id));
     } else {
       // No matching values, so get default value.
       // Use perturbation, etc. from NAMES table.
