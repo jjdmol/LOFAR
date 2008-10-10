@@ -70,6 +70,7 @@ namespace BBS {
 
   vector<double> Parm::getCoeff (const Location& where, bool useMask)
   {
+    ASSERT (! itsSolveGrid.isDefault());
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     // Find the location in the ParmValueSet grid given the location in
     // the solve grid.
@@ -77,7 +78,14 @@ namespace BBS {
 					   where, itsSolveGrid,
 					   pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
-    return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
+    if (pv.hasCoeff()) {
+	return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
+    }
+    // An array of scalar values; get the right one.
+    cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+				      where, itsSolveGrid,
+				      pv.getGrid());
+    return vector<double> (1, pv.getValues().data()[cellId]);
   }
 
   vector<double> Parm::makeCoeff (const Array<double>& values,
@@ -105,36 +113,54 @@ namespace BBS {
 		       const double* newValues, uint nvalues,
 		       bool useMask)
   {
+    ASSERT (! itsSolveGrid.isDefault());
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     pvset.setDirty();
     const Array<bool>& mask = pvset.getSolvableMask();
     uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
 					   where, itsSolveGrid,
 					   pvset.getGrid());
+    bool cell0changed = (cellId==0);
     ParmValue& pv = pvset.getParmValue(cellId);
-    Array<double> values (pv.getValues());
+    Array<double>& values (pv.getValues());
     ASSERT (values.contiguousStorage());
-    if (!useMask  ||  mask.size() == 0) {
-      ASSERT (nvalues == values.size());
-      std::copy (newValues, newValues+nvalues, values.cbegin());
-      return;
-    }
-    ASSERT (values.shape().isEqual(mask.shape()) && mask.contiguousStorage());
-    double* valp = values.data();
-    const bool* maskp  = mask.data();
-    for (uint i=0; i<values.size(); ++i) {
-      if (maskp[i]) {
-	valp[i] = newValues[i];
-	nvalues--;
+    if (pv.hasCoeff()) {
+      if (!useMask  ||  mask.size() == 0) {
+	// Coefficients without a mask; copy all.
+	ASSERT (nvalues == values.size());
+	std::copy (newValues, newValues+nvalues, values.cbegin());
+      } else {
+	// Only copy values where mask is true.
+	ASSERT (values.shape().isEqual(mask.shape()) &&
+		mask.contiguousStorage());
+	double* valp = values.data();
+	const bool* maskp  = mask.data();
+	for (uint i=0; i<values.size(); ++i) {
+	  if (maskp[i]) {
+	    valp[i] = newValues[i];
+	    nvalues--;
+	  }
+	}
+	ASSERT (nvalues == 0);  // make sure everything is copied
       }
+    } else {
+      // A scalar array; copy to the correct cell.
+      ASSERT (nvalues == 1);
+      cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+					where, itsSolveGrid,
+					pv.getGrid());
+      values.data()[cellId] = newValues[0];
+      cell0changed = (cellId==0);
     }
-    ASSERT (nvalues == 0);
     // Coefficients have changed, so recalculate the perturbations.
-    calcPerturbations();
+    if (cell0changed) {
+      calcPerturbations();
+    }
   }
 
   void Parm::revertCoeff()
   {
+    ASSERT (! itsSolveGrid.isDefault());
     // Moet ik nog over nadenken.
     // Coefficients have changed, so recalculate the perturbations.
     calcPerturbations();
@@ -144,8 +170,13 @@ namespace BBS {
   {
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     const ParmValue& pv = pvset.getFirstParmValue();
-    itsPerturbations = makeCoeff (pv.getValues(), pvset.getSolvableMask(),
-				  true);
+    if (pv.hasCoeff()) {
+      itsPerturbations = makeCoeff (pv.getValues(), pvset.getSolvableMask(),
+				    true);
+    } else {
+      itsPerturbations.resize (1);
+      itsPerturbations[0] = pv.getValues().data()[0];
+    }
     double perturbation = pvset.getPerturbation();
     for (vector<double>::iterator iter=itsPerturbations.begin();
 	 iter!=itsPerturbations.end(); ++iter) {
@@ -177,6 +208,7 @@ namespace BBS {
       } else {
 	// We have scalar values, thus only one perturbed value.
 	// First get result and add perturbed value to it.
+	DBGASSERT (itsPerturbations.size() == 1);
 	getResult (result[0], predictGrid);
 	result[1].resize (result[0].shape());
 	result[1] = result[0] + itsPerturbations[0];

@@ -53,11 +53,11 @@ namespace BBS {
 
     // Link to the DBRep by incrementing the count.
     void link()
-    { itsCount++; }
+      { itsCount++; }
 
     // Unlink by decrementing the count.
     int unlink()
-    { return --itsCount; }
+      { return --itsCount; }
 
     // Writelock and unlock the database tables.
     // The user does not need to lock/unlock, but it can increase performance
@@ -147,23 +147,23 @@ namespace BBS {
     // Set or get the name and type.
     // <group>
     void setParmDBMeta (const ParmDBMeta& ptm)
-    { itsPTM = ptm; }
+      { itsPTM = ptm; }
     const ParmDBMeta& getParmDBMeta() const
-    { return itsPTM; }
+      { return itsPTM; }
     // </group>
 
     // Set or get ParmDB sequence nr.
     // <group>
     void setParmDBSeqNr (int seqnr)
-    { itsSeqNr = seqnr; }
+      { itsSeqNr = seqnr; }
     int getParmDBSeqNr() const
-    { return itsSeqNr; }
+      { return itsSeqNr; }
     // </group>
 
     // Set the default value map to being not filled.
     // This is needed after a delete, etc.
     void clearDefFilled()
-    { itsDefFilled = false; }
+      { itsDefFilled = false; }
 
   private:
     // Fill the map with default values.

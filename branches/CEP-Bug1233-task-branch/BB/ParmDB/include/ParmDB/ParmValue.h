@@ -97,8 +97,12 @@ namespace BBS {
       { return itsHasCoeff; }
 
     // Get the values.
+    // <group>
     const casa::Array<double>& getValues() const
       { return itsValues; }
+    casa::Array<double>& getValues()
+      { return itsValues; }
+    // </group>
 
     // Get the grid.
     const Grid& getGrid() const

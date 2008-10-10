@@ -93,7 +93,6 @@ namespace BBS {
     // (not implemented yet).
     // It clears the dirty flag.
     void revertCoeff();
-    // </group>
 
     // Get the perturbations for the coefficients.
     // The possible mask is applied.
@@ -110,9 +109,7 @@ namespace BBS {
     // Note that it is possible to first create a correctly sized MeqMatrix
     // and create the Array from its raw storage. In that way the Array
     // data does not need to be copied to the MeqMatrix.
-    // <group>
     void getResult (casa::Array<double>& result, const Grid& predictGrid);
-    // </group>
 
     // Get the values for the given predict grid.
     // The parm value is taken that contains the middle of a
@@ -121,10 +118,8 @@ namespace BBS {
     // Otherwise only the first array in the vector is filled in.
     // As above, the shape of the array is normally [nx,ny],
     // but can be [1,1] if constant.
-    // <group>
     void getResult (vector<casa::Array<double> >& result,
 		    const Grid& predictGrid, bool perturb);
-    // </group>
 
     // Form the coefficients vector from values and mask.
     static vector<double> makeCoeff (const casa::Array<double>& values,

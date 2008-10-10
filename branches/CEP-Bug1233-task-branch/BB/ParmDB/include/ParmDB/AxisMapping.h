@@ -79,7 +79,42 @@ namespace BBS {
   private:
     vector<int>    itsMapping;   //# cellnr in to for from-cell i
     vector<double> itsCenters;   //# center of from-cell i scaled to to-cell
-    vector<int>    itsBorders;   //# last from-cell mapped to same to-cell
+    vector<int>    itsBorders;   //# last from-cell mapped to same to-cell i
+  };
+
+
+  // This class caches Grid objects. It is used to achieve that parameters
+  // with equal domains share the same Axis objects. In this way
+  // the AxisMapping objects can also be shared which can improve the
+  // performance.
+  //
+  // The cache consists of two parts:
+  // <ol>
+  //  <li> A map of axis ID to Axis objects is used to know which Axis
+  // objects are available and to find them by Axis ID.
+  //  <li> Another map is used to find the possible pair of Axis objects
+  // that form a Grid with a given hash value. Note that different Grids
+  // might map to the same hash value, although in practice that will
+  // hardly ever occur.
+  class AxisCache
+  {
+  public:
+    // Get a Grid object for the given domains.
+    // It adds Axis objects to the cache if they are new.
+    Grid getGrid (const vector<Box>& domains);
+
+    // Test if an Axis object equal to the given one occurs in the cache.
+    // If so, return that object. Otherwise add the Axis to the cache.
+    Axis::ShPtr getAxis (const Axis& axis);
+
+    // Clear the cache.
+    void clear()
+      { itsGridCache.clear(); itsAxisCache.clear(); }
+
+  private:
+    //# Data members
+    map<int64,vector<pair<int,int> > > itsGridCache;
+    map<int, Axis::ShPtr>              itsAxisCache;
   };
 
 
@@ -117,7 +152,7 @@ namespace BBS {
 
     // Find the possible mapping of axis 'from' to axis 'to'.
     // If no existing, create it.
-    const AxisMapping& get (const Axis& from,const Axis& to)
+    const AxisMapping& get (const Axis& from, const Axis& to)
     {
       map<AxisKey,AxisMapping>::const_iterator iter =
 	itsCache.find(AxisKey(from.getId(), to.getId()));

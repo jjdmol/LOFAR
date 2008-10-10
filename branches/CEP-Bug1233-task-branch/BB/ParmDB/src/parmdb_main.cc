@@ -1,4 +1,4 @@
-//# parmdb.cc: put values in the database used for MNS
+//# parmdb_main.cc: put values in the ParmDB database
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -62,11 +62,6 @@ enum PTCommand {
   NEWDEF,
   UPDDEF,
   DELDEF,
-  SHOWOLD,
-  NAMESOLD,
-  UPDOLD,
-  DELOLD,
-  TOOLD,
   QUIT
 };
 
@@ -115,13 +110,6 @@ void showHelp()
   cerr << " add parmname domain= valuespec" << endl;
   cerr << " update parmname_pattern [domain=] valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
-  cerr << endl;
-  cerr << " toold parmname_pattern [domain=] [newparentid=]" << endl;
-  cerr << endl;
-  cerr << " showold [parmname_pattern] [domain=...] [parentid=...]" << endl;
-  cerr << " namesold [parmname_pattern]" << endl;
-  cerr << " updateold parmname_pattern [domain=] valuespec" << endl;
-  cerr << " removeold parmname_pattern [domain=]" << endl;
   cerr << endl;
   cerr << "  domain gives an N-dim domain (usually n is 2) as:" << endl;
   cerr << "      domain=[stx,endx,sty,endy,...]" << endl;
@@ -178,16 +166,6 @@ PTCommand getCommand (char*& str)
     cmd = UPDDEF;
   } else if (sc == "deletedef"  ||  sc == "removedef"  || sc == "erasedef") {
     cmd = DELDEF;
-  } else if (sc == "showold"  ||  sc == "listold") {
-    cmd = SHOWOLD;
-  } else if (sc == "namesold") {
-    cmd = NAMESOLD;
-  } else if (sc == "updateold") {
-    cmd = UPDOLD;
-  } else if (sc == "deleteold"  ||  sc == "removeold"  || sc == "eraseold") {
-    cmd = DELOLD;
-  } else if (sc == "toold") {
-    cmd = TOOLD;
   } else if (sc == "open") {
     cmd = OPEN;
   } else if (sc == "close") {
@@ -421,9 +399,7 @@ void showNames (const string& pattern, PTCommand type)
 {
   vector<string> names;
   if (type == NAMES) {
-    names = parmtab->getNames (pattern, ParmDBRep::UseNormal);
-  } else if (type == NAMESOLD) {
-    names = parmtab->getNames (pattern, ParmDBRep::UseHistory);
+    names = parmtab->getNames (pattern);
   } else {
     map<string,ParmValueSet> parmset;
     parmtab->getDefValues (parmset, pattern);
@@ -793,8 +769,8 @@ void doIt (bool noPrompt)
 	    KeyValueMap kvmap = KeyParser::parse (cstr);
 	    // For list functions the parmname defaults to *.
 	    // Otherwise a parmname or pattern must be given.
-	    if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF && cmd!=SHOWOLD &&
-		cmd!=NAMES && cmd!=NAMESDEF && cmd!=NAMESOLD) {
+	    if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
+		cmd!=NAMES && cmd!=NAMESDEF) {
 	      ASSERTSTR (!parmName.empty(), "No parameter name given");
 	    } else if (parmName.empty()) {
 	      parmName = "*";
@@ -821,8 +797,7 @@ void doIt (bool noPrompt)
 		cout << "Deleted " << nrparm << " default parm value records"
 		     << endl;
 	      }
-	    } else if (cmd==NEW || cmd==UPD || cmd==DEL || cmd==SHOW ||
-		       cmd==TOOLD) {
+	    } else if (cmd==NEW || cmd==UPD || cmd==DEL || cmd==SHOW) {
 	      // Read the given parameters and domains.
 	      ParmDomain domain = getDomain(kvmap);
 	      int defaultParentId = (cmd==NEW ? 0 : -1);
@@ -847,35 +822,8 @@ void doIt (bool noPrompt)
 		parmtab->deleteValues (parmName, domain, parentId);
 		cout << "Deleted " << nrvalrec << " value records (of "
 		     << nrparm << " parms)" << endl;
-	      } else if (cmd == TOOLD) {
-		ASSERTSTR (! parmset.empty(), "parameter/domain not found");
-		moveParms (parmName, domain, parentId, parmset, kvmap);
-		cout << "Moved " << nrvalrec << " value records (of "
-		     << nrparm << " parms)" << endl;
 	      }
-	    } else if (cmd==UPDOLD || cmd==DELOLD || cmd==SHOWOLD) {
-	      // Read the given parameters and domains.
-	      ParmDomain domain = getDomain(kvmap);
-	      int parentId = kvmap.getInt ("parentid", -1);
-	      map<string,ParmValueSet> parmset;
-	      parmtab->getValues (parmset, parmName, domain, parentId,
-				  ParmDBRep::UseHistory);
-	      int nrparm = parmset.size();
-	      int nrvalrec = countParms (parmset);
-	      if (cmd == SHOWOLD) {
-		showParms (parmset, true);
-	      } else if (cmd == UPDOLD) {
-		ASSERTSTR (! parmset.empty(), "parameter/domain not found");
-		updateParms (parmset, kvmap, ParmDBRep::UseHistory);
-		cout << "Updated " << nrvalrec << " old value records (of "
-		     << nrparm << " parms)" << endl;
-	      } else if (cmd == DELOLD) {
-		ASSERTSTR (! parmset.empty(), "parameter/domain not found");
-		parmtab->deleteValues (parmName, domain, parentId);
-		cout << "Deleted " << nrvalrec << " old value records (of "
-		     << nrparm << " parms)" << endl;
-	      }
-	    } else if (cmd==NAMES || cmd==NAMESOLD || cmd==NAMESDEF)  {
+	    } else if (cmd==NAMES || cmd==NAMESDEF)  {
 	      // show names matching the pattern.
 	      showNames (parmName, cmd);
 	    } else if (cmd == RANGE) {

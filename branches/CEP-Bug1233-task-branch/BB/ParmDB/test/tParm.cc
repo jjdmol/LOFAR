@@ -452,6 +452,95 @@ void testSetGetCoeff2()
   }
 }
 
+// Test getting perturbed values for scalar values.
+void testScalarPert()
+{
+  // Create parmdb and write default values in it.
+  ParmDB pdb(ParmDBMeta("casa", "tParm_tmp.tab2"), true);
+  // Create parmset.
+  ParmSet parmset;
+  parmset.addParm (pdb, "gain");
+  Box workDomain(make_pair(3,4), make_pair(10,12));
+  // Create the cache and fill for the work domain.
+  ParmCache parmCache(parmset, workDomain);
+  // Create the parms.
+  Parm parmg(parmCache, "gain");
+  // Getting or setting coeff should not work now.
+  bool ok = false;
+  try {
+    parmg.getCoeff(Location(0,0));
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+    ok = true;
+  }
+  ASSERT (ok);
+  ok = false;
+  try {
+    parmg.setCoeff(Location(0,0), 0, 0);
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+    ok = true;
+  }
+  ASSERT (ok);
+  // Now we want to set values for the parm.
+  Matrix<double> scalars(2,3);
+  indgen (scalars, 10.);
+  // This requires it to be made solvable, so make solve grid.
+  Grid solveGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
+		 Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
+  parmg.setSolveGrid (solveGrid);
+  // Set the values for each cell.
+  for (int i=0; i<6; ++i) {
+    parmg.setCoeff(solveGrid.getCellLocation(i), scalars.data()+i, 1);
+  }
+  // Check them.
+  for (int i=0; i<6; ++i) {
+    vector<double> v = parmg.getCoeff(solveGrid.getCellLocation(i));
+    ASSERT (v.size() == 1);
+    ASSERT (v[0] == scalars.data()[i]);
+  }
+  {
+    // Form a predict grid which is a subset of the domain grid.
+    Axis::ShPtr axis1(new RegularAxis(2,1,4));
+    Axis::ShPtr axis2(new RegularAxis(1,1,4));
+    Grid grid(axis1, axis2);
+    Matrix<double> result;
+    parmg.getResult (result, grid);
+    ASSERT (result.shape() == IPosition(2,4,4));
+    for (int j=0; j<4; ++j) {
+      int y = (j<3 ? 0:1);
+      for (int i=0; i<4; ++i) {
+	int x = i/2;
+	double v = scalars(x,y);
+	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+	ASSERT (casa::near (result(i,j), v));
+      }
+    }
+  }
+  {
+    // Form a predict grid for the entire domain grid.
+    Axis::ShPtr axis1(new RegularAxis(1,1,6));
+    Axis::ShPtr axis2(new RegularAxis(0.5,1,12));
+    Grid grid(axis1, axis2);
+    vector<Array<double> > resultVec;
+    parmg.getResult (resultVec, grid, true);
+    ASSERT (resultVec.size() == 2);
+    Matrix<double> result(resultVec[0]);
+    Matrix<double> pert(resultVec[1]);
+    ASSERT (result.shape() == IPosition(2,6,12));
+    for (int j=0; j<12; ++j) {
+      int y = j/4;
+      for (int i=0; i<6; ++i) {
+	int x = i/3;
+	double v = scalars(x,y);
+	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+	ASSERT (casa::near (result(i,j), v));
+	ASSERT (casa::near (pert(i,j), v + scalars(0,0)*1e-6));
+      }
+    }
+  }
+}
+
 int main()
 {
   try {
@@ -463,6 +552,7 @@ int main()
     testResultMultiScalar();
     testSetGetCoeff1();
     testSetGetCoeff2();
+    testScalarPert();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
