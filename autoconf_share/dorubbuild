@@ -225,7 +225,7 @@ do
   buildmsg1=`eval echo $buildmsgst`
   buildmsg2=`eval echo $buildmsgend`
   if [ $buildmake = 1 ]; then
-    eval "($initcmd $ksep $confcmd $makecmd $ksep echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> $logfile 2>&1
+    eval "($initcmd $ksep $confcmd $makecmd && echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> $logfile 2>&1
     stat=$?
   else
     eval "($initcmd $ksep $confcmd $makecmd; exit "'$?)' >> $logfile 2>&1
