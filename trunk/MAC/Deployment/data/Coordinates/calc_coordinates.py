@@ -21,6 +21,7 @@ Conversion between ETRS89 and ITRS2000 coordinates based on
 def print_help():
     print "Usage: calc_coordinates <stationname> <objecttype> date"
     print "    <objecttype>: LBA|HBA|marker"
+    print "    <date>      : yyyy.yy e.g. 2008.75 for Oct 1st 2008"
 
 def subtract(a,b):
     return [x-y for x,y in zip(a,b)]
