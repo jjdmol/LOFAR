@@ -143,5 +143,3 @@ if __name__ == '__main__':
         db.query("select * from add_object('%s','%s',%s)" % ( stationname, objecttype, number))
         # add the coord.
         db.query("select * from add_ref_coord('%s','%s',%s,%s,%s,%s,%s,%s,%s,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" % ( stationname, objecttype, number, X, Y, Z, sX, sY, sZ, refSys, refFrame, method, date, pers1, pers2, pers3, absRef, derived, comment))
-	
-

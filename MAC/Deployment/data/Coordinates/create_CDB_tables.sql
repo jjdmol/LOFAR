@@ -64,6 +64,29 @@ CREATE TABLE reference_coord (
 
 
 --
+-- transformation
+--
+CREATE SEQUENCE transformation_ID;
+CREATE TABLE transformation (
+	ID				INT4			DEFAULT nextval('transformation_ID'),
+	from_frame		VARCHAR(10)		NOT NULL REFERENCES reference_frame(name),
+	to_frame		VARCHAR(10)		NOT NULL REFERENCES reference_frame(name),
+	target_date		FLOAT4			NOT NULL,
+	Tx				FLOAT8			NOT NULL,
+	Ty				FLOAT8			NOT NULL,
+	Tz				FLOAT8			NOT NULL,
+	sf				FLOAT8			NOT NULL,
+	Rx				FLOAT8			NOT NULL,
+	Ry				FLOAT8			NOT NULL,
+	Rz				FLOAT8			NOT NULL,
+	person1			VARCHAR(30)		NOT NULL REFERENCES personnel(name),
+	person2			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
+	comment			TEXT,
+	
+	CONSTRAINT	transformation_uniq	UNIQUE(from_frame,to_frame,target_date)
+) WITHOUT OIDS;
+
+--
 -- generated_coord
 --
 CREATE TABLE generated_coord (
