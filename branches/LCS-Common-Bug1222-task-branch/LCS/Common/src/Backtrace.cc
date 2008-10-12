@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/Backtrace.h>
 #include <Common/AddressTranslator.h>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <cstring>
