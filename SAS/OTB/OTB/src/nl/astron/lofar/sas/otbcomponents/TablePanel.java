@@ -97,7 +97,16 @@ public class TablePanel extends javax.swing.JPanel {
 
     /** set the selected Row
      *
-     * @param aRow the selected Row
+     * @param sRow - the selected startRow
+     * @param eRow - the selected endRow
+     */
+    public void setSelectedRow(int sRow,int eRow) {
+        jTable1.getSelectionModel().setSelectionInterval(sRow, eRow);
+    }
+
+    /** set the selected Row with ID=anID
+     *
+     * @param anID the selected ID
      */
     public void setSelectedID(int anID) {
         int IDcol=-1;
