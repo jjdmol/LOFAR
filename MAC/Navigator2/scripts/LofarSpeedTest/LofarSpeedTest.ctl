@@ -951,9 +951,7 @@ void centralFromTwoStations100IntTo10() {
     writeCollection("","Int");
   } else if (stationName == "" ) {
     DebugTN("Will start reading 100 series of 10 Int values from Stations");
-    readCollection(STATION1,"Int");
-    readCollection(STATION2,"Int");
-    
+    readCollectionFromTwo(STATION1,STATION2,"Int");
   }
 }
 
@@ -1017,9 +1015,8 @@ void centralFromTwoStations100IntTo10x1() {
     writeSingleCollection("","Int");
   } else if (stationName == "" ) {
     DebugTN("Will start reading 100 series of 10 (Single) Int values from Stations");
-    readSingleCollection(STATION1,"Int");
-    readSingleCollection(STATION2,"Int");
-    
+    readSingleCollectionFromTwo(STATION1,STATION2,"Int");
+
   }
 }
 
@@ -1284,12 +1281,8 @@ void centralFromFourStations100IntTo10() {
     writeCollection("","Int");
   } else {
     DebugTN("Will start reading 100 series of 10 Int values from Stations");
-    readCollection(STATION1,"Int");
-    readCollection(STATION2,"Int");
-    readCollection(STATION3,"Int");
-    readCollection(STATION4,"Int");
-    
-  }
+    readCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"Int");
+   }
 }
 
 // *******************************************
@@ -1352,11 +1345,7 @@ void centralFromFourStations100IntTo10x1() {
     writeSingleCollection("","Int");
   } else {
     DebugTN("Will start reading 100 series of 10 (Single) Int values from Stations");
-    readSingleCollection(STATION1,"Int");
-    readSingleCollection(STATION2,"Int");
-    readSingleCollection(STATION3,"Int");
-    readSingleCollection(STATION4,"Int");
-    
+    readSingleCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"Int");
   }
 }
 
@@ -1388,10 +1377,7 @@ void centralFromFourStations100StringTo10x1() {
     writeSingleCollection("","String");
   } else {
     DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollection(STATION1,"String");
-    readSingleCollection(STATION2,"String");
-    readSingleCollection(STATION3,"String");
-    readSingleCollection(STATION4,"String");
+    readSingleCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"String");
   }
 }
 
@@ -2265,7 +2251,7 @@ void centralToOneStationPingPong1000String() {
     DebugTN("Will start station pingpong test with 1000 bounces and a string");
     emptyPoints();
     if (dpExists(STATION1+"lofarSpeedTest.singleString") ){
-      dpConnect("pingpongStationStringTrigger",false,STATION1+"lofarSpeedTest.singleString");
+//       dpConnect("pingpongStationStringTrigger",false,STATION1+"lofarSpeedTest.singleString");
     } else {
       DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.singleString. Test halted");
     }
@@ -2598,7 +2584,7 @@ void writeSingle(string machineName,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",nrWrites,
+    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2630,7 +2616,7 @@ void writeSingleToTwo(string machineName1,string machineName2,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
+    dpSet("lofarSpeedTest.result.nrWrites",nrWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
@@ -2659,10 +2645,10 @@ void readSingleFromFour(string machineName1,string machineName2,string machineNa
       dpExists(machineName1+"lofarSpeedTest.single"+val) &&
       dpExists(machineName1+"lofarSpeedTest.single"+val) ){
     emptyPoints();
-    dpConnect("stationSingleIntTrigger",false,machineName1+"lofarSpeedTest.single"+val,
-                                              machineName2+"lofarSpeedTest.single"+val,
-                                              machineName3+"lofarSpeedTest.single"+val,
-                                              machineName4+"lofarSpeedTest.single"+val);
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest.single"+val);
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest.single"+val);
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest.single"+val);
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest.single"+val);
   } else {
     DebugTN("Error: dp "+machineName1+"lofarSpeedTest.single"+val+" does not exist or,"+
                   " dp "+machineName2+"lofarSpeedTest.single"+val+" does not exist or,"+
@@ -2676,7 +2662,8 @@ void readSingleFromFour(string machineName1,string machineName2,string machineNa
 void readSingleFromTwo(string machineName1,string machineName2,string val) {
   if (dpExists(machineName1+"lofarSpeedTest.single"+val) && dpExists(machineName2+"lofarSpeedTest.single"+val) ){
     emptyPoints();
-    dpConnect("stationSingleIntTrigger",false,machineName1+"lofarSpeedTest.single"+val,machineName2+"lofarSpeedTest.single"+val);
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest.single");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest.single");
   } else {
     DebugTN("Error: dp "+machineName1+"lofarSpeedTest.single"+val+" does not exist or,"+
                   " dp "+machineName2+"lofarSpeedTest.single"+val+" does not exist no connect possible"); 
@@ -3183,6 +3170,94 @@ void readCollection(string machineName,string val) {
   }
 }     
 
+void readCollectionFromTwo(string machineName1,string machineName2,string val) {
+  if (dpExists(machineName1+"lofarSpeedTest."+val+"Collection.val1") && 
+      dpExists(machineName2+"lofarSpeedTest."+val+"Collection.val1")  ){
+    emptyPoints();
+    dpConnect("centralCollectionTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val10");
+    dpConnect("centralCollectionTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val10");
+  } else {
+    DebugTN("Error: dp "+machineName1+"lofarSpeedTest."+val+"Collection.val1 or "+
+                   "dp "+machineName2+"lofarSpeedTest."+val+"Collection.val1 does not exist no connect possible"); 
+    isRunning = false;
+    return;
+  }
+}     
+
+void readCollectionFromFour(string machineName1,string machineName2,string machineName3, string machineName4,string val) {
+  if (dpExists(machineName1+"lofarSpeedTest."+val+"Collection.val1") && 
+      dpExists(machineName2+"lofarSpeedTest."+val+"Collection.val1") &&
+      dpExists(machineName3+"lofarSpeedTest."+val+"Collection.val1") &&
+      dpExists(machineName4+"lofarSpeedTest."+val+"Collection.val1")){
+    emptyPoints();
+    dpConnect("centralCollectionTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName1+"lofarSpeedTest."+val+"Collection.val10");
+    dpConnect("centralCollectionTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName2+"lofarSpeedTest."+val+"Collection.val10");
+    dpConnect("centralCollectionTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName3+"lofarSpeedTest."+val+"Collection.val10");
+    dpConnect("centralCollectionTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val1",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val2",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val3",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val4",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val5",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val6",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val7",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val8",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val9",
+                                               machineName4+"lofarSpeedTest."+val+"Collection.val10");
+  } else {
+    DebugTN("Error: dp "+machineName1+"lofarSpeedTest."+val+"Collection.val1 or "+
+                   "dp "+machineName2+"lofarSpeedTest."+val+"Collection.val1 or "+
+                   "dp "+machineName3+"lofarSpeedTest."+val+"Collection.val1 or "+
+                   "dp "+machineName4+"lofarSpeedTest."+val+"Collection.val1 does not exist no connect possible"); 
+    isRunning = false;
+    return;
+  }
+}     
+ 
 void readSingleCollection(string machineName,string val) {
   if (dpExists(machineName+"lofarSpeedTest."+val+"Collection") ){
     emptyPoints();
@@ -3198,6 +3273,98 @@ void readSingleCollection(string machineName,string val) {
     dpConnect("centralSingleTrigger",false,machineName+"lofarSpeedTest."+val+"Collection.val10");
   } else {
     DebugTN("Error: dp "+machineName+"lofarSpeedTest."+val+"Collection.val1 does not exist, no connect possible"); 
+    isRunning = false;
+    return;
+  }
+}
+
+void readSingleCollectionFromTwo(string machineName1,string machineName2,string val) {
+  if (dpExists(machineName1+"lofarSpeedTest."+val+"Collection") &&
+      dpExists(machineName2+"lofarSpeedTest."+val+"Collection") ){
+    emptyPoints();
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val10");
+    
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val10");
+  } else {
+    DebugTN("Error: dp "+machineName1+"lofarSpeedTest."+val+"Collection.val1 or "+
+                  " dp "+machineName2+"lofarSpeedTest."+val+"Collection.val1 does not exist, no connect possible"); 
+    isRunning = false;
+    return;
+  }
+}
+
+void readSingleCollectionFromFour(string machineName1,string machineName2,string machineName3,string machineName4 ,string val) {
+  if (dpExists(machineName1+"lofarSpeedTest."+val+"Collection") &&
+      dpExists(machineName2+"lofarSpeedTest."+val+"Collection") &&
+      dpExists(machineName3+"lofarSpeedTest."+val+"Collection") &&
+      dpExists(machineName4+"lofarSpeedTest."+val+"Collection") ){
+    emptyPoints();
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName1+"lofarSpeedTest."+val+"Collection.val10");
+    
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName2+"lofarSpeedTest."+val+"Collection.val10");
+
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName3+"lofarSpeedTest."+val+"Collection.val10");
+    
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val1");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val2");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val3");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val4");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val5");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val6");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val7");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val8");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val9");
+    dpConnect("centralSingleTrigger",false,machineName4+"lofarSpeedTest."+val+"Collection.val10");
+  } else {
+    DebugTN("Error: dp "+machineName1+"lofarSpeedTest."+val+"Collection.val1 or "+
+                  " dp "+machineName2+"lofarSpeedTest."+val+"Collection.val1 or "+
+                  " dp "+machineName3+"lofarSpeedTest."+val+"Collection.val1 or "+
+                  " dp "+machineName4+"lofarSpeedTest."+val+"Collection.val1 does not exist, no connect possible"); 
     isRunning = false;
     return;
   }

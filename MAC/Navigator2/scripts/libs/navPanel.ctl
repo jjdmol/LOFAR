@@ -461,12 +461,6 @@ void navPanel_statePopup(string baseDP) {
   }        
 
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|recursive="+recursive);
-  bool ack=navFunct_acknowledgePanel("This will (re)set the state of "+baseDP+" to "+getStateName(state)+". Are you sure?");
-  if (!ack) {
-    LOG_DEBUG("navPanel.ctl:navPanel_statePopup|State change by operator cancelled");
-    return;
-  }
-  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|State change by operator confirmed");
   
   string database = dpSubStr(baseDP,DPSUB_SYS);
   string bareDP = dpSubStr(baseDP,DPSUB_DP);
