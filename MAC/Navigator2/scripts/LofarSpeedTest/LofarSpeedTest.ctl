@@ -72,131 +72,131 @@ void testTriggered(string dp1, string testName) {
   }
   
   if (testName == "One station to central(1000 int x 1)" ){
-    oneStationToCentral1000IntTo1();
+    oneStationToCentral1000To1("Int");
   } else if (testName == "One station to central(1000 string x 1)" ){
-    oneStationToCentral1000StringTo1();
+    oneStationToCentral1000To1("String");
   } else if (testName == "One station to central(100 int x 10)" ){
-    oneStationToCentral100IntTo10();
+    oneStationToCentral100To10("Int");
   } else if (testName == "One station to central(100 string x 10)" ){
-    oneStationToCentral100StringTo10();
+    oneStationToCentral100To10("String");
   } else if (testName == "One station to central(100 int x 10 x 1)" ){
-    oneStationToCentral100IntTo10x1();
+    oneStationToCentral100To10x1("Int");
   } else if (testName == "One station to central(100 string x 10 x 1)" ){
     oneStationToCentral100StringTo10x1();
   }else if (testName == "Central from one station(1000 int x 1)" ){
-    centralFromOneStation1000IntTo1();
+    centralFromOneStation1000To1("Int");
   } else if (testName == "Central from one station(1000 string x 1)" ){
     centralFromOneStation1000StringTo1();
   } else if (testName == "Central from one station(100 int x 10)" ){
-    centralFromOneStation100IntTo10();
+    centralFromOneStation100To10("Int");
   } else if (testName == "Central from one station(100 string x 10)" ){
     centralFromOneStation100StringTo10();
   } else if (testName == "Central from one station(100 int x 10 x 1)" ){
-    centralFromOneStation100IntTo10x1();
+    centralFromOneStation100To10x1("Int");
   } else if (testName == "Central from one station(100 string x 10 x 1)" ){
     centralFromOneStation100StringTo10x1();
   } else if (testName == "Two stations to central(1000 int x 1)" ){
-    twoStationsToCentral1000IntTo1();
+    twoStationsToCentral1000To1("Int");
   } else if (testName == "Two stations to central(1000 string x 1)" ){
-    twoStationsToCentral1000StringTo1();
+    twoStationsToCentral1000To1("String");
   } else if (testName == "Two stations to central(100 int x 10)" ){
-    twoStationsToCentral100IntTo10();
+    twoStationsToCentral100To10("Int");
   } else if (testName == "Two stations to central(100 string x 10)" ){
-    twoStationsToCentral100StringTo10();
+    twoStationsToCentral100To10("String");
   } else if (testName == "Two stations to central(100 int x 10 x 1)" ){
-    twoStationsToCentral100IntTo10x1();
+    twoStationsToCentral100To10x1("Int");
   } else if (testName == "Two stations to central(100 string x 10 x 1)" ){
-    twoStationsToCentral100StringTo10x1();
+    twoStationsToCentral100To10x1("String");
   } else if (testName == "Central from two stations(1000 int x 1)" ){
-    centralFromTwoStations1000IntTo1();
+    centralFromTwoStations1000To1("Int");
   } else if (testName == "Central from two stations(1000 string x 1)" ){
-    centralFromTwoStations1000StringTo1();
+    centralFromTwoStations1000To1("String");
   } else if (testName == "Central from two stations(100 int x 10)" ){
-    centralFromTwoStations100IntTo10();
+    centralFromTwoStations100To10("Int");
   } else if (testName == "Central from two stations(100 string x 10)" ){
-    centralFromTwoStations100StringTo10();
+    centralFromTwoStations100To10("String");
   } else if (testName == "Central from two stations(100 int x 10 x 1)" ){
-    centralFromTwoStations100IntTo10x1();
+    centralFromTwoStations100To10x1("Int");
   } else if (testName == "Central from two stations(100 string x 10 x 1)" ){
-    centralFromTwoStations100StringTo10x1();
+    centralFromTwoStations100To10x1("String");
   } else if (testName == "Four stations to central(1000 int x 1)" ){
-    fourStationsToCentral1000IntTo1();
+    fourStationsToCentral1000To1("Int");
   } else if (testName == "Four stations to central(1000 string x 1)" ){
-    fourStationsToCentral1000StringTo1();
+    fourStationsToCentral1000To1("String");
   } else if (testName == "Four stations to central(100 int x 10)" ){
-    fourStationsToCentral100IntTo10();
+    fourStationsToCentral100To10("Int");
   } else if (testName == "Four stations to central(100 string x 10)" ){
-    fourStationsToCentral100StringTo10();
+    fourStationsToCentral100To10("String");
   } else if (testName == "Four stations to central(100 int x 10 x 1)" ){
-    fourStationsToCentral100IntTo10x1();
+    fourStationsToCentral100To10x1("Int");
   } else if (testName == "Four stations to central(100 string x 10 x 1)" ){
-    fourStationsToCentral100StringTo10x1();
+    fourStationsToCentral100To10x1("String");
   } else if (testName == "Central from four stations(1000 int x 1)" ){
-    centralFromFourStations1000IntTo1();
+    centralFromFourStations1000To1("Int");
   } else if (testName == "Central from four stations(1000 string x 1)" ){
-    centralFromFourStations1000StringTo1();
+    centralFromFourStations1000To1("String");
   } else if (testName == "Central from four stations(100 int x 10)" ){
-    centralFromFourStations100IntTo10();
+    centralFromFourStations100To10("Int");
   } else if (testName == "Central from four stations(100 string x 10)" ){
-    centralFromFourStations100StringTo10();    
+    centralFromFourStations100To10("String");    
   } else if (testName == "Central from four stations(100 int x 10 x 1)" ){
-    centralFromFourStations100IntTo10x1();
+    centralFromFourStations100To10x1("Int");
   } else if (testName == "Central from four stations(100 string x 10 x 1)" ){
-    centralFromFourStations100StringTo10x1();    
+    centralFromFourStations100To10x1("String");    
   } else if (testName == "Two stations from central(1000 int x 1)" ){
-    twoStationsFromCentral1000IntTo1();
+    twoStationsFromCentral1000To1("Int");
   } else if (testName == "Two stations from central(1000 string x 1)" ){
-    twoStationsFromCentral1000StringTo1();
+    twoStationsFromCentral1000To1("String");
   } else if (testName == "Two stations from central(100 int x 10)" ){
-    twoStationsFromCentral100IntTo10();
+    twoStationsFromCentral100To10("Int");
   } else if (testName == "Two stations from central(100 string x 10)" ){
-    twoStationsFromCentral100StringTo10();
+    twoStationsFromCentral100To10("String");
   } else if (testName == "Two stations from central(100 int x 10 x 1)" ){
-    twoStationsFromCentral100IntTo10x1();
+    twoStationsFromCentral100To10x1("Int");
   } else if (testName == "Two stations from central(100 string x 10 x 1)" ){
-    twoStationsFromCentral100StringTo10x1();
+    twoStationsFromCentral100To10x1("String");
   }else if (testName == "Central to two stations(1000 int x 1)" ){
-    centralToTwoStations1000IntTo1();
+    centralToTwoStations1000To1("Int");
   } else if (testName == "Central to two stations(1000 string x 1)" ){
-    centralToTwoStations1000StringTo1();
+    centralToTwoStations1000To1("String");
   } else if (testName == "Central to two stations(100 int x 10)" ){
-    centralToTwoStations100IntTo10();
+    centralToTwoStations100To10("Int");
   } else if (testName == "Central to two stations(100 string x 10)" ){
-    centralToTwoStations100StringTo10();
+    centralToTwoStations100To10("String");
   } else if (testName == "Central to two stations(100 int x 10 x 1)" ){
-    centralToTwoStations100IntTo10x1();
+    centralToTwoStations100To10x1("Int");
   } else if (testName == "Central to two stations(100 string x 10 x 1)" ){
-    centralToTwoStations100StringTo10x1();
+    centralToTwoStations100To10x1("String");
   } else if (testName == "Four stations from central(1000 int x 1)" ){
-    fourStationsFromCentral1000IntTo1();
+    fourStationsFromCentral1000To1("Int");
   } else if (testName == "Four stations from central(1000 string x 1)" ){
-    fourStationsFromCentral1000StringTo1();
+    fourStationsFromCentral1000To1("String");
   } else if (testName == "Four stations from central(100 int x 10)" ){
-    fourStationsFromCentral100IntTo10();
+    fourStationsFromCentral100To10("Int");
   } else if (testName == "Four stations from central(100 string x 10)" ){
-    fourStationsFromCentral100StringTo10();
+    fourStationsFromCentral100To10("String");
   } else if (testName == "Four stations from central(100 int x 10 x 1)" ){
-    fourStationsFromCentral100IntTo10x1();
+    fourStationsFromCentral100To10x1("Int");
   } else if (testName == "Four stations from central(100 string x 10 x 1)" ){
-    fourStationsFromCentral100StringTo10x1();
+    fourStationsFromCentral100To10x1("String");
   } else if (testName == "Central to four stations(1000 int x 1)" ){
-    centralToFourStations1000IntTo1();
+    centralToFourStations1000To1("Int");
   } else if (testName == "Central to four stations(1000 string x 1)" ){
-    centralToFourStations1000StringTo1();
+    centralToFourStations1000To1("String");
   } else if (testName == "Central to four stations(100 int x 10)" ){
-    centralToFourStations100IntTo10();
+    centralToFourStations100To10("Int");
   } else if (testName == "Central to four stations(100 string x 10)" ){
-    centralToFourStations100StringTo10();    
+    centralToFourStations100To10("String");    
   } else if (testName == "Central to four stations(100 int x 10 x 1)" ){
-    centralToFourStations100IntTo10x1();
+    centralToFourStations100To10x1("Int");
   } else if (testName == "Central to four stations(100 string x 10 x 1)" ){
-    centralToFourStations100StringTo10x1();  
+    centralToFourStations100To10x1("String");  
   } else if (testName == "Pingpong between central and one station (1000 int)") { 
-    centralToOneStationPingPong1000Int();
+    centralToOneStationPingPong1000("Int");
   } else if (testName == "Pingpong between central and one station (1000 string)") { 
-    centralToOneStationPingPong1000String();
+    centralToOneStationPingPong1000("String");
   } else if (testName == "reset") {
-    reset();  
+    reset();
   }else {
     DebugTN("Error, unsupported testname received: "+ testName );
     DebugTN("Supported testnames: One station to central(1000 int x 1)\n"+
@@ -272,7 +272,7 @@ void testTriggered(string dp1, string testName) {
 //
 
 // *******************************************
-// Name : oneStationToCentral1000IntTo1
+// Name : oneStationToCentral1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -287,56 +287,24 @@ void testTriggered(string dp1, string testName) {
 // Returns:
 //    None
 // *******************************************
-void oneStationToCentral1000IntTo1() {
-  DebugTN("oneStationToCentral1000IntTo1 starting ");
+void oneStationToCentral1000To1(string choice) {
+  DebugTN("oneStationToCentral1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 1000 single Int values to Central");
-    writeSingle("MCU001:","Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to Central");
+    writeSingle("MCU001:",choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 1000 single Int values from Central");
-    readSingle("MCU001:","Int");
+    DebugTN("Will start reading 1000 single "+choice+" values from Central");
+    readSingle("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : oneStationToCentral1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// station:        script will write 1000 times another value in 
-//                 the central datapoint.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void oneStationToCentral1000StringTo1() {
-  DebugTN("oneStationToCentral1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 1000 single String values to Central");
-    writeSingle("MCU001:","String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 1000 single String values from Central");
-    readSingle("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : oneStationToCentral100IntTo10
+// Name : oneStationToCentral100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -351,56 +319,26 @@ void oneStationToCentral1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void oneStationToCentral100IntTo10() {
-  DebugTN("oneStationToCentral100IntTo10 starting ");
+void oneStationToCentral100To10(string choice) { 
+  DebugTN("oneStationToCentral100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 Int values to Central");
-    writeCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Central");
+    writeCollection("MCU001:",choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 Int values from Central");
-    readCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Central");
+    readCollection("MCU001:",choice);
   }
 }
 
-// *******************************************
-// Name : oneStationToCentral100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the central.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void oneStationToCentral100StringTo10() {
-  DebugTN("oneStationToCentral100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 String values to Central");
-    writeCollection("MCU001:","String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 String values from Central");
-    readCollection("MCU001:","String");
-  }
-}
+
 
 // *******************************************
-// Name : oneStationToCentral100IntTo10x1
+// Name : oneStationToCentral100To10x1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -415,60 +353,29 @@ void oneStationToCentral100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void oneStationToCentral100IntTo10x1() {
-  DebugTN("oneStationToCentral100IntTo10x1 starting ");
+void oneStationToCentral100To10x1(string choice) {
+  DebugTN("oneStationToCentral100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 (single) Int  values to Central");
-    writeSingleCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series of 10 (single) "+choice+"  values to Central");
+    writeSingleCollection("MCU001:",choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 (single) Int values from Central");
-    readSingleCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 (single) "+choice+" values from Central");
+    readSingleCollection("MCU001:",choice);
   }
 }
 
-// *******************************************
-// Name : oneStationToCentral100StringTo10x1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the central in 10 different writes.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void oneStationToCentral100StringTo10x1() {
-  DebugTN("oneStationToCentral100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 (single) String values to Central");
-    writeSingleCollection("MCU001:","String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 (single) String values from Central");
-    readSingleCollection("MCU001:","String");
-  }
-}
 
 //
 //  ********** Central From One Station **********
 //
 
 // *******************************************
-// Name : centralFromOneStation1000IntTo1
+// Name : centralFromOneStation1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the station database
@@ -483,56 +390,25 @@ void oneStationToCentral100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void centralFromOneStation1000IntTo1() {
-  DebugTN("centralFromOneStation1000IntTo1 starting ");
+void centralFromOneStation1000To1(string choice) {
+  DebugTN("centralFromOneStation1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 1000 single Int values to Station");
-    writeSingle(STATION1,"Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to Station");
+    writeSingle(STATION1,choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 1000 single Int values from Station");
-    readSingle(STATION1,"Int");
+    DebugTN("Will start reading 1000 single "+choice+" values from Station");
+    readSingle(STATION1,choice);
   }
 }
 
-// *******************************************
-// Name : centralFromOneStation1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the station database
-//                 and will count the updates.
-// station:        script will write 1000 times another value in 
-//                 the station datapoint.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromOneStation1000StringTo1() {
-  DebugTN("centralFromOneStation1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 1000 single String values to Station");
-    writeSingle(STATION1,"String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 1000 single String values from Station");
-    readSingle(STATION1,"String");
-  }
-}
 
 // *******************************************
-// Name : centralFromOneStation100IntTo10
+// Name : centralFromOneStation100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the station database
@@ -547,56 +423,25 @@ void centralFromOneStation1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void centralFromOneStation100IntTo10() {
-  DebugTN("centralFromOneStation100IntTo10 starting ");
+void centralFromOneStation100To10(string choice) {
+  DebugTN("centralFromOneStation100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 Int values to Station");
-    writeCollection(STATION1,"Int");
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Station");
+    writeCollection(STATION1,choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 Int values from Station");
-    readCollection(STATION1,"Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Station");
+    readCollection(STATION1,choice);
   }
 }
 
-// *******************************************
-// Name : centralFromOneStation100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the station database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromOneStation100StringTo10() {
-  DebugTN("centralFromOneStation100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 String values to Station");
-    writeCollection(STATION1,"String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 String values from Station");
-    readCollection(STATION1,"String");
-  }
-}
 
 // *******************************************
-// Name : centralFromOneStation100IntTo10x1
+// Name : centralFromOneStation100To10x1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the station database
@@ -611,60 +456,30 @@ void centralFromOneStation100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralFromOneStation100IntTo10x1() {
-  DebugTN("centralFromOneStation100IntTo10x1 starting ");
+void centralFromOneStation100To10x1(string choice) {
+  DebugTN("centralFromOneStation100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Station");
-    writeSingleCollection(STATION1,"Int");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Station");
+    writeSingleCollection(STATION1,choice);
   } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Station");
-    readSingleCollection(STATION1,"Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Station");
+    readSingleCollection(STATION1,choice);
   }
 }
 
-// *******************************************
-// Name : centralFromOneStation100StringTo10x1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the station database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station in 10 different writes.
-//
-// Results:        1 Time on the station to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromOneStation100StringTo10x1() {
-  DebugTN("centralFromOneStation100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Station");
-    writeSingleCollection(STATION1,"String");
-  } else if (stationName == "") {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollection(STATION1,"String");
-  }
-}
+
 
 //
 //  ********** Two Stations To Central **********
 //
 
 // *******************************************
-// Name : twoStationsToCentral1000IntTo1
+// Name : twoStationsToCentral1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -679,56 +494,25 @@ void centralFromOneStation100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsToCentral1000IntTo1() {
-  DebugTN("twoStationsToCentral1000IntTo1 starting ");
+void twoStationsToCentral1000To1(string choice) {
+  DebugTN("twoStationsToCentral1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Station  Will start writing 1000 single Int values to Central");
-    writeSingle("MCU001:","Int");
+    DebugTN("Station  Will start writing 1000 single "+choice+" values to Central");
+    writeSingle("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 2000 single Int values from Central");
-    readSingle("MCU001:","Int");
+    DebugTN("Will start reading 2000 single "+choice+" values from Central");
+    readSingle("MCU001:",choice);
   }
 }
 
-// *******************************************
-// Name : twoStationsToCentral1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// stations:       script will write 1000 times another value in 
-//                 the central datapoint.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsToCentral1000StringTo1() {
-  DebugTN("twoStationsToCentral1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=2000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 1000 single String values to Central");
-    writeSingle("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 2000 single String values from Central");
-    readSingle("MCU001:","String");
-  }
-}
 
 // *******************************************
-// Name : twoStationsToCentral100IntTo10
+// Name : twoStationsToCentral100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -743,56 +527,24 @@ void twoStationsToCentral1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsToCentral100IntTo10() {
-  DebugTN("twoStationsToCentral100IntTo10 starting ");
+void twoStationsToCentral100To10(string choice) {
+  DebugTN("twoStationsToCentral100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series if Int values to Central");
-    writeCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series of "+choice+" values to Central");
+    writeCollection("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 Int values from Central");
-    readCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Central");
+    readCollection("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : twoStationsToCentral100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// stations:       script will write 100 times another value in 
-//                 10 datapoints on the central.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsToCentral100StringTo10() {
-  DebugTN("twoStationsToCentral100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=200;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 String values to Central");
-    writeCollection("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 String values from Central");
-    readCollection("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : twoStationsToCentral100IntTo10x1
+// Name : twoStationsToCentral100To10x1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -807,51 +559,19 @@ void twoStationsToCentral100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsToCentral100IntTo10x1() {
-  DebugTN("twoStationsToCentral100IntTo10x1 starting ");
+void twoStationsToCentral100To10x1(string choice) {
+  DebugTN("twoStationsToCentral100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of (Single) Int values to Central");
-    writeSingleCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series of (Single) "+choice+" values to Central");
+    writeSingleCollection("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Central");
-    readSingleCollection("MCU001:","Int");
-  }
-}
-
-// *******************************************
-// Name : twoStationsToCentral100StringTo10x1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// stations:       script will write 100 times another value in 
-//                 10 datapoints on the central in 10 different writes.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsToCentral100StringTo10x1() {
-  DebugTN("twoStationsToCentral100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=2000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Central");
-    writeSingleCollection("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Central");
-    readSingleCollection("MCU001:","String");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Central");
+    readSingleCollection("MCU001:",choice);
   }
 }
 
@@ -860,7 +580,7 @@ void twoStationsToCentral100StringTo10x1() {
 //
 
 // *******************************************
-// Name : centralFromTwoStations1000IntTo1
+// Name : centralFromTwoStations1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the station database
@@ -875,56 +595,24 @@ void twoStationsToCentral100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void centralFromTwoStations1000IntTo1() {
-  DebugTN("centralFromTwoStations1000IntTo1 starting ");
+void centralFromTwoStations1000To1(string choice) {
+  DebugTN("centralFromTwoStations1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 1000 single Int values to Station");
-    writeSingle("","Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to Station");
+    writeSingle("",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 2000 single Int values from Station");
-    readSingleFromTwo(STATION1,STATION2,"Int");    
+    DebugTN("Will start reading 2000 single "+choice+" values from Station");
+    readSingleFromTwo(STATION1,STATION2,choice);    
   }
 }
 
 // *******************************************
-// Name : centralFromTwoStations1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// stations:       script will write 2000 times another value in 
-//                 the station datapoint.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromTwoStations1000StringTo1() {
-  DebugTN("centralFromTwoStations1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=2000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 1000 single String values to Station");
-    writeSingle("","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 2000 single  values from Station");
-    readSingleFromTwo(STATION1,STATION2,"String");    
-  }
-}
-
-// *******************************************
-// Name : centralFromTwoStations100IntTo10
+// Name : centralFromTwoStations100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the stations database
@@ -939,56 +627,25 @@ void centralFromTwoStations1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void centralFromTwoStations100IntTo10() {
-  DebugTN("centralFromTwoStations100IntTo10 starting ");
+void centralFromTwoStations100To10(string choice) {
+  DebugTN("centralFromTwoStations100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=200;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 Int values to Station");
-    writeCollection("","Int");
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Station");
+    writeCollection("",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 Int values from Stations");
-    readCollectionFromTwo(STATION1,STATION2,"Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Stations");
+    readCollectionFromTwo(STATION1,STATION2,choice);
   }
 }
 
-// *******************************************
-// Name : centralFromTwoStations100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromTwoStations100StringTo10() {
-  DebugTN("centralFromTwoStations100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=200;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 String values to Station");
-    writeCollection("","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 String values from Station");
-    readCollectionFromTwo(STATION1,STATION2,"String");
-  }
-}
 
 // *******************************************
-// Name : centralFromTwoStations100IntTo10x1
+// Name : centralFromTwoStations100To10x1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the stations database
@@ -1003,61 +660,29 @@ void centralFromTwoStations100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralFromTwoStations100IntTo10x1() {
-  DebugTN("centralFromTwoStations100IntTo10x1 starting ");
+void centralFromTwoStations100To10x1(string choice) {
+  DebugTN("centralFromTwoStations100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=2000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Station");
-    writeSingleCollection("","Int");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Station");
+    writeSingleCollection("",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Stations");
-    readSingleCollectionFromTwo(STATION1,STATION2,"Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Stations");
+    readSingleCollectionFromTwo(STATION1,STATION2,choice);
 
   }
 }
 
-// *******************************************
-// Name : centralFromTwoStations100StringTo10x1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station in 10 different writes.
 //
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromTwoStations100StringTo10x1() {
-  DebugTN("centralFromTwoStations100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=2000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Station");
-    writeSingleCollection("","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollectionFromTwo(STATION1,STATION2,"String");
-  }
-}
-
-//
-//  ********** Four Stations To Central **********
+//  ********** Four Stations To Central *********
 //
 
 // *******************************************
-// Name : fourStationsToCentral1000IntTo1
+// Name : fourStationsToCentral1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -1072,56 +697,24 @@ void centralFromTwoStations100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void fourStationsToCentral1000IntTo1() {
-  DebugTN("fourStationsToCentral1000IntTo1 starting ");
+void fourStationsToCentral1000To1(string choice) {
+  DebugTN("fourStationsToCentral1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Station Will start writing 1000 single Int values to Central");
-    writeSingle("MCU001:","Int");
+    DebugTN("Station Will start writing 1000 single "+choice+" values to Central");
+    writeSingle("MCU001:",choice);
   } else {
-    DebugTN("Will start reading 4000 single Int values from Central");
-    readSingle("MCU001:","Int");
+    DebugTN("Will start reading 4000 single "+choice+" values from Central");
+    readSingle("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : fourStationsToCentral1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// stations:       script will write 1000 times another value in 
-//                 the central datapoint.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void fourStationsToCentral1000StringTo1() {
-  DebugTN("fourStationsToCentral1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=4000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start writing 1000 single String values to Central");
-    writeSingle("MCU001:","String");
-  } else {
-    DebugTN("Will start reading 4000 single String values from Central");
-    readSingle("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : fourStationsToCentral100IntTo10
+// Name : fourStationsToCentral100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the central database
@@ -1136,61 +729,28 @@ void fourStationsToCentral1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void fourStationsToCentral100IntTo10() {
-  DebugTN("fourStationsToCentral100IntTo10 starting ");
+void fourStationsToCentral100To10(string choice) {
+  DebugTN("fourStationsToCentral100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=400;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start writing 100 series if Int values to Central");
-    writeCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series of "+choice+" values to Central");
+    writeCollection("MCU001:",choice);
   } else {
-    DebugTN("Will start reading 400 series of 10 Int values from Central");
-    readCollection("MCU001:","Int");
+    DebugTN("Will start reading 400 series of 10 "+choice+" values from Central");
+    readCollection("MCU001:",choice);
   }
 }
-
-// *******************************************
-// Name : fourStationsToCentral100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the central database
-//                 and will count the updates.
-// stations:       script will write 100 times another value in 
-//                 10 datapoints on the central.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void fourStationsToCentral100StringTo10() {
-  DebugTN("fourStationsToCentral100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=400;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start writing 100 series of 10 String values to Central");
-    writeCollection("MCU001:","String");
-  } else {
-    DebugTN("Will start reading 400 series of 10 String values from Central");
-    readCollection("MCU001:","String");
-  }
-}
-
 
 //
 //  ********** Central From Four Stations **********
 //
 
 // *******************************************
-// Name : centralFromFourStations1000IntTo1
+// Name : centralFromFourStations1000To1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the station database
@@ -1205,56 +765,25 @@ void fourStationsToCentral100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralFromFourStations1000IntTo1() {
-  DebugTN("centralFromFourStations1000IntTo1 starting ");
+void centralFromFourStations1000To1(string choice) {
+  DebugTN("centralFromFourStations1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start writing 1000 single Int values to Station");
-    writeSingle("","Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to Station");
+    writeSingle("",choice);
   } else {
-    DebugTN("Will start reading 4000 single Int values from Station");
-    readSingleFromFour(STATION1,STATION2,STATION3,STATION4,"Int");    
+    DebugTN("Will start reading 4000 single "+choice+" values from Station");
+    readSingleFromFour(STATION1,STATION2,STATION3,STATION4,choice);    
   }
 }
 
-// *******************************************
-// Name : centralFromFourStations1000StringTo1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// stations:       script will write 2000 times another value in 
-//                 the station datapoint.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromFourStations1000StringTo1() {
-  DebugTN("centralFromFourStations1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=4000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start writing 1000 single String values to Station");
-    writeSingle("","String");
-  } else {
-    DebugTN("Will start reading 4000 single  values from Station");
-    readSingleFromFour(STATION1,STATION2,STATION3,STATION4,"String");    
-  }
-}
 
 // *******************************************
-// Name : centralFromFourStations100IntTo10
+// Name : centralFromFourStations100To10
 // *******************************************
 // Description:
 // central system: script connects to a DP in the stations database
@@ -1269,56 +798,25 @@ void centralFromFourStations1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void centralFromFourStations100IntTo10() {
-  DebugTN("centralFromFourStation100IntTo10 starting ");
+void centralFromFourStations100To10(string choice) {
+  DebugTN("centralFromFourStation100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=400;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start writing 100 series of 10 Int values to Station");
-    writeCollection("","Int");
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Station");
+    writeCollection("",choice);
   } else {
-    DebugTN("Will start reading 100 series of 10 Int values from Stations");
-    readCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Stations");
+    readCollectionFromFour(STATION1,STATION2,STATION3,STATION4,choice);
    }
 }
 
-// *******************************************
-// Name : centralFromFourStations100StringTo10
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromFourStations100StringTo10() {
-  DebugTN("centralFromFourStations100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=400;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start writing 100 series of 10 String values to Station");
-    writeCollection("","String");
-  } else {
-    DebugTN("Will start reading 100 series of 10 String values from Station");
-    readCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"String");
-  }
-}
     
 // *******************************************
-// Name : centralFromFourStations100IntTo10x1
+// Name : centralFromFourStations100To10x1
 // *******************************************
 // Description:
 // central system: script connects to a DP in the stations database
@@ -1333,60 +831,29 @@ void centralFromFourStations100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralFromFourStations100IntTo10x1() {
-  DebugTN("centralFromFourStation100IntTo10x1 starting ");
+void centralFromFourStations100To10x1(string choice) {
+  DebugTN("centralFromFourStation100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=4000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Station");
-    writeSingleCollection("","Int");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Station");
+    writeSingleCollection("",choice);
   } else {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Stations");
-    readSingleCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Stations");
+    readSingleCollectionFromFour(STATION1,STATION2,STATION3,STATION4,choice);
   }
 }
 
-// *******************************************
-// Name : centralFromFourStations100StringTo10x1
-// *******************************************
-// Description:
-// central system: script connects to a DP in the stations database
-//                 and will count the updates.
-// station:        script will write 100 times another value in 
-//                 10 datapoints on the station in 10 different writes.
-//
-// Results:        1 Time on the stations to write the values.
-//                 2 Time on the central system to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralFromFourStations100StringTo10x1() {
-  DebugTN("centralFromFourStations100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=4000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Station");
-    writeSingleCollection("","String");
-  } else {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollectionFromFour(STATION1,STATION2,STATION3,STATION4,"String");
-  }
-}
 
 //
 //  ********** Two Stations From Central **********
 //
 
 // *******************************************
-// Name : twoStationsFromCentral1000IntTo1
+// Name : twoStationsFromCentral1000To1
 // *******************************************
 // Description:
 // central system: script will write 1000 times another value in 
@@ -1401,56 +868,24 @@ void centralFromFourStations100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsFromCentral1000IntTo1() {
-  DebugTN("twoStationsFromCentral1000IntTo1 starting ");
+void twoStationsFromCentral1000To1(string choice) {
+  DebugTN("twoStationsFromCentral1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Station 1 Will start reading 1000 single Int values from the Central");
-    readSingle("MCU001:","Int");
+    DebugTN("Station Will start reading 1000 single "+choice+" values from the Central");
+    readSingle("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 1000 single Int values from Central");
-    writeSingle("MCU001:","Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to Central");
+    writeSingle("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : twoStationsFromCentral1000StringTo1
-// *******************************************
-// Description:
-// central system: script will write 1000 times another value in 
-//                 the central datapoint.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the stations to read the values.
-//                 2 Time on the central system to write the values.
-//                 3 Did the stations receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsFromCentral1000StringTo1() {
-  DebugTN("twoStationsFromCentral1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 1000 single String values from Central");
-    readSingle("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start reading 1000 single String values to Central");
-    writeSingle("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : twoStationsFromCentral100IntTo10
+// Name : twoStationsFromCentral100To10
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1465,56 +900,24 @@ void twoStationsFromCentral1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsFromCentral100IntTo10() {
-  DebugTN("twoStationsFromCentral100IntTo10 starting ");
+void twoStationsFromCentral100To10(string choice) {
+  DebugTN("twoStationsFromCentral100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 Int values from Central");
-    readCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Central");
+    readCollection("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series if Int values to Central");
-    writeCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series if "+choice+" values to Central");
+    writeCollection("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : twoStationsFromCentral100StringTo10
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the central.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the stations to read the values.
-//                 2 Time on the central system to write the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsFromCentral100StringTo10() {
-  DebugTN("twoStationsFromCentral100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 String values from Central");
-    readCollection("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 String values to Central");
-    writeCollection("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : twoStationsFromCentral100IntTo10x1
+// Name : twoStationsFromCentral100To10x1
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1529,51 +932,19 @@ void twoStationsFromCentral100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void twoStationsFromCentral100IntTo10x1() {
-  DebugTN("twoStationsFromCentral100IntTo10x1 starting ");
+void twoStationsFromCentral100To10x1() {
+  DebugTN("twoStationsFromCentral100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Central");
-    readSingleCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Central");
+    readSingleCollection("MCU001:",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Central");
-    writeSingleCollection("MCU001:","Int");
-  }
-}
-
-// *******************************************
-// Name : twoStationsFromCentral100StringTo10x1
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the central in 10 different writes.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the stations to read the values.
-//                 2 Time on the central system to write the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void twoStationsFromCentral100StringTo10x1() {
-  DebugTN("twoStationsFromCentral100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Central");
-    readSingleCollection("MCU001:","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Central");
-    writeSingleCollection("MCU001:","String");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Central");
+    writeSingleCollection("MCU001:",choice);
   }
 }
 
@@ -1582,7 +953,7 @@ void twoStationsFromCentral100StringTo10x1() {
 //
 
 // *******************************************
-// Name : centralToTwoStations1000IntTo1
+// Name : centralToTwoStations1000To1
 // *******************************************
 // Description:
 // central system: script will write 1000 times another value in 
@@ -1597,56 +968,24 @@ void twoStationsFromCentral100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void centralToTwoStations1000IntTo1() {
-  DebugTN("centralToTwoStations1000IntTo1 starting ");
+void centralToTwoStations1000To1(string choice) {
+  DebugTN("centralToTwoStations1000To1 starting ");
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 1000 single Int values from Station");
-    readSingle("","Int");    
+    DebugTN("Will start reading 1000 single "+choice+" values from Station");
+    readSingle("",choice);    
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 1000 single Int values to two Station");
-    writeSingleToTwo(STATION1,STATION2,"Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to two Station");
+    writeSingleToTwo(STATION1,STATION2,choice);
   }
 }
 
 // *******************************************
-// Name : centralToTwoStations1000StringTo1
-// *******************************************
-// Description:
-// central system:script will write 1000 times another value in 
-//                 two stations datapoint.
-// stations:       script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on the two stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToTwoStations1000StringTo1() {
-  DebugTN("centralToTwoStations1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 2000 single  values from Station");
-    readSingle("","String");    
-  } else if (stationName == "" ) {
-    DebugTN("Will start writing 1000 single String values to Station");
-    writeSingleToTwo(STATION1,STATION2,"String");
-  }
-}
-
-// *******************************************
-// Name : centralToTwoStations100IntTo10
+// Name : centralToTwoStations100To10
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1661,56 +1000,25 @@ void centralToTwoStations1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void centralToTwoStations100IntTo10() {
-  DebugTN("centralToTwoStations100IntTo10 starting ");
+void centralToTwoStations100To10(string choice) {
+  DebugTN("centralToTwoStations100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 Int values from Station");
-    readCollection("","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Station");
+    readCollection("",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 Int values to Station");
-    writeCollectionToTwo(STATION1,STATION2,"Int");    
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Station");
+    writeCollectionToTwo(STATION1,STATION2,choice);    
   }
 }
 
-// *******************************************
-// Name : centralToTwoStations100StringTo10
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on two stations.
-// station:        script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on the two stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToTwoStations100StringTo10() {
-  DebugTN("centralToTwoStations100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 String values from Station");
-    readCollection("","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 String values to two Station");
-    writeCollectionToTwo(STATION1,STATION2,"String");
-  }
-}
 
 // *******************************************
-// Name : centralToTwoStations100IntTo10x1
+// Name : centralToTwoStations100To10x1
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1725,59 +1033,28 @@ void centralToTwoStations100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralToTwoStations100IntTo10x1() {
-  DebugTN("centralToTwoStations100IntTo10x1 starting ");
+void centralToTwoStations100To10x1(string choice) {
+  DebugTN("centralToTwoStations100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=100;
   nrReads=0;
   
   if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Station");
-    readSingleCollection("","Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Station");
+    readSingleCollection("",choice);
   } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Station");
-    writeSingleCollectionToTwo(STATION1,STATION2,"Int");    
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Station");
+    writeSingleCollectionToTwo(STATION1,STATION2,choice);    
   }
 }
 
-// *******************************************
-// Name : centralToTwoStations100StringTo10x1
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on two stations in 10 different writes.
-// station:        script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on the two stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToTwoStations100StringTo10x1() {
-  DebugTN("centralToTwoStations100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && (stationName==STATION1 || stationName==STATION2)) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollection("","String");
-  } else if (stationName == "" ) {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to two Station");
-    writeSingleCollectionToTwo(STATION1,STATION2,"String");
-  }
-}
 //
 //  ********** Four Stations From Central **********
 //
 
 // *******************************************
-// Name : fourStationsFromCentral1000IntTo1
+// Name : fourStationsFromCentral1000To1
 // *******************************************
 // Description:
 // central system: script will write 1000 times another value in 
@@ -1792,56 +1069,24 @@ void centralToTwoStations100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void fourStationsFromCentral1000IntTo1() {
-  DebugTN("fourStationsFromCentral1000IntTo1 starting ");
+void fourStationsFromCentral1000To1(string choice) {
+  DebugTN("fourStationsFromCentral1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 1000 single Int values from Central");
-    readSingle("MCU001:","Int");
+    DebugTN("Will start reading 1000 single "+choice+" values from Central");
+    readSingle("MCU001:",choice);
   } else {
-    DebugTN("Script Will start writing 1000 single Int values to Central");
-    writeSingle("MCU001:","Int");
+    DebugTN("Script Will start writing 1000 single "+choice+" values to Central");
+    writeSingle("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : fourStationsFromCentral1000StringTo1
-// *******************************************
-// Description:
-// central system: script will write 1000 times another value in 
-//                 the central datapoint.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on the four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void fourStationsFromCentral1000StringTo1() {
-  DebugTN("fourStationsFromCentral1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 1000 single String values from Central");
-    readSingle("MCU001:","String");
-  } else {
-    DebugTN("Will start writing 1000 single String values to Central");
-    writeSingle("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : fourStationsFromCentral100IntTo10
+// Name : fourStationsFromCentral100To10
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1856,56 +1101,24 @@ void fourStationsFromCentral1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void fourStationsFromCentral100IntTo10() {
-  DebugTN("fourStationsFromCentral100IntTo10 starting ");
+void fourStationsFromCentral100To10(string choice) {
+  DebugTN("fourStationsFromCentral100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 100 series of 10 Int values from Central");
-    readCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Central");
+    readCollection("MCU001:",choice);
   } else {
-    DebugTN("Will start writing 100 series if Int values to Central");
-    writeCollection("MCU001:","Int");
+    DebugTN("Will start writing 100 series if "+choice+" values to Central");
+    writeCollection("MCU001:",choice);
   }
 }
 
 // *******************************************
-// Name : fourStationsFromCentral100StringTo10
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the central.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central script to write the values.
-//                 2 Time on the four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void fourStationsFromCentral100StringTo10() {
-  DebugTN("fourStationsFromCentral100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 100 series of 10 String values from Central");
-    readCollection("MCU001:","String");
-  } else {
-    DebugTN("Will start writing 100 series of 10 String values to Central");
-    writeCollection("MCU001:","String");
-  }
-}
-
-// *******************************************
-// Name : fourStationsFromCentral100IntTo10x1
+// Name : fourStationsFromCentral100To10x1
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -1920,51 +1133,19 @@ void fourStationsFromCentral100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void fourStationsFromCentral100IntTo10x1() {
-  DebugTN("fourStationsFromCentral100IntTo10x1 starting ");
+void fourStationsFromCentral100To10x1(string choice) {
+  DebugTN("fourStationsFromCentral100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Central");
-    readSingleCollection("MCU001:","Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Central");
+    readSingleCollection("MCU001:",choice);
   } else {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Central");
-    writeSingleCollection("MCU001:","Int");
-  }
-}
-
-// *******************************************
-// Name : fourStationsFromCentral100StringTo10x1
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the central in 10 different writes.
-// stations:       script connects to a DP in the central database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central script to write the values.
-//                 2 Time on the four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void fourStationsFromCentral100StringTo10x1() {
-  DebugTN("fourStationsFromCentral100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Central");
-    readSingleCollection("MCU001:","String");
-  } else {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Central");
-    writeSingleCollection("MCU001:","String");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Central");
+    writeSingleCollection("MCU001:",choice);
   }
 }
 
@@ -1974,7 +1155,7 @@ void fourStationsFromCentral100StringTo10x1() {
 //
 
 // *******************************************
-// Name : centralToFourStations1000IntTo1
+// Name : centralToFourStations1000To1
 // *******************************************
 // Description:
 // central system: script will write 1000 times another value in 
@@ -1989,56 +1170,25 @@ void fourStationsFromCentral100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void centralToFourStations1000IntTo1() {
-  DebugTN("centralToFourStations1000IntTo1 starting ");
+void centralToFourStations1000To1(string choice) {
+  DebugTN("centralToFourStations1000To1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 1000 single Int values from Station");
-    readSingle("","Int");    
+    DebugTN("Will start reading 1000 single "+choice+" values from Station");
+    readSingle("",choice);    
   } else {
-    DebugTN("Will start writing 1000 single Int values to four Stations");
-    writeSingleToFour(STATION1,STATION2,STATION3,STATION4,"Int");
+    DebugTN("Will start writing 1000 single "+choice+" values to four Stations");
+    writeSingleToFour(STATION1,STATION2,STATION3,STATION4,choice);
   }
 }
 
-// *******************************************
-// Name : centralToFourStations1000StringTo1
-// *******************************************
-// Description:
-// central system: script will write 1000 times another value in 
-//                 the station datapoint.
-// stations:       script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central sysyem to write the values.
-//                 2 Time on the four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToFourStations1000StringTo1() {
-  DebugTN("centralToFourStations1000StringTo1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 1000 single  values from Station");
-    readSingle("","String");    
-  } else {
-    DebugTN("Will start writing 1000 single String values to Station");
-    writeSingleToFour(STATION1,STATION2,STATION3,STATION4,"String");
-  }
-}
 
 // *******************************************
-// Name : centralToFourStations100IntTo10
+// Name : centralToFourStations100To10
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -2053,57 +1203,25 @@ void centralToFourStations1000StringTo1() {
 // Returns:
 //    None
 // *******************************************
-void centralToFourStations100IntTo10() {
-  DebugTN("centralToFourStation100IntTo10 starting ");
+void centralToFourStations100To10(string choice) {
+  DebugTN("centralToFourStation100To10 starting for "+choice);
   isRunning=true;
   nrWrites=100;
   totalWrites=100;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 100 series of 10 Int values from Stations");
-    readCollection("","Int");
+    DebugTN("Will start reading 100 series of 10 "+choice+" values from Stations");
+    readCollection("",choice);
   } else {
-    DebugTN("Will start writing 100 series of 10 Int values to Station");
-    writeCollectionToFour(STATION1,STATION2,STATION3,STATION4,"Int");
+    DebugTN("Will start writing 100 series of 10 "+choice+" values to Station");
+    writeCollectionToFour(STATION1,STATION2,STATION3,STATION4,choice);
     
   }
 }
 
 // *******************************************
-// Name : centralToFourStations100StringTo10
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the station.
-// station:        script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToStations100StringTo10() {
-  DebugTN("centralFromFourStations100StringTo10 starting ");
-  isRunning=true;
-  nrWrites=100;
-  totalWrites=100;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 100 series of 10 String values from Station");
-    readCollection("","String");
-  } else {
-    DebugTN("Will start writing 100 series of 10 String values to Station");
-    writeCollectionToFour(STATION1,STATION2,STATION3,STATION4,"String");
-  }
-}
-
-// *******************************************
-// Name : centralToFourStations100IntTo10x1
+// Name : centralToFourStations100To10x1
 // *******************************************
 // Description:
 // central system: script will write 100 times another value in 
@@ -2118,58 +1236,24 @@ void centralToStations100StringTo10() {
 // Returns:
 //    None
 // *******************************************
-void centralToFourStations100IntTo10x1() {
-  DebugTN("centralToFourStation100IntTo10x1 starting ");
+void centralToFourStations100To10x1(string choice) {
+  DebugTN("centralToFourStation100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation) {
-    DebugTN("Will start reading 100 series of 10 (Single) Int values from Stations");
-    readSingleCollection("","Int");
+    DebugTN("Will start reading 100 series of 10 (Single) "+choice+" values from Stations");
+    readSingleCollection("",choice);
   } else {
-    DebugTN("Will start writing 100 series of 10 (Single) Int values to Station");
-    writeSingleCollectionToFour(STATION1,STATION2,STATION3,STATION4,"Int");
+    DebugTN("Will start writing 100 series of 10 (Single) "+choice+" values to Station");
+    writeSingleCollectionToFour(STATION1,STATION2,STATION3,STATION4,choice);
     
   }
 }
 
-// *******************************************
-// Name : centralToFourStations100StringTo10x1
-// *******************************************
-// Description:
-// central system: script will write 100 times another value in 
-//                 10 datapoints on the station in 10 different writes.
-// station:        script connects to a DP in the stations database
-//                 and will count the updates.
-//
-// Results:        1 Time on the central system to write the values.
-//                 2 Time on four stations to read the values.
-//                 3 Did the central database receive all changes.
-//
-// Returns:
-//    None
-// *******************************************
-void centralToStations100StringTo10x1() {
-  DebugTN("centralFromFourStations100StringTo10x1 starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation) {
-    DebugTN("Will start reading 100 series of 10 (Single) String values from Station");
-    readSingleCollection("","String");
-  } else {
-    DebugTN("Will start writing 100 series of 10 (Single) String values to Station");
-    writeSingleCollectionToFour(STATION1,STATION2,STATION3,STATION4,"String");
-  }
-}
-
-
-// *******************************************
-// Name : centralToOneStationPingPong1000Int
+// Name : centralToOneStationPingPong1000
 // *******************************************
 // Description:
 // central system: will write an int into a point at the stations database.
@@ -2186,95 +1270,42 @@ void centralToStations100StringTo10x1() {
 // Returns:
 //    None
 // *******************************************
-void centralToOneStationPingPong1000Int() {
-  DebugTN("centralToOneStationPingPong1000Int starting ");
+void centralToOneStationPingPong1000(string choice) {
+  DebugTN("centralToOneStationPingPong1000 starting ");
   isRunning=true;
   nrWrites=1000;
   totalWrites=1000;
   nrReads=0;
   
   if (isStation && stationName==STATION1) {
-    DebugTN("Will start station pingpong test with 1000 bounces and an int");
+    DebugTN("Will start station pingpong test with 1000 bounces with "+choice);
     emptyPoints();    
-    if (dpExists(STATION1+"lofarSpeedTest.singleInt") ){
-      dpConnect("pingpongStationIntTrigger",false,STATION1+"lofarSpeedTest.singleInt");
+    if (dpExists(STATION1+"lofarSpeedTest.single"+choice) ){
+      dpConnect("pingpongStation"+choice+"Trigger",false,STATION1+"lofarSpeedTest.single"+choice);
     } else {
-      DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.singleInt. Test halted");
+      DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.single"+choice+". Test halted");
     }
   } else {
-    DebugTN("Will start maincu pingpong test with 1000 bounces and an int");
+    DebugTN("Will start maincu pingpong test with 1000 bounces with "+choice);
     emptyPoints();
     // Give readcycle a chance to start up
     delay(0,500);
 
     // 1st connect to own point
-    if (dpExists("MCU001:lofarSpeedTest.singleInt") ){
-      dpConnect("pingpongCentralIntTrigger",false,"MCU001:lofarSpeedTest.singleInt");
+    if (dpExists("MCU001:lofarSpeedTest.single"+choice) ){
+      dpConnect("pingpongCentral"+choice+"Trigger",false,"MCU001:lofarSpeedTest.single"+choice);
       // now check stations point and write first value to start the game
-      if (dpExists(STATION1+"lofarSpeedTest.singleInt") ){
-        dpSet(STATION1+"lofarSpeedTest.singleInt",10);
+      if (dpExists(STATION1+"lofarSpeedTest.single"+choice) ){
+        dpSet(STATION1+"lofarSpeedTest.single"+choice,10);
       } else {
-        DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.singleInt");          
+        DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.single"+choice);          
       }
     } else {
-      DebugTN("Error: couldn't connect to MCU001:lofarSpeedTest.singleInt. Test halted");
+      DebugTN("Error: couldn't connect to MCU001:lofarSpeedTest.single"+choice+". Test halted");
     }
   }
 }
 
-// *******************************************
-// Name : centralToOneStationPingPong1000String
-// *******************************************
-// Description:
-// central system: will write an int into a point at the staations database.
-//                 and will have a dpconnect in his own db on the same point.
-//                 as soon as the dpconnect is triggered , he will read the 
-//                 value and send it back to the station again, after 1000 bounces
-//                 the test will stop.
-// station:        will have a dpconnect on a point in his own db. As soon as
-//                 he is triggered, he will send the received value back to
-//                 the central system
-//
-// Results:        1 Time between first and last trigger
-//
-// Returns:
-//    None
-// *******************************************
-void centralToOneStationPingPong1000String() {
-  DebugTN("centralToOneStationPingPong1000String starting ");
-  isRunning=true;
-  nrWrites=1000;
-  totalWrites=1000;
-  nrReads=0;
-  
-  if (isStation && stationName==STATION1) {
-    DebugTN("Will start station pingpong test with 1000 bounces and a string");
-    emptyPoints();
-    if (dpExists(STATION1+"lofarSpeedTest.singleString") ){
-//       dpConnect("pingpongStationStringTrigger",false,STATION1+"lofarSpeedTest.singleString");
-    } else {
-      DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.singleString. Test halted");
-    }
-  } else {
-    DebugTN("Will start maincu pingpong test with 1000 bounces and an int");
-    emptyPoints();
-    // Give readcycle a chance to start up
-    delay(0,500);
-
-    // 1st connect to own point
-    if (dpExists("MCU001:lofarSpeedTest.singleString") ){
-      dpConnect("pingpongCentralStringTrigger",false,"MCU001:lofarSpeedTest.singleString");
-      // now check stations point and write first value to start the game
-      if (dpExists(STATION1+"lofarSpeedTest.singleString") ){
-        dpSet(STATION1+"lofarSpeedTest.singleString","testing");
-      } else {
-        DebugTN("Error: couldn't connect to "+STATION1+"lofarSpeedTest.singleString");          
-      }
-    } else {
-      DebugTN("Error: couldn't connect to MCU001:lofarSpeedTest.singleString. Test halted");
-    }
-  }
-}
 //
 // *********** Callbacks **********
 //
@@ -2758,7 +1789,7 @@ void writeSingleCollection(string machineName,string val) {
     endTime = getCurrentTime();
     time timed=endTime-startTime;
     string tStr=hour(timed)+","+minute(timed)+","+second(timed)+","+ milliSecond(timed);
-    dpSet("lofarSpeedTest.result.nrWrites",totalWrites,
+    dpSet("lofarSpeedTest.result.nrWrites",nrWrites,
           "lofarSpeedTest.result.writeTime",tStr);
     isRunning=false;
     DebugTN("*****End write cycle reached*****");
