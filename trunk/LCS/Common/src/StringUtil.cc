@@ -405,7 +405,6 @@ string findRangeElement(const string& orgStr)
 // (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
 // if you change anything structural change the Navigator part also please
 // -----------------------------------------------------------------------
-
 string expandedArrayString(const string& orgStr)
 {
   // any ranges in the string?
@@ -424,12 +423,20 @@ string expandedArrayString(const string& orgStr)
     return (orgStr);
   }
 
+  string grpStr;
+  
   // construct scanmask and outputmask.
   string elemName(strVector[0].substr(0,firstDigit));
   string scanMask(elemName+"%ld");
-  string grpStr;
-  string outMask (formatString("%s%%0%dld", elemName.c_str(), 1));
-	
+  int nrDigits;
+  if (strVector[0].find("..",0) != string::npos) 	// range element?
+    nrDigits = ((strVector[0].length() - 2)/2) - elemName.length();
+  else if (strVector[0].find("*",0) != string::npos)    // '*' element?
+    nrDigits = 1;
+  else
+    nrDigits = strVector[0].length() - elemName.length();
+  string outMask (formatString("%s%%0%dld", elemName.c_str(), nrDigits));
+
   // handle all elements
   string result("[");
   int nrElems(strVector.size());
@@ -534,5 +541,4 @@ string expandedArrayString(const string& orgStr)
 
   return (result+"]");
 }
-
 } // namespace LOFAR
