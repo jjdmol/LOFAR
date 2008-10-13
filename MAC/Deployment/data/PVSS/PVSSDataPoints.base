@@ -22,6 +22,11 @@ WAN					-			C	P	N	LOFAR_PIC_WAN
 WANarea				-			C	P	N	LOFAR_PIC_WAN_@wan@
 Switch				-			C	P	Y	LOFAR_PIC_WAN_@wan@_@switch@
 PermSW				-			C	P	N	LOFAR_PermSW
+# Note: the next 4 lines are neccesary for PVSS2SAS to create the PIC tree.
+Ring				-			C	P	N	LOFAR_PermSW_@ring@
+Station				STS			C	P	Y	LOFAR_PermSW_@ring@_@station@
+Cluster				-			C	P	N	LOFAR_PermSW_@cluster@
+Node				-			C	P	Y	LOFAR_PermSW_@cluster@_@node@
 Daemons				-			C	P	N	LOFAR_PermSW_Daemons
 LogProcessor		-			C	P	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker		- 			C	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
@@ -50,6 +55,9 @@ RCU					RCU			S	P	Y	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB			S	P	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
 StationClock		SCK			S	P	Y	LOFAR_PIC_StationClock
 StnPermSW			-			S	P	N	LOFAR_PermSW
+# Note: the next 2 lines are neccesary for PVSS2SAS to create the PIC tree.
+Cluster				-			S	P	N	LOFAR_PermSW_@cluster@
+Node				-			S	P	Y	LOFAR_PermSW_@cluster@_@node@
 Daemons				-			S	P	N	LOFAR_PermSW_Daemons
 LogProcessor		LGP			S	P	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker		- 			S	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
