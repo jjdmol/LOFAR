@@ -38,6 +38,7 @@ def main(files, name):
             continue
         result    = os.system('ssh %s "mkdir %s"' % (target, name))
         if result == 0 or result == 256:
+            print 'ssh -A %s "scp -r %s %s:%s"' % (host, loc + '/' + filename, target, name)
             result = os.system('ssh -A %s "scp -r %s %s:%s"' % (host, loc + '/' + filename, target, name))
 ##            if result: print "Error:" + str(result)
 ##            else:
