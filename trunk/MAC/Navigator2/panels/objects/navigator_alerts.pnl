@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1071 110 N "_3DFace" 1
+PANEL,-1 -1 1058 288 N "_3DFace" 1
 "$name"
 "main() {
   
@@ -187,6 +187,7 @@ void rClick(int row) {
       httpStr=substr(startStr,0,end);
     } 
   }
+  LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|found http msg: \"+httpStr);
   
   
     
@@ -253,7 +254,7 @@ void rClick(int row) {
       }    
     }
   } else if (answer == 2) {
-    std_help(httpStr,false);
+    std_help(httpStr,true);
   }
 }
 
