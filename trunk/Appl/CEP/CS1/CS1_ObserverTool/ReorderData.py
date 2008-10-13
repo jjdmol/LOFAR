@@ -39,10 +39,10 @@ def main(files, name):
         result    = os.system('ssh %s "mkdir %s"' % (target, name))
         if result == 0 or result == 256:
             result = os.system('ssh -A %s "scp -r %s %s:%s"' % (host, loc + '/' + filename, target, name))
-            if result: print "Error:" + str(result)
-            else:
-                result = os.system('ssh -A %s "rm -rf %s"' % (host, loc + '/' + filename))
-                if result: print "Error:" + str(result)
+##            if result: print "Error:" + str(result)
+##            else:
+##                result = os.system('ssh -A %s "rm -rf %s"' % (host, loc + '/' + filename))
+##                if result: print "Error:" + str(result)
 
 if __name__ == "__main__":
     parser = OptionParser(usage='prog -f<files>, -n<name>')
