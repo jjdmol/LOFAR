@@ -597,7 +597,8 @@ create_dp_file()
 		echo    "Action	DpName	TypeName	ID"
 	) >${DESTDIR}/${DP_FILE}
 
-	cleanlist $1 | awk -v dbtype=$2 -v dptype=$3 '{ 
+	# Note: ignore the PermSW_@... lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@" | awk -v dbtype=$2 -v dptype=$3 '{ 
 		if ($3 == dbtype && $4 == dptype) {
 			print $6"	"$1	
 		} }' | \

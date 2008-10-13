@@ -35,6 +35,7 @@ _mp_ProcessStatus	ProcessStatus	0
 _dt_ProcessStatus	_DynamicDatapoints	0
 
 ElementName	TypeName	_original.._value	_original.._status
+_mp_ObjectStatus.leaf	ObjectStatus	"false"	0x101
 _dt_ProcessStatus.Leaf	_DynamicDatapoints	"_mp_ProcessStatus.logMsg:_archive"	0x101
 _dt_ProcessStatus.DynamicAttribute	_DynamicDatapoints	"_da_none"	0x101
 
