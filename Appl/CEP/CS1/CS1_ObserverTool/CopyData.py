@@ -23,25 +23,71 @@ from qt import *
 
 class CopyData(QDialog):
     def __init__(self, parent):
-        QDialog.__init__(self, parent, "Storage Details", True)
-        self.location = QLineEdit("/data/L2008_06100", self)
+        QDialog.__init__(self, parent, "Copy data", True)
+        self.location = QLineEdit("L2008_06100", self)
         self.location.setMinimumWidth(190)
         self.location.move(100, 15)
-        l = QLabel("Dataset location:", self)
+        l = QLabel("Dataset:", self)
         l.move(15, 15)
         l.setMaximumWidth(80)
         self.resize(300, 150)
         b = QPushButton("Copy", self)
         b.move(100, 55)
         b.show()
+        self.connect(b, SIGNAL("clicked()"), self.goCopy)
         b = QPushButton("Close", self)
         b.move(100, 90)
         b.show()
         self.connect(b, SIGNAL("clicked()"), self.accept)
 
-    def getDetails(self, name):
+    def showResults(self, lines):
+        q = QDialog(self, "Copied data", True)
+        height = 15
+        sv = QScrollView(q)
+        sv.enableClipper(True)
+        sv.move(15, 15)
+        sv.resize(470, 200)
+        w = QWidget(sv.viewport())
+        sv.addChild(w)
+        sv.setVScrollBarMode(QScrollView.AlwaysOn)
+        for line in lines:
+            if line[0] == '0': continue
+            l = QLabel(w)
+            l.move(20, height)
+            l.setAutoResize(True)
+            height += 20
+            l.setText(line)
+        w.resize(450, height+60)
+        q.resize(500, 260)
+        b = QPushButton("Close", q)
+        b.move(200, 220)
+        b.show()
+        self.connect(b, SIGNAL("clicked()"), q.accept)
+        q.show()
+
+    def goCopy(self):
+        self.setCursor(Qt.busyCursor)
+        files = self.goFind()
         try:
-            reload(GetStorageDetails)
+            reload(ReorderData)
         except:
-            import GetStorageDetails
-        return GetStorageDetails.main(name)
+            import ReorderData
+        ReorderData.main(files, "/data/" + self.location.text())
+        self.unsetCursor()
+        self.showResults(files)
+
+    def goFind(self):
+        try:
+            reload(FindFiles)
+        except:
+            import FindFiles
+        config = {'nrListNodes':4, 'nrLifsNodes':12}
+
+        sources = []
+        for i in range(config['nrListNodes']):
+            name  = "list%03d" % (i+1)
+            sources.append((name,"/data"))
+            sources.append((name,"/san/LOFAR"))
+
+        lines = FindFiles.main(sources, str(self.location.text()))
+        return lines
