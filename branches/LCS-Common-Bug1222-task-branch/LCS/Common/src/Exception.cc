@@ -22,9 +22,15 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
 #include <Common/Exception.h>
+#include <cstdlib>    // for abort()
 #include <iostream>
-#include <typeinfo>
+
+#ifndef __GNUG_
+# include <cstdio>    // for fputs()
+# include <typeinfo>  // for typeid()
+#endif
 
 namespace LOFAR 
 {
@@ -78,29 +84,30 @@ namespace LOFAR
 #ifdef __GNUG__
         __gnu_cxx::__verbose_terminate_handler();
 #else
-        // Rethrow once more to separate exception from other exceptions.
+        // Rethrow once more to separate std::exception from other exceptions.
         try {
           throw;
         } 
         // Print the (mangled) type of the exception and its content.
         catch (exception& e) {
-          cerr << typeid(e).name() << ": " << e.what() << endl;
+	  try {
+	    cerr << typeid(e).name() << ": " << e.what() << endl;
+	  } catch (...) {}
         }
 #endif
       }
     }
-    // All bets are off.
     abort();
   }
 
 
   void Exception::print(ostream& os) const
   {
-    os << "[" << type() << ": " << itsText << endl
+    os << "[" << type() << ": " << itsText << "]" << endl
        << "in function " << (itsFunction.empty() ? "??" : itsFunction) << endl
        << "(" << (itsFile.empty() ? "??" : itsFile) << ":" << itsLine << ")";
 #ifdef HAVE_BACKTRACE
-    if (itsBacktrace.get()) {
+    if (itsBacktrace) {
       os << "\nBacktrace follows:\n" << *itsBacktrace;
     }
 #endif
