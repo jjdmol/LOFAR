@@ -30,6 +30,7 @@
 #include <Common/lofar_iostream.h>
 #include <cstring>
 #include <cstdarg>
+#include <ctime>
 
 namespace LOFAR
 {

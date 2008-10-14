@@ -24,6 +24,7 @@
 
 
 %{
+#include <lofar_config.h>
 #include <Blob/KeyValueMap.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include "SimulatorParse.h"

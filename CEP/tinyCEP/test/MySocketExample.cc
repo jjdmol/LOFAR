@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include <MySocketExample.h>
 #include <Transport/Connection.h>
 

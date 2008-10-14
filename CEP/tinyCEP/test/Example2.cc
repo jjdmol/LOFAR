@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <iostream>
 #include <Transport/DataHolder.h>
 #ifdef HAVE_MPI

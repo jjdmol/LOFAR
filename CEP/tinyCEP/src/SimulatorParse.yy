@@ -23,6 +23,7 @@
 */
 
 %{
+#include <lofar_config.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Blob/KeyValueMap.h>
 using namespace LOFAR;

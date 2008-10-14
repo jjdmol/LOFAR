@@ -110,26 +110,26 @@ namespace LOFAR
   void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
 						     asection*  section)
   {
-    bfd_vma vma;
-    bfd_size_type size;
-      
     if (found)
       return;
       
+    asymbol** syms = SymbolTable::instance().getSyms();
+    if (!syms)
+      return;
+
     if ((bfd_get_section_flags (abfd, section) & SEC_ALLOC) == 0)
       return;
       
-    vma = bfd_get_section_vma (abfd, section);
+    bfd_vma vma = bfd_get_section_vma (abfd, section);
     if (pc < vma)
       return;
       
-    size = bfd_get_section_size (section);
+    bfd_size_type size = bfd_get_section_size (section);
     if (pc >= vma + size)
       return;
-      
-    found = bfd_find_nearest_line (abfd, section, 
-                                   SymbolTable::instance().getSyms(), 
-                                   pc - vma, &filename, &functionname, &line);
+
+    found = bfd_find_nearest_line (abfd, section, syms, pc - vma, 
+				   &filename, &functionname, &line);
   }
     
 #endif

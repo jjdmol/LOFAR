@@ -1,4 +1,5 @@
 
+#include <lofar_config.h>
 #include <MyExample.h>
 
 namespace LOFAR

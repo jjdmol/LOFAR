@@ -24,6 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
+#include <lofar_config.h>
 #include "DH_ExampleSim.h"
 
 using namespace LOFAR;

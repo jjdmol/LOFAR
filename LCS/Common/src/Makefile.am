@@ -11,6 +11,7 @@ lib_LTLIBRARIES 	= libcommon.la
 libcommon_la_SOURCES 	= Package__Version.cc \
 	Allocator.cc \
 	DataConvert.cc \
+	Exception.cc \
 	FileLocator.cc \
 	hexdump.cc \
 	lofar_bitset.cc \

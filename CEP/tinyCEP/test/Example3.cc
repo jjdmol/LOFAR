@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <iostream>
 #include <Transport/DataHolder.h>
 #include <tinyCEP/SimulatorParseClass.h>
