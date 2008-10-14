@@ -1,0 +1,168 @@
+#ifndef LOFAR_INTERFACE_CORRELATED_DATA_H
+#define LOFAR_INTERFACE_CORRELATED_DATA_H
+
+#include <Common/lofar_complex.h>
+#include <Common/DataConvert.h>
+#include <Interface/Align.h>
+#include <Interface/Allocator.h>
+#include <Interface/Config.h>
+#include <Stream/Stream.h>
+
+#include <boost/multi_array.hpp>
+#include <stdexcept>
+
+
+namespace LOFAR {
+namespace RTCP {
+
+class CorrelatedData
+{
+  public:
+    CorrelatedData(unsigned nrBaselines, unsigned nrChannels);
+    CorrelatedData(const Arena &, unsigned nrBaselines, unsigned nrChannels);
+    ~CorrelatedData();
+
+    static size_t requiredSize(unsigned nrBaselines, unsigned nrChannels);
+    void	  read(Stream *);
+    void	  write(Stream *) const;
+
+    CorrelatedData &operator += (const CorrelatedData &);
+
+  private:
+    Arena		  *privateArena;
+    SparseSetAllocator	  allocator;
+    unsigned		  itsNrBaselines;
+
+  public:
+    boost::multi_array_ref<fcomplex, 4>       visibilities; //[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
+    boost::multi_array_ref<unsigned short, 2> nrValidSamples; //[itsNrBaselines][nrChannels]
+    float				      *centroids; //[itsNrBaselines]
+
+  private:
+    void	  checkEndianness();
+
+    static size_t visibilitiesSize(unsigned nrBaselines, unsigned nrChannels);
+    static size_t nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels);
+    static size_t centroidSize(unsigned nrBaselines);
+};
+
+
+inline size_t CorrelatedData::visibilitiesSize(unsigned nrBaselines, unsigned nrChannels)
+{
+  return align(sizeof(fcomplex) * nrBaselines * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, 32);
+}
+
+
+inline size_t CorrelatedData::nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels)
+{
+  return sizeof(unsigned short) * nrBaselines * nrChannels;
+}
+
+
+inline size_t CorrelatedData::centroidSize(unsigned nrBaselines)
+{
+  return align(sizeof(float) * nrBaselines, 32);
+}
+
+
+inline size_t CorrelatedData::requiredSize(unsigned nrBaselines, unsigned nrChannels)
+{
+  return visibilitiesSize(nrBaselines, nrChannels) + nrValidSamplesSize(nrBaselines, nrChannels) + centroidSize(nrBaselines);
+}
+
+
+inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels)
+:
+  privateArena(new MallocedArena(requiredSize(nrBaselines, nrChannels), 32)),
+  allocator(*privateArena),
+  itsNrBaselines(nrBaselines),
+  visibilities(static_cast<fcomplex *>(allocator.allocate(visibilitiesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]),
+  nrValidSamples(static_cast<unsigned short *>(allocator.allocate(nrValidSamplesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels]),
+  centroids(static_cast<float *>(allocator.allocate(centroidSize(nrBaselines), 32)))
+{
+}
+
+
+inline CorrelatedData::CorrelatedData(const Arena &arena, unsigned nrBaselines, unsigned nrChannels)
+:
+  privateArena(0),
+  allocator(arena),
+  itsNrBaselines(nrBaselines),
+  visibilities(static_cast<fcomplex *>(allocator.allocate(visibilitiesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]),
+  nrValidSamples(static_cast<unsigned short *>(allocator.allocate(nrValidSamplesSize(nrBaselines, nrChannels), 32)), boost::extents[nrBaselines][nrChannels]),
+  centroids(static_cast<float *>(allocator.allocate(centroidSize(nrBaselines), 32)))
+{
+}
+
+
+inline CorrelatedData::~CorrelatedData()
+{
+  allocator.deallocate(visibilities.origin());
+  allocator.deallocate(nrValidSamples.origin());
+  allocator.deallocate(centroids);
+
+  delete privateArena;
+}
+
+
+inline void CorrelatedData::read(Stream *str)
+{
+  str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
+  str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+  //str->read(centroids, itsNrBaselines * sizeof(float));
+
+  checkEndianness();
+}
+
+
+inline void CorrelatedData::write(Stream *str) const
+{
+#if !defined WORDS_BIGENDIAN
+  throw std::logic_error("not implemented: think about endianness");
+#endif
+
+  str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
+  str->write(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
+  //str->write(centroids, itsNrBaselines * sizeof(float));
+}
+
+
+inline void CorrelatedData::checkEndianness()
+{
+#if !defined WORDS_BIGENDIAN
+  dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
+  dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
+  // dataConvert(LittleEndian, centroids, itsNrBaselines);
+#endif
+}
+
+
+inline CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
+{
+  // add visibilities
+  {
+    fcomplex	   *dst	 = visibilities.origin();
+    const fcomplex *src	 = other.visibilities.origin();
+    unsigned	   count = visibilities.num_elements();
+
+    for (unsigned i = 0; i < count; i ++)
+      dst[i] += src[i];
+  }
+
+  // add nr. valid samples
+  {
+    unsigned short       *dst  = nrValidSamples.origin();
+    const unsigned short *src  = other.nrValidSamples.origin();
+    unsigned		 count = nrValidSamples.num_elements();
+
+    for (unsigned i = 0; i < count; i ++)
+      dst[i] += src[i];
+  }
+
+  return *this;
+}
+
+} // namespace RTCP
+} // namespace LOFAR
+
+#endif
