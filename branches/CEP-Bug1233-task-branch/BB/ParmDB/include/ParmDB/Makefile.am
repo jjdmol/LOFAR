@@ -3,7 +3,8 @@ INSTHDRS = \
 Axis.h AxisMapping.h Box.h Grid.h \
 ParmValue.h ParmSet.h ParmMap.h ParmCache.h \
 ParmDBMeta.h ParmDB.h ParmDBCasa.h ParmDBLocker.h \
-Parm.h
+Parm.h \
+SourceInfo.h SourceDB.h SourceDBCasa.h
 
 NOINSTHDRS =
 
