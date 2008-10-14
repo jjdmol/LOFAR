@@ -56,7 +56,9 @@ ApplController::ApplController(const string&	configID) :
     itsAPAPool       (0),
 	itsServerStub	 (0),
 	itsDaemonComm	 (0),
+#ifdef KVLOGGER	
 	itsKVLogger		 (0),
+#endif	
 	itsCurTime       (0),
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
@@ -94,7 +96,9 @@ ApplController::~ApplController()
     if (itsAPAPool)        { delete itsAPAPool;        }
 	if (itsServerStub)     { delete itsServerStub;     }
 	if (itsDaemonComm)     { delete itsDaemonComm;     }
+#ifdef KVLOGGER	
 	if (itsKVLogger)	   { delete itsKVLogger;	   }
+#endif	
 	if (itsCurACMsg)	   { delete itsCurACMsg; 	   }
 	if (itsStateEngine)	   { delete itsStateEngine;    }
 
@@ -129,9 +133,10 @@ void ApplController::startupNetwork()
 							itsBootParamSet->getString("AC.pingID"));
 
 	// 												   client					synchrone
+#ifdef KVLOGGER
 	itsKVLogger = new EventPort(MAC_SVCMASK_KVTLOGGER, false, KVT_PROTOCOL, "", true);	
 	ASSERTSTR(itsKVLogger, "Can't connect to KeyValueLogger");
-
+#endif
 	itsIsRunning = true;
 }
 
@@ -282,47 +287,6 @@ void ApplController::createParSubsets()
 		rtrim(procName, "()0123456789");
 		string procPrefix = applName +"." + procName;
 
-		// TODO: REMOVE THIS CS1 HACK
-		// number of processes if very complex to calculate. For CS1 this is done
-		// by a python script, for final LOFAR we need to do this in SAS.
-		if (procPrefix == "InputAppl.Transpose") {
-			LOG_DEBUG("CS1_SPECIAL: calling prepare_CS1_InputSection.py");
-			string	command("/opt/lofar/bin/prepare_CS1_InputSection.py --parsetfile=" + itsObsPSfilename);
-			nrProcs = system(command.c_str())/256;
-			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
-		}
-		else if (procPrefix == "StorageAppl.StorageProg") {
-#ifdef STEP5 			
-			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
-			// NOTE: next code-fragment should be replaced with coe based on 'Observation' class.
-			nrProcs = itsObsParamSet->getStringVector("Observation.VirtualInstrument.partitionList").size() * itsObsParamSet->getInt32("OLAP.nrStorageNodes");
-			LOG_DEBUG_STR("nrOfProcesses = " << nrProcs);
-#else			
-			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
-			// NOTE: next code-fragment should be replaced with coe based on 'Observation' class.
-			int32	nrSubbands(0);
-			int32	nrBeams = itsObsParamSet->getUint32("Observation.nrBeams");
-			for (int32 beam(1); beam <= nrBeams; beam++) {
-				string	beamPrefix(formatString("Observation.Beam[%d].", beam));
-				string	sbString("x=" + expandedArrayString(itsObsParamSet->getString(beamPrefix+"subbandList","[]")));
-				ParameterSet	sbParset;
-				sbParset.adoptBuffer(sbString);
-				vector<int16>	subbands = sbParset.getInt16Vector("x");
-				nrSubbands += subbands.size();
-			}
-			// end fragment
-
-//			vector<int>	subbands = itsObsParamSet->getInt32Vector("Observation.subbandList");
-//			nrSubbands = subbands.size();
-			int			psetsPerStorage = itsObsParamSet->getInt32("OLAP.psetsPerStorage");
-			int			subbandsPerPset = itsObsParamSet->getInt32("OLAP.subbandsPerPset");
-			nrProcs = nrSubbands / (psetsPerStorage * subbandsPerPset);
-			LOG_DEBUG_STR("nrOfProcesses = " << nrSubbands << "/(" << psetsPerStorage << "*" << 
-							subbandsPerPset << ")=" << nrProcs);
-#endif		
-		
-		}
-        
 		if (nrProcs == 0) {
 			itsNrOfProcs++;
 		}
@@ -401,6 +365,9 @@ void ApplController::createParSubsets()
 											  fileName));
 				}
 			}
+			
+			// IONProc processes do not connect to the ApplController.
+			itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 
 		else if (startstopType == "mpirun") {
@@ -420,34 +387,16 @@ void ApplController::createParSubsets()
 									fileName,
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
+			// Storage processes do not connect to the ApplController.
+			itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 
 		// --- bgl ---
 		else if (startstopType == "bgl") {
-#ifdef STEP5
-			// This processSet is a BG/L job
-			LOG_TRACE_COND_STR("bgl process " << procName);
-			vector<string>	parList = basePS.getStringVector("Observation.VirtualInstrument.partitionList");
-			for (uint parIdx = 0; parIdx < parList.size(); parIdx++) {
-			  
-			  itsProcRuler.add(PR_BGL(procName,				    
-									  parList[parIdx],
-									  basePS.getString(procPrefix + "._executable"),
-									  basePS.getString(procPrefix + ".workingdir"),
-									  fileName, 
-									  nrProcs));
-			
-			  writeParSubset(basePS, parList[parIdx], fileName);
-			}
-			
-			// BGL processes do not connect to the ApplController.
-			itsNrOfProcs -= nrProcs ? nrProcs : 1;
-
-#else		
 			// This processSet is a BG/L job
 			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
-									basePS.getString(procPrefix + ".partition"),
+									basePS.getString("OLAP.BGLProc.partition"),
 									basePS.getString(procPrefix + "._executable"),
 									basePS.getString(procPrefix + ".workingdir"),
 									fileName, 
@@ -455,7 +404,6 @@ void ApplController::createParSubsets()
 			writeParSubset(basePS, procName, fileName);
 			// BGL processes do not connect to the ApplController.
 			itsNrOfProcs -= nrProcs ? nrProcs : 1;
-#endif				
 		}
 	} // for processes
 }
@@ -522,12 +470,14 @@ void ApplController::sendToKVLogger(ParameterSet&	aResultPS)
 	}
 
 	// send message and wait for answer.
+#ifdef KVLOGGER
 	itsKVLogger->send(&poolEvent);
 	KVTSendMsgPoolAckEvent		poolAck(*(itsKVLogger->receive()));
 
 	if (poolAck.result != 0) {
 		LOG_ERROR_STR("Storing metadata in PVSS resulted in errorcode " << poolAck.result);
 	}
+#endif	
 }
 
 
