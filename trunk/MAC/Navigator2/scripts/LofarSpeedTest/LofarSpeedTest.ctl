@@ -932,7 +932,7 @@ void twoStationsFromCentral100To10(string choice) {
 // Returns:
 //    None
 // *******************************************
-void twoStationsFromCentral100To10x1() {
+void twoStationsFromCentral100To10x1(string choice) {
   DebugTN("twoStationsFromCentral100To10x1 starting for "+choice);
   isRunning=true;
   nrWrites=1000;
