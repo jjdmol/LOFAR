@@ -24,6 +24,7 @@
 
 #
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <jni.h>
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jCommon.h>
 #include <jOTDB2/nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection.h>
