@@ -85,7 +85,6 @@ void ParmDBCasa::createTables (const string& tableName)
   TableDesc td("ME parameter table", TableDesc::Scratch);
   td.comment() = String("Table containing ME parameters values");
   td.addColumn (ScalarColumnDesc<uint>  ("NAMEID"));
-  td.addColumn (ScalarColumnDesc<int>   ("TYPE"));
   td.addColumn (ScalarColumnDesc<double>("STARTX"));
   td.addColumn (ScalarColumnDesc<double>("ENDX"));
   td.addColumn (ScalarColumnDesc<double>("STARTY"));
@@ -248,12 +247,13 @@ pair<string,ParmValueSet> ParmDBCasa::extractDefValue (const Table& tab,
   ROScalarColumn<bool>   prelCol (tab, "PERT_REL");
   ParmValue pval;
   Array<double> val = valCol(row);
-  if (val.size() == 1) {
-    pval.setValues (Grid(), val);
+  ParmValue::FunkletType type = ParmValue::FunkletType(typeCol(row));
+  if (type == ParmValue::Scalar) {
+    ASSERT(val.size() == 1);
+    pval.setScalars (Grid(), val);
   } else {
     pval.setCoeff (val);
   }
-  ParmValue::FunkletType type = ParmValue::FunkletType(typeCol(row));
   ParmValueSet valset(pval, type, pertCol(row), prelCol(row));
   if (maskCol.isDefined(row)) {
     valset.setSolvableMask (maskCol(row));
@@ -281,7 +281,6 @@ void ParmDBCasa::getValues (vector<ParmValueSet>& psets,
   ROScalarColumn<double> pertCol(nmtab, "PERTURBATION");
   ROScalarColumn<bool>   prelCol(nmtab, "PERT_REL");
   ROArrayColumn<bool>    maskCol(nmtab, "SOLVABLE");
-  ROScalarColumn<int>    tpCol (table, "TYPE");
   ROScalarColumn<double> sxCol (table, "STARTX");
   ROScalarColumn<double> exCol (table, "ENDX");
   ROScalarColumn<double> syCol (table, "STARTY");
@@ -316,15 +315,15 @@ void ParmDBCasa::getValues (vector<ParmValueSet>& psets,
 	double ex = exCol(row);
 	double ey = eyCol(row);
 	ParmValue::ShPtr pval = ParmValue::ShPtr (new ParmValue);
-	if (tpCol(row) == 0) {
+	if (type != ParmValue::Scalar) {
 	  pval->setCoeff (valCol(row));
 	} else {
 	  Array<double> values = valCol(row);
 	  uint nx = values.shape()[0];
 	  uint ny = values.shape()[1];
-	  pval->setValues (Grid(getInterval(ivxCol, row, sx, ex, nx),
-				getInterval(ivyCol, row, sy, ey, ny)),
-			   values);
+	  pval->setScalars (Grid(getInterval(ivxCol, row, sx, ex, nx),
+				 getInterval(ivyCol, row, sy, ey, ny)),
+			    values);
 	}
 	pval->setRowId (row);
 	values.push_back (pval);
@@ -387,12 +386,13 @@ void ParmDBCasa::doPutValue (const string& name, int& nameId,
       putNewValue (name, nameId, pset, pval, grid.getCell(i));
     } else {
       // It is an existing row.
-      putOldValue (pval);
+      putOldValue (pval, pset.getType());
     }
   }
 }
 
-void ParmDBCasa::putOldValue (const ParmValue& pval)
+void ParmDBCasa::putOldValue (const ParmValue& pval,
+			      ParmValue::FunkletType type)
 {
   Table& table = itsTables[0];
   ArrayColumn<double>  valCol  (table, "VALUES");
@@ -419,7 +419,7 @@ void ParmDBCasa::putOldValue (const ParmValue& pval)
     styCol.put (rownr, domain.lowerY());
     endyCol.put (rownr, domain.upperY());
     // Write irregular intervals if needed.
-    if (! pval.hasCoeff()) {
+    if (type == ParmValue::Scalar) {
       if (! pvGrid.getAxis(0)->isRegular()) {
 	putInterval (*pvGrid.getAxis(0), ivxCol, rownr);
       } else {
@@ -450,7 +450,6 @@ void ParmDBCasa::putNewValue (const string& parmName, int& nameId,
   Table& table = itsTables[0];
   uint rownr = table.nrow();
   ScalarColumn<uint>   idCol   (table, "NAMEID");
-  ScalarColumn<int>    tpCol   (table, "TYPE");
   ScalarColumn<double> stxCol  (table, "STARTX");
   ScalarColumn<double> endxCol (table, "ENDX");
   ScalarColumn<double> styCol  (table, "STARTY");
@@ -462,12 +461,11 @@ void ParmDBCasa::putNewValue (const string& parmName, int& nameId,
   // Create a new row for the ParmValue.
   table.addRow();
   idCol.put (rownr, nameId);
-  tpCol.put (rownr, pval.hasCoeff() ? 0:1);
   stxCol.put (rownr, domain.lowerX());
   endxCol.put (rownr, domain.upperX());
   styCol.put (rownr, domain.lowerY());
   endyCol.put (rownr, domain.upperY());
-  if (! pval.hasCoeff()) {
+  if (pset.getType() == ParmValue::Scalar) {
     const Grid& pvGrid = pval.getGrid();
     if (! pvGrid.getAxis(0)->isRegular()) {
       putInterval (*pvGrid.getAxis(0), ivxCol, rownr);

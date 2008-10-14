@@ -62,6 +62,10 @@ namespace BBS {
     // the alreay known parmid.
     ParmId addParm (ParmDB&, const string& name);
 
+    // Does the parm already exist in the ParmDB?
+    bool isInParmDB (ParmId parmid) const
+      { return itsParms[parmid].getNameId() >= 0; }
+
     // Add zero or more existing parms.
     // A vector of unique parmIds is returned.
     // <group>

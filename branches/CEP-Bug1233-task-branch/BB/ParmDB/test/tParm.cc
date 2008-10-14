@@ -241,7 +241,7 @@ void testResultOneScalar()
   Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
 		  Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
   ParmValue pval;
-  pval.setValues (domainGrid, scalars);
+  pval.setScalars (domainGrid, scalars);
   {
     // Form a predict grid which is a subset of the domain grid.
     Axis::ShPtr axis1(new RegularAxis(2,1,4));
@@ -294,7 +294,7 @@ void testResultMultiScalar()
       Grid domainGrid(Axis::ShPtr(new RegularAxis( 6*i+1, 3, 2)),
 		      Axis::ShPtr(new RegularAxis(12*j+5, 4, 3)));
       ParmValue pval;
-      pval.setValues (domainGrid, scalars);
+      pval.setScalars (domainGrid, scalars);
       parmValues.push_back (ParmValue::ShPtr(new ParmValue(pval)));
     }
   }
@@ -362,12 +362,12 @@ void testSetGetCoeff1()
   indgen(coeff);
   ParmValue defaultValue;
   defaultValue.setCoeff (coeff);
-  pdb.putDefValue ("ra", ParmValueSet(defaultValue));
+  pdb.putDefValue ("ra", ParmValueSet(defaultValue, ParmValue::Polc));
   defaultValue.setCoeff (coeff+10.);
   Array<bool> solvMask(coeff.shape());
   solvMask = true;
   solvMask(IPosition(2,1,2)) = false;
-  ParmValueSet pvset(defaultValue);
+  ParmValueSet pvset(defaultValue, ParmValue::Polc);
   pvset.setSolvableMask(solvMask);
   pdb.putDefValue ("dec", pvset);
   // Create parmset.

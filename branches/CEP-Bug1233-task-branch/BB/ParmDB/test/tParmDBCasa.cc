@@ -86,6 +86,7 @@ void testDef()
     // Put with a scalar value 2.
     ParmValue defaultValue(2);
     ParmValueSet pset(defaultValue);
+
     pdb.putDefValue ("test1", pset);
     ASSERT (t1.nrow() == 1);
   }
@@ -93,7 +94,7 @@ void testDef()
     // Put with an array value.
     ParmValue defaultValue;
     defaultValue.setCoeff (coeff);
-    ParmValueSet pset(defaultValue);
+    ParmValueSet pset(defaultValue, ParmValue::Polc);
     pdb.putDefValue ("test2a", pset);
     ASSERT (t1.nrow() == 2);
   }
@@ -144,7 +145,7 @@ void testPutValues()
   ParmValueSet pset1(Grid(domains), values1, ParmValue(),
 		     ParmValue::Polc, 2e-6, false);
   ParmValueSet pset2(Grid(domains), values2, ParmValue(),
-		     ParmValue::Polc, 2e-6, true);
+		     ParmValue::Scalar, 2e-6, true);
   // Write arrays, thus one row per domain will be used.
   int nameId = -1;             // test.ra1 is a new name
   pdb.putValues ("test1.ra1", nameId, pset1);
@@ -195,6 +196,7 @@ void testGetValues()
   indgen(coeff, 1.);
   ParmValueSet pset1 = values[0];
   ASSERT (pset1.size() == 12);
+  ASSERT (pset1.getType() == ParmValue::Polc);
   for (int i=0; i<3; ++i) {
     for (int j=0; j<4; ++j) {
       int inx = j+i*4;
@@ -202,13 +204,13 @@ void testGetValues()
       const ParmValue& pvalue = pset1.getParmValue(inx);
       ASSERT (pvalue.nx() == 2);
       ASSERT (pvalue.ny() == 3);
-      ASSERT (pvalue.hasCoeff());
       ASSERT (allEQ(pvalue.getValues(), coeff+double(inx)));
     }
   }
   // Check the scalar values and domains.
   ParmValueSet pset2 = values[2];
   ASSERT (pset2.size() == 12);
+  ASSERT (pset1.getType() == ParmValue::Polc);
   for (int i=0; i<3; ++i) {
     for (int j=0; j<4; ++j) {
       int inx = j+i*4;
@@ -216,7 +218,6 @@ void testGetValues()
       const ParmValue& pvalue = pset2.getParmValue(inx);
       ASSERT (pvalue.nx() == 1);
       ASSERT (pvalue.ny() == 1);
-      ASSERT (!pvalue.hasCoeff());
       ASSERT (pvalue.getValues().data()[0] == inx);
     }
   }

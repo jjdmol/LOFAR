@@ -37,7 +37,6 @@ void testValue()
   ParmValue pvalue;
   ASSERT (pvalue.nx() == 1);
   ASSERT (pvalue.ny() == 1);
-  ASSERT (!pvalue.hasCoeff());
   ASSERT (!pvalue.hasErrors());
   ASSERT (pvalue.getRowId() < 0);
   ASSERT (pvalue.getValues().data()[0] == 0);
@@ -46,7 +45,6 @@ void testValue()
   Array<double> values(IPosition(2,5,6));
   indgen(values);
   pvalue.setCoeff (values);
-  ASSERT (pvalue.hasCoeff());
   ASSERT (pvalue.nx() == 5);
   ASSERT (pvalue.ny() == 6);
   for (int i=0; i<30; ++i) {
@@ -65,7 +63,6 @@ void testValue()
   // Test assignment.
   ParmValue pvalue2;
   pvalue2 = pvalue;
-  ASSERT (pvalue2.hasCoeff());
   ASSERT (pvalue2.nx() == 5);
   ASSERT (pvalue2.ny() == 6);
   // Assure a copy of the data array was made.
@@ -79,6 +76,7 @@ void testEmptySet()
 {
   ParmValueSet pset;
   ASSERT (pset.size() == 0);
+  ASSERT (pset.getType() == ParmValue::Scalar);
   ASSERT (!pset.isDirty());
   ASSERT (pset.getPerturbation() == 1e-6);
   ASSERT (pset.getPertRel());
@@ -90,6 +88,7 @@ void testDefaultSet()
   ParmValue defaultValue(2);
   ParmValueSet pset(defaultValue);
   ASSERT (pset.size() == 0);
+  ASSERT (pset.getType() == ParmValue::Scalar);
   ASSERT (pset.getGrid().size() == 1);
   ASSERT (!pset.isDirty());
   ASSERT (pset.getPerturbation() == 1e-6);
@@ -98,7 +97,6 @@ void testDefaultSet()
   const ParmValue& pvalue = pset.getFirstParmValue();
   ASSERT (pvalue.nx() == 1);
   ASSERT (pvalue.ny() == 1);
-  ASSERT (!pvalue.hasCoeff());
   ASSERT (pvalue.getValues().data()[0] == 2);
 }
 
@@ -115,6 +113,7 @@ void testRegularSet()
   ParmValueSet pset(Grid(domains), values, ParmValue(),
 		    ParmValue::Polc, 2e-6, false);
   ASSERT (pset.size() == 12);
+  ASSERT (pset.getType() == ParmValue::Polc);
   ASSERT (!pset.isDirty());
   ASSERT (pset.getPerturbation() == 2e-6);
   ASSERT (!pset.getPertRel());
@@ -123,7 +122,6 @@ void testRegularSet()
     const ParmValue& pvalue = pset.getParmValue(i);
     ASSERT (pvalue.nx() == 1);
     ASSERT (pvalue.ny() == 1);
-    ASSERT (!pvalue.hasCoeff());
     ASSERT (pvalue.getValues().data()[0] == i);
   }
   const Grid& grid = pset.getGrid();
@@ -142,6 +140,7 @@ void testRegularSet()
 void checkSolveScalarSet (const ParmValueSet& pset, uint nrx, uint nry)
 {
   ASSERT (pset.size() == 1);
+  ASSERT (pset.getType() == ParmValue::Scalar);
   ASSERT (pset.getGrid().size() == 1);
   ASSERT (pset.getParmValue(0).getGrid().size() == nrx*nry);
   ASSERT (!pset.isDirty());
@@ -152,7 +151,6 @@ void checkSolveScalarSet (const ParmValueSet& pset, uint nrx, uint nry)
   ASSERT (pvalue.getGrid().size() == nrx*nry);
   ASSERT (pvalue.nx() == nrx);
   ASSERT (pvalue.ny() == nry);
-  ASSERT (!pvalue.hasCoeff());
   ASSERT (pvalue.getValues().size() == nrx*nry);
   ASSERT (allEQ (pvalue.getValues(), 2.));
 }
@@ -189,6 +187,7 @@ void testSolveScalarSet()
 void checkSolveCoeffSet (const ParmValueSet& pset, uint nrx, uint nry)
 {
   ASSERT (pset.size() == nrx*nry);
+  ASSERT (pset.getType() == ParmValue::Polc);
   ASSERT (pset.getGrid().size() == nrx*nry);
   ASSERT (!pset.isDirty());
   ASSERT (pset.getPerturbation() == 1e-6);
@@ -197,7 +196,6 @@ void checkSolveCoeffSet (const ParmValueSet& pset, uint nrx, uint nry)
   const ParmValue& pvalue = pset.getParmValue(0);
   ASSERT (pvalue.nx() == 2);
   ASSERT (pvalue.ny() == 3);
-  ASSERT (pvalue.hasCoeff());
   ASSERT (pvalue.getValues().size() == 2*3);
   Array<double> coeff(IPosition(2,2,3));
   coeff = 0.;
@@ -213,7 +211,7 @@ void testSolveCoeffSet()
   coeff = 0.;
   coeff(IPosition(2,0,0)) = 1.;
   defaultValue.setCoeff (coeff);
-  ParmValueSet pset(defaultValue);
+  ParmValueSet pset(defaultValue, ParmValue::Polc);
   // Define a solve grid.
   Axis::ShPtr ax0 (new RegularAxis(10,2,5));
   Axis::ShPtr ax1 (new RegularAxis(20,10,8));
@@ -252,7 +250,7 @@ int main()
     testRegularSet();
     cout << "testing setSolveScalarGrid ..." << endl;
     testSolveScalarSet();
-    cout << "testing setSolveCoeffGrid ..." << endl;
+    cout << "testing setSolveCoeffSet ..." << endl;
     testSolveCoeffSet();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;

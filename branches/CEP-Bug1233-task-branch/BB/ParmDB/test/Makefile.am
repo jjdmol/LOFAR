@@ -8,8 +8,8 @@ CHECKTOOLPROGS        = $(check_PROGRAMS)
 # scripts used to run tests
 TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmValue.sh tParmDBCasa.sh \
-			tParmSet.sh tParmCache tParm.sh
-#			tparmdb.sh
+			tParmSet.sh tParmCache tParm.sh \
+			tparmdb.sh
 
 # scripts and possible programs to run tests
 TESTS	              = $(TESTSCRIPTS)

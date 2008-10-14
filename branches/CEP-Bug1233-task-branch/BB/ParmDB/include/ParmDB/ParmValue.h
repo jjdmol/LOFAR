@@ -56,8 +56,12 @@ namespace BBS {
 
     // Define the possible funklet types.
     enum FunkletType {
-      Polc = 0,
-      PolcLog = 1
+      // A constant scalar
+      Scalar  = 0,
+      // A polynomial
+      Polc    = 1,
+      // A polynomial of logs
+      PolcLog = 2
     };
 
     // Construct with the given scalar value.
@@ -79,7 +83,7 @@ namespace BBS {
 
     // Set as an array of scalar values with the grid.
     // The shape of grid and values must match.
-    void setValues (const Grid&, const casa::Array<double>&);
+    void setScalars (const Grid&, const casa::Array<double>&);
 
     // Set the errors.
     void setErrors (const casa::Array<double>&);
@@ -91,10 +95,6 @@ namespace BBS {
     int ny() const
       { return itsValues.shape()[1]; }
     // </group>
-
-    // Do the values represent coefficients or scalar values?
-    bool hasCoeff() const
-      { return itsHasCoeff; }
 
     // Get the values.
     // <group>
@@ -132,7 +132,6 @@ namespace BBS {
     Grid                 itsGrid;
     casa::Array<double>  itsValues;
     casa::Array<double>* itsErrors;
-    bool                 itsHasCoeff;
     int                  itsRowId;
   };
 
@@ -150,20 +149,21 @@ namespace BBS {
   public:
 
     // Create a parameterset with the given default
-    // parm value (which is treated as a polc).
+    // parm value (which is by default a scalar).
+    // If the funklet type is a scalar, the value in the default must contain
+    // one value only.
     explicit ParmValueSet (const ParmValue& defaultValue = ParmValue(),
-			   ParmValue::FunkletType = ParmValue::Polc,
+			   ParmValue::FunkletType = ParmValue::Scalar,
 			   double perturbation = 1e-6,
 			   bool pertRel = true);
 
     // Create the parameterset for the given domain grid and ParmValue objects.
-    // If not defined, get it from the default parameter values resulting
-    // in a ParmValue with a single domain.
-    // An exception is thrown if not found in the defaults either.
+    // If the funklet type is a scalar, the values in the ParmValues must
+    // contain one value only.
     ParmValueSet (const Grid& domainGrid,
 		  const std::vector<ParmValue::ShPtr>& values,
 		  const ParmValue& defaultValue = ParmValue(),
-		  ParmValue::FunkletType type = ParmValue::Polc,
+		  ParmValue::FunkletType type = ParmValue::Scalar,
 		  double perturbation = 1e-6,
 		  bool pertRel = true);
 

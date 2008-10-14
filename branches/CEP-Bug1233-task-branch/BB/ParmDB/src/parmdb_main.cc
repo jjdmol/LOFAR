@@ -77,6 +77,8 @@ char bool2char (bool val)
 string int2type (int type)
 {
   switch (type) {
+  case ParmValue::Scalar:
+    return "scalar";
   case ParmValue::Polc:
     return "polc";
   case ParmValue::PolcLog:
@@ -90,7 +92,9 @@ int getType (const string& str)
 {
   String strc(str);
   strc.downcase();
-  if (strc == "polc") {
+  if (strc == "scalar") {
+    return ParmValue::Scalar;
+  } else if (strc == "polc") {
     return ParmValue::Polc;
   } else if (strc == "polclog") {
     return ParmValue::PolcLog;
@@ -137,7 +141,7 @@ void showHelp()
   cerr << " removedef parmname_pattern" << endl;
   cerr << endl;
   cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
-  cerr << " show [parmname_pattern] [domain=...] [parentid=...]" << endl;
+  cerr << " show [parmname_pattern] [domain=...]" << endl;
   cerr << " names [parmname_pattern]" << endl;
   cerr << " add parmname domain= valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
@@ -254,7 +258,7 @@ int getSize (const IPosition& shape)
 }
 
 // Get the shape and return the size.
-int getShape (const KeyValueMap& kvmap, IPosition& shape)
+int getShape (const KeyValueMap& kvmap, IPosition& shape, int defsize=1)
 {
   KeyValueMap::const_iterator value = kvmap.find("shape");
   if (value != kvmap.end()) {
@@ -263,8 +267,8 @@ int getShape (const KeyValueMap& kvmap, IPosition& shape)
     std::copy (vec.begin(), vec.end(), shape.begin());
   } else {
     shape.resize (2);
-    shape[0] = kvmap.getInt ("nx", 1);
-    shape[1] = kvmap.getInt ("ny", 1);
+    shape[0] = kvmap.getInt ("nx", defsize);
+    shape[1] = kvmap.getInt ("ny", defsize);
   }
   return getSize(shape);
 }
@@ -443,41 +447,45 @@ void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
     showDomain (domain);
     cout << endl;
   }
-  if (parm.hasCoeff()) {
-    cout << "    coeff:  ";
-  } else {
-    cout << "    scalars:  ";
-  }
+  cout << "    values:  ";
   showValues (cout, parm.getValues(), pvset.getSolvableMask());
   cout << endl;
   cout << "    pert=" << pvset.getPerturbation()
        << " pert_rel=" << bool2char(pvset.getPertRel()) << endl;
 }
 
-void showParms (map<string,ParmValueSet>& parmSet, bool showAll)
+void showParms (ParmMap& parmSet, bool showAll)
 {
   int nr=0;
-  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+  for (ParmMap::iterator iter = parmSet.begin();
        iter != parmSet.end();
        iter++) {
     const string& parmName = iter->first;
-    for (uint i=0; i<iter->second.size(); ++i) {
+    if (iter->second.size() == 0) {
       showParm (parmName,
-		iter->second.getParmValue(i),
-		iter->second.getGrid().getCell(i),
+		iter->second.getFirstParmValue(),
+		iter->second.getGrid().getBoundingBox(),
 		iter->second, showAll);
       nr++;
+    } else {
+      for (uint i=0; i<iter->second.size(); ++i) {
+	showParm (parmName,
+		  iter->second.getParmValue(i),
+		  iter->second.getGrid().getCell(i),
+		  iter->second, showAll);
+	nr++;
+      }
     }
   }
   if (nr != 1) {
-    cout << nr << " parms found" << endl;
+    cout << parmSet.size() << " parms and " << nr << " values found" << endl;
   }
 }
 
-int countParms (map<string,ParmValueSet>& parmSet)
+int countParms (const ParmMap& parmSet)
 {
   int nr=0;
-  for (map<string,ParmValueSet>::const_iterator iter = parmSet.begin();
+  for (ParmMap::const_iterator iter = parmSet.begin();
        iter != parmSet.end();
        iter++) {
     nr += iter->second.size();
@@ -489,7 +497,6 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
 {
   ParmSet parmset;
   ParmId parmid = parmset.addParm (*parmtab, parmName);
-  bool isOldParm = parmset.isInParmDB(parmid);
   // Get domain and values (if existing).
   Box domain = getDomain (kvmap, 2);
   ParmCache cache (parmset, domain);
@@ -497,54 +504,54 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   // Assure no value exists yet.
   ASSERTSTR (pvset.size() == 0,
 	     "Value for this parameter/domain already exists");
+  // Check if the parm already exists (for another domain).
+  // If so, only the values can be set (but not the coeff shape).
+  bool isOldParm = cache.getParmSet().isInParmDB(parmid);
   // Get values using current default values.
-  // Defaults are the values of an existing name entry.
-  // Otherwise those from the DEFAULTVALUES table.
   ParmValue defval(pvset.getFirstParmValue());
   int type = pvset.getType();
-  // Get possible new values.
-  if (type<0) type = ParmValue::Polc;
-  double pert = kvmap.getDouble("pert", pvset.getPerturbation());
-  bool pertrel = kvmap.getBool("pertrel", pvset.getPertRel());
-  // Get the shape and the data.
+  double pert = pvset.getPerturbation();
+  bool pertrel = pvset.getPertRel();
+  Array<Bool> mask = pvset.getSolvableMask();
   IPosition shape = defval.getValues().shape();
   int size = shape.product();
-  if (kvmap.isDefined("shape")) {
-    size = getShape (kvmap, shape);
+  // Get the new shape and the data.
+  IPosition shp;
+  int nsize = getShape (kvmap, shp);
+  // Get possible new values.
+  if (!isOldParm) {
+    if (kvmap.isDefined("type")) {
+      type = getType (kvmap.getString("type", ""));
+    }
+    if (nsize > 0) {
+      shape = shp;
+      size = nsize;
+    }
+    if (kvmap.isDefined("mask")) {
+      Block<Bool> bmask = getMask (kvmap, "mask", size);
+      mask.assign (Array<bool>(shape, bmask.storage(), SHARE));
+    }
+  } else {
+    if (nsize > 0  &&  type != ParmValue::Scalar) {
+      ASSERTSTR (shp.isEqual(shape),
+		 "Parameter has more domains; coeff shape cannot be changed");
+    }
+    shape = shp;
+    size = nsize;
   }
-  // Get values and possible mask.
-  vector<double> values;
-  bool hasCoeff = false;
-  if (kvmap.isDefined("coeff")) {
-    values = getArray (kvmap, "coeff", size);
-    hasCoeff = true;
-  } else if (kvmap.isDefined("scalars")) {
-    values = getArray (kvmap, "scalars", size);
-  }
-  Array<bool> mask;
-  mask = pvset.getSolvableMask();
-  if (kvmap.isDefined("mask")) {
-    Block<Bool> bmask = getMask (kvmap, "mask", size);
-    mask = Array<bool>(shape, bmask.storage(), COPY);
-  }
-  // If an existing name, the shape and type cannot be changed.
-  if (isOldParm) {
-    ASSERTSTR (hasCoeff == defval.hasCoeff(),
-	       "Value/coeff-type of an existing parameter cannot be changed");
-    ASSERTSTR (shape.isEqual (defval.getValues().shape()),
-	       "Value/coeff shape of an existing parameter cannot be changed");
-  }
-  // Change the value as needed.
+  // Get the values.
+  vector<double> values = getArray (kvmap, "values", size);
   Array<double> vals(shape, &(values[0]), SHARE);
+  // Create the parm value.
   ParmValue::ShPtr pval(new ParmValue);
-  if (hasCoeff) {
+  if (pvset.getType() != ParmValue::Scalar) {
     pval->setCoeff (vals);
   } else {
-    RegularAxis xaxis(domain.lowerX(), domain.upperX(), shape[0], true);
-    RegularAxis yaxis(domain.lowerY(), domain.upperY(), shape[1], true);
-    pval->setValues (Grid(Axis::ShPtr(new RegularAxis(xaxis)),
-			  Axis::ShPtr(new RegularAxis(yaxis))),
-		     vals);
+      RegularAxis xaxis(domain.lowerX(), domain.upperX(), shape[0], true);
+      RegularAxis yaxis(domain.lowerY(), domain.upperY(), shape[1], true);
+      pval->setScalars (Grid(Axis::ShPtr(new RegularAxis(xaxis)),
+			     Axis::ShPtr(new RegularAxis(yaxis))),
+			vals);
   }
   vector<ParmValue::ShPtr> valvec (1, pval);
   vector<Box> domains(1, domain);
@@ -570,19 +577,22 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
     mask = getMask (kvmap, "mask", size);
   }
   ParmValue pval(values[0]);
-  if (type >= 0  ||  values.size() > 1) {
+  if (type > 0  ||  values.size() > 1) {
     pval.setCoeff (Array<double>(shape, &(values[0]), SHARE));
-    type = ParmValue::Polc;
+    if (type<0) type = ParmValue::Polc;
   } else {
-    type = ParmValue::Polc;
+    type = ParmValue::Scalar;
   }
   // Get perturbation for numerical derivatives.
   double pert = kvmap.getDouble ("pert", 1e-6);
   bool pertrel = kvmap.getBool ("pert_rel", true);
   ParmValueSet pvset(pval, ParmValue::FunkletType(type), pert, pertrel);
+  if (mask.size() > 0) {
+    pvset.setSolvableMask (Array<Bool>(shape, mask.storage(), SHARE));
+  }
   showParm (parmName, pval, Box(), pvset, false);
   parmtab->putDefValue (parmName, pvset);
-  cout << "Wrote new def record for parameter " << parmName << endl;
+  cout << "Wrote new defaultvalue record for parameter " << parmName << endl;
 }
 
 void updateDefParm (const string& parmName, const ParmValueSet& pvset,
@@ -600,31 +610,32 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
     // Get the coefficients shape and the data.
     int size = getShape (kvmap, shape);
     vector<double> coeff = getArray (kvmap, "values", size);
-    values = Array<double> (shape, &(coeff[0]), COPY);
+    values.assign (Array<double> (shape, &(coeff[0]), SHARE));
   }
   Array<bool> mask = pvset.getSolvableMask().copy();
   if (kvmap.isDefined("mask")) {
     Block<bool> bmask = getMask (kvmap, "mask", values.size());
-    mask = Array<bool> (values.shape(), bmask.storage(), SHARE);
+    mask.assign (Array<bool> (values.shape(), bmask.storage(), SHARE));
   }
   // Set perturbation for numerical derivatives.
   double pert = kvmap.getDouble ("pert", pvset.getPerturbation());
   bool pertrel = kvmap.getBool ("pertrel", pvset.getPertRel());
   ParmValue newval(values.data()[0]);
-  if (type >= 0  ||  values.size() > 1) {
+  if (type > 0  ||  values.size() > 1) {
     newval.setCoeff (values);
-    type = ParmValue::Polc;
+    if (type<0) type = ParmValue::Polc;
   } else {
-    type = ParmValue::Polc;
+    type = ParmValue::Scalar;
   }
   ParmValueSet newset(newval, ParmValue::FunkletType(type), pert, pertrel);
+  newset.setSolvableMask (mask);
   showParm (parmName, newval, Box(), newset, false);
   parmtab->putDefValue (parmName, newset);
 }
 
-void updateDefParms (map<string,ParmValueSet>& parmSet, KeyValueMap& kvmap)
+void updateDefParms (ParmMap& parmSet, KeyValueMap& kvmap)
 {
-  for (map<string,ParmValueSet>::iterator iter = parmSet.begin();
+  for (ParmMap::iterator iter = parmSet.begin();
        iter != parmSet.end();
        iter++) {
     updateDefParm (iter->first, iter->second, kvmap);
@@ -671,7 +682,7 @@ void doIt (bool noPrompt)
 	  string dbUser = kvmap.getString ("user", getUserName());
 	  string dbHost = kvmap.getString ("host", "dop50.astron.nl");
 	  string dbName = kvmap.getString ("db", dbUser);
-	  string dbType = kvmap.getString ("dbtype", "aips");
+	  string dbType = kvmap.getString ("dbtype", "casa");
 	  string tableName = kvmap.getString ("tablename", "MeqParm");
 	  ParmDBMeta meta (dbType, tableName);
 	  meta.setSQLMeta (dbName, dbUser, "", dbHost);
@@ -683,7 +694,7 @@ void doIt (bool noPrompt)
 	  string dbUser = kvmap.getString ("user", getUserName());
 	  string dbHost = kvmap.getString ("host", "dop50.astron.nl");
 	  string dbName = kvmap.getString ("db", dbUser);
-	  string dbType = kvmap.getString ("dbtype", "aips");
+	  string dbType = kvmap.getString ("dbtype", "casa");
 	  string tableName = kvmap.getString ("tablename", "MeqParm");
 	  ParmDBMeta meta (dbType, tableName);
 	  meta.setSQLMeta (dbName, dbUser, "", dbHost);
@@ -722,19 +733,19 @@ void doIt (bool noPrompt)
 	      } else if (cmd == UPDDEF) {
 		ASSERTSTR (! parmset.empty(), "parameter not found");
 		updateDefParms (parmset, kvmap);
-		cout << "Updated " << nrparm << " default parm value records"
+		cout << "Updated " << nrparm << " parm defaultvalue records"
 		     << endl;
 	      } else if (cmd == DELDEF) {
 		ASSERTSTR (! parmset.empty(), "parameter not found");
 		parmtab->deleteDefValues (parmName);
-		cout << "Deleted " << nrparm << " default parm value records"
+		cout << "Deleted " << nrparm << " parm defaultvalue records"
 		     << endl;
 	      }
 	    } else if (cmd==NEW || cmd==DEL || cmd==SHOW) {
 	      // Read the given parameters and domains.
 	      Box domain = getDomain(kvmap);
 	      ParmMap parmset;
-	      parmtab->getValues (parmset, parmName, domain, parentId);
+	      parmtab->getValues (parmset, parmName, domain);
 	      int nrparm = parmset.size();
 	      int nrvalrec = countParms (parmset);
 	      if (cmd == NEW) {
@@ -745,7 +756,7 @@ void doIt (bool noPrompt)
 		showParms (parmset, true);
 	      } else if (cmd == DEL) {
 		ASSERTSTR (! parmset.empty(), "parameter/domain not found");
-		parmtab->deleteValues (parmName, domain, parentId);
+		parmtab->deleteValues (parmName, domain);
 		cout << "Deleted " << nrvalrec << " value records (of "
 		     << nrparm << " parms)" << endl;
 	      }

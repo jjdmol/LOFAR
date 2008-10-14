@@ -136,7 +136,8 @@ namespace BBS {
 		     ParmValueSet& parmSet);
 
     // Put the value for an existing parameter/domain.
-    void putOldValue (const ParmValue& parmValue);
+    void putOldValue (const ParmValue& parmValue,
+		      ParmValue::FunkletType type);
 
     // Put the value for a new parameter/domain.
     void putNewValue (const string& name, int& nameId, ParmValueSet& parmSet,

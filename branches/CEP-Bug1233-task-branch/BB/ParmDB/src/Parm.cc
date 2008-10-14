@@ -52,14 +52,13 @@ namespace BBS {
   
   uint Parm::getCoeffSize (bool useMask)
   {
-    // Use the first ParmValue.
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-    const ParmValue& pv = pvset.getFirstParmValue();
-    // The ParmValue can contain a scalar array or coeff.
     // For a scalar array, only one coeff is used.
-    if (! pv.hasCoeff()) {
+    if (pvset.getType() == ParmValue::Scalar) {
       return 1;
     }
+    // Use the first ParmValue.
+    const ParmValue& pv = pvset.getFirstParmValue();
     const Array<double>& values = pv.getValues();
     const Array<bool>&   mask   = pvset.getSolvableMask();
     if (!useMask  ||  mask.size() == 0) {
@@ -78,7 +77,7 @@ namespace BBS {
 					   where, itsSolveGrid,
 					   pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
-    if (pv.hasCoeff()) {
+    if (pvset.getType() != ParmValue::Scalar) {
 	return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
     }
     // An array of scalar values; get the right one.
@@ -124,7 +123,7 @@ namespace BBS {
     ParmValue& pv = pvset.getParmValue(cellId);
     Array<double>& values (pv.getValues());
     ASSERT (values.contiguousStorage());
-    if (pv.hasCoeff()) {
+    if (pvset.getType() != ParmValue::Scalar) {
       if (!useMask  ||  mask.size() == 0) {
 	// Coefficients without a mask; copy all.
 	ASSERT (nvalues == values.size());
@@ -170,7 +169,7 @@ namespace BBS {
   {
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     const ParmValue& pv = pvset.getFirstParmValue();
-    if (pv.hasCoeff()) {
+    if (pvset.getType() != ParmValue::Scalar) {
       itsPerturbations = makeCoeff (pv.getValues(), pvset.getSolvableMask(),
 				    true);
     } else {
@@ -201,7 +200,7 @@ namespace BBS {
       // Perturbed values need to be calculated. Make room for them.
       result.resize (itsPerturbations.size() + 1);
       ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-      if (pvset.getFirstParmValue().hasCoeff()) {
+      if (pvset.getType() != ParmValue::Scalar) {
 	// It is a funklet, so evaluate it.
 	getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
 			itsCache->getAxisMappingCache());
@@ -220,7 +219,7 @@ namespace BBS {
   {
     // Get the values.
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-    if (pvset.getFirstParmValue().hasCoeff()) {
+    if (pvset.getType() != ParmValue::Scalar) {
       // It is a funklet, so evaluate it.
       getResultCoeff (&result, predictGrid, pvset, vector<double>(),
 		      itsCache->getAxisMappingCache());

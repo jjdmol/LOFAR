@@ -56,6 +56,14 @@ namespace BBS {
     void add (const string& name, const ParmValueSet& pset)
       { itsValueSets[name] = pset; }
 
+    // Is the map empty?
+    bool empty() const 
+      { return itsValueSets.empty(); }
+
+    // Return the size of the map.
+    uint size() const 
+      { return itsValueSets.size(); }
+
     // Iterator functionality.
     // <group>
     typedef map<string, ParmValueSet>::iterator       iterator;

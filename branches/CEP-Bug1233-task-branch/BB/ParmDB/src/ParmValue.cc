@@ -61,7 +61,6 @@ namespace BBS {
   {
     itsGrid     = that.itsGrid;
     itsRowId    = that.itsRowId;
-    itsHasCoeff = that.itsHasCoeff;
     itsValues.assign (that.itsValues);     // ensure a copy is made
     if (that.itsErrors) {
       itsErrors = new Array<double>;
@@ -73,23 +72,20 @@ namespace BBS {
   {
     itsValues.resize (IPosition(2,1,1));
     itsValues = value;
-    itsHasCoeff = false;
   }
 
   void ParmValue::setCoeff (const casa::Array<double>& values)
   {
     itsValues.assign (values);
-    itsHasCoeff = true;
   }
 
-  void ParmValue::setValues (const Grid& grid,
-			     const casa::Array<double>& values)
+  void ParmValue::setScalars (const Grid& grid,
+			      const casa::Array<double>& values)
   {
     ASSERT (int(grid.nx()) == values.shape()[0]  &&
 	    int(grid.ny()) == values.shape()[1]);
     itsValues.assign (values);
-    itsGrid     = grid;
-    itsHasCoeff = false;
+    itsGrid = grid;
   }
 
   void ParmValue::setErrors (const casa::Array<double>& errors)
@@ -112,7 +108,12 @@ namespace BBS {
       itsPertRel      (pertRel),
       itsDefaultValue (defaultValue),
       itsDirty        (false)
-  {}
+  {
+    if (type == ParmValue::Scalar) {
+      ASSERTSTR (defaultValue.getValues().size() == 1,
+		 "Default value of funklet type SCALAR can have one value only");
+    }
+  }
 
   ParmValueSet::ParmValueSet (const Grid& domainGrid,
 			      const std::vector<ParmValue::ShPtr>& values,
@@ -128,6 +129,14 @@ namespace BBS {
       itsDirty        (false)
   {
     ASSERT (domainGrid.size() == values.size()  &&  values.size() > 0);
+    if (type == ParmValue::Scalar) {
+      ASSERTSTR (defaultValue.getValues().size() == 1,
+		 "Default value of funklet type SCALAR can have one value only");
+      for (uint i=0; i<values.size(); ++i) {
+	ASSERTSTR (values[i]->getValues().size() == values[i]->getGrid().size(),
+		   "ParmValues of funklet type SCALAR must contain scalar values");
+      }
+    }
   }
 
   const ParmValue& ParmValueSet::getFirstParmValue() const
@@ -156,7 +165,7 @@ namespace BBS {
   {
     ASSERT (itsValues.empty());
     // If the ParmValue represents coefficients, copy it as often as needed.
-    if (itsDefaultValue.hasCoeff()) {
+    if (itsType != ParmValue::Scalar) {
       itsDomainGrid = solveGrid;
       uint nrv = itsDomainGrid.size();
       itsValues.reserve (nrv);
@@ -169,7 +178,7 @@ namespace BBS {
       // Set it to the default value.
       values = itsDefaultValue.getValues().data()[0];
       ParmValue::ShPtr newVal(new ParmValue());
-      newVal->setValues (solveGrid, values);
+      newVal->setScalars (solveGrid, values);
       itsValues.push_back (newVal);
       itsDomainGrid = Grid(vector<Box>(1, solveGrid.getBoundingBox()));
     }
@@ -180,7 +189,7 @@ namespace BBS {
     // Check if the solve grid intervals match the domain grid.
     // If the values represent coefficients, the domain grid is the final grid
     // which should match the solve grid.
-    if (itsValues[0]->hasCoeff()) {
+    if (itsType != ParmValue::Scalar) {
       ASSERT (itsDomainGrid.checkIntervals (solveGrid));
     } else {
       // Each ParmValue has its own grid which has to be checked.
@@ -202,7 +211,7 @@ namespace BBS {
     // Add values and extend the domain grid.
     // If the values represent coefficients, the domain grid is the final grid
     // which should match the solve grid.
-    if (itsValues[0]->hasCoeff()) {
+    if (itsType != ParmValue::Scalar) {
       addCoeffValues (solveGrid);
     } else {
       // The values is an array of scalars.
@@ -249,7 +258,7 @@ namespace BBS {
 	  newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ix,ey1-1));
 	}
       }
-      value.setValues (newGrid, newValues);
+      value.setScalars (newGrid, newValues);
       itsDomainGrid = Grid(vector<Box>(1, newGrid.getBoundingBox()));
     }
   }

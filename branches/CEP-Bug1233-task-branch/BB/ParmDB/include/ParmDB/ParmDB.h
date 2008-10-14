@@ -89,9 +89,10 @@ namespace BBS {
 
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
-    //    virtual void getValues (ParmMap& result,
-    //			    const std::string& parmNamePattern,
-    //			    const Box& domain) = 0;
+    // The default implementation uses the following getValues function.
+    virtual void getValuesPattern (ParmMap& result,
+				   const std::string& parmNamePattern,
+				   const Box& domain);
 
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.
@@ -232,13 +233,13 @@ namespace BBS {
 // 		    const Box& domain) const
 //       { itsRep->getValues (result, parmNames, domain); }
 
-//     // Get the parameter values for the given parameters and domain.
-//     // Only * and ? should be used in the pattern (no [] and {}).
-//     // A selection on parentId is done if >= 0.
-//     void getValues (ParmMap& result,
-// 		    const std::string& parmNamePattern,
-// 		    const Box& domain) const
-//       { itsRep->getValues (result, parmNamePattern, domain); }
+    // Get the parameter values for the given parameters and domain.
+    // Only * and ? should be used in the pattern (no [] and {}).
+    // A selection on parentId is done if >= 0.
+    void getValues (ParmMap& result,
+ 		    const std::string& parmNamePattern,
+ 		    const Box& domain) const
+      { itsRep->getValuesPattern (result, parmNamePattern, domain); }
 
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.

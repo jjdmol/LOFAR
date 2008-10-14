@@ -12,12 +12,12 @@ Parm.cc
 # AM_LFLAGS               = -PKeyTokenize
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
-bin_PROGRAMS = versionparmdb
-#parmdb
+bin_PROGRAMS = versionparmdb \
+		parmdb
 
-#parmdb_SOURCES		= parmdb_main.cc
-#parmdb_LDADD		= libparmdb.la
-#parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
+parmdb_SOURCES		= parmdb_main.cc
+parmdb_LDADD		= libparmdb.la
+parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
 pythondir = $(bindir)
 dist_python_SCRIPTS = 

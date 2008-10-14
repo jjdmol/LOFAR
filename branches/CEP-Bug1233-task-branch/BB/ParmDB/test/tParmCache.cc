@@ -49,7 +49,7 @@ void fillDef (ParmDB& pdb1, ParmDB& pdb2)
   pdb1.putDefValue ("phase",  ParmValueSet(ParmValue(0.1)));
   ParmValue defaultValue;
   defaultValue.setCoeff (coeff);
-  pdb2.putDefValue ("ra", ParmValueSet(defaultValue));
+  pdb2.putDefValue ("ra", ParmValueSet(defaultValue, ParmValue::Polc));
 }
 
 void testCreate()
@@ -119,6 +119,8 @@ void testCreate()
     pset5.setSolveGrid (grid2);
     pset5.setDirty();
     ASSERT (pset5.size() == 6);
+    ASSERT (pset5.getParmValue(0).getValues().size() == 6);
+    ASSERT (pset5.getParmValue(0).getGrid().size() == 1);
     pset6.setSolveGrid (grid2);
     pset6.setDirty();
     ASSERT (pset6.size() == 1);
@@ -147,6 +149,8 @@ void testCreate()
     pset5.setSolveGrid (grid2);
     pset5.setDirty();
     ASSERT (pset5.size() == 28);
+    ASSERT (pset5.getParmValue(0).getValues().size() == 6);
+    ASSERT (pset5.getParmValue(0).getGrid().size() == 1);
     pset6.setSolveGrid (grid2);
     pset6.setDirty();
     ASSERT (pset6.size() == 1);
