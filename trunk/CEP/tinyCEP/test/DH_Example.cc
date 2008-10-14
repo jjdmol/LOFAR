@@ -20,7 +20,7 @@
 //
 //  $Id$
 
-
+#include <lofar_config.h>
 #include <DH_Example.h>
 
 namespace LOFAR

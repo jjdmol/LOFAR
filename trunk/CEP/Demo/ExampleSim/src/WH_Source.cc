@@ -23,6 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 #include "ExampleSim/WH_Source.h"
 
 using namespace LOFAR;

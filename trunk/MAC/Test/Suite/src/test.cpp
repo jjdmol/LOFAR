@@ -29,6 +29,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include <Suite/test.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
