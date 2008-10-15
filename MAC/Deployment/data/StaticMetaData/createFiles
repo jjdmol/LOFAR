@@ -69,6 +69,19 @@ def findIPandMAC(nodeName):
     return ipAndMac.group(1), ipAndMac.group(2)
 
 #
+# findAllStations()
+#
+def findAllStations():
+    """
+    Return a list of all stationnames that are found in file StationInfo
+    """
+    pattern = re.compile("^[A-Z][A-Z][0-9][0-9][0-9]",re.IGNORECASE | re.MULTILINE)
+    match = pattern.findall(open("StationInfo").read())
+    if not match:
+        raise "\nFatal error: could not find any stationnames in file 'StationInfo'"
+    return match
+
+#
 # findStationInfo(stationName)
 #
 def findStationInfo(stationName):
@@ -161,13 +174,21 @@ def createRemoteStationFile(resultDir, stationName):
 
 
 # MAIN
-for stationName in sys.argv[1:]:
+
+stationList = []
+if sys.argv[1] == "all":
+    stationList = findAllStations()
+else:
+    stationList = sys.argv[1:]
+
+for stationName in stationList:
     resultDir = "output/"+stationName+"/etc"
     if os.path.exists(resultDir):
         for oldfile in os.listdir(resultDir):
             os.remove(resultDir+"/"+oldfile)
     else:
         os.makedirs(resultDir)
+
     createRSPDriverFile    (resultDir, stationName) 
     createTBBDriverFile    (resultDir, stationName)
     createRemoteStationFile(resultDir, stationName)
