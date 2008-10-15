@@ -253,19 +253,19 @@ namespace BBS {
          iter!=defaultParameters.end(); ++iter) {
       if (iter->first == "Ra")  foundRa  = true;
       if (iter->first == "Dec") foundDec = true;
-      getParmDB().putDefValue (sourceName + ':' + iter->first, iter->second);
+      getParmDB().putDefValue (iter->first + ':' + sourceName, iter->second);
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.
     if (!foundRa  &&  ra != -1e9) {
       ParmValue pval(ra);
-      getParmDB().putDefValue (sourceName + ":Ra",
+      getParmDB().putDefValue ("Ra:" + sourceName,
                                ParmValueSet(pval, ParmValue::Scalar,
                                             1e-6, false));
     }
     if (!foundDec  &&  dec != -1e9) {
       ParmValue pval(dec);
-      getParmDB().putDefValue (sourceName + ":Dec",
+      getParmDB().putDefValue ("Dec:" + sourceName,
                                ParmValueSet(pval, ParmValue::Scalar,
                                             1e-6, false));
     }
@@ -284,7 +284,7 @@ namespace BBS {
     // A patch will never be removed from the PATCH table, otherwise the
     // PATCHID keys (which are row numbers) do not match anymore.
     // Delete the sources from the ParmDB tables.
-    string parmNamePattern = sourceNamePattern + ":*";
+    string parmNamePattern = "*:" + sourceNamePattern;
     getParmDB().deleteDefValues (parmNamePattern);
     getParmDB().deleteValues (parmNamePattern, Box(Point(-1e30,-1e30),
                                                    Point( 1e30, 1e30)));

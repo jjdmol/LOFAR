@@ -181,25 +181,25 @@ void checkParms()
   ParmMap v;
   pdb.getDefValues (v, "*");
   ASSERT (v.size() == 16);
-  ASSERT (v["sun:fluxI"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["sun:fluxQ"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["sun:fluxU"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["sun:fluxV"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2:Ra"].getFirstParmValue().getValues().data()[0] == 1.1);
-  ASSERT (v["src2:Dec"].getFirstParmValue().getValues().data()[0] == -1.1);
-  ASSERT (v["src2:fluxI"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["src2:fluxQ"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2:fluxU"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2:fluxV"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2a:Ra"].getFirstParmValue().getValues().data()[0] == 1.101);
-  ASSERT (v["src2a:Dec"].getFirstParmValue().getValues().data()[0] == -1.101);
-  ASSERT (v["src2a:fluxI"].getFirstParmValue().getValues().data()[0] == 2);
-  ASSERT (v["src2a:fluxQ"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2a:fluxU"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2a:fluxV"].getFirstParmValue().getValues().data()[0] == 0);
-  ASSERT (v["src2a:Ra"].getPertRel() == false);
-  ASSERT (v["src2a:Dec"].getPertRel() == false);
-  ASSERT (v["src2a:fluxI"].getPertRel() == true);
+  ASSERT (v["fluxI:sun"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:sun"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["Ra:src2"].getFirstParmValue().getValues().data()[0] == 1.1);
+  ASSERT (v["Dec:src2"].getFirstParmValue().getValues().data()[0] == -1.1);
+  ASSERT (v["fluxI:src2"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:src2"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["Ra:src2a"].getFirstParmValue().getValues().data()[0] == 1.101);
+  ASSERT (v["Dec:src2a"].getFirstParmValue().getValues().data()[0] == -1.101);
+  ASSERT (v["fluxI:src2a"].getFirstParmValue().getValues().data()[0] == 2);
+  ASSERT (v["fluxQ:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxU:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["fluxV:src2a"].getFirstParmValue().getValues().data()[0] == 0);
+  ASSERT (v["Ra:src2a"].getPertRel() == false);
+  ASSERT (v["Dec:src2a"].getPertRel() == false);
+  ASSERT (v["fluxI:src2a"].getPertRel() == true);
 }
 
 int main()

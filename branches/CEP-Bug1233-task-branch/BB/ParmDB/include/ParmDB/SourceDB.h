@@ -96,7 +96,7 @@ namespace BBS {
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
-    // will be preceeded by the source name and a colon.
+    // will be succeeded by a colon and the source name.
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the source already exists.
@@ -201,7 +201,7 @@ namespace BBS {
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
-    // will be preceeded by the source name and a colon.
+    // will be succeeded by a colon and the source name.
     // The map should contain the parameters belonging to the source type.
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
