@@ -36,7 +36,8 @@ class Job(object):
 	for IONode in interfaces:
             ionode = Host(name = IONode, \
                           address = IONode)
-	    self.runCommand = ionode.executeAsync('( cd '+ self.workingDir + '; ' + runCmd + ' ' + parsetfile.split('/')[-1] + ') &> ' + self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
+	    runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1])
+	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[-1] + ') &> ' + self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
   
     def isDone(self):
         ret = self.runCommand.isDone()

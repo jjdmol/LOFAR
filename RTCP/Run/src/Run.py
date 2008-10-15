@@ -44,8 +44,8 @@ def doObservation(obsID, parset):
     parsetfile = workingDir + 'RTCP.parset'
     
     sectionTable = dict({\
-        #'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
-	#'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
+        'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
+	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
 	'StorageSection': StorageSection(parset, listfen, workingDir, parsetfile)
         })
 
