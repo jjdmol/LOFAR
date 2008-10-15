@@ -14,11 +14,15 @@ SourceDB.cc SourceDBCasa.cc
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
 bin_PROGRAMS = versionparmdb \
-		parmdb
+		parmdb makesourcedb
 
 parmdb_SOURCES		= parmdb_main.cc
 parmdb_LDADD		= libparmdb.la
 parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
+
+makesourcedb_SOURCES		= makesourcedb.cc
+makesourcedb_LDADD		= libparmdb.la
+makesourcedb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
 pythondir = $(bindir)
 dist_python_SCRIPTS = 
