@@ -53,7 +53,7 @@ namespace BBS {
     {}
 
     // Add or replace a ParmValueSet.
-    void add (const string& name, const ParmValueSet& pset)
+    void define (const string& name, const ParmValueSet& pset)
       { itsValueSets[name] = pset; }
 
     // Is the map empty?
@@ -63,6 +63,10 @@ namespace BBS {
     // Return the size of the map.
     uint size() const 
       { return itsValueSets.size(); }
+
+    // Get the value belonging to the name.
+    // An exception is thrown if the value does not exist.
+    const ParmValueSet& operator[] (const string& name) const;
 
     // Iterator functionality.
     // <group>

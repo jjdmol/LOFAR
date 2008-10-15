@@ -109,7 +109,7 @@ namespace BBS {
     getValues (sets, nameIds, parmIds, domain);
     for (uint i=0; i<sets.size(); ++i) {
       if (sets[i].size() > 0) {
-	result.add (parmNames[i], sets[i]);
+	result.define (parmNames[i], sets[i]);
       }
     }
   }

@@ -1,6 +1,7 @@
 check_PROGRAMS        = tAxis tAxisMapping tBox tGrid \
 			tParmValue tParmDBCasa \
-			tParmSet tParmCache tParm
+			tParmSet tParmCache tParm \
+			tSourceDBCasa
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        = $(check_PROGRAMS)
@@ -9,7 +10,8 @@ CHECKTOOLPROGS        = $(check_PROGRAMS)
 TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmValue.sh tParmDBCasa.sh \
 			tParmSet.sh tParmCache tParm.sh \
-			tparmdb.sh
+			tparmdb.sh \
+			tSourceDBCasa.sh
 
 # scripts and possible programs to run tests
 TESTS	              = $(TESTSCRIPTS)
@@ -55,6 +57,10 @@ tParm_DEPENDENCIES		= ../src/libparmdb.la $(LOFAR_DEPEND)
 tParmCache_SOURCES		= tParmCache.cc
 tParmCache_LDADD		= ../src/libparmdb.la
 tParmCache_DEPENDENCIES		= ../src/libparmdb.la $(LOFAR_DEPEND)
+
+tSourceDBCasa_SOURCES		= tSourceDBCasa.cc
+tSourceDBCasa_LDADD		= ../src/libparmdb.la
+tSourceDBCasa_DEPENDENCIES	= ../src/libparmdb.la $(LOFAR_DEPEND)
 
 
 include $(top_srcdir)/Makefile.common

@@ -56,8 +56,46 @@ namespace BBS {
     virtual void unlock();
     // </group>
 
-    // Delete the records for the given parameters and domain.
-    virtual void deleteValues (const string& sourceNamePattern);
+    // Check for duplicate patches or sources.
+    // An exception is thrown if that is the case.
+    virtual void checkDuplicates();
+
+    // Test if the patch already exists.
+    virtual bool patchExists (const string& patchName);
+
+    // Test if the source already exists.
+    virtual bool sourceExists (const string& sourceName);
+
+    // Add a patch and return its patchId.
+    // Nomally ra and dec should be filled in, but for moving patches
+    // (e.g. sun) this is not needed.
+    // <br>Optionally it is checked if the patch already exists.
+    virtual uint addPatch (const string& patchName, int catType,
+                           double apparentBrightness,
+                           double ra, double dec,
+                           bool check);
+
+    // Add a source to a patch.
+    // Its ra and dec and default parameters will be stored as default
+    // values in the associated ParmDB tables. The names of the parameters
+    // will be preceeded by the source name and a colon.
+    // The map should contain the parameters belonging to the source type.
+    // Missing parameters will default to 0.
+    // <br>Optionally it is checked if the patch already exists.
+    virtual void addSource (const string& patchName, const string& sourceName,
+                            SourceInfo::Type sourceType,
+                            const ParmMap& defaultParameters,
+                            double ra, double dec,
+                            bool check);
+
+    // Add a source which forms a patch in itself (with the same name).
+    // <br>Optionally it is checked if the patch or source already exists.
+    virtual void addSource (const string& sourceName, int catType,
+                            double apparentBrightness,
+                            SourceInfo::Type sourceType,
+                            const ParmMap& defaultParameters,
+                            double ra, double dec,
+                            bool check);
 
     // Get the Cat-1 patch names in order of decreasing apparent flux.
     virtual vector<string> getCat1Patches();
@@ -80,6 +118,13 @@ namespace BBS {
   private:
     // Create the source and patch table.
     void createTables (const string& tableName);
+
+    // Add a source for the given patch.
+    void addSrc (uint patchId,
+                 const string& sourceName,
+                 SourceInfo::Type sourceType,
+                 const ParmMap& defaultParameters,
+                 double ra, double dec);
 
     //# Data members
     casa::Table itsPatchTable;

@@ -230,7 +230,7 @@ namespace BBS {
     TableLocker locker(table, FileLocker::Read);
     for (uint row=0; row<table.nrow(); ++row) {
       pair<string,ParmValueSet> val = extractDefValue(table, row);
-      defMap.add (val.first, val.second);
+      defMap.define (val.first, val.second);
     }
   }
 
@@ -353,7 +353,7 @@ namespace BBS {
     ROScalarColumn<String> nameCol(sel, "NAME");
     for (uint row=0; row<sel.nrow(); ++row) {
       pair<string,ParmValueSet> pset (extractDefValue(sel, row));
-      result.add (pset.first, pset.second);
+      result.define (pset.first, pset.second);
     }
   }
 

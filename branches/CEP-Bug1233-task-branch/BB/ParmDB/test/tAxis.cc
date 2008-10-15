@@ -178,7 +178,7 @@ void testOrdered()
   try {
     combAxis = axis2.combine(axis, s1, e1, s2, e2);
   } catch (std::exception& x) {
-    cout << x.what() << endl;
+    cout << "Expected exception: " << x.what() << endl;
     fail = true;
   }
   ASSERT (fail);
@@ -186,7 +186,7 @@ void testOrdered()
   try {
     combAxis = axis.combine(axis2, s1, e1, s2, e2);
   } catch (std::exception& x) {
-    cout << x.what() << endl;
+    cout << "Expected exception: " << x.what() << endl;
     fail = true;
   }
   ASSERT (fail);

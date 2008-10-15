@@ -43,15 +43,15 @@ namespace BBS {
   public:
     // Define the source types.
     //# The values should never be changed.
-    enum Type {Point = 0,
-               Gaussian = 1,
-               Disk = 2,
-               Shapelet = 3,
-               Sun = 10,
-               Moon = 11,
-               Jupiter = 12,
-               Mars = 13,
-               Venus = 14
+    enum Type {POINT = 0,
+               GAUSSIAN = 1,
+               DISK = 2,
+               SHAPELET = 3,
+               SUN = 10,
+               MOON = 11,
+               JUPITER = 12,
+               MARS = 13,
+               VENUS = 14
     };
 
 

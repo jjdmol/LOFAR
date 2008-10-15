@@ -2,7 +2,7 @@ lib_LTLIBRARIES         = libparmdb.la
 
 libparmdb_la_SOURCES = Package__Version.cc  \
 Axis.cc AxisMapping.cc Box.cc Grid.cc \
-ParmValue.cc ParmSet.cc ParmCache.cc \
+ParmValue.cc ParmSet.cc ParmMap.cc ParmCache.cc \
 ParmDBMeta.cc ParmDB.cc ParmDBCasa.cc ParmDBLocker.cc \
 Parm.cc \
 SourceDB.cc SourceDBCasa.cc

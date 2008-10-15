@@ -470,7 +470,7 @@ void testScalarPert()
   try {
     parmg.getCoeff(Location(0,0));
   } catch (std::exception& x) {
-    cout << x.what() << endl;
+    cout << "Expected exception: " << x.what() << endl;
     ok = true;
   }
   ASSERT (ok);
@@ -478,7 +478,7 @@ void testScalarPert()
   try {
     parmg.setCoeff(Location(0,0), 0, 0);
   } catch (std::exception& x) {
-    cout << x.what() << endl;
+    cout << "Expected exception: " << x.what() << endl;
     ok = true;
   }
   ASSERT (ok);

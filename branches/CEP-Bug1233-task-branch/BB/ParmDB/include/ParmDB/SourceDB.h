@@ -38,6 +38,9 @@
 namespace LOFAR {
 namespace BBS {
 
+  //# Forward Declarations
+  class ParmMap;
+
   // @ingroup ParmDB
   // @{
 
@@ -71,8 +74,46 @@ namespace BBS {
     ParmDB& getParmDB()
       { return itsParmDB; }
 
-    // Delete the records for the given parameters and domain.
-    virtual void deleteValues (const std::string& sourceNamePattern) = 0;
+    // Check for duplicate patches or sources.
+    // An exception is thrown if that is the case.
+    virtual void checkDuplicates() = 0;
+
+    // Test if the patch already exists.
+    virtual bool patchExists (const string& patchName) = 0;
+
+    // Test if the source already exists.
+    virtual bool sourceExists (const string& sourceName) = 0;
+
+    // Add a patch and return its patchId.
+    // Nomally ra and dec should be filled in, but for moving patches
+    // (e.g. sun) this is not needed.
+    // <br>Optionally it is checked if the patch already exists.
+    virtual uint addPatch (const string& patchName, int catType,
+                           double apparentBrightness,
+                           double ra, double dec,
+                           bool check) = 0;
+
+    // Add a source to a patch.
+    // Its ra and dec and default parameters will be stored as default
+    // values in the associated ParmDB tables. The names of the parameters
+    // will be preceeded by the source name and a colon.
+    // The map should contain the parameters belonging to the source type.
+    // Missing parameters will default to 0.
+    // <br>Optionally it is checked if the source already exists.
+    virtual void addSource (const string& patchName, const string& sourceName,
+                            SourceInfo::Type sourceType,
+                            const ParmMap& defaultParameters,
+                            double ra, double dec,
+                            bool check) = 0;
+
+    // Add a source which forms a patch in itself (with the same name).
+    // <br>Optionally it is checked if the patch or source already exists.
+    virtual void addSource (const string& sourceName, int catType,
+                            double apparentBrightness,
+                            SourceInfo::Type sourceType,
+                            const ParmMap& defaultParameters,
+                            double ra, double dec,
+                            bool check) = 0;
 
     // Get the Cat-1 patch names in order of decreasing apparent flux.
     virtual vector<string> getCat1Patches() = 0;
@@ -133,30 +174,54 @@ namespace BBS {
     ParmDB& getParmDB()
       { return itsRep->getParmDB(); }
 
-    // Add a patch.
+    // Check for duplicate patches or sources.
+    // An exception is thrown if that is the case.
+    void checkDuplicates() const
+      { itsRep->checkDuplicates(); }
+
+    // Test if the patch already exists.
+    bool patchExists (const string& patchName) const
+      { return itsRep->patchExists (patchName); }
+
+    // Test if the source already exists.
+    bool sourceExists (const string& sourceName) const
+      { return itsRep->sourceExists (sourceName); }
+
+    // Add a patch and return its patchId.
     // Nomally ra and dec should be filled in, but for moving patches
     // (e.g. sun) this is not needed.
-    const string& addPatch (const string& patchName, int catType,
-			    double apparentBrightness,
-			    double ra=-1e9, double dec=-1e9);
+    // <br>Optionally it is checked if the patch already exists.
+    uint addPatch (const string& patchName, int catType,
+                   double apparentBrightness,
+                   double ra=-1e9, double dec=-1e9,
+                   bool check = true)
+      { return itsRep->addPatch (patchName, catType, apparentBrightness,
+                                 ra, dec, check); }
 
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
     // will be preceeded by the source name and a colon.
     // The map should contain the parameters belonging to the source type.
-    // Missing parameters will default to 0.
+    // Not all parameters need to be present. The ParmDB classes will
+    // use a default of 0 for missing ones.
     void addSource (const string& patchName, const string& sourceName,
 		    SourceInfo::Type sourceType,
-		    const map<string,ParmValueSet>& defaultParameters,
-		    double ra=-1e9, double dec=-1e9);
+		    const ParmMap& defaultParameters,
+		    double ra=-1e9, double dec=-1e9,
+                    bool check = true)
+      { itsRep->addSource (patchName, sourceName, sourceType,
+                           defaultParameters, ra, dec, check); }
 
     // Add a source which forms a patch in itself (with the same name).
     void addSource (const string& sourceName, int catType,
 		    double apparentBrightness,
 		    SourceInfo::Type sourceType,
-		    const map<string,ParmValueSet>& defaultParameters,
-		    double ra=-1e9, double dec=-1e9);
+		    const ParmMap& defaultParameters,
+		    double ra=-1e9, double dec=-1e9,
+                    bool check = true)
+      { itsRep->addSource (sourceName, catType, apparentBrightness, sourceType,
+                           defaultParameters, ra, dec, check); }
 
     // Get the Cat-1 patch names in order of decreasing apparent brightness.
     vector<string> getCat1Patches()

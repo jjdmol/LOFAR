@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDBCasa.h>
+#include <ParmDB/ParmMap.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -43,10 +44,10 @@ namespace BBS {
   SourceDBCasa::SourceDBCasa (const ParmDBMeta& pdm, bool forceNew)
     : SourceDBRep (pdm, forceNew)
   {
-    string tableName = pdm.getTableName() + "/SourceDB";
+    string tableName = pdm.getTableName() + "/SOURCES";
     // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
-      createTables (tableName);
+      createTables (pdm.getTableName());
     }
     // Open the main table.
     itsSourceTable = Table(tableName, TableLock::UserLocking);
@@ -71,31 +72,37 @@ namespace BBS {
 
   void SourceDBCasa::createTables (const string& tableName)
   {
+    // Create description of SOURCES.
     TableDesc td("Local Sky Model Sources", TableDesc::Scratch);
     td.comment() = String("Table containing the sources in the Local Sky Model");
     td.addColumn (ScalarColumnDesc<String>("SOURCENAME"));
     td.addColumn (ScalarColumnDesc<uint>  ("PATCHID"));
     td.addColumn (ScalarColumnDesc<int>   ("SOURCETYPE"));
-    td.addColumn (ScalarColumnDesc<double>("APPARENT_BRIGHTNESS"));
-    td.addColumn (ScalarColumnDesc<double>("RA"));
-    td.addColumn (ScalarColumnDesc<double>("DEC"));
-
+    // Create description of PATCHES.
     TableDesc tdpat("Local Sky Model patches", TableDesc::Scratch);
     tdpat.comment() = String("Table containing the patches in the Local Sky Model");
-    tdpat.addColumn (ScalarColumnDesc<String>("NAME"));
-    tdpat.addColumn (ScalarColumnDesc<int>   ("CATEGORY"));
-
-    SetupNewTable newtab(tableName, td, Table::New);
-    SetupNewTable newpattab(tableName+string("/PATCHES"), tdpat, Table::New);
-
+    tdpat.addColumn (ScalarColumnDesc<String>("PATCHNAME"));
+    tdpat.addColumn (ScalarColumnDesc<uint>  ("CATEGORY"));
+    tdpat.addColumn (ScalarColumnDesc<double>("APPARENT_BRIGHTNESS"));
+    tdpat.addColumn (ScalarColumnDesc<double>("RA"));
+    tdpat.addColumn (ScalarColumnDesc<double>("DEC"));
+    // Create the tables.
+    string tabNameSrc = tableName + "/SOURCES";
+    SetupNewTable newtab(tabNameSrc, td, Table::New);
+    SetupNewTable newpattab(tabNameSrc + "/PATCHES", tdpat, Table::New);
     Table tab(newtab);
     Table pattab(newpattab);
+    // PATCHES is subtable of SOURCES.
     tab.rwKeywordSet().defineTable("PATCHES", pattab);  
-
+    // Set type info.
     tab.tableInfo().setType ("LSM");
     tab.tableInfo().readmeAddLine ("Sources in the Local Sky Model");
     pattab.tableInfo().setType ("LSMpatches");
     pattab.tableInfo().readmeAddLine ("Patches in the Local Sky Model");
+    // Make SOURCES subtable of the ParmDB.
+    Table ptab(tableName, Table::Update);
+    TableLocker locker(ptab, FileLocker::Write);
+    ptab.rwKeywordSet().defineTable("SOURCES", tab);  
   }
 
   void SourceDBCasa::clearTables()
@@ -112,6 +119,158 @@ namespace BBS {
     }
   }
 
+  void SourceDBCasa::checkDuplicates()
+  {
+    TableLocker lockerp(itsPatchTable, FileLocker::Read);
+    Table tabp = itsPatchTable.sort ("PATCHNAME", Sort::Ascending,
+                                     Sort::HeapSort + Sort::NoDuplicates);
+    ASSERTSTR (tabp.nrow() == itsPatchTable.nrow(),
+               "The PATCHES table has " <<
+               itsPatchTable.nrow() - tabp.nrow() <<
+               " duplicate patch names");
+    TableLocker lockers(itsSourceTable, FileLocker::Read);
+    Table tabs = itsSourceTable.sort ("SOURCENAME", Sort::Ascending,
+                                     Sort::HeapSort + Sort::NoDuplicates);
+    ASSERTSTR (tabs.nrow() == itsSourceTable.nrow(),
+               "The SOURCES table has " <<
+               itsSourceTable.nrow() - tabs.nrow() <<
+               " duplicate source names");
+  }
+
+  bool SourceDBCasa::patchExists (const string& patchName)
+  {
+    TableLocker locker(itsPatchTable, FileLocker::Read);
+    // See if existing.
+    Table table = itsPatchTable(itsPatchTable.col("PATCHNAME") ==
+                                String(patchName));
+    return (table.nrow() > 0);
+  }
+
+  bool SourceDBCasa::sourceExists (const string& sourceName)
+  {
+    TableLocker locker(itsSourceTable, FileLocker::Read);
+    // See if existing.
+    Table table = itsSourceTable(itsSourceTable.col("SOURCENAME") ==
+                                 String(sourceName));
+    return (table.nrow() > 0);
+  }
+
+  uint SourceDBCasa::addPatch (const string& patchName, int catType,
+                               double apparentBrightness,
+                               double ra, double dec,
+                               bool check)
+  {
+    itsPatchTable.reopenRW();
+    TableLocker locker(itsPatchTable, FileLocker::Write);
+    // See if already existing.
+    if (check) {
+      ASSERTSTR (!patchExists(patchName),
+                 "Patch " << patchName << " already exists");
+    }
+    // Okay, add it to the patch table.
+    ScalarColumn<String> nameCol(itsPatchTable, "PATCHNAME");
+    ScalarColumn<uint>   catCol (itsPatchTable, "CATEGORY");
+    ScalarColumn<double> brCol  (itsPatchTable, "APPARENT_BRIGHTNESS");
+    ScalarColumn<double> raCol  (itsPatchTable, "RA");
+    ScalarColumn<double> decCol (itsPatchTable, "DEC");
+    uint rownr = itsPatchTable.nrow();
+    itsPatchTable.addRow();
+    nameCol.put (rownr, patchName);
+    catCol.put  (rownr, catType);
+    brCol.put   (rownr, apparentBrightness);
+    raCol.put   (rownr, ra);
+    decCol.put  (rownr, dec);
+    return rownr;
+  }
+
+  void SourceDBCasa::addSource (const string& patchName,
+                                const string& sourceName,
+                                SourceInfo::Type sourceType,
+                                const ParmMap& defaultParameters,
+                                double ra, double dec,
+                                bool check)
+  {
+    uint patchId;
+    {
+      // Find the patch.
+      TableLocker locker(itsPatchTable, FileLocker::Read);
+      Table table = itsPatchTable(itsPatchTable.col("PATCHNAME") ==
+                                  String(patchName));
+      ASSERTSTR (table.nrow() == 1,
+                 "Patch " << patchName << " does not exist");
+      patchId = table.rowNumbers()[0];
+    }
+    itsSourceTable.reopenRW();
+    TableLocker locker(itsSourceTable, FileLocker::Write);
+    if (check) {
+      ASSERTSTR (!sourceExists(sourceName),
+                 "Source " << sourceName << " already exists");
+    }
+    addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
+  }
+
+  void SourceDBCasa::addSource (const string& sourceName, int catType,
+                                double apparentBrightness,
+                                SourceInfo::Type sourceType,
+                                const ParmMap& defaultParameters,
+                                double ra, double dec,
+                                bool check)
+  {
+    itsPatchTable.reopenRW();
+    itsSourceTable.reopenRW();
+    TableLocker lockerp(itsPatchTable, FileLocker::Write);
+    TableLocker lockers(itsSourceTable, FileLocker::Write);
+    if (check) {
+      ASSERTSTR (!patchExists(sourceName),
+                 "Patch " << sourceName << " already exists");
+      ASSERTSTR (!sourceExists(sourceName),
+                 "Source " << sourceName << " already exists");
+    }
+    uint patchId = addPatch (sourceName, catType, apparentBrightness,
+                             ra, dec, false);
+    addSrc (patchId, sourceName, sourceType, defaultParameters, ra, dec);
+  }
+
+  void SourceDBCasa::addSrc (uint patchId,
+                             const string& sourceName,
+                             SourceInfo::Type sourceType,
+                             const ParmMap& defaultParameters,
+                             double ra, double dec)
+  {
+    // Okay, add it to the source table.
+    ScalarColumn<String> nameCol(itsSourceTable, "SOURCENAME");
+    ScalarColumn<uint>   idCol  (itsSourceTable, "PATCHID");
+    ScalarColumn<int>    typeCol(itsSourceTable, "SOURCETYPE");
+    uint rownr = itsSourceTable.nrow();
+    itsSourceTable.addRow();
+    nameCol.put (rownr, sourceName);
+    idCol.put   (rownr, patchId);
+    typeCol.put (rownr, sourceType);
+    // Now add the default parameters to the ParmDB DEFAULTVALUES table.
+    bool foundRa = false;
+    bool foundDec = false;
+    for (ParmMap::const_iterator iter=defaultParameters.begin();
+         iter!=defaultParameters.end(); ++iter) {
+      if (iter->first == "Ra")  foundRa  = true;
+      if (iter->first == "Dec") foundDec = true;
+      getParmDB().putDefValue (sourceName + ':' + iter->first, iter->second);
+    }
+    // If Ra or Dec given and not in parameters, put it.
+    // Use absolute perturbations for them.
+    if (!foundRa  &&  ra != -1e9) {
+      ParmValue pval(ra);
+      getParmDB().putDefValue (sourceName + ":Ra",
+                               ParmValueSet(pval, ParmValue::Scalar,
+                                            1e-6, false));
+    }
+    if (!foundDec  &&  dec != -1e9) {
+      ParmValue pval(dec);
+      getParmDB().putDefValue (sourceName + ":Dec",
+                               ParmValueSet(pval, ParmValue::Scalar,
+                                            1e-6, false));
+    }
+  }
+
   void SourceDBCasa::deleteSources (const string& sourceNamePattern)
   {
     Table table = itsSourceTable;
@@ -124,12 +283,18 @@ namespace BBS {
     itsSourceTable.removeRow (table.rowNumbers());
     // A patch will never be removed from the PATCH table, otherwise the
     // PATCHID keys (which are row numbers) do not match anymore.
+    // Delete the sources from the ParmDB tables.
+    string parmNamePattern = sourceNamePattern + ":*";
+    getParmDB().deleteDefValues (parmNamePattern);
+    getParmDB().deleteValues (parmNamePattern, Box(Point(-1e30,-1e30),
+                                                   Point( 1e30, 1e30)));
   }
 
   vector<string> SourceDBCasa::getCat1Patches()
   {
     TableLocker locker(itsPatchTable, FileLocker::Read);
     Table table = itsPatchTable(itsPatchTable.col("CATEGORY") == 1);
+    table = table.sort ("APPARENT_BRIGHTNESS", Sort::Descending);
     Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
     return vector<string>(nm.cbegin(), nm.cend());
   }
