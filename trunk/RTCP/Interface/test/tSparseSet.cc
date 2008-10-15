@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include "Interface/SparseSet.h"
 
 #include <cassert>
