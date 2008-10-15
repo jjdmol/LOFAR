@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
 
 #if defined(__linux__) && !defined(USE_NOSOCKETS)
