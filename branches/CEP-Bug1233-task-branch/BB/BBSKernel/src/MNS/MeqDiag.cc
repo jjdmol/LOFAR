@@ -1,4 +1,4 @@
-//# MeqDiag.cc: A diagonal node in a Jones matrix expression.
+//# Diag.cc: A diagonal node in a Jones matrix expression.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,7 +31,7 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqDiag::MeqDiag(const MeqExpr& xx, const MeqExpr& yy)
+Diag::Diag(const Expr& xx, const Expr& yy)
 : itsXX(xx),
   itsYY(yy)
 {
@@ -39,19 +39,19 @@ MeqDiag::MeqDiag(const MeqExpr& xx, const MeqExpr& yy)
   addChild(itsYY);
 }
 
-MeqDiag::~MeqDiag()
+Diag::~Diag()
 {}
 
-MeqJonesResult MeqDiag::getJResult(const MeqRequest& request)
+JonesResult Diag::getJResult(const Request& request)
 {
 //  PERFPROFILE(__PRETTY_FUNCTION__);
 
-  MeqJonesResult res(0);
+  JonesResult res(0);
   {
     itsXX.getResultSynced(request, res.result11());
     itsYY.getResultSynced(request, res.result22());
-    res.result12().setValue (MeqMatrix(0.));
-    res.result21().setValue (MeqMatrix(0.));
+    res.result12().setValue (Matrix(0.));
+    res.result21().setValue (Matrix(0.));
   }
   return res;
 }

@@ -1,6 +1,6 @@
-//# MeqRequest.h: The request for an evaluation of an expression
+//# Request.h: Request grid on which to evaluate an expression.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,133 +20,61 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQREQUEST_H)
+#ifndef MNS_MEQREQUEST_H
 #define MNS_MEQREQUEST_H
 
 // \file
-// The request for an evaluation of an expression
+// Request grid on which to evaluate an expression.
 
-//# Includes
-#include <BBSKernel/MNS/MeqRequestId.h>
-#include <BBSKernel/MNS/MeqDomain.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
-#include <Common/lofar_vector.h>
-#include <utility>
+#include <ParmDB/Grid.h>
+#include <BBSKernel/Types.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using std::pair;
 
-// \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-// This class represents a request for which an expression has to be
-// evaluated. It contains the domain and the spids for which the
-// derivative has to calculated.
+typedef int RequestId;
+const RequestId InitRequestId = -1;
 
-class MeqRequest
+class Request
 {
 public:
-  // Create the request from the domain and number of spids for which
-  // the derivatives have to be calculated.
-  // Give the number of cells in the domain.
-  // For y one can also give an ascending array of y-values, where the
-  // first and last value have to match the domain boundaries.
-  // <group>
-  MeqRequest (const MeqDomain&, int nrx, int nry,
-	      int nrSpid = 0);
-  MeqRequest (const MeqDomain&, int nrx,
-	      const vector<double>& y,
-	      int nrSpid = 0);
-  // </group>
+    Request(const Grid &grid, bool evalPValues = false);
+    ~Request();
+    
+    RequestId getId() const
+    { return itsId; }
 
-  // Create a partial request for the given domain and values.
-  MeqRequest (const MeqRequest&, unsigned int stx, unsigned int nrx, unsigned int sty, unsigned int nry);
+    Box getBoundingBox() const
+    { return itsGrid.getBoundingBox(); }
+    
+    size_t getChannelCount() const
+    { return itsGrid[FREQ]->size(); }
 
-  // Copy constructor.
-  MeqRequest (const MeqRequest&);
+    size_t getTimeslotCount() const
+    { return itsGrid[TIME]->size(); }
 
-  // Assignment
-  MeqRequest& operator= (const MeqRequest&);
+    const Grid &getGrid() const
+    { return itsGrid; }
 
-  // Set a new domain and number of cells.
-  // <group>
-  void setDomain (const MeqDomain&, int nrx, int nry);
-  void setDomain (const MeqDomain&, int nrx,
-		  const vector<double>& y);
-  // </group>
-
-  // Get the domain.
-  const MeqDomain& domain() const
-    { return itsDomain; }
-
-  // Get the number of parameters.
-  int nspid() const
-    { return itsNspids; }
-
-  // Get the number of cells.
-  int nx() const
-    { return itsNx; }
-  int ny() const
-    { return itsNy; }
-  int ncells() const
-    { return itsNx * itsNy; }
-
-  double stepX() const
-    { return itsStepX; }
-  double y (int inx) const
-    { return (itsYP[inx+1] + itsYP[inx]) / 2; }
-  double sizeY (int inx) const
-    { return itsYP[inx+1] - itsYP[inx]; }
-  double startY (int inx) const
-    { return itsYP[inx]; }
-  double endY (int inx) const
-    { return itsYP[inx+1]; }
-
-  // Set or get the first X-value (i.e. first channel).
-  // <group>
-//  void setFirstX (int firstX)
-//    { itsFirstX = firstX; }
-//  int firstX() const
-//    { return itsFirstX; }
-  // </group>
-
-  void setOffset(pair<size_t, size_t> offset)
-  { itsOffset = offset; }
-
-  pair<size_t, size_t> offset() const
-  { return itsOffset; }
-
-  // Get the request id.
-  MeqRequestId getId() const
-    { return itsRequestId; }
-
-  // Initialize the static request id.
-  static void initRequestId()
-    { theirRequestId = 0; }
-
+    bool getPValueFlag() const
+    { return itsPValueFlag; }
+    
 private:
-  MeqRequestId   itsRequestId;
-  MeqDomain      itsDomain;
-  int            itsNx;
-  int            itsNy;
-  double         itsStepX;
-  vector<double> itsY;     //# The vector of Y values.
-  double*        itsYP;    //# The pointer to itsY for a partial request
-//  int            itsFirstX;
-  int            itsSourceNr;
-  int            itsNspids;
-  pair<size_t, size_t>  itsOffset;
-
-  static MeqRequestId theirRequestId;
+    size_t              itsId;
+    Grid                itsGrid;
+    bool                itsPValueFlag;
+    
+    static RequestId    theirId;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

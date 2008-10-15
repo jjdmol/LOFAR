@@ -1,4 +1,4 @@
-//# MeqGaussianCoherency.cc: Spatial coherence function of an elliptical
+//# GaussianCoherency.cc: Spatial coherence function of an elliptical
 //#     gaussian source.
 //#
 //# Copyright (C) 2005
@@ -39,9 +39,9 @@ namespace BBS
 using LOFAR::exp;
 using LOFAR::conj;
 
-MeqGaussianCoherency::MeqGaussianCoherency(const MeqGaussianSource *source,
-        MeqStatUVW *station1,
-        MeqStatUVW *station2)
+GaussianCoherency::GaussianCoherency(const GaussianSource *source,
+        StatUVW *station1,
+        StatUVW *station2)
     :   itsSource(source),
         itsStation1(station1),
         itsStation2(station2)
@@ -56,42 +56,42 @@ MeqGaussianCoherency::MeqGaussianCoherency(const MeqGaussianSource *source,
 }
 
 
-MeqGaussianCoherency::~MeqGaussianCoherency()
+GaussianCoherency::~GaussianCoherency()
 {
 }
 
 
-MeqJonesResult MeqGaussianCoherency::getJResult(const MeqRequest &request)
+JonesResult GaussianCoherency::getJResult(const Request &request)
 {
     // Evaluate source parameters.
     // Note: The result of any parameter is either scalar or it is 2D and
     // conforms to the size of the request.
-    MeqResult ikBuf, qkBuf, ukBuf, vkBuf, majorBuf, minorBuf, phiBuf;
-    const MeqResult &ik =
-        getChild(MeqGaussianCoherency::IN_I).getResultSynced(request, ikBuf);
-    const MeqResult &qk =
-        getChild(MeqGaussianCoherency::IN_Q).getResultSynced(request, qkBuf);
-    const MeqResult &uk =
-        getChild(MeqGaussianCoherency::IN_U).getResultSynced(request, ukBuf);
-    const MeqResult &vk =
-        getChild(MeqGaussianCoherency::IN_V).getResultSynced(request, vkBuf);
-    const MeqResult &major =
-        getChild(MeqGaussianCoherency::IN_MAJOR).getResultSynced(request, majorBuf);
-    const MeqResult &minor =
-        getChild(MeqGaussianCoherency::IN_MINOR).getResultSynced(request, minorBuf);
-    const MeqResult &phi =
-        getChild(MeqGaussianCoherency::IN_PHI).getResultSynced(request, phiBuf);
+    Result ikBuf, qkBuf, ukBuf, vkBuf, majorBuf, minorBuf, phiBuf;
+    const Result &ik =
+        getChild(GaussianCoherency::IN_I).getResultSynced(request, ikBuf);
+    const Result &qk =
+        getChild(GaussianCoherency::IN_Q).getResultSynced(request, qkBuf);
+    const Result &uk =
+        getChild(GaussianCoherency::IN_U).getResultSynced(request, ukBuf);
+    const Result &vk =
+        getChild(GaussianCoherency::IN_V).getResultSynced(request, vkBuf);
+    const Result &major =
+        getChild(GaussianCoherency::IN_MAJOR).getResultSynced(request, majorBuf);
+    const Result &minor =
+        getChild(GaussianCoherency::IN_MINOR).getResultSynced(request, minorBuf);
+    const Result &phi =
+        getChild(GaussianCoherency::IN_PHI).getResultSynced(request, phiBuf);
     
     // Assume major, minor, phi are scalar.
     DBGASSERT(!major.getValue().isArray());
     DBGASSERT(!minor.getValue().isArray());
     DBGASSERT(!phi.getValue().isArray());
 
-    // Note: The result of a MeqStatUVW node is always 1D in time.
-    const MeqResult &uStation1 = itsStation1->getU(request);
-    const MeqResult &vStation1 = itsStation1->getV(request);
-    const MeqResult &uStation2 = itsStation2->getU(request);
-    const MeqResult &vStation2 = itsStation2->getV(request);
+    // Note: The result of a StatUVW node is always 1D in time.
+    const Result &uStation1 = itsStation1->getU(request);
+    const Result &vStation1 = itsStation1->getV(request);
+    const Result &uStation2 = itsStation2->getU(request);
+    const Result &vStation2 = itsStation2->getV(request);
 
     // Check pre-conditions.
     DBGASSERT(uStation1.getValue().nx() == 1 && uStation1.getValue().nelements() == request.ny());
@@ -100,141 +100,141 @@ MeqJonesResult MeqGaussianCoherency::getJResult(const MeqRequest &request)
     DBGASSERT(vStation2.getValue().nx() == 1 && vStation1.getValue().nelements() == request.ny());
 
     // Compute baseline uv-coordinates (1D in time).
-    MeqMatrix uBaseline = uStation2.getValue() - uStation1.getValue();
-    MeqMatrix vBaseline = vStation2.getValue() - vStation1.getValue();
-
-    // Compute scaled Stokes vector.
-    MeqMatrix uvScaled = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
-    MeqMatrix iScaled = ik.getValue() * 0.5;
-    MeqMatrix qScaled = qk.getValue() * 0.5;
+    Matrix uBaseline = uStation2.getValue() - uStation1.getValue();
+    Matrix vBaseline = vStation2.getValue() - vStation1.getValue();
 
     // Compute spatial coherence for a gaussian source.
-    MeqMatrix coherence = computeCoherence(request, uBaseline, vBaseline, major.getValue(), minor.getValue(), phi.getValue());
+    Matrix coherence = computeCoherence(request, uBaseline, vBaseline,
+      major.getValue(), minor.getValue(), phi.getValue());
 
     // Allocate the result.
-    MeqJonesResult result(request.nspid());
-    MeqResult &resXX = result.result11();
-    MeqResult &resXY = result.result12();
-    MeqResult &resYX = result.result21();
-    MeqResult &resYY = result.result22();
+    JonesResult result(request.nspid());
+    Result &resXX = result.result11();
+    Result &resXY = result.result12();
+    Result &resYX = result.result21();
+    Result &resYY = result.result22();
     
+    // Compute main result.
+    Matrix iScaled = 0.5 * ik.getValue();
+    Matrix qScaled = 0.5 * qk.getValue();
+    Matrix uvScaled = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+
     resXX.setValue((iScaled + qScaled) * coherence);
     resXY.setValue(uvScaled * coherence);
     resYX.setValue(conj(uvScaled) * coherence);
     resYY.setValue((iScaled - qScaled) * coherence);
     
-    // Evaluate (if needed) for the perturbed parameter values.
-    const MeqParmFunklet* perturbedParm = 0;
-    MeqMatrix coherencePerturbed;
-    MeqMatrix iScaledPerturbed, qScaledPerturbed, uvScaledPerturbed;
-
-    for(int spinx = 0; spinx < request.nspid(); ++spinx)
+    // Compute perturbed values.
+    enum PVIteratorIndex
     {
-        bool evalCoherence = false;
-        bool evalIQ = false;
-        bool evalUV = false;
-        
-        coherencePerturbed = coherence;
-        iScaledPerturbed = iScaled;
-        qScaledPerturbed = qScaled;
-        uvScaledPerturbed = uvScaled;
-
-        if(major.isDefined(spinx))
-        {
-            evalCoherence = true;
-            perturbedParm = major.getPerturbedParm (spinx);
-        }
-        else if(minor.isDefined(spinx))
-        {
-            evalCoherence = true;
-            perturbedParm = minor.getPerturbedParm (spinx);
-        }
-        else if(phi.isDefined(spinx))
-        {
-            evalCoherence = true;
-            perturbedParm = phi.getPerturbedParm (spinx);
-        }
-        
-        if(ik.isDefined(spinx))
-        {
-            evalIQ = true;
-            perturbedParm = ik.getPerturbedParm (spinx);
-        }
-        else if(qk.isDefined(spinx))
-        {
-            evalIQ = true;
-            perturbedParm = qk.getPerturbedParm (spinx);
-        }
+        RESULT_I = 0,
+        RESULT_Q = 0,
+        RESULT_U = 0,
+        RESULT_V = 0,
+        RESULT_MAJOR = 0,
+        RESULT_MINOR = 0,
+        RESULT_PHI = 0,
+        N_PVIteratorIndex
+    };
     
-        if(uk.isDefined(spinx))
+    PValueIterator pvIter[N_PVIteratorIndex];
+    pvIter[RESULT_I] = PValueIterator(ik);
+    pvIter[RESULT_Q] = PValueIterator(qk);
+    pvIter[RESULT_U] = PValueIterator(uk);
+    pvIter[RESULT_V] = PValueIterator(vk);
+    pvIter[RESULT_MAJOR] = PValueIterator(major);
+    pvIter[RESULT_MINOR] = PValueIterator(minor);
+    pvIter[RESULT_PHI] = PValueIterator(phi);
+
+    Matrix iScaledPerturbed, qScaledPerturbed, uvScaledPerturbed,
+        coherencePerturbed;
+
+    bool atEnd = false;
+    while(!atEnd)
+    {
+        atEnd = true;
+
+        PValueKey currKey(static_cast<size_t>(-1), 0);
+        for(size_t i = 0; i < N_PVIteratorIndex; ++i)
         {
-            evalUV = true;
-            perturbedParm = uk.getPerturbedParm (spinx);
-        }
-        else if(vk.isDefined(spinx))
-        {
-            evalUV = true;
-            perturbedParm = vk.getPerturbedParm (spinx);
-        }
-        
-        if(evalCoherence)
-        {
-            coherencePerturbed = computeCoherence(request, uBaseline, vBaseline,
-                major.getPerturbedValue(spinx),
-                minor.getPerturbedValue(spinx),
-                phi.getPerturbedValue(spinx));
+            if(!pvIter[i].atEnd() && pvIter[i].key().parmId < currKey.parmId)
+            {
+                currKey = pvIter[i].key();
+                atEnd = false;
+            }
         }
 
-        if(evalIQ)
+        if(!atEnd)
         {
-            iScaledPerturbed = ik.getPerturbedValue(spinx) * 0.5;
-            qScaledPerturbed = qk.getPerturbedValue(spinx) * 0.5;
-        }
+            bool evalIQ = evalUV = evalCoherence = false;
 
-        if(evalUV)
-        {
-            uvScaledPerturbed = tocomplex(uk.getPerturbedValue(spinx),
-                vk.getPerturbedValue(spinx)) * 0.5;
-        }
+            iScaledPerturbed = iScaled;
+            qScaledPerturbed = qScaled;
+            uvScaledPerturbed = uvScaled;
+            coherencePerturbed = coherence;
 
-        if(evalCoherence || evalIQ)
-        {        
-            resXX.setPerturbedParm(spinx, perturbedParm);
-            resXX.setPerturbedValue(spinx,
-                (iScaledPerturbed + qScaledPerturbed) * coherencePerturbed);
-                
-            resYY.setPerturbedParm(spinx, perturbedParm);
-            resYY.setPerturbedValue(spinx,
-                (iScaledPerturbed - qScaledPerturbed) * coherencePerturbed);
-        }
+            if(pvIter[RESULT_I].isAt(currKey) || pvIter[RESULT_Q].isAt(currKey))
+            {
+                evalIQ = true;
+                iScaledPerturbed = 0.5 * pvIter[RESULT_I].next(currKey);
+                qScaledPerturbed = 0.5 * pvIter[RESULT_Q].next(currKey);
+            }
+            
+            if(pvIter[RESULT_U].isAt(currKey) || pvIter[RESULT_V].isAt(currKey))
+            {
+                evalUV = true;
+                uvScaledPerturbed =
+                    0.5 * tocomplex(pvIter[RESULT_U].next(currKey),
+                        pvIter[RESULT_V].next(currKey));
+            }
 
-        if(evalCoherence || evalUV)
-        {
-            resXY.setPerturbedParm(spinx, perturbedParm);
-            resXY.setPerturbedValue(spinx, uvScaledPerturbed * coherencePerturbed);
-                
-            resYX.setPerturbedParm(spinx, perturbedParm);
-            resYX.setPerturbedValue(spinx, conj(uvScaledPerturbed) * coherencePerturbed);
+            if(pvIter[RESULT_MAJOR].isAt(currKey)
+              || pvIter[RESULT_MINOR].isAt(currKey)
+              || pvIter[RESULT_PHI].isAt(currKey))
+            {
+                evalCoherence = true;
+                coherencePerturbed = computeCoherence(request,
+                    uBaseline, vBaseline,
+                    pvIter[RESULT_MAJOR].next(currKey),
+                    pvIter[RESULT_MINOR].next(currKey),
+                    pvIter[RESULT_PHI].next(currKey));
+            }              
+
+            if(evalIQ || evalCoherence)
+            {        
+                resXX.setPerturbedValue(currKey,
+                    (iScaledPerturbed + qScaledPerturbed) * coherencePerturbed);
+                resYY.setPerturbedValue(currKey,
+                    (iScaledPerturbed - qScaledPerturbed) * coherencePerturbed);
+            }
+
+            if(evalUV || evalCoherence)
+            {
+                resXY.setPerturbedValue(currKey, uvScaledPerturbed
+                    * coherencePerturbed);
+                resYX.setPerturbedValue(currKey, conj(uvScaledPerturbed)
+                    * coherencePerturbed);
+            }
         }
     }
-
+    
     return result;
 }
 
 
-MeqMatrix MeqGaussianCoherency::computeCoherence(const MeqRequest &request,
-    const MeqMatrix &uBaseline, const MeqMatrix &vBaseline,
-    const MeqMatrix &major, const MeqMatrix &minor, const MeqMatrix &phi)
+Matrix GaussianCoherency::computeCoherence(const Request &request,
+    const Matrix &uBaseline, const Matrix &vBaseline,
+    const Matrix &major, const Matrix &minor, const Matrix &phi)
 {
     // Compute dot product of rotated, scaled uv-vector with itself (1D in time).
-    MeqMatrix cosPhi(cos(phi));
-    MeqMatrix sinPhi(sin(phi));
-    MeqMatrix uvTransformedDotProduct =
+    Matrix cosPhi(cos(phi));
+    Matrix sinPhi(sin(phi));
+    Matrix uvTransformedDotProduct =
         sqr(major * (uBaseline * cosPhi - vBaseline * sinPhi))
         + sqr(minor * (uBaseline * sinPhi + vBaseline * cosPhi));
 
     // Allocate the result matrix (2D).
-    MeqMatrix result;
+    Matrix result;
     double *valuep = result.setDoubleFormat(request.nx(), request.ny());
 
     // Compute unnormalized spatial coherence (2D).
@@ -256,9 +256,9 @@ MeqMatrix MeqGaussianCoherency::computeCoherence(const MeqRequest &request,
 
 
 #ifdef EXPR_GRAPH
-std::string MeqGaussianCoherency::getLabel()
+std::string GaussianCoherency::getLabel()
 {
-    return std::string("MeqGaussianCoherency\\nSpatial coherence function of"
+    return std::string("GaussianCoherency\\nSpatial coherence function of"
         " an elliptical gaussian source\\n" + itsSource->getName() + " ("
         + itsSource->getGroupName() + ")");
 }

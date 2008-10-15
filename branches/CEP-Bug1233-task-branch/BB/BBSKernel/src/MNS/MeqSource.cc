@@ -1,4 +1,4 @@
-//# MeqSource.cc: Class holding the expressions defining a  source
+//# Source.cc: Class holding the expressions defining a  source
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,18 +29,16 @@ namespace LOFAR
 namespace BBS
 {
 
+Source::Source(const string& name, const Expr &ra, const Expr &dec)
+    :   itsName(name),
+        itsRa(ra),
+        itsDec(dec)
+{
+}
 
-MeqSource::MeqSource (const string& name, const string& groupName,
-              const MeqExpr& ra, const MeqExpr& dec)
-: itsSourceNr  (-1),
-  itsName      (name),
-  itsGroupName (groupName),
-  itsRa        (ra),
-  itsDec       (dec)
-{}
-
-MeqSource::~MeqSource()
-{}
+Source::~Source()
+{
+}
 
 } // namespace BBS
 } // namespace LOFAR

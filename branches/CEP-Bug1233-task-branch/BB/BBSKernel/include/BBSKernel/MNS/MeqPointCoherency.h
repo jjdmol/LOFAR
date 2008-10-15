@@ -1,4 +1,4 @@
-//# MeqPointCoherency.h: Spatial coherence function of a point source.
+//# PointCoherency.h: Spatial coherence function of a point source.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,11 +26,12 @@
 // \file
 // Spatial coherence function of a point source.
 
-//# Includes
 #include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqLMN.h>
 #include <BBSKernel/MNS/MeqPointSource.h>
-#include <BBSKernel/MNS/MeqDFTPS.h>
+
+#ifdef EXPR_GRAPH
+#include <Common/lofar_string.h>
+#endif
 
 namespace LOFAR
 {
@@ -38,27 +39,23 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-//# Forward Declarations
-
-
-class MeqPointCoherency: public MeqJonesExprRep
+class PointCoherency: public JonesExprRep
 {
 public:
-  MeqPointCoherency(const MeqPointSource *source);
-  ~MeqPointCoherency();
+    PointCoherency(const PointSource::ConstPointer &source);
+    ~PointCoherency();
 
-  // Calculate the results for the given domain.
-  virtual MeqJonesResult getJResult(const MeqRequest &request);
+    virtual JonesResult getJResult(const Request &request);
 
 private:
 #ifdef EXPR_GRAPH
-  virtual std::string getLabel();
+    virtual string getLabel();
 #endif
 
-  const MeqPointSource *itsSource;
+    PointSource::ConstPointer    itsSource;
 };
 
 // @}

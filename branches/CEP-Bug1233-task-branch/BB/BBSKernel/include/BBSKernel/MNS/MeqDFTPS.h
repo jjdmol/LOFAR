@@ -1,4 +1,4 @@
-//# MeqPointDFT.h: The DFT for a point source
+//# StationShift.h: Station part of baseline phase shift.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,11 +24,17 @@
 #define MNS_MEQPOINTDFT_H
 
 // \file
-// The DFT for a point source.
+// Station part of baseline phase shift.
 
 //# Includes
 #include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqStatUVW.h>
+
 #include <Common/lofar_vector.h>
+
+#ifdef EXPR_GRAPH
+#include <Common/lofar_string.h>
+#endif
 
 namespace LOFAR
 {
@@ -36,33 +42,25 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-//# Forward declarations
-class MeqLMN;
-class MeqStatUVW;
-
-// This class is the (abstract) base class for an expression.
-
-class MeqDFTPS: public MeqExprRep
+class DFTPS: public ExprRep
 {
 public:
-  // Construct from source list, phase reference position and uvw.
-  explicit MeqDFTPS (const MeqExpr& lmn, MeqStatUVW*);
+    // Construct from source list, phase reference position and uvw.
+    DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn);
+    virtual ~DFTPS();
 
-  virtual ~MeqDFTPS();
-
-  // Get the result of the expression for the given domain.
-  virtual MeqResultVec getResultVec (const MeqRequest&);
+    // Get the result of the expression for the given domain.
+    virtual ResultVec getResultVec(const Request &request);
 
 private:
 #ifdef EXPR_GRAPH
-  virtual std::string getLabel();
+    virtual string getLabel();
 #endif
 
-  MeqExpr     itsLMN;
-  MeqStatUVW* itsUVW;
+    StatUVW::ConstPointer    itsUVW;
 };
 
 // @}

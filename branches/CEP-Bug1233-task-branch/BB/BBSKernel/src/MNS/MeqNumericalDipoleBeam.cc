@@ -1,4 +1,4 @@
-//# MeqNumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
+//# NumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
 //# "Mathematical-physical analysis of the generic dual-dipole antenna"
 //#
 //# Copyright (C) 2008
@@ -31,8 +31,8 @@ namespace LOFAR
 namespace BBS 
 {
 
-MeqNumericalDipoleBeam::MeqNumericalDipoleBeam(const BeamCoeff &coeff,
-    const MeqExpr &azel, const MeqExpr &orientation)
+NumericalDipoleBeam::NumericalDipoleBeam(const BeamCoeff &coeff,
+    const Expr &azel, const Expr &orientation)
     : itsBeamCoeff(coeff)
 {
     ASSERT(itsBeamCoeff.coeff);
@@ -43,24 +43,24 @@ MeqNumericalDipoleBeam::MeqNumericalDipoleBeam(const BeamCoeff &coeff,
 }
 
 
-MeqJonesResult MeqNumericalDipoleBeam::getJResult(const MeqRequest &request)
+JonesResult NumericalDipoleBeam::getJResult(const Request &request)
 {
     // Evaluate children.
-    MeqResultVec res_azel;
-    MeqResult res_orientation;
+    ResultVec res_azel;
+    Result res_orientation;
     
-    const MeqResultVec &azel = getChild(IN_AZEL).getResultVecSynced(request,
+    const ResultVec &azel = getChild(IN_AZEL).getResultVecSynced(request,
         res_azel);
 
-    const MeqResult &orientation =
+    const Result &orientation =
         getChild(IN_ORIENTATION).getResultSynced(request, res_orientation);
 
     // Create result.
-    MeqJonesResult result(request.nspid());
-    MeqResult &result11 = result.result11();
-    MeqResult &result12 = result.result12();
-    MeqResult &result21 = result.result21();
-    MeqResult &result22 = result.result22();
+    JonesResult result(request.nspid());
+    Result &result11 = result.result11();
+    Result &result12 = result.result12();
+    Result &result21 = result.result21();
+    Result &result22 = result.result22();
     
     // Evaluate main value.
     evaluate(request,
@@ -70,7 +70,7 @@ MeqJonesResult MeqNumericalDipoleBeam::getJResult(const MeqRequest &request)
         result21.getValueRW(), result22.getValueRW());
 
     // Evaluate perturbed values.  
-    const MeqParmFunklet *perturbedParm;
+    const ParmFunklet *perturbedParm;
     for(int i = 0; i < request.nspid(); ++i)
     {
         // Find out if this perturbed value needs to be computed.
@@ -107,11 +107,11 @@ MeqJonesResult MeqNumericalDipoleBeam::getJResult(const MeqRequest &request)
 }
 
 
-void MeqNumericalDipoleBeam::evaluate(const MeqRequest &request,
-    const MeqMatrix &in_az, const MeqMatrix &in_el,
-    const MeqMatrix &in_orientation,
-    MeqMatrix &out_E11, MeqMatrix &out_E12,
-    MeqMatrix &out_E21, MeqMatrix &out_E22)
+void NumericalDipoleBeam::evaluate(const Request &request,
+    const Matrix &in_az, const Matrix &in_el,
+    const Matrix &in_orientation,
+    Matrix &out_E11, Matrix &out_E12,
+    Matrix &out_E21, Matrix &out_E22)
 {
     // Check preconditions.
     ASSERT(in_az.nelements() == request.ny());
@@ -224,9 +224,9 @@ void MeqNumericalDipoleBeam::evaluate(const MeqRequest &request,
 
 
 #ifdef EXPR_GRAPH
-std::string MeqNumericalDipoleBeam::getLabel()
+std::string NumericalDipoleBeam::getLabel()
 {
-    return std::string("MeqNumericalDipoleBeam\\nDipole voltage beam based on"
+    return std::string("NumericalDipoleBeam\\nDipole voltage beam based on"
         " numerical simulation");
 }
 #endif

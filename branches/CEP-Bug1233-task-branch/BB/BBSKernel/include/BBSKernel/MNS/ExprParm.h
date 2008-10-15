@@ -1,6 +1,6 @@
-//# MeqParmSingle.h: The class for a single parameter
+//# ExprParm.h: Parameter that can be used in an expression.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,47 +20,48 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPARMSINGLE_H)
-#define MNS_MEQPARMSINGLE_H
+#ifndef MNS_EXPRPARM_H
+#define MNS_EXPRPARM_H
 
 // \file
-// The class for a single parameter
+// Parameter that can be used in an expression.
 
-//# Includes
-#include <BBSKernel/MNS/MeqParm.h>
-
+#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-// This class is the (abstract) base class for parameters.
-// The constructor assigns a unique id to the parameter and adds
-// it to a map to find the id from the name.
-
-class MeqParmSingle : public MeqParm
+class ExprParm: public ExprRep
 {
 public:
-  // Create a parameter with the given name.
-  MeqParmSingle (const string& name, double initValue = 1);
-
-  ~MeqParmSingle();
-
-  // Get the result of the parameter for the given domain.
-  virtual MeqResult getResult (const MeqRequest&);
+    ExprParm(const ParmProxy::ConstPointer &parm);
+    ~ExprParm();
+    
+    void setPValueFlag();
+    bool getPValueFlag() const
+    { return itsPValueFlag; }
+    void clearPValueFlag();
+    
+    // Compute a result for the given request.
+    Result getResult(const Request &request);
 
 private:
-  double  itsValue;
+    ExprParm(const ExprParm &other);
+    ExprParm &operator=(const ExprParm &other);
+
+    ParmProxy::ConstPointer itsParm;
+    bool                    itsPValueFlag;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

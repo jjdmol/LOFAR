@@ -1,4 +1,4 @@
-//# MeqMatrixRep.h: Temporary matrix for Mns
+//# MatrixRep.h: Temporary matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -43,16 +43,16 @@ namespace BBS
 using LOFAR::dcomplex;
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 //# Forward Declarations
-class MeqMatrixRealSca;
-class MeqMatrixComplexSca;
-class MeqMatrixRealArr;
-class MeqMatrixComplexArr;
+class MatrixRealSca;
+class MatrixComplexSca;
+class MatrixRealArr;
+class MatrixComplexArr;
 
-class MeqMatrixRep
+class MatrixRep
 {
 public:
   enum type {
@@ -62,7 +62,7 @@ public:
     ComplexArray   = 3
   };
 
-  MeqMatrixRep (int nx, int ny, enum type type)
+  MatrixRep (int nx, int ny, enum type type)
     : type(type),
       itsCount     (0),
       itsNx        (nx),
@@ -71,17 +71,17 @@ public:
     {
     }
 
-  virtual ~MeqMatrixRep();
+  virtual ~MatrixRep();
 
-  virtual MeqMatrixRep* clone() const = 0;
+  virtual MatrixRep* clone() const = 0;
 
-  MeqMatrixRep* link()
+  MatrixRep* link()
     {
       itsCount++;
       return this;
     }
 
-  static void unlink (MeqMatrixRep* rep)
+  static void unlink (MatrixRep* rep)
     { if (rep != 0 && -- rep->itsCount == 0) delete rep; }
 
   int nx() const
@@ -106,59 +106,59 @@ public:
   virtual double getDouble (int x, int y) const = 0;
   virtual dcomplex getDComplex (int x, int y) const = 0;
 
-  virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp) = 0;
-  virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp) = 0;
-  virtual MeqMatrixRep* multiply (MeqMatrixRep& right, bool rightTmp) = 0;
-  virtual MeqMatrixRep* divide   (MeqMatrixRep& right, bool rightTmp) = 0;
-  virtual MeqMatrixRep* posdiff  (MeqMatrixRep& right);
-  virtual MeqMatrixRep* tocomplex(MeqMatrixRep& right);
+  virtual MatrixRep* add      (MatrixRep& right, bool rightTmp) = 0;
+  virtual MatrixRep* subtract (MatrixRep& right, bool rightTmp) = 0;
+  virtual MatrixRep* multiply (MatrixRep& right, bool rightTmp) = 0;
+  virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp) = 0;
+  virtual MatrixRep* posdiff  (MatrixRep& right);
+  virtual MatrixRep* tocomplex(MatrixRep& right);
 
-  virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* addRep (MeqMatrixRealArr& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* addRep (MeqMatrixComplexSca& left,
+  virtual MatrixRep* addRep (MatrixRealSca& left, bool rightTmp) = 0;
+  virtual MatrixRep* addRep (MatrixRealArr& left, bool rightTmp) = 0;
+  virtual MatrixRep* addRep (MatrixComplexSca& left,
 				bool rightTmp) = 0;
-  virtual MeqMatrixRep* addRep (MeqMatrixComplexArr& left,
-				bool rightTmp) = 0;
-
-  virtual MeqMatrixRep* subRep (MeqMatrixRealSca& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* subRep (MeqMatrixRealArr& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* subRep (MeqMatrixComplexSca& left,
-				bool rightTmp) = 0;
-  virtual MeqMatrixRep* subRep (MeqMatrixComplexArr& left,
+  virtual MatrixRep* addRep (MatrixComplexArr& left,
 				bool rightTmp) = 0;
 
-  virtual MeqMatrixRep* mulRep (MeqMatrixRealSca& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* mulRep (MeqMatrixRealArr& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* mulRep (MeqMatrixComplexSca& left,
+  virtual MatrixRep* subRep (MatrixRealSca& left, bool rightTmp) = 0;
+  virtual MatrixRep* subRep (MatrixRealArr& left, bool rightTmp) = 0;
+  virtual MatrixRep* subRep (MatrixComplexSca& left,
 				bool rightTmp) = 0;
-  virtual MeqMatrixRep* mulRep (MeqMatrixComplexArr& left,
-				bool rightTmp) = 0;
-
-  virtual MeqMatrixRep* divRep (MeqMatrixRealSca& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* divRep (MeqMatrixRealArr& left, bool rightTmp) = 0;
-  virtual MeqMatrixRep* divRep (MeqMatrixComplexSca& left,
-				bool rightTmp) = 0;
-  virtual MeqMatrixRep* divRep (MeqMatrixComplexArr& left,
+  virtual MatrixRep* subRep (MatrixComplexArr& left,
 				bool rightTmp) = 0;
 
-  virtual MeqMatrixRep* posdiffRep (MeqMatrixRealSca& left);
-  virtual MeqMatrixRep* posdiffRep (MeqMatrixRealArr& left);
+  virtual MatrixRep* mulRep (MatrixRealSca& left, bool rightTmp) = 0;
+  virtual MatrixRep* mulRep (MatrixRealArr& left, bool rightTmp) = 0;
+  virtual MatrixRep* mulRep (MatrixComplexSca& left,
+				bool rightTmp) = 0;
+  virtual MatrixRep* mulRep (MatrixComplexArr& left,
+				bool rightTmp) = 0;
 
-  virtual MeqMatrixRep* tocomplexRep (MeqMatrixRealSca& left);
-  virtual MeqMatrixRep* tocomplexRep (MeqMatrixRealArr& left);
+  virtual MatrixRep* divRep (MatrixRealSca& left, bool rightTmp) = 0;
+  virtual MatrixRep* divRep (MatrixRealArr& left, bool rightTmp) = 0;
+  virtual MatrixRep* divRep (MatrixComplexSca& left,
+				bool rightTmp) = 0;
+  virtual MatrixRep* divRep (MatrixComplexArr& left,
+				bool rightTmp) = 0;
 
-  virtual MeqMatrixRep* negate() = 0;
+  virtual MatrixRep* posdiffRep (MatrixRealSca& left);
+  virtual MatrixRep* posdiffRep (MatrixRealArr& left);
 
-  virtual MeqMatrixRep* sin() = 0;
-  virtual MeqMatrixRep* cos() = 0;
-  virtual MeqMatrixRep* exp() = 0;
-  virtual MeqMatrixRep* sqr() = 0;
-  virtual MeqMatrixRep* sqrt() = 0;
-  virtual MeqMatrixRep* conj() = 0;
-  virtual MeqMatrixRep* min() = 0;
-  virtual MeqMatrixRep* max() = 0;
-  virtual MeqMatrixRep* mean() = 0;
-  virtual MeqMatrixRep* sum() = 0;
+  virtual MatrixRep* tocomplexRep (MatrixRealSca& left);
+  virtual MatrixRep* tocomplexRep (MatrixRealArr& left);
+
+  virtual MatrixRep* negate() = 0;
+
+  virtual MatrixRep* sin() = 0;
+  virtual MatrixRep* cos() = 0;
+  virtual MatrixRep* exp() = 0;
+  virtual MatrixRep* sqr() = 0;
+  virtual MatrixRep* sqrt() = 0;
+  virtual MatrixRep* conj() = 0;
+  virtual MatrixRep* min() = 0;
+  virtual MatrixRep* max() = 0;
+  virtual MatrixRep* mean() = 0;
+  virtual MatrixRep* sum() = 0;
 
   virtual void fillRowWithProducts(dcomplex v0, dcomplex factor, int row);
 

@@ -1,4 +1,4 @@
-//# MeqDipoleBeam.h: Dipole voltage beam (analytic)
+//# DipoleBeam.h: Dipole voltage beam (analytic)
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,10 +34,10 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqDipoleBeam: public MeqJonesExprRep
+class DipoleBeam: public JonesExprRep
 {
 public:
     enum
@@ -46,14 +46,14 @@ public:
         N_InputPort
     } InputPort;
 
-    MeqDipoleBeam(MeqExpr azel, double height = 1.706, double length = 1.38,
+    DipoleBeam(Expr azel, double height = 1.706, double length = 1.38,
         double slant = casa::C::pi / 4.001, double orientation = 0.0);
 
-    virtual MeqJonesResult getJResult(const MeqRequest &request);
+    virtual JonesResult getJResult(const Request &request);
 
 private:
-    void evaluate(const MeqRequest &request, const MeqMatrix &in_az,
-        const MeqMatrix &in_el, MeqMatrix &out_E_theta, MeqMatrix &out_E_phi, 
+    void evaluate(const Request &request, const Matrix &in_az,
+        const Matrix &in_el, Matrix &out_E_theta, Matrix &out_E_phi, 
         double height, double length, double slant, double orientation);
 
 #ifdef EXPR_GRAPH

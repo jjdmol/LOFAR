@@ -1,4 +1,4 @@
-//# MeqJonesVisData.cc: 
+//# JonesVisData.cc: 
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,14 +31,14 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesVisData::MeqJonesVisData(VisData::Pointer vdata, baseline_t baseline)
+JonesVisData::JonesVisData(VisData::Pointer vdata, baseline_t baseline)
     : itsVisData(vdata)
 {
     const VisDimensions &dims = itsVisData->getDimensions();
     itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
-MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
+JonesResult JonesVisData::getJResult (const Request& request)
 {
     typedef boost::multi_array<sample_t, 4>::index_range range;
 
@@ -50,11 +50,11 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
 
     // Allocate the result matrices.
     double *re, *im;
-    MeqJonesResult result(request.nspid());
-    MeqMatrix& m11 = result.result11().getValueRW();
-    MeqMatrix& m12 = result.result12().getValueRW();
-    MeqMatrix& m21 = result.result21().getValueRW();
-    MeqMatrix& m22 = result.result22().getValueRW();
+    JonesResult result(request.nspid());
+    Matrix& m11 = result.result11().getValueRW();
+    Matrix& m12 = result.result12().getValueRW();
+    Matrix& m21 = result.result21().getValueRW();
+    Matrix& m22 = result.result22().getValueRW();
     m11.setDCMat(nChannels, nTimeslots);
     m12.setDCMat(nChannels, nTimeslots);
     m21.setDCMat(nChannels, nTimeslots);
@@ -73,7 +73,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     }
     catch(BBSKernelException &ex)
     {
-        m11 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+        m11 = Matrix(makedcomplex(0,0), nChannels, nTimeslots);
     }
 
     // Copy 12 elements if available.
@@ -87,7 +87,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     }
     catch(BBSKernelException &ex)
     {
-        m12 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+        m12 = Matrix(makedcomplex(0,0), nChannels, nTimeslots);
     }
 
     // Copy 21 elements if available.
@@ -101,7 +101,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     }
     catch(BBSKernelException &ex)
     {
-        m21 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+        m21 = Matrix(makedcomplex(0,0), nChannels, nTimeslots);
     }
 
 
@@ -116,14 +116,14 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     }
     catch(BBSKernelException &ex)
     {
-        m22 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+        m22 = Matrix(makedcomplex(0,0), nChannels, nTimeslots);
     }
 
     return result;
 }
 
 
-void MeqJonesVisData::copy(double *re, double *im,
+void JonesVisData::copy(double *re, double *im,
     const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src)
 {
     for(size_t tslot = 0; tslot < src.shape()[0]; ++tslot)

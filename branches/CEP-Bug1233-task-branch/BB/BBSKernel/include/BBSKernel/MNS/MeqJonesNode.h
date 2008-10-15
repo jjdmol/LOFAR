@@ -1,4 +1,4 @@
-//# MeqJonesNode.h: A node in a Jones matrix expression.
+//# JonesNode.h: A node in a Jones matrix expression.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,37 +36,37 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 //# Forward Declarations
-class MeqExpr;
-class MeqJonesResult;
+class Expr;
+class JonesResult;
 
 
 // This class is a node in a Jones matrix expression.
 
-class MeqJonesNode: public MeqJonesExprRep
+class JonesNode: public JonesExprRep
 {
 public:
   // Construct from four Jones elements.
-  MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
-        const MeqExpr& elem21, const MeqExpr& elem22);
+  JonesNode (const Expr& elem11, const Expr& elem12,
+        const Expr& elem21, const Expr& elem22);
 
-  virtual ~MeqJonesNode();
+  virtual ~JonesNode();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual JonesResult getJResult (const Request&);
 
 private:
 #ifdef EXPR_GRAPH
   virtual std::string getLabel();
 #endif
 
-  MeqExpr itsExpr11;
-  MeqExpr itsExpr12;
-  MeqExpr itsExpr21;
-  MeqExpr itsExpr22;
+  Expr itsExpr11;
+  Expr itsExpr12;
+  Expr itsExpr21;
+  Expr itsExpr22;
 };
 
 // @}

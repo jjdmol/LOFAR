@@ -27,28 +27,21 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
+#include <BBSKernel/MNS/MeqPointSource.h>
+#include <BBSKernel/MNS/MeqGaussianSource.h>
+
+#include <BBSKernel/MNS/ExprParm.h>
 #include <BBSKernel/MNS/MeqPhaseRef.h>
-#include <BBSKernel/MNS/MeqParmFunklet.h>
-#include <BBSKernel/MNS/MeqParmSingle.h>
-#include <BBSKernel/MNS/MeqDiag.h>
-#include <BBSKernel/MNS/MeqJonesInvert.h>
 #include <BBSKernel/MNS/MeqPhaseShift.h>
 #include <BBSKernel/MNS/MeqPointCoherency.h>
-#include <BBSKernel/MNS/MeqGaussianCoherency.h>
 #include <BBSKernel/MNS/MeqJonesMul.h>
-#include <BBSKernel/MNS/MeqJonesCMul3.h>
 #include <BBSKernel/MNS/MeqJonesSum.h>
-#include <BBSKernel/MNS/MeqJonesVisData.h>
-#include <BBSKernel/MNS/MeqAzEl.h>
-//include <BBSKernel/MNS/MeqDipoleBeam.h>
-#include <BBSKernel/MNS/MeqDipoleBeamExternal.h>
-#include <BBSKernel/MNS/MeqNumericalDipoleBeam.h>
 
-#include <BBSKernel/MNS/MeqStation.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
 #include <BBSKernel/MNS/MeqLMN.h>
 #include <BBSKernel/MNS/MeqDFTPS.h>
 #include <BBSKernel/MNS/MeqJonesNode.h>
+#include <BBSKernel/MNS/MeqJonesInvert.h>
+#include <BBSKernel/MNS/MeqJonesCMul3.h>
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
 
@@ -60,36 +53,139 @@
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_complex.h>
+#include <Common/lofar_algorithm.h>
 #include <Common/lofar_smartptr.h>
 
 #include <measures/Measures/MDirection.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Vector.h>
 
-#include <ParmDB/ParmDB.h>
+#include <iterator>
 
 namespace LOFAR
 {
 namespace BBS 
 {
-using LOFAR::ParmDB::ParmDB;
-using std::max;
 
-Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
-    ParmDB *skyDBase, MeqPhaseRef *phaseRef)
-    :   itsEquationType(UNSET)
+Model::Model(const Instrument &instrument, const casa::MDirection &phaseRef)
+    : itsInstrument(instrument)
 {
-    // Construct source list.
-    itsSourceList.reset(new MeqSourceList(*skyDBase, parmGroup));
+    // Store phase reference.
+    itsPhaseRef = PhaseRef::ConstPointer(new PhaseRef(phaseRef));
 
-    // Make nodes for all stations.
-    makeStationNodes(instrument, *phaseRef);
+    // Make UVW nodes for all stations.
+    makeStationUvw();
+}
+
+bool Model::makeFwdExpressions(const ModelConfig &config,
+    const vector<baseline_t> &baselines)
+{
+    // Remove all existing expressions.
+    clearExpressions();
+
+    // Create source nodes for all selected sources.
+    vector<Source::Pointer> sources;
+    sources.push_back(makeSource(SourceDescriptor("CasA", SourceDescriptor::POINT)));
+//    sources.push_back(makeSource(SourceDescriptor("CygA", SourceDescriptor::POINT)));
+//    makeSources(sources, config.sources);
+    if(sources.empty())
+    {
+        LOG_ERROR_STR("Source selection is empty.");
+        return false;
+    }
+
+    const size_t nSources = sources.size();
+    const size_t nStations = itsStationUvw.size();
+
+    cout << "nSources: " << nSources << endl;
+    cout << "nStations: " << nStations << endl;
+
+    // Create LMN nodes for all sources and coherence nodes for all point
+    // sources.
+    vector<Expr> lmn(nSources);
+    map<size_t, JonesExpr> pointCoherences;
+
+    for(size_t i = 0; i < nSources; ++i)
+    {
+        // Create LMN node.
+        lmn[i] = new LMN(sources[i], itsPhaseRef);
+
+        // A point source's coherence is independent of baseline UVW
+        // coordinates. Therefore, they are constructed here and shared
+        // between baselines.
+        PointSource::ConstPointer pointSource =
+            dynamic_pointer_cast<const PointSource>(sources[i]);
+
+        if(pointSource)
+        {
+            // Create point source coherence.
+            pointCoherences[i] = new PointCoherency(pointSource);
+        }
+    }
+
+    // Direction independent (uv-plane) effects.
+    vector<JonesExpr> gain;
+    makeGainNodes(gain, config);
+
+    // Direction dependent (image-plane) effects.
+    boost::multi_array<Expr, 2>
+        stationShift(boost::extents[nStations][nSources]);
+
+    // Create a station shift node per station-source combination.
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            stationShift[i][j] = new DFTPS(itsStationUvw[i], lmn[j]);
+        }
+    }
+    
+    // Create an expression tree for each baseline.
+    for(size_t i = 0; i < baselines.size(); ++i)
+    {
+        const baseline_t &baseline = baselines[i];
+
+        vector<JonesExpr> terms;
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            // Phase shift (incorporates geometry and fringe stopping).
+            Expr shift(new PhaseShift(stationShift[baseline.first][j],
+                stationShift[baseline.second][j]));
+
+            JonesExpr coherence = pointCoherences[j];
+            ASSERT(!coherence.isNull());
+
+            // Phase shift the source coherence.
+            coherence = new JonesMul(coherence, shift);
+
+            terms.push_back(coherence);
+        }
+
+        // Sum all source coherences.
+        JonesExpr sum;
+        if(terms.size() == 1)
+        {
+            sum = terms.front();
+        }
+        else
+        {
+            sum = new JonesSum(terms);
+        }
+
+        sum = new JonesCMul3(gain[baseline.first], sum,
+            gain[baseline.second]);
+
+        itsExpressions[baseline] = sum;
+    }
+
+    return true;
 }
 
 
+/*
 void Model::makeEquations(EquationType type, const ModelConfig &config,
-    const vector<baseline_t> &baselines, MeqParmGroup &parmGroup,
-    ParmDB *instrumentDBase, MeqPhaseRef *phaseRef, VisData::Pointer buffer)
+    const vector<baseline_t> &baselines, PhaseRef *phaseRef,
+    VisData::Pointer buffer)
 {
     // Parse component names.
     vector<bool> mask(N_ModelComponent, false);
@@ -124,6 +220,7 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
 
     // Clear all equations.
     clearEquations();
+
     itsEquationType = type;
 
     // Make nodes for all specified sources (use all if none specified).
@@ -138,10 +235,10 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
 
     ASSERT(nStations > 0 && nSources > 0);
 
-    vector<MeqExpr> azel(nSources);
-    vector<MeqExpr> dft(nStations * nSources);
-    vector<MeqJonesExpr> bandpass, gain, dir_gain;
-    vector<vector<MeqJonesExpr> > beam;
+    vector<Expr> azel(nSources);
+    vector<Expr> dft(nStations * nSources);
+    vector<JonesExpr> bandpass, gain, dir_gain;
+    vector<vector<JonesExpr> > beam;
 
     if(mask[BANDPASS])
     {
@@ -167,7 +264,7 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
     {
         // Make a phase term per station per source.
         for(size_t j = 0; j < nSources; ++j)
-            dft[i * nSources + j] = MeqExpr(new MeqDFTPS(itsLMNNodes[j],
+            dft[i * nSources + j] = Expr(new DFTPS(itsLMNNodes[j],
                 itsUVWNodes[i].get()));
 
         // Make a bandpass expression per station.
@@ -175,55 +272,55 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
         {
             string suffix = itsStationNodes[i]->getName();
 
-            MeqExpr B11(MeqParmFunklet::create("bandpass:11:" + suffix,
+            Expr B11(ParmFunklet::create("bandpass:11:" + suffix,
                 parmGroup, instrumentDBase));
-            MeqExpr B22(MeqParmFunklet::create("bandpass:22:" + suffix,
+            Expr B22(ParmFunklet::create("bandpass:22:" + suffix,
                 parmGroup, instrumentDBase));
 
-            bandpass[i] = new MeqDiag(B11, B22);
+            bandpass[i] = new Diag(B11, B22);
         }
 
         // Make a complex gain expression per station and possibly per source.
         if(mask[GAIN])
         {
-            MeqExpr J11, J12, J21, J22;
+            Expr J11, J12, J21, J22;
             string suffix = itsStationNodes[i]->getName();
 
             // Make a J-jones expression per station
-            MeqExpr J11_part1(MeqParmFunklet::create("gain:11:" + part1
+            Expr J11_part1(ParmFunklet::create("gain:11:" + part1
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J11_part2(MeqParmFunklet::create("gain:11:" + part2
+            Expr J11_part2(ParmFunklet::create("gain:11:" + part2
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J12_part1(MeqParmFunklet::create("gain:12:" + part1
+            Expr J12_part1(ParmFunklet::create("gain:12:" + part1
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J12_part2(MeqParmFunklet::create("gain:12:" + part2
+            Expr J12_part2(ParmFunklet::create("gain:12:" + part2
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J21_part1(MeqParmFunklet::create("gain:21:" + part1
+            Expr J21_part1(ParmFunklet::create("gain:21:" + part1
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J21_part2(MeqParmFunklet::create("gain:21:" + part2
+            Expr J21_part2(ParmFunklet::create("gain:21:" + part2
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J22_part1(MeqParmFunklet::create("gain:22:" + part1
+            Expr J22_part1(ParmFunklet::create("gain:22:" + part1
                 + suffix, parmGroup, instrumentDBase));
-            MeqExpr J22_part2(MeqParmFunklet::create("gain:22:" + part2
+            Expr J22_part2(ParmFunklet::create("gain:22:" + part2
                 + suffix, parmGroup, instrumentDBase));
 
             if(mask[config.usePhasors])
             {
-                J11 = new MeqExprAPToComplex(J11_part1, J11_part2);
-                J12 = new MeqExprAPToComplex(J12_part1, J12_part2);
-                J21 = new MeqExprAPToComplex(J21_part1, J21_part2);
-                J22 = new MeqExprAPToComplex(J22_part1, J22_part2);
+                J11 = new ExprAPToComplex(J11_part1, J11_part2);
+                J12 = new ExprAPToComplex(J12_part1, J12_part2);
+                J21 = new ExprAPToComplex(J21_part1, J21_part2);
+                J22 = new ExprAPToComplex(J22_part1, J22_part2);
             }
             else
             {
-                J11 = new MeqExprToComplex(J11_part1, J11_part2);
-                J12 = new MeqExprToComplex(J12_part1, J12_part2);
-                J21 = new MeqExprToComplex(J21_part1, J21_part2);
-                J22 = new MeqExprToComplex(J22_part1, J22_part2);
+                J11 = new ExprToComplex(J11_part1, J11_part2);
+                J12 = new ExprToComplex(J12_part1, J12_part2);
+                J21 = new ExprToComplex(J21_part1, J21_part2);
+                J22 = new ExprToComplex(J22_part1, J22_part2);
             }
 
-            gain[i] = new MeqJonesNode(J11, J12, J21, J22);
-//            inv_gain[i] = new MeqJonesInvert(gain[i]);
+            gain[i] = new JonesNode(J11, J12, J21, J22);
+//            inv_gain[i] = new JonesInvert(gain[i]);
         }
         
         if(mask[DIRECTIONAL_GAIN])
@@ -232,49 +329,49 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             // patches of several sources will be supported as well.
             for(size_t j = 0; j < nSources; ++j)
             {
-                MeqExpr J11, J12, J21, J22;
+                Expr J11, J12, J21, J22;
                 string suffix = itsStationNodes[i]->getName() + ":"
                     + itsSourceNodes[j]->getName();
 
-                MeqExpr J11_part1(MeqParmFunklet::create("gain:11:" + part1
+                Expr J11_part1(ParmFunklet::create("gain:11:" + part1
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J11_part2(MeqParmFunklet::create("gain:11:" + part2
+                Expr J11_part2(ParmFunklet::create("gain:11:" + part2
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J12_part1(MeqParmFunklet::create("gain:12:" + part1
+                Expr J12_part1(ParmFunklet::create("gain:12:" + part1
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J12_part2(MeqParmFunklet::create("gain:12:" + part2
+                Expr J12_part2(ParmFunklet::create("gain:12:" + part2
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J21_part1(MeqParmFunklet::create("gain:21:" + part1
+                Expr J21_part1(ParmFunklet::create("gain:21:" + part1
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J21_part2(MeqParmFunklet::create("gain:21:" + part2
+                Expr J21_part2(ParmFunklet::create("gain:21:" + part2
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J22_part1(MeqParmFunklet::create("gain:22:" + part1
+                Expr J22_part1(ParmFunklet::create("gain:22:" + part1
                     + suffix, parmGroup, instrumentDBase));
-                MeqExpr J22_part2(MeqParmFunklet::create("gain:22:" + part2
+                Expr J22_part2(ParmFunklet::create("gain:22:" + part2
                     + suffix, parmGroup, instrumentDBase));
 
                 if(mask[config.usePhasors])
                 {
-                    J11 = new MeqExprAPToComplex(J11_part1, J11_part2);
-                    J12 = new MeqExprAPToComplex(J12_part1, J12_part2);
-                    J21 = new MeqExprAPToComplex(J21_part1, J21_part2);
-                    J22 = new MeqExprAPToComplex(J22_part1, J22_part2);
+                    J11 = new ExprAPToComplex(J11_part1, J11_part2);
+                    J12 = new ExprAPToComplex(J12_part1, J12_part2);
+                    J21 = new ExprAPToComplex(J21_part1, J21_part2);
+                    J22 = new ExprAPToComplex(J22_part1, J22_part2);
                 }
                 else
                 {
-                    J11 = new MeqExprToComplex(J11_part1, J11_part2);
-                    J12 = new MeqExprToComplex(J12_part1, J12_part2);
-                    J21 = new MeqExprToComplex(J21_part1, J21_part2);
-                    J22 = new MeqExprToComplex(J22_part1, J22_part2);
+                    J11 = new ExprToComplex(J11_part1, J11_part2);
+                    J12 = new ExprToComplex(J12_part1, J12_part2);
+                    J21 = new ExprToComplex(J21_part1, J21_part2);
+                    J22 = new ExprToComplex(J22_part1, J22_part2);
                 }
 
                 dir_gain[i * nSources + j] =
-                    new MeqJonesNode(J11, J12, J21, J22);
+                    new JonesNode(J11, J12, J21, J22);
 
                 // Gain correction is always performed with respect to the
                 // direction of the first source (patch).
 //                if(j == 0)
-//                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
+//                    inv_gain[i] = new JonesInvert(gain[i * nSources]);
             }
         }
     }
@@ -285,14 +382,14 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             "Need at least one of GAIN, DIRECTIONAL_GAIN, BANDPASS to"
             " correct for.");
             
-        vector<MeqJonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
+        vector<JonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
         
         if(mask[BANDPASS])
         {
             inv_bandpass.resize(nStations);
             for(size_t i = 0; i < nStations; ++i)
             {
-                inv_bandpass[i] = new MeqJonesInvert(bandpass[i]);
+                inv_bandpass[i] = new JonesInvert(bandpass[i]);
             }
         }
 
@@ -301,7 +398,7 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             inv_gain.resize(nStations);
             for(size_t i = 0; i < nStations; ++i)
             {
-                inv_gain[i] = new MeqJonesInvert(gain[i]);
+                inv_gain[i] = new JonesInvert(gain[i]);
             }
         }
         
@@ -311,7 +408,7 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             for(size_t i = 0; i < nStations; ++i)
             {
                 // Always correct for the first source (direction).
-                inv_dir_gain[i] = new MeqJonesInvert(dir_gain[i * nSources]);
+                inv_dir_gain[i] = new JonesInvert(dir_gain[i * nSources]);
             }
         }
 
@@ -320,27 +417,27 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
             ++it)
         {
             const baseline_t &baseline = *it;
-            MeqJonesExpr vis = new MeqJonesVisData(buffer, baseline);
+            JonesExpr vis = new JonesVisData(buffer, baseline);
             
             if(mask[BANDPASS])
             {
-                vis = new MeqJonesCMul3(inv_bandpass[baseline.first], vis,
+                vis = new JonesCMul3(inv_bandpass[baseline.first], vis,
                     inv_bandpass[baseline.second]);
             }
 
             if(mask[GAIN])
             {
-                vis = new MeqJonesCMul3(inv_gain[baseline.first], vis,
+                vis = new JonesCMul3(inv_gain[baseline.first], vis,
                     inv_gain[baseline.second]);
             }
             
             if(mask[DIRECTIONAL_GAIN])
             {
-                vis = new MeqJonesCMul3(inv_dir_gain[baseline.first], vis,
+                vis = new JonesCMul3(inv_dir_gain[baseline.first], vis,
                     inv_dir_gain[baseline.second]);
             }
 
-            itsEquations[baseline] = vis;
+            itsExpressions[baseline] = vis;
         }
     }
     else
@@ -351,38 +448,38 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
         {
             const baseline_t &baseline = *it;
 
-            vector<MeqJonesExpr> terms;
+            vector<JonesExpr> terms;
             for(size_t j = 0; j < nSources; ++j)
             {
                 // Phase shift (incorporates geometry and fringe stopping).
-                MeqExpr shift
-                    (new MeqPhaseShift(dft[baseline.first * nSources + j],
+                Expr shift
+                    (new PhaseShift(dft[baseline.first * nSources + j],
                     dft[baseline.second * nSources + j]));
 
-                MeqJonesExpr sourceExpr;
+                JonesExpr sourceExpr;
 
-                MeqPointSource *source =
-                    dynamic_cast<MeqPointSource*>(itsSourceNodes[j]);
+                PointSource *source =
+                    dynamic_cast<PointSource*>(itsSourceNodes[j]);
 
                 if(source)
                 {
                     // Point source.
-                    sourceExpr = new MeqPointCoherency(source);
+                    sourceExpr = new PointCoherency(source);
                 }
                 else
                 {
-                    MeqGaussianSource *source = dynamic_cast<MeqGaussianSource*>(itsSourceNodes[j]);
+                    GaussianSource *source = dynamic_cast<GaussianSource*>(itsSourceNodes[j]);
                     ASSERT(source);
-                    sourceExpr = new MeqGaussianCoherency(source, itsUVWNodes[baseline.first].get(), itsUVWNodes[baseline.second].get());
+                    sourceExpr = new GaussianCoherency(source, itsUVWNodes[baseline.first].get(), itsUVWNodes[baseline.second].get());
                 }
 
                 // Phase shift the source coherency.
-                sourceExpr = new MeqJonesMul(sourceExpr, shift);
+                sourceExpr = new JonesMul(sourceExpr, shift);
                 
                 // Apply image plane effects if required.
                 if(mask[BEAM])
                 {
-                    sourceExpr = new MeqJonesCMul3
+                    sourceExpr = new JonesCMul3
                         (beam[baseline.first][j],
                         sourceExpr,
                         beam[baseline.second][j]);
@@ -390,7 +487,7 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
 
                 if(mask[DIRECTIONAL_GAIN])
                 {
-                    sourceExpr = new MeqJonesCMul3
+                    sourceExpr = new JonesCMul3
                         (dir_gain[baseline.first * nSources + j],
                         sourceExpr,
                         dir_gain[baseline.second * nSources + j]);
@@ -399,65 +496,132 @@ void Model::makeEquations(EquationType type, const ModelConfig &config,
                 terms.push_back(sourceExpr);
             }
 
-            MeqJonesExpr sum;
+            JonesExpr sum;
             if(terms.size() == 1)
                 sum = terms.front();
             else
-                sum = MeqJonesExpr(new MeqJonesSum(terms));
+                sum = JonesExpr(new JonesSum(terms));
 
             // Apply UV-plane effects if required.
             if(mask[GAIN])
             {
-                sum = new MeqJonesCMul3(gain[baseline.first], sum,
+                sum = new JonesCMul3(gain[baseline.first], sum,
                     gain[baseline.second]);
             }
 
             if(mask[BANDPASS])
             {
-                sum = new MeqJonesCMul3(bandpass[baseline.first], sum,
+                sum = new JonesCMul3(bandpass[baseline.first], sum,
                     bandpass[baseline.second]);
             }
             
-            itsEquations[baseline] = sum;
+            itsExpressions[baseline] = sum;
         }
     }
 }
+*/    
 
-
-void Model::clearEquations()
+void Model::clearExpressions()
 {
-    itsEquations.clear();
-    itsEquationType = UNSET;
+    itsExpressions.clear();
+    itsParms.clear();
 }
 
-
-void Model::precalculate(const MeqRequest& request)
+void Model::setPerturbedParms(const ParmGroup &perturbed)
 {
-    if(itsEquations.empty())
-        return;
+    ParmGroup::const_iterator pertIt = perturbed.begin();
+    ParmGroup::const_iterator pertItEnd = perturbed.end();
+    while(pertIt != pertItEnd)
+    {
+        map<uint, Expr>::iterator parmIt = itsParms.find(*pertIt);
+        if(parmIt != itsParms.end())
+        {
+            ExprParm *parmPtr = static_cast<ExprParm*>(parmIt->second.getPtr());
+            ASSERT(parmPtr);
+            parmPtr->setPValueFlag();
+        }
+        ++pertIt;
+    }
+}
 
+void Model::clearPerturbedParms()
+{
+    map<uint, Expr>::iterator it = itsParms.begin();
+    map<uint, Expr>::iterator itEnd = itsParms.end();
+    while(it != itEnd)
+    {
+        ExprParm *parmPtr = static_cast<ExprParm*>(it->second.getPtr());
+        ASSERT(parmPtr);
+        parmPtr->clearPValueFlag();
+        ++it;
+    }
+}
+
+ParmGroup Model::getPerturbedParms() const
+{
+    ParmGroup result;
+    
+    map<uint, Expr>::const_iterator it = itsParms.begin();
+    map<uint, Expr>::const_iterator itEnd = itsParms.end();
+    while(it != itEnd)
+    {
+        const ExprParm *parmPtr =
+            static_cast<const ExprParm*>(it->second.getPtr());
+        ASSERT(parmPtr);
+        if(parmPtr->getPValueFlag())
+        {
+            result.insert(it->first);
+        }
+        ++it;
+    }
+
+    return result;
+}
+
+ParmGroup Model::getParms() const
+{
+    ParmGroup result;
+    
+    map<uint, Expr>::const_iterator it = itsParms.begin();
+    map<uint, Expr>::const_iterator itEnd = itsParms.end();
+    while(it != itEnd)
+    {
+        result.insert(it->first);
+        ++it;
+    }
+
+    return result;
+}
+
+void Model::precalculate(const Request &request)
+{
+    if(itsExpressions.empty())
+    {
+        return;
+    }
+    
     // First clear the levels of all nodes in the tree.
-    for(map<baseline_t, MeqJonesExpr>::iterator it = itsEquations.begin();
-        it != itsEquations.end();
+    for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
+        it != itsExpressions.end();
         ++it)
     {
-        MeqJonesExpr &expr = it->second;
-        if(!expr.isNull())
-            expr.clearDone();
+        JonesExpr &expr = it->second;
+        ASSERT(!expr.isNull());
+        expr.clearDone();
     }
 
     // Now set the levels of all nodes in the tree.
-    // The top nodes have level 0; lower nodes have 1, 2, etc..
+    // The root nodes have level 0; child nodes have level 1 or higher.
     int nrLev = -1;
-    for(map<baseline_t, MeqJonesExpr>::iterator it = itsEquations.begin();
-        it != itsEquations.end();
+    for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
+        it != itsExpressions.end();
         ++it)
     {
-        MeqJonesExpr &expr = it->second;
-        if(!expr.isNull())
-            nrLev = max(nrLev, expr.setLevel(0));
+        JonesExpr &expr = it->second;
+        ASSERT(!expr.isNull());
+        nrLev = std::max(nrLev, expr.setLevel(0));
     }
-    nrLev++;
+    ++nrLev;
     ASSERT(nrLev > 0);
 
     // Find the nodes to be precalculated at each level.
@@ -466,30 +630,25 @@ void Model::precalculate(const MeqRequest& request)
     // having one parent).
     // It may happen that a station is used by only one baseline. Calculating
     // such a baseline is much more work if the station was not precalculated.
-    vector<vector<MeqExprRep*> > precalcNodes(nrLev);
-    for(size_t level = 1; level < nrLev; ++level)
+    vector<vector<ExprRep*> > precalcNodes(nrLev);
+    for(int level = 1; level < nrLev; ++level)
     {
-        vector<MeqExprRep*> &nodes = precalcNodes[level];
-        nodes.resize(0);
-
-        for(map<baseline_t, MeqJonesExpr>::iterator it = itsEquations.begin();
-            it != itsEquations.end();
+        for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
+            it != itsExpressions.end();
             ++it)
         {
-            MeqJonesExpr &expr = it->second;
-            if(!expr.isNull())
-                expr.getCachingNodes(nodes, level, false);
+            JonesExpr &expr = it->second;
+            ASSERT(!expr.isNull());
+            expr.getCachingNodes(precalcNodes[level], level, false);
         }
     }
 
-/************ DEBUG DEBUG DEBUG ************/
     LOG_TRACE_FLOW_STR("#levels=" << nrLev);
-    for(size_t i = 0; i < nrLev; ++i)
+    for(int i = 0; i < nrLev; ++i)
     {
         LOG_TRACE_FLOW_STR("#expr on level " << i << " is "
             << precalcNodes[i].size());
     }
-/************ DEBUG DEBUG DEBUG ************/
 
 #pragma omp parallel
     {
@@ -498,11 +657,13 @@ void Model::precalculate(const MeqRequest& request)
         // Level 0 is formed by itsExpr which are not calculated here.
         for(size_t level = precalcNodes.size(); --level > 0;)
         {
-            vector<MeqExprRep*> &nodes = precalcNodes[level];
+            vector<ExprRep*> &nodes = precalcNodes[level];
+            
             if(!nodes.empty())
             {
-//                ASSERT(nodes.size() <= numeric_limits<int>::max());
 #pragma omp for schedule(dynamic)
+                // NOTE: OpenMP will only parallelize for loops that use type
+                // 'int' for the loop counter.
                 for(int i = 0; i < static_cast<int>(nodes.size()); ++i)
                 {
                     nodes[i]->precalculate(request);
@@ -512,30 +673,29 @@ void Model::precalculate(const MeqRequest& request)
     } // omp parallel
 }
 
-
-MeqJonesResult Model::evaluate(baseline_t baseline, const MeqRequest& request)
+JonesResult Model::evaluate(const baseline_t &baseline,
+    const Request &request)
 {
-    map<baseline_t, MeqJonesExpr>::iterator it =
-        itsEquations.find(baseline);
-    ASSERTSTR(it != itsEquations.end(), "Result requested for unknown"
+    map<baseline_t, JonesExpr>::iterator it = itsExpressions.find(baseline);
+    ASSERTSTR(it != itsExpressions.end(), "Result requested for unknown"
         " baseline " << baseline.first << " - " << baseline.second);
 
     return it->second.getResult(request);
 }
 
-
+/*
 void Model::makeStationNodes(const Instrument &instrument,
-    const MeqPhaseRef &phaseRef)
+    const PhaseRef &phaseRef)
 {
     // Workaround to facilitate comparison with earlier versions of BBS
-    // and with MeqTree.
+    // and with Tree.
     casa::Quantum<casa::Vector<casa::Double> > angles =
         phaseRef.direction().getAngle();
     casa::MDirection phaseRef2(casa::MVDirection(angles.getBaseValue()(0),
         angles.getBaseValue()(1)), casa::MDirection::J2000);
     LOG_WARN_STR("Superfluous conversion of phase center from/to"
         " casa::MDirection to allow comparison with earlier version of BBS and"
-        " with MeqTree. Should be removed after validation.");
+        " with Tree. Should be removed after validation.");
 
     itsStationNodes.resize(instrument.stations.size());
     itsUVWNodes.resize(instrument.stations.size());
@@ -544,38 +704,42 @@ void Model::makeStationNodes(const Instrument &instrument,
         const casa::MVPosition &position =
             instrument.stations[i].position.getValue();
 
-        MeqParmSingle *x = new MeqParmSingle("position:x:" +
+        ParmSingle *x = new ParmSingle("position:x:" +
             instrument.stations[i].name, position(0));
-        MeqParmSingle *y = new MeqParmSingle("position:y:" +
+        ParmSingle *y = new ParmSingle("position:y:" +
             instrument.stations[i].name, position(1));
-        MeqParmSingle *z = new MeqParmSingle("position:z:" +
+        ParmSingle *z = new ParmSingle("position:z:" +
             instrument.stations[i].name, position(2));
 
-        itsStationNodes[i].reset(new MeqStation(x, y, z,
+        itsStationNodes[i].reset(new Station(x, y, z,
             instrument.stations[i].name));
 
-        itsUVWNodes[i].reset(new MeqStatUVW(itsStationNodes[i].get(),
+        itsUVWNodes[i].reset(new StatUVW(itsStationNodes[i].get(),
             phaseRef2, instrument.position));
     }
 }
+*/    
 
 
-void Model::makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef)
+/*
+void Model::makeSourceNodes(const vector<string> &names, PhaseRef *phaseRef)
 {
     itsSourceNodes.resize(names.size());
     itsLMNNodes.resize(names.size());
     for(size_t i = 0; i < names.size(); ++i)
     {
-        MeqSource *source = itsSourceList->getSource(names[i]);
+        Source *source = itsSourceList->getSource(names[i]);
         itsSourceNodes[i] = source;
 
         // Create an LMN node for the source.
-        itsLMNNodes[i] = new MeqLMN(source);
+        itsLMNNodes[i] = new LMN(source);
         itsLMNNodes[i]->setPhaseRef(phaseRef);
     }
 }
+*/    
 
 
+/*
 void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
 {
     const size_t nStations = instrument.stations.size();
@@ -652,24 +816,26 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         }
     }
 }
+*/    
+    
 
-
+/*
 void Model::makeBeamNodes(const ModelConfig &config,
-    LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group,
-    vector<vector<MeqJonesExpr> > &result) const
+    LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
+    vector<vector<JonesExpr> > &result) const
 {
     ASSERT(config.beamConfig);
     ASSERT(config.beamConfig->type() == "HamakerDipole"
         || config.beamConfig->type() == "YatawattaDipole");
     
     // Create AzEl node for each source-station combination.
-    vector<MeqExpr> azel(itsSourceNodes.size());
+    vector<Expr> azel(itsSourceNodes.size());
     for(size_t i = 0; i < itsSourceNodes.size(); ++i)
     {
         // TODO: This code uses station 0 as reference position on earth
         // (see global_model.py in EJones_HBA). Is this accurate enough?
         azel[i] =
-            new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
+            new AzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
     }
 
     if(config.beamConfig->type() == "HamakerDipole")
@@ -686,13 +852,13 @@ void Model::makeBeamNodes(const ModelConfig &config,
         for(size_t i = 0; i < itsStationNodes.size(); ++i)
         {
             // Get dipole orientation.
-            MeqExpr orientation(MeqParmFunklet::create("orientation:"
+            Expr orientation(ParmFunklet::create("orientation:"
                 + itsStationNodes[i]->getName(), group, db));
 
             result[i].resize(itsSourceNodes.size());
             for(size_t j = 0; j < itsSourceNodes.size(); ++j)
             {
-                result[i][j] = new MeqNumericalDipoleBeam(coeff, azel[j],
+                result[i][j] = new NumericalDipoleBeam(coeff, azel[j],
                     orientation);
             }
         }
@@ -714,16 +880,16 @@ void Model::makeBeamNodes(const ModelConfig &config,
         for(size_t i = 0; i < itsStationNodes.size(); ++i)
         {
             // Get dipole orientation.
-            MeqExpr orientation(MeqParmFunklet::create("orientation:"
+            Expr orientation(ParmFunklet::create("orientation:"
                 + itsStationNodes[i]->getName(), group, db));
 
             result[i].resize(itsSourceNodes.size());
             for(size_t j = 0; j < itsSourceNodes.size(); ++j)
             {
-//                result[i][j] = new MeqDipoleBeam(azel[j], 1.706, 1.38,
+//                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
 //                    casa::C::pi / 4.001, -casa::C::pi_4);
                 result[i][j] =
-                    new MeqDipoleBeamExternal(beamConfig->moduleTheta,
+                    new DipoleBeamExternal(beamConfig->moduleTheta,
                         beamConfig->modulePhi, azel[j], orientation, 1.0);
             }
         }
@@ -733,8 +899,125 @@ void Model::makeBeamNodes(const ModelConfig &config,
         ASSERT(false);
     }
 }
+*/    
 
+void Model::makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config,
+    bool inverse)
+{
+    string elem1(config.usePhasors ? "Ampl"  : "Real");
+    string elem2(config.usePhasors ? "Phase" : "Imag");
 
+    const size_t nStations = itsInstrument.stations.size();
+    result.resize(nStations);
+
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        Expr J11, J12, J21, J22;
+        
+        string suffix(itsInstrument.stations[i].name);
+
+        Expr J11_elem1 =
+            makeExprParm(INSTRUMENT, "Gain:11:" + elem1 + ":" + suffix);
+        Expr J11_elem2 =
+            makeExprParm(INSTRUMENT, "Gain:11:" + elem2 + ":" + suffix);
+        Expr J12_elem1 =
+            makeExprParm(INSTRUMENT, "Gain:12:" + elem1 + ":" + suffix);
+        Expr J12_elem2 =
+            makeExprParm(INSTRUMENT, "Gain:12:" + elem2 + ":" + suffix);
+        Expr J21_elem1 =
+            makeExprParm(INSTRUMENT, "Gain:21:" + elem1 + ":" + suffix);
+        Expr J21_elem2 =
+            makeExprParm(INSTRUMENT, "Gain:21:" + elem2 + ":" + suffix);
+        Expr J22_elem1 =
+            makeExprParm(INSTRUMENT, "Gain:22:" + elem1 + ":" + suffix);
+        Expr J22_elem2 =
+            makeExprParm(INSTRUMENT, "Gain:22:" + elem2 + ":" + suffix);
+
+        if(config.usePhasors)
+        {
+            J11 = new ExprAPToComplex(J11_elem1, J11_elem2);
+            J12 = new ExprAPToComplex(J12_elem1, J12_elem2);
+            J21 = new ExprAPToComplex(J21_elem1, J21_elem2);
+            J22 = new ExprAPToComplex(J22_elem1, J22_elem2);
+        }
+        else
+        {
+            J11 = new ExprToComplex(J11_elem1, J11_elem2);
+            J12 = new ExprToComplex(J12_elem1, J12_elem2);
+            J21 = new ExprToComplex(J21_elem1, J21_elem2);
+            J22 = new ExprToComplex(J22_elem1, J22_elem2);
+        }
+
+        result[i] = new JonesNode(J11, J12, J21, J22);
+        if(inverse)
+        {
+            result[i] = new JonesInvert(result[i]);
+        }
+    }
+}
+
+void Model::makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
+    const ModelConfig &config, const vector<Source::Pointer> &sources,
+    bool inverse)
+{
+    string elem1(config.usePhasors ? "Ampl"  : "Real");
+    string elem2(config.usePhasors ? "Phase" : "Imag");
+
+    const size_t nStations = itsInstrument.stations.size();
+    const size_t nSources = sources.size();
+    result.resize(boost::extents[nStations][nSources]);
+
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            Expr J11, J12, J21, J22;
+            
+            string suffix(itsInstrument.stations[i].name + ":"
+                + sources[j]->getName());
+
+            Expr J11_elem1 =
+                makeExprParm(INSTRUMENT, "Gain:11:" + elem1 + ":" + suffix);
+            Expr J11_elem2 =
+                makeExprParm(INSTRUMENT, "Gain:11:" + elem2 + ":" + suffix);
+            Expr J12_elem1 =
+                makeExprParm(INSTRUMENT, "Gain:12:" + elem1 + ":" + suffix);
+            Expr J12_elem2 =
+                makeExprParm(INSTRUMENT, "Gain:12:" + elem2 + ":" + suffix);
+            Expr J21_elem1 =
+                makeExprParm(INSTRUMENT, "Gain:21:" + elem1 + ":" + suffix);
+            Expr J21_elem2 =
+                makeExprParm(INSTRUMENT, "Gain:21:" + elem2 + ":" + suffix);
+            Expr J22_elem1 =
+                makeExprParm(INSTRUMENT, "Gain:22:" + elem1 + ":" + suffix);
+            Expr J22_elem2 =
+                makeExprParm(INSTRUMENT, "Gain:22:" + elem2 + ":" + suffix);
+
+            if(config.usePhasors)
+            {
+                J11 = new ExprAPToComplex(J11_elem1, J11_elem2);
+                J12 = new ExprAPToComplex(J12_elem1, J12_elem2);
+                J21 = new ExprAPToComplex(J21_elem1, J21_elem2);
+                J22 = new ExprAPToComplex(J22_elem1, J22_elem2);
+            }
+            else
+            {
+                J11 = new ExprToComplex(J11_elem1, J11_elem2);
+                J12 = new ExprToComplex(J12_elem1, J12_elem2);
+                J21 = new ExprToComplex(J21_elem1, J21_elem2);
+                J22 = new ExprToComplex(J22_elem1, J22_elem2);
+            }
+
+            result[i][j] = new JonesNode(J11, J12, J21, J22);
+            if(inverse)
+            {
+                result[i][j] = new JonesInvert(result[i][j]);
+            }   
+        }
+    }
+}
+
+/*
 BeamCoeff Model::readBeamCoeffFile(const string &filename) const
 {
     LOG_DEBUG_STR("Reading beam coefficients...");
@@ -824,7 +1107,149 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
 
     return BeamCoeff(freqAvg, freqRange, coeff);
 }
+*/    
 
+Expr Model::makeExprParm(uint category, const string &name)
+{
+    ParmProxy::ConstPointer proxy(ParmManager::instance().get(category, name));
+
+    pair<map<uint, Expr>::const_iterator, bool> status =
+        itsParms.insert(make_pair(proxy->getId(), Expr(new ExprParm(proxy))));
+
+    return status.first->second;
+}
+
+void Model::makeStationUvw()
+{
+    const vector<Station> &stations = itsInstrument.stations;
+
+    itsStationUvw.resize(stations.size());
+    for(size_t i = 0; i < stations.size(); ++i)
+    {
+        itsStationUvw[i] = StatUVW::ConstPointer(new StatUVW(stations[i].name,
+            stations[i].position, itsInstrument.position, itsPhaseRef));
+    }
+}
+
+/*
+void Model::makeSources(vector<Source::Pointer> &result, ParmGroup &group,
+    vector<string> names) const
+{
+    result.clear();
+
+    if(names.empty())
+    {
+        // By default include all available sources.
+        SourceList::ContainerT::const_iterator it = itsSourceList.begin();
+        while(it != itsSourceList.end())
+        {
+            try
+            {
+                ParmGroup tmp;
+                result.push_back(makeSource(*it, tmp));
+                copy(tmp.begin(), tmp.end(), std::inserter(group,
+                    group.begin()));
+            }
+            catch(Exception &ex)
+            {
+                LOG_WARN_STR("Unable to initialize source: " << it->name
+                    << " (" << ex.what() << "); ignored.");
+            }
+
+            ++it;
+        }
+    }
+    else
+    {
+        // Only consider unique names.
+        sort(names.begin(), names.end());
+        vector<string>::const_iterator nameEnd = unique(names.begin(),
+            names.end());
+        vector<string>::const_iterator nameIt = names.begin();
+        
+        while(nameIt != nameEnd)
+        {
+            SourceList::ContainerT::const_iterator srcIt =
+                itsSourceList.find(*nameIt);
+
+            if(srcIt != itsSourceList.end())
+            {
+                try
+                {
+                    ParmGroup tmp;
+                    result.push_back(makeSource(*srcIt, tmp));
+                    copy(tmp.begin(), tmp.end(), std::inserter(group,
+                        group.begin()));
+                }
+                catch(Exception &ex)
+                {
+                    LOG_WARN_STR("Unable to initialize source: " << *nameIt
+                        << " (" << ex.what() << "); ignored.");
+                }
+            }
+            else
+            {
+                LOG_WARN_STR("Unknown source: " << *nameIt << "; ignored.");
+                continue;
+            }
+            
+            ++nameIt;
+        }
+    }
+}
+*/
+
+Source::Pointer Model::makeSource(const SourceDescriptor &source)
+{
+    cout << "Creating source: " << source.name << endl;
+    switch(source.type)
+    {
+    case SourceDescriptor::POINT:
+        {
+            Expr ra(makeExprParm(SKY, "Ra:" + source.name));
+            Expr dec(makeExprParm(SKY, "Dec:" + source.name));
+            Expr i(makeExprParm(SKY, "I:" + source.name));
+            Expr q(makeExprParm(SKY, "Q:" + source.name));
+            Expr u(makeExprParm(SKY, "U:" + source.name));
+            Expr v(makeExprParm(SKY, "V:" + source.name));
+
+            return PointSource::Pointer(new PointSource(source.name,
+                ra, dec, i, q, u, v));
+        }
+        break;
+    /*
+    case Source::GAUSSIAN:
+        {
+            Expr ra(new ExprParm(ParmManager::instance().get(SKY, "Ra:"
+                + source.name, group)));
+            Expr dec(new ExprParm(ParmManager::instance().get(SKY, "Dec:"
+                + source.name, group)));
+            Expr i(new ExprParm(ParmManager::instance().get(SKY, "I:"
+                + source.name, group)));
+            Expr q(new ExprParm(ParmManager::instance().get(SKY, "Q:"
+                + source.name, group)));
+            Expr u(new ExprParm(ParmManager::instance().get(SKY, "U:"
+                + source.name, group)));
+            Expr v(new ExprParm(ParmManager::instance().get(SKY, "V:"
+                + source.name, group)));
+            Expr maj(new ExprParm(ParmManager::instance().get(SKY, "Major:"
+                + source.name, group)));
+            Expr min(new ExprParm(ParmManager::instance().get(SKY, "Minor:"
+                + source.name, group)));
+            Expr phi(new ExprParm(ParmManager::instance().get(SKY, "Phi:"
+                + source.name, group)));
+         
+            return 
+                GaussianSource::Pointer(new GaussianSource(source.name,
+                    ra, dec, i, q, u, v, maj, min, phi));
+        }
+        break;
+    */        
+    default:
+        break;
+    }
+    THROW(BBSKernelException, "Unable to construct source: " << source.name);
+}
 
 } // namespace BBS
 } // namespace LOFAR

@@ -1,4 +1,4 @@
-//# MeqGaussianCoherency.h: Spatial coherence function of an elliptical
+//# GaussianCoherency.h: Spatial coherence function of an elliptical
 //#     gaussian source.
 //#
 //# Copyright (C) 2005
@@ -38,13 +38,13 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 //# Forward Declarations
 
 
-class MeqGaussianCoherency: public MeqJonesExprRep
+class GaussianCoherency: public JonesExprRep
 {
 public:
     enum
@@ -59,23 +59,23 @@ public:
         N_InputPort
     } InputPort;
 
-    MeqGaussianCoherency(const MeqGaussianSource *source, MeqStatUVW *station1, MeqStatUVW *station2);
-    ~MeqGaussianCoherency();
+    GaussianCoherency(const GaussianSource *source, StatUVW *station1, StatUVW *station2);
+    ~GaussianCoherency();
 
     // Calculate the results for the given domain.
-    virtual MeqJonesResult getJResult(const MeqRequest &request);
+    virtual JonesResult getJResult(const Request &request);
 
 private:
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
 
-    MeqMatrix computeCoherence(const MeqRequest &request,
-        const MeqMatrix &uBaseline, const MeqMatrix &vBaseline,
-        const MeqMatrix &major, const MeqMatrix &minor, const MeqMatrix &phi);
+    Matrix computeCoherence(const Request &request,
+        const Matrix &uBaseline, const Matrix &vBaseline,
+        const Matrix &major, const Matrix &minor, const Matrix &phi);
 
-    const MeqGaussianSource    *itsSource;
-    MeqStatUVW                 *itsStation1, *itsStation2;
+    const GaussianSource    *itsSource;
+    StatUVW                 *itsStation1, *itsStation2;
 };
 
 // @}

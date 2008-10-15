@@ -1,4 +1,4 @@
-//# MeqDiag.h: The Jones expression for a diagonal matrix
+//# Diag.h: The Jones expression for a diagonal matrix
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,29 +36,29 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 //# Forward Declarations
-class MeqExpr;
-class MeqJonesResult;
+class Expr;
+class JonesResult;
 
 // This class is a diagonal node in a Jones matrix expression.
 
-class MeqDiag: public MeqJonesExprRep
+class Diag: public JonesExprRep
 {
 public:
   // Construct from the various subexpressions.
-  MeqDiag (const MeqExpr& xx, const MeqExpr& yy);
+  Diag (const Expr& xx, const Expr& yy);
 
-  virtual ~MeqDiag();
+  virtual ~Diag();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual JonesResult getJResult (const Request&);
 
 private:
-  MeqExpr itsXX;
-  MeqExpr itsYY;
+  Expr itsXX;
+  Expr itsYY;
 };
 
 // @}

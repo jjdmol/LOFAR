@@ -1,4 +1,4 @@
-//# MeqLMN.cc: Class holding the LMN values of a point source
+//# LMN.cc: Class holding the LMN values of a point source
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,52 +36,52 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqLMN::MeqLMN (MeqPointSource* source)
+LMN::LMN (PointSource* source)
 : itsSource    (source)
 {
   addChild (itsSource->getRa());
   addChild (itsSource->getDec());
 }
 
-MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
+ResultVec LMN::getResultVec (const Request& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
-  MeqResultVec result(3, request.nspid());
-  MeqResult& resL = result[0];
-  MeqResult& resM = result[1];
-  MeqResult& resN = result[2];
-  MeqResult raRes, deRes;
-  const MeqResult& rak  = itsSource->getRa().getResultSynced (request, raRes);
-  const MeqResult& deck = itsSource->getDec().getResultSynced (request, deRes);
+  ResultVec result(3, request.nspid());
+  Result& resL = result[0];
+  Result& resM = result[1];
+  Result& resN = result[2];
+  Result raRes, deRes;
+  const Result& rak  = itsSource->getRa().getResultSynced (request, raRes);
+  const Result& deck = itsSource->getDec().getResultSynced (request, deRes);
   double refRa  = itsPhaseRef->getRa();
   double refDec = itsPhaseRef->getDec();
   double refSinDec = itsPhaseRef->getSinDec();
   double refCosDec = itsPhaseRef->getCosDec();
-  MeqMatrix cosdec = cos(deck.getValue());
-  MeqMatrix radiff = rak.getValue() - refRa;
+  Matrix cosdec = cos(deck.getValue());
+  Matrix radiff = rak.getValue() - refRa;
   if (request.nspid() == 0) {
-    MeqMatrix lk = cosdec * sin(radiff);
-    MeqMatrix mk = sin(deck.getValue()) * refCosDec -
+    Matrix lk = cosdec * sin(radiff);
+    Matrix mk = sin(deck.getValue()) * refCosDec -
                    cosdec * refSinDec * cos(radiff);
-    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
+    MatrixTmp nks = 1. - sqr(lk) - sqr(mk);
     ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
 	       << " too far from phaseref " << refRa << ", " << refDec);
-    MeqMatrix nk = sqrt(nks);
+    Matrix nk = sqrt(nks);
     resL.setValue (lk);
     resM.setValue (mk);
     resN.setValue (nk);
   } else {
-    MeqMatrix sinradiff = sin(radiff);
-    MeqMatrix cosradiff = cos(radiff);
-    MeqMatrix sindec = sin(deck.getValue());
-    MeqMatrix lk = cosdec * sinradiff;
-    MeqMatrix mk = sindec * refCosDec -
+    Matrix sinradiff = sin(radiff);
+    Matrix cosradiff = cos(radiff);
+    Matrix sindec = sin(deck.getValue());
+    Matrix lk = cosdec * sinradiff;
+    Matrix mk = sindec * refCosDec -
                    cosdec * refSinDec * cosradiff;
-    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
+    MatrixTmp nks = 1. - sqr(lk) - sqr(mk);
     ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
 	       << " too far from phaseref " << refRa << ", " << refDec);
-    MeqMatrix nk = sqrt(nks);
+    Matrix nk = sqrt(nks);
     resL.setValue (lk);
     resM.setValue (mk);
     resN.setValue (nk);
@@ -104,36 +104,36 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
     // n'= 0.5 * 1/sqrt(1 - l^2 - m^2) * (-2*l*l' - 2*m*m')
     //   = (l*l' + m*m') / -n
     double perturbation;
-    MeqMatrix c1 = lk * refSinDec;
-    MeqMatrix c2 = cosdec * refCosDec + sindec * refSinDec * cosradiff;
-    MeqMatrix c3 = cosdec * cosradiff;
-    MeqMatrix c4 = -sindec * sinradiff;
-    MeqMatrix ln = -lk / n;
-    MeqMatrix mn = -mk / n;
+    Matrix c1 = lk * refSinDec;
+    Matrix c2 = cosdec * refCosDec + sindec * refSinDec * cosradiff;
+    Matrix c3 = cosdec * cosradiff;
+    Matrix c4 = -sindec * sinradiff;
+    Matrix ln = -lk / n;
+    Matrix mn = -mk / n;
     for (int spinx=0; spinx<request.nspid(); spinx++) {
       if (rak.isDefined(spinx)) {
-	const MeqMatrix& dra = raRes.getPerturbedValue (spinx);
+	const Matrix& dra = raRes.getPerturbedValue (spinx);
 	if (deck.isDefined(spinx)) {
 	  // Both are defined, so we have to evaluate all.
-	  const MeqMatrix& ddec = decRes.getPerturbedValue (spinx);
-	  MeqMatrix dl = c3*dra + c4*ddec;
-	  MeqMatrix dm = c1*dra + c2*ddec;
+	  const Matrix& ddec = decRes.getPerturbedValue (spinx);
+	  Matrix dl = c3*dra + c4*ddec;
+	  Matrix dm = c1*dra + c2*ddec;
 	  resL.setPerturbedValue (spinx, dl);
 	  resM.setPerturbedValue (spinx, dm);
 	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
 	} else {
 	  // no derivative in dec, so ddec=0.
-	  MeqMatrix dl = c3*dra;
-	  MeqMatrix dm = c1*dra;
+	  Matrix dl = c3*dra;
+	  Matrix dm = c1*dra;
 	  resL.setPerturbedValue (spinx, dl);
 	  resM.setPerturbedValue (spinx, dm);
 	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
 	}
       } else if (deck.isDefined(spinx)) {
 	// no derivative in ra, so dra=0.
-	const MeqMatrix& ddec = decRes.getPerturbedValue (spinx);
-	MeqMatrix dl = c4*ddec;
-	MeqMatrix dm = c2*ddec;
+	const Matrix& ddec = decRes.getPerturbedValue (spinx);
+	Matrix dl = c4*ddec;
+	Matrix dm = c2*ddec;
 	resL.setPerturbedValue (spinx, dl);
 	resM.setPerturbedValue (spinx, dm);
 	resN.setPerturbedValue (spinx, ln*dl + mn*dm);

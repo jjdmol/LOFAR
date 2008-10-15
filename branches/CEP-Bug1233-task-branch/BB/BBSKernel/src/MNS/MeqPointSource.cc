@@ -1,4 +1,4 @@
-//# MeqPointSource.cc: Class holding the expressions defining a point source
+//# PointSource.cc: Class holding the expressions defining a point source.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,26 +23,25 @@
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqPointSource.h>
 
-
 namespace LOFAR
 {
 namespace BBS
 {
 
-MeqPointSource::MeqPointSource (const string& name,
-                const string& groupName,
-                const MeqExpr& fluxI, const MeqExpr& fluxQ,
-                const MeqExpr& fluxU, const MeqExpr& fluxV,
-                const MeqExpr& ra, const MeqExpr& dec)
-: MeqSource (name, groupName, ra, dec),
-  itsI      (fluxI),
-  itsQ      (fluxQ),
-  itsU      (fluxU),
-  itsV      (fluxV)
-{}
+PointSource::PointSource(const string& name, const Expr &ra,
+    const Expr &dec, const Expr &I, const Expr &Q, const Expr &U,
+    const Expr &V)
+    :   Source(name, ra, dec),
+        itsI(I),
+        itsQ(Q),
+        itsU(U),
+        itsV(V)
+{
+}
 
-MeqPointSource::~MeqPointSource()
-{}
+PointSource::~PointSource()
+{
+}
 
 } // namespace BBS
 } // namespace LOFAR

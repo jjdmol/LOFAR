@@ -1,4 +1,4 @@
-//# MeqPhaseShift.h: Phase delay due to baseline geometry with respect to source
+//# PhaseShift.h: Phase delay due to baseline geometry with respect to source
 //#     direction.
 //#
 //# Copyright (C) 2005
@@ -36,25 +36,25 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqPhaseShift: public MeqExprRep
+class PhaseShift: public ExprRep
 {
 public:
-    MeqPhaseShift (const MeqExpr& left, const MeqExpr& right);
-    ~MeqPhaseShift();
+    PhaseShift (const Expr& left, const Expr& right);
+    ~PhaseShift();
 
     // Calculate the results for the given domain.
-    virtual MeqResult getResult(const MeqRequest &request);
+    virtual Result getResult(const Request &request);
 
 private:
     #ifdef EXPR_GRAPH
     virtual std::string getLabel();
     #endif
 
-    MeqExpr itsLeft;
-    MeqExpr itsRight;
+    Expr itsLeft;
+    Expr itsRight;
 };
 
 // @}

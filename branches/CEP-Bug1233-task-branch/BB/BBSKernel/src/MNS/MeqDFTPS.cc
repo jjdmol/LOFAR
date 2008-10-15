@@ -1,4 +1,4 @@
-//# MeqDFTPS.cc: Class doing the station DFT for a point source
+//# DFTPS.cc: Station part of baseline phase shift. 
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,6 +28,9 @@
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqResult.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/PValueIterator.h>
+#include <Common/LofarLogger.h>
+
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;
@@ -37,98 +40,122 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqDFTPS::MeqDFTPS (const MeqExpr& lmn, MeqStatUVW* uvw)
-: itsLMN (lmn),
-  itsUVW (uvw)
+DFTPS::DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn)
+    : itsUVW(uvw)
 {
-  addChild (itsLMN);
+    addChild(lmn);
 }
 
-MeqDFTPS::~MeqDFTPS()
-{}
-
-MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
+DFTPS::~DFTPS()
 {
-  const MeqDomain& domain = request.domain();
-  // The exponent and its frequency delta are calculated.
-  // However, the delta is only calculated if there are multiple channels.
-  MeqResultVec resultVec(2, request.nspid());
-  bool calcDelta = request.nx() > 1;
-  // Calculate 2pi/wavelength, where wavelength=c/freq.
-  // Calculate it for the frequency step if needed.
-  double df = request.stepX();
-  double f0 = domain.startX() + df/2;
-  MeqMatrix wavel0 (C::_2pi * f0 / C::c);
-  MeqMatrix dwavel (df / f0);
-  // Get the UVW coordinates.
-  const MeqResult& resU = itsUVW->getU(request);
-  const MeqResult& resV = itsUVW->getV(request);
-  const MeqResult& resW = itsUVW->getW(request);
-  const MeqMatrix& u = resU.getValue();
-  const MeqMatrix& v = resV.getValue();
-  const MeqMatrix& w = resW.getValue();
-  // Calculate the DFT contribution for this station for the source.
-  MeqResultVec lmnBuf;
-  const MeqResultVec& lmn = itsLMN.getResultVecSynced (request, lmnBuf);
-  const MeqResult& lrk  = lmn[0];
-  const MeqResult& mrk  = lmn[1];
-  const MeqResult& nrk  = lmn[2];
-  MeqResult& result = resultVec[0];
-  // Note that both UVW and LMN are scalars or vectors in time.
-  // They always have nx==1 in their MeqMatrices.
-  MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() +
-          w*(nrk.getValue() - 1.)) * wavel0;
-  result.setValue (tocomplex(cos(r1), sin(r1)));
-  if (calcDelta) {
-    MeqResult& delta = resultVec[1];
-    r1 *= dwavel;
-    delta.setValue (tocomplex(cos(r1), sin(r1)));
-  }
-
-  // Evaluate (if needed) for the perturbed parameter values.
-  const MeqParmFunklet* perturbedParm;
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    bool eval = false;
-    if (lrk.isDefined(spinx)) {
-      perturbedParm = lrk.getPerturbedParm(spinx);
-      eval = true;
-    } else if (mrk.isDefined(spinx)) {
-      perturbedParm = mrk.getPerturbedParm(spinx);
-      eval = true;
-    } else if (nrk.isDefined(spinx)) {
-      perturbedParm = nrk.getPerturbedParm(spinx);
-      eval = true;
-    } else if (resU.isDefined(spinx)) {
-      perturbedParm = resU.getPerturbedParm(spinx);
-      eval = true;
-    } else if (resV.isDefined(spinx)) {
-      perturbedParm = resV.getPerturbedParm(spinx);
-      eval = true;
-    } else if (resW.isDefined(spinx)) {
-      perturbedParm = resW.getPerturbedParm(spinx);
-      eval = true;
-    }
-    if (eval) {
-      r1 = (resU.getPerturbedValue(spinx) * lrk.getPerturbedValue(spinx) +
-        resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
-        resW.getPerturbedValue(spinx) *
-        (nrk.getPerturbedValue(spinx) - 1.)) * wavel0;
-      result.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
-      result.setPerturbedParm (spinx, perturbedParm);
-      if (calcDelta) {
-    MeqResult& delta = resultVec[1];
-    r1 *= dwavel;
-    delta.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
-      }
-    }
-  }
-  return resultVec;
 }
+
+ResultVec DFTPS::getResultVec(const Request &request)
+{
+    // It is assumed that the channels are regularly spaced, i.e. the channel
+    // frequency can be written as f0 + k * df where f0 is the frequency of
+    // the first channel and k is an integer. Under this assumption, the phase
+    // shift can be expressed as:
+    //
+    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
+    //
+    // shift = exp(i * 2.0 * pi * (u . l) * (f0 + k * df) / c)
+    //       = exp(i * (2.0 * pi / c) * (u . l) * f0) 
+    //         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
+    //
+    // The StationShift node only computes the two exponential terms.
+    // Computing the phase shift for each channel is performed by the node that
+    // computes the phase shift for a baseline (by combining the result of two
+    // StationShift nodes).
+    
+    // Check precondition (frequency axis must be regular).
+    const Grid &reqGrid = request.getGrid();
+    ASSERT(dynamic_cast<RegularAxis*>(reqGrid[FREQ].get()) != 0);
+
+    // Allocate the result.
+    ResultVec resultVec(2);
+    bool calcDelta = request.getChannelCount() > 1;
+    
+    // Calculate 2.0 * pi / lambda0, where lambda0 = c / f0.
+    double df = reqGrid[FREQ]->width(0);
+    double f0 = reqGrid[FREQ]->center(0);
+    Matrix wavel0(C::_2pi * f0 / C::c);
+    Matrix dwavel(df / f0);
+
+    // Get the UVW coordinates.
+    const Result &resU = itsUVW->getU(request);
+    const Result &resV = itsUVW->getV(request);
+    const Result &resW = itsUVW->getW(request);
+    const Matrix &u = resU.getValue();
+    const Matrix &v = resV.getValue();
+    const Matrix &w = resW.getValue();
+
+    // Calculate the DFT contribution for this (station, direction) combination.
+    ResultVec tmpLMN;
+    const ResultVec &resLMN =
+        getChild(0).getResultVecSynced(request, tmpLMN);
+    const Result &resL = resLMN[0];
+    const Result &resM = resLMN[1];
+    const Result &resN = resLMN[2];
+    const Matrix &l = resL.getValue();
+    const Matrix &m = resM.getValue();
+    const Matrix &n = resN.getValue();
+
+    // Note that both UVW and LMN are required to either scalar or variable in
+    // time.
+    ASSERT(u.nx() == 1 && v.nx() == 1 && w.nx() == 1);
+    ASSERT(l.nx() == 1 && m.nx() == 1 && n.nx() == 1);
+
+    Matrix phase0 = (u * l + v * m + w * (n - 1.0)) * wavel0;
+    resultVec[0].setValue(tocomplex(cos(phase0), sin(phase0)));
+    
+    if(calcDelta)
+    {
+        phase0 *= dwavel;
+        resultVec[1].setValue(tocomplex(cos(phase0), sin(phase0)));
+    }
+
+    // Compute the perturbed values.
+    enum PValues
+    {
+        PV_U, PV_V, PV_W, PV_L, PV_M, PV_N, N_PValues
+    };
+    
+    const Result *pvSet[N_PValues] =
+        {&resU, &resV, &resW, &resL, &resM, &resN};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+    
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvU = pvIter.value(PV_U);
+        const Matrix &pvV = pvIter.value(PV_V);
+        const Matrix &pvW = pvIter.value(PV_W);
+        const Matrix &pvL = pvIter.value(PV_L);
+        const Matrix &pvM = pvIter.value(PV_M);
+        const Matrix &pvN = pvIter.value(PV_N);
+            
+        phase0 = (pvU * pvL + pvV * pvM + pvW * (pvN - 1.0)) * wavel0;
+        resultVec[0].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
+            sin(phase0)));
+            
+        if(calcDelta)
+        {
+            phase0 *= dwavel;
+            resultVec[1].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
+                sin(phase0)));
+        }
+
+        pvIter.next();
+    }
+
+    return resultVec;
+}
+
 
 #ifdef EXPR_GRAPH
-std::string MeqDFTPS::getLabel()
+string DFTPS::getLabel()
 {
-    return std::string("MeqDFTPS\\nStation DFT of a point source\\n" + itsUVW->getStation()->getName());
+    return string("DFTPS\\nStation part of baseline phase\\n");
 }
 #endif
 

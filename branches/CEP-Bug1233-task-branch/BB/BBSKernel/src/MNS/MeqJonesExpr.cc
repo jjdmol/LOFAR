@@ -1,4 +1,4 @@
-//# MeqJonesExpr.cc: The base class of a Jones matrix expression.
+//# JonesExpr.cc: The base class of a Jones matrix expression.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,16 +31,16 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesExprRep::~MeqJonesExprRep()
+JonesExprRep::~JonesExprRep()
 {
   delete itsResult;
 }
 
-void MeqJonesExprRep::precalculate (const MeqRequest& request)
+void JonesExprRep::precalculate (const Request& request)
 {
   // Use a cache.
   DBGASSERT (itsReqId != request.getId());
-  if (!itsResult) itsResult = new MeqJonesResult;
+  if (!itsResult) itsResult = new JonesResult;
   *itsResult = getJResult (request);
   itsReqId = request.getId();
 }

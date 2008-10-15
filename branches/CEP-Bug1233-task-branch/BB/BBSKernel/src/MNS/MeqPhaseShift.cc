@@ -1,4 +1,4 @@
-//# MeqPhaseShift.cc: Phase delay due to baseline geometry with respect to
+//# PhaseShift.cc: Phase delay due to baseline geometry with respect to
 //#     source direction.
 //#
 //# Copyright (C) 2005
@@ -27,6 +27,7 @@
 #include <BBSKernel/MNS/MeqDFTPS.h>
 #include <BBSKernel/MNS/MeqStatUVW.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
@@ -40,7 +41,7 @@ using LOFAR::dcomplex;
 using LOFAR::conj;
 
 
-MeqPhaseShift::MeqPhaseShift (const MeqExpr& left, const MeqExpr& right)
+PhaseShift::PhaseShift (const Expr& left, const Expr& right)
   : itsLeft  (left),
     itsRight (right)
 {
@@ -49,34 +50,38 @@ MeqPhaseShift::MeqPhaseShift (const MeqExpr& left, const MeqExpr& right)
 }
 
 
-MeqPhaseShift::~MeqPhaseShift()
+PhaseShift::~PhaseShift()
 {
 }
 
 
-MeqResult MeqPhaseShift::getResult (const MeqRequest& request)
+Result PhaseShift::getResult (const Request& request)
 {
-    MeqResult result(request.nspid());
+    Result result;
+    result.init();
 
+    int nChannels = request.getChannelCount();
+    int nTimeslots = request.getTimeslotCount();
+    
     // Get N (for the division).
     // Assert it is a scalar value.
-//    MeqResultVec lmnRes;
-//    const MeqResultVec& lmn = itsLMN.getResultVecSynced (request, lmnRes);
-//    const MeqResult& nk = lmn[2];
+//    ResultVec lmnRes;
+//    const ResultVec& lmn = itsLMN.getResultVecSynced (request, lmnRes);
+//    const Result& nk = lmn[2];
 //    DBGASSERT (nk.getValue().nelements() == request.ny()  ||
 //            nk.getValue().nelements() == 1);
 
     // Calculate the left and right station Jones matrix elements.
     // A delta in the station source predict is only available if multiple
     // frequency channels are used.
-    bool multFreq = request.nx() > 1;
-    MeqResultVec reslBuf, resrBuf;
-    const MeqResultVec& resl = itsLeft.getResultVecSynced (request, resrBuf);
-    const MeqResultVec& resr = itsRight.getResultVecSynced (request, reslBuf);
-    const MeqResult& left = resl[0];
-    const MeqResult& right = resr[0];
-    const MeqResult& leftDelta = resl[1];
-    const MeqResult& rightDelta = resr[1];
+    bool multFreq = nChannels > 1;
+    ResultVec reslBuf, resrBuf;
+    const ResultVec& resl = itsLeft.getResultVecSynced (request, resrBuf);
+    const ResultVec& resr = itsRight.getResultVecSynced (request, reslBuf);
+    const Result& left = resl[0];
+    const Result& right = resr[0];
+    const Result& leftDelta = resl[1];
+    const Result& rightDelta = resr[1];
 
     // It is tried to compute the DFT as efficient as possible.
     // Therefore the baseline contribution is split into its antenna parts.
@@ -90,7 +95,7 @@ MeqResult MeqPhaseShift::getResult (const MeqRequest& request)
     //   x^(a*b) = (x^a)^b
     // which is valid for real numbers, is only valid for complex numbers
     // if b is an integer number.
-    // Therefore the station calculations (in MeqStatSources) are done as
+    // Therefore the station calculations (in StatSources) are done as
     // follows, where it should be noted that the frequencies are regularly
     // strided.
     //  f = f0 + k.df   (k = 0 ... nchan-1)
@@ -114,15 +119,15 @@ MeqResult MeqPhaseShift::getResult (const MeqRequest& request)
     /*
     {
 
-        MeqDFTPS *dftpsl = dynamic_cast<MeqDFTPS*>(itsLeft.rep());
-        MeqDFTPS *dftpsr = dynamic_cast<MeqDFTPS*>(itsRight.rep());
+        DFTPS *dftpsl = dynamic_cast<DFTPS*>(itsLeft.rep());
+        DFTPS *dftpsr = dynamic_cast<DFTPS*>(itsRight.rep());
 
-        const MeqResult& ul = dftpsl->uvw()->getU(request);
-        const MeqResult& vl = dftpsl->uvw()->getV(request);
-        const MeqResult& wl = dftpsl->uvw()->getW(request);
-        const MeqResult& ur = dftpsr->uvw()->getU(request);
-        const MeqResult& vr = dftpsr->uvw()->getV(request);
-        const MeqResult& wr = dftpsr->uvw()->getW(request);
+        const Result& ul = dftpsl->uvw()->getU(request);
+        const Result& vl = dftpsl->uvw()->getV(request);
+        const Result& wl = dftpsl->uvw()->getW(request);
+        const Result& ur = dftpsr->uvw()->getU(request);
+        const Result& vr = dftpsr->uvw()->getV(request);
+        const Result& wr = dftpsr->uvw()->getW(request);
         cout << "U: " << setprecision(20) << ur.getValue() - ul.getValue()
             << endl;
         cout << "V: " << setprecision(20) << vr.getValue() - vl.getValue()
@@ -135,15 +140,15 @@ MeqResult MeqPhaseShift::getResult (const MeqRequest& request)
     }
     */
     
-    MeqMatrix res(makedcomplex(0,0), request.nx(), request.ny(), false);
-    for(int iy=0; iy<request.ny(); ++iy)
+    Matrix res(makedcomplex(0,0), nChannels, nTimeslots, false);
+    for(int iy=0; iy<nTimeslots; ++iy)
     {
         dcomplex tmpl = left.getValue().getDComplex(0,iy);
         dcomplex tmpr = right.getValue().getDComplex(0,iy);
         
         // We have to divide by N.
         // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
-        // in MeqBaseLinPS.
+        // in BaseLinPS.
         //    double tmpnk = 2. * nk.getValue().getDouble(0,iy);
 //        double tmpnk = 2.0;
         dcomplex factor;
@@ -164,54 +169,67 @@ MeqResult MeqPhaseShift::getResult (const MeqRequest& request)
     // Evaluate (if needed) for the perturbed parameter values.
     // Note that we do not have to test for perturbed values in nk,
     // because the left and right value already depend on nk.
-    const MeqParmFunklet* perturbedParm;
-    
-    for(int spinx=0; spinx<request.nspid(); spinx++)
+
+    enum PValues
+    { PV_LEFT, PV_RIGHT, PV_LEFT_DELTA, PV_RIGHT_DELTA, N_PValues };
+
+    const Result *pvSet[N_PValues] =
+        {&left, &right, &leftDelta, &rightDelta};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+
+    while(!pvIter.atEnd())
     {
-        bool eval = false;
-        if(left.isDefined(spinx))
+        const Matrix &pvLeft = pvIter.value(PV_LEFT);
+        const Matrix &pvRight = pvIter.value(PV_RIGHT);
+
+        Matrix pres(makedcomplex(0,0), nChannels, nTimeslots, false);
+
+        if(multFreq)
         {
-            eval = true;
-            perturbedParm = left.getPerturbedParm(spinx);
-        }
-        else if(right.isDefined(spinx))
-        {
-            eval = true;
-            perturbedParm = right.getPerturbedParm(spinx);
-        }
-        
-        if(eval)
-        {
-            MeqMatrix pres(makedcomplex(0,0), request.nx(), request.ny(), false);
-            for(int iy=0; iy<request.ny(); ++iy)
+            const Matrix &pvLeftDelta = pvIter.value(PV_LEFT_DELTA);
+            const Matrix &pvRightDelta = pvIter.value(PV_RIGHT_DELTA);
+            
+            for(int iy=0; iy<nTimeslots; ++iy)
             {
-                dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
-                dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
-                
-                // double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
+                dcomplex tmpl = pvLeft.getDComplex(0, iy);
+                dcomplex tmpr = pvRight.getDComplex(0, iy);
+
+//            dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
+//            dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
+            
+            // double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
 //                double tmpnk = 2.0;
-                dcomplex factor;
-                if(multFreq)
-                {
-                    dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-                    dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-                    factor = deltar * conj(deltal);
-                }
+//                dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+//                dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+                dcomplex deltal = pvLeftDelta.getDComplex(0,iy);
+                dcomplex deltar = pvRightDelta.getDComplex(0,iy);
+                dcomplex factor = deltar * conj(deltal);
 //                pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
                 pres.fillRowWithProducts(tmpr * conj(tmpl), factor, iy);
-                result.setPerturbedValue (spinx, pres);
-                result.setPerturbedParm (spinx, perturbedParm);
             }
         }
+        else
+        {
+            for(int iy=0; iy<nTimeslots; ++iy)
+            {
+                dcomplex tmpl = pvLeft.getDComplex(0, iy);
+                dcomplex tmpr = pvRight.getDComplex(0, iy);
+                pres.fillRowWithProducts(tmpr * conj(tmpl), 1.0, iy);
+            }
+        }            
+
+        result.setPerturbedValue(pvIter.key(), pres);
+//        result.setPerturbedParm (spinx, perturbedParm);
+        pvIter.next();
     }
     
     return result;
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqPhaseShift::getLabel()
+std::string PhaseShift::getLabel()
 {
-    return std::string("MeqPhaseShift\\nPhase delay due to baseline geometry.");
+    return std::string("PhaseShift\\nPhase delay due to baseline geometry.");
 }
 #endif
 

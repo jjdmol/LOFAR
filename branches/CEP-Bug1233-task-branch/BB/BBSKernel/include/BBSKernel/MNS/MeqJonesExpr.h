@@ -1,4 +1,4 @@
-//# MeqJonesExpr.h: The base class of a Jones matrix expression.
+//# JonesExpr.h: The base class of a Jones matrix expression.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -39,20 +39,20 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 // This class is the (abstract) base class for a Jones expression.
 
-class MeqJonesExprRep : public MeqExprRep
+class JonesExprRep : public ExprRep
 {
 public:
   // The default constructor.
-  MeqJonesExprRep()
+  JonesExprRep()
     : itsResult (0)
     {}
 
-  virtual ~MeqJonesExprRep();
+  virtual ~JonesExprRep();
 
   // Get the single result of the expression for the given domain.
   // The return value is a reference to the true result. This can either
@@ -60,71 +60,71 @@ public:
   // or to the result object in the parameter list (if no cache).
   // If the result is stored in the cache, it is done in a thread-safe way.
   // Note that a cache is used if the expression has multiple parents.
-  const MeqJonesResult& getJResultSynced (const MeqRequest& request,
-					  MeqJonesResult& result)
+  const JonesResult& getJResultSynced (const Request& request,
+					  JonesResult& result)
     { return itsReqId == request.getId()  ?
 	*itsResult : getJResult2(request, result); }
 
   // Get the actual result.
   // The default implementation throw an exception.
-  virtual MeqJonesResult getJResult (const MeqRequest&) = 0;
+  virtual JonesResult getJResult (const Request&) = 0;
 
   // Precalculate the result and store it in the cache.
-  virtual void precalculate (const MeqRequest&);
+  virtual void precalculate (const Request&);
 
 private:
   // Helper function adding an extra check.
-  const MeqJonesResult& getJResult2 (const MeqRequest& request,
-				     MeqJonesResult& result)
+  const JonesResult& getJResult2 (const Request& request,
+				     JonesResult& result)
     ///#    { DBGASSERT(itsNParents<=1); return result = getJResult(request); }
     { return result = getJResult(request); }
 
   // Forbid copy and assignment.
-  MeqJonesExprRep (const MeqJonesExprRep&);
-  MeqJonesExprRep& operator= (const MeqJonesExprRep&);
+  JonesExprRep (const JonesExprRep&);
+  JonesExprRep& operator= (const JonesExprRep&);
 
 
-  MeqJonesResult* itsResult;     //# Possibly cached result
+  JonesResult* itsResult;     //# Possibly cached result
 };
 
 
 
-class MeqJonesExpr : public MeqExpr
+class JonesExpr : public Expr
 {
 public:
   // The default constructor.
   // It takes over the pointer, so it takes care of deleting the object.
-  MeqJonesExpr (MeqJonesExprRep* expr = 0)
-    : MeqExpr (expr),
+  JonesExpr (JonesExprRep* expr = 0)
+    : Expr (expr),
       itsRep  (expr)
     {}
 
-  MeqJonesExpr (const MeqJonesExpr& that)
-    : MeqExpr (that),
+  JonesExpr (const JonesExpr& that)
+    : Expr (that),
       itsRep  (that.itsRep)
     {}
 
-  ~MeqJonesExpr()
+  ~JonesExpr()
     {}
 
-  MeqJonesExpr& operator= (const MeqJonesExpr& that)
+  JonesExpr& operator= (const JonesExpr& that)
   {
-    MeqExpr::operator= (that);
+    Expr::operator= (that);
     itsRep = that.itsRep;
     return *this;
   }
 
   // Get the result of the expression for the given domain.
   // <group>
-  MeqJonesResult getResult (const MeqRequest& request)
+  JonesResult getResult (const Request& request)
     { return itsRep->getJResult (request); }
-  const MeqJonesResult& getResultSynced (const MeqRequest& request,
-					 MeqJonesResult& result)
+  const JonesResult& getResultSynced (const Request& request,
+					 JonesResult& result)
     { return itsRep->getJResultSynced (request, result); }
   // </group>
 
 private:
-  MeqJonesExprRep* itsRep;
+  JonesExprRep* itsRep;
 };
 
 

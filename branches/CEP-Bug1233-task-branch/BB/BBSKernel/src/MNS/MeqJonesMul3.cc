@@ -1,4 +1,4 @@
-//# MeqJonesMul3.cc: Calculate left*mid*right
+//# JonesMul3.cc: Calculate left*mid*right
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,9 +36,9 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesMul3::MeqJonesMul3 (const MeqJonesExpr& left,
-			    const MeqJonesExpr& mid,
-			    const MeqJonesExpr& right)
+JonesMul3::JonesMul3 (const JonesExpr& left,
+			    const JonesExpr& mid,
+			    const JonesExpr& right)
 : itsLeft  (left),
   itsMid   (mid),
   itsRight (right)
@@ -48,57 +48,57 @@ MeqJonesMul3::MeqJonesMul3 (const MeqJonesExpr& left,
   addChild (itsRight);
 }
 
-MeqJonesMul3::~MeqJonesMul3()
+JonesMul3::~JonesMul3()
 {}
 
-MeqJonesResult MeqJonesMul3::getJResult (const MeqRequest& request)
+JonesResult JonesMul3::getJResult (const Request& request)
 {
   // Create the result object.
-  MeqJonesResult result(request.nspid());
-  MeqResult& result11 = result.result11();
-  MeqResult& result12 = result.result12();
-  MeqResult& result21 = result.result21();
-  MeqResult& result22 = result.result22();
+  JonesResult result(request.nspid());
+  Result& result11 = result.result11();
+  Result& result12 = result.result12();
+  Result& result21 = result.result21();
+  Result& result22 = result.result22();
   // Calculate the children.
-  MeqJonesResult leftBuf, midBuf, rightBuf;
-  const MeqJonesResult& left  = itsLeft.getResultSynced (request, leftBuf);
-  const MeqJonesResult& mid   = itsMid.getResultSynced (request, midBuf);
-  const MeqJonesResult& right = itsRight.getResultSynced (request, rightBuf);
-  const MeqResult& l11 = left.getResult11();
-  const MeqResult& l12 = left.getResult12();
-  const MeqResult& l21 = left.getResult21();
-  const MeqResult& l22 = left.getResult22();
-  const MeqResult& m11 = mid.getResult11();
-  const MeqResult& m12 = mid.getResult12();
-  const MeqResult& m21 = mid.getResult21();
-  const MeqResult& m22 = mid.getResult22();
-  const MeqResult& r11 = right.getResult11();
-  const MeqResult& r12 = right.getResult12();
-  const MeqResult& r21 = right.getResult21();
-  const MeqResult& r22 = right.getResult22();
-  const MeqMatrix& ml11 = l11.getValue();
-  const MeqMatrix& ml12 = l12.getValue();
-  const MeqMatrix& ml21 = l21.getValue();
-  const MeqMatrix& ml22 = l22.getValue();
-  const MeqMatrix& mm11 = m11.getValue();
-  const MeqMatrix& mm12 = m12.getValue();
-  const MeqMatrix& mm21 = m21.getValue();
-  const MeqMatrix& mm22 = m22.getValue();
-  const MeqMatrix& mr11 = r11.getValue();
-  const MeqMatrix& mr12 = r12.getValue();
-  const MeqMatrix& mr21 = r21.getValue();
-  const MeqMatrix& mr22 = r22.getValue();
-  MeqMatrix t11(ml11*mm11 + ml12*mm21);
-  MeqMatrix t12(ml11*mm12 + ml12*mm22);
-  MeqMatrix t21(ml21*mm11 + ml22*mm21);
-  MeqMatrix t22(ml21*mm12 + ml22*mm22);
+  JonesResult leftBuf, midBuf, rightBuf;
+  const JonesResult& left  = itsLeft.getResultSynced (request, leftBuf);
+  const JonesResult& mid   = itsMid.getResultSynced (request, midBuf);
+  const JonesResult& right = itsRight.getResultSynced (request, rightBuf);
+  const Result& l11 = left.getResult11();
+  const Result& l12 = left.getResult12();
+  const Result& l21 = left.getResult21();
+  const Result& l22 = left.getResult22();
+  const Result& m11 = mid.getResult11();
+  const Result& m12 = mid.getResult12();
+  const Result& m21 = mid.getResult21();
+  const Result& m22 = mid.getResult22();
+  const Result& r11 = right.getResult11();
+  const Result& r12 = right.getResult12();
+  const Result& r21 = right.getResult21();
+  const Result& r22 = right.getResult22();
+  const Matrix& ml11 = l11.getValue();
+  const Matrix& ml12 = l12.getValue();
+  const Matrix& ml21 = l21.getValue();
+  const Matrix& ml22 = l22.getValue();
+  const Matrix& mm11 = m11.getValue();
+  const Matrix& mm12 = m12.getValue();
+  const Matrix& mm21 = m21.getValue();
+  const Matrix& mm22 = m22.getValue();
+  const Matrix& mr11 = r11.getValue();
+  const Matrix& mr12 = r12.getValue();
+  const Matrix& mr21 = r21.getValue();
+  const Matrix& mr22 = r22.getValue();
+  Matrix t11(ml11*mm11 + ml12*mm21);
+  Matrix t12(ml11*mm12 + ml12*mm22);
+  Matrix t21(ml21*mm11 + ml22*mm21);
+  Matrix t22(ml21*mm12 + ml22*mm22);
   result11.setValue (t11*mr11 + t12*mr21);
   result12.setValue (t11*mr12 + t12*mr22);
   result21.setValue (t21*mr11 + t22*mr21);
   result22.setValue (t21*mr12 + t22*mr22);
 
   // Determine which values are perturbed and determine the perturbation.
-  const MeqParmFunklet* perturbedParm;
+  const ParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval11 = false;
     bool eval12 = false;
@@ -158,21 +158,21 @@ MeqJonesResult MeqJonesMul3::getJResult (const MeqRequest& request)
       }
     }
     if (eval11 || eval12 || eval21 || eval22) {
-      const MeqMatrix& ml11 = l11.getPerturbedValue(spinx);
-      const MeqMatrix& ml12 = l12.getPerturbedValue(spinx);
-      const MeqMatrix& ml21 = l21.getPerturbedValue(spinx);
-      const MeqMatrix& ml22 = l22.getPerturbedValue(spinx);
-      const MeqMatrix& mm11 = m11.getPerturbedValue(spinx);
-      const MeqMatrix& mm12 = m12.getPerturbedValue(spinx);
-      const MeqMatrix& mm21 = m21.getPerturbedValue(spinx);
-      const MeqMatrix& mm22 = m22.getPerturbedValue(spinx);
-      const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
-      const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
-      const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
-      const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
+      const Matrix& ml11 = l11.getPerturbedValue(spinx);
+      const Matrix& ml12 = l12.getPerturbedValue(spinx);
+      const Matrix& ml21 = l21.getPerturbedValue(spinx);
+      const Matrix& ml22 = l22.getPerturbedValue(spinx);
+      const Matrix& mm11 = m11.getPerturbedValue(spinx);
+      const Matrix& mm12 = m12.getPerturbedValue(spinx);
+      const Matrix& mm21 = m21.getPerturbedValue(spinx);
+      const Matrix& mm22 = m22.getPerturbedValue(spinx);
+      const Matrix& mr11 = r11.getPerturbedValue(spinx);
+      const Matrix& mr12 = r12.getPerturbedValue(spinx);
+      const Matrix& mr21 = r21.getPerturbedValue(spinx);
+      const Matrix& mr22 = r22.getPerturbedValue(spinx);
       if (eval11 || eval12) {
-	MeqMatrix t11(ml11*mm11 + ml12*mm21);
-	MeqMatrix t12(ml11*mm12 + ml12*mm22);
+	Matrix t11(ml11*mm11 + ml12*mm21);
+	Matrix t12(ml11*mm12 + ml12*mm22);
 	if (eval11) { 
 	  result11.setPerturbedParm (spinx, perturbedParm);
 	  result11.setPerturbedValue (spinx, t11*mr11 + t12*mr21);
@@ -183,8 +183,8 @@ MeqJonesResult MeqJonesMul3::getJResult (const MeqRequest& request)
 	}
       }
       if (eval21 || eval22) {
-	MeqMatrix t21(ml21*mm11 + ml22*mm21);
-	MeqMatrix t22(ml21*mm12 + ml22*mm22);
+	Matrix t21(ml21*mm11 + ml22*mm21);
+	Matrix t22(ml21*mm12 + ml22*mm22);
 	if (eval21) {
 	  result21.setPerturbedParm (spinx, perturbedParm);
 	  result21.setPerturbedValue (spinx, t21*mr11 + t22*mr21);

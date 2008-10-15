@@ -1,4 +1,4 @@
-//# MeqGaussianSource.cc: Class holding the expressions defining a gauss source
+//# GaussianSource.cc: Class holding the expressions defining a gauss source
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,26 +28,22 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqGaussianSource::MeqGaussianSource(const string &name,
-    const string& groupName,
-    const MeqExpr& fluxI, const MeqExpr& fluxQ,
-    const MeqExpr& fluxU, const MeqExpr& fluxV,
-    const MeqExpr& ra, const MeqExpr& dec,
-    const MeqExpr& major, const MeqExpr& minor,
-    const MeqExpr& phi)
-    :    MeqSource(name, groupName, ra, dec),
-         itsI(fluxI),
-         itsQ(fluxQ),
-         itsU(fluxU),
-         itsV(fluxV),
-         itsMajor(major),
-         itsMinor(minor),
-         itsPhi(phi)
+GaussianSource::GaussianSource(const string& name,
+    const Expr &ra, const Expr &dec,
+    const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
+    const Expr &major, const Expr &minor, const Expr &phi)
+    :   Source(name, ra, dec),
+        itsI(I),
+        itsQ(Q),
+        itsU(U),
+        itsV(V),
+        itsMajor(major),
+        itsMinor(minor),
+        itsPhi(phi)
 {
 }
 
-
-MeqGaussianSource::~MeqGaussianSource()
+GaussianSource::~GaussianSource()
 {
 }
 

@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS_METAMEASUREMENT_H
 #define LOFAR_BBS_METAMEASUREMENT_H
 
-#include <BBSKernel/Axis.h>
+#include <ParmDB/Axis.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Types.h>
 
@@ -59,7 +59,7 @@ namespace BBS
         void setInstrument(const Instrument &instrument)
         { itsInstrument = instrument; }
 
-        void setTimeAxis(Axis::Pointer axis)
+        void setTimeAxis(Axis::ShPtr axis)
         { itsTimeAxis = axis; }
         
         void setBaselines(const set<baseline_t> &baselines)
@@ -69,7 +69,7 @@ namespace BBS
         { itsPolarizations = polarizations; }
         
         void addPart(const string &host, const string &path,
-            Axis::Pointer axis);
+            Axis::ShPtr axis);
 
         const string &getName() const
         { return itsName; }
@@ -82,7 +82,7 @@ namespace BBS
         
         pair<double, double> getFreqRange();
 
-        const Axis::Pointer getTimeAxis() const
+        const Axis::ShPtr getTimeAxis() const
         { return itsTimeAxis; }
         pair<double, double> getTimeRange() const
         { return itsTimeAxis->range(); }
@@ -108,7 +108,7 @@ namespace BBS
         string getPath(size_t part)
         { return getPart(part).getPath(); }
 
-        const Axis::Pointer getFreqAxis(size_t part)
+        const Axis::ShPtr getFreqAxis(size_t part)
         { return getPart(part).getFreqAxis(); }
         pair<double, double> getFreqRange(size_t part)
         { return getPart(part).getFreqRange(); }
@@ -123,7 +123,7 @@ namespace BBS
             Part()
             {}
             
-            Part(const string &host, const string &path, Axis::Pointer axis)
+            Part(const string &host, const string &path, Axis::ShPtr axis)
                 :   itsHostName(host),
                     itsFreqAxis(axis)
             {
@@ -137,7 +137,7 @@ namespace BBS
             string getPath() const
             { return itsPath; }
 
-            const Axis::Pointer getFreqAxis() const
+            const Axis::ShPtr getFreqAxis() const
             { return itsFreqAxis; }
 
             size_t getChannelCount() const
@@ -152,7 +152,7 @@ namespace BBS
         private:
             string                  itsHostName;
             string                  itsPath;
-            Axis::Pointer           itsFreqAxis;
+            Axis::ShPtr           itsFreqAxis;
 
             friend BlobOStream &operator<<(BlobOStream &out,
                 const MetaMeasurement::Part &obj);
@@ -166,7 +166,7 @@ namespace BBS
         casa::MDirection    itsPhaseCenter;
         Instrument          itsInstrument;
         
-        Axis::Pointer       itsTimeAxis;
+        Axis::ShPtr       itsTimeAxis;
         set<baseline_t>     itsBaselines;
         set<string>         itsPolarizations;
 

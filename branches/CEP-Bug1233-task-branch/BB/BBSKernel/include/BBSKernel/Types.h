@@ -23,10 +23,10 @@
 #ifndef LOFAR_BBSKERNEL_TYPES_H
 #define LOFAR_BBSKERNEL_TYPES_H
 
-#include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/LofarTypes.h>
 
 #include <utility>
 
@@ -47,7 +47,28 @@ using std::pair;
         TIME,
         N_AxisName
     };
+    
+    enum ParmCategory
+    {
+        INSTRUMENT = 0,
+        SKY,
+        N_ParmCategory
+    };
+    /*
+    template <typename Pair>
+    class select1st: public unary_function<Pair, Pair::first_type>
+    {
+        const Pair::first_type &operator()(const Pair& p) const
+        { return p.first; }
+    };
 
+    template <typename Pair>
+    class select2nd: public unary_function<Pair, Pair::second_type>
+    {
+        const Pair::second_type &operator()(const Pair& p) const
+        { return p.second; }
+    };
+    */
 } // namespace BBS
 } // namespace LOFAR
 

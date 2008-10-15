@@ -1,4 +1,4 @@
-//# MeqStatUVW.cc: The station UVW coordinates for a time domain
+//# StatUVW.cc: UVW coordinates of a station in meters.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -44,159 +44,102 @@ namespace LOFAR
 namespace BBS
 {
 
-/*
-//# Old constructor, uses MeqPhaseRef class which contains a hard-coded
-//# reference to the WSRT.
-
-MeqStatUVW::MeqStatUVW (MeqStation* station,
-            const MeqPhaseRef* phaseRef)
-: itsStation   (station),
-  itsPhaseRef  (phaseRef),
-  itsU         (0),
-  itsV         (0),
-  itsW         (0),
-  itsLastReqId (InitMeqRequestId)
+StatUVW::StatUVW(const string &name, const casa::MPosition &position,
+    const casa::MPosition &arrayRef, const PhaseRef::ConstPointer &phaseRef)
+    :   itsName(name),
+        itsPosition(position),
+        itsArrayRef(arrayRef),
+        itsPhaseRef(phaseRef),
+        itsLastReqId(InitRequestId)
 {
-  itsFrame.set (itsPhaseRef->direction());
-  itsFrame.set (itsPhaseRef->earthPosition());
-  LOG_TRACE_FLOW("Phase ref earth position: " << itsPhaseRef->earthPosition());
-}
-*/
+    itsU.init();
+    itsV.init();
+    itsW.init();
+}    
 
-MeqStatUVW::MeqStatUVW(MeqStation *station, const casa::MDirection &phaseCenter,
-    const casa::MPosition &arrayPosition)
-    :   itsStation(station),
-        itsPhaseCenter(phaseCenter),
-        itsArrayPosition(arrayPosition),
-  itsU         (0),
-  itsV         (0),
-  itsW         (0),
-  itsLastReqId (InitMeqRequestId)
+StatUVW::~StatUVW()
 {
 }
 
-
-void MeqStatUVW::calculate (const MeqRequest& request)
+void StatUVW::calculate(const Request &request) const
 {
-  //# Make sure the MeqResult/Matrix objects have the correct size.
-  int ntime = request.ny();
-  double* uptr = itsU.setDoubleFormat (1, ntime);
-  double* vptr = itsV.setDoubleFormat (1, ntime);
-  double* wptr = itsW.setDoubleFormat (1, ntime);
+    // Allocate result.
+    size_t nTime = request.getTimeslotCount();
 
-  //# Use the UVW coordinates if already calculated for a time.
-  int ndone = 0;
-  for (int i=0; i<ntime; ++i) {
-    MeqTime meqtime(request.y(i));
-    map<MeqTime,MeqUVW>::iterator pos = itsUVW.find (meqtime);
-    if (pos != itsUVW.end()) {
-      uptr[i] = pos->second.itsU;
-      vptr[i] = pos->second.itsV;
-      wptr[i] = pos->second.itsW;
-      ndone++;
+    double *u = itsU.getValueRW().setDoubleFormat(1, nTime);
+    double *v = itsV.getValueRW().setDoubleFormat(1, nTime);
+    double *w = itsW.getValueRW().setDoubleFormat(1, nTime);
+
+    // Use cached UVW coordinates if available.
+    const Grid &reqGrid = request.getGrid();
+
+    size_t nDone = 0;
+    for(size_t i = 0; i < nTime; ++i)
+    {
+        Time time(reqGrid[TIME]->center(i));
+        map<Time, Uvw>::const_iterator it = itsUvwCache.find(time);
+
+        if(it != itsUvwCache.end())
+        {
+            u[i] = it->second.u;
+            v[i] = it->second.v;
+            w[i] = it->second.w;
+            ++nDone;
+        }
     }
-  }
-  //# If all found we can exit.
-  if (ndone == ntime) {
+
+    // If all done then return.
+    if(nDone == nTime)
+    {
+        return;
+    }
+
+    // Compute missing UVW coordinates using the AIPS++ measures.
+
+    // Get the station position relative to the array reference position
+    // (to keep values small).
+    const MPosition mPos(itsPosition.getValue() - itsArrayRef.getValue());
+
+    //# Setup coordinate transformation engine.
+    Quantum<double> qEpoch(0.0, "s");
+    MEpoch mEpoch(qEpoch, MEpoch::UTC);
+
+    MeasFrame frame(itsArrayRef);
+    frame.set(itsPhaseRef->getPhaseRef());
+    frame.set(mEpoch);
+
+    MVBaseline mvBaseline(mPos.getValue());
+    MBaseline mBaseline(mvBaseline, MBaseline::ITRF);
+    mBaseline.getRefPtr()->set(frame);
+
+    MBaseline::Convert convertor(mBaseline, MBaseline::J2000);
+
+    //# Compute missing UVW coordinates.
+    for(size_t i = 0; i < nTime; ++i)
+    {
+        const double time = reqGrid[TIME]->center(i);
+        map<Time, Uvw>::iterator it = itsUvwCache.find(Time(time));
+
+        if(it == itsUvwCache.end())
+        {
+            qEpoch.setValue(time);
+            mEpoch.set(qEpoch);
+            frame.set(mEpoch);
+
+            MVuvw uvw2000(convertor().getValue(),
+                itsPhaseRef->getPhaseRef().getValue());
+            const Vector<double> &xyz = uvw2000.getValue();
+
+            u[i] = xyz(0);
+            v[i] = xyz(1);
+            w[i] = xyz(2);
+
+            // Update UVW cache.
+            itsUvwCache[Time(time)] = Uvw(xyz(0), xyz(1), xyz(2));
+        }
+    }
+
     itsLastReqId = request.getId();
-    return;
-  }
-
-  //# Calculate the other UVW coordinates using the AIPS++ code.
-  //# First form the time-independent stuff.
-  ASSERTSTR (itsStation, "UVW coordinates cannot be calculated");
-
-  //# Get station coordinates in ITRF coordinates
-  MeqResult posx = itsStation->getPosX().getResult (request);
-  MeqResult posy = itsStation->getPosY().getResult (request);
-  MeqResult posz = itsStation->getPosZ().getResult (request);
-
-  LOG_TRACE_FLOW_STR ("posx" << posx.getValue());
-  LOG_TRACE_FLOW_STR ("posy" << posy.getValue());
-  LOG_TRACE_FLOW_STR ("posz" << posz.getValue());
-
-  //# Get position relative to center to keep values small.
-//#  const MVPosition& mvcpos = itsPhaseRef->earthPosition().getValue();
-  const MVPosition& mvcpos = itsArrayPosition.getValue();
-  MVPosition mvpos(posx.getValue().getDouble() - mvcpos(0),
-                   posy.getValue().getDouble() - mvcpos(1),
-                   posz.getValue().getDouble() - mvcpos(2));
-
-//  LOG_TRACE_FLOW_STR ("mbl " << mbl);
-//#  mbl.getRefPtr()->set(itsFrame);      // attach frame
-
-
-  for (int i=0; i<ntime; ++i) {
-    double time = request.y(i);
-//    cout << "Time: " << setprecision(25) << time << endl;
-    map<MeqTime,MeqUVW>::iterator pos = itsUVW.find (MeqTime(time));
-    if (pos == itsUVW.end()) {
-
-      Quantum<double> qepoch(time, "s");
-      MEpoch mepoch(qepoch, MEpoch::UTC);
-
-      MeasFrame frame(itsArrayPosition);
-      frame.set(itsPhaseCenter);
-      frame.set(mepoch);
-
-//      cout << "Frame: " << setprecision(25) << frame << endl;
-//      LOG_TRACE_FLOW_STR ("frame " << mbl.getRefPtr()->getFrame());
-
-      MVBaseline mvbl(mvpos);
-//      cout << "mvbl: " << setprecision(25) << mvbl << endl;
-      MBaseline mbl(mvbl, MBaseline::ITRF);
-//      cout << "mbl: " << setprecision(25) << mbl << endl;
-      mbl.getRefPtr()->set(frame);      // attach frame
-//      cout << "mbl (after set frame): " << setprecision(25) << mbl << endl;
-      MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-//      cout << "mcvt: " << setprecision(25) << mcvt << endl;
-      const MVBaseline& bas2000 = mcvt().getValue();
-//      cout << "bas2000: " << setprecision(25) << bas2000 << endl;
-
-//      LOG_TRACE_FLOW_STR (bas2000);
-//#      LOG_TRACE_FLOW_STR (itsPhaseRef->direction().getValue());
-//      LOG_TRACE_FLOW_STR (itsPhaseCenter.getValue());
-//#      MVuvw uvw2000 (bas2000, itsPhaseRef->direction().getValue());
-
-
-      MVuvw uvw2000 (bas2000, itsPhaseCenter.getValue());
-
-      const Vector<double>& xyz = uvw2000.getValue();
-
-      LOG_TRACE_FLOW_STR (xyz(0) << ' ' << xyz(1) << ' ' << xyz(2));
-      *uptr++ = xyz(0);
-      *vptr++ = xyz(1);
-      *wptr++ = xyz(2);
-/*
-      cout << "Baseline: " << hex
-<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(0))))
-<< " " << hex
-<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(1))))
-<< " " << hex
-<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(2))))
-<< dec << endl;
-*/
-      // Save the UVW coordinates in the map.
-      itsUVW[MeqTime(time)] = MeqUVW(xyz(0), xyz(1), xyz(2));
-    }
-  }
-  LOG_TRACE_FLOW_STR ('U' << itsU.getValue());
-  LOG_TRACE_FLOW_STR ('V' << itsV.getValue());
-  LOG_TRACE_FLOW_STR ('W' << itsW.getValue());
-
-/*
-  cout << "Station: " << itsStation->getName() << endl;
-  cout << "U: " << setprecision(25) << itsU.getValue() << endl;
-  cout << "V: " << setprecision(25) << itsV.getValue() << endl;
-  cout << "W: " << setprecision(25) << itsW.getValue() << endl;
-*/
-  itsLastReqId = request.getId();
-}
-
-
-void MeqStatUVW::set (double time, double u, double v, double w)
-{
-  itsUVW[MeqTime(time)] = MeqUVW(u,v,w);
 }
 
 } // namespace BBS

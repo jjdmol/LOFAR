@@ -1,4 +1,4 @@
-//# MeqResultVec.cc: The result of a Jones expression for a domain.
+//# ResultVec.cc: A vector containing multiple results.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,58 +23,66 @@
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqResultVec.h>
 
-// This class represents the result in a Jones matrix of a domain for
-// which the expressions have been evaluated.
-
 namespace LOFAR
 {
 namespace BBS
 {
 
-  MeqResultVecRep::MeqResultVecRep (int size, int nspid)
-  : itsCount (0)
-  {
-    itsResult.reserve (size);
-    for (int i=0; i<size; ++i) {
-      itsResult.push_back (MeqResult(nspid));
+ResultVecRep::ResultVecRep(size_t size)
+    : itsRefCount(0)
+{
+    itsResult.resize(size);
+    for(size_t i = 0; i < size; ++i)
+    {
+        itsResult[i].init();
     }
-  }
+}
 
-  void MeqResultVecRep::show (ostream&) const
-  {
-    for (uint i=0; i<itsResult.size(); ++i) {
-      cout << "*** result" << i << " ***" << endl << itsResult[i];
-    }
-  }
+ResultVecRep::~ResultVecRep()
+{
+}
 
+// -------------------------------------------------------------------------- //
 
+ResultVec::ResultVec()
+    : itsRep(0)
+{
+}
 
-  MeqResultVec::MeqResultVec (int size, int nspid)
-    : itsRep (0)
-  {
-    itsRep = new MeqResultVecRep(size, nspid);
+ResultVec::ResultVec(size_t size)
+    : itsRep(new ResultVecRep(size))
+{
     itsRep->link();
-  }
+}
 
-  MeqResultVec::MeqResultVec (const MeqResultVec& that)
-    : itsRep (that.itsRep)
-  {
-    if (itsRep != 0) {
-      itsRep->link();
-    }
-  }
+ResultVec::~ResultVec()
+{
+    ResultVecRep::unlink(itsRep);
+}
 
-  MeqResultVec& MeqResultVec::operator= (const MeqResultVec& that)
-  {
-    if (this != &that) {
-      MeqResultVecRep::unlink (itsRep);
-      itsRep = that.itsRep;
-      if (itsRep != 0) {
-	itsRep->link();
-      }
+ResultVec::ResultVec(const ResultVec &other)
+    : itsRep(other.itsRep)
+{
+    if(itsRep != 0)
+    {
+        itsRep->link();
     }
+}
+
+ResultVec &ResultVec::operator=(const ResultVec &other)
+{
+    if(this != &other)
+    {
+        ResultVecRep::unlink(itsRep);
+        itsRep = other.itsRep;
+        if(itsRep != 0)
+        {
+            itsRep->link();
+        }
+    }
+    
     return *this;
-  }
+}
 
 } // namespace BBS
 } // namespace LOFAR

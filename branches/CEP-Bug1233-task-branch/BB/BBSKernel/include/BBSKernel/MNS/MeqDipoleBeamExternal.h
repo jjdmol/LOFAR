@@ -1,4 +1,4 @@
-//# MeqDipoleBeamExternal.h: Dipole voltage beam based on external functions.
+//# DipoleBeamExternal.h: Dipole voltage beam based on external functions.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,7 +26,7 @@
 #include <BBSKernel/MNS/MeqExpr.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
 #include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/ExternalFunction.h>
+#include <BBSKernel/MNS/MeqExternalFunction.h>
 
 namespace LOFAR
 {
@@ -34,10 +34,10 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqDipoleBeamExternal: public MeqJonesExprRep
+class DipoleBeamExternal: public JonesExprRep
 {
 public:
     enum
@@ -47,16 +47,16 @@ public:
         N_InputPort
     } InputPort;
 
-    MeqDipoleBeamExternal(const string &moduleTheta, const string &modulePhi,
-        MeqExpr azel, MeqExpr orientation, double scaleFactor);
+    DipoleBeamExternal(const string &moduleTheta, const string &modulePhi,
+        Expr azel, Expr orientation, double scaleFactor);
 
-    virtual MeqJonesResult getJResult(const MeqRequest &request);
+    virtual JonesResult getJResult(const Request &request);
 
 private:
-    void evaluate(const MeqRequest &request, const MeqMatrix &in_az,
-        const MeqMatrix &in_el, const MeqMatrix &in_orientation,
-        MeqMatrix &out_E11, MeqMatrix &out_E12,
-        MeqMatrix &out_E21, MeqMatrix &out_E22);
+    void evaluate(const Request &request, const Matrix &in_az,
+        const Matrix &in_el, const Matrix &in_orientation,
+        Matrix &out_E11, Matrix &out_E12,
+        Matrix &out_E21, Matrix &out_E22);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();

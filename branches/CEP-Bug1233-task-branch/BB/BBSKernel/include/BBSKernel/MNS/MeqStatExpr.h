@@ -1,4 +1,4 @@
-//# MeqStatExpr.h: The Jones expression for a station
+//# StatExpr.h: The Jones expression for a station
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,35 +36,35 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 //# Forward Declarations
-class MeqExpr;
+class Expr;
 
 // This class is a node in a Jones matrix expression.
 
-class MeqStatExpr: public MeqJonesExprRep
+class StatExpr: public JonesExprRep
 {
 public:
   // Construct from the various subexpressions.
-  MeqStatExpr (const MeqExpr& faradayRotation,
-           const MeqExpr& dipoleRotation,
-           const MeqExpr& dipoleEllipticity,
-           const MeqExpr& gain1,
-           const MeqExpr& gain2);
+  StatExpr (const Expr& faradayRotation,
+           const Expr& dipoleRotation,
+           const Expr& dipoleEllipticity,
+           const Expr& gain1,
+           const Expr& gain2);
 
-  virtual ~MeqStatExpr();
+  virtual ~StatExpr();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual JonesResult getJResult (const Request&);
 
 private:
-  MeqExpr itsFarRot;
-  MeqExpr itsDipRot;
-  MeqExpr itsDipEll;
-  MeqExpr itsGain1;
-  MeqExpr itsGain2;
+  Expr itsFarRot;
+  Expr itsDipRot;
+  Expr itsDipEll;
+  Expr itsGain1;
+  Expr itsGain2;
 };
 
 // @}

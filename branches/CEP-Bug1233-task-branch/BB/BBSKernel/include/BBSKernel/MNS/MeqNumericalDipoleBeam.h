@@ -1,4 +1,4 @@
-//# MeqNumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
+//# NumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
 //# "Mathematical-physical analysis of the generic dual-dipole antenna"
 //#
 //# Copyright (C) 2008
@@ -39,7 +39,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 class BeamCoeff
@@ -61,7 +61,7 @@ public:
 };
 
 
-class MeqNumericalDipoleBeam: public MeqJonesExprRep
+class NumericalDipoleBeam: public JonesExprRep
 {
 public:
     enum
@@ -71,15 +71,15 @@ public:
         N_InputPort
     } InputPort;
     
-    MeqNumericalDipoleBeam(const BeamCoeff &coeff, const MeqExpr &azel,
-        const MeqExpr &orientation);
+    NumericalDipoleBeam(const BeamCoeff &coeff, const Expr &azel,
+        const Expr &orientation);
 
-    virtual MeqJonesResult getJResult(const MeqRequest &request);
+    virtual JonesResult getJResult(const Request &request);
 
-    void evaluate(const MeqRequest &request, const MeqMatrix &in_az,
-        const MeqMatrix &in_el, const MeqMatrix &in_orientation,
-        MeqMatrix &out_E11, MeqMatrix &out_E12, 
-        MeqMatrix &out_E21, MeqMatrix &out_E22);
+    void evaluate(const Request &request, const Matrix &in_az,
+        const Matrix &in_el, const Matrix &in_orientation,
+        Matrix &out_E11, Matrix &out_E12, 
+        Matrix &out_E21, Matrix &out_E22);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();

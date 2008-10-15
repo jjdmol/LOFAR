@@ -1,4 +1,4 @@
-//# MeqStatUVW.h: The station UVW coordinates for a time domain
+//# StatUVW.h: UVW coordinates of a station in meters.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,18 +24,18 @@
 #define MNS_MEQSTATUVW_H
 
 // \file
-// The station UVW coordinates for a time domain
+// UVW coordinates of a station in meters.
 
-//# Includes
 #include <BBSKernel/MNS/MeqResult.h>
 #include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqStation.h>
+#include <BBSKernel/MNS/MeqPhaseRef.h>
+
 #include <Common/lofar_map.h>
-#include <Common/lofar_vector.h>
-#include <utility>
+#include <Common/lofar_smartptr.h>
+#include <Common/lofar_string.h>
+
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
-
 
 namespace LOFAR
 {
@@ -43,73 +43,71 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-//# Forward declarations
-class MeqStation;
-
-class MeqStatUVW
+class StatUVW
 {
 public:
-  // The default constructor.
-  MeqStatUVW() {};
+    typedef shared_ptr<StatUVW>          Pointer;
+    typedef shared_ptr<const StatUVW>    ConstPointer;
 
-//#   MeqStatUVW (MeqStation*, const MeqPhaseRef*);
-  MeqStatUVW(MeqStation *station, const casa::MDirection &phaseCenter,
-    const casa::MPosition &arrayPosition);
+    StatUVW(const string &name, const casa::MPosition &position,
+        const casa::MPosition &arrayRef,
+        const PhaseRef::ConstPointer &phaseRef);
+    ~StatUVW();
 
-  void calculate (const MeqRequest&);
+    void calculate(const Request &request) const;
 
-  // Get the U, V or W value.
-  const MeqResult& getU (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsU; }
-  const MeqResult& getV (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsV; }
-  const MeqResult& getW (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsW; }
+    const Result &getU(const Request &request) const
+    { if(request.getId() != itsLastReqId) calculate(request); return itsU; }
+    const Result &getV(const Request &request) const
+    { if(request.getId() != itsLastReqId) calculate(request); return itsV; }
+    const Result &getW(const Request &request) const
+    { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
 
-  // Set the UVW coordinate for the given time.
-  void set (double time, double u, double v, double w);
+    const string &getName() const
+    { return itsName; }
+
+private:
+    struct Time
+    {
+        Time(double time)
+            : time(time)
+        {}
+
+        bool operator<(const Time &other) const
+        { return time < other.time - 0.000001; }
+
+        double time;
+    };
+
+    struct Uvw
+    {
+        Uvw()
+        {}
+
+        Uvw(double u, double v, double w)
+            : u(u), v(v), w(w)
+        {}
+
+        double u, v, w;
+    };
 
 #ifdef EXPR_GRAPH
-  const MeqStation *getStation() const
-  {
-      return itsStation;
-  }
+    virtual string getLabel();
 #endif
-  
-private:
-  struct MeqTime
-  {
-    MeqTime (double time) :itsTime(time) {}
-    bool operator< (const MeqTime& other) const
-        { return itsTime < other.itsTime-0.000001; }
-    //# operator== (const MeqTime& other)
-    //#    { return itsTime > other.itsTime-0.001 && itsTime < other.itsTime+0.001; }
-    double itsTime;
-  };
 
-  struct MeqUVW
-  {
-    MeqUVW() {}
-    MeqUVW (double u, double v, double w) : itsU(u), itsV(v), itsW(w) {}
-    double itsU;
-    double itsV;
-    double itsW;
-  };
+    string                      itsName;
+    casa::MPosition             itsPosition;
+    casa::MPosition             itsArrayRef;
+    PhaseRef::ConstPointer   itsPhaseRef;
+    mutable map<Time, Uvw>      itsUvwCache;
 
-  MeqStation            *itsStation;
-  casa::MDirection      itsPhaseCenter;
-  casa::MPosition       itsArrayPosition;
-  MeqResult             itsU;
-  MeqResult             itsV;
-  MeqResult             itsW;
-  MeqRequestId          itsLastReqId;
-  map<MeqTime,MeqUVW>   itsUVW;    // association of time and UVW coordinates
-
-//#  const MeqPhaseRef* itsPhaseRef;
-//#  casa::MeasFrame    itsFrame;
+    mutable Result           itsU;
+    mutable Result           itsV;
+    mutable Result           itsW;
+    mutable RequestId        itsLastReqId;
 };
 
 // @}

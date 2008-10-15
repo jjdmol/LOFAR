@@ -1,4 +1,4 @@
-//# MeqMatrixRep.cc: Temporary matrix for Mns
+//# MatrixRep.cc: Temporary matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,48 +32,48 @@ namespace BBS
 {
 
 
-MeqMatrixRep::~MeqMatrixRep()
+MatrixRep::~MatrixRep()
 {
 }
 
-const double* MeqMatrixRep::doubleStorage() const
+const double* MatrixRep::doubleStorage() const
 {
-  throw (AipsError ("MeqMatrixRep::doubleStorage()"));
+  throw (AipsError ("MatrixRep::doubleStorage()"));
 }
 
-void MeqMatrixRep::dcomplexStorage(const double *&, const double *&) const
+void MatrixRep::dcomplexStorage(const double *&, const double *&) const
 {
-  throw (AipsError ("MeqMatrixRep::dcomplexStorage()"));
+  throw (AipsError ("MatrixRep::dcomplexStorage()"));
 }
 
-MeqMatrixRep* MeqMatrixRep::posdiff (MeqMatrixRep&)
+MatrixRep* MatrixRep::posdiff (MatrixRep&)
 {
-  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+  throw (AipsError ("MatrixRep::posdiff requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::posdiffRep (MeqMatrixRealSca&)
+MatrixRep* MatrixRep::posdiffRep (MatrixRealSca&)
 {
-  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+  throw (AipsError ("MatrixRep::posdiff requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::posdiffRep (MeqMatrixRealArr&)
+MatrixRep* MatrixRep::posdiffRep (MatrixRealArr&)
 {
-  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+  throw (AipsError ("MatrixRep::posdiff requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::tocomplex (MeqMatrixRep&)
+MatrixRep* MatrixRep::tocomplex (MatrixRep&)
 {
-  throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
+  throw (AipsError ("MatrixRep::tocomplex requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealSca&)
+MatrixRep* MatrixRep::tocomplexRep (MatrixRealSca&)
 {
-  throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
+  throw (AipsError ("MatrixRep::tocomplex requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealArr&)
+MatrixRep* MatrixRep::tocomplexRep (MatrixRealArr&)
 {
-  throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
+  throw (AipsError ("MatrixRep::tocomplex requires real arguments"));
 }
 
-void MeqMatrixRep::fillRowWithProducts(dcomplex, dcomplex, int)
+void MatrixRep::fillRowWithProducts(dcomplex, dcomplex, int)
 {
-  throw (AipsError ("MeqMatrixRep::fillRowWithProducts not implemented"));
+  throw (AipsError ("MatrixRep::fillRowWithProducts not implemented"));
 }
 
 } // namespace BBS

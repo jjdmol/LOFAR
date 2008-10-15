@@ -1,4 +1,4 @@
-//# MeqPhaseRef.h: Phase reference position and derived values
+//# PhaseRef.h: Phase reference position and derived values.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPHASEREF_H)
+#ifndef MNS_MEQPHASEREF_H
 #define MNS_MEQPHASEREF_H
 
 // \file
-// Phase reference position and derived values
+// Phase reference position and derived values.
 
-//# Includes
+#include <Common/lofar_smartptr.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 
@@ -36,47 +36,39 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqPhaseRef
+class PhaseRef
 {
 public:
-  // The default constructor.
-  MeqPhaseRef() {};
+    typedef shared_ptr<PhaseRef>         Pointer;
+    typedef shared_ptr<const PhaseRef>   ConstPointer;
 
-  MeqPhaseRef (const casa::MDirection& phaseRef, double startTime);
+    PhaseRef();
+    PhaseRef(const casa::MDirection &phaseRef);
+    ~PhaseRef();
 
-  double getRa() const
+    double getRa() const
     { return itsRa; }
-  double getDec() const
+    double getDec() const
     { return itsDec; }
-  double getSinDec() const
+    double getSinDec() const
     { return itsSinDec; }
-  double getCosDec() const
+    double getCosDec() const
     { return itsCosDec; }
-  double getStartTime() const
-    { return itsStartTime; }
-  double getStartHA() const
-    { return itsStartHA; }
-  double getScaleHA() const
-    { return itsScaleHA; }
-
-  const casa::MDirection& direction() const
-    { return itsDir; }
-  const casa::MPosition& earthPosition() const
-    { return itsEarthPos; }
+    
+    const casa::MDirection &getPhaseRef() const
+    { return itsPhaseRef; }
 
 private:
-  double itsRa;
-  double itsDec;
-  double itsSinDec;
-  double itsCosDec;
-  double itsStartTime;
-  double itsStartHA;
-  double itsScaleHA;
-  casa::MDirection itsDir;
-  casa::MPosition  itsEarthPos;
+    double  itsRa;
+    double  itsDec;
+    double  itsSinDec;
+    double  itsCosDec;
+
+    casa::MDirection    itsPhaseRef;
+    casa::MPosition     itsArrayRef;
 };
 
 // @}

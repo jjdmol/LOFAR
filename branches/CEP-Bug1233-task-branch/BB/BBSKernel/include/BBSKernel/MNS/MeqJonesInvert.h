@@ -1,4 +1,4 @@
-//# MeqJonesInvert.h: The inverse of a Jones matrix expression.
+//# JonesInvert.h: The inverse of a Jones matrix expression.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,23 +36,23 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 // This class gets the inverse of a Jones matrix.
 
-class MeqJonesInvert : public MeqJonesExprRep
+class JonesInvert : public JonesExprRep
 {
 public:
   // The default constructor.
-  MeqJonesInvert (const MeqJonesExpr& expr);
-  virtual ~MeqJonesInvert();
+  JonesInvert (const JonesExpr& expr);
+  virtual ~JonesInvert();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual JonesResult getJResult (const Request&);
 
 private:
-  MeqJonesExpr itsExpr;
+  JonesExpr itsExpr;
 };
 
 

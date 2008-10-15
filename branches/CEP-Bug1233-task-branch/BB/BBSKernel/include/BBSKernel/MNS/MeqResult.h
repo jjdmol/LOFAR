@@ -1,6 +1,7 @@
-//# MeqResult.h: The result of an expression for a domain.
+//# Result.h: The result of the evaluation of an expression on a given request
+//# grid.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,202 +21,247 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQRESULT_H)
+#ifndef MNS_MEQRESULT_H
 #define MNS_MEQRESULT_H
 
 // \file
-// The result of an expression for a domain.
+// The result of the evaluation of an expression on a given request grid.
 
-//# Includes
 #include <BBSKernel/MNS/MeqMatrix.h>
-//#include <BBSKernel/MNS/Pool.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_iostream.h>
+#include <Common/lofar_vector.h>
 
-// This class represents a result of a domain for which an expression
-// has been evaluated.
+#include <limits>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-//# Forward Declarations
-class MeqParmFunklet;
-
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-
-class MeqResultRep
+// A key that identifies a perturbed value through its associated (parameter id,
+// coefficient id) combination.
+class PValueKey
 {
 public:
-  // Create a time,frequency result for the given number of spids.
-  explicit MeqResultRep (int nspid);
+    PValueKey(size_t parmId, size_t coeffId);
 
-  ~MeqResultRep();
+    bool operator<(const PValueKey &other) const;
+    bool operator==(const PValueKey &other) const;
 
-  MeqResultRep* link()
-    { itsCount++; return this; }
-
-  static void unlink (MeqResultRep* rep)
-    { if (rep != 0 && --rep->itsCount == 0) delete rep; }
-
-//  static void *operator new(size_t size);
-//  static void operator delete(void *rep);
-
-  // Get the value.
-  const MeqMatrix& getValue() const
-    { return itsValue; }
-  MeqMatrix& getValueRW()
-    { return itsValue; }
-
-  // Is the i-th perturbed value defined?
-  bool isDefined (int i) const
-    { return itsPerturbedValues != 0 && /*i<itsNspid &&*/ itsPerturbedValues->find(i) != itsPerturbedValues->end(); }
-
-  // Get the i-th perturbed value.
-  const MeqMatrix& getPerturbedValue (int i) // const
-    {
-      if (itsPerturbedValues == 0) return itsValue;
-      map<int, MeqMatrix>::iterator it = itsPerturbedValues->find(i);
-      return it == itsPerturbedValues->end() ? itsValue : it->second;
-    }
-
-  MeqMatrix& getPerturbedValueRW (int i)
-    {
-      if (itsPerturbedValues == 0) itsPerturbedValues = new map<int,MeqMatrix>;
-      return (*itsPerturbedValues)[i];
-    }
-
-  // Get the i-th parameter perturbation info.
-  const MeqParmFunklet* getPerturbedParm (int i) const
-    {
-      DBGASSERT (itsPerturbedParms != 0);
-      map<int,const MeqParmFunklet*>::iterator it = itsPerturbedParms->find(i);
-      DBGASSERT (it != itsPerturbedParms->end());
-      return it->second;
-    }
-
-  // Get the perturbation for j-th domain in the i-th perturbed value.
-  double getPerturbation (int i, int j) const;
-
-  // Set the value.
-  // The current value is replaced by the new one.
-  void setValue (const MeqMatrix& value)
-    { itsValue = value; }
-
-  // Set the value with a given type and shape.
-  // It won't change if the current value type and shape match.
-  double* setDoubleFormat (int nx, int ny)
-    { return itsValue.setDoubleFormat (nx, ny); }
-
-  // Remove all perturbed values.
-  void clear();
-
-  int nperturbed() const
-    { return itsNspid; }
-
-  // Set the i-th perturbed value.
-  void setPerturbedValue (int i, const MeqMatrix&);
-
-  // Set the i-th perturbed parameter.
-  void setPerturbedParm (int i, const MeqParmFunklet* parm);
-
-  void show (ostream&) const;
-
-private:
-  // Forbid copy and assignment.
-  MeqResultRep (const MeqResultRep&);
-  MeqResultRep& operator= (const MeqResultRep&);
-
-  int			           itsCount;
-  int			           itsNspid;
-  MeqMatrix		           itsValue;
-  map<int, MeqMatrix>*	           itsPerturbedValues;
-  map<int, const MeqParmFunklet*>* itsPerturbedParms;
+    size_t  parmId, coeffId;
 };
 
-
-
-class MeqResult
+// Result of the evaluation of an expression on a given request grid. This is a
+// representation class that contains the actual result data and provides an
+// internal reference count.
+class ResultRep
 {
 public:
-  // Create a null object.
-  MeqResult()
-    : itsRep(0) {}
+    ResultRep();
+    ~ResultRep();
 
-  // Create a time,frequency result for the given number of parameters.
-  explicit MeqResult (int nspid);
+    // Support for reference counting (NOT THREAD SAFE).
+    ResultRep *link();
+    static void unlink(ResultRep *rep);
 
-  MeqResult (const MeqResult&);
+    // Access the main result value.
+    void setValue(const Matrix &value);
+    const Matrix &getValue() const;
+    Matrix &getValueRW();
 
-  ~MeqResult()
-    { MeqResultRep::unlink (itsRep); }
+    // Access a perturbed value associated with a certain (parameter,
+    // coefficient) combination.
+    void setPerturbedValue(const PValueKey &key, const Matrix &value);
+    const Matrix &getPerturbedValue(const PValueKey &key) const;
+    Matrix &getPerturbedValueRW(const PValueKey &key);
 
-  MeqResult& operator= (const MeqResult&);
+    // Find out if this result contains a perturbed value for the given
+    // (parameter, coefficient) combination.
+    bool isPerturbed(const PValueKey &key) const;
 
-  // Get the value.
-  const MeqMatrix& getValue() const
-    { return itsRep->getValue(); }
-  MeqMatrix& getValueRW()
-    { return itsRep->getValueRW(); }
+    // Remove all perturbed values.
+    void clearPerturbedValues();
 
-  // Is the i-th perturbed value defined?
-  bool isDefined (int i) const
-    { return itsRep->isDefined(i); }
-
-  // Get the i-th perturbed value.
-  const MeqMatrix& getPerturbedValue (int i) const
-    { return itsRep->getPerturbedValue(i); }
-  MeqMatrix& getPerturbedValueRW (int i)
-    { return itsRep->getPerturbedValueRW(i); }
-
-  // Get the i-th perturbed parameter.
-  const MeqParmFunklet* getPerturbedParm (int i) const
-    { return itsRep->getPerturbedParm (i); }
-
-  // Get the perturbation for j-th domain in the i-th perturbed value
-  double getPerturbation (int i, int j=0) const
-    { return itsRep->getPerturbation (i, j); }
-
-  // Set the value.
-  void setValue (const MeqMatrix& value)
-    { itsRep->setValue (value); }
-  
-  // Set the value with a given type and shape.
-  // It won't change if the current value type and shape matches.
-  // It returns a pointer to the internal storage.
-  double* setDoubleFormat (int nx, int ny)
-    { return itsRep->setDoubleFormat (nx, ny); }
-
-  // Remove all perturbed values.
-  void clear()
-    { itsRep->clear(); }
-
-  int nperturbed() const
-    { return itsRep->nperturbed(); }
-
-  // Set the i-th perturbed value.
-  void setPerturbedValue (int i, const MeqMatrix& value)
-    { itsRep->setPerturbedValue (i, value); }
-
-  // Set the i-th perturbed parameter.
-  void setPerturbedParm (int i, const MeqParmFunklet* parm)
-    { itsRep->setPerturbedParm (i, parm); }
-
-  friend ostream& operator<< (ostream& os, const MeqResult& result)
-    { result.itsRep->show (os); return os; }
-
+    // Get the number of perturbed values available.
+    size_t getPerturbedValueCount() const;
+    
 private:
-  MeqResultRep* itsRep;
+    // Forbid copy and assignment.
+    ResultRep(const ResultRep&);
+    ResultRep &operator=(const ResultRep&);
+
+    // Allow iterators access to private attributes.
+    friend class PValueIterator;
+    friend class PValueConstIterator;
+
+    typedef map<PValueKey, size_t>  PValueMap;
+
+    Matrix           itsValue;
+    vector<Matrix>   itsPValues;
+    PValueMap           itsPValueMap;
+
+    size_t              itsRefCount;
 };
+
+// A proxy class that manages a ResultRep class. Note that the default
+// constructor creates a Result WITHOUT creating the underlying
+// ResultRep object. This behaviour is mainly useful when passing the
+// Result instance directly to Expr::getResult(Vec)Synced(). Before
+// calling any methods on Result, init() should be called first to construct
+// the underlying ResultRep object.
+class Result
+{
+public:
+    // NB: The default constructor DOES NOT allocate an underlying ResultRep
+    // instance.
+    Result();
+    ~Result();
+
+    Result(const Result &other);
+    Result &operator=(const Result &other);
+
+    // Allocate the underlying ResultRep object.
+    void init();
+
+    // Access the main result value.
+    void setValue(const Matrix &value);
+    const Matrix &getValue() const;
+    Matrix &getValueRW();
+
+    // Access a perturbed value associated with a certain (parameter,
+    // coefficient) combination.
+    void setPerturbedValue(const PValueKey &key, const Matrix &value);
+    const Matrix &getPerturbedValue(const PValueKey &key) const;
+    Matrix &getPerturbedValueRW(const PValueKey &key);
+    
+    // Find out if this result contains a perturbed value for the given
+    // (parameter, coefficient) combination.
+    bool isPerturbed(const PValueKey &key) const;
+
+    // Remove all perturbed values.
+    void clearPerturbedValues();
+
+    // Get the number of perturbed values available.
+    size_t getPerturbedValueCount() const;
+    
+private:
+    // Allow iterators access to the underlying ResultRep instance.
+    friend class PValueConstIterator;
+    friend class PValueIterator;
+    
+    ResultRep    *itsRep;
+};
+
+// -------------------------------------------------------------------------- //
+// IMPLEMENTATION                                                             //
+// -------------------------------------------------------------------------- //
+
+inline PValueKey::PValueKey(size_t parmId, size_t coeffId)
+    :   parmId(parmId),
+        coeffId(coeffId)
+{
+}
+    
+inline bool PValueKey::operator<(const PValueKey &other) const
+{
+    return parmId < other.parmId
+        || (parmId == other.parmId && coeffId < other.coeffId);
+}
+    
+inline bool PValueKey::operator==(const PValueKey &other) const
+{
+    return parmId == other.parmId && coeffId == other.coeffId;
+}
+
+inline ResultRep *ResultRep::link()
+{
+    ++itsRefCount;
+    return this;
+}
+
+inline void ResultRep::unlink(ResultRep *rep)
+{
+    if(rep != 0 && --rep->itsRefCount == 0)
+    {
+        delete rep;
+    }
+}        
+
+inline void ResultRep::setValue(const Matrix &value)
+{ itsValue = value; }
+
+inline const Matrix &ResultRep::getValue() const
+{ return itsValue; }
+
+inline Matrix &ResultRep::getValueRW()
+{ return itsValue; }
+
+inline size_t ResultRep::getPerturbedValueCount() const
+{ return itsPValues.size(); }
+
+inline void Result::setValue(const Matrix &value)
+{
+    ASSERT(itsRep);
+    itsRep->setValue(value);
+}
+
+inline const Matrix &Result::getValue() const
+{
+    ASSERT(itsRep);
+    return itsRep->getValue();
+}
+
+inline Matrix &Result::getValueRW()
+{
+    ASSERT(itsRep);
+    return itsRep->getValueRW();
+}
+
+inline void Result::setPerturbedValue(const PValueKey &key,
+    const Matrix &value)
+{
+    ASSERT(itsRep);
+    itsRep->setPerturbedValue(key, value);
+}
+
+inline const Matrix &Result::getPerturbedValue(const PValueKey &key) const
+{
+    ASSERT(itsRep);
+    return itsRep->getPerturbedValue(key);
+}
+
+inline Matrix &Result::getPerturbedValueRW(const PValueKey &key)
+{
+    ASSERT(itsRep);
+    return itsRep->getPerturbedValueRW(key);
+}
+    
+inline bool Result::isPerturbed(const PValueKey &key) const
+{
+    ASSERT(itsRep);
+    return itsRep->isPerturbed(key);
+}
+
+inline void Result::clearPerturbedValues()
+{
+    ASSERT(itsRep);
+    itsRep->clearPerturbedValues();
+}
+
+inline size_t Result::getPerturbedValueCount() const
+{
+    ASSERT(itsRep);
+    return itsRep->getPerturbedValueCount();
+}
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

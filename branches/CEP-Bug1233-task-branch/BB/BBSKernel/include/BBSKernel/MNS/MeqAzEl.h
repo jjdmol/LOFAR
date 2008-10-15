@@ -1,4 +1,4 @@
-//# MeqAzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# AzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,16 +34,16 @@ namespace LOFAR
 {
 namespace BBS
 {
-class MeqSource;
-class MeqStation;
-class MeqRequest;
-class MeqMatrix;
+class Source;
+class Station;
+class Request;
+class Matrix;
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqAzEl: public MeqExprRep
+class AzEl: public ExprRep
 {
 public:
     enum
@@ -56,13 +56,13 @@ public:
         N_InputPort
     } InputPort;
     
-    MeqAzEl(MeqSource &source, MeqStation &station);
-    MeqResultVec getResultVec(const MeqRequest &request);
+    AzEl(Source &source, Station &station);
+    ResultVec getResultVec(const Request &request);
     
 private:
-    void evaluate(const MeqRequest& request, const MeqMatrix &in_ra,
-        const MeqMatrix &in_dec, const MeqMatrix &in_x, const MeqMatrix &in_y,
-        const MeqMatrix &in_z, MeqMatrix &out_az, MeqMatrix &out_el);
+    void evaluate(const Request& request, const Matrix &in_ra,
+        const Matrix &in_dec, const Matrix &in_x, const Matrix &in_y,
+        const Matrix &in_z, Matrix &out_az, Matrix &out_el);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();

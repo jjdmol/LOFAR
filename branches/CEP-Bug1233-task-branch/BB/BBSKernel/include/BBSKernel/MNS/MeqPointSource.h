@@ -1,4 +1,4 @@
-//# MeqPointSource.h: Class holding a point source
+//# PointSource.h: Class holding the expressions defining a point source.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,9 +24,8 @@
 #define MNS_MEQPOINTSOURCE_H
 
 // \file
-// Class holding a point source
+// Class holding the expressions defining a point source.
 
-//# Includes
 #include <BBSKernel/MNS/MeqSource.h>
 #include <Common/lofar_string.h>
 
@@ -36,35 +35,34 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-
-class MeqPointSource: public MeqSource
+class PointSource: public Source
 {
 public:
-  MeqPointSource (const string& name,
-          const string& groupName,
-          const MeqExpr& fluxI, const MeqExpr& fluxQ,
-          const MeqExpr& fluxU, const MeqExpr& fluxV,
-          const MeqExpr& ra, const MeqExpr& dec);
+    typedef shared_ptr<PointSource>          Pointer;
+    typedef shared_ptr<const PointSource>    ConstPointer;
 
-  virtual ~MeqPointSource();
+    PointSource(const string& name, const Expr &ra, const Expr &dec,
+        const Expr &I, const Expr &Q, const Expr &U, const Expr &V);
 
-  MeqExpr getI() const
+    virtual ~PointSource();
+
+    const Expr &getI() const
     { return itsI; }
-  MeqExpr getQ() const
+    const Expr &getQ() const
     { return itsQ; }
-  MeqExpr getU() const
+    const Expr &getU() const
     { return itsU; }
-  MeqExpr getV() const
+    const Expr &getV() const
     { return itsV; }
 
 private:
-  MeqExpr   itsI;
-  MeqExpr   itsQ;
-  MeqExpr   itsU;
-  MeqExpr   itsV;
+    Expr itsI;
+    Expr itsQ;
+    Expr itsU;
+    Expr itsV;
 };
 
 // @}

@@ -1,4 +1,4 @@
-//# MeqExpr.cc: The base class of an expression.
+//# Expr.cc: The base class of an expression.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,6 +25,7 @@
 #include <BBSKernel/MNS/MeqResult.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 //#include <Common/Timer.h>
@@ -36,7 +37,7 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqExprRep::MeqExprRep()
+ExprRep::ExprRep()
   : itsCount    (0),
     itsMinLevel (100000000),     // very high number
     itsMaxLevel (-1),
@@ -44,14 +45,14 @@ MeqExprRep::MeqExprRep()
     itsResult   (0),
     itsResVec   (0),
     itsNParents (0),
-    itsReqId    (InitMeqRequestId)
+    itsReqId    (InitRequestId)
 {}
 
-MeqExprRep::~MeqExprRep()
+ExprRep::~ExprRep()
 {
-  for(std::vector<MeqExpr>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
+  for(std::vector<Expr>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
   {
-      MeqExprRep *childRep = (*it).itsRep;
+      ExprRep *childRep = (*it).itsRep;
       ASSERT(childRep);
       childRep->decrNParents();
   }
@@ -60,33 +61,33 @@ MeqExprRep::~MeqExprRep()
   delete itsResVec;
 }
 
-void MeqExprRep::addChild (MeqExpr child)
+void ExprRep::addChild (Expr child)
 {
-  MeqExprRep *childRep = child.itsRep;
+  ExprRep *childRep = child.itsRep;
   ASSERT(childRep);
   childRep->incrNParents();
   itsChildren.push_back(child);
 }
 
-void MeqExprRep::removeChild(MeqExpr child)
+void ExprRep::removeChild(Expr child)
 {
-    std::vector<MeqExpr>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child);
+    std::vector<Expr>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child);
     ASSERT(it != itsChildren.end());
     
-    MeqExprRep *childRep = child.itsRep;
+    ExprRep *childRep = child.itsRep;
     ASSERT(childRep);
     
     childRep->decrNParents();
     itsChildren.erase(it);
 }
 
-MeqExpr MeqExprRep::getChild(size_t index)
+Expr ExprRep::getChild(size_t index)
 {
     ASSERT(index < itsChildren.size());
     return itsChildren[index];
 }
 
-int MeqExprRep::setLevel (int level)
+int ExprRep::setLevel (int level)
 {
   if (level < itsMinLevel) itsMinLevel = level;
   int nrLev = itsMaxLevel;
@@ -100,7 +101,7 @@ int MeqExprRep::setLevel (int level)
   return nrLev;
 }
 
-void MeqExprRep::clearDone()
+void ExprRep::clearDone()
 {
   itsLevelDone = -1;
   itsMaxLevel  = -1;
@@ -113,7 +114,7 @@ void MeqExprRep::clearDone()
   }
 }
 
-void MeqExprRep::getCachingNodes (std::vector<MeqExprRep*>& nodes,
+void ExprRep::getCachingNodes (std::vector<ExprRep*>& nodes,
                   int level, bool all)
 {
   if (itsLevelDone != level) {
@@ -134,19 +135,19 @@ void MeqExprRep::getCachingNodes (std::vector<MeqExprRep*>& nodes,
   }
 }
 
-void MeqExprRep::precalculate (const MeqRequest& request)
+void ExprRep::precalculate (const Request& request)
 {
-  MeqResultVec result;
+  ResultVec result;
   calcResultVec (request, result, true);
   DBGASSERT (itsResVec);
-  if (itsResVec->nresult() == 1) {
-    if (!itsResult) itsResult = new MeqResult;
+  if (itsResVec->size() == 1) {
+    if (!itsResult) itsResult = new Result;
     *itsResult = (*itsResVec)[0];
   }
 }
 
-const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
-                     MeqResult& result)
+const Result& ExprRep::calcResult (const Request& request,
+                     Result& result)
 {
   // The value has to be calculated.
   // Do not cache if no multiple parents.
@@ -160,14 +161,14 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
   // Use a cache.
   // Synchronize the calculations.
   // Only calculate if not already calculated in another thread.
-  //static NSTimer timer("MeqExprRep::calcResult", true);
+  //static NSTimer timer("ExprRep::calcResult", true);
   //timer.start();
 #if defined _OPENMP
 #pragma omp critical(calcResult)
   if (itsReqId != request.getId())  // retry test in critical section
 #endif
   {
-    if (!itsResult) itsResult = new MeqResult;
+    if (!itsResult) itsResult = new Result;
     *itsResult = getResult (request);
     itsReqId = request.getId();
   }
@@ -176,50 +177,50 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
   return *itsResult;
 }
 
-MeqMatrix MeqExprRep::getResultValue (const vector<const MeqMatrix*>&)
+Matrix ExprRep::getResultValue (const vector<const Matrix*>&)
 {
   THROW (LOFAR::Exception,
-     "MeqExpr::getResult(Value) not implemented in derived class");
+     "Expr::getResult(Value) not implemented in derived class");
 }
 
-MeqResult MeqExprRep::getResult (const MeqRequest& request)
+Result ExprRep::getResult (const Request& request)
 {
   // Calculate the result in a generic way.
-  MeqResult result(request.nspid());
+  Result result;
+  result.init();
+
   // First evaluate all children and keep their results.
   // Also keep the main value.
-  int nrchild = itsChildren.size();
-  vector<MeqResult> res(nrchild);
-  vector<const MeqMatrix*> mat(nrchild);
-  for (int i=0; i<nrchild; ++i) {
-    res[i] = itsChildren[i].getResultSynced (request, res[i]);
-    mat[i] = &res[i].getValue();
+  size_t nrchild = itsChildren.size();
+  vector<Result> buf(nrchild);
+  vector<const Result*> res(nrchild);
+  vector<const Matrix*> mat(nrchild);
+  for (size_t i=0; i<nrchild; ++i) {
+    res[i] = &itsChildren[i].getResultSynced (request, buf[i]);
+    mat[i] = &res[i]->getValue();
   }
+
   // Calculate the resulting main value.
   result.setValue (getResultValue(mat));
-  // Calculate the perturbed values for which any child is perturbed.
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    int eval = -1;
-    for (int i=0; i<nrchild; ++i) {
-      if (res[i].isDefined(spinx)) {
-    // Perturbed, so set value to the perturbed one.
-    mat[i] = &res[i].getPerturbedValue(spinx);
-    eval = i;
-      } else {
-    mat[i] = &res[i].getValue();
-      }
-    }
-    if (eval >= 0) {
-      // Evaluate the perturbed value and reset the value vector.
-      result.setPerturbedParm (spinx, res[eval].getPerturbedParm(spinx));
-      result.setPerturbedValue (spinx, getResultValue(mat));
-    }
+
+  // Calculate the perturbed values.
+  PValueSetIteratorDynamic pvIter(res);
+
+  while(!pvIter.atEnd())
+  {
+    for (size_t i=0; i<nrchild; ++i) {
+      mat[i] = &(pvIter.value(i));
+    }      
+
+    result.setPerturbedValue(pvIter.key(), getResultValue(mat));
+    pvIter.next();
   }
+
   return result;
 }
 
-const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
-                           MeqResultVec& result,
+const ResultVec& ExprRep::calcResultVec (const Request& request,
+                           ResultVec& result,
                            bool useCache)
 {
   // The value has to be calculated.
@@ -234,14 +235,14 @@ const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
   // Use a cache.
   // Synchronize the calculations.
   // Only calculate if not already calculated in another thread.
-  //static NSTimer timer("MeqExprRep::calcResultVec", true);
+  //static NSTimer timer("ExprRep::calcResultVec", true);
   //timer.start();
 #if defined _OPENMP
 #pragma omp critical(calcResult)
   if (itsReqId != request.getId())  // retry test in critical section
 #endif
   {
-    if (!itsResVec) itsResVec = new MeqResultVec;
+    if (!itsResVec) itsResVec = new ResultVec;
     *itsResVec = getResultVec (request);
     itsReqId = request.getId();
   }
@@ -250,24 +251,24 @@ const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
   return *itsResVec;
 }
 
-MeqResultVec MeqExprRep::getResultVec (const MeqRequest& request)
+ResultVec ExprRep::getResultVec (const Request& request)
 {
-  MeqResultVec res(1);
+  ResultVec res(1);
   res[0] = getResult (request);
   return res;
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqExprRep::getLabel()
+std::string ExprRep::getLabel()
 {
-    return std::string("MeqExprRep base class");
+    return std::string("ExprRep base class");
 }
 
-void MeqExprRep::writeExpressionGraph(std::ostream &os)
+void ExprRep::writeExpressionGraph(std::ostream &os)
 {
     os << "id" << std::hex << this << " [label=\"" << getLabel() << "\"];" << std::endl;
 
-    std::vector<MeqExpr>::iterator it;
+    std::vector<Expr>::iterator it;
     for(it = itsChildren.begin(); it != itsChildren.end(); ++it)
     {
           os << "id" << std::hex << it->rep() << " -> " << "id" << std::hex
@@ -278,17 +279,17 @@ void MeqExprRep::writeExpressionGraph(std::ostream &os)
 #endif
 
 
-MeqExpr::MeqExpr (const MeqExpr& that)
+Expr::Expr (const Expr& that)
 : itsRep (that.itsRep)
 {
   if (itsRep != 0) {
     itsRep->link();
   }
 }
-MeqExpr& MeqExpr::operator= (const MeqExpr& that)
+Expr& Expr::operator= (const Expr& that)
 {
   if (this != &that) {
-    MeqExprRep::unlink (itsRep);
+    ExprRep::unlink (itsRep);
     itsRep = that.itsRep;
     if (itsRep != 0) {
       itsRep->link();
@@ -297,8 +298,8 @@ MeqExpr& MeqExpr::operator= (const MeqExpr& that)
   return *this;
 }
 
-MeqExprToComplex::MeqExprToComplex (const MeqExpr& real,
-                    const MeqExpr& imag)
+ExprToComplex::ExprToComplex (const Expr& real,
+                    const Expr& imag)
   : itsReal(real),
     itsImag(imag)
 {
@@ -306,42 +307,44 @@ MeqExprToComplex::MeqExprToComplex (const MeqExpr& real,
   addChild (itsImag);
 }
 
-MeqExprToComplex::~MeqExprToComplex()
+ExprToComplex::~ExprToComplex()
 {}
 
-MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
+Result ExprToComplex::getResult (const Request& request)
 {
-  MeqResult realRes;
-  MeqResult imagRes;
-  const MeqResult& real = itsReal.getResultSynced (request, realRes);
-  const MeqResult& imag = itsImag.getResultSynced (request, imagRes);
-  MeqResult result(request.nspid());
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    if (real.isDefined(spinx)) {
-      result.setPerturbedValue (spinx,
-                tocomplex(real.getPerturbedValue(spinx),
-                      imag.getPerturbedValue(spinx)));
-      result.setPerturbedParm (spinx, real.getPerturbedParm(spinx));
-    } else if (imag.isDefined(spinx)) {
-      result.setPerturbedValue (spinx,
-                tocomplex(real.getPerturbedValue(spinx),
-                      imag.getPerturbedValue(spinx)));
-      result.setPerturbedParm (spinx, imag.getPerturbedParm(spinx));
-    }
+  Result realRes;
+  Result imagRes;
+  const Result& real = itsReal.getResultSynced (request, realRes);
+  const Result& imag = itsImag.getResultSynced (request, imagRes);
+
+  // Compute main value.
+  Result result;
+  result.init();
+  result.setValue(tocomplex(real.getValue(), imag.getValue()));
+  
+  // Compute perturbed values.
+  const Result *pvSet[2] = {&real, &imag};
+  PValueSetIterator<2> pvIter(pvSet);
+  
+  while(!pvIter.atEnd())
+  {
+    result.setPerturbedValue(pvIter.key(), tocomplex(pvIter.value(0),
+        pvIter.value(1)));
+    pvIter.next();
   }
-  result.setValue (tocomplex(real.getValue(), imag.getValue()));
+
   return result;
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqExprToComplex::getLabel()
+std::string ExprToComplex::getLabel()
 {
-    return std::string("MeqExprToComplex\\nreal / imaginary");
+    return std::string("ExprToComplex\\nreal / imaginary");
 }
 #endif
 
-MeqExprAPToComplex::MeqExprAPToComplex (const MeqExpr& ampl,
-                    const MeqExpr& phase)
+ExprAPToComplex::ExprAPToComplex (const Expr& ampl,
+                    const Expr& phase)
   : itsAmpl (ampl),
     itsPhase(phase)
 {
@@ -349,39 +352,47 @@ MeqExprAPToComplex::MeqExprAPToComplex (const MeqExpr& ampl,
   addChild (itsPhase);
 }
 
-MeqExprAPToComplex::~MeqExprAPToComplex()
+ExprAPToComplex::~ExprAPToComplex()
 {}
 
-MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
+Result ExprAPToComplex::getResult (const Request& request)
 {
-  MeqResult amplRes;
-  MeqResult phaseRes;
-  const MeqResult& ampl  = itsAmpl.getResultSynced (request, amplRes);
-  const MeqResult& phase = itsPhase.getResultSynced (request, phaseRes);
-  MeqResult result(request.nspid());
-  MeqMatrixTmp matt (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    if (phase.isDefined(spinx)) {
-      const MeqMatrix& ph = phase.getPerturbedValue(spinx);
-      result.setPerturbedValue (spinx,
-                ampl.getPerturbedValue(spinx) *
-                tocomplex(cos(ph), sin(ph)));
-      result.setPerturbedParm (spinx, phase.getPerturbedParm(spinx));
-    } else if (ampl.isDefined(spinx)) {
-      result.setPerturbedValue (spinx,
-                ampl.getPerturbedValue(spinx) *
-                matt.clone());
-      result.setPerturbedParm (spinx, ampl.getPerturbedParm(spinx));
-    }
-  }
+  Result amplRes;
+  Result phaseRes;
+  const Result& ampl  = itsAmpl.getResultSynced (request, amplRes);
+  const Result& phase = itsPhase.getResultSynced (request, phaseRes);
+
+  // Compute main value.
+  Result result;
+  result.init();
+  MatrixTmp matt(tocomplex(cos(phase.getValue()), sin(phase.getValue())));
   result.setValue (matt * ampl.getValue());
+
+  // Compute perturbed values.
+  const Result *pvSet[2] = {&ampl, &phase};
+  PValueSetIterator<2> pvIter(pvSet);
+  
+  while(!pvIter.atEnd())
+  {
+    if(pvIter.hasPValue(1)) {
+      const Matrix &pvPhase = pvIter.value(1);
+      result.setPerturbedValue(pvIter.key(), pvIter.value(0)
+        * tocomplex(cos(pvPhase), sin(pvPhase)));
+    }
+    else {
+      result.setPerturbedValue(pvIter.key(), pvIter.value(0) * matt.clone());
+    }
+
+    pvIter.next();
+  }
+
   return result;
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqExprAPToComplex::getLabel()
+std::string ExprAPToComplex::getLabel()
 {
-    return std::string("MeqExprToComplex\\namplitude / phase");
+    return std::string("ExprToComplex\\namplitude / phase");
 }
 #endif
 

@@ -1,4 +1,4 @@
-//# MeqStatExpr.cc: The Jones expression for a station
+//# StatExpr.cc: The Jones expression for a station
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,11 +34,11 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqStatExpr::MeqStatExpr (const MeqExpr& faradayRotation,
-			  const MeqExpr& dipoleRotation,
-			  const MeqExpr& dipoleEllipticity,
-			  const MeqExpr& gain1,
-			  const MeqExpr& gain2)
+StatExpr::StatExpr (const Expr& faradayRotation,
+			  const Expr& dipoleRotation,
+			  const Expr& dipoleEllipticity,
+			  const Expr& gain1,
+			  const Expr& gain2)
 : itsFarRot (faradayRotation),
   itsDipRot (dipoleRotation),
   itsDipEll (dipoleEllipticity),
@@ -52,37 +52,37 @@ MeqStatExpr::MeqStatExpr (const MeqExpr& faradayRotation,
   addChild (itsGain2);
 }
 
-MeqStatExpr::~MeqStatExpr()
+StatExpr::~StatExpr()
 {}
 
-MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
+JonesResult StatExpr::getJResult (const Request& request)
 {
-  static NSTimer timer("MeqStatExpr::getResult", true);
+  static NSTimer timer("StatExpr::getResult", true);
   timer.start();
   
   // Allocate the result objects.
   // At the end they will be stored in the base class object.
-  MeqJonesResult result(request.nspid());
-  MeqResult& result11 = result.result11();
-  MeqResult& result12 = result.result12();
-  MeqResult& result21 = result.result21();
-  MeqResult& result22 = result.result22();
+  JonesResult result(request.nspid());
+  Result& result11 = result.result11();
+  Result& result12 = result.result12();
+  Result& result21 = result.result21();
+  Result& result22 = result.result22();
   // Get the values (also perturbed) for the expressions.
-  MeqResult frotBuf, drotBuf, dellBuf, g1Buf, g2Buf;
-  const MeqResult& frot = itsFarRot.getResultSynced (request, frotBuf);
-  const MeqResult& drot = itsDipRot.getResultSynced (request, drotBuf);
-  const MeqResult& dell = itsDipEll.getResultSynced (request, dellBuf);
-  const MeqResult& g1  = itsGain1.getResultSynced (request, g1Buf);
-  const MeqResult& g2  = itsGain2.getResultSynced (request, g2Buf);
+  Result frotBuf, drotBuf, dellBuf, g1Buf, g2Buf;
+  const Result& frot = itsFarRot.getResultSynced (request, frotBuf);
+  const Result& drot = itsDipRot.getResultSynced (request, drotBuf);
+  const Result& dell = itsDipEll.getResultSynced (request, dellBuf);
+  const Result& g1  = itsGain1.getResultSynced (request, g1Buf);
+  const Result& g2  = itsGain2.getResultSynced (request, g2Buf);
   // Precalculate reused subexpressions.
   // They might also be reused in calculating the perturbed values,
-  // so do not use a MeqMatrixTmp for them.
-  MeqMatrix sinfrot = sin(frot.getValue());
-  MeqMatrix cosfrot = cos(frot.getValue());
-  MeqMatrix sindrot = sin(drot.getValue());
-  MeqMatrix cosdrot = cos(drot.getValue());
-  MeqMatrix sindell = sin(dell.getValue());
-  MeqMatrix cosdell = cos(dell.getValue());
+  // so do not use a MatrixTmp for them.
+  Matrix sinfrot = sin(frot.getValue());
+  Matrix cosfrot = cos(frot.getValue());
+  Matrix sindrot = sin(drot.getValue());
+  Matrix cosdrot = cos(drot.getValue());
+  Matrix sindell = sin(dell.getValue());
+  Matrix cosdell = cos(dell.getValue());
   // Multiply dell and drot matrices as:
   //        cde -sde       cdr isdr
   //        sde  cde      isdr  cdr
@@ -91,18 +91,18 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
   //            cosfrot -sinfrot
   //            sinfrot  cosfrot
   // This is described in AIPS++ note 185.
-  MeqMatrix cdecdr = cosdell * cosdrot;
-  MeqMatrix sdesdr = sindell * sindrot;
-  MeqMatrix cdesdr = cosdell * sindrot;
-  MeqMatrix sdecdr = sindell * cosdrot;
-  MeqMatrix d11 = tocomplex( cdecdr, -sdesdr);
-  MeqMatrix d12 = tocomplex(-cdesdr,  sdecdr);
-  MeqMatrix d21 = tocomplex( cdesdr,  sdecdr);
-  MeqMatrix d22 = tocomplex( cdecdr,  sdesdr);
-  MeqMatrix df11 = d11 * cosfrot + d12 * sinfrot;
-  MeqMatrix df12 = d12 * cosfrot - d11 * sinfrot;
-  MeqMatrix df21 = d21 * cosfrot + d22 * sinfrot;
-  MeqMatrix df22 = d22 * cosfrot - d21 * sinfrot;
+  Matrix cdecdr = cosdell * cosdrot;
+  Matrix sdesdr = sindell * sindrot;
+  Matrix cdesdr = cosdell * sindrot;
+  Matrix sdecdr = sindell * cosdrot;
+  Matrix d11 = tocomplex( cdecdr, -sdesdr);
+  Matrix d12 = tocomplex(-cdesdr,  sdecdr);
+  Matrix d21 = tocomplex( cdesdr,  sdecdr);
+  Matrix d22 = tocomplex( cdecdr,  sdesdr);
+  Matrix df11 = d11 * cosfrot + d12 * sinfrot;
+  Matrix df12 = d12 * cosfrot - d11 * sinfrot;
+  Matrix df21 = d21 * cosfrot + d22 * sinfrot;
+  Matrix df22 = d22 * cosfrot - d21 * sinfrot;
   // Calculate the final result.
   result11.setValue (g1.getValue() * df11);
   result12.setValue (g1.getValue() * df12);
@@ -113,21 +113,21 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
       if (drot.isDefined(spinx)  ||  dell.isDefined(spinx)
       ||  frot.isDefined(spinx)
       ||  g1.isDefined(spinx)  || g2.isDefined(spinx)) {
-	MeqMatrix psinfrot = sinfrot;
-	MeqMatrix pcosfrot = cosfrot;
-	MeqMatrix psindrot = sindrot;
-	MeqMatrix pcosdrot = cosdrot;
-	MeqMatrix psindell = sindell;
-	MeqMatrix pcosdell = cosdell;
-	MeqMatrix pd11 = d11;
-	MeqMatrix pd12 = d12;
-	MeqMatrix pd21 = d21;
-	MeqMatrix pd22 = d22;
-	MeqMatrix pdf11 = df11;
-	MeqMatrix pdf12 = df12;
-	MeqMatrix pdf21 = df21;
-	MeqMatrix pdf22 = df22;
-	const MeqParmFunklet* perturbedParm;
+	Matrix psinfrot = sinfrot;
+	Matrix pcosfrot = cosfrot;
+	Matrix psindrot = sindrot;
+	Matrix pcosdrot = cosdrot;
+	Matrix psindell = sindell;
+	Matrix pcosdell = cosdell;
+	Matrix pd11 = d11;
+	Matrix pd12 = d12;
+	Matrix pd21 = d21;
+	Matrix pd22 = d22;
+	Matrix pdf11 = df11;
+	Matrix pdf12 = df12;
+	Matrix pdf21 = df21;
+	Matrix pdf22 = df22;
+	const ParmFunklet* perturbedParm;
 	bool eval = false;
 	if (drot.isDefined(spinx)) {
 	  eval = true;
@@ -142,10 +142,10 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	  perturbedParm = dell.getPerturbedParm(spinx);
 	}
 	if (eval) {
-	  MeqMatrix cdecdr = pcosdell * pcosdrot;
-	  MeqMatrix sdesdr = psindell * psindrot;
-	  MeqMatrix cdesdr = pcosdell * psindrot;
-	  MeqMatrix sdecdr = psindell * pcosdrot;
+	  Matrix cdecdr = pcosdell * pcosdrot;
+	  Matrix sdesdr = psindell * psindrot;
+	  Matrix cdesdr = pcosdell * psindrot;
+	  Matrix sdecdr = psindell * pcosdrot;
 	  pd11 = tocomplex( cdecdr, -sdesdr);
 	  pd12 = tocomplex(-cdesdr,  sdecdr);
 	  pd21 = tocomplex( cdesdr,  sdecdr);
@@ -169,7 +169,7 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	  perturbedParm = g1.getPerturbedParm(spinx);
 	}
 	if (evalg) {
-	  const MeqMatrix& pert = g1.getPerturbedValue(spinx);
+	  const Matrix& pert = g1.getPerturbedValue(spinx);
 	  result11.setPerturbedValue (spinx, pert * pdf11);
 	  result12.setPerturbedValue (spinx, pert * pdf12);
 	  result11.setPerturbedParm (spinx, perturbedParm);
@@ -181,7 +181,7 @@ MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 	  perturbedParm = g2.getPerturbedParm(spinx);
 	}
 	if (evalg) {
-	  const MeqMatrix& pert = g2.getPerturbedValue(spinx);
+	  const Matrix& pert = g2.getPerturbedValue(spinx);
 	  result21.setPerturbedValue (spinx, pert * pdf21);
 	  result22.setPerturbedValue (spinx, pert * pdf22);
 	  result21.setPerturbedParm (spinx, perturbedParm);

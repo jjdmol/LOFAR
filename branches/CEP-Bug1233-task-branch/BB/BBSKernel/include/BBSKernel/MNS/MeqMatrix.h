@@ -1,4 +1,4 @@
-//# MeqMatrix.h: Matrix for Mns
+//# Matrix.h: Matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,10 +30,10 @@
 #include <BBSKernel/MNS/MeqMatrixRep.h>
 
 //# Forward Declarations
-namespace casa
-{
-    template<class T> class Matrix;
-}
+//namespace casa
+//{
+//    template<class T> class Matrix;
+//}
 
 namespace LOFAR
 {
@@ -42,7 +42,7 @@ namespace LOFAR
     
     namespace BBS
     {
-        class MeqMatrixTmp;
+        class MatrixTmp;
     }
 }
 
@@ -52,59 +52,59 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqMatrix
+class Matrix
 {
 public:
   // A null vector (i.e. no vector assigned yet).
   // This can be used to clear the 'cache' in the Mns.
-  MeqMatrix()
+  Matrix()
     : itsRep(0) {}
 
-  // Create a scalar MeqMatrix.
+  // Create a scalar Matrix.
   // <group>
-  explicit MeqMatrix (double value);
-  explicit MeqMatrix (dcomplex value);
+  explicit Matrix (double value);
+  explicit Matrix (dcomplex value);
   // <group>
 
-  // Create a MeqMatrix of given size.
+  // Create a Matrix of given size.
   // If the init flag is true, the matrix is initialized to the given value.
   // Otherwise the value only indicates the type of matrix to be created.
   // <group>
-  MeqMatrix (double, int nx, int ny, bool init=true);
-  MeqMatrix (dcomplex, int nx, int ny, bool init=true);
+  Matrix (double, int nx, int ny, bool init=true);
+  Matrix (dcomplex, int nx, int ny, bool init=true);
   // <group>
 
-  // Create a MeqMatrix from a value array.
+  // Create a Matrix from a value array.
   // <group>
-  MeqMatrix (const double* values, int nx, int ny);
-  MeqMatrix (const dcomplex* values, int nx, int ny);
-  MeqMatrix (const casa::Matrix<double>&);
-  MeqMatrix (const casa::Matrix<dcomplex>&);
+  Matrix (const double* values, int nx, int ny);
+  Matrix (const dcomplex* values, int nx, int ny);
+//  Matrix (const casa::Matrix<double>&);
+//  Matrix (const casa::Matrix<dcomplex>&);
   // </group>
 
-  // Create a MeqMatrix from a MeqMatrixRep.
+  // Create a Matrix from a MatrixRep.
   // It takes over the pointer and deletes it in the destructor.
-  explicit MeqMatrix (MeqMatrixRep* rep)
+  explicit Matrix (MatrixRep* rep)
     : itsRep (rep->link()) {}
 
-  // Create a MeqMatrix from a temporary one (reference semantics).
-  MeqMatrix (const MeqMatrixTmp& that);
+  // Create a Matrix from a temporary one (reference semantics).
+  Matrix (const MatrixTmp& that);
 
   // Copy constructor (reference semantics).
-  MeqMatrix (const MeqMatrix& that);
+  Matrix (const Matrix& that);
 
-  ~MeqMatrix()
-    { MeqMatrixRep::unlink (itsRep); }
+  ~Matrix()
+    { MatrixRep::unlink (itsRep); }
 
   // Assignment (reference semantics).
-  MeqMatrix& operator= (const MeqMatrix& other);
-  MeqMatrix& operator= (const MeqMatrixTmp& other);
+  Matrix& operator= (const Matrix& other);
+  Matrix& operator= (const MatrixTmp& other);
 
   // Clone the matrix (copy semantics).
-  MeqMatrix clone() const;
+  Matrix clone() const;
 
   // Change the type/or shape if different.
   double* setDoubleFormat (int nrx, int nry)
@@ -145,8 +145,8 @@ public:
   bool isComplex() const
     { return itsRep->isComplex(); }
 
-  casa::Matrix<double> getDoubleMatrix() const;
-  casa::Matrix<dcomplex> getDComplexMatrix() const;
+//  casa::Matrix<double> getDoubleMatrix() const;
+//  casa::Matrix<dcomplex> getDComplexMatrix() const;
 
   const double* doubleStorage() const
     { return itsRep->doubleStorage(); }
@@ -172,67 +172,67 @@ public:
   dcomplex getDComplex() const
     { return itsRep->getDComplex (0, 0); }
 
-  MeqMatrixRep* rep() const
+  MatrixRep* rep() const
     { return itsRep; }
 
-  void operator+= (const MeqMatrix& right);
-  void operator+= (const MeqMatrixTmp& right);
+  void operator+= (const Matrix& right);
+  void operator+= (const MatrixTmp& right);
 
-  void operator-= (const MeqMatrix& right);
-  void operator-= (const MeqMatrixTmp& right);
+  void operator-= (const Matrix& right);
+  void operator-= (const MatrixTmp& right);
 
-  void operator*= (const MeqMatrix& right);
-  void operator*= (const MeqMatrixTmp& right);
+  void operator*= (const Matrix& right);
+  void operator*= (const MatrixTmp& right);
 
-  void operator/= (const MeqMatrix& right);
-  void operator/= (const MeqMatrixTmp& right);
+  void operator/= (const Matrix& right);
+  void operator/= (const MatrixTmp& right);
 
-  MeqMatrixTmp operator+ (const MeqMatrix& right) const;
-  MeqMatrixTmp operator+ (const MeqMatrixTmp& right) const;
+  MatrixTmp operator+ (const Matrix& right) const;
+  MatrixTmp operator+ (const MatrixTmp& right) const;
 
-  MeqMatrixTmp operator- (const MeqMatrix& right) const;
-  MeqMatrixTmp operator- (const MeqMatrixTmp& right) const;
+  MatrixTmp operator- (const Matrix& right) const;
+  MatrixTmp operator- (const MatrixTmp& right) const;
 
-  MeqMatrixTmp operator* (const MeqMatrix& right) const;
-  MeqMatrixTmp operator* (const MeqMatrixTmp& right) const;
+  MatrixTmp operator* (const Matrix& right) const;
+  MatrixTmp operator* (const MatrixTmp& right) const;
 
-  MeqMatrixTmp operator/ (const MeqMatrix& right) const;
-  MeqMatrixTmp operator/ (const MeqMatrixTmp& right) const;
+  MatrixTmp operator/ (const Matrix& right) const;
+  MatrixTmp operator/ (const MatrixTmp& right) const;
 
-  MeqMatrixTmp operator-() const;
+  MatrixTmp operator-() const;
 
   void fillRowWithProducts(dcomplex v0, dcomplex factor, int row)
     {
        itsRep->fillRowWithProducts(v0, factor, row);
     }
 
-  friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrix&);
-  friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrixTmp&);
-  friend MeqMatrixTmp tocomplex (const MeqMatrix&, const MeqMatrix&);
-  friend MeqMatrixTmp tocomplex (const MeqMatrix&, const MeqMatrixTmp&);
-  friend MeqMatrixTmp sin (const MeqMatrix&);
-  friend MeqMatrixTmp cos (const MeqMatrix&);
-  friend MeqMatrixTmp exp (const MeqMatrix&);
-  friend MeqMatrixTmp sqr (const MeqMatrix&);
-  friend MeqMatrixTmp sqrt(const MeqMatrix&);
-  friend MeqMatrixTmp conj(const MeqMatrix&);
-  friend MeqMatrixTmp min (const MeqMatrix&);
-  friend MeqMatrixTmp max (const MeqMatrix&);
-  friend MeqMatrixTmp mean(const MeqMatrix&);
-  friend MeqMatrixTmp sum (const MeqMatrix&);
+  friend MatrixTmp posdiff (const Matrix&, const Matrix&);
+  friend MatrixTmp posdiff (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp tocomplex (const Matrix&, const Matrix&);
+  friend MatrixTmp tocomplex (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp sin (const Matrix&);
+  friend MatrixTmp cos (const Matrix&);
+  friend MatrixTmp exp (const Matrix&);
+  friend MatrixTmp sqr (const Matrix&);
+  friend MatrixTmp sqrt(const Matrix&);
+  friend MatrixTmp conj(const Matrix&);
+  friend MatrixTmp min (const Matrix&);
+  friend MatrixTmp max (const Matrix&);
+  friend MatrixTmp mean(const Matrix&);
+  friend MatrixTmp sum (const Matrix&);
 
 
 private:
-  MeqMatrixRep* itsRep;
+  MatrixRep* itsRep;
 };
 
 
-inline ostream& operator<< (ostream& os, const MeqMatrix& vec)
+inline ostream& operator<< (ostream& os, const Matrix& vec)
   { vec.show (os); return os; }
 
-LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const MeqMatrix& vec);
+//LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const Matrix& vec);
 
-LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, MeqMatrix& vec);
+//LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, Matrix& vec);
 
 // @}
 

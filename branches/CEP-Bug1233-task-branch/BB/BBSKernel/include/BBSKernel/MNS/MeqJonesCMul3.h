@@ -1,4 +1,4 @@
-//# MeqJonesCMul3.h: Calculate left*mid*conj(right)
+//# JonesCMul3.h: Calculate left*mid*conj(right)
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -35,32 +35,32 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 
 // Calculate left*mid*conj(transpose(right)).
 
-class MeqJonesCMul3: public MeqJonesExprRep
+class JonesCMul3: public JonesExprRep
 {
 public:
-  MeqJonesCMul3 (const MeqJonesExpr& left,
-         const MeqJonesExpr& mid,
-         const MeqJonesExpr& right);
+  JonesCMul3 (const JonesExpr& left,
+         const JonesExpr& mid,
+         const JonesExpr& right);
 
-  ~MeqJonesCMul3();
+  ~JonesCMul3();
 
   // Get the result of the expression for the given domain.
-  MeqJonesResult getJResult (const MeqRequest&);
+  JonesResult getJResult (const Request&);
 
 private:
 #ifdef EXPR_GRAPH
   virtual std::string getLabel();
 #endif
 
-  MeqJonesExpr itsLeft;
-  MeqJonesExpr itsMid;
-  MeqJonesExpr itsRight;
+  JonesExpr itsLeft;
+  JonesExpr itsMid;
+  JonesExpr itsRight;
 };
 
 // @}

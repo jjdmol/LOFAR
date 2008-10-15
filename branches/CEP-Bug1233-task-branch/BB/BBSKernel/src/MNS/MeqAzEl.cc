@@ -1,4 +1,4 @@
-//# MeqAzEl.cc: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# AzEl.cc: Azimuth and elevation for a direction (ra,dec) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -43,7 +43,7 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqAzEl::MeqAzEl(MeqSource &source, MeqStation &station)
+AzEl::AzEl(Source &source, Station &station)
 {
     addChild(source.getRa());
     addChild(source.getDec());
@@ -53,23 +53,23 @@ MeqAzEl::MeqAzEl(MeqSource &source, MeqStation &station)
 }
 
 
-MeqResultVec MeqAzEl::getResultVec(const MeqRequest& request)
+ResultVec AzEl::getResultVec(const Request& request)
 {
     // Check preconditions.
     ASSERTSTR(request.ny() > 0, "Need time values.");
 
     // Evaluate children.
-    MeqResult res_ra, res_dec, res_x, res_y, res_z;
-    const MeqResult &ra =
-        getChild(MeqAzEl::IN_RA).getResultSynced(request, res_ra);
-    const MeqResult &dec =
-        getChild(MeqAzEl::IN_DEC).getResultSynced(request, res_dec);
-    const MeqResult &x =
-        getChild(MeqAzEl::IN_X).getResultSynced(request, res_x);
-    const MeqResult &y =
-        getChild(MeqAzEl::IN_Y).getResultSynced(request, res_y);
-    const MeqResult &z =
-        getChild(MeqAzEl::IN_Z).getResultSynced(request, res_z);
+    Result res_ra, res_dec, res_x, res_y, res_z;
+    const Result &ra =
+        getChild(AzEl::IN_RA).getResultSynced(request, res_ra);
+    const Result &dec =
+        getChild(AzEl::IN_DEC).getResultSynced(request, res_dec);
+    const Result &x =
+        getChild(AzEl::IN_X).getResultSynced(request, res_x);
+    const Result &y =
+        getChild(AzEl::IN_Y).getResultSynced(request, res_y);
+    const Result &z =
+        getChild(AzEl::IN_Z).getResultSynced(request, res_z);
     
     // Check preconditions.
     ASSERTSTR(!ra.getValue().isArray() && !dec.getValue().isArray(), "Variable"
@@ -79,14 +79,14 @@ MeqResultVec MeqAzEl::getResultVec(const MeqRequest& request)
         " supported yet.");
 
     // Create result.
-    MeqResultVec result(2, request.nspid());
+    ResultVec result(2, request.nspid());
 
     // Evaluate main value.
     evaluate(request, ra.getValue(), dec.getValue(), x.getValue(), y.getValue(),
         z.getValue(), result[0].getValueRW(), result[1].getValueRW());
     
     // Evaluate perturbed values.  
-    const MeqParmFunklet *perturbedParm;
+    const ParmFunklet *perturbedParm;
     for(int i = 0; i < request.nspid(); ++i)
     {
         // Find out if this perturbed value needs to be computed.
@@ -128,9 +128,9 @@ MeqResultVec MeqAzEl::getResultVec(const MeqRequest& request)
 }
 
 
-void MeqAzEl::evaluate(const MeqRequest& request, const MeqMatrix &in_ra,
-    const MeqMatrix &in_dec, const MeqMatrix &in_x, const MeqMatrix &in_y,
-    const MeqMatrix &in_z, MeqMatrix &out_az, MeqMatrix &out_el)
+void AzEl::evaluate(const Request& request, const Matrix &in_ra,
+    const Matrix &in_dec, const Matrix &in_x, const Matrix &in_y,
+    const Matrix &in_z, Matrix &out_az, Matrix &out_el)
 {
     MPosition position(MVPosition(in_x.getDouble(0, 0), in_y.getDouble(0, 0),
         in_z.getDouble(0, 0)), MPosition::Ref(MPosition::ITRF));
@@ -170,9 +170,9 @@ void MeqAzEl::evaluate(const MeqRequest& request, const MeqMatrix &in_ra,
 
 
 #ifdef EXPR_GRAPH
-std::string MeqAzEl::getLabel()
+std::string AzEl::getLabel()
 {
-    return std::string("MeqAzEl\\nAzimuth and elevation of a source.");
+    return std::string("AzEl\\nAzimuth and elevation of a source.");
 }
 #endif
 

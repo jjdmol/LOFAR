@@ -1,6 +1,7 @@
-//# MeqResult.cc: The result of an expression for a domain.
+//# Result.cc: The result of the evaluation of an expression on a given request
+//# grid.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -22,113 +23,113 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqResult.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/Pool.h>
-#include <BBSKernel/MNS/MeqParmFunklet.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
-namespace BBS
+namespace BBS 
 {
 
-/*
-Pool<MeqResultRep> theirPool;
-#pragma omp threadprivate(theirPool)
-
-void *MeqResultRep::operator new(size_t)
+ResultRep::ResultRep()
+    : itsRefCount(0)
 {
-  return theirPool.allocate();
 }
 
-void MeqResultRep::operator delete(void *rep)
+ResultRep::~ResultRep()
 {
-  theirPool.deallocate((MeqResultRep *) rep);
-}
-*/
-
-MeqResultRep::MeqResultRep (int nspid)
-: itsCount           (0),
-  itsNspid	     (nspid),
-  itsPerturbedValues (0),
-  itsPerturbedParms  (0)
-{}
-
-MeqResultRep::~MeqResultRep()
-{
-  clear();
 }
 
-
-void MeqResultRep::clear()
+void ResultRep::setPerturbedValue(const PValueKey &key,
+    const Matrix &value)
 {
-  delete itsPerturbedValues;
-  itsPerturbedValues = 0;
-  delete itsPerturbedParms;
-  itsPerturbedParms = 0;
-}
+    pair<PValueMap::iterator, bool> status =
+        itsPValueMap.insert(make_pair(key, itsPValues.size()));
 
-  
-double MeqResultRep::getPerturbation (int i, int j) const
-{
-  const MeqParmFunklet* parm = getPerturbedParm(i);
-  int coeffInx = i - parm->getPertInx();
-  return parm->getFunklets()[j]->getPerturbation (coeffInx);
-}
-
-void MeqResultRep::setPerturbedValue (int i, const MeqMatrix& value)
-{
-  if (itsPerturbedValues == 0) {
-    itsPerturbedValues = new map<int, MeqMatrix>;
-  }
-  (*itsPerturbedValues)[i] = value;
-}
-
-void MeqResultRep::setPerturbedParm (int i, const MeqParmFunklet* parm)
-{
-  if (itsPerturbedParms == 0) {
-    itsPerturbedParms = new map<int, const MeqParmFunklet*>;
-  }
-  (*itsPerturbedParms)[i] = parm;
-}
-
-void MeqResultRep::show (ostream& os) const
-{
-  os << "Value: " << itsValue << endl;
-  for (int i=0; i<itsNspid; i++) {
-    if (isDefined(i)) {
-      os << "deriv parm " << i << endl;
-      os << "   " << ((*itsPerturbedValues)[i] - itsValue) << endl;
+    if(status.second)
+    {
+        itsPValues.push_back(value);
     }
-  }
+    else
+    {
+        itsPValues[status.first->second] = value;
+    }        
 }
 
-
-
-
-MeqResult::MeqResult (int nspid)
-: itsRep (new MeqResultRep(nspid))
+Matrix &ResultRep::getPerturbedValueRW(const PValueKey &key)
 {
-  itsRep->link();
-}
+    pair<PValueMap::iterator, bool> status =
+        itsPValueMap.insert(make_pair(key, itsPValues.size()));
 
-MeqResult::MeqResult (const MeqResult& that)
-: itsRep (that.itsRep)
-{
-  if (itsRep != 0) {
-    itsRep->link();
-  }
-}
-MeqResult& MeqResult::operator= (const MeqResult& that)
-{
-  if (this != &that) {
-    MeqResultRep::unlink (itsRep);
-    itsRep = that.itsRep;
-    if (itsRep != 0) {
-      itsRep->link();
+    if(status.second)
+    {
+        itsPValues.push_back(Matrix());
     }
-  }
-  return *this;
+    
+    return itsPValues[status.first->second];
 }
 
-} // namespace BBS
-} // namespace LOFAR
+const Matrix &ResultRep::getPerturbedValue(const PValueKey &key) const
+{
+    PValueMap::const_iterator it = itsPValueMap.find(key);
+    return it == itsPValueMap.end() ? itsValue : itsPValues[it->second];
+}
+
+bool ResultRep::isPerturbed(const PValueKey &key) const
+{
+    PValueMap::const_iterator it = itsPValueMap.find(key);
+    return (it != itsPValueMap.end());
+}
+
+void ResultRep::clearPerturbedValues()
+{
+    itsPValues.clear();
+    itsPValueMap.clear();
+}
+
+// -------------------------------------------------------------------------- //
+
+Result::Result()
+    : itsRep(0)
+{
+}
+
+Result::~Result()
+{
+    ResultRep::unlink(itsRep);
+}
+
+Result::Result(const Result &other)
+    : itsRep(other.itsRep)
+{
+    if(itsRep != 0)
+    {
+        itsRep->link();
+    }        
+}
+
+Result &Result::operator=(const Result &other)
+{
+    if(this != &other)
+    {
+        ResultRep::unlink(itsRep);
+        itsRep = other.itsRep;
+        if(itsRep != 0)
+        {
+            itsRep->link();
+        }
+    }
+    
+    return *this;
+}    
+
+void Result::init()
+{
+    if(itsRep == 0)
+    {
+        itsRep = new ResultRep();
+        itsRep->link();
+    }
+}
+
+} //# namespace BBS
+} //# namespace LOFAR

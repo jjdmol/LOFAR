@@ -1,4 +1,4 @@
-//# MeqJonesSum.h: A summation of MeqJonesExpr
+//# JonesSum.h: A summation of JonesExpr
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define MNS_MEQJONESSUM_H
 
 // \file
-// A sum of MeqJonesExpr
+// A sum of JonesExpr
 
 //# Includes
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -36,29 +36,30 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 
-// This class adds the results of multiple MeqJonesExpr objects.
+// This class adds the results of multiple JonesExpr objects.
 
-class MeqJonesSum: public MeqJonesExprRep
+class JonesSum: public JonesExprRep
 {
 public:
   // Construct from four Jones elements.
-  MeqJonesSum (const std::vector<MeqJonesExpr>& expr);
+  JonesSum (const std::vector<JonesExpr>& expr);
 
-  virtual ~MeqJonesSum();
+  virtual ~JonesSum();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual JonesResult getJResult (const Request&);
 
 private:
+  void mergePValues(const Result &in, Result &out);
 #ifdef EXPR_GRAPH
   virtual std::string getLabel();
 #endif
 
-  std::vector<MeqJonesExpr> itsExpr;
+  std::vector<JonesExpr> itsExpr;
 };
 
 // @}

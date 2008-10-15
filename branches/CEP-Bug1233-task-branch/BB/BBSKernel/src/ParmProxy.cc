@@ -1,6 +1,6 @@
-//# MeqStation.h: Class holding the ITRF position expressions of a station
+//# ParmProxy.cc: Wrapper class that stores information related to solving.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,56 +20,24 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQSTATION_H)
-#define MNS_MEQSTATION_H
-
-// \file
-// Class holding the ITRF position expressions of a station
-
-//# Includes
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <Common/lofar_string.h>
+#include <lofar_config.h>
+#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
-namespace BBS
+namespace BBS 
 {
 
-// \ingroup BBSKernel
-// \addtogroup MNS
-// @{
-
-// Class holding the ITRF position expressions of a station.
-
-class MeqStation
+ParmProxy::ParmProxy(uint id, const string &name, const Parm &parm)
+    :   itsId(id),
+        itsName(name),
+        itsParm(parm)
 {
-public:
-  // The default constructor.
-  MeqStation();
+}
 
-  MeqStation (MeqExpr posX, MeqExpr posY, MeqExpr posZ, const string& name);
+ParmProxy::~ParmProxy()
+{
+}
 
-  MeqExpr& getPosX()
-    { return itsX; }
-  MeqExpr& getPosY()
-    { return itsY; }
-  MeqExpr& getPosZ()
-    { return itsZ; }
-
-  const string& getName() const
-    { return itsName; }
-
-
-private:
-  MeqExpr itsX;
-  MeqExpr itsY;
-  MeqExpr itsZ;
-  string   itsName;
-};
-
-// @}
-
-} // namespace BBS
-} // namespace LOFAR
-
-#endif
+} //# namespace BBS
+} //# namespace LOFAR

@@ -1,4 +1,4 @@
-//# MeqResultVec.h: A vector of results.
+//# ResultVec.h: A vector containing multiple results.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,15 +24,11 @@
 #define MNS_MEQRESULTVEC_H
 
 // \file
-// A result vector containing multiple results.
+// A vector containing multiple results.
 
-//# Includes
 #include <BBSKernel/MNS/MeqResult.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_vector.h>
-
-// This class represents multiple results.
-// It is faster than a vector<MeqResult>.
 
 namespace LOFAR
 {
@@ -40,75 +36,65 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqResultVecRep
+class ResultVecRep
 {
 public:
-  // Create a time,frequency result for the given number of spids.
-  MeqResultVecRep (int size, int nspid);
+    explicit ResultVecRep(size_t size);
+    ~ResultVecRep();
 
-  ~MeqResultVecRep()
-    {}
+    ResultVecRep *link()
+    {
+        ++itsRefCount;
+        return this;
+    }
 
-  MeqResultVecRep* link()
-    { itsCount++; return this; }
+    static void unlink(ResultVecRep *rep)
+    {
+        if(rep != 0  &&  --rep->itsRefCount == 0)
+        {
+            delete rep;
+        }
+    }        
 
-  static void unlink (MeqResultVecRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
-
-  // Get the result vector.
-  vector<MeqResult>& results()
+    vector<Result> &results()
     { return itsResult; }
 
-  void show (ostream&) const;
-
 private:
-  // Forbid copy and assignment.
-  MeqResultVecRep (const MeqResultVecRep&);
-  MeqResultVecRep& operator= (const MeqResultVecRep&);
+    // Forbid copy and assignment.
+    ResultVecRep(const ResultVecRep&);
+    ResultVecRep &operator=(const ResultVecRep&);
 
-  int               itsCount;
-  vector<MeqResult> itsResult;
+    size_t              itsRefCount;
+    vector<Result>   itsResult;
 };
 
-
-
-class MeqResultVec
+class ResultVec
 {
 public:
-  // Create a null object.
-  MeqResultVec()
-    : itsRep(0) {}
+    ResultVec();
+    explicit ResultVec(size_t size);
+    ~ResultVec();
 
-  // Create a time,frequency result for the given number of parameters.
-  explicit MeqResultVec (int size, int nspid = 0);
+    ResultVec(const ResultVec &other);
+    ResultVec &operator=(const ResultVec &other);
 
-  MeqResultVec (const MeqResultVec&);
-
-  ~MeqResultVec()
-    { MeqResultVecRep::unlink (itsRep); }
-
-  MeqResultVec& operator= (const MeqResultVec&);
-
-  // Get the nr of results.
-  int nresult() const
+    // Get the size of the result vector.
+    size_t size() const
     { return itsRep->results().size(); }
 
-  // Get the given result.
-  // <group>
-  const MeqResult& operator[] (int index) const
+    // Get the result stored at the given index.
+    // <group>
+    const Result &operator[](size_t index) const
     { return itsRep->results()[index]; }
-  MeqResult& operator[] (int index)
+    Result &operator[](size_t index)
     { return itsRep->results()[index]; }
-  // </group>
+    // </group>
 
-  friend ostream& operator<< (ostream& os, const MeqResultVec& result)
-    { result.itsRep->show (os); return os; }
-
-private:
-  MeqResultVecRep* itsRep;
+protected:
+    ResultVecRep *itsRep;
 };
 
 // @}

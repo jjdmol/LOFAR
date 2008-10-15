@@ -1,4 +1,5 @@
-//# MeqGaussianSource.h: Class holding a gaussian source
+//# GaussianSource.h: Class holding the expressions defining a gaussian
+//# source.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,9 +25,8 @@
 #define MNS_MEQGAUSSIANSOURCE_H
 
 // \file
-// Class holding a gaussian source
+// Class holding the expressions defining a gaussian source.
 
-//# Includes
 #include <BBSKernel/MNS/MeqSource.h>
 #include <Common/lofar_string.h>
 
@@ -36,47 +36,44 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-
-class MeqGaussianSource: public MeqSource
+class GaussianSource: public Source
 {
 public:
-  MeqGaussianSource(const string& name,
-		  const string& groupName,
-		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
-		  const MeqExpr& fluxU, const MeqExpr& fluxV,
-		  const MeqExpr& ra, const MeqExpr& dec,
-		  const MeqExpr& major, const MeqExpr& minor,
-		  const MeqExpr& phi);
-  
+    typedef shared_ptr<GaussianSource>       Pointer;
+    typedef shared_ptr<const GaussianSource> ConstPointer;
 
-  virtual ~MeqGaussianSource();
+    GaussianSource(const string& name, const Expr &ra, const Expr &dec,
+        const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
+        const Expr &major, const Expr &minor, const Expr &phi);
 
-  MeqExpr getI() const
+    virtual ~GaussianSource();
+
+    const Expr &getI() const
     { return itsI; }
-  MeqExpr getQ() const
+    const Expr &getQ() const
     { return itsQ; }
-  MeqExpr getU() const
+    const Expr &getU() const
     { return itsU; }
-  MeqExpr getV() const
+    const Expr &getV() const
     { return itsV; }
-  MeqExpr getMajor() const
+    const Expr &getMajor() const
     { return itsMajor; }
-  MeqExpr getMinor() const
+    const Expr &getMinor() const
     { return itsMinor; }
-  MeqExpr getPhi() const
+    const Expr &getPhi() const
     { return itsPhi; }
 
 private:
-  MeqExpr itsI;
-  MeqExpr itsQ;
-  MeqExpr itsU;
-  MeqExpr itsV;
-  MeqExpr itsMajor;
-  MeqExpr itsMinor;
-  MeqExpr itsPhi;
+    Expr itsI;
+    Expr itsQ;
+    Expr itsU;
+    Expr itsV;
+    Expr itsMajor;
+    Expr itsMinor;
+    Expr itsPhi;
 };
 
 // @}

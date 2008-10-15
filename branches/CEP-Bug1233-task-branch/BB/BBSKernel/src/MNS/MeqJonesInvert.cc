@@ -1,4 +1,4 @@
-//# MeqJonesInvert.cc: The inverse of a Jones matrix expression.
+//# JonesInvert.cc: The inverse of a Jones matrix expression.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,6 +26,7 @@
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 
 // Inverse of a 2x2 matrix:
 //
@@ -47,69 +48,67 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesInvert::MeqJonesInvert (const MeqJonesExpr& expr)
+JonesInvert::JonesInvert (const JonesExpr& expr)
     : itsExpr(expr)
 {
   addChild(itsExpr);
 }
 
-MeqJonesInvert::~MeqJonesInvert()
+JonesInvert::~JonesInvert()
 {}
 
-MeqJonesResult MeqJonesInvert::getJResult (const MeqRequest& request)
+JonesResult JonesInvert::getJResult (const Request& request)
 {
   // Create the result object.
-  MeqJonesResult result(request.nspid());
-  MeqResult& result11 = result.result11();
-  MeqResult& result12 = result.result12();
-  MeqResult& result21 = result.result21();
-  MeqResult& result22 = result.result22();
+  JonesResult result;
+  result.init();
+  
+  Result& result11 = result.result11();
+  Result& result12 = result.result12();
+  Result& result21 = result.result21();
+  Result& result22 = result.result22();
+
   // Calculate the children.
-  MeqJonesResult buf;
-  const MeqJonesResult& res = itsExpr.getResultSynced (request, buf);
-  const MeqResult& r11 = res.getResult11();
-  const MeqResult& r12 = res.getResult12();
-  const MeqResult& r21 = res.getResult21();
-  const MeqResult& r22 = res.getResult22();
-  const MeqMatrix& mr11 = r11.getValue();
-  const MeqMatrix& mr12 = r12.getValue();
-  const MeqMatrix& mr21 = r21.getValue();
-  const MeqMatrix& mr22 = r22.getValue();
-  MeqMatrix t(1. / (mr11*mr22 - mr12*mr21));
+  JonesResult buf;
+  const JonesResult& res = itsExpr.getResultSynced (request, buf);
+  const Result& r11 = res.getResult11();
+  const Result& r12 = res.getResult12();
+  const Result& r21 = res.getResult21();
+  const Result& r22 = res.getResult22();
+  const Matrix& mr11 = r11.getValue();
+  const Matrix& mr12 = r12.getValue();
+  const Matrix& mr21 = r21.getValue();
+  const Matrix& mr22 = r22.getValue();
+  Matrix t(1. / (mr11 * mr22 - mr12 * mr21));
   result11.setValue (mr22 * t);
   result12.setValue (mr12 * -t);
   result21.setValue (mr21 * -t);
   result22.setValue (mr11 * t);
 
-  // Determine which values are perturbed and determine the perturbation.
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    const MeqParmFunklet* perturbedParm;
-    if (r11.isDefined(spinx)) {
-      perturbedParm = r11.getPerturbedParm(spinx);
-    } else if (r12.isDefined(spinx)) {
-      perturbedParm = r12.getPerturbedParm(spinx);
-    } else if (r21.isDefined(spinx)) {
-      perturbedParm = r21.getPerturbedParm(spinx);
-    } else if (r22.isDefined(spinx)) {
-      perturbedParm = r22.getPerturbedParm(spinx);
-    } else {
-      continue;
-    }
+  // Compute the perturbed values.
+  enum PValues
+  { PV_J11, PV_J12, PV_J21, PV_J22, N_PValues };
 
-    const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
-    const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
-    const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
-    const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
-    MeqMatrix t(1. / (mr11*mr22 - mr12*mr21));
-    result11.setPerturbedValue (spinx, mr11 * t);
-    result11.setPerturbedParm(spinx, perturbedParm);
-    result12.setPerturbedValue (spinx, mr12 * -t);
-    result12.setPerturbedParm(spinx, perturbedParm);
-    result21.setPerturbedValue (spinx, mr21 * -t);
-    result21.setPerturbedParm(spinx, perturbedParm);
-    result22.setPerturbedValue (spinx, mr22 * t);
-    result22.setPerturbedParm(spinx, perturbedParm);
+  const Result *pvSet[N_PValues] = {&r11, &r12, &r21, &r22};
+  PValueSetIterator<N_PValues> pvIter(pvSet);
+
+  while(!pvIter.atEnd())
+  {
+    const Matrix &mr11 = pvIter.value(PV_J11);
+    const Matrix &mr12 = pvIter.value(PV_J12);
+    const Matrix &mr21 = pvIter.value(PV_J21);
+    const Matrix &mr22 = pvIter.value(PV_J22);
+
+    Matrix t(1. / (mr11 * mr22 - mr12 * mr21));
+
+    result11.setPerturbedValue(pvIter.key(), mr22 * t);
+    result12.setPerturbedValue(pvIter.key(), mr12 * -t);
+    result21.setPerturbedValue(pvIter.key(), mr21 * -t);
+    result22.setPerturbedValue(pvIter.key(), mr11 * t);
+    
+    pvIter.next();
   }
+
   return result;
 }
 

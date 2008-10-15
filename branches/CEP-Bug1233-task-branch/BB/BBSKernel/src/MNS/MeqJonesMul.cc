@@ -1,5 +1,5 @@
-//# MeqJonesMul.h: Multiply each component of a MeqJonesExpr with a single
-//#     MeqExpr.
+//# JonesMul.h: Multiply each component of a JonesExpr with a single
+//#     Expr.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,13 +27,14 @@
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-MeqJonesMul::MeqJonesMul(const MeqJonesExpr &left, const MeqExpr &right)
+JonesMul::JonesMul(const JonesExpr &left, const Expr &right)
     :    itsLeft(left),
          itsRight(right)
 {
@@ -42,38 +43,40 @@ MeqJonesMul::MeqJonesMul(const MeqJonesExpr &left, const MeqExpr &right)
 }
 
 
-MeqJonesMul::~MeqJonesMul()
+JonesMul::~JonesMul()
 {
 }
 
 
-MeqJonesResult MeqJonesMul::getJResult(const MeqRequest &request)
+JonesResult JonesMul::getJResult(const Request &request)
 {
     // Create the result object.
-    MeqJonesResult result(request.nspid());
-    MeqResult& result11 = result.result11();
-    MeqResult& result12 = result.result12();
-    MeqResult& result21 = result.result21();
-    MeqResult& result22 = result.result22();
+    JonesResult result;
+    result.init();
+    
+    Result& result11 = result.result11();
+    Result& result12 = result.result12();
+    Result& result21 = result.result21();
+    Result& result22 = result.result22();
     
     // Evaluate the children.
-    MeqJonesResult leftResult;
-    MeqResult rightResult;
+    JonesResult leftResult;
+    Result rightResult;
 
-    const MeqJonesResult &left = itsLeft.getResultSynced(request, leftResult);
-    const MeqResult &right = itsRight.getResultSynced(request, rightResult);
+    const JonesResult &left = itsLeft.getResultSynced(request, leftResult);
+    const Result &right = itsRight.getResultSynced(request, rightResult);
         
-    const MeqResult &l11 = left.getResult11();
-    const MeqResult &l12 = left.getResult12();
-    const MeqResult &l21 = left.getResult21();
-    const MeqResult &l22 = left.getResult22();
+    const Result &l11 = left.getResult11();
+    const Result &l12 = left.getResult12();
+    const Result &l21 = left.getResult21();
+    const Result &l22 = left.getResult22();
     
-    const MeqMatrix &ml11 = l11.getValue();
-    const MeqMatrix &ml12 = l12.getValue();
-    const MeqMatrix &ml21 = l21.getValue();
-    const MeqMatrix &ml22 = l22.getValue();
+    const Matrix &ml11 = l11.getValue();
+    const Matrix &ml12 = l12.getValue();
+    const Matrix &ml21 = l21.getValue();
+    const Matrix &ml22 = l22.getValue();
 
-    const MeqMatrix &mr = right.getValue();
+    const Matrix &mr = right.getValue();
 
     // Compute result.
     result11.setValue(ml11 * mr);
@@ -82,64 +85,51 @@ MeqJonesResult MeqJonesMul::getJResult(const MeqRequest &request)
     result22.setValue(ml22 * mr);
 
     // Compute perturbed values.
-    for (int spinx=0; spinx<request.nspid(); spinx++)
-    {
-        if(right.isDefined(spinx))
-        {
-            const MeqMatrix &mr = right.getPerturbedValue(spinx);
-            const MeqMatrix &ml11 = l11.getPerturbedValue(spinx);
-            const MeqMatrix &ml12 = l12.getPerturbedValue(spinx);
-            const MeqMatrix &ml21 = l21.getPerturbedValue(spinx);
-            const MeqMatrix &ml22 = l22.getPerturbedValue(spinx);
+    enum PValues
+    { PV_LEFT11, PV_LEFT12, PV_LEFT21, PV_LEFT22, PV_RIGHT, N_PValues };
 
-            const MeqParmFunklet *perturbedParm = right.getPerturbedParm(spinx);
-            result11.setPerturbedParm(spinx, perturbedParm);
-            result11.setPerturbedValue(spinx, ml11 * mr);
-            result12.setPerturbedParm(spinx, perturbedParm);
-            result12.setPerturbedValue(spinx, ml12 * mr);
-            result21.setPerturbedParm(spinx, perturbedParm);
-            result21.setPerturbedValue(spinx, ml21 * mr);
-            result22.setPerturbedParm(spinx, perturbedParm);
-            result22.setPerturbedValue(spinx, ml22 * mr);
+    const Result *pvSet[N_PValues] = {&l11, &l12, &l21, &l22, &right};    
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+
+    while(!pvIter.atEnd())
+    {
+        const Matrix &ml11 = pvIter.value(PV_LEFT11);
+        const Matrix &ml12 = pvIter.value(PV_LEFT12);
+        const Matrix &ml21 = pvIter.value(PV_LEFT21);
+        const Matrix &ml22 = pvIter.value(PV_LEFT22);
+        const Matrix &mr = pvIter.value(PV_RIGHT);
+            
+        if(pvIter.hasPValue(PV_RIGHT))
+        {
+            result11.setPerturbedValue(pvIter.key(), ml11 * mr);
+            result12.setPerturbedValue(pvIter.key(), ml12 * mr);
+            result21.setPerturbedValue(pvIter.key(), ml21 * mr);
+            result22.setPerturbedValue(pvIter.key(), ml22 * mr);
         }
         else
-        {        
-            if(l11.isDefined(spinx))
+        {
+            if(pvIter.hasPValue(PV_LEFT11))
             {
-                const MeqMatrix &mr = right.getPerturbedValue(spinx);
-                const MeqMatrix &ml11 = l11.getPerturbedValue(spinx);
-
-                result11.setPerturbedParm(spinx, l11.getPerturbedParm(spinx));
-                result11.setPerturbedValue(spinx, ml11 * mr);
+                result11.setPerturbedValue(pvIter.key(), ml11 * mr);
             }
             
-            if(l12.isDefined(spinx))
+            if(pvIter.hasPValue(PV_LEFT12))
             {
-                const MeqMatrix &mr = right.getPerturbedValue(spinx);
-                const MeqMatrix &ml12 = l12.getPerturbedValue(spinx);
-
-                result12.setPerturbedParm(spinx, l12.getPerturbedParm(spinx));
-                result12.setPerturbedValue(spinx, ml12 * mr);
+                result12.setPerturbedValue(pvIter.key(), ml12 * mr);
             }
 
-            if(l21.isDefined(spinx))
+            if(pvIter.hasPValue(PV_LEFT21))
             {
-                const MeqMatrix &mr = right.getPerturbedValue(spinx);
-                const MeqMatrix &ml21 = l21.getPerturbedValue(spinx);
-
-                result21.setPerturbedParm(spinx, l21.getPerturbedParm(spinx));
-                result21.setPerturbedValue(spinx, ml21 * mr);
+                result21.setPerturbedValue(pvIter.key(), ml21 * mr);
             }
 
-            if(l22.isDefined(spinx))
+            if(pvIter.hasPValue(PV_LEFT22))
             {
-                const MeqMatrix &mr = right.getPerturbedValue(spinx);
-                const MeqMatrix &ml22 = l22.getPerturbedValue(spinx);
-
-                result22.setPerturbedParm(spinx, l22.getPerturbedParm(spinx));
-                result22.setPerturbedValue(spinx, ml22 * mr);
+                result21.setPerturbedValue(pvIter.key(), ml22 * mr);
             }
         }
+        
+        pvIter.next();
     }
 
     return result;
@@ -147,10 +137,10 @@ MeqJonesResult MeqJonesMul::getJResult(const MeqRequest &request)
 
 
 #ifdef EXPR_GRAPH
-virtual std::string MeqJonesMul::getLabel()
+virtual std::string JonesMul::getLabel()
 {
-    return std::string("MeqJonesMul\\n"
-        "Multiply MeqJonesExpr with a single MeqExpr");
+    return std::string("JonesMul\\n"
+        "Multiply JonesExpr with a single Expr");
 }
 #endif
 

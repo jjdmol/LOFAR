@@ -1,4 +1,4 @@
-//# MeqMatrixComplexSca.cc: Temporary matrix for Mns
+//# MatrixComplexSca.cc: Temporary matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -38,69 +38,69 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqMatrixComplexSca::~MeqMatrixComplexSca()
+MatrixComplexSca::~MatrixComplexSca()
 {}
 
-MeqMatrixRep* MeqMatrixComplexSca::clone() const
+MatrixRep* MatrixComplexSca::clone() const
 {
-  return new MeqMatrixComplexSca (itsValue);
+  return new MatrixComplexSca (itsValue);
 }
 
-void MeqMatrixComplexSca::show (ostream& os) const
+void MatrixComplexSca::show (ostream& os) const
 {
   os << itsValue;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::add (MeqMatrixRep& right, bool rightTmp)
+MatrixRep* MatrixComplexSca::add (MatrixRep& right, bool rightTmp)
 {
   return right.addRep (*this, rightTmp);
 }
-MeqMatrixRep* MeqMatrixComplexSca::subtract (MeqMatrixRep& right,
+MatrixRep* MatrixComplexSca::subtract (MatrixRep& right,
 					     bool rightTmp)
 {
   return right.subRep (*this, rightTmp);
 }
-MeqMatrixRep* MeqMatrixComplexSca::multiply (MeqMatrixRep& right,
+MatrixRep* MatrixComplexSca::multiply (MatrixRep& right,
 					     bool rightTmp)
 {
   return right.mulRep (*this, rightTmp);
 }
-MeqMatrixRep* MeqMatrixComplexSca::divide (MeqMatrixRep& right, bool rightTmp)
+MatrixRep* MatrixComplexSca::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
 
-void MeqMatrixComplexSca::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
+void MatrixComplexSca::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
 {
   realPtr = (double *) &itsValue;
   imagPtr = realPtr + 1;
 }
 
-double MeqMatrixComplexSca::getDouble (int, int) const
+double MatrixComplexSca::getDouble (int, int) const
 {
   ASSERTSTR (imag(itsValue)==0,
-	     "MeqMatrix: dcomplex->double conversion not possible");
+	     "Matrix: dcomplex->double conversion not possible");
   return real(itsValue);
 }
 
-dcomplex MeqMatrixComplexSca::getDComplex (int, int) const
+dcomplex MatrixComplexSca::getDComplex (int, int) const
 {
   return itsValue;
 }
 
 
 #define MNSMATRIXCOMPLEXSCA_OP(NAME, OP, OP2) \
-MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixRealSca& left, \
+MatrixRep* MatrixComplexSca::NAME (MatrixRealSca& left, \
 					 bool rightTmp) \
 { \
-  MeqMatrixComplexSca* v = this; \
+  MatrixComplexSca* v = this; \
   if (!rightTmp) { \
-    v = new MeqMatrixComplexSca (itsValue); \
+    v = new MatrixComplexSca (itsValue); \
   } \
   v->itsValue = left.itsValue OP2 v->itsValue; \
   return v; \
 } \
-MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixComplexSca& left, \
+MatrixRep* MatrixComplexSca::NAME (MatrixComplexSca& left, \
 					 bool) \
 { \
   left.itsValue OP itsValue; \
@@ -112,9 +112,9 @@ MNSMATRIXCOMPLEXSCA_OP(subRep,-=,-);
 MNSMATRIXCOMPLEXSCA_OP(mulRep,*=,*);
 MNSMATRIXCOMPLEXSCA_OP(divRep,/=,/);
 
-MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixRealArr& left, bool)
+MatrixRep* MatrixComplexSca::addRep(MatrixRealArr& left, bool)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
   double re = real(itsValue), im = imag(itsValue);
 
   for (int i=0; i<left.nelements(); i++) {
@@ -124,7 +124,7 @@ MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixRealArr& left, bool)
   return v;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixComplexArr& left, bool)
+MatrixRep* MatrixComplexSca::addRep(MatrixComplexArr& left, bool)
 {
 #if defined TIMER
   static NSTimer timer("add CS CA", true);
@@ -145,9 +145,9 @@ MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixComplexArr& left, bool)
   return &left;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixRealArr& left, bool)
+MatrixRep* MatrixComplexSca::subRep(MatrixRealArr& left, bool)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
   double re = real(itsValue), im = imag(itsValue);
 
   for (int i=0; i<left.nelements(); i++) {
@@ -157,7 +157,7 @@ MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixRealArr& left, bool)
   return v;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixComplexArr& left, bool)
+MatrixRep* MatrixComplexSca::subRep(MatrixComplexArr& left, bool)
 {
 #if defined TIMER
   static NSTimer timer("sub CS CA", true);
@@ -178,9 +178,9 @@ MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixComplexArr& left, bool)
   return &left;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixRealArr& left, bool)
+MatrixRep* MatrixComplexSca::mulRep(MatrixRealArr& left, bool)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
   double re = real(itsValue), im = imag(itsValue);
 
   for (int i=0; i<left.nelements(); i++) {
@@ -190,7 +190,7 @@ MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixRealArr& left, bool)
   return v;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixComplexArr& left, bool)
+MatrixRep* MatrixComplexSca::mulRep(MatrixComplexArr& left, bool)
 {
 #if defined TIMER
   static NSTimer timer("mul CS CA", true);
@@ -212,9 +212,9 @@ MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixComplexArr& left, bool)
   return &left;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixRealArr& left, bool)
+MatrixRep* MatrixComplexSca::divRep(MatrixRealArr& left, bool)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  MatrixComplexArr* v = MatrixComplexArr::allocate (left.nx(), left.ny());
   double re = real(itsValue), im = imag(itsValue);
   double tmp = re * re + im * im;
 
@@ -226,7 +226,7 @@ MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixRealArr& left, bool)
   return v;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixComplexArr& left, bool)
+MatrixRep* MatrixComplexSca::divRep(MatrixComplexArr& left, bool)
 {
 #if defined TIMER
   static NSTimer timer("div CS CA", true);
@@ -249,61 +249,61 @@ MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixComplexArr& left, bool)
   return &left;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::negate()
+MatrixRep* MatrixComplexSca::negate()
 {
   itsValue = -1. * itsValue;
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::sin()
+MatrixRep* MatrixComplexSca::sin()
 {
   itsValue = LOFAR::sin(itsValue);
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::cos()
+MatrixRep* MatrixComplexSca::cos()
 {
   itsValue = LOFAR::cos(itsValue);
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::exp()
+MatrixRep* MatrixComplexSca::exp()
 {
   itsValue = LOFAR::exp(itsValue);
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::sqr()
+MatrixRep* MatrixComplexSca::sqr()
 {
   itsValue *= itsValue;
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::sqrt()
+MatrixRep* MatrixComplexSca::sqrt()
 {
   itsValue = LOFAR::sqrt(itsValue);
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::conj()
+MatrixRep* MatrixComplexSca::conj()
 {
   itsValue = LOFAR::conj(itsValue);
   return this;
 }
 
-MeqMatrixRep* MeqMatrixComplexSca::min()
+MatrixRep* MatrixComplexSca::min()
 {
   return this;
 }
-MeqMatrixRep* MeqMatrixComplexSca::max()
+MatrixRep* MatrixComplexSca::max()
 {
   return this;
 }
-MeqMatrixRep* MeqMatrixComplexSca::mean()
+MatrixRep* MatrixComplexSca::mean()
 {
   return this;
 }
-MeqMatrixRep* MeqMatrixComplexSca::sum()
+MatrixRep* MatrixComplexSca::sum()
 {
   return this;
 }

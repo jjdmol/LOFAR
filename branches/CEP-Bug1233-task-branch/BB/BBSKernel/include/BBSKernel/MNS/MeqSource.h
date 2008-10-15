@@ -1,4 +1,4 @@
-//# MeqPointSource.h: Abstract base class for holding a source
+//# PointSource.h: Abstract base class for holding a source
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,9 +26,9 @@
 // \file
 // Abstract base class for holding a source
 
-//# Includes
-#include <BBSKernel/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_smartptr.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,45 +36,32 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-class MeqSource
+class Source
 {
 public:
-  // The default constructor.
-  MeqSource();
+    typedef shared_ptr<Source>       Pointer;
+    typedef shared_ptr<const Source> ConstPointer;
+    
+    Source();
+    Source(const string &name, const Expr &ra, const Expr &dec);
 
-  MeqSource (const string& name, const string& groupName,
-         const MeqExpr& ra, const MeqExpr& dec);
+    virtual ~Source();
 
-  virtual ~MeqSource();
-
-  const string& getName() const
+    const string &getName() const
     { return itsName; }
 
-  const string& getGroupName() const
-    { return itsGroupName; }
-
-  // Get the source nr.
-  int getSourceNr() const
-    { return itsSourceNr; }
-
-  // Set the source nr.
-  void setSourceNr (int sourceNr)
-    { itsSourceNr = sourceNr; }
-
-  MeqExpr& getRa()
+    const Expr &getRa() const
     { return itsRa; }
-  MeqExpr& getDec()
+    const Expr &getDec() const
     { return itsDec; }
 
 protected:
-  int     itsSourceNr;
-  string  itsName;
-  string  itsGroupName;
-  MeqExpr itsRa;
-  MeqExpr itsDec;
+    string  itsName;
+    Expr itsRa;
+    Expr itsDec;
 };
 
 // @}

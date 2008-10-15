@@ -121,8 +121,8 @@ bool mergeMeta(MetaMeasurement &lhs, MetaMeasurement &rhs)
     }
 
     // Check time axis.
-    Axis::Pointer timeLhs = lhs.getTimeAxis();
-    Axis::Pointer timeRhs = rhs.getTimeAxis();
+    Axis::ShPtr timeLhs = lhs.getTimeAxis();
+    Axis::ShPtr timeRhs = rhs.getTimeAxis();
 
     if(timeLhs->size() != timeRhs->size())
     {

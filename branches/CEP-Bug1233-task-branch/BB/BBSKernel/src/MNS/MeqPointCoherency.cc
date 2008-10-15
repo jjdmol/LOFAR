@@ -1,4 +1,4 @@
-//# MeqPointCoherency.h: Spatial coherence function of a point source.
+//# PointCoherency.h: Spatial coherence function of a point source.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,11 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
-//#include <Common/Timer.h>
+//include <Common/Timer.h>
 
 #include <BBSKernel/MNS/MeqPointCoherency.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <Common/LofarLogger.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 
 using namespace casa;
 
@@ -34,102 +34,77 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqPointCoherency::MeqPointCoherency(const MeqPointSource *source)
+PointCoherency::PointCoherency(const PointSource::ConstPointer &source)
     :   itsSource(source)
 {
-  addChild (itsSource->getI());
-  addChild (itsSource->getQ());
-  addChild (itsSource->getU());
-  addChild (itsSource->getV());
+    addChild (itsSource->getI());
+    addChild (itsSource->getQ());
+    addChild (itsSource->getU());
+    addChild (itsSource->getV());
 }
 
 
-MeqPointCoherency::~MeqPointCoherency()
+PointCoherency::~PointCoherency()
 {
 }
 
 
-MeqJonesResult MeqPointCoherency::getJResult(const MeqRequest &request)
+JonesResult PointCoherency::getJResult(const Request &request)
 {
-    //static NSTimer timer("MeqPointCoherency::getResult", true);
+    //static NSTimer timer("PointCoherency::getResult", true);
     //timer.start();
 
     // Allocate the result.
-    MeqJonesResult result(request.nspid());
-    MeqResult& resXX = result.result11();
-    MeqResult& resXY = result.result12();
-    MeqResult& resYX = result.result21();
-    MeqResult& resYY = result.result22();
+    JonesResult result;
+    result.init();
+    
+    Result& resXX = result.result11();
+    Result& resXY = result.result12();
+    Result& resYX = result.result21();
+    Result& resYY = result.result22();
     
     // Calculate the source fluxes.
-    MeqResult ikBuf, qkBuf, ukBuf, vkBuf;
-    const MeqResult& ik = itsSource->getI().getResultSynced (request, ikBuf);
-    const MeqResult& qk = itsSource->getQ().getResultSynced (request, qkBuf);
-    const MeqResult& uk = itsSource->getU().getResultSynced (request, ukBuf);
-    const MeqResult& vk = itsSource->getV().getResultSynced (request, vkBuf);
+    Result ikBuf, qkBuf, ukBuf, vkBuf;
+    const Result& ik = getChild(0).getResultSynced(request, ikBuf);
+    const Result& qk = getChild(1).getResultSynced(request, qkBuf);
+    const Result& uk = getChild(2).getResultSynced(request, ukBuf);
+    const Result& vk = getChild(3).getResultSynced(request, vkBuf);
     
-    // Calculate the XX values, etc.
-    MeqMatrix uvk_2 = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
-    MeqMatrix ik_2 = ik.getValue() * 0.5;
-    MeqMatrix qk_2 = qk.getValue() * 0.5;
+    // Compute main value.
+    Matrix uvk_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+    resXX.setValue(0.5 * (ik.getValue() + qk.getValue()));
+    resXY.setValue(uvk_2);
+    resYX.setValue(conj(uvk_2));
+    resYY.setValue(0.5 * (ik.getValue() - qk.getValue()));
+    
+    // Compute perturbed values.
+    enum PValues
+    {   PV_I, PV_Q, PV_U, PV_V, N_PValues };
+    
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
 
-    resXX.setValue (ik_2 + qk_2);
-    resXY.setValue (uvk_2);
-    resYX.setValue (conj(uvk_2));
-    resYY.setValue (ik_2 - qk_2);
-    
-    // Evaluate (if needed) for the perturbed parameter values.
-    const MeqParmFunklet* perturbedParm;
-    for(int spinx=0; spinx<request.nspid(); spinx++)
+    while(!pvIter.atEnd())
     {
-        bool eval1 = false;
-        bool eval2 = false;
-        
-        if(ik.isDefined(spinx))
-        {
-            eval1 = true;
-            perturbedParm = ik.getPerturbedParm (spinx);
-        }
-        else if(qk.isDefined(spinx))
-        {
-            eval1 = true;
-            perturbedParm = qk.getPerturbedParm (spinx);
-        }
-    
-        if(uk.isDefined(spinx))
-        {
-            eval2 = true;
-            perturbedParm = uk.getPerturbedParm (spinx);
-        }
-        else if(vk.isDefined(spinx))
-        {
-            eval2 = true;
-            perturbedParm = vk.getPerturbedParm (spinx);
-        }
-        
-        if(eval1)
-        {
-            const MeqMatrix& ikp_2 = ik.getPerturbedValue(spinx) * 0.5;
-            const MeqMatrix& qkp_2 = qk.getPerturbedValue(spinx) * 0.5;
+        const Matrix &pvI = pvIter.value(PV_I);
+        const Matrix &pvQ = pvIter.value(PV_Q);
+        const Matrix &pvU = pvIter.value(PV_U);
+        const Matrix &pvV = pvIter.value(PV_V);
             
-            resXX.setPerturbedParm (spinx, perturbedParm);
-            resXX.setPerturbedValue(spinx, (ikp_2 + qkp_2));
-                
-            resYY.setPerturbedParm (spinx, perturbedParm);
-            resYY.setPerturbedValue(spinx, (ikp_2 - qkp_2));
-        }
-
-        if(eval2)
+        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
         {
-            MeqMatrix uvkp_2 = tocomplex(uk.getPerturbedValue(spinx),
-                vk.getPerturbedValue(spinx)) * 0.5;
-
-            resXY.setPerturbedParm(spinx, perturbedParm);
-            resXY.setPerturbedValue(spinx, uvkp_2);
-                
-            resYX.setPerturbedParm (spinx, perturbedParm);
-            resYX.setPerturbedValue(spinx, conj(uvkp_2));
+          resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ)); 
+          resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ)); 
         }
+
+        if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
+        {
+            Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
+            resXY.setPerturbedValue(pvIter.key(), uvkp_2);
+            resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
+        }
+
+        pvIter.next();
     }
 
     //timer.stop();
@@ -137,11 +112,10 @@ MeqJonesResult MeqPointCoherency::getJResult(const MeqRequest &request)
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqPointCoherency::getLabel()
+string PointCoherency::getLabel()
 {
-    return std::string("MeqPointCoherency\\nSpatial coherence function of a"
-        " point source\\n" + itsSource->getName() + " ("
-        + itsSource->getGroupName() + ")");
+    return string("PointCoherency\\nSpatial coherence function of a point"
+        " source\\n" + itsSource->getName());
 }
 #endif
 

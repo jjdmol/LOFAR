@@ -1,4 +1,4 @@
-//# MeqMatrix.cc: Matrix for Mns
+//# Matrix.cc: Matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,7 +31,7 @@
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
-#include <casa/Arrays/Matrix.h>
+//#include <casa/Arrays/Matrix.h>
 
 using namespace casa;
 
@@ -40,73 +40,73 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqMatrix::MeqMatrix (double value)
+Matrix::Matrix (double value)
 {
-    MeqMatrixRealSca* v = new MeqMatrixRealSca (value);
+    MatrixRealSca* v = new MatrixRealSca (value);
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (dcomplex value)
+Matrix::Matrix (dcomplex value)
 {
-    MeqMatrixComplexSca* v = new MeqMatrixComplexSca (value);
+    MatrixComplexSca* v = new MatrixComplexSca (value);
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (double value, int nx, int ny, bool init)
+Matrix::Matrix (double value, int nx, int ny, bool init)
 {
-    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
+    MatrixRealArr* v = MatrixRealArr::allocate(nx, ny);
     if (init) {
       v->set (value);
     }
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (dcomplex value, int nx, int ny, bool init)
+Matrix::Matrix (dcomplex value, int nx, int ny, bool init)
 {
-    MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx, ny);
+    MatrixComplexArr* v = MatrixComplexArr::allocate (nx, ny);
     if (init) {
       v->set (value);
     }
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (const double* values, int nx, int ny)
+Matrix::Matrix (const double* values, int nx, int ny)
 {
-    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
+    MatrixRealArr* v = MatrixRealArr::allocate(nx, ny);
     v->set (values);
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (const dcomplex* values, int nx, int ny)
+Matrix::Matrix (const dcomplex* values, int nx, int ny)
 {
-    MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate(nx, ny);
+    MatrixComplexArr* v = MatrixComplexArr::allocate(nx, ny);
     v->set (values);
     itsRep = v->link();
 }
-
-MeqMatrix::MeqMatrix (const Matrix<double>& array)
+/*
+Matrix::Matrix (const Matrix<double>& array)
 {
     bool deleteIt;
     const double* values = array.getStorage (deleteIt);
-    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(array.shape()(0),
+    MatrixRealArr* v = MatrixRealArr::allocate(array.shape()(0),
 						     array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
 }
 
-MeqMatrix::MeqMatrix (const Matrix<dcomplex >& array)
+Matrix::Matrix (const Matrix<dcomplex >& array)
 {
     bool deleteIt;
     const dcomplex* values = array.getStorage (deleteIt);
-    MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (array.shape()(0),
+    MatrixComplexArr* v = MatrixComplexArr::allocate (array.shape()(0),
 							    array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
 }
-
-MeqMatrix::MeqMatrix (const MeqMatrix& that)
+*/
+Matrix::Matrix (const Matrix& that)
 : itsRep (that.itsRep)
 {
     if (itsRep != 0) {
@@ -114,13 +114,13 @@ MeqMatrix::MeqMatrix (const MeqMatrix& that)
     }
 }
 
-MeqMatrix::MeqMatrix (const MeqMatrixTmp& that)
+Matrix::Matrix (const MatrixTmp& that)
 : itsRep (that.rep()->link()) {}
 
-MeqMatrix& MeqMatrix::operator= (const MeqMatrix& that)
+Matrix& Matrix::operator= (const Matrix& that)
 {
     if (this != &that) {
-        MeqMatrixRep::unlink (itsRep);
+        MatrixRep::unlink (itsRep);
 	itsRep = that.itsRep;
 	if (itsRep != 0) {
 	    itsRep->link();
@@ -128,207 +128,207 @@ MeqMatrix& MeqMatrix::operator= (const MeqMatrix& that)
     }
     return *this;
 }
-MeqMatrix& MeqMatrix::operator= (const MeqMatrixTmp& that)
+Matrix& Matrix::operator= (const MatrixTmp& that)
 {
-    MeqMatrixRep::unlink (itsRep);
+    MatrixRep::unlink (itsRep);
     itsRep = that.rep()->link();
     return *this;
 }
 
-MeqMatrix MeqMatrix::clone() const
+Matrix Matrix::clone() const
 {
   if (itsRep == 0) {
-    return MeqMatrix();
+    return Matrix();
   }
-  return MeqMatrix (itsRep->clone());
+  return Matrix (itsRep->clone());
 }
 
-void MeqMatrix::setDMat (int nx, int ny)
+void Matrix::setDMat (int nx, int ny)
 {
-    MeqMatrixRep::unlink (itsRep);
+    MatrixRep::unlink (itsRep);
     if (nx == 1 && ny == 1) {
-        itsRep = new MeqMatrixRealSca (0.);
+        itsRep = new MatrixRealSca (0.);
     } else {
-        itsRep = MeqMatrixRealArr::allocate(nx, ny);
+        itsRep = MatrixRealArr::allocate(nx, ny);
     }
     itsRep->link();
 }
-void MeqMatrix::setDCMat (int nx, int ny)
+void Matrix::setDCMat (int nx, int ny)
 {
-    MeqMatrixRep::unlink (itsRep);
+    MatrixRep::unlink (itsRep);
     if (nx == 1 && ny == 1) {
-        itsRep = new MeqMatrixComplexSca (dcomplex());
+        itsRep = new MatrixComplexSca (dcomplex());
     } else {
-        itsRep = MeqMatrixComplexArr::allocate (nx, ny);
+        itsRep = MatrixComplexArr::allocate (nx, ny);
     }
     itsRep->link();
 }
 
-Matrix<double> MeqMatrix::getDoubleMatrix() const
+//Matrix<double> Matrix::getDoubleMatrix() const
+//{
+//  return Matrix<double> (IPosition(2,nx(),ny()), doubleStorage());
+//}
+
+//Matrix<dcomplex > Matrix::getDComplexMatrix() const
+//{
+//  Matrix<dcomplex > mat(nx(), ny());
+//  for (int i1=0; i1<ny(); i1++) {
+//    for (int i0=0; i0<nx(); i0++) {
+//      mat(i0,i1) = getDComplex(i0,i1);
+//    }
+//  }
+//  return mat;
+//}
+
+
+void Matrix::operator+= (const Matrix& right)
 {
-  return Matrix<double> (IPosition(2,nx(),ny()), doubleStorage());
+  MatrixRep* res = itsRep->add (*right.itsRep, False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator+= (const MatrixTmp& right)
+{
+  MatrixRep* res = itsRep->add (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator-= (const Matrix& right)
+{
+  MatrixRep* res = itsRep->subtract (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator-= (const MatrixTmp& right)
+{
+  MatrixRep* res = itsRep->subtract (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator*= (const Matrix& right)
+{
+  MatrixRep* res = itsRep->multiply (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator*= (const MatrixTmp& right)
+{
+  MatrixRep* res = itsRep->multiply (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator/= (const Matrix& right)
+{
+  MatrixRep* res = itsRep->divide (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+void Matrix::operator/= (const MatrixTmp& right)
+{
+  MatrixRep* res = itsRep->divide (*right.rep(), False);
+  ASSERTSTR (res == itsRep, "Mismatching types");
+}   
+
+MatrixTmp Matrix::operator+ (const Matrix& right) const
+{
+    return MatrixTmp(*this) + right;
+    //return MatrixTmp(rep()->add(*right.rep(), false));
+}   
+MatrixTmp Matrix::operator+ (const MatrixTmp& right) const
+{
+    return (MatrixTmp&)right + *this;
 }
 
-Matrix<dcomplex > MeqMatrix::getDComplexMatrix() const
+MatrixTmp Matrix::operator- (const Matrix& right) const
 {
-  Matrix<dcomplex > mat(nx(), ny());
-  for (int i1=0; i1<ny(); i1++) {
-    for (int i0=0; i0<nx(); i0++) {
-      mat(i0,i1) = getDComplex(i0,i1);
-    }
-  }
-  return mat;
+    return MatrixTmp(*this) - right;
+}   
+MatrixTmp Matrix::operator- (const MatrixTmp& right) const
+{
+    return MatrixTmp(*this) - right;
 }
 
-
-void MeqMatrix::operator+= (const MeqMatrix& right)
+MatrixTmp Matrix::operator* (const Matrix& right) const
 {
-  MeqMatrixRep* res = itsRep->add (*right.itsRep, False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
+    return MatrixTmp(*this) * right;
 }   
-void MeqMatrix::operator+= (const MeqMatrixTmp& right)
+MatrixTmp Matrix::operator* (const MatrixTmp& right) const
 {
-  MeqMatrixRep* res = itsRep->add (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator-= (const MeqMatrix& right)
-{
-  MeqMatrixRep* res = itsRep->subtract (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator-= (const MeqMatrixTmp& right)
-{
-  MeqMatrixRep* res = itsRep->subtract (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator*= (const MeqMatrix& right)
-{
-  MeqMatrixRep* res = itsRep->multiply (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator*= (const MeqMatrixTmp& right)
-{
-  MeqMatrixRep* res = itsRep->multiply (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator/= (const MeqMatrix& right)
-{
-  MeqMatrixRep* res = itsRep->divide (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-void MeqMatrix::operator/= (const MeqMatrixTmp& right)
-{
-  MeqMatrixRep* res = itsRep->divide (*right.rep(), False);
-  ASSERTSTR (res == itsRep, "Mismatching types");
-}   
-
-MeqMatrixTmp MeqMatrix::operator+ (const MeqMatrix& right) const
-{
-    return MeqMatrixTmp(*this) + right;
-    //return MeqMatrixTmp(rep()->add(*right.rep(), false));
-}   
-MeqMatrixTmp MeqMatrix::operator+ (const MeqMatrixTmp& right) const
-{
-    return (MeqMatrixTmp&)right + *this;
+    return (MatrixTmp&)right * *this;
 }
 
-MeqMatrixTmp MeqMatrix::operator- (const MeqMatrix& right) const
+MatrixTmp Matrix::operator/ (const Matrix& right) const
 {
-    return MeqMatrixTmp(*this) - right;
-}   
-MeqMatrixTmp MeqMatrix::operator- (const MeqMatrixTmp& right) const
-{
-    return MeqMatrixTmp(*this) - right;
-}
-
-MeqMatrixTmp MeqMatrix::operator* (const MeqMatrix& right) const
-{
-    return MeqMatrixTmp(*this) * right;
-}   
-MeqMatrixTmp MeqMatrix::operator* (const MeqMatrixTmp& right) const
-{
-    return (MeqMatrixTmp&)right * *this;
-}
-
-MeqMatrixTmp MeqMatrix::operator/ (const MeqMatrix& right) const
-{
-    return MeqMatrixTmp(*this) / right;
+    return MatrixTmp(*this) / right;
 }
 //# This could possibly be speeded up by using right as the result.
-//# It requires a special divide function in MeqMatrixRep and derived classes.
+//# It requires a special divide function in MatrixRep and derived classes.
 //# The same is true for operator-.
 //# (Alternatively one could do  "(-right) + this".)
-MeqMatrixTmp MeqMatrix::operator/ (const MeqMatrixTmp& right) const
+MatrixTmp Matrix::operator/ (const MatrixTmp& right) const
 {
-    return MeqMatrixTmp(*this) / right;
+    return MatrixTmp(*this) / right;
 }
 
-MeqMatrixTmp MeqMatrix::operator-() const
+MatrixTmp Matrix::operator-() const
 {
-    return MeqMatrixTmp(*this).operator-();
+    return MatrixTmp(*this).operator-();
 }
 
-MeqMatrixTmp posdiff (const MeqMatrix& left, const MeqMatrix& right)
+MatrixTmp posdiff (const Matrix& left, const Matrix& right)
 {
     return left.itsRep->posdiff(*right.itsRep);
 }
-MeqMatrixTmp posdiff (const MeqMatrix& left, const MeqMatrixTmp& right)
+MatrixTmp posdiff (const Matrix& left, const MatrixTmp& right)
 {
     return left.itsRep->posdiff(*right.rep());
 }
-MeqMatrixTmp tocomplex (const MeqMatrix& left, const MeqMatrix& right)
+MatrixTmp tocomplex (const Matrix& left, const Matrix& right)
 {
     return left.itsRep->tocomplex(*right.itsRep);
 }
-MeqMatrixTmp tocomplex (const MeqMatrix& left, const MeqMatrixTmp& right)
+MatrixTmp tocomplex (const Matrix& left, const MatrixTmp& right)
 {
     return left.itsRep->tocomplex(*right.rep());
 }
-MeqMatrixTmp sin (const MeqMatrix& arg)
+MatrixTmp sin (const Matrix& arg)
 {
-    return sin(MeqMatrixTmp(arg));
+    return sin(MatrixTmp(arg));
 }
-MeqMatrixTmp cos(const MeqMatrix& arg)
+MatrixTmp cos(const Matrix& arg)
 {
-    return cos(MeqMatrixTmp(arg));
+    return cos(MatrixTmp(arg));
 }
-MeqMatrixTmp exp(const MeqMatrix& arg)
+MatrixTmp exp(const Matrix& arg)
 {
-    return exp(MeqMatrixTmp(arg));
+    return exp(MatrixTmp(arg));
 }
-MeqMatrixTmp sqr(const MeqMatrix& arg)
+MatrixTmp sqr(const Matrix& arg)
 {
-    return sqr(MeqMatrixTmp(arg));
+    return sqr(MatrixTmp(arg));
 }
-MeqMatrixTmp sqrt(const MeqMatrix& arg)
+MatrixTmp sqrt(const Matrix& arg)
 {
-    return sqrt(MeqMatrixTmp(arg));
+    return sqrt(MatrixTmp(arg));
 }
-MeqMatrixTmp conj(const MeqMatrix& arg)
+MatrixTmp conj(const Matrix& arg)
 {
-    return conj(MeqMatrixTmp(arg));
+    return conj(MatrixTmp(arg));
 }
-MeqMatrixTmp min(const MeqMatrix& arg)
+MatrixTmp min(const Matrix& arg)
 {
     return arg.itsRep->min();
 }
-MeqMatrixTmp max(const MeqMatrix& arg)
+MatrixTmp max(const Matrix& arg)
 {
     return arg.itsRep->max();
 }
-MeqMatrixTmp mean(const MeqMatrix& arg)
+MatrixTmp mean(const Matrix& arg)
 {
     return arg.itsRep->mean();
 }
-MeqMatrixTmp sum(const MeqMatrix& arg)
+MatrixTmp sum(const Matrix& arg)
 {
     return arg.itsRep->sum();
 }
 
-
-LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
+/*
+LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const Matrix& vec)
 {
-  bs.putStart ("MeqMatrix", 1);
+  bs.putStart ("Matrix", 1);
 #if 0
   bs<<(vec.rep() == 0);
   if (vec.rep() != 0) {
@@ -348,24 +348,24 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
     }
   }
 #else
-  MeqMatrixRep *rep = vec.rep();
+  MatrixRep *rep = vec.rep();
   bs << (rep == 0);
   if (rep != 0) {
     bs << (unsigned char) rep->type;
     switch (rep->type) {
-      case MeqMatrixRep::RealScalar :
+      case MatrixRep::RealScalar :
 	bs << vec.getDouble();
 	break;
 
-      case MeqMatrixRep::RealArray :
+      case MatrixRep::RealArray :
 	bs << vec.getDoubleMatrix();
 	break;
 
-      case MeqMatrixRep::ComplexScalar :
+      case MatrixRep::ComplexScalar :
 	bs << vec.getDComplex();
 	break;
 
-      case MeqMatrixRep::ComplexArray :
+      case MatrixRep::ComplexArray :
 	bs << vec.getDComplexMatrix();
 	break;
     }
@@ -375,35 +375,35 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
   return bs;
 }
 
-LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
+LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, Matrix& vec)
 {
-  bs.getStart ("MeqMatrix");
+  bs.getStart ("Matrix");
 #if 0
   bool isRepNull, isDouble, isScalar;
   bs >> isRepNull;
   if (isRepNull) {
-    vec = MeqMatrix();
+    vec = Matrix();
   } else {
     bs >> isDouble >> isScalar;
     if (isDouble) {
       if (isScalar) {
 	double val;
 	bs >> val;
-	vec = MeqMatrix(val);
+	vec = Matrix(val);
       } else {
 	Matrix<double> mat;
 	bs >> mat;
-	vec = MeqMatrix(mat);
+	vec = Matrix(mat);
       }
     } else {
       if (isScalar) {
 	dcomplex val;
 	bs >> val;
-	vec = MeqMatrix(val);
+	vec = Matrix(val);
       } else {
 	Matrix<dcomplex > mat;
 	bs >> mat;
-	vec = MeqMatrix(mat);
+	vec = Matrix(mat);
       }
     }
   }
@@ -411,7 +411,7 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
   bool isRepNull;
   bs >> isRepNull;
   if (isRepNull) {
-    vec = MeqMatrix();
+    vec = Matrix();
   } else {
     double rval;
     Matrix<double> rmat;
@@ -421,24 +421,24 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 
     bs >> type;
     switch (type) {
-      case MeqMatrixRep::RealScalar :
+      case MatrixRep::RealScalar :
 	bs >> rval;
-	vec = MeqMatrix(rval);
+	vec = Matrix(rval);
 	break;
 
-      case MeqMatrixRep::RealArray :
+      case MatrixRep::RealArray :
 	bs >> rmat;
-	vec = MeqMatrix(rmat);
+	vec = Matrix(rmat);
 	break;
 
-      case MeqMatrixRep::ComplexScalar :
+      case MatrixRep::ComplexScalar :
 	bs >> cval;
-	vec = MeqMatrix(cval);
+	vec = Matrix(cval);
 	break;
 
-      case MeqMatrixRep::ComplexArray :
+      case MatrixRep::ComplexArray :
 	bs >> cmat;
-	vec = MeqMatrix(cmat);
+	vec = Matrix(cmat);
 	break;
     }
   }
@@ -447,10 +447,10 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
   bs.getEnd();
   return bs;
 }
-
+*/
 } // namespace BBS
 } // namespace LOFAR
-
+/*
 //# Instantiate the AIPS++ templates needed for Matrix<dcomplex>
 //# This is needed because dcomplex is usually not the same as casa::DComplex.
 //# The inclusion of the other .cc files is needed for the automatic
@@ -464,3 +464,4 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 #include <casa/Utilities/CountedPtr.cc>
 template class Matrix<LOFAR::dcomplex>;
 #endif
+*/

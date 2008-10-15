@@ -1,5 +1,5 @@
-//# MeqJonesMul.h: Multiply each component of a MeqJonesExpr with a single
-//#     MeqExpr.
+//# JonesMul.h: Multiply each component of a JonesExpr with a single
+//#     Expr.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #ifndef MNS_MEQJONESMUL_H
 #define MNS_MEQJONESMUL_H
 
-// \file Multiply each component of a MeqJonesExpr with a single MeqExpr.
+// \file Multiply each component of a JonesExpr with a single Expr.
 
 #include <BBSKernel/MNS/MeqExpr.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -36,28 +36,28 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
 
-// Multiply each component of a MeqJonesExpr with a single MeqExpr.
+// Multiply each component of a JonesExpr with a single Expr.
 
-class MeqJonesMul: public MeqJonesExprRep
+class JonesMul: public JonesExprRep
 {
 public:
-    MeqJonesMul(const MeqJonesExpr &left, const MeqExpr &right);
-    ~MeqJonesMul();
+    JonesMul(const JonesExpr &left, const Expr &right);
+    ~JonesMul();
 
     // Get the result of the expression for the given domain.
-    MeqJonesResult getJResult(const MeqRequest &request);
+    JonesResult getJResult(const Request &request);
 
 private:
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
 
-    MeqJonesExpr	itsLeft;
-    MeqExpr             itsRight;
+    JonesExpr	itsLeft;
+    Expr       itsRight;
 };
 
 // @}

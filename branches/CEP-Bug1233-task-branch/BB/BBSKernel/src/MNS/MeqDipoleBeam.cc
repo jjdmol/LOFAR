@@ -1,4 +1,4 @@
-//# MeqDipoleBeam.cc: Dipole voltage beam (analytic)
+//# DipoleBeam.cc: Dipole voltage beam (analytic)
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,7 +36,7 @@ using LOFAR::dcomplex;
 using LOFAR::conj;
 
 
-MeqDipoleBeam::MeqDipoleBeam(MeqExpr azel, double height, double length,
+DipoleBeam::DipoleBeam(Expr azel, double height, double length,
     double slant, double orientation)
     :   itsHeight(height),
         itsLength(length),
@@ -47,19 +47,19 @@ MeqDipoleBeam::MeqDipoleBeam(MeqExpr azel, double height, double length,
 }
 
 
-MeqJonesResult MeqDipoleBeam::getJResult(const MeqRequest &request)
+JonesResult DipoleBeam::getJResult(const Request &request)
 {
     // Evaluate children.
-    MeqResultVec res_azel;    
-    const MeqResultVec &azel =
-        getChild(MeqDipoleBeam::IN_AZEL).getResultVecSynced(request, res_azel);
+    ResultVec res_azel;    
+    const ResultVec &azel =
+        getChild(DipoleBeam::IN_AZEL).getResultVecSynced(request, res_azel);
 
     // Create result.
-    MeqJonesResult result(request.nspid());
-    MeqResult& result11 = result.result11();
-    MeqResult& result12 = result.result12();
-    MeqResult& result21 = result.result21();
-    MeqResult& result22 = result.result22();
+    JonesResult result(request.nspid());
+    Result& result11 = result.result11();
+    Result& result12 = result.result12();
+    Result& result21 = result.result21();
+    Result& result22 = result.result22();
     
     // Evaluate main value.
     // Evaluate X polarization.
@@ -72,7 +72,7 @@ MeqJonesResult MeqDipoleBeam::getJResult(const MeqRequest &request)
         itsSlant, itsOrientation - casa::C::pi_2);
 
     // Evaluate perturbed values.  
-    const MeqParmFunklet *perturbedParm;
+    const ParmFunklet *perturbedParm;
     for(int i = 0; i < request.nspid(); ++i)
     {
         // Find out if this perturbed value needs to be computed.
@@ -111,8 +111,8 @@ MeqJonesResult MeqDipoleBeam::getJResult(const MeqRequest &request)
 }
 
 
-void MeqDipoleBeam::evaluate(const MeqRequest &request, const MeqMatrix &in_az,
-    const MeqMatrix &in_el, MeqMatrix &out_E_theta, MeqMatrix &out_E_phi, 
+void DipoleBeam::evaluate(const Request &request, const Matrix &in_az,
+    const Matrix &in_el, Matrix &out_E_theta, Matrix &out_E_phi, 
     double height, double length, double slant, double orientation)
 {
     const double *az = in_az.doubleStorage();

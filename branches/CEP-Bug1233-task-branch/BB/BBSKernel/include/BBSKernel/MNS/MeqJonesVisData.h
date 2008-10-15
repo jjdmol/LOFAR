@@ -1,4 +1,4 @@
-//# MeqJonesVisData.h: 
+//# JonesVisData.h: 
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,16 +31,16 @@ namespace LOFAR
 namespace BBS
 {
 
-class MeqJonesVisData: public MeqJonesExprRep
+class JonesVisData: public JonesExprRep
 {
 public:
-    MeqJonesVisData(VisData::Pointer vdata, baseline_t baseline);
+    JonesVisData(VisData::Pointer vdata, baseline_t baseline);
 
-    ~MeqJonesVisData()
+    ~JonesVisData()
     {}
 
     // Get the result of the expression for the given domain.
-    virtual MeqJonesResult getJResult (const MeqRequest&);
+    virtual JonesResult getJResult (const Request&);
 
 private:
     void copy(double *re, double *im,

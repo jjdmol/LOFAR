@@ -1,4 +1,4 @@
-//# MeqJonesCMul2.cc: Calculate left*right
+//# JonesCMul2.cc: Calculate left*right
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,8 +36,8 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesCMul2::MeqJonesCMul2 (const MeqJonesExpr& left,
-			      const MeqJonesExpr& right)
+JonesCMul2::JonesCMul2 (const JonesExpr& left,
+			      const JonesExpr& right)
 : itsLeft  (left),
   itsRight (right)
 {
@@ -45,44 +45,44 @@ MeqJonesCMul2::MeqJonesCMul2 (const MeqJonesExpr& left,
   addChild (itsRight);
 }
 
-MeqJonesCMul2::~MeqJonesCMul2()
+JonesCMul2::~JonesCMul2()
 {}
 
-MeqJonesResult MeqJonesCMul2::getJResult (const MeqRequest& request)
+JonesResult JonesCMul2::getJResult (const Request& request)
 {
   // Create the result object.
-  MeqJonesResult result(request.nspid());
-  MeqResult& result11 = result.result11();
-  MeqResult& result12 = result.result12();
-  MeqResult& result21 = result.result21();
-  MeqResult& result22 = result.result22();
+  JonesResult result(request.nspid());
+  Result& result11 = result.result11();
+  Result& result12 = result.result12();
+  Result& result21 = result.result21();
+  Result& result22 = result.result22();
   // Calculate the children.
-  MeqJonesResult leftBuf, rightBuf;
-  const MeqJonesResult& left  = itsLeft.getResultSynced (request, leftBuf);
-  const MeqJonesResult& right = itsRight.getResultSynced (request, rightBuf);
-  const MeqResult& l11 = left.getResult11();
-  const MeqResult& l12 = left.getResult12();
-  const MeqResult& l21 = left.getResult21();
-  const MeqResult& l22 = left.getResult22();
-  const MeqResult& r11 = right.getResult11();
-  const MeqResult& r12 = right.getResult12();
-  const MeqResult& r21 = right.getResult21();
-  const MeqResult& r22 = right.getResult22();
-  const MeqMatrix& ml11 = l11.getValue();
-  const MeqMatrix& ml12 = l12.getValue();
-  const MeqMatrix& ml21 = l21.getValue();
-  const MeqMatrix& ml22 = l22.getValue();
-  const MeqMatrix& mr11 = r11.getValue();
-  const MeqMatrix& mr12 = r12.getValue();
-  const MeqMatrix& mr21 = r21.getValue();
-  const MeqMatrix& mr22 = r22.getValue();
+  JonesResult leftBuf, rightBuf;
+  const JonesResult& left  = itsLeft.getResultSynced (request, leftBuf);
+  const JonesResult& right = itsRight.getResultSynced (request, rightBuf);
+  const Result& l11 = left.getResult11();
+  const Result& l12 = left.getResult12();
+  const Result& l21 = left.getResult21();
+  const Result& l22 = left.getResult22();
+  const Result& r11 = right.getResult11();
+  const Result& r12 = right.getResult12();
+  const Result& r21 = right.getResult21();
+  const Result& r22 = right.getResult22();
+  const Matrix& ml11 = l11.getValue();
+  const Matrix& ml12 = l12.getValue();
+  const Matrix& ml21 = l21.getValue();
+  const Matrix& ml22 = l22.getValue();
+  const Matrix& mr11 = r11.getValue();
+  const Matrix& mr12 = r12.getValue();
+  const Matrix& mr21 = r21.getValue();
+  const Matrix& mr22 = r22.getValue();
   result11.setValue (ml11*conj(mr11) + ml12*conj(mr12));
   result12.setValue (ml11*conj(mr21) + ml12*conj(mr22));
   result21.setValue (ml21*conj(mr11) + ml22*conj(mr12));
   result22.setValue (ml21*conj(mr21) + ml22*conj(mr22));
 
   // Determine which values are perturbed and determine the perturbation.
-  const MeqParmFunklet* perturbedParm;
+  const ParmFunklet* perturbedParm;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval11 = false;
     bool eval12 = false;
@@ -125,14 +125,14 @@ MeqJonesResult MeqJonesCMul2::getJResult (const MeqRequest& request)
       eval22 = true;
     }
     if (eval11 || eval12 || eval21 || eval22) {
-      const MeqMatrix& ml11 = l11.getPerturbedValue(spinx);
-      const MeqMatrix& ml12 = l12.getPerturbedValue(spinx);
-      const MeqMatrix& ml21 = l21.getPerturbedValue(spinx);
-      const MeqMatrix& ml22 = l22.getPerturbedValue(spinx);
-      const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
-      const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
-      const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
-      const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
+      const Matrix& ml11 = l11.getPerturbedValue(spinx);
+      const Matrix& ml12 = l12.getPerturbedValue(spinx);
+      const Matrix& ml21 = l21.getPerturbedValue(spinx);
+      const Matrix& ml22 = l22.getPerturbedValue(spinx);
+      const Matrix& mr11 = r11.getPerturbedValue(spinx);
+      const Matrix& mr12 = r12.getPerturbedValue(spinx);
+      const Matrix& mr21 = r21.getPerturbedValue(spinx);
+      const Matrix& mr22 = r22.getPerturbedValue(spinx);
       if (eval11) { 
 	result11.setPerturbedParm (spinx, perturbedParm);
 	result11.setPerturbedValue (spinx, ml11*conj(mr11) + ml12*conj(mr12));

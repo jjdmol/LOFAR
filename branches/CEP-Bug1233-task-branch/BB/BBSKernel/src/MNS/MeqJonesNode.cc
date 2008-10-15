@@ -1,4 +1,4 @@
-//# MeqJonesNode.cc: A node in a Jones matrix expression.
+//# JonesNode.cc: A node in a Jones matrix expression.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,8 +30,8 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
-                const MeqExpr& elem21, const MeqExpr& elem22)
+JonesNode::JonesNode (const Expr& elem11, const Expr& elem12,
+                const Expr& elem21, const Expr& elem22)
 : itsExpr11 (elem11),
   itsExpr12 (elem12),
   itsExpr21 (elem21),
@@ -43,12 +43,13 @@ MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
   addChild (itsExpr22);
 }
 
-MeqJonesNode::~MeqJonesNode()
+JonesNode::~JonesNode()
 {}
 
-MeqJonesResult MeqJonesNode::getJResult (const MeqRequest& request)
+JonesResult JonesNode::getJResult (const Request& request)
 {
-  MeqJonesResult res(0);
+  JonesResult res;
+  res.init();
   {
     itsExpr11.getResultSynced (request, res.result11());
     itsExpr12.getResultSynced (request, res.result12());
@@ -59,9 +60,9 @@ MeqJonesResult MeqJonesNode::getJResult (const MeqRequest& request)
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqJonesNode::getLabel()
+std::string JonesNode::getLabel()
 {
-    return std::string("MeqJonesNode\\n2x2 Jones matrix");
+    return std::string("JonesNode\\n2x2 Jones matrix");
 }
 #endif
 

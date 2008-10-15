@@ -1,4 +1,4 @@
-//# MeqMatrixTmp.cc: Matrix for Mns
+//# MatrixTmp.cc: Matrix for Mns
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,28 +31,28 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
+MatrixTmp::MatrixTmp (double value, int nx, int ny, bool init)
 {
-    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
+    MatrixRealArr* v = MatrixRealArr::allocate(nx, ny);
     if (init) {
       v->set (value);
     }
     itsRep = v->link();
 }
 
-MeqMatrixTmp::MeqMatrixTmp (dcomplex value, int nx, int ny, bool init)
+MatrixTmp::MatrixTmp (dcomplex value, int nx, int ny, bool init)
 {
-    MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx, ny);
+    MatrixComplexArr* v = MatrixComplexArr::allocate (nx, ny);
     if (init) {
       v->set (value);
     }
     itsRep = v->link();
 }
 
-MeqMatrixTmp& MeqMatrixTmp::operator= (const MeqMatrixTmp& that)
+MatrixTmp& MatrixTmp::operator= (const MatrixTmp& that)
 {
   if (this != &that) {
-    MeqMatrixRep::unlink (itsRep);
+    MatrixRep::unlink (itsRep);
     itsRep = that.itsRep;
     if (itsRep != 0) {
       itsRep->link();
@@ -61,65 +61,65 @@ MeqMatrixTmp& MeqMatrixTmp::operator= (const MeqMatrixTmp& that)
   return *this;
 }
 
-MeqMatrixTmp MeqMatrixTmp::operator-() const
+MatrixTmp MatrixTmp::operator-() const
 {
   itsRep->negate();
   return itsRep;
 }
 
-MeqMatrixTmp posdiff (const MeqMatrixTmp& left, const MeqMatrix& right)
+MatrixTmp posdiff (const MatrixTmp& left, const Matrix& right)
 {
     return left.itsRep->posdiff(*right.rep());
 }
-MeqMatrixTmp posdiff (const MeqMatrixTmp& left, const MeqMatrixTmp& right)
+MatrixTmp posdiff (const MatrixTmp& left, const MatrixTmp& right)
 {
     return left.itsRep->posdiff(*right.rep());
 }
-MeqMatrixTmp tocomplex (const MeqMatrixTmp& left, const MeqMatrix& right)
+MatrixTmp tocomplex (const MatrixTmp& left, const Matrix& right)
 {
     return left.itsRep->tocomplex(*right.rep());
 }
-MeqMatrixTmp tocomplex (const MeqMatrixTmp& left, const MeqMatrixTmp& right)
+MatrixTmp tocomplex (const MatrixTmp& left, const MatrixTmp& right)
 {
     return left.itsRep->tocomplex(*right.rep());
 }
-MeqMatrixTmp sin (const MeqMatrixTmp& arg)
+MatrixTmp sin (const MatrixTmp& arg)
 {
   return arg.itsRep->sin();
 }
-MeqMatrixTmp cos (const MeqMatrixTmp& arg)
+MatrixTmp cos (const MatrixTmp& arg)
 {
   return arg.itsRep->cos();
 }
-MeqMatrixTmp exp (const MeqMatrixTmp& arg)
+MatrixTmp exp (const MatrixTmp& arg)
 {
   return arg.itsRep->exp();
 }
-MeqMatrixTmp sqr(const MeqMatrixTmp& arg)
+MatrixTmp sqr(const MatrixTmp& arg)
 {
   return arg.itsRep->sqr();
 }
-MeqMatrixTmp sqrt(const MeqMatrixTmp& arg)
+MatrixTmp sqrt(const MatrixTmp& arg)
 {
   return arg.itsRep->sqrt();
 }
-MeqMatrixTmp conj (const MeqMatrixTmp& arg)
+MatrixTmp conj (const MatrixTmp& arg)
 {
   return arg.itsRep->conj();
 }
-MeqMatrixTmp min (const MeqMatrixTmp& arg)
+MatrixTmp min (const MatrixTmp& arg)
 {
   return arg.itsRep->min();
 }
-MeqMatrixTmp max (const MeqMatrixTmp& arg)
+MatrixTmp max (const MatrixTmp& arg)
 {
   return arg.itsRep->max();
 }
-MeqMatrixTmp mean (const MeqMatrixTmp& arg)
+MatrixTmp mean (const MatrixTmp& arg)
 {
   return arg.itsRep->mean();
 }
-MeqMatrixTmp sum (const MeqMatrixTmp& arg)
+MatrixTmp sum (const MatrixTmp& arg)
 {
   return arg.itsRep->sum();
 }

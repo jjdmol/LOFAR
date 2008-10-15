@@ -3,7 +3,7 @@
 #tShift tDFT
 
 check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
-tMeqParm tShift tDFT
+tMeqParm tShift tDFT tMeqDFTPS
 
 tFillRow_SOURCES = tFillRow.cc
 tFillRow_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
@@ -46,6 +46,9 @@ tShift_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tDFT_SOURCES = tDFT.cc
 tDFT_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
+
+tMeqDFTPS_SOURCES = tMeqDFTPS.cc
+tMeqDFTPS_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 LDADD				= ../src/libbbskernel.la 
 

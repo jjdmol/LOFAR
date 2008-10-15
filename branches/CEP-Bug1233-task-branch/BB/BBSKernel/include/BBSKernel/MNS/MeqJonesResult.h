@@ -1,4 +1,4 @@
-//# MeqJonesResult.h: The result of a Jones expression for a domain.
+//# JonesResult.h: The result of a Jones expression.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,13 +24,10 @@
 #define MNS_MEQJONESRESULT_H
 
 // \file
-// The result of the 4 expressions in a Jones matrix for a domain.
+// The result of a Jones expression.
 
-//# Includes
 #include <BBSKernel/MNS/MeqResultVec.h>
-
-// This class represents the result in a Jones matrix of a domain for
-// which the expressions have been evaluated.
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -38,46 +35,56 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-  class MeqJonesResult : public MeqResultVec
-  {
-  public:
-    // Create an null object.
-    MeqJonesResult()
-      : MeqResultVec() {}
+class JonesResult: public ResultVec
+{
+public:
+    JonesResult()
+        : ResultVec()
+    {
+    }
     
-    // Create a time,frequency result for the given number of parameters.
-    explicit MeqJonesResult (int nspid)
-      : MeqResultVec(4, nspid) {}
+    void init()
+    {
+        if(itsRep == 0)
+        {
+            ResultVec::operator=(ResultVec(4));
+        }
+    }
 
-    MeqJonesResult (const MeqJonesResult& that)
-      : MeqResultVec(that) {}
+    JonesResult(const JonesResult &other)
+        : ResultVec(other)
+    {
+    }
 
-    MeqJonesResult& operator= (const MeqJonesResult& that)
-      { MeqResultVec::operator= (that); return *this; }
+    JonesResult &operator=(const JonesResult &other)
+    {
+        ResultVec::operator=(other);
+        return *this;
+    }
 
     // Get the individual results.
     // <group>
-    const MeqResult& getResult11() const
-      { return (*this)[0]; }
-    MeqResult& result11()
-      { return (*this)[0]; }
-    const MeqResult& getResult12() const
-      { return (*this)[1]; }
-    MeqResult& result12()
-      { return (*this)[1]; }
-    const MeqResult& getResult21() const
-      { return (*this)[2]; }
-    MeqResult& result21()
-      { return (*this)[2]; }
-    const MeqResult& getResult22() const
-      { return (*this)[3]; }
-    MeqResult& result22()
-      { return (*this)[3]; }
+    const Result& getResult11() const
+    { return (*this)[0]; }
+    Result& result11()
+    { return (*this)[0]; }
+    const Result& getResult12() const
+    { return (*this)[1]; }
+    Result& result12()
+    { return (*this)[1]; }
+    const Result& getResult21() const
+    { return (*this)[2]; }
+    Result& result21()
+    { return (*this)[2]; }
+    const Result& getResult22() const
+    { return (*this)[3]; }
+    Result& result22()
+    { return (*this)[3]; }
     // </group>
-  };
+};
 
 // @}
 

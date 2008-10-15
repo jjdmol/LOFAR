@@ -1,4 +1,4 @@
-//# MeqLMN.cc: Class holding the LMN values of a point source
+//# LMN.cc: LMN-coordinates of a direction on the sky.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,6 +27,7 @@
 #include <BBSKernel/MNS/MeqPhaseRef.h>
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/MNS/PValueIterator.h>
 #include <Common/LofarLogger.h>
 
 
@@ -35,180 +36,88 @@ namespace LOFAR
 namespace BBS
 {
 
-MeqLMN::MeqLMN (MeqSource* source)
-: itsSource    (source)
+LMN::LMN(const Source::Pointer &source,
+    const PhaseRef::ConstPointer &phaseRef)
+    :   itsSource(source),
+        itsPhaseRef(phaseRef)
 {
     addChild(itsSource->getRa());
     addChild(itsSource->getDec());
 }
 
-MeqLMN::~MeqLMN()
+LMN::~LMN()
 {
 }
 
-MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
+ResultVec LMN::getResultVec(const Request &request)
 {
-  MeqResultVec result(3, request.nspid());
-  MeqResult& resL = result[0];
-  MeqResult& resM = result[1];
-  MeqResult& resN = result[2];
-  MeqResult raRes, deRes;
-  const MeqResult& rak  = itsSource->getRa().getResultSynced (request, raRes);
-  const MeqResult& deck = itsSource->getDec().getResultSynced (request, deRes);
-  double refRa  = itsPhaseRef->getRa();
-  double refDec = itsPhaseRef->getDec();
-  double refSinDec = itsPhaseRef->getSinDec();
-  double refCosDec = itsPhaseRef->getCosDec();
-  MeqMatrix cosdec = cos(deck.getValue());
-  MeqMatrix radiff = rak.getValue() - refRa;
-  MeqMatrix lk = cosdec * sin(radiff);
-  MeqMatrix mk = sin(deck.getValue()) * refCosDec -
-                 cosdec * refSinDec * cos(radiff);
-  MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
-  ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-         << " too far from phaseref " << refRa << ", " << refDec);
-  MeqMatrix nk = sqrt(nks);
-  resL.setValue (lk);
-  resM.setValue (mk);
-  resN.setValue (nk);
+    ResultVec result(3);
+    Result &resL = result[0];
+    Result &resM = result[1];
+    Result &resN = result[2];
+    Result raRes, deRes;
 
-  // Evaluate (if needed) for the perturbed parameter values.
-  const MeqParmFunklet* perturbedParm;
-  for (int spinx=0; spinx<request.nspid(); spinx++) {
-    MeqMatrix pcosdec = cosdec;
-    MeqMatrix pradiff = radiff;
-    bool eval = false;
-    if (rak.isDefined(spinx)) {
-      perturbedParm = rak.getPerturbedParm(spinx);
-      pradiff = rak.getPerturbedValue(spinx) - refRa;
-      eval = true;
-    }
-    if (deck.isDefined(spinx)) {
-      perturbedParm = deck.getPerturbedParm(spinx);
-      pcosdec = cos(deck.getPerturbedValue(spinx));
-      eval = true;
-    }
-    if (eval) {
-      MeqMatrix plk = pcosdec * sin(pradiff);
-      MeqMatrix pmk = sin(deck.getPerturbedValue(spinx)) * refCosDec -
-       pcosdec * refSinDec * cos(pradiff);
-      MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(plk) - sqr(pmk);
-      ASSERTSTR (min(nks).getDouble() > 0, "perturbed source "
-         << itsSource->getSourceNr()
-         << " too far from phaseref " << refRa << ", " << refDec);
-      MeqMatrix pnk = sqrt(nks);
-      resL.setPerturbedValue (spinx, plk);
-      resL.setPerturbedParm   (spinx, perturbedParm);
-      resM.setPerturbedValue (spinx, pmk);
-      resM.setPerturbedParm   (spinx, perturbedParm);
-      resN.setPerturbedValue (spinx, pnk);
-      resN.setPerturbedParm   (spinx, perturbedParm);
-    }
-  }
-  return result;
-}
+    const Result &rak = getChild(0).getResultSynced(request, raRes);
+    const Result &deck = getChild(1).getResultSynced(request, deRes);
+    const double refRa = itsPhaseRef->getRa();
+    const double refDec = itsPhaseRef->getDec();
+    const double refSinDec = itsPhaseRef->getSinDec();
+    const double refCosDec = itsPhaseRef->getCosDec();
 
-MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
-{
-  MeqResultVec result(3, request.nspid());
-  MeqResult& resL = result[0];
-  MeqResult& resM = result[1];
-  MeqResult& resN = result[2];
-  MeqResult raRes, deRes;
-  const MeqResult& rak  = itsSource->getRa().getResultSynced (request, raRes);
-  const MeqResult& deck = itsSource->getDec().getResultSynced (request, deRes);
-  double refRa  = itsPhaseRef->getRa();
-  double refDec = itsPhaseRef->getDec();
-  double refSinDec = itsPhaseRef->getSinDec();
-  double refCosDec = itsPhaseRef->getCosDec();
-  MeqMatrix cosdec = cos(deck.getValue());
-  MeqMatrix radiff = rak.getValue() - refRa;
-  if (request.nspid() == 0) {
-    MeqMatrix lk = cosdec * sin(radiff);
-    MeqMatrix mk = sin(deck.getValue()) * refCosDec -
-                   cosdec * refSinDec * cos(radiff);
-    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
-    ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-           << " too far from phaseref " << refRa << ", " << refDec);
-    MeqMatrix nk = sqrt(nks);
-    resL.setValue (lk);
-    resM.setValue (mk);
-    resN.setValue (nk);
-  } else {
-    MeqMatrix sinradiff = sin(radiff);
-    MeqMatrix cosradiff = cos(radiff);
-    MeqMatrix sindec = sin(deck.getValue());
-    MeqMatrix lk = cosdec * sinradiff;
-    MeqMatrix mk = sindec * refCosDec -
-                   cosdec * refSinDec * cosradiff;
-    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
-    ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
-           << " too far from phaseref " << refRa << ", " << refDec);
-    MeqMatrix nk = sqrt(nks);
-    resL.setValue (lk);
-    resM.setValue (mk);
-    resN.setValue (nk);
+    Matrix cosdec = cos(deck.getValue());
+    Matrix radiff = rak.getValue() - refRa;
+    Matrix lk = cosdec * sin(radiff);
+    Matrix mk = sin(deck.getValue()) * refCosDec - cosdec * refSinDec
+        * cos(radiff);
+    MatrixTmp nks = 1. - sqr(lk) - sqr(mk);
 
-    // Evaluate (if needed) for the parameter derivatives.
-    // l = cosdec*sinradiff
-    // m = sindec*cosdec0 - cosdec*sindec0*cosradiff
-    // l'= -sindec*dec'*sinradiff + cosdec*cosradiff*ra'
-    // m'= cosdec*dec'*cosdec0 - (-sindec*dec'*sindec0*cosradiff
-    //                            + cosdec*sindec0*-sinradiff*ra')
-    //   = (cosdec*cosdec0 + sindec*sindec0*cosradiff) * dec'
-    //     + cosdec*sindec0*sinradiff*ra'
-    // precalculate:  c1 = cosdec*sindec0*sinradiff = l*sindec0
-    //                c2 = cosdec*cosdec0 + sindec*sindec0*cosradiff
-    //                c3 = cosdec*cosradiff
-    //                c4 = -sindec*sinradiff
-    // l'= c3*ra' + c4*dec'
-    // m'= c1*ra' + c2*dec'
-    // n = sqrt(1 - l^2 - m^2)
-    // n'= 0.5 * 1/sqrt(1 - l^2 - m^2) * (-2*l*l' - 2*m*m')
-    //   = (l*l' + m*m') / -n
-    MeqMatrix c1 = lk * refSinDec;
-    MeqMatrix c2 = cosdec * refCosDec + sindec * refSinDec * cosradiff;
-    MeqMatrix c3 = cosdec * cosradiff;
-    MeqMatrix c4 = -sindec * sinradiff;
-    MeqMatrix ln = -lk / nk;
-    MeqMatrix mn = -mk / nk;
-    for (int spinx=0; spinx<request.nspid(); spinx++) {
-      if (rak.isDefined(spinx)) {
-    const MeqMatrix& dra = raRes.getPerturbedValue (spinx);
-    if (deck.isDefined(spinx)) {
-      // Both are defined, so we have to evaluate all.
-      const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
-      MeqMatrix dl = c3*dra + c4*ddec;
-      MeqMatrix dm = c1*dra + c2*ddec;
-      resL.setPerturbedValue (spinx, dl);
-      resM.setPerturbedValue (spinx, dm);
-      resN.setPerturbedValue (spinx, ln*dl + mn*dm);
-    } else {
-      // no derivative in dec, so ddec=0.
-      MeqMatrix dl = c3*dra;
-      MeqMatrix dm = c1*dra;
-      resL.setPerturbedValue (spinx, dl);
-      resM.setPerturbedValue (spinx, dm);
-      resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+    // Although an N-coordinate of 0.0 is valid as long as the length of the
+    // LMN vector equals 1.0, it will cause problems when dividing by it.
+    // However, this should be checked where the division takes place.
+    ASSERTSTR(min(nks).getDouble() >= 0.0, "Source " << itsSource->getName()
+        << " too far from phase reference " << refRa << ", " << refDec);
+
+    Matrix nk = sqrt(nks);
+    resL.setValue(lk);
+    resM.setValue(mk);
+    resN.setValue(nk);
+
+    cout << itsSource->getName() << " L: " << lk.getDouble(0, 0) << " M: "
+        << mk.getDouble(0, 0) << " N: " << nk.getDouble(0, 0) << endl;
+
+    // Compute perturbed values.
+    const Result *pvSet[2] = {&rak, &deck};
+    PValueSetIterator<2> pvIter(pvSet);
+
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvRa = pvIter.value(0);
+        const Matrix &pvDec = pvIter.value(1);
+        Matrix pradiff = pvRa - refRa;
+        Matrix pcosdec = cos(pvDec);
+        Matrix plk = pcosdec * sin(pradiff);
+        Matrix pmk = sin(pvDec) * refCosDec - pcosdec * refSinDec * cos(pradiff);
+        MatrixTmp nks = MatrixTmp(1.) - sqr(plk) - sqr(pmk);
+        ASSERTSTR(min(nks).getDouble() >= 0.0, "Perturbed source "
+            << itsSource->getName() << " too far from phase reference "
+            << refRa << ", " << refDec);
+        Matrix pnk = sqrt(nks);
+
+        resL.setPerturbedValue(pvIter.key(), plk);
+        resM.setPerturbedValue(pvIter.key(), pmk);
+        resN.setPerturbedValue(pvIter.key(), pnk);
+        
+        pvIter.next();
     }
-      } else if (deck.isDefined(spinx)) {
-    // no derivative in ra, so dra=0.
-    const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
-    MeqMatrix dl = c4*ddec;
-    MeqMatrix dm = c2*ddec;
-    resL.setPerturbedValue (spinx, dl);
-    resM.setPerturbedValue (spinx, dm);
-    resN.setPerturbedValue (spinx, ln*dl + mn*dm);
-      }
-    }
-  }
-  return result;
+
+    return result;
 }
 
 #ifdef EXPR_GRAPH
-std::string MeqLMN::getLabel()
+string LMN::getLabel()
 {
-    return std::string("MeqLMN\\nImage plane coordinates of a point source\\n" + itsSource->getName() + " (" + itsSource->getGroupName() + ")");
+    return string("LMN\\nLMN-coordinates of a direction on the sky\\n"
+        + itsSource->getName());
 }
 #endif
 

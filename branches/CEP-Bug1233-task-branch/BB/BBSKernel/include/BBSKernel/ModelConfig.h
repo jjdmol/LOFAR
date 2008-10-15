@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBSKernel
+// \ingroup BBSKernel
 // @{
     
 class BeamConfig

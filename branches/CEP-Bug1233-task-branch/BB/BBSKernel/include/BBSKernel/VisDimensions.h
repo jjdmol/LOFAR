@@ -23,8 +23,8 @@
 #ifndef LOFAR_BBS_BBSKERNEL_VISDIMENSIONS_H
 #define LOFAR_BBS_BBSKERNEL_VISDIMENSIONS_H
 
-#include <BBSKernel/Axis.h>
-#include <BBSKernel/Grid.h>
+#include <ParmDB/Axis.h>
+#include <ParmDB/Grid.h>
 #include <BBSKernel/Types.h>
 
 #include <Common/lofar_map.h>
@@ -49,14 +49,14 @@ namespace BBS
         const Grid &getGrid() const
         { return itsGrid; }
 
-        const Axis::Pointer getFreqAxis() const
+        const Axis::ShPtr getFreqAxis() const
         { return itsGrid[FREQ]; }
         pair<double, double> getFreqRange() const
         { return itsGrid[FREQ]->range(); }
         size_t getChannelCount() const
         { return itsGrid[FREQ]->size(); }
 
-        const Axis::Pointer getTimeAxis() const
+        const Axis::ShPtr getTimeAxis() const
         { return itsGrid[TIME]; }
         pair<double, double> getTimeRange() const
         { return itsGrid[TIME]->range(); }

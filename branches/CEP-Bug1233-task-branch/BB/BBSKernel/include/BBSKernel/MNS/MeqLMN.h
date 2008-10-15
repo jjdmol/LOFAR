@@ -1,4 +1,4 @@
-//# MeqLMN.h: Class holding the LMN values of a point source
+//# LMN.h: LMN-coordinates of a direction on the sky.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,11 @@
 #define MNS_MEQLMN_H
 
 // \file
-// Class holding the LMN values of a point source
+// LMN-coordinates of a direction on the sky.
 
-//# Includes
 #include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqSource.h>
+#include <BBSKernel/MNS/MeqPhaseRef.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -36,41 +37,28 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \ingroup MNS
 // @{
 
-//# Forward Declarations
-class MeqSource;
-class MeqPhaseRef;
-
-
-class MeqLMN: public MeqExprRep
+class LMN: public ExprRep
 {
 public:
-  // Construct for the given point source.
-  explicit MeqLMN (MeqSource*);
+    LMN(const Source::Pointer &source,
+        const PhaseRef::ConstPointer &phaseRef);
+    ~LMN();
 
-  ~MeqLMN();
+    const Source::Pointer &getSource() const
+    { return itsSource; }
 
-  const MeqSource& getSource() const
-    { return *itsSource; }
-
-  // Set the phase reference position.
-  void setPhaseRef (const MeqPhaseRef* phaseRef)
-    { itsPhaseRef = phaseRef; }
-
-  // Get the precalculated result of l, m, or n.
-  MeqResultVec getResultVec (const MeqRequest&);
-
-  MeqResultVec getAnResultVec (const MeqRequest& request);
+    ResultVec getResultVec(const Request &request);
 
 private:
 #ifdef EXPR_GRAPH
-  virtual std::string getLabel();
+    virtual string getLabel();
 #endif
 
-  MeqSource*         itsSource;
-  const MeqPhaseRef* itsPhaseRef;
+    Source::Pointer          itsSource;
+    PhaseRef::ConstPointer   itsPhaseRef;
 };
 
 // @}
