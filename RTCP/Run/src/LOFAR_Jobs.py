@@ -20,7 +20,7 @@ class Job(object):
     def run(self, runlog, parsetfile, timeOut, runCmd = None):
         self.runlog = runlog
         self.runLogRetreived = False
-	self.host.sput(self.workingDir + 'RTCP/' + self.name + '/src/' + self.name + '.log_prop', '~/')
+	self.host.sput(self.workingDir + 'LOFAR/RTCP/' + self.name + '/src/' + self.name + '.log_prop', '~/')
         if runCmd == None:
             runCmd = self.executable
 	    
