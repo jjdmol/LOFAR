@@ -74,7 +74,7 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
   itsNPolSquared = pols*pols;
 
   // itsWeightFactor = the inverse of maximum number of valid samples
-  itsWeightFactor = 1.0 / (ps->BGLintegrationSteps() * ps->IONintegrationSteps() * ps->storageIntegrationSteps());
+  itsWeightFactor = 1.0 / (ps->CNintegrationSteps() * ps->IONintegrationSteps() * ps->storageIntegrationSteps());
   
   itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 }
@@ -103,7 +103,7 @@ SubbandWriter::~SubbandWriter()
 
 void SubbandWriter::createInputStreams()
 {
-  string   prefix            = "OLAP.OLAP_Conn.BGLProc_Storage";
+  string   prefix            = "OLAP.OLAP_Conn.IONProc_Storage";
   string   connectionType    = itsPS->getString(prefix + "_Transport");
 
   itsInputStreams.resize(itsPS->nrPsetsPerStorage());
