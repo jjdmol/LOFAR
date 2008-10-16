@@ -245,7 +245,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    std::vector<fcomplex, AlignedStdAllocator<fcomplex> > fftOutData(itsNrChannels);
+    std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
 
     FIRtimer.start();
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {

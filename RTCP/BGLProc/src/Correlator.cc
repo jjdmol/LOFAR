@@ -119,7 +119,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
 		sum += filteredData->samples[ch][stat1][time][pol1] * conj(filteredData->samples[ch][stat2][time][pol2]);
 	      }
-	      sum *= itsCorrelationWeights[nrValid] * FIR::bandPassCorrectionFactors[ch];
+	      sum *= itsCorrelationWeights[nrValid] * itsBandPass.correctionFactors()[ch];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
