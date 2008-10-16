@@ -1,6 +1,6 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# PointSource.h: Class holding the expressions defining a point source.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,41 +20,54 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef EXPR_POINTSOURCE_H
+#define EXPR_POINTSOURCE_H
 
-#include <Common/lofar_complex.h>
+// \file
+// Class holding the expressions defining a point source.
+
+#include <BBSKernel/Expr/Source.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup BBSKernel
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+class PointSource: public Source
+{
+public:
+    typedef shared_ptr<PointSource>          Pointer;
+    typedef shared_ptr<const PointSource>    ConstPointer;
 
-} //# namespace BBS
-} //# namespace LOFAR
+    PointSource(const string& name, const Expr &ra, const Expr &dec,
+        const Expr &I, const Expr &Q, const Expr &U, const Expr &V);
+
+    virtual ~PointSource();
+
+    const Expr &getI() const
+    { return itsI; }
+    const Expr &getQ() const
+    { return itsQ; }
+    const Expr &getU() const
+    { return itsU; }
+    const Expr &getV() const
+    { return itsV; }
+
+private:
+    Expr itsI;
+    Expr itsQ;
+    Expr itsU;
+    Expr itsV;
+};
+
+// @}
+
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

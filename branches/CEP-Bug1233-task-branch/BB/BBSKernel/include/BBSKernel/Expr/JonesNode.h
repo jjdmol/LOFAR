@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesNode.h: A node in a Jones matrix expression.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,58 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#if !defined(EXPR_JONESNODE_H)
+#define EXPR_JONESNODE_H
 
 // \file
-// Parameter that can be used in an expression.
+// A node in a Jones matrix expression.
 
+//# Includes
+#include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+//# Forward Declarations
+class Expr;
+class JonesResult;
+
+
+// This class is a node in a Jones matrix expression.
+
+class JonesNode: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  // Construct from four Jones elements.
+  JonesNode (const Expr& elem11, const Expr& elem12,
+        const Expr& elem21, const Expr& elem22);
+
+  virtual ~JonesNode();
+
+  // Calculate the result of its members.
+  virtual JonesResult getJResult (const Request&);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+  Expr itsExpr11;
+  Expr itsExpr12;
+  Expr itsExpr21;
+  Expr itsExpr22;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -1,6 +1,7 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# PhaseShift.h: Phase delay due to baseline geometry with respect to source
+//#     direction.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +21,45 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef EXPR_PHASESHIFT_H
+#define EXPR_PHASESHIFT_H
 
 // \file
-// Parameter that can be used in an expression.
+// Phase delay due to baseline geometry with respect to source direction.
 
+//# Includes
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+class PhaseShift: public ExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+    PhaseShift (const Expr& left, const Expr& right);
+    ~PhaseShift();
+
+    // Calculate the results for the given domain.
+    virtual Result getResult(const Request &request);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+    #ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+    #endif
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+    Expr itsLeft;
+    Expr itsRight;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

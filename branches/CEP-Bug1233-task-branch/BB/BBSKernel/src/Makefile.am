@@ -1,15 +1,15 @@
 lib_LTLIBRARIES = libbbskernel.la
 
 #	Expr/ExternalFunction.cc \
-#	Expr/MeqAzEl.cc \
-#	Expr/MeqDiag.cc \
-#	Expr/MeqDipoleBeam.cc \
-#	Expr/MeqDipoleBeamExternal.cc \
-#	Expr/MeqGaussianCoherency.cc \
-#	Expr/MeqGaussianSource.cc \
-#	Expr/MeqJonesCMul2.cc \
-#	Expr/MeqJonesMul3.cc \
-#	Expr/MeqNumericalDipoleBeam.cc
+#	Expr/AzEl.cc \
+#	Expr/Diag.cc \
+#	Expr/DipoleBeam.cc \
+#	Expr/DipoleBeamExternal.cc \
+#	Expr/GaussianCoherence.cc \
+#	Expr/GaussianSource.cc \
+#	Expr/JonesCMul2.cc \
+#	Expr/JonesMul3.cc \
+#	Expr/NumericalDipoleBeam.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
 	BlobIOExtensions.cc \
@@ -28,33 +28,33 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisDimensions.cc \
 	VisSelection.cc \
 	Expr/ExprParm.cc \
-	Expr/MeqDFTPS.cc \
-	Expr/MeqExpr.cc \
-	Expr/MeqLMN.cc \
-	Expr/MeqJonesCMul3.cc \
-	Expr/MeqJonesExpr.cc \
-	Expr/MeqJonesInvert.cc \
-	Expr/MeqJonesMul.cc \
-	Expr/MeqJonesMul2.cc \
-	Expr/MeqJonesNode.cc \
-	Expr/MeqJonesSum.cc \
-	Expr/MeqJonesVisData.cc \
-	Expr/MeqMatrix.cc \
-	Expr/MeqMatrixComplexArr.cc \
-	Expr/MeqMatrixComplexSca.cc \
-	Expr/MeqMatrixRealArr.cc \
-	Expr/MeqMatrixRealSca.cc \
-	Expr/MeqMatrixRep.cc \
-	Expr/MeqMatrixTmp.cc \
-	Expr/MeqPhaseRef.cc \
-    Expr/MeqPhaseShift.cc \
-	Expr/MeqPointCoherency.cc \
-	Expr/MeqPointSource.cc \
-	Expr/MeqRequest.cc \
-	Expr/MeqResult.cc \
-	Expr/MeqResultVec.cc \
-    Expr/MeqSource.cc \
-    Expr/MeqStatUVW.cc
+	Expr/DFTPS.cc \
+	Expr/Expr.cc \
+	Expr/LMN.cc \
+	Expr/JonesCMul3.cc \
+	Expr/JonesExpr.cc \
+	Expr/JonesInvert.cc \
+	Expr/JonesMul.cc \
+	Expr/JonesMul2.cc \
+	Expr/JonesNode.cc \
+	Expr/JonesSum.cc \
+	Expr/JonesVisData.cc \
+	Expr/Matrix.cc \
+	Expr/MatrixComplexArr.cc \
+	Expr/MatrixComplexSca.cc \
+	Expr/MatrixRealArr.cc \
+	Expr/MatrixRealSca.cc \
+	Expr/MatrixRep.cc \
+	Expr/MatrixTmp.cc \
+	Expr/PhaseRef.cc \
+    Expr/PhaseShift.cc \
+	Expr/PointCoherence.cc \
+	Expr/PointSource.cc \
+	Expr/Request.cc \
+	Expr/Result.cc \
+	Expr/ResultVec.cc \
+    Expr/Source.cc \
+    Expr/StatUVW.cc
 
 bin_PROGRAMS = versionbbskernel metams
 

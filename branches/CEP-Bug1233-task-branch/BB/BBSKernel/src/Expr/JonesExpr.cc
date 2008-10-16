@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesExpr.cc: The base class of a Jones matrix expression.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,30 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#include <lofar_config.h>
 
-// \file
-// Parameter that can be used in an expression.
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <Common/LofarLogger.h>
+//#include <Common/Timer.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
-// @{
-
-class ExprParm: public ExprRep
+JonesExprRep::~JonesExprRep()
 {
-public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  delete itsResult;
+}
 
-private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+void JonesExprRep::precalculate (const Request& request)
+{
+  // Use a cache.
+  DBGASSERT (itsReqId != request.getId());
+  if (!itsResult) itsResult = new JonesResult;
+  *itsResult = getJResult (request);
+  itsReqId = request.getId();
+}
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
-};
-
-// @}
-
-} //# namespace BBS
-} //# namespace LOFAR
-
-#endif
+} // namespace BBS
+} // namespace LOFAR

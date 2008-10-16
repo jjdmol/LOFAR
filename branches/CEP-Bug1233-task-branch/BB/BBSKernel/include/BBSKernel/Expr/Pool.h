@@ -1,5 +1,5 @@
-#ifndef Expr_POOL_H
-#define Expr_POOL_H
+#ifndef EXPR_POOL_H
+#define EXPR_POOL_H
 
 #include <assert.h>
 #include <stdlib.h>

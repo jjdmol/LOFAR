@@ -21,13 +21,13 @@
 //#
 //# $Id$
 
-#ifndef Expr_PVITERATOR_H
-#define Expr_PVITERATOR_H
+#ifndef EXPR_PVITERATOR_H
+#define EXPR_PVITERATOR_H
 
 // \file
 // Iterators that iterate over the perturbed values of a (set of) result(s).
 
-#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/Result.h>
 
 namespace LOFAR
 {

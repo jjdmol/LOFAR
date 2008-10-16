@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# PhaseRef.cc: Phase reference position and derived values
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,42 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#include <lofar_config.h>
+#include <BBSKernel/Expr/PhaseRef.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MeasConvert.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Arrays/Vector.h>
 
-// \file
-// Parameter that can be used in an expression.
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+using namespace casa;
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
-// @{
-
-class ExprParm: public ExprRep
+PhaseRef::PhaseRef()
+    :   itsRa(0.0),
+        itsDec(0.0),
+        itsSinDec(0.0),
+        itsCosDec(1.0)
 {
-public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+}
 
-private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+PhaseRef::PhaseRef(const casa::MDirection &phaseRef)
+{
+    itsPhaseRef = MDirection::Convert(phaseRef, MDirection::J2000)();
+    Quantum<Vector<double> > angles = itsPhaseRef.getAngle();
+    itsRa  = angles.getBaseValue()(0);
+    itsDec = angles.getBaseValue()(1);
+    itsSinDec = std::sin(itsDec);
+    itsCosDec = std::cos(itsDec);
+}    
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
-};
+PhaseRef::~PhaseRef()
+{
+}
 
-// @}
-
-} //# namespace BBS
-} //# namespace LOFAR
-
-#endif
+} // namespace BBS
+} // namespace LOFAR

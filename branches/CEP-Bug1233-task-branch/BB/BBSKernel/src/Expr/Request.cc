@@ -1,4 +1,4 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# Request.cc: Request grid on which to evaluate an expression.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +20,26 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
-
-#include <Common/lofar_complex.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <lofar_config.h>
+#include <BBSKernel/Expr/Request.h>
 
 namespace LOFAR
 {
-namespace BBS
+namespace BBS 
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+RequestId Request::theirId = 0;
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+Request::Request(const Grid &grid, bool evalPValues)
+    :   itsId(theirId++),
+        itsGrid(grid),
+        itsPValueFlag(evalPValues)
+{
+}        
+
+Request::~Request()
+{
+}
 
 } //# namespace BBS
 } //# namespace LOFAR
-
-#endif

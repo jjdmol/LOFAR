@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# StatExpr.h: The Jones expression for a station
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,56 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#if !defined(EXPR_STATEXPR_H)
+#define EXPR_STATEXPR_H
 
 // \file
-// Parameter that can be used in an expression.
+// The Jones expression for a station
 
+//# Includes
+#include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+//# Forward Declarations
+class Expr;
+
+// This class is a node in a Jones matrix expression.
+
+class StatExpr: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  // Construct from the various subexpressions.
+  StatExpr (const Expr& faradayRotation,
+           const Expr& dipoleRotation,
+           const Expr& dipoleEllipticity,
+           const Expr& gain1,
+           const Expr& gain2);
+
+  virtual ~StatExpr();
+
+  // Calculate the result of its members.
+  virtual JonesResult getJResult (const Request&);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
-
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+  Expr itsFarRot;
+  Expr itsDipRot;
+  Expr itsDipEll;
+  Expr itsGain1;
+  Expr itsGain2;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

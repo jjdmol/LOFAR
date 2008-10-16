@@ -1,6 +1,6 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# LMN.h: LMN-coordinates of a direction on the sky.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,41 +20,50 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef EXPR_LMN_H
+#define EXPR_LMN_H
 
-#include <Common/lofar_complex.h>
+// \file
+// LMN-coordinates of a direction on the sky.
+
+#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/PhaseRef.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup BBSKernel
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+class LMN: public ExprRep
+{
+public:
+    LMN(const Source::Pointer &source,
+        const PhaseRef::ConstPointer &phaseRef);
+    ~LMN();
 
-} //# namespace BBS
-} //# namespace LOFAR
+    const Source::Pointer &getSource() const
+    { return itsSource; }
+
+    ResultVec getResultVec(const Request &request);
+
+private:
+#ifdef EXPR_GRAPH
+    virtual string getLabel();
+#endif
+
+    Source::Pointer          itsSource;
+    PhaseRef::ConstPointer   itsPhaseRef;
+};
+
+// @}
+
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

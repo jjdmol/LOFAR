@@ -1,6 +1,7 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesVisData.h: Make visibility data from an observation available to the
+//# expression tree.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +21,43 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef EXPR_JONESVISDATA_H
+#define EXPR_JONESVISDATA_H
+
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/VisData.h>
 
 // \file
-// Parameter that can be used in an expression.
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+// Make visibility data from an observation available to the expression tree.
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
-class ExprParm: public ExprRep
+class JonesVisData: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+    JonesVisData(const VisData::Pointer &chunk, const baseline_t &baseline);
+    ~JonesVisData();
+
+    // Get the result of the expression for the given domain.
+    virtual JonesResult getJResult (const Request&);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+    void copy(double *re, double *im,
+        const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src);
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+    VisData::Pointer    itsChunk;
+    uint                itsBaselineIndex;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -1,6 +1,6 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# AzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,41 +20,58 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef EXPR_AZEL_H
+#define EXPR_AZEL_H
 
-#include <Common/lofar_complex.h>
+#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ResultVec.h>
+
+#ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#endif
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
+class Source;
+class Station;
+class Request;
+class Matrix;
+
+// \ingroup BBSKernel
+// \ingroup Expr
+// @{
+
+class AzEl: public ExprRep
+{
+public:
+    enum
     {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
+        IN_RA,
+        IN_DEC,
+        IN_X,
+        IN_Y,
+        IN_Z,
+        N_InputPort
+    } InputPort;
+    
+    AzEl(Source &source, Station &station);
+    ResultVec getResultVec(const Request &request);
+    
+private:
+    void evaluate(const Request& request, const Matrix &in_ra,
+        const Matrix &in_dec, const Matrix &in_x, const Matrix &in_y,
+        const Matrix &in_z, Matrix &out_az, Matrix &out_el);
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+#ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+#endif
+};
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+// @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

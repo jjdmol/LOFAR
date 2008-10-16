@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesCMul2.h: Calculate left*conj(right)
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,49 +19,45 @@
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //# $Id$
-
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef EXPR_JONESCMUL2_H
+#define EXPR_JONESCMUL2_H
 
 // \file
-// Parameter that can be used in an expression.
+// Calculate left*conj(transpose(right))
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+//# Includes
+#include <BBSKernel/Expr/JonesExpr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+
+// Calculate left*conj(transpose(right)).
+
+class JonesCMul2: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  JonesCMul2 (const JonesExpr& left, const JonesExpr& right);
+
+  ~JonesCMul2();
+
+  // Get the result of the expression for the given domain.
+  JonesResult getJResult (const Request&);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
-
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+  JonesExpr itsLeft;
+  JonesExpr itsRight;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -1,6 +1,6 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# StationShift.h: Station part of baseline phase shift.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,41 +20,52 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#if !defined(EXPR_POINTDFT_H)
+#define EXPR_POINTDFT_H
 
-#include <Common/lofar_complex.h>
-#include <Common/lofar_string.h>
+// \file
+// Station part of baseline phase shift.
+
+//# Includes
+#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/StatUVW.h>
+
 #include <Common/lofar_vector.h>
+
+#ifdef EXPR_GRAPH
+#include <Common/lofar_string.h>
+#endif
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup BBSKernel
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+class DFTPS: public ExprRep
+{
+public:
+    // Construct from source list, phase reference position and uvw.
+    DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn);
+    virtual ~DFTPS();
 
-} //# namespace BBS
-} //# namespace LOFAR
+    // Get the result of the expression for the given domain.
+    virtual ResultVec getResultVec(const Request &request);
+
+private:
+#ifdef EXPR_GRAPH
+    virtual string getLabel();
+#endif
+
+    StatUVW::ConstPointer    itsUVW;
+};
+
+// @}
+
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

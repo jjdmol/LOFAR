@@ -36,11 +36,11 @@
 //#include <BBSKernel/SourceList.h>
 #include <BBSKernel/VisData.h>
 #include <BBSKernel/Expr/ExprParm.h>
-#include <BBSKernel/Expr/MeqPhaseRef.h>
-#include <BBSKernel/Expr/MeqJonesResult.h>
-#include <BBSKernel/Expr/MeqJonesExpr.h>
-#include <BBSKernel/Expr/MeqSource.h>
-#include <BBSKernel/Expr/MeqStatUVW.h>
+#include <BBSKernel/Expr/PhaseRef.h>
+#include <BBSKernel/Expr/JonesResult.h>
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/StatUVW.h>
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/SourceDB.h>

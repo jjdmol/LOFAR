@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesSum.h: A summation of JonesExpr
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,51 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef EXPR_JONESSUM_H
+#define EXPR_JONESSUM_H
 
 // \file
-// Parameter that can be used in an expression.
+// A sum of JonesExpr
 
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+//# Includes
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <vector>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+
+// This class adds the results of multiple JonesExpr objects.
+
+class JonesSum: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  // Construct from four Jones elements.
+  JonesSum (const std::vector<JonesExpr>& expr);
+
+  virtual ~JonesSum();
+
+  // Calculate the result of its members.
+  virtual JonesResult getJResult (const Request&);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+  void mergePValues(const Result &in, Result &out);
+#ifdef EXPR_GRAPH
+  virtual std::string getLabel();
+#endif
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+  std::vector<JonesExpr> itsExpr;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

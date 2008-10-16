@@ -1,15 +1,15 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
 #	Expr/ExternalFunction.h \
-#	Expr/MeqAzEl.h \
-#	Expr/MeqDiag.h \
-#	Expr/MeqDipoleBeam.h \
-#	Expr/MeqDipoleBeamExternal.h \
-#	Expr/MeqGaussianCoherency.h \
-#	Expr/MeqGaussianSource.h \
-#	Expr/MeqJonesCMul2.h \
-#	Expr/MeqJonesMul3.h \
-#	Expr/MeqNumericalDipoleBeam.h
+#	Expr/AzEl.h \
+#	Expr/Diag.h \
+#	Expr/DipoleBeam.h \
+#	Expr/DipoleBeamExternal.h \
+#	Expr/GaussianCoherence.h \
+#	Expr/GaussianSource.h \
+#	Expr/JonesCMul2.h \
+#	Expr/JonesMul3.h \
+#	Expr/NumericalDipoleBeam.h
 
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
@@ -33,35 +33,35 @@ pkginclude_HEADERS = Package__Version.h \
 
 pkginclude_Expr_HEADERS	= 	\
 	Expr/ExprParm.h \
-	Expr/MeqDFTPS.h \
-	Expr/MeqExpr.h \
-	Expr/MeqJonesCMul3.h \
-	Expr/MeqJonesExpr.h \
-	Expr/MeqJonesInvert.h \
-	Expr/MeqJonesMul.h \
-	Expr/MeqJonesMul2.h \
-	Expr/MeqJonesNode.h \
-	Expr/MeqJonesResult.h \
-	Expr/MeqJonesSum.h \
-	Expr/MeqJonesVisData.h \
-	Expr/MeqLMN.h \
-	Expr/MeqMatrix.h \
-	Expr/MeqMatrixComplexArr.h \
-	Expr/MeqMatrixComplexSca.h \
-	Expr/MeqMatrixRealArr.h \
-	Expr/MeqMatrixRealSca.h \
-	Expr/MeqMatrixRep.h \
-	Expr/MeqMatrixTmp.h \
-	Expr/MeqPhaseRef.h \
-	Expr/MeqPhaseShift.h \
-	Expr/MeqPointCoherency.h \
-	Expr/MeqPointSource.h \
+	Expr/DFTPS.h \
+	Expr/Expr.h \
+	Expr/JonesCMul3.h \
+	Expr/JonesExpr.h \
+	Expr/JonesInvert.h \
+	Expr/JonesMul.h \
+	Expr/JonesMul2.h \
+	Expr/JonesNode.h \
+	Expr/JonesResult.h \
+	Expr/JonesSum.h \
+	Expr/JonesVisData.h \
+	Expr/LMN.h \
+	Expr/Matrix.h \
+	Expr/MatrixComplexArr.h \
+	Expr/MatrixComplexSca.h \
+	Expr/MatrixRealArr.h \
+	Expr/MatrixRealSca.h \
+	Expr/MatrixRep.h \
+	Expr/MatrixTmp.h \
+	Expr/PhaseRef.h \
+	Expr/PhaseShift.h \
+	Expr/PointCoherence.h \
+	Expr/PointSource.h \
 	Expr/PValueIterator.h \
-    Expr/MeqRequest.h \
-	Expr/MeqResult.h \
-	Expr/MeqResultVec.h \
+    Expr/Request.h \
+	Expr/Result.h \
+	Expr/ResultVec.h \
 	Expr/Pool.h \
-	Expr/MeqSource.h \
-    Expr/MeqStatUVW.h
+	Expr/Source.h \
+    Expr/StatUVW.h
 
 include $(top_srcdir)/Makefile.common

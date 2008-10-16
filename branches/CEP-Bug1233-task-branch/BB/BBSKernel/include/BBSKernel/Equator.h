@@ -27,7 +27,7 @@
 // Generate normal equations that tie a model to an observation.
 
 #include <BBSKernel/Model.h>
-#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/Result.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/VisData.h>
 #include <Common/Timer.h>

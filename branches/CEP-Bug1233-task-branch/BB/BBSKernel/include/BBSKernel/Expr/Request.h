@@ -1,4 +1,4 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# Request.h: Request grid on which to evaluate an expression.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,39 +20,59 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef EXPR_REQUEST_H
+#define EXPR_REQUEST_H
 
-#include <Common/lofar_complex.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+// \file
+// Request grid on which to evaluate an expression.
+
+#include <ParmDB/Grid.h>
+#include <BBSKernel/Types.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+typedef int RequestId;
+const RequestId InitRequestId = -1;
+
+class Request
+{
+public:
+    Request(const Grid &grid, bool evalPValues = false);
+    ~Request();
+    
+    RequestId getId() const
+    { return itsId; }
+
+    Box getBoundingBox() const
+    { return itsGrid.getBoundingBox(); }
+    
+    size_t getChannelCount() const
+    { return itsGrid[FREQ]->size(); }
+
+    size_t getTimeslotCount() const
+    { return itsGrid[TIME]->size(); }
+
+    const Grid &getGrid() const
+    { return itsGrid; }
+
+    bool getPValueFlag() const
+    { return itsPValueFlag; }
+    
+private:
+    size_t              itsId;
+    Grid                itsGrid;
+    bool                itsPValueFlag;
+    
+    static RequestId    theirId;
+};
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

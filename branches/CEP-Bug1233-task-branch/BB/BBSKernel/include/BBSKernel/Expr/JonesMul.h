@@ -1,6 +1,7 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# JonesMul.h: Multiply each component of a JonesExpr with a single
+//#     Expr.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +21,48 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef EXPR_JONESMUL_H
+#define EXPR_JONESMUL_H
 
-// \file
-// Parameter that can be used in an expression.
+// \file Multiply each component of a JonesExpr with a single Expr.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/JonesResult.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+
+// Multiply each component of a JonesExpr with a single Expr.
+
+class JonesMul: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+    JonesMul(const JonesExpr &left, const Expr &right);
+    ~JonesMul();
+
+    // Get the result of the expression for the given domain.
+    JonesResult getJResult(const Request &request);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+#ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+#endif
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+    JonesExpr	itsLeft;
+    Expr       itsRight;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

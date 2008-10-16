@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# Diag.cc: A diagonal node in a Jones matrix expression.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,41 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#include <lofar_config.h>
+//#include <Common/Profiling/PerfProfile.h>
 
-// \file
-// Parameter that can be used in an expression.
-
+#include <BBSKernel/Expr/Diag.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
-// @{
-
-class ExprParm: public ExprRep
+Diag::Diag(const Expr& xx, const Expr& yy)
+: itsXX(xx),
+  itsYY(yy)
 {
-public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+  addChild(itsXX);
+  addChild(itsYY);
+}
 
-private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+Diag::~Diag()
+{}
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
-};
+JonesResult Diag::getJResult(const Request& request)
+{
+//  PERFPROFILE(__PRETTY_FUNCTION__);
 
-// @}
+  JonesResult res(0);
+  {
+    itsXX.getResultSynced(request, res.result11());
+    itsYY.getResultSynced(request, res.result22());
+    res.result12().setValue (Matrix(0.));
+    res.result21().setValue (Matrix(0.));
+  }
+  return res;
+}
 
-} //# namespace BBS
-} //# namespace LOFAR
-
-#endif
+} // namespace BBS
+} // namespace LOFAR

@@ -1,6 +1,6 @@
-//# ExternalFunction.h: Dynamically loaded function.
+//# PointSource.h: Abstract base class for holding a source
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,41 +20,53 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef EXPR_SOURCE_H
+#define EXPR_SOURCE_H
 
-#include <Common/lofar_complex.h>
+// \file
+// Abstract base class for holding a source
+
 #include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
+#include <Common/lofar_smartptr.h>
+#include <BBSKernel/Expr/Expr.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup BBSKernel
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+class Source
+{
+public:
+    typedef shared_ptr<Source>       Pointer;
+    typedef shared_ptr<const Source> ConstPointer;
+    
+    Source();
+    Source(const string &name, const Expr &ra, const Expr &dec);
 
-} //# namespace BBS
-} //# namespace LOFAR
+    virtual ~Source();
+
+    const string &getName() const
+    { return itsName; }
+
+    const Expr &getRa() const
+    { return itsRa; }
+    const Expr &getDec() const
+    { return itsDec; }
+
+protected:
+    string  itsName;
+    Expr itsRa;
+    Expr itsDec;
+};
+
+// @}
+
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

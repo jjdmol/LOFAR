@@ -27,25 +27,25 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Measurement.h>
 
-#include <BBSKernel/Expr/MeqPointSource.h>
-#include <BBSKernel/Expr/MeqGaussianSource.h>
+#include <BBSKernel/Expr/PointSource.h>
+#include <BBSKernel/Expr/GaussianSource.h>
 
 #include <BBSKernel/Expr/ExprParm.h>
-#include <BBSKernel/Expr/MeqPhaseRef.h>
-#include <BBSKernel/Expr/MeqPhaseShift.h>
-#include <BBSKernel/Expr/MeqPointCoherency.h>
-#include <BBSKernel/Expr/MeqJonesMul.h>
-#include <BBSKernel/Expr/MeqJonesMul2.h>
-#include <BBSKernel/Expr/MeqJonesVisData.h>
-#include <BBSKernel/Expr/MeqJonesSum.h>
+#include <BBSKernel/Expr/PhaseRef.h>
+#include <BBSKernel/Expr/PhaseShift.h>
+#include <BBSKernel/Expr/PointCoherence.h>
+#include <BBSKernel/Expr/JonesMul.h>
+#include <BBSKernel/Expr/JonesMul2.h>
+#include <BBSKernel/Expr/JonesVisData.h>
+#include <BBSKernel/Expr/JonesSum.h>
 
-#include <BBSKernel/Expr/MeqLMN.h>
-#include <BBSKernel/Expr/MeqDFTPS.h>
-#include <BBSKernel/Expr/MeqJonesNode.h>
-#include <BBSKernel/Expr/MeqJonesInvert.h>
-#include <BBSKernel/Expr/MeqJonesCMul3.h>
-#include <BBSKernel/Expr/MeqRequest.h>
-#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/LMN.h>
+#include <BBSKernel/Expr/DFTPS.h>
+#include <BBSKernel/Expr/JonesNode.h>
+#include <BBSKernel/Expr/JonesInvert.h>
+#include <BBSKernel/Expr/JonesCMul3.h>
+#include <BBSKernel/Expr/Request.h>
+#include <BBSKernel/Expr/JonesExpr.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>

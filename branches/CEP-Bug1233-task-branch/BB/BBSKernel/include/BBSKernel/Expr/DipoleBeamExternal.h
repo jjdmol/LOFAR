@@ -1,4 +1,4 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# DipoleBeamExternal.h: Dipole voltage beam based on external functions.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,43 +20,50 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
-
-// \file
-// Parameter that can be used in an expression.
+#ifndef EXPR_DIPOLEBEAMEXTERNAL_H
+#define EXPR_DIPOLEBEAMEXTERNAL_H
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/JonesResult.h>
+#include <BBSKernel/Expr/ExternalFunction.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+class DipoleBeamExternal: public JonesExprRep
 {
 public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+    enum
+    {
+        IN_AZEL = 0,
+        IN_ORIENTATION,
+        N_InputPort
+    } InputPort;
+
+    DipoleBeamExternal(const string &moduleTheta, const string &modulePhi,
+        Expr azel, Expr orientation, double scaleFactor);
+
+    virtual JonesResult getJResult(const Request &request);
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+    void evaluate(const Request &request, const Matrix &in_az,
+        const Matrix &in_el, const Matrix &in_orientation,
+        Matrix &out_E11, Matrix &out_E12,
+        Matrix &out_E21, Matrix &out_E22);
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+#ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+#endif
+
+    ExternalFunction    itsThetaFunction, itsPhiFunction;
+    double              itsScaleFactor;
 };
 
 // @}

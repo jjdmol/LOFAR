@@ -1,6 +1,6 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# Source.cc: Class holding the expressions defining a  source
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,48 +20,25 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#include <lofar_config.h>
+#include <BBSKernel/Expr/Source.h>
 
-// \file
-// Parameter that can be used in an expression.
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
-// @{
-
-class ExprParm: public ExprRep
+Source::Source(const string& name, const Expr &ra, const Expr &dec)
+    :   itsName(name),
+        itsRa(ra),
+        itsDec(dec)
 {
-public:
-    ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
-    
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
-    
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+}
 
-private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+Source::~Source()
+{
+}
 
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
-};
-
-// @}
-
-} //# namespace BBS
-} //# namespace LOFAR
-
-#endif
+} // namespace BBS
+} // namespace LOFAR
