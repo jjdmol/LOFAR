@@ -26,7 +26,7 @@ class Section(object):
 
     def run(self, runlog, timeOut, runCmd = None):
         if '_bgp' in self.buildvar:
-            self.runJob = BGLJob(self.package.split('/')[-1], \
+            self.runJob = CNJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
@@ -75,7 +75,7 @@ class Section(object):
             raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
 
         nPsets = nSubbands / nSubbandsPerPset
-        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
+        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.CNProc.coresPerPset')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
 
 	stations = parset.getStations()
@@ -89,14 +89,14 @@ class Section(object):
 	if nPsets > len(interfaces):
 	  raise Exception('need too many output psets --- increase nrSubbandsPerPset')
 	
-	if not parset.isDefined('OLAP.BGLProc.inputPsets') and not parset.isDefined('OLAP.BGLProc.outputPsets'):
+	if not parset.isDefined('OLAP.CNProc.inputPsets') and not parset.isDefined('OLAP.CNProc.outputPsets'):
 	    print 'interfaces = ', interfaces
 	    print 'inputPsets = ', inputPsets
 	    print 'outputPsets = ', outputPsets
 
-	parset['OLAP.BGLProc.inputPsets']  = inputPsets
-	parset['OLAP.BGLProc.outputPsets'] = outputPsets
-	parset['OLAP.BGLProc.psetDimensions'] = psetDimensions.get(self.partition)
+	parset['OLAP.CNProc.inputPsets']  = inputPsets
+	parset['OLAP.CNProc.outputPsets'] = outputPsets
+	parset['OLAP.CNProc.psetDimensions'] = psetDimensions.get(self.partition)
 	parset.checkRspBoardList()
 	
 class StorageSection(Section):
@@ -118,7 +118,7 @@ class StorageSection(Section):
 			 buildvar = 'gnu_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
-        self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
+        self.parset['OLAP.OLAP_Conn.IONProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)
@@ -139,14 +139,14 @@ class IONProcSection(Section):
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)        
         
-class BGLProcSection(Section):
+class CNProcSection(Section):
     def __init__(self, parset, host, partition, workingDir, parsetfile):
         self.partition = partition
 
         self.inOutPsets(parset)
 
         Section.__init__(self, parset, \
-                         'RTCP/BGLProc', \
+                         'RTCP/CNProc', \
                          host = host, \
 			 workingDir = workingDir, \
 			 parsetfile = parsetfile, \
@@ -154,7 +154,7 @@ class BGLProcSection(Section):
 
         nstations = parset.getNStations()
         clock = parset.getClockString()
-	self.executable = 'BGL_Processing'
+	self.executable = 'CN_Processing'
         
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)

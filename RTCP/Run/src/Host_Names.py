@@ -20,15 +20,12 @@ list003   = Host(name = 'list003'  , \
                  address = '10.181.0.3')
 hpclf     = Host(name = 'hpclf'  , \
                  address = 'hpclf1.service.rug.nl')
-bglfen1   = Host(name = 'bglfen1', \
-                 address = 'bglfen1.service.rug.nl')
-bglfen2   = Host(name = 'bglfen2', \
-                 #address = 'bglfen2.service.rug.nl')
-                 address = 'bglfen2')
-bglfen3   = Host(name = 'bglfen3', \
-                 address = 'bglfen3.service.rug.nl')
-bglfen0   = Host(name = 'bglfen0', \
-                 address = 'bglfen0.service.rug.nl')
+bgfen1   = Host(name = 'bgfen1', \
+                 address = 'bgfen1.bgnet.rug.nl')
+bgfen2   = Host(name = 'bgfen2', \
+                 address = 'bgfen2.bgnet.rug.nl')
+bgfen3   = Host(name = 'bgfen3', \
+                 address = 'bgfen3.bgnet.rug.nl')
 bgfen0    = Host(name = 'bgfen0', \
                  address = 'bgfen0.bgnet.rug.nl')
 bgsn      = Host(name = 'bgsn', \

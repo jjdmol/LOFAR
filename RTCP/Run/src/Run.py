@@ -45,22 +45,22 @@ def doObservation(obsID, parset):
     
     sectionTable = dict({\
         'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
-	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
+	'CNProcSection' : CNProcSection(parset, userId.getHost(), options.partition, workingDir, parsetfile),
 	'StorageSection': StorageSection(parset, listfen, workingDir, parsetfile)
         })
 
     sectionList = sectionTable.keys()
     sectionList.sort()
     
-    if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('BGLProcSection'):
-	parset['OLAP.OLAP_Conn.IONProc_BGLProc_Transport'] = 'NULL'
+    if not sectionTable.has_key('IONProcSection') or not sectionTable.has_key('CNProcSection'):
+	parset['OLAP.OLAP_Conn.IONProc_CNProc_Transport'] = 'NULL'
     
-    if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
-	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
+    if sectionTable.has_key('CNProcSection') and sectionTable.has_key('StorageSection'):
+	parset['OLAP.OLAP_Conn.IONProc_Storage_Transport'] = 'TCP'
     else:
-	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'NULL'
+	parset['OLAP.OLAP_Conn.IONProc_Storage_Transport'] = 'NULL'
 
-    nSubbandSamples = float(parset['OLAP.BGLProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
+    nSubbandSamples = float(parset['OLAP.CNProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
     stepTime = nSubbandSamples / (parset['Observation.sampleClock'] * 1000000.0 / 1024)
 
     startTime = parset['Observation.startTime']
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='RTCP.parset', type='string', help='name of the parameterset [%default]')
-    parser.add_option('--partition'      , dest='partition'      , default='R000_256_1', type='string', help='name of the BGL partion [%default]')
+    parser.add_option('--partition'      , dest='partition'      , default='R000_256_1', type='string', help='name of the BlueGene partion [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='200MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
     parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 25), type='int', help='start of measurement in UTC seconds [now + 25]')
