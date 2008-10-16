@@ -107,7 +107,7 @@ void Parset::check() const
       throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSlotsInFrame");
   
   // check not needed when using Storage
-  if (isDefined("OLAP.BGLProc.inputPsets")) {
+  if (isDefined("OLAP.CNProc.inputPsets")) {
     std::vector<unsigned> inputs	 = inputPsets();
     
     for (std::vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset ++) {

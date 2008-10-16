@@ -2,8 +2,8 @@ lib_LTLIBRARIES			= libinterface.la
 
 libinterface_la_SOURCES	        = Package__Version.cc \
 				  Allocator.cc \
-				  BGL_Configuration.cc \
-				  BGL_Mapping.cc \
+				  CN_Configuration.cc \
+				  CN_Mapping.cc \
 				  Parset.cc \
 				  RSPTimeStamp.cc
 
