@@ -79,7 +79,7 @@ class Job(object):
 		ionode = Host(name = IONode, \
                               address = IONode)
 		ionode.executeAsync('killall IONProc').waitForDone()
-	elif (self.name == 'BGLProc'):
+	elif (self.name == 'CNProc'):
 	    bgfen0.executeAsync('killall mpirun').waitForDone()
 	else:  
             self.host.executeAsync('killall ' + self.name).waitForDone()
@@ -116,7 +116,7 @@ class MPIJob(Job):
         self.host.sput(lmf, self.workingDir + self.name + '.machinefile')
         os.remove(lmf)
 
-class BGLJob(Job):
+class CNJob(Job):
     ''' A Job that runs on BlueGene/L'''
     def __init__(self, name, host, executable, noProcesses, partition, workingDir):
         self.partition = partition

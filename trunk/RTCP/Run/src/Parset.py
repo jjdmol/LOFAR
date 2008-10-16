@@ -40,12 +40,10 @@ class Parset(LOFAR_Parset.Parset):
         
         if self.clock == '160MHz':
 	    self['Observation.sampleClock'] = 160
-	    self['OLAP.BGLProc.integrationSteps'] = 608
+	    self['OLAP.CNProc.integrationSteps'] = 608
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
-	    self['OLAP.BGLProc.integrationSteps'] = 768
-	    #self['OLAP.BGLProc.integrationSteps'] = 384
-	    #self['OLAP.BGLProc.integrationSteps'] = 192
+	    self['OLAP.CNProc.integrationSteps'] = 768
        
     def getClockString(self):
         return self.clock
@@ -130,14 +128,14 @@ class Parset(LOFAR_Parset.Parset):
 	        print 'tabList contains wrong number (' + str(len(tabList)) + ') of elements (expected '+ str(len(self.stationList)) + ')'
 		sys.exit(0)
 		
-	self['OLAP.BGLProc.tabList'] = [tab for tab in tabList]
+	self['OLAP.CNProc.tabList'] = [tab for tab in tabList]
 	
     def getStations(self):
 	return self.stationList
     
     def setPartition(self, partition):
         self.partition = partition
-	self['OLAP.BGLProc.partition'] = partition	
+	self['OLAP.CNProc.partition'] = partition	
 	
     def getPartition(self):
         return self.partition
@@ -240,7 +238,7 @@ class Parset(LOFAR_Parset.Parset):
 		    sys.exit(0)
 
     def inputPsets(self):
-        return self.getInt32Vector('OLAP.BGLProc.inputPsets')
+        return self.getInt32Vector('OLAP.CNProc.inputPsets')
 	    
     def checkRspBoardList(self):
         if self.isDefined('Observation.subbandList'):
