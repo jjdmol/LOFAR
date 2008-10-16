@@ -33,8 +33,8 @@
 #include <ION_Allocator.h>
 //#include <TH_ZoidServer.h>
 #include <Interface/AlignedStdAllocator.h>
-#include <Interface/BGL_Command.h>
-#include <Interface/BGL_Mapping.h>
+#include <Interface/CN_Command.h>
+#include <Interface/CN_Mapping.h>
 #include <Interface/SubbandMetaData.h>
 
 #include <pthread.h>
@@ -408,10 +408,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
 
 #else
 
-  BGL_Command command(BGL_Command::PROCESS);
+  CN_Command command(CN_Command::PROCESS);
   
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
-    unsigned core    = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    unsigned core    = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
     Stream   *stream = itsClientStreams[core];
 
     // tell CN to process data
