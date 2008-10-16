@@ -35,6 +35,8 @@
 #include <BBSKernel/MNS/MeqPhaseShift.h>
 #include <BBSKernel/MNS/MeqPointCoherency.h>
 #include <BBSKernel/MNS/MeqJonesMul.h>
+#include <BBSKernel/MNS/MeqJonesMul2.h>
+#include <BBSKernel/MNS/MeqJonesVisData.h>
 #include <BBSKernel/MNS/MeqJonesSum.h>
 
 #include <BBSKernel/MNS/MeqLMN.h>
@@ -67,8 +69,10 @@ namespace LOFAR
 namespace BBS 
 {
 
-Model::Model(const Instrument &instrument, const casa::MDirection &phaseRef)
-    : itsInstrument(instrument)
+Model::Model(const Instrument &instrument, const SourceDB &sourceDb, 
+    const casa::MDirection &phaseRef)
+    :   itsInstrument(instrument),
+        itsSourceDb(sourceDb)
 {
     // Store phase reference.
     itsPhaseRef = PhaseRef::ConstPointer(new PhaseRef(phaseRef));
@@ -80,14 +84,15 @@ Model::Model(const Instrument &instrument, const casa::MDirection &phaseRef)
 bool Model::makeFwdExpressions(const ModelConfig &config,
     const vector<baseline_t> &baselines)
 {
-    // Remove all existing expressions.
-    clearExpressions();
+    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
+        "clearExpressions() first");
+
+    // Parse user supplied model component selection.
+    vector<bool> mask(parseComponents(config.components));
 
     // Create source nodes for all selected sources.
     vector<Source::Pointer> sources;
-    sources.push_back(makeSource(SourceDescriptor("CasA", SourceDescriptor::POINT)));
-//    sources.push_back(makeSource(SourceDescriptor("CygA", SourceDescriptor::POINT)));
-//    makeSources(sources, config.sources);
+    makeSources(sources, config.sources);
     if(sources.empty())
     {
         LOG_ERROR_STR("Source selection is empty.");
@@ -95,21 +100,12 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     }
 
     const size_t nSources = sources.size();
-    const size_t nStations = itsStationUvw.size();
+    const size_t nStations = itsInstrument.stations.size();
 
-    cout << "nSources: " << nSources << endl;
-    cout << "nStations: " << nStations << endl;
-
-    // Create LMN nodes for all sources and coherence nodes for all point
-    // sources.
-    vector<Expr> lmn(nSources);
+    // Create coherence nodes for all point sources.
     map<size_t, JonesExpr> pointCoherences;
-
     for(size_t i = 0; i < nSources; ++i)
     {
-        // Create LMN node.
-        lmn[i] = new LMN(sources[i], itsPhaseRef);
-
         // A point source's coherence is independent of baseline UVW
         // coordinates. Therefore, they are constructed here and shared
         // between baselines.
@@ -119,27 +115,86 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
         if(pointSource)
         {
             // Create point source coherence.
-            pointCoherences[i] = new PointCoherency(pointSource);
+            pointCoherences[i] = new PointCoherence(pointSource);
         }
     }
 
     // Direction independent (uv-plane) effects.
+    bool uvEffects = mask[BANDPASS] || mask[GAIN];
+    
+    // Create a bandpass node per station.
+    vector<JonesExpr> bandpass;
+//    if(mask[BANDPASS])
+//    {
+//        makeBandpassNodes(bandpass, config);
+//    }
+    
+    // Create a gain node per station.
     vector<JonesExpr> gain;
-    makeGainNodes(gain, config);
-
-    // Direction dependent (image-plane) effects.
-    boost::multi_array<Expr, 2>
-        stationShift(boost::extents[nStations][nSources]);
-
-    // Create a station shift node per station-source combination.
-    for(size_t i = 0; i < nStations; ++i)
+    if(mask[GAIN])
     {
-        for(size_t j = 0; j < nSources; ++j)
-        {
-            stationShift[i][j] = new DFTPS(itsStationUvw[i], lmn[j]);
+        makeGainNodes(gain, config);
+    }
+
+    // Create a single JonesExpr per station that is the accumulation of all
+    // uv-plane effects.
+    vector<JonesExpr> uvJones;
+    if(uvEffects)
+    {
+        uvJones.resize(nStations);
+        for(size_t i = 0; i < nStations; ++i)
+        {   
+            if(mask[GAIN])
+            {
+                uvJones[i] = gain[i];
+            }
+                
+//            if(mask[BANDPASS])
+//            {
+//                uvJones[i] = uvJones[i].isNull() ? bandpass[i]
+//                    : JonesExpr(new JonesMul2(bandpass[i], uvJones[i]));
+//            }
+
+            // TODO: Add other uv-plane effects here.
         }
     }
     
+    // Direction dependent (image-plane) effects.
+    bool imgEffects = mask[DIRECTIONAL_GAIN] && mask[BEAM];
+    
+    // Create a station shift node per station-source combination.
+    boost::multi_array<Expr, 2> stationShift;
+    makeStationShiftNodes(stationShift, sources);
+
+    // Create a directional gain node per station-source combination.
+    boost::multi_array<JonesExpr, 2> gainDirectional;
+    if(mask[DIRECTIONAL_GAIN])
+    {
+        makeDirectionalGainNodes(gainDirectional, config, sources);
+    }
+    
+    // Create a single JonesExpr per station-source combination that is the
+    // accumulation of all image-plane effects.
+    // TODO: Incorporate station phase shift by splitting it per station-source.
+    boost::multi_array<JonesExpr, 2> imgJones;
+    if(imgEffects)
+    {
+        imgJones.resize(boost::extents[nStations][nSources]);
+
+        for(size_t i = 0; i < nStations; ++i)
+        {
+            for(size_t j = 0; j < nSources; ++j)
+            {
+                if(mask[DIRECTIONAL_GAIN])
+                {
+                    imgJones[i][j] = gainDirectional[i][j];
+                }
+                
+                // TODO: Add other image-plane effects here.
+            }
+        }
+    }
+        
     // Create an expression tree for each baseline.
     for(size_t i = 0; i < baselines.size(); ++i)
     {
@@ -153,10 +208,18 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                 stationShift[baseline.second][j]));
 
             JonesExpr coherence = pointCoherences[j];
+            // TODO: Remove this assert after adding GaussianSource.
             ASSERT(!coherence.isNull());
 
             // Phase shift the source coherence.
             coherence = new JonesMul(coherence, shift);
+            
+            // Apply direction dependent (image-plane) effects.
+            if(imgEffects)
+            {
+                coherence = new JonesCMul3(imgJones[baseline.first][j],
+                    coherence, imgJones[baseline.second][j]);
+            }
 
             terms.push_back(coherence);
         }
@@ -172,8 +235,12 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
             sum = new JonesSum(terms);
         }
 
-        sum = new JonesCMul3(gain[baseline.first], sum,
-            gain[baseline.second]);
+        // Apply direction independent (uv-plane) effects.
+        if(uvEffects)
+        {
+            sum = new JonesCMul3(uvJones[baseline.first], sum,
+                uvJones[baseline.second]);
+        }
 
         itsExpressions[baseline] = sum;
     }
@@ -181,345 +248,99 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     return true;
 }
 
-
-/*
-void Model::makeEquations(EquationType type, const ModelConfig &config,
-    const vector<baseline_t> &baselines, PhaseRef *phaseRef,
-    VisData::Pointer buffer)
+bool Model::makeInvExpressions(const ModelConfig &config,
+    const VisData::Pointer &chunk, const vector<baseline_t> &baselines)
 {
-    // Parse component names.
-    vector<bool> mask(N_ModelComponent, false);
-    for(vector<string>::const_iterator it = config.components.begin();
-        it != config.components.end();
-        ++it)
+    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
+        "clearExpressions() first");
+
+    // Parse user supplied model component selection.
+    vector<bool> mask(parseComponents(config.components));
+
+    // Create source nodes for all selected sources.
+    vector<Source::Pointer> sources;
+    makeSources(sources, config.sources);
+    if(sources.size() != 1)
     {
-        if(*it == "BANDPASS")
-        {
-            mask[BANDPASS] = true;
-        }
-        else if(*it == "GAIN")
-        {
-            mask[GAIN] = true;
-        }
-        else if(*it == "DIRECTIONAL_GAIN")
-        {
-            mask[DIRECTIONAL_GAIN] = true;
-        }
-        else if(*it == "BEAM" && type == SIMULATE)
-        {
-            mask[BEAM] = true;
-        }
-        else
-        {
-            LOG_WARN_STR("Ignored unknown model component '" << *it << "'.");
-        }
+        LOG_ERROR_STR("No direction, or more than one direction specified. A"
+            " correction can only be applied for a single direction on the"
+            " sky");
+        return false;
     }
+
+    const size_t nStations = itsInstrument.stations.size();
+
+    // Direction independent (uv-plane) effects.
+    bool uvEffects = mask[BANDPASS] || mask[GAIN];
     
-    string part1(config.usePhasors ? "ampl:" : "real:");
-    string part2(config.usePhasors ? "phase:" : "imag:");
-
-    // Clear all equations.
-    clearEquations();
-
-    itsEquationType = type;
-
-    // Make nodes for all specified sources (use all if none specified).
-    if(config.sources.empty())
-        makeSourceNodes(itsSourceList->getSourceNames(), phaseRef);
-    else
-        makeSourceNodes(config.sources, phaseRef);
-
-    // Make baseline equations.
-    size_t nStations = itsStationNodes.size();
-    size_t nSources = itsSourceNodes.size();
-
-    ASSERT(nStations > 0 && nSources > 0);
-
-    vector<Expr> azel(nSources);
-    vector<Expr> dft(nStations * nSources);
-    vector<JonesExpr> bandpass, gain, dir_gain;
-    vector<vector<JonesExpr> > beam;
-
-    if(mask[BANDPASS])
-    {
-        bandpass.resize(nStations);
-    }
+    // Create a bandpass node per station.
+    vector<JonesExpr> bandpass;
+//    if(mask[BANDPASS])
+//    {
+//        makeBandpassNodes(bandpass, config, true);
+//    }
     
+    // Create a gain node per station.
+    vector<JonesExpr> gain;
     if(mask[GAIN])
     {
-        gain.resize(nStations);
+        makeGainNodes(gain, config, true);
     }
-        
+
+    // Create a single JonesExpr per station-source combination that is the
+    // accumulation of all uv-plane and image-plane effects.
+    // Accumulate all uv-plane effects.
+    boost::multi_array<JonesExpr, 1> jJones(boost::extents[nStations]);
+    if(uvEffects)
+    {
+        for(size_t i = 0; i < nStations; ++i)
+        {   
+//            if(mask[BANDPASS])
+//            {
+//                jJones[i] = bandpass[i];
+//            }
+            
+            if(mask[GAIN])
+            {
+                jJones[i] = jJones[i].isNull() ? gain[i]
+                    : JonesExpr(new JonesMul2(gain[i], jJones[i]));
+            }
+
+            // TODO: Add other uv-plane effects here.
+        }
+    }
+    
+    // Direction dependent (image-plane) effects.
+    // Create a directional gain node per station-source combination.
+    boost::multi_array<JonesExpr, 2> gainDirectional;
     if(mask[DIRECTIONAL_GAIN])
     {
-        dir_gain.resize(nStations * nSources);
+        makeDirectionalGainNodes(gainDirectional, config, sources, true);
     }
-
-    if(mask[BEAM])
-    {
-        makeBeamNodes(config, instrumentDBase, parmGroup, beam);
-    }
-
+    
+    // Accumulate the image-plane effects.
     for(size_t i = 0; i < nStations; ++i)
     {
-        // Make a phase term per station per source.
-        for(size_t j = 0; j < nSources; ++j)
-            dft[i * nSources + j] = Expr(new DFTPS(itsLMNNodes[j],
-                itsUVWNodes[i].get()));
-
-        // Make a bandpass expression per station.
-        if(mask[BANDPASS])
-        {
-            string suffix = itsStationNodes[i]->getName();
-
-            Expr B11(ParmFunklet::create("bandpass:11:" + suffix,
-                parmGroup, instrumentDBase));
-            Expr B22(ParmFunklet::create("bandpass:22:" + suffix,
-                parmGroup, instrumentDBase));
-
-            bandpass[i] = new Diag(B11, B22);
-        }
-
-        // Make a complex gain expression per station and possibly per source.
-        if(mask[GAIN])
-        {
-            Expr J11, J12, J21, J22;
-            string suffix = itsStationNodes[i]->getName();
-
-            // Make a J-jones expression per station
-            Expr J11_part1(ParmFunklet::create("gain:11:" + part1
-                + suffix, parmGroup, instrumentDBase));
-            Expr J11_part2(ParmFunklet::create("gain:11:" + part2
-                + suffix, parmGroup, instrumentDBase));
-            Expr J12_part1(ParmFunklet::create("gain:12:" + part1
-                + suffix, parmGroup, instrumentDBase));
-            Expr J12_part2(ParmFunklet::create("gain:12:" + part2
-                + suffix, parmGroup, instrumentDBase));
-            Expr J21_part1(ParmFunklet::create("gain:21:" + part1
-                + suffix, parmGroup, instrumentDBase));
-            Expr J21_part2(ParmFunklet::create("gain:21:" + part2
-                + suffix, parmGroup, instrumentDBase));
-            Expr J22_part1(ParmFunklet::create("gain:22:" + part1
-                + suffix, parmGroup, instrumentDBase));
-            Expr J22_part2(ParmFunklet::create("gain:22:" + part2
-                + suffix, parmGroup, instrumentDBase));
-
-            if(mask[config.usePhasors])
-            {
-                J11 = new ExprAPToComplex(J11_part1, J11_part2);
-                J12 = new ExprAPToComplex(J12_part1, J12_part2);
-                J21 = new ExprAPToComplex(J21_part1, J21_part2);
-                J22 = new ExprAPToComplex(J22_part1, J22_part2);
-            }
-            else
-            {
-                J11 = new ExprToComplex(J11_part1, J11_part2);
-                J12 = new ExprToComplex(J12_part1, J12_part2);
-                J21 = new ExprToComplex(J21_part1, J21_part2);
-                J22 = new ExprToComplex(J22_part1, J22_part2);
-            }
-
-            gain[i] = new JonesNode(J11, J12, J21, J22);
-//            inv_gain[i] = new JonesInvert(gain[i]);
-        }
-        
         if(mask[DIRECTIONAL_GAIN])
         {
-            // Make a J-jones expression per station per source. Eventually,
-            // patches of several sources will be supported as well.
-            for(size_t j = 0; j < nSources; ++j)
-            {
-                Expr J11, J12, J21, J22;
-                string suffix = itsStationNodes[i]->getName() + ":"
-                    + itsSourceNodes[j]->getName();
-
-                Expr J11_part1(ParmFunklet::create("gain:11:" + part1
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J11_part2(ParmFunklet::create("gain:11:" + part2
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J12_part1(ParmFunklet::create("gain:12:" + part1
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J12_part2(ParmFunklet::create("gain:12:" + part2
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J21_part1(ParmFunklet::create("gain:21:" + part1
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J21_part2(ParmFunklet::create("gain:21:" + part2
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J22_part1(ParmFunklet::create("gain:22:" + part1
-                    + suffix, parmGroup, instrumentDBase));
-                Expr J22_part2(ParmFunklet::create("gain:22:" + part2
-                    + suffix, parmGroup, instrumentDBase));
-
-                if(mask[config.usePhasors])
-                {
-                    J11 = new ExprAPToComplex(J11_part1, J11_part2);
-                    J12 = new ExprAPToComplex(J12_part1, J12_part2);
-                    J21 = new ExprAPToComplex(J21_part1, J21_part2);
-                    J22 = new ExprAPToComplex(J22_part1, J22_part2);
-                }
-                else
-                {
-                    J11 = new ExprToComplex(J11_part1, J11_part2);
-                    J12 = new ExprToComplex(J12_part1, J12_part2);
-                    J21 = new ExprToComplex(J21_part1, J21_part2);
-                    J22 = new ExprToComplex(J22_part1, J22_part2);
-                }
-
-                dir_gain[i * nSources + j] =
-                    new JonesNode(J11, J12, J21, J22);
-
-                // Gain correction is always performed with respect to the
-                // direction of the first source (patch).
-//                if(j == 0)
-//                    inv_gain[i] = new JonesInvert(gain[i * nSources]);
-            }
-        }
-    }
-
-    if(type == CORRECT)
-    {
-        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[BANDPASS],
-            "Need at least one of GAIN, DIRECTIONAL_GAIN, BANDPASS to"
-            " correct for.");
-            
-        vector<JonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
-        
-        if(mask[BANDPASS])
-        {
-            inv_bandpass.resize(nStations);
-            for(size_t i = 0; i < nStations; ++i)
-            {
-                inv_bandpass[i] = new JonesInvert(bandpass[i]);
-            }
-        }
-
-        if(mask[GAIN])
-        {
-            inv_gain.resize(nStations);
-            for(size_t i = 0; i < nStations; ++i)
-            {
-                inv_gain[i] = new JonesInvert(gain[i]);
-            }
+            jJones[i] = jJones[i].isNull() ? gainDirectional[i][0]
+                : JonesExpr(new JonesMul2(gainDirectional[i][0], jJones[i]));
         }
         
-        if(mask[DIRECTIONAL_GAIN])
-        {
-            inv_dir_gain.resize(nStations);
-            for(size_t i = 0; i < nStations; ++i)
-            {
-                // Always correct for the first source (direction).
-                inv_dir_gain[i] = new JonesInvert(dir_gain[i * nSources]);
-            }
-        }
-
-        for(vector<baseline_t>::const_iterator it = baselines.begin();
-            it != baselines.end();
-            ++it)
-        {
-            const baseline_t &baseline = *it;
-            JonesExpr vis = new JonesVisData(buffer, baseline);
-            
-            if(mask[BANDPASS])
-            {
-                vis = new JonesCMul3(inv_bandpass[baseline.first], vis,
-                    inv_bandpass[baseline.second]);
-            }
-
-            if(mask[GAIN])
-            {
-                vis = new JonesCMul3(inv_gain[baseline.first], vis,
-                    inv_gain[baseline.second]);
-            }
-            
-            if(mask[DIRECTIONAL_GAIN])
-            {
-                vis = new JonesCMul3(inv_dir_gain[baseline.first], vis,
-                    inv_dir_gain[baseline.second]);
-            }
-
-            itsExpressions[baseline] = vis;
-        }
+        // TODO: Add other image-plane effects here.
     }
-    else
+    
+    // Create an expression tree for each baseline.
+    for(size_t i = 0; i < baselines.size(); ++i)
     {
-        for(vector<baseline_t>::const_iterator it = baselines.begin();
-            it != baselines.end();
-            ++it)
-        {
-            const baseline_t &baseline = *it;
-
-            vector<JonesExpr> terms;
-            for(size_t j = 0; j < nSources; ++j)
-            {
-                // Phase shift (incorporates geometry and fringe stopping).
-                Expr shift
-                    (new PhaseShift(dft[baseline.first * nSources + j],
-                    dft[baseline.second * nSources + j]));
-
-                JonesExpr sourceExpr;
-
-                PointSource *source =
-                    dynamic_cast<PointSource*>(itsSourceNodes[j]);
-
-                if(source)
-                {
-                    // Point source.
-                    sourceExpr = new PointCoherency(source);
-                }
-                else
-                {
-                    GaussianSource *source = dynamic_cast<GaussianSource*>(itsSourceNodes[j]);
-                    ASSERT(source);
-                    sourceExpr = new GaussianCoherency(source, itsUVWNodes[baseline.first].get(), itsUVWNodes[baseline.second].get());
-                }
-
-                // Phase shift the source coherency.
-                sourceExpr = new JonesMul(sourceExpr, shift);
-                
-                // Apply image plane effects if required.
-                if(mask[BEAM])
-                {
-                    sourceExpr = new JonesCMul3
-                        (beam[baseline.first][j],
-                        sourceExpr,
-                        beam[baseline.second][j]);
-                }
-
-                if(mask[DIRECTIONAL_GAIN])
-                {
-                    sourceExpr = new JonesCMul3
-                        (dir_gain[baseline.first * nSources + j],
-                        sourceExpr,
-                        dir_gain[baseline.second * nSources + j]);
-                }
-                
-                terms.push_back(sourceExpr);
-            }
-
-            JonesExpr sum;
-            if(terms.size() == 1)
-                sum = terms.front();
-            else
-                sum = JonesExpr(new JonesSum(terms));
-
-            // Apply UV-plane effects if required.
-            if(mask[GAIN])
-            {
-                sum = new JonesCMul3(gain[baseline.first], sum,
-                    gain[baseline.second]);
-            }
-
-            if(mask[BANDPASS])
-            {
-                sum = new JonesCMul3(bandpass[baseline.first], sum,
-                    bandpass[baseline.second]);
-            }
-            
-            itsExpressions[baseline] = sum;
-        }
+        const baseline_t &baseline = baselines[i];
+        itsExpressions[baseline] = new JonesCMul3(jJones[baseline.first],
+            JonesExpr(new JonesVisData(chunk, baseline)),
+            jJones[baseline.second]);
     }
+
+    return true;
 }
-*/    
 
 void Model::clearExpressions()
 {
@@ -683,223 +504,83 @@ JonesResult Model::evaluate(const baseline_t &baseline,
     return it->second.getResult(request);
 }
 
-/*
-void Model::makeStationNodes(const Instrument &instrument,
-    const PhaseRef &phaseRef)
+
+vector<bool> Model::parseComponents(const vector<string> &components) const
 {
-    // Workaround to facilitate comparison with earlier versions of BBS
-    // and with Tree.
-    casa::Quantum<casa::Vector<casa::Double> > angles =
-        phaseRef.direction().getAngle();
-    casa::MDirection phaseRef2(casa::MVDirection(angles.getBaseValue()(0),
-        angles.getBaseValue()(1)), casa::MDirection::J2000);
-    LOG_WARN_STR("Superfluous conversion of phase center from/to"
-        " casa::MDirection to allow comparison with earlier version of BBS and"
-        " with Tree. Should be removed after validation.");
-
-    itsStationNodes.resize(instrument.stations.size());
-    itsUVWNodes.resize(instrument.stations.size());
-    for(size_t i = 0; i < instrument.stations.size(); ++i)
-    {
-        const casa::MVPosition &position =
-            instrument.stations[i].position.getValue();
-
-        ParmSingle *x = new ParmSingle("position:x:" +
-            instrument.stations[i].name, position(0));
-        ParmSingle *y = new ParmSingle("position:y:" +
-            instrument.stations[i].name, position(1));
-        ParmSingle *z = new ParmSingle("position:z:" +
-            instrument.stations[i].name, position(2));
-
-        itsStationNodes[i].reset(new Station(x, y, z,
-            instrument.stations[i].name));
-
-        itsUVWNodes[i].reset(new StatUVW(itsStationNodes[i].get(),
-            phaseRef2, instrument.position));
-    }
-}
-*/    
-
-
-/*
-void Model::makeSourceNodes(const vector<string> &names, PhaseRef *phaseRef)
-{
-    itsSourceNodes.resize(names.size());
-    itsLMNNodes.resize(names.size());
-    for(size_t i = 0; i < names.size(); ++i)
-    {
-        Source *source = itsSourceList->getSource(names[i]);
-        itsSourceNodes[i] = source;
-
-        // Create an LMN node for the source.
-        itsLMNNodes[i] = new LMN(source);
-        itsLMNNodes[i]->setPhaseRef(phaseRef);
-    }
-}
-*/    
-
-
-/*
-void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
-{
-    const size_t nStations = instrument.stations.size();
-    vector<bool> statDone(nStations);
-    vector<double> statUVW(3 * nStations);
-
-    const VisDimensions &dims = buffer->getDimensions();
-    const Grid &grid = dims.getGrid();
-    const vector<baseline_t> &baselines = dims.getBaselines();
+    vector<bool> mask(N_ModelComponent, false);
     
-    // Step through the MS by timeslot.
-    for (size_t tslot = 0; tslot < grid[TIME]->size(); ++tslot)
+    for(vector<string>::const_iterator it = components.begin();
+        it != components.end();
+        ++it)
     {
-        const double time = grid[TIME]->center(tslot);
-        fill(statDone.begin(), statDone.end(), false);
-
-        // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = baselines[0].first;
-        statUVW[3 * station0] = 0.0;
-        statUVW[3 * station0 + 1] = 0.0;
-        statUVW[3 * station0 + 2] = 0.0;
-        itsUVWNodes[station0]->set(time, 0.0, 0.0, 0.0);
-        statDone[station0] = true;
-
-        size_t nDone;
-        do
+        if(*it == "BANDPASS")
         {
-            nDone = 0;
-            for(size_t idx = 0; idx < baselines.size(); ++idx)
-            {
-                // If the contents of the UVW column is uninitialized, skip
-                // it.
-                if(buffer->tslot_flag[idx][tslot] & VisData::UNAVAILABLE)
-                {
-                    continue;
-                }
-                
-                size_t statA = baselines[idx].first;
-                size_t statB = baselines[idx].second;
-                if(statDone[statA] && !statDone[statB])
-                {
-                    statUVW[3 * statB] =
-                        buffer->uvw[idx][tslot][0] - statUVW[3 * statA];
-                    statUVW[3 * statB + 1] =
-                        buffer->uvw[idx][tslot][1] - statUVW[3 * statA + 1];
-                    statUVW[3 * statB + 2] =
-                        buffer->uvw[idx][tslot][2] - statUVW[3 * statA + 2];
-                    statDone[statB] = true;
-                    itsUVWNodes[statB]->set(time, statUVW[3 * statB],
-                        statUVW[3 * statB + 1], statUVW[3 * statB + 2]);
-                    ++nDone;
-                }
-                else if(statDone[statB] && !statDone[statA])
-                {
-                    statUVW[3 * statA] =
-                        statUVW[3 * statB] - buffer->uvw[idx][tslot][0];
-                    statUVW[3 * statA + 1] =
-                        statUVW[3 * statB + 1] - buffer->uvw[idx][tslot][1];
-                    statUVW[3 * statA + 2] =
-                        statUVW[3 * statB + 2] - buffer->uvw[idx][tslot][2];
-                    statDone[statA] = true;
-                    itsUVWNodes[statA]->set(time, statUVW[3 * statA],
-                        statUVW[3 * statA + 1], statUVW[3 * statA + 2]);
-                    ++nDone;
-                }
-            }
+            mask[BANDPASS] = true;
         }
-        while(nDone > 0);
-        
-        for(size_t i = 0; i < statDone.size(); ++i)
+        else if(*it == "GAIN")
         {
-            ASSERTSTR(statDone[i], "UVW of station " << i << " could not be"
-                " determined for timeslot " << tslot);
+            mask[GAIN] = true;
+        }
+        else if(*it == "DIRECTIONAL_GAIN")
+        {
+            mask[DIRECTIONAL_GAIN] = true;
+        }
+        else if(*it == "BEAM")
+        {
+            mask[BEAM] = true;
+        }
+        else
+        {
+            LOG_WARN_STR("Ignored unsupported model component \"" << *it
+                << "\".");
         }
     }
-}
-*/    
-    
 
-/*
-void Model::makeBeamNodes(const ModelConfig &config,
-    LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
-    vector<vector<JonesExpr> > &result) const
+    return mask;
+}
+
+Expr Model::makeExprParm(uint category, const string &name)
 {
-    ASSERT(config.beamConfig);
-    ASSERT(config.beamConfig->type() == "HamakerDipole"
-        || config.beamConfig->type() == "YatawattaDipole");
-    
-    // Create AzEl node for each source-station combination.
-    vector<Expr> azel(itsSourceNodes.size());
-    for(size_t i = 0; i < itsSourceNodes.size(); ++i)
+    ParmProxy::ConstPointer proxy(ParmManager::instance().get(category, name));
+
+    pair<map<uint, Expr>::const_iterator, bool> status =
+        itsParms.insert(make_pair(proxy->getId(), Expr(new ExprParm(proxy))));
+
+    return status.first->second;
+}
+
+void Model::makeStationUvw()
+{
+    const vector<Station> &stations = itsInstrument.stations;
+
+    itsStationUvw.resize(stations.size());
+    for(size_t i = 0; i < stations.size(); ++i)
     {
-        // TODO: This code uses station 0 as reference position on earth
-        // (see global_model.py in EJones_HBA). Is this accurate enough?
-        azel[i] =
-            new AzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
-    }
-
-    if(config.beamConfig->type() == "HamakerDipole")
-    {
-        HamakerDipoleConfig::ConstPointer beamConfig =
-            dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
-        ASSERT(beamConfig);
-        
-        // Read beam model coefficients.
-        BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
-
-        // Create a beam node for each source-station combination.
-        result.resize(itsStationNodes.size());
-        for(size_t i = 0; i < itsStationNodes.size(); ++i)
-        {
-            // Get dipole orientation.
-            Expr orientation(ParmFunklet::create("orientation:"
-                + itsStationNodes[i]->getName(), group, db));
-
-            result[i].resize(itsSourceNodes.size());
-            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
-            {
-                result[i][j] = new NumericalDipoleBeam(coeff, azel[j],
-                    orientation);
-            }
-        }
-    }
-    else if(config.beamConfig->type() == "YatawattaDipole")
-    {
-        YatawattaDipoleConfig::ConstPointer beamConfig =
-            dynamic_pointer_cast<const YatawattaDipoleConfig>
-                (config.beamConfig);
-        ASSERT(beamConfig);
-
-        // TODO: Where is this scale factor coming from (see global_model.py
-        // in EJones_droopy_comp and EJones_HBA)?
-//        const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
-//            : 1.0 / 600.0;
-
-        // Create a beam node for each source-station combination.
-        result.resize(itsStationNodes.size());
-        for(size_t i = 0; i < itsStationNodes.size(); ++i)
-        {
-            // Get dipole orientation.
-            Expr orientation(ParmFunklet::create("orientation:"
-                + itsStationNodes[i]->getName(), group, db));
-
-            result[i].resize(itsSourceNodes.size());
-            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
-            {
-//                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
-//                    casa::C::pi / 4.001, -casa::C::pi_4);
-                result[i][j] =
-                    new DipoleBeamExternal(beamConfig->moduleTheta,
-                        beamConfig->modulePhi, azel[j], orientation, 1.0);
-            }
-        }
-    }
-    else
-    {
-        ASSERT(false);
+        itsStationUvw[i] = StatUVW::ConstPointer(new StatUVW(stations[i].name,
+            stations[i].position, itsInstrument.position, itsPhaseRef));
     }
 }
-*/    
+
+void Model::makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
+    const vector<Source::Pointer> &sources) const
+{
+    const size_t nStations = itsInstrument.stations.size();
+    const size_t nSources = sources.size();
+
+    ASSERTSTR(itsStationUvw.size() == nStations, "Model::makeStationUvw()"
+        " should be called first.");
+
+    result.resize(boost::extents[nStations][nSources]);
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        Expr lmn = new LMN(sources[i], itsPhaseRef);
+
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            result[i][j] = new DFTPS(itsStationUvw[i], lmn);
+        }
+    }
+}
 
 void Model::makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config,
     bool inverse)
@@ -1018,6 +699,88 @@ void Model::makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
 }
 
 /*
+void Model::makeBeamNodes(const ModelConfig &config,
+    LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
+    vector<vector<JonesExpr> > &result) const
+{
+    ASSERT(config.beamConfig);
+    ASSERT(config.beamConfig->type() == "HamakerDipole"
+        || config.beamConfig->type() == "YatawattaDipole");
+    
+    // Create AzEl node for each source-station combination.
+    vector<Expr> azel(itsSourceNodes.size());
+    for(size_t i = 0; i < itsSourceNodes.size(); ++i)
+    {
+        // TODO: This code uses station 0 as reference position on earth
+        // (see global_model.py in EJones_HBA). Is this accurate enough?
+        azel[i] =
+            new AzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
+    }
+
+    if(config.beamConfig->type() == "HamakerDipole")
+    {
+        HamakerDipoleConfig::ConstPointer beamConfig =
+            dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
+        ASSERT(beamConfig);
+        
+        // Read beam model coefficients.
+        BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
+
+        // Create a beam node for each source-station combination.
+        result.resize(itsStationNodes.size());
+        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        {
+            // Get dipole orientation.
+            Expr orientation(ParmFunklet::create("orientation:"
+                + itsStationNodes[i]->getName(), group, db));
+
+            result[i].resize(itsSourceNodes.size());
+            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            {
+                result[i][j] = new NumericalDipoleBeam(coeff, azel[j],
+                    orientation);
+            }
+        }
+    }
+    else if(config.beamConfig->type() == "YatawattaDipole")
+    {
+        YatawattaDipoleConfig::ConstPointer beamConfig =
+            dynamic_pointer_cast<const YatawattaDipoleConfig>
+                (config.beamConfig);
+        ASSERT(beamConfig);
+
+        // TODO: Where is this scale factor coming from (see global_model.py
+        // in EJones_droopy_comp and EJones_HBA)?
+//        const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
+//            : 1.0 / 600.0;
+
+        // Create a beam node for each source-station combination.
+        result.resize(itsStationNodes.size());
+        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        {
+            // Get dipole orientation.
+            Expr orientation(ParmFunklet::create("orientation:"
+                + itsStationNodes[i]->getName(), group, db));
+
+            result[i].resize(itsSourceNodes.size());
+            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            {
+//                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
+//                    casa::C::pi / 4.001, -casa::C::pi_4);
+                result[i][j] =
+                    new DipoleBeamExternal(beamConfig->moduleTheta,
+                        beamConfig->modulePhi, azel[j], orientation, 1.0);
+            }
+        }
+    }
+    else
+    {
+        ASSERT(false);
+    }
+}
+*/    
+
+/*
 BeamCoeff Model::readBeamCoeffFile(const string &filename) const
 {
     LOG_DEBUG_STR("Reading beam coefficients...");
@@ -1109,146 +872,98 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
 }
 */    
 
-Expr Model::makeExprParm(uint category, const string &name)
-{
-    ParmProxy::ConstPointer proxy(ParmManager::instance().get(category, name));
-
-    pair<map<uint, Expr>::const_iterator, bool> status =
-        itsParms.insert(make_pair(proxy->getId(), Expr(new ExprParm(proxy))));
-
-    return status.first->second;
-}
-
-void Model::makeStationUvw()
-{
-    const vector<Station> &stations = itsInstrument.stations;
-
-    itsStationUvw.resize(stations.size());
-    for(size_t i = 0; i < stations.size(); ++i)
-    {
-        itsStationUvw[i] = StatUVW::ConstPointer(new StatUVW(stations[i].name,
-            stations[i].position, itsInstrument.position, itsPhaseRef));
-    }
-}
-
-/*
-void Model::makeSources(vector<Source::Pointer> &result, ParmGroup &group,
-    vector<string> names) const
+void Model::makeSources(vector<Source::Pointer> &result,
+    vector<string> patterns)
 {
     result.clear();
-
-    if(names.empty())
+    
+    if(patterns.empty())
     {
-        // By default include all available sources.
-        SourceList::ContainerT::const_iterator it = itsSourceList.begin();
-        while(it != itsSourceList.end())
+        vector<SourceInfo> sources(itsSourceDb.getSources("*"));
+        for(size_t i = 0; i < sources.size(); ++i)
         {
-            try
+            Source::Pointer source = makeSource(sources[i]);
+            if(source)
             {
-                ParmGroup tmp;
-                result.push_back(makeSource(*it, tmp));
-                copy(tmp.begin(), tmp.end(), std::inserter(group,
-                    group.begin()));
+                result.push_back(source);
             }
-            catch(Exception &ex)
-            {
-                LOG_WARN_STR("Unable to initialize source: " << it->name
-                    << " (" << ex.what() << "); ignored.");
-            }
-
-            ++it;
         }
     }
-    else
+    
+    map<string, SourceInfo> sources;
+    
+    // Only consider unique patterns.
+    sort(patterns.begin(), patterns.end());
+    vector<string>::const_iterator patternItEnd = unique(patterns.begin(),
+        patterns.end());
+    vector<string>::const_iterator patternIt = patterns.begin();
+    
+    while(patternIt != patternItEnd)
     {
-        // Only consider unique names.
-        sort(names.begin(), names.end());
-        vector<string>::const_iterator nameEnd = unique(names.begin(),
-            names.end());
-        vector<string>::const_iterator nameIt = names.begin();
-        
-        while(nameIt != nameEnd)
+        vector<SourceInfo> tmp = itsSourceDb.getSources(*patternIt);
+        for(size_t i = 0; i < tmp.size(); ++i)
         {
-            SourceList::ContainerT::const_iterator srcIt =
-                itsSourceList.find(*nameIt);
-
-            if(srcIt != itsSourceList.end())
-            {
-                try
-                {
-                    ParmGroup tmp;
-                    result.push_back(makeSource(*srcIt, tmp));
-                    copy(tmp.begin(), tmp.end(), std::inserter(group,
-                        group.begin()));
-                }
-                catch(Exception &ex)
-                {
-                    LOG_WARN_STR("Unable to initialize source: " << *nameIt
-                        << " (" << ex.what() << "); ignored.");
-                }
-            }
-            else
-            {
-                LOG_WARN_STR("Unknown source: " << *nameIt << "; ignored.");
-                continue;
-            }
-            
-            ++nameIt;
+            sources.insert(make_pair(tmp[i].getName(), tmp[i]));
         }
+        ++patternIt;
+    }
+    
+    map<string, SourceInfo>::const_iterator srcIt = sources.begin();
+    map<string, SourceInfo>::const_iterator srcItEnd = sources.end();
+    while(srcIt != srcItEnd)
+    {
+        Source::Pointer source = makeSource(srcIt->second);
+        if(source)
+        {
+            result.push_back(source);
+        }
+        ++srcIt;
     }
 }
-*/
 
-Source::Pointer Model::makeSource(const SourceDescriptor &source)
+Source::Pointer Model::makeSource(const SourceInfo &source)
 {
-    cout << "Creating source: " << source.name << endl;
-    switch(source.type)
+    cout << "Creating source: " << source.getName() << endl;
+    
+    switch(source.getType())
     {
-    case SourceDescriptor::POINT:
+    case SourceInfo::POINT:
         {
-            Expr ra(makeExprParm(SKY, "Ra:" + source.name));
-            Expr dec(makeExprParm(SKY, "Dec:" + source.name));
-            Expr i(makeExprParm(SKY, "I:" + source.name));
-            Expr q(makeExprParm(SKY, "Q:" + source.name));
-            Expr u(makeExprParm(SKY, "U:" + source.name));
-            Expr v(makeExprParm(SKY, "V:" + source.name));
+            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
+            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
+            Expr i(makeExprParm(SKY, "I:" + source.getName()));
+            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
+            Expr u(makeExprParm(SKY, "U:" + source.getName()));
+            Expr v(makeExprParm(SKY, "V:" + source.getName()));
 
-            return PointSource::Pointer(new PointSource(source.name,
+            return PointSource::Pointer(new PointSource(source.getName(),
                 ra, dec, i, q, u, v));
         }
         break;
     /*
-    case Source::GAUSSIAN:
+    case SourceInfo::GAUSSIAN:
         {
-            Expr ra(new ExprParm(ParmManager::instance().get(SKY, "Ra:"
-                + source.name, group)));
-            Expr dec(new ExprParm(ParmManager::instance().get(SKY, "Dec:"
-                + source.name, group)));
-            Expr i(new ExprParm(ParmManager::instance().get(SKY, "I:"
-                + source.name, group)));
-            Expr q(new ExprParm(ParmManager::instance().get(SKY, "Q:"
-                + source.name, group)));
-            Expr u(new ExprParm(ParmManager::instance().get(SKY, "U:"
-                + source.name, group)));
-            Expr v(new ExprParm(ParmManager::instance().get(SKY, "V:"
-                + source.name, group)));
-            Expr maj(new ExprParm(ParmManager::instance().get(SKY, "Major:"
-                + source.name, group)));
-            Expr min(new ExprParm(ParmManager::instance().get(SKY, "Minor:"
-                + source.name, group)));
-            Expr phi(new ExprParm(ParmManager::instance().get(SKY, "Phi:"
-                + source.name, group)));
-         
-            return 
-                GaussianSource::Pointer(new GaussianSource(source.name,
-                    ra, dec, i, q, u, v, maj, min, phi));
+            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
+            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
+            Expr i(makeExprParm(SKY, "I:" + source.getName()));
+            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
+            Expr u(makeExprParm(SKY, "U:" + source.getName()));
+            Expr v(makeExprParm(SKY, "V:" + source.getName()));
+            Expr maj(makeExprParm(SKY, "Major:" + source.getName()));
+            Expr min(makeExprParm(SKY, "Minor:" + source.getName()));
+            Expr phi(makeExprParm(SKY, "Phi:" + source.getName()));
+
+            return GaussianSource::Pointer(new GaussianSource(source.getName(),
+                ra, dec, i, q, u, v, maj, min, phi));
         }
         break;
     */        
     default:
+        LOG_WARN_STR("Unable to construct source: " << source.getName());
         break;
     }
-    THROW(BBSKernelException, "Unable to construct source: " << source.name);
+    
+    return Source::Pointer();
 }
 
 } // namespace BBS

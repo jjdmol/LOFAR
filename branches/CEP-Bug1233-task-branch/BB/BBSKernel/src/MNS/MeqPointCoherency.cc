@@ -1,4 +1,4 @@
-//# PointCoherency.h: Spatial coherence function of a point source.
+//# PointCoherence.h: Spatial coherence function of a point source.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-PointCoherency::PointCoherency(const PointSource::ConstPointer &source)
+PointCoherence::PointCoherence(const PointSource::ConstPointer &source)
     :   itsSource(source)
 {
     addChild (itsSource->getI());
@@ -44,14 +44,14 @@ PointCoherency::PointCoherency(const PointSource::ConstPointer &source)
 }
 
 
-PointCoherency::~PointCoherency()
+PointCoherence::~PointCoherence()
 {
 }
 
 
-JonesResult PointCoherency::getJResult(const Request &request)
+JonesResult PointCoherence::getJResult(const Request &request)
 {
-    //static NSTimer timer("PointCoherency::getResult", true);
+    //static NSTimer timer("PointCoherence::getResult", true);
     //timer.start();
 
     // Allocate the result.
@@ -112,9 +112,9 @@ JonesResult PointCoherency::getJResult(const Request &request)
 }
 
 #ifdef EXPR_GRAPH
-string PointCoherency::getLabel()
+string PointCoherence::getLabel()
 {
-    return string("PointCoherency\\nSpatial coherence function of a point"
+    return string("PointCoherence\\nSpatial coherence function of a point"
         " source\\n" + itsSource->getName());
 }
 #endif

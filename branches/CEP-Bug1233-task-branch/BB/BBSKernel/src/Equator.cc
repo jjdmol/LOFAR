@@ -635,6 +635,10 @@ Equator::ThreadContext::ThreadContext()
 {
 }
 
+Equator::ThreadContext::~ThreadContext()
+{
+}
+
 void Equator::ThreadContext::resize(uint nCoeff, uint nMaxCells)
 {
     index.resize(nCoeff);

@@ -31,45 +31,61 @@ namespace LOFAR
 namespace BBS
 {
 
-JonesVisData::JonesVisData(VisData::Pointer vdata, baseline_t baseline)
-    : itsVisData(vdata)
+JonesVisData::JonesVisData(const VisData::Pointer &chunk,
+    const baseline_t &baseline)
+    : itsChunk(chunk)
 {
-    const VisDimensions &dims = itsVisData->getDimensions();
+    const VisDimensions &dims = itsChunk->getDimensions();
     itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
-JonesResult JonesVisData::getJResult (const Request& request)
+JonesVisData::~JonesVisData()
 {
-    typedef boost::multi_array<sample_t, 4>::index_range range;
+}
 
-    size_t nChannels = request.nx();
-    size_t nTimeslots = request.ny();
-    pair<size_t, size_t> offset = request.offset();
-    range freqRange(offset.first, offset.first + nChannels);
-    range timeRange(offset.second, offset.second + nTimeslots);
+JonesResult JonesVisData::getJResult(const Request &request)
+{
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const Grid &visGrid = dims.getGrid();
+    const Grid &reqGrid = request.getGrid();
 
-    // Allocate the result matrices.
-    double *re, *im;
-    JonesResult result(request.nspid());
+    // Find the offset of the request grid relative to the chunk grid.
+    Box reqBox(reqGrid.getBoundingBox());
+    Location start(visGrid.locate(reqBox.lower()));
+
+    // Verify that the request grid is contained within the chunk grid (as it
+    // is impossible to return a partial result).
+    uint nChannels = request.getChannelCount();
+    uint nTimeslots = request.getTimeslotCount();
+    ASSERT(start.first + nChannels <= visGrid.shape().first);
+    ASSERT(start.second + nTimeslots <= visGrid.shape().second);
+
+    LOG_DEBUG_STR("Offset: (" << start.first << "," << start.second
+        << ") Size: " << nChannels << "x" << nTimeslots);
+        
+    // NB: index_ranges are exclusive.
+    typedef boost::multi_array<sample_t, 4>::index_range Range;
+    Range freqRange(start.first, start.first + nChannels);
+    Range timeRange(start.second, start.second + nTimeslots);
+
+    // Allocate the result.
+    JonesResult result;
+    result.init();
     Matrix& m11 = result.result11().getValueRW();
     Matrix& m12 = result.result12().getValueRW();
     Matrix& m21 = result.result21().getValueRW();
     Matrix& m22 = result.result22().getValueRW();
-    m11.setDCMat(nChannels, nTimeslots);
-    m12.setDCMat(nChannels, nTimeslots);
-    m21.setDCMat(nChannels, nTimeslots);
-    m22.setDCMat(nChannels, nTimeslots);
 
-    const VisDimensions &dims = itsVisData->getDimensions();
+    double *re = 0, *im = 0;
 
     // Copy 11 elements if available.
     try
     {
-        size_t polarizationIndex = dims.getPolarizationIndex("XX");
-        
+        const uint productIndex = dims.getPolarizationIndex("XX");
+        m11.setDCMat(nChannels, nTimeslots);
         m11.dcomplexStorage(re, im);
-        copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][polarizationIndex]]);
+        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+            [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
     {
@@ -79,11 +95,11 @@ JonesResult JonesVisData::getJResult (const Request& request)
     // Copy 12 elements if available.
     try
     {
-        size_t polarizationIndex = dims.getPolarizationIndex("XY");
-        
+        const uint productIndex = dims.getPolarizationIndex("XY");
+        m12.setDCMat(nChannels, nTimeslots);
         m12.dcomplexStorage(re, im);
-        copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][polarizationIndex]]);
+        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+            [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
     {
@@ -93,11 +109,11 @@ JonesResult JonesVisData::getJResult (const Request& request)
     // Copy 21 elements if available.
     try
     {
-        size_t polarizationIndex = dims.getPolarizationIndex("YX");
-        
+        const uint productIndex = dims.getPolarizationIndex("YX");
+        m21.setDCMat(nChannels, nTimeslots);
         m21.dcomplexStorage(re, im);
-        copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][polarizationIndex]]);
+        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+            [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
     {
@@ -108,11 +124,11 @@ JonesResult JonesVisData::getJResult (const Request& request)
     // Copy 22 elements if available.
     try
     {
-        size_t polarizationIndex = dims.getPolarizationIndex("YY");
-        
+        const uint productIndex = dims.getPolarizationIndex("YY");
+        m22.setDCMat(nChannels, nTimeslots);
         m22.dcomplexStorage(re, im);
-        copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][polarizationIndex]]);
+        copy(re, im, itsChunk->vis_data[boost::indices[itsBaselineIndex]
+            [timeRange][freqRange][productIndex]]);
     }
     catch(BBSKernelException &ex)
     {

@@ -1,4 +1,5 @@
-//# JonesVisData.h: 
+//# JonesVisData.h: Make visibility data from an observation available to the
+//# expression tree.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,18 +27,22 @@
 #include <BBSKernel/MNS/MeqJonesExpr.h>
 #include <BBSKernel/VisData.h>
 
+// \file
+// Make visibility data from an observation available to the expression tree.
+
 namespace LOFAR
 {
 namespace BBS
 {
 
+// \addtogroup MNS
+// @{
+
 class JonesVisData: public JonesExprRep
 {
 public:
-    JonesVisData(VisData::Pointer vdata, baseline_t baseline);
-
-    ~JonesVisData()
-    {}
+    JonesVisData(const VisData::Pointer &chunk, const baseline_t &baseline);
+    ~JonesVisData();
 
     // Get the result of the expression for the given domain.
     virtual JonesResult getJResult (const Request&);
@@ -46,9 +51,11 @@ private:
     void copy(double *re, double *im,
         const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src);
 
-    VisData::Pointer    itsVisData;
-    size_t              itsBaselineIndex;
+    VisData::Pointer    itsChunk;
+    uint                itsBaselineIndex;
 };
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

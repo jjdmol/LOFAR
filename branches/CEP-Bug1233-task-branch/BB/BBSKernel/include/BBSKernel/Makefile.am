@@ -8,9 +8,7 @@ pkginclude_MNSdir = $(pkgincludedir)/MNS
 #	MNS/MeqGaussianCoherency.h \
 #	MNS/MeqGaussianSource.h \
 #	MNS/MeqJonesCMul2.h \
-#	MNS/MeqJonesMul2.h \
 #	MNS/MeqJonesMul3.h \
-#	MNS/MeqJonesVisData.h \
 #	MNS/MeqNumericalDipoleBeam.h
 
 pkginclude_HEADERS = Package__Version.h \
@@ -41,9 +39,11 @@ pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqJonesExpr.h \
 	MNS/MeqJonesInvert.h \
 	MNS/MeqJonesMul.h \
+	MNS/MeqJonesMul2.h \
 	MNS/MeqJonesNode.h \
 	MNS/MeqJonesResult.h \
 	MNS/MeqJonesSum.h \
+	MNS/MeqJonesVisData.h \
 	MNS/MeqLMN.h \
 	MNS/MeqMatrix.h \
 	MNS/MeqMatrixComplexArr.h \

@@ -8,9 +8,7 @@ lib_LTLIBRARIES = libbbskernel.la
 #	MNS/MeqGaussianCoherency.cc \
 #	MNS/MeqGaussianSource.cc \
 #	MNS/MeqJonesCMul2.cc \
-#	MNS/MeqJonesMul2.cc \
 #	MNS/MeqJonesMul3.cc \
-#	MNS/MeqJonesVisData.cc \
 #	MNS/MeqNumericalDipoleBeam.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
@@ -37,8 +35,10 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	MNS/MeqJonesExpr.cc \
 	MNS/MeqJonesInvert.cc \
 	MNS/MeqJonesMul.cc \
+	MNS/MeqJonesMul2.cc \
 	MNS/MeqJonesNode.cc \
 	MNS/MeqJonesSum.cc \
+	MNS/MeqJonesVisData.cc \
 	MNS/MeqMatrix.cc \
 	MNS/MeqMatrixComplexArr.cc \
 	MNS/MeqMatrixComplexSca.cc \

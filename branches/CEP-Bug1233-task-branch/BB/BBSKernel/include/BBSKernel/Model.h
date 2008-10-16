@@ -43,6 +43,7 @@
 #include <BBSKernel/MNS/MeqStatUVW.h>
 
 #include <ParmDB/ParmDB.h>
+#include <ParmDB/SourceDB.h>
 
 #include <boost/multi_array.hpp>
 
@@ -56,33 +57,10 @@ class Instrument;
 //class ParmGroup;
 class PhaseRef;
 class Request;
-class Station;
 //class StatUVW;
 //class LMN;
 //class JonesExpr;
 //class BeamCoeff;
-
-class SourceDescriptor
-{
-public:
-//    typedef shared_ptr<SourceList>          Pointer;
-//    typedef shared_ptr<const SourceList>    ConstPointer;
-
-    enum Type
-    {
-        POINT = 0,
-        GAUSSIAN,
-        N_Type
-    };
-
-    SourceDescriptor(const string &name, Type type)
-        :   name(name),
-            type(type)
-    {}
-    
-    string  name;
-    Type    type;
-};
 
 class Model
 {
@@ -99,12 +77,16 @@ public:
         N_ModelComponent
     };
 
-    Model(const Instrument &instrument, const casa::MDirection &phaseRef);
+    Model(const Instrument &instrument, const SourceDB &sourceDb,
+        const casa::MDirection &phaseRef);
 
     void clearExpressions();
 
     bool makeFwdExpressions(const ModelConfig &config,
         const vector<baseline_t> &baselines);
+
+    bool makeInvExpressions(const ModelConfig &config,
+        const VisData::Pointer &chunk, const vector<baseline_t> &baselines);
 
     void setPerturbedParms(const ParmGroup &solvables);
     void clearPerturbedParms();
@@ -116,13 +98,14 @@ public:
     JonesResult evaluate(const baseline_t &baseline, const Request &request);
 
 private:
-    void makeStationUvw();
-
+    vector<bool> parseComponents(const vector<string> &components) const;
+    
     Expr makeExprParm(uint category, const string &name);
     
-//    void makeSources(vector<Source::Pointer> &result, ParmGroup &group,
-//        vector<string> names) const;
-    Source::Pointer makeSource(const SourceDescriptor &source);
+    void makeStationUvw();
+    
+    void makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
+        const vector<Source::Pointer> &sources) const;
 
     void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config,
         bool inverse = false);
@@ -137,8 +120,12 @@ private:
 
 //    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
+    void makeSources(vector<Source::Pointer> &result, vector<string> patterns);
+    
+    Source::Pointer makeSource(const SourceInfo &source);
+
     Instrument                      itsInstrument;
-//    SourceList                      itsSourceList;
+    SourceDB                        itsSourceDb;
     PhaseRef::ConstPointer          itsPhaseRef;
     vector<StatUVW::ConstPointer>   itsStationUvw;
     map<baseline_t, JonesExpr>      itsExpressions;

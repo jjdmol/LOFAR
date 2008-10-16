@@ -1,4 +1,4 @@
-//# PointCoherency.h: Spatial coherence function of a point source.
+//# PointCoherence.h: Spatial coherence function of a point source.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQPOINTCOHERENCY_H
-#define MNS_MEQPOINTCOHENRECY_H
+#ifndef MNS_MEQPOINTCOHERENCE_H
+#define MNS_MEQPOINTCOHENRECE_H
 
 // \file
 // Spatial coherence function of a point source.
@@ -42,11 +42,11 @@ namespace BBS
 // \ingroup MNS
 // @{
 
-class PointCoherency: public JonesExprRep
+class PointCoherence: public JonesExprRep
 {
 public:
-    PointCoherency(const PointSource::ConstPointer &source);
-    ~PointCoherency();
+    PointCoherence(const PointSource::ConstPointer &source);
+    ~PointCoherence();
 
     virtual JonesResult getJResult(const Request &request);
 

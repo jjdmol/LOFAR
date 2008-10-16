@@ -94,6 +94,7 @@ private:
         };
         
         ThreadContext();
+        ~ThreadContext();
         void resize(uint nCoeff, uint nMaxCells);
         void clear(bool clearEq = false);
 
@@ -113,10 +114,9 @@ private:
         Interval()
             :   start(0),
                 end(0)
-        {
-        }
+        {}
         
-        uint32  start, end;                
+        uint    start, end;                
     };
     
     VisData::Pointer                    itsChunk;

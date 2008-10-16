@@ -1,4 +1,4 @@
-//# JonesMul2.h: Calculate left*right
+//# JonesMul2.h: Calculate left * right
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -37,22 +37,19 @@ namespace BBS
 // \ingroup MNS
 // @{
 
-
-// Calculate left*right.
+// Calculate left * right.
 
 class JonesMul2: public JonesExprRep
 {
 public:
-  JonesMul2 (const JonesExpr& left, const JonesExpr& right);
+    JonesMul2(const JonesExpr &left, const JonesExpr &right);
+    ~JonesMul2();
 
-  ~JonesMul2();
-
-  // Get the result of the expression for the given domain.
-  JonesResult getJResult (const Request&);
+    // Get the result of the expression for the given domain.
+    JonesResult getJResult(const Request &request);
 
 private:
-  JonesExpr itsLeft;
-  JonesExpr itsRight;
+    JonesExpr   itsLeft, itsRight;
 };
 
 // @}
