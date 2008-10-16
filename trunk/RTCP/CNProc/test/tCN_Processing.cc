@@ -191,7 +191,7 @@ template <typename SAMPLE_TYPE> void doWork()
   if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
   {
-    unsigned   nrStations	= 77;
+    unsigned   nrStations	= 7;
     unsigned   nrChannels	= 256;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
@@ -225,8 +225,11 @@ template <typename SAMPLE_TYPE> void doWork()
     Correlator       correlator(nrStations, nrChannels, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
-    ppf.computeFlags(&transposedData, &filteredData);
-    ppf.filter(refFreq, &transposedData, &filteredData);
+
+    for (unsigned stat = 0; stat < nrStations; stat ++) {
+      ppf.computeFlags(stat, &transposedData, &filteredData);
+      ppf.filter(stat, refFreq, &transposedData, &filteredData);
+    }
 
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
