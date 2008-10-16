@@ -39,7 +39,7 @@ using namespace BBS;
 SourceInfo::Type string2type (const string& str)
 {
   string s = toLower(str);
-  if (s == "point") {
+  if (s == "point"  ||  s.empty()) {
     return SourceInfo::POINT;
   } else if (s == "gaussian") {
     return SourceInfo::GAUSSIAN;
@@ -63,7 +63,7 @@ SourceInfo::Type string2type (const string& str)
 
 double string2real (const vector<string>& fields, uint fieldnr, double def)
 {
-  if (fieldnr >= fields.size()) {
+  if (fieldnr >= fields.size()  ||  fields[fieldnr].empty()) {
     return def;
   }
   istringstream istr(fields[fieldnr]);
@@ -74,7 +74,7 @@ double string2real (const vector<string>& fields, uint fieldnr, double def)
 
 double string2pos (const vector<string>& fields, uint fieldnr, double def)
 {
-  if (fieldnr >= fields.size()) {
+  if (fieldnr >= fields.size()  ||  fields[fieldnr].empty()) {
     return def;
   }
   Quantity q;
@@ -87,10 +87,10 @@ void add (ParmMap& defVal, const string& name, double value)
   defVal.define (name, ParmValueSet(ParmValue(value)));
 }
 
-void process (const string& line, SourceDB& pdb)
+void process (const string& line, SourceDB& pdb, char sep)
 {
   //  cout << line << endl;
-  vector<string> fields = StringUtil::split (line, ',');
+  vector<string> fields = StringUtil::split (line, sep);
   ASSERT (fields.size() >= 2);
   string srcName = fields[0];
   SourceInfo::Type type = string2type (fields[1]);
@@ -113,7 +113,7 @@ void process (const string& line, SourceDB& pdb)
   pdb.addSource (srcName, 2, fluxI, type, defValues, ra, dec, false);
 }
 
-void make (const char* in, const string& out)
+void make (const char* in, const string& out, char sep)
 {
   ParmDBMeta ptm("casa", out);
   SourceDB pdb(ptm, true);
@@ -135,7 +135,7 @@ void make (const char* in, const string& out)
       }
     }
     if (!skip) {
-      process (line, pdb);
+      process (line, pdb, sep);
     }
     // Read next line
     getline (infile, line);
@@ -148,9 +148,12 @@ int main (int argc, char *argv[])
   const char* progName = basename(argv[0]);
   INIT_LOGGER(progName);
   // Get the arguments.
-  ASSERTSTR (argc == 3, "Run as:   makesourcedb inname outname");
+  ASSERTSTR (argc >= 3, "Run as:   makesourcedb inname outname [separator]");
   try {
-    make (argv[1], argv[2]);
+    // Default separator is a comma.
+    char sep = ',';
+    if (argc > 3  &&  argv[3][0] != 0) sep = argv[3][0];
+    make (argv[1], argv[2], sep);
   } catch (std::exception& x) {
     std::cerr << "Caught exception: " << x.what() << std::endl;
     return 1;
