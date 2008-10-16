@@ -21,7 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Interface/BGL_Mapping.h>
+#include <Interface/CN_Mapping.h>
 #include <Interface/Allocator.h>
 #include <OutputSection.h>
 
@@ -93,7 +93,7 @@ void OutputSection::connectToStorage(const Parset *ps)
   unsigned storageHostIndex  = myPsetIndex / nrPsetsPerStorage;
   unsigned storagePortIndex  = myPsetIndex % nrPsetsPerStorage;
 
-  string   prefix	     = "OLAP.OLAP_Conn.BGLProc_Storage";
+  string   prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
   string   connectionType    = ps->getString(prefix + "_Transport");
 
   if (connectionType == "NULL") {
@@ -154,7 +154,7 @@ void OutputSection::process()
 
     CorrelatedData *data   = lastTime ? itsFreeQueue.remove() : firstTime ? itsVisibilitySums[subband] : itsTmpSum;
   
-    unsigned	   channel = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    unsigned	   channel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
     data->read(itsStreamsFromCNs[channel]);
 

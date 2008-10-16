@@ -21,9 +21,9 @@
 #include <lofar_config.h>
 
 #include <PLC/ACCmain.h>
-#include <Interface/BGL_Command.h>
-#include <Interface/BGL_Configuration.h>
-#include <Interface/BGL_Mapping.h>
+#include <Interface/CN_Command.h>
+#include <Interface/CN_Configuration.h>
+#include <Interface/CN_Mapping.h>
 #include <Interface/Parset.h>
 #include <InputSection.h>
 #include <OutputSection.h>
@@ -137,22 +137,22 @@ static void deleteClientStreams()
 
 static void configureCNs(const Parset &parset)
 {
-  BGL_Command	    command(BGL_Command::PREPROCESS);
-  BGL_Configuration configuration;
+  CN_Command	    command(CN_Command::PREPROCESS);
+  CN_Configuration configuration;
 
   configuration.nrStations()              = parset.nrStations();
   configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
   configuration.nrChannelsPerSubband()	  = parset.nrChannelsPerSubband();
-  configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
-  configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
+  configuration.nrSamplesPerIntegration() = parset.CNintegrationSteps();
+  configuration.nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
   configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
   configuration.delayCompensation()       = parset.delayCompensation();
   configuration.correctBandPass()	  = parset.correctBandPass();
   configuration.sampleRate()              = parset.sampleRate();
-  configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
-  configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
-  configuration.tabList()                 = parset.getUint32Vector("OLAP.BGLProc.tabList");
+  configuration.inputPsets()              = parset.getUint32Vector("OLAP.CNProc.inputPsets");
+  configuration.outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
+  configuration.tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
   configuration.refFreqs()                = parset.subbandToFrequencyMapping();
 
   std::clog << "configuring " << nrCoresPerPset << " cores ...";
@@ -174,7 +174,7 @@ static void unconfigureCNs()
   std::clog << "unconfiguring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
 
-  BGL_Command command(BGL_Command::POSTPROCESS);
+  CN_Command command(CN_Command::POSTPROCESS);
 
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     std::clog << ' ' << core;
@@ -191,7 +191,7 @@ static void stopCNs()
   std::clog << "stopping " << nrCoresPerPset << " cores ... ";
   std::clog.flush();
 
-  BGL_Command command(BGL_Command::STOP);
+  CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCoresPerPset; core ++)
     command.write(clientStreams[core]);
@@ -382,7 +382,7 @@ void *master_thread(void *)
     parset.adoptFile("OLAP.parset");
     checkParset(parset);
 
-    nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.BGLintegrationTime()));
+    nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
     std::clog << "nrRuns = " << nrRuns << std::endl;
 
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
@@ -390,7 +390,7 @@ void *master_thread(void *)
 
 #if !defined HAVE_ZOID
     nrCoresPerPset = parset.nrCoresPerPset();
-    string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_BGLProc");
+    string streamType = parset.getTransportType("OLAP.OLAP_Conn.IONProc_CNProc");
     createClientStreams(nrCoresPerPset, streamType);
 #endif
 
@@ -409,11 +409,11 @@ void *master_thread(void *)
     if (!hasInputSection && hasOutputSection) {
       // quick hack to send PROCESS commands to CNs
 
-      BGL_Command command(BGL_Command::PROCESS);
+      CN_Command command(CN_Command::PROCESS);
       unsigned	  core = 0;
 
       for (int count = nrRuns * parset.nrSubbandsPerPset(); -- count >= 0;) {
-	command.write(clientStreams[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+	command.write(clientStreams[CN_Mapping::mapCoreOnPset(core, myPsetNumber)]);
 
 	if (++ core == nrCoresPerPset)
 	  core = 0;
