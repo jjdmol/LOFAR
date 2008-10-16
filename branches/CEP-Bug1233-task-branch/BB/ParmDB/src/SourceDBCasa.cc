@@ -290,11 +290,32 @@ namespace BBS {
                                                    Point( 1e30, 1e30)));
   }
 
-  vector<string> SourceDBCasa::getCat1Patches()
+  vector<string> SourceDBCasa::getPatches (int category, const string& pattern,
+                                           double minBrightness,
+                                           double maxBrightness)
   {
     TableLocker locker(itsPatchTable, FileLocker::Read);
-    Table table = itsPatchTable(itsPatchTable.col("CATEGORY") == 1);
-    table = table.sort ("APPARENT_BRIGHTNESS", Sort::Descending);
+    Table table = itsPatchTable;
+    if (category >= 0) {
+      table = table(table.col("CATEGORY") == category);
+    }
+    if (!pattern.empty()  &&  pattern != "*") {
+      Regex regex(Regex::fromPattern(pattern));
+      table = table(table.col("PATCHNAME") == regex);
+    }
+    if (minBrightness >= 0) {
+      table = table(table.col("APPARENT_BRIGHTNESS") >= minBrightness);
+    }
+    if (maxBrightness >= 0) {
+      table = table(table.col("APPARENT_BRIGHTNESS") <= maxBrightness);
+    }
+    Block<String> keys(2);
+    Block<Int> orders(2);
+    keys[0] = "CATEGORY";
+    keys[1] = "APPARENT_BRIGHTNESS";
+    orders[0] = Sort::Ascending;
+    orders[1] = Sort::Descending;
+    table = table.sort (keys, orders);
     Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
     return vector<string>(nm.cbegin(), nm.cend());
   }

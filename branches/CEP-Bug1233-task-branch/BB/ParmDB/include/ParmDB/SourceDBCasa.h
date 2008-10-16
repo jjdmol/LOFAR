@@ -97,9 +97,13 @@ namespace BBS {
                             double ra, double dec,
                             bool check);
 
-    // Get the Cat-1 patch names in order of decreasing apparent flux.
-    virtual vector<string> getCat1Patches();
-
+    // Get patch names in order of category and decreasing apparent flux.
+    // category < 0 means all categories.
+    // A brightness < 0 means no test on brightness.
+    virtual vector<string> getPatches (int category, const string& pattern,
+                                       double minBrightness,
+                                       double maxBrightness);
+;
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
 

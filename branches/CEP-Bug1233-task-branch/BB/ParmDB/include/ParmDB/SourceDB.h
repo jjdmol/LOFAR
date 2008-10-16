@@ -115,8 +115,12 @@ namespace BBS {
                             double ra, double dec,
                             bool check) = 0;
 
-    // Get the Cat-1 patch names in order of decreasing apparent flux.
-    virtual vector<string> getCat1Patches() = 0;
+    // Get patch names in order of category and decreasing apparent flux.
+    // category < 0 means all categories.
+    // A brightness < 0 means no test on brightness.
+    virtual vector<string> getPatches (int category, const string& pattern,
+                                       double minBrightness,
+                                       double maxBrightness) = 0;
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName) = 0;
@@ -223,9 +227,13 @@ namespace BBS {
       { itsRep->addSource (sourceName, catType, apparentBrightness, sourceType,
                            defaultParameters, ra, dec, check); }
 
-    // Get the Cat-1 patch names in order of decreasing apparent brightness.
-    vector<string> getCat1Patches()
-      { return itsRep->getCat1Patches(); }
+    // Get patch names in order of category and decreasing apparent flux.
+    // category < 0 means all categories.
+    // A brightness < 0 means no test on brightness.
+    vector<string> getPatches (int category=-1, const string& pattern="",
+                               double minBrightness=-1, double maxBrightness=-1)
+     { return itsRep->getPatches (category, pattern,
+                                  minBrightness, maxBrightness); }
 
     // Get the info of the sources belonging to the given patch.
     vector<SourceInfo> getPatchSources (const string& patchName)

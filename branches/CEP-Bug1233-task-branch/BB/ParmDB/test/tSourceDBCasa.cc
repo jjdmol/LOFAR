@@ -61,9 +61,9 @@ void testPatches()
   Table t1("tSourceDBCasa_tmp.tab/SOURCES/PATCHES");
   ASSERT (t1.nrow() == 0);
   ASSERT (pdb.addPatch ("patch1", 1, 2., 1.0, -1.0) == 0);
-  ASSERT (pdb.addPatch ("patch2", 2, 2., 1.1, -1.1) == 1);
-  ASSERT (pdb.addPatch ("patch3", 1, 4., 1.2, -1.2) == 2);
-  ASSERT (pdb.addPatch ("patch4", 1, 3., 1.3, -1.3) == 3);
+  ASSERT (pdb.addPatch ("patch2", 2, 3., 1.1, -1.1) == 1);
+  ASSERT (pdb.addPatch ("patch3", 1, 5., 1.2, -1.2) == 2);
+  ASSERT (pdb.addPatch ("patch4", 1, 4., 1.3, -1.3) == 3);
   ASSERT (t1.nrow() == 4);
   // Try adding an existing patch.
   bool ok = false;
@@ -75,12 +75,19 @@ void testPatches()
   }
   ASSERT (ok);
   ASSERT (t1.nrow() == 4);
-  // Get the Cat1 patches (in descending order).
-  vector<string> names = pdb.getCat1Patches();
+  // Get the Cat1 patches (in descending order of brightness).
+  vector<string> names = pdb.getPatches(1);
   ASSERT (names.size() == 3);
   ASSERT (names[0] == "patch3");
   ASSERT (names[1] == "patch4");
   ASSERT (names[2] == "patch1");
+  // Get all patches (in order of category and descending brightness).
+  names = pdb.getPatches(-1, "*", 0.1, 100.);
+  ASSERT (names.size() == 4);
+  ASSERT (names[0] == "patch3");
+  ASSERT (names[1] == "patch4");
+  ASSERT (names[2] == "patch1");
+  ASSERT (names[3] == "patch2");
   ASSERT (pdb.patchExists ("patch1"));
   ASSERT (!pdb.patchExists ("patch10"));
   pdb.checkDuplicates();
