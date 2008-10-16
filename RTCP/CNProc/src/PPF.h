@@ -1,5 +1,5 @@
-#ifndef LOFAR_CNPROC_PPF_H
-#define LOFAR_CNPROC_PPF_H
+#ifndef LOFAR_BGLPROC_PPF_H
+#define LOFAR_BGLPROC_PPF_H
 
 #if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define PPF_C_IMPLEMENTATION
@@ -40,7 +40,10 @@ template <typename SAMPLE_TYPE> class PPF
 
   private:
     void init_fft(), destroy_fft();
+
+#if !defined PPF_C_IMPLEMENTATION
     void initConstantTable();
+#endif
 
 #if defined PPF_C_IMPLEMENTATION
     fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
@@ -69,7 +72,7 @@ template <typename SAMPLE_TYPE> class PPF
 #endif
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-    CN_Mutex  *mutex;
+    BGL_Mutex  *mutex;
 #endif
 };
 

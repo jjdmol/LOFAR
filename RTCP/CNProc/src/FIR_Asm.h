@@ -65,7 +65,7 @@ extern "C" {
   } _FIR_constants_used;
 
 #if defined HAVE_BGL
-  void _cn_mutex_lock(CN_Mutex *), _cn_mutex_unlock(CN_Mutex *);
+  void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
 #endif
 
   unsigned long long _rdtsc();

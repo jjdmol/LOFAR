@@ -35,8 +35,8 @@ _FIR_constants_used:
 
 
 .align	5
-.global _cn_mutex_lock
-_cn_mutex_lock:
+.global _bgl_mutex_lock
+_bgl_mutex_lock:
 	sync
 0:	lwz	0,0(3)
 	cmpwi	0,0
@@ -44,8 +44,8 @@ _cn_mutex_lock:
 	sync
 	blr
 
-.global	_cn_mutex_unlock
-_cn_mutex_unlock:
+.global	_bgl_mutex_unlock
+_bgl_mutex_unlock:
 	sync
 	li	0,0
 	stw	0,0(3)

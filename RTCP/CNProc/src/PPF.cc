@@ -75,9 +75,14 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
     ;
 
   init_fft();
+
+#if !defined PPF_C_IMPLEMENTATION
   initConstantTable();
+#endif
 }
 
+
+#if !defined PPF_C_IMPLEMENTATION
 
 template <> void PPF<i4complex>::initConstantTable()
 {
@@ -115,6 +120,8 @@ template <> void PPF<i16complex>::initConstantTable()
 #endif
 }
 
+#endif
+
 
 template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::~PPF()
 {
@@ -151,8 +158,13 @@ static void FFTtest()
 template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::init_fft()
 {
 #if defined HAVE_FFTW3
-  std::vector<fftwf_complex, AlignedStdAllocator<fftwf_complex, 32> > cbuf1(itsNrChannels), cbuf2(itsNrChannels);
-  itsFFTWPlan = fftwf_plan_dft_1d(itsNrChannels, &cbuf1[0], &cbuf2[0], FFTW_FORWARD, FFTW_ESTIMATE);
+  fftwf_complex *buf = static_cast<fftwf_complex *>(fftwf_malloc(2 * itsNrChannels * sizeof(fftwf_complex)));
+
+  if (buf == 0)
+    throw std::bad_alloc();
+
+  itsFFTWPlan = fftwf_plan_dft_1d(itsNrChannels, buf, buf + itsNrChannels, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftwf_free(buf);
 #elif defined HAVE_FFTW2
   itsFFTWPlan = fftw_create_plan(itsNrChannels, FFTW_FORWARD, FFTW_ESTIMATE);
 #endif
@@ -234,7 +246,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   // PPF puts a lot of pressure on the memory bus.  Avoid that both cores
   // run simultaneously, since it slows them both.
-  _cn_mutex_lock(mutex);
+  _bgl_mutex_lock(mutex);
 #endif
 
 //  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
@@ -375,7 +387,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 //  }
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
-  _cn_mutex_unlock(mutex);
+  _bgl_mutex_unlock(mutex);
 #endif
 
   PPFtimer.stop();
