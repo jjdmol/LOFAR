@@ -73,16 +73,16 @@ public:
 	vector<double> positions() const;
 	vector<double> getRefPhaseCentres() const;
 	vector<double> getPhaseCentresOf(const string& name) const;	
-	uint32	       BGLintegrationSteps() const;
+	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
 	uint32	       storageIntegrationSteps() const;
-	double         BGLintegrationTime() const;
+	double         CNintegrationTime() const;
 	double         IONintegrationTime() const;
 	double         storageIntegrationTime() const;
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
 	uint32         nrHistorySamples() const;
-	uint32         nrSamplesToBGLProc() const;
+	uint32         nrSamplesToCNProc() const;
 	uint32         inputBufferSize() const; // in samples
 	uint32	       maxNetworkDelay() const;
 	uint32         nrPPFTaps() const;
@@ -229,9 +229,9 @@ inline uint32 Parset::nrBitsPerSample() const
   return getUint32("OLAP.nrBitsPerSample");
 }
 
-inline uint32 Parset::BGLintegrationSteps() const
+inline uint32 Parset::CNintegrationSteps() const
 {
-  return getUint32("OLAP.BGLProc.integrationSteps");
+  return getUint32("OLAP.CNProc.integrationSteps");
 }
 
 inline uint32 Parset::IONintegrationSteps() const
@@ -244,14 +244,14 @@ inline uint32 Parset::storageIntegrationSteps() const
   return getUint32("OLAP.StorageProc.integrationSteps");
 }
 
-inline double Parset::BGLintegrationTime() const
+inline double Parset::CNintegrationTime() const
 {
   return nrSubbandSamples() / sampleRate();
 }
 
 inline double Parset::IONintegrationTime() const
 {
-  return BGLintegrationTime() * IONintegrationSteps();
+  return CNintegrationTime() * IONintegrationSteps();
 }
 
 inline double Parset::storageIntegrationTime() const
@@ -261,7 +261,7 @@ inline double Parset::storageIntegrationTime() const
 
 inline uint32 Parset::nrSubbandSamples() const
 {
-  return BGLintegrationSteps() * nrChannelsPerSubband();
+  return CNintegrationSteps() * nrChannelsPerSubband();
 }
 
 inline uint32 Parset::nrHistorySamples() const
@@ -269,7 +269,7 @@ inline uint32 Parset::nrHistorySamples() const
   return (nrPPFTaps() - 1) * nrChannelsPerSubband();
 }
 
-inline uint32 Parset::nrSamplesToBGLProc() const
+inline uint32 Parset::nrSamplesToCNProc() const
 {
   return nrSubbandSamples() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
 }
@@ -291,7 +291,7 @@ inline uint32 Parset::nrSubbandsPerPset() const
 
 inline uint32 Parset::nrPPFTaps() const
 {
-  return getUint32("OLAP.BGLProc.nrPPFTaps");
+  return getUint32("OLAP.CNProc.nrPPFTaps");
 }
 
 inline uint32 Parset::nrChannelsPerSubband() const
@@ -306,7 +306,7 @@ inline uint32 Parset::nrPsets() const
 
 inline uint32 Parset::nrCoresPerPset() const
 {
-  return getUint32("OLAP.BGLProc.coresPerPset");
+  return getUint32("OLAP.CNProc.coresPerPset");
 }  
  
 inline unsigned Parset::nrSubbands() const
@@ -365,23 +365,23 @@ inline uint32 Parset::nrPsetsPerStorage() const
 
 inline vector<uint32> Parset::inputPsets() const
 {
-  return getUint32Vector("OLAP.BGLProc.inputPsets");
+  return getUint32Vector("OLAP.CNProc.inputPsets");
 }
 
 inline vector<uint32> Parset::outputPsets() const
 {
-  return getUint32Vector("OLAP.BGLProc.outputPsets");
+  return getUint32Vector("OLAP.CNProc.outputPsets");
 }
 
 inline vector<uint32> Parset::tabList() const
 {
-  return getUint32Vector("OLAP.BGLProc.tabList");
+  return getUint32Vector("OLAP.CNProc.tabList");
 }
 
 
 inline vector<uint32> Parset::psetDimensions() const
 {
-  return getUint32Vector("OLAP.BGLProc.psetDimensions");
+  return getUint32Vector("OLAP.CNProc.psetDimensions");
 }
 
 inline int Parset::inputPsetIndex(uint32 pset) const
@@ -401,7 +401,7 @@ inline int32 Parset::nrSlotsInFrame() const
 
 inline string Parset::partitionName() const
 {
-  return getString("OLAP.BGLProc.partition");
+  return getString("OLAP.CNProc.partition");
 }
 
 inline bool Parset::realTime() const

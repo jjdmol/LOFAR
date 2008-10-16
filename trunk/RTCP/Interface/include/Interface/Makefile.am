@@ -2,9 +2,9 @@ pkginclude_HEADERS = Package__Version.h \
 		     Align.h \
 		     AlignedStdAllocator.h \
 		     Allocator.h \
-		     BGL_Command.h \
-		     BGL_Configuration.h \
-		     BGL_Mapping.h \
+		     CN_Command.h \
+		     CN_Configuration.h \
+		     CN_Mapping.h \
 		     CorrelatedData.h \
 		     Config.h \
 		     Parset.h \
