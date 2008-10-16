@@ -22,9 +22,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqGaussianCoherency.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/MeqGaussianCoherency.h>
+#include <BBSKernel/Expr/MeqMatrix.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
 #include <Common/lofar_complex.h>
 #include <Common/lofar_math.h>
 #include <Common/LofarLogger.h>

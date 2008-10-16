@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQSOURCE_H
-#define MNS_MEQSOURCE_H
+#ifndef Expr_MEQSOURCE_H
+#define Expr_MEQSOURCE_H
 
 // \file
 // Abstract base class for holding a source
 
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class Source

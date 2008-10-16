@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQDIAG_H)
-#define MNS_MEQDIAG_H
+#if !defined(Expr_MEQDIAG_H)
+#define Expr_MEQDIAG_H
 
-// \file MNS/MeqDiag.h
+// \file Expr/MeqDiag.h
 // The Jones expression for a diagonal matrix
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 //# Forward Declarations

@@ -30,7 +30,7 @@
 
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/Expr/MeqRequest.h>
 #include <Common/Timer.h>
 
 namespace LOFAR

@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqJonesCMul2.h>
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/MeqJonesCMul2.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqMatrix.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
 
 using namespace casa;

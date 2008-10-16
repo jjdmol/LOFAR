@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqExternalFunction.h>
+#include <BBSKernel/Expr/MeqExternalFunction.h>
 #include <BBSKernel/Exceptions.h>
 #include <Common/LofarLogger.h>
 

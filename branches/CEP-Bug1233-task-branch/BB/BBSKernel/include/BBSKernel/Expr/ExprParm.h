@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_EXPRPARM_H
-#define MNS_EXPRPARM_H
+#ifndef Expr_EXPRPARM_H
+#define Expr_EXPRPARM_H
 
 // \file
 // Parameter that can be used in an expression.
 
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 #include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class ExprParm: public ExprRep

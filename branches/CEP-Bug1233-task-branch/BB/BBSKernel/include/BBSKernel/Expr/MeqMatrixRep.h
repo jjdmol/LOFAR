@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQMATRIXREP_H)
-#define MNS_MEQMATRIXREP_H
+#if !defined(Expr_MEQMATRIXREP_H)
+#define Expr_MEQMATRIXREP_H
 
 // \file
 // Temporary matrix for Mns
@@ -43,7 +43,7 @@ namespace BBS
 using LOFAR::dcomplex;
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 //# Forward Declarations

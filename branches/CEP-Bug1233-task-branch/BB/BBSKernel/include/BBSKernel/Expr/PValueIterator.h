@@ -21,20 +21,20 @@
 //#
 //# $Id$
 
-#ifndef MNS_PVITERATOR_H
-#define MNS_PVITERATOR_H
+#ifndef Expr_PVITERATOR_H
+#define Expr_PVITERATOR_H
 
 // \file
 // Iterators that iterate over the perturbed values of a (set of) result(s).
 
-#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/Expr/MeqResult.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class PValueConstIterator

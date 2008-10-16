@@ -21,13 +21,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQGAUSSIANSOURCE_H
-#define MNS_MEQGAUSSIANSOURCE_H
+#ifndef Expr_MEQGAUSSIANSOURCE_H
+#define Expr_MEQGAUSSIANSOURCE_H
 
 // \file
 // Class holding the expressions defining a gaussian source.
 
-#include <BBSKernel/MNS/MeqSource.h>
+#include <BBSKernel/Expr/MeqSource.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class GaussianSource: public Source

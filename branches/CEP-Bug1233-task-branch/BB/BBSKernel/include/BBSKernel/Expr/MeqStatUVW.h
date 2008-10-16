@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQSTATUVW_H
-#define MNS_MEQSTATUVW_H
+#ifndef Expr_MEQSTATUVW_H
+#define Expr_MEQSTATUVW_H
 
 // \file
 // UVW coordinates of a station in meters.
 
-#include <BBSKernel/MNS/MeqResult.h>
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqPhaseRef.h>
+#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/MeqPhaseRef.h>
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
@@ -43,7 +43,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class StatUVW

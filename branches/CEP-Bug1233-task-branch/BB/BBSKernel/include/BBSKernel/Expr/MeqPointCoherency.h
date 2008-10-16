@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQPOINTCOHERENCE_H
-#define MNS_MEQPOINTCOHENRECE_H
+#ifndef Expr_MEQPOINTCOHERENCE_H
+#define Expr_MEQPOINTCOHENRECE_H
 
 // \file
 // Spatial coherence function of a point source.
 
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqPointSource.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqPointSource.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -39,7 +39,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class PointCoherence: public JonesExprRep

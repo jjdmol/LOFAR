@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQJONESINVERT_H)
-#define MNS_MEQJONESINVERT_H
+#if !defined(Expr_MEQJONESINVERT_H)
+#define Expr_MEQJONESINVERT_H
 
 // \file
 // The inverse of a Jones matrix expression.
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 
 
 namespace LOFAR
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 // This class gets the inverse of a Jones matrix.

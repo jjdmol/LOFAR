@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQDIPOLEBEAMEXTERNAL_H
-#define MNS_MEQDIPOLEBEAMEXTERNAL_H
+#ifndef Expr_MEQDIPOLEBEAMEXTERNAL_H
+#define Expr_MEQDIPOLEBEAMEXTERNAL_H
 
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/MeqExternalFunction.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqExternalFunction.h>
 
 namespace LOFAR
 {
@@ -34,7 +34,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class DipoleBeamExternal: public JonesExprRep

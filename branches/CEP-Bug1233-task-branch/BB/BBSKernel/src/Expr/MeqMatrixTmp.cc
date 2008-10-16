@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/MeqMatrixRealArr.h>
-#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/MeqMatrixRealArr.h>
+#include <BBSKernel/Expr/MeqMatrixComplexArr.h>
 
 
 namespace LOFAR

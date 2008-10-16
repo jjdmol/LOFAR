@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqJonesInvert.h>
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/PValueIterator.h>
+#include <BBSKernel/Expr/MeqJonesInvert.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/MeqMatrix.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 
 // Inverse of a 2x2 matrix:
 //

@@ -21,14 +21,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESMUL_H
-#define MNS_MEQJONESMUL_H
+#ifndef Expr_MEQJONESMUL_H
+#define Expr_MEQJONESMUL_H
 
 // \file Multiply each component of a JonesExpr with a single Expr.
 
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 

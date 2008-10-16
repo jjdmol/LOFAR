@@ -22,10 +22,10 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqAzEl.h>
-#include <BBSKernel/MNS/MeqSource.h>
-#include <BBSKernel/MNS/MeqStation.h>
-#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/Expr/MeqAzEl.h>
+#include <BBSKernel/Expr/MeqSource.h>
+#include <BBSKernel/Expr/MeqStation.h>
+#include <BBSKernel/Expr/MeqRequest.h>
 #include <Common/LofarLogger.h>
 
 #include <measures/Measures/MDirection.h>

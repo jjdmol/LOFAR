@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/ExprParm.h>
+#include <BBSKernel/Expr/ExprParm.h>
 
 #include <Common/lofar_iomanip.h>
 

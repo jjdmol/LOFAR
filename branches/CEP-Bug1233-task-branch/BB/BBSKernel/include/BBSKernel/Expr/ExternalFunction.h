@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef MNS_EXTERNALFUNCTION_H
-#define MNS_EXTERNALFUNCTION_H
+#ifndef Expr_EXTERNALFUNCTION_H
+#define Expr_EXTERNALFUNCTION_H
 
 #include <Common/lofar_complex.h>
 #include <Common/lofar_string.h>

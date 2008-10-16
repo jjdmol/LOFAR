@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESSUM_H
-#define MNS_MEQJONESSUM_H
+#ifndef Expr_MEQJONESSUM_H
+#define Expr_MEQJONESSUM_H
 
 // \file
 // A sum of JonesExpr
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 #include <vector>
 
 namespace LOFAR
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 

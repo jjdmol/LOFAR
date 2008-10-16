@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 #include <Common/LofarLogger.h>
 //#include <Common/Timer.h>
 

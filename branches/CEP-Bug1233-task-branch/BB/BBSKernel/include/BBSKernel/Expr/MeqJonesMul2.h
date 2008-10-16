@@ -19,14 +19,14 @@
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //# $Id$
-#ifndef MNS_MEQJONESMUL2_H
-#define MNS_MEQJONESMUL2_H
+#ifndef Expr_MEQJONESMUL2_H
+#define Expr_MEQJONESMUL2_H
 
 // \file
 // Calculate left*right
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 
 namespace LOFAR
 {
@@ -34,7 +34,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 // Calculate left * right.

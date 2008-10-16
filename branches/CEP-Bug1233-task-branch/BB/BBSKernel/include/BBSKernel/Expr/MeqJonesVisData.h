@@ -21,10 +21,10 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESVISDATA_H
-#define MNS_MEQJONESVISDATA_H
+#ifndef Expr_MEQJONESVISDATA_H
+#define Expr_MEQJONESVISDATA_H
 
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 #include <BBSKernel/VisData.h>
 
 // \file
@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup MNS
+// \addtogroup Expr
 // @{
 
 class JonesVisData: public JonesExprRep

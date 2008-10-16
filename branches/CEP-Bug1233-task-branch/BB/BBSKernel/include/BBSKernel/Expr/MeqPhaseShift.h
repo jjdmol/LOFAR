@@ -21,14 +21,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQPHASESHIFT_H
-#define MNS_MEQPHASESHIFT_H
+#ifndef Expr_MEQPHASESHIFT_H
+#define Expr_MEQPHASESHIFT_H
 
 // \file
 // Phase delay due to baseline geometry with respect to source direction.
 
 //# Includes
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class PhaseShift: public ExprRep

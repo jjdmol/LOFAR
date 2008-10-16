@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 //#include <Common/Profiling/PerfProfile.h>
 
-#include <BBSKernel/MNS/MeqDiag.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqDiag.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {

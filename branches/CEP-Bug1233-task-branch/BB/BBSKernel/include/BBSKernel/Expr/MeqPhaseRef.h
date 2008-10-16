@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQPHASEREF_H
-#define MNS_MEQPHASEREF_H
+#ifndef Expr_MEQPHASEREF_H
+#define Expr_MEQPHASEREF_H
 
 // \file
 // Phase reference position and derived values.
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class PhaseRef

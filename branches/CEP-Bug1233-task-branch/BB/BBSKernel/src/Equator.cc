@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/MNS/PValueIterator.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>

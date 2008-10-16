@@ -21,13 +21,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQRESULT_H
-#define MNS_MEQRESULT_H
+#ifndef Expr_MEQRESULT_H
+#define Expr_MEQRESULT_H
 
 // \file
 // The result of the evaluation of an expression on a given request grid.
 
-#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/Expr/MeqMatrix.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
@@ -40,7 +40,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 // A key that identifies a perturbed value through its associated (parameter id,

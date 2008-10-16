@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESRESULT_H
-#define MNS_MEQJONESRESULT_H
+#ifndef Expr_MEQJONESRESULT_H
+#define Expr_MEQJONESRESULT_H
 
 // \file
 // The result of a Jones expression.
 
-#include <BBSKernel/MNS/MeqResultVec.h>
+#include <BBSKernel/Expr/MeqResultVec.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -35,7 +35,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class JonesResult: public ResultVec

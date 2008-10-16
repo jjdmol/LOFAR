@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQJONESNODE_H)
-#define MNS_MEQJONESNODE_H
+#if !defined(Expr_MEQJONESNODE_H)
+#define Expr_MEQJONESNODE_H
 
 // \file
 // A node in a Jones matrix expression.
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 //# Forward Declarations

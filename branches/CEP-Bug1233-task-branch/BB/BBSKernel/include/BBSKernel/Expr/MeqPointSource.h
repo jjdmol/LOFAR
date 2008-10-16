@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQPOINTSOURCE_H
-#define MNS_MEQPOINTSOURCE_H
+#ifndef Expr_MEQPOINTSOURCE_H
+#define Expr_MEQPOINTSOURCE_H
 
 // \file
 // Class holding the expressions defining a point source.
 
-#include <BBSKernel/MNS/MeqSource.h>
+#include <BBSKernel/Expr/MeqSource.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -35,7 +35,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class PointSource: public Source

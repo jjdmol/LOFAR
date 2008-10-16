@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/Expr/MeqResult.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

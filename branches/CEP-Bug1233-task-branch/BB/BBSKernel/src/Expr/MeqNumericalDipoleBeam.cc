@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqNumericalDipoleBeam.h>
+#include <BBSKernel/Expr/MeqNumericalDipoleBeam.h>
 
 #include <casa/BasicSL/Constants.h>
 

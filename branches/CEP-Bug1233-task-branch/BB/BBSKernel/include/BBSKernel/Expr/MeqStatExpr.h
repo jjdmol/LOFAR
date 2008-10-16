@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQSTATEXPR_H)
-#define MNS_MEQSTATEXPR_H
+#if !defined(Expr_MEQSTATEXPR_H)
+#define Expr_MEQSTATEXPR_H
 
 // \file
 // The Jones expression for a station
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 //# Forward Declarations

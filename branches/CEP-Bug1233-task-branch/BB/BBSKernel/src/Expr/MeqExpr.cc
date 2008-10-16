@@ -21,11 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqResult.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/PValueIterator.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 //#include <Common/Timer.h>

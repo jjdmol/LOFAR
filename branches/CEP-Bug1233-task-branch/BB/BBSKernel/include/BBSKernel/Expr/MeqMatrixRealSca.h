@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQMATRIXREALSCA_H)
-#define MNS_MEQMATRIXREALSCA_H
+#if !defined(Expr_MEQMATRIXREALSCA_H)
+#define Expr_MEQMATRIXREALSCA_H
 
 // \file
 // Temporary matrix for Mns
 
 //# Includes
-#include <BBSKernel/MNS/MeqMatrixRep.h>
+#include <BBSKernel/Expr/MeqMatrixRep.h>
 
 namespace LOFAR
 {
@@ -35,7 +35,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class MatrixRealSca : public MatrixRep

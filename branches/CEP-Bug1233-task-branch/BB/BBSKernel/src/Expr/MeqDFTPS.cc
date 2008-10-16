@@ -22,13 +22,13 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqDFTPS.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
-#include <BBSKernel/MNS/MeqLMN.h>
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqResult.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/PValueIterator.h>
+#include <BBSKernel/Expr/MeqDFTPS.h>
+#include <BBSKernel/Expr/MeqStatUVW.h>
+#include <BBSKernel/Expr/MeqLMN.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/BasicSL/Constants.h>

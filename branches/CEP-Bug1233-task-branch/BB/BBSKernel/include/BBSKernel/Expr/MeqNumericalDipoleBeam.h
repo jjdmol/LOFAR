@@ -21,12 +21,12 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQNUMERICALDIPOLEBEAM_H
-#define MNS_MEQNUMERICALDIPOLEBEAM_H
+#ifndef Expr_MEQNUMERICALDIPOLEBEAM_H
+#define Expr_MEQNUMERICALDIPOLEBEAM_H
 
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_complex.h>
@@ -39,7 +39,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class BeamCoeff

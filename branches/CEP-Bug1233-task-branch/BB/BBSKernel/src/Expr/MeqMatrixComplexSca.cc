@@ -23,10 +23,10 @@
 #undef TIMER
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqMatrixRealSca.h>
-#include <BBSKernel/MNS/MeqMatrixRealArr.h>
-#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
-#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/Expr/MeqMatrixRealSca.h>
+#include <BBSKernel/Expr/MeqMatrixRealArr.h>
+#include <BBSKernel/Expr/MeqMatrixComplexSca.h>
+#include <BBSKernel/Expr/MeqMatrixComplexArr.h>
 #include <Common/LofarLogger.h>
 
 #if defined TIMER
@@ -89,7 +89,7 @@ dcomplex MatrixComplexSca::getDComplex (int, int) const
 }
 
 
-#define MNSMATRIXCOMPLEXSCA_OP(NAME, OP, OP2) \
+#define ExprMATRIXCOMPLEXSCA_OP(NAME, OP, OP2) \
 MatrixRep* MatrixComplexSca::NAME (MatrixRealSca& left, \
 					 bool rightTmp) \
 { \
@@ -107,10 +107,10 @@ MatrixRep* MatrixComplexSca::NAME (MatrixComplexSca& left, \
   return &left; \
 }
 
-MNSMATRIXCOMPLEXSCA_OP(addRep,+=,+);
-MNSMATRIXCOMPLEXSCA_OP(subRep,-=,-);
-MNSMATRIXCOMPLEXSCA_OP(mulRep,*=,*);
-MNSMATRIXCOMPLEXSCA_OP(divRep,/=,/);
+ExprMATRIXCOMPLEXSCA_OP(addRep,+=,+);
+ExprMATRIXCOMPLEXSCA_OP(subRep,-=,-);
+ExprMATRIXCOMPLEXSCA_OP(mulRep,*=,*);
+ExprMATRIXCOMPLEXSCA_OP(divRep,/=,/);
 
 MatrixRep* MatrixComplexSca::addRep(MatrixRealArr& left, bool)
 {

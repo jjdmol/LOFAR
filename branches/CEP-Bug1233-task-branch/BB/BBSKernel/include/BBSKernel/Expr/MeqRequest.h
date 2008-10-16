@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQREQUEST_H
-#define MNS_MEQREQUEST_H
+#ifndef Expr_MEQREQUEST_H
+#define Expr_MEQREQUEST_H
 
 // \file
 // Request grid on which to evaluate an expression.
@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 typedef int RequestId;

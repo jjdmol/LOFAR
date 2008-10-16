@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQMATRIX_H)
-#define MNS_MEQMATRIX_H
+#if !defined(Expr_MEQMATRIX_H)
+#define Expr_MEQMATRIX_H
 
 // \file
 // Matrix for Mns
 
 //# Includes
-#include <BBSKernel/MNS/MeqMatrixRep.h>
+#include <BBSKernel/Expr/MeqMatrixRep.h>
 
 //# Forward Declarations
 //namespace casa
@@ -52,7 +52,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class Matrix

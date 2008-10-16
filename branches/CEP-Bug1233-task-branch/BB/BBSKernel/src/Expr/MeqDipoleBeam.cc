@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqDipoleBeam.h>
+#include <BBSKernel/Expr/MeqDipoleBeam.h>
 #include <Common/lofar_complex.h>
 #include <Common/lofar_math.h>
 

@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQRESULTVEC_H
-#define MNS_MEQRESULTVEC_H
+#ifndef Expr_MEQRESULTVEC_H
+#define Expr_MEQRESULTVEC_H
 
 // \file
 // A vector containing multiple results.
 
-#include <BBSKernel/MNS/MeqResult.h>
+#include <BBSKernel/Expr/MeqResult.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_vector.h>
 
@@ -36,7 +36,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class ResultVecRep

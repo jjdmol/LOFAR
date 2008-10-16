@@ -20,17 +20,17 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQMATRIXTMP_H)
-#define MNS_MEQMATRIXTMP_H
+#if !defined(Expr_MEQMATRIXTMP_H)
+#define Expr_MEQMATRIXTMP_H
 
 // \file
 // Temporary matrix for Mns
 
 //# Includes
-#include <BBSKernel/MNS/MeqMatrixRep.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/MeqMatrixRealSca.h>
-#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
+#include <BBSKernel/Expr/MeqMatrixRep.h>
+#include <BBSKernel/Expr/MeqMatrix.h>
+#include <BBSKernel/Expr/MeqMatrixRealSca.h>
+#include <BBSKernel/Expr/MeqMatrixComplexSca.h>
 
 
 namespace LOFAR
@@ -39,7 +39,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class MatrixTmp

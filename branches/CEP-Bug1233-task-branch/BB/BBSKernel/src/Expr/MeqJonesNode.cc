@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqJonesNode.h>
-#include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesNode.h>
+#include <BBSKernel/Expr/MeqExpr.h>
 
 namespace LOFAR
 {

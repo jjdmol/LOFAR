@@ -1,15 +1,15 @@
-pkginclude_MNSdir = $(pkgincludedir)/MNS
+pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	MNS/ExternalFunction.h \
-#	MNS/MeqAzEl.h \
-#	MNS/MeqDiag.h \
-#	MNS/MeqDipoleBeam.h \
-#	MNS/MeqDipoleBeamExternal.h \
-#	MNS/MeqGaussianCoherency.h \
-#	MNS/MeqGaussianSource.h \
-#	MNS/MeqJonesCMul2.h \
-#	MNS/MeqJonesMul3.h \
-#	MNS/MeqNumericalDipoleBeam.h
+#	Expr/ExternalFunction.h \
+#	Expr/MeqAzEl.h \
+#	Expr/MeqDiag.h \
+#	Expr/MeqDipoleBeam.h \
+#	Expr/MeqDipoleBeamExternal.h \
+#	Expr/MeqGaussianCoherency.h \
+#	Expr/MeqGaussianSource.h \
+#	Expr/MeqJonesCMul2.h \
+#	Expr/MeqJonesMul3.h \
+#	Expr/MeqNumericalDipoleBeam.h
 
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
@@ -31,37 +31,37 @@ pkginclude_HEADERS = Package__Version.h \
 	VisDimensions.h \
 	VisSelection.h
 
-pkginclude_MNS_HEADERS	= 	\
-	MNS/ExprParm.h \
-	MNS/MeqDFTPS.h \
-	MNS/MeqExpr.h \
-	MNS/MeqJonesCMul3.h \
-	MNS/MeqJonesExpr.h \
-	MNS/MeqJonesInvert.h \
-	MNS/MeqJonesMul.h \
-	MNS/MeqJonesMul2.h \
-	MNS/MeqJonesNode.h \
-	MNS/MeqJonesResult.h \
-	MNS/MeqJonesSum.h \
-	MNS/MeqJonesVisData.h \
-	MNS/MeqLMN.h \
-	MNS/MeqMatrix.h \
-	MNS/MeqMatrixComplexArr.h \
-	MNS/MeqMatrixComplexSca.h \
-	MNS/MeqMatrixRealArr.h \
-	MNS/MeqMatrixRealSca.h \
-	MNS/MeqMatrixRep.h \
-	MNS/MeqMatrixTmp.h \
-	MNS/MeqPhaseRef.h \
-	MNS/MeqPhaseShift.h \
-	MNS/MeqPointCoherency.h \
-	MNS/MeqPointSource.h \
-	MNS/PValueIterator.h \
-    MNS/MeqRequest.h \
-	MNS/MeqResult.h \
-	MNS/MeqResultVec.h \
-	MNS/Pool.h \
-	MNS/MeqSource.h \
-    MNS/MeqStatUVW.h
+pkginclude_Expr_HEADERS	= 	\
+	Expr/ExprParm.h \
+	Expr/MeqDFTPS.h \
+	Expr/MeqExpr.h \
+	Expr/MeqJonesCMul3.h \
+	Expr/MeqJonesExpr.h \
+	Expr/MeqJonesInvert.h \
+	Expr/MeqJonesMul.h \
+	Expr/MeqJonesMul2.h \
+	Expr/MeqJonesNode.h \
+	Expr/MeqJonesResult.h \
+	Expr/MeqJonesSum.h \
+	Expr/MeqJonesVisData.h \
+	Expr/MeqLMN.h \
+	Expr/MeqMatrix.h \
+	Expr/MeqMatrixComplexArr.h \
+	Expr/MeqMatrixComplexSca.h \
+	Expr/MeqMatrixRealArr.h \
+	Expr/MeqMatrixRealSca.h \
+	Expr/MeqMatrixRep.h \
+	Expr/MeqMatrixTmp.h \
+	Expr/MeqPhaseRef.h \
+	Expr/MeqPhaseShift.h \
+	Expr/MeqPointCoherency.h \
+	Expr/MeqPointSource.h \
+	Expr/PValueIterator.h \
+    Expr/MeqRequest.h \
+	Expr/MeqResult.h \
+	Expr/MeqResultVec.h \
+	Expr/Pool.h \
+	Expr/MeqSource.h \
+    Expr/MeqStatUVW.h
 
 include $(top_srcdir)/Makefile.common

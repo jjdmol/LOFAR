@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQLMN_H
-#define MNS_MEQLMN_H
+#ifndef Expr_MEQLMN_H
+#define Expr_MEQLMN_H
 
 // \file
 // LMN-coordinates of a direction on the sky.
 
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqSource.h>
-#include <BBSKernel/MNS/MeqPhaseRef.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqSource.h>
+#include <BBSKernel/Expr/MeqPhaseRef.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -37,7 +37,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class LMN: public ExprRep

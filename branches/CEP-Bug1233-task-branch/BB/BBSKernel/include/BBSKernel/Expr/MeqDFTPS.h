@@ -20,15 +20,15 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQPOINTDFT_H)
-#define MNS_MEQPOINTDFT_H
+#if !defined(Expr_MEQPOINTDFT_H)
+#define Expr_MEQPOINTDFT_H
 
 // \file
 // Station part of baseline phase shift.
 
 //# Includes
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqStatUVW.h>
 
 #include <Common/lofar_vector.h>
 
@@ -42,7 +42,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class DFTPS: public ExprRep

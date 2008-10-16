@@ -35,12 +35,12 @@
 #include <BBSKernel/Instrument.h>
 //#include <BBSKernel/SourceList.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/MNS/ExprParm.h>
-#include <BBSKernel/MNS/MeqPhaseRef.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqSource.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
+#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/MeqPhaseRef.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqSource.h>
+#include <BBSKernel/Expr/MeqStatUVW.h>
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/SourceDB.h>

@@ -21,10 +21,10 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqMatrixRealSca.h>
-#include <BBSKernel/MNS/MeqMatrixRealArr.h>
-#include <BBSKernel/MNS/MeqMatrixComplexSca.h>
-#include <BBSKernel/MNS/MeqMatrixComplexArr.h>
+#include <BBSKernel/Expr/MeqMatrixRealSca.h>
+#include <BBSKernel/Expr/MeqMatrixRealArr.h>
+#include <BBSKernel/Expr/MeqMatrixComplexSca.h>
+#include <BBSKernel/Expr/MeqMatrixComplexArr.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iostream.h>
@@ -88,7 +88,7 @@ dcomplex MatrixRealSca::getDComplex (int, int) const
 }
 
 
-#define MNSMATRIXREALSCA_OP(NAME, OP, OPX) \
+#define ExprMATRIXREALSCA_OP(NAME, OP, OPX) \
 MatrixRep* MatrixRealSca::NAME (MatrixRealSca& left, \
 				      bool) \
 { \
@@ -112,10 +112,10 @@ MatrixRep* MatrixRealSca::NAME (MatrixRealArr& left,  \
   return &left; \
 }
 
-MNSMATRIXREALSCA_OP(addRep,+=,'+');
-MNSMATRIXREALSCA_OP(subRep,-=,'-');
-MNSMATRIXREALSCA_OP(mulRep,*=,'*');
-MNSMATRIXREALSCA_OP(divRep,/=,'/');
+ExprMATRIXREALSCA_OP(addRep,+=,'+');
+ExprMATRIXREALSCA_OP(subRep,-=,'-');
+ExprMATRIXREALSCA_OP(mulRep,*=,'*');
+ExprMATRIXREALSCA_OP(divRep,/=,'/');
 
 MatrixRep *MatrixRealSca::addRep(MatrixComplexArr &left, bool)
 {

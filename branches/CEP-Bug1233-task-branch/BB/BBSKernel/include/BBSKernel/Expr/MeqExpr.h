@@ -20,16 +20,16 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQEXPR_H
-#define MNS_MEQEXPR_H
+#ifndef Expr_MEQEXPR_H
+#define Expr_MEQEXPR_H
 
 // \file
 // The base class of an expression
 
 //# Includes
-#include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqResult.h>
-#include <BBSKernel/MNS/MeqResultVec.h>
+#include <BBSKernel/Expr/MeqRequest.h>
+#include <BBSKernel/Expr/MeqResult.h>
+#include <BBSKernel/Expr/MeqResultVec.h>
 #include <vector>
 
 #ifdef EXPR_GRAPH
@@ -46,7 +46,7 @@ namespace BBS
 class Expr;
 
 // \ingroup BBSKernel
-// \addtogroup MNS
+// \addtogroup Expr
 // @{
 
 

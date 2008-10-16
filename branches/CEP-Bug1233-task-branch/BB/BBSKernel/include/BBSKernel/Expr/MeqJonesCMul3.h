@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESCMUL3_H
-#define MNS_MEQJONESCMUL3_H
+#ifndef Expr_MEQJONESCMUL3_H
+#define Expr_MEQJONESCMUL3_H
 
 // \file
 // Calculate left*mid*conj(transpose(right))
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
 
 namespace LOFAR
 {
@@ -35,7 +35,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 

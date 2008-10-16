@@ -23,9 +23,9 @@
 #include <lofar_config.h>
 //include <Common/Timer.h>
 
-#include <BBSKernel/MNS/MeqPointCoherency.h>
-#include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/PValueIterator.h>
+#include <BBSKernel/Expr/MeqPointCoherency.h>
+#include <BBSKernel/Expr/MeqMatrixTmp.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 
 using namespace casa;
 

@@ -1,15 +1,15 @@
 lib_LTLIBRARIES = libbbskernel.la
 
-#	MNS/ExternalFunction.cc \
-#	MNS/MeqAzEl.cc \
-#	MNS/MeqDiag.cc \
-#	MNS/MeqDipoleBeam.cc \
-#	MNS/MeqDipoleBeamExternal.cc \
-#	MNS/MeqGaussianCoherency.cc \
-#	MNS/MeqGaussianSource.cc \
-#	MNS/MeqJonesCMul2.cc \
-#	MNS/MeqJonesMul3.cc \
-#	MNS/MeqNumericalDipoleBeam.cc
+#	Expr/ExternalFunction.cc \
+#	Expr/MeqAzEl.cc \
+#	Expr/MeqDiag.cc \
+#	Expr/MeqDipoleBeam.cc \
+#	Expr/MeqDipoleBeamExternal.cc \
+#	Expr/MeqGaussianCoherency.cc \
+#	Expr/MeqGaussianSource.cc \
+#	Expr/MeqJonesCMul2.cc \
+#	Expr/MeqJonesMul3.cc \
+#	Expr/MeqNumericalDipoleBeam.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
 	BlobIOExtensions.cc \
@@ -27,34 +27,34 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisData.cc \
 	VisDimensions.cc \
 	VisSelection.cc \
-	MNS/ExprParm.cc \
-	MNS/MeqDFTPS.cc \
-	MNS/MeqExpr.cc \
-	MNS/MeqLMN.cc \
-	MNS/MeqJonesCMul3.cc \
-	MNS/MeqJonesExpr.cc \
-	MNS/MeqJonesInvert.cc \
-	MNS/MeqJonesMul.cc \
-	MNS/MeqJonesMul2.cc \
-	MNS/MeqJonesNode.cc \
-	MNS/MeqJonesSum.cc \
-	MNS/MeqJonesVisData.cc \
-	MNS/MeqMatrix.cc \
-	MNS/MeqMatrixComplexArr.cc \
-	MNS/MeqMatrixComplexSca.cc \
-	MNS/MeqMatrixRealArr.cc \
-	MNS/MeqMatrixRealSca.cc \
-	MNS/MeqMatrixRep.cc \
-	MNS/MeqMatrixTmp.cc \
-	MNS/MeqPhaseRef.cc \
-    MNS/MeqPhaseShift.cc \
-	MNS/MeqPointCoherency.cc \
-	MNS/MeqPointSource.cc \
-	MNS/MeqRequest.cc \
-	MNS/MeqResult.cc \
-	MNS/MeqResultVec.cc \
-    MNS/MeqSource.cc \
-    MNS/MeqStatUVW.cc
+	Expr/ExprParm.cc \
+	Expr/MeqDFTPS.cc \
+	Expr/MeqExpr.cc \
+	Expr/MeqLMN.cc \
+	Expr/MeqJonesCMul3.cc \
+	Expr/MeqJonesExpr.cc \
+	Expr/MeqJonesInvert.cc \
+	Expr/MeqJonesMul.cc \
+	Expr/MeqJonesMul2.cc \
+	Expr/MeqJonesNode.cc \
+	Expr/MeqJonesSum.cc \
+	Expr/MeqJonesVisData.cc \
+	Expr/MeqMatrix.cc \
+	Expr/MeqMatrixComplexArr.cc \
+	Expr/MeqMatrixComplexSca.cc \
+	Expr/MeqMatrixRealArr.cc \
+	Expr/MeqMatrixRealSca.cc \
+	Expr/MeqMatrixRep.cc \
+	Expr/MeqMatrixTmp.cc \
+	Expr/MeqPhaseRef.cc \
+    Expr/MeqPhaseShift.cc \
+	Expr/MeqPointCoherency.cc \
+	Expr/MeqPointSource.cc \
+	Expr/MeqRequest.cc \
+	Expr/MeqResult.cc \
+	Expr/MeqResultVec.cc \
+    Expr/MeqSource.cc \
+    Expr/MeqStatUVW.cc
 
 bin_PROGRAMS = versionbbskernel metams
 

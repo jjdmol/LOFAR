@@ -21,16 +21,16 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQGAUSSIANCOHERENCY_H
-#define MNS_MEQGAUSSIANCOHENRECY_H
+#ifndef Expr_MEQGAUSSIANCOHERENCY_H
+#define Expr_MEQGAUSSIANCOHENRECY_H
 
 // \file
 // Spatial coherence function of an elliptical gaussian source.
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqGaussianSource.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
+#include <BBSKernel/Expr/MeqJonesExpr.h>
+#include <BBSKernel/Expr/MeqGaussianSource.h>
+#include <BBSKernel/Expr/MeqStatUVW.h>
 
 namespace LOFAR
 {
@@ -38,7 +38,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 //# Forward Declarations

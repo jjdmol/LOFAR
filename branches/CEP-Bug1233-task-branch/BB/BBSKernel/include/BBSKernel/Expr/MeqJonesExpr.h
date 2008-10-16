@@ -20,16 +20,16 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQJONESEXPR_H)
-#define MNS_MEQJONESEXPR_H
+#if !defined(Expr_MEQJONESEXPR_H)
+#define Expr_MEQJONESEXPR_H
 
 // \file
 // The base class of a Jones matrix expression.
 
 //# Includes
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/MeqRequest.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqJonesResult.h>
+#include <BBSKernel/Expr/MeqRequest.h>
 #include <Common/LofarLogger.h>
 
 
@@ -39,7 +39,7 @@ namespace BBS
 {
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 // This class is the (abstract) base class for a Jones expression.

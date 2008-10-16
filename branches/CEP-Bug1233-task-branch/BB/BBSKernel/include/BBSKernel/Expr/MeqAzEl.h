@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQAZEL_H
-#define MNS_MEQAZEL_H
+#ifndef Expr_MEQAZEL_H
+#define Expr_MEQAZEL_H
 
-#include <BBSKernel/MNS/MeqExpr.h>
-#include <BBSKernel/MNS/MeqResultVec.h>
+#include <BBSKernel/Expr/MeqExpr.h>
+#include <BBSKernel/Expr/MeqResultVec.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -40,7 +40,7 @@ class Request;
 class Matrix;
 
 // \ingroup BBSKernel
-// \ingroup MNS
+// \ingroup Expr
 // @{
 
 class AzEl: public ExprRep

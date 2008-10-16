@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/MNS/MeqJonesVisData.h>
+#include <BBSKernel/Expr/MeqJonesVisData.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

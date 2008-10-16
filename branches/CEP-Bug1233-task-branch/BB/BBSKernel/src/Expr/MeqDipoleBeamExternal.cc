@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/MNS/MeqDipoleBeamExternal.h>
+#include <BBSKernel/Expr/MeqDipoleBeamExternal.h>
 #include <Common/lofar_complex.h>
 
 #include <casa/BasicSL/Constants.h>
