@@ -19,6 +19,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <ParmFacade/ParmFacade.h>
 
 #include <pyrap/Converters/PycExcp.h>
@@ -31,7 +32,7 @@
 using namespace boost::python;
 using namespace casa::pyrap;
 
-namespace LOFAR { namespace ParmDB {
+namespace LOFAR { namespace BBS  {
 
   void pyparmdb()
   {
@@ -50,14 +51,6 @@ namespace LOFAR { namespace ParmDB {
 	     boost::python::arg("starty"),
 	     boost::python::arg("endy"),
 	     boost::python::arg("ny")))
-      .def ("gethistory", &ParmFacade::getHistoryRec,
- 	    (boost::python::arg("parmnamepattern"),
-	     boost::python::arg("startx"),
-	     boost::python::arg("endx"),
-	     boost::python::arg("starty"),
-	     boost::python::arg("endy"),
-	     boost::python::arg("startsolvetime")=0,
-	     boost::python::arg("ndsolvetime")=1e25))
       ;
   }
     
@@ -73,5 +66,5 @@ BOOST_PYTHON_MODULE(_parmdb)
   casa::pyrap::register_convert_std_vector<std::string>();
   casa::pyrap::register_convert_casa_record();
 
-  LOFAR::ParmDB::pyparmdb();
+  LOFAR::BBS::pyparmdb();
 }
