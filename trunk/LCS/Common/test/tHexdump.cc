@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>	       // contains the API of the LofarLogger
 #include <Common/hexdump.h>
 #include <Common/StringUtil.h>
+#include <cstring>
 
 using namespace LOFAR;
 
