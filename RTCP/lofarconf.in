@@ -1,5 +1,5 @@
-BGLProc			#short description
-Run                     #short description
-IONProc                 #short description
-Interface		#short description
-Storage			#short description
+CNProc			#running on Compute Cores of BlueGene
+Run                     #startup RTCP
+IONProc                 #running on IONode of BlueGene
+Interface		#Interface class
+Storage			#Storage class
