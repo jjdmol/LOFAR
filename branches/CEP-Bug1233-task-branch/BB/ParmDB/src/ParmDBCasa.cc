@@ -503,7 +503,7 @@ namespace BBS {
       vs.push_back (*arrp++);
       ve.push_back (*arrp++);
     }
-    return Axis::ShPtr(new OrderedAxis (vs, ve));
+    return Axis::ShPtr(new OrderedAxis (vs, ve, true));
   }
 
   int ParmDBCasa::putName (const string& name, const ParmValueSet& pset)
@@ -646,12 +646,12 @@ namespace BBS {
                                       const Box& domain) const
   {
     TableExprNode expr;
-    if (domain.lowerX() < domain.upperX() != 0) {
+    if (domain.lowerX() < domain.upperX()) {
       andExpr (expr,
                domain.lowerX() < table.col("ENDX")  &&
                domain.upperX() > table.col("STARTX"));
     }
-    if (domain.lowerY() < domain.upperY() != 0) {
+    if (domain.lowerY() < domain.upperY()) {
       andExpr (expr,
                domain.lowerY() < table.col("ENDY")  &&
                domain.upperY() > table.col("STARTY"));

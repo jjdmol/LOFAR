@@ -403,7 +403,7 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
     int nr = size - st.size();
     for (int i=0; i<nr; ++i) {
       st.push_back (0);
-      end.push_back (1);
+      end.push_back (0);
     }
   }
   return Box(make_pair(st[0], end[0]), make_pair(st[1], end[1]));
