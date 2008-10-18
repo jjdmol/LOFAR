@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2007 by Adriaan Renting, ASTRON                         *
+ *   Copyright (C) 2007-8 by Adriaan Renting, ASTRON                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -32,6 +32,10 @@
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 
+// @file
+// @brief Class to hold code for DataSquasher step in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -45,6 +49,8 @@ namespace LOFAR
     public:
       DataSquasher(void);
       ~DataSquasher(void);
+
+      // All processing of one integration time happens in one go.
       void ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
                            MsInfo& Info, RunDetails& Details,
                            std::vector<double>& TimeData);

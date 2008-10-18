@@ -26,11 +26,9 @@
 /**
 @author Adriaan Renting
 */
-//namespace WSRT
-//{
-//  class MS_File; //foreward declaration
-//  class ComplexMedianFlagger;
-//} //namespace WSRT
+// @file
+// @brief Class to hold code for inititalising IDPP and starting the processing in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
@@ -48,19 +46,19 @@ namespace LOFAR
     class PipelineProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
-      std::string  itsInMS;
-      std::string  itsOutMS;
-      unsigned int itsBandpass;
-      unsigned int itsFlagger;
-      unsigned int itsSquasher;
+      std::string  itsInMS; //Name and location of input MS
+      std::string  itsOutMS; //Name and location of output MS
+      unsigned int itsBandpass; //from ParameterSet
+      unsigned int itsFlagger; //From ParameterSet
+      unsigned int itsSquasher; //From ParameterSet
 
-      Pipeline*          myPipeline;
       MsFile*            myFile;
       MsInfo*            myInfo;
       BandpassCorrector* myBandpass;
       Flagger*           myFlagger;
       DataSquasher*      mySquasher;
       RunDetails*        myDetails;
+      Pipeline*          myPipeline; //the actual pipeline, all others need to be initialised first
     public:
       PipelineProcessControl(void);
 

@@ -1,5 +1,5 @@
 /**************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -26,6 +26,10 @@
 #include <list>
 #include <map>
 
+// @file
+// @brief Class to hold code for BandpassCorrector in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -40,15 +44,16 @@ namespace LOFAR
       public:
         BandpassCorrector(void);
         ~BandpassCorrector();
-
+        // All processing of one integration time happens in one go.
         void ProcessTimeslot(DataBuffer& data, MsInfo& info, RunDetails& details);
       protected:
       private:
+        // Processes one band of one baseline, fixed selects with profile is used
         void ProcessBaselineBand(casa::Matrix<casa::Complex>& In,
                                  casa::Matrix<casa::Complex>& Out,
                                  int fixed);
-        int NumChannels;
-        int NumPolarizations;
+        int NumChannels; // From MsInfo
+        int NumPolarizations; //From MsInfo
     }; // BandpassCorrector
   }; // namespace CS1
 }; // namespace LOFAR

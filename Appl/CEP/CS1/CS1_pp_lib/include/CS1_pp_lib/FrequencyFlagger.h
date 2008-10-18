@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -27,6 +27,10 @@
 #include <map>
 #include <CS1_pp_lib/Flagger.h>
 
+// @file
+// @brief Class to hold code for FrequencyFlagger in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -43,6 +47,7 @@ namespace LOFAR
         FrequencyFlagger();
         ~FrequencyFlagger();
 
+        // All processing of one integration time happens in one go.
         void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
                              RunDetails& details,

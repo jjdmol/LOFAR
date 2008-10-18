@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,6 +20,10 @@
 #ifndef __FLAGGER_FLAGGER_H__
 #define __FLAGGER_FLAGGER_H__
 
+// @file
+// @brief Class to hold code for virtual base class for Flaggers in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -34,6 +38,9 @@ namespace LOFAR
     {
       public:
         virtual ~Flagger() {};
+
+        // All processing of one integration time happens in one go.
+        // purely virtual to provide a prototype to inherit
         virtual void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
                              RunDetails& details,

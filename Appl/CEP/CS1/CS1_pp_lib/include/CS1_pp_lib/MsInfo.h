@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2007-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -26,6 +26,10 @@
 #include <vector>
 #include <string>
 #include <map>
+
+// @file
+// @brief Class to hold code for retrieving information from MeasurementSet in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
@@ -55,13 +59,13 @@ namespace LOFAR
       std::map<baseline_t, int> BaselineIndex;
       std::vector<double>       BaselineLengths;
 
-      void                      Update(void);
-      void                      PrintInfo(void);
+      void                      Update(void); //reread the info from the MeasurementSet
+      void                      PrintInfo(void); // prints info to cout, for debugging
 
     protected:
     private:
       std::string MsName;
-      void        ComputeBaselineLengths(casa::MeasurementSet& MS);
+      void        ComputeBaselineLengths(casa::MeasurementSet& MS); // for baseline dependent flagging or filtering
     }; // class MsInfo
   }; // CS1
 }; // namespace LOFAR

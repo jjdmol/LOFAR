@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2007-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -23,6 +23,11 @@
 
 #include <vector>
 
+// @file
+// @brief Class to hold code for Pipeline in IDPPP, which determines the order in which the
+// steps in IDPPP are run
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -40,9 +45,12 @@ namespace LOFAR
     class Pipeline
     {
     public:
+      //Gets initialised after reading the ParameterSet and initalising the input and output
+      // MeasuremenSets and choosing a BandpassCorrector, Flagger and DataSquasher and initialising those
       Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
                BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher);
       ~Pipeline();
+      //run the pipeline until there are no more timeslots in the input MeasurementSet.
       void Run(MsInfo* SquashedInfo, bool Columns);
 
     protected:
@@ -53,12 +61,12 @@ namespace LOFAR
       BandpassCorrector*  myBandpass;
       Flagger*            myFlagger;
       DataSquasher*       mySquasher;
-      DataBuffer*         BandpassData;
-      DataBuffer*         FlaggerData;
-      DataBuffer*         SquasherData;
-      FlaggerStatistics*  myStatistics;
-      std::vector<double> TimeData;
-      void MirrorBuffer(DataBuffer& buffer, MsInfo& info, int step);
+      DataBuffer*         BandpassData; //initial data read from MS
+      DataBuffer*         FlaggerData; //data after bandpass correction to be flagged
+      DataBuffer*         SquasherData; //output of the squasher
+      FlaggerStatistics*  myStatistics; //Stores the statistics of the flaggers
+      std::vector<double> TimeData; // remmber what timeslots we are processing
+      void MirrorBuffer(DataBuffer& buffer, MsInfo& info, int step); // for handling the start and stop edges of the data
 
     }; // class Pipeline
   }; // CS1
