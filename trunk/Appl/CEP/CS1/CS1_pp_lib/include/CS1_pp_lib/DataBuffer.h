@@ -24,6 +24,10 @@
 
 #include <CS1_pp_lib/MsInfo.h>
 
+// @file
+// @brief Class to hold code for DataBuffer in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1

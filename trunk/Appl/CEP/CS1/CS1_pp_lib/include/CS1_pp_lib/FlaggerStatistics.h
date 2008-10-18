@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -25,6 +25,10 @@
 #include <vector>
 #include <CS1_pp_lib/MsInfo.h>
 
+// @file
+// @brief Class to hold code for holding the statistics of a Flagger pass in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -34,15 +38,16 @@ namespace LOFAR
       public:
         FlaggerStatistics(MsInfo& info);
         ~FlaggerStatistics();
+        // Will output formatted statistics to the output stream (usually cout)
         void PrintStatistics(std::ostream& output);
-        int& operator()(int x, int y, int z);
+        int& operator()(int x, int y, int z); //for quick indexing of the internal data
 
       protected:
       private:
         int                       NumAntennae;
         int                       NumBands;
-        casa::Cube< int >         Statistics;
-        int                       Normalizer;
+        casa::Cube< int >         Statistics; //A cube of antenna x antenna x bands
+        int                       Normalizer; //the total count of antenna x antenna x bands
         std::vector<casa::String> AntennaNames;
     }; // FlaggerStatistics
   }; // CS1

@@ -27,6 +27,10 @@
 #include <map>
 #include <CS1_pp_lib/Flagger.h>
 
+// @file
+// @brief Class to hold code for second variant of ComplexMedianFlagger in IDPPP
+// @author Adriaan Renting (renting AT astron nl)
+
 namespace LOFAR
 {
   namespace CS1
@@ -43,6 +47,7 @@ namespace LOFAR
         ComplexMedianFlagger2(void);
         ~ComplexMedianFlagger2();
 
+        // All processing of one integration time happens in one go.
         void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
                              RunDetails& details,
