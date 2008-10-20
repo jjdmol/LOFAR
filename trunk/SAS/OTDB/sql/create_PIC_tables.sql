@@ -80,7 +80,7 @@ CREATE TABLE PIChierarchy (
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(nodeID),
 	paramRefID	INT4			NOT NULL REFERENCES PICparamref(paramID),
 	name		VARCHAR(150)		NOT NULL,
-	index		INT2			NOT NULL DEFAULT 0,
+	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 
 	CONSTRAINT	param_uniq_in_tree	UNIQUE(treeID, nodeID)

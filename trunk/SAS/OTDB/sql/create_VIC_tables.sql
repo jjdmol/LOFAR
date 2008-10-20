@@ -102,10 +102,10 @@ CREATE TABLE VICparamdef (
 -- The VIC template table containts the 'folded' trees that are used during
 -- the define fase of the tree.
 --
--- Note: When index = 0 the node is a 'master' node defining the number of
+-- Note: When index = -1 the node is a 'master' node defining the number of
 -- nodes of that type that are available in the variable 'instances'.
--- When index != 0 the record specifies one specific node the instances
--- variable is 0 in that case.
+-- When index != -1 the record specifies one specific node the instances
+-- variable is 1 in that case.
 --
 -- Note2: When leaf = false the record is a node and the limits field contains
 -- the max number of childs the node can have. When leaf = true the record
@@ -120,9 +120,9 @@ CREATE TABLE VICtemplate (
 	parentID	INT4			NOT NULL,  -- REFERENCES VICtemplate(nodeID),
 	originID	INT4			NOT NULL DEFAULT 0, -- REF VICnode or VICparam
 	name		VARCHAR(40)		NOT NULL,
-	index		INT2			NOT NULL DEFAULT 0,
+	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
-	instances	INT2			NOT NULL DEFAULT 0,
+	instances	INT2			NOT NULL DEFAULT 1,
 	limits		TEXT,			-- interpreted by GUI: range, enum, default
 
 	CONSTRAINT	VTemplNode_uniqin_tree	UNIQUE(treeID, nodeID)
@@ -142,7 +142,7 @@ CREATE TABLE VIChierarchy (
 	parentID	INT4			NOT NULL, -- REFERENCES VIChierachy(nodeID),
 	paramRefID	INT4			NOT NULL, -- REFERENCES VICparamref(paramID),
 	name		VARCHAR(150)	NOT NULL,
-	index		INT2			NOT NULL DEFAULT 0,
+	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	value		TEXT,			-- empty for nodes, filled for params
 

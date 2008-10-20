@@ -102,7 +102,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	  vFieldnr  := 1;
 	  vParentID := 0;
 	  vNodeID   := 0;
-	  vParamIndex := 0;		-- TODO
+	  vParamIndex := -1;		-- TODO
 	  LOOP
 		vNodename := split_part(vFullname, \'.\', vFieldnr);
 		EXIT WHEN length(vNodename) <= 0;
