@@ -67,7 +67,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
     public String getNameForNode(TreeNode aNode){
         String name = "";
         name = ((jOTDBparam)aNode.getUserObject()).name;
-        if (((jOTDBparam)aNode.getUserObject()).index > 0) {
+        if (((jOTDBparam)aNode.getUserObject()).index > -1) {
             name +="["+String.valueOf(((jOTDBparam)aNode.getUserObject()).index)+"]";
         }
         return name;

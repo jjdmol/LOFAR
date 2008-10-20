@@ -818,8 +818,6 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         // now that all Nodes are deleted we should collect the tables input and create new TBBsettings to save to the database.
         
         itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
-        // keep defaultTBBsetting save
-        jOTDBnode aDefaultNode= itsTBBsettings.elementAt(0);
         itsTBBsettings.clear();
         
         try {
@@ -830,7 +828,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 // with the values from the set fields and save the elements again
                 //
                 // Duplicates the given node (and its parameters and children)
-                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),itsDefaultNode.nodeID(),(short)(i));
+                int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),itsDefaultNode.nodeID(),(short)(i-1));
                 if (aN <= 0) {
                     logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
                 } else {

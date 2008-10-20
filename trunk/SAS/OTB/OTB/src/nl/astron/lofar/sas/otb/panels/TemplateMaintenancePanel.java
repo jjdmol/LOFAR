@@ -236,6 +236,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
             }
         } else if (evt.getActionCommand().equals("Duplicate")) {
+            
+            //!!!!!  if duplicating a node the default node.instances need to be set to +1 instance!!!!!!
+            itsMainFrame.ToDo();
+            
+            
             //Check  if the selected node isn't a leaf
             if (itsSelectedNode != null && !itsSelectedNode.leaf) {
                 String answer=JOptionPane.showInputDialog(this,"What is the index for the new subtree?","Enter indexNumber",JOptionPane.QUESTION_MESSAGE);
@@ -367,7 +372,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Duplicate",false);
                 buttonPanel1.setButtonEnabled("Delete",false);
             } else {
-                buttonPanel1.setButtonEnabled("Duplicate",true);
+//                buttonPanel1.setButtonEnabled("Duplicate",true);
                 buttonPanel1.setButtonEnabled("Delete",true);
             }
         }
@@ -386,6 +391,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         buttonPanel1.addButton("Duplicate");
         buttonPanel1.addButton("Change Status");
         buttonPanel1.addButton("Exit");
+        
+        buttonPanel1.setButtonEnabled("Duplicate",false);
         
         nodeViewPanel1.enableButtons(true);
        
