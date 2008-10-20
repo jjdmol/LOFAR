@@ -73,7 +73,7 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
             } else {
                 name=((jOTDBnode)aNode.getUserObject()).name;
             }
-            if (((jOTDBnode)aNode.getUserObject()).index > 0 && !((jOTDBnode)aNode.getUserObject()).leaf) {
+            if (((jOTDBnode)aNode.getUserObject()).index > -1 && !((jOTDBnode)aNode.getUserObject()).leaf) {
                 if (name.contains("[") && name.contains("]")) {
                     
                 } else {

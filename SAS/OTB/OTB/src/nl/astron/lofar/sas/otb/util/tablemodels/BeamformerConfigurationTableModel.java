@@ -26,7 +26,7 @@
  * @created 06-10-2008, 12:00
  *
  *
- * @version $Id:$
+ * @version $Id$
  *
  * @updated
  */
@@ -79,7 +79,7 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         
         // need to skip first entry because it is the default (dummy) TBBsetting
         for (int i=0; i<length-offset; i++) {
-            String[]  newRow = { Integer.toString(i),stations.elementAt(i+offset)};
+            String[]  newRow = { Integer.toString(i+1),stations.elementAt(i+offset)};
             
             this.addRow(newRow);
         }
