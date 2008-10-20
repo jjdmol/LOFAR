@@ -123,7 +123,8 @@ public:
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
 	string			stationList;
-
+	string                  BGLNodeList; 	 
+	string                  storageNodeList;
 };
 
 //#
