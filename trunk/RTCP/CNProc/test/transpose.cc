@@ -25,11 +25,6 @@
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
 #include <PLC/ACCmain.h>
-#include <tinyCEP/ApplicationHolderController.h>
-#include <tinyCEP/TinyApplicationHolder.h>
-#include <tinyCEP/WorkHolder.h>
-#include <Transport/DataHolder.h>
-#include <Transport/TH_MPI.h>
 
 #if defined HAVE_BGL
 #include <bglpersonality.h>
