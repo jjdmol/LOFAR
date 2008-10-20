@@ -103,6 +103,9 @@ cout << "compacted stationList=" << stationList << endl;
 		}
 	}
 
+        BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
+	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
+
 	// get the beams info
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
@@ -293,6 +296,8 @@ ostream& Observation::print (ostream&	os) const
 
 	os << "Receivers    : " << receiverList << endl;
 	os << "Stations     : " << stationList << endl;
+	os << "BLG nodes    : " << BGLNodeList << endl;
+	os << "Storage nodes: " << storageNodeList << endl << endl;
 
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	i(0) ; i < beams.size(); i++) {
