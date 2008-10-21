@@ -102,7 +102,7 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         stations.setSize(1);
         
         for (int i=0; i<getRowCount(); i++) {
-            stations.addElement((String)getValueAt(i,1));
+            stations.addElement(getValueAt(i,1).toString());
         }
         return true;    
     }

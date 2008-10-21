@@ -429,6 +429,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void fillBeamformerStationList() {
         
+        itsAvailableBeamformStations.clear();
         int size = stationsList.getModel().getSize();
         String[] tempList=new String[size];
         DefaultListModel itsModel = new DefaultListModel();
@@ -441,7 +442,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             if (itsUsedBeamformStations.indexOf(station) < 0) {
                 tempList[i] = station; 
                 itsModel.addElement(station);
-                itsAvailableBeamformStations.addElement(station);
+                // check if station is not allready there
+                if (itsAvailableBeamformStations.indexOf(station)<0){
+                    itsAvailableBeamformStations.addElement(station);
+                }
             }
         }
         if(itsAvailableBeamformStations.isEmpty()) {
@@ -628,7 +632,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.modifyStationsCombobox.removeAllItems();
         for (int i=0; i < stationsList.getModel().getSize();i++) {
           this.modifyStationsCombobox.addItem(stationsList.getModel().getElementAt(i));
-          if (! itsUsedBeamformStations.contains(stationsList.getModel().getElementAt(i))) {
+          if (! itsUsedBeamformStations.contains(stationsList.getModel().getElementAt(i)) &&
+                  itsAvailableBeamformStations.indexOf(stationsList.getModel().getElementAt(i).toString())< 0) {
               itsAvailableBeamformStations.add(stationsList.getModel().getElementAt(i).toString());
           }
         }
@@ -784,7 +789,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsBeamformerConfigurationTableModel.getTable(itsStations);
         // keep default save
         jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
-        itsBeamformers.clear();        
+        itsBeamformers.clear(); 
+        // validate table
+        for (int j=0; j< itsStations.size(); j++) {
+            if (itsStations.get(j).equals("")) {
+                itsStations.remove(j);
+            }
+        }
         try {
             // for all elements
             for (i=1; i < itsStations.size();i++) {
@@ -921,7 +932,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     private void deleteBeamformer() {
         String selection = itsBeamformerConfigurationTableModel.getSelection(beamformerConfigurationPanel.getSelectedRow());
-        if (selection== null || selection.equals("")) {
+        if (selection== null) {
             return;
         }
         String[] involvedStations = selection.split("[,]");
@@ -1618,6 +1629,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         int[] selectedIndices = stationsList.getSelectedIndices();
         while(selectedIndices.length>0){
             theStationModel.remove(selectedIndices[0]);
+            
             selectedIndices = stationsList.getSelectedIndices();
         }
         if(theStationModel.size()==0){
