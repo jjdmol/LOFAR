@@ -46,13 +46,13 @@ namespace LOFAR
     //===============>>> PipelineProcessControl::PipelineProcessControl  <<<===============
     PipelineProcessControl::PipelineProcessControl()
     : ProcessControl(),
-      myPipeline(NULL),
       myFile(NULL),
       myInfo(NULL),
       myBandpass(NULL),
       myFlagger(NULL),
       mySquasher(NULL),
-      myDetails(NULL)
+      myDetails(NULL),
+      myPipeline(NULL)
     {
     }
 
