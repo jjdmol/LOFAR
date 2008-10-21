@@ -55,7 +55,7 @@ void RunDetails::PrintInfo(void)
   std::cout << "Fixed:             " << Fixed << std::endl;        // BandpassCorrector
   std::cout << "FreqWindow:        " << FreqWindow << std::endl;   // FrequencyFlagger, MADFlagger
   std::cout << "TimeWindow:        " << TimeWindow << std::endl;   // ComplexMedianFlagger, MADFlagger
-  std::cout << "Treshold:          " << Treshold << std::endl;     // FrequencyFlagger
+  std::cout << "Threshold:         " << Threshold << std::endl;     // FrequencyFlagger
   std::cout << "MinThreshold:      " << MinThreshold << std::endl; // ComplexMedianFlagger
   std::cout << "MaxThreshold:      " << MaxThreshold << std::endl; // ComplexMedianFlagger
   std::cout << "Algorithm:         " << Algorithm << std::endl;    // FrequencyFlagger

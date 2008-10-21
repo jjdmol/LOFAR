@@ -143,7 +143,7 @@ void FrequencyFlagger::ProcessTimeslot(DataBuffer& data,
         stats(i, j, k) = FlagBaselineBand(flags,
                                           tempdata,
                                           stats(i,j,k),
-                                          details.Treshold,
+                                          details.Threshold,
                                           details.Existing,
                                           details.Algorithm);
       }

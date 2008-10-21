@@ -145,7 +145,7 @@ void ComplexMedianFlagger2::ProcessTimeslot(DataBuffer& data,
         stats(i, j, k) = FlagBaselineBand(flags,
                                           data.Data[index],
                                           stats(i,j,k),
-                                          details.Treshold,
+                                          details.Threshold,
                                           pos,
                                           details.Existing,
                                           data.WindowSize);

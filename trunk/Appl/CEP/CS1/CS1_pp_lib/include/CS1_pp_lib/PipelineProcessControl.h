@@ -52,13 +52,13 @@ namespace LOFAR
       unsigned int itsFlagger; //From ParameterSet
       unsigned int itsSquasher; //From ParameterSet
 
+      Pipeline*          myPipeline; //the actual pipeline, all others need to be initialised first
       MsFile*            myFile;
       MsInfo*            myInfo;
       BandpassCorrector* myBandpass;
       Flagger*           myFlagger;
       DataSquasher*      mySquasher;
       RunDetails*        myDetails;
-      Pipeline*          myPipeline; //the actual pipeline, all others need to be initialised first
     public:
       PipelineProcessControl(void);
 
