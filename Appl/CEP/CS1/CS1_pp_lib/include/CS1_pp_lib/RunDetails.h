@@ -44,7 +44,7 @@ namespace LOFAR
       unsigned int Fixed;        // BandpassCorrector
       unsigned int FreqWindow;   // FrequencyFlagger, MADFlagger
       unsigned int TimeWindow;   // ComplexMedianFlagger, MADFlagger
-      double       Treshold;     // FrequencyFlagger
+      double       Threshold;    // FrequencyFlagger, MADFlagger
       double       MinThreshold; // ComplexMedianFlagger
       double       MaxThreshold; // ComplexMedianFlagger
       unsigned int Algorithm;    // FrequencyFlagger

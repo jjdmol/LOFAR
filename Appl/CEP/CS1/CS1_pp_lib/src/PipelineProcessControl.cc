@@ -46,13 +46,13 @@ namespace LOFAR
     //===============>>> PipelineProcessControl::PipelineProcessControl  <<<===============
     PipelineProcessControl::PipelineProcessControl()
     : ProcessControl(),
+      myPipeline(NULL),
       myFile(NULL),
       myInfo(NULL),
       myBandpass(NULL),
       myFlagger(NULL),
       mySquasher(NULL),
-      myDetails(NULL),
-      myPipeline(NULL)
+      myDetails(NULL)
     {
     }
 
@@ -69,7 +69,7 @@ namespace LOFAR
       myDetails->Fixed        = ParamSet->getUint32("fixed", 0);         // BandpassCorrector
       myDetails->FreqWindow   = ParamSet->getUint32("freqwindow", 1);    // FrequencyFlagger, MADFlagger
       myDetails->TimeWindow   = ParamSet->getUint32("timewindow", 1);    // ComplexMedianFlagger, MADFlagger
-      myDetails->Treshold     = ParamSet->getDouble("treshold", 1.0);   // FrequencyFlagger, MADFlagger
+      myDetails->Threshold     = ParamSet->getDouble("threshold", 1.0);  // FrequencyFlagger, MADFlagger
       myDetails->Algorithm    = ParamSet->getUint32("algorithm", 0);     // FrequencyFlagger
       myDetails->MinThreshold = ParamSet->getDouble("min", 1.0);        // ComplexMedianFlagger
       myDetails->MaxThreshold = ParamSet->getDouble("max", 1.0);        // ComplexMedianFlagger
