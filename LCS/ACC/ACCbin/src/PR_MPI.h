@@ -31,7 +31,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 
-#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
+#include <Common/StringUtil.h>
 #include "ProcRule.h"
 
 namespace LOFAR {

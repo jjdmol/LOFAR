@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/StringUtil.h>
 #include "PR_Shell.h"
 
 namespace LOFAR {

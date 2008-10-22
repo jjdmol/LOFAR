@@ -391,18 +391,18 @@ void ApplController::createParSubsets()
 			itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 
-		// --- bgl ---
+		// --- cn ---
 		else if (startstopType == "bgl") {
 			// This processSet is a BG/L job
 			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
-									basePS.getString("OLAP.BGLProc.partition"),
+									basePS.getString("OLAP.CNProc.partition"),
 									basePS.getString(procPrefix + "._executable"),
 									basePS.getString(procPrefix + ".workingdir"),
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
-			// BGL processes do not connect to the ApplController.
+			// CN processes do not connect to the ApplController.
 			itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 	} // for processes
