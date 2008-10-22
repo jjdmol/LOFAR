@@ -39,7 +39,7 @@ LocalSolveController::LocalSolveController(const VisData::Pointer &chunk,
     ASSERT(itsModel);
     
     itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
-        options.collFactor, options.lmFactor, options.balancedEqs,
+        options.colFactor, options.lmFactor, options.balancedEqs,
         options.useSVD);
 }
         

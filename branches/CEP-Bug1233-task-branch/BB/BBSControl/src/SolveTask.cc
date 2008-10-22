@@ -47,7 +47,7 @@ namespace LOFAR
 //         itsKernels.push_back(make_pair(kernels[i], NOMESSAGE));
 //       }
       itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
-        options.collFactor, options.lmFactor, options.balancedEqs,
+        options.colFactor, options.lmFactor, options.balancedEqs,
         options.useSVD);
     }
 

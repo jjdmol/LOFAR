@@ -117,9 +117,6 @@ namespace LOFAR
       // Return which correlation products should be used for this step.
       Correlation correlation() const { return itsCorrelation; }
 
-      // Return the amount of integration that must be applied to the data.
-      Integration integration() const { return itsIntegration; }
-
       // Return the model configuration
       ModelConfig modelConfig() const { return itsModelConfig; }
 
@@ -169,11 +166,6 @@ namespace LOFAR
       // Parameters describing which correlation products for which
       // polarizations should be used for this step.
       Correlation            itsCorrelation;
-
-      // Parameters describing the amount of integration that must be applied
-      // to the data. Integration can be useful to decrease the amount of
-      // data.
-      Integration            itsIntegration;
 
       // Model configuration options as specified in the parameter set file.
       ModelConfig            itsModelConfig;

@@ -266,7 +266,7 @@ namespace LOFAR
             << ",'" << strategy.parmDB().instrument          << "'"
             << ",'" << strategy.parmDB().history             << "'"
             << ",'" << strategy.stations()                   << "'"
-            << ",'" << strategy.inputData()                  << "'"
+            << ",'" << strategy.inputColumn()                << "'"
             << ",'" << strategy.regionOfInterest().freq      << "'"
             << ",'" << strategy.regionOfInterest().time      << "'"
             << ",'" << strategy.chunkSize()                  << "'"

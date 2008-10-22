@@ -53,8 +53,8 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const = 0;
 
-      // Return the name of the data column to write data to.
-      string outputData() const { return itsOutputData; }
+      // Return the name of the column to write data to.
+      string outputColumn() const { return itsOutputColumn; }
 
     protected:
       // Default constructor. Construct an empty SingleStep object and make
@@ -78,8 +78,8 @@ namespace LOFAR
       // object.
       virtual void read(const ACC::APS::ParameterSet& ps);
 
-      // Name of the data column to write data to.
-      string          itsOutputData;
+      // Name of the column to write data to.
+      string          itsOutputColumn;
     };
 
     // @}

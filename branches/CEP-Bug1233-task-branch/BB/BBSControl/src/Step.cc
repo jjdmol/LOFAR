@@ -144,10 +144,6 @@ namespace LOFAR
                   itsCorrelation.selection);
       ps.replace(prefix + "Correlation.Type",
                   toString(itsCorrelation.type));
-      ps.replace(prefix + "Integration.Freq",
-                  toString(itsIntegration.deltaFreq));
-      ps.replace(prefix + "Integration.Time",
-                  toString(itsIntegration.deltaTime));
       ps.replace(prefix + "Model.UsePhasors",
                   toString(itsModelConfig.usePhasors));
       ps.replace(prefix + "Model.Sources",
@@ -171,7 +167,7 @@ namespace LOFAR
               (itsModelConfig.beamConfig);
           ASSERT(config);
               
-          ps.replace(prefix + "Model.Beam.CoeffFile",
+          ps.replace(prefix + "Model.Beam.HamakerDipole.CoeffFile",
                   config->coeffFile);
         }
         else if(itsModelConfig.beamConfig->type() == "YatawattaDipole")
@@ -181,9 +177,9 @@ namespace LOFAR
               (itsModelConfig.beamConfig);
           ASSERT(config);
 
-          ps.replace(prefix + "Model.Beam.ModuleTheta",
+          ps.replace(prefix + "Model.Beam.YatawattaDipole.ModuleTheta",
                   config->moduleTheta);
-          ps.replace(prefix + "Model.Beam.ModulePhi",
+          ps.replace(prefix + "Model.Beam.YatawattaDipole.ModulePhi",
                   config->modulePhi);
         }
       }
@@ -209,12 +205,6 @@ namespace LOFAR
       itsCorrelation.type = 
         ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
-      // Get the integration intervals in frequency (Hz) and time (s).
-      itsIntegration.deltaFreq = 
-        ps.getDouble("Integration.Freq", itsIntegration.deltaFreq);
-      itsIntegration.deltaTime = 
-        ps.getDouble("Integration.Time", itsIntegration.deltaTime);
-
       // Get the model configuration.
       itsModelConfig.usePhasors =
         ps.getBool("Model.UsePhasors", itsModelConfig.usePhasors);
@@ -236,11 +226,11 @@ namespace LOFAR
                 
           HamakerDipoleConfig::Pointer config(new HamakerDipoleConfig());
 
-          config->coeffFile = ps.getString("Model.Beam.CoeffFile",
+          config->coeffFile = ps.getString("Model.Beam.HamakerDipole.CoeffFile",
             parentConfig ? parentConfig->coeffFile : string());
           if(config->coeffFile.empty()) {
-            THROW(BBSControlException, "Model.Beam.CoeffFile expected but not"
-              " found.");
+            THROW(BBSControlException, "Model.Beam.HamakerDipole.CoeffFile"
+              " expected but not found.");
           }
         
           itsModelConfig.beamConfig = config;
@@ -252,18 +242,20 @@ namespace LOFAR
           
           YatawattaDipoleConfig::Pointer config(new YatawattaDipoleConfig());
 
-          config->moduleTheta = ps.getString("Model.Beam.ModuleTheta",
-            parentConfig ? parentConfig->moduleTheta : string());
+          config->moduleTheta =
+            ps.getString("Model.Beam.YatawattaDipole.ModuleTheta",
+              parentConfig ? parentConfig->moduleTheta : string());
           if(config->moduleTheta.empty()) {
-            THROW(BBSControlException, "Model.Beam.ModuleTheta expected but not"
-              " found.");
+            THROW(BBSControlException, "Model.Beam.YatawattaDipole.ModuleTheta"
+              " expected but not found.");
           }
 
-          config->modulePhi = ps.getString("Model.Beam.ModulePhi",
-            parentConfig ? parentConfig->modulePhi : string());
+          config->modulePhi =
+            ps.getString("Model.Beam.YatawattaDipole.ModulePhi", parentConfig
+              ? parentConfig->modulePhi : string());
           if(config->modulePhi.empty()) {
-            THROW(BBSControlException, "Model.Beam.ModulePhi expected but not"
-              " found.");
+            THROW(BBSControlException, "Model.Beam.YatawattaDipole.ModulePhi"
+                " expected but not found.");
           }
 
           itsModelConfig.beamConfig = config;
@@ -285,7 +277,6 @@ namespace LOFAR
         << endl << indent << "Full name: " << fullName()
     	  << endl << indent << itsBaselines
     	  << endl << indent << itsCorrelation
-    	  << endl << indent << itsIntegration
         << endl << indent << itsModelConfig;
     }
 

@@ -62,8 +62,8 @@ int main(int /*argc*/, char* argv[])
     ParameterSet parset(parsetFile);
     Strategy strategy(parset);
 //     CommandQueue queue(getenv("USER"));
-    CommandQueue queue(parset.getString("BBDB.DBName"),
-		       parset.getString("BBDB.UserName"),
+    CommandQueue queue(parset.getString("BBDB.Name"),
+		       parset.getString("BBDB.Username"),
 		       parset.getString("BBDB.Host"),
 		       parset.getString("BBDB.Port"));
     CommandQueue::Trigger insert_trig(queue, CommandQueue::Trigger::Command);

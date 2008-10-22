@@ -113,9 +113,9 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     {
         // Open measurement.
         string path = itsMetaMeasurement.getPath(itsKernelId);
-        LOG_INFO_STR("Input: " << path << "::" << strategy->inputData());
+        LOG_INFO_STR("Input: " << path << "::" << strategy->inputColumn());
 
-        itsInputColumn = strategy->inputData();
+        itsInputColumn = strategy->inputColumn();
         itsMeasurement.reset(new MeasurementAIPS(path));
     }
     catch(Exception &ex)
@@ -328,10 +328,10 @@ void CommandExecutor::visit(const PredictStep &command)
     itsModel->clearExpressions();
 
     // Optionally write the simulated visibilities.
-    if(!command.outputData().empty())
+    if(!command.outputColumn().empty())
     {
-        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
-            false);
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+            command.outputColumn(), false);
     }
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
@@ -377,10 +377,10 @@ void CommandExecutor::visit(const SubtractStep &command)
     itsModel->clearExpressions();
 
     // Optionally write the simulated visibilities.
-    if(!command.outputData().empty())
+    if(!command.outputColumn().empty())
     {
-        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
-            false);
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+            command.outputColumn(), false);
     }
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
@@ -427,10 +427,10 @@ void CommandExecutor::visit(const CorrectStep &command)
     itsModel->clearExpressions();
 
     // Optionally write the simulated visibilities.
-    if(!command.outputData().empty())
+    if(!command.outputColumn().empty())
     {
-        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
-            false);
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+            command.outputColumn(), false);
     }
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
@@ -466,7 +466,7 @@ void CommandExecutor::visit(const SolveStep &command)
         return;
     }
     
-    if(command.kernelGroups().empty())
+    if(command.calibrationGroups().empty())
     {
         // Construct solution grid.
         const CellSize &cellSize(command.cellSize());
@@ -534,7 +534,7 @@ void CommandExecutor::visit(const SolveStep &command)
         const CellSize &cellSize(command.cellSize());
 
         // Determine group id.
-        vector<uint32> groupEnd = command.kernelGroups();
+        vector<uint32> groupEnd = command.calibrationGroups();
         partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
         const size_t groupId = upper_bound(groupEnd.begin(), groupEnd.end(),
             itsKernelId) - groupEnd.begin();

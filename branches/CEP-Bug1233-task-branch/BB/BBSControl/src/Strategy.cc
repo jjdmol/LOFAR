@@ -73,8 +73,8 @@ namespace LOFAR
       // ID's of the stations to be used by this strategy.
       itsStations = ps.getStringVector("Stations");
 
-      // Get the name of the MS input data column
-      itsInputData = ps.getString("InputData");
+      // Get the name of the MS input column
+      itsInputColumn = ps.getString("InputColumn");
 
       // Get the region of interest (optional)
       itsRegionOfInterest.freq =
@@ -90,11 +90,6 @@ namespace LOFAR
         ps.getString("Correlation.Selection");
       itsCorrelation.type = 
         ps.getStringVector("Correlation.Type", vector<string>());
-
-      // Get the integration intervals in frequency (Hz) and time (s)
-      // (optional).
-      itsIntegration.deltaFreq = ps.getDouble("Integration.Freq", 0);
-      itsIntegration.deltaTime = ps.getDouble("Integration.Time", 0);
 
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
@@ -125,11 +120,10 @@ namespace LOFAR
 	 << endl << indent << itsPDB
 	 << endl << indent << "Strategy:";
       Indent id;
-      os << endl << indent << "Input data: " << itsInputData
+      os << endl << indent << "Input column: " << itsInputColumn
 	 << endl << indent << itsRegionOfInterest
 	 << endl << indent << "Chunk size: " << itsChunkSize
 	 << endl << indent << itsCorrelation
-	 << endl << indent << itsIntegration
 	 << endl << indent << "Stations: " << itsStations;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	os << endl << indent << *itsSteps[i];
@@ -160,7 +154,7 @@ namespace LOFAR
       ps.add("ParmDB.Sky", itsPDB.sky);
       ps.add("ParmDB.History", itsPDB.history);
       ps.add("Strategy.Stations", toString(itsStations));
-      ps.add("Strategy.InputData", itsInputData);
+      ps.add("Strategy.InputColumn", itsInputColumn);
       ps.add("Strategy.ChunkSize", toString(itsChunkSize));
       ps.add("Strategy.RegionOfInterest.Freq", 
              toString(itsRegionOfInterest.freq));
@@ -168,8 +162,6 @@ namespace LOFAR
              toString(itsRegionOfInterest.time));
       ps.add("Strategy.Correlation.Selection", itsCorrelation.selection);
       ps.add("Strategy.Correlation.Type", toString(itsCorrelation.type));
-      ps.add("Strategy.Integration.Freq", toString(itsIntegration.deltaFreq));
-      ps.add("Strategy.Integration.Time", toString(itsIntegration.deltaTime));
       LOG_TRACE_COND_STR("Write the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
       if (itsWriteSteps) writeSteps(ps);
@@ -185,18 +177,16 @@ namespace LOFAR
       itsPDB.sky                 = ps.getString("ParmDB.Sky");
       itsPDB.history             = ps.getString("ParmDB.History");
       itsStations                = ps.getStringVector("Strategy.Stations");
-      itsInputData               = ps.getString("Strategy.InputData");
-      itsChunkSize = ps.getUint32("Strategy.ChunkSize");
-      itsRegionOfInterest.freq =
+      itsInputColumn             = ps.getString("Strategy.InputColumn");
+      itsChunkSize               = ps.getUint32("Strategy.ChunkSize");
+      itsRegionOfInterest.freq   =
         ps.getUint32Vector("Strategy.RegionOfInterest.Freq");
-      itsRegionOfInterest.time  =
+      itsRegionOfInterest.time   =
         ps.getStringVector("Strategy.RegionOfInterest.Time");
       itsCorrelation.selection   =
         ps.getString("Strategy.Correlation.Selection");
       itsCorrelation.type        = 
         ps.getStringVector("Strategy.Correlation.Type");
-      itsIntegration.deltaFreq   = ps.getDouble("Strategy.Integration.Freq");
-      itsIntegration.deltaTime   = ps.getDouble("Strategy.Integration.Time");
 
       // Read back the Step objects? Set \c itsWriteSteps to \c false, if
       // no steps were specified in the parameter set.

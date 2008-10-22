@@ -91,11 +91,10 @@ namespace LOFAR
       string            dataSet()          const { return itsDataSet; }
       PDB               parmDB()           const { return itsPDB; }
       vector<string>    stations()         const { return itsStations; }
-      string            inputData()        const { return itsInputData; }
+      string            inputColumn()      const { return itsInputColumn; }
       RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
       uint32            chunkSize()        const { return itsChunkSize; }
       Correlation       correlation()      const { return itsCorrelation; }
-      Integration       integration()      const { return itsIntegration; }
       // @}
 
     private:
@@ -117,8 +116,8 @@ namespace LOFAR
       // they will be passed unaltered by BBS control.
       vector<string>         itsStations;
 
-      // Name of the MS input data column
-      string                 itsInputData;
+      // Name of the MS input column
+      string                 itsInputColumn;
 
       // Region of interest
       RegionOfInterest       itsRegionOfInterest;
@@ -128,9 +127,6 @@ namespace LOFAR
 
       // Selection type of the correlation products.
       Correlation            itsCorrelation;
-
-      // Integration intervals in frequency (Hz) and time (s).
-      Integration            itsIntegration;
 
       // Sequence of steps that comprise this solve strategy.
       vector< shared_ptr<const Step> > itsSteps;

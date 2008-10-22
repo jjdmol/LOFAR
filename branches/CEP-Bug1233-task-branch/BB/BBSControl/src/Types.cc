@@ -44,7 +44,7 @@ namespace LOFAR
       Indent id;
       os << endl << indent << "Host: "     << obj.host
 	 << endl << indent << "Port: "     << obj.port
-	 << endl << indent << "DBName: "   << obj.dbName
+	 << endl << indent << "Name: "   << obj.name
 	 << endl << indent << "Username: " << obj.username
 	 << endl << indent << "Password: " << obj.password;
       return os;
@@ -82,16 +82,6 @@ namespace LOFAR
     }
 
 
-    ostream& operator<<(ostream& os, const Integration& obj)
-    {
-      os << "Integration:";
-      Indent id;
-      os << endl << indent << "Delta frequency: " << obj.deltaFreq << " (Hz)"
-	 << endl << indent << "Delta time: "      << obj.deltaTime << " (s)";
-      return os;
-    }
-
-
     ostream& operator<<(ostream& os, const SolverOptions& obj)
     {
       os << "Solver options:";
@@ -99,7 +89,7 @@ namespace LOFAR
       os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
          << endl << indent << "Epsilon value: "          << obj.epsValue
          << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
-         << endl << indent << "Collinearity factor: "    << obj.collFactor
+         << endl << indent << "Colinearity factor: "     << obj.colFactor
          << endl << indent << "LM factor: "              << obj.lmFactor
          << boolalpha
          << endl << indent << "Balanced equations: "     << obj.balancedEqs
