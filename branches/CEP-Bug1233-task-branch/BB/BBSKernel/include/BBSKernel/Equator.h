@@ -45,6 +45,7 @@ namespace BBS
 class Equator
 {
 public:
+    // Constructor. NB: nThreads is ignored when compiled without OPENMP.
     Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
         const CoeffIndex &index, const Grid &solGrid, uint nMaxCells,
         uint nThreads = 1);
@@ -54,16 +55,24 @@ public:
     void setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products);
 
-//    void setCells(const Location &start, const Location &end);
-
+    // Generate normal equations for the given (inclusive) range of cells in
+    // the solution grid.
     void process(vector<CellEquation> &result, const Location &start,
         const Location &end);
 
 private:    
-    void makeContexts();
+    // Create a mapping for each axis that maps from cells in the solution grid
+    // to cell intervals in the observation (chunk) grid.
     void makeGridMapping();
+
+    // Create a mapping that maps each (parmId, coeffId) combination to an
+    // index.
     void makeCoeffMapping(const CoeffIndex &index);
+
+    // Pre-allocate thread private casa::LSQFit instances.
+    void makeContexts();
     
+    // Generate normal equations for a single baseline.
     void blConstruct(uint threadId, const baseline_t &baseline,
         const Request &request, const Location &cellStart,
         const Location &cellEnd, const Location &visStart);
@@ -71,15 +80,8 @@ private:
     void resetTimers();
     void printTimers();
 
-    enum Timer
-    {
-        PROCESS,
-        PRECOMPUTE,
-        COMPUTE,
-        MERGE,
-        N_Timer
-    };
-
+    // Nested class containing thread private data structures. Each thread gets
+    // its own private data structures, to avoid unnecessary locking.
     class ThreadContext
     {
     public:
@@ -98,50 +100,82 @@ private:
         void resize(uint nCoeff, uint nMaxCells);
         void clear(bool clearEq = false);
 
+        // Normal matrices (one per cell).
+        vector<casa::LSQFit*>   eq;
+        // Mapping from available perturbed values (parmId, coeffId) to a
+        // coefficient index in the normal matrix.
+        vector<uint>            index;
+        // One over the perturbation (delta) used to compute the perturbed
+        // values. This number is used to approximate the partial derivatives
+        // of the model with respect to the solvables using forward differences.
+        vector<double>          inversePert;
+        // Pointers to the real and imaginary components of the perturbed
+        // values.
+        vector<const double*>   pertRe, pertIm;
+        // Value of the (approximated) partial derivatives.
+        vector<double>          partialRe, partialIm;
+
+        // Statistics
         static string           timerNames[N_Timer];
         NSTimer                 timers[N_Timer];
         unsigned long long      count;
-
-        vector<casa::LSQFit*>   eq;
-        vector<uint>            index;
-        vector<double>          inversePert;
-        vector<const double*>   pertRe, pertIm;
-        vector<double>          partialRe, partialIm;
     };
     
+    // Nested struct that represents an interval of cells along an axis. Used to
+    // create the mapping from cells in the solution grid to intervals of cells
+    // in the observation grid.
     struct Interval
     {
         Interval()
             :   start(0),
                 end(0)
-        {}
+        {
+        }
         
         uint    start, end;                
     };
     
+    // Observed visibilities.
     VisData::Pointer                    itsChunk;
+    // Model of the sky and the instrument.
     Model::Pointer                      itsModel;
+    // Solution grid.
+    Grid                                itsSolGrid;
+    // Maximum number of cells in the solution grid that can be processed
+    // simultaneously.
+    uint                                itsMaxCellCount;
+    // Requested number of threads.
+    uint                                itsThreadCount;
 
+    // Selection of the visibility data to process.
     vector<baseline_t>                  itsBaselines;
     int                                 itsProductMask[4];
     
-    // Global solution grid.
-    Grid                                itsSolGrid;
-    // Mapping of local solution grid cells to intervals along the chunk
-    // grid's axes.
-    vector<Interval>                    itsFreqIntervals, itsTimeIntervals;
-    // Location in the global solution grid of the current chunk's start and
-    // end cell.
+    // Location in the solution grid of the current chunk's start and end cell.
     Location                            itsStartCell, itsEndCell;
+    // Mapping of cells in the solution grid to intervals of cells along the
+    // observation grid's axes.
+    vector<Interval>                    itsFreqIntervals, itsTimeIntervals;
+
+    // Mapping from (parmId, coeffId) to a coefficient index in the normal
+    // equations.
+    map<PValueKey, uint>                itsCoeffMap;
+
+    // Thread private data structures.
     boost::multi_array<casa::LSQFit, 2> itsThreadEq;
     vector<ThreadContext>               itsContexts;
-    uint                                itsMaxCellCount;
 
-//    vector<size_t>                      itsCoeffIndex;
-    uint                                itsThreadCount;
-    map<PValueKey, uint>                itsCoeffMap;
+    // Timers
+    enum Timer
+    {
+        PROCESS,
+        PRECOMPUTE,
+        COMPUTE,
+        MERGE,
+        N_Timer
+    };
+
     NSTimer                             itsTimers[N_Timer];
-//    vector<size_t>                      itsCellIdxFreq, itsCellIdxTime;
 };
 
 // @}

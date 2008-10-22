@@ -152,7 +152,7 @@ namespace BBS
         private:
             string                  itsHostName;
             string                  itsPath;
-            Axis::ShPtr           itsFreqAxis;
+            Axis::ShPtr             itsFreqAxis;
 
             friend BlobOStream &operator<<(BlobOStream &out,
                 const MetaMeasurement::Part &obj);
@@ -166,7 +166,7 @@ namespace BBS
         casa::MDirection    itsPhaseCenter;
         Instrument          itsInstrument;
         
-        Axis::ShPtr       itsTimeAxis;
+        Axis::ShPtr         itsTimeAxis;
         set<baseline_t>     itsBaselines;
         set<string>         itsPolarizations;
 

@@ -51,7 +51,9 @@ public:
         N_Mode
     };
     
-    Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model);
+    // Constructor. NB: nThreads is ignored when compiled without OPENMP.
+    Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
+        uint nThreads = 1);
     ~Evaluator();
 
     // Set subset of visibility data to process.
@@ -74,7 +76,8 @@ private:
 
     VisData::Pointer    itsChunk;
     Model::Pointer      itsModel;
-
+    uint                itsThreadCount;
+    
     vector<baseline_t>  itsBaselines;
     int                 itsProductMask[4];
     
