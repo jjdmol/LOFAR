@@ -104,7 +104,7 @@ void Parset::check() const
   
   for (unsigned subband = 0; subband < slots.size(); subband ++)
     if (slots[subband] >= slotsPerFrame)
-      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= OLAP.nrSlotsInFrame");
+      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame");
   
   // check not needed when using Storage
   if (isDefined("OLAP.CNProc.inputPsets")) {

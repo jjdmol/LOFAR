@@ -396,7 +396,7 @@ inline int Parset::outputPsetIndex(uint32 pset) const
 
 inline int32 Parset::nrSlotsInFrame() const
 {
-  return getInt32("OLAP.nrSlotsInFrame");
+  return getInt32("Observation.nrSlotsInFrame");
 }
 
 inline string Parset::partitionName() const
