@@ -1,5 +1,6 @@
 gnu.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CCASFLAGS='-DHAVE_BGP' --with-cppflags='-DHAVE_BGP'
 gnubgp.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc
+gnufen.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++
 
 gnu.compiler.aipspp.var: --with-casacore=/cephome/romein/packages/casacore-0.3.0/stage --without-wcs
 
