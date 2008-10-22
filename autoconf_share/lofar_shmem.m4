@@ -25,17 +25,16 @@
 #
 # Macro to check for Shared Memory support.
 #
-AC_DEFUN([lofar_SHMEM],dnl
-[dnl
-AC_PREREQ(2.13)dnl
-have_shmem=0;
+AC_DEFUN([lofar_SHMEM],
 [
-if test "$with_shmem" = "yes"; then
-  have_shmem=1;
-  ]AC_DEFINE(HAVE_SHMEM, 1, [Defined if shared memory is used])[
-  echo SHMEM >> pkgext
-fi
-]
-AM_CONDITIONAL(HAVE_SHMEM, test $have_shmem = 1)
-])dnl
-dnl
+  AC_PREREQ(2.13)
+  AC_ARG_WITH(shmem,
+    [AS_HELP_STRING([--with-shmem],[use shared memory support [default=no]])],
+    [with_shmem="$withval"],
+    [with_shmem="no"])
+  if test "$with_shmem" != "no"; then
+    AC_DEFINE(HAVE_SHMEM, 1, [Defined if shared memory is used])
+    echo SHMEM >> pkgext
+  fi
+  AM_CONDITIONAL(HAVE_SHMEM, test "$with_shmem" != "no")
+])
