@@ -12,8 +12,9 @@ FIR.h			\
 PPF.h			\
 Transpose.h		\
 AsyncTranspose.h	\
+BeamFormer.h            \
 Correlator.h		\
-CN_Processing.h	\
+CN_Processing.h	        \
 FCNP_ClientStream.h     \
 AsyncCommunication.h
 
@@ -43,6 +44,7 @@ FFT_Asm.S			\
 FIR.cc				\
 Transpose.cc			\
 AsyncTranspose.cc		\
+BeamFormer.cc                   \
 PPF.cc				\
 Correlator.cc			\
 CN_Processing_main.cc    	\

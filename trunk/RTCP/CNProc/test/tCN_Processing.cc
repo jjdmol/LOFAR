@@ -28,6 +28,7 @@
 #include <Common/Exception.h>
 #include <Common/Timer.h>
 #include <PPF.h>
+#include <BeamFormer.h>
 #include <Correlator.h>
 
 #if defined HAVE_MPI
@@ -169,7 +170,7 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
     if (abs(visibilities[0][ch][1][1]) > max)
       max = abs(visibilities[0][ch][1][1]);
 
-  std::clog << "max = " << max << std::endl;
+//  std::clog << "max = " << max << std::endl;
 
   for (unsigned ch = 1; ch < nrChannels; ch ++)
     std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
@@ -191,14 +192,29 @@ template <typename SAMPLE_TYPE> void doWork()
   if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
   {
-    unsigned   nrStations	= 7;
+    unsigned   nrStations	= 14;
     unsigned   nrChannels	= 256;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
     double     signalFrequency	= refFreq + 73 * sampleRate / nrChannels; // channel 73
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
+
+#if 0
+    unsigned   nrSuperStations  = nrStations / 7;
+    unsigned   nrBaselines	= nrSuperStations * (nrSuperStations + 1) / 2;
+#else
+    unsigned   nrSuperStations  = 0;
     unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
+#endif
+
+    std::vector<unsigned> station2SuperStation;
+
+    station2SuperStation.resize(nrStations);
+    for(unsigned i=0; i<nrStations; i++) {
+      station2SuperStation[i] = (i / 7);
+      cerr << station2SuperStation[i] << endl;
+    }
 
     const char *env;
 
@@ -222,7 +238,9 @@ template <typename SAMPLE_TYPE> void doWork()
     CorrelatedData correlatedData(arena1, nrBaselines, nrChannels);
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
-    Correlator       correlator(nrStations, nrChannels, nrSamplesPerIntegration, true);
+    BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, nrSuperStations, station2SuperStation, nrChannels);
+    Correlator     correlator(nrSuperStations == 0 ? nrStations : nrSuperStations, 
+			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
 
@@ -231,10 +249,12 @@ template <typename SAMPLE_TYPE> void doWork()
       ppf.filter(stat, refFreq, &transposedData, &filteredData);
     }
 
+    beamFormer.formBeams(&filteredData);
+
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
 
-    checkCorrelatorTestPattern(&correlatedData, nrStations, nrChannels);
+    checkCorrelatorTestPattern(&correlatedData, nrSuperStations == 0 ? nrStations : nrSuperStations, nrChannels);
   }
 }
 

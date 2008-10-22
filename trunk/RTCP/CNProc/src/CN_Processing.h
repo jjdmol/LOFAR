@@ -44,6 +44,7 @@
 #include <AsyncTranspose.h>
 #include <PPF.h>
 #include <Correlator.h>
+#include <BeamFormer.h>
 
 #include <LocationInfo.h>
 
@@ -116,6 +117,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
 #endif
     PPF<SAMPLE_TYPE>	*itsPPF;
+    BeamFormer          *itsBeamFormer;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

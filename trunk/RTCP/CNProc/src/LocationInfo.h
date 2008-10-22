@@ -4,13 +4,15 @@
 #include <vector>
 
 #if defined HAVE_BGP
+#if defined HAVE_MPI
 // we do not need mpi.h here, but including it after bgp_personality.h leads
 // to compilation errors
 #define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
+#endif // HAVE_MPI
 
 #include <common/bgp_personality.h>
-#endif
+#endif // HAVE_BGP
 
 #if defined HAVE_BGL
 #include <bglpersonality.h>

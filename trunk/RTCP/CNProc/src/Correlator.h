@@ -17,10 +17,13 @@
 namespace LOFAR {
 namespace RTCP {
 
+
+
 class Correlator
 {
   public:
-    Correlator(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, bool correctBandPass);
+    // TODO make stationMapping a vector? --Rob
+    Correlator(unsigned nrStations, unsigned* stationMapping, unsigned nrChannels, unsigned nrSamplesPerIntegration, bool correctBandPass);
     ~Correlator();
 
     void	    correlate(const FilteredData *, CorrelatedData *);
@@ -32,6 +35,10 @@ class Correlator
     unsigned	    itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
     BandPass	    itsBandPass;
+
+    // A list indexed by station number, result is the station position in the Filtered data.
+    // This is needed in case of tied array beam forming.
+    unsigned*       itsStationMapping; //[itsNrStations]
 
     double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
 };
