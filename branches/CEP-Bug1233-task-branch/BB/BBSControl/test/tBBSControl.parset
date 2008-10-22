@@ -25,7 +25,7 @@ BBDB.UserName           = postgres          # username for accessing the DBMS
 BBDB.PassWord           =                   # password for accessing the DBMS
 
 ParmDB.Instrument       = test.mep          # instrument parameters (MS table)
-ParmDB.LocalSky         = test.gsm          # local sky parameters (MS table)
+ParmDB.Sky        	= test.gsm          # local sky parameters (MS table)
 ParmDB.History          = test.his          # history (MS table)
 
 Step.xyz1.Steps         = [ sl1, sl2 ]      # names of substeps

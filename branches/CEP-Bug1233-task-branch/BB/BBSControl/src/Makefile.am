@@ -9,9 +9,11 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	CorrectStep.cc \
 	FinalizeCommand.cc \
 	GlobalProcessControl.cc \
+	GlobalSolveController.cc \
 	InitializeCommand.cc \
 	KernelConnection.cc \
 	KernelProcessControl.cc \
+	LocalSolveController.cc \
 	Messages.cc \
 	MultiStep.cc \
 	NextChunkCommand.cc \

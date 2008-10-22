@@ -91,7 +91,7 @@ LANGUAGE SQL;
 -- -------- --
 CREATE OR REPLACE FUNCTION blackboard.set_strategy
     (data_set TEXT,
-    parmdb_local_sky TEXT,
+    parmdb_sky TEXT,
     parmdb_instrument TEXT,
     parmdb_history TEXT,
     stations TEXT,
@@ -112,7 +112,7 @@ $$
             INTO blackboard.strategy
                 (state,
                 "DataSet", 
-                "ParmDB.LocalSky", 
+                "ParmDB.Sky", 
                 "ParmDB.Instrument", 
                 "ParmDB.History", 
                 "Strategy.Stations",
@@ -125,7 +125,7 @@ $$
             VALUES
                 ('ACTIVE',
                 data_set,
-                parmdb_local_sky,
+                parmdb_sky,
                 parmdb_instrument,
                 parmdb_history,
                 stations,

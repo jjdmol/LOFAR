@@ -4,7 +4,7 @@ CREATE TABLE blackboard.strategy
 
     "DataSet"                           TEXT                NOT NULL,
 
-    "ParmDB.LocalSky"                   TEXT                NOT NULL,
+    "ParmDB.Sky"                        TEXT                NOT NULL,
     "ParmDB.Instrument"                 TEXT                NOT NULL,
     "ParmDB.History"                    TEXT                NOT NULL,
 

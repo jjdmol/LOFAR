@@ -89,7 +89,7 @@ namespace LOFAR
       // @name Accessor methods
       // @{
       string            dataSet()          const { return itsDataSet; }
-      ParmDB            parmDB()           const { return itsParmDB; }
+      PDB               parmDB()           const { return itsPDB; }
       vector<string>    stations()         const { return itsStations; }
       string            inputData()        const { return itsInputData; }
       RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
@@ -110,7 +110,7 @@ namespace LOFAR
       string                 itsDataSet;
 
       // Information about the parameter database.
-      ParmDB                 itsParmDB;
+      PDB                    itsPDB;
 
       // Names of the stations to use. Names may contains wildcards, like \c *
       // and \c ?. Expansion of wildcards will be done in the BBS kernel, so

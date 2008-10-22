@@ -2,7 +2,7 @@
 Measurement Set: test.ms
 Parameter database:
 . Instrument table: test.mep
-. Local sky table: test.gsm
+. Sky table: test.gsm
 . History table: test.his
 Strategy:
 . Input data: INDATA

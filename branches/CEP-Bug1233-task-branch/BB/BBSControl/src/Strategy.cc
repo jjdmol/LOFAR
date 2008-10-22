@@ -62,9 +62,9 @@ namespace LOFAR
       itsDataSet = aParSet.getString("DataSet");
 
       // Retrieve the parameter database related key/value pairs.
-      itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
-      itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
-      itsParmDB.history = aParSet.getString("ParmDB.History");
+      itsPDB.instrument = aParSet.getString("ParmDB.Instrument");
+      itsPDB.sky = aParSet.getString("ParmDB.Sky");
+      itsPDB.history = aParSet.getString("ParmDB.History");
 
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
@@ -122,7 +122,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
-	 << endl << indent << itsParmDB
+	 << endl << indent << itsPDB
 	 << endl << indent << "Strategy:";
       Indent id;
       os << endl << indent << "Input data: " << itsInputData
@@ -156,9 +156,9 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       ps.add("DataSet", itsDataSet);
-      ps.add("ParmDB.Instrument", itsParmDB.instrument);
-      ps.add("ParmDB.LocalSky", itsParmDB.localSky);
-      ps.add("ParmDB.History", itsParmDB.history);
+      ps.add("ParmDB.Instrument", itsPDB.instrument);
+      ps.add("ParmDB.Sky", itsPDB.sky);
+      ps.add("ParmDB.History", itsPDB.history);
       ps.add("Strategy.Stations", toString(itsStations));
       ps.add("Strategy.InputData", itsInputData);
       ps.add("Strategy.ChunkSize", toString(itsChunkSize));
@@ -181,9 +181,9 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       itsDataSet                 = ps.getString("DataSet");
-      itsParmDB.instrument       = ps.getString("ParmDB.Instrument");
-      itsParmDB.localSky         = ps.getString("ParmDB.LocalSky");
-      itsParmDB.history          = ps.getString("ParmDB.History");
+      itsPDB.instrument          = ps.getString("ParmDB.Instrument");
+      itsPDB.sky                 = ps.getString("ParmDB.Sky");
+      itsPDB.history             = ps.getString("ParmDB.History");
       itsStations                = ps.getStringVector("Strategy.Stations");
       itsInputData               = ps.getString("Strategy.InputData");
       itsChunkSize = ps.getUint32("Strategy.ChunkSize");

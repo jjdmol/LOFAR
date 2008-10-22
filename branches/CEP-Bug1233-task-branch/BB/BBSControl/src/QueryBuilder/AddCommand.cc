@@ -262,7 +262,7 @@ namespace LOFAR
       {
         ostringstream oss;
         oss << "'"  << strategy.dataSet()                    << "'"
-            << ",'" << strategy.parmDB().localSky            << "'"
+            << ",'" << strategy.parmDB().sky                 << "'"
             << ",'" << strategy.parmDB().instrument          << "'"
             << ",'" << strategy.parmDB().history             << "'"
             << ",'" << strategy.stations()                   << "'"

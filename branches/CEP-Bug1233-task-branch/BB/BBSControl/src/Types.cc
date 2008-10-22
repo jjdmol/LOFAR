@@ -51,12 +51,12 @@ namespace LOFAR
     }
 
 
-    ostream& operator<<(ostream& os, const ParmDB& obj)
+    ostream& operator<<(ostream& os, const PDB& obj)
     {
       os << "Parameter database:";
       Indent id;
       os << endl << indent << "Instrument table: " << obj.instrument
-	 << endl << indent << "Local sky table: "  << obj.localSky
+	 << endl << indent << "Sky table: " << obj.sky
 	 << endl << indent << "History table: "    << obj.history;
       return os;
     }

@@ -43,7 +43,13 @@
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
 
+#include <BBSControl/LocalSolveController.h>
+#include <BBSControl/GlobalSolveController.h>
+
 #include <BBSKernel/MeasurementAIPS.h>
+#include <BBSKernel/ParmManager.h>
+#include <BBSKernel/Evaluator.h>
+#include <BBSKernel/Equator.h>
 #include <BBSKernel/Solver.h>
 
 #include <Blob/BlobIStream.h>
@@ -60,17 +66,6 @@
 #ifdef LOG_SOLVE_DOMAIN_STATS
 #include <Common/lofar_sstream.h>
 #endif
-
-#if 0
-#define NONREADY        casa::LSQFit::NONREADY
-#define SOLINCREMENT    casa::LSQFit::SOLINCREMENT
-#define DERIVLEVEL      casa::LSQFit::DERIVLEVEL
-#else
-#define NONREADY        0
-#define SOLINCREMENT    1
-#define DERIVLEVEL      2
-#endif
-
 
 namespace LOFAR
 {
@@ -130,42 +125,39 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
         return;
     }
 
+    
     try
     {
-        // Open sky model parmdb.
-        LOFAR::ParmDB::ParmDBMeta skyDbMeta("aips",
-            strategy->parmDB().localSky);
-        LOG_INFO_STR("Sky model database: "
-            << skyDbMeta.getTableName());
-        itsSkyDb.reset(new LOFAR::ParmDB::ParmDB(skyDbMeta));
+        // Open sky model database.
+        itsSourceDb.reset(new SourceDB(ParmDBMeta("casa",
+            strategy->parmDB().sky)));
+        ParmManager::instance().initCategory(SKY, itsSourceDb->getParmDB());
     }
     catch(Exception &ex)
     {
         itsResult = CommandResult(CommandResult::ERROR, "Failed to open sky"
-            " model parameter database: " + strategy->parmDB().localSky);
+            " model database: " + strategy->parmDB().sky);
         return;
     }        
 
+
     try
     {
-        // Open instrument model parmdb.
-        LOFAR::ParmDB::ParmDBMeta instrumentDbMeta("aips",
-            strategy->parmDB().instrument);
-        LOG_INFO_STR("Instrument model database: "
-            << instrumentDbMeta.getTableName());
-        itsInstrumentDb.reset(new LOFAR::ParmDB::ParmDB(instrumentDbMeta));
+        // Open instrument model parameter database.
+        ParmManager::instance().initCategory(INSTRUMENT,
+            ParmDB(ParmDBMeta("casa", strategy->parmDB().instrument)));
     }
     catch(Exception &ex)
     {
         itsResult = CommandResult(CommandResult::ERROR, "Failed to open"
-            " instrument model parameter database."
+            " instrument model parameter database: "
             + strategy->parmDB().instrument);
         return;
     }        
 
-    // Create kernel.
-    itsKernel.reset(new Prediffer(itsMeasurement, *itsSkyDb.get(),
-        *itsInstrumentDb.get()));
+    // Create model.
+    itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
+        itsMeasurement->getPhaseCenter()));
 
     // Initialize the chunk selection from information in strategy.
     if(!strategy->stations().empty())
@@ -208,17 +200,35 @@ void CommandExecutor::visit(const NextChunkCommand &command)
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
+    // Check preconditions. Currently it is assumed that each chunk spans the
+    // frequency axis of the _entire_ (meta) measurement.
+    const pair<double, double> freqRangeCmd(command.getFreqRange());
+    const VisDimensions &dimsObs = itsMeasurement->getDimensions();
+    const pair<double, double> freqRangeObs(dimsObs.getFreqRange());
+    ASSERT((freqRangeObs.first >= freqRangeCmd.first
+        || casa::near(freqRangeObs.first, freqRangeCmd.first))
+        && (freqRangeObs.second <= freqRangeCmd.second)
+        || casa::near(freqRangeObs.second, freqRangeCmd.second));
+
+    // Update domain.
+    const pair<double, double> timeRangeCmd(command.getTimeRange());
+    itsDomain = Box(Point(freqRangeCmd.first, timeRangeCmd.first),
+        Point(freqRangeCmd.second, timeRangeCmd.second));
+
+    // Notify ParmManager. NB: The domain from the NextChunkCommand is used for
+    // parameters. This domain spans the entire meta measurement in frequency
+    // (even though locally visibility data is available for only a small part
+    // of this domain).
+    ParmManager::instance().setDomain(itsDomain);
+    
     // Update chunk selection.
     itsChunkSelection.clear(VisSelection::TIME_START);
     itsChunkSelection.clear(VisSelection::TIME_END);
-
-    pair<double, double> range = command.getTimeRange();
-    itsChunkSelection.setTimeRange(range.first, range.second);
+    itsChunkSelection.setTimeRange(timeRangeCmd.first, timeRangeCmd.second);
 
     // Deallocate chunk.
-    itsKernel->detachChunk();
     ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
-        "itsChunk shoud be unique (or uninitialized) by now.");
+        "Chunk shoud be unique (or uninitialized) by now.");
     itsChunk.reset();
 
     LOG_DEBUG("Reading chunk...");
@@ -233,8 +243,6 @@ void CommandExecutor::visit(const NextChunkCommand &command)
             " chunk.");
         return;                
     }
-
-    itsKernel->attachChunk(itsChunk);
 
     // Display information about chunk.
     LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
@@ -288,23 +296,36 @@ void CommandExecutor::visit(const PredictStep &command)
     LOG_DEBUG("Handling a PredictStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    ASSERTSTR(itsKernel, "No kernel available.");
+    ASSERTSTR(itsChunk, "No visibility data available.");
+    ASSERTSTR(itsModel, "No model available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
+    // Parse visibility selection.
+    vector<baseline_t> baselines;
+    vector<string> products;
+    
+    if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command)))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to parse"
+            " visibility selection.");
         return;
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SIMULATE, command.modelConfig());
+    if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+        return;
+    }
         
     // Compute simulated visibilities.
-    itsKernel->simulate();
+    Evaluator evaluator(itsChunk, itsModel);
+    evaluator.setSelection(baselines, products);
+    evaluator.process(Evaluator::ASSIGN);
+
+    // De-initialize model.
+    itsModel->clearExpressions();
 
     // Optionally write the simulated visibilities.
     if(!command.outputData().empty())
@@ -324,25 +345,38 @@ void CommandExecutor::visit(const SubtractStep &command)
     LOG_DEBUG("Handling a SubtractStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    ASSERTSTR(itsKernel, "No kernel available.");
+    ASSERTSTR(itsChunk, "No visibility data available.");
+    ASSERTSTR(itsModel, "No model available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
+    // Parse visibility selection.
+    vector<baseline_t> baselines;
+    vector<string> products;
+    
+    if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command)))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to parse"
+            " visibility selection.");
         return;
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SUBTRACT, command.modelConfig());
+    if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+        return;
+    }
         
-    // Subtract the simulated visibilities from the observed visibilities.
-    itsKernel->subtract();
+    // Compute simulated visibilities.
+    Evaluator evaluator(itsChunk, itsModel);
+    evaluator.setSelection(baselines, products);
+    evaluator.process(Evaluator::SUBTRACT);
 
-    // Optionally write the residuals.
+    // De-initialize model.
+    itsModel->clearExpressions();
+
+    // Optionally write the simulated visibilities.
     if(!command.outputData().empty())
     {
         itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
@@ -360,31 +394,45 @@ void CommandExecutor::visit(const CorrectStep &command)
     LOG_DEBUG("Handling a CorrectStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    ASSERTSTR(itsKernel, "No kernel available.");
+    ASSERTSTR(itsChunk, "No visibility data available.");
+    ASSERTSTR(itsModel, "No model available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
+    // Parse visibility selection.
+    vector<baseline_t> baselines;
+    vector<string> products;
+    
+    if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command)))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to parse"
+            " visibility selection.");
         return;
     }        
         
     // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CORRECT, command.modelConfig());
+    if(!itsModel->makeInvExpressions(command.modelConfig(), itsChunk,
+        baselines))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+        return;
+    }
         
-    // Correct the visibilities.
-    itsKernel->correct();
+    // Compute simulated visibilities.
+    Evaluator evaluator(itsChunk, itsModel);
+    evaluator.setSelection(baselines, products);
+    evaluator.process(Evaluator::ASSIGN);
 
-    // Optionally write the corrected visibilities.
+    // De-initialize model.
+    itsModel->clearExpressions();
+
+    // Optionally write the simulated visibilities.
     if(!command.outputData().empty())
     {
         itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
             false);
     }
-    
+
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -395,18 +443,162 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_DEBUG("Handling a SolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
     
-    LOG_DEBUG_STR("Solve type: " << (command.kernelGroups().empty() ? "LOCAL" 
-        : "GLOBAL"));
-    LOG_DEBUG_STR("Kernel ID: " << itsKernelId);
+    ASSERTSTR(itsChunk, "No visibility data available.");
+    ASSERTSTR(itsModel, "No model available.");
+
+    // Parse visibility selection.
+    vector<baseline_t> baselines;
+    vector<string> products;
+    
+    if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command)))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to parse"
+            " visibility selection.");
+        return;
+    }        
+        
+    // Initialize model.
+    if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+        return;
+    }
     
     if(command.kernelGroups().empty())
     {
-        handleLocalSolve(command);
+        // Construct solution grid.
+        const CellSize &cellSize(command.cellSize());
+
+        Axis::ShPtr freqAxis(itsMetaMeasurement.getFreqAxis(itsKernelId));
+        if(cellSize.freq == 0)
+        {
+            const pair<double, double> range = freqAxis->range();
+            freqAxis.reset(new RegularAxis(range.first, range.second
+                - range.first, 1));
+        }
+        else if(cellSize.freq > 1)
+        {
+            freqAxis = freqAxis->compress(cellSize.freq);
+        }
+
+        Axis::ShPtr timeAxis(itsMetaMeasurement.getTimeAxis());
+        const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
+        const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
+        ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
+        timeAxis = timeAxis->subset(timeStart, timeEnd);
+
+        if(cellSize.time == 0)
+        {
+            const pair<double, double> range = timeAxis->range();
+            timeAxis.reset(new RegularAxis(range.first, range.second
+                - range.first, 1));
+        }
+        else if(cellSize.time > 1)
+        {
+            timeAxis = timeAxis->compress(cellSize.time);
+        }
+
+        Grid grid(freqAxis, timeAxis);
+
+        // Determine the number of cells to process simultaneously.
+        uint cellChunkSize = command.cellChunkSize() == 0 ? grid[TIME]->size()
+            : command.cellChunkSize();
+
+        try
+        {
+            LocalSolveController controller(itsChunk, itsModel,
+                command.solverOptions());
+
+            controller.init(command.parms(), command.exclParms(), grid,
+                baselines, products, cellChunkSize);
+
+            controller.run();
+
+            // Store solutions to disk.
+            // TODO: Revert solutions on failure?
+            ParmManager::instance().flush();
+    
+            itsResult = CommandResult(CommandResult::OK, "Ok.");
+        }
+        catch(Exception &ex)
+        {
+            itsResult = CommandResult(CommandResult::ERROR, "Unable to"
+                " initialize or run local solve controller.");
+        }
     }
     else
     {
-        handleGlobalSolve(command);
+        // Construct solution grid.
+        const CellSize &cellSize(command.cellSize());
+
+        // Determine group id.
+        vector<uint32> groupEnd = command.kernelGroups();
+        partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
+        const size_t groupId = upper_bound(groupEnd.begin(), groupEnd.end(),
+            itsKernelId) - groupEnd.begin();
+        ASSERT(groupId < groupEnd.size());
+        LOG_DEBUG_STR("Group id: " << groupId);
+        
+        double freqBegin = itsMetaMeasurement.getFreqRange(groupId > 0
+            ? groupEnd[groupId - 1] : 0).first;
+        double freqEnd =
+            itsMetaMeasurement.getFreqRange(groupEnd[groupId] - 1).second;
+            
+        LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin << " - "
+            << freqEnd);
+        Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
+            1));
+
+        Axis::ShPtr timeAxis(itsMetaMeasurement.getTimeAxis());
+        const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
+        const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
+        ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
+        timeAxis = timeAxis->subset(timeStart, timeEnd);
+
+        if(cellSize.time == 0)
+        {
+            const pair<double, double> range = timeAxis->range();
+            timeAxis.reset(new RegularAxis(range.first, range.second
+                - range.first, 1));
+        }
+        else if(cellSize.time > 1)
+        {
+            timeAxis = timeAxis->compress(cellSize.time);
+        }
+
+        Grid grid(freqAxis, timeAxis);
+
+        // Determine the number of cells to process simultaneously.
+        uint cellChunkSize = command.cellChunkSize() == 0 ? grid[TIME]->size()
+            : command.cellChunkSize();
+
+        try
+        {
+            GlobalSolveController controller(itsKernelId, itsChunk, itsModel,
+                itsGlobalSolver);
+
+            controller.init(command.parms(), command.exclParms(), grid,
+                baselines, products, cellChunkSize);
+
+            controller.run();
+
+            // Store solutions to disk.
+            // TODO: Revert solutions on failure?
+            ParmManager::instance().flush();
+    
+            itsResult = CommandResult(CommandResult::OK, "Ok.");
+        }
+        catch(Exception &ex)
+        {
+            itsResult = CommandResult(CommandResult::ERROR, "Unable to"
+                " initialize or run global solve controller.");
+        }
     }
+
+    // De-initialize model.
+    itsModel->clearExpressions();
 }
 
 
@@ -427,412 +619,174 @@ void CommandExecutor::visit(const RefitStep &command)
     itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
-
-void CommandExecutor::handleLocalSolve(const SolveStep &command)
+bool CommandExecutor::parseBaselineSelection(vector<baseline_t> &result,
+    const Step &command)
 {
-    ASSERTSTR(itsKernel, "No kernel available.");
+    const string &filter = command.correlation().selection;
+    if(!filter.empty() && filter != "AUTO" && filter != "CROSS")
+    {
+        LOG_ERROR_STR("Correlation.Selection should be empty or one of \"AUTO\""
+            ", \"CROSS\".");
+        return false;
+    }
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
+    const vector<string> &station1 = command.baselines().station1;
+    const vector<string> &station2 = command.baselines().station2;
+    if(station1.size() != station2.size())
+    {
+        LOG_ERROR("Baselines.Station1 and Baselines.Station2 should have the"
+            "same length.");
+        return false;
+    }
+    
+    // Filter available baselines.
+    set<baseline_t> selection;
+    
+    if(station1.empty())
+    {
+        // If no station groups are speficied, select all the baselines
+        // available in the chunk that match the baseline filter.
+        const VisDimensions &dims = itsChunk->getDimensions();
+        const vector<baseline_t> &baselines = dims.getBaselines();
         
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.modelConfig());
-
-    if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
-            " parameter selection.");
-        return;
-    }
-        
-    // Get measurement dimensions.
-    const VisDimensions &dims = itsMeasurement->getDimensions();
-
-    // Construct solution cell grid.
-    const CellSize cellSize(command.cellSize());
-
-    Axis::Pointer freqAxis(dims.getFreqAxis());
-    if(cellSize.freq == 0)
-    {
-        const pair<double, double> range = dims.getFreqRange();
-        freqAxis.reset(new RegularAxis(range.first, range.second - range.first,
-            1));
-    }
-    else if(cellSize.freq > 1)
-    {
-        freqAxis = freqAxis->compress(cellSize.freq);
-    }
-
-    Axis::Pointer timeAxis(dims.getTimeAxis());
-    if(cellSize.time == 0)
-    {
-        const pair<double, double> range = dims.getTimeRange();
-        timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
-            1));
-    }
-    else if(cellSize.time > 1)
-    {
-        timeAxis = timeAxis->compress(cellSize.time);
-    }
-
-    Grid cellGrid(freqAxis, timeAxis);
-
-    // Set solution cell grid.
-    itsKernel->setCellGrid(cellGrid);
-    
-    // Find cells to process.
-    const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    Box bbox = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
-    ASSERT(!bbox.empty());
-
-    Location chunkStartCell = cellGrid.locate(bbox.start);
-    Location chunkEndCell = cellGrid.locate(bbox.end, false);
-
-    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
-        << chunkStartCell.second << "), (" << chunkEndCell.first << ","
-        << chunkEndCell.second << ")]");
-    
-    // Number of cells along the time axis.
-    const uint nCellsTime = chunkEndCell.second - chunkStartCell.second + 1;
-
-    // Determine the number of cells to process simultaneously.
-    uint cellChunkSize = std::min(command.cellChunkSize(), nCellsTime);
-    if(cellChunkSize == 0)
-    {
-        cellChunkSize = nCellsTime;
-    }
-    
-    const uint nCellChunks =
-        static_cast<uint>(ceil(static_cast<double>(nCellsTime)
-            / cellChunkSize));
-
-    // Initialize solver.
-    Solver solver;
-    SolverOptions options(command.solverOptions());
-    solver.reset(options.maxIter, options.epsValue, options.epsDerivative,
-        options.collFactor, options.lmFactor, options.balancedEqs,
-        options.useSVD);
-
-    // Short-wire coefficient index.
-    solver.setCoeffIndex(0, itsKernel->getCoeffIndex());
-    itsKernel->setCoeffIndex(solver.getCoeffIndex());
-    
-    vector<CellCoeff> coeff;
-    vector<CellEquation> equations;
-    vector<CellSolution> solutions;
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-    uint nCells = (chunkEndCell.first - chunkStartCell.first + 1)
-        * (chunkEndCell.second - chunkStartCell.second + 1);
-    uint nConverged = 0, nStopped = 0;
-#endif
-
-    Location startCell(chunkStartCell), endCell(chunkEndCell);
-    for(uint cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
-    {
-        // Move to next cell chunk.
-        endCell.second = std::min(startCell.second + cellChunkSize - 1,
-            chunkEndCell.second);
-
-        // Short-wire initial coefficients.
-        itsKernel->getCoeff(startCell, endCell, coeff);
-        solver.setCoeff(0, coeff);
-
-        // Iterate.
-        bool done = false;
-        while(!done)
+        vector<baseline_t>::const_iterator baselIt = baselines.begin();
+        vector<baseline_t>::const_iterator baselItEnd = baselines.end();
+        while(baselIt != baselItEnd)
         {
-            // Construct equations and pass to solver.
-            itsKernel->construct(startCell, endCell, equations);
-            solver.setEquations(0, equations);
-            
-            // Perform an non-linear LSQ iteration.
-            done = solver.iterate(solutions);
-            
-            // Update coefficients.
-            itsKernel->setCoeff(solutions);
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-            ostringstream oss;
-            oss << "Solver statistics:";
-            for(size_t i = 0; i < solutions.size(); ++i)
+            if(filter.empty()
+                || (baselIt->first == baselIt->second && filter == "AUTO")
+                || (baselIt->first != baselIt->second && filter == "CROSS"))
             {
-                oss << " [" << solutions[i].id << "] " << solutions[i].rank
-                << " " << solutions[i].chiSqr;
-                
-                if(solutions[i].result == DERIVLEVEL)
-                {
-                    ++nConverged;
-                }
-                else if(solutions[i].result != NONREADY)
-                {
-                    ++nStopped;
-                }
+                selection.insert(*baselIt);
             }
-            LOG_DEBUG(oss.str());
-#endif            
+            ++baselIt;
+        }
+    }
+    else
+    {
+        vector<casa::Regex> stationRegex1(station1.size());
+        vector<casa::Regex> stationRegex2(station2.size());
+
+        try
+        {
+            transform(station1.begin(), station1.end(), stationRegex1.begin(),
+                ptr_fun(casa::Regex::fromPattern));
+            transform(station2.begin(), station2.end(), stationRegex2.begin(),
+                ptr_fun(casa::Regex::fromPattern));
+        }
+        catch(casa::AipsError &ex)
+        {
+            LOG_ERROR_STR("Error parsing include/exclude pattern (exception: "
+                << ex.what() << ")");
+            return false;
         }
 
-#ifdef LOG_SOLVE_DOMAIN_STATS
-        LOG_DEBUG_STR("" << setw(3) << static_cast<double>(nConverged) / nCells
-            * 100.0 << "% converged, " << setw(3)
-            << static_cast<double>(nStopped) / nCells * 100.0 << "% stopped.");
-#endif
-                
-        // Propagate solutions to the next cell chunk.
-        if(command.propagate())
+        for(size_t i = 0; i < stationRegex1.size(); ++i)
         {
-            Location cell;
-            vector<double> initialValues;
-            
-            for(size_t f = startCell.first; f <= endCell.first; ++f)
-            {
-                itsKernel->getCoeff(Location(f, endCell.second), initialValues);
+            // Find the indices of all the stations of which the name matches
+            // the regex specified in the context.
+            set<uint> stationGroup1, stationGroup2;
 
-                cout << "GET: " << f << "," << endCell.second << endl;
-                cout << "COEFF: " << initialValues << endl;
-                for(size_t t = chunkStartCell.second + (cellChunk + 1)
-                        * cellChunkSize;
-                    t <= std::min(chunkEndCell.second, chunkStartCell.second
-                        + (cellChunk + 2) * cellChunkSize - 1);
-                    ++t)
+            const Instrument &instrument = itsMeasurement->getInstrument();
+            for(size_t i = 0; i < instrument.stations.size(); ++i)
+            {
+                casa::String stationName(instrument.stations[i].name);
+
+                if(stationName.matches(stationRegex1[i]))
                 {
-                    cout << "SET: " << f << "," << t << endl;
-                    itsKernel->setCoeff(Location(f, t), initialValues);
+                    stationGroup1.insert(i);
+                }
+
+                if(stationName.matches(stationRegex2[i]))
+                {
+                    stationGroup2.insert(i);
                 }
             }
-        }                
 
-        startCell.second += cellChunkSize;
+            // Generate all possible baselines (pairs) from the two groups of
+            // station indices. If a baseline is available in the chunk _and_
+            // matches the baseline filter, select it for processing.
+            const VisDimensions &dims = itsChunk->getDimensions();
+
+            for(set<uint>::const_iterator it1 = stationGroup1.begin();
+                it1 != stationGroup1.end();
+                ++it1)
+            {
+                for(set<uint>::const_iterator it2 = stationGroup2.begin();
+                    it2 != stationGroup2.end();
+                    ++it2)
+                {
+                    if(filter.empty()
+                        || (*it1 == *it2 && filter == "AUTO")
+                        || (*it1 != *it2 && filter == "CROSS"))
+                    {
+                        baseline_t baseline(*it1, *it2);
+
+                        if(dims.hasBaseline(baseline))
+                        {
+                            selection.insert(baseline);
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    itsKernel->storeParameterValues();
-
-    itsResult = CommandResult(CommandResult::OK, "Ok.");
+    // Verify that at least one baseline is selected.
+    if(selection.empty())
+    {
+        LOG_ERROR("Baseline selection did not match any baselines in the"
+            " observation.");
+        return false;
+    }
+    
+    result.resize(selection.size());
+    copy(selection.begin(), selection.end(), result.begin());
+    return true;
 }
 
 
-void CommandExecutor::handleGlobalSolve(const SolveStep &command)
+bool CommandExecutor::parseProductSelection(vector<string> &result,
+    const Step &command)
 {
-    ASSERTSTR(itsKernel, "No kernel available.");
-    ASSERTSTR(itsSolver, "No global solver available.");
-
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.modelConfig());
-
-    if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
-            " parameter selection.");
-        return;
-    }
-        
-    // Get measurement dimensions.
     const VisDimensions &dims = itsMeasurement->getDimensions();
+    const vector<string> &available = dims.getPolarizations();
 
-    // Construct solution cell grid.
-    vector<uint32> groupEnd = command.kernelGroups();    
-    partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
-
-    size_t groupId = 0;
-    while(itsKernelId >= groupEnd[groupId])
+    const vector<string> &products = command.correlation().type;
+    if(products.empty())
     {
-        ++groupId;
-    }
-    ASSERT(groupId < groupEnd.size());
-    LOG_DEBUG_STR("Group id: " << groupId);
-    
-    double freqBegin = itsMetaMeasurement.getFreqRange(groupId > 0
-        ? groupEnd[groupId - 1] : 0).first;
-    double freqEnd =
-        itsMetaMeasurement.getFreqRange(groupEnd[groupId] - 1).second;
-        
-    LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin << " - "
-        << freqEnd);
-    Axis::Pointer freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin, 1));
-
-    const CellSize cellSize(command.cellSize());
-
-    Axis::Pointer timeAxis = dims.getTimeAxis();
-    if(cellSize.time == 0)
-    {
-        const pair<double, double> range = dims.getTimeRange();
-        timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
-            1));
-    }
-    else if(cellSize.time > 1)
-    {
-        timeAxis = timeAxis->compress(cellSize.time);
+        result = available;
+        return true;
     }
 
-    Grid cellGrid(freqAxis, timeAxis);
-
-    // Set solution cell grid.
-    itsKernel->setCellGrid(cellGrid);
-
-    // Find cells to process.
-    const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    Box bbox = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
-    ASSERT(!bbox.empty());
-
-    Location chunkStartCell = cellGrid.locate(bbox.start);
-    Location chunkEndCell = cellGrid.locate(bbox.end, false);
-
-    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
-        << chunkStartCell.second << "), (" << chunkEndCell.first << ","
-        << chunkEndCell.second << ")]");
-    
-    // Number of cells along the time axis.
-    const uint nCellsTime = chunkEndCell.second - chunkStartCell.second + 1;
-
-    // Determine the number of cells to process simultaneously.
-    uint cellChunkSize = std::min(command.cellChunkSize(), nCellsTime);
-    if(cellChunkSize == 0)
+    // Select polarization products by name.
+    set<string> selection;
+    for(size_t i = 0; i < available.size(); ++i)
     {
-        cellChunkSize = nCellsTime;
-    }
-    
-    const uint nCellChunks =
-        static_cast<uint>(ceil(static_cast<double>(nCellsTime)
-            / cellChunkSize));
-
-    // Send coefficient index.
-    CoeffIndexMsg kernelIndexMsg(itsKernelId);
-    kernelIndexMsg.getContents() = itsKernel->getCoeffIndex();
-    itsSolver->sendObject(kernelIndexMsg);
-
-    shared_ptr<BlobStreamable> solverMsg(itsSolver->recvObject());
-    shared_ptr<MergedCoeffIndexMsg> solverIndexMsg(dynamic_pointer_cast<MergedCoeffIndexMsg>(solverMsg));
-    
-    if(!solverIndexMsg)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
-        return;
-    }
-    
-    itsKernel->setCoeffIndex(solverIndexMsg->getContents());
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-    uint nCells = (chunkEndCell.first - chunkStartCell.first + 1)
-        * (chunkEndCell.second - chunkStartCell.second + 1);
-    uint nConverged = 0, nStopped = 0;
-#endif
-
-    Location startCell(chunkStartCell), endCell(chunkEndCell);
-    for(uint cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
-    {
-        // Move to next cell chunk.
-        endCell.second = std::min(startCell.second + cellChunkSize - 1,
-            chunkEndCell.second);
-
-        CoeffMsg kernelCoeffMsg(itsKernelId);
-        itsKernel->getCoeff(startCell, endCell, kernelCoeffMsg.getContents());
-        itsSolver->sendObject(kernelCoeffMsg);
-
-        bool done = false;
-        while(!done)
+        // Check if this polarization needs to be processed.
+        for(size_t j = 0; j < products.size(); ++j)
         {
-            EquationMsg kernelEqMsg(itsKernelId);
-            itsKernel->construct(startCell, endCell, kernelEqMsg.getContents());
-            itsSolver->sendObject(kernelEqMsg);
-
-            solverMsg.reset(itsSolver->recvObject());
-            shared_ptr<SolutionMsg> solverSolutionMsg(dynamic_pointer_cast<SolutionMsg>(solverMsg));
-            if(!solverSolutionMsg)
+            if(available[i] == products[j])
             {
-                itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
-                return;
+                selection.insert(available[i]);
+                break;
             }
-            
-            const vector<CellSolution> &solutions =
-                solverSolutionMsg->getContents();
-
-            itsKernel->setCoeff(solutions);
-            
-            done = true;
-            for(size_t i = 0; i < solutions.size(); ++i)
-            {
-                done = done && (solutions[i].result != NONREADY);
-            }                
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-            ostringstream oss;
-            oss << "Solver statistics:";
-            for(size_t i = 0; i < solutions.size(); ++i)
-            {
-                oss << " [" << solutions[i].id << "] " << solutions[i].rank
-                << " " << solutions[i].chiSqr;
-                
-                if(solutions[i].result == DERIVLEVEL)
-                {
-                    ++nConverged;
-                }
-                else if(solutions[i].result != NONREADY)
-                {
-                    ++nStopped;
-                }
-            }
-            LOG_DEBUG(oss.str());
-#endif            
         }
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-        LOG_DEBUG_STR("" << setw(3) << static_cast<double>(nConverged) / nCells
-            * 100.0 << "% converged, " << setw(3)
-            << static_cast<double>(nStopped) / nCells * 100.0 << "% stopped.");
-#endif
-                
-        // Propagate solutions to the next cell chunk.
-        if(command.propagate())
-        {
-            Location cell;
-            vector<double> initialValues;
-            
-            for(size_t f = startCell.first; f <= endCell.first; ++f)
-            {
-                itsKernel->getCoeff(Location(f, endCell.second), initialValues);
-
-                cout << "GET: " << f << "," << endCell.second << endl;
-                cout << "COEFF: " << initialValues << endl;
-                for(size_t t = chunkStartCell.second + (cellChunk + 1)
-                        * cellChunkSize;
-                    t <= std::min(chunkEndCell.second, chunkStartCell.second
-                        + (cellChunk + 2) * cellChunkSize - 1);
-                    ++t)
-                {
-                    cout << "SET: " << f << "," << t << endl;
-                    itsKernel->setCoeff(Location(f, t), initialValues);
-                }
-            }
-        }                
-
-        startCell.second += cellChunkSize;
     }
 
-    itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
+    // Verify that at least one polarization is selected.
+    if(selection.empty())
+    {
+        LOG_ERROR("Polarization product selection did not match any"
+            " polarization product in the observation.");
+        return false;
+    }
 
-    itsKernel->storeParameterValues();
-
-    itsResult = CommandResult(CommandResult::OK, "Ok.");
+    // Copy selected polarizations.
+    result.resize(selection.size());
+    copy(selection.begin(), selection.end(), result.begin());
+    return true;
 }
-
 
 } //# namespace BBS
 } //# namespace LOFAR

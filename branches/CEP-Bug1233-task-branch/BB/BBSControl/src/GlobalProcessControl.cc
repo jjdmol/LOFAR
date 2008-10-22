@@ -64,7 +64,7 @@ namespace LOFAR
       CommandId finalizeId(0);
       
       bool dummy1 = BlobStreamableFactory::instance().registerClass<RegularAxis>("RegularAxis");
-      bool dummy2 = BlobStreamableFactory::instance().registerClass<IrregularAxis>("IrregularAxis");      
+      bool dummy2 = BlobStreamableFactory::instance().registerClass<OrderedAxis>("OrderedAxis");      
     }
 
 
@@ -211,7 +211,7 @@ namespace LOFAR
         itsFreqEnd = range.second;
 
         // Determine ROI in time.
-        const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+        const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
 
         itsTimeStart = 0;
         itsTimeEnd = timeAxis->size() - 1;
@@ -260,7 +260,7 @@ namespace LOFAR
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
           ASSERT(itsChunkStart <= itsTimeEnd);
 
-          const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+          const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
           const double start = timeAxis->lower(itsChunkStart);
           const double end =
             timeAxis->upper(std::min(itsChunkStart + itsChunkSize - 1,

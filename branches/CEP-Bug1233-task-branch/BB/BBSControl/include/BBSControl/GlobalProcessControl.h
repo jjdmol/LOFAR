@@ -30,7 +30,7 @@
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/CommandQueue.h>
 
-#include <BBSKernel/Axis.h>
+#include <ParmDB/Axis.h>
 #include <BBSKernel/MetaMeasurement.h>
 
 #include <PLC/ProcessControl.h>

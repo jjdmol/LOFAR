@@ -10,8 +10,10 @@ pkginclude_HEADERS = Package__Version.h  \
 	Exceptions.h \
 	FinalizeCommand.h \
 	GlobalProcessControl.h \
+	GlobalSolveController.h \
 	InitializeCommand.h \
 	KernelProcessControl.h \
+	LocalSolveController.h \
 	Messages.h \
 	MessageHandlers.h \
 	MultiStep.h \

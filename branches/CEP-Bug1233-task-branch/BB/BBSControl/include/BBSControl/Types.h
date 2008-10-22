@@ -63,10 +63,10 @@ namespace LOFAR
 
     // Information about the parameter database.
     // \note These are currently AIPS++ MS tables.
-    struct ParmDB
+    struct PDB
     {
       string instrument;     ///< Instrument parameters (MS table)
-      string localSky;	     ///< Local sky parameters (MS table)
+      string sky;	         ///< Local sky parameters (MS table)
       string history;        ///< History (MS table)
     };
 
@@ -149,7 +149,7 @@ namespace LOFAR
     // Write the contents of these types in human readable form.
     // @{
     ostream& operator<<(ostream&, const BBDB&);
-    ostream& operator<<(ostream&, const ParmDB&);
+    ostream& operator<<(ostream&, const PDB&);
     ostream& operator<<(ostream&, const CellSize&);
     ostream& operator<<(ostream&, const RegionOfInterest&);
     ostream& operator<<(ostream&, const Integration&);
