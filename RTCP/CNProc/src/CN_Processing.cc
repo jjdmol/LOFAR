@@ -94,6 +94,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsAsyncTranspose(0),
 #endif
   itsPPF(0),
+  itsBeamFormer(0),
   itsCorrelator(0)
 {
   memset(itsArenas, 0, sizeof itsArenas);
@@ -250,7 +251,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #endif
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
-  std::vector<unsigned> &tabList     = configuration.tabList();
   
 #if defined HAVE_BGP || defined HAVE_BGL
   if(!itsDoAsyncCommunication) {
@@ -270,6 +270,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToCNProc	   = configuration.nrSamplesToCNProc();
+  unsigned nrBeamFormedStations    = 0; // TODO get nrTabStations from parset / configuration
+  std::vector<unsigned> station2BeamFormedStation = configuration.tabList();
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers
@@ -312,7 +314,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines, nrChannels);
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
-    itsCorrelator     = new Correlator(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
+
+    itsBeamFormer     = new BeamFormer(itsNrStations, nrSamplesPerIntegration, nrBeamFormedStations, station2BeamFormedStation, nrChannels);
+    itsCorrelator     = new Correlator(nrBeamFormedStations == 0 ? itsNrStations : nrBeamFormedStations, itsBeamFormer->getStationMapping(),
+				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 
 #if defined HAVE_MPI
@@ -351,14 +356,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 #endif // HAVE_MPI
 
   if (itsIsTransposeInput) {
-#if defined HAVE_MPI
-    if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
-#endif // HAVE_MPI
-
     static NSTimer readTimer("receive timer", true);
 
-#if defined HAVE_MPI	
+#if defined HAVE_MPI
+    if (LOG_CONDITION) {
+      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
+    }
+
     if(itsDoAsyncCommunication) {
       NSTimer asyncSendTimer("async send", LOG_CONDITION);
 
@@ -438,6 +442,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 #endif // HAVE_MPI
 
     computeTimer.start();
+    itsBeamFormer->formBeams(itsFilteredData);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
     computeTimer.stop();
@@ -507,6 +512,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsTransposedData;
     delete itsPPF;
     delete itsFilteredData;
+    delete itsBeamFormer;
     delete itsCorrelator;
     delete itsCorrelatedData;
 
