@@ -28,17 +28,17 @@
 # e.g. lofar_DOCXX
 # -------------------------
 #
-AC_DEFUN([lofar_DOCXX],dnl
-lofar_DOXYGEN([])dnl
-lofar_DOCPP([])dnl
-[
-if test "$enable_doxygen" = "yes"; then
-  if test "$enable_docpp" = "yes"; then
-]
-    AC_MSG_ERROR([Cannot use both doxygen and doc++ tools. Reconfigure with --without-doxygen or --without-docpp])
-[ fi
-fi]
-)dnl
+AC_DEFUN([lofar_DOCXX],[
+  lofar_DOXYGEN([])
+  lofar_DOCPP([])
+
+  if test "$enable_doxygen" = "yes"; then
+    if test "$enable_docpp" = "yes"; then
+      AC_MSG_ERROR([Cannot use both doxygen and doc++ tools. Reconfigure with --without-doxygen or --without-docpp])
+    fi
+  fi
+])
+
 #
 #
 #

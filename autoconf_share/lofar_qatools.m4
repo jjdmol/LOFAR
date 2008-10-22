@@ -25,18 +25,18 @@
 #
 # Macro to check for pure or insure checking tools
 #
-AC_DEFUN([lofar_QATOOLS],dnl
-lofar_PURETOOLS([])dnl
-lofar_INSURETOOLS([])dnl
-lofar_COMPILETOOLS()dnl
-[
-if test "$enable_puretools" = "yes"; then
-  if test "$enable_insuretools" = "yes"; then
-]
-    AC_MSG_ERROR([Cannot use both pure and insure tools. Reconfigure with --without-puretools or --without-insuretools])
-[ fi
-fi]
-)dnl
+AC_DEFUN([lofar_QATOOLS],[
+  lofar_PURETOOLS([])
+  lofar_INSURETOOLS([])
+  lofar_COMPILETOOLS([])
+
+  if test "$enable_puretools" = "yes"; then
+    if test "$enable_insuretools" = "yes"; then
+      AC_MSG_ERROR([Cannot use both pure and insure tools. Reconfigure with --without-puretools or --without-insuretools])
+    fi
+  fi
+])
+
 #
 #
 #
