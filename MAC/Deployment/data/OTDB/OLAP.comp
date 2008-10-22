@@ -1,16 +1,16 @@
-# -- BGLProc --
+# -- CNProc --
 #
 # $Id$
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   BGLProc     1.0.4  development 'node constraint'  "Blue Gene Processing"
+node   CNProc     1.0.4  development 'node constraint'  "Blue Gene Processing"
 
 # name   	        dir.    type    unit    prun.   vm      value    constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par integrationSteps	I	int	-	10	0	768 	 -	'???'
 par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
-par coresPerPset	I	int	-	10	0	16	 -	'???'
+par coresPerPset	I	int	-	10	0	64	 -	'???'
 par partition		I	text	-	10	0	'R000_256_1'	-	'???'
 
 
@@ -21,8 +21,8 @@ node  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specificati
 
 #    name         	     	dir. 	type   unit   	prun. 	vm  	value			constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par BGLProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'		- 	'Portnumbers to use in the connections.'
-par IONProc_BGLProc_Transport   I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	'???'
+par IONProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'		- 	'Portnumbers to use in the connections.'
+par IONProc_CNProc_Transport   I	ptext	-	10	0	'FCNP|TCP|NULL;FCNP'	-	'???'
 par rawDataOutputs		I	text	-	10	0	'[tcp:10.181.0.2:4000]'	-	'???'
 
 # -- DelayComp --
@@ -74,16 +74,16 @@ par EPAHeaderSize	I	int	-	10	0	16		-		'???'
 par nrTimesInFrame	I	int	-	10	0	16		-		'???'
 par nrSubbandsPerFrame	I	int	-	10	0	>>Observation.nrSlotsInFrame		-		'???'
 par nrBitsPerSample	I	int	-	10	0	16		-		'???'
-par nrSecondsOfBuffer	I	int	-	10	0	20		-		'???'
-par maxNetworkDelay	I	int	-	10	0	1		-		'???'
+par nrSecondsOfBuffer	I	int	-	10	0	4		-		'???'
+par maxNetworkDelay	I	int	-	10	0	0.5		-		'???'
 par correctBandPass	I   	bool    -       10  	0	true		-		'???'
 
 
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  BGLProc      1.0.4  development 'node constraint'  "Blue Gene Processing"
+uses  CNProc      1.0.4  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
 uses  OLAP_Conn    1.0.5  development 'node constraint'  "Connection specification of OLAP"
 uses  DelayComp    1.0.3  development 'node constraint'  "Setting of the delaycompensation"
-uses  IONProc      1.0.2  development 'node constraint'  "???"
-uses  StorageProc  1.0.2  development 'node constraint'  "???"
+uses  IONProc      1.0.2  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
+uses  StorageProc  1.0.2  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
