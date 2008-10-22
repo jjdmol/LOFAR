@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/hexdump.h>
+#include <Common/StringUtil.h>
 #include <ALC/ACSyncClient.h>
 #include <time.h>
 #include "myACClientFunctions.h"
