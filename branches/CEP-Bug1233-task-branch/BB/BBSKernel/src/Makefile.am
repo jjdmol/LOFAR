@@ -1,15 +1,8 @@
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/ExternalFunction.cc \
-#	Expr/AzEl.cc \
-#	Expr/Diag.cc \
 #	Expr/DipoleBeam.cc \
-#	Expr/DipoleBeamExternal.cc \
-#	Expr/GaussianCoherence.cc \
-#	Expr/GaussianSource.cc \
 #	Expr/JonesCMul2.cc \
-#	Expr/JonesMul3.cc \
-#	Expr/NumericalDipoleBeam.cc
+#	Expr/JonesMul3.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
 	BlobIOExtensions.cc \
@@ -27,9 +20,15 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisData.cc \
 	VisDimensions.cc \
 	VisSelection.cc \
-	Expr/ExprParm.cc \
+	Expr/AzEl.cc \
+	Expr/Diag.cc \
+    Expr/DipoleBeamExternal.cc \
 	Expr/DFTPS.cc \
 	Expr/Expr.cc \
+	Expr/ExprParm.cc \
+	Expr/ExternalFunction.cc \
+	Expr/GaussianCoherence.cc \
+	Expr/GaussianSource.cc \
 	Expr/LMN.cc \
 	Expr/JonesCMul3.cc \
 	Expr/JonesExpr.cc \
@@ -46,6 +45,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MatrixRealSca.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixTmp.cc \
+    Expr/NumericalDipoleBeam.cc \
 	Expr/PhaseRef.cc \
     Expr/PhaseShift.cc \
 	Expr/PointCoherence.cc \
@@ -55,7 +55,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ResultVec.cc \
     Expr/Source.cc \
     Expr/StatUVW.cc
-
+    
 bin_PROGRAMS = versionbbskernel metams
 
 versionbbskernel_SOURCES      = versionbbskernel.cc

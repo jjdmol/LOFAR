@@ -1,4 +1,4 @@
-//# DipoleBeamExternal.cc: Dipole voltage beam based on external functions.
+//# YatawattaDipole.cc: Dipole voltage beam based on external functions.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/DipoleBeamExternal.h>
+#include <BBSKernel/Expr/PValueIterator.h>
+
 #include <Common/lofar_complex.h>
 
 #include <casa/BasicSL/Constants.h>
@@ -32,8 +34,8 @@ namespace LOFAR
 namespace BBS 
 {
 
-DipoleBeamExternal::DipoleBeamExternal(const string &moduleTheta,
-    const string &modulePhi, Expr azel, Expr orientation,
+YatawattaDipole::YatawattaDipole(const string &moduleTheta,
+    const string &modulePhi, const Expr &azel, const Expr &orientation,
         double scaleFactor)
     :   itsThetaFunction(moduleTheta, "test"),
         itsPhiFunction(modulePhi, "test"),
@@ -46,99 +48,92 @@ DipoleBeamExternal::DipoleBeamExternal(const string &moduleTheta,
     addChild(orientation);
 }
 
-
-JonesResult DipoleBeamExternal::getJResult(const Request &request)
+JonesResult YatawattaDipole::getJResult(const Request &request)
 {
     // Evaluate children.
-    ResultVec res_azel;
-    Result res_orientation;
+    ResultVec tmpAzel;
+    Result tmpOrientation;
     
-    const ResultVec &azel = getChild(IN_AZEL).getResultVecSynced(request,
-        res_azel);
+    const ResultVec &resAzel = getChild(0).getResultVecSynced(request, tmpAzel);
+    const Result &resOrientation =
+        getChild(1).getResultSynced(request, tmpOrientation);
 
-    const Result &orientation =
-        getChild(IN_ORIENTATION).getResultSynced(request, res_orientation);
+    const Matrix &az = resAzel[0].getValue();
+    const Matrix &el = resAzel[1].getValue();
+    const Matrix &orientation = resOrientation.getValue();
 
     // Create result.
-    JonesResult result(request.nspid());
-    Result &result11 = result.result11();
-    Result &result12 = result.result12();
-    Result &result21 = result.result21();
-    Result &result22 = result.result22();
+    JonesResult result;
+    result.init();
     
-    // Evaluate main value.
-    evaluate(request,
-        azel[0].getValue(), azel[1].getValue(),
-        orientation.getValue(),
-        result11.getValueRW(), result12.getValueRW(),
-        result21.getValueRW(), result22.getValueRW());
+    Result &resXX = result.result11();
+    Result &resXY = result.result12();
+    Result &resYX = result.result21();
+    Result &resYY = result.result22();
+    
+    // Compute main value.
+    evaluate(request, az, el, orientation, resXX.getValueRW(),
+        resXY.getValueRW(), resYX.getValueRW(), resYY.getValueRW());
 
-    // Evaluate perturbed values.  
-    const ParmFunklet *perturbedParm;
-    for(int i = 0; i < request.nspid(); ++i)
+    // Compute the perturbed values.  
+    enum PValues
     {
-        // Find out if this perturbed value needs to be computed.
-    	if(azel[0].isDefined(i))
-    	{
-    	    perturbedParm = azel[0].getPerturbedParm(i);
-    	}
-    	else if(azel[1].isDefined(i))
-    	{
-    	    perturbedParm = azel[1].getPerturbedParm(i);
-    	}
-    	else if(orientation.isDefined(i))
-    	{
-    	    perturbedParm = orientation.getPerturbedParm(i);
-    	}
-    	else
-    	{
-    	    continue;
-    	}
-
-        evaluate(request,
-            azel[0].getPerturbedValue(i), azel[1].getPerturbedValue(i),
-            orientation.getPerturbedValue(i),
-            result11.getPerturbedValueRW(i), result12.getPerturbedValueRW(i),
-            result21.getPerturbedValueRW(i), result22.getPerturbedValueRW(i));
-
-        result11.setPerturbedParm(i, perturbedParm);
-        result12.setPerturbedParm(i, perturbedParm);
-        result21.setPerturbedParm(i, perturbedParm);
-        result22.setPerturbedParm(i, perturbedParm);
-    }
+        PV_AZ, PV_EL, PV_ORIENTATION, N_PValues
+    };
     
+    const Result *pvSet[N_PValues] = {&(resAzel[0]), &(resAzel[1]),
+        &resOrientation};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+    
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvAz = pvIter.value(PV_AZ);
+        const Matrix &pvEl = pvIter.value(PV_EL);
+        const Matrix &pvOrientation = pvIter.value(PV_ORIENTATION);
+
+        evaluate(request, pvAz, pvEl, pvOrientation,
+            resXX.getPerturbedValueRW(pvIter.key()),
+            resXY.getPerturbedValueRW(pvIter.key()),
+            resYX.getPerturbedValueRW(pvIter.key()),
+            resYY.getPerturbedValueRW(pvIter.key()));
+
+        pvIter.next();
+    }
+
     return result;
 }
 
-
-void DipoleBeamExternal::evaluate(const Request &request,
+void YatawattaDipole::evaluate(const Request &request,
         const Matrix &in_az, const Matrix &in_el,
         const Matrix &in_orientation,
         Matrix &out_E11, Matrix &out_E12,
         Matrix &out_E21, Matrix &out_E22)
 {        
+    const size_t nChannels = request.getChannelCount();
+    const size_t nTimeslots = request.getTimeslotCount();
+
     // Check preconditions.
-    ASSERT(in_az.nelements() == request.ny());
-    ASSERT(in_el.nelements() == request.ny());
-    ASSERT(in_orientation.nelements() == 1);
+    ASSERT(static_cast<size_t>(in_az.nelements()) == nTimeslots);
+    ASSERT(static_cast<size_t>(in_el.nelements()) == nTimeslots);
+    ASSERT(static_cast<size_t>(in_orientation.nelements()) == 1);
     
     const double *az = in_az.doubleStorage();
     const double *el = in_el.doubleStorage();
 
     double *E11_re, *E11_im;
-    out_E11.setDCMat(request.nx(), request.ny());
+    out_E11.setDCMat(nChannels, nTimeslots);
     out_E11.dcomplexStorage(E11_re, E11_im);
     
     double *E12_re, *E12_im;
-    out_E12.setDCMat(request.nx(), request.ny());
+    out_E12.setDCMat(nChannels, nTimeslots);
     out_E12.dcomplexStorage(E12_re, E12_im);
 
     double *E21_re, *E21_im;
-    out_E21.setDCMat(request.nx(), request.ny());
+    out_E21.setDCMat(nChannels, nTimeslots);
     out_E21.dcomplexStorage(E21_re, E21_im);
 
     double *E22_re, *E22_im;
-    out_E22.setDCMat(request.nx(), request.ny());
+    out_E22.setDCMat(nChannels, nTimeslots);
     out_E22.dcomplexStorage(E22_re, E22_im);
     
     //  Parameters for external functions:
@@ -175,12 +170,9 @@ void DipoleBeamExternal::evaluate(const Request &request,
         
     // Evaluate beam.
     uint sample = 0;
-    for(int t = 0; t < request.ny(); ++t)
+    Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
+    for(size_t t = 0; t < nTimeslots; ++t)
     {
-        const double freq = request.domain().startX() + request.stepX() / 2.0;
-        xParms[1] = makedcomplex(freq, 0.0);
-        yParms[1] = makedcomplex(freq, 0.0);
-
         // TODO: Where does the -pi/4 term in azimuth come from (see
         // global_model.py in EJones_HBA)? Is this just the default dipole
         // orientation? If so, the term should be removed in favor of setting
@@ -191,8 +183,12 @@ void DipoleBeamExternal::evaluate(const Request &request,
         xParms[2] = yParms[2] = makedcomplex(az[t], 0.0);
         xParms[3] = yParms[3] = makedcomplex(el[t], 0.0);
                     
-        for(int f = 0; f < request.nx(); ++f)
+        for(size_t f = 0; f < nChannels; ++f)
         {
+            // Update frequency.
+            xParms[1] = yParms[1] = makedcomplex(freqAxis->center(f), 0.0);
+
+            // Compute dipole beam value.
             const dcomplex xTheta = itsThetaFunction(xParms) * itsScaleFactor;
             const dcomplex xPhi = itsPhiFunction(xParms) * itsScaleFactor;
             E11_re[sample] = real(xTheta);
@@ -206,10 +202,6 @@ void DipoleBeamExternal::evaluate(const Request &request,
             E21_im[sample] = imag(yTheta);
             E22_re[sample] = real(yPhi);
             E22_im[sample] = imag(yPhi);
-
-            // Update frequency.
-            xParms[1] += request.stepX();
-            yParms[1] += request.stepX();
             
             // Move to next sample.
             ++sample;

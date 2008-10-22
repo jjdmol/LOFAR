@@ -51,9 +51,6 @@ PointCoherence::~PointCoherence()
 
 JonesResult PointCoherence::getJResult(const Request &request)
 {
-    //static NSTimer timer("PointCoherence::getResult", true);
-    //timer.start();
-
     // Allocate the result.
     JonesResult result;
     result.init();
@@ -86,19 +83,18 @@ JonesResult PointCoherence::getJResult(const Request &request)
 
     while(!pvIter.atEnd())
     {
-        const Matrix &pvI = pvIter.value(PV_I);
-        const Matrix &pvQ = pvIter.value(PV_Q);
-        const Matrix &pvU = pvIter.value(PV_U);
-        const Matrix &pvV = pvIter.value(PV_V);
-            
         if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
         {
+          const Matrix &pvI = pvIter.value(PV_I);
+          const Matrix &pvQ = pvIter.value(PV_Q);
           resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ)); 
           resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ)); 
         }
 
         if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
         {
+            const Matrix &pvU = pvIter.value(PV_U);
+            const Matrix &pvV = pvIter.value(PV_V);
             Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
             resXY.setPerturbedValue(pvIter.key(), uvkp_2);
             resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
@@ -107,7 +103,6 @@ JonesResult PointCoherence::getJResult(const Request &request)
         pvIter.next();
     }
 
-    //timer.stop();
     return result;
 }
 

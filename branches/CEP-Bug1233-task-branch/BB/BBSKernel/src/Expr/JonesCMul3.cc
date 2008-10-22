@@ -96,7 +96,6 @@ inline __m128d sub(__m128d b, __m128d a)
 static void getResultSSE2 (
   Result &result11, Result &result12,
   Result &result21, Result &result22,
-  const Request &request,
   const Result &l11, const Result &l12,
   const Result &l21, const Result &l22,
   const Result &m11, const Result &m12,
@@ -450,7 +449,6 @@ JonesResult JonesCMul3::getJResult (const Request& request)
       mm11.rep()->type == MatrixRep::ComplexArray &&
       mr11.rep()->type == MatrixRep::ComplexScalar)
     getResultSSE2(result11, result12, result21, result22,
-          request,
           l11, l12, l21, l22,
           m11, m12, m21, m22,
           r11, r12, r21, r22,

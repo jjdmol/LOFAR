@@ -28,7 +28,7 @@ namespace LOFAR
 namespace BBS
 {
 
-GaussianSource::GaussianSource(const string& name,
+GaussianSource::GaussianSource(const string &name,
     const Expr &ra, const Expr &dec,
     const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
     const Expr &major, const Expr &minor, const Expr &phi)

@@ -1,4 +1,4 @@
-//# Diag.cc: A diagonal node in a Jones matrix expression.
+//# Diag.cc: A diagonal Jones matrix.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-//#include <Common/Profiling/PerfProfile.h>
 
 #include <BBSKernel/Expr/Diag.h>
 #include <BBSKernel/Expr/Expr.h>
@@ -31,29 +30,27 @@ namespace LOFAR
 namespace BBS
 {
 
-Diag::Diag(const Expr& xx, const Expr& yy)
-: itsXX(xx),
-  itsYY(yy)
+Diag::Diag(const Expr &xx, const Expr &yy)
 {
-  addChild(itsXX);
-  addChild(itsYY);
+    addChild(xx);
+    addChild(yy);
 }
 
 Diag::~Diag()
-{}
-
-JonesResult Diag::getJResult(const Request& request)
 {
-//  PERFPROFILE(__PRETTY_FUNCTION__);
+}
 
-  JonesResult res(0);
-  {
-    itsXX.getResultSynced(request, res.result11());
-    itsYY.getResultSynced(request, res.result22());
-    res.result12().setValue (Matrix(0.));
-    res.result21().setValue (Matrix(0.));
-  }
-  return res;
+JonesResult Diag::getJResult(const Request &request)
+{
+    JonesResult result;
+    result.init();
+
+    getChild(0).getResultSynced(request, result.result11());
+    getChild(1).getResultSynced(request, result.result22());
+    result.result12().setValue(Matrix(0.));
+    result.result21().setValue(Matrix(0.));
+
+    return result;
 }
 
 } // namespace BBS

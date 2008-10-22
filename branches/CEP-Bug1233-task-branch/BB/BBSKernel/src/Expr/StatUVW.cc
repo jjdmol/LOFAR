@@ -44,10 +44,9 @@ namespace LOFAR
 namespace BBS
 {
 
-StatUVW::StatUVW(const string &name, const casa::MPosition &position,
-    const casa::MPosition &arrayRef, const PhaseRef::ConstPointer &phaseRef)
-    :   itsName(name),
-        itsPosition(position),
+StatUVW::StatUVW(const Station &station, const casa::MPosition &arrayRef,
+    const PhaseRef::ConstPointer &phaseRef)
+    :   itsStation(station),
         itsArrayRef(arrayRef),
         itsPhaseRef(phaseRef),
         itsLastReqId(InitRequestId)
@@ -98,7 +97,8 @@ void StatUVW::calculate(const Request &request) const
 
     // Get the station position relative to the array reference position
     // (to keep values small).
-    const MPosition mPos(itsPosition.getValue() - itsArrayRef.getValue());
+    const MPosition mPos(itsStation.position.getValue()
+        - itsArrayRef.getValue());
 
     //# Setup coordinate transformation engine.
     Quantum<double> qEpoch(0.0, "s");

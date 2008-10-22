@@ -1,4 +1,4 @@
-//# NumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
+//# HamakerDipole.h: Implementation of J.P. Hamaker's memo
 //# "Mathematical-physical analysis of the generic dual-dipole antenna"
 //#
 //# Copyright (C) 2008
@@ -22,7 +22,9 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSKernel/Expr/NumericalDipoleBeam.h>
+#include <BBSKernel/Expr/PValueIterator.h>
 
 #include <casa/BasicSL/Constants.h>
 
@@ -31,8 +33,8 @@ namespace LOFAR
 namespace BBS 
 {
 
-NumericalDipoleBeam::NumericalDipoleBeam(const BeamCoeff &coeff,
-    const Expr &azel, const Expr &orientation)
+HamakerDipole::HamakerDipole(const BeamCoeff &coeff, const Expr &azel,
+    const Expr &orientation)
     : itsBeamCoeff(coeff)
 {
     ASSERT(itsBeamCoeff.coeff);
@@ -42,81 +44,75 @@ NumericalDipoleBeam::NumericalDipoleBeam(const BeamCoeff &coeff,
     addChild(orientation);
 }
 
-
-JonesResult NumericalDipoleBeam::getJResult(const Request &request)
+JonesResult HamakerDipole::getJResult(const Request &request)
 {
     // Evaluate children.
-    ResultVec res_azel;
-    Result res_orientation;
+    ResultVec tmpAzel;
+    Result tmpOrientation;
     
-    const ResultVec &azel = getChild(IN_AZEL).getResultVecSynced(request,
-        res_azel);
+    const ResultVec &resAzel = getChild(0).getResultVecSynced(request, tmpAzel);
+    const Result &resOrientation =
+        getChild(1).getResultSynced(request, tmpOrientation);
 
-    const Result &orientation =
-        getChild(IN_ORIENTATION).getResultSynced(request, res_orientation);
+    const Matrix &az = resAzel[0].getValue();
+    const Matrix &el = resAzel[1].getValue();
+    const Matrix &orientation = resOrientation.getValue();
 
     // Create result.
-    JonesResult result(request.nspid());
-    Result &result11 = result.result11();
-    Result &result12 = result.result12();
-    Result &result21 = result.result21();
-    Result &result22 = result.result22();
+    JonesResult result;
+    result.init();
     
+    Result &resXX = result.result11();
+    Result &resXY = result.result12();
+    Result &resYX = result.result21();
+    Result &resYY = result.result22();
+
     // Evaluate main value.
-    evaluate(request,
-        azel[0].getValue(), azel[1].getValue(),
-        orientation.getValue(),
-        result11.getValueRW(), result12.getValueRW(),
-        result21.getValueRW(), result22.getValueRW());
+    evaluate(request, az, el, orientation, resXX.getValueRW(),
+        resXY.getValueRW(), resYX.getValueRW(), resYY.getValueRW());
 
     // Evaluate perturbed values.  
-    const ParmFunklet *perturbedParm;
-    for(int i = 0; i < request.nspid(); ++i)
+    // Compute the perturbed values.  
+    enum PValues
     {
-        // Find out if this perturbed value needs to be computed.
-    	if(azel[0].isDefined(i))
-    	{
-    	    perturbedParm = azel[0].getPerturbedParm(i);
-    	}
-    	else if(azel[1].isDefined(i))
-    	{
-    	    perturbedParm = azel[1].getPerturbedParm(i);
-    	}
-    	else if(orientation.isDefined(i))
-    	{
-    	    perturbedParm = orientation.getPerturbedParm(i);
-    	}
-    	else
-    	{
-    	    continue;
-    	}
+        PV_AZ, PV_EL, PV_ORIENTATION, N_PValues
+    };
+    
+    const Result *pvSet[N_PValues] = {&(resAzel[0]), &(resAzel[1]),
+        &resOrientation};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+    
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvAz = pvIter.value(PV_AZ);
+        const Matrix &pvEl = pvIter.value(PV_EL);
+        const Matrix &pvOrientation = pvIter.value(PV_ORIENTATION);
 
-        evaluate(request,
-            azel[0].getPerturbedValue(i), azel[1].getPerturbedValue(i),
-            orientation.getPerturbedValue(i),
-            result11.getPerturbedValueRW(i), result12.getPerturbedValueRW(i),
-            result21.getPerturbedValueRW(i), result22.getPerturbedValueRW(i));
+        evaluate(request, pvAz, pvEl, pvOrientation,
+            resXX.getPerturbedValueRW(pvIter.key()),
+            resXY.getPerturbedValueRW(pvIter.key()),
+            resYX.getPerturbedValueRW(pvIter.key()),
+            resYY.getPerturbedValueRW(pvIter.key()));
 
-        result11.setPerturbedParm(i, perturbedParm);
-        result12.setPerturbedParm(i, perturbedParm);
-        result21.setPerturbedParm(i, perturbedParm);
-        result22.setPerturbedParm(i, perturbedParm);
+        pvIter.next();
     }
     
     return result;
 }
 
-
-void NumericalDipoleBeam::evaluate(const Request &request,
+void HamakerDipole::evaluate(const Request &request,
     const Matrix &in_az, const Matrix &in_el,
     const Matrix &in_orientation,
     Matrix &out_E11, Matrix &out_E12,
     Matrix &out_E21, Matrix &out_E22)
 {
+    const size_t nChannels = request.getChannelCount();
+    const size_t nTimeslots = request.getTimeslotCount();
+
     // Check preconditions.
-    ASSERT(in_az.nelements() == request.ny());
-    ASSERT(in_el.nelements() == request.ny());
-    ASSERT(in_orientation.nelements() == 1);
+    ASSERT(static_cast<size_t>(in_az.nelements()) == nTimeslots);
+    ASSERT(static_cast<size_t>(in_el.nelements()) == nTimeslots);
+    ASSERT(static_cast<size_t>(in_orientation.nelements()) == 1);
     
     // Get pointers to input and output data.
     const double *az = in_az.doubleStorage();
@@ -124,19 +120,19 @@ void NumericalDipoleBeam::evaluate(const Request &request,
     const double orientation = in_orientation.getDouble(0, 0);
 
     double *E11_re, *E11_im;
-    out_E11.setDCMat(request.nx(), request.ny());
+    out_E11.setDCMat(nChannels, nTimeslots);
     out_E11.dcomplexStorage(E11_re, E11_im);
     
     double *E12_re, *E12_im;
-    out_E12.setDCMat(request.nx(), request.ny());
+    out_E12.setDCMat(nChannels, nTimeslots);
     out_E12.dcomplexStorage(E12_re, E12_im);
 
     double *E21_re, *E21_im;
-    out_E21.setDCMat(request.nx(), request.ny());
+    out_E21.setDCMat(nChannels, nTimeslots);
     out_E21.dcomplexStorage(E21_re, E21_im);
 
     double *E22_re, *E22_im;
-    out_E22.setDCMat(request.nx(), request.ny());
+    out_E22.setDCMat(nChannels, nTimeslots);
     out_E22.dcomplexStorage(E22_re, E22_im);
     
     // Evaluate beam.
@@ -147,10 +143,9 @@ void NumericalDipoleBeam::evaluate(const Request &request,
     const boost::multi_array<dcomplex, 4> &coeff = *itsBeamCoeff.coeff;
 
     size_t sample = 0;
-    for(size_t t = 0; t < static_cast<size_t>(request.ny()); ++t)
+    Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
+    for(size_t t = 0; t < nTimeslots; ++t)
     {
-        double freq = request.domain().startX() + 0.5 * request.stepX();
-
         // Correct azimuth for dipole orientation.
         const double phi = az[t] - orientation;
 
@@ -158,13 +153,13 @@ void NumericalDipoleBeam::evaluate(const Request &request,
         // appropriate conversion is taken care of below.
         const double theta = casa::C::pi_2 - el[t];
 
-        for(size_t f = 0; f < static_cast<size_t>(request.nx()); ++f)
+        for(size_t f = 0; f < nChannels; ++f)
         {
             // NB: The model is parameterized in terms of a normalized
             // frequency in the range [-1, 1]. The appropriate conversion is
             // taken care of below.
-            const double scaledFreq = (freq - itsBeamCoeff.freqAvg)
-                / itsBeamCoeff.freqRange;
+            const double scaledFreq = (freqAxis->center(f)
+                - itsBeamCoeff.freqAvg) / itsBeamCoeff.freqRange;
 
             // J-jones matrix (2x2 complex matrix)
             dcomplex J[2][2];
@@ -213,9 +208,6 @@ void NumericalDipoleBeam::evaluate(const Request &request,
             E22_re[sample] = real(J[1][1]);
             E22_im[sample] = imag(J[1][1]);
 
-            // Update frequency.
-            freq += request.stepX();
-
             // Move to next sample.
             ++sample;
         }
@@ -224,9 +216,9 @@ void NumericalDipoleBeam::evaluate(const Request &request,
 
 
 #ifdef EXPR_GRAPH
-std::string NumericalDipoleBeam::getLabel()
+std::string HamakerDipole::getLabel()
 {
-    return std::string("NumericalDipoleBeam\\nDipole voltage beam based on"
+    return std::string("HamakerDipole\\nDipole voltage beam based on"
         " numerical simulation");
 }
 #endif

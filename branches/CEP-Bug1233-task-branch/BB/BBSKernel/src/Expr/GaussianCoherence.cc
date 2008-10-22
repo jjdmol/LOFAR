@@ -1,7 +1,7 @@
-//# GaussianCoherence.cc: Spatial coherence function of an elliptical
-//#     gaussian source.
+//# GaussianCoherence.cc: Spatial coherence function of an elliptical gaussian
+//# source.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -22,12 +22,16 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSKernel/Expr/GaussianCoherence.h>
 #include <BBSKernel/Expr/Matrix.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
+#include <BBSKernel/Expr/PValueIterator.h>
+
 #include <Common/lofar_complex.h>
 #include <Common/lofar_math.h>
 #include <Common/LofarLogger.h>
+
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;
@@ -39,9 +43,9 @@ namespace BBS
 using LOFAR::exp;
 using LOFAR::conj;
 
-GaussianCoherence::GaussianCoherence(const GaussianSource *source,
-        StatUVW *station1,
-        StatUVW *station2)
+GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPointer &source,
+    const StatUVW::ConstPointer &station1,
+    const StatUVW::ConstPointer &station2)
     :   itsSource(source),
         itsStation1(station1),
         itsStation2(station2)
@@ -55,32 +59,28 @@ GaussianCoherence::GaussianCoherence(const GaussianSource *source,
 	addChild(itsSource->getPhi());
 }
 
-
 GaussianCoherence::~GaussianCoherence()
 {
 }
 
-
 JonesResult GaussianCoherence::getJResult(const Request &request)
 {
+    enum ChildExprIndex
+    {
+        IN_I, IN_Q, IN_U, IN_V, IN_MAJOR, IN_MINOR, IN_PHI
+    };
+
     // Evaluate source parameters.
     // Note: The result of any parameter is either scalar or it is 2D and
     // conforms to the size of the request.
     Result ikBuf, qkBuf, ukBuf, vkBuf, majorBuf, minorBuf, phiBuf;
-    const Result &ik =
-        getChild(GaussianCoherence::IN_I).getResultSynced(request, ikBuf);
-    const Result &qk =
-        getChild(GaussianCoherence::IN_Q).getResultSynced(request, qkBuf);
-    const Result &uk =
-        getChild(GaussianCoherence::IN_U).getResultSynced(request, ukBuf);
-    const Result &vk =
-        getChild(GaussianCoherence::IN_V).getResultSynced(request, vkBuf);
-    const Result &major =
-        getChild(GaussianCoherence::IN_MAJOR).getResultSynced(request, majorBuf);
-    const Result &minor =
-        getChild(GaussianCoherence::IN_MINOR).getResultSynced(request, minorBuf);
-    const Result &phi =
-        getChild(GaussianCoherence::IN_PHI).getResultSynced(request, phiBuf);
+    const Result &ik = getChild(IN_I).getResultSynced(request, ikBuf);
+    const Result &qk = getChild(IN_Q).getResultSynced(request, qkBuf);
+    const Result &uk = getChild(IN_U).getResultSynced(request, ukBuf);
+    const Result &vk = getChild(IN_V).getResultSynced(request, vkBuf);
+    const Result &major = getChild(IN_MAJOR).getResultSynced(request, majorBuf);
+    const Result &minor = getChild(IN_MINOR).getResultSynced(request, minorBuf);
+    const Result &phi = getChild(IN_PHI).getResultSynced(request, phiBuf);
     
     // Assume major, minor, phi are scalar.
     DBGASSERT(!major.getValue().isArray());
@@ -94,166 +94,129 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
     const Result &vStation2 = itsStation2->getV(request);
 
     // Check pre-conditions.
-    DBGASSERT(uStation1.getValue().nx() == 1 && uStation1.getValue().nelements() == request.ny());
-    DBGASSERT(vStation1.getValue().nx() == 1 && vStation1.getValue().nelements() == request.ny());
-    DBGASSERT(uStation2.getValue().nx() == 1 && uStation2.getValue().nelements() == request.ny());
-    DBGASSERT(vStation2.getValue().nx() == 1 && vStation1.getValue().nelements() == request.ny());
+    DBGASSERT(uStation1.getValue().nx() == 1
+        && static_cast<uint>(uStation1.getValue().nelements())
+            == request.getTimeslotCount());
+    DBGASSERT(vStation1.getValue().nx() == 1
+        && static_cast<uint>(vStation1.getValue().nelements())
+            == request.getTimeslotCount());
+    DBGASSERT(uStation2.getValue().nx() == 1
+        && static_cast<uint>(uStation2.getValue().nelements())
+            == request.getTimeslotCount());
+    DBGASSERT(vStation2.getValue().nx() == 1
+        && static_cast<uint>(vStation1.getValue().nelements())
+            == request.getTimeslotCount());
 
+    // Allocate the result.
+    JonesResult result;
+    result.init();
+
+    Result &resXX = result.result11();
+    Result &resXY = result.result12();
+    Result &resYX = result.result21();
+    Result &resYY = result.result22();
+    
     // Compute baseline uv-coordinates (1D in time).
     Matrix uBaseline = uStation2.getValue() - uStation1.getValue();
     Matrix vBaseline = vStation2.getValue() - vStation1.getValue();
 
     // Compute spatial coherence for a gaussian source.
     Matrix coherence = computeCoherence(request, uBaseline, vBaseline,
-      major.getValue(), minor.getValue(), phi.getValue());
+        major.getValue(), minor.getValue(), phi.getValue());
 
-    // Allocate the result.
-    JonesResult result(request.nspid());
-    Result &resXX = result.result11();
-    Result &resXY = result.result12();
-    Result &resYX = result.result21();
-    Result &resYY = result.result22();
-    
     // Compute main result.
-    Matrix iScaled = 0.5 * ik.getValue();
-    Matrix qScaled = 0.5 * qk.getValue();
-    Matrix uvScaled = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+    Matrix uv_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
 
-    resXX.setValue((iScaled + qScaled) * coherence);
-    resXY.setValue(uvScaled * coherence);
-    resYX.setValue(conj(uvScaled) * coherence);
-    resYY.setValue((iScaled - qScaled) * coherence);
+    resXX.setValue((0.5 * (ik.getValue() + qk.getValue())) * coherence);
+    resXY.setValue(uv_2 * coherence);
+    resYX.setValue(conj(uv_2) * coherence);
+    resYY.setValue((0.5 * (ik.getValue() - qk.getValue())) * coherence);
     
-    // Compute perturbed values.
-    enum PVIteratorIndex
+    // Compute the perturbed values.
+    enum PValues
     {
-        RESULT_I = 0,
-        RESULT_Q = 0,
-        RESULT_U = 0,
-        RESULT_V = 0,
-        RESULT_MAJOR = 0,
-        RESULT_MINOR = 0,
-        RESULT_PHI = 0,
-        N_PVIteratorIndex
+        PV_I, PV_Q, PV_U, PV_V, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
     };
     
-    PValueIterator pvIter[N_PVIteratorIndex];
-    pvIter[RESULT_I] = PValueIterator(ik);
-    pvIter[RESULT_Q] = PValueIterator(qk);
-    pvIter[RESULT_U] = PValueIterator(uk);
-    pvIter[RESULT_V] = PValueIterator(vk);
-    pvIter[RESULT_MAJOR] = PValueIterator(major);
-    pvIter[RESULT_MINOR] = PValueIterator(minor);
-    pvIter[RESULT_PHI] = PValueIterator(phi);
-
-    Matrix iScaledPerturbed, qScaledPerturbed, uvScaledPerturbed,
-        coherencePerturbed;
-
-    bool atEnd = false;
-    while(!atEnd)
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &major, &minor, &phi};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+    
+    while(!pvIter.atEnd())
     {
-        atEnd = true;
+        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q);
+        bool evalUV = pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V);
+        bool evalCoh = pvIter.hasPValue(PV_MAJOR) || pvIter.hasPValue(PV_MINOR)
+            || pvIter.hasPValue(PV_PHI);
 
-        PValueKey currKey(static_cast<size_t>(-1), 0);
-        for(size_t i = 0; i < N_PVIteratorIndex; ++i)
+        Matrix pvUV_2(uv_2);
+        Matrix pvCoh(coherence);
+
+        if(evalUV)
         {
-            if(!pvIter[i].atEnd() && pvIter[i].key().parmId < currKey.parmId)
-            {
-                currKey = pvIter[i].key();
-                atEnd = false;
-            }
+            pvUV_2 = 0.5 * tocomplex(pvIter.value(PV_U), pvIter.value(PV_V));
+        }
+        
+        if(evalCoh)
+        {
+            pvCoh = computeCoherence(request, uBaseline, vBaseline,
+                pvIter.value(PV_MAJOR), pvIter.value(PV_MINOR),
+                pvIter.value(PV_PHI));
+        }
+        
+        if(evalIQ || evalCoh)
+        {
+            const Matrix &pvI = pvIter.value(PV_I);
+            const Matrix &pvQ = pvIter.value(PV_Q);
+        
+            resXX.setPerturbedValue(pvIter.key(), (0.5 * (pvI + pvQ)) * pvCoh);
+            resYY.setPerturbedValue(pvIter.key(), (0.5 * (pvI - pvQ)) * pvCoh);
         }
 
-        if(!atEnd)
+        if(evalUV || evalCoh)
         {
-            bool evalIQ = evalUV = evalCoherence = false;
-
-            iScaledPerturbed = iScaled;
-            qScaledPerturbed = qScaled;
-            uvScaledPerturbed = uvScaled;
-            coherencePerturbed = coherence;
-
-            if(pvIter[RESULT_I].isAt(currKey) || pvIter[RESULT_Q].isAt(currKey))
-            {
-                evalIQ = true;
-                iScaledPerturbed = 0.5 * pvIter[RESULT_I].next(currKey);
-                qScaledPerturbed = 0.5 * pvIter[RESULT_Q].next(currKey);
-            }
-            
-            if(pvIter[RESULT_U].isAt(currKey) || pvIter[RESULT_V].isAt(currKey))
-            {
-                evalUV = true;
-                uvScaledPerturbed =
-                    0.5 * tocomplex(pvIter[RESULT_U].next(currKey),
-                        pvIter[RESULT_V].next(currKey));
-            }
-
-            if(pvIter[RESULT_MAJOR].isAt(currKey)
-              || pvIter[RESULT_MINOR].isAt(currKey)
-              || pvIter[RESULT_PHI].isAt(currKey))
-            {
-                evalCoherence = true;
-                coherencePerturbed = computeCoherence(request,
-                    uBaseline, vBaseline,
-                    pvIter[RESULT_MAJOR].next(currKey),
-                    pvIter[RESULT_MINOR].next(currKey),
-                    pvIter[RESULT_PHI].next(currKey));
-            }              
-
-            if(evalIQ || evalCoherence)
-            {        
-                resXX.setPerturbedValue(currKey,
-                    (iScaledPerturbed + qScaledPerturbed) * coherencePerturbed);
-                resYY.setPerturbedValue(currKey,
-                    (iScaledPerturbed - qScaledPerturbed) * coherencePerturbed);
-            }
-
-            if(evalUV || evalCoherence)
-            {
-                resXY.setPerturbedValue(currKey, uvScaledPerturbed
-                    * coherencePerturbed);
-                resYX.setPerturbedValue(currKey, conj(uvScaledPerturbed)
-                    * coherencePerturbed);
-            }
+            resXY.setPerturbedValue(pvIter.key(), pvUV_2 * pvCoh);
+            resYX.setPerturbedValue(pvIter.key(), conj(pvUV_2) * pvCoh);
         }
-    }
+
+        pvIter.next();
+    }        
     
     return result;
 }
-
 
 Matrix GaussianCoherence::computeCoherence(const Request &request,
     const Matrix &uBaseline, const Matrix &vBaseline,
     const Matrix &major, const Matrix &minor, const Matrix &phi)
 {
-    // Compute dot product of rotated, scaled uv-vector with itself (1D in time).
+    // Compute dot product of a rotated, scaled uv-vector with itself (1D in
+    // time) and pre-multiply with 2.0 * PI / C * C.
     Matrix cosPhi(cos(phi));
     Matrix sinPhi(sin(phi));
-    Matrix uvTransformedDotProduct =
-        sqr(major * (uBaseline * cosPhi - vBaseline * sinPhi))
-        + sqr(minor * (uBaseline * sinPhi + vBaseline * cosPhi));
+    Matrix uvTransformed = casa::C::_2pi / (casa::C::c * casa::C::c)
+        * (sqr(major * (uBaseline * cosPhi - vBaseline * sinPhi))
+        + sqr(minor * (uBaseline * sinPhi + vBaseline * cosPhi)));
 
     // Allocate the result matrix (2D).
+    const uint nChannels = request.getChannelCount();
+    const uint nTimeslots = request.getTimeslotCount();
+    
     Matrix result;
-    double *valuep = result.setDoubleFormat(request.nx(), request.ny());
+    double *valuep = result.setDoubleFormat(nChannels, nTimeslots);
 
     // Compute unnormalized spatial coherence (2D).
-    double cSqr = casa::C::c * casa::C::c;
-    for(int t = 0; t < request.ny(); ++t)
+    Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
+    for(uint t = 0; t < nTimeslots; ++t)
     {
-        double freq = request.domain().startX() + request.stepX() / 2.0;
-        const double uv = casa::C::_2pi * uvTransformedDotProduct.getDouble(0, t);
-
-        for(int f = 0; f < request.nx(); ++f)
+        const double uv = uvTransformed.getDouble(0, t);
+        for(uint f = 0; f < nChannels; ++f)
         {
-            *(valuep++) = exp(-(freq * freq * uv) / cSqr);
-            freq += request.stepX();
+            const double freq = freqAxis->center(f);
+            *(valuep++) = exp(-(freq * freq * uv));
         }
     }
 
     return result;
 }
-
 
 #ifdef EXPR_GRAPH
 std::string GaussianCoherence::getLabel()

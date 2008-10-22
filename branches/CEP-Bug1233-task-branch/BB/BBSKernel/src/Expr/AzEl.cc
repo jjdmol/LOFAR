@@ -23,9 +23,9 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/AzEl.h>
-#include <BBSKernel/Expr/Source.h>
-#include <BBSKernel/Expr/Station.h>
 #include <BBSKernel/Expr/Request.h>
+#include <BBSKernel/Expr/PValueIterator.h>
+
 #include <Common/LofarLogger.h>
 
 #include <measures/Measures/MDirection.h>
@@ -43,85 +43,56 @@ namespace LOFAR
 namespace BBS
 {
 
-AzEl::AzEl(Source &source, Station &station)
+AzEl::AzEl(const Station &station, const Source::ConstPointer &source)
+    :   itsStation(station),
+        itsSource(source)
 {
-    addChild(source.getRa());
-    addChild(source.getDec());
-    addChild(station.getPosX());
-    addChild(station.getPosY());
-    addChild(station.getPosZ());
+    addChild(source->getRa());
+    addChild(source->getDec());
 }
 
 
 ResultVec AzEl::getResultVec(const Request& request)
 {
     // Check preconditions.
-    ASSERTSTR(request.ny() > 0, "Need time values.");
+    ASSERTSTR(request.getTimeslotCount() > 0, "Need time values.");
 
     // Evaluate children.
-    Result res_ra, res_dec, res_x, res_y, res_z;
-    const Result &ra =
-        getChild(AzEl::IN_RA).getResultSynced(request, res_ra);
-    const Result &dec =
-        getChild(AzEl::IN_DEC).getResultSynced(request, res_dec);
-    const Result &x =
-        getChild(AzEl::IN_X).getResultSynced(request, res_x);
-    const Result &y =
-        getChild(AzEl::IN_Y).getResultSynced(request, res_y);
-    const Result &z =
-        getChild(AzEl::IN_Z).getResultSynced(request, res_z);
+    Result tmpRa, tmpDec;
+    const Result &resRa = getChild(0).getResultSynced(request, tmpRa);
+    const Result &resDec = getChild(1).getResultSynced(request, tmpDec);
+    const Matrix &ra = resRa.getValue();
+    const Matrix &dec = resDec.getValue();
     
     // Check preconditions.
-    ASSERTSTR(!ra.getValue().isArray() && !dec.getValue().isArray(), "Variable"
-        " source positions are not supported yet.");
-    ASSERTSTR(!x.getValue().isArray() && !y.getValue().isArray()
-        && !z.getValue().isArray(), "Variable station positions are not"
-        " supported yet.");
+    ASSERTSTR(!ra.isArray() && !dec.isArray(), "Variable source positions are"
+        " not supported yet.");
 
     // Create result.
-    ResultVec result(2, request.nspid());
+    ResultVec result(2);
 
-    // Evaluate main value.
-    evaluate(request, ra.getValue(), dec.getValue(), x.getValue(), y.getValue(),
-        z.getValue(), result[0].getValueRW(), result[1].getValueRW());
+    // Compute main value.
+    evaluate(request, ra, dec, result[0].getValueRW(), result[1].getValueRW());
     
-    // Evaluate perturbed values.  
-    const ParmFunklet *perturbedParm;
-    for(int i = 0; i < request.nspid(); ++i)
+    // Compute the perturbed values.
+    enum PValues
     {
-        // Find out if this perturbed value needs to be computed.
-    	if(ra.isDefined(i))
-    	{
-    	    perturbedParm = ra.getPerturbedParm(i);
-    	}
-    	else if(dec.isDefined(i))
-    	{
-    	    perturbedParm = dec.getPerturbedParm(i);
-    	}
-    	else if(x.isDefined(i))
-    	{
-    	    perturbedParm = x.getPerturbedParm(i);
-    	}
-    	else if(y.isDefined(i))
-    	{
-    	    perturbedParm = y.getPerturbedParm(i);
-    	}
-    	else if(z.isDefined(i))
-    	{
-    	    perturbedParm = z.getPerturbedParm(i);
-    	}
-    	else
-    	{
-    	    continue;
-    	}
+        PV_RA, PV_DEC, N_PValues
+    };
+    
+    const Result *pvSet[N_PValues] = {&resRa, &resDec};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+    
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvRa = pvIter.value(PV_RA);
+        const Matrix &pvDec = pvIter.value(PV_DEC);
 
-        evaluate(request, ra.getPerturbedValue(i), dec.getPerturbedValue(i),
-            x.getPerturbedValue(i), y.getPerturbedValue(i),
-            z.getPerturbedValue(i), result[0].getPerturbedValueRW(i),
-            result[1].getPerturbedValueRW(i));
-        
-        result[0].setPerturbedParm(i, perturbedParm);
-        result[1].setPerturbedParm(i, perturbedParm);
+        evaluate(request, pvRa, pvDec,
+            result[0].getPerturbedValueRW(pvIter.key()),
+            result[1].getPerturbedValueRW(pvIter.key()));
+
+        pvIter.next();
     }
     
     return result;
@@ -129,17 +100,14 @@ ResultVec AzEl::getResultVec(const Request& request)
 
 
 void AzEl::evaluate(const Request& request, const Matrix &in_ra,
-    const Matrix &in_dec, const Matrix &in_x, const Matrix &in_y,
-    const Matrix &in_z, Matrix &out_az, Matrix &out_el)
+    const Matrix &in_dec, Matrix &out_az, Matrix &out_el)
 {
-    MPosition position(MVPosition(in_x.getDouble(0, 0), in_y.getDouble(0, 0),
-        in_z.getDouble(0, 0)), MPosition::Ref(MPosition::ITRF));
     Quantum<double> qepoch(0, "s");
     MEpoch epoch(qepoch, MEpoch::UTC);    
         
     // Create and initialize a frame.
     MeasFrame frame;
-    frame.set(position);
+    frame.set(itsStation.position);
     frame.set(epoch);
 
     // Create conversion engine.
@@ -149,13 +117,15 @@ void AzEl::evaluate(const Request& request, const Matrix &in_ra,
         MDirection::Ref(MDirection::AZEL, frame));
         
     // Result is only time variable.
-    double *az = out_az.setDoubleFormat(1, request.ny());
-    double *el = out_el.setDoubleFormat(1, request.ny());
+    const size_t nTimeslots = request.getTimeslotCount();
+    double *az = out_az.setDoubleFormat(1, nTimeslots);
+    double *el = out_el.setDoubleFormat(1, nTimeslots);
     
-    for(int i = 0; i < request.ny(); ++i)
+    Axis::ShPtr timeAxis(request.getGrid()[TIME]);
+    for(size_t i = 0; i < nTimeslots; ++i)
     {
         // Update reference frame.
-        qepoch.setValue(request.y(i));
+        qepoch.setValue(timeAxis->center(i));
         epoch.set(qepoch);
         frame.set(epoch);
         
