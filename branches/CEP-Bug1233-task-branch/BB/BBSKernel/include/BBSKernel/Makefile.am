@@ -27,14 +27,14 @@ pkginclude_HEADERS = Package__Version.h \
 pkginclude_Expr_HEADERS	= 	\
 	Expr/AzEl.h \
 	Expr/Diag.h \
-	Expr/DipoleBeamExternal.h \
 	Expr/DFTPS.h \
 	Expr/Expr.h \
 	Expr/ExprParm.h \
 	Expr/ExternalFunction.h \
 	Expr/GaussianCoherence.h \
 	Expr/GaussianSource.h \
-	Expr/JonesCMul3.h \
+    Expr/HamakerDipole.h \
+  	Expr/JonesCMul3.h \
 	Expr/JonesExpr.h \
 	Expr/JonesInvert.h \
 	Expr/JonesMul.h \
@@ -51,7 +51,6 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MatrixRealSca.h \
 	Expr/MatrixRep.h \
 	Expr/MatrixTmp.h \
-	Expr/NumericalDipoleBeam.h \
 	Expr/PhaseRef.h \
 	Expr/PhaseShift.h \
 	Expr/PointCoherence.h \
@@ -62,6 +61,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ResultVec.h \
 	Expr/Pool.h \
 	Expr/Source.h \
-    Expr/StatUVW.h
+    Expr/StatUVW.h \
+    Expr/YatawattaDipole.h
     
 include $(top_srcdir)/Makefile.common
