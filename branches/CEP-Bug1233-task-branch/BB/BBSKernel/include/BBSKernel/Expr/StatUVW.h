@@ -26,6 +26,7 @@
 // \file
 // UVW coordinates of a station in meters.
 
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/Expr/Result.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/PhaseRef.h>
@@ -52,8 +53,7 @@ public:
     typedef shared_ptr<StatUVW>          Pointer;
     typedef shared_ptr<const StatUVW>    ConstPointer;
 
-    StatUVW(const string &name, const casa::MPosition &position,
-        const casa::MPosition &arrayRef,
+    StatUVW(const Station &station, const casa::MPosition &arrayRef,
         const PhaseRef::ConstPointer &phaseRef);
     ~StatUVW();
 
@@ -67,7 +67,7 @@ public:
     { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
 
     const string &getName() const
-    { return itsName; }
+    { return itsStation.name; }
 
 private:
     struct Time
@@ -98,11 +98,10 @@ private:
     virtual string getLabel();
 #endif
 
-    string                      itsName;
-    casa::MPosition             itsPosition;
-    casa::MPosition             itsArrayRef;
+    Station                  itsStation;
+    casa::MPosition          itsArrayRef;
     PhaseRef::ConstPointer   itsPhaseRef;
-    mutable map<Time, Uvw>      itsUvwCache;
+    mutable map<Time, Uvw>   itsUvwCache;
 
     mutable Result           itsU;
     mutable Result           itsV;

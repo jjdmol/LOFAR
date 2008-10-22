@@ -101,11 +101,11 @@ private:
 
     typedef map<PValueKey, size_t>  PValueMap;
 
-    Matrix           itsValue;
-    vector<Matrix>   itsPValues;
-    PValueMap           itsPValueMap;
+    Matrix          itsValue;
+    vector<Matrix>  itsPValues;
+    PValueMap       itsPValueMap;
 
-    size_t              itsRefCount;
+    size_t          itsRefCount;
 };
 
 // A proxy class that manages a ResultRep class. Note that the default

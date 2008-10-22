@@ -1,4 +1,4 @@
-//# Diag.h: The Jones expression for a diagonal matrix
+//# Diag.h: A diagonal Jones matrix.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,12 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_DIAG_H)
+#ifndef EXPR_DIAG_H
 #define EXPR_DIAG_H
 
-// \file Expr/Diag.h
-// The Jones expression for a diagonal matrix
+// \file
+// A diagonal Jones matrix.
 
-//# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/Expr.h>
 
@@ -39,26 +38,17 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-//# Forward Declarations
 class Expr;
 class JonesResult;
-
-// This class is a diagonal node in a Jones matrix expression.
 
 class Diag: public JonesExprRep
 {
 public:
-  // Construct from the various subexpressions.
-  Diag (const Expr& xx, const Expr& yy);
+    Diag(const Expr &xx, const Expr &yy);
+    virtual ~Diag();
 
-  virtual ~Diag();
-
-  // Calculate the result of its members.
-  virtual JonesResult getJResult (const Request&);
-
-private:
-  Expr itsXX;
-  Expr itsYY;
+    // Compute the result.
+    virtual JonesResult getJResult(const Request &request);
 };
 
 // @}

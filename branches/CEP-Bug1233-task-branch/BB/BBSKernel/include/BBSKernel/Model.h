@@ -33,7 +33,6 @@
 
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Instrument.h>
-//#include <BBSKernel/SourceList.h>
 #include <BBSKernel/VisData.h>
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/PhaseRef.h>
@@ -54,13 +53,8 @@ namespace BBS
 {
 class ModelConfig;
 class Instrument;
-//class ParmGroup;
 class PhaseRef;
 class Request;
-//class StatUVW;
-//class LMN;
-//class JonesExpr;
-//class BeamCoeff;
 
 class Model
 {
@@ -107,12 +101,12 @@ private:
     void makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
         const vector<Source::Pointer> &sources) const;
 
-    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config,
-        bool inverse = false);
+    void makeBandpassNodes(vector<JonesExpr> &result);
+    
+    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
 
     void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
-        const ModelConfig &config, const vector<Source::Pointer> &sources,
-        bool inverse = false);
+        const ModelConfig &config, const vector<Source::Pointer> &sources);
 
 //    void makeBeamNodes(const ModelConfig &config,
 //        LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
@@ -120,7 +114,8 @@ private:
 
 //    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
-    void makeSources(vector<Source::Pointer> &result, vector<string> patterns);
+    void makeSources(vector<Source::Pointer> &result,
+        const vector<string> &patterns);
     
     Source::Pointer makeSource(const SourceInfo &source);
 

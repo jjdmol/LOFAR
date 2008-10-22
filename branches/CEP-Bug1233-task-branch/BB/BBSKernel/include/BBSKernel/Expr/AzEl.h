@@ -23,8 +23,10 @@
 #ifndef EXPR_AZEL_H
 #define EXPR_AZEL_H
 
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ResultVec.h>
+#include <BBSKernel/Expr/Source.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -34,8 +36,6 @@ namespace LOFAR
 {
 namespace BBS
 {
-class Source;
-class Station;
 class Request;
 class Matrix;
 
@@ -46,27 +46,19 @@ class Matrix;
 class AzEl: public ExprRep
 {
 public:
-    enum
-    {
-        IN_RA,
-        IN_DEC,
-        IN_X,
-        IN_Y,
-        IN_Z,
-        N_InputPort
-    } InputPort;
-    
-    AzEl(Source &source, Station &station);
+    AzEl(const Station &station, const Source::ConstPointer &source);
     ResultVec getResultVec(const Request &request);
     
 private:
     void evaluate(const Request& request, const Matrix &in_ra,
-        const Matrix &in_dec, const Matrix &in_x, const Matrix &in_y,
-        const Matrix &in_z, Matrix &out_az, Matrix &out_el);
+        const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
+
+    Station                 itsStation;
+    Source::ConstPointer    itsSource;
 };
 
 // @}

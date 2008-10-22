@@ -1,4 +1,4 @@
-//# NumericalDipoleBeam.h: Implementation of J.P. Hamaker's memo
+//# HamakerDipole.h: Implementation of J.P. Hamaker's memo
 //# "Mathematical-physical analysis of the generic dual-dipole antenna"
 //#
 //# Copyright (C) 2008
@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_NUMERICALDIPOLEBEAM_H
-#define EXPR_NUMERICALDIPOLEBEAM_H
+#ifndef EXPR_HAMAKERDIPOLE_H
+#define EXPR_HAMAKERDIPOLE_H
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/JonesExpr.h>
@@ -61,17 +61,10 @@ public:
 };
 
 
-class NumericalDipoleBeam: public JonesExprRep
+class HamakerDipole: public JonesExprRep
 {
 public:
-    enum
-    {
-        IN_AZEL,
-        IN_ORIENTATION,
-        N_InputPort
-    } InputPort;
-    
-    NumericalDipoleBeam(const BeamCoeff &coeff, const Expr &azel,
+    HamakerDipole(const BeamCoeff &coeff, const Expr &azel,
         const Expr &orientation);
 
     virtual JonesResult getJResult(const Request &request);

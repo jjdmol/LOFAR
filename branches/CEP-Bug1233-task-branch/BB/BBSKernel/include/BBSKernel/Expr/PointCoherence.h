@@ -21,7 +21,7 @@
 //# $Id$
 
 #ifndef EXPR_POINTCOHERENCE_H
-#define EXPR_POINTCOHENRECE_H
+#define EXPR_POINTCOHERENCE_H
 
 // \file
 // Spatial coherence function of a point source.

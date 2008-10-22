@@ -1,7 +1,7 @@
-//# GaussianCoherence.h: Spatial coherence function of an elliptical
-//#     gaussian source.
+//# GaussianCoherence.h: Spatial coherence function of an elliptical gaussian
+//# source.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,13 +21,12 @@
 //#
 //# $Id$
 
-#ifndef EXPR_GAUSSIANCOHERENCY_H
-#define EXPR_GAUSSIANCOHENRECY_H
+#ifndef EXPR_GAUSSIANCOHERENCE_H
+#define EXPR_GAUSSIANCOHERENCE_H
 
 // \file
 // Spatial coherence function of an elliptical gaussian source.
 
-//# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/GaussianSource.h>
 #include <BBSKernel/Expr/StatUVW.h>
@@ -41,25 +40,12 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-//# Forward Declarations
-
-
 class GaussianCoherence: public JonesExprRep
 {
 public:
-    enum
-    {
-        IN_I,
-        IN_Q,
-        IN_U,
-        IN_V,
-        IN_MAJOR,
-        IN_MINOR,
-        IN_PHI,
-        N_InputPort
-    } InputPort;
-
-    GaussianCoherence(const GaussianSource *source, StatUVW *station1, StatUVW *station2);
+    GaussianCoherence(const GaussianSource::ConstPointer &source,
+        const StatUVW::ConstPointer &station1,
+        const StatUVW::ConstPointer &station2);
     ~GaussianCoherence();
 
     // Calculate the results for the given domain.
@@ -70,12 +56,12 @@ private:
     virtual std::string getLabel();
 #endif
 
-    Matrix computeCoherence(const Request &request,
-        const Matrix &uBaseline, const Matrix &vBaseline,
-        const Matrix &major, const Matrix &minor, const Matrix &phi);
+    Matrix computeCoherence(const Request &request, const Matrix &uBaseline,
+        const Matrix &vBaseline, const Matrix &major, const Matrix &minor,
+        const Matrix &phi);
 
-    const GaussianSource    *itsSource;
-    StatUVW                 *itsStation1, *itsStation2;
+    GaussianSource::ConstPointer    itsSource;
+    StatUVW::ConstPointer           itsStation1, itsStation2;
 };
 
 // @}

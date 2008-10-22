@@ -45,7 +45,7 @@ public:
     typedef shared_ptr<GaussianSource>       Pointer;
     typedef shared_ptr<const GaussianSource> ConstPointer;
 
-    GaussianSource(const string& name, const Expr &ra, const Expr &dec,
+    GaussianSource(const string &name, const Expr &ra, const Expr &dec,
         const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
         const Expr &major, const Expr &minor, const Expr &phi);
 

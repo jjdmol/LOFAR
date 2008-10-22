@@ -1,4 +1,5 @@
-//# DipoleBeamExternal.h: Dipole voltage beam based on external functions.
+//# YatawattaDipole.h: Dipole voltage beam using Sarod Yatawatta's analytical
+//# model.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_DIPOLEBEAMEXTERNAL_H
-#define EXPR_DIPOLEBEAMEXTERNAL_H
+#ifndef EXPR_YATAWATTADIPOLE_H
+#define EXPR_YATAWATTADIPOLE_H
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/JonesExpr.h>
@@ -37,18 +38,11 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class DipoleBeamExternal: public JonesExprRep
+class YatawattaDipole: public JonesExprRep
 {
 public:
-    enum
-    {
-        IN_AZEL = 0,
-        IN_ORIENTATION,
-        N_InputPort
-    } InputPort;
-
-    DipoleBeamExternal(const string &moduleTheta, const string &modulePhi,
-        Expr azel, Expr orientation, double scaleFactor);
+    YatawattaDipole(const string &moduleTheta, const string &modulePhi,
+        const Expr &azel, const Expr &orientation, double scaleFactor);
 
     virtual JonesResult getJResult(const Request &request);
 

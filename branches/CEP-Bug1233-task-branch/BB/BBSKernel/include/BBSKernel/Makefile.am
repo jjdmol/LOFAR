@@ -1,15 +1,8 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/ExternalFunction.h \
-#	Expr/AzEl.h \
-#	Expr/Diag.h \
 #	Expr/DipoleBeam.h \
-#	Expr/DipoleBeamExternal.h \
-#	Expr/GaussianCoherence.h \
-#	Expr/GaussianSource.h \
 #	Expr/JonesCMul2.h \
-#	Expr/JonesMul3.h \
-#	Expr/NumericalDipoleBeam.h
+#	Expr/JonesMul3.h
 
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
@@ -32,9 +25,15 @@ pkginclude_HEADERS = Package__Version.h \
 	VisSelection.h
 
 pkginclude_Expr_HEADERS	= 	\
-	Expr/ExprParm.h \
+	Expr/AzEl.h \
+	Expr/Diag.h \
+	Expr/DipoleBeamExternal.h \
 	Expr/DFTPS.h \
 	Expr/Expr.h \
+	Expr/ExprParm.h \
+	Expr/ExternalFunction.h \
+	Expr/GaussianCoherence.h \
+	Expr/GaussianSource.h \
 	Expr/JonesCMul3.h \
 	Expr/JonesExpr.h \
 	Expr/JonesInvert.h \
@@ -52,6 +51,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MatrixRealSca.h \
 	Expr/MatrixRep.h \
 	Expr/MatrixTmp.h \
+	Expr/NumericalDipoleBeam.h \
 	Expr/PhaseRef.h \
 	Expr/PhaseShift.h \
 	Expr/PointCoherence.h \
@@ -63,5 +63,5 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Pool.h \
 	Expr/Source.h \
     Expr/StatUVW.h
-
+    
 include $(top_srcdir)/Makefile.common
