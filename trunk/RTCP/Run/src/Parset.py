@@ -167,7 +167,7 @@ class Parset(LOFAR_Parset.Parset):
         return subbands / subbandsperpset
     
     def nrSlotsInFrame(self):
-        return self.getInt32('OLAP.nrSlotsInFrame')
+        return self.getInt32('Observation.nrSlotsInFrame')
     
     def subbandToRSPboardMapping(self):
         return self.getExpandedInt32Vector('Observation.rspBoardList')
@@ -234,7 +234,7 @@ class Parset(LOFAR_Parset.Parset):
 	
 	    for subband in range(0, len(slots)):
 	        if slots[subband] >= slotsPerFrame:
-	            print 'Observation.rspSlotList contains slot numbers >= OLAP.nrSlotsInFrame'
+	            print 'Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame'
 		    sys.exit(0)
 
     def inputPsets(self):
