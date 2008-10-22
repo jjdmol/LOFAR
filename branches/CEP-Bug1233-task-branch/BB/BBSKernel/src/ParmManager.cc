@@ -73,8 +73,8 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
     if(status.second)
     {
         // This is the first reference to this parameter.
-        cout << "Fetching parameter from db: " << name << " [" << parmId << "]"
-            << endl;
+//        cout << "Fetching parameter from db: " << name << " [" << parmId << "]"
+//            << endl;
 
         const ParmId internalId = itsParmSet.addParm(parmDb, name);
         Parm parm(itsParmCache, internalId);

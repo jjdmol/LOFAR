@@ -46,12 +46,22 @@ Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
     ASSERT(itsChunk);
     ASSERT(itsModel);
 
+#ifndef _OPENMP
+    // Ignore thread count specified in constructor.
+    itsThreadCount = 1;
+#endif
+
     // By default, select all the baselines and polarizations products
     // available.
     const VisDimensions &dims = itsChunk->getDimensions();    
     setSelection(dims.getBaselines(), dims.getPolarizations());
     
+    // Create a mapping for each axis that maps from cells in the solution grid
+    // to cell intervals in the observation (chunk) grid.
     makeGridMapping();
+    
+    // Create a mapping that maps each (parmId, coeffId) combination to an
+    // index.
     makeCoeffMapping(index);
 
     // Pre-allocate thread private casa::LSQFit instances.
@@ -67,33 +77,33 @@ void Equator::setSelection(const vector<baseline_t> &baselines,
 {
     itsBaselines = baselines;
     
-    // Compute product mask.
+    // Determine product mask.
+    const VisDimensions &dims = itsChunk->getDimensions();
+
     fill(&(itsProductMask[0]), &(itsProductMask[4]), -1);
 
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    for(size_t i = 0; i < products.size(); ++i)
+    if(dims.hasPolarization("XX")
+        && find(products.begin(), products.end(), "XX") != products.end())
     {
-        if(products[i] == "XX")
-        {
-            itsProductMask[0] = dims.getPolarizationIndex("XX");
-        }
-        else if(products[i] == "XY")
-        {
-            itsProductMask[1] = dims.getPolarizationIndex("YX");
-        }
-        else if(products[i] == "YX")
-        {
-            itsProductMask[2] = dims.getPolarizationIndex("XY");
-        }
-        else if(products[i] == "YY")
-        {
-            itsProductMask[3] = dims.getPolarizationIndex("YY");
-        }
-        else
-        {
-            LOG_WARN_STR("Don't know how to process polarization product"
-                << products[i] << "; skipping.");
-        }
+        itsProductMask[0] = dims.getPolarizationIndex("XX");
+    }
+
+    if(dims.hasPolarization("XY")
+        && find(products.begin(), products.end(), "XY") != products.end())
+    {
+        itsProductMask[1] = dims.getPolarizationIndex("XY");
+    }
+
+    if(dims.hasPolarization("YX")
+        && find(products.begin(), products.end(), "YX") != products.end())
+    {
+        itsProductMask[2] = dims.getPolarizationIndex("YX");
+    }
+
+    if(dims.hasPolarization("YY")
+        && find(products.begin(), products.end(), "YY") != products.end())
+    {
+        itsProductMask[3] = dims.getPolarizationIndex("YY");
     }
 }
 
@@ -101,56 +111,70 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     const Location &end)
 {
     // Check if [start, end] is a valid range.
-    ASSERT(start.first <= end.first && start.second <= end.second);
-    // Check if end points to a valid cell in the solution grid.
-    ASSERT(end.first < itsSolGrid[FREQ]->size()
-        && end.second < itsSolGrid[TIME]->size());
+    ASSERTSTR(start.first <= end.first && start.second <= end.second,
+        "Invalid cell range specified.");
+    // Check number of cells in the request.
+    ASSERTSTR((end.first - start.first + 1) * (end.second - start.second + 1)
+        <= itsMaxCellCount, "Number of cells to process too large.");
+    // Check if end location points to a valid cell in the solution grid.
+    ASSERTSTR(end.first < itsSolGrid[FREQ]->size()
+        && end.second < itsSolGrid[TIME]->size(),
+        "Cell range extends outside of solution grid.");
 
-    // If no data is available for all requested cells, then we're done.
+    // If no observed visibilities are available for the requested cell range,
+    // then exit.
     if(end.first < itsStartCell.first
         || start.first > itsEndCell.first
         || end.second < itsStartCell.second
         || start.second > itsEndCell.second)
     {
+        result.clear();
         return;
     }
 
     resetTimers();
     itsTimers[PROCESS].start();
 
-    // Clip requested cells against available data.
+    LOG_DEBUG_STR("Cells requested (solution grid relative): [("
+        << start.first << "," << start.second << "),(" << end.first << ","
+        << end.second << ")]");
+
+    // Clip requested cell range against available visibility data.
     Location reqStart(std::max(start.first, itsStartCell.first),
         std::max(start.second, itsStartCell.second));
     Location reqEnd(std::min(end.first, itsEndCell.first),
          std::min(end.second, itsEndCell.second));
+    const size_t nCells =
+        (end.first - start.first + 1) * (end.second - start.second + 1);
+    
+    LOG_DEBUG_STR("Cells to process (solution grid relative): [("
+        << reqStart.first << "," << reqStart.second << "),(" << reqEnd.first
+        << "," << reqEnd.second << ")]");
 
-    const size_t nCells = (end.first - start.first + 1)
-        * (end.second - start.second + 1);
-    ASSERT(nCells <= itsMaxCellCount);
-    
-    LOG_DEBUG_STR("Constructing equations for " << nCells << " cell(s).");
-    
-    // Initialize result and set cell id (solution grid relative).
+    // Initialize the result and the thread context of the main thread.
     result.resize(nCells);
-    size_t i = 0;
-    CellIterator it(reqStart, reqEnd);
-    while(!it.atEnd())
-    {
-        result[i].id = itsSolGrid.getCellId(*it);
-        result[i].equation.set(static_cast<uint>(itsCoeffMap.size()));
-        ++i;
-        ++it;
-    }
 
+    size_t index = 0;
+    CellIterator cellIt(reqStart, reqEnd);
+    while(!cellIt.atEnd())
+    {
+        // Set cell id (relative to the solution grid).
+        result[index].id = itsSolGrid.getCellId(*cellIt);
+        result[index].equation.set(static_cast<uint>(itsCoeffMap.size()));
+        itsContexts[0].eq[index] = &(result[index].equation);
+        ++index;
+        ++cellIt;
+    }
+    
     // Transform to chunk relative coordinates.
     reqStart.first -= itsStartCell.first;
     reqStart.second -= itsStartCell.second;
     reqEnd.first -= itsStartCell.first;
     reqEnd.second -= itsStartCell.second;
     
-    LOG_DEBUG_STR("Cells (chunk relative): [(" << reqStart.first << ","
-      << reqStart.second << "),(" << reqEnd.first << "," << reqEnd.second
-      << ")]");
+    LOG_DEBUG_STR("Cells to process (chunk relative): [(" << reqStart.first
+        << "," << reqStart.second << "),(" << reqEnd.first << ","
+        << reqEnd.second << ")]");
       
     // Get frequency / time grid information.
     const Location visStart(itsFreqIntervals[reqStart.first].start,
@@ -158,19 +182,18 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     const Location visEnd(itsFreqIntervals[reqEnd.first].end,
         itsTimeIntervals[reqEnd.second].end);
 
-    LOG_DEBUG_STR("Visibilities (chunk relative): [(" << visStart.first << ","
-      << visStart.second << "),(" << visEnd.first << "," << visEnd.second
-      << ")]");
+    LOG_DEBUG_STR("Visibilities to process (chunk relative): [("
+        << visStart.first << "," << visStart.second << "),(" << visEnd.first
+        << "," << visEnd.second << ")]");
 
     // Create request.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
     Request request(visGrid.subset(visStart, visEnd), true);
     
-    LOG_DEBUG_STR("nChannels: " << request.getChannelCount() << " nTimeslots: "
-        << request.getTimeslotCount());
-    LOG_DEBUG_STR("nBaselines: " << itsBaselines.size()
-       << " nProducts: "
-       << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1));
+    LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
+        << request.getTimeslotCount() << "t x " << request.getChannelCount()
+        << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
+        << "p");
 
     // Precompute.
     LOG_DEBUG_STR("Precomputing...");
@@ -178,12 +201,6 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     itsModel->precalculate(request);
     itsTimers[PRECOMPUTE].stop();
     LOG_DEBUG_STR("Precomputing... done");
-
-    // Initialize thread context of main thread.
-    for(size_t i = 0; i < nCells; ++i)
-    {
-        itsContexts[0].eq[i] = &(result[i].equation);
-    }
     
 #ifdef _OPENMP
     // Reset casa::LSQFit instances for each non-main thread.
@@ -197,7 +214,7 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
 #endif
 
     itsTimers[COMPUTE].start();
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
 #ifdef _OPENMP
@@ -247,10 +264,12 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
     ThreadContext &context = itsContexts[threadId];
 
     // Find baseline index.
+    // NB. VisDimensions::getBaselineIndex() could throw an exception.
     const VisDimensions &dims = itsChunk->getDimensions();    
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
+    // NB. Model::evaluate() could throw an exception.
     context.timers[ThreadContext::MODEL_EVAL].start();
     JonesResult jresult = itsModel->evaluate(baseline, request);
     context.timers[ThreadContext::MODEL_EVAL].stop();
@@ -298,6 +317,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         while(!it.atEnd())
         {
 //            cout << " (" << it.key().parmId << "," << it.key().coeffId << ")";
+
             // Get pointers to the perturbed value.
             it.value().dcomplexStorage(context.pertRe[nCoeff],
                 context.pertIm[nCoeff]);
@@ -317,9 +337,6 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 //                << " Inverse perturbation: " << context.inversePert[nCoeff]
 //                << endl;
 
-//            cout << "Pert. Coeff: " << it.key().parmId << " ("
-//                << it.key().coeffId << ") -> " << context.index[nCoeff] << endl;
-            
             ++nCoeff;
             it.next();
         }
@@ -372,17 +389,9 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                         const double modelRe = modelVisRe[visOffset];
                         const double modelIm = modelVisIm[visOffset];
 
-//                        cout << "Obs: " << obsVis << " Model: " << modelRe
-//                            << "," << modelIm << endl;
-
-//                            sumRe += abs(real(obsVis) - modelVisRe);
-//                            sumIm += abs(imag(obsVis) - modelVisIm);
-                            
-                        // Approximate partial derivatives (forward
-                        // differences).
+                        // Approximate partial derivatives (forward differences)
                         // TODO: Remove this transpose.                            
                         context.timers[ThreadContext::DERIVATIVES].start();
-                        cout << "Partial: [" << fixed << setprecision(9);
                         for(size_t i = 0; i < nCoeff; ++i)
                         {
                             context.partialRe[i] = 
@@ -392,11 +401,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                             context.partialIm[i] = 
                                 (context.pertIm[i][visOffset] - modelIm)
                                     * context.inversePert[i];
-
-                            cout << " (" << context.partialRe[i] << ","
-                                << context.partialIm[i] << ")";
                         }
-                        cout << "]" << endl;
                         context.timers[ThreadContext::DERIVATIVES].stop();
 
                         context.timers[ThreadContext::MAKE_NORM].start();
@@ -422,6 +427,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                     nChannels - (chInterval.end - chInterval.start + 1);
             } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
         
+            // Move to next cell.
             ++eqIndex;
             ++cellIt;
         }
@@ -432,15 +438,11 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 
 void Equator::makeContexts()
 {
+    ASSERTSTR(itsCoeffMap.size() > 0, "Call Equator::makeCoeffIndex() first.");
+    
     // Pre-allocate thread private casa::LSQFit instances and initialize an
     // array of pointers to it for thread 1 and upwards.
-
-#ifndef _OPENMP
-    itsContexts.resize(1);
-#else
     itsContexts.resize(itsThreadCount);
-#endif
-
     for(size_t i = 0; i < itsThreadCount; ++i)
     {
         itsContexts[i].resize(itsCoeffMap.size(), itsMaxCellCount);
@@ -466,20 +468,12 @@ void Equator::makeContexts()
 
 void Equator::makeGridMapping()
 {
-    itsStartCell = Location();
-    itsEndCell = Location();
-    itsFreqIntervals.clear();
-    itsTimeIntervals.clear();
-    
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
 
     // Compute overlap between the solution grid and the current chunk.
     Box overlap = itsSolGrid.getBoundingBox() & visGrid.getBoundingBox();
-    if(overlap.empty())
-    {
-        LOG_WARN("No overlap between solution grid and the current chunk.");
-        return;
-    }
+    ASSERTSTR(!overlap.empty(), "No overlap between the solution grid and the"
+        " current chunk.");
 
     // Find the first and last cell that intersects the current chunk.
     itsStartCell = itsSolGrid.locate(overlap.lower());
@@ -488,11 +482,6 @@ void Equator::makeGridMapping()
     // The end cell is _inclusive_ by convention.
     const size_t nFreqCells = itsEndCell.first - itsStartCell.first + 1;
     const size_t nTimeCells = itsEndCell.second - itsStartCell.second + 1;
-    const size_t nCells = nFreqCells * nTimeCells;
-
-    LOG_DEBUG_STR("Cells in chunk: [(" << itsStartCell.first << ","
-        << itsStartCell.second << "),(" << itsEndCell.first << ","
-        << itsEndCell.second << ")]; " << nCells << " cell(s) in total");
 
     // Map cells to inclusive sample intervals (frequency axis).
     Axis::ShPtr visAxis = visGrid[FREQ];
@@ -588,8 +577,7 @@ void Equator::printTimers()
     LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
         * 1000.0 << " ms");
 
-//#ifdef LOFAR_BBS_VERBOSE
-#ifdef LOFAR_DEBUG
+#if defined(LOFAR_DEBUG) || defined(LOFAR_BBS_VERBOSE)
     for(size_t i = 0; i < ThreadContext::N_Timer; ++i)
     {
         unsigned long long count = 0;
@@ -621,6 +609,8 @@ void Equator::printTimers()
         * 1000.0 << " ms");
 }
 
+// -------------------------------------------------------------------------- //
+// - ThreadContext implementation                                           - //
 // -------------------------------------------------------------------------- //
 
 string Equator::ThreadContext::timerNames[Equator::ThreadContext::N_Timer] =

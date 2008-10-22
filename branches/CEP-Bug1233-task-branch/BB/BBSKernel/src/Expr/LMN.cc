@@ -82,8 +82,8 @@ ResultVec LMN::getResultVec(const Request &request)
     resM.setValue(mk);
     resN.setValue(nk);
 
-    cout << itsSource->getName() << " L: " << lk.getDouble(0, 0) << " M: "
-        << mk.getDouble(0, 0) << " N: " << nk.getDouble(0, 0) << endl;
+//    cout << itsSource->getName() << " L: " << lk.getDouble(0, 0) << " M: "
+//        << mk.getDouble(0, 0) << " N: " << nk.getDouble(0, 0) << endl;
 
     // Compute perturbed values.
     const Result *pvSet[2] = {&rak, &deck};

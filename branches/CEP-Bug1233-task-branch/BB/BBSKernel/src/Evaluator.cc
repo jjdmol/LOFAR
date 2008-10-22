@@ -30,12 +30,19 @@ namespace LOFAR
 namespace BBS 
 {
 
-Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model)
+Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
+    uint nThreads)
     :   itsChunk(chunk),
-        itsModel(model)
+        itsModel(model),
+        itsThreadCount(nThreads)
 {
     ASSERT(itsChunk);
     ASSERT(itsModel);
+
+#ifndef _OPENMP
+    // Ignore thread count specified in constructor.
+    itsThreadCount = 1;
+#endif    
     
     // By default, select all the baselines and polarizations products
     // available.
@@ -52,33 +59,33 @@ void Evaluator::setSelection(const vector<baseline_t> &baselines,
 {
     itsBaselines = baselines;
     
-    // Compute product mask.
+    // Determine product mask.
+    const VisDimensions &dims = itsChunk->getDimensions();
+
     fill(&(itsProductMask[0]), &(itsProductMask[4]), -1);
 
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    for(size_t i = 0; i < products.size(); ++i)
+    if(dims.hasPolarization("XX")
+        && find(products.begin(), products.end(), "XX") != products.end())
     {
-        if(products[i] == "XX")
-        {
-            itsProductMask[0] = dims.getPolarizationIndex("XX");
-        }
-        else if(products[i] == "XY")
-        {
-            itsProductMask[1] = dims.getPolarizationIndex("YX");
-        }
-        else if(products[i] == "YX")
-        {
-            itsProductMask[2] = dims.getPolarizationIndex("XY");
-        }
-        else if(products[i] == "YY")
-        {
-            itsProductMask[3] = dims.getPolarizationIndex("YY");
-        }
-        else
-        {
-            LOG_WARN_STR("Don't know how to process polarization product"
-                << products[i] << "; skipping.");
-        }
+        itsProductMask[0] = dims.getPolarizationIndex("XX");
+    }
+
+    if(dims.hasPolarization("XY")
+        && find(products.begin(), products.end(), "XY") != products.end())
+    {
+        itsProductMask[1] = dims.getPolarizationIndex("XY");
+    }
+
+    if(dims.hasPolarization("YX")
+        && find(products.begin(), products.end(), "YX") != products.end())
+    {
+        itsProductMask[2] = dims.getPolarizationIndex("YX");
+    }
+
+    if(dims.hasPolarization("YY")
+        && find(products.begin(), products.end(), "YY") != products.end())
+    {
+        itsProductMask[3] = dims.getPolarizationIndex("YY");
     }
 }
 
@@ -110,7 +117,7 @@ void Evaluator::process(Mode mode)
 
     itsTimers[COMPUTE].reset();
     itsTimers[COMPUTE].start();
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
 #ifdef _OPENMP

@@ -102,6 +102,8 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     const size_t nSources = sources.size();
     const size_t nStations = itsInstrument.stations.size();
 
+//    cout << "nSources: " << nSources << endl;
+
     // Create coherence nodes for all point sources.
     map<size_t, JonesExpr> pointCoherences;
     for(size_t i = 0; i < nSources; ++i)
@@ -160,7 +162,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     }
     
     // Direction dependent (image-plane) effects.
-    bool imgEffects = mask[DIRECTIONAL_GAIN] && mask[BEAM];
+    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM];
     
     // Create a station shift node per station-source combination.
     boost::multi_array<Expr, 2> stationShift;
@@ -254,21 +256,10 @@ bool Model::makeInvExpressions(const ModelConfig &config,
     ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
         "clearExpressions() first");
 
+    const size_t nStations = itsInstrument.stations.size();
+
     // Parse user supplied model component selection.
     vector<bool> mask(parseComponents(config.components));
-
-    // Create source nodes for all selected sources.
-    vector<Source::Pointer> sources;
-    makeSources(sources, config.sources);
-    if(sources.size() != 1)
-    {
-        LOG_ERROR_STR("No direction, or more than one direction specified. A"
-            " correction can only be applied for a single direction on the"
-            " sky");
-        return false;
-    }
-
-    const size_t nStations = itsInstrument.stations.size();
 
     // Direction independent (uv-plane) effects.
     bool uvEffects = mask[BANDPASS] || mask[GAIN];
@@ -311,32 +302,55 @@ bool Model::makeInvExpressions(const ModelConfig &config,
     }
     
     // Direction dependent (image-plane) effects.
-    // Create a directional gain node per station-source combination.
-    boost::multi_array<JonesExpr, 2> gainDirectional;
-    if(mask[DIRECTIONAL_GAIN])
+    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM];
+
+    if(imgEffects)
     {
-        makeDirectionalGainNodes(gainDirectional, config, sources, true);
-    }
-    
-    // Accumulate the image-plane effects.
-    for(size_t i = 0; i < nStations; ++i)
-    {
+        // Create source nodes for all selected sources.
+        vector<Source::Pointer> sources;
+        makeSources(sources, config.sources);
+        if(sources.size() != 1)
+        {
+            LOG_ERROR_STR("No direction, or more than one direction specified."
+                " A correction can only be applied for a single direction on"
+                " the sky");
+            return false;
+        }
+
+        // Create a directional gain node per station-source combination.
+        boost::multi_array<JonesExpr, 2> gainDirectional;
         if(mask[DIRECTIONAL_GAIN])
         {
-            jJones[i] = jJones[i].isNull() ? gainDirectional[i][0]
-                : JonesExpr(new JonesMul2(gainDirectional[i][0], jJones[i]));
+            makeDirectionalGainNodes(gainDirectional, config, sources, true);
         }
         
-        // TODO: Add other image-plane effects here.
+        // Accumulate the image-plane effects.
+        for(size_t i = 0; i < nStations; ++i)
+        {
+            if(mask[DIRECTIONAL_GAIN])
+            {
+                jJones[i] = jJones[i].isNull() ? gainDirectional[i][0]
+                    : JonesExpr(new JonesMul2(gainDirectional[i][0], jJones[i]));
+            }
+            
+            // TODO: Add other image-plane effects here.
+        }
     }
-    
+        
     // Create an expression tree for each baseline.
     for(size_t i = 0; i < baselines.size(); ++i)
     {
         const baseline_t &baseline = baselines[i];
-        itsExpressions[baseline] = new JonesCMul3(jJones[baseline.first],
-            JonesExpr(new JonesVisData(chunk, baseline)),
-            jJones[baseline.second]);
+        
+        JonesExpr vdata(new JonesVisData(chunk, baseline));
+        
+        if(uvEffects || imgEffects)
+        {
+            vdata = new JonesCMul3(jJones[baseline.first], vdata,
+                jJones[baseline.second]);
+        }
+        
+        itsExpressions[baseline] = vdata;
     }
 
     return true;
@@ -564,18 +578,15 @@ void Model::makeStationUvw()
 void Model::makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
     const vector<Source::Pointer> &sources) const
 {
-    const size_t nStations = itsInstrument.stations.size();
-    const size_t nSources = sources.size();
+    ASSERTSTR(itsStationUvw.size() == itsInstrument.stations.size(),
+        "Model::makeStationUvw() should be called first.");
 
-    ASSERTSTR(itsStationUvw.size() == nStations, "Model::makeStationUvw()"
-        " should be called first.");
-
-    result.resize(boost::extents[nStations][nSources]);
-    for(size_t i = 0; i < nStations; ++i)
+    result.resize(boost::extents[itsStationUvw.size()][sources.size()]);
+    for(size_t j = 0; j < sources.size(); ++j)
     {
-        Expr lmn = new LMN(sources[i], itsPhaseRef);
-
-        for(size_t j = 0; j < nSources; ++j)
+        Expr lmn = new LMN(sources[j], itsPhaseRef);
+    
+        for(size_t i = 0; i < itsStationUvw.size(); ++i)
         {
             result[i][j] = new DFTPS(itsStationUvw[i], lmn);
         }
@@ -923,7 +934,7 @@ void Model::makeSources(vector<Source::Pointer> &result,
 
 Source::Pointer Model::makeSource(const SourceInfo &source)
 {
-    cout << "Creating source: " << source.getName() << endl;
+//    cout << "Creating source: " << source.getName() << endl;
     
     switch(source.getType())
     {
