@@ -62,7 +62,7 @@ void BeamFormer::calcMapping()
       itsStationMapping[i] = itsBeamFormedStations[i][0];
     }
 
-#if 1
+#if 0
   // dump the mapping
   std::cerr << "*** BeamForming mapping START" << std::endl;
   for(unsigned i=0; i<itsNrBeamFormedStations; i++) {
@@ -83,7 +83,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   unsigned destStation = stationList[0];
   unsigned nrStationsInBeam = stationList.size();
   
-#if 1
+#if 0
   std::cerr << "Beam forming station " << beamFormedStation << ", size is " << nrStationsInBeam << " (";
   for(unsigned statIndex=0; statIndex<nrStationsInBeam; statIndex++) {
     unsigned station = stationList[statIndex];
@@ -104,7 +104,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   for(unsigned i=0; i<nrStationsInBeam; i++) {
     if(filteredData->flags[stationList[i]].count() > upperBound) {
       // many samples have been flagged away, drop entire station
-# if 1
+# if 0
       std::cerr << "dropping station " << stationList[i] << ", " << filteredData->flags[destStation].count() <<
 	" samples were flagged away, upper bound = " << upperBound << std::endl;
 #endif
@@ -116,7 +116,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
     }
   }
 
-  std::cerr << "total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations << std::endl; 
+//  std::cerr << "total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations << std::endl; 
 
   float factor = 1.0 / nrValidStations;
 
