@@ -22,7 +22,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisSelection.cc \
 	Expr/AzEl.cc \
 	Expr/Diag.cc \
-    Expr/DipoleBeamExternal.cc \
 	Expr/DFTPS.cc \
 	Expr/Expr.cc \
 	Expr/ExprParm.cc \
@@ -30,6 +29,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/GaussianCoherence.cc \
 	Expr/GaussianSource.cc \
 	Expr/LMN.cc \
+	Expr/HamakerDipole.cc \
 	Expr/JonesCMul3.cc \
 	Expr/JonesExpr.cc \
 	Expr/JonesInvert.cc \
@@ -45,7 +45,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MatrixRealSca.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixTmp.cc \
-    Expr/NumericalDipoleBeam.cc \
 	Expr/PhaseRef.cc \
     Expr/PhaseShift.cc \
 	Expr/PointCoherence.cc \
@@ -54,7 +53,8 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Result.cc \
 	Expr/ResultVec.cc \
     Expr/Source.cc \
-    Expr/StatUVW.cc
+    Expr/StatUVW.cc \
+    Expr/YatawattaDipole.cc
     
 bin_PROGRAMS = versionbbskernel metams
 
