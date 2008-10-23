@@ -200,23 +200,21 @@ template <typename SAMPLE_TYPE> void doWork()
     double     signalFrequency	= refFreq + 73 * sampleRate / nrChannels; // channel 73
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
-#if 0
-    unsigned   nrSuperStations  = nrStations / 7;
-    unsigned   nrBaselines	= nrSuperStations * (nrSuperStations + 1) / 2;
-#else
-    unsigned   nrSuperStations  = 0;
-    unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
-#endif
-
     std::vector<unsigned> station2SuperStation;
-
+# if 1
     station2SuperStation.resize(nrStations);
     for(unsigned i=0; i<nrStations; i++) {
       station2SuperStation[i] = (i / 7);
-      cerr << station2SuperStation[i] << endl;
+//      cerr << station2SuperStation[i] << endl;
     }
+#endif
+
+    BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, station2SuperStation, nrChannels);
 
     const char *env;
+    unsigned nrBeamFormedStations = beamFormer.getNrBeamFormedStations();
+    unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
+
 
     if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
       signalFrequency = atof(env);
@@ -238,8 +236,7 @@ template <typename SAMPLE_TYPE> void doWork()
     CorrelatedData correlatedData(arena1, nrBaselines, nrChannels);
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
-    BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, nrSuperStations, station2SuperStation, nrChannels);
-    Correlator     correlator(nrSuperStations == 0 ? nrStations : nrSuperStations, 
+    Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
 			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
@@ -254,7 +251,7 @@ template <typename SAMPLE_TYPE> void doWork()
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);
 
-    checkCorrelatorTestPattern(&correlatedData, nrSuperStations == 0 ? nrStations : nrSuperStations, nrChannels);
+    checkCorrelatorTestPattern(&correlatedData, beamFormer.getNrBeamFormedStations(), nrChannels);
   }
 }
 

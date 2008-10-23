@@ -40,14 +40,20 @@ class BeamFormer
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    BeamFormer(unsigned nrStations, unsigned nrSamplesPerIntegration, unsigned nrBeamFormedStations, std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels);
+    BeamFormer(unsigned nrStations, unsigned nrSamplesPerIntegration, 
+	       std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels);
+
     ~BeamFormer();
 
     // reads from and writes to FilteredData
     void	    formBeams(FilteredData *);
 
+    // Return the number of beam formed stations.
+    // If beamforming is not used, this is the total number of stations.
+    unsigned getNrBeamFormedStations();
+
     // return the station mapping
-  unsigned*       getStationMapping() { return itsStationMapping; }
+    unsigned*       getStationMapping();
 
   private:
     unsigned	    itsNrStations;
@@ -58,9 +64,20 @@ class BeamFormer
     std::vector<std::vector<unsigned> > itsBeamFormedStations;
     unsigned*       itsStationMapping; // same as itsBeamFormedStations, but only contains the first (=destination) station
 
+    unsigned calcNrBeamFormedStations();
     void calcMapping();
     void beamFormStation(FilteredData *filteredData, unsigned beamFormedStation);
 };
+
+
+inline unsigned BeamFormer::getNrBeamFormedStations() { 
+    if(itsNrBeamFormedStations == 0) return itsNrStations;
+    return itsNrBeamFormedStations; 
+}
+
+inline unsigned* BeamFormer::getStationMapping() { 
+    return itsStationMapping; 
+}
 
 } // namespace SRCP
 } // namespace LOFAR
