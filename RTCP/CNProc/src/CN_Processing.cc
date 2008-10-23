@@ -266,12 +266,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsNrStations	                   = configuration.nrStations();
   itsOutputPsetSize                = outputPsets.size();
-  unsigned nrBaselines		   = itsNrStations * (itsNrStations + 1) / 2;
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToCNProc	   = configuration.nrSamplesToCNProc();
-  unsigned nrBeamFormedStations    = 0; // TODO get nrTabStations from parset / configuration
   std::vector<unsigned> station2BeamFormedStation = configuration.tabList();
+  
+  // We have to create the Beam Former first, it knows the number of beam-formed stations.
+  // The number of baselines depends on this.
+  // If beam forming is disabled, nrBeamFormedStations will be equal to nrStations.
+  itsBeamFormer = new BeamFormer(itsNrStations, nrSamplesPerIntegration, station2BeamFormedStation, nrChannels);
+  unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
+  unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers
@@ -315,8 +320,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
-    itsBeamFormer     = new BeamFormer(itsNrStations, nrSamplesPerIntegration, nrBeamFormedStations, station2BeamFormedStation, nrChannels);
-    itsCorrelator     = new Correlator(nrBeamFormedStations == 0 ? itsNrStations : nrBeamFormedStations, itsBeamFormer->getStationMapping(),
+
+    itsCorrelator     = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(),
 				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
   }
 

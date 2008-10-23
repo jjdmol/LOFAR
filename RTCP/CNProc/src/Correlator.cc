@@ -107,7 +107,7 @@ void Correlator::computeFlags(const FilteredData *filteredData, CorrelatedData *
 
 void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *correlatedData)
 {
-#if 1
+#if 0
   std::cout << "correlating " << itsNrStations << " stations" << std::endl;
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     std::cout << "   station " << stat << " -> " << itsStationMapping[stat] << std::endl;

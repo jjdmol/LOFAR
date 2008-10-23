@@ -7,6 +7,7 @@
 
 #include <map>
 
+#define VERBOSE 0
 
 namespace LOFAR {
 namespace RTCP {
@@ -14,23 +15,41 @@ namespace RTCP {
 static NSTimer beamFormTimer("BeamFormer::formBeams()", true);
 
 BeamFormer::BeamFormer(unsigned nrStations, unsigned nrSamplesPerIntegration, 
-		       unsigned nrBeamFormedStations, std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels)
+		       std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels)
 :
   itsNrStations(nrStations), 
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration), 
-  itsNrBeamFormedStations(nrBeamFormedStations),
   itsStation2BeamFormedStation(station2BeamFormedStation)
 {
-  if(nrBeamFormedStations == 0) {
+  itsNrBeamFormedStations = calcNrBeamFormedStations();
+  if(itsNrBeamFormedStations == 0) {
+#if VERBOSE
     std::cerr << "BeamForming disabled" << std::endl;
+#endif
     itsStationMapping = new unsigned[nrStations];
   } else {  
-    std::cerr << "BeamForming enabled, " << nrBeamFormedStations << " stations" << std::endl;
-    itsStationMapping = new unsigned[nrBeamFormedStations];
+#if VERBOSE
+    std::cerr << "BeamForming enabled, " << itsNrBeamFormedStations << " station(s)" << std::endl;
+#endif
+    itsStationMapping = new unsigned[itsNrBeamFormedStations];
   }
 
   calcMapping();
+}
+
+unsigned BeamFormer::calcNrBeamFormedStations()
+{
+    if(itsStation2BeamFormedStation.size() == 0) return 0;
+
+    unsigned max = 0;
+    for(unsigned i=0; i<itsStation2BeamFormedStation.size(); i++) {
+	if(itsStation2BeamFormedStation[i] > max) {
+	    max = itsStation2BeamFormedStation[i];
+	}
+    }
+
+    return max + 1;
 }
 
 BeamFormer::~BeamFormer()
@@ -62,7 +81,7 @@ void BeamFormer::calcMapping()
       itsStationMapping[i] = itsBeamFormedStations[i][0];
     }
 
-#if 0
+#if VERBOSE
   // dump the mapping
   std::cerr << "*** BeamForming mapping START" << std::endl;
   for(unsigned i=0; i<itsNrBeamFormedStations; i++) {
@@ -83,11 +102,10 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   unsigned destStation = stationList[0];
   unsigned nrStationsInBeam = stationList.size();
   
-#if 0
+#if VERBOSE
   std::cerr << "Beam forming station " << beamFormedStation << ", size is " << nrStationsInBeam << " (";
   for(unsigned statIndex=0; statIndex<nrStationsInBeam; statIndex++) {
-    unsigned station = stationList[statIndex];
-    std::cerr << station << " ";
+    std::cerr << stationList[statIndex] << " ";
   }
   std::cerr << ")" << std::endl;
 #endif
@@ -104,7 +122,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   for(unsigned i=0; i<nrStationsInBeam; i++) {
     if(filteredData->flags[stationList[i]].count() > upperBound) {
       // many samples have been flagged away, drop entire station
-# if 0
+#if VERBOSE
       std::cerr << "dropping station " << stationList[i] << ", " << filteredData->flags[destStation].count() <<
 	" samples were flagged away, upper bound = " << upperBound << std::endl;
 #endif
@@ -171,7 +189,9 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
 
 void BeamFormer::formBeams(FilteredData *filteredData)
 {
-//  std::cerr << "beam forming START" << std::endl;
+#if VERBOSE
+  std::cerr << "beam forming START" << std::endl;
+#endif
 
   beamFormTimer.start();
 
@@ -183,7 +203,9 @@ void BeamFormer::formBeams(FilteredData *filteredData)
 
   beamFormTimer.stop();
 
-//  std::cerr << "beam forming DONE" << std::endl;
+#if VERBOSE
+  std::cerr << "beam forming DONE" << std::endl;
+#endif
 }
 
 
