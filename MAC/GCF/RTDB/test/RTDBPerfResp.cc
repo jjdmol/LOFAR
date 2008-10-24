@@ -33,8 +33,10 @@ void RTDBPerfResp::dpeValueGet(const string& /*propName*/, PVSSresult /*result*/
 {
 }
 
-void RTDBPerfResp::dpeValueChanged(const string& /*propName*/, PVSSresult /*result*/, const PVSS::GCFPValue& /*value*/)
+void RTDBPerfResp::dpeValueChanged(const string& propName, PVSSresult result, const PVSS::GCFPValue& /*value*/)
 {
+	LOG_DEBUG(formatString("RESPONSE:Value of property '%s' changed (err=%d)", propName.c_str(), result));
+	gGetCounter--;
 }
 
 void RTDBPerfResp::dpeValueSet(const string& /*propName*/, PVSSresult /*result*/)
