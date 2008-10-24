@@ -1,4 +1,4 @@
-//# JonesMul3.h: Calculate left*mid*right
+//# JonesMul3.h: Calculate A * B * C.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,9 +24,8 @@
 #define EXPR_JONESMUL3_H
 
 // \file
-// Calculate left*mid*right
+// Calculate A * B * C.
 
-//# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
 
 namespace LOFAR
@@ -34,29 +33,24 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-
-// Calculate left*mid*right.
-
+// Calculate A * B * C.
 class JonesMul3: public JonesExprRep
 {
 public:
-  JonesMul3 (const JonesExpr& left,
-		const JonesExpr& mid,
-		const JonesExpr& right);
+    JonesMul3(const JonesExpr &left, const JonesExpr &mid,
+        const JonesExpr &right);
+    ~JonesMul3();
 
-  ~JonesMul3();
-
-  // Get the result of the expression for the given domain.
-  JonesResult getJResult (const Request&);
+    // Get the result of the expression for the given domain.
+    JonesResult getJResult(const Request &request);
 
 private:
-  JonesExpr itsLeft;
-  JonesExpr itsMid;
-  JonesExpr itsRight;
+    JonesExpr itsLeft;
+    JonesExpr itsMid;
+    JonesExpr itsRight;
 };
 
 // @}

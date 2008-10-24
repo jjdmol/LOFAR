@@ -30,10 +30,10 @@
 #include <BBSKernel/Expr/MatrixRep.h>
 
 //# Forward Declarations
-//namespace casa
-//{
-//    template<class T> class Matrix;
-//}
+//#namespace casa
+//#{
+//#    template<class T> class Matrix;
+//#}
 
 namespace LOFAR
 {
@@ -51,7 +51,6 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
@@ -63,27 +62,27 @@ public:
   Matrix()
     : itsRep(0) {}
 
+  // @{
   // Create a scalar Matrix.
-  // <group>
   explicit Matrix (double value);
   explicit Matrix (dcomplex value);
-  // <group>
-
+  // @}
+  
   // Create a Matrix of given size.
   // If the init flag is true, the matrix is initialized to the given value.
   // Otherwise the value only indicates the type of matrix to be created.
-  // <group>
+  // @{
   Matrix (double, int nx, int ny, bool init=true);
   Matrix (dcomplex, int nx, int ny, bool init=true);
-  // <group>
+  // @}
 
   // Create a Matrix from a value array.
-  // <group>
+  // @{
   Matrix (const double* values, int nx, int ny);
   Matrix (const dcomplex* values, int nx, int ny);
-//  Matrix (const casa::Matrix<double>&);
-//  Matrix (const casa::Matrix<dcomplex>&);
-  // </group>
+//#  Matrix (const casa::Matrix<double>&);
+//#  Matrix (const casa::Matrix<dcomplex>&);
+  // @}
 
   // Create a Matrix from a MatrixRep.
   // It takes over the pointer and deletes it in the destructor.
@@ -145,8 +144,8 @@ public:
   bool isComplex() const
     { return itsRep->isComplex(); }
 
-//  casa::Matrix<double> getDoubleMatrix() const;
-//  casa::Matrix<dcomplex> getDComplexMatrix() const;
+//#  casa::Matrix<double> getDoubleMatrix() const;
+//#  casa::Matrix<dcomplex> getDComplexMatrix() const;
 
   const double* doubleStorage() const
     { return itsRep->doubleStorage(); }
@@ -230,9 +229,9 @@ private:
 inline ostream& operator<< (ostream& os, const Matrix& vec)
   { vec.show (os); return os; }
 
-//LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const Matrix& vec);
+//#LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const Matrix& vec);
 
-//LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, Matrix& vec);
+//#LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, Matrix& vec);
 
 // @}
 

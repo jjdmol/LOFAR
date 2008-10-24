@@ -1,4 +1,4 @@
-//# JonesMul2.h: Calculate left * right
+//# JonesMul2.h: Calculate A * B.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,13 +19,13 @@
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //# $Id$
+
 #ifndef EXPR_JONESMUL2_H
 #define EXPR_JONESMUL2_H
 
 // \file
-// Calculate left*right
+// Calculate A * B.
 
-//# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
 
 namespace LOFAR
@@ -33,12 +33,10 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-// Calculate left * right.
-
+// Calculate A * B.
 class JonesMul2: public JonesExprRep
 {
 public:

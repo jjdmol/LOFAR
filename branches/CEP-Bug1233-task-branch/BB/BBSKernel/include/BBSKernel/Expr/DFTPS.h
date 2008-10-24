@@ -41,7 +41,6 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 

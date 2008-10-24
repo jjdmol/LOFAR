@@ -42,7 +42,6 @@ namespace BBS
 {
 using LOFAR::dcomplex;
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 

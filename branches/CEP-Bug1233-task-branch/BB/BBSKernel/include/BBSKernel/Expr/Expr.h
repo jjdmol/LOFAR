@@ -45,8 +45,7 @@ namespace BBS
 //# Forward Declarations.
 class Expr;
 
-// \ingroup BBSKernel
-// \addtogroup Expr
+// \ingroup Expr
 // @{
 
 

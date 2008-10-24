@@ -39,7 +39,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBSKernel
+// \ingroup BBSKernel
 // @{
 
 class Equator
@@ -85,16 +85,6 @@ private:
     class ThreadContext
     {
     public:
-        enum Timer
-        {
-            MODEL_EVAL,
-            PROCESS,
-            BUILD_INDEX,
-            DERIVATIVES,
-            MAKE_NORM,
-            N_Timer
-        };
-        
         ThreadContext();
         ~ThreadContext();
         void resize(uint nCoeff, uint nMaxCells);
@@ -113,12 +103,25 @@ private:
         // values.
         vector<const double*>   pertRe, pertIm;
         // Value of the (approximated) partial derivatives.
+        // @{
         vector<double>          partialRe, partialIm;
+        // @}
 
         // Statistics
-        static string           timerNames[N_Timer];
-        NSTimer                 timers[N_Timer];
         unsigned long long      count;
+
+        enum ThreadTimer
+        {
+            MODEL_EVAL,
+            PROCESS,
+            BUILD_INDEX,
+            DERIVATIVES,
+            MAKE_NORM,
+            N_ThreadTimer
+        };
+        
+        static string           timerNames[N_ThreadTimer];
+        NSTimer                 timers[N_ThreadTimer];
     };
     
     // Nested struct that represents an interval of cells along an axis. Used to

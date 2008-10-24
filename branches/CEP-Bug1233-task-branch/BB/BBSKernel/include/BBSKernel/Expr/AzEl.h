@@ -39,7 +39,6 @@ namespace BBS
 class Request;
 class Matrix;
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 

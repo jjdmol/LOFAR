@@ -1,5 +1,4 @@
-//# JonesMul.h: Multiply each component of a JonesExpr with a single
-//#     Expr.
+//# JonesMul.h: Calculate c * A, where c is an Expr and A is a JonesExpr.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +23,8 @@
 #ifndef EXPR_JONESMUL_H
 #define EXPR_JONESMUL_H
 
-// \file Multiply each component of a JonesExpr with a single Expr.
+// \file
+// Calculate c * A, where c is an Expr and A is a JonesExpr.
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/JonesExpr.h>
@@ -35,17 +35,14 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-
-// Multiply each component of a JonesExpr with a single Expr.
-
+// Calculate c * A, where c is an Expr and A is a JonesExpr.
 class JonesMul: public JonesExprRep
 {
 public:
-    JonesMul(const JonesExpr &left, const Expr &right);
+    JonesMul(const Expr &left, const JonesExpr &right);
     ~JonesMul();
 
     // Get the result of the expression for the given domain.
@@ -56,8 +53,8 @@ private:
     virtual std::string getLabel();
 #endif
 
-    JonesExpr	itsLeft;
-    Expr       itsRight;
+    Expr        itsLeft;
+    JonesExpr   itsRight;
 };
 
 // @}

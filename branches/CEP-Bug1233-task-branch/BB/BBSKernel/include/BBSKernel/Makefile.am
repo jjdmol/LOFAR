@@ -1,8 +1,6 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/DipoleBeam.h \
-#	Expr/JonesCMul2.h \
-#	Expr/JonesMul3.h
+#	Expr/DipoleBeam.h
 
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
@@ -34,11 +32,13 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/GaussianCoherence.h \
 	Expr/GaussianSource.h \
     Expr/HamakerDipole.h \
+	Expr/JonesCMul2.h \
   	Expr/JonesCMul3.h \
 	Expr/JonesExpr.h \
 	Expr/JonesInvert.h \
 	Expr/JonesMul.h \
 	Expr/JonesMul2.h \
+	Expr/JonesMul3.h \
 	Expr/JonesNode.h \
 	Expr/JonesResult.h \
 	Expr/JonesSum.h \

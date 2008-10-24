@@ -55,6 +55,7 @@ class ModelConfig;
 class Instrument;
 class PhaseRef;
 class Request;
+class BeamCoeff;
 
 class Model
 {
@@ -96,6 +97,11 @@ private:
     
     Expr makeExprParm(uint category, const string &name);
     
+    void makeSources(vector<Source::Pointer> &result,
+        const vector<string> &patterns);
+    
+    Source::Pointer makeSource(const SourceInfo &source);
+
     void makeStationUvw();
     
     void makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
@@ -108,16 +114,10 @@ private:
     void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
         const ModelConfig &config, const vector<Source::Pointer> &sources);
 
-//    void makeBeamNodes(const ModelConfig &config,
-//        LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
-//        vector<vector<JonesExpr> > &result) const;
+    void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
+        const ModelConfig &config, const vector<Source::Pointer> &sources);
 
-//    BeamCoeff readBeamCoeffFile(const string &filename) const;
-
-    void makeSources(vector<Source::Pointer> &result,
-        const vector<string> &patterns);
-    
-    Source::Pointer makeSource(const SourceInfo &source);
+    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
     Instrument                      itsInstrument;
     SourceDB                        itsSourceDb;

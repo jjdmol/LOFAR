@@ -38,7 +38,6 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
@@ -47,14 +46,16 @@ class BeamCoeff
 public:
     BeamCoeff()
         : freqAvg(0.0), freqRange(1.0)
-    {}
+    {
+    }
 
     BeamCoeff(double avg, double range,
         const shared_ptr<const boost::multi_array<dcomplex, 4> > &ptr)
         :   freqAvg(avg),
             freqRange(range),
             coeff(ptr)
-    {}
+    {
+    }
 
     double  freqAvg, freqRange;
     shared_ptr<const boost::multi_array<dcomplex, 4> > coeff;

@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef EXPR_PVITERATOR_H
-#define EXPR_PVITERATOR_H
+#ifndef EXPR_PVALUEITERATOR_H
+#define EXPR_PVALUEITERATOR_H
 
 // \file
 // Iterators that iterate over the perturbed values of a (set of) result(s).
@@ -260,7 +260,6 @@ private:
     PValueKey                   itsCurrKey;
     bool                        itsAtEnd;
 };
-
 
 // @}
 

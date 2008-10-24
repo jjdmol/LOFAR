@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup Expr
+// \ingroup Expr
 // @{
 
 class JonesVisData: public JonesExprRep

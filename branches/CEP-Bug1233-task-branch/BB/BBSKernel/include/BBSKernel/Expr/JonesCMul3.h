@@ -1,4 +1,4 @@
-//# JonesCMul3.h: Calculate left*mid*conj(right)
+//# JonesCMul3.h: Calculate A * B * C^H (the conjugate transpose of C).
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define EXPR_JONESCMUL3_H
 
 // \file
-// Calculate left*mid*conj(transpose(right))
+// Calculate A * B * C^H (the conjugate transpose of C).
 
 //# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
@@ -34,33 +34,26 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-
-// Calculate left*mid*conj(transpose(right)).
-
+// Calculate A * B * C^H (the conjugate transpose of C).
 class JonesCMul3: public JonesExprRep
 {
 public:
-  JonesCMul3 (const JonesExpr& left,
-         const JonesExpr& mid,
-         const JonesExpr& right);
+    JonesCMul3(const JonesExpr &left, const JonesExpr &mid,
+        const JonesExpr &right);
+    ~JonesCMul3();
 
-  ~JonesCMul3();
-
-  // Get the result of the expression for the given domain.
-  JonesResult getJResult (const Request&);
+    // Get the result of the expression for the given domain.
+    JonesResult getJResult (const Request&);
 
 private:
 #ifdef EXPR_GRAPH
-  virtual std::string getLabel();
+    virtual std::string getLabel();
 #endif
 
-  JonesExpr itsLeft;
-  JonesExpr itsMid;
-  JonesExpr itsRight;
+    JonesExpr itsLeft, itsMid, itsRight;
 };
 
 // @}

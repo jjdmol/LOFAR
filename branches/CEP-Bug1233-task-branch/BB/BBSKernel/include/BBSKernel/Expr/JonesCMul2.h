@@ -1,4 +1,4 @@
-//# JonesCMul2.h: Calculate left*conj(right)
+//# JonesCMul2.h: Calculate A * B^H (the conjugate transpose of B).
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,13 +19,13 @@
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //# $Id$
+
 #ifndef EXPR_JONESCMUL2_H
 #define EXPR_JONESCMUL2_H
 
 // \file
-// Calculate left*conj(transpose(right))
+// Calculate A * B^H (the conjugate transpose of B).
 
-//# Includes
 #include <BBSKernel/Expr/JonesExpr.h>
 
 namespace LOFAR
@@ -33,26 +33,21 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
 // \ingroup Expr
 // @{
 
-
-// Calculate left*conj(transpose(right)).
-
+// Calculate A * B^H (the conjugate transpose of B).
 class JonesCMul2: public JonesExprRep
 {
 public:
-  JonesCMul2 (const JonesExpr& left, const JonesExpr& right);
+    JonesCMul2(const JonesExpr &left, const JonesExpr &right);
+    ~JonesCMul2();
 
-  ~JonesCMul2();
-
-  // Get the result of the expression for the given domain.
-  JonesResult getJResult (const Request&);
+    // Get the result of the expression for the given domain.
+    JonesResult getJResult(const Request &request);
 
 private:
-  JonesExpr itsLeft;
-  JonesExpr itsRight;
+    JonesExpr itsLeft, itsRight;
 };
 
 // @}
