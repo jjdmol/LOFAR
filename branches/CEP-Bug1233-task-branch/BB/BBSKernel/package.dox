@@ -8,5 +8,8 @@
 // @{
 
 // \defgroup Expr Expr
+// This module contains classes that can be used to build expressions trees that
+// model the sky and the behaviour of the instrument.
 
 // @}
+
