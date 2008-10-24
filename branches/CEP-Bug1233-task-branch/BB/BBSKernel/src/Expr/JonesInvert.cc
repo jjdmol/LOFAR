@@ -28,6 +28,8 @@
 #include <BBSKernel/Expr/MatrixTmp.h>
 #include <BBSKernel/Expr/PValueIterator.h>
 
+#include <Common/lofar_iomanip.h>
+
 // Inverse of a 2x2 matrix:
 //
 //        (a b)                      ( d -b)
@@ -51,65 +53,66 @@ namespace BBS
 JonesInvert::JonesInvert (const JonesExpr& expr)
     : itsExpr(expr)
 {
-  addChild(itsExpr);
+    addChild(itsExpr);
 }
 
 JonesInvert::~JonesInvert()
-{}
+{
+}
 
 JonesResult JonesInvert::getJResult (const Request& request)
 {
-  // Create the result object.
-  JonesResult result;
-  result.init();
-  
-  Result& result11 = result.result11();
-  Result& result12 = result.result12();
-  Result& result21 = result.result21();
-  Result& result22 = result.result22();
+    // Create the result object.
+    JonesResult result;
+    result.init();
 
-  // Calculate the children.
-  JonesResult buf;
-  const JonesResult& res = itsExpr.getResultSynced (request, buf);
-  const Result& r11 = res.getResult11();
-  const Result& r12 = res.getResult12();
-  const Result& r21 = res.getResult21();
-  const Result& r22 = res.getResult22();
-  const Matrix& mr11 = r11.getValue();
-  const Matrix& mr12 = r12.getValue();
-  const Matrix& mr21 = r21.getValue();
-  const Matrix& mr22 = r22.getValue();
-  Matrix t(1. / (mr11 * mr22 - mr12 * mr21));
-  result11.setValue (mr22 * t);
-  result12.setValue (mr12 * -t);
-  result21.setValue (mr21 * -t);
-  result22.setValue (mr11 * t);
+    Result& result11 = result.result11();
+    Result& result12 = result.result12();
+    Result& result21 = result.result21();
+    Result& result22 = result.result22();
 
-  // Compute the perturbed values.
-  enum PValues
-  { PV_J11, PV_J12, PV_J21, PV_J22, N_PValues };
-
-  const Result *pvSet[N_PValues] = {&r11, &r12, &r21, &r22};
-  PValueSetIterator<N_PValues> pvIter(pvSet);
-
-  while(!pvIter.atEnd())
-  {
-    const Matrix &mr11 = pvIter.value(PV_J11);
-    const Matrix &mr12 = pvIter.value(PV_J12);
-    const Matrix &mr21 = pvIter.value(PV_J21);
-    const Matrix &mr22 = pvIter.value(PV_J22);
-
+    // Calculate the children.
+    JonesResult buf;
+    const JonesResult& res = itsExpr.getResultSynced (request, buf);
+    const Result& r11 = res.getResult11();
+    const Result& r12 = res.getResult12();
+    const Result& r21 = res.getResult21();
+    const Result& r22 = res.getResult22();
+    const Matrix& mr11 = r11.getValue();
+    const Matrix& mr12 = r12.getValue();
+    const Matrix& mr21 = r21.getValue();
+    const Matrix& mr22 = r22.getValue();
     Matrix t(1. / (mr11 * mr22 - mr12 * mr21));
+    result11.setValue (mr22 * t);
+    result12.setValue (mr12 * -t);
+    result21.setValue (mr21 * -t);
+    result22.setValue (mr11 * t);
 
-    result11.setPerturbedValue(pvIter.key(), mr22 * t);
-    result12.setPerturbedValue(pvIter.key(), mr12 * -t);
-    result21.setPerturbedValue(pvIter.key(), mr21 * -t);
-    result22.setPerturbedValue(pvIter.key(), mr11 * t);
-    
-    pvIter.next();
-  }
+    // Compute the perturbed values.
+    enum PValues
+    { PV_J11, PV_J12, PV_J21, PV_J22, N_PValues };
 
-  return result;
+    const Result *pvSet[N_PValues] = {&r11, &r12, &r21, &r22};
+    PValueSetIterator<N_PValues> pvIter(pvSet);
+
+    while(!pvIter.atEnd())
+    {
+        const Matrix &mr11 = pvIter.value(PV_J11);
+        const Matrix &mr12 = pvIter.value(PV_J12);
+        const Matrix &mr21 = pvIter.value(PV_J21);
+        const Matrix &mr22 = pvIter.value(PV_J22);
+
+        Matrix t(1. / (mr11 * mr22 - mr12 * mr21));
+
+        result11.setPerturbedValue(pvIter.key(), mr22 * t);
+        result12.setPerturbedValue(pvIter.key(), mr12 * -t);
+        result21.setPerturbedValue(pvIter.key(), mr21 * -t);
+        result22.setPerturbedValue(pvIter.key(), mr11 * t);
+
+        pvIter.next();
+    }
+
+    return result;
 }
 
 } // namespace BBS

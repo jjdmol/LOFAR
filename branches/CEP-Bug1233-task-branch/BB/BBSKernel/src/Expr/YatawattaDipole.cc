@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/DipoleBeamExternal.h>
+#include <BBSKernel/Expr/YatawattaDipole.h>
 #include <BBSKernel/Expr/PValueIterator.h>
 
 #include <Common/lofar_complex.h>

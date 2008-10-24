@@ -1,4 +1,4 @@
-//# HamakerDipole.h: Implementation of J.P. Hamaker's memo
+//# HamakerDipole.cc: Implementation of J.P. Hamaker's memo
 //# "Mathematical-physical analysis of the generic dual-dipole antenna"
 //#
 //# Copyright (C) 2008
@@ -23,8 +23,10 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/NumericalDipoleBeam.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PValueIterator.h>
+
+#include <Common/lofar_iomanip.h>
 
 #include <casa/BasicSL/Constants.h>
 

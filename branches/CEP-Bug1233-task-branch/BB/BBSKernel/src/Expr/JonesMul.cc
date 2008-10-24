@@ -1,5 +1,4 @@
-//# JonesMul.h: Multiply each component of a JonesExpr with a single
-//#     Expr.
+//# JonesMul.h: Calculate c * A, where c is an Expr and A is a JonesExpr.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,19 +33,17 @@ namespace LOFAR
 namespace BBS
 {
 
-JonesMul::JonesMul(const JonesExpr &left, const Expr &right)
+JonesMul::JonesMul(const Expr &left, const JonesExpr &right)
     :    itsLeft(left),
          itsRight(right)
 {
-    addChild(left);
-    addChild(right);
+    addChild(itsLeft);
+    addChild(itsRight);
 }
-
 
 JonesMul::~JonesMul()
 {
 }
-
 
 JonesResult JonesMul::getJResult(const Request &request)
 {
@@ -54,78 +51,77 @@ JonesResult JonesMul::getJResult(const Request &request)
     JonesResult result;
     result.init();
     
-    Result& result11 = result.result11();
-    Result& result12 = result.result12();
-    Result& result21 = result.result21();
-    Result& result22 = result.result22();
+    Result &result11 = result.result11();
+    Result &result12 = result.result12();
+    Result &result21 = result.result21();
+    Result &result22 = result.result22();
     
     // Evaluate the children.
-    JonesResult leftResult;
-    Result rightResult;
-
-    const JonesResult &left = itsLeft.getResultSynced(request, leftResult);
-    const Result &right = itsRight.getResultSynced(request, rightResult);
+    Result tmpLeft;
+    JonesResult tmpRight;
+    const Result &left = itsLeft.getResultSynced(request, tmpLeft);
+    const JonesResult &right = itsRight.getResultSynced(request, tmpRight);
         
-    const Result &l11 = left.getResult11();
-    const Result &l12 = left.getResult12();
-    const Result &l21 = left.getResult21();
-    const Result &l22 = left.getResult22();
+    const Result &r11 = right.getResult11();
+    const Result &r12 = right.getResult12();
+    const Result &r21 = right.getResult21();
+    const Result &r22 = right.getResult22();
     
-    const Matrix &ml11 = l11.getValue();
-    const Matrix &ml12 = l12.getValue();
-    const Matrix &ml21 = l21.getValue();
-    const Matrix &ml22 = l22.getValue();
+    const Matrix &mr11 = r11.getValue();
+    const Matrix &mr12 = r12.getValue();
+    const Matrix &mr21 = r21.getValue();
+    const Matrix &mr22 = r22.getValue();
 
-    const Matrix &mr = right.getValue();
+    const Matrix &ml = left.getValue();
 
     // Compute result.
-    result11.setValue(ml11 * mr);
-    result12.setValue(ml12 * mr);
-    result21.setValue(ml21 * mr);
-    result22.setValue(ml22 * mr);
+    result11.setValue(ml * mr11);
+    result12.setValue(ml * mr12);
+    result21.setValue(ml * mr21);
+    result22.setValue(ml * mr22);
 
     // Compute perturbed values.
     enum PValues
-    { PV_LEFT11, PV_LEFT12, PV_LEFT21, PV_LEFT22, PV_RIGHT, N_PValues };
+    { PV_LEFT, PV_RIGHT11, PV_RIGHT12, PV_RIGHT21, PV_RIGHT22, N_PValues };
 
-    const Result *pvSet[N_PValues] = {&l11, &l12, &l21, &l22, &right};    
+    const Result *pvSet[N_PValues] = {&left, &r11, &r12, &r21, &r22};
     PValueSetIterator<N_PValues> pvIter(pvSet);
 
     while(!pvIter.atEnd())
     {
-        const Matrix &ml11 = pvIter.value(PV_LEFT11);
-        const Matrix &ml12 = pvIter.value(PV_LEFT12);
-        const Matrix &ml21 = pvIter.value(PV_LEFT21);
-        const Matrix &ml22 = pvIter.value(PV_LEFT22);
-        const Matrix &mr = pvIter.value(PV_RIGHT);
+        const Matrix &ml = pvIter.value(PV_LEFT);
+        const Matrix &mr11 = pvIter.value(PV_RIGHT11);
+        const Matrix &mr12 = pvIter.value(PV_RIGHT12);
+        const Matrix &mr21 = pvIter.value(PV_RIGHT21);
+        const Matrix &mr22 = pvIter.value(PV_RIGHT22);
             
-        if(pvIter.hasPValue(PV_RIGHT))
+        if(pvIter.hasPValue(PV_LEFT))
         {
-            result11.setPerturbedValue(pvIter.key(), ml11 * mr);
-            result12.setPerturbedValue(pvIter.key(), ml12 * mr);
-            result21.setPerturbedValue(pvIter.key(), ml21 * mr);
-            result22.setPerturbedValue(pvIter.key(), ml22 * mr);
+            result11.setPerturbedValue(pvIter.key(), ml * mr11);
+            result12.setPerturbedValue(pvIter.key(), ml * mr12);
+            result21.setPerturbedValue(pvIter.key(), ml * mr21);
+            result22.setPerturbedValue(pvIter.key(), ml * mr22);
         }
         else
         {
-            if(pvIter.hasPValue(PV_LEFT11))
+            if(pvIter.hasPValue(PV_RIGHT11))
             {
-                result11.setPerturbedValue(pvIter.key(), ml11 * mr);
+                result11.setPerturbedValue(pvIter.key(), ml * mr11);
             }
             
-            if(pvIter.hasPValue(PV_LEFT12))
+            if(pvIter.hasPValue(PV_RIGHT12))
             {
-                result12.setPerturbedValue(pvIter.key(), ml12 * mr);
+                result12.setPerturbedValue(pvIter.key(), ml * mr12);
             }
 
-            if(pvIter.hasPValue(PV_LEFT21))
+            if(pvIter.hasPValue(PV_RIGHT21))
             {
-                result21.setPerturbedValue(pvIter.key(), ml21 * mr);
+                result21.setPerturbedValue(pvIter.key(), ml * mr21);
             }
 
-            if(pvIter.hasPValue(PV_LEFT22))
+            if(pvIter.hasPValue(PV_RIGHT22))
             {
-                result21.setPerturbedValue(pvIter.key(), ml22 * mr);
+                result21.setPerturbedValue(pvIter.key(), ml * mr22);
             }
         }
         
@@ -135,15 +131,12 @@ JonesResult JonesMul::getJResult(const Request &request)
     return result;
 }
 
-
 #ifdef EXPR_GRAPH
 virtual std::string JonesMul::getLabel()
 {
-    return std::string("JonesMul\\n"
-        "Multiply JonesExpr with a single Expr");
+    return std::string("JonesMul\\nMultiply an Expr with a JonesExpr");
 }
 #endif
-
 
 } // namespace BBS
 } // namespace LOFAR

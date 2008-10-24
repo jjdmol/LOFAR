@@ -1,8 +1,6 @@
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/DipoleBeam.cc \
-#	Expr/JonesCMul2.cc \
-#	Expr/JonesMul3.cc
+#	Expr/DipoleBeam.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
 	BlobIOExtensions.cc \
@@ -30,11 +28,13 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/GaussianSource.cc \
 	Expr/LMN.cc \
 	Expr/HamakerDipole.cc \
+	Expr/JonesCMul2.cc \
 	Expr/JonesCMul3.cc \
 	Expr/JonesExpr.cc \
 	Expr/JonesInvert.cc \
 	Expr/JonesMul.cc \
 	Expr/JonesMul2.cc \
+	Expr/JonesMul3.cc \
 	Expr/JonesNode.cc \
 	Expr/JonesSum.cc \
 	Expr/JonesVisData.cc \

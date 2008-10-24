@@ -1,4 +1,4 @@
-//# JonesMul2.cc: Calculate left*right
+//# JonesMul2.cc: Calculate A * B.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

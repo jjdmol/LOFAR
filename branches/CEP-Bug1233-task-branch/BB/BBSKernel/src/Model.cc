@@ -33,6 +33,9 @@
 #include <BBSKernel/Expr/GaussianCoherence.h>
 
 #include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/AzEl.h>
+#include <BBSKernel/Expr/YatawattaDipole.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PhaseRef.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/JonesMul.h>
@@ -177,6 +180,13 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
         makeDirectionalGainNodes(gainDirectional, config, sources);
     }
     
+    // Create a dipole beam node per station0-source combination.
+    boost::multi_array<JonesExpr, 2> dipoleBeam;
+    if(mask[BEAM])
+    {
+        makeDipoleBeamNodes(dipoleBeam, config, sources);
+    }
+
     // Create a single JonesExpr per station-source combination that is the
     // accumulation of all image-plane effects.
     // TODO: Incorporate station phase shift by splitting it per station-source.
@@ -194,6 +204,13 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                     imgJones[i][j] = gainDirectional[i][j];
                 }
                 
+                if(mask[BEAM])
+                {
+                    imgJones[i][j] = imgJones[i][j].isNull() ? dipoleBeam[i][j]
+                        : JonesExpr(new JonesMul2(imgJones[i][j],
+                            dipoleBeam[i][j]));
+                }
+
                 // TODO: Add other image-plane effects here.
             }
         }
@@ -231,7 +248,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
 
             // Phase shift the source coherence.
             ASSERT(!coherence.isNull());
-            coherence = new JonesMul(coherence, shift);
+            coherence = new JonesMul(shift, coherence);
             
             // Apply direction dependent (image-plane) effects.
             if(imgEffects)
@@ -341,15 +358,29 @@ bool Model::makeInvExpressions(const ModelConfig &config,
             makeDirectionalGainNodes(gainDirectional, config, sources);
         }
         
+        // Create a dipole beam node per station0-source combination.
+        boost::multi_array<JonesExpr, 2> dipoleBeam;
+        if(mask[BEAM])
+        {
+            makeDipoleBeamNodes(dipoleBeam, config, sources);
+        }
+
         // Accumulate the image-plane effects.
         for(size_t i = 0; i < nStations; ++i)
         {
             if(mask[DIRECTIONAL_GAIN])
             {
                 jJones[i] = jJones[i].isNull() ? gainDirectional[i][0]
-                    : JonesExpr(new JonesMul2(gainDirectional[i][0], jJones[i]));
+                    : JonesExpr(new JonesMul2(jJones[i],
+                        gainDirectional[i][0]));
             }
             
+            if(mask[BEAM])
+            {
+                jJones[i] = jJones[i].isNull() ? dipoleBeam[i][0]
+                    : JonesExpr(new JonesMul2(jJones[i], dipoleBeam[i][0]));
+            }
+
             // TODO: Add other image-plane effects here.
         }
     }
@@ -590,6 +621,100 @@ Expr Model::makeExprParm(uint category, const string &name)
     return status.first->second;
 }
 
+void Model::makeSources(vector<Source::Pointer> &result,
+    const vector<string> &patterns)
+{
+    result.clear();
+
+    if(patterns.empty())
+    {
+        // Create source nodes for all sources.
+        vector<SourceInfo> sources(itsSourceDb.getSources("*"));
+        for(size_t i = 0; i < sources.size(); ++i)
+        {
+            Source::Pointer source(makeSource(sources[i]));
+            if(source)
+            {
+                result.push_back(source);
+            }
+        }
+    }
+    else
+    {
+        // Create a list of all unique sources that match the given patterns.
+        map<string, SourceInfo> sources;
+
+        for(size_t i = 0; i < patterns.size(); ++i)
+        {
+            vector<SourceInfo> tmp(itsSourceDb.getSources(patterns[i]));
+            for(size_t j = 0; j < tmp.size(); ++j)
+            {
+                sources.insert(make_pair(tmp[j].getName(), tmp[j]));
+            }
+        }
+    
+        // Create a Source node for each unique source.
+        map<string, SourceInfo>::const_iterator srcIt = sources.begin();
+        map<string, SourceInfo>::const_iterator srcItEnd = sources.end();
+        while(srcIt != srcItEnd)
+        {
+            Source::Pointer source = makeSource(srcIt->second);
+            if(source)
+            {
+                result.push_back(source);
+            }
+
+            ++srcIt;
+        }
+    }
+}
+
+Source::Pointer Model::makeSource(const SourceInfo &source)
+{
+//    LOG_DEBUG_STR("Creating source: " << source.getName() << " ["
+//        << source.getType() << "]);
+    
+    switch(source.getType())
+    {
+    case SourceInfo::POINT:
+        {
+            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
+            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
+            Expr i(makeExprParm(SKY, "I:" + source.getName()));
+            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
+            Expr u(makeExprParm(SKY, "U:" + source.getName()));
+            Expr v(makeExprParm(SKY, "V:" + source.getName()));
+
+            return PointSource::Pointer(new PointSource(source.getName(),
+                ra, dec, i, q, u, v));
+        }
+        break;
+        
+    case SourceInfo::GAUSSIAN:
+        {
+            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
+            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
+            Expr i(makeExprParm(SKY, "I:" + source.getName()));
+            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
+            Expr u(makeExprParm(SKY, "U:" + source.getName()));
+            Expr v(makeExprParm(SKY, "V:" + source.getName()));
+            Expr maj(makeExprParm(SKY, "Major:" + source.getName()));
+            Expr min(makeExprParm(SKY, "Minor:" + source.getName()));
+            Expr phi(makeExprParm(SKY, "Phi:" + source.getName()));
+
+            return GaussianSource::Pointer(new GaussianSource(source.getName(),
+                ra, dec, i, q, u, v, maj, min, phi));
+        }
+        break;
+        
+    default:
+        LOG_WARN_STR("Unable to construct source !!: " << source.getName());
+        break;
+    }
+    
+    return Source::Pointer();
+}
+
 void Model::makeStationUvw()
 {
     const vector<Station> &stations = itsInstrument.stations;
@@ -744,23 +869,24 @@ void Model::makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
     }
 }
 
-/*
-void Model::makeBeamNodes(const ModelConfig &config,
-    LOFAR::ParmDB::ParmDB *db, ParmGroup &group,
-    vector<vector<JonesExpr> > &result) const
+void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
+    const ModelConfig &config, const vector<Source::Pointer> &sources)
 {
     ASSERT(config.beamConfig);
     ASSERT(config.beamConfig->type() == "HamakerDipole"
         || config.beamConfig->type() == "YatawattaDipole");
     
+    const size_t nSources = sources.size();
+    const size_t nStations = itsInstrument.stations.size();
+
     // Create AzEl node for each source-station combination.
-    vector<Expr> azel(itsSourceNodes.size());
-    for(size_t i = 0; i < itsSourceNodes.size(); ++i)
+    vector<Expr> azel(nSources);
+    for(size_t i = 0; i < nSources; ++i)
     {
         // TODO: This code uses station 0 as reference position on earth
         // (see global_model.py in EJones_HBA). Is this accurate enough?
         azel[i] =
-            new AzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
+            new AzEl(itsInstrument.stations[0], sources[i]);
     }
 
     if(config.beamConfig->type() == "HamakerDipole")
@@ -773,18 +899,16 @@ void Model::makeBeamNodes(const ModelConfig &config,
         BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
 
         // Create a beam node for each source-station combination.
-        result.resize(itsStationNodes.size());
-        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        result.resize(boost::extents[nStations][nSources]);
+        for(size_t i = 0; i < nStations; ++i)
         {
             // Get dipole orientation.
-            Expr orientation(ParmFunklet::create("orientation:"
-                + itsStationNodes[i]->getName(), group, db));
+            Expr orientation(makeExprParm(INSTRUMENT, "orientation:"
+                + itsInstrument.stations[i].name));
 
-            result[i].resize(itsSourceNodes.size());
-            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            for(size_t j = 0; j < nSources; ++j)
             {
-                result[i][j] = new NumericalDipoleBeam(coeff, azel[j],
-                    orientation);
+                result[i][j] = new HamakerDipole(coeff, azel[j], orientation);
             }
         }
     }
@@ -801,32 +925,24 @@ void Model::makeBeamNodes(const ModelConfig &config,
 //            : 1.0 / 600.0;
 
         // Create a beam node for each source-station combination.
-        result.resize(itsStationNodes.size());
-        for(size_t i = 0; i < itsStationNodes.size(); ++i)
+        result.resize(boost::extents[nStations][nSources]);
+        for(size_t i = 0; i < nStations; ++i)
         {
             // Get dipole orientation.
-            Expr orientation(ParmFunklet::create("orientation:"
-                + itsStationNodes[i]->getName(), group, db));
+            Expr orientation(makeExprParm(INSTRUMENT, "orientation:"
+                + itsInstrument.stations[i].name));
 
-            result[i].resize(itsSourceNodes.size());
-            for(size_t j = 0; j < itsSourceNodes.size(); ++j)
+            for(size_t j = 0; j < nSources; ++j)
             {
 //                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
 //                    casa::C::pi / 4.001, -casa::C::pi_4);
-                result[i][j] =
-                    new DipoleBeamExternal(beamConfig->moduleTheta,
-                        beamConfig->modulePhi, azel[j], orientation, 1.0);
+                result[i][j] = new YatawattaDipole(beamConfig->moduleTheta,
+                    beamConfig->modulePhi, azel[j], orientation, 1.0);
             }
         }
     }
-    else
-    {
-        ASSERT(false);
-    }
 }
-*/    
 
-/*
 BeamCoeff Model::readBeamCoeffFile(const string &filename) const
 {
     LOG_DEBUG_STR("Reading beam coefficients...");
@@ -915,101 +1031,6 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
     }
 
     return BeamCoeff(freqAvg, freqRange, coeff);
-}
-*/    
-
-void Model::makeSources(vector<Source::Pointer> &result,
-    const vector<string> &patterns)
-{
-    result.clear();
-
-    if(patterns.empty())
-    {
-        // Create source nodes for all sources.
-        vector<SourceInfo> sources(itsSourceDb.getSources("*"));
-        for(size_t i = 0; i < sources.size(); ++i)
-        {
-            Source::Pointer source(makeSource(sources[i]));
-            if(source)
-            {
-                result.push_back(source);
-            }
-        }
-    }
-    else
-    {
-        // Create a list of all unique sources that match the given patterns.
-        map<string, SourceInfo> sources;
-
-        for(size_t i = 0; i < patterns.size(); ++i)
-        {
-            vector<SourceInfo> tmp(itsSourceDb.getSources(patterns[i]));
-            for(size_t j = 0; j < tmp.size(); ++j)
-            {
-                sources.insert(make_pair(tmp[j].getName(), tmp[j]));
-            }
-        }
-    
-        // Create a Source node for each unique source.
-        map<string, SourceInfo>::const_iterator srcIt = sources.begin();
-        map<string, SourceInfo>::const_iterator srcItEnd = sources.end();
-        while(srcIt != srcItEnd)
-        {
-            Source::Pointer source = makeSource(srcIt->second);
-            if(source)
-            {
-                result.push_back(source);
-            }
-
-            ++srcIt;
-        }
-    }
-}
-
-Source::Pointer Model::makeSource(const SourceInfo &source)
-{
-//    LOG_DEBUG_STR("Creating source: " << source.getName() << " ["
-//        << source.getType() << "]);
-    
-    switch(source.getType())
-    {
-    case SourceInfo::POINT:
-        {
-            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
-            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
-            Expr i(makeExprParm(SKY, "I:" + source.getName()));
-            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
-            Expr u(makeExprParm(SKY, "U:" + source.getName()));
-            Expr v(makeExprParm(SKY, "V:" + source.getName()));
-
-            return PointSource::Pointer(new PointSource(source.getName(),
-                ra, dec, i, q, u, v));
-        }
-        break;
-        
-    case SourceInfo::GAUSSIAN:
-        {
-            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
-            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
-            Expr i(makeExprParm(SKY, "I:" + source.getName()));
-            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
-            Expr u(makeExprParm(SKY, "U:" + source.getName()));
-            Expr v(makeExprParm(SKY, "V:" + source.getName()));
-            Expr maj(makeExprParm(SKY, "Major:" + source.getName()));
-            Expr min(makeExprParm(SKY, "Minor:" + source.getName()));
-            Expr phi(makeExprParm(SKY, "Phi:" + source.getName()));
-
-            return GaussianSource::Pointer(new GaussianSource(source.getName(),
-                ra, dec, i, q, u, v, maj, min, phi));
-        }
-        break;
-        
-    default:
-        LOG_WARN_STR("Unable to construct source !!: " << source.getName());
-        break;
-    }
-    
-    return Source::Pointer();
 }
 
 } // namespace BBS

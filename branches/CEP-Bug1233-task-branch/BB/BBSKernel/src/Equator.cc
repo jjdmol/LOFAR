@@ -551,7 +551,7 @@ void Equator::resetTimers()
     {
         itsContexts[i].count = 0;
 
-        for(size_t j = 0; j < ThreadContext::N_Timer; ++j)
+        for(size_t j = 0; j < ThreadContext::N_ThreadTimer; ++j)
         {
             itsContexts[i].timers[j].reset();
         }
@@ -578,7 +578,7 @@ void Equator::printTimers()
         * 1000.0 << " ms");
 
 #if defined(LOFAR_DEBUG) || defined(LOFAR_BBS_VERBOSE)
-    for(size_t i = 0; i < ThreadContext::N_Timer; ++i)
+    for(size_t i = 0; i < ThreadContext::N_ThreadTimer; ++i)
     {
         unsigned long long count = 0;
         double sum = 0.0;
@@ -613,12 +613,12 @@ void Equator::printTimers()
 // - ThreadContext implementation                                           - //
 // -------------------------------------------------------------------------- //
 
-string Equator::ThreadContext::timerNames[Equator::ThreadContext::N_Timer] =
-    {"Model evaluation",
-    "Process",
-    "Build coefficient index",
-    "Compute partial derivatives",
-    "casa::LSQFit::makeNorm()"};
+string Equator::ThreadContext::timerNames[Equator::ThreadContext::N_ThreadTimer]
+    = {"Model evaluation",
+        "Process",
+        "Build coefficient index",
+        "Compute partial derivatives",
+        "casa::LSQFit::makeNorm()"};
 
 Equator::ThreadContext::ThreadContext()
     : count(0)
