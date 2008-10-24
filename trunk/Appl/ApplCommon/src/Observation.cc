@@ -110,8 +110,8 @@ cout << "compacted stationList=" << stationList << endl;
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
 	// allocate beamlet 2 beam mapping and reset to 0
-	beamlet2beams.resize(4*aParSet->getUint32("OLAP.nrSlotsInFrame"), -1);
-	beamlet2subbands.resize(4*aParSet->getUint32("OLAP.nrSlotsInFrame"), -1);
+	beamlet2beams.resize(4*aParSet->getUint32("Observation.nrSlotsInFrame"), -1);
+	beamlet2subbands.resize(4*aParSet->getUint32("Observation.nrSlotsInFrame"), -1);
 	
 	set<uint32> subbands;		
 
@@ -156,8 +156,8 @@ cout << "compacted stationList=" << stationList << endl;
 
         nrRSPboards=0;
         for (uint32 i(0) ; i < 4; i++) {
-          uint32 bIndex = i * aParSet->getUint32("OLAP.nrSlotsInFrame");
-	  uint32 eIndex = bIndex + aParSet->getUint32("OLAP.nrSlotsInFrame");
+          uint32 bIndex = i * aParSet->getUint32("Observation.nrSlotsInFrame");
+	  uint32 eIndex = bIndex + aParSet->getUint32("Observation.nrSlotsInFrame");
           for (; bIndex < eIndex; bIndex++) {
 	    if (beamlet2beams[bIndex] != -1) {
 	      nrRSPboards+=1;
@@ -168,8 +168,8 @@ cout << "compacted stationList=" << stationList << endl;
 	
 	// OLAP: uStation mode(y/n)
 	uStation = true;
-	for (uint32 s(0) ; s < aParSet->getUint32("OLAP.nrSlotsInFrame")-1; s++) {
-           if (beamlet2subbands[s] != beamlet2subbands[s+aParSet->getUint32("OLAP.nrSlotsInFrame")]) {
+	for (uint32 s(0) ; s < aParSet->getUint32("Observation.nrSlotsInFrame")-1; s++) {
+           if (beamlet2subbands[s] != beamlet2subbands[s+aParSet->getUint32("Observation.nrSlotsInFrame")]) {
 	     uStation = false;
 	     break;
 	   }
