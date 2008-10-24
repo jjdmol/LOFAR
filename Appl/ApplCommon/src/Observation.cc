@@ -116,7 +116,7 @@ cout << "compacted stationList=" << stationList << endl;
 	set<uint32> subbands;		
 
 	// loop over al beams
-	for (int32 beam(0) ; beam <= nrBeams; beam++) {
+	for (int32 beam(0) ; beam < nrBeams; beam++) {
 		Beam	newBeam;
 		string	beamPrefix(prefix+formatString("Beam[%d].", beam));
 		// get all fields
