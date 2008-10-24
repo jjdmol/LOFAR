@@ -145,7 +145,7 @@ string	realHostname(const string&	someName)
 
 	// leaves us with ABC999 and XY999 formats
 	// when 3rd character is not a digit the name refers to a CEP machine
-	if (!isdigit(someName[3])) {
+	if (!isdigit(someName[2])) {
 		return (someName);
 	}
 

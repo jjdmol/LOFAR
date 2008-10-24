@@ -15,17 +15,12 @@ BUILT_SOURCES = \
 	TP_Protocol.ph \
 	TP_Protocol.cc 
 
-sysconf_DATA = \
-	TBBDriver.conf \
-	TBBDriver.log_prop \
-	tbbctl.log_prop
+# TBBDriver.conf is generated from MAC/Deployment/data/StaticMetadata
+#sysconf_DATA = TBBDriver.conf 
 
-%.conf: %.conf.in
-	cp $< $@
+#%.conf: %.conf.in
+#	cp $< $@
 	
-%.log_prop: %.log_prop.in
-	cp $< $@
-
 lib_LTLIBRARIES = \
 	libtbbdriver.la \
 	libtp_protocol.la
