@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/RTDB/src
 
-check_PROGRAMS 					= tPropertySet tRTDBPerformance tDPservice testQuery
+check_PROGRAMS 					= tPropertySet tRTDBPerformance tDPservice testQuery tPerformanceReport
 
 TESTS							= tPropertySet tDPservice
 
@@ -19,6 +19,10 @@ tDPservice_DEPENDENCIES			= ../src/libgcfrtdb.la $(LOFAR_DEPEND)
 testQuery_SOURCES 				= $(BUILT_SOURCES) testQuery.cc
 testQuery_LDADD					= ../src/libgcfrtdb.la $(LOFAR_DEPEND)
 testQuery_DEPENDENCIES			= ../src/libgcfrtdb.la $(LOFAR_DEPEND)
+
+tPerformanceReport_SOURCES 		= $(BUILT_SOURCES) tPerformanceReport.cc RTDBPerfResp.cc
+tPerformanceReport_LDADD		= ../src/libgcfrtdb.la $(LOFAR_DEPEND)
+tPerformanceReport_DEPENDENCIES	= ../src/libgcfrtdb.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
