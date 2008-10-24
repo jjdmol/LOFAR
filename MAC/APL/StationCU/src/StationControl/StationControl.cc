@@ -84,11 +84,12 @@ StationControl::StationControl(const string&	cntlrName) :
 	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
 
 	// Readin some parameters from the ParameterSet.
-	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "instanceNr");
+	itsInstanceNr = globalParameterSet()->getUint32("instanceNr", 0);
+	itsUseHWinfo  = globalParameterSet()->getBool("useHardwareStates", true);
 
 	// TODO
 	LOG_INFO("MACProcessScope: LOFAR.PermSW.StationCtrl");
+	LOG_INFO_STR((itsUseHWinfo ? "Using" : "Ignoring") << " the hardware states in PVSS");
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -809,18 +810,24 @@ uint16 StationControl::_addObservation(const string&	name)
 	theObsPS.adoptFile(filename);
 	Observation		theObs(&theObsPS);
 LOG_DEBUG_STR("theOBS=" << theObs);
-	// Create a bitset containing the available receivers for this oberservation.
-	Observation::RCUset_t	realReceivers = Observation(&theObsPS).RCUset & itsRCUmask;
 
-	// Write the corrected set back into the ParameterSetfile.
-	string prefix = theObsPS.locateModule("Observation") + "Observation.";
-	// save original under different name (using 'replace' is 'add' simplifies testing)
-	theObsPS.replace(prefix+"originalReceiverList", theObs.receiverList);
-	// replace orignal
-	theObsPS.replace(prefix+"receiverList", bitset2CompactedArrayString(realReceivers));
-	// modify base parsetfile and my own parsetfile too, to prevent confusion
-	theObsPS.writeFile(observationParset(theObs.obsID));
-	theObsPS.writeFile(filename);
+	// Create a bitset containing the available receivers for this oberservation.
+	Observation::RCUset_t	realReceivers = Observation(&theObsPS).RCUset;
+	// apply the current state of the hardware to the desired selection when user likes that.
+	if (itsUseHWinfo) {
+		realReceivers &= itsRCUmask;
+		// Write the corrected set back into the ParameterSetfile.
+		string prefix = theObsPS.locateModule("Observation") + "Observation.";
+		// save original under different name (using 'replace' is 'add' w. simplified testing)
+		theObsPS.replace(prefix+"originalReceiverList", theObs.receiverList);
+		// replace orignal
+		theObsPS.replace(prefix+"receiverList", bitset2CompactedArrayString(realReceivers));
+		// modify base parsetfile and my own parsetfile too, to prevent confusion
+		theObsPS.writeFile(observationParset(theObs.obsID));
+		theObsPS.writeFile(filename);
+	}
+	LOG_INFO_STR("Available receivers for observation " << theObs.obsID << ":" << 
+				string(realReceivers.to_string<char,char_traits<char>,allocator<char> >()));
 
 	// create an activeObservation object that will manage the child controllers.
 	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);

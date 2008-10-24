@@ -1,9 +1,4 @@
 # new setup
-prefix		= CS010:StationCntl.
-
-CS010:StationCntl.instanceNr	= 0
-
-# TODO: use sampleClock setting of PVSS
-CS010:StationCntl.sampleClock	= 160
-
-
+instanceNr		  = 0
+useHardwareStates = Yes
+sampleClock		  = 160 		# TODO: use sampleClock setting of PVSS

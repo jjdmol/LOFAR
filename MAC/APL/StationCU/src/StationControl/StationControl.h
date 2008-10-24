@@ -120,7 +120,6 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	// ParameterSet variables
-	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	int32					itsClock;
@@ -129,12 +128,13 @@ private:
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
 
 	// Availability information of Antenna's and circuit boards.
+	bool									itsUseHWinfo;
 	bitset<MAX_RCUS / N_POL * 2>			itsLBAmask;		// LBA's are tight to LBL AND LBH!!!
 	bitset<MAX_RCUS / N_POL>				itsHBAmask;
 	bitset<MAX_RCUS>						itsRCUmask;
 	bitset<MAX_RCUS / NR_RCUS_PER_TBBOARD>	itsTBmask;
-	uint32										itsNrLBAs;
-	uint32										itsNrHBAs;
+	uint32									itsNrLBAs;
+	uint32									itsNrHBAs;
 };
 
   };//StationCU
