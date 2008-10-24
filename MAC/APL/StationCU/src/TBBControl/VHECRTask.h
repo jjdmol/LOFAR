@@ -28,9 +28,6 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
 
-//# GCF Includes
-#include <GCF/TM/GCF_Control.h>
-
 //# local includes
 #include "TBBTrigger.h"
 #include "TBBReadCmd.h"
@@ -39,58 +36,66 @@
 
 
 namespace LOFAR {
-	namespace StationCU {
+  namespace StationCU {
+    
+    class VHECRTask
+    {
+    public:
+      VHECRTask();
+      ~VHECRTask();
+      
+      // define responsefunctionType
+      void VHECRTask::readTBBdata(vector<TBBReadCmd>	cmdVector);
+      void addTrigger(const TBBTrigger&	trigger);
+      
+    private:
 
-class TBBControl;
+#define VHECR_TASK_BUFFER_LENGTH (3*96)
 
-using	GCF::TM::GCFTimerPort;
-using	GCF::TM::GCFEvent;
-using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
+      int itsNoCoincidenceChannels;
+      double itsCoincidenceTime;
 
+      // avoid defaultconstruction and copying
+      VHECRTask(const VHECRTask&);
+      VHECRTask& operator=(const VHECRTask&);
+      
+      // remote function to call for saving triggers
+      uint32 itsNrTriggers;	// just for statistics
+      bool   itsInitialized;
+      vector<TBBReadCmd> itsCommandVector;    // used as temporarely buffer
+      
 
-class VHECRTask : public GCFTask
-{
-public:
-	static VHECRTask*	instance();
-	~VHECRTask();
+      // Buffer for trigger messages
 
-	// define responsefunctionType
-	typedef	void (*saveFunctionType) (vector<TBBReadCmd>);
+      // Single element in the buffer
+      struct triggerBuffElem {
+	uint32	next;
+	uint32	prev;	
+	uint32	RcuNr;
+	uint32	SeqNr;
+	uint32	Time;
+	uint32	SampleNr;
+	uint32	Sum;
+	uint32	NrSamples;
+	uint32	PeakValue;
+	double  date;
+	uint32	meanval;
+	uint32	afterval;
+      };
 
-	void	addTrigger(const TBBTrigger&	trigger);
-	void	setSaveFunction(saveFunctionType	saveFunction);
-	void	setSaveTask(TBBControl*	saveTask);
-private:
-	// Wait till maintask has installed my responsefunction
-   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+      // All buffered triggers
+      struct triggerBuffElem trigBuffer[VHECR_TASK_BUFFER_LENGTH];
 
-	// Normal operationmode
-   	GCFEvent::TResult operational  (GCFEvent& e, GCFPortInterface& p);
+      // Index of first and last element in buffer
+      uint32 first, last;
 
-	// Quiting, shutdown connections, send FINISH and quit
-   	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
+      // Insert element into buffer, returns index of inserted element
+      uint32 add2buffer(const TBBTrigger& trigger);
 
-	// avoid defaultconstruction and copying
-	VHECRTask();
-	VHECRTask(const VHECRTask&);
-   	VHECRTask& operator=(const VHECRTask&);
+      int coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow);
 
-	// pointer to timers
-	GCFTimerPort*			itsTimerPort;
-
-	// remote function to call for saving triggers
-	saveFunctionType		itsSaveFunction;
-	TBBControl*					itsSaveTask;
-	// [TEST] datamembers
-	uint32					itsMinResponseTime;		// for simulating varying behaviour
-	uint32					itsMaxResponseTime;
-	uint32					itsNrTriggers;			// just for statistics
-	bool					itsInitialized;
-	vector<TBBReadCmd>		itsCommandVector;		// used as temporarely buffer
-
-};
-
+    };
+    
   };//StationCU
 };//LOFAR
 #endif
