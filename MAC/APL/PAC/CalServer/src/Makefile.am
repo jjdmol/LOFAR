@@ -19,8 +19,7 @@ BUILT_SOURCES = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	AntennaArrays.conf \
-	CalServer.log_prop
+	AntennaArrays.conf
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
@@ -30,11 +29,7 @@ sysconf_DATA = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	AntennaArrays.conf \
-	CalServer.log_prop
-
-%.log_prop: %.log_prop.in
-	cp $< $@
+	AntennaArrays.conf
 
 %.conf: %.conf.in
 	cp $< $@

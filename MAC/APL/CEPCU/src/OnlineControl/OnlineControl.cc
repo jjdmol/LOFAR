@@ -42,7 +42,7 @@
 #include <PLC/PCCmd.h>
 
 #include "OnlineControl.h"
-#include "OnlineControlDefines.h"
+#include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
@@ -160,7 +160,7 @@ void    OnlineControl::_setState(CTState::CTstateNr     newState)
 	// Update PVSS to inform operator.
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -311,12 +311,12 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
-		string	propSetName = formatString(ONC_PROPSET_NAME, obsID);
+//		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
+		string	propSetName(createPropertySetName(PSN_ONLINE_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
-											 ONC_PROPSET_TYPE,
-											 PSAT_WO,
+											 PST_ONLINE_CTRL,
+											 PSAT_RW,
 											 this);
 		}
 		break;
@@ -334,8 +334,8 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 	case F_TIMER: {	// must be timer that PropSet is online.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("initial"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 	  
 		// Start ParentControl task
 		LOG_DEBUG ("Enabling ParentControl task");
@@ -378,8 +378,8 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("active"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("active"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 	}
 	break;
 
@@ -505,8 +505,8 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("finished"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
 		itsTimerPort->setTimer(1.0);
 		break;

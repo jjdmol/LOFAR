@@ -33,19 +33,6 @@ DOCHDRS						= $(pkginclude_HEADERS) $(BUILT_SOURCES)
 
 EXTRA_DIST 					= 
 
-#in case of make install these files will be copied to the bindir beside the test apps
-
-sysconf_DATA		= ControllerMenu.log_prop TestController.log_prop CodeLoggingTest.log_prop
-
-%.log_prop: %.log_prop.in
-	cp $< $@
-
-%.conf: %.conf.in
-	cp $< $@
-
-clean-local:
-	rm -f *.ph
-
 versiontestctlr_SOURCES      = versiontestctlr.cc Package__Version.cc
 versiontestctlr_LDADD        = 
 versiontestctlr_DEPENDENCIES = $(LOFAR_DEPEND)

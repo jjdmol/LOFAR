@@ -30,7 +30,6 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir=$(bindir)
 configfiles_DATA 	= 
 
-sysconf_DATA		= ServiceBroker.conf \
-					  ServiceBroker.log_prop 
+sysconf_DATA		= ServiceBroker.conf 
 
 include $(top_srcdir)/Makefile.common

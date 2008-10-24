@@ -26,13 +26,6 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA 	= 
-
-sysconf_DATA		= OnlineControl.log_prop
-
-%.log_prop: %.log_prop.in
-	cp $< $@
-
-clean-local:
-	rm -f *.ph
+sysconf_DATA		= 
 
 include $(top_srcdir)/Makefile.common

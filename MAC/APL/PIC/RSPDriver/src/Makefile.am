@@ -17,11 +17,10 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	RemoteStation.conf \
-	RSPDriver.conf \
-	rspctl.conf \
-	RSPDriver.log_prop \
-	rspctl.log_prop
+	rspctl.conf 
+
+#	RemoteStation.conf
+#	RSPDriver.conf
 
 clean-local:
 	rm -f *.ph
@@ -30,25 +29,15 @@ EXTRA_DIST = \
 	$(BUILT_SOURCES)
 
 sysconf_DATA = \
-	RemoteStation.conf \
-	RSPDriver.conf \
-	rspctl.conf \
-	RSPDriver.log_prop \
-	rspctl.log_prop
+	rspctl.conf 
+
+#	RemoteStation.conf
+#	RSPDriver.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
 %.conf: %.conf.in
-	cp $< $@
-
-%.log_prop: %.log_prop.in
-	cp $< $@
-
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
 	cp $< $@
 
 lib_LTLIBRARIES = libepa.la
