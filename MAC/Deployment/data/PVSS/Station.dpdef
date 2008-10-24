@@ -1,3 +1,6 @@
 # Station
 #
+power48On		bool
+power220On		bool
+
 __childDp		string
