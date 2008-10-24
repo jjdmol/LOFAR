@@ -1,8 +1,22 @@
-doorOpen		bool
-fan				bool
-inletTemp		float
-frontTemp		float
-backTemp		float
-setpointTemp	float
-ambientTemp		float
-controlMode		string
+frontDoorOpen		bool
+frontFanInner		bool
+frontFanOuter		bool
+frontVanes			bool
+frontAirflow		bool
+
+backDoorOpen		bool
+backtFanInner		bool
+backtFanOuter		bool
+backVanes			bool
+backAirflow			bool
+
+tempAlarm			int
+humidityAlarm		int
+
+temperature			float
+humidity			float
+
+controlMode			string
+temperatureSensor	string
+humidityControl		string
+DoorControl			string
