@@ -23,10 +23,10 @@
 #ifndef LOFAR_BBSKERNEL_TYPES_H
 #define LOFAR_BBSKERNEL_TYPES_H
 
-#include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/LofarTypes.h>
 
 #include <utility>
 
@@ -43,9 +43,16 @@ using std::pair;
 
     enum AxisName
     {
-        FREQ = 0,
+        FREQ,
         TIME,
         N_AxisName
+    };
+    
+    enum ParmCategory
+    {
+        INSTRUMENT,
+        SKY,
+        N_ParmCategory
     };
 
 } // namespace BBS

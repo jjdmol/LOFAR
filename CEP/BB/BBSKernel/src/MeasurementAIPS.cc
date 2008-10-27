@@ -476,7 +476,7 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
         itsFreqAxisReversed = true;
     }
 
-    Axis::Pointer freqAxis(new RegularAxis(lower,
+    Axis::ShPtr freqAxis(new RegularAxis(lower,
         (upper - lower) / nChannels, nChannels));
 
     // Extract time grid based on TIME column (mid-point of integration
@@ -504,7 +504,7 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
-    Axis::Pointer timeAxis(new IrregularAxis(timeCopy, intervalCopy));
+    Axis::ShPtr timeAxis(new OrderedAxis(timeCopy, intervalCopy));
     itsDimensions.setGrid(Grid(freqAxis, timeAxis));
 }
 
@@ -750,7 +750,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
         upper = rootGrid[FREQ]->upper(slicer.end()[1]);
     }    
 
-    Axis::Pointer freqAxis(new RegularAxis(lower,
+    Axis::ShPtr freqAxis(new RegularAxis(lower,
         (upper - lower) / nChannels, nChannels));
 
     // Initialize time axis.
@@ -773,7 +773,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
-    Axis::Pointer timeAxis(new IrregularAxis(timeCopy, intervalCopy));
+    Axis::ShPtr timeAxis(new OrderedAxis(timeCopy, intervalCopy));
     dims.setGrid(Grid(freqAxis, timeAxis));
     
     // Find all unique baselines.

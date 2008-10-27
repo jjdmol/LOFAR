@@ -29,12 +29,22 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_set.h>
+#include <iterator>
 
+#include <BBSKernel/ParmManager.h>
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisData.h>
-#include <BBSKernel/MNS/MeqJonesResult.h>
-#include <BBSKernel/MNS/MeqSourceList.h>
+#include <BBSKernel/Expr/ExprParm.h>
+#include <BBSKernel/Expr/PhaseRef.h>
+#include <BBSKernel/Expr/JonesResult.h>
+#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/StatUVW.h>
 
 #include <ParmDB/ParmDB.h>
+#include <ParmDB/SourceDB.h>
+
+#include <boost/multi_array.hpp>
 
 
 namespace LOFAR
@@ -43,78 +53,78 @@ namespace BBS
 {
 class ModelConfig;
 class Instrument;
-class MeqParmGroup;
-class MeqPhaseRef;
-class MeqRequest;
-class MeqStation;
-class MeqStatUVW;
-class MeqLMN;
-class MeqAzEl;
-class MeqJonesExpr;
+class PhaseRef;
+class Request;
 class BeamCoeff;
 
 class Model
 {
 public:
-    typedef shared_ptr<Model> Pointer;
+    typedef shared_ptr<Model>       Pointer;
+    typedef shared_ptr<const Model> ConstPointer;
 
     enum ModelComponent
     {
         BANDPASS = 0,
         GAIN,
         DIRECTIONAL_GAIN,
-        IONOSPHERE,
         BEAM,
         N_ModelComponent
     };
 
-    enum EquationType
-    {
-        UNSET = 0,
-        SIMULATE,
-        CORRECT,
-        N_EquationType
-    };
+    Model(const Instrument &instrument, const SourceDB &sourceDb,
+        const casa::MDirection &phaseRef);
 
-    Model(const Instrument &instrument, MeqParmGroup &parmGroup,
-        ParmDB::ParmDB *skyDBase, MeqPhaseRef *phaseRef);
+    void clearExpressions();
 
-    void setStationUVW(const Instrument &instrument, VisData::Pointer buffer);
+    bool makeFwdExpressions(const ModelConfig &config,
+        const vector<baseline_t> &baselines);
 
-    void makeEquations(EquationType type, const ModelConfig &config,
-        const vector<baseline_t> &baselines, MeqParmGroup &parmGroup,
-        ParmDB::ParmDB *instrumentDBase, MeqPhaseRef *phaseRef,
-        VisData::Pointer buffer);
+    bool makeInvExpressions(const ModelConfig &config,
+        const VisData::Pointer &chunk, const vector<baseline_t> &baselines);
 
-    void clearEquations();
-    
-    EquationType getEquationType()
-    { return itsEquationType; }
+    void setPerturbedParms(const ParmGroup &solvables);
+    void clearPerturbedParms();
 
-    void precalculate(const MeqRequest& request);
+    ParmGroup getParms() const;
+    ParmGroup getPerturbedParms() const;
 
-    MeqJonesResult evaluate(baseline_t baseline, const MeqRequest& request);
+    void precalculate(const Request &request);
+    JonesResult evaluate(const baseline_t &baseline, const Request &request);
 
 private:
-    void makeStationNodes(const Instrument &instrument,
-        const MeqPhaseRef &phaseRef);
+    vector<bool> parseComponents(const vector<string> &components) const;
+    
+    Expr makeExprParm(uint category, const string &name);
+    
+    void makeSources(vector<Source::Pointer> &result,
+        const vector<string> &patterns);
+    
+    Source::Pointer makeSource(const SourceInfo &source);
 
-    void makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef);
-    void makeAzElNodes(vector<MeqExpr> & itsAzElNodes);
+    void makeStationUvw();
+    
+    void makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
+        const vector<Source::Pointer> &sources) const;
 
-    void makeBeamNodes(const ModelConfig &config,
-		       LOFAR::ParmDB::ParmDB *db, MeqParmGroup &group, const vector<MeqExpr> & itsAzElNodes,
-        vector<vector<MeqJonesExpr> > &result) const;
+    void makeBandpassNodes(vector<JonesExpr> &result);
+    
+    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
+
+    void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
+        const ModelConfig &config, const vector<Source::Pointer> &sources);
+
+    void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
+        const ModelConfig &config, const vector<Source::Pointer> &sources);
 
     BeamCoeff readBeamCoeffFile(const string &filename) const;
 
-    scoped_ptr<MeqSourceList>           itsSourceList;
-    vector<shared_ptr<MeqStation> >     itsStationNodes;
-    vector<shared_ptr<MeqStatUVW> >     itsUVWNodes;
-    vector<MeqSource*>                  itsSourceNodes;
-    vector<MeqLMN*>                     itsLMNNodes;
-    map<baseline_t, MeqJonesExpr>       itsEquations;
-    EquationType                        itsEquationType;
+    Instrument                      itsInstrument;
+    SourceDB                        itsSourceDb;
+    PhaseRef::ConstPointer          itsPhaseRef;
+    vector<StatUVW::ConstPointer>   itsStationUvw;
+    map<baseline_t, JonesExpr>      itsExpressions;
+    map<uint, Expr>                 itsParms;
 };
 
 } //# namespace BBS
