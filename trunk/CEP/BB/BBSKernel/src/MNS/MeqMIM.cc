@@ -208,8 +208,8 @@ void MeqMIM::evaluate(const MeqRequest& request, const MeqMatrix &in_x, const Me
     double rot_x = -1*std::sin(lon)*x+std::cos(lon)*y;
     double rot_y = -1*std::sin(lat)*std::cos(lon)*x-std::sin(lat)*std::sin(lon)*y+std::cos(lat)*z;
 
-
-    return (parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)/std::cos(alpha);
+    
+    return (75e8/freq)*(parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)/std::cos(alpha);
   }
 #ifdef EXPR_GRAPH
   std::string MeqMIM::getLabel()
