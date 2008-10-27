@@ -630,8 +630,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         restore();
         
         this.modifyStationsCombobox.removeAllItems();
+        // for now we set a number of stations hardcoded, in the future we need to make this automatic based on the real avaolable
+        // stations
+        this.modifyStationsCombobox.addItem("CS001");
+        this.modifyStationsCombobox.addItem("CS010");
+        this.modifyStationsCombobox.addItem("CS016");
         for (int i=0; i < stationsList.getModel().getSize();i++) {
-          this.modifyStationsCombobox.addItem(stationsList.getModel().getElementAt(i));
           if (! itsUsedBeamformStations.contains(stationsList.getModel().getElementAt(i)) &&
                   itsAvailableBeamformStations.indexOf(stationsList.getModel().getElementAt(i).toString())< 0) {
               itsAvailableBeamformStations.add(stationsList.getModel().getElementAt(i).toString());
