@@ -73,6 +73,5 @@ AC_OUTPUT(
 	Makefile
 	src/Makefile
 	test/Makefile
-	src/calserver
 	CalServer.spec
 )
