@@ -396,5 +396,48 @@ std::string ExprAPToComplex::getLabel()
 }
 #endif
 
+ExprPhaseToComplex::ExprPhaseToComplex(const Expr &phase)
+    : itsPhase(phase)
+{
+    addChild(itsPhase);
+}
+
+ExprPhaseToComplex::~ExprPhaseToComplex()
+{
+}
+
+Result ExprPhaseToComplex::getResult(const Request &request)
+{
+    Result tmpPhase;
+    const Result &phase = itsPhase.getResultSynced(request, tmpPhase);
+
+    // Allocate result.
+    Result result;
+    result.init();    
+
+    // Compute main value.
+    result.setValue(tocomplex(cos(phase.getValue()), sin(phase.getValue())));
+
+    // Compute perturbed values.
+    const Result *pvSet[1] = {&phase};
+    PValueSetIterator<1> pvIter(pvSet);
+
+    while(!pvIter.atEnd())
+    {
+        const Matrix &pvPhase = pvIter.value(0);
+        result.setPerturbedValue(pvIter.key(), tocomplex(cos(pvPhase),
+            sin(pvPhase)));
+        pvIter.next();
+    }
+
+    return result;
+}
+
+#ifdef EXPR_GRAPH
+std::string ExprPhaseToComplex::getLabel()
+{
+    return std::string("ExprPhaseToComplex\\nphase");
+}
+
 } // namespace BBS
 } // namespace LOFAR
