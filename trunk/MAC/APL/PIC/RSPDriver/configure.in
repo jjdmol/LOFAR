@@ -105,6 +105,5 @@ AC_OUTPUT(
 	Makefile
 	RSPDriver.spec
 	src/Makefile
-	src/rspdriver
 	test/Makefile
 )

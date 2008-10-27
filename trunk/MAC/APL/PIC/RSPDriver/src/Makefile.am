@@ -48,7 +48,7 @@ libepa_la_SOURCES = Package__Version.cc  \
 	RawEvent.h \
 	RawEvent.cc
 
-sbin_SCRIPTS = \
+sbin_PROGRAMS = \
 	geni2c
 
 bin_PROGRAMS = versionrspdriver \
