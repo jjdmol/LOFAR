@@ -310,8 +310,6 @@ private:
   Expr itsImag;
 };
 
-
-
 class ExprAPToComplex: public ExprRep
 {
 public:
@@ -328,6 +326,22 @@ private:
 
   Expr itsAmpl;
   Expr itsPhase;
+};
+
+class ExprPhaseToComplex: public ExprRep
+{
+public:
+    ExprPhaseToComplex(const Expr &phase);
+    virtual ~ExprPhaseToComplex();
+
+    virtual Result getResult(const Request &request);
+
+private:
+#ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+#endif
+
+    Expr itsPhase;
 };
 
 // @}

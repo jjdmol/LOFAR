@@ -26,6 +26,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
