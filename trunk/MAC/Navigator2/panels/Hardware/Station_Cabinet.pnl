@@ -10,7 +10,6 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
   baseDP                 = g_currentDatapoint;
   string strModuleName   = myModuleName();  
   string addPanelName;
-  DebugN(\"baseDP: \"+baseDP);
   if(dpExists(baseDP+\"_Cabinet2\")) {
     addPanelName= \"objects/Hardware/Station-3Cabinets.pnl\";
   } else {
@@ -31,10 +30,10 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
   }  
   
   // set the hardware selectable items for this screen
-//  prepareHardwareList();
+  prepareHardwareList();
 
   // trigger that the panel values are calculated and ready
-//  navPanel_setEvent(\"Station_Cabinet.pnl\",\"Update\");
+  navPanel_setEvent(\"Station_Cabinet.pnl\",\"Update\");
       
   
 }
