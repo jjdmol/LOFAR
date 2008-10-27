@@ -50,6 +50,7 @@ const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRI
 #ifndef [+ protocol_name +]_H
 #define [+ protocol_name +]_H
 
+#include <lofar_config.h>
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
 #include <MACIO/ProtocolDefs.h>
