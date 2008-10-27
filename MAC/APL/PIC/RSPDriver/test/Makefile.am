@@ -7,11 +7,11 @@ AM_CPPFLAGS = \
 # 	RSPTest \
 # 	EPAStub
 
-bin_PROGRAMS = \
+sbin_PROGRAMS = \
 	EPAStub \
 	RSPTest
 
-bin_SCRIPTS = \
+sbin_SCRIPTS = \
 	beamtest \
 	wgtest
 

@@ -42,8 +42,6 @@ BeamServer_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 beamctl_SOURCES 		= beamctl.h beamctl.cc
 
-bin_SCRIPTS 			= beamserver
-
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
