@@ -65,8 +65,9 @@ libcaldevel_la_SOURCES = Package__Version.cc  \
 
 bin_PROGRAMS = versioncalserver \
 	CalServer \
-	juggle_acc \
 	calinfo
+
+sbin_PROGRAMS = juggle_acc
 
 CalServer_SOURCES = \
 	CalServer.h \
@@ -88,9 +89,6 @@ calinfo_SOURCES = \
 CalServer_DEPENDENCIES = \
 	libcaldevel.la \
 	$(LOFAR_DEPEND)
-
-bin_SCRIPTS = \
-	calserver
 
 clean-local:
 	rm -f *.ph

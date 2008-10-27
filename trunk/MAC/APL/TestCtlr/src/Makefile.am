@@ -1,5 +1,5 @@
 
-bin_PROGRAMS 				= versiontestctlr ControllerMenu TestController CodeLoggingTest
+sbin_PROGRAMS 				= versiontestctlr ControllerMenu TestController CodeLoggingTest
 
 ControllerMenu_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \

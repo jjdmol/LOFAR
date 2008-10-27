@@ -1,10 +1,7 @@
-#<<<<<<< Makefile.am
-#=======
 check_PROGRAMS        =
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        =
-#ENDCHECKTOOLPROGS
 
 # scripts used to run tests
 #TESTSCRIPTS           =
@@ -21,8 +18,6 @@ XFAIL_TESTS           =
 #testprg_SOURCES		= testprg.cc
 #testprg_LDADD			= ../src/libtbbdriver.la
 #testprg_DEPENDENCIES		= ../src/libtbbdriver.la $(LOFAR_DEPEND)
-
-#>>>>>>> 1.2
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
@@ -68,7 +63,7 @@ libtbbstub_la_SOURCES = \
 	StubRawEvent.h \
 	StubRawEvent.cc 
 
-bin_PROGRAMS = \
+sbin_PROGRAMS = \
 	TPStub \
 	TBBTest
 

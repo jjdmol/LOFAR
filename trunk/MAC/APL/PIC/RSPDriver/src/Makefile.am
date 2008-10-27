@@ -48,13 +48,12 @@ libepa_la_SOURCES = Package__Version.cc  \
 	RawEvent.h \
 	RawEvent.cc
 
-bin_SCRIPTS = \
-	rspdriver
+sbin_SCRIPTS = \
+	geni2c
 
 bin_PROGRAMS = versionrspdriver \
 	RSPDriver \
-	rspctl \
-	geni2c
+	rspctl
 
 RSPDriver_SOURCES = $(RSPDriverFiles)
 

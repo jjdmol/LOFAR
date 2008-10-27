@@ -1,5 +1,5 @@
 
-bin_SCRIPTS = \
+sbin_SCRIPTS = \
 	rsuctl\
 	rsuctl3.pl
 
