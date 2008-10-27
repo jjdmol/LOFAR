@@ -1,22 +1,25 @@
 frontDoorOpen		bool
 frontFanInner		bool
 frontFanOuter		bool
-frontVanes			bool
 frontAirflow		bool
 
 backDoorOpen		bool
 backtFanInner		bool
 backtFanOuter		bool
-backVanes			bool
 backAirflow			bool
 
 tempAlarm			int
 humidityAlarm		int
 
 temperature			float
+tempMin				float
+tempMax				float
+tempMaxMax			float
 humidity			float
+humidityMax			float
+humidityMaxMax		float
 
 controlMode			string
 temperatureSensor	string
 humidityControl		string
-DoorControl			string
+doorControl			string
