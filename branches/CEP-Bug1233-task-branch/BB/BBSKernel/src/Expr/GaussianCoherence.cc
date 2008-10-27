@@ -189,10 +189,11 @@ Matrix GaussianCoherence::computeCoherence(const Request &request,
     const Matrix &major, const Matrix &minor, const Matrix &phi)
 {
     // Compute dot product of a rotated, scaled uv-vector with itself (1D in
-    // time) and pre-multiply with 2.0 * PI / C * C.
+    // time) and pre-multiply with 2.0 * PI^2 / C^2.
     Matrix cosPhi(cos(phi));
     Matrix sinPhi(sin(phi));
-    Matrix uvTransformed = casa::C::_2pi / (casa::C::c * casa::C::c)
+    Matrix uvTransformed = (2.0 * casa::C::pi * casa::C::pi)
+        / (casa::C::c * casa::C::c)
         * (sqr(major * (uBaseline * cosPhi - vBaseline * sinPhi))
         + sqr(minor * (uBaseline * sinPhi + vBaseline * cosPhi)));
 
