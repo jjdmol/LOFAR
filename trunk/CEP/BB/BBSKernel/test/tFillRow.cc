@@ -1,4 +1,4 @@
-//# tFillRow.cc: Test MeqMatrixComplexArr::fillRow
+//# tFillRow.cc: Test MatrixComplexArr::fillRow
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/MNS/MeqMatrix.h>
+#include <BBSKernel/Expr/Matrix.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
 
@@ -33,7 +33,7 @@ using namespace std;
 void doTest (int nx, int ny)
 {
   // Make a complex array with an odd nr of elements.
-  MeqMatrix arr;
+  Matrix arr;
   arr.setDCMat (nx, ny);
   dcomplex v0 = makedcomplex(0.5,0.3);
   dcomplex fact = makedcomplex(0.9,0.95);

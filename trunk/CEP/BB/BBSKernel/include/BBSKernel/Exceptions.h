@@ -28,23 +28,22 @@
 // \file
 // Definition of the BBSKernel specific exception classes
 
-//# Includes
 #include <Common/Exception.h>
 
 namespace LOFAR
 {
-  namespace BBS
-  {
-    // \addtogroup BBSKernel
-    // @{
+namespace BBS
+{
 
-    // This exception is thrown when an error occurs in the BBS kernel part.
-    EXCEPTION_CLASS(BBSKernelException, LOFAR::Exception);
+// \ingroup BBSKernel
+// @{
 
-    // @}
+// This exception is thrown when an error occurs in the BBS kernel part.
+EXCEPTION_CLASS(BBSKernelException, LOFAR::Exception);
 
-  } // namespace BBS
-  
+// @}
+
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

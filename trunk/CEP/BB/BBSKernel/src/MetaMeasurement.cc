@@ -71,7 +71,7 @@ MetaMeasurement::Part &MetaMeasurement::getPart(size_t part)
 }
 
 void MetaMeasurement::addPart(const string &host, const string &path,
-    Axis::Pointer axis)
+    Axis::ShPtr axis)
 {
     itsParts.push_back(MetaMeasurement::Part(host, path, axis));
     itsIsSorted = false;        
@@ -95,7 +95,7 @@ BlobIStream &operator>>(BlobIStream &in, MetaMeasurement::Part &obj)
         >> obj.itsPath;
         
     obj.itsFreqAxis =
-        Axis::Pointer(dynamic_cast<Axis*>(BlobStreamable::deserialize(in)));
+        Axis::ShPtr(dynamic_cast<Axis*>(BlobStreamable::deserialize(in)));
 
     return in;
 }
@@ -127,7 +127,7 @@ BlobIStream &operator>>(BlobIStream &in, MetaMeasurement &obj)
         >> obj.itsParts;
 
     obj.itsTimeAxis =
-        Axis::Pointer(dynamic_cast<Axis*>(BlobStreamable::deserialize(in)));
+        Axis::ShPtr(dynamic_cast<Axis*>(BlobStreamable::deserialize(in)));
     
     in.getEnd();
     return in;
