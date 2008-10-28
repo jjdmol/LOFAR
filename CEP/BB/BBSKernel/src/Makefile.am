@@ -26,7 +26,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/ExternalFunction.cc \
 	Expr/GaussianCoherence.cc \
 	Expr/GaussianSource.cc \
-	Expr/LMN.cc \
 	Expr/HamakerDipole.cc \
 	Expr/JonesCMul2.cc \
 	Expr/JonesCMul3.cc \
@@ -38,6 +37,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/JonesNode.cc \
 	Expr/JonesSum.cc \
 	Expr/JonesVisData.cc \
+	Expr/LMN.cc \
 	Expr/Matrix.cc \
 	Expr/MatrixComplexArr.cc \
 	Expr/MatrixComplexSca.cc \
@@ -45,8 +45,10 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/MatrixRealSca.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixTmp.cc \
+	Expr/MIM.cc \
 	Expr/PhaseRef.cc \
     Expr/PhaseShift.cc \
+    Expr/PiercePoint.cc \
 	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
 	Expr/Request.cc \

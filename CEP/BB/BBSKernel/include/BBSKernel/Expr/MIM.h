@@ -1,4 +1,4 @@
-//# AzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# MIM.h: Ionospheric disturbance of a (source,station) combination.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,10 @@
 //#
 //# $Id$
 
-#ifndef EXPR_AZEL_H
-#define EXPR_AZEL_H
+#ifndef EXPR_MIM_H
+#define EXPR_MIM_H
 
-#include <BBSKernel/Instrument.h>
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ResultVec.h>
-#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/JonesNode.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -42,22 +39,31 @@ class Matrix;
 // \ingroup Expr
 // @{
 
-class AzEl: public ExprRep
+class MIM: public JonesExprRep
 {
 public:
-    AzEl(const Station &station, const Source::ConstPointer &source);
-    ResultVec getResultVec(const Request &request);
-    
+    static const uint NPARMS = 5;
+
+    MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp);
+    virtual ~MIM();
+
+    // Calculate the result of its members.
+    virtual JonesResult getJResult (const Request&);
+
 private:
-    void evaluate(const Request &request, const Matrix &in_ra,
-        const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
+    void evaluate(const Request &request, const Matrix &in_x,
+        const Matrix &in_y, const Matrix &in_z, const Matrix &in_alpha,
+        const vector<const Matrix*> &MIMParms, const Matrix &in_refx,
+        const Matrix &in_refy, const Matrix &in_refz, Matrix &out_11,
+        Matrix &out_22);
+
+    double calculate_mim_function(const vector<double> &parms, double x,
+        double y, double z, double alpha, double freq, double ref_x,
+        double ref_y, double ref_z);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
-
-    Station                 itsStation;
-    Source::ConstPointer    itsSource;
 };
 
 // @}

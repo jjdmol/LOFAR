@@ -51,8 +51,10 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/MatrixRealSca.h \
 	Expr/MatrixRep.h \
 	Expr/MatrixTmp.h \
+	Expr/MIM.h \
 	Expr/PhaseRef.h \
 	Expr/PhaseShift.h \
+	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
 	Expr/PointSource.h \
 	Expr/PValueIterator.h \

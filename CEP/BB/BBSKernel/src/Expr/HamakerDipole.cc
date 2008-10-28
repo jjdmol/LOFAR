@@ -69,11 +69,10 @@ JonesResult HamakerDipole::getJResult(const Request &request)
     Result &resYX = result.result21();
     Result &resYY = result.result22();
 
-    // Evaluate main value.
+    // Compute main value.
     evaluate(request, az, el, orientation, resXX.getValueRW(),
         resXY.getValueRW(), resYX.getValueRW(), resYY.getValueRW());
 
-    // Evaluate perturbed values.  
     // Compute the perturbed values.  
     enum PValues
     {

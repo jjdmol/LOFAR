@@ -1,4 +1,4 @@
-//# AzEl.h: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# PiercePoint.h: Pierce point for a direction (az,el) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,12 @@
 //#
 //# $Id$
 
-#ifndef EXPR_AZEL_H
-#define EXPR_AZEL_H
+#ifndef EXPR_PIERCEPOINT_H
+#define EXPR_PIERCEPOINT_H
 
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ResultVec.h>
-#include <BBSKernel/Expr/Source.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -36,28 +35,28 @@ namespace LOFAR
 {
 namespace BBS
 {
-class Request;
-class Matrix;
-
+  
 // \ingroup Expr
 // @{
 
-class AzEl: public ExprRep
+const double iono_height=400000.; //height (m) 
+
+class PiercePoint: public ExprRep
 {
 public:
-    AzEl(const Station &station, const Source::ConstPointer &source);
+    PiercePoint(const Station &station, const Expr &direction);
     ResultVec getResultVec(const Request &request);
     
 private:
-    void evaluate(const Request &request, const Matrix &in_ra,
-        const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
+    void evaluate(const Request &request, const Matrix &in_az,
+        const Matrix &in_el, Matrix &out_x, Matrix &out_y, Matrix &out_z,
+        Matrix &out_alpha);
 
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
 
     Station                 itsStation;
-    Source::ConstPointer    itsSource;
 };
 
 // @}

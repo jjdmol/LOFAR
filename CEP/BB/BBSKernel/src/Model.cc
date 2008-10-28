@@ -34,6 +34,8 @@
 
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/AzEl.h>
+#include <BBSKernel/Expr/PiercePoint.h>
+#include <BBSKernel/Expr/MIM.h>
 #include <BBSKernel/Expr/YatawattaDipole.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PhaseRef.h>
@@ -167,12 +169,19 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     }
     
     // Direction dependent (image-plane) effects.
-    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM];
+    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
     
     // Create a station shift node per station-source combination.
     boost::multi_array<Expr, 2> stationShift;
     makeStationShiftNodes(stationShift, sources);
 
+    // Create an AzEl node per station-source combination.
+    boost::multi_array<Expr, 2> azel;
+    if(mask[BEAM] || mask[IONOSPHERE])
+    {
+        makeAzElNodes(azel, sources);
+    }
+    
     // Create a directional gain node per station-source combination.
     boost::multi_array<JonesExpr, 2> gainDirectional;
     if(mask[DIRECTIONAL_GAIN])
@@ -184,7 +193,14 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     boost::multi_array<JonesExpr, 2> dipoleBeam;
     if(mask[BEAM])
     {
-        makeDipoleBeamNodes(dipoleBeam, config, sources);
+        makeDipoleBeamNodes(dipoleBeam, config, azel);
+    }
+    
+    // Create a MIM node per station-source combination.
+    boost::multi_array<JonesExpr, 2> ionosphere;
+    if(mask[IONOSPHERE])
+    {
+        makeIonosphereNodes(ionosphere, azel);
     }
 
     // Create a single JonesExpr per station-source combination that is the
@@ -211,6 +227,13 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                             dipoleBeam[i][j]));
                 }
 
+                if(mask[IONOSPHERE])
+                {
+                    imgJones[i][j] = imgJones[i][j].isNull() ? ionosphere[i][j]
+                        : JonesExpr(new JonesMul2(imgJones[i][j],
+                            ionosphere[i][j]));
+                }
+                
                 // TODO: Add other image-plane effects here.
             }
         }
@@ -336,7 +359,7 @@ bool Model::makeInvExpressions(const ModelConfig &config,
     }
     
     // Direction dependent (image-plane) effects.
-    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM];
+    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
 
     if(imgEffects)
     {
@@ -351,6 +374,13 @@ bool Model::makeInvExpressions(const ModelConfig &config,
             return false;
         }
 
+        // Create an AzEl node per station-source combination.
+        boost::multi_array<Expr, 2> azel;
+        if(mask[BEAM] || mask[IONOSPHERE])
+        {
+            makeAzElNodes(azel, sources);
+        }
+
         // Create a directional gain node per station-source combination.
         boost::multi_array<JonesExpr, 2> gainDirectional;
         if(mask[DIRECTIONAL_GAIN])
@@ -362,7 +392,14 @@ bool Model::makeInvExpressions(const ModelConfig &config,
         boost::multi_array<JonesExpr, 2> dipoleBeam;
         if(mask[BEAM])
         {
-            makeDipoleBeamNodes(dipoleBeam, config, sources);
+            makeDipoleBeamNodes(dipoleBeam, config, azel);
+        }
+
+        // Create a MIM node per station-source combination.
+        boost::multi_array<JonesExpr, 2> ionosphere;
+        if(mask[IONOSPHERE])
+        {
+            makeIonosphereNodes(ionosphere, azel);
         }
 
         // Accumulate the image-plane effects.
@@ -379,6 +416,12 @@ bool Model::makeInvExpressions(const ModelConfig &config,
             {
                 jJones[i] = jJones[i].isNull() ? dipoleBeam[i][0]
                     : JonesExpr(new JonesMul2(jJones[i], dipoleBeam[i][0]));
+            }
+
+            if(mask[IONOSPHERE])
+            {
+                jJones[i] = jJones[i].isNull() ? ionosphere[i][0]
+                    : JonesExpr(new JonesMul2(jJones[i], ionosphere[i][0]));
             }
 
             // TODO: Add other image-plane effects here.
@@ -601,6 +644,10 @@ vector<bool> Model::parseComponents(const vector<string> &components) const
         {
             mask[BEAM] = true;
         }
+        else if(*it == "IONOSPHERE")
+        {
+            mask[IONOSPHERE] = true;
+        }
         else
         {
             LOG_WARN_STR("Ignored unsupported model component \"" << *it
@@ -724,6 +771,23 @@ void Model::makeStationUvw()
     {
         itsStationUvw[i] = StatUVW::ConstPointer(new StatUVW(stations[i],
             itsInstrument.position, itsPhaseRef));
+    }
+}
+
+void Model::makeAzElNodes(boost::multi_array<Expr, 2> &result,
+    const vector<Source::Pointer> &sources) const
+{
+    const size_t nSources = sources.size();
+    const size_t nStations = itsInstrument.stations.size();
+
+    // Create an AzEl node for each source-station combination.
+    result.resize(boost::extents[nStations][nSources]);
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            result[i][j] = new AzEl(itsInstrument.stations[i], sources[j]);
+        }
     }
 }
 
@@ -870,24 +934,18 @@ void Model::makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
 }
 
 void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
-    const ModelConfig &config, const vector<Source::Pointer> &sources)
+    const ModelConfig &config, const boost::multi_array<Expr, 2> &azel)
 {
     ASSERT(config.beamConfig);
     ASSERT(config.beamConfig->type() == "HamakerDipole"
         || config.beamConfig->type() == "YatawattaDipole");
+    ASSERT(azel.shape()[0] == itsInstrument.stations.size());
     
-    const size_t nSources = sources.size();
-    const size_t nStations = itsInstrument.stations.size();
+    const size_t nStations = azel.shape()[0];
+    const size_t nSources = azel.shape()[1];
 
-    // Create AzEl node for each source-station combination.
-    vector<Expr> azel(nSources);
-    for(size_t i = 0; i < nSources; ++i)
-    {
-        // TODO: This code uses station 0 as reference position on earth
-        // (see global_model.py in EJones_HBA). Is this accurate enough?
-        azel[i] =
-            new AzEl(itsInstrument.stations[0], sources[i]);
-    }
+    // TODO: This code uses station 0 as reference position on earth
+    // (see global_model.py in EJones_HBA). Is this accurate enough?
 
     if(config.beamConfig->type() == "HamakerDipole")
     {
@@ -908,7 +966,8 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
 
             for(size_t j = 0; j < nSources; ++j)
             {
-                result[i][j] = new HamakerDipole(coeff, azel[j], orientation);
+                result[i][j] = new HamakerDipole(coeff, azel[0][j],
+                    orientation);
             }
         }
     }
@@ -937,8 +996,38 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
 //                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
 //                    casa::C::pi / 4.001, -casa::C::pi_4);
                 result[i][j] = new YatawattaDipole(beamConfig->moduleTheta,
-                    beamConfig->modulePhi, azel[j], orientation, 1.0);
+                    beamConfig->modulePhi, azel[0][j], orientation, 1.0);
             }
+        }
+    }
+}
+
+void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
+    const boost::multi_array<Expr, 2> &azel)
+{
+    ASSERT(azel.shape()[0] == itsInstrument.stations.size());
+    
+    const size_t nStations = azel.shape()[0];
+    const size_t nSources = azel.shape()[1];
+
+    // Create reference direction.
+    Expr reference(new PiercePoint(itsInstrument.stations[0], azel[0][0]));
+
+    // Get parameters.
+    vector<Expr> MIMParms(MIM::NPARMS);
+    for(size_t i = 0; i < MIMParms.size(); ++i)
+    {
+        MIMParms[i] = makeExprParm(INSTRUMENT, "MIM:" + i);
+    }
+
+    // Create a MIM node per (station, source) combination.
+    result.resize(boost::extents[nStations][nSources]);
+    for(size_t i = 0; i < nStations; ++i)
+    {
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            Expr point(new PiercePoint(itsInstrument.stations[i], azel[i][j]));
+            result[i][j] = new MIM(point, MIMParms, reference);
         }
     }
 }
