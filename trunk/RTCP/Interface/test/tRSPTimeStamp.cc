@@ -28,19 +28,22 @@
 
 #define SAMPLERATE 195312.5
 // start the test at INT32_MAX * SAMPLERATE
-#define TESTSTART (0x7fffffff * SAMPLERATE)
+#define TESTSTART static_cast<int64>(0x7fffffff * SAMPLERATE)
 // we don't want the test to take too long
-#define TESTEND   (0x7ffff000 * SAMPLERATE) 
+#define TESTEND   static_cast<int64>(0x7fffff00 * SAMPLERATE) 
 
 using namespace LOFAR;
 using LOFAR::RTCP::TimeStamp;
 
-int main(int argc, char* argv[]) {
-  //TimeStamp::setMaxBlockId(SAMPLERATE);
+int main()
+{
+  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * SAMPLERATE));
+
   for (int64 timecounter = TESTSTART; timecounter >= TESTEND; timecounter--) {
     TimeStamp one(timecounter);
     TimeStamp other(one.getSeqId(), one.getBlockId());
     ASSERTSTR(one == other, one << " == " << other << " counter was " << timecounter);
   }
+
   return 0;
 }
