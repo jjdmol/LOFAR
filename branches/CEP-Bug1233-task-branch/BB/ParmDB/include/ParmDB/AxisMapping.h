@@ -128,7 +128,7 @@ namespace BBS {
     // Define the key consisting of both id-s.
     struct AxisKey {
       AxisKey (uint fromId, uint toId)
-	: itsFrom(fromId), itsTo(toId) {}
+        : itsFrom(fromId), itsTo(toId) {}
       uint itsFrom;
       uint itsTo;
 
@@ -138,7 +138,7 @@ namespace BBS {
         { return itsFrom!=that.itsFrom  ||  itsTo!=that.itsTo; }
       bool operator< (const AxisKey that) const
         { return itsFrom<that.itsFrom  ||
-	    itsFrom==that.itsFrom && itsTo < that.itsTo; }
+            itsFrom==that.itsFrom && itsTo < that.itsTo; }
     };
 
   public:
@@ -155,7 +155,7 @@ namespace BBS {
     const AxisMapping& get (const Axis& from, const Axis& to)
     {
       map<AxisKey,AxisMapping>::const_iterator iter =
-	itsCache.find(AxisKey(from.getId(), to.getId()));
+        itsCache.find(AxisKey(from.getId(), to.getId()));
       return (iter == itsCache.end()  ?  makeMapping(from,to) : iter->second);
     }
 
@@ -173,27 +173,27 @@ namespace BBS {
   public:
     // Find the location in grid 'dest', given the location in grid 'src'.
     static Location findLocation (AxisMappingCache& cache,
-				  const Location& location,
-				  const Grid& src,
-				  const Grid& dest);
+                                  const Location& location,
+                                  const Grid& src,
+                                  const Grid& dest);
 
     // Find the location in grid 'dest', given the cellId in grid 'src'.
     static Location findLocation (AxisMappingCache& cache,
-				  uint cellId,
-				  const Grid& src,
-				  const Grid& dest);
+                                  uint cellId,
+                                  const Grid& src,
+                                  const Grid& dest);
 
     // Find the cellId in grid 'dest', given the location in grid 'src'.
     static uint findCellId (AxisMappingCache& cache,
-			    const Location& location,
-			    const Grid& src,
-			    const Grid& dest);
+                            const Location& location,
+                            const Grid& src,
+                            const Grid& dest);
 
     // Find the cellId in grid 'dest', given the cellId in grid 'src'.
     static uint findcellId (AxisMappingCache& cache,
-			    uint cellId,
-			    const Grid& src,
-			    const Grid& dest);
+                            uint cellId,
+                            const Grid& src,
+                            const Grid& dest);
   };
 
   // @}

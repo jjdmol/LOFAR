@@ -46,7 +46,7 @@ void check (const Grid& grid)
   ASSERT (grid.getCell(32) == Box(Point(4,80),Point(6,90)));
   ASSERT (grid.getBoundingBox() == Box(Point(0,20),Point(10,100)));
   ASSERT (grid.getBoundingBox(Location(1,2), Location(4,3)) ==
-	  Box(Point(2,40),Point(10,60)));
+          Box(Point(2,40),Point(10,60)));
   ASSERT (grid.locate (Point(3,45)) == Location(1,2));
   ASSERT (grid.locate (Point(2,40), true) == Location(1,2));
   ASSERT (grid.locate (Point(2,40), false) == Location(0,1));

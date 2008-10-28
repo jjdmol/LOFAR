@@ -74,22 +74,22 @@ namespace BBS {
     // Find the location in the ParmValueSet grid given the location in
     // the solve grid.
     uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
-					   where, itsSolveGrid,
-					   pvset.getGrid());
+                                           where, itsSolveGrid,
+                                           pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
     if (pvset.getType() != ParmValue::Scalar) {
-	return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
+        return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
     }
     // An array of scalar values; get the right one.
     cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
-				      where, itsSolveGrid,
-				      pv.getGrid());
+                                      where, itsSolveGrid,
+                                      pv.getGrid());
     return vector<double> (1, pv.getValues().data()[cellId]);
   }
 
   vector<double> Parm::makeCoeff (const Array<double>& values,
-				  const Array<Bool>& mask,
-				  bool useMask)
+                                  const Array<Bool>& mask,
+                                  bool useMask)
   {
     ASSERT (values.contiguousStorage());
     if (!useMask  ||  mask.size() == 0) {
@@ -102,52 +102,52 @@ namespace BBS {
     const bool* maskp  = mask.data();
     for (uint i=0; i<values.size(); ++i) {
       if (maskp[i]) {
-	solvCoeff.push_back (valp[i]);
+        solvCoeff.push_back (valp[i]);
       }
     }
     return solvCoeff;
   }
 
   void Parm::setCoeff (const Location& where,
-		       const double* newValues, uint nvalues,
-		       bool useMask)
+                       const double* newValues, uint nvalues,
+                       bool useMask)
   {
     ASSERT (! itsSolveGrid.isDefault());
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     pvset.setDirty();
     const Array<bool>& mask = pvset.getSolvableMask();
     uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
-					   where, itsSolveGrid,
-					   pvset.getGrid());
+                                           where, itsSolveGrid,
+                                           pvset.getGrid());
     bool cell0changed = (cellId==0);
     ParmValue& pv = pvset.getParmValue(cellId);
     Array<double>& values (pv.getValues());
     ASSERT (values.contiguousStorage());
     if (pvset.getType() != ParmValue::Scalar) {
       if (!useMask  ||  mask.size() == 0) {
-	// Coefficients without a mask; copy all.
-	ASSERT (nvalues == values.size());
-	std::copy (newValues, newValues+nvalues, values.cbegin());
+        // Coefficients without a mask; copy all.
+        ASSERT (nvalues == values.size());
+        std::copy (newValues, newValues+nvalues, values.cbegin());
       } else {
-	// Only copy values where mask is true.
-	ASSERT (values.shape().isEqual(mask.shape()) &&
-		mask.contiguousStorage());
-	double* valp = values.data();
-	const bool* maskp  = mask.data();
-	for (uint i=0; i<values.size(); ++i) {
-	  if (maskp[i]) {
-	    valp[i] = newValues[i];
-	    nvalues--;
-	  }
-	}
-	ASSERT (nvalues == 0);  // make sure everything is copied
+        // Only copy values where mask is true.
+        ASSERT (values.shape().isEqual(mask.shape()) &&
+                mask.contiguousStorage());
+        double* valp = values.data();
+        const bool* maskp  = mask.data();
+        for (uint i=0; i<values.size(); ++i) {
+          if (maskp[i]) {
+            valp[i] = newValues[i];
+            nvalues--;
+          }
+        }
+        ASSERT (nvalues == 0);  // make sure everything is copied
       }
     } else {
       // A scalar array; copy to the correct cell.
       ASSERT (nvalues == 1);
       cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
-					where, itsSolveGrid,
-					pv.getGrid());
+                                        where, itsSolveGrid,
+                                        pv.getGrid());
       values.data()[cellId] = newValues[0];
       cell0changed = (cellId==0);
     }
@@ -171,29 +171,29 @@ namespace BBS {
     const ParmValue& pv = pvset.getFirstParmValue();
     if (pvset.getType() != ParmValue::Scalar) {
       itsPerturbations = makeCoeff (pv.getValues(), pvset.getSolvableMask(),
-				    true);
+                                    true);
     } else {
       itsPerturbations.resize (1);
       itsPerturbations[0] = pv.getValues().data()[0];
     }
     double perturbation = pvset.getPerturbation();
     for (vector<double>::iterator iter=itsPerturbations.begin();
-	 iter!=itsPerturbations.end(); ++iter) {
+         iter!=itsPerturbations.end(); ++iter) {
       if (pvset.getPertRel()  &&  std::abs(*iter) > 1e-10) {
-	*iter *= perturbation;
+        *iter *= perturbation;
       } else {
-	*iter = perturbation;
+        *iter = perturbation;
       }
     }
   }
 
   void Parm::getResult (vector<Array<double> >& result,
-			const Grid& predictGrid, bool perturb)
+                        const Grid& predictGrid, bool perturb)
   {
     if (!perturb  ||  itsPerturbations.empty()) {
       // No perturbed values need to be calculated.
       if (result.empty()) {
-	result.resize (1);
+        result.resize (1);
       }
       getResult (result[0], predictGrid);
     } else {
@@ -201,16 +201,16 @@ namespace BBS {
       result.resize (itsPerturbations.size() + 1);
       ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
       if (pvset.getType() != ParmValue::Scalar) {
-	// It is a funklet, so evaluate it.
-	getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
-			itsCache->getAxisMappingCache());
+        // It is a funklet, so evaluate it.
+        getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
+                        itsCache->getAxisMappingCache());
       } else {
-	// We have scalar values, thus only one perturbed value.
-	// First get result and add perturbed value to it.
-	DBGASSERT (itsPerturbations.size() == 1);
-	getResult (result[0], predictGrid);
-	result[1].resize (result[0].shape());
-	result[1] = result[0] + itsPerturbations[0];
+        // We have scalar values, thus only one perturbed value.
+        // First get result and add perturbed value to it.
+        DBGASSERT (itsPerturbations.size() == 1);
+        getResult (result[0], predictGrid);
+        result[1].resize (result[0].shape());
+        result[1] = result[0] + itsPerturbations[0];
       }
     }
   }
@@ -222,30 +222,30 @@ namespace BBS {
     if (pvset.getType() != ParmValue::Scalar) {
       // It is a funklet, so evaluate it.
       getResultCoeff (&result, predictGrid, pvset, vector<double>(),
-		      itsCache->getAxisMappingCache());
+                      itsCache->getAxisMappingCache());
     } else if (pvset.getGrid().size() == 1) {
       // Optimize for the often occurring case of a single ParmValue object.
       const ParmValue& pval = pvset.getFirstParmValue();
       if (pval.getGrid().size() == 1) {
-	// Only a single value, so size the array accordingly.
-	result.resize (IPosition(2,1,1));
-	result = pval.getValues();
+        // Only a single value, so size the array accordingly.
+        result.resize (IPosition(2,1,1));
+        result = pval.getValues();
       } else {
-	// There are multiple values, so use the ParmValue's grid.
-	getResultScalar (result, predictGrid, pval,
-			 itsCache->getAxisMappingCache());
+        // There are multiple values, so use the ParmValue's grid.
+        getResultScalar (result, predictGrid, pval,
+                         itsCache->getAxisMappingCache());
       }
     } else {
       // The hardest case; multiple ParmValues, possibly each with its own grid.
       getResultScalar (result, predictGrid, pvset,
-		       itsCache->getAxisMappingCache());
+                       itsCache->getAxisMappingCache());
     }
   }
 
   void Parm::getResultCoeff (Array<double>* resultVec, const Grid& predictGrid,
-			     const ParmValueSet& pvset,
-			     const vector<double>& perturbations,
-			     AxisMappingCache& axisMappingCache)
+                             const ParmValueSet& pvset,
+                             const vector<double>& perturbations,
+                             AxisMappingCache& axisMappingCache)
   {
     Array<double>& result = *resultVec;
     const Axis& paxisx = *predictGrid.getAxis(0);
@@ -265,91 +265,91 @@ namespace BBS {
     const double* pvaly = ceny;
     // Loop over all cells of the predict y-axis.
     for (AxisMapping::const_iterator ity=mapy.begin();
-	 ity!=mapy.end(); ++ity) {
+         ity!=mapy.end(); ++ity) {
       int inxy = *ity * nrdx;
       double valy = *pvaly++;
       const double* pvalx = cenx;
       // Loop over all cells of the predict x-axis.
       for (AxisMapping::const_iterator itx=mapx.begin();
-	   itx!=mapx.end(); ++itx) {
-	double valx = *pvalx++;
-	// Get the coefficients.
-	const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
-	const double* coeff = carr.data();
-	int nrcx = carr.shape()[0];
-	int nrcy = carr.shape()[1];
-	// Calculate sigma(c[i,j] * x^i * y^j)
-	double y = 1;
-	double val = 0;
-	for (int j=0; j<nrcy; ++j) {
-	  double subval = 0;
-	  for (int i=nrcx-1; i>0; i--) {
-	    subval += coeff[i];
-	    subval *= valx;
-	  }
-	  subval += coeff[0];
-	  val += y*subval;
-	  y *= valy;
-	  coeff += nrcx;
-	}
-	*resultIter = val;
-	++resultIter;
+           itx!=mapx.end(); ++itx) {
+        double valx = *pvalx++;
+        // Get the coefficients.
+        const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
+        const double* coeff = carr.data();
+        int nrcx = carr.shape()[0];
+        int nrcy = carr.shape()[1];
+        // Calculate sigma(c[i,j] * x^i * y^j)
+        double y = 1;
+        double val = 0;
+        for (int j=0; j<nrcy; ++j) {
+          double subval = 0;
+          for (int i=nrcx-1; i>0; i--) {
+            subval += coeff[i];
+            subval *= valx;
+          }
+          subval += coeff[0];
+          val += y*subval;
+          y *= valy;
+          coeff += nrcx;
+        }
+        *resultIter = val;
+        ++resultIter;
       }
     }
     // Now calculate all perturbed values if needed.
     if (! perturbations.empty()) {
       vector<double> pertCoeff(perturbations.size(), 0.);
       for (uint ip=0; ip<perturbations.size(); ++ip) {
-	pertCoeff[ip] = perturbations[ip];
-	Array<double>& result = resultVec[ip+1];
-	// Size the array as needed and get an iterator for it.
-	result.resize (IPosition(2, paxisx.size(), paxisy.size()));
-	Array<double>::iterator resultIter = result.begin();
-	const double* pvaly = ceny;
-	// Loop over all cells of the predict y-axis.
-	for (AxisMapping::const_iterator ity=mapy.begin();
-	     ity!=mapy.end(); ++ity) {
-	  int inxy = *ity * nrdx;
-	  double valy = *pvaly++;
-	  const double* pvalx = cenx;
-	  // Loop over all cells of the predict x-axis.
-	  for (AxisMapping::const_iterator itx=mapx.begin();
-	       itx!=mapx.end(); ++itx) {
-	    double valx = *pvalx++;
-	    // Get the coefficients.
-	    const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
-	    DBGASSERT (carr.size() == perturbations.size());
-	    const double* coeff = carr.data();
-	    const double* pcoeff = &(pertCoeff[0]);
-	    int nrcx = carr.shape()[0];
-	    int nrcy = carr.shape()[1];
-	    // Calculate sigma(c[i,j] * x^i * y^j)
-	    double y = 1;
-	    double val = 0;
-	    for (int j=0; j<nrcy; ++j) {
-	      double subval = 0;
-	      for (int i=nrcx-1; i>0; i--) {
-		subval += coeff[i] + pcoeff[i];
-		subval *= valx;
-	      }
-	      subval += coeff[0] + pcoeff[0];
-	      val += y*subval;
-	      y *= valy;
-	      coeff += nrcx;
-	      pcoeff += nrcx;
-	    }
-	    *resultIter = val;
-	    ++resultIter;
-	  }
-	}
-	pertCoeff[ip] = 0.;
+        pertCoeff[ip] = perturbations[ip];
+        Array<double>& result = resultVec[ip+1];
+        // Size the array as needed and get an iterator for it.
+        result.resize (IPosition(2, paxisx.size(), paxisy.size()));
+        Array<double>::iterator resultIter = result.begin();
+        const double* pvaly = ceny;
+        // Loop over all cells of the predict y-axis.
+        for (AxisMapping::const_iterator ity=mapy.begin();
+             ity!=mapy.end(); ++ity) {
+          int inxy = *ity * nrdx;
+          double valy = *pvaly++;
+          const double* pvalx = cenx;
+          // Loop over all cells of the predict x-axis.
+          for (AxisMapping::const_iterator itx=mapx.begin();
+               itx!=mapx.end(); ++itx) {
+            double valx = *pvalx++;
+            // Get the coefficients.
+            const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
+            DBGASSERT (carr.size() == perturbations.size());
+            const double* coeff = carr.data();
+            const double* pcoeff = &(pertCoeff[0]);
+            int nrcx = carr.shape()[0];
+            int nrcy = carr.shape()[1];
+            // Calculate sigma(c[i,j] * x^i * y^j)
+            double y = 1;
+            double val = 0;
+            for (int j=0; j<nrcy; ++j) {
+              double subval = 0;
+              for (int i=nrcx-1; i>0; i--) {
+                subval += coeff[i] + pcoeff[i];
+                subval *= valx;
+              }
+              subval += coeff[0] + pcoeff[0];
+              val += y*subval;
+              y *= valy;
+              coeff += nrcx;
+              pcoeff += nrcx;
+            }
+            *resultIter = val;
+            ++resultIter;
+          }
+        }
+        pertCoeff[ip] = 0.;
       }
     }
   }
 
   void Parm::getResultScalar (Array<double>& result, const Grid& predictGrid,
-			      const ParmValue& pval,
-			      AxisMappingCache& axisMappingCache)
+                              const ParmValue& pval,
+                              AxisMappingCache& axisMappingCache)
   {
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);
@@ -365,20 +365,20 @@ namespace BBS {
     Array<double>::iterator resultIter = result.begin();
     // Loop over all cells of the predict y-axis.
     for (AxisMapping::const_iterator ity=mapy.begin();
-	 ity!=mapy.end(); ++ity) {
+         ity!=mapy.end(); ++ity) {
       int inxy = *ity * nrdx;
       // Loop over all cells of the predict x-axis.
       for (AxisMapping::const_iterator itx=mapx.begin();
-	   itx!=mapx.end(); ++itx) {
-	*resultIter = data[*itx + inxy];
-	++resultIter;
+           itx!=mapx.end(); ++itx) {
+        *resultIter = data[*itx + inxy];
+        ++resultIter;
       }
     }
   }
 
   void Parm::getResultScalar (Array<double>& result, const Grid& predictGrid,
-			      const ParmValueSet& pvset,
-			      AxisMappingCache& axisMappingCache)
+                              const ParmValueSet& pvset,
+                              AxisMappingCache& axisMappingCache)
   {
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);
@@ -403,9 +403,9 @@ namespace BBS {
       int inxy = nrsx * mapy[sty];
       int stx = 0;
       for (uint ix=0; ix<bordersx.size(); ++ix) {
-	getResultPV (resData, nrx, stx, sty, bordersx[ix], bordersy[iy],
-		     pvset.getParmValue (mapx[stx] + inxy), predictGrid);
-	stx = bordersx[ix];
+        getResultPV (resData, nrx, stx, sty, bordersx[ix], bordersy[iy],
+                     pvset.getParmValue (mapx[stx] + inxy), predictGrid);
+        stx = bordersx[ix];
       }
       sty = bordersy[iy];
     }
@@ -413,8 +413,8 @@ namespace BBS {
   }
 
   void Parm::getResultPV (double* resData, int nrx, int stx, int sty,
-			  int endx, int endy, const ParmValue& pval,
-			  const Grid& predictGrid)
+                          int endx, int endy, const ParmValue& pval,
+                          const Grid& predictGrid)
   {
     // Get pointer to the scalar values.
     const double* data = pval.getValues().data();
@@ -434,8 +434,8 @@ namespace BBS {
       inxy = daxisy.locate (paxisy.center(iy), true, inxy);
       const double* pData = data + inxy*nrdx;
       for (int ix=stx; ix<endx; ++ix) {
-	inxx = daxisx.locate (paxisx.center(ix), true, inxx);
-	*rData++ = pData[inxx];
+        inxx = daxisx.locate (paxisx.center(ix), true, inxx);
+        *rData++ = pData[inxx];
       }
     }
   }

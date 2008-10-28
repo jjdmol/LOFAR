@@ -57,14 +57,14 @@ namespace BBS {
     // Default constructor creates an empty box.
     Box()
       : itsStart(0, 0),
-	itsEnd  (0, 0)
+        itsEnd  (0, 0)
     {}
 
     // Create a box from the bottom-left and top-right corner.
     // both coordinates in start must be <= end.
     Box (const Point& start, const Point& end)
       : itsStart(start),
-	itsEnd  (end)
+        itsEnd  (end)
     {
       ASSERT(start.first <= end.first && start.second <= end.second);
     }            
@@ -106,13 +106,13 @@ namespace BBS {
     bool intersects (const Box& other) const
     {
       return (other.itsStart.first < itsEnd.first
-	      && !casa::near(other.itsStart.first, itsEnd.first)
-	      && other.itsEnd.first > itsStart.first
-	      && !casa::near(other.itsEnd.first, itsStart.first)
-	      && other.itsStart.second < itsEnd.second
-	      && !casa::near(other.itsStart.second, itsEnd.second)
-	      && other.itsEnd.second > itsStart.second
-	      && !casa::near(other.itsEnd.second, itsStart.second));
+              && !casa::near(other.itsStart.first, itsEnd.first)
+              && other.itsEnd.first > itsStart.first
+              && !casa::near(other.itsEnd.first, itsStart.first)
+              && other.itsStart.second < itsEnd.second
+              && !casa::near(other.itsStart.second, itsEnd.second)
+              && other.itsEnd.second > itsStart.second
+              && !casa::near(other.itsEnd.second, itsStart.second));
     }
 
     // A box A contains a box B if all points within or on the border of B
@@ -120,20 +120,20 @@ namespace BBS {
     bool contains (const Box& other) const
     {
       return ((other.itsStart.first >= itsStart.first
-	       || casa::near(other.itsStart.first, itsStart.first))
-	      && (other.itsEnd.first <= itsEnd.first
-		  || casa::near(other.itsEnd.first, itsEnd.first))
-	      && (other.itsStart.second >= itsStart.second
-		  || casa::near(other.itsStart.second, itsStart.second))
-	      && (other.itsEnd.second <= itsEnd.second
-		  || casa::near(other.itsEnd.second, itsEnd.second)));
+               || casa::near(other.itsStart.first, itsStart.first))
+              && (other.itsEnd.first <= itsEnd.first
+                  || casa::near(other.itsEnd.first, itsEnd.first))
+              && (other.itsStart.second >= itsStart.second
+                  || casa::near(other.itsStart.second, itsStart.second))
+              && (other.itsEnd.second <= itsEnd.second
+                  || casa::near(other.itsEnd.second, itsEnd.second)));
     }
 
     //Check if the box is empty.
     bool empty() const
     {
       return (casa::near(itsStart.first, itsEnd.first)
-	      || casa::near(itsStart.second, itsEnd.second));
+              || casa::near(itsStart.second, itsEnd.second));
     }
 
     // Return the intersection of this and that box. An empty box is
@@ -155,12 +155,12 @@ namespace BBS {
     // <group>
     bool operator< (const Box& that) const
       { return itsStart.second < that.itsStart.second
-	  ||  (itsStart.second == that.itsStart.second  &&
-	       itsStart.first < that.itsStart.first); }
+          ||  (itsStart.second == that.itsStart.second  &&
+               itsStart.first < that.itsStart.first); }
     bool operator> (const Box& that) const
       { return itsStart.second > that.itsStart.second
-	  ||  (itsStart.second == that.itsStart.second  &&
-	       itsStart.first > that.itsStart.first); }
+          ||  (itsStart.second == that.itsStart.second  &&
+               itsStart.first > that.itsStart.first); }
     // </group>
 
   private:

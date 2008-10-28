@@ -111,7 +111,7 @@ void testRegularSet()
     }
   }
   ParmValueSet pset(Grid(domains), values, ParmValue(),
-		    ParmValue::Polc, 2e-6, false);
+                    ParmValue::Polc, 2e-6, false);
   ASSERT (pset.size() == 12);
   ASSERT (pset.getType() == ParmValue::Polc);
   ASSERT (!pset.isDirty());

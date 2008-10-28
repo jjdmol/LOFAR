@@ -101,7 +101,7 @@ namespace BBS {
     // As a search hint one can tell where to start the search (e.g. the
     // result of the previous locate).
     virtual size_t locate(double x, bool biasRight = true,
-			  size_t start=0) const = 0;
+                          size_t start=0) const = 0;
 
     // Check if the corresponding intervals in this and that axis are the same.
     bool checkIntervals (const Axis& that) const;
@@ -109,7 +109,7 @@ namespace BBS {
     // Make a subset of the axis for the given start/end.
     // It fills the index of the starting point of the subset on the axis.
     virtual Axis::ShPtr subset (double start, double end,
-				size_t& index) const = 0;
+                                size_t& index) const = 0;
 
     // Compress the axis.
     virtual Axis::ShPtr compress(size_t factor) const = 0;
@@ -123,7 +123,7 @@ namespace BBS {
     // are consecutive and have the same width, otherwise the result
     // is an OrderedAxis.
     Axis::ShPtr combine (const Axis& that,
-			 int& s1, int& e1, int& s2, int& e2) const;
+                         int& s1, int& e1, int& s2, int& e2) const;
 
     // Return the type of \c *this as a string.
     virtual const string& classType() const = 0;
@@ -137,7 +137,7 @@ namespace BBS {
     // Otherwise an OrderedAxis object.
     // The intervals must be consecutive.
     static Axis::ShPtr makeAxis (const vector<double>& low,
-				       const vector<double>& high);
+                                       const vector<double>& high);
 
     //# Unique seqnr of an Axis object. Used in class AxisMapping.
     uint        itsId;
@@ -154,7 +154,7 @@ namespace BBS {
 
     // Construct giving the beginning of the axis and the width of each cell.
     RegularAxis(double begin, double cellWidth, uint count,
-		bool asStartEnd=false);
+                bool asStartEnd=false);
 
     virtual ~RegularAxis();
 
@@ -177,7 +177,7 @@ namespace BBS {
     virtual size_t size() const;
     virtual pair<double, double> range() const;
     virtual size_t locate(double x, bool biasRight = true,
-			  size_t start=0) const;
+                          size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
     virtual Axis::ShPtr compress(size_t factor) const;
     
@@ -205,7 +205,7 @@ namespace BBS {
 
     // Specify as v1/v2 as width/center or start/end.
     IrregularAxis(const vector<double>& v1, const vector<double>& v2,
-		  bool asStartEnd, bool checkOrder);
+                  bool asStartEnd, bool checkOrder);
     
     virtual ~IrregularAxis();
 
@@ -247,7 +247,7 @@ namespace BBS {
     // order and they have to be disjoint. However, they do not need to be
     // consecutive. 
     OrderedAxis(const vector<double>& v1, const vector<double>& v2,
-		bool asStartEnd=false);
+                bool asStartEnd=false);
     
     virtual ~OrderedAxis();
 
@@ -258,7 +258,7 @@ namespace BBS {
     virtual bool isOrdered() const;
 
     virtual size_t locate(double x, bool biasRight = true,
-			  size_t start=0) const;
+                          size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
     virtual Axis::ShPtr compress(size_t factor) const;
 
@@ -280,7 +280,7 @@ namespace BBS {
     // The vectors must have equal sizes. The intervals do not need to be
     // ordered nor do they have to be disjoint.
     UnorderedAxis(const vector<double>& v1, const vector<double>& v2,
-		  bool asStartEnd=false);
+                  bool asStartEnd=false);
     
     virtual ~UnorderedAxis();
 
@@ -291,7 +291,7 @@ namespace BBS {
     virtual bool isOrdered() const;
 
     virtual size_t locate(double x, bool biasRight = true,
-			  size_t start=0) const;
+                          size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
     virtual Axis::ShPtr compress(size_t factor) const;
 

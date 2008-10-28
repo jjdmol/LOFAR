@@ -56,7 +56,7 @@ namespace BBS {
   {}
 
   ParmValueSet ParmDBRep::getDefValue (const string& parmName,
-				       const ParmValue& defaultValue)
+                                       const ParmValue& defaultValue)
   {
     // Fill the map with default values if not done yet.
     if (!itsDefFilled) {
@@ -73,12 +73,12 @@ namespace BBS {
     while (true) {
       ParmMap::const_iterator pos = itsDefValues.find (name);
       if (pos != itsDefValues.end()) {
-	return pos->second;
+        return pos->second;
       }
       string::size_type idx = name.rfind (':');
       // Exit loop if no more name parts.
       if (idx == string::npos) {
-	break;
+        break;
       }
       // Remove last part and try again.
       name = name.substr (0, idx);
@@ -88,8 +88,8 @@ namespace BBS {
   }
 
   void ParmDBRep::getValuesPattern (ParmMap& result,
-				    const std::string& parmNamePattern,
-				    const Box& domain)
+                                    const std::string& parmNamePattern,
+                                    const Box& domain)
   {
     vector<string> parmNames = getNames (parmNamePattern);
     vector<uint> nameIds;
@@ -97,7 +97,7 @@ namespace BBS {
     for (uint i=0; i<parmNames.size(); ++i) {
       int id = getNameId (parmNames[i]);
       if (id >= 0) {
-	nameIds.push_back (id);
+        nameIds.push_back (id);
       }
     }
     vector<ParmId> parmIds;
@@ -109,7 +109,7 @@ namespace BBS {
     getValues (sets, nameIds, parmIds, domain);
     for (uint i=0; i<sets.size(); ++i) {
       if (sets[i].size() > 0) {
-	result.define (parmNames[i], sets[i]);
+        result.define (parmNames[i], sets[i]);
       }
     }
   }
@@ -133,10 +133,10 @@ namespace BBS {
       //#if defined(HAVE_PGSQL)
 #if 0
       itsRep = new ParmDBPostgres(ptm.getDBName(),
-				  ptm.getUserName(),
-				  ptm.getDBPwd(),
-				  ptm.getHostName(),
-				  "");
+                                  ptm.getUserName(),
+                                  ptm.getDBPwd(),
+                                  ptm.getHostName(),
+                                  "");
 #else
       ASSERTSTR(false, "unsupported parmTableType: "<<ptm.getType());
 #endif
@@ -152,10 +152,10 @@ namespace BBS {
     } else {
       // Some entry has been deleted; reuse it.
       for (dbnr=0; dbnr<theirParmDBs.size(); ++dbnr) {
-	if (theirParmDBs[dbnr] == 0) {
-	  theirParmDBs[dbnr] = itsRep;
-	  break;
-	}
+        if (theirParmDBs[dbnr] == 0) {
+          theirParmDBs[dbnr] = itsRep;
+          break;
+        }
       }
     }
     itsRep->setParmDBSeqNr (dbnr);
@@ -190,7 +190,7 @@ namespace BBS {
       string tabName = itsRep->getParmDBMeta().getTableName();
       map<string,int>::iterator pos = theirDBNames.find (tabName);
       ASSERTSTR (pos != theirDBNames.end(),
-		 "~ParmDB " << tabName << " not found in map");
+                 "~ParmDB " << tabName << " not found in map");
       DBGASSERT (theirParmDBs[pos->second] == itsRep);
       theirParmDBs[pos->second] = 0;
       theirDBNames.erase (pos);
@@ -202,7 +202,7 @@ namespace BBS {
   ParmDB ParmDB::getParmDB (uint index)
   {
     ASSERTSTR (index < theirParmDBs.size()  &&  theirParmDBs[index] != 0,
-	       "ParmDB index " << index << " is unknown");
+               "ParmDB index " << index << " is unknown");
     return ParmDB(theirParmDBs[index]);
   }
 

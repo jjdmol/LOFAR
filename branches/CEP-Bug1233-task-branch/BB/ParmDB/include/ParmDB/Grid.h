@@ -185,7 +185,7 @@ namespace BBS {
     {
       DBGASSERT(location.first < nx()  &&  location.second < ny());
       return Point (getAxis(0)->center(location.first),
-		    getAxis(1)->center(location.second));
+                    getAxis(1)->center(location.second));
     }
 
     // Get the blc and trc coordinates of the given cell.
@@ -194,9 +194,9 @@ namespace BBS {
     {
       DBGASSERT(location.first < nx()  &&  location.second < ny());
       return Box(Point(getAxis(0)->lower(location.first),
-		       getAxis(1)->lower(location.second)),
-		 Point(getAxis(0)->upper(location.first),
-		       getAxis(1)->upper(location.second)));
+                       getAxis(1)->lower(location.second)),
+                 Point(getAxis(0)->upper(location.first),
+                       getAxis(1)->upper(location.second)));
     }
 
     
@@ -208,7 +208,7 @@ namespace BBS {
     Box getBoundingBox() const
     {
       return Box(Point(getAxis(0)->start(), getAxis(1)->start()),
-		 Point(getAxis(0)->end(),   getAxis(1)->end()));
+                 Point(getAxis(0)->end(),   getAxis(1)->end()));
     }
 
     // Get the bounding box of part of the grid.
@@ -224,7 +224,7 @@ namespace BBS {
     Location locate (const Point& point, bool biasRight = true) const
     {
       return make_pair(getAxis(0)->locate(point.first, biasRight),
-		       getAxis(1)->locate(point.second, biasRight));
+                       getAxis(1)->locate(point.second, biasRight));
     }
 
     // Apply the given domain to this grid.
@@ -254,12 +254,12 @@ namespace BBS {
     // <group>
     bool operator< (const Grid& that) const
       { return getBoundingBox().lowerY() < that.getBoundingBox().lowerY()
-	  || (getBoundingBox().lowerY() == that.getBoundingBox().lowerY()  &&
-	      getBoundingBox().lowerX() < that.getBoundingBox().lowerX()); }
+          || (getBoundingBox().lowerY() == that.getBoundingBox().lowerY()  &&
+              getBoundingBox().lowerX() < that.getBoundingBox().lowerX()); }
     bool operator> (const Grid& that) const
       { return getBoundingBox().lowerY() > that.getBoundingBox().lowerY()
-	  || (getBoundingBox().lowerY() == that.getBoundingBox().lowerY()  &&
-	      getBoundingBox().lowerX() > that.getBoundingBox().lowerX()); }
+          || (getBoundingBox().lowerY() == that.getBoundingBox().lowerY()  &&
+              getBoundingBox().lowerX() > that.getBoundingBox().lowerX()); }
     // </group>
 
   private:

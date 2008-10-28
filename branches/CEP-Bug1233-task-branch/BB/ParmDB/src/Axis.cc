@@ -77,12 +77,12 @@ namespace BBS {
   }
 
   Axis::ShPtr Axis::combine (const Axis& that,
-			     int& s1, int& e1, int& s2, int& e2) const
+                             int& s1, int& e1, int& s2, int& e2) const
   {
     pair<double,double> range1 = range();
     pair<double,double> range2 = that.range();
     if (range1.second <= range2.first  ||
-	casa::near(range1.second, range2.first)) {
+        casa::near(range1.second, range2.first)) {
       // this is fully left of that.
       Axis::ShPtr newAxis (add (that));
       s1 = 0;
@@ -92,7 +92,7 @@ namespace BBS {
       return newAxis;
     }
     if (range2.second <= range1.first  ||
-	casa::near(range2.second, range1.first)) {
+        casa::near(range2.second, range1.first)) {
       // that is fully left of this.
       Axis::ShPtr newAxis (that.add (*this));
       e1 = newAxis->size();
@@ -131,9 +131,9 @@ namespace BBS {
       double low2 = that.lower(s1+i);
       double upp2 = that.upper(s1+i);
       ASSERTSTR ((low1==low2 || casa::near(low1,low2))  &&
-		 (upp1==upp2 || casa::near(upp1,upp2)),
-		 "Axis::combine: interval [" << low1 << ',' << upp1
-		 << "] mismatches [" << low2 << ',' << upp2 << ']');
+                 (upp1==upp2 || casa::near(upp1,upp2)),
+                 "Axis::combine: interval [" << low1 << ',' << upp1
+                 << "] mismatches [" << low2 << ',' << upp2 << ']');
     }
     // If this fully covers that, return this axis.
     if (s1 == 0  &&  nr == nr2) {
@@ -157,12 +157,12 @@ namespace BBS {
       low.reserve (e2);
       upp.reserve (e2);
       for (int i=0; i<s2; ++i) {
-	low.push_back (lower(i));
-	upp.push_back (upper(i));
+        low.push_back (lower(i));
+        upp.push_back (upper(i));
       }
       for (int i=0; i<nr2; ++i) {
-	low.push_back (that.lower(i));
-	upp.push_back (that.upper(i));
+        low.push_back (that.lower(i));
+        upp.push_back (that.upper(i));
       }
     } else {
       // that starts before this.
@@ -171,12 +171,12 @@ namespace BBS {
       low.reserve (e1);
       upp.reserve (e1);
       for (int i=0; i<s1; ++i) {
-	low.push_back (that.lower(i));
-	upp.push_back (that.upper(i));
+        low.push_back (that.lower(i));
+        upp.push_back (that.upper(i));
       }
       for (int i=0; i<nr1; ++i) {
-	low.push_back (lower(i));
-	upp.push_back (upper(i));
+        low.push_back (lower(i));
+        upp.push_back (upper(i));
       }
     }
     return makeAxis (low, upp);
@@ -214,13 +214,13 @@ namespace BBS {
   }
 
   Axis::ShPtr Axis::makeAxis (const vector<double>& low,
-			      const vector<double>& upp)
+                              const vector<double>& upp)
   {
     // Check if the width is constant, thus if the result is a regular axis.
     double width = upp[0] - low[0];
     for (uint i=1; i<low.size(); ++i) {
       if (!casa::near (width, upp[i]-low[i])) {
-	return Axis::ShPtr (new OrderedAxis (low, upp, true));
+        return Axis::ShPtr (new OrderedAxis (low, upp, true));
       }
     }
     return Axis::ShPtr (new RegularAxis (low[0], width, low.size()));
@@ -235,7 +235,7 @@ namespace BBS {
   {}     
     
   RegularAxis::RegularAxis (double begin, double width, uint count,
-			    bool asStartEnd)
+                            bool asStartEnd)
     : itsBegin(begin),
       itsWidth(width),
       itsCount(count)
@@ -258,7 +258,7 @@ namespace BBS {
   {
     const RegularAxis* axis = dynamic_cast<const RegularAxis*>(&that);
     return (axis!=0 && itsBegin==axis->itsBegin && itsWidth==axis->itsWidth
-	    && itsCount==axis->itsCount);
+            && itsCount==axis->itsCount);
   }
 
   bool RegularAxis::isRegular() const
@@ -314,18 +314,18 @@ namespace BBS {
     // on the biasRight argument.
     if (biasRight) {
       if (inx < last) {
-	if (casa::near (double(inx+1), inxd)) ++inx;
+        if (casa::near (double(inx+1), inxd)) ++inx;
       }
     } else {
       if (inx > 0) {
-	if (casa::near(double(inx), inxd)) --inx;
+        if (casa::near(double(inx), inxd)) --inx;
       }
     }
     return inx;
   }
 
   Axis::ShPtr RegularAxis::subset (double start, double end,
-				   size_t& index) const
+                                   size_t& index) const
   {
     pair<double,double> rng = range();
     int sinx = 0;
@@ -345,7 +345,7 @@ namespace BBS {
     // Is the resulting axis still regular?
     if (itsCount % factor == 0) {
       return Axis::ShPtr(new RegularAxis(itsBegin, itsWidth * factor,
-					 itsCount / factor));
+                                         itsCount / factor));
     }
     vector<double> centers(itsCount / factor + 1);
     for (size_t i = 0; i < itsCount / factor; ++i) {
@@ -383,9 +383,9 @@ namespace BBS {
   {}
 
   IrregularAxis::IrregularAxis (const vector<double>& starts,
-				const vector<double>& ends,
-				bool asStartEnd,
-				bool checkOrder)
+                                const vector<double>& ends,
+                                bool asStartEnd,
+                                bool checkOrder)
   {
     ASSERT(starts.size() == ends.size());
     ASSERT(starts.size() > 0);
@@ -394,22 +394,22 @@ namespace BBS {
       itsCenters = starts;
       itsHWidths = ends;
       for (uint i=0; i<nr; ++i) {
-	itsHWidths[i] *= 0.5;
+        itsHWidths[i] *= 0.5;
       }
     } else {
       itsCenters.reserve (nr);
       itsHWidths.reserve (nr);
       for (uint i=0; i<nr; ++i) {
-	itsCenters.push_back ((ends[i] + starts[i]) * 0.5);
-	itsHWidths.push_back ((ends[i] - starts[i]) * 0.5);
+        itsCenters.push_back ((ends[i] + starts[i]) * 0.5);
+        itsHWidths.push_back ((ends[i] - starts[i]) * 0.5);
       }
     }
     for (uint i=0; i<nr; ++i) {
       ASSERT (itsHWidths[i] > 0);
       if (checkOrder  &&  i > 0) {
-	double end = itsCenters[i-1] + itsHWidths[i-1];
-	double st  = itsCenters[i]   - itsHWidths[i];
-	ASSERT(st>=end  ||  casa::near(st,end));
+        double end = itsCenters[i-1] + itsHWidths[i-1];
+        double st  = itsCenters[i]   - itsHWidths[i];
+        ASSERT(st>=end  ||  casa::near(st,end));
       }
     }
   }
@@ -475,8 +475,8 @@ namespace BBS {
   {}
 
   OrderedAxis::OrderedAxis (const vector<double>& starts,
-			    const vector<double>& ends,
-			    bool asStartEnd)
+                            const vector<double>& ends,
+                            bool asStartEnd)
     : IrregularAxis (starts, ends, asStartEnd, true)
   {}
 
@@ -505,33 +505,33 @@ namespace BBS {
       double s = itsCenters[start]-itsHWidths[start];
       double e = itsCenters[start]+itsHWidths[start];
       if (x < s) {
-	if (biasRight  &&  casa::near(x,s)) {
-	  // On the left edge.
-	  break;
-	}
-	// Value before first interval uses first interval.
-	ASSERTSTR (start==0, "No interval found for value " << x);
-	break;
+        if (biasRight  &&  casa::near(x,s)) {
+          // On the left edge.
+          break;
+        }
+        // Value before first interval uses first interval.
+        ASSERTSTR (start==0, "No interval found for value " << x);
+        break;
       } else if (x < e) {
-	// Inside the interval.
-	break;
+        // Inside the interval.
+        break;
       } else {
-	if (!biasRight) {
-	  if (casa::near(x,e)) {
-	    // On the right edge.
-	    break;
-	  }
-	} else if (start < nr-1
-		   && !casa::near(x, itsCenters[start+1]-itsHWidths[start+1])) {
-	  if (casa::near(x,e)) {
-	    // On the right edge and not on left edge of next one.
-	    break;
-	  }
-	}
+        if (!biasRight) {
+          if (casa::near(x,e)) {
+            // On the right edge.
+            break;
+          }
+        } else if (start < nr-1
+                   && !casa::near(x, itsCenters[start+1]-itsHWidths[start+1])) {
+          if (casa::near(x,e)) {
+            // On the right edge and not on left edge of next one.
+            break;
+          }
+        }
       }
       if (start == nr-1) {
-	// Value after last interval uses last interval.
-	break;
+        // Value after last interval uses last interval.
+        break;
       }
       ++start;
     }
@@ -539,7 +539,7 @@ namespace BBS {
   }
 
   Axis::ShPtr OrderedAxis::subset (double start, double end,
-				   size_t& index) const
+                                   size_t& index) const
   {
     ASSERT (start < end);
     size_t sinx = locate (start, true);
@@ -570,8 +570,8 @@ namespace BBS {
   {}
 
   UnorderedAxis::UnorderedAxis (const vector<double>& starts,
-				const vector<double>& ends,
-				bool asStartEnd)
+                                const vector<double>& ends,
+                                bool asStartEnd)
     : IrregularAxis (starts, ends, asStartEnd, false)
   {}
 
@@ -603,44 +603,44 @@ namespace BBS {
       double s = itsCenters[start]-itsHWidths[start];
       double e = itsCenters[start]+itsHWidths[start];
       if (x < s) {
-	if (casa::near(x,s)) {
-	  // On the left edge.
-	  if (biasRight) break;
-	  possible = start;
-	}
+        if (casa::near(x,s)) {
+          // On the left edge.
+          if (biasRight) break;
+          possible = start;
+        }
       } else if (x < e) {
-	// Inside the interval.
-	break;
+        // Inside the interval.
+        break;
       } else {
-	if (casa::near(x,e)) {
-	  // On the right edge.
-	  if (!biasRight) break;
-	  possible = start;
-	}
+        if (casa::near(x,e)) {
+          // On the right edge.
+          if (!biasRight) break;
+          possible = start;
+        }
       }
       ++start;
       if (start == nr) {
-	start = 0;
+        start = 0;
       }
       // If not found, return possible match, otherwise first or last interval.
       if (start == startOrig) {
-	if (possible >= 0) {
-	  start= possible;
-	} else {
-	  if (x < itsCenters[0]) {
-	    start = 0;
-	  } else {
-	    start = nr-1;
-	  }
-	}
-	break;
+        if (possible >= 0) {
+          start= possible;
+        } else {
+          if (x < itsCenters[0]) {
+            start = 0;
+          } else {
+            start = nr-1;
+          }
+        }
+        break;
       }
     }
     return start;
   }
 
   Axis::ShPtr UnorderedAxis::subset (double start, double end,
-				     size_t& index) const
+                                     size_t& index) const
   {
     vector<double> cen, wid;
     index = 0;
@@ -648,13 +648,13 @@ namespace BBS {
     // Use all intervals containing a part of start-end.
     for (size_t i=0; i<itsCenters.size(); ++i) {
       if (start <= itsCenters[i]+itsHWidths[i]  &&
-	  end   >= itsCenters[i]-itsHWidths[i]) {
-	cen.push_back (itsCenters[i]);
-	wid.push_back (2*itsHWidths[i]);
-	if (first) {
-	  index = i;
-	  first = false;
-	}
+          end   >= itsCenters[i]-itsHWidths[i]) {
+        cen.push_back (itsCenters[i]);
+        wid.push_back (2*itsHWidths[i]);
+        if (first) {
+          index = i;
+          first = false;
+        }
       }
     }
     return Axis::ShPtr (new UnorderedAxis (cen, wid));

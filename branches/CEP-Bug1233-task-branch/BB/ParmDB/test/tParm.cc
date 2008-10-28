@@ -97,9 +97,9 @@ void testResultCoeff()
     vector<ParmValue::ShPtr> pvec(1, ParmValue::ShPtr(new ParmValue));
     pvec[0]->setCoeff (coeff);
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   6, 1)),
-		    Axis::ShPtr(new RegularAxis(0.5, 4, 1)));
+                    Axis::ShPtr(new RegularAxis(0.5, 4, 1)));
     ParmValueSet pvset(domainGrid, pvec, ParmValue(),
-		       ParmValue::Polc, 1e-6, true);
+                       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     Axis::ShPtr axis1(new RegularAxis(1,2,3));
     Axis::ShPtr axis2(new RegularAxis(0.5,1,4));
@@ -110,12 +110,12 @@ void testResultCoeff()
     for (int j=0; j<4; ++j) {
       double y = (j+1 - 0.5) / 4.;
       for (int i=0; i<3; ++i) {
-	double x = (2*(i+1) - 1.) / 6.;
-	double v = ((coeff(0,0) + coeff(1,0)*x) +
-		    (coeff(0,1) + coeff(1,1)*x)*y +
-		    (coeff(0,2) + coeff(1,2)*x)*y*y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
+        double x = (2*(i+1) - 1.) / 6.;
+        double v = ((coeff(0,0) + coeff(1,0)*x) +
+                    (coeff(0,1) + coeff(1,1)*x)*y +
+                    (coeff(0,2) + coeff(1,2)*x)*y*y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
       }
     }
   }
@@ -133,9 +133,9 @@ void testResultCoeff()
     pvec[3]->setCoeff (coeff+3.);
     // Use 2 domains in both x and y.
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
-		    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
+                    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
     ParmValueSet pvset(domainGrid, pvec, ParmValue(),
-		       ParmValue::Polc, 1e-6, true);
+                       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     // Note that the center of the middle x-cell is right on the border of
     // the parmvalue domains. It should take the right one below.
@@ -150,14 +150,14 @@ void testResultCoeff()
       if (j>1) y = (j+1 - 2.5) / 2.;
       double coeffadd = (j<2 ? 0:2);
       for (int i=0; i<3; ++i) {
-	if (i==1) coeffadd += 1;
-	double   x = (2*(i+1) - 1.) / 3.;
-	if (i>0) x = (2*(i+1) - 4.) / 3.;
-	double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
-		    (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
-		    (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
+        if (i==1) coeffadd += 1;
+        double   x = (2*(i+1) - 1.) / 3.;
+        if (i>0) x = (2*(i+1) - 4.) / 3.;
+        double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
+                    (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
+                    (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
       }
     }
   }
@@ -177,9 +177,9 @@ void testResultCoeff()
     pvec[3]->setCoeff (coeff+3.);
     // Use 2 domains in both x and y.
     Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
-		    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
+                    Axis::ShPtr(new RegularAxis(0.5, 2, 2)));
     ParmValueSet pvset(domainGrid, pvec, ParmValue(),
-		       ParmValue::Polc, 1e-6, true);
+                       ParmValue::Polc, 1e-6, true);
     // Form a predict grid.
     // Note that the center of the middle x-cell is right on the border of
     // the parmvalue domains. It should take the right one below.
@@ -195,14 +195,14 @@ void testResultCoeff()
       if (j>1) y = (j+1 - 2.5) / 2.;
       double coeffadd = (j<2 ? 0:2);
       for (int i=0; i<3; ++i) {
-	if (i==1) coeffadd += 1;
-	double   x = (2*(i+1) - 1.) / 3.;
-	if (i>0) x = (2*(i+1) - 4.) / 3.;
-	double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
-		    (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
-		    (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result.data()[i+j*3], v));
+        if (i==1) coeffadd += 1;
+        double   x = (2*(i+1) - 1.) / 3.;
+        if (i>0) x = (2*(i+1) - 4.) / 3.;
+        double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
+                    (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
+                    (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result.data()[i+j*3], v));
       }
     }
     // Check the perturbed values.
@@ -211,19 +211,19 @@ void testResultCoeff()
       coeff(ip%2, ip/2) += pertc[ip];
       ASSERT (result.shape() == IPosition(2,3,4));
       for (int j=0; j<4; ++j) {
-	double   y = (j+1 - 0.5) / 2.;
-	if (j>1) y = (j+1 - 2.5) / 2.;
-	double coeffadd = (j<2 ? 0:2);
-	for (int i=0; i<3; ++i) {
-	  if (i==1) coeffadd += 1;
-	  double   x = (2*(i+1) - 1.) / 3.;
-	  if (i>0) x = (2*(i+1) - 4.) / 3.;
-	  double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
-		      (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
-		      (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
-	  //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	  ASSERT (casa::near (result.data()[i+j*3], v));
-	}
+        double   y = (j+1 - 0.5) / 2.;
+        if (j>1) y = (j+1 - 2.5) / 2.;
+        double coeffadd = (j<2 ? 0:2);
+        for (int i=0; i<3; ++i) {
+          if (i==1) coeffadd += 1;
+          double   x = (2*(i+1) - 1.) / 3.;
+          if (i>0) x = (2*(i+1) - 4.) / 3.;
+          double v = ((coeff(0,0) + coeffadd + (coeff(1,0) + coeffadd)*x) +
+                      (coeff(0,1) + coeffadd + (coeff(1,1) + coeffadd)*x)*y +
+                      (coeff(0,2) + coeffadd + (coeff(1,2) + coeffadd)*x)*y*y);
+          //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+          ASSERT (casa::near (result.data()[i+j*3], v));
+        }
       }
       coeff(ip%2, ip/2) -= pertc[ip];
     }
@@ -239,7 +239,7 @@ void testResultOneScalar()
   indgen (scalars, 1.);     // initialize with 1,2,3,...
   // Form the grid belonging to the values.
   Grid domainGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
-		  Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
+                  Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
   ParmValue pval;
   pval.setScalars (domainGrid, scalars);
   {
@@ -253,10 +253,10 @@ void testResultOneScalar()
     for (int j=0; j<4; ++j) {
       int y = (j<3 ? 0:1);
       for (int i=0; i<4; ++i) {
-	int x = i/2;
-	double v = scalars(x,y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
+        int x = i/2;
+        double v = scalars(x,y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
       }
     }
   }
@@ -271,10 +271,10 @@ void testResultOneScalar()
     for (int j=0; j<12; ++j) {
       int y = j/4;
       for (int i=0; i<6; ++i) {
-	int x = i/3;
-	double v = scalars(x,y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
+        int x = i/3;
+        double v = scalars(x,y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
       }
     }
   }
@@ -292,7 +292,7 @@ void testResultMultiScalar()
       indgen (scalars, 10.*(i+4*j));
       // Form the grid belonging to the values.
       Grid domainGrid(Axis::ShPtr(new RegularAxis( 6*i+1, 3, 2)),
-		      Axis::ShPtr(new RegularAxis(12*j+5, 4, 3)));
+                      Axis::ShPtr(new RegularAxis(12*j+5, 4, 3)));
       ParmValue pval;
       pval.setScalars (domainGrid, scalars);
       parmValues.push_back (ParmValue::ShPtr(new ParmValue(pval)));
@@ -300,7 +300,7 @@ void testResultMultiScalar()
   }
   // Form the grid of the ParmValues.
   Grid parmGrid(Axis::ShPtr(new RegularAxis(1,  6, 4)),
-		Axis::ShPtr(new RegularAxis(5, 12, 4)));
+                Axis::ShPtr(new RegularAxis(5, 12, 4)));
   ParmValueSet pvset(parmGrid, parmValues);
   {
     // Form a predict grid which is a subset of the parm grid.
@@ -319,11 +319,11 @@ void testResultMultiScalar()
       int pvy = (3+iy)/6;             // 6 y-values per ParmValue
       int y = (((3+iy)%6) / 2) * 2;   // y-value in ParmValue
       for (int ix=0; ix<12; ++ix) {
-	int pvx = (1+ix)/6;           // 6 x-values per ParmValue
-	int x = ((1+ix)%6) / 3;       // x-value in ParmValue
-	double v = x + 10*pvx + y + 40*pvy;
-	//cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
-	ASSERT (casa::near (result(ix,iy), v));
+        int pvx = (1+ix)/6;           // 6 x-values per ParmValue
+        int x = ((1+ix)%6) / 3;       // x-value in ParmValue
+        double v = x + 10*pvx + y + 40*pvy;
+        //cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
+        ASSERT (casa::near (result(ix,iy), v));
       }
     }
   }
@@ -341,11 +341,11 @@ void testResultMultiScalar()
       int pvy = (iy)/12;             // 6 y-values per ParmValue
       int y = (((iy)%12) / 4) * 2;   // y-value in ParmValue
       for (int ix=0; ix<24; ++ix) {
-	int pvx = (ix)/6;            // 6 x-values per ParmValue
-	int x = ((ix)%6) / 3;        // x-value in ParmValue
-	double v = x + 10*pvx + y + 40*pvy;
-	//cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
-	ASSERT (casa::near (result(ix,iy), v));
+        int pvx = (ix)/6;            // 6 x-values per ParmValue
+        int x = ((ix)%6) / 3;        // x-value in ParmValue
+        double v = x + 10*pvx + y + 40*pvy;
+        //cout << result(ix,iy) << ' ' << v << ' '<<pvx<<' '<<x<<' '<<pvy<<' '<<y<<endl;
+        ASSERT (casa::near (result(ix,iy), v));
       }
     }
   }
@@ -487,7 +487,7 @@ void testScalarPert()
   indgen (scalars, 10.);
   // This requires it to be made solvable, so make solve grid.
   Grid solveGrid(Axis::ShPtr(new RegularAxis(1,   3, 2)),
-		 Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
+                 Axis::ShPtr(new RegularAxis(0.5, 4, 3)));
   parmg.setSolveGrid (solveGrid);
   // Set the values for each cell.
   for (int i=0; i<6; ++i) {
@@ -510,10 +510,10 @@ void testScalarPert()
     for (int j=0; j<4; ++j) {
       int y = (j<3 ? 0:1);
       for (int i=0; i<4; ++i) {
-	int x = i/2;
-	double v = scalars(x,y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
+        int x = i/2;
+        double v = scalars(x,y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
       }
     }
   }
@@ -531,11 +531,11 @@ void testScalarPert()
     for (int j=0; j<12; ++j) {
       int y = j/4;
       for (int i=0; i<6; ++i) {
-	int x = i/3;
-	double v = scalars(x,y);
-	//cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
-	ASSERT (casa::near (result(i,j), v));
-	ASSERT (casa::near (pert(i,j), v + scalars(0,0)*1e-6));
+        int x = i/3;
+        double v = scalars(x,y);
+        //cout << result(i,j) << ' ' << v << ' '<<x<<' '<<y<<endl;
+        ASSERT (casa::near (result(i,j), v));
+        ASSERT (casa::near (pert(i,j), v + scalars(0,0)*1e-6));
       }
     }
   }

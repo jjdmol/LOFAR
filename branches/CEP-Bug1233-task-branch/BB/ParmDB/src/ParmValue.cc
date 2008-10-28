@@ -80,10 +80,10 @@ namespace BBS {
   }
 
   void ParmValue::setScalars (const Grid& grid,
-			      const casa::Array<double>& values)
+                              const casa::Array<double>& values)
   {
     ASSERT (int(grid.nx()) == values.shape()[0]  &&
-	    int(grid.ny()) == values.shape()[1]);
+            int(grid.ny()) == values.shape()[1]);
     itsValues.assign (values);
     itsGrid = grid;
   }
@@ -100,9 +100,9 @@ namespace BBS {
 
 
   ParmValueSet::ParmValueSet (const ParmValue& defaultValue,
-			      ParmValue::FunkletType type,
-			      double perturbation,
-			      bool pertRel)
+                              ParmValue::FunkletType type,
+                              double perturbation,
+                              bool pertRel)
     : itsType         (type),
       itsPerturbation (perturbation),
       itsPertRel      (pertRel),
@@ -111,15 +111,15 @@ namespace BBS {
   {
     if (type == ParmValue::Scalar) {
       ASSERTSTR (defaultValue.getValues().size() == 1,
-		 "Default value of funklet type SCALAR can have one value only");
+                 "Default value of funklet type SCALAR can have one value only");
     }
   }
 
   ParmValueSet::ParmValueSet (const Grid& domainGrid,
-			      const std::vector<ParmValue::ShPtr>& values,
-			      const ParmValue& defaultValue,
-			      ParmValue::FunkletType type,
-			      double perturbation, bool pertRel)
+                              const std::vector<ParmValue::ShPtr>& values,
+                              const ParmValue& defaultValue,
+                              ParmValue::FunkletType type,
+                              double perturbation, bool pertRel)
     : itsType         (type),
       itsPerturbation (perturbation),
       itsPertRel      (pertRel),
@@ -131,10 +131,10 @@ namespace BBS {
     ASSERT (domainGrid.size() == values.size()  &&  values.size() > 0);
     if (type == ParmValue::Scalar) {
       ASSERTSTR (defaultValue.getValues().size() == 1,
-		 "Default value of funklet type SCALAR can have one value only");
+                 "Default value of funklet type SCALAR can have one value only");
       for (uint i=0; i<values.size(); ++i) {
-	ASSERTSTR (values[i]->getValues().size() == values[i]->getGrid().size(),
-		   "ParmValues of funklet type SCALAR must contain scalar values");
+        ASSERTSTR (values[i]->getValues().size() == values[i]->getGrid().size(),
+                   "ParmValues of funklet type SCALAR must contain scalar values");
       }
     }
   }
@@ -153,10 +153,10 @@ namespace BBS {
       // If the entire solve grid is part of the values, check if the
       // grid matches.
       if (itsDomainGrid.getBoundingBox().contains(solveGrid.getBoundingBox())) {
-	checkGrid (solveGrid);
+        checkGrid (solveGrid);
       } else {
-	// Part of the solve grid does not exist, so they need to be added.
-	addValues (solveGrid);
+        // Part of the solve grid does not exist, so they need to be added.
+        addValues (solveGrid);
       }
     }
   }
@@ -170,7 +170,7 @@ namespace BBS {
       uint nrv = itsDomainGrid.size();
       itsValues.reserve (nrv);
       for (uint i=0; i<nrv; ++i) {
-	itsValues.push_back (ParmValue::ShPtr(new ParmValue(itsDefaultValue)));
+        itsValues.push_back (ParmValue::ShPtr(new ParmValue(itsDefaultValue)));
       }
     } else {
       // Otherwise it is an array of scalar values, so form the array.
@@ -194,14 +194,14 @@ namespace BBS {
     } else {
       // Each ParmValue has its own grid which has to be checked.
       if (itsValues.size() == 1) {
-	// Only one value, so its grid should match.
-	ASSERT (itsValues[0]->getGrid().checkIntervals (solveGrid));
+        // Only one value, so its grid should match.
+        ASSERT (itsValues[0]->getGrid().checkIntervals (solveGrid));
       } else {
-	// The domain grid is split, so check each part with the corresponding
-	// subset of the solve grid.
-	for (uint i=0; i<itsDomainGrid.size(); ++i) {
-	  ASSERT (itsValues[i]->getGrid().checkIntervals (solveGrid));
-	}
+        // The domain grid is split, so check each part with the corresponding
+        // subset of the solve grid.
+        for (uint i=0; i<itsDomainGrid.size(); ++i) {
+          ASSERT (itsValues[i]->getGrid().checkIntervals (solveGrid));
+        }
       }
     }
   }
@@ -222,14 +222,14 @@ namespace BBS {
       ParmValue& value = *itsValues[0];
       int sx1,ex1,sx2,ex2,sy1,sy2,ey1,ey2;
       Axis::ShPtr xaxis = value.getGrid().getAxis(0)->combine
-	(*solveGrid.getAxis(0), sx1, ex1, sx2, ex2);
+        (*solveGrid.getAxis(0), sx1, ex1, sx2, ex2);
       Axis::ShPtr yaxis = value.getGrid().getAxis(1)->combine
-	(*solveGrid.getAxis(1), sy1, ey1, sy2, ey2);
+        (*solveGrid.getAxis(1), sy1, ey1, sy2, ey2);
       Grid newGrid(xaxis, yaxis);
       Array<double> newValues(IPosition(2, newGrid.nx(), newGrid.ny()));
       // Copy the old values.
       newValues(IPosition(2,sx1,sy1),
-		IPosition(2,ex1-1,ey1-1)) = value.getValues();
+                IPosition(2,ex1-1,ey1-1)) = value.getValues();
       // Fill in the other values.
       // In the extreme case the old values are in the middle of the
       // new values, so all sides have to be filled.
@@ -239,24 +239,24 @@ namespace BBS {
       // existing ones.
       // First copy the values before and after the x-part of the old values.
       for (int iy=sy1; iy<ey1; ++iy) {
-	for (int ix=sx2; ix<sx1; ++ix) {
-	  newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,sx1,iy));
-	}
-	for (int ix=ex1; ix<ex2; ++ix) {
-	  newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ex1-1,iy));
-	}
+        for (int ix=sx2; ix<sx1; ++ix) {
+          newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,sx1,iy));
+        }
+        for (int ix=ex1; ix<ex2; ++ix) {
+          newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ex1-1,iy));
+        }
       }
       // Now copy the values before and after the y-part of the old values.
       int nrx = newValues.shape()[0];
       for (int iy=sy2; iy<sy1; ++iy) {
-	for (int ix=0; ix<nrx; ++ix) {
-	  newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ix,sy1));
-	}
+        for (int ix=0; ix<nrx; ++ix) {
+          newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ix,sy1));
+        }
       }
       for (int iy=ey1; iy<ey2; ++iy) {
-	for (int ix=0; ix<nrx; ++ix) {
-	  newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ix,ey1-1));
-	}
+        for (int ix=0; ix<nrx; ++ix) {
+          newValues(IPosition(2,ix,iy)) = newValues(IPosition(2,ix,ey1-1));
+        }
       }
       value.setScalars (newGrid, newValues);
       itsDomainGrid = Grid(vector<Box>(1, newGrid.getBoundingBox()));
@@ -287,7 +287,7 @@ namespace BBS {
     const ParmValue::ShPtr* oldValues = &(itsValues[0]);
     for (int iy=0; iy<ey1-sy1; ++iy) {
       for (int ix=0; ix<ex1-sx1; ++ix) {
-	newValues[sx1+ix + (sy1+iy)*nx] = *oldValues++;
+        newValues[sx1+ix + (sy1+iy)*nx] = *oldValues++;
       }
     }
     // Fill in the other values.
@@ -300,21 +300,21 @@ namespace BBS {
     // First copy the values before and after the x-part of the old values.
     for (int iy=sy1; iy<ey1; ++iy) {
       for (int ix=sx2; ix<sx1; ++ix) {
-	newValues[ix+iy*nx] = copyParmCoeff (newValues[sx1+iy*nx]);
+        newValues[ix+iy*nx] = copyParmCoeff (newValues[sx1+iy*nx]);
       }
       for (int ix=ex1; ix<ex2; ++ix) {
-	newValues[ix+iy*nx] = copyParmCoeff (newValues[ex1-1+iy*nx]);
+        newValues[ix+iy*nx] = copyParmCoeff (newValues[ex1-1+iy*nx]);
       }
     }
     // Now copy the values before and after the y-part of the old values.
     for (int iy=sy2; iy<sy1; ++iy) {
       for (int ix=0; ix<nx; ++ix) {
-	newValues[ix+iy*nx] = copyParmCoeff (newValues[ix+sy1*nx]);
+        newValues[ix+iy*nx] = copyParmCoeff (newValues[ix+sy1*nx]);
       }
     }
     for (int iy=ey1; iy<ey2; ++iy) {
       for (int ix=0; ix<nx; ++ix) {
-	newValues[ix+iy*nx] = copyParmCoeff (newValues[ix+(ey1-1)*nx]);
+        newValues[ix+iy*nx] = copyParmCoeff (newValues[ix+(ey1-1)*nx]);
       }
     }
     // Use new values and new grid.

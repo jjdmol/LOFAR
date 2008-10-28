@@ -77,11 +77,11 @@ namespace BBS {
     while (nx < domains.size()) {
       uint inx = index[nx];
       if (sy != domains[inx].lowerY()) {
-	break;
+        break;
       }
       if (! (casa::near(ex, domains[inx].lowerX())
-	 &&  casa::near(dx, domains[inx].upperX() - domains[inx].lowerX()))) {
-	xregular = false;
+         &&  casa::near(dx, domains[inx].upperX() - domains[inx].lowerX()))) {
+        xregular = false;
       }
       ex = domains[inx].upperX();
       ++nx;
@@ -101,9 +101,9 @@ namespace BBS {
     }
     for (uint j=1; j<ny; ++j) {
       for (uint i=0; i<nx; ++i) {
-	uint inx = index[j*nx + i];
-	ASSERT (casa::near(xaxisStart[i], domains[inx].lowerX()));
-	ASSERT (casa::near(xaxisEnd[i], domains[inx].upperX()));
+        uint inx = index[j*nx + i];
+        ASSERT (casa::near(xaxisStart[i], domains[inx].lowerX()));
+        ASSERT (casa::near(xaxisEnd[i], domains[inx].upperX()));
       }
     }
     // Determine the start/end for Y and if it is regular.
@@ -119,16 +119,16 @@ namespace BBS {
       yaxisStart.push_back (domains[inx].lowerY());
       yaxisEnd.push_back (domains[inx].upperY());
       if (! (casa::near(ey, domains[inx].lowerY())
-	 &&  casa::near(dy, domains[inx].upperY() - domains[inx].lowerY()))) {
-	yregular = false;
+         &&  casa::near(dy, domains[inx].upperY() - domains[inx].lowerY()))) {
+        yregular = false;
       }
       ey = domains[inx].upperY();
     }
     for (uint j=0; j<ny; ++j) {
       for (uint i=1; i<nx; ++i) {
-	uint inx = index[j*nx + i];
-	ASSERT (casa::near(yaxisStart[j], domains[inx].lowerY()));
-	ASSERT (casa::near(yaxisEnd[j], domains[inx].upperY()));
+        uint inx = index[j*nx + i];
+        ASSERT (casa::near(yaxisStart[j], domains[inx].lowerY()));
+        ASSERT (casa::near(yaxisEnd[j], domains[inx].upperY()));
       }
     }
     // Create the (ir)regular axis.
@@ -177,7 +177,7 @@ namespace BBS {
   {
     // Check per axis.
     return (getAxis(0)->checkIntervals (*that.getAxis(0))  &&
-	    getAxis(1)->checkIntervals (*that.getAxis(1)));
+            getAxis(1)->checkIntervals (*that.getAxis(1)));
   }
 
   int64 Grid::hash (const vector<Grid>& grids)
@@ -195,7 +195,7 @@ namespace BBS {
     for (uint i=0; i<domains.size(); ++i) {
       const Box& box = domains[i];
       val += int64(box.lowerX()) + int64(box.upperX()) +
-	     int64(box.lowerY()) + int64(box.upperY());
+             int64(box.lowerY()) + int64(box.upperY());
     }
     return val;
   }
@@ -209,9 +209,9 @@ namespace BBS {
   Grid Grid::subset (const Box& domain, Location& index) const
   {
     return Grid (getAxis(0)->subset (domain.lowerX(),
-				     domain.upperX(), index.first),
- 		 getAxis(1)->subset (domain.lowerY(),
-				     domain.upperY(), index.second));
+                                     domain.upperX(), index.first),
+                 getAxis(1)->subset (domain.lowerY(),
+                                     domain.upperY(), index.second));
   }
 
   void Grid::toDomains (vector<Box>& domains) const
@@ -235,7 +235,7 @@ namespace BBS {
     domains.reserve (domains.size() + size());
     for (uint iy=0; iy<nry; ++iy) {
       for (uint ix=0; ix<nrx; ++ix) {
-	domains.push_back (Box(Point(sx[ix], sy[iy]), Point(ex[ix], ey[iy])));
+        domains.push_back (Box(Point(sx[ix], sy[iy]), Point(ex[ix], ey[iy])));
       }
     }
   }

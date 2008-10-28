@@ -105,7 +105,7 @@ int getType (const string& str)
 }
 
 void showValues (std::ostream& os, const Array<double>& values,
-		 const Array<bool>& mask)
+                 const Array<bool>& mask)
 {
   int n = values.size();
   if (n > 0) {
@@ -274,7 +274,7 @@ int getShape (const KeyValueMap& kvmap, IPosition& shape, int defsize=1)
 }
 
 vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
-			 uint size=0, double defaultValue = 1)
+                         uint size=0, double defaultValue = 1)
 {
   vector<double> res(size, 0.);
   KeyValueMap::const_iterator value = kvmap.find(arrName);
@@ -303,7 +303,7 @@ vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
 
 // Return as Block instead of vector, because vector<bool> uses bits.
 Block<bool> getMask (const KeyValueMap& kvmap, const std::string& arrName,
-		     uint size)
+                     uint size)
 {
   Block<bool> res(size, false);
   KeyValueMap::const_iterator value = kvmap.find(arrName);
@@ -339,24 +339,24 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
       const KeyValueMap& kvm = value->second.getValueMap();
       KeyValueMap::const_iterator key = kvm.find("st");
       if (key != kvm.end()) {
-	st = key->second.getVecDouble();
-	key = kvm.find("end");
-	bool hasend = (key != kvm.end());
-	if (hasend) end = key->second.getVecDouble();
-	key = kvm.find("size");
-	bool hassize = (key != kvm.end());
-	if (hassize) end = key->second.getVecDouble();
-	// end and size cannot be given both.
-	if (hasend != hassize) {
-	  if (st.size() == end.size()) {
-	    ok = true;
-	    if (hassize) {
-	      for (uint i=0; i<end.size(); ++i) {
-		end[i] += st[i];
-	      }
-	    }
-	  }
-	}
+        st = key->second.getVecDouble();
+        key = kvm.find("end");
+        bool hasend = (key != kvm.end());
+        if (hasend) end = key->second.getVecDouble();
+        key = kvm.find("size");
+        bool hassize = (key != kvm.end());
+        if (hassize) end = key->second.getVecDouble();
+        // end and size cannot be given both.
+        if (hasend != hassize) {
+          if (st.size() == end.size()) {
+            ok = true;
+            if (hassize) {
+              for (uint i=0; i<end.size(); ++i) {
+                end[i] += st[i];
+              }
+            }
+          }
+        }
       }
     } else {
       // Given as a vector of values (as stx,endx,sty,endy,...).
@@ -364,39 +364,39 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
       ok = true;
       const vector<KeyValue>& vals = value->second.getVector();
       for (vector<KeyValue>::const_iterator iter = vals.begin();
-	   iter != vals.end();
-	   iter++) {
-	if (iter->dataType() == KeyValue::DTString) {
-	  MUString str (iter->getString());
-	  Quantity res;
-	  if (MVTime::read (res, str)) {
-	    vec.push_back (res.getValue());
-	  } else {
-	    cout << "Error in interpreting " << iter->getString() << endl;
-	    ok = false;
-	    break;
-	  }
-	} else {
-	  vec.push_back (iter->getDouble());
-	}
+           iter != vals.end();
+           iter++) {
+        if (iter->dataType() == KeyValue::DTString) {
+          MUString str (iter->getString());
+          Quantity res;
+          if (MVTime::read (res, str)) {
+            vec.push_back (res.getValue());
+          } else {
+            cout << "Error in interpreting " << iter->getString() << endl;
+            ok = false;
+            break;
+          }
+        } else {
+          vec.push_back (iter->getDouble());
+        }
       }
       if (ok) {
-	if (vec.size() % 2 != 0) {
-	  ok = false;
-	} else {
-	  int nr = vec.size() / 2;
-	  st.resize(nr);
-	  end.resize(nr);
-	  for (int i=0; i<nr; ++i) {
-	    st[i] = vec[2*i];
-	    end[i] = vec[2*i + 1];
-	  }
-	}
+        if (vec.size() % 2 != 0) {
+          ok = false;
+        } else {
+          int nr = vec.size() / 2;
+          st.resize(nr);
+          end.resize(nr);
+          for (int i=0; i<nr; ++i) {
+            st[i] = vec[2*i];
+            end[i] = vec[2*i + 1];
+          }
+        }
       }
     }
     ASSERTSTR (ok,
-	       "domain must be given as [[stx,endx],[sty,endy],...]\n"
-	       "or as [st=[stx,...],end=[endx,...] or size=[sizex,...]]");
+               "domain must be given as [[stx,endx],[sty,endy],...]\n"
+               "or as [st=[stx,...],end=[endx,...] or size=[sizex,...]]");
   }
   if (size > 0) {
     ASSERTSTR (int(st.size()) <= size, "Domain has too many axes");
@@ -428,8 +428,8 @@ void showNames (const string& pattern, PTCommand type)
     ParmMap parmset;
     parmtab->getDefValues (parmset, pattern);
     for (ParmMap::const_iterator iter = parmset.begin();
-	 iter != parmset.end();
-	 iter++) {
+         iter != parmset.end();
+         iter++) {
       names.push_back (iter->first);
     }
   }
@@ -437,7 +437,7 @@ void showNames (const string& pattern, PTCommand type)
 }
 
 void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
-	       const ParmValueSet& pvset, bool showAll)
+               const ParmValueSet& pvset, bool showAll)
 {
   cout << parmName;
   cout << "  type=" << int2type(pvset.getType());
@@ -463,17 +463,17 @@ void showParms (ParmMap& parmSet, bool showAll)
     const string& parmName = iter->first;
     if (iter->second.size() == 0) {
       showParm (parmName,
-		iter->second.getFirstParmValue(),
-		iter->second.getGrid().getBoundingBox(),
-		iter->second, showAll);
+                iter->second.getFirstParmValue(),
+                iter->second.getGrid().getBoundingBox(),
+                iter->second, showAll);
       nr++;
     } else {
       for (uint i=0; i<iter->second.size(); ++i) {
-	showParm (parmName,
-		  iter->second.getParmValue(i),
-		  iter->second.getGrid().getCell(i),
-		  iter->second, showAll);
-	nr++;
+        showParm (parmName,
+                  iter->second.getParmValue(i),
+                  iter->second.getGrid().getCell(i),
+                  iter->second, showAll);
+        nr++;
       }
     }
   }
@@ -503,7 +503,7 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   ParmValueSet& pvset = cache.getValueSet(parmid);
   // Assure no value exists yet.
   ASSERTSTR (pvset.size() == 0,
-	     "Value for this parameter/domain already exists");
+             "Value for this parameter/domain already exists");
   // Check if the parm already exists (for another domain).
   // If so, only the values can be set (but not the coeff shape).
   bool isOldParm = cache.getParmSet().isInParmDB(parmid);
@@ -534,7 +534,7 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   } else {
     if (nsize > 0  &&  type != ParmValue::Scalar) {
       ASSERTSTR (shp.isEqual(shape),
-		 "Parameter has more domains; coeff shape cannot be changed");
+                 "Parameter has more domains; coeff shape cannot be changed");
     }
     shape = shp;
     size = nsize;
@@ -550,13 +550,13 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
       RegularAxis xaxis(domain.lowerX(), domain.upperX(), shape[0], true);
       RegularAxis yaxis(domain.lowerY(), domain.upperY(), shape[1], true);
       pval->setScalars (Grid(Axis::ShPtr(new RegularAxis(xaxis)),
-			     Axis::ShPtr(new RegularAxis(yaxis))),
-			vals);
+                             Axis::ShPtr(new RegularAxis(yaxis))),
+                        vals);
   }
   vector<ParmValue::ShPtr> valvec (1, pval);
   vector<Box> domains(1, domain);
   pvset = ParmValueSet (Grid(domains), valvec, defval,
-			ParmValue::FunkletType(type), pert, pertrel);
+                        ParmValue::FunkletType(type), pert, pertrel);
   showParm (parmName, *pval, domain, pvset, true);
   pvset.setDirty();
   cache.flush();
@@ -596,7 +596,7 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
 }
 
 void updateDefParm (const string& parmName, const ParmValueSet& pvset,
-		    KeyValueMap& kvmap)
+                    KeyValueMap& kvmap)
 {
   ParmValue pval = pvset.getFirstParmValue();
   int type = pvset.getType();
@@ -652,126 +652,126 @@ void doIt (bool noPrompt)
   while (true) {
     try {
       if (!noPrompt) {
-	cerr << "Command: ";
+        cerr << "Command: ";
       }
       char* cstr = cstra;
       if (! cin.getline (cstr, buffersize)) {
-	cerr << "Error while reading command" << endl;
-	break;
+        cerr << "Error while reading command" << endl;
+        break;
       } 
       while (*cstr == ' ') {
-	cstr++;
+        cstr++;
       }
       // Skip empty lines and comment lines.
       if (cstr[0] == 0  ||  cstr[0] == '#') {
-	continue;
+        continue;
       }
       if (cstr[0] == '?') {
-	showHelp();
+        showHelp();
       } else {
-	PTCommand cmd = getCommand (cstr);
-	ASSERTSTR(cmd!=NOCMD, "invalid command given: " << cstr);
-	if (cmd == QUIT) {
-	  break;
-	}
-	string parmName;
-	if (cmd == OPEN) {
-	  ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
-	  // Connect to database.
-	  KeyValueMap kvmap = KeyParser::parse (cstr);
-	  string dbUser = kvmap.getString ("user", getUserName());
-	  string dbHost = kvmap.getString ("host", "dop50.astron.nl");
-	  string dbName = kvmap.getString ("db", dbUser);
-	  string dbType = kvmap.getString ("dbtype", "casa");
-	  string tableName = kvmap.getString ("tablename", "MeqParm");
-	  ParmDBMeta meta (dbType, tableName);
-	  meta.setSQLMeta (dbName, dbUser, "", dbHost);
-	  parmtab = new ParmDB (meta);
-	} else if (cmd == CREATE)  {
-	  ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
-	  // create dataBase
-	  KeyValueMap kvmap = KeyParser::parse (cstr);
-	  string dbUser = kvmap.getString ("user", getUserName());
-	  string dbHost = kvmap.getString ("host", "dop50.astron.nl");
-	  string dbName = kvmap.getString ("db", dbUser);
-	  string dbType = kvmap.getString ("dbtype", "casa");
-	  string tableName = kvmap.getString ("tablename", "MeqParm");
-	  ParmDBMeta meta (dbType, tableName);
-	  meta.setSQLMeta (dbName, dbUser, "", dbHost);
-	  parmtab = new ParmDB (meta, true);
-	} else {
-	  ASSERTSTR(parmtab!=0, "OPEN or CREATE not done yet");
-	  if (cmd == CLOSE)  {
-	    delete parmtab;
-	    parmtab = 0;
-	  } else if (cmd == CLEAR)  {
-	    // clear database tables
-	    parmtab->clearTables();
-	  } else {
-	    // Other commands expect a possible parmname and keywords
-	    parmName = getParmName (cstr);
-	    KeyValueMap kvmap = KeyParser::parse (cstr);
-	    // For list functions the parmname defaults to *.
-	    // Otherwise a parmname or pattern must be given.
-	    if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
-		cmd!=NAMES && cmd!=NAMESDEF) {
-	      ASSERTSTR (!parmName.empty(), "No parameter name given");
-	    } else if (parmName.empty()) {
-	      parmName = "*";
-	    }
-	    if (cmd==NEWDEF || cmd==UPDDEF || cmd==DELDEF || cmd==SHOWDEF) {
-	      // Read the given def parameters and domains.
-	      ParmMap parmset;
-	      parmtab->getDefValues (parmset, parmName);
-	      int nrparm = parmset.size();
-	      if (cmd == NEWDEF) {
-		ASSERTSTR (parmset.empty(),
-			   "the parameter already exists");
-		newDefParm (parmName, kvmap);
-	      } else if (cmd == SHOWDEF) {
-		showParms (parmset, false);
-	      } else if (cmd == UPDDEF) {
-		ASSERTSTR (! parmset.empty(), "parameter not found");
-		updateDefParms (parmset, kvmap);
-		cout << "Updated " << nrparm << " parm defaultvalue records"
-		     << endl;
-	      } else if (cmd == DELDEF) {
-		ASSERTSTR (! parmset.empty(), "parameter not found");
-		parmtab->deleteDefValues (parmName);
-		cout << "Deleted " << nrparm << " parm defaultvalue records"
-		     << endl;
-	      }
-	    } else if (cmd==NEW || cmd==DEL || cmd==SHOW) {
-	      // Read the given parameters and domains.
-	      Box domain = getDomain(kvmap);
-	      ParmMap parmset;
-	      parmtab->getValues (parmset, parmName, domain);
-	      int nrparm = parmset.size();
-	      int nrvalrec = countParms (parmset);
-	      if (cmd == NEW) {
-		ASSERTSTR (parmset.empty(),
-			   "the parameter/domain already exists");
-		newParm (parmName, kvmap);
-	      } else if (cmd == SHOW) {
-		showParms (parmset, true);
-	      } else if (cmd == DEL) {
-		ASSERTSTR (! parmset.empty(), "parameter/domain not found");
-		parmtab->deleteValues (parmName, domain);
-		cout << "Deleted " << nrvalrec << " value records (of "
-		     << nrparm << " parms)" << endl;
-	      }
-	    } else if (cmd==NAMES || cmd==NAMESDEF)  {
-	      // show names matching the pattern.
-	      showNames (parmName, cmd);
-	    } else if (cmd == RANGE) {
-	      cout << "Range: ";
-	      showDomain (parmtab->getRange (parmName));
-	      cout << endl;
-	    } else {
-	      cerr << "Unknown command given" << endl;
-	    }
-	  }
-	}
+        PTCommand cmd = getCommand (cstr);
+        ASSERTSTR(cmd!=NOCMD, "invalid command given: " << cstr);
+        if (cmd == QUIT) {
+          break;
+        }
+        string parmName;
+        if (cmd == OPEN) {
+          ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
+          // Connect to database.
+          KeyValueMap kvmap = KeyParser::parse (cstr);
+          string dbUser = kvmap.getString ("user", getUserName());
+          string dbHost = kvmap.getString ("host", "dop50.astron.nl");
+          string dbName = kvmap.getString ("db", dbUser);
+          string dbType = kvmap.getString ("dbtype", "casa");
+          string tableName = kvmap.getString ("tablename", "MeqParm");
+          ParmDBMeta meta (dbType, tableName);
+          meta.setSQLMeta (dbName, dbUser, "", dbHost);
+          parmtab = new ParmDB (meta);
+        } else if (cmd == CREATE)  {
+          ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
+          // create dataBase
+          KeyValueMap kvmap = KeyParser::parse (cstr);
+          string dbUser = kvmap.getString ("user", getUserName());
+          string dbHost = kvmap.getString ("host", "dop50.astron.nl");
+          string dbName = kvmap.getString ("db", dbUser);
+          string dbType = kvmap.getString ("dbtype", "casa");
+          string tableName = kvmap.getString ("tablename", "MeqParm");
+          ParmDBMeta meta (dbType, tableName);
+          meta.setSQLMeta (dbName, dbUser, "", dbHost);
+          parmtab = new ParmDB (meta, true);
+        } else {
+          ASSERTSTR(parmtab!=0, "OPEN or CREATE not done yet");
+          if (cmd == CLOSE)  {
+            delete parmtab;
+            parmtab = 0;
+          } else if (cmd == CLEAR)  {
+            // clear database tables
+            parmtab->clearTables();
+          } else {
+            // Other commands expect a possible parmname and keywords
+            parmName = getParmName (cstr);
+            KeyValueMap kvmap = KeyParser::parse (cstr);
+            // For list functions the parmname defaults to *.
+            // Otherwise a parmname or pattern must be given.
+            if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
+                cmd!=NAMES && cmd!=NAMESDEF) {
+              ASSERTSTR (!parmName.empty(), "No parameter name given");
+            } else if (parmName.empty()) {
+              parmName = "*";
+            }
+            if (cmd==NEWDEF || cmd==UPDDEF || cmd==DELDEF || cmd==SHOWDEF) {
+              // Read the given def parameters and domains.
+              ParmMap parmset;
+              parmtab->getDefValues (parmset, parmName);
+              int nrparm = parmset.size();
+              if (cmd == NEWDEF) {
+                ASSERTSTR (parmset.empty(),
+                           "the parameter already exists");
+                newDefParm (parmName, kvmap);
+              } else if (cmd == SHOWDEF) {
+                showParms (parmset, false);
+              } else if (cmd == UPDDEF) {
+                ASSERTSTR (! parmset.empty(), "parameter not found");
+                updateDefParms (parmset, kvmap);
+                cout << "Updated " << nrparm << " parm defaultvalue records"
+                     << endl;
+              } else if (cmd == DELDEF) {
+                ASSERTSTR (! parmset.empty(), "parameter not found");
+                parmtab->deleteDefValues (parmName);
+                cout << "Deleted " << nrparm << " parm defaultvalue records"
+                     << endl;
+              }
+            } else if (cmd==NEW || cmd==DEL || cmd==SHOW) {
+              // Read the given parameters and domains.
+              Box domain = getDomain(kvmap);
+              ParmMap parmset;
+              parmtab->getValues (parmset, parmName, domain);
+              int nrparm = parmset.size();
+              int nrvalrec = countParms (parmset);
+              if (cmd == NEW) {
+                ASSERTSTR (parmset.empty(),
+                           "the parameter/domain already exists");
+                newParm (parmName, kvmap);
+              } else if (cmd == SHOW) {
+                showParms (parmset, true);
+              } else if (cmd == DEL) {
+                ASSERTSTR (! parmset.empty(), "parameter/domain not found");
+                parmtab->deleteValues (parmName, domain);
+                cout << "Deleted " << nrvalrec << " value records (of "
+                     << nrparm << " parms)" << endl;
+              }
+            } else if (cmd==NAMES || cmd==NAMESDEF)  {
+              // show names matching the pattern.
+              showNames (parmName, cmd);
+            } else if (cmd == RANGE) {
+              cout << "Range: ";
+              showDomain (parmtab->getRange (parmName));
+              cout << endl;
+            } else {
+              cerr << "Unknown command given" << endl;
+            }
+          }
+        }
       }
     } catch (std::exception& x) {
       cerr << "Exception: " << x.what() << endl;

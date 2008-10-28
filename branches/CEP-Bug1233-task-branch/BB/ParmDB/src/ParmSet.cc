@@ -48,7 +48,7 @@ namespace BBS {
     uint i;
     for (i=0; i<itsDBs.size(); ++i) {
       if (&parmdb == itsDBs[i]) {
-	break;
+        break;
       }
     }
     if (i == itsDBs.size()) {
@@ -61,12 +61,12 @@ namespace BBS {
   {
     map<string,int>::const_iterator pos = itsNames.find(name);
     ASSERTSTR (pos != itsNames.end(), "Parm " << name
-	       << " not found in ParmSet");
+               << " not found in ParmSet");
     return itsParms[pos->second].getParmId();
   }
 
   void ParmSet::getValues (vector<ParmValueSet>& vsets,
-			   const Box& workDomain) const
+                           const Box& workDomain) const
   {
     if (vsets.size() == itsParms.size()) {
       return;      // nothing to do
@@ -84,25 +84,25 @@ namespace BBS {
     for (uint i=0; i<itsDBs.size(); ++i) {
       ParmDB* pdb = itsDBs[i];
       for (uint j=start; j<itsParms.size(); ++j) {
-	if (itsParms[j].getParmDBPtr() == pdb) {
-	  int nameid = itsParms[j].getNameId();
-	  ParmId parmid = itsParms[j].getParmId();
-	  if (nameid < 0) {
-	    // Use default value.
-	    vsets[parmid] = pdb->getDefValue (itsParms[parmid].getName(),
-					      ParmValue());
-	  } else {
-	    nameIds.push_back (nameid);
-	    parmIds.push_back (parmid);
-	  }
-	}
+        if (itsParms[j].getParmDBPtr() == pdb) {
+          int nameid = itsParms[j].getNameId();
+          ParmId parmid = itsParms[j].getParmId();
+          if (nameid < 0) {
+            // Use default value.
+            vsets[parmid] = pdb->getDefValue (itsParms[parmid].getName(),
+                                              ParmValue());
+          } else {
+            nameIds.push_back (nameid);
+            parmIds.push_back (parmid);
+          }
+        }
       }
       if (nameIds.size() > 0) {
-	pdb->getValues (vsets, nameIds, parmIds, workDomain);
-	todo -= nameIds.size();
-	if (todo == 0) break;
-	nameIds.clear();
-	parmIds.clear();
+        pdb->getValues (vsets, nameIds, parmIds, workDomain);
+        todo -= nameIds.size();
+        if (todo == 0) break;
+        nameIds.clear();
+        parmIds.clear();
       }
     }
   }
@@ -111,8 +111,8 @@ namespace BBS {
   {
     ParmDB* pdb = const_cast<ParmDB*>(itsParms[parmId].getParmDBPtr());
     pdb->putValues (itsParms[parmId].getName(),
-		    itsParms[parmId].getNameId(),
-		    pvset);
+                    itsParms[parmId].getNameId(),
+                    pvset);
   }
 
   void ParmSet::clear()

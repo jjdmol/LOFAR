@@ -38,7 +38,7 @@ namespace BBS {
     for (size_t i=0; i<nr; ++i) {
       size_t inxn = to.locate (from.center(i), true, inx);
       if (inxn != inx  &&  i > 0) {
-	itsBorders.push_back (i);
+        itsBorders.push_back (i);
       }
       inx = inxn;
       itsMapping.push_back (inx);
@@ -49,11 +49,11 @@ namespace BBS {
 
 
   const AxisMapping& AxisMappingCache::makeMapping (const Axis& from,
-						    const Axis& to)
+                                                    const Axis& to)
   {
     pair<map<AxisKey,AxisMapping>::iterator, bool> result = 
       itsCache.insert (make_pair(AxisKey(from.getId(), to.getId()),
-				 AxisMapping(from, to)));
+                                 AxisMapping(from, to)));
     // Make sure it got inserted.
     ASSERT (result.second);
     // Return the new mapping.
@@ -62,9 +62,9 @@ namespace BBS {
 
 
   Location GridMapping::findLocation (AxisMappingCache& cache,
-				      const Location& location,
-				      const Grid& src,
-				      const Grid& dest)
+                                      const Location& location,
+                                      const Grid& src,
+                                      const Grid& dest)
   {
     const AxisMapping& mapx = cache.get (*src.getAxis(0), *dest.getAxis(0));
     const AxisMapping& mapy = cache.get (*src.getAxis(1), *dest.getAxis(1));
@@ -72,25 +72,25 @@ namespace BBS {
   }
 
   Location GridMapping::findLocation (AxisMappingCache& cache,
-				      uint cellId,
-				      const Grid& src,
-				      const Grid& dest)
+                                      uint cellId,
+                                      const Grid& src,
+                                      const Grid& dest)
   {
     return findLocation (cache, src.getCellLocation(cellId), src, dest);
   }
 
   uint GridMapping::findCellId (AxisMappingCache& cache,
-				const Location& location,
-				const Grid& src,
-				const Grid& dest)
+                                const Location& location,
+                                const Grid& src,
+                                const Grid& dest)
   {
     return dest.getCellId (findLocation (cache, location, src, dest));
   }
 
   uint GridMapping::findcellId (AxisMappingCache& cache,
-				uint cellId,
-				const Grid& src,
-				const Grid& dest)
+                                uint cellId,
+                                const Grid& src,
+                                const Grid& dest)
   {
     return dest.getCellId (findLocation (cache, cellId, src, dest));
   }

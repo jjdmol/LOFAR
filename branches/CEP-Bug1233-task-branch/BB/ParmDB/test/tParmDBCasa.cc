@@ -51,7 +51,7 @@ void testCreate()
 }
 
 void checkDef (const ParmValueSet& pset, double value,
-	       const Array<double>& values = Array<double>())
+               const Array<double>& values = Array<double>())
 {
   // Check the value set of a default value.
   ASSERT (pset.size() == 0);
@@ -143,9 +143,9 @@ void testPutValues()
     }
   }
   ParmValueSet pset1(Grid(domains), values1, ParmValue(),
-		     ParmValue::Polc, 2e-6, false);
+                     ParmValue::Polc, 2e-6, false);
   ParmValueSet pset2(Grid(domains), values2, ParmValue(),
-		     ParmValue::Scalar, 2e-6, true);
+                     ParmValue::Scalar, 2e-6, true);
   // Write arrays, thus one row per domain will be used.
   int nameId = -1;             // test.ra1 is a new name
   pdb.putValues ("test1.ra1", nameId, pset1);

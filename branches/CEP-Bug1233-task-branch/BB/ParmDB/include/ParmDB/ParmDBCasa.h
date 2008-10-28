@@ -73,24 +73,24 @@ namespace BBS {
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.
     virtual void getValues (vector<ParmValueSet>& values,
-			    const vector<uint>& nameIds,
-			    const vector<ParmId>& parmIds,
-			    const Box& domain);
+                            const vector<uint>& nameIds,
+                            const vector<ParmId>& parmIds,
+                            const Box& domain);
 
     // Put the values for the given parameter name and id.
     // If it is a new value, the new rowid will be stored in the ParmValueSet.
     // If it is a new name, the nameId will be filled in.
     virtual void putValues (const string& parmName, int& nameId,
-			    ParmValueSet& values);
+                            ParmValueSet& values);
 
     // Delete the value records for the given parameters and domain.
     virtual void deleteValues (const std::string& parmNamePattern,
-			       const Box& domain);
+                               const Box& domain);
 
     // Get the default value for the given parameters.
     // Only * and ? should be used in the pattern (no [] and {}).
     virtual void getDefValues (ParmMap& result,
-			       const std::string& parmNamePattern);
+                               const std::string& parmNamePattern);
 
     // Put the default value.
     virtual void putDefValue (const string& name, const ParmValueSet& value);
@@ -133,15 +133,15 @@ namespace BBS {
 
     // Do the actual put of a value.
     void doPutValue (const string& parmName, int& nameId,
-		     ParmValueSet& parmSet);
+                     ParmValueSet& parmSet);
 
     // Put the value for an existing parameter/domain.
     void putOldValue (const ParmValue& parmValue,
-		      ParmValue::FunkletType type);
+                      ParmValue::FunkletType type);
 
     // Put the value for a new parameter/domain.
     void putNewValue (const string& name, int& nameId, ParmValueSet& parmSet,
-		      ParmValue& parmValue, const Box& domain);
+                      ParmValue& parmValue, const Box& domain);
 
     // Put an entry into the NAME table.
     int putName (const string& name, const ParmValueSet& pset);
@@ -151,25 +151,25 @@ namespace BBS {
 
     // Put the begin/end of an irregular axis.
     void putInterval (const Axis& axis, casa::ArrayColumn<double>& col,
-		      uint rownr);
+                      uint rownr);
 
     // Form an axis from the interval array in the given row.
     // If no interval array, return a regular axis made from (st,end,n).
     Axis::ShPtr getInterval (casa::ROArrayColumn<double>& col, uint rownr,
-			     double st, double end, uint n);
+                             double st, double end, uint n);
 
     // Find the table subset containing the parameter values for the
     // requested domain.
     casa::Table find (const std::string& parmName, 
-		      const Box& domain);
+                      const Box& domain);
 
     // Create a select expression node on domain and parent id.
     casa::TableExprNode makeExpr (const casa::Table& table,
-				  const Box& domain) const;
+                                  const Box& domain) const;
 
     // And two table select expressions, where the first one can be null.
     void andExpr (casa::TableExprNode& expr,
-		  const casa::TableExprNode& right) const;
+                  const casa::TableExprNode& right) const;
 
     //# Data members
     casa::Table itsTables[3];    //# normal,names,default

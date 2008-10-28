@@ -79,33 +79,33 @@ namespace BBS {
     // Get the parameter values for the given parameter and domain.
     // Note that the requested domain may contain multiple values.
     //    virtual ParmValueSet getValues (const std::string& parmName,
-    //				    const Box& domain) = 0;
+    //                              const Box& domain) = 0;
 
     // Get all values for a given domain and set of parm names.
     // If the parm name vector is empty, all parm names are taken.
     //    virtual void getValues (ParmMap& result,
-    //			    const std::vector<std::string>& parmNames,
-    //			    const Box& domain) = 0;
+    //                      const std::vector<std::string>& parmNames,
+    //                      const Box& domain) = 0;
 
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
     // The default implementation uses the following getValues function.
     virtual void getValuesPattern (ParmMap& result,
-				   const std::string& parmNamePattern,
-				   const Box& domain);
+                                   const std::string& parmNamePattern,
+                                   const Box& domain);
 
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.
     virtual void getValues (vector<ParmValueSet>& values,
-			    const vector<uint>& nameIds,
-			    const vector<ParmId>& parmIds,
-			    const Box& domain) = 0;
+                            const vector<uint>& nameIds,
+                            const vector<ParmId>& parmIds,
+                            const Box& domain) = 0;
 
     // Put the values for the given parameter name and id.
     // If it is a new value, the new rowid will be stored in the ParmValueSet.
     // If it is a new name, the nameId will be filled in.
     virtual void putValues (const string& parmName, int& nameId,
-			    ParmValueSet& values) = 0;
+                            ParmValueSet& values) = 0;
 
     // Put the value for the given parameters and domain.
     // It only writes the parameters that have the same DBSeqNr as this ParmDB.
@@ -115,22 +115,22 @@ namespace BBS {
 
     // Delete the records for the given parameters and domain.
     virtual void deleteValues (const std::string& parmNamePattern,
-			       const Box& domain) = 0;
+                               const Box& domain) = 0;
 
     // Get the default value for the given parameter.
     // If no default value is defined in the ParmDB, the given default value
     // will be used.
     ParmValueSet getDefValue (const std::string& parmName,
-			      const ParmValue& defaultValue);
+                              const ParmValue& defaultValue);
 
     // Get the default value for the given parameters.
     // Only * and ? should be used in the pattern (no [] and {}).
     virtual void getDefValues (ParmMap& result,
-			       const std::string& parmNamePattern) = 0;
+                               const std::string& parmNamePattern) = 0;
 
     // Put the default value.
     virtual void putDefValue (const string& parmName,
-			      const ParmValueSet& value) = 0;
+                              const ParmValueSet& value) = 0;
 
     // Delete the default value records for the given parameters.
     virtual void deleteDefValues (const std::string& parmNamePattern) = 0;
@@ -221,7 +221,7 @@ namespace BBS {
 //     // Note that the requested domain may contain multiple values.
 //     // A selection on parentId is done if >= 0.
 //     ParmValueSet getValues (const std::string& parmName,
-// 			    const Box& domain) const
+//                          const Box& domain) const
 //       { return itsRep->getValues (parmName, domain); }
 
 //     // Get the parameter values for the given parameters and domain.
@@ -229,24 +229,24 @@ namespace BBS {
 //     // in the parmNames vector.
 //     // A selection on parentId is done if >= 0.
 //     void getValues (ParmMap& result,
-// 		    const std::vector<std::string>& parmNames,
-// 		    const Box& domain) const
+//                  const std::vector<std::string>& parmNames,
+//                  const Box& domain) const
 //       { itsRep->getValues (result, parmNames, domain); }
 
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
     // A selection on parentId is done if >= 0.
     void getValues (ParmMap& result,
- 		    const std::string& parmNamePattern,
- 		    const Box& domain) const
+                    const std::string& parmNamePattern,
+                    const Box& domain) const
       { itsRep->getValuesPattern (result, parmNamePattern, domain); }
 
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.
     void getValues (vector<ParmValueSet>& values,
-		    const vector<uint>& nameIds,
-		    const vector<ParmId>& parmIds,
-		    const Box& domain)
+                    const vector<uint>& nameIds,
+                    const vector<ParmId>& parmIds,
+                    const Box& domain)
       { itsRep->getValues (values, nameIds, parmIds, domain); }
 
 //     // Put the value for the given parameters and domain.
@@ -258,23 +258,23 @@ namespace BBS {
     // If it is a new value, the new rowid will be stored in the ParmValueSet.
     // If it is a new name, the nameId will be filled in.
     void putValues (const string& name, int& nameId,
-		    ParmValueSet& values)
+                    ParmValueSet& values)
       { itsRep->putValues (name, nameId, values); }
 
     // Delete the records for the given parameters and domain.
     void deleteValues (const std::string& parmNamePattern,
-		       const Box& domain)
+                       const Box& domain)
       { itsRep->deleteValues (parmNamePattern, domain); }
 
     // Get the initial value for the given parameter.
     ParmValueSet getDefValue (const std::string& parmName,
-			      const ParmValue& defaultValue = ParmValue()) const
+                              const ParmValue& defaultValue = ParmValue()) const
       { return itsRep->getDefValue (parmName, defaultValue); }
 
     // Get the default value for the given parameters.
     // Only * and ? should be used in the pattern (no [] and {}).
     void getDefValues (ParmMap& result,
-		       const std::string& parmNamePattern) const
+                       const std::string& parmNamePattern) const
       { itsRep->getDefValues (result, parmNamePattern); }
 
     // Put the default value for the given parameter.

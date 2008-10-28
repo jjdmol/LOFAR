@@ -210,19 +210,19 @@ namespace BBS {
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
     void addSource (const string& patchName, const string& sourceName,
-		    SourceInfo::Type sourceType,
-		    const ParmMap& defaultParameters,
-		    double ra=-1e9, double dec=-1e9,
+                    SourceInfo::Type sourceType,
+                    const ParmMap& defaultParameters,
+                    double ra=-1e9, double dec=-1e9,
                     bool check = true)
       { itsRep->addSource (patchName, sourceName, sourceType,
                            defaultParameters, ra, dec, check); }
 
     // Add a source which forms a patch in itself (with the same name).
     void addSource (const string& sourceName, int catType,
-		    double apparentBrightness,
-		    SourceInfo::Type sourceType,
-		    const ParmMap& defaultParameters,
-		    double ra=-1e9, double dec=-1e9,
+                    double apparentBrightness,
+                    SourceInfo::Type sourceType,
+                    const ParmMap& defaultParameters,
+                    double ra=-1e9, double dec=-1e9,
                     bool check = true)
       { itsRep->addSource (sourceName, catType, apparentBrightness, sourceType,
                            defaultParameters, ra, dec, check); }

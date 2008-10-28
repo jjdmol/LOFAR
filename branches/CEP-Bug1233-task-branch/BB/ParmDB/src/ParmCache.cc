@@ -68,8 +68,8 @@ namespace BBS {
     for (uint i=0; i<itsValueSets.size(); ++i) {
       ParmValueSet& pvset = itsValueSets[i];
       if (pvset.isDirty()) {
-	itsParmSet->write (i, pvset);
-	pvset.setDirty (false);
+        itsParmSet->write (i, pvset);
+        pvset.setDirty (false);
       }
     }
   }

@@ -34,15 +34,15 @@ namespace BBS {
   {}
 
   ParmDBMeta::ParmDBMeta (const std::string& type,
-			  const std::string& tableName)
+                          const std::string& tableName)
     : itsType      (type),
       itsTableName (tableName)
   {}
 
   void ParmDBMeta::setSQLMeta (const std::string& dbName,
-			       const std::string& userName,
-			       const std::string& dbPwd,
-			       const std::string& hostName)
+                               const std::string& userName,
+                               const std::string& dbPwd,
+                               const std::string& hostName)
   {
     itsDBName   = dbName;
     itsUserName = userName;
@@ -53,16 +53,16 @@ namespace BBS {
   BlobOStream& operator<< (BlobOStream& bos, const ParmDBMeta& pdm)
   {
     bos << pdm.itsType   << pdm.itsTableName
-	<< pdm.itsDBName << pdm.itsUserName
-	<< pdm.itsDBPwd  << pdm.itsHostName;
+        << pdm.itsDBName << pdm.itsUserName
+        << pdm.itsDBPwd  << pdm.itsHostName;
     return bos;
   }
     
   BlobIStream& operator>> (BlobIStream& bis, ParmDBMeta& pdm)
   {
     bis >> pdm.itsType >> pdm.itsTableName
-	>> pdm.itsDBName >> pdm.itsUserName
-	>> pdm.itsDBPwd >> pdm.itsHostName;
+        >> pdm.itsDBName >> pdm.itsUserName
+        >> pdm.itsDBPwd >> pdm.itsHostName;
     return bis;
   }   
 

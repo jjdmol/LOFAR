@@ -29,9 +29,9 @@ namespace BBS {
   Box unite (const Box& lhs, const Box& rhs)
   {
     Point start(min(lhs.lowerX(), rhs.lowerX()),
-		min(lhs.lowerY(), rhs.lowerY()));
+                min(lhs.lowerY(), rhs.lowerY()));
     Point end(max(lhs.upperX(), rhs.upperX()),
-	      max(lhs.upperY(), rhs.upperY()));
+              max(lhs.upperY(), rhs.upperY()));
     return Box(start, end);
   }
 
@@ -39,15 +39,15 @@ namespace BBS {
   Box intersect (const Box& lhs, const Box& rhs)
   {
     Point start(max(lhs.lowerX(), rhs.lowerX()),
-		max(lhs.lowerY(), rhs.lowerY()));
+                max(lhs.lowerY(), rhs.lowerY()));
     Point end(min(lhs.upperX(), rhs.upperX()),
-	      min(lhs.upperY(), rhs.upperY()));
+              min(lhs.upperY(), rhs.upperY()));
     if(start.first < end.first
        && !casa::near(start.first, end.first)
        && start.second < end.second
        && !casa::near(start.second, end.second))
       {
-	return Box(start, end);
+        return Box(start, end);
       }
     return Box();
   }

@@ -107,9 +107,9 @@ namespace BBS {
       // Create a parameter key.
       ParmKey (ParmDB* parmdb, const string& name, int nameId, ParmId parmId)
         : itsParmDB (parmdb),
-	  itsName   (name),
-	  itsNameId (nameId),
-	  itsParmId (parmId)
+          itsName   (name),
+          itsNameId (nameId),
+          itsParmId (parmId)
       {}
 
       // Get the name.
