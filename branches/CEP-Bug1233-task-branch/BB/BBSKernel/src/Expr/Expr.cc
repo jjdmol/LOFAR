@@ -438,6 +438,7 @@ std::string ExprPhaseToComplex::getLabel()
 {
     return std::string("ExprPhaseToComplex\\nphase");
 }
+#endif
 
 } // namespace BBS
 } // namespace LOFAR
