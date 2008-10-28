@@ -278,8 +278,9 @@ namespace BBS {
   {
   public:
     CellIterator(const Location& start, const Location& end)
-      : itsStart (start),
-        itsEnd   (end)
+      : itsStart    (start),
+        itsEnd      (end),
+        itsLocation (start)
     {}
 
     // Test if the iterator is at the end.
