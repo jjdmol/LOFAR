@@ -65,10 +65,11 @@ public:
 
     enum ModelComponent
     {
-        BANDPASS = 0,
+        BANDPASS,
         GAIN,
         DIRECTIONAL_GAIN,
         BEAM,
+        IONOSPHERE,
         N_ModelComponent
     };
 
@@ -104,6 +105,9 @@ private:
 
     void makeStationUvw();
     
+    void makeAzElNodes(boost::multi_array<Expr, 2> &result,
+        const vector<Source::Pointer> &sources) const;
+
     void makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
         const vector<Source::Pointer> &sources) const;
 
@@ -115,7 +119,10 @@ private:
         const ModelConfig &config, const vector<Source::Pointer> &sources);
 
     void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
-        const ModelConfig &config, const vector<Source::Pointer> &sources);
+        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
+
+    void makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
+        const boost::multi_array<Expr, 2> &azel);
 
     BeamCoeff readBeamCoeffFile(const string &filename) const;
 
