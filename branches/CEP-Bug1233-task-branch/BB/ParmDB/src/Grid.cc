@@ -214,6 +214,13 @@ namespace BBS {
                                      domain.upperY(), index.second));
   }
 
+  Grid Grid::subset (const Location& start, const Location& end) const
+  {
+    DBGASSERT(start.first <= end.first  &&  start.second <= end.second);
+    return Grid (getAxis(0)->subset (start.first, end.first),
+                 getAxis(1)->subset (start.second, end.second));
+  }
+
   void Grid::toDomains (vector<Box>& domains) const
   {
     const Axis& xaxis = *(getAxis(0));

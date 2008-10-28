@@ -106,10 +106,13 @@ namespace BBS {
     // Check if the corresponding intervals in this and that axis are the same.
     bool checkIntervals (const Axis& that) const;
 
-    // Make a subset of the axis for the given start/end.
+    // Make a subset of the axis for the given start/end value.
     // It fills the index of the starting point of the subset on the axis.
     virtual Axis::ShPtr subset (double start, double end,
                                 size_t& index) const = 0;
+
+    // Make a subset of the axis for the given start/end index.
+    virtual Axis::ShPtr subset (size_t start, size_t end) const = 0;
 
     // Compress the axis.
     virtual Axis::ShPtr compress(size_t factor) const = 0;

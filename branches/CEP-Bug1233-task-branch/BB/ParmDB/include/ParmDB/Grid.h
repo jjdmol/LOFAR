@@ -238,6 +238,7 @@ namespace BBS {
     // <group>
     Grid subset (const Box&) const;
     Grid subset (const Box&, Location& index) const;
+    Grid subset (const Location &start, const Location &end) const;
     // </group>
 
     // Convert the grid to domain boxes and append them to the vector.
