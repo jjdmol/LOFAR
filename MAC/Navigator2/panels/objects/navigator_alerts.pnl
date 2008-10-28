@@ -593,11 +593,11 @@ LANG:0 0
   // goes 10 backwards in file or set to 0 if counting goes below 0
   firstRow-=10;
   if (firstRow < 0) {
-    firstRow=0;
-    
-    // redraw Table
-    redraw_table(firstRow);
+    firstRow=0;    
   }
+  
+  // redraw Table
+  redraw_table(firstRow);
 }" 0
  E E E
 13 13
@@ -631,10 +631,9 @@ LANG:0 0
   firstRow+=10;
   if (firstRow > (dynlen(g_alarms[ \"TIME\" ])-3) ) {
     firstRow=dynlen(g_alarms[ \"TIME\" ])-3;
-    
-    // redraw Table
-    redraw_table(firstRow);
   }
+  // redraw Table
+  redraw_table(firstRow);
 }" 0
  E E E
 13 14
