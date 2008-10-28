@@ -55,16 +55,23 @@ public:
     
     void init(const vector<string> &include, const vector<string> &exclude,
         const Grid &solGrid, const vector<baseline_t> &baselines,
-        const vector<string> &products, uint cellChunkSize);
+        const vector<string> &products, uint cellChunkSize, bool propagate);
     void run();
 
 private:
     void makeCoeffIndex(const ParmGroup &solvables);
     void makeCoeffMapping(const ParmGroup &solvables, const CoeffIndex &index);
-    void getCoeff(vector<CellCoeff> &result, const Location &start,
+
+    void getInitialCoeff(vector<CellCoeff> &result, const Location &start,
         const Location &end) const;
-    void setCoeff(const vector<CellSolution> &solutions, const Location &start,
-        const Location &end) const;
+
+    void setSolution(const vector<CellSolution> &solutions,
+        const Location &start, const Location &end) const;
+
+    void getCoeff(vector<double> &result, const Location &cell) const;
+    void setCoeff(const vector<double> &coeff, const Location &cell) const;
+    void setCoeff(const vector<double> &coeff, const Location &cell,
+        const vector<uint> &mapping) const;
 
     KernelId                                itsKernelId;
     VisData::Pointer                        itsChunk;
@@ -72,6 +79,7 @@ private:
     shared_ptr<BlobStreamableConnection>    itsSolver;
 
     bool                                    itsInitFlag;
+    bool                                    itsPropagateFlag;
     Grid                                    itsSolGrid;
     uint                                    itsCellChunkSize;
     ParmGroup                               itsSolvables;
