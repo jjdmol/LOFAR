@@ -99,6 +99,10 @@ namespace BBS {
     const vector<double>& getPerturbations() const
       { return itsPerturbations; }
 
+    // Get a particular perturbation.
+    double getPerturbation (uint index)
+      { return itsPerturbations.at (index); }
+
     // Get the result for the given grid. No perturbed values are calculated.
     // Normally the result has the same shape as the predict grid.
     // However, if there is a single constant value, it has shape [1,1].

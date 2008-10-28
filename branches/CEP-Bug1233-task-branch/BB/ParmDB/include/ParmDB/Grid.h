@@ -82,9 +82,9 @@ namespace BBS {
 
     // Get the given axis.
     // <group>
-    Axis::ShPtr getAxis (size_t n)
+    Axis::ShPtr& getAxis (size_t n)
       { return itsAxes[n]; }
-    const Axis::ShPtr getAxis (size_t n) const
+    const Axis::ShPtr& getAxis (size_t n) const
       { return itsAxes[n]; }
     // </group>
 
@@ -153,8 +153,12 @@ namespace BBS {
     { return itsRep->isDefault(); }
 
     // Get the given axis.
-    const Axis::ShPtr getAxis (size_t n) const
+    // <group>
+    const Axis::ShPtr& getAxis (size_t n) const
       { return itsRep->getAxis (n); }
+    const Axis::ShPtr& operator[] (size_t n) const
+      { return itsRep->getAxis (n); }
+    // </group>
 
     // Get the sizes of the axes.
     // <group>
@@ -265,6 +269,49 @@ namespace BBS {
   private:
     GridRep::ShPtr itsRep;
   };
+
+
+
+  // @brief Utility class that simplifies iterating over a 2-D range of cells.
+  class CellIterator
+  {
+  public:
+    CellIterator(const Location& start, const Location& end)
+      : itsStart (start),
+        itsEnd   (end)
+    {}
+
+    // Test if the iterator is at the end.
+    bool atEnd() const
+      { return itsLocation.second > itsEnd.second; }
+
+    // Increment the iterator.
+    // <group>
+    void operator++()
+    {
+      if (++itsLocation.first > itsEnd.first) {
+        itsLocation.first = itsStart.first;
+        ++itsLocation.second;
+      }
+    }
+    void operator++ (int)
+      { operator++(); }
+    // </group>
+
+    // STL-like iterator dereference.
+    const Location& operator*() const
+      { return itsLocation; }
+
+    // STL-like iterator pointer.
+    const Location *operator->() const
+      { return &itsLocation; }
+
+  private:
+    Location itsStart;
+    Location itsEnd;
+    Location itsLocation;
+  };
+
 
   // @}
 

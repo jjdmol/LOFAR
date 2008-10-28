@@ -340,6 +340,15 @@ namespace BBS {
     return Axis::ShPtr (new RegularAxis (lower(sinx), itsWidth, 1+einx-sinx));
   }
 
+  Axis::ShPtr RegularAxis::subset (size_t start, size_t end) const
+  {
+    if (start > end  ||  start >= size()  ||  end >= size()) {
+      return Axis::ShPtr (new RegularAxis());
+    }
+    return Axis::ShPtr (new RegularAxis (itsBegin + start*itsWidth,
+                                         itsWidth, end - start + 1));
+  }
+
   Axis::ShPtr RegularAxis::compress (size_t factor) const
   {
     // Is the resulting axis still regular?
@@ -553,6 +562,21 @@ namespace BBS {
     return Axis::ShPtr (new OrderedAxis (centers, widths));
   }
 
+  Axis::ShPtr OrderedAxis::subset(size_t start, size_t end) const
+  {
+    if (start > end  ||  start >= size()  ||  end >= size()) {
+      return Axis::ShPtr(new OrderedAxis());
+    }
+    size_t size = end - start + 1;
+    vector<double> centers(size);
+    vector<double> widths(size);    
+    for (size_t i=0; i<size; ++i) {
+      centers[i] = itsCenters[start + i];
+      widths[i]  = itsHWidths[start + i] * 2.0;
+    }
+    return Axis::ShPtr(new OrderedAxis(centers, widths));
+  }
+
   Axis::ShPtr OrderedAxis::compress (size_t) const
   {
     ASSERTSTR(false, "UnorderedAxis::compress not implemented");
@@ -658,6 +682,21 @@ namespace BBS {
       }
     }
     return Axis::ShPtr (new UnorderedAxis (cen, wid));
+  }
+
+  Axis::ShPtr UnorderedAxis::subset(size_t start, size_t end) const
+  {
+    if (start > end  ||  start >= size()  ||  end >= size()) {
+      return Axis::ShPtr(new UnorderedAxis());
+    }
+    size_t size = end - start + 1;
+    vector<double> centers(size);
+    vector<double> widths(size);    
+    for (size_t i=0; i<size; ++i) {
+      centers[i] = itsCenters[start + i];
+      widths[i]  = itsHWidths[start + i] * 2.0;
+    }
+    return Axis::ShPtr(new UnorderedAxis(centers, widths));
   }
 
   Axis::ShPtr UnorderedAxis::compress (size_t) const

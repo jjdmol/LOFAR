@@ -29,6 +29,10 @@
 namespace LOFAR {
 namespace BBS {
 
+  ParmCache::ParmCache (ParmSet& parmSet)
+    : itsParmSet (&parmSet)
+  {}
+
   ParmCache::ParmCache (ParmSet& parmSet, const Box& workDomain)
     : itsParmSet    (&parmSet),
       itsWorkDomain (workDomain)

@@ -179,6 +179,7 @@ namespace BBS {
     virtual size_t locate(double x, bool biasRight = true,
                           size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
+    virtual Axis::ShPtr subset (size_t start, size_t end) const;
     virtual Axis::ShPtr compress(size_t factor) const;
     
   private:
@@ -260,6 +261,7 @@ namespace BBS {
     virtual size_t locate(double x, bool biasRight = true,
                           size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
+    virtual Axis::ShPtr subset (size_t start, size_t end) const;
     virtual Axis::ShPtr compress(size_t factor) const;
 
   private:
@@ -293,6 +295,7 @@ namespace BBS {
     virtual size_t locate(double x, bool biasRight = true,
                           size_t start=0) const;
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
+    virtual Axis::ShPtr subset (size_t start, size_t end) const;
     virtual Axis::ShPtr compress(size_t factor) const;
 
   private:

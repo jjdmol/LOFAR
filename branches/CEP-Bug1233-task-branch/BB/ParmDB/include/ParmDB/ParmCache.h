@@ -46,6 +46,11 @@ namespace BBS {
   class ParmCache
   {
   public:
+    // Set up a cache. Attach it to he given ParmSet.
+    // No work domain is set yet; this has to be done later using the
+    // reset function.
+    ParmCache (ParmSet&);
+
     // Set up a cache for the given work domain.
     // Attach it to the given ParmSet.
     // Note that nameIds in the ParmSet might get changed when new values are
