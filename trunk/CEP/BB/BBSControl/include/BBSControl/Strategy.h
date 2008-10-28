@@ -89,13 +89,12 @@ namespace LOFAR
       // @name Accessor methods
       // @{
       string            dataSet()          const { return itsDataSet; }
-      ParmDB            parmDB()           const { return itsParmDB; }
+      PDB               parmDB()           const { return itsPDB; }
       vector<string>    stations()         const { return itsStations; }
-      string            inputData()        const { return itsInputData; }
+      string            inputColumn()      const { return itsInputColumn; }
       RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
       uint32            chunkSize()        const { return itsChunkSize; }
       Correlation       correlation()      const { return itsCorrelation; }
-      Integration       integration()      const { return itsIntegration; }
       // @}
 
     private:
@@ -110,15 +109,15 @@ namespace LOFAR
       string                 itsDataSet;
 
       // Information about the parameter database.
-      ParmDB                 itsParmDB;
+      PDB                    itsPDB;
 
       // Names of the stations to use. Names may contains wildcards, like \c *
       // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
       // they will be passed unaltered by BBS control.
       vector<string>         itsStations;
 
-      // Name of the MS input data column
-      string                 itsInputData;
+      // Name of the MS input column
+      string                 itsInputColumn;
 
       // Region of interest
       RegionOfInterest       itsRegionOfInterest;
@@ -128,9 +127,6 @@ namespace LOFAR
 
       // Selection type of the correlation products.
       Correlation            itsCorrelation;
-
-      // Integration intervals in frequency (Hz) and time (s).
-      Integration            itsIntegration;
 
       // Sequence of steps that comprise this solve strategy.
       vector< shared_ptr<const Step> > itsSteps;

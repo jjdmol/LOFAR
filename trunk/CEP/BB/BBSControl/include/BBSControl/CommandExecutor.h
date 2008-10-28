@@ -31,28 +31,30 @@
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/Types.h>
 
-#include <BBSKernel/Prediffer.h>
 #include <BBSKernel/MetaMeasurement.h>
 #include <BBSKernel/Measurement.h>
-#include <BBSKernel/NoiseGenerator.h>
+//#include <BBSKernel/NoiseGenerator.h>
+#include <BBSKernel/Model.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
 
-#include <ParmDB/ParmDB.h>
+#include <ParmDB/SourceDB.h>
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 #include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
   //# Forward declations
   class BlobStreamable;
-
+  
   namespace BBS
   {
     //# Forward declations
     class CommandQueue;
+    class Step;
 //    class BlobStreamableConnection;
 
     // \addtogroup BBSControl
@@ -66,7 +68,7 @@ namespace LOFAR
                       shared_ptr<BlobStreamableConnection> &solver)
         :   itsKernelId(id),
             itsCommandQueue(queue),
-            itsSolver(solver)
+            itsGlobalSolver(solver)
       {
       }
 
@@ -99,11 +101,11 @@ namespace LOFAR
       { return itsKernelId; }
 
     private:
-      void handleLocalSolve(const SolveStep &command);
-      void handleGlobalSolve(const SolveStep &command);
+      bool parseProductSelection(vector<string> &result, const Step &command);
+      bool parseBaselineSelection(vector<baseline_t> &result,
+        const Step &command);
       
       // Kernel.
-      scoped_ptr<Prediffer>                   itsKernel;
       KernelId                                itsKernelId;
       
       // Measurement.
@@ -111,22 +113,25 @@ namespace LOFAR
       Measurement::Pointer                    itsMeasurement;
       string                                  itsInputColumn;
 
+      // Source Database
+      scoped_ptr<SourceDB>                    itsSourceDb;
+      
       // Chunk.
+      Box                                     itsDomain;
       VisSelection                            itsChunkSelection;
       VisData::Pointer                        itsChunk;
       
-      // Model parameter databases.
-      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsSkyDb;
-      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsInstrumentDb;
-
+      // Model
+      Model::Pointer                          itsModel;
+      
       // Noise generator (put here to keep state across chunks).
-      NoiseGenerator                          itsNoiseGenerator;
+//      NoiseGenerator                          itsNoiseGenerator;
       
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;
 
       // Connection to the global solver.
-      shared_ptr<BlobStreamableConnection>    itsSolver;
+      shared_ptr<BlobStreamableConnection>    itsGlobalSolver;
 
       // Result of the last executed command.
       CommandResult                           itsResult;

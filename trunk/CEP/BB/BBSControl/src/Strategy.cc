@@ -62,9 +62,9 @@ namespace LOFAR
       itsDataSet = aParSet.getString("DataSet");
 
       // Retrieve the parameter database related key/value pairs.
-      itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
-      itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
-      itsParmDB.history = aParSet.getString("ParmDB.History");
+      itsPDB.instrument = aParSet.getString("ParmDB.Instrument");
+      itsPDB.sky = aParSet.getString("ParmDB.Sky");
+      itsPDB.history = aParSet.getString("ParmDB.History");
 
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
@@ -73,8 +73,8 @@ namespace LOFAR
       // ID's of the stations to be used by this strategy.
       itsStations = ps.getStringVector("Stations");
 
-      // Get the name of the MS input data column
-      itsInputData = ps.getString("InputData");
+      // Get the name of the MS input column
+      itsInputColumn = ps.getString("InputColumn");
 
       // Get the region of interest (optional)
       itsRegionOfInterest.freq =
@@ -90,11 +90,6 @@ namespace LOFAR
         ps.getString("Correlation.Selection");
       itsCorrelation.type = 
         ps.getStringVector("Correlation.Type", vector<string>());
-
-      // Get the integration intervals in frequency (Hz) and time (s)
-      // (optional).
-      itsIntegration.deltaFreq = ps.getDouble("Integration.Freq", 0);
-      itsIntegration.deltaTime = ps.getDouble("Integration.Time", 0);
 
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
@@ -122,14 +117,13 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
-	 << endl << indent << itsParmDB
+	 << endl << indent << itsPDB
 	 << endl << indent << "Strategy:";
       Indent id;
-      os << endl << indent << "Input data: " << itsInputData
+      os << endl << indent << "Input column: " << itsInputColumn
 	 << endl << indent << itsRegionOfInterest
 	 << endl << indent << "Chunk size: " << itsChunkSize
 	 << endl << indent << itsCorrelation
-	 << endl << indent << itsIntegration
 	 << endl << indent << "Stations: " << itsStations;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	os << endl << indent << *itsSteps[i];
@@ -156,11 +150,11 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       ps.add("DataSet", itsDataSet);
-      ps.add("ParmDB.Instrument", itsParmDB.instrument);
-      ps.add("ParmDB.LocalSky", itsParmDB.localSky);
-      ps.add("ParmDB.History", itsParmDB.history);
+      ps.add("ParmDB.Instrument", itsPDB.instrument);
+      ps.add("ParmDB.Sky", itsPDB.sky);
+      ps.add("ParmDB.History", itsPDB.history);
       ps.add("Strategy.Stations", toString(itsStations));
-      ps.add("Strategy.InputData", itsInputData);
+      ps.add("Strategy.InputColumn", itsInputColumn);
       ps.add("Strategy.ChunkSize", toString(itsChunkSize));
       ps.add("Strategy.RegionOfInterest.Freq", 
              toString(itsRegionOfInterest.freq));
@@ -168,8 +162,6 @@ namespace LOFAR
              toString(itsRegionOfInterest.time));
       ps.add("Strategy.Correlation.Selection", itsCorrelation.selection);
       ps.add("Strategy.Correlation.Type", toString(itsCorrelation.type));
-      ps.add("Strategy.Integration.Freq", toString(itsIntegration.deltaFreq));
-      ps.add("Strategy.Integration.Time", toString(itsIntegration.deltaTime));
       LOG_TRACE_COND_STR("Write the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
       if (itsWriteSteps) writeSteps(ps);
@@ -181,22 +173,20 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       itsDataSet                 = ps.getString("DataSet");
-      itsParmDB.instrument       = ps.getString("ParmDB.Instrument");
-      itsParmDB.localSky         = ps.getString("ParmDB.LocalSky");
-      itsParmDB.history          = ps.getString("ParmDB.History");
+      itsPDB.instrument          = ps.getString("ParmDB.Instrument");
+      itsPDB.sky                 = ps.getString("ParmDB.Sky");
+      itsPDB.history             = ps.getString("ParmDB.History");
       itsStations                = ps.getStringVector("Strategy.Stations");
-      itsInputData               = ps.getString("Strategy.InputData");
-      itsChunkSize = ps.getUint32("Strategy.ChunkSize");
-      itsRegionOfInterest.freq =
+      itsInputColumn             = ps.getString("Strategy.InputColumn");
+      itsChunkSize               = ps.getUint32("Strategy.ChunkSize");
+      itsRegionOfInterest.freq   =
         ps.getUint32Vector("Strategy.RegionOfInterest.Freq");
-      itsRegionOfInterest.time  =
+      itsRegionOfInterest.time   =
         ps.getStringVector("Strategy.RegionOfInterest.Time");
       itsCorrelation.selection   =
         ps.getString("Strategy.Correlation.Selection");
       itsCorrelation.type        = 
         ps.getStringVector("Strategy.Correlation.Type");
-      itsIntegration.deltaFreq   = ps.getDouble("Strategy.Integration.Freq");
-      itsIntegration.deltaTime   = ps.getDouble("Strategy.Integration.Time");
 
       // Read back the Step objects? Set \c itsWriteSteps to \c false, if
       // no steps were specified in the parameter set.

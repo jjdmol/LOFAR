@@ -64,7 +64,7 @@ namespace LOFAR
       CommandId finalizeId(0);
       
       bool dummy1 = BlobStreamableFactory::instance().registerClass<RegularAxis>("RegularAxis");
-      bool dummy2 = BlobStreamableFactory::instance().registerClass<IrregularAxis>("IrregularAxis");      
+      bool dummy2 = BlobStreamableFactory::instance().registerClass<OrderedAxis>("OrderedAxis");      
     }
 
 
@@ -124,8 +124,8 @@ namespace LOFAR
         // Create a new CommandQueue. This will open a connection to the
         // blackboard database.
         itsCommandQueue.reset
-          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
-                            globalParameterSet()->getString("BBDB.UserName"),
+          (new CommandQueue(globalParameterSet()->getString("BBDB.Name"),
+                            globalParameterSet()->getString("BBDB.Username"),
                             globalParameterSet()->getString("BBDB.Host"),
                             globalParameterSet()->getString("BBDB.Port")));
 
@@ -133,12 +133,13 @@ namespace LOFAR
         // posted to the blackboard database.
         itsCommandQueue->registerTrigger(CommandQueue::Trigger::Result);
 
-        // Retrieve the number of local controllers.
-        nrLocalCtrls = globalParameterSet()->getUint32("NrLocalCtrls");
-        LOG_DEBUG_STR("Number of local controllers: " << nrLocalCtrls);
+        // Retrieve the number of kernels.
+        nrLocalCtrls = globalParameterSet()->getUint32("Control.KernelCount");
+        LOG_DEBUG_STR("Number of kernels: " << nrLocalCtrls);
 
         // Retrieve the number of global solvers.
-        nrGlobalSolvers = globalParameterSet()->getUint32("NrGlobalSolvers");
+        nrGlobalSolvers =
+          globalParameterSet()->getUint32("Control.SolverCount");
         LOG_DEBUG_STR("Number of global solvers: " << nrGlobalSolvers);
 
         // Send the strategy.
@@ -211,7 +212,7 @@ namespace LOFAR
         itsFreqEnd = range.second;
 
         // Determine ROI in time.
-        const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+        const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
 
         itsTimeStart = 0;
         itsTimeEnd = timeAxis->size() - 1;
@@ -260,7 +261,7 @@ namespace LOFAR
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
           ASSERT(itsChunkStart <= itsTimeEnd);
 
-          const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+          const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
           const double start = timeAxis->lower(itsChunkStart);
           const double end =
             timeAxis->upper(std::min(itsChunkStart + itsChunkSize - 1,

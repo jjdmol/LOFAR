@@ -81,7 +81,7 @@ namespace LOFAR
 	Indent id;
 	os << endl << indent << "Solvable parameters: " << itsParms
 	   << endl << indent << "Excluded parameters: " << itsExclParms
-       << endl << indent << "Kernel groups: "       << itsKernelGroups
+       << endl << indent << "Calibration groups: "  << itsCalibrationGroups
 	   << endl << indent << itsCellSize
 	   << endl << indent << "Cell chunk size: " << itsCellChunkSize
 	   << boolalpha
@@ -116,8 +116,8 @@ namespace LOFAR
                  toString(itsParms));
       ps.replace(prefix + "ExclParms", 
                  toString(itsExclParms));
-      ps.replace(prefix + "KernelGroups",
-                 toString(itsKernelGroups));
+      ps.replace(prefix + "CalibrationGroups",
+                 toString(itsCalibrationGroups));
       ps.replace(prefix + "CellSize.Freq",
                  toString(itsCellSize.freq));
       ps.replace(prefix + "CellSize.Time", 
@@ -132,8 +132,8 @@ namespace LOFAR
                  toString(itsSolverOptions.epsValue));
       ps.replace(prefix + "Options.EpsDerivative", 
                  toString(itsSolverOptions.epsDerivative));
-      ps.replace(prefix + "Options.CollFactor", 
-                 toString(itsSolverOptions.collFactor));
+      ps.replace(prefix + "Options.ColFactor", 
+                 toString(itsSolverOptions.colFactor));
       ps.replace(prefix + "Options.LMFactor", 
                  toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs", 
@@ -153,8 +153,8 @@ namespace LOFAR
         pss.getStringVector("Parms");
       itsExclParms                   = 
         pss.getStringVector("ExclParms",    vector<string>());
-      itsKernelGroups                = 
-        pss.getUint32Vector("KernelGroups");//, vector<uint32>());
+      itsCalibrationGroups           = 
+        pss.getUint32Vector("CalibrationGroups");//, vector<uint32>());
       itsCellSize.freq               =
         pss.getUint32      ("CellSize.Freq");
       itsCellSize.time               = 
@@ -169,8 +169,8 @@ namespace LOFAR
         pss.getDouble      ("Options.EpsValue");
       itsSolverOptions.epsDerivative = 
         pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.collFactor    = 
-        pss.getDouble      ("Options.CollFactor");
+      itsSolverOptions.colFactor     = 
+        pss.getDouble      ("Options.ColFactor");
       itsSolverOptions.lmFactor      = 
         pss.getDouble      ("Options.LMFactor");
       itsSolverOptions.balancedEqs   = 
