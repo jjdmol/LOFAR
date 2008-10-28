@@ -513,7 +513,7 @@ void CommandExecutor::visit(const SolveStep &command)
                 command.solverOptions());
 
             controller.init(command.parms(), command.exclParms(), grid,
-                baselines, products, cellChunkSize);
+                baselines, products, cellChunkSize, command.propagate());
 
             controller.run();
 
@@ -581,7 +581,7 @@ void CommandExecutor::visit(const SolveStep &command)
                 itsGlobalSolver);
 
             controller.init(command.parms(), command.exclParms(), grid,
-                baselines, products, cellChunkSize);
+                baselines, products, cellChunkSize, command.propagate());
 
             controller.run();
 
