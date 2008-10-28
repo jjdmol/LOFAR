@@ -2,10 +2,10 @@
 Measurement Set: test.ms
 Parameter database:
 . Instrument table: test.mep
-. Local sky table: test.gsm
+. Sky table: test.gsm
 . History table: test.his
 Strategy:
-. Input data: INDATA
+. Input column: INDATA
 . Region of interest:
 . . Frequency: []
 . . Time: []
@@ -13,9 +13,6 @@ Strategy:
 . Correlation:
 . . Selection: ALL
 . . Type: ["XX","YY"]
-. Integration:
-. . Delta frequency: 1 (Hz)
-. . Delta time: 0.1 (s)
 . Stations: ["CS*","RS1*","RS2*","DE*"]
 . Step: MultiStep
 . . Name: xyz1
@@ -26,9 +23,6 @@ Strategy:
 . . Correlation:
 . . . Selection: CROSS
 . . . Type: ["XX","XY","YX","YY"]
-. . Integration:
-. . . Delta frequency: 2 (Hz)
-. . . Delta time: 0.5 (s)
 . . Model configuration:
 . . . Use phasors: false
 . . . Sources: ["3C343"]
@@ -45,18 +39,15 @@ Strategy:
 . . . Correlation:
 . . . . Selection: CROSS
 . . . . Type: ["XX","XY","YX","YY"]
-. . . Integration:
-. . . . Delta frequency: 2 (Hz)
-. . . . Delta time: 0.5 (s)
 . . . Model configuration:
 . . . . Use phasors: false
 . . . . Sources: ["3C343"]
 . . . . Components: ["BANDPASS"]
-. . . Output data: OUTDATA1
+. . . Output column: OUTDATA1
 . . . Solve: 
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Kernel groups: [1,1]
+. . . . Calibration groups: [1,1]
 . . . . Cell size:
 . . . . . No. of channels: 1000
 . . . . . No. of timeslots: 1
@@ -66,7 +57,7 @@ Strategy:
 . . . . . Max nr. of iterations: 10
 . . . . . Epsilon value: 1e-07
 . . . . . Epsilon derivative: 1e-07
-. . . . . Collinearity factor: 0.99
+. . . . . Colinearity factor: 0.99
 . . . . . LM factor: 0.001
 . . . . . Balanced equations: true
 . . . . . Use SVD: false
@@ -79,9 +70,6 @@ Strategy:
 . . . Correlation:
 . . . . Selection: CROSS
 . . . . Type: ["XX","XY","YX","YY"]
-. . . Integration:
-. . . . Delta frequency: 2 (Hz)
-. . . . Delta time: 0.5 (s)
 . . . Model configuration:
 . . . . Use phasors: false
 . . . . Sources: ["3C343"]
@@ -89,7 +77,7 @@ Strategy:
 . . . . Beam:
 . . . . . Type: HamakerDipole
 . . . . . Coefficient file: beam_coeff.txt
-. . . Output data: OUTDATA2
+. . . Output column: OUTDATA2
 . . Step: Noise
 . . . Name: sl4
 . . . Full name: xyz1.sl4
@@ -99,9 +87,6 @@ Strategy:
 . . . Correlation:
 . . . . Selection: CROSS
 . . . . Type: ["XX","XY","YX","YY"]
-. . . Integration:
-. . . . Delta frequency: 2 (Hz)
-. . . . Delta time: 0.5 (s)
 . . . Model configuration:
 . . . . Use phasors: false
 . . . . Sources: ["3C343"]
@@ -109,7 +94,7 @@ Strategy:
 . . . . Beam:
 . . . . . Type: HamakerDipole
 . . . . . Coefficient file: beam_coeff.txt
-. . . Output data: OUTDATA4
+. . . Output column: OUTDATA4
 . . . Additive Gaussian noise:
 . . . . Mean: -3
 . . . . Sigma: 5
@@ -122,9 +107,6 @@ Strategy:
 . . Correlation:
 . . . Selection: NONE
 . . . Type: []
-. . Integration:
-. . . Delta frequency: 0 (Hz)
-. . . Delta time: 0 (s)
 . . Model configuration:
 . . . Use phasors: true
 . . . Sources: ["3C343"]
@@ -142,18 +124,15 @@ Strategy:
 . . . Correlation:
 . . . . Selection: NONE
 . . . . Type: []
-. . . Integration:
-. . . . Delta frequency: 0 (Hz)
-. . . . Delta time: 0 (s)
 . . . Model configuration:
 . . . . Use phasors: true
 . . . . Sources: ["3C343"]
 . . . . Components: ["BANDPASS"]
-. . . Output data: OUTDATA1
+. . . Output column: OUTDATA1
 . . . Solve: 
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Kernel groups: [1,1]
+. . . . Calibration groups: [1,1]
 . . . . Cell size:
 . . . . . No. of channels: 1000
 . . . . . No. of timeslots: 1
@@ -163,7 +142,7 @@ Strategy:
 . . . . . Max nr. of iterations: 10
 . . . . . Epsilon value: 1e-07
 . . . . . Epsilon derivative: 1e-07
-. . . . . Collinearity factor: 0.99
+. . . . . Colinearity factor: 0.99
 . . . . . LM factor: 0.001
 . . . . . Balanced equations: true
 . . . . . Use SVD: false
@@ -176,9 +155,6 @@ Strategy:
 . . . Correlation:
 . . . . Selection: NONE
 . . . . Type: []
-. . . Integration:
-. . . . Delta frequency: 0 (Hz)
-. . . . Delta time: 0 (s)
 . . . Model configuration:
 . . . . Use phasors: true
 . . . . Sources: ["3C343"]
@@ -187,4 +163,4 @@ Strategy:
 . . . . . Type: YatawattaDipole
 . . . . . Module theta: beam_theta.so
 . . . . . Module phi: beam_phi.so
-. . . Output data: OUTDATA3
+. . . Output column: OUTDATA3

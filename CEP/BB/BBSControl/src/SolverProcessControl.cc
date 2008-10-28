@@ -83,10 +83,10 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::define()");
       try {
-        itsNrKernels = globalParameterSet()->getUint32("Solver.nrKernels");
+        itsNrKernels = globalParameterSet()->getUint32("Solver.KernelCount");
         itsSenderId = 
           SenderId(SenderId::SOLVER,
-                   globalParameterSet()->getUint32("SolverProcessId"));
+            globalParameterSet()->getUint32("Solver.Id"));
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
@@ -118,8 +118,8 @@ namespace LOFAR
           // Create a new CommandQueue. This will open a connection to the
           // blackboard database.
           itsCommandQueue.reset
-            (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
-                              globalParameterSet()->getString("BBDB.UserName"),
+            (new CommandQueue(globalParameterSet()->getString("BBDB.Name"),
+                              globalParameterSet()->getString("BBDB.Username"),
                               globalParameterSet()->getString("BBDB.Host"),
                               globalParameterSet()->getString("BBDB.Port")));
 
@@ -228,7 +228,7 @@ namespace LOFAR
             shared_ptr<const SolveStep> solveStep = 
               dynamic_pointer_cast<const SolveStep>(itsCommand.first);
             if (solveStep) {
-              setSolveTasks(solveStep->kernelGroups(), 
+              setSolveTasks(solveStep->calibrationGroups(), 
                             solveStep->solverOptions());
               setState(SOLVE);
             } 
@@ -244,7 +244,6 @@ namespace LOFAR
             LOG_DEBUG("Received empty command. Ignored");
             setState(WAIT);
           }
-
           break;
         }
 

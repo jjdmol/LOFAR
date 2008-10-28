@@ -49,7 +49,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::print(os);
       Indent id;
-      os << endl << indent << "Output data: " << itsOutputData;
+      os << endl << indent << "Output column: " << itsOutputColumn;
     }
 
 
@@ -74,7 +74,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::write(ps);
       const string prefix("Step." + name() + ".");
-      ps.replace(prefix + "OutputData", itsOutputData);
+      ps.replace(prefix + "OutputColumn", itsOutputColumn);
       ps.replace(prefix + "Operation",  toUpper(operation()));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -84,7 +84,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::read(ps);
-      itsOutputData = ps.getString("OutputData");
+      itsOutputColumn = ps.getString("OutputColumn");
     }
 
   } // namespace BBS

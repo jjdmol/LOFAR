@@ -112,13 +112,13 @@ namespace LOFAR
 
       try {
         uint32 kernelId =
-            LOFAR::ACC::APS::globalParameterSet()->getUint32("KernelId");
+            LOFAR::ACC::APS::globalParameterSet()->getUint32("Kernel.Id");
 
         // Create a new CommandQueue. This will open a connection to the
         // blackboard database.
         itsCommandQueue.reset
-          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
-                            globalParameterSet()->getString("BBDB.UserName"),
+          (new CommandQueue(globalParameterSet()->getString("BBDB.Name"),
+                            globalParameterSet()->getString("BBDB.Username"),
                             globalParameterSet()->getString("BBDB.Host"),
                             globalParameterSet()->getString("BBDB.Port")));
 

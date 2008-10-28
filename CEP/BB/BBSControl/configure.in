@@ -38,7 +38,7 @@ lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h)
 #lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h)
 lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h)
-lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/Prediffer.h)
+lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/Equator.h)
 #lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 #lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 

@@ -4,12 +4,12 @@ CREATE TABLE blackboard.strategy
 
     "DataSet"                           TEXT                NOT NULL,
 
-    "ParmDB.LocalSky"                   TEXT                NOT NULL,
+    "ParmDB.Sky"                        TEXT                NOT NULL,
     "ParmDB.Instrument"                 TEXT                NOT NULL,
     "ParmDB.History"                    TEXT                NOT NULL,
 
     "Strategy.Stations"                 TEXT                DEFAULT '[]',
-    "Strategy.InputData"                TEXT                DEFAULT 'DATA',
+    "Strategy.InputColumn"              TEXT                DEFAULT 'DATA',
 
     "Strategy.RegionOfInterest.Freq"    TEXT                DEFAULT '[]',
     "Strategy.RegionOfInterest.Time"    TEXT                DEFAULT '[]',
@@ -17,10 +17,7 @@ CREATE TABLE blackboard.strategy
     "Strategy.ChunkSize"                INTEGER             NOT NULL,
 
     "Strategy.Correlation.Selection"    TEXT                DEFAULT 'CROSS',
-    "Strategy.Correlation.Type"         TEXT                DEFAULT '[]',
-
-    "Strategy.Integration.Freq"         DOUBLE PRECISION    DEFAULT 1.0,
-    "Strategy.Integration.Time"         DOUBLE PRECISION    DEFAULT 1.0
+    "Strategy.Correlation.Type"         TEXT                DEFAULT '[]'
 );
 
 
