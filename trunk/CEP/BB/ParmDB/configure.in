@@ -55,8 +55,9 @@ lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_AIPSPP(1,"-ltables -lcasa")
 
-lofar_EXTERNAL(pgsql,0,pgsql/libpq-fe.h,pq)
-lofar_EXTERNAL(pqxx,0,pqxx/pqxx, pqxx)
+lofar_EXTERNAL(boost,1,boost/preprocessor/repetition.hpp,"")
+dnl lofar_EXTERNAL(pgsql,0,pgsql/libpq-fe.h,pq)
+dnl lofar_EXTERNAL(pqxx,0,pqxx/pqxx, pqxx)
 
 dnl
 dnl Output Makefiles
