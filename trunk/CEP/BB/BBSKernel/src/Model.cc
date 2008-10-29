@@ -1017,7 +1017,9 @@ void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
     vector<Expr> MIMParms(MIM::NPARMS);
     for(size_t i = 0; i < MIMParms.size(); ++i)
     {
-        MIMParms[i] = makeExprParm(INSTRUMENT, "MIM:" + i);
+        ostringstream oss;
+        oss << "MIM:" << i;
+        MIMParms[i] = makeExprParm(INSTRUMENT, oss.str());
     }
 
     // Create a MIM node per (station, source) combination.
@@ -1091,6 +1093,7 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
         size_t element, harmonic, powerTime, powerFreq;
         double re, im;
        
+        iss.clear();
         iss.str(line);
         iss >> element >> harmonic >> powerTime >> powerFreq >> re >> im;
         
