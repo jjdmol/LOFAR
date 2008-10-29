@@ -40,6 +40,7 @@
 #include <boost/multi_array.hpp>
 #include <pthread.h>
 
+#undef DUMP_RAW_DATA
 
 namespace LOFAR {
 namespace RTCP {
@@ -54,9 +55,19 @@ template <typename SAMPLE_TYPE> class InputSection {
     void			 postprocess();
     
   private:
+    void			 startThreads();
     static void			 raisePriority();
     static void			 limitFlagsLength(SparseSet<unsigned> &flags);
-    void			 startThreads();
+
+    void			 computeDelays();
+    void			 startTransaction();
+    void			 writeLogMessage() const;
+    void			 toComputeNode();
+    void			 stopTransaction();
+
+#if defined DUMP_RAW_DATA
+    void			 dumpRawData();
+#endif
 
     bool			 itsDelayCompensation;
     bool			 itsIsRealTime;
@@ -93,6 +104,12 @@ template <typename SAMPLE_TYPE> class InputSection {
     std::vector<BeamletBuffer<SAMPLE_TYPE> *> itsBBuffers;
     WH_DelayCompensation	 *itsDelayComp;
     double			 itsSampleRate, itsSampleDuration;
+
+    std::vector<TimeStamp>	 itsDelayedStamps;
+    std::vector<signed int>	 itsSamplesDelay;
+    std::vector<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
+    boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
+
     
     LogThread			 *itsLogThread;
     NSTimer			 itsDelayTimer;

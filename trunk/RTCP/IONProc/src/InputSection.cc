@@ -43,9 +43,6 @@
 #include <cstdio>
 #include <stdexcept>
 
-#undef DUMP_RAW_DATA
-//#define DUMP_RAW_DATA
-
 #if defined DUMP_RAW_DATA
 #include <Stream/SocketStream.h>
 #endif
@@ -199,6 +196,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples" << std::endl;
 
   itsBBuffers.resize(itsNrInputs);
+  itsDelayedStamps.resize(itsNrBeams);
+  itsSamplesDelay.resize(itsNrBeams);
+  itsFineDelaysAtBegin.resize(itsNrBeams);
+  itsFineDelaysAfterEnd.resize(itsNrBeams);
+  itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     itsBBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(ps->inputBufferSize(), ps->getUint32("OLAP.nrTimesInFrame"), ps->nrSlotsInFrame(), itsNrBeams, itsNHistorySamples, !itsIsRealTime, itsMaxNetworkDelay);
@@ -230,15 +232,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::limitFlagsLength(
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process() 
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
 {
-  std::vector<TimeStamp>	delayedStamps(itsNrBeams, itsSyncedStamp - itsNHistorySamples);
-  std::vector<signed int>	samplesDelay(itsNrBeams);
-  std::vector<float>		fineDelaysAtBegin(itsNrBeams), fineDelaysAfterEnd(itsNrBeams);
-  boost::multi_array<SparseSet<unsigned>, 2> flags(boost::extents[itsNrInputs][itsNrBeams]);
-  
-  // set delay
-  if (itsDelayCompensation) {    
+  if (itsDelayCompensation) {
     itsCounter ++;
     itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
     
@@ -273,29 +269,37 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
       // time interval and is expressed in seconds.
       double d = coarseDelay * itsSampleDuration;
     
-      delayedStamps[beam]     += coarseDelay;
-      samplesDelay[beam]       = +coarseDelay; // FIXME: or - ?
-      fineDelaysAtBegin[beam]  = (float) (itsDelaysAtBegin[beam] - d);
-      fineDelaysAfterEnd[beam] = (float) (itsDelaysAfterEnd[beam] - d);
+      itsDelayedStamps[beam]     += coarseDelay;
+      itsSamplesDelay[beam]       = +coarseDelay; // FIXME: or - ?
+      itsFineDelaysAtBegin[beam]  = (float) (itsDelaysAtBegin[beam] - d);
+      itsFineDelaysAfterEnd[beam] = (float) (itsDelaysAfterEnd[beam] - d);
     }
   } else {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      samplesDelay[beam]       = 0;
-      fineDelaysAtBegin[beam]  = 0;
-      fineDelaysAfterEnd[beam] = 0;
+      itsSamplesDelay[beam]       = 0;
+      itsFineDelaysAtBegin[beam]  = 0;
+      itsFineDelaysAfterEnd[beam] = 0;
     }  
   }
+}
 
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startTransaction()
+{
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++) {
-    itsBBuffers[rsp]->startReadTransaction(delayedStamps, itsNSamplesPerSec + itsNHistorySamples);
+    itsBBuffers[rsp]->startReadTransaction(itsDelayedStamps, itsNSamplesPerSec + itsNHistorySamples);
 
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       /*if (itsMustComputeFlags[rsp][beam])*/ { // TODO
-	flags[rsp][beam] = itsBBuffers[rsp]->readFlags(beam);
-	limitFlagsLength(flags[rsp][beam]);
+	itsFlags[rsp][beam] = itsBBuffers[rsp]->readFlags(beam);
+	limitFlagsLength(itsFlags[rsp][beam]);
       }
   }
+}
 
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage() const
+{
   std::clog << itsSyncedStamp;
 
   if (itsIsRealTime) {
@@ -317,14 +321,59 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
   }
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    std::clog << ", flags " << rsp << ": " << flags[rsp][0] << '(' << std::setprecision(3) << (100.0 * flags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
+    std::clog << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
   
   std::clog << std::endl;
+}
 
-  NSTimer timer;
-  timer.start();
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNode()
+{
+  CN_Command command(CN_Command::PROCESS);
+  
+  for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
+    unsigned core    = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    Stream   *stream = itsClientStreams[core];
+
+    // tell CN to process data
+    command.write(stream);
+
+    // create and send all metadata in one "large" message
+    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData(itsNrPsets);
+
+    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
+      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+      unsigned beam     = itsSubbandToBeamMapping[subband];
+
+      metaData[pset].delayAtBegin   = itsFineDelaysAtBegin[beam];
+      metaData[pset].delayAfterEnd  = itsFineDelaysAfterEnd[beam];
+      metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
+      metaData[pset].setFlags(itsFlags[rspBoard][beam]);
+    }
+
+    stream->write(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
+
+    // now send all subband data
+    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
+      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+      unsigned rspSlot	= itsSubbandToRSPslotMapping[subband];
+      unsigned beam     = itsSubbandToBeamMapping[subband];
+
+      itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+    }
+
+    if (++ itsCurrentComputeCore == itsNrCoresPerPset)
+      itsCurrentComputeCore = 0;
+  }
+}
+
 
 #if defined DUMP_RAW_DATA
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
+{
   static bool fileHeaderWritten = false;
 
   vector<unsigned> subbandToBeamMapping     = itsPS->subbandToBeamMapping();
@@ -391,66 +440,51 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
   blockHeader.magic = 0x2913D852;
 
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    blockHeader.coarseDelayApplied[beam]	 = samplesDelay[beam];
-    blockHeader.fineDelayRemainingAtBegin[beam]	 = fineDelaysAtBegin[beam];
-    blockHeader.fineDelayRemainingAfterEnd[beam] = fineDelaysAfterEnd[beam];
-    blockHeader.time[beam]			 = delayedStamps[beam];
+    blockHeader.coarseDelayApplied[beam]	 = itsSamplesDelay[beam];
+    blockHeader.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam];
+    blockHeader.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam];
+    blockHeader.time[beam]			 = itsDelayedStamps[beam];
 
     // FIXME: the current BlockHeader format does not provide space for
     // the flags from multiple RSP boards --- use the flags of RSP board 0
-    flags[0][beam].marshall(reinterpret_cast<char *>(&blockHeader.flags[beam]), sizeof(struct BlockHeader::marshalledFlags));
+    itsFlags[0][beam].marshall(reinterpret_cast<char *>(&blockHeader.flags[beam]), sizeof(struct BlockHeader::marshalledFlags));
   }
   
   rawDataStream->write(&blockHeader, sizeof blockHeader);
 
   for (unsigned subband = 0; subband < nrSubbands; subband ++)
     itsBBuffers[subbandToRSPboardMapping[subband]]->sendUnalignedSubband(rawDataStream, subbandToRSPslotMapping[subband], subbandToBeamMapping[subband]);
+}
 
-#else
-
-  CN_Command command(CN_Command::PROCESS);
-  
-  for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
-    unsigned core    = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-    Stream   *stream = itsClientStreams[core];
-
-    // tell CN to process data
-    command.write(stream);
-
-    // create and send all metadata in one "large" message
-    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData(itsNrPsets);
-
-    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
-      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-      unsigned beam     = itsSubbandToBeamMapping[subband];
-
-      metaData[pset].delayAtBegin   = fineDelaysAtBegin[beam];
-      metaData[pset].delayAfterEnd  = fineDelaysAfterEnd[beam];
-      metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
-      metaData[pset].setFlags(flags[rspBoard][beam]);
-    }
-
-    stream->write(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
-
-    // now send all subband data
-    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
-      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-      unsigned rspSlot	= itsSubbandToRSPslotMapping[subband];
-      unsigned beam     = itsSubbandToBeamMapping[subband];
-
-      itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
-    }
-
-    if (++ itsCurrentComputeCore == itsNrCoresPerPset)
-      itsCurrentComputeCore = 0;
-  }
 #endif
 
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::stopTransaction()
+{
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     itsBBuffers[rsp]->stopReadTransaction();
+}
 
+
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
+{
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+    itsDelayedStamps[beam] = itsSyncedStamp - itsNHistorySamples;
+
+  computeDelays();
+  startTransaction();
+  writeLogMessage();
+
+  NSTimer timer;
+  timer.start();
+
+#if defined DUMP_RAW_DATA
+  dumpRawData();
+#else
+  toComputeNode();
+#endif
+
+  stopTransaction();
   itsSyncedStamp += itsNSamplesPerSec;
 
   timer.stop();
