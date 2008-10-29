@@ -55,13 +55,8 @@ int doIt(KeyCompare::Mode mode)
 
     ParameterSet		myPS2(mode);
 
-#if 0
-    /* This does not (yet) work! 
-       Self-adopt currently results in undefined behaviour!
-    */
     // Try a self-adopt. Should return the same set.
     myPS.adoptCollection(myPS, "Aap.Noot.");
-#endif
 
     // Adopt collection myPS in myPS2 using a prefix.
     myPS2.adoptCollection(myPS, "Foo.Bar.");
@@ -236,16 +231,11 @@ int doIt(KeyCompare::Mode mode)
     }
 
   }
-  catch (LOFAR::Exception& ex) {
-    LOG_DEBUG_STR ("Exception:" << ex.what());
-    return 1;
-  }
   catch (std::exception& ex) {
-    LOG_DEBUG_STR ("Unexpected exception: " << ex.what());
+    cout << "Unexpected exception: " << ex.what() << endl;
     return 1;
   }
   return 0;
-
 }
 
 
@@ -256,7 +246,7 @@ int main()
   fails += doIt(KeyCompare::NORMAL);
   fails += doIt(KeyCompare::NOCASE);
   if (fails > 0) {
-    LOG_ERROR_STR(fails << " test(s) failed");
+    cout << fails << " test(s) failed" << endl;
     return 1;
   }
   return 0;

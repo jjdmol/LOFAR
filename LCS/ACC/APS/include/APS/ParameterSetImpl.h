@@ -30,6 +30,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <APS/ParameterValue.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
@@ -37,7 +38,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/StringUtil.h>
-#include <APS/KVpair.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -57,7 +57,7 @@ typedef StringUtil::Compare			KeyCompare;
 // A key/value map is defined as a map of strings. The third template
 // parameter, \c KeyCompare, is the string comparison functor that will be
 // used to compare keys.
-typedef map <string, string, KeyCompare>	KeyValueMap;
+typedef map <string, ParameterValue, KeyCompare>	KeyValueMap;
 
 //# Description of class.
 // The ParameterSetImpl class is a key-value implementation of the type
@@ -98,6 +98,10 @@ public:
 	int decrCount()
 	  { return --itsCount; }
 	// @}
+
+        // Get the ParameterValue.
+        // @{ 
+        const ParameterValue& get (const string& aKey) const;
 
 	// Return the key comparison mode.
 	KeyCompare::Mode keyCompareMode() const { return itsMode; }
@@ -155,10 +159,10 @@ public:
 	ParameterSetImpl*	makeSubset(const string& baseKey,
 								   const string& prefix = "") const;
 
-	// Substract a subset from the current ParameterSet. Every parameter
+	// Subtract a subset from the current ParameterSet. Every parameter
 	// whose key starts with the given name will be removed from the
 	// ParameterSet.
-	void	substractSubset(const string& fullPrefix);
+	void	subtractSubset(const string& fullPrefix);
 	// @}
 
 	
@@ -169,13 +173,11 @@ public:
 
 	// Add the given pair to the collection. When the \c aKey does not exist 
 	// in the collection an exception is thrown.
-	void	add    (const string& aKey, const string& aValue);
-	void	add    (const KVpair& aPair);
+	void	add    (const string& aKey, const ParameterValue& aValue);
 
 	// Replaces the given pair in the collection. If \c aKey does not exist in
 	// the collection the pair is just added to the collection.
-	void	replace(const string& aKey, const string& aValue);
-	void	replace(const KVpair& aPair);
+	void	replace(const string& aKey, const ParameterValue& aValue);
 
 	// Removes the pair with the given key. Removing a non-existing key is ok.
 	void	remove (const string& aKey);
@@ -206,14 +208,10 @@ public:
 	// @{
 	bool	getBool  (const string& aKey) const;
         bool	getBool  (const string& aKey, bool aValue) const;
-	int16	getInt16 (const string& aKey) const;
-        int16	getInt16 (const string& aKey, int16 aValue) const;
-	uint16	getUint16(const string& aKey) const;
-        uint16	getUint16(const string& aKey, uint16 aValue) const;
-	int32	getInt32 (const string& aKey) const;
-        int32	getInt32 (const string& aKey, int32 aValue) const;
-	uint32	getUint32(const string& aKey) const;
-        uint32	getUint32(const string& aKey, uint32 aValue) const;
+	int	getInt   (const string& aKey) const;
+        int	getInt   (const string& aKey, int aValue) const;
+	uint	getUint  (const string& aKey) const;
+        uint	getUint  (const string& aKey, uint aValue) const;
 #if HAVE_LONG_LONG
 	int64	getInt64 (const string& aKey) const;
         int64	getInt64 (const string& aKey, int64 aValue) const;
@@ -235,30 +233,53 @@ public:
 
 	// Return vector of values.
 	// @{
-	vector<bool>	getBoolVector  (const string& aKey) const;
-        vector<bool>	getBoolVector  (const string& aKey, const vector<bool>& aValue) const;
-	vector<int16>	getInt16Vector (const string& aKey) const;
-        vector<int16>	getInt16Vector (const string& aKey, const vector<int16>& aValue) const;
-	vector<uint16>	getUint16Vector(const string& aKey) const;
-        vector<uint16>	getUint16Vector(const string& aKey, const vector<uint16>& aValue) const;
-	vector<int32>	getInt32Vector (const string& aKey) const;
-        vector<int32>	getInt32Vector (const string& aKey, const vector<int32>& aValue) const;
-	vector<uint32>	getUint32Vector(const string& aKey) const;
-        vector<uint32>	getUint32Vector(const string& aKey, const vector<uint32>& aValue) const;
+        vector<bool>	getBoolVector  (const string& aKey,
+                                        bool expandable) const;
+        vector<bool>	getBoolVector  (const string& aKey,
+                                        const vector<bool>& aValue,
+                                        bool expandable) const;
+        vector<int>	getIntVector   (const string& aKey,
+                                        bool expandable) const;
+        vector<int>	getIntVector   (const string& aKey,
+                                        const vector<int>& aValue,
+                                        bool expandable) const;
+        vector<uint>	getUintVector  (const string& aKey,
+                                        bool expandable) const;
+        vector<uint>	getUintVector  (const string& aKey,
+                                        const vector<uint>& aValue,
+                                        bool expandable) const;
 #if HAVE_LONG_LONG
-	vector<int64>	getInt64Vector (const string& aKey) const;
-        vector<int64>	getInt64Vector (const string& aKey, const vector<int64>& aValue) const;
-	vector<uint64>	getUint64Vector(const string& aKey) const;
-        vector<uint64>	getUint64Vector(const string& aKey, const vector<uint64>& aValue) const;
+	vector<int64>	getInt64Vector (const string& aKey,
+                                        bool expandable) const;
+        vector<int64>	getInt64Vector (const string& aKey,
+                                        const vector<int64>& aValue,
+                                        bool expandable) const;
+	vector<uint64>	getUint64Vector(const string& aKey,
+                                        bool expandable) const;
+        vector<uint64>	getUint64Vector(const string& aKey,
+                                        const vector<uint64>& aValue,
+                                        bool expandable) const;
 #endif
-	vector<float>	getFloatVector (const string& aKey) const;
-        vector<float>	getFloatVector (const string& aKey, const vector<float>& aValue) const;
-	vector<double>	getDoubleVector(const string& aKey) const;
-        vector<double>	getDoubleVector(const string& aKey, const vector<double>& aValue) const;
-	vector<string>	getStringVector(const string& aKey) const;
-        vector<string>	getStringVector(const string& aKey, const vector<string>& aValue) const;
-	vector<time_t>	getTimeVector  (const string& aKey) const;
-        vector<time_t>	getTimeVector  (const string& aKey, const vector<time_t>& aValue) const;
+	vector<float>	getFloatVector (const string& aKey,
+                                        bool expandable) const;
+        vector<float>	getFloatVector (const string& aKey,
+                                        const vector<float>& aValue,
+                                        bool expandable) const;
+        vector<double>	getDoubleVector(const string& aKey,
+                                        bool expandable) const;
+        vector<double>	getDoubleVector(const string& aKey,
+                                        const vector<double>& aValue,
+                                        bool expandable) const;
+        vector<string>	getStringVector(const string& aKey,
+                                        bool expandable) const;
+        vector<string>	getStringVector(const string& aKey,
+                                        const vector<string>& aValue,
+                                        bool expandable) const;
+        vector<time_t>	getTimeVector  (const string& aKey,
+                                        bool expandable) const;
+        vector<time_t>	getTimeVector  (const string& aKey,
+                                        const vector<time_t>& aValue,
+                                        bool expandable) const;
 	// @}
 
 	// @}
@@ -352,14 +373,18 @@ string	valuePart  (const string& parameterLine);
 // last pair is used.
 int32 	indexValue (const string&	label, char	indexMarker[2]);
 
-vector<char*>	splitVector(char*	target);
-time_t StringToTime_t (const string& aString);
 // @} addgroup
 
+
+//#	get(key)
+inline const ParameterValue& ParameterSetImpl::get(const string& aKey) const
+{
+        return findKV(aKey)->second;
+}
 //#	getBool(key)
 inline bool ParameterSetImpl::getBool(const string& aKey) const
 {
-	return (StringToBool(findKV(aKey)->second));
+        return findKV(aKey)->second.getBool();
 }
 
 //#	getBool(key, value)
@@ -367,70 +392,42 @@ inline bool ParameterSetImpl::getBool(const string& aKey, bool aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-	else return StringToBool(it->second);
+        return it->second.getBool();
 }
 
-//#	getInt16(key)
-inline int16 ParameterSetImpl::getInt16(const string& aKey) const
+//#	getInt(key)
+inline int ParameterSetImpl::getInt(const string& aKey) const
 {
-	return (StringToInt16(findKV(aKey)->second));
+        return findKV(aKey)->second.getInt();
 }
 
-//#	getInt16(key, value)
-inline int16 ParameterSetImpl::getInt16(const string& aKey, int16 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToInt16(it->second);
-}
-
-//#	getUint16(key)
-inline uint16 ParameterSetImpl::getUint16(const string& aKey) const
-{
-	return (StringToUint16(findKV(aKey)->second));
-}
-
-//#	getUint16(key, value)
-inline uint16 ParameterSetImpl::getUint16(const string& aKey, uint16 aValue) const
+//#	getInt(key, value)
+inline int ParameterSetImpl::getInt(const string& aKey, int aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToUint16(it->second);
+        return it->second.getInt();
 }
 
-//#	getInt32(key)
-inline int32 ParameterSetImpl::getInt32(const string& aKey) const
+//#	getUint(key)
+inline uint ParameterSetImpl::getUint(const string& aKey) const
 {
-	return (StringToInt32(findKV(aKey)->second));
+        return findKV(aKey)->second.getUint();
 }
 
-//#	getInt32(key, value)
-inline int32 ParameterSetImpl::getInt32(const string& aKey, int32 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToInt32(it->second);
-}
-
-//#	getUint32(key)
-inline uint32 ParameterSetImpl::getUint32(const string& aKey) const
-{
-	return (StringToUint32(findKV(aKey)->second));
-}
-
-//#	getUint32(key, value)
-inline uint32 ParameterSetImpl::getUint32(const string& aKey, uint32 aValue) const
+//#	getUint(key, value)
+inline uint ParameterSetImpl::getUint(const string& aKey, uint aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToUint32(it->second);
+        return it->second.getUint();
 }
 
 #if HAVE_LONG_LONG
 //#	getInt64(key)
 inline int64 ParameterSetImpl::getInt64(const string& aKey) const
 {
-	return (StringToInt64(findKV(aKey)->second));
+        return findKV(aKey)->second.getInt64();
 }
 
 //#	getInt64(key, value)
@@ -438,13 +435,13 @@ inline int64 ParameterSetImpl::getInt64(const string& aKey, int64 aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToInt64(it->second);
+        return it->second.getInt64();
 }
 
 //#	getUint64(key)
 inline uint64 ParameterSetImpl::getUint64(const string& aKey) const
 {
-	return (StringToUint64(findKV(aKey)->second));
+        return findKV(aKey)->second.getUint64();
 }
 
 //#	getUint64(key, value)
@@ -452,14 +449,14 @@ inline uint64 ParameterSetImpl::getUint64(const string& aKey, uint64 aValue) con
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToUint64(it->second);
+        return it->second.getUint64();
 }
 #endif
 
 //#	getFloat(key)
 inline float ParameterSetImpl::getFloat (const string& aKey) const
 {
-	return (StringToFloat(findKV(aKey)->second));
+        return findKV(aKey)->second.getFloat();
 }
 
 //#	getFloat(key, value)
@@ -467,13 +464,13 @@ inline float ParameterSetImpl::getFloat (const string& aKey, float aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToFloat(it->second);
+        return it->second.getFloat();
 }
 
 //#	getDouble(key)
 inline double ParameterSetImpl::getDouble(const string& aKey) const
 {
-	return (StringToDouble(findKV(aKey)->second));
+        return findKV(aKey)->second.getDouble();
 }
 
 //#	getDouble(key, value)
@@ -481,13 +478,13 @@ inline double ParameterSetImpl::getDouble(const string& aKey, double aValue) con
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToDouble(it->second);
+        return it->second.getDouble();
 }
 
 //#	getString(key)
 inline string ParameterSetImpl::getString(const string& aKey) const
 {
-	return (findKV(aKey)->second);
+        return findKV(aKey)->second.getString();
 }
 
 //#	getString(key, value)
@@ -495,13 +492,13 @@ inline string ParameterSetImpl::getString(const string& aKey, const string& aVal
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return it->second;
+        return it->second.getString();
 }
 
 //#	getTime(key)
 inline time_t ParameterSetImpl::getTime(const string& aKey) const
 {
-	return (StringToTime_t(findKV(aKey)->second));
+        return findKV(aKey)->second.getTime();
 }
 
 //#	getTime(key, value)
@@ -509,7 +506,7 @@ inline time_t ParameterSetImpl::getTime(const string& aKey, const time_t& aValue
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToTime_t(it->second);
+        return it->second.getTime();
 }
 
     } // namespace APS
