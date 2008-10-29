@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
+#include <Common/StringUtil.h>
 #include <string>                // for getline
 #include <iostream>
 #include <fstream>
