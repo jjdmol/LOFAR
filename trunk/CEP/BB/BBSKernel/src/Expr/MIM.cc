@@ -161,18 +161,18 @@ void MIM::evaluate(const Request &request, const Matrix &in_x,
         double refy=in_refy.getDouble(0,t);
         double refz=in_refz.getDouble(0,t);
         double alpha=in_alpha.getDouble(0,t);
+	double tec = calculate_mim_function(parms, x, y, z, alpha, refx,
+					    refy, refz);
 
         for(size_t f = 0; f < nChannels; ++f)
         {
             const double freq = freqAxis->center(f);
-            
-            phase = calculate_mim_function(parms, x, y, z, alpha, freq, refx,
-                refy, refz);
-                
-            *E11_re=std::sin(phase);
-            *E22_re=std::sin(phase);
-            *E11_im=std::cos(phase);
-            *E22_im=std::cos(phase);
+            //convert tec-value to freq. dependent phase
+	    phase =(75e8/freq)*tec; 
+            *E11_re=std::cos(phase);
+            *E22_re=std::cos(phase);
+            *E11_im=std::sin(phase);
+            *E22_im=std::sin(phase);
             
             ++E11_re; ++E22_re; ++E11_im; ++E22_im;
         }
@@ -180,7 +180,7 @@ void MIM::evaluate(const Request &request, const Matrix &in_x,
 }
 
 double MIM::calculate_mim_function(const vector<double> &parms, double x,
-    double y, double z, double alpha, double freq, double ref_x, double ref_y,
+    double y, double z, double alpha, double ref_x, double ref_y,
     double ref_z)
 {
     //dummy
@@ -189,9 +189,9 @@ double MIM::calculate_mim_function(const vector<double> &parms, double x,
     double lat = std::atan2(ref_z, std::sqrt(ref_x*ref_x + ref_y*ref_y));
     double rot_x = -1*std::sin(lon)*x+std::cos(lon)*y;
     double rot_y = -1*std::sin(lat)*std::cos(lon)*x-std::sin(lat)*std::sin(lon)
-        *y+std::cos(lat)*z;
+      *y+std::cos(lat)*z;
 
-    return (75e8/freq)*(parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)
+    return (parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)
         /std::cos(alpha);
 }
 
