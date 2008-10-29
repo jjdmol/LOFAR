@@ -129,7 +129,7 @@ namespace LOFAR {
     // Type <tt>type</tt> argument is the same as in function <tt>show</tt>.
     // Use like:
     // @code
-    //  std::string info = Version::getTopInfo<BlobVersion>();
+    //  std::string info = Version::getInfo<BlobVersion>();
     // @endcode
     template<typename T>
     static std::string getInfo (const std::string& applName="",
