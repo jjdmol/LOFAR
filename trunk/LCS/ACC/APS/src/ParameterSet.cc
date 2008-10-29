@@ -49,7 +49,20 @@ ParameterSet* globalParameterSet()
 // Default constructor
 //
 ParameterSet::ParameterSet(KeyCompare::Mode	mode)
-	: itsSet (new ParameterSetImpl(mode))
+  : itsSet (new ParameterSetImpl(mode))
+{}
+
+ParameterSet::ParameterSet(bool caseInsensitive)
+  : itsSet (new ParameterSetImpl(caseInsensitive ?
+                                 KeyCompare::NOCASE : KeyCompare::NORMAL))
+{}
+
+//
+// Construction by reading a parameter file.
+//
+ParameterSet::ParameterSet(const string& theFilename, bool caseInsensitive)
+  : itsSet (new ParameterSetImpl(theFilename, caseInsensitive ?
+                                 KeyCompare::NOCASE : KeyCompare::NORMAL))
 {}
 
 //
@@ -57,7 +70,12 @@ ParameterSet::ParameterSet(KeyCompare::Mode	mode)
 //
 ParameterSet::ParameterSet(const string&	theFilename,
 			   KeyCompare::Mode	mode)
-	: itsSet (new ParameterSetImpl(theFilename, mode))
+  : itsSet (new ParameterSetImpl(theFilename, mode))
+{}
+
+ParameterSet::ParameterSet(const char*	theFilename,
+			   KeyCompare::Mode	mode)
+  : itsSet (new ParameterSetImpl(string(theFilename), mode))
 {}
 
 //
@@ -94,6 +112,75 @@ void ParameterSet::unlink()
     delete itsSet;
   }
 }
+
+vector<int16> ParameterSet::getInt16Vector(const string& aKey,
+                                           bool expandable) const
+{
+  vector<int> vec (getIntVector(aKey, expandable));
+  return vector<int16> (vec.begin(), vec.end());
+}
+
+vector<int16> ParameterSet::getInt16Vector(const string& aKey,
+                                           const vector<int16>& aValue,
+                                           bool expandable) const
+{
+  vector<int> vec (getIntVector(aKey,
+                                vector<int>(aValue.begin(), aValue.end()),
+                                expandable));
+  return vector<int16> (vec.begin(), vec.end());
+}
+
+vector<uint16> ParameterSet::getUint16Vector(const string& aKey,
+                                             bool expandable) const
+{
+  vector<uint> vec (getUintVector(aKey, expandable));
+  return vector<uint16> (vec.begin(), vec.end());
+}
+
+vector<uint16> ParameterSet::getUint16Vector(const string& aKey,
+                                             const vector<uint16>& aValue,
+                                             bool expandable) const
+{
+  vector<uint> vec (getUintVector(aKey,
+                                  vector<uint>(aValue.begin(), aValue.end()),
+                                  expandable));
+  return vector<uint16> (vec.begin(), vec.end());
+}
+
+vector<int32> ParameterSet::getInt32Vector(const string& aKey,
+                                           bool expandable) const
+{
+  vector<int> vec (getIntVector(aKey, expandable));
+  return vector<int32> (vec.begin(), vec.end());
+}
+
+vector<int32> ParameterSet::getInt32Vector(const string& aKey,
+                                           const vector<int32>& aValue,
+                                           bool expandable) const
+{
+  vector<int> vec (getIntVector(aKey,
+                                vector<int>(aValue.begin(), aValue.end()),
+                                expandable));
+  return vector<int32> (vec.begin(), vec.end());
+}
+
+vector<uint32> ParameterSet::getUint32Vector(const string& aKey,
+                                             bool expandable) const
+{
+  vector<uint> vec (getUintVector(aKey, expandable));
+  return vector<uint32> (vec.begin(), vec.end());
+}
+
+vector<uint32> ParameterSet::getUint32Vector(const string& aKey,
+                                             const vector<uint32>& aValue,
+                                             bool expandable) const
+{
+  vector<uint> vec (getUintVector(aKey,
+                                  vector<uint>(aValue.begin(), aValue.end()),
+                                  expandable));
+  return vector<uint32> (vec.begin(), vec.end());
+}
+
 
 //
 // operator<<

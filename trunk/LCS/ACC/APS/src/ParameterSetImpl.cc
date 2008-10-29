@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <cstdlib>
 
 namespace LOFAR {
@@ -84,7 +85,7 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 //
 ParameterSetImpl* 
 ParameterSetImpl::makeSubset(const string& baseKey, 
-			     			 const string& prefix) const
+                             const string& prefix) const
 {
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
   string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
@@ -113,13 +114,13 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 }
 
 //
-// substractSubset(fullPrefix)
+// subtractSubset(fullPrefix)
 //
 // Removes all the keys the start with the given prefix from the parset.
 //
-void ParameterSetImpl::substractSubset(const string& fullPrefix) 
+void ParameterSetImpl::subtractSubset(const string& fullPrefix) 
 {
-	LOG_TRACE_CALC_STR("substractSubSet(" << fullPrefix << ")");
+	LOG_TRACE_CALC_STR("subtractSubSet(" << fullPrefix << ")");
 
 	// Convert \a baseKey to lowercase, if we need to do case insensitve compare.
 	string	prefix = (itsMode == KeyCompare::NOCASE) ? toLower(fullPrefix) : fullPrefix;
@@ -175,12 +176,15 @@ void ParameterSetImpl::adoptBuffer(const string&	theBuffer,
 void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
 				       const string&	thePrefix)
 {
+    // Cannot adopt itself.
+    if (&theCollection != this) {
 	const_iterator		newItem = theCollection.begin();
 
 	while (newItem != theCollection.end()) {
 		replace(thePrefix+newItem->first, newItem->second);
 		++newItem;
 	}
+    }
 }
 
 //
@@ -262,12 +266,12 @@ void ParameterSetImpl::readStream(istream&	inputStream,
 			valueStr = paramLine;		// whole line is value
 		}
 		else {
-			// line must have an equal-character ofcourse.
+			// line must have an equal-character of course.
 			char* separator = strstr(paramLine, "=");
 			if (!separator) {
 				THROW (APSException,formatString("No '=' found in %s", paramLine));
 			}
-			*separator= '\0';					// terminate key string
+			*separator = '\0';					// terminate key string
 			valueStr = separator + 1;			// ValueStr starts after = sign
 
 			// skip leading and trailing spaces from key (allowing spaces before = sign)
@@ -316,11 +320,11 @@ void ParameterSetImpl::readStream(istream&	inputStream,
 
 		// finally check (again) for quoted strings, cutoff quotes
 		valLen = strlen(valueStr)-1;
-		if ((valLen > 0) && (*valueStr == '"' || *valueStr == '\'') &&
-									(*valueStr == valueStr[valLen])) {
-			valueStr[valLen] = '\0';
-			++valueStr;
-		}
+                ///		if ((valLen > 0) && (*valueStr == '"' || *valueStr == '\'') &&
+                ///									(*valueStr == valueStr[valLen])) {
+                ///			valueStr[valLen] = '\0';
+                ///			++valueStr;
+                ///		}
 	
 		// if this or previous line is multiline, collect result
 		if (multiLine || addToPrev) {	
@@ -344,7 +348,9 @@ void ParameterSetImpl::readStream(istream&	inputStream,
 			}
 			// Finally add to map
 			pair< KeyValueMap::iterator, bool>		result;
-			result = insert(std::make_pair(prefixedKey, valueStr)); 
+			result = insert(std::make_pair(prefixedKey,
+                                                       ParameterValue(valueStr,
+                                                                      false))); 
 			if (!result.second) {
 				THROW (APSException, 
 					   formatString("Key %s double defined?", keyStr));
@@ -379,35 +385,19 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 //
 // add (key, value)
 //
-void ParameterSetImpl::add(const string& aKey, const string& aValue)
+void ParameterSetImpl::add(const string& aKey, const ParameterValue& aValue)
 {
-	if (!insert(make_pair(aKey, aValue)).second) {
-		THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
-	}
-}
-
-//
-// add (pair)
-//
-void ParameterSetImpl::add(const KVpair&	aPair)
-{
-	add(aPair.first, aPair.second);
+  if (!insert(make_pair(aKey, aValue)).second) {
+    THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
+  }
 }
 
 //
 // replace (key, value)
 //
-void ParameterSetImpl::replace(const string& aKey, const string& aValue)
+void ParameterSetImpl::replace(const string& aKey, const ParameterValue& aValue)
 {
-	(*this)[aKey] = aValue;
-}
-
-//
-// replace (pair)
-//
-void ParameterSetImpl::replace(const KVpair&	aPair)
-{
-	replace(aPair.first, aPair.second);
+  (*this)[aKey] = aValue;
 }
 
 //
@@ -415,86 +405,8 @@ void ParameterSetImpl::replace(const KVpair&	aPair)
 //
 void ParameterSetImpl::remove(const string& aKey)
 {
-	// remove any existed value
-	erase(aKey);
-}
-
-//-------------------------- parse functions -----------------------------
-//
-// splitVector [private]
-//
-// Splits the given C string into a array of char* in the original string!
-// Original string is destroyed because null-characters are placed in it.
-//
-// Syntax: [ <element> , <element> , <element> ]
-// or 	   <element>
-// An element may be placed between single or double qoutes.
-//
-vector<char*> splitVector(char*	target)
-{
-	vector<char*>	result;
-
-	// trim target and check array markers
-	uint32			lastPos = rtrim(target = ltrim(target)) - 1;
-
-	// if no markers are used, read the one and only argument.
-	if (target[0] != '[' && target[lastPos] != ']') {
-		result.push_back(target);
-		return (result);
-	}	
-
-	// When only one marker is used, throw exception.
-	if (target[0] != '[' || target[lastPos] != ']') {
-		THROW (APSException, 
-				formatString("Array %s should be limited with '[' and ']'", 
-				target));
-	}
-
-	// strip off array marker and trim again.
-	target[lastPos] = '\0';
-	lastPos = rtrim(target = ltrim(target+1));
-	// if we had an empty vector lastPos = 0
-	if (lastPos > 0 ) {
-	  lastPos -= 1;
-
-	  // the comma seperated elements are left now.
-	  // scan string and set pointers.
-	  uint32	idx = 0;
-	  while (idx <= lastPos) {
-		// skip leading space.
-		while(idx <= lastPos && (target[idx]==' ' || target[idx]=='\t')) {
-			++idx;
-		}
-
-		uint32		start = idx;		// remember first char.
-		if (target[idx] == '\'' || target[idx] == '"') {
-			++idx;
-			// find matching qoute
-			while (idx <= lastPos && target[idx] != target[start]) {
-				++idx;
-			}
-			if (target[idx] != target[start]) {
-				THROW(APSException,
-					formatString("%s: unmatched quote", target+start));
-			}
-			// start and idx now at qoutes of same type, remove both
-			target[start++] = '\0';
-			target[idx++]   = '\0';
-		}
-
-		// find comma.
-		while (idx <= lastPos && target[idx] != ',') {
-			++idx;
-		}
-
-		if (idx != start) {
-			result.push_back(target+start);
-			target[idx++] = '\0'; 	// hop over , while removing it
-		}
-	  }
-	}
-
-	return (result);
+  // remove any existed value
+  erase(aKey);
 }
 
 //
@@ -523,491 +435,36 @@ vector<char*> splitVector(char*	target)
 //	return("");
 //}
 
-//
-//	getBoolVector(key)
-//
-vector<bool> ParameterSetImpl::getBoolVector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getBoolVector(" << theKey << ")");
-
-	// get destroyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<bool>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToBool(string(elemPtrs[i])));
-	}
-
-	return (result);
+#define PARAMETERSETIMPL_GETVECTOR(TPC,TPL) \
+vector<TPL> ParameterSetImpl::get##TPC##Vector(const string& aKey, \
+                                               bool expandable) const \
+{ \
+  ParameterValue value (findKV(aKey)->second); \
+  if (expandable) value = value.expand(); \
+  return value.get##TPC##Vector(); \
+} \
+ \
+vector<TPL> ParameterSetImpl::get##TPC##Vector(const string& aKey, \
+                                               const vector<TPL>& aValue, \
+                                               bool expandable) const   \
+{ \
+  const_iterator it = findKV(aKey,false); \
+  if (it == end()) return aValue; \
+  ParameterValue value (it->second); \
+  if (expandable) value = value.expand(); \
+  return value.get##TPC##Vector(); \
 }
 
-//
-//	getBoolVector(key, value)
-//
-vector<bool> ParameterSetImpl::getBoolVector(const string& theKey, const vector<bool>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getBoolVector(" << theKey << "," << theValue << ")");
+PARAMETERSETIMPL_GETVECTOR (Bool, bool)
+PARAMETERSETIMPL_GETVECTOR (Int, int)
+PARAMETERSETIMPL_GETVECTOR (Uint, uint)
+PARAMETERSETIMPL_GETVECTOR (Int64, int64)
+PARAMETERSETIMPL_GETVECTOR (Uint64, uint64)
+PARAMETERSETIMPL_GETVECTOR (Float, float)
+PARAMETERSETIMPL_GETVECTOR (Double, double)
+PARAMETERSETIMPL_GETVECTOR (String, string)
+PARAMETERSETIMPL_GETVECTOR (Time, time_t)
 
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<bool>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToBool(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getInt16Vector(key)
-//
-vector<int16> ParameterSetImpl::getInt16Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getInt16Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int16>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt16(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getInt16Vector(key, value)
-//
-vector<int16> ParameterSetImpl::getInt16Vector(const string& theKey, const vector<int16>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getInt16Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int16>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt16(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint16Vector(key)
-//
-vector<uint16> ParameterSetImpl::getUint16Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getUint16Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint16>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint16(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint16Vector(key, value)
-//
-vector<uint16> ParameterSetImpl::getUint16Vector(const string& theKey, const vector<uint16>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getUint16Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint16>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint16(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getInt32Vector(key)
-//
-vector<int32> ParameterSetImpl::getInt32Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getInt32Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int32>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt32(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getInt32Vector(key, value)
-//
-vector<int32> ParameterSetImpl::getInt32Vector(const string& theKey, const vector<int32>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getInt32Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int32>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt32(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint32Vector(key)
-//
-vector<uint32> ParameterSetImpl::getUint32Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getUint32Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint32>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint32(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint32Vector(key, value)
-//
-vector<uint32> ParameterSetImpl::getUint32Vector(const string& theKey, const vector<uint32>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getUint32Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint32>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint32(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-#if HAVE_LONG_LONG
-//
-//	getInt64Vector(key)
-//
-vector<int64> ParameterSetImpl::getInt64Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getInt64Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int64>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt64(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getInt64Vector(key, value)
-//
-vector<int64> ParameterSetImpl::getInt64Vector(const string& theKey, const vector<int64>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getInt64Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<int64>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToInt64(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint64Vector(key)
-//
-vector<uint64> ParameterSetImpl::getUint64Vector(const string& theKey) const
-{
-	LOG_TRACE_CALC_STR("getUint64Vector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint64>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint64(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-//	getUint64Vector(key, value)
-//
-vector<uint64> ParameterSetImpl::getUint64Vector(const string& theKey, const vector<uint64>& theValue) const
-{
-	LOG_TRACE_CALC_STR("getUint64Vector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<uint64>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToUint64(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-#endif
-
-//
-// getFloatVector(key)
-//
-vector<float> ParameterSetImpl::getFloatVector(const string& theKey) const 
-{
-	LOG_TRACE_CALC_STR("getFloatVector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<float>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToFloat(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-// getFloatVector(key, value)
-//
-vector<float> ParameterSetImpl::getFloatVector(const string& theKey, const vector<float>& theValue) const 
-{
-	LOG_TRACE_CALC_STR("getFloatVector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<float>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToFloat(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-// getDoubleVector(key)
-//
-vector<double> ParameterSetImpl::getDoubleVector(const string& theKey) const 
-{
-	LOG_TRACE_CALC_STR("getDoubleVector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<double>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToDouble(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-// getDoubleVector(key, value)
-//
-vector<double> ParameterSetImpl::getDoubleVector(const string& theKey, const vector<double>& theValue) const 
-{
-	LOG_TRACE_CALC_STR("getDoubleVector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<double>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToDouble(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-// getStringVector(key)
-//
-vector<string> ParameterSetImpl::getStringVector(const string& theKey) const 
-{
-	LOG_TRACE_CALC_STR("getStringVector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<string>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(string(elemPtrs[i]));
-	}
-
-	return (result);
-}
-
-//
-// getStringVector(key, value)
-//
-vector<string> ParameterSetImpl::getStringVector(const string& theKey, const vector<string>& theValue) const 
-{
-	LOG_TRACE_CALC_STR("getStringVector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<string>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(string(elemPtrs[i]));
-	}
-
-	return (result);
-}
-
-//
-// getTimeVector(key)
-//
-vector<time_t> ParameterSetImpl::getTimeVector(const string& theKey) const 
-{
-	LOG_TRACE_CALC_STR("getTimeVector(" << theKey << ")");
-
-	// get destoyable copy of value part
-	string		value(findKV(theKey)->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<time_t>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToTime_t(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
-
-//
-// getTimeVector(key, value)
-//
-vector<time_t> ParameterSetImpl::getTimeVector(const string& theKey, const vector<time_t>& theValue) const 
-{
-	LOG_TRACE_CALC_STR("getTimeVector(" << theKey << "," << theValue << ")");
-
-        // Find key; if not found, return default value \a theValue
-        const_iterator it = findKV(theKey, false);
-        if (it == end()) return theValue;
-
-	// get destroyable copy of value part
-	string		value(it->second.c_str());	
-
-	// parse value part as an array
-	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
-	vector<time_t>	result;
-	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
-		result.push_back(StringToTime_t(string(elemPtrs[i])));
-	}
-
-	return (result);
-}
 
 //---------------------------- save functions -------------------------------
 //
@@ -1062,48 +519,11 @@ void ParameterSetImpl::writeStream(ostream&	os) const
 	while (curPair != end()) {
 		// Key can always be written.
 		os << curPair->first << "=";
-
-		//* value may begin or end in a space: use quotes
-		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
-			os << "\"" << curPair->second << "\"" << endl;
-		}
-		else {
- 			os << curPair->second << endl;
-		}
-
+                os << curPair->second.get() << endl;
 		curPair++;
 	}
 }
 
-//-------------------------- global functions -----------------------------
-//
-// StringToTime_t (aString) 
-//
-time_t StringToTime_t (const string& aString) 
-{
-	time_t				theTime;
-	char				unit[1024];
-	unit[0] = '\0';
-	if (sscanf (aString.c_str(), "%ld%s", &theTime, unit) < 1) {
-		THROW (APSException, aString + " is not an time value");
-	}
-
-	switch (unit[0]) {
-	case 's':
-	case 'S':
-	case '\0':
-		break;
-	case 'm':
-	case 'M':
-		theTime *= 60;
-		break;
-	case 'h':
-	case 'H':
-		theTime *= 3600;
-		break;
-	}
-	return (theTime);
-}
 
 //
 // isValidVersionNr(versionNr)
