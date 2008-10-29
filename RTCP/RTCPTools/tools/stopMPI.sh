@@ -14,4 +14,9 @@ ssh listfen killall -9 mpirun
 
 rm -f $1*.ps
 
-kill `ps -ef |grep '\-[w]dir' |grep -v 'sh \-c'|awk '{ print $2 }'`
+pid=`ps -ef |grep '\-[w]dir' |grep -v 'sh \-c'|awk '{ print $2 }'`
+if [ "${pid}" != "" ]; then
+  kill -9 ${pid}
+else
+  echo 'no process to killed'  
+fi

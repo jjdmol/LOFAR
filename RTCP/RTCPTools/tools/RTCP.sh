@@ -75,9 +75,13 @@ stop_prog()
 	echo 'Terminate mpirun (listfen).'
 	ssh listfen killall -9 mpirun
 	echo ''
-	echo 'Terminate old Processes.'
-	kill `ps -ef |grep '\-[w]dir' |grep -v 'sh \-c'|awk '{ print $2 }'`
-	
+	echo 'Killed old process.'
+	pid=`ps -ef |grep '\-[w]dir' |grep -v 'sh \-c'|awk '{ print $2 }'`
+	if [ "${pid}" != "" ]; then
+          kill -9 ${pid}
+	else
+	  echo 'no process to killed'  
+        fi	
 }
 
 #
