@@ -58,7 +58,7 @@ private:
         Matrix &out_22);
 
     double calculate_mim_function(const vector<double> &parms, double x,
-        double y, double z, double alpha, double freq, double ref_x,
+        double y, double z, double alpha, double ref_x,
         double ref_y, double ref_z);
 
 #ifdef EXPR_GRAPH
