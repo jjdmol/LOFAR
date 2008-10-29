@@ -28,6 +28,7 @@
 
 //# Includes
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
 
 #ifdef ENABLE_TRACER
