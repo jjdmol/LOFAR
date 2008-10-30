@@ -1,6 +1,7 @@
 
 >>>
 Reading in parameterfile 'tParameterSet.in_param_normal'
+This ParameterSet does NORMAL key comparison.
 <<<
 
 Showing some values
@@ -34,6 +35,7 @@ a.b.time3=15 hour
 a.c.a=nog een afkorting
 e.g=een voorbeeld
 egg=een ei
+emptyvec=[]
 vtest.intVector1Dim=[ 3, 20485, 	002, 4904 , 25 ]
 Fullname of 'b'=a.
 isValidVersionNr(1.2.3.4)   = 0
@@ -84,10 +86,12 @@ a.b.time3
 a.c.a
 e.g
 egg
+emptyvec
 vtest.intVector1Dim
 
 >>>
 Reading in parameterfile 'tParameterSet.in_param_nocase'
+This ParameterSet does NOCASE key comparison.
 <<<
 
 Showing some values
@@ -121,6 +125,7 @@ a.b.TIME3=15 hour
 A.c.a=nog een afkorting
 e.g=een voorbeeld
 Egg=een ei
+emptyvec=[]
 VTest.IntVector1Dim=[ 3, 20485, 	002, 4904 , 25 ]
 Fullname of 'b'=a.
 isValidVersionNr(1.2.3.4)   = 0
@@ -171,4 +176,5 @@ a.b.TIME3
 A.c.a
 e.g
 Egg
+emptyvec
 VTest.IntVector1Dim

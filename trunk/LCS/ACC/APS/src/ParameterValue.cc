@@ -67,13 +67,18 @@ namespace LOFAR { namespace ACC { namespace APS {
   vector<ParameterValue> ParameterValue::getVector() const
   {
     // A single value if there is no opening and closing bracket.
-    int st = 1;
+    uint st = 1;
     uint last = itsValue.size() - 1;
     if (!(itsValue[0] == '['  &&  itsValue[last] == ']')) {
       return vector<ParameterValue> (1, *this);
     }
     // Allocate result.
+    // Empty result if only whitespace between brackets.
     vector<ParameterValue> result;
+    st = ltrim (st, last);
+    if (st == last) {
+      return result;
+    }
     // Split on commas, but take quotes, parentheses, and brackets into account.
     bool squote = false;
     bool dquote = false;

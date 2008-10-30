@@ -7,3 +7,4 @@ a.b.double= 3.1415926	# we may put comment here
 
 e.g=een voorbeeld
 egg=een ei
+emptyvec=[]
