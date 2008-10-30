@@ -1,3 +1,4 @@
+AM_CPPFLAGS = -DUSES_NEW_IOSTREAM
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot

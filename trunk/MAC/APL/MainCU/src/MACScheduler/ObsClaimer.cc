@@ -291,7 +291,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			LOG_DEBUG_STR("Removing " << itsCurrentObs->second->obsName << " from my prepareList");
 			delete itsCurrentObs->second;
 			itsObsMap.erase(itsCurrentObs);
-			itsCurrentObs = 0;
+			itsCurrentObs = itsObsMap.end();	// reset iterator.
 
 			// back to idle state.
 			TRAN(ObsClaimer::idle_state);

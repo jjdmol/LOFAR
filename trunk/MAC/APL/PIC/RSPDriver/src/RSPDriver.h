@@ -87,7 +87,7 @@ namespace LOFAR {
       /**
        * Delete the client ports on the m_dead_clients.
        */
-      void RSPDriver::undertaker();
+      void undertaker();
 
       /**
        * The enabled state. In this state the task can receive

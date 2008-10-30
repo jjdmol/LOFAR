@@ -1,3 +1,4 @@
+AM_CPPFLAGS = -DUSES_NEW_IOSTREAM
 pkginclude_HEADERS = Package__Version.h
 
 AUTOGEN = autogen

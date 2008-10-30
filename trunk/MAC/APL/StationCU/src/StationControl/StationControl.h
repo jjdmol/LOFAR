@@ -88,6 +88,7 @@ private:
 	StationControl(const StationControl&);
    	StationControl& operator=(const StationControl&);
 
+	// internla types
 	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 
 	// helper methods
@@ -124,7 +125,6 @@ private:
 	time_t					itsStartTime;		// timestamp the controller was started
 	int32					itsClock;
 
-	typedef	map<string, ActiveObs*>::iterator		ObsIter;
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
 
 	// Availability information of Antenna's and circuit boards.

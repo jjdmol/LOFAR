@@ -1,4 +1,4 @@
-AM_CPPFLAGS			= -I$(top_builddir)/include
+AM_CPPFLAGS 		= -DUSES_NEW_IOSTREAM -I$(top_builddir)/include
 AUTOGEN 			= autogen
 SUFFIXES 			= .ph
 %.cc: %.prot
