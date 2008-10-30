@@ -29,6 +29,7 @@
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
 
 #include <climits>
 #include <cfloat>
@@ -101,6 +102,8 @@ int doIt(KeyCompare::Mode mode)
     ASSERT(myPS.getString("String", "Hello World") == "Hello World");
     ASSERT(myPS.getTime("Time", 15) == 15);
     ASSERT(myPS.getTime("Time", 18000) == 18000);
+    ASSERT(myPS["emptyvec"].getVector().size() == 0);
+    ASSERT(myPS.getUint32Vector("emptyvec").size() == 0);
 
     {
       vector<bool> v(2); v[0] = true; v[1] = false;
