@@ -28,6 +28,7 @@
 #include <Common/lofar_string.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/PVSS/GCF_PValue.h>
+#include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {

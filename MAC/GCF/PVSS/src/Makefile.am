@@ -22,7 +22,7 @@ libgcfpvss_la_SOURCES= Package__Version.cc $(NODOCHDRS) \
 					  PVSSinfo.cc \
 					  PVSSservice.cc
 
-AM_CPPFLAGS 		= -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"
+AM_CPPFLAGS = -DUSES_NEW_IOSTREAM -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"
 		
 bin_PROGRAMS = versiongcfpvss
 
