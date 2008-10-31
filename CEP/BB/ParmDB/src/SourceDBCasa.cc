@@ -35,7 +35,8 @@
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableLocker.h>
-
+#include <tables/Tables/TableIter.h>
+#include <casa/Containers/RecordField.h>
 using namespace casa;
 
 namespace LOFAR {
@@ -135,6 +136,31 @@ namespace BBS {
                "The SOURCES table has " <<
                itsSourceTable.nrow() - tabs.nrow() <<
                " duplicate source names");
+  }
+
+  vector<string> SourceDBCasa::findDuplicates (Table& table,
+                                               const string& columnName)
+  {
+    TableLocker locker(table, FileLocker::Read);
+    TableIterator iter(table, columnName);
+    vector<string> result;
+    while (!iter.pastEnd()) {
+      if (iter.table().nrow() > 1) {
+        result.push_back (ROScalarColumn<String>(table, columnName)(0));
+      }
+      ++iter;
+    }
+    return result;
+  }
+
+  vector<string> SourceDBCasa::findDuplicatePatches()
+  {
+    return findDuplicates (itsPatchTable, "PATCHNAME");
+  }
+
+  vector<string> SourceDBCasa::findDuplicateSources()
+  {
+    return findDuplicates (itsSourceTable, "SOURCENAME");
   }
 
   bool SourceDBCasa::patchExists (const string& patchName)

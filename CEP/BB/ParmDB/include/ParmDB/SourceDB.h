@@ -78,6 +78,12 @@ namespace BBS {
     // An exception is thrown if that is the case.
     virtual void checkDuplicates() = 0;
 
+    // Find non-unique patch names.
+    virtual vector<string> findDuplicatePatches() = 0;
+
+    // Find non-unique source names.
+    virtual vector<string> findDuplicateSources() = 0;
+
     // Test if the patch already exists.
     virtual bool patchExists (const string& patchName) = 0;
 
@@ -182,6 +188,14 @@ namespace BBS {
     // An exception is thrown if that is the case.
     void checkDuplicates() const
       { itsRep->checkDuplicates(); }
+
+    // Find non-unique patch names.
+    vector<string> findDuplicatePatches()
+      { return itsRep->findDuplicatePatches(); }
+
+    // Find non-unique source names.
+    vector<string> findDuplicateSources()
+      { return itsRep->findDuplicateSources(); }
 
     // Test if the patch already exists.
     bool patchExists (const string& patchName) const
