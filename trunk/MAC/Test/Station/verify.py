@@ -51,17 +51,37 @@ verify.add_option('--pol', type='string', dest='polId',
 #   string to the testcase. The advantage is that they all show up with --help.
 #   The disadvantage is that for every new options also this verify.py needs to
 #   be updated.
-verify.add_option('--read', action='store_true', dest='read',
-  help='Run the testcase read only')
 verify.add_option('--pid', type='string', dest='pid',
   help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, all', default='all')
-verify.add_option('--mode', type='string', dest='diag_mode',
-  help='Diag mode: off, tx, rx, tx_rx, local', default='local')
-verify.add_option('--sync', type='int', dest='diag_sync',
+verify.add_option('--data', type='string', dest='data',
+  help='Data values(s) to write or verify read', default='40')
+verify.add_option('--count', action='store_true', dest='count',
+  help='Use counter data values')
+verify.add_option('--rand', action='store_true', dest='rand',
+  help='Use random data values')
+verify.add_option('--read', action='store_true', dest='read',
+  help='Run the testcase read only')
+verify.add_option('--diag_mode', type='string', dest='diag_mode',
+  help='Diag mode: off, tx, rx, tx_rx, local', default='tx_rx')
+verify.add_option('--diag_sync', type='int', dest='diag_sync',
   help='Diag sync: 0 for pps, > 0 for alt sync interval in s', default=1)
-verify.add_option('--data', type='string', dest='diag_data',
+verify.add_option('--diag_data', type='string', dest='diag_data',
   help='Diag data: lfsr, cntr', default='lfsr')
-  
+verify.add_option('--client_rcu', type='string', dest='client_rcu',
+  help='HBA control via this RCU, power via the other RCU: x or y', default='y')
+verify.add_option('--client_access', type='string', dest='client_access',
+  help='HBA client access: r = read only, w = write only, wr = first write then readback', default='r')
+verify.add_option('--client_reg', type='string', dest='client_reg',
+  help='HBA client register: request, response, led, vref, version, speed', default='led')
+verify.add_option('--server', type='string', dest='server',
+  help='HBA server range, first server and last server', default='1,16')
+verify.add_option('--server_access', type='string', dest='server_access',
+  help='HBA server access: bc = broadcast to all servers, uc = unicast to first server', default='uc')
+verify.add_option('--server_function', type='string', dest='server_function',
+  help='HBA server function: gb, gw, sb, sw', default='gb')
+verify.add_option('--server_reg', type='string', dest='server_reg',
+  help='HBA server register: delay_x, delay_y, version, address', default='delay_x')
+
 v.opts, v.args = verify.parse_args()
 
 # - Option checks and/or reformatting
@@ -104,26 +124,42 @@ v.polId = v.opts.polId.split(',')
 # testcase.py for every new option. Rename with prefix arg_ so it is easier
 # to search for the specific arguments, e.g. with grep or an editor.
 
-arg_read   = v.opts.read
-arg_procid = v.opts.pid
-arg_mode   = v.opts.diag_mode
-arg_sync   = v.opts.diag_sync
-arg_data   = v.opts.diag_data
+arg_procid              = v.opts.pid
+data_str                = v.opts.data.split(',')
+arg_data = []
+for di in data_str:
+  arg_data.append(int(di))
+arg_count               = v.opts.count
+arg_rand                = v.opts.rand
+arg_read                = v.opts.read
+arg_diag_mode           = v.opts.diag_mode
+arg_diag_sync           = v.opts.diag_sync
+arg_diag_data           = v.opts.diag_data
+arg_hba_client_rcu      = v.opts.client_rcu
+arg_hba_client_access   = v.opts.client_access
+arg_hba_client_reg      = v.opts.client_reg
+server_str              = v.opts.server.split(',')
+arg_hba_server = []
+for si in server_str:
+  arg_hba_server.append(int(si))
+arg_hba_server_access   = v.opts.server_access
+arg_hba_server_function = v.opts.server_function
+arg_hba_server_reg      = v.opts.server_reg
 
 
 ################################################################################
 # Run the testcase
 
 # Import here so no need in Testcase
-import time
+import random
 import mep
 import testcase
 import rsp
+import smbus
 
 msg = mep.MepMessage()
   
 for te in v.testname:
-  startTime = time.time()
   # Pass the common options on via the testcase class instance.
   tc = testcase.Testcase(v.opts.verbosity,
                          te,
@@ -134,8 +170,7 @@ for te in v.testname:
   tc.appendLog(2,'--------------------------------------------------------------------------------')
   tc.setResult('RUNONLY')
   execfile(tc.testName)
-  endTime = time.time()
-  dt = int(endTime - startTime)
+  dt = tc.getRunTime()
   tc.appendLog(2,'Duration: %d %02d:%02d:%02d' % (dt/60/60/24, dt/60/60 % 24, dt/60 % 60, dt % 60))
   tc.appendLog(0,tc.getResult())
   tc.closeLog()
