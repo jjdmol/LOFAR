@@ -47,9 +47,9 @@ bypass = 0x8F  # Bypass data path to have direct access to RCU data via SS, use 
 #r = 1
 #for i in range(0,r):
 #  rsp.write_ss(tc, msg, ss_map, blpId, rspId)
-#  time.sleep(1)
+#  tc.sleep(1000)
 #  rsp.write_ss(tc, msg, ss_map, blpId, rspId)
-#  time.sleep(1)
+#  tc.sleep(1000)
 
 # Apparently rspctl updates the SS every pps, so overwriting it does not work.
 # Disabling SS update in RSPDriver.conf may be an option. However instead adapt
@@ -76,7 +76,7 @@ rsp.rspctl(tc, '--rcuprsg')
 # Run the test
 for k in range(0, repeat):
   rsp.write_rsu_altsync(tc, msg, rspId)      # Apply altsync to capture a new result buffer
-  time.sleep(0.1)
+  tc.sleep(100)
 
   for ri in rspId:
     for bi in blpId:
