@@ -2,6 +2,8 @@
 
   def rspctl(tc, arg)
 
+  def i2bb(s)
+  def i2bbbb(s)
   def calculate_next_sequence_value(in_word, seq='PRSG', width=12)
   def reorder(data, index)
   
@@ -16,6 +18,9 @@
   def read_diag_result_buffer(tc, msg, nof, width, blpId=['blp0'], rspId=['rsp0'])
   def write_diag_selftest(tc, msg, selftest, blpId=['blp0'], rspId=['rsp0'], appLev=21)
   
+  def write_rd_smbh_protocol_list(tc, msg, smbh, protocol_list,  polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0'])
+  def overwrite_rd_smbh_protocol_results(tc, msg, smbh, polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0'])
+
   def write_rsu_altsync(tc, msg, rspId=['rsp0'])
   
   def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0'])
@@ -32,6 +37,7 @@ import math
 # User imports
 import cli
 import mep
+import smbus
 
 
 ################################################################################
@@ -228,8 +234,9 @@ c_hba_nof_servers     =  16       # HBA nof servers
 c_hba_cmd_request     =   0       # HBA client REQUEST register
 c_hba_cmd_response    =   1       # HBA client RESPONSE register
 c_hba_cmd_led         =   2       # HBA client LED register
-c_hba_cmd_vref        = 124       # HBA client VREF register
-c_hba_cmd_speed       = 125       # HBA client SPEED register
+c_hba_cmd_vref        = 124       # HBA client VREF register (v10)
+c_hba_cmd_speed       = 127       # HBA client SPEED register (old)
+#c_hba_cmd_speed       = 125       # HBA client SPEED register (v10)
 c_hba_cmd_version     = 126       # HBA client VERSION register
 c_hba_reg_request_sz  =  38       # register size in octets
 c_hba_reg_response_sz =   4
@@ -290,10 +297,40 @@ c_sens12v                 = 12.0/192
 def rspctl(tc, arg, appLev=22):
   cmd = 'rspctl %s' % arg
   if tc != None:
-    tc.appendLog(appLev,cmd)
-  return cli.command(cmd)
+    tc.appendLog(appLev,cmd)     # 22: show command line
+    res = cli.command(cmd)
+    tc.appendLog(appLev+1,res)   # 23: show command return
+    return res
+  else:
+    return cli.command(cmd)
 
 
+def i2bb(s):
+  """ Convert list of integers into list of byte-bytes
+  Input:
+  - s   = list of integers
+  Return:
+  - ret = list of two bytes, LSByte first per pair
+  """
+  ret = []
+  for i in s:
+    ret.extend([i%256, (i/256)%256])
+  return ret
+
+  
+def i2bbbb(s):
+  """ Convert list of integers into list of byte-byte-byte-bytes
+  Input:
+  - s   = list of integers
+  Return:
+  - ret = list of four bytes, LSByte first per four
+  """
+  ret = []
+  for i in s:
+    ret.extend([i%256, (i/256)%256, (i/(256*256))%256, (i/(256*256*256))%256])
+  return ret
+  
+  
 def calculate_next_sequence_value(in_word, seq='PRSG', width=12):
   """ Calculate next sequence value for PRSG or COUNTER
   
@@ -552,6 +589,101 @@ def write_rsu_altsync(tc, msg, rspId=['rsp0']):
     msg.packPayload([1],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
   
+
+def write_rd_smbh_protocol_list(tc, msg, smbh, protocol_list,  polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0']):
+  """Write and readback protocol list to SMBus handler in RSP. The list will take effect at next sync.
+
+  Input:
+  - tc            = Testcase
+  - msg           = MepMessage
+  - smbh          = SMBus handler: 'tdsh' or 'rcuh'
+  - protocol_list = Protocol list
+  - polId         = Polarization ID: x, y or 'x y' for RCUH, ignored for TDSH
+  - blpId         = BLP ID: 'blp#' for RCUH, destination defaults to 'rsp' for TDSH
+  - rspId         = RSP ID: 'rsp#'
+  Report:
+    tc.appendlog messages are reported.
+    tc.setResult is set
+  Return: void
+  """
+  # - Write the protocol list to the SMBH
+  smbus.write_protocol_list(tc, msg, smbh, protocol_list, polId, blpId, rspId)
+
+  # - Read back the protocol list to verify that this is possible
+  for ri in rspId:
+    if smbh == 'tdsh':
+      rb_protocol_list = smbus.readback_protocol_list(tc, msg, smbh, len(protocol_list), None, None, [ri])
+      if protocol_list == rb_protocol_list:
+        tc.appendLog(21, '>>> RSP-%s, TDSH : The protocol list READBACK went OK' % ri)
+      else:
+        tc.appendLog(11, '>>> RSP-%s, TDSH : The protocol list READBACK went wrong:' % ri)
+        tc.appendLog(11, 'Expected protocol list: %s' % protocol_list)
+        tc.appendLog(11, 'Readback protocol list: %s' % rb_protocol_list)
+        tc.setResult('FAILED')
+    elif smbh == 'rcuh':
+      for bi in blpId:
+        for pi in polId:
+	  rb_protocol_list = smbus.readback_protocol_list(tc, msg, smbh, len(protocol_list), pi, [bi], [ri])
+          if protocol_list == rb_protocol_list:
+            tc.appendLog(21, '>>> RSP-%s, BLP-%s, RCUH-%s: The protocol list READBACK went OK' % (ri, bi, pi))
+          else:
+            tc.appendLog(11, '>>> RSP-%s, BLP-%s, RCUH-%s: The protocol list READBACK went wrong:' % (ri, bi, pi))
+            tc.appendLog(11, 'Expected protocol list: %s' % protocol_list)
+            tc.appendLog(11, 'Readback protocol list: %s' % rb_protocol_list)
+            tc.setResult('FAILED')
+
+
+def overwrite_rd_smbh_protocol_results(tc, msg, smbh, polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0']):
+  """Overwrite and read protocol result of SMBus handler in RSP.
+
+  Input:
+  - tc            = Testcase
+  - msg           = MepMessage
+  - smbh          = SMBus handler: 'tdsh' or 'rcuh'
+  - polId         = Polarization ID: x, y or 'x y' for RCUH, ignored for TDSH
+  - blpId         = BLP ID: 'blp#' for RCUH, destination defaults to 'rsp' for TDSH
+  - rspId         = RSP ID: 'rsp#'
+  Report:
+    tc appendlog messages are reported.
+    tc setResult is set  global env
+  Return: void
+  """
+  if smbh == 'rcuh':
+    nof_result_bytes = 2**c_rcuh_result_adr_w
+  if smbh == 'tdsh':
+    nof_result_bytes = 2**c_tdsh_result_adr_w
+  
+  # - Overwrite first entries of protocol result register to be sure that the results will be fresh
+  wr_result = []
+  for i in range(nof_result_bytes):
+    wr_result.append(17)      # Just some number not equal to 0, 1, 255 and < 256
+
+  # - Overwrite
+  smbus.overwrite_results(tc, msg, smbh, wr_result, polId, blpId, rspId)
+
+  # - Readback to verify overwrite
+  for ri in rspId:
+    if smbh == 'tdsh':
+      rd_result = smbus.read_results(tc, msg, smbh, nof_result_bytes, None, None, [ri])
+      if wr_result == rd_result:
+        tc.appendLog(21, '>>> RSP-%s, TDSH : The protocol results OVERWRITE and read went OK' % ri)
+      else:
+        tc.appendLog(11, '>>> RSP-%s, TDSH : The protocol results OVERWRITE and read went wrong:' % ri)
+        tc.appendLog(11, 'Expected protocol result: %s' % wr_result)
+        tc.appendLog(11, 'Readback protocol result: %s' % rd_result)
+        tc.setResult('FAILED')
+    elif smbh == 'rcuh':
+      for bi in blpId:
+        for pi in polId:
+          rd_result = smbus.read_results(tc, msg, smbh, nof_result_bytes, pi, [bi], [ri])
+          if wr_result == rd_result:
+            tc.appendLog(21, '>>> RSP-%s, BLP-%s, RCUH-%s: The protocol results OVERWRITE and read went OK' % (ri, bi, pi))
+          else:
+            tc.appendLog(11, '>>> RSP-%s, BLP-%s, RCUH-%s: The protocol results OVERWRITE and read went wrong:' % (ri, bi, pi))
+            tc.appendLog(11, 'Expected protocol result: %s' % wr_result)
+            tc.appendLog(11, 'Readback protocol result: %s' % rd_result)
+            tc.setResult('FAILED')
+
 
 def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0']):
   """Overwrite the selected process fields of the RSP status register
