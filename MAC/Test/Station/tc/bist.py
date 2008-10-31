@@ -46,7 +46,7 @@ tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
 for ri in rspId:
   rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
-time.sleep(7)
+tc.sleep(7000)
   
 # - Write DIAG selftest for CEP
 #
@@ -58,7 +58,7 @@ tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
 for ri in rspId:
   rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
-time.sleep(5)
+tc.sleep(5000)
   
 # - Write DIAG selftest for SERDES
 #
@@ -70,7 +70,7 @@ tst_mode      = rsp.c_diag_mode_loop_local  # 1 = loop local
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
 for ri in rspId:
   rsp.write_diag_selftest(tc, msg, selftest, bpId, [ri], 99)
-time.sleep(1)
+tc.sleep(1000)
   
 # - Write DIAG selftest for RI
 #
@@ -82,7 +82,7 @@ tst_mode      = rsp.c_diag_mode_bus         # 6 = mode bus is mode tx,rx
 selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
 for ri in rspId:
   rsp.write_diag_selftest(tc, msg, selftest, fpgaId, [ri], 99)
-time.sleep(1)
+tc.sleep(1000)
   
 # - Read RSR to get BIST result, starting with MEP status error field (offset 0x1A) and length 0x18 bytes
 #
@@ -90,7 +90,6 @@ time.sleep(1)
 #   01 00 10 00 00  01   01 00  1A 00  18 00  07 00  00 00  00 00 00 00  00 00 00 00  00 00 00 00  00 00 00 00
 #
 for ri in rspId:
-
   rsp.read_mem(tc, msg, 'rsr', 'status', rsp.c_ei_status_rsr_size, bpId, [ri], 'h', 1, rsp.c_ei_status_rsr_offset)
   
   msg.setOffset(rsp.c_ei_status_mep_offset)
