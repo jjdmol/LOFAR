@@ -37,6 +37,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
 #include <casa/Containers/Block.h>
+#include <casa/Exceptions/Error.h>
 #include <iostream>
 #include <string>
 #include <pwd.h>
@@ -656,7 +657,6 @@ void doIt (bool noPrompt)
       }
       char* cstr = cstra;
       if (! cin.getline (cstr, buffersize)) {
-        cerr << "Error while reading command" << endl;
         break;
       } 
       while (*cstr == ' ') {
