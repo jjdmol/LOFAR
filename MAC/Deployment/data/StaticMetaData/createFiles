@@ -2,8 +2,15 @@
 #
 # $Id: $
 #
-# Syntax: createFiles ( -a | stationname [stationame ...])
+# Syntax: createFiles outputdir all | stationname [stationame ...])
 #
+# outputdir is teh root directory for the outputfiles:
+#     <stationname>/etc/<files>
+#
+# Using 'all' as stationname will create files for all stations in file
+# StationInfo
+#
+
 import re, sys, os
 warnings = []
 
@@ -176,13 +183,20 @@ def createRemoteStationFile(resultDir, stationName):
 # MAIN
 
 stationList = []
-if sys.argv[1] == "all":
+
+if (len(sys.argv) < 3):
+    print "Provide at least rootdir for output files and a stationname (or 'all')"
+    sys.exit(1)
+    
+resultRoot = sys.argv[1]
+
+if sys.argv[2] == "all":
     stationList = findAllStations()
 else:
-    stationList = sys.argv[1:]
+    stationList = sys.argv[2:]
 
 for stationName in stationList:
-    resultDir = "output/"+stationName+"/etc"
+    resultDir = resultRoot+"/StaticMetaData/"+stationName+"/etc"
     if os.path.exists(resultDir):
         for oldfile in os.listdir(resultDir):
             os.remove(resultDir+"/"+oldfile)
