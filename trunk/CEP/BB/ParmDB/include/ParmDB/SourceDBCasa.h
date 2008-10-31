@@ -60,6 +60,12 @@ namespace BBS {
     // An exception is thrown if that is the case.
     virtual void checkDuplicates();
 
+    // Find non-unique patch names.
+    virtual vector<string> findDuplicatePatches();
+
+    // Find non-unique source names.
+    virtual vector<string> findDuplicateSources();
+
     // Test if the patch already exists.
     virtual bool patchExists (const string& patchName);
 
@@ -129,6 +135,11 @@ namespace BBS {
                  SourceInfo::Type sourceType,
                  const ParmMap& defaultParameters,
                  double ra, double dec);
+
+    // Find the duplicate patches or sources.
+    vector<string> findDuplicates (casa::Table& table,
+                                   const string& columnName);
+
 
     //# Data members
     casa::Table itsPatchTable;

@@ -27,7 +27,7 @@
 //   makesourcedb in=inname out=outname format="fmt" append=true/false (or 1/0)
 // in      gives the input file name
 // out     gives the sourcedb name which will be created or appended
-// append  defines the the sourcedb is created or appended (default is appended)
+// append  defines if the sourcedb is created or appended (default is appended)
 // format  defines the format of the input file
 //
 // The format string looks like:
@@ -186,7 +186,7 @@ void checkRaDec (const SdbFormat& sdbf, int nr,
               "rah/d/m/s cannot be used if ra is given (same for dec)");
   }
   ASSERTSTR(v>=0 || hv>=0 || dv>=0 || mv>=0 || sv>=0,
-            "No Ra or Decfield info given");
+            "No Ra or Dec info given");
 }
 
 uint ltrim (const string& value, uint st, uint end)
@@ -450,7 +450,8 @@ void add (ParmMap& defVal, const string& name, double value)
   defVal.define (name, ParmValueSet(ParmValue(value)));
 }
 
-bool process (const string& line, SourceDB& pdb, const SdbFormat& sdbf)
+void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
+              bool check, int& nrpatch, int& nrsource)
 {
   //  cout << line << endl;
   // Hold the values.
@@ -510,23 +511,22 @@ bool process (const string& line, SourceDB& pdb, const SdbFormat& sdbf)
   }
   // Add the source.
   // Do not check for duplicates yet.
-  bool isPatch = false;
   if (srcName.empty()) {
-    ASSERTSTR (!patch.empty(), "Source and/orpatch name must be filled in");
-    pdb.addPatch (patch, cat, fluxI, ra, dec, false);
-    isPatch = true;
+    ASSERTSTR (!patch.empty(), "Source and/or patch name must be filled in");
+    pdb.addPatch (patch, cat, fluxI, ra, dec, check);
+    nrpatch++;
   } else {
     if (patch.empty()) {
-      pdb.addSource (srcName, cat, fluxI, srctype, defValues, ra, dec, false);
+      pdb.addSource (srcName, cat, fluxI, srctype, defValues, ra, dec, check);
     } else {
-      pdb.addSource (patch, srcName, srctype, defValues, ra, dec, false);
+      pdb.addSource (patch, srcName, srctype, defValues, ra, dec, check);
     }
+    nrsource++;
   }
-  return isPatch;
 }
 
 void make (const string& in, const string& out,
-           const string& format, bool append)
+           const string& format, bool append, bool check)
 {
   // Analyze the format string.
   SdbFormat sdbf = getFormat (format);
@@ -534,40 +534,46 @@ void make (const string& in, const string& out,
   ParmDBMeta ptm("casa", out);
   SourceDB pdb(ptm, !append);
   pdb.lock (true);
-  ifstream infile(in.c_str());
-  ASSERTSTR (infile, "File " << in << " could not be opened");
-  string line;
-  int nrpatch=0;
-  int nrsrc=0;
-  // Read first line.
-  getline (infile, line);
-  while (infile) {
-    // Remove comments.
-    bool skip = true;
-    for (uint i=0; i<line.size(); ++i) {
-      if (line[i] == '#') {
-        break;
-      }
-      if (line[i] != ' '  &&  line[i] != '\t') {
-        skip = false;
-        break;
-      }
-    }
-    if (!skip) {
-      bool isPatch = process (line, pdb, sdbf);
-      if (isPatch) {
-        nrpatch++;
-      } else {
-        nrsrc++;
-      }
-    }
-    // Read next line
+  int nrpatch = 0;
+  int nrsource = 0;
+  if (in.empty()) {
+    process (string(), pdb, sdbf, check, nrpatch, nrsource);
+  } else {
+    ifstream infile(in.c_str());
+    ASSERTSTR (infile, "File " << in << " could not be opened");
+    string line;
+    // Read first line.
     getline (infile, line);
+    while (infile) {
+      // Remove comments.
+      bool skip = true;
+      for (uint i=0; i<line.size(); ++i) {
+        if (line[i] == '#') {
+          break;
+        }
+        if (line[i] != ' '  &&  line[i] != '\t') {
+          skip = false;
+          break;
+        }
+      }
+      if (!skip) {
+        process (line, pdb, sdbf, check, nrpatch, nrsource);
+      }
+      // Read next line
+      getline (infile, line);
+    }
   }
   cout << "Wrote " << nrpatch << " patches and "
-       << nrsrc << " sources into "
+       << nrsource << " sources into "
        << pdb.getParmDBMeta().getTableName() << endl;
-  pdb.checkDuplicates();
+  vector<string> dp(pdb.findDuplicatePatches());
+  if (dp.size() > 0) {
+    cout << "Duplicate patches: " << dp << endl;
+  }
+  vector<string> ds(pdb.findDuplicateSources());
+  if (ds.size() > 0) {
+    cout << "Duplicate sources: " << ds << endl;
+  }
 }
 
 int main (int argc, const char *argv[])
@@ -584,16 +590,18 @@ int main (int argc, const char *argv[])
                   "Output sourcedb name", "string");
     inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi",
                   "Format of the input lines", "string");
-    inputs.create("append", "1",
+    inputs.create("append", "true",
                   "Append to possibly existing sourcedb?", "bool");
+    inputs.create("check", "false",
+                  "Check immediately for duplicate entries?", "bool");
     inputs.readArguments(argc, argv);
     string in = inputs.getString("in");
-    ASSERTSTR (!in.empty(), "no input file name given");
     string out = inputs.getString("out");
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
     string format = inputs.getString("format");
     bool append = inputs.getBool("append");
-    make (in, out, format, append);
+    bool check  = inputs.getBool("check");
+    make (in, out, format, append, check);
   } catch (std::exception& x) {
     std::cerr << "Caught exception: " << x.what() << std::endl;
     return 1;
