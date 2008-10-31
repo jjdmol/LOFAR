@@ -14,6 +14,7 @@ class Testcase:
                      rspId=['rsp0'], bpId='rsp', blpId='blp0',
                      tbbId=None, tpId=None, mpId=None,
                      polId=['x','y']):
+    self.startTime = time.time()
     self.verbosity = verbosity
     self.testName = testName
     self.repeat = repeat
@@ -41,7 +42,7 @@ class Testcase:
     txt = 'Tc %s - ' % self.testName[0:-3]
     if notime == 0:
       t = time.localtime()
-      txt = txt + '[%s %02d:%02d:%02d]' % (t.tm_wday, t.tm_hour, t.tm_min, t.tm_sec)
+      txt = txt + '[%d:%02d:%02d %02d:%02d:%02d]' % (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
     if nolevel == 0:
       txt = txt + ' - (%02d) ' % level
     txt = txt + string
@@ -50,5 +51,22 @@ class Testcase:
       print txt
       self.logFile.write(txt + '\n')
 
+  def appendFile(self, level, fileName):
+    try:
+      appFile = open(fileName,'r')
+      self.appendLog(level,appFile.read(),1,1,1)
+      appFile.close()
+    except IOError:
+      self.appendLog(level,'ERROR : Can not open file %s' % fileName)
+
+  def sleep(self, ms):
+    time.sleep(ms/1000.0)
+  
+  def setStartTime(self):
+    self.startTime = time.time()
+    
+  def getRunTime(self):
+    return int(time.time() - self.startTime)
+  
   def closeLog(self):
     self.logFile.close()
