@@ -1,15 +1,15 @@
 """Test the SERDES ring between RSP boards, based on TCL testcase 3.8
 
-   - Arguments
-     . mode:
-       off    = rsp.c_diag_mode_no_tst   --> enable sync to stop continuous tx test
-       tx     = rsp.c_diag_mode_loop_tx  --> keep ext sync disabled to continue tx
-       rx     = rsp.c_diag_mode_loop_rx
-       tx_rx  = rsp.c_diag_mode_loop_tx_rx
-       local  = rsp.c_diag_mode_loop_local --> use local loopback (idem as testcase 3.6)
-     . sync: When 0 use external sync, else use altsync with sync interval time
-             given by 'sync' sec.
-     . data:
+   - Specific arguments:
+     . diag_mode:
+         off    = rsp.c_diag_mode_no_tst   --> enable sync to stop continuous tx test
+         tx     = rsp.c_diag_mode_loop_tx  --> keep ext sync disabled to continue tx
+         rx     = rsp.c_diag_mode_loop_rx
+         tx_rx  = rsp.c_diag_mode_loop_tx_rx
+         local  = rsp.c_diag_mode_loop_local --> use local loopback (idem as testcase 3.6)
+     . diag_sync: When 0 use external sync, else use altsync with sync interval time
+                  given by 'sync' sec.
+     . diag_data:
          cntr   = use incremental data
          lfsr   = use LFSR data
 
@@ -21,13 +21,18 @@
 # NOTE:
 #   When using arg_sync = 0 to select the external sync the --brd order of RSP
 #   boards should match the fysical SERDES tx order. Due to the slow script
-#   (few MEP messages/sec) the test will otherwise fail when too many boards are
-#   in the test.
+#   (few MEP messages/sec) the test migth otherwise fail when too many boards
+#   are in the test.
 
 ################################################################################
 # - Verify options
 rspId = tc.rspId
 repeat = tc.repeat
+
+# - Rename testcase specific options
+arg_mode = arg_diag_mode
+arg_sync = arg_diag_sync
+arg_data = arg_diag_data
 
 ################################################################################
 # - Test selections
@@ -95,7 +100,7 @@ else:
     for ri in rspId:
       rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], [ri], 99)
 
-    time.sleep(0.1)        # wait DIAG ack_period_done
+    tc.sleep(100)        # wait DIAG ack_period_done
 
     # Sync control
     if arg_mode != 'tx':
@@ -105,14 +110,14 @@ else:
 
         # Wait for serdes_diag_lane tx, rx test to finish (1 until start sync, 1 measurement sync interval, 1 sync interval
         # for tx to finish, so worst case 3 sec)
-        time.sleep(3)
+        tc.sleep(3000)
       else:
         # Run serdes_diag_lane tx, rx test for 1 sync interval (arbitrary long, typically 1 sec)
         rsp.write_rsu_altsync(tc, msg, rspId)        # start of sync interval
-        time.sleep(arg_sync)
+        tc.sleep(arg_sync*1000)
         rsp.write_rsu_altsync(tc, msg, rspId)        # end of sync interval
         rsp.write_rsu_altsync(tc, msg, rspId)        # end tx
-        time.sleep(1)                                # allow time for DIAG tst result event to reach RSR
+        tc.sleep(1000)                               # allow time for DIAG tst result event to reach RSR
         rsp.write_cr_syncon(tc, msg, ['rsp'], rspId)  # restore CR ext sync enabled default
     # else: For mode 'tx' keep ext sync off to run tx forever, i.e. until tc is rerun with mode 'off'.
 
