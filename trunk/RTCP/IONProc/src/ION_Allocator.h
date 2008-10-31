@@ -32,7 +32,6 @@
 #define USE_ZOID_ALLOCATOR
 #endif
 
-
 namespace LOFAR {
 namespace RTCP {
 

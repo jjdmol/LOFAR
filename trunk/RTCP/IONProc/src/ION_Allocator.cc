@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <iostream>
 
-
 #if defined USE_ZOID_ALLOCATOR
 extern "C" {
   void *__zoid_alloc(size_t);
@@ -44,7 +43,7 @@ namespace RTCP {
 #if !defined USE_ZOID_ALLOCATOR
 #if defined HAVE_ZOID || defined FLAT_MEMORY
   //  FixedArena	   ION_Allocator::arena((void *) 0xA4002400, 0xBFFDC00);
-  FixedArena	     ION_Allocator::arena((void *) 0x40000000, 0x30000000);
+  FixedArena	     ION_Allocator::arena((void *) 0x50000000, 0x60000000);
   SparseSetAllocator ION_Allocator::allocator(ION_Allocator::arena);
 #else
   HeapAllocator	   ION_Allocator::allocator;

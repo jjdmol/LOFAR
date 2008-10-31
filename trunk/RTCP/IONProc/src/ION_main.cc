@@ -340,7 +340,7 @@ static void * mmapFastMemory()
   }
   
   /* 0x40000000 is usually the lowest virtual address of free vm start in 256MB alignment */
-  flatmem_mmap_addr = mmap((void*)0x40000000, size , PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+  flatmem_mmap_addr = mmap((void*)0x50000000, size , PROT_READ, MAP_PRIVATE, fd, 0);
   if( flatmem_mmap_addr == MAP_FAILED) {
     perror("mmap");
     exit(1);
@@ -359,7 +359,7 @@ void *master_thread(void *)
   
   std::clog << "starting master_thread" << std::endl;
 
-//   enableCoreDumps();
+  enableCoreDumps();
 
   std::clog << "coredumps" << std::endl;
 
