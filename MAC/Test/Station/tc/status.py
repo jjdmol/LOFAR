@@ -31,7 +31,7 @@ tc.appendLog(11, '')
 if repeat==1:
   status = rsp.read_rsr(tc, msg, arg_procid, rspId, 11)
 else:
-  for rep in range(repeat):
+  for rep in range(1,1+repeat):
     tc.appendLog(11, '>>> %d' % rep)
     if arg_procid == 'rad':
       for ri in rspId:
@@ -54,4 +54,4 @@ else:
     else:
       for ri in rspId:
         status = rsp.read_rsr(tc, msg, arg_procid, [ri], 11)
-  time.sleep(0.9)   # little less than 1 sec so we do not miss an interval status
+  tc.sleep(900)   # little less than 1 sec so we do not miss an interval status
