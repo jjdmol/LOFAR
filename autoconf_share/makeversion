@@ -58,8 +58,8 @@ fpkg=`pwd`
 pkg=`basename $fpkg`
 
 # No version info is needed if thee is src/Makefile.am or configure.in.
-# Also not needed (in fact, not possible) for Tools.
-if [ ! -e src/Makefile.am  -o  ! -e configure.in  -o  "$pkg" = Tools ]; then
+# Also not needed (in fact, not possible) for Tools and pytools.
+if [ ! -e src/Makefile.am  -o  ! -e configure.in  -o  "$pkg" = Tools  -o  "$pkg" = pytools ]; then
   exit 0
 fi
 
