@@ -20,7 +20,7 @@
 # $Id$
 
 from _pyparameterset import ParameterValue
-from _pyparameterset import ParameterSet
+from _pyparameterset import PyParameterSet
 
 
 class parametervalue(ParameterValue):
@@ -35,18 +35,18 @@ class parametervalue(ParameterValue):
         return self.get()
 
 
-class parameterset(ParameterSet):
+class parameterset(PyParameterSet):
     """
     The Python interface to ParameterSet
     """
 
     def __init__(self, filename=None, caseInsensitive=False):
         if filename==None:
-            ParameterSet.__init__ (self, caseInsensitive);
+            PyParameterSet.__init__ (self, caseInsensitive);
         elif isinstance(filename, bool):
-            ParameterSet.__init__ (self, filename);
+            PyParameterSet.__init__ (self, filename);
         else:
-            ParameterSet.__init__ (self, filename, caseInsensitive);
+            PyParameterSet.__init__ (self, filename, caseInsensitive);
 
     def __getitem__(self, key):
         return self.get (key)
