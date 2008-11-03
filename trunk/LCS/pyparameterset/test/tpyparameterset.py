@@ -60,6 +60,12 @@ print ""
 
 # Create and check a new parset using same keys/values as in parset file.
 ps=parameterset()
+print ">>>"
+print ps.version("tree")
+print ps.version("full")
+print ps.version("top")
+print ps.version()
+print "<<<"
 ps.add ("a.b", "7")
 ps.add ("a.b.lange_naam", "dit is nu een andere naam geworden met extra spaties aan het einde  ")
 ps.add ("a.b.c", "5")

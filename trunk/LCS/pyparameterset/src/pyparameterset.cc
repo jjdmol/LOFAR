@@ -29,10 +29,28 @@
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
+#include "Package__Version.cc"
+
 using namespace boost::python;
 using namespace casa::pyrap;
 
 namespace LOFAR { namespace ACC { namespace APS {
+
+  class PyParameterSet : public ParameterSet
+  {
+  public:
+    PyParameterSet()
+      : ParameterSet()
+    {}
+    PyParameterSet (bool caseInsensitive)
+      : ParameterSet (caseInsensitive)
+    {}
+    PyParameterSet (const string& fileName, bool caseInsensitive)
+      : ParameterSet (fileName, caseInsensitive)
+    {}
+    string version (const string& type) const
+      { return Version::getInfo<pyparametersetVersion> (type); }
+  };
 
   // Define function pointers for overloaded functions to be able to tell
   // boost-python which function to take.
@@ -115,10 +133,12 @@ namespace LOFAR { namespace ACC { namespace APS {
   // Define the python interface to ParameterSet.
   void pyparameterset()
   {
-    class_<ParameterSet> ("ParameterSet")
+    class_<PyParameterSet> ("PyParameterSet")
       .def (init<bool>())
       .def (init<std::string, bool>())
 
+      .def ("version", &PyParameterSet::version,
+            (boost::python::arg("type")="other"))
       .def ("size", &ParameterSet::size)
       .def ("__len__", &ParameterSet::size)
       .def ("makeSubset", &ParameterSet::makeSubset,
