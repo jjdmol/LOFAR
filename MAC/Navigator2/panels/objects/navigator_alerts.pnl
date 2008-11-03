@@ -572,7 +572,7 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 E E E
 0
 2
-LANG:1 0 
+LANG:1 10 move 10 up
 LANG:0 0 
 
 0
@@ -609,7 +609,7 @@ LANG:0 0
 E E E
 0
 2
-LANG:1 0 
+LANG:1 12 Move 10 down
 LANG:0 0 
 
 0
@@ -645,7 +645,7 @@ LANG:0 0
 E E E
 0
 2
-LANG:1 0 
+LANG:1 11 Move to top
 LANG:0 0 
 
 0
@@ -676,7 +676,7 @@ LANG:1 1 T
 E E E
 0
 2
-LANG:1 0 
+LANG:1 14 Move to bottom
 LANG:0 0 
 
 0

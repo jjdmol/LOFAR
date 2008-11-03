@@ -1110,7 +1110,7 @@ navFunct_fillObservationsTree() {
       return;
     }
            
-    string lvl;
+    string lvl="";
     // check in what lvl the searched obs is
     if (dynContains(aO,g_observationsList[i])>0) {
       lvl="active";
@@ -1121,7 +1121,7 @@ navFunct_fillObservationsTree() {
     }
           
     string aS=lvl+","+g_observationsList[i]+","+g_observations["DP"][iPos];
-    if (!dynContains(result,aS)){
+    if (!dynContains(result,aS) && lvl!=""){
         dynAppend(result,aS);
     }
   }

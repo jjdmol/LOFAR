@@ -99,6 +99,8 @@ updateObservations(string dp1, dyn_string obs,
                                                 obsDP + \".runState\",
                                                 obsDP + \".stationList\",
                                                 obsDP + \".status.state:_online.._invalid\");    
+    } else {
+      LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: couldn't connect to : \"+obsDP);   
     }
   }
 }
@@ -113,9 +115,9 @@ updateObservationsTableValues(string dp1, int state,
   string col=getStateColor(state);
   dyn_string d1=makeDynString(\" \",col);  
   
+  DebugN(\"CAllback with: \" + dp1);
     // this is the temp name
-  string dp = navFunct_dpStripLastElement(dpSubStr(dp1,DPSUB_DP));
-
+  string dp = dpSubStr(dp1,DPSUB_DP);
   // get the connected Observation
   string name = claimManager_realNameToName(MainDBName+dp);
   
