@@ -52,8 +52,8 @@ lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
   fi
   # If this package was configured in, add the statements to get the
   # version of this package.
-  # The Tools package is special and not handled.
-  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
+  # The Tools abd pytools packages are special and not handled.
+  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools  -a  "${lfr_pkgnam_intv}" != pytools ]; then
     echo "#include \"${lfr_hdrpath}/Package__Version.h\"" >> FillPackage__VersionInc.h
     # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
     # old one back, while preserving creation date and time.
