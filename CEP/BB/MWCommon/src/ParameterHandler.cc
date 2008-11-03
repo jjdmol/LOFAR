@@ -109,7 +109,7 @@ namespace LOFAR { namespace CEP {
     for (ParameterSet::const_iterator it=m.begin();
          it!=m.end();
          ++it) {
-      bs << it->first << it->second;
+      bs << it->first << it->second.get();
     }
     bs.putEnd();
     return bs;
