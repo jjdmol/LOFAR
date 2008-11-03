@@ -578,7 +578,9 @@ void make (const string& in, const string& out,
 
 int main (int argc, const char *argv[])
 {
-  const char* progName = basename(argv[0]);
+  // Some basename versions do not accept const char*.
+  char* pgmname = const_cast<char*>(argv[0]);
+  const char* progName = basename(pgmname);
   INIT_LOGGER(progName);
   try {
     // Get the inputs.
