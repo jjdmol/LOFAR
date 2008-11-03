@@ -115,20 +115,22 @@ AC_ARG_ENABLE(lib64,
     esac
   fi
 
-  # Determine if lib64 has to be used. This is somewhat tricky, because:
-  # Debian puts 64-bit libs in /lib and 32-bit libs in /lib32, but
-  # SuSE and RedHat put 64-bit libs in /lib64 and 32-bit libs in /lib.
-  # We cannot use `uname -s`, since all distros return "Linux", so we must
-  # test for the presence of these lib directories instead.
+  # Determine if lib64 has to be used. This is somewhat tricky for the default
+  # case, because: Debian puts 64-bit libs in /lib and 32-bit libs in /lib32,
+  # but SuSE and RedHat put 64-bit libs in /lib64 and 32-bit libs in /lib. 
+  # We cannot use `uname -s`, since all distros return "Linux", hence we must
+  # test for the presence of these lib directories instead. To further 
+  # complicate matters, Debian distros may create a symlink /lib64; therefore
+  # we should make sure that /lib64 is a "real" directory, not a symlink.
   lofar_libdirext=lib
   if test "$enable_lib64" = "yes" ; then
     lofar_libdirext=lib64
   elif test "$enable_lib64" = "default" ; then
-    if test -d /lib64 ; then
+    if test -d /lib64 -a ! -L /lib64 ; then
       lofar_libdirext=lib64
     fi
   else
-    if test -d /lib32 ; then
+    if test -d /lib32 -a ! -L /lib32 ; then
       lofar_libdirext=lib32
     fi
   fi
