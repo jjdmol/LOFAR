@@ -23,14 +23,13 @@
 #ifndef EXPR_AZEL_H
 #define EXPR_AZEL_H
 
+// \file
+// Azimuth and elevation for a direction (ra,dec) on the sky.
+
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ResultVec.h>
 #include <BBSKernel/Expr/Source.h>
-
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
 
 namespace LOFAR
 {
@@ -42,19 +41,23 @@ class Matrix;
 // \ingroup Expr
 // @{
 
+// AzEl computes azimuth and elevation coordinates for a direction (ra, dec) on
+// the sky as seen from a specific location (ITRF) on earth.
+//
+// \todo The direction on the sky is assumed to be a source and the location
+// on earth is assumed to be a station. This could be generalized if necessary.
 class AzEl: public ExprRep
 {
 public:
     AzEl(const Station &station, const Source::ConstPointer &source);
+    
     ResultVec getResultVec(const Request &request);
     
 private:
+    // Compute (az, el) coordinates. This method will be called multiple times
+    // if any of the input values (ra, dec) have associated perturbed values.
     void evaluate(const Request &request, const Matrix &in_ra,
         const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
-
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
     Station                 itsStation;
     Source::ConstPointer    itsSource;

@@ -20,21 +20,15 @@
 //#
 //# $Id$
 
-#if !defined(EXPR_POINTDFT_H)
-#define EXPR_POINTDFT_H
+#ifndef EXPR_DFTPS_H
+#define EXPR_DFTPS_H
 
 // \file
 // Station part of baseline phase shift.
 
-//# Includes
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/StatUVW.h>
-
 #include <Common/lofar_vector.h>
-
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
 
 namespace LOFAR
 {
@@ -44,21 +38,32 @@ namespace BBS
 // \ingroup Expr
 // @{
 
+// DFTPS computes the station part of the phase related to a direction (l, m, n)
+// on the sky.
+//
+// It is assumed that the frequency axis of the request is regularly spaced,
+// i.e. the frequency can be written as f0 + k * df where f0 is the frequency of
+// the first sample and k is an integer. Under this assumption, the phase shift
+// can be expressed as:
+//
+// Let (u . l) = u * l + v * m + w * (n - 1.0), then:
+//
+// shift = exp(i * 2.0 * pi * (u . l) * (f0 + k * df) / c)
+//       = exp(i * (2.0 * pi / c) * (u . l) * f0) 
+//         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
+//
+// DFTPS only computes the two exponential terms. PhaseShift computes the phase
+// shift for a baseline for each frequency by combining the results of two
+// DFTPS nodes and applying the above equation.
 class DFTPS: public ExprRep
 {
 public:
-    // Construct from source list, phase reference position and uvw.
     DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn);
     virtual ~DFTPS();
 
-    // Get the result of the expression for the given domain.
     virtual ResultVec getResultVec(const Request &request);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
-
     StatUVW::ConstPointer    itsUVW;
 };
 
