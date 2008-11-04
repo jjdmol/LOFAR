@@ -138,8 +138,7 @@ void AzEl::evaluate(const Request& request, const Matrix &in_ra,
     }
 }
 
-
-#ifdef EXPR_GRAPH
+#if 0
 std::string AzEl::getLabel()
 {
     return std::string("AzEl\\nAzimuth and elevation of a source.");

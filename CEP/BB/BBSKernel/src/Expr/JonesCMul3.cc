@@ -90,6 +90,9 @@ inline __m128d sub(__m128d b, __m128d a)
 #endif
 
 #if defined __SSE2__
+// Specialized SSE2 method for computing A * B * C^H.
+// NOTE: Only handles the case where A, C are complex scalar matrices and B is a
+// complex non-scalar matrix.
 static void getResultSSE2(
     Result &result11, Result &result12,
     Result &result21, Result &result22,
@@ -106,10 +109,27 @@ static void getResultSSE2(
     const Matrix &mr11, const Matrix &mr12,
     const Matrix &mr21, const Matrix &mr22)
 {
-    __m128d t11_r, t11_i, t12_r, t12_i, t21_r, t21_i, t22_r, t22_i;
+    // To do SSE2 computation a (const) __m128d* is needed, while to get a
+    // pointer to the values of a Matrix a (const) double* is needed. The unions
+    // below make it possible to treat the same memory location as either a
+    // (const) __m128d* or a (const) double *. This avoids the "dereferencing
+    // type-punned pointer will break strict-aliasing rules" warning.
+    union sse2_const_ptr
+    {
+        const __m128d *__m128d_ptr;
+        const double *double_ptr;
+    };
+   
+    union sse2_ptr
+    {
+        __m128d *__m128d_ptr;
+        double *double_ptr;
+    };
+
     dcomplex v;
     int n, nx = mm11.nx(), ny = mm11.ny();
 
+    // Get left and right values, and pointers to the middle values.
     v = ml11.getDComplex();
     __m128d l11_r = _mm_set1_pd(real(v)), l11_i = _mm_set1_pd(imag(v));
     v = ml12.getDComplex();
@@ -119,15 +139,15 @@ static void getResultSSE2(
     v = ml22.getDComplex();
     __m128d l22_r = _mm_set1_pd(real(v)), l22_i = _mm_set1_pd(imag(v));
 
-    __m128d *m11_r, *m11_i;
-    mm11.dcomplexStorage((const double *&) m11_r, (const double *&) m11_i);
-    __m128d *m12_r, *m12_i;
-    mm12.dcomplexStorage((const double *&) m12_r, (const double *&) m12_i);
-    __m128d *m21_r, *m21_i;
-    mm21.dcomplexStorage((const double *&) m21_r, (const double *&) m21_i);
-    __m128d *m22_r, *m22_i;
-    mm22.dcomplexStorage((const double *&) m22_r, (const double *&) m22_i);
-
+    sse2_const_ptr m11_r, m11_i;
+    mm11.dcomplexStorage(m11_r.double_ptr, m11_i.double_ptr);
+    sse2_const_ptr m12_r, m12_i;
+    mm12.dcomplexStorage(m12_r.double_ptr, m12_i.double_ptr);
+    sse2_const_ptr m21_r, m21_i;
+    mm21.dcomplexStorage(m21_r.double_ptr, m21_i.double_ptr);
+    sse2_const_ptr m22_r, m22_i;
+    mm22.dcomplexStorage(m22_r.double_ptr, m22_i.double_ptr);
+    
     v = mr11.getDComplex();
     __m128d r11_r = _mm_set1_pd(real(v)), r11_i = _mm_set1_pd(imag(v));
     v = mr12.getDComplex();
@@ -137,41 +157,43 @@ static void getResultSSE2(
     v = mr22.getDComplex();
     __m128d r22_r = _mm_set1_pd(real(v)), r22_i = _mm_set1_pd(imag(v));
 
-    Matrix v11(v, nx, ny, false);
-    Matrix v12(v, nx, ny, false);
-    Matrix v21(v, nx, ny, false);
-    Matrix v22(v, nx, ny, false);
+    Matrix v11(dcomplex(0.0, 0.0), nx, ny, false);
+    Matrix v12(dcomplex(0.0, 0.0), nx, ny, false);
+    Matrix v21(dcomplex(0.0, 0.0), nx, ny, false);
+    Matrix v22(dcomplex(0.0, 0.0), nx, ny, false);
 
-    __m128d *v11_r, *v11_i;
-    v11.dcomplexStorage((const double *&) v11_r, (const double *&) v11_i);
-    __m128d *v12_r, *v12_i;
-    v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
-    __m128d *v21_r, *v21_i;
-    v21.dcomplexStorage((const double *&) v21_r, (const double *&) v21_i);
-    __m128d *v22_r, *v22_i;
-    v22.dcomplexStorage((const double *&) v22_r, (const double *&) v22_i);
+    sse2_ptr v11_r, v11_i;
+    v11.dcomplexStorage(v11_r.double_ptr, v11_i.double_ptr);
+    sse2_ptr v12_r, v12_i;
+    v12.dcomplexStorage(v12_r.double_ptr, v12_i.double_ptr);
+    sse2_ptr v21_r, v21_i;
+    v21.dcomplexStorage(v21_r.double_ptr, v21_i.double_ptr);
+    sse2_ptr v22_r, v22_i;
+    v22.dcomplexStorage(v22_r.double_ptr, v22_i.double_ptr);
 
     // Compute main value.
-    n = (mm11.rep()->nelements() + 1) / 2;
+    __m128d t11_r, t11_i, t12_r, t12_i, t21_r, t21_i, t22_r, t22_i;
 
+    n = (mm11.rep()->nelements() + 1) / 2;
     for (int _i = 0; _i < n; _i ++)
     {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i[_i]),_mm_mul_pd(l11_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i[_i]),_mm_mul_pd(l12_i,m22_r[_i])));
-t21_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
-t21_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
-t22_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
-t22_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i[_i]),_mm_mul_pd(l21_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i[_i]),_mm_mul_pd(l22_i,m22_r[_i])));
-v11_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
-v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
-v12_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
-v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
-v21_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t21_r,r11_r),_mm_mul_pd(t21_i,r11_i)),_mm_add_pd(_mm_mul_pd(t22_r,r12_r),_mm_mul_pd(t22_i,r12_i)));
-v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r11_r),_mm_mul_pd(t21_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t22_i,r12_r),_mm_mul_pd(t22_r,r12_i)));
-v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t21_r,r21_r),_mm_mul_pd(t21_i,r21_i)),_mm_add_pd(_mm_mul_pd(t22_r,r22_r),_mm_mul_pd(t22_i,r22_i)));
-v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t22_i,r22_r),_mm_mul_pd(t22_r,r22_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_r.__m128d_ptr[_i])));
+t21_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_i.__m128d_ptr[_i])));
+t21_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_r.__m128d_ptr[_i])));
+t22_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_i.__m128d_ptr[_i])));
+t22_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_r.__m128d_ptr[_i])));
+
+v11_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
+v11_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
+v12_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
+v12_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
+v21_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t21_r,r11_r),_mm_mul_pd(t21_i,r11_i)),_mm_add_pd(_mm_mul_pd(t22_r,r12_r),_mm_mul_pd(t22_i,r12_i)));
+v21_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r11_r),_mm_mul_pd(t21_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t22_i,r12_r),_mm_mul_pd(t22_r,r12_i)));
+v22_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t21_r,r21_r),_mm_mul_pd(t21_i,r21_i)),_mm_add_pd(_mm_mul_pd(t22_r,r22_r),_mm_mul_pd(t22_i,r22_i)));
+v22_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t22_i,r22_r),_mm_mul_pd(t22_r,r22_i)));
     }
 
     result11.setValue(v11);
@@ -239,18 +261,14 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i))
             v = ml12.getDComplex();
             __m128d l12_r = _mm_set1_pd(real(v)), l12_i = _mm_set1_pd(imag(v));
 
-            __m128d *m11_r, *m11_i;
-            mm11.dcomplexStorage((const double *&) m11_r,
-                (const double *&) m11_i);
-            __m128d *m12_r, *m12_i;
-            mm12.dcomplexStorage((const double *&) m12_r,
-                (const double *&) m12_i);
-            __m128d *m21_r, *m21_i;
-            mm21.dcomplexStorage((const double *&) m21_r,
-                (const double *&) m21_i);
-            __m128d *m22_r, *m22_i;
-            mm22.dcomplexStorage((const double *&) m22_r,
-                (const double *&) m22_i);
+            sse2_const_ptr m11_r, m11_i;
+            mm11.dcomplexStorage(m11_r.double_ptr, m11_i.double_ptr);
+            sse2_const_ptr m12_r, m12_i;
+            mm12.dcomplexStorage(m12_r.double_ptr, m12_i.double_ptr);
+            sse2_const_ptr m21_r, m21_i;
+            mm21.dcomplexStorage(m21_r.double_ptr, m21_i.double_ptr);
+            sse2_const_ptr m22_r, m22_i;
+            mm22.dcomplexStorage(m22_r.double_ptr, m22_i.double_ptr);
 
             if(eval11 && eval12)
             {
@@ -267,29 +285,29 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i))
                 __m128d r22_r = _mm_set1_pd(real(v));
                 __m128d r22_i = _mm_set1_pd(imag(v));
 
-                Matrix &v11 = result11.getPerturbedValueRW(pvIter.key());
-                Matrix &v12 = result12.getPerturbedValueRW(pvIter.key());
-                v11.setDCMat(nx, ny);
-                v12.setDCMat(nx, ny);
+                Matrix v11(dcomplex(0.0, 0.0), nx, ny, false);
+                Matrix v12(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v11_r, *v11_i;
-                v11.dcomplexStorage((const double *&) v11_r,
-                    (const double *&) v11_i);
-                __m128d *v12_r, *v12_i;
-                v12.dcomplexStorage((const double *&) v12_r,
-                    (const double *&) v12_i);
+                sse2_ptr v11_r, v11_i;
+                v11.dcomplexStorage(v11_r.double_ptr, v11_i.double_ptr);
+                sse2_ptr v12_r, v12_i;
+                v12.dcomplexStorage(v12_r.double_ptr, v12_i.double_ptr);
 
                 for(int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i[_i]),_mm_mul_pd(l11_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i[_i]),_mm_mul_pd(l12_i,m22_r[_i])));
-v11_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
-v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
-v12_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
-v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_r.__m128d_ptr[_i])));
+
+v11_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
+v11_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
+v12_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
+v12_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
                 }
+                
+                result11.setPerturbedValue(pvIter.key(), v11);
+                result12.setPerturbedValue(pvIter.key(), v12);
             }
             else if(eval11)
             {
@@ -300,22 +318,23 @@ v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
                 __m128d r12_r = _mm_set1_pd(real(v));
                 __m128d r12_i = _mm_set1_pd(imag(v));
 
-                Matrix &v11 = result11.getPerturbedValueRW(pvIter.key());
-                v11.setDCMat(nx, ny);
+                Matrix v11(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v11_r, *v11_i;
-                v11.dcomplexStorage((const double *&) v11_r,
-                    (const double *&) v11_i);
+                sse2_ptr v11_r, v11_i;
+                v11.dcomplexStorage(v11_r.double_ptr, v11_i.double_ptr);
 
                 for(int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i[_i]),_mm_mul_pd(l11_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i[_i]),_mm_mul_pd(l12_i,m22_r[_i])));
-v11_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
-v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_r.__m128d_ptr[_i])));
+
+v11_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
+v11_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
                 }
+                
+                result11.setPerturbedValue(pvIter.key(), v11);
             }
             else
             {
@@ -326,21 +345,23 @@ v11_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i))
                 __m128d r22_r = _mm_set1_pd(real(v));
                 __m128d r22_i = _mm_set1_pd(imag(v));
 
-                Matrix &v12 = result12.getPerturbedValueRW(pvIter.key());
-                v12.setDCMat(nx, ny);
+                Matrix v12(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v12_r, *v12_i;
-                v12.dcomplexStorage((const double *&) v12_r, (const double *&) v12_i);
+                sse2_ptr v12_r, v12_i;
+                v12.dcomplexStorage(v12_r.double_ptr, v12_i.double_ptr);
 
                 for(int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r[_i]),_mm_mul_pd(l11_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r[_i]),_mm_mul_pd(l12_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i[_i]),_mm_mul_pd(l11_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i[_i]),_mm_mul_pd(l12_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r[_i]),_mm_mul_pd(l11_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r[_i]),_mm_mul_pd(l12_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i[_i]),_mm_mul_pd(l11_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i[_i]),_mm_mul_pd(l12_i,m22_r[_i])));
-v12_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
-v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l11_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l12_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l11_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l11_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l12_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l12_i,m22_r.__m128d_ptr[_i])));
+
+v12_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
+v12_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
                 }
+
+                result12.setPerturbedValue(pvIter.key(), v12);
             }
         }
 
@@ -351,18 +372,14 @@ v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
             v = ml22.getDComplex();
             __m128d l22_r = _mm_set1_pd(real(v)), l22_i = _mm_set1_pd(imag(v));
 
-            __m128d *m11_r, *m11_i;
-            mm11.dcomplexStorage((const double *&) m11_r,
-                (const double *&) m11_i);
-            __m128d *m12_r, *m12_i;
-            mm12.dcomplexStorage((const double *&) m12_r,
-                (const double *&) m12_i);
-            __m128d *m21_r, *m21_i;
-            mm21.dcomplexStorage((const double *&) m21_r,
-                (const double *&) m21_i);
-            __m128d *m22_r, *m22_i;
-            mm22.dcomplexStorage((const double *&) m22_r,
-                (const double *&) m22_i);
+            sse2_const_ptr m11_r, m11_i;
+            mm11.dcomplexStorage(m11_r.double_ptr, m11_i.double_ptr);
+            sse2_const_ptr m12_r, m12_i;
+            mm12.dcomplexStorage(m12_r.double_ptr, m12_i.double_ptr);
+            sse2_const_ptr m21_r, m21_i;
+            mm21.dcomplexStorage(m21_r.double_ptr, m21_i.double_ptr);
+            sse2_const_ptr m22_r, m22_i;
+            mm22.dcomplexStorage(m22_r.double_ptr, m22_i.double_ptr);
 
             if(eval21 && eval22)
             {
@@ -379,29 +396,29 @@ v12_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
                 __m128d r22_r = _mm_set1_pd(real(v));
                 __m128d r22_i = _mm_set1_pd(imag(v));
 
-                Matrix &v21 = result21.getPerturbedValueRW(pvIter.key());
-                Matrix &v22 = result22.getPerturbedValueRW(pvIter.key());
-                v21.setDCMat(nx, ny);
-                v22.setDCMat(nx, ny);
+                Matrix v21(dcomplex(0.0, 0.0), nx, ny, false);
+                Matrix v22(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v21_r, *v21_i;
-                v21.dcomplexStorage((const double *&) v21_r,
-                    (const double *&) v21_i);
-                __m128d *v22_r, *v22_i;
-                v22.dcomplexStorage((const double *&) v22_r,
-                    (const double *&) v22_i);
+                sse2_ptr v21_r, v21_i;
+                v21.dcomplexStorage(v21_r.double_ptr, v21_i.double_ptr);
+                sse2_ptr v22_r, v22_i;
+                v22.dcomplexStorage(v22_r.double_ptr, v22_i.double_ptr);
 
                 for(int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i[_i]),_mm_mul_pd(l21_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i[_i]),_mm_mul_pd(l22_i,m22_r[_i])));
-v21_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
-v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
-v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
-v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_r.__m128d_ptr[_i])));
+
+v21_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
+v21_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
+v22_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
+v22_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
                 }
+                
+                result21.setPerturbedValue(pvIter.key(), v21);
+                result22.setPerturbedValue(pvIter.key(), v22);
             }
             else if(eval21)
             {
@@ -412,22 +429,23 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
                 __m128d r12_r = _mm_set1_pd(real(v));
                 __m128d r12_i = _mm_set1_pd(imag(v));
 
-                Matrix &v21 = result21.getPerturbedValueRW(pvIter.key());
-                v21.setDCMat(nx, ny);
+                Matrix v21(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v21_r, *v21_i;
-                v21.dcomplexStorage((const double *&) v21_r,
-                    (const double *&) v21_i);
+                sse2_ptr v21_r, v21_i;
+                v21.dcomplexStorage(v21_r.double_ptr, v21_i.double_ptr);
 
                 for(int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i[_i]),_mm_mul_pd(l21_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i[_i]),_mm_mul_pd(l22_i,m22_r[_i])));
-v21_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
-v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_r.__m128d_ptr[_i])));
+
+v21_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r11_r),_mm_mul_pd(t11_i,r11_i)),_mm_add_pd(_mm_mul_pd(t12_r,r12_r),_mm_mul_pd(t12_i,r12_i)));
+v21_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r12_r),_mm_mul_pd(t12_r,r12_i)));
                 }
+
+                result21.setPerturbedValue(pvIter.key(), v21);
             }
             else
             {
@@ -438,27 +456,27 @@ v21_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r11_r),_mm_mul_pd(t11_r,r11_i))
                 __m128d r22_r = _mm_set1_pd(real(v));
                 __m128d r22_i = _mm_set1_pd(imag(v));
 
-                Matrix &v22 = result22.getPerturbedValueRW(pvIter.key());
-                v22.setDCMat(nx, ny);
+                Matrix v22(dcomplex(0.0, 0.0), nx, ny, false);
 
-                __m128d *v22_r, *v22_i;
-                v22.dcomplexStorage((const double *&) v22_r,
-                    (const double *&) v22_i);
+                sse2_ptr v22_r, v22_i;
+                v22.dcomplexStorage(v22_r.double_ptr, v22_i.double_ptr);
 
                 for (int _i = 0; _i < n; _i ++)
                 {
-t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r[_i]),_mm_mul_pd(l21_i,m11_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r[_i]),_mm_mul_pd(l22_i,m21_i[_i])));
-t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i[_i]),_mm_mul_pd(l21_i,m11_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i[_i]),_mm_mul_pd(l22_i,m21_r[_i])));
-t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r[_i]),_mm_mul_pd(l21_i,m12_i[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r[_i]),_mm_mul_pd(l22_i,m22_i[_i])));
-t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i[_i]),_mm_mul_pd(l21_i,m12_r[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i[_i]),_mm_mul_pd(l22_i,m22_r[_i])));
-v22_r[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
-v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
+t11_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m11_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m21_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_i.__m128d_ptr[_i])));
+t11_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m11_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m11_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m21_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m21_r.__m128d_ptr[_i])));
+t12_r=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(l21_r,m12_r.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_i.__m128d_ptr[_i])),_mm_sub_pd(_mm_mul_pd(l22_r,m22_r.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_i.__m128d_ptr[_i])));
+t12_i=_mm_add_pd(_mm_add_pd(_mm_mul_pd(l21_r,m12_i.__m128d_ptr[_i]),_mm_mul_pd(l21_i,m12_r.__m128d_ptr[_i])),_mm_add_pd(_mm_mul_pd(l22_r,m22_i.__m128d_ptr[_i]),_mm_mul_pd(l22_i,m22_r.__m128d_ptr[_i])));
+v22_r.__m128d_ptr[_i]=_mm_add_pd(_mm_add_pd(_mm_mul_pd(t11_r,r21_r),_mm_mul_pd(t11_i,r21_i)),_mm_add_pd(_mm_mul_pd(t12_r,r22_r),_mm_mul_pd(t12_i,r22_i)));
+v22_i.__m128d_ptr[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i)),_mm_sub_pd(_mm_mul_pd(t12_i,r22_r),_mm_mul_pd(t12_r,r22_i)));
                 }
+
+                result22.setPerturbedValue(pvIter.key(), v22);
             }
         }
 
         pvIter.next();
-    } // while(!atEnd)
+    } // while(!pvIter.atEnd())
 }
 #endif
 
@@ -622,7 +640,7 @@ JonesResult JonesCMul3::getJResult(const Request& request)
             }
           
             pvIter.next();
-        } // while(!atEnd)
+        } // while(!pvIter.atEnd())
 #if defined __SSE2__
     }
 #endif
