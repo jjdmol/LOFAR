@@ -27,9 +27,9 @@
 #include <string>
 #include <map>
 
-// @file
-// @brief Class to hold code for retrieving information from MeasurementSet in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for retrieving information from MeasurementSet in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
@@ -59,13 +59,13 @@ namespace LOFAR
       std::map<baseline_t, int> BaselineIndex;
       std::vector<double>       BaselineLengths;
 
-      void                      Update(void); //reread the info from the MeasurementSet
-      void                      PrintInfo(void); // prints info to cout, for debugging
+      void                      Update(void); ///< reread the info from the MeasurementSet
+      void                      PrintInfo(void); ///< prints info to cout, for debugging
 
     protected:
     private:
       std::string MsName;
-      void        ComputeBaselineLengths(casa::MeasurementSet& MS); // for baseline dependent flagging or filtering
+      void        ComputeBaselineLengths(casa::MeasurementSet& MS); ///< for baseline dependent flagging or filtering
     }; // class MsInfo
   }; // CS1
 }; // namespace LOFAR

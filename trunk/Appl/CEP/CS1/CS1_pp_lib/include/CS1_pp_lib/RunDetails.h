@@ -20,20 +20,20 @@
 #ifndef __CS1_PP_RUN_DETAILS_H__
 #define __CS1_PP_RUN_DETAILS_H__
 
-// @file
-// @brief Class to hold parameter settings for the steps in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold parameter settings for the steps in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
   namespace CS1
   {
-    // @ingroup CS1_pp_lib
-    //
-    // This class is basically a fancy struct of the variables that need to be set
-    // in the parameterset for IDPPP for the various steps.
-    // It has some extra functionality to validate and print the values.
-    // It isn't using setter/getter functions because that seemed overkill for the required use.
+    /// @ingroup CS1_pp_lib
+    ///
+    /// This class is basically a fancy struct of the variables that need to be set
+    /// in the parameterset for IDPPP for the various steps.
+    /// It has some extra functionality to validate and print the values.
+    /// It isn't using setter/getter functions because that seemed overkill for the required use.
 
     class RunDetails
     {
@@ -41,22 +41,22 @@ namespace LOFAR
       RunDetails();
       ~RunDetails();
 
-      unsigned int Fixed;        // BandpassCorrector
-      unsigned int FreqWindow;   // FrequencyFlagger, MADFlagger
-      unsigned int TimeWindow;   // ComplexMedianFlagger, MADFlagger
-      double       Threshold;    // FrequencyFlagger, MADFlagger
-      double       MinThreshold; // ComplexMedianFlagger
-      double       MaxThreshold; // ComplexMedianFlagger, MADFlagger
-      unsigned int Algorithm;    // FrequencyFlagger
-      bool         Existing;     // all flaggers
-      unsigned int NChan;        // DataSquasher
-      unsigned int Start;        // DataSquasher
-      unsigned int Step;         // DataSquasher
-      bool         Skip;         // DataSquasher
-      bool         Columns;      // DataSquasher
-      unsigned int TimeStep;     // DataSquasher
-      bool CheckValues(void);    // Method to do some validity checks on the values
-      void PrintInfo(void);      // Prints all values to cout, mainly for debugging purposes
+      unsigned int Fixed;        ///< BandpassCorrector
+      unsigned int FreqWindow;   ///< FrequencyFlagger, MADFlagger
+      unsigned int TimeWindow;   ///< ComplexMedianFlagger, MADFlagger
+      double       Threshold;    ///< FrequencyFlagger, MADFlagger
+      double       MinThreshold; ///< ComplexMedianFlagger
+      double       MaxThreshold; ///< ComplexMedianFlagger, MADFlagger
+      unsigned int Algorithm;    ///< FrequencyFlagger
+      bool         Existing;     ///< all flaggers
+      unsigned int NChan;        ///< DataSquasher
+      unsigned int Start;        ///< DataSquasher
+      unsigned int Step;         ///< DataSquasher
+      bool         Skip;         ///< DataSquasher
+      bool         Columns;      ///< DataSquasher
+      unsigned int TimeStep;     ///< DataSquasher
+      bool CheckValues(void);    ///< Method to do some validity checks on the values
+      void PrintInfo(void);      ///< Prints all values to cout, mainly for debugging purposes
 
     protected:
     private:

@@ -26,15 +26,15 @@
 /**
 @author Adriaan Renting
 */
-// @file
-// @brief Class to hold code for inititalising IDPP and starting the processing in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for inititalising IDPP and starting the processing in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
   namespace CS1
   {
-    //Foreward declarations
+    ///Foreward declarations
     class BandpassCorrector;
     class Flagger;
     class DataSquasher;
@@ -46,13 +46,13 @@ namespace LOFAR
     class PipelineProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
-      std::string  itsInMS; //Name and location of input MS
-      std::string  itsOutMS; //Name and location of output MS
-      unsigned int itsBandpass; //from ParameterSet
-      unsigned int itsFlagger; //From ParameterSet
-      unsigned int itsSquasher; //From ParameterSet
+      std::string  itsInMS; ///< Name and location of input MS
+      std::string  itsOutMS; ///< Name and location of output MS
+      unsigned int itsBandpass; ///< from ParameterSet
+      unsigned int itsFlagger; ///< From ParameterSet
+      unsigned int itsSquasher; ///< From ParameterSet
 
-      Pipeline*          myPipeline; //the actual pipeline, all others need to be initialised first
+      Pipeline*          myPipeline; ///< the actual pipeline, all others need to be initialised first
       MsFile*            myFile;
       MsInfo*            myInfo;
       BandpassCorrector* myBandpass;
@@ -63,28 +63,28 @@ namespace LOFAR
       PipelineProcessControl(void);
 
       ~PipelineProcessControl(void);
-      // \name Command to control the processes.
-      // There are a dozen commands that can be sent to a application process
-      // to control its flow. The return values for these command are:<br>
-      // - True   - Command executed succesfully.
-      // - False  - Command could not be executed.
-      //
-      // @{
+      /// \name Command to control the processes.
+      /// There are a dozen commands that can be sent to a application process
+      /// to control its flow. The return values for these command are:<br>
+      /// - True   - Command executed succesfully.
+      /// - False  - Command could not be executed.
+      ///
+      /// @{
 
-      // During the \c define state the process check the contents of the
-      // ParameterSet it received during start-up. When everthing seems ok the
-      // process constructs the communication channels for exchanging data
-      // with the other processes. The connection are NOT made in the stage.
+      /// During the \c define state the process check the contents of the
+      /// ParameterSet it received during start-up. When everthing seems ok the
+      /// process constructs the communication channels for exchanging data
+      /// with the other processes. The connection are NOT made in the stage.
       tribool define   (void);
 
-      // When a process receives an \c init command it allocates the buffers it
-      // needs an makes the connections with the other processes. When the
-      // process succeeds in this it is ready for dataprocessing (or whatever
-      // task the process has).
+      /// When a process receives an \c init command it allocates the buffers it
+      /// needs an makes the connections with the other processes. When the
+      /// process succeeds in this it is ready for dataprocessing (or whatever
+      /// task the process has).
       tribool init     (void);
 
-      // During the \c run phase the process does the work it is designed for.
-      // The run phase stays active until another command is send.
+      /// During the \c run phase the process does the work it is designed for.
+      /// The run phase stays active until another command is send.
       tribool run      (void);
 
       tribool pause(const std::string&);

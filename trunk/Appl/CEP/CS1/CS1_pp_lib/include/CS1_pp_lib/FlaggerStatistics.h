@@ -25,9 +25,9 @@
 #include <vector>
 #include <CS1_pp_lib/MsInfo.h>
 
-// @file
-// @brief Class to hold code for holding the statistics of a Flagger pass in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for holding the statistics of a Flagger pass in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
@@ -38,16 +38,16 @@ namespace LOFAR
       public:
         FlaggerStatistics(MsInfo& info);
         ~FlaggerStatistics();
-        // Will output formatted statistics to the output stream (usually cout)
+        /// Will output formatted statistics to the output stream (usually cout)
         void PrintStatistics(std::ostream& output);
-        int& operator()(int x, int y, int z); //for quick indexing of the internal data
+        int& operator()(int x, int y, int z); ///< for quick indexing of the internal data
 
       protected:
       private:
         int                       NumAntennae;
         int                       NumBands;
-        casa::Cube< int >         Statistics; //A cube of antenna x antenna x bands
-        int                       Normalizer; //the total count of antenna x antenna x bands
+        casa::Cube< int >         Statistics; ///< A cube of antenna x antenna x bands
+        int                       Normalizer; ///< the total count of antenna x antenna x bands
         std::vector<casa::String> AntennaNames;
     }; // FlaggerStatistics
   }; // CS1

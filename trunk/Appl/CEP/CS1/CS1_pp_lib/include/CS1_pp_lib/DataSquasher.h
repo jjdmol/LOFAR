@@ -32,9 +32,9 @@
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 
-// @file
-// @brief Class to hold code for DataSquasher step in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for DataSquasher step in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
@@ -50,11 +50,13 @@ namespace LOFAR
       DataSquasher(void);
       ~DataSquasher(void);
 
-      // All processing of one integration time happens in one go.
+      /// All processing of one integration time happens in one go.
       void ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
                            MsInfo& Info, RunDetails& Details,
                            std::vector<double>& TimeData);
     private:
+      /// This will squash every Step Channels starting from Start into one channel, until NChan have been processed.
+      /// newWeights will reflect how many values were unflagged. Only unflagged values are retained
       void Squash(casa::Matrix<casa::Complex>& oldData, casa::Matrix<casa::Complex>& newData,
                   casa::Matrix<casa::Bool>& oldFlags, casa::Matrix<casa::Bool>& newFlags,
                   casa::Matrix<casa::Float>& newWeights, int itsNumPolarizations,
