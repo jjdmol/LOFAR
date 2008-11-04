@@ -48,7 +48,7 @@ MADFlagger::~MADFlagger()
 
 //===============>>> ComplexMedianFlagger2::ComputeThreshold  <<<============
 /*Compute Thresholds */
-void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
+void MADFlagger::ComputeThreshold(const Cube<Float>& Values,
                                   int TWindowSize, int FWindowSize,
                                   int TimePos, int ChanPos, int PolPos,
                                   float& Z1, float& Z2, Matrix<Float>& Medians)
@@ -63,7 +63,7 @@ void MADFlagger::ComputeThreshold(const Cube<Complex>& Values,
     {
       tempF = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? ChanPos-j : ChanPos+j); //have the channels wrap back upon themselves.
       tempT = (TimePos + i + TWindowSize) % TWindowSize;
-      Medians(i+T, j+F) = abs(Values(PolPos, tempF, tempT)); //Fill the Matrix.
+      Medians(i+T, j+F) = Values(PolPos, tempF, tempT); //Fill the Matrix.
     }
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z
@@ -83,24 +83,30 @@ based on the RMS of the points it didn't flag.*/
 int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
                                  const Cube<Complex>& Data,
                                  int flagCounter,
-                                 double Threshold,
+                                 double Threshold, double MaxLevel,
                                  int Position, bool Existing,
                                  int TWindowSize, int FWindowSize)
 {
-  float Z1         = 0.0;
-  float Z2         = 0.0;
-  int    flagcount = 0;
-  double MAD       = 1.4826;
+  float Z1             = 0.0;
+  float Z2             = 0.0;
+  int    flagcount     = 0;
+  double MAD           = 1.4826;
+  Cube<Float> RealData = amplitude(Data);
   Matrix<Float> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace
   for (int i = NumChannels-1; i >= 0; i--)
   {
     bool FlagAllPolarizations = false;
     for (int j = NumPolarizations-1; j >= 0; j--)
-    { //we need to loop twice, once to determine FlagAllCorrelations
+    { //we need to loop twice, once to determine FlagAllPolarizations, then to set the flags
       if (!FlagAllPolarizations /*&& PolarizationsToCheck[j]*/)
       {
-        ComputeThreshold(Data, TWindowSize, FWindowSize, Position, i, j, Z1, Z2, Medians);
-        FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(abs(Data(j, i, Position)) - Z1);
+        if (MaxLevel && RealData(j, i, Position) > MaxLevel)
+        { FlagAllPolarizations = true;
+        }
+        else
+        { ComputeThreshold(RealData, TWindowSize, FWindowSize, Position, i, j, Z1, Z2, Medians);
+          FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(RealData(j, i, Position) - Z1);
+        }
       }
     }
     for (int j = NumPolarizations-1; j >= 0; j--)
@@ -145,6 +151,7 @@ void MADFlagger::ProcessTimeslot(DataBuffer& data,
                                           data.Data[index],
                                           stats(i,j,k),
                                           details.Threshold,
+                                          details.MaxThreshold,
                                           pos,
                                           details.Existing,
                                           details.TimeWindow,

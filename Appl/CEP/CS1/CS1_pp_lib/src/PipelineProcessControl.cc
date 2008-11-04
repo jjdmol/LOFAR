@@ -37,7 +37,8 @@
 #include <CS1_pp_lib/MADFlagger.h>
 #include <CS1_pp_lib/DataSquasher.h>
 
-#define PIPELINE_VERSION "0.22"
+#define PIPELINE_VERSION "0.23"
+// 0.23 Added AbsoluteThreshold for MADFlagger
 
 namespace LOFAR
 {
@@ -71,8 +72,8 @@ namespace LOFAR
       myDetails->TimeWindow   = ParamSet->getUint32("timewindow", 1);    // ComplexMedianFlagger, MADFlagger
       myDetails->Threshold     = ParamSet->getDouble("threshold", 1.0);  // FrequencyFlagger, MADFlagger
       myDetails->Algorithm    = ParamSet->getUint32("algorithm", 0);     // FrequencyFlagger
-      myDetails->MinThreshold = ParamSet->getDouble("min", 1.0);        // ComplexMedianFlagger
-      myDetails->MaxThreshold = ParamSet->getDouble("max", 1.0);        // ComplexMedianFlagger
+      myDetails->MinThreshold = ParamSet->getDouble("min", 0.0);        // ComplexMedianFlagger
+      myDetails->MaxThreshold = ParamSet->getDouble("max", 0.0);        // ComplexMedianFlagger, MADFlagger
       myDetails->Existing     = ParamSet->getBool("existing", false);   // all flaggers
       myDetails->NChan        = ParamSet->getUint32("nchan");            // DataSquasher
       myDetails->Start        = ParamSet->getUint32("start");            // DataSquasher
