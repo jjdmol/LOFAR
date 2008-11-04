@@ -26,15 +26,15 @@
 #include <CS1_pp_lib/MsInfo.h>
 #include <CS1_pp_lib/DataBuffer.h>
 
-// @file
-// @brief Class to hold code for access to MeasurementSet in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for access to MeasurementSet in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
   namespace CS1
   {
-    //Foreward declaration
+    ///Foreward declaration
     class MsInfo;
     class RunDetails;
 
@@ -44,17 +44,17 @@ namespace LOFAR
       MsFile(const std::string& msin, const std::string& msout);
       ~MsFile();
 
-      // Iterator to process all data from one integration time at the same time
+      /// Iterator to process all data from one integration time at the same time
       casa::TableIterator TimeIterator();
-      // creates a new measurement set
+      /// creates a new measurement set
       void Init(MsInfo& Info, RunDetails& Details);
-      void PrintInfo(void); //prints some numbers for debug purposes
-      // processes the tables from TimeIterator to fill the next timeslot to be processed in DataBuffer
+      void PrintInfo(void); ///< prints some numbers for debug purposes
+      /// processes the tables from TimeIterator to fill the next timeslot to be processed in DataBuffer
       void UpdateTimeslotData(casa::TableIterator& Data_iter,
                               MsInfo& Info,
                               DataBuffer& Buffer,
                               std::vector<double>& TimeData);
-      // Writes the data in DataBuffer->Position+1 to the file
+      /// Writes the data in DataBuffer->Position+1 to the file
       void WriteData(casa::TableIterator& Data_iter,
                      MsInfo& Info,
                      DataBuffer& Buffer,
@@ -63,7 +63,7 @@ namespace LOFAR
 
     protected:
     private:
-      // Function for reshaping a table column
+      /// Function for reshaping a table column
       void TableResize(casa::TableDesc tdesc,
                        casa::IPosition ipos,
                        std::string name,

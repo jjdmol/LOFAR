@@ -27,15 +27,20 @@
 #include <map>
 #include <CS1_pp_lib/Flagger.h>
 
-// @file
-// @brief Class to hold code for first variant of ComplexMedianFlagger in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for first variant of ComplexMedianFlagger in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
+
+/// This flagger computes a circle in the complex plane with a centre bases
+/// on a median of the real and imaginary values in a window and a radius based
+/// on a given threshhold, baseline length and theoratical noise level.
+/// Values outside the circle get flagged.
 
 namespace LOFAR
 {
   namespace CS1
   {
-    //Foreward declarations
+    ///Foreward declarations
     class DataBuffer;
     class MsInfo;
     class RunDetails;
@@ -47,7 +52,7 @@ namespace LOFAR
         ComplexMedianFlagger(void);
         ~ComplexMedianFlagger();
 
-        // All processing of one integration time happens in one go.
+        /// All processing of one integration time happens in one go.
         void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
                              RunDetails& details,

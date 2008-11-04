@@ -24,10 +24,13 @@
 
 #include <CS1_pp_lib/MsInfo.h>
 
-// @file
-// @brief Class to hold code for DataBuffer in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for DataBuffer in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
+/// The class maintains a buffer withe NumSlots Cubes of size:
+/// [myInfo->NumPolarizations, myInfo->NumChannels, WindowSize]
+/// ModelData and CorrectedData are only used if Colums==true
 namespace LOFAR
 {
   namespace CS1
@@ -37,8 +40,8 @@ namespace LOFAR
       public:
          DataBuffer(MsInfo* info, int TimeWindow, bool Columns);
          ~DataBuffer();
-        int Position;
-        int NumSlots;
+        int Position; ///< Position just updated in the buffer, -1 when it's uninitialised
+        int NumSlots; ///< Number fo baselines X number of Spectral Windows
         int WindowSize;
 
         std::vector< bool >                      PolarizationsToCheck;
@@ -47,7 +50,7 @@ namespace LOFAR
         std::vector< casa::Cube<casa::Complex> > CorrectedData;
         std::vector< casa::Cube<casa::Bool> >    Flags;
         std::vector< casa::Cube<casa::Float> >   Weights;
-        void DeterminePolarizationsToCheck(bool UseOnlyXpolarizations);
+        void DeterminePolarizationsToCheck(bool UseOnlyXpolarizations); ///< Not used right now
         void PrintInfo(void);
 
       private:

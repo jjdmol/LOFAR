@@ -20,15 +20,15 @@
 #ifndef __FLAGGER_FLAGGER_H__
 #define __FLAGGER_FLAGGER_H__
 
-// @file
-// @brief Class to hold code for virtual base class for Flaggers in IDPPP
-// @author Adriaan Renting (renting AT astron nl)
+/// @file
+/// @brief Class to hold code for virtual base class for Flaggers in IDPPP
+/// @author Adriaan Renting (renting AT astron nl)
 
 namespace LOFAR
 {
   namespace CS1
   {
-    //Foreward declarations
+    ///Foreward declarations
     class MsInfo;
     class RunDetails;
     class DataBuffer;
@@ -39,8 +39,8 @@ namespace LOFAR
       public:
         virtual ~Flagger() {};
 
-        // All processing of one integration time happens in one go.
-        // purely virtual to provide a prototype to inherit
+        /// All processing of one integration time happens in one go.
+        /// purely virtual to provide a prototype to inherit
         virtual void ProcessTimeslot(DataBuffer& data,
                              MsInfo& info,
                              RunDetails& details,
