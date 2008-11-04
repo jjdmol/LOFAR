@@ -56,9 +56,9 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
 updateStates(string dp1, string message, 
              string dp2, string action,
              string dp3, string error,
-             string dp4, unsigned processID,
-             string dp5, string startTime,
-             string dp6, string stopTime,
+             string dp4, string startTime,
+             string dp5, string stopTime,
+             string dp6, unsigned processID,
              string dp7, bool invalid)
 {
   LOG_DEBUG($ctrlName+\".pnl:update|entered with: \"+ message + \" action: \" + action + \" error: \" + error);  

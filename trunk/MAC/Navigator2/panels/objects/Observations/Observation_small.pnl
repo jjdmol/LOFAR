@@ -216,19 +216,19 @@ E
 1
 LANG:1 0 
 
-100 "Stop Time" 8 1 0 "s" 1
+115 "Stop Time" 8 1 0 "s" 1
 LANG:1 9 Stop Time
 E
 1
 LANG:1 0 
 
-100 "Station List" 48 1 0 "s" 1
+115 "Station List" 48 1 0 "s" 1
 LANG:1 12 Station List
 E
 1
 LANG:1 0 
 
-544 
+514 
 18 18 10 10
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
