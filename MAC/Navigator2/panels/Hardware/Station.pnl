@@ -126,7 +126,8 @@ void redraw(string mode) {
   int   yPos_AddSymbol;
   string addPanelName;
   
-  dynClear(g_RCUList);
+  navFunct_clearGlobalLists();
+  
   g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);

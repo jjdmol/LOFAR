@@ -72,16 +72,7 @@ void navPanel_initPanel(string objectName) {
   itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".selection";
   sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
   
-  // empty global listings
-  dynClear(g_stationList);
-  dynClear(g_cabinetList);
-  dynClear(g_subrackList);
-  dynClear(g_RSPList);
-  dynClear(g_TBBList);
-  dynClear(g_RCUList);
-
-  dynClear(g_observationsList);
-  dynClear(g_processesList);
+  navFunct_clearGlobalLists();
   
   // empty the hardwareList
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList")) {

@@ -56,6 +56,7 @@
 // navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
 // navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
 // navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
+// navFunct)clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -1129,4 +1130,23 @@ navFunct_fillObservationsTree() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillObservationsTree|result: "+ result);     
   
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList",result);  
+}
+
+// ****************************************
+// Name: navFunct_clearGlobalLists  
+// ****************************************
+//     Clear all global observations,hardware and processesLists
+//
+// ****************************************
+navFunct_clearGlobalLists() {
+  // empty global listings
+  dynClear(g_stationList);
+  dynClear(g_cabinetList);
+  dynClear(g_subrackList);
+  dynClear(g_RSPList);
+  dynClear(g_TBBList);
+  dynClear(g_RCUList);
+
+  dynClear(g_observationsList);
+  dynClear(g_processesList);
 }
