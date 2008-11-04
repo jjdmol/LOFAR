@@ -24,6 +24,10 @@
 #ifndef EXPR_HAMAKERDIPOLE_H
 #define EXPR_HAMAKERDIPOLE_H
 
+// \file
+// Implementation of J.P. Hamaker's memo "Mathematical-physical analysis of the
+// generic dual-dipole antenna".
+
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/JonesResult.h>
