@@ -820,8 +820,8 @@ void Model::makeBandpassNodes(vector<JonesExpr> &result)
         
         const string &suffix = itsInstrument.stations[i].name;
 
-        B11 = makeExprParm(INSTRUMENT, "Bandpass:X:" + suffix);
-        B22 = makeExprParm(INSTRUMENT, "Bandpass:Y:" + suffix);
+        B11 = makeExprParm(INSTRUMENT, "Bandpass:11:" + suffix);
+        B22 = makeExprParm(INSTRUMENT, "Bandpass:22:" + suffix);
 
         result[i] = new Diag(B11, B22);
     }
@@ -961,7 +961,7 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
         for(size_t i = 0; i < nStations; ++i)
         {
             // Get dipole orientation.
-            Expr orientation(makeExprParm(INSTRUMENT, "orientation:"
+            Expr orientation(makeExprParm(INSTRUMENT, "Orientation:"
                 + itsInstrument.stations[i].name));
 
             for(size_t j = 0; j < nSources; ++j)
@@ -988,7 +988,7 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
         for(size_t i = 0; i < nStations; ++i)
         {
             // Get dipole orientation.
-            Expr orientation(makeExprParm(INSTRUMENT, "orientation:"
+            Expr orientation(makeExprParm(INSTRUMENT, "Orientation:"
                 + itsInstrument.stations[i].name));
 
             for(size_t j = 0; j < nSources; ++j)

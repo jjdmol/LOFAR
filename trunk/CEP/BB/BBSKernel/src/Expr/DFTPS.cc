@@ -152,7 +152,7 @@ ResultVec DFTPS::getResultVec(const Request &request)
 }
 
 
-#ifdef EXPR_GRAPH
+#if 0
 string DFTPS::getLabel()
 {
     return string("DFTPS\\nStation part of baseline phase\\n");
