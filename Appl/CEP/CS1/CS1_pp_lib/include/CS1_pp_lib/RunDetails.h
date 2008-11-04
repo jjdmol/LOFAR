@@ -46,7 +46,7 @@ namespace LOFAR
       unsigned int TimeWindow;   // ComplexMedianFlagger, MADFlagger
       double       Threshold;    // FrequencyFlagger, MADFlagger
       double       MinThreshold; // ComplexMedianFlagger
-      double       MaxThreshold; // ComplexMedianFlagger
+      double       MaxThreshold; // ComplexMedianFlagger, MADFlagger
       unsigned int Algorithm;    // FrequencyFlagger
       bool         Existing;     // all flaggers
       unsigned int NChan;        // DataSquasher
