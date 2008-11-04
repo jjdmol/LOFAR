@@ -16,7 +16,7 @@ PANEL,-1 -1 512 400 N "_3DFace" 1
   }
   
   if (! dpExists(baseDP)) {
-    dpSet(\"cabinet_top\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"cabinet_top\",\"backCol\",\"_dpdoesnotexist\");
   }
   
   
