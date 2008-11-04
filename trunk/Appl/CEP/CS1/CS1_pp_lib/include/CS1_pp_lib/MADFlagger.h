@@ -55,14 +55,14 @@ namespace LOFAR
 
       protected:
       private:
-        void ComputeThreshold(const casa::Cube<casa::Complex>& Values,
+        void ComputeThreshold(const casa::Cube<casa::Float>& Values,
                               int TWindowSize, int FWindowSize,
                               int TimePos, int ChanPos, int PolPos,
                               float& Z1, float& Z2, casa::Matrix<casa::Float>& Medians);
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
                              const casa::Cube<casa::Complex>& Data,
                              int flagCounter,
-                             double Level,
+                             double Threshold, double MaxLevel,
                              int Position, bool Existing,
                              int TWindowSize, int FWindowSize);
         int NumChannels;
