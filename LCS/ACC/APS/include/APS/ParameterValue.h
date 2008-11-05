@@ -129,6 +129,14 @@ namespace LOFAR { namespace ACC { namespace APS {
     // Convert a string to a time.
     static time_t StringToTime_t (const string& aString) ;
 
+    // Put or get to/from ostream.
+    // <group>
+    friend ostream& operator<< (ostream& os, const ParameterValue& pval)
+      { os << pval.itsValue; return os; }
+    friend istream& operator>> (istream& os, ParameterValue& pval)
+      { os >> pval.itsValue; return os; }
+    // </group>
+
   private:
     // Return the position of the first non-whitespace character in itsValue
     // starting at st.
