@@ -91,7 +91,7 @@ namespace LOFAR {
     // Convert the gridder keywords.
     {
       ACC::APS::ParameterSet grin = in.makeSubset ("Gridder.");
-      in.substractSubset ("Gridder.");
+      in.subtractSubset ("Gridder.");
       // Get the gridder type.
       string type = grin.getString ("type");
       out.add ("Cimager.gridder", type);
@@ -101,7 +101,7 @@ namespace LOFAR {
     // Convert the solver keywords.
     {
       ACC::APS::ParameterSet soin = in.makeSubset ("Solver.");
-      in.substractSubset ("Solver.");
+      in.subtractSubset ("Solver.");
       // Get the solver type (dirty, clean).
       string type = soin.getString ("type");
       soin.remove ("type");
@@ -112,7 +112,7 @@ namespace LOFAR {
     // Convert the images keywords.
     {
       ACC::APS::ParameterSet imin = in.makeSubset ("Images.");
-      in.substractSubset ("Images.");
+      in.subtractSubset ("Images.");
       // Combine ra,dec,type into a single string.
       string angle1    = imin.getString ("ra");
       string angle2    = imin.getString ("dec");
