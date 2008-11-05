@@ -32,7 +32,7 @@ BUILT_SOURCES 			= $(ph_HEADERS) swlevel swlevel.conf
 
 EXTRA_DIST 				= $(BUILT_SOURCES) $(BUILT_SOURCES)
 
-sysconf_DATA			= swlevel.conf mac.log_prop
+sysconf_DATA			= swlevel.conf 
 
 bin_SCRIPTS				= swlevel
 

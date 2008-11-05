@@ -160,6 +160,9 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 	switch (event.signal) {
 	case F_ENTRY:
 		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
+		// Register my own logging too.
+		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
+	
 	break;
 
 	// Catch incoming connections of new clients
