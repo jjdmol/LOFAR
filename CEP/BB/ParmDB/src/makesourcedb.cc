@@ -576,9 +576,10 @@ void make (const string& in, const string& out,
   }
 }
 
-int main (int argc, char *argv[])
+int main (int argc, const char* argv[])
 {
-  const char* progName = basename(argv[0]);
+  // Niot all version of basename accept a const char.
+  const char* progName = basename(const_cast<char*>(argv[0]));
   INIT_LOGGER(progName);
   try {
     // Get the inputs.
