@@ -1,4 +1,4 @@
-SUBDIRS=src test include
+SUBDIRS=src test
 
 ACLOCAL_AMFLAGS = -I $(top_srcdir)/autoconf_share
 
@@ -10,7 +10,7 @@ DISTCHECK_CONFIGURE_FLAGS=\
 
 EXTRA_DIST = \
       Makefile.common \
-      ParmAcc.spec \
+      pyparmdb.spec \
       autoconf_share/compiletool
 
 include $(top_srcdir)/Makefile.common

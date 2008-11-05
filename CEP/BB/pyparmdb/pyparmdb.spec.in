@@ -1,5 +1,5 @@
 # -*- Mode:rpm-spec -*-
-# ParmFacade.spec.in
+# pyparmdb.spec.in
 #
 
 ##############################################################################
@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: ParmFacade is the high level access to the Parameter Data Base
+Summary: pyparmdb is the pyton access layer to the Parameter Data Base
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -37,7 +37,7 @@ AutoReqProv: no
 
 %description
 
-ParmFacade is the high level access to the Parameter Data Base.
+pyparmdb is the pyton access layer to the Parameter Data Base
 
 ##############################################################################
 #

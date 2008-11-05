@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(ParmFacade, 1.0, no-define)
+AM_INIT_AUTOMAKE(pyparmdb, 1.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,7 +55,9 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h)
+lofar_INTERNAL(LCS/pytools,pytools,,,,"")
 
 lofar_EXTERNAL(pyrap,1,pyrap/Converters/PycBasicData.h)
 lofar_AIPSPP(1,"-ltables -lscimath -lscimath_f -lcasa")
@@ -66,10 +68,8 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-include/Makefile
-include/ParmFacade/Makefile
 src/Makefile
 test/Makefile
 Makefile
-ParmFacade.spec
+pyparmdb.spec
 )
