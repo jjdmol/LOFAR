@@ -72,6 +72,19 @@ void testBox()
   ASSERT (!box.contains (Box(Point(1.1, 2.1), Point(2.9, 4.1))));
 }
 
+void testVec()
+{
+  Box box1((vector<double>()));
+  ASSERT (box1.lowerX()==-1e30 && box1.lowerY()==-1e30);
+  ASSERT (box1.upperX()== 1e30 && box1.upperY()== 1e30);
+  Box box2(vector<double>(1,2.5));
+  ASSERT (box2.lowerX()== 2.5  && box2.lowerY()==-1e30);
+  ASSERT (box2.upperX()== 1e30 && box2.upperY()== 1e30);
+  Box box3(vector<double>(4,2.5));
+  ASSERT (box3.lowerX()== 2.5  && box3.lowerY()== 2.5);
+  ASSERT (box3.upperX()== 2.5  && box3.upperY()== 2.5);
+}
+
 void testSort()
 {
   vector<Box> boxes;
@@ -96,6 +109,7 @@ int main()
   try {
     INIT_LOGGER("tBox");
     testBox();
+    testVec();
     testSort();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;

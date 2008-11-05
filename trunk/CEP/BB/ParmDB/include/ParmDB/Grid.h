@@ -56,21 +56,20 @@ namespace BBS {
 
     // Create from given axes.
     GridRep(Axis::ShPtr first, Axis::ShPtr second);
-    
-    // Create a grid from a series of domains.
-    // They have to be in order of startY,startX. If unsorted, they are sorted.
-    // The domains in the vector must span a grid, otherwise an exception is
-    // thrown.
+
+    // Create a grid from a series of grids.
+    // They have to be in order of startY,startX. They are sorted if needed.
+    // The grids in the vector must span a rectangular grid, otherwise an
+    // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
-    GridRep(const vector<Box>& domains, bool unsorted=false);
+    GridRep(const vector<Grid>& domains, bool sort);
 
     // Create a grid from a series of domains.
-    // They have to be in order of startY,startX which is given by the index.
-    // The domains in the vector must span a grid, otherwise an exception is
-    // thrown.
+    // They have to be in order of startY,startX. They are sorted if needed.
+    // The domains in the vector must span a rectangular grid, otherwise an
+    // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
-    GridRep(const vector<Box>& domains, const uint* indexVector)
-      { setup (domains, indexVector); }
+    GridRep(const vector<Box>& domains, bool sort);
 
     // Is it the default grid?
     bool isDefault() const
@@ -90,8 +89,16 @@ namespace BBS {
 
   private:
     // Initialize from an ordered vector of domains.
-    // The order is given by the index which has the same length as the vector.
-    void setup (const vector<Box>& domains, const uint* index);
+    void setup (const vector<Box>& domains);
+
+    // Initialize from an ordered vector of grids.
+    void setup (const vector<Grid>& domains);
+
+    // Combine the given axes in the grids into one new axis.
+    // This axis is regular if all axes are regular and consecutive with
+    // equal widths.
+    Axis::ShPtr combineAxes (const vector<Grid>& grids, uint axis,
+                             uint n, uint step) const;
 
     // Set the id.
     void init();
@@ -119,22 +126,20 @@ namespace BBS {
       : itsRep (new GridRep(first, second))
     {}
 
-    // Create a grid from a series of domains.
-    // They have to be in order of startY,startX. If unsorted, they are sorted.
-    // The domains in the vector must span a grid, otherwise an exception is
-    // thrown.
+    // Create a grid from a series of grids.
+    // They have to be in order of startY,startX. They are sorted if needed.
+    // The grids in the vector must span a rectangular grid, otherwise an
+    // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
-    Grid(const vector<Box>& domains, bool unsorted=false)
-      : itsRep (new GridRep(domains, unsorted))
-    {}
+    Grid(const vector<Grid>& grids, bool sort=false);
 
     // Create a grid from a series of domains.
-    // They have to be in order of startY,startX which is given by the index.
-    // The domains in the vector must span a grid, otherwise an exception is
-    // thrown.
+    // They have to be in order of startY,startX. They are sorted if needed.
+    // The domains in the vector must span a rectangular grid, otherwise an
+    // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
-    Grid(const vector<Box>& domains, const uint* indexVector)
-      : itsRep (new GridRep(domains, indexVector))
+    Grid(const vector<Box>& domains, bool sort=false)
+      : itsRep (new GridRep(domains, sort))
     {}
 
     // Check if two grids are equal. They are if their axes have the same

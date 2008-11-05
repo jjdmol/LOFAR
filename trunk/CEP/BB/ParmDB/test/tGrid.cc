@@ -192,6 +192,39 @@ void testIrregularXYSet()
   ASSERT (Grid::hash(grids) == 3*grid.hash());
 }
 
+void testCombineGrids()
+{
+  {
+    vector<Grid> grids;
+    grids.push_back (Grid (Axis::ShPtr (new RegularAxis(1,2,4)),
+                           Axis::ShPtr (new RegularAxis(1,20,40))));
+    grids.push_back (Grid (Axis::ShPtr (new RegularAxis(9,2,5)),
+                           Axis::ShPtr (new RegularAxis(1,20,40))));
+    grids.push_back (Grid (Axis::ShPtr (new RegularAxis(1,2,4)),
+                           Axis::ShPtr (new RegularAxis(900,20,10))));
+    grids.push_back (Grid (Axis::ShPtr (new RegularAxis(9,2,5)),
+                           Axis::ShPtr (new RegularAxis(900,20,10))));
+    Grid grid(grids, true);
+    ASSERT (grid[0]->isRegular());
+    ASSERT (grid[0]->size() == 9);
+    ASSERT (grid[0]->width(0) == 2);
+    ASSERT (grid[0]->lower(0) == 1);
+    ASSERT (grid[0]->upper(8) == 19);
+    ASSERT (!grid[1]->isRegular());
+    ASSERT (grid[1]->size() == 50);
+    for (uint i=0; i<40; ++i) {
+      ASSERT (grid[1]->width(i) == 20);
+      ASSERT (grid[1]->lower(i) == 1 + i*20);
+      ASSERT (grid[1]->upper(i) == 21+ i*20);
+    }
+    for (uint i=40; i<50; ++i) {
+      ASSERT (grid[1]->width(i) == 20);
+      ASSERT (grid[1]->lower(i) == 100 + i*20);
+      ASSERT (grid[1]->upper(i) == 120 + i*20);
+    }
+  }
+}
+
 int main()
 {
   try {
@@ -208,6 +241,8 @@ int main()
     testIrregularYSet();
     cout << "Testing IrregularXYSet ..." << endl;
     testIrregularXYSet();
+    cout << "Testing CombineGrids ..." << endl;
+    testCombineGrids();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

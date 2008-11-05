@@ -303,7 +303,6 @@ namespace BBS {
         // Retrieve the rows.
         vector<ParmValue::ShPtr> values;
         vector<Box> domains;
-        vector<Grid> grids;
         values.reserve (nrow);
         domains.reserve (nrow);
         for (uint i=0; i<nrow; ++i) {
