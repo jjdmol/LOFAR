@@ -28,6 +28,7 @@
 #define LOFAR_PARMDB_BOX_H
 
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
@@ -68,6 +69,10 @@ namespace BBS {
     {
       ASSERT(start.first <= end.first && start.second <= end.second);
     }            
+
+    // Create a box from a vector which must be ordered as stx,sty,endx,endy.
+    // Trailing values may be omitted and default to -1e30 or 1e30.
+    Box (const vector<double>&);
 
     // Test if boxes are exactly the same.
     // <group>

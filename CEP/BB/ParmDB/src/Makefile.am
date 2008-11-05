@@ -4,7 +4,7 @@ libparmdb_la_SOURCES = Package__Version.cc  \
 Axis.cc AxisMapping.cc Box.cc Grid.cc \
 ParmValue.cc ParmSet.cc ParmMap.cc ParmCache.cc \
 ParmDBMeta.cc ParmDB.cc ParmDBCasa.cc ParmDBLocker.cc \
-Parm.cc \
+Parm.cc ParmFacade.cc \
 SourceDB.cc SourceDBCasa.cc
 #ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 

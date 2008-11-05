@@ -54,6 +54,28 @@ namespace BBS {
     itsId = theirId++;
   }
 
+  vector<double> Axis::centers() const
+  {
+    vector<double> result;
+    uint n = size();
+    result.reserve (n);
+    for (uint i=0; i<n; ++i) {
+      result.push_back (center(i));
+    }
+    return result;
+  }
+
+  vector<double> Axis::widths() const
+  {
+    vector<double> result;
+    uint n = size();
+    result.reserve (n);
+    for (uint i=0; i<n; ++i) {
+      result.push_back (width(i));
+    }
+    return result;
+  }
+
   bool Axis::checkIntervals (const Axis& that) const
   {
     pair<double,double> range1 = range();

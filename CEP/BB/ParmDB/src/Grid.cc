@@ -46,44 +46,50 @@ namespace BBS {
   GridRep::GridRep (const vector<Box>& domains, bool unsorted)
     : itsIsDefault (false)
   {
-    vector<uint> index(domains.size());
-    uint* indexp = &(index[0]);
-    for (uint i=0; i<domains.size(); ++i) {
-      indexp[i] = i;
-    }
     if (unsorted) {
       vector<Box> sortDomains(domains);
       sort (sortDomains.begin(), sortDomains.end());
-      setup (sortDomains, indexp);
+      setup (sortDomains);
     } else {
-      setup (domains, indexp);
+      setup (domains);
     }
     init();
   }
 
-  void GridRep::setup (const vector<Box>& domains, const uint* index)
+  GridRep::GridRep (const vector<Grid>& grids, bool unsorted)
+    : itsIsDefault (false)
   {
-    uint first = index[0];
-    double sx = domains[first].lowerX();
-    double ex = domains[first].upperX();
+    if (unsorted) {
+      vector<Grid> sortGrids(grids);
+      sort (sortGrids.begin(), sortGrids.end());
+      setup (sortGrids);
+    } else {
+      setup (grids);
+    }
+    init();
+  }
+
+  void GridRep::setup (const vector<Box>& domains)
+  {
+    double sx = domains[0].lowerX();
+    double ex = domains[0].upperX();
     double dx = ex-sx;
-    double sy = domains[first].lowerY();
-    double ey = domains[first].upperY();
+    double sy = domains[0].lowerY();
+    double ey = domains[0].upperY();
     double dy = ey-sy;
     // Determine nr of cells in X and test if the cells are regular or not.
     // They are regular if equal width and consecutive.
     uint nx = 1;
     bool xregular = true;
     while (nx < domains.size()) {
-      uint inx = index[nx];
-      if (sy != domains[inx].lowerY()) {
+      if (sy != domains[nx].lowerY()) {
         break;
       }
-      if (! (casa::near(ex, domains[inx].lowerX())
-         &&  casa::near(dx, domains[inx].upperX() - domains[inx].lowerX()))) {
+      if (! (casa::near(ex, domains[nx].lowerX())
+         &&  casa::near(dx, domains[nx].upperX() - domains[nx].lowerX()))) {
         xregular = false;
       }
-      ex = domains[inx].upperX();
+      ex = domains[nx].upperX();
       ++nx;
     }
     // Assure there is an integer nr of y domains.
@@ -95,13 +101,12 @@ namespace BBS {
     xaxisStart.reserve (nx);
     xaxisEnd.reserve (nx);
     for (uint i=0; i<nx; ++i) {
-      uint inx = index[i];
-      xaxisStart.push_back (domains[inx].lowerX());
-      xaxisEnd.push_back (domains[inx].upperX());
+      xaxisStart.push_back (domains[i].lowerX());
+      xaxisEnd.push_back   (domains[i].upperX());
     }
     for (uint j=1; j<ny; ++j) {
       for (uint i=0; i<nx; ++i) {
-        uint inx = index[j*nx + i];
+        uint inx = j*nx + i;
         ASSERT (casa::near(xaxisStart[i], domains[inx].lowerX()));
         ASSERT (casa::near(xaxisEnd[i], domains[inx].upperX()));
       }
@@ -115,7 +120,7 @@ namespace BBS {
     bool yregular = true;
     ey = sy;
     for (uint i=0; i<ny; ++i) {
-      uint inx = index[i*nx];
+      uint inx = i*nx;
       yaxisStart.push_back (domains[inx].lowerY());
       yaxisEnd.push_back (domains[inx].upperY());
       if (! (casa::near(ey, domains[inx].lowerY())
@@ -126,7 +131,7 @@ namespace BBS {
     }
     for (uint j=0; j<ny; ++j) {
       for (uint i=1; i<nx; ++i) {
-        uint inx = index[j*nx + i];
+        uint inx = j*nx + i;
         ASSERT (casa::near(yaxisStart[j], domains[inx].lowerY()));
         ASSERT (casa::near(yaxisEnd[j], domains[inx].upperY()));
       }
@@ -143,6 +148,81 @@ namespace BBS {
     } else {
       itsAxes[1] = Axis::ShPtr(new OrderedAxis (yaxisStart, yaxisEnd, true));
     }
+  }
+
+  void GridRep::setup (const vector<Grid>& grids)
+  {
+    // First form a grid from the bounding boxes.
+    // This checks if it is regular and divides in x and y.
+    vector<Box> domains;
+    domains.reserve (grids.size());
+    for (vector<Grid>::const_iterator iter = grids.begin();
+         iter != grids.end(); ++iter) {
+      domains.push_back (iter->getBoundingBox());
+    }
+    setup (domains);
+    // Now combine the grid axes.
+    uint nx = itsAxes[0]->size();
+    uint ny = itsAxes[1]->size();
+    itsAxes[0] = combineAxes (grids, 0, nx, 1);
+    itsAxes[1] = combineAxes (grids, 1, ny, nx);
+    // Check if the grids themselves are equal for all x and y.
+    // Check if the x axis is the same for all y-s.
+    Axis::ShPtr xaxis = grids[0].getAxis(0);
+    for (uint j=1; j<ny; ++j) {
+      for (uint i=0; i<nx; ++i) {
+        uint inx = j*nx + i;
+        ASSERT (*grids[i].getAxis(0) == *grids[inx].getAxis(0));
+      }
+    }
+    // Check if the y axis is the same for all x-s.
+    for (uint j=0; j<ny; ++j) {
+      uint inx = j*nx;
+      for (uint i=1; i<nx; ++i) {
+        ASSERT (*grids[inx].getAxis(1) == *grids[inx+i].getAxis(1));
+      }
+    }
+  }
+
+  Axis::ShPtr GridRep::combineAxes (const vector<Grid>& grids, uint axnr,
+                                    uint n, uint step) const
+  {
+    // Nothing to be done if only one cell.
+    const Axis::ShPtr& faxis = grids[0].getAxis(axnr);
+    if (n == 1) {
+      return faxis;
+    }
+    // Count total number of cells and check if fully regular.
+    bool isRegular = faxis->isRegular();
+    double width   = faxis->width(0);
+    double last    = faxis->upper(faxis->size() - 1);
+    uint ncells    = faxis->size();
+    for (uint i=1; i<n; ++i) {
+      const Axis::ShPtr& axis = grids[i*step].getAxis(axnr);
+      ncells += axis->size();
+      if (isRegular) {
+        isRegular = axis->isRegular() && (casa::near(width, axis->width(0)) &&
+                                          casa::near(last,  axis->lower(0)));
+        last = axis->upper(axis->size() - 1);
+      }
+    }
+    // If regular, return as such.
+    if (isRegular) {
+      return Axis::ShPtr(new RegularAxis (faxis->lower(0), width, ncells));
+    }
+    // Alas irregular, so create an ordered axis.
+    vector<double> starts;
+    vector<double> ends;
+    starts.reserve (ncells);
+    ends.reserve   (ncells);
+    for (uint i=0; i<n; ++i) {
+      const Axis::ShPtr& axis = grids[i*step].getAxis(axnr);
+      for (uint j=0; j<axis->size(); ++j) {
+        starts.push_back (axis->lower(j));
+        ends.push_back   (axis->upper(j));
+      }
+    }
+    return Axis::ShPtr(new OrderedAxis (starts, ends, true));
   }
 
   void GridRep::init()
@@ -163,6 +243,16 @@ namespace BBS {
   }
 
 
+
+  Grid::Grid (const vector<Grid>& grids, bool unsorted)
+  {
+    // If only one entry, we can simply make a copy.
+    if (grids.size() == 1) {
+      this->operator= (grids[0]);
+    } else {
+      itsRep = GridRep::ShPtr (new GridRep(grids, unsorted));
+    }
+  }
 
   bool Grid::operator== (const Grid& that) const
   {

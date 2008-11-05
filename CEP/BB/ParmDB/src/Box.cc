@@ -52,5 +52,32 @@ namespace BBS {
     return Box();
   }
 
+  Box::Box (const vector<double>& values)
+  {
+    double stx = -1e30;
+    double sty = -1e30;
+    double enx =  1e30;
+    double eny =  1e30;
+    int sz = values.size();
+    if (sz > 4) sz=4;
+    switch (sz) {
+    case 4:
+      eny = values[3];
+    case 3:
+      enx = values[2];
+    case 2:
+      sty = values[1];
+    case 1:
+      stx = values[0];
+      break;
+    default:
+      break;
+    }
+    ASSERT (stx <= enx);
+    ASSERT (sty <= eny);
+    itsStart = Point(stx, sty);
+    itsEnd   = Point(enx, eny);
+  }
+
 } //# namespace BBS
 } //# namespace LOFAR

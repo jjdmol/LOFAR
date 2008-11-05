@@ -215,24 +215,6 @@ namespace BBS {
       { return itsRep->getRange (parmNames); }
     // </group>
 
-//     // Get the parameter values for the given parameter and domain.
-//     // The matchDomain argument is set telling if the found parameter
-//     // matches the domain exactly.
-//     // Note that the requested domain may contain multiple values.
-//     // A selection on parentId is done if >= 0.
-//     ParmValueSet getValues (const std::string& parmName,
-//                          const Box& domain) const
-//       { return itsRep->getValues (parmName, domain); }
-
-//     // Get the parameter values for the given parameters and domain.
-//     // An element in the returned vector belongs to the corresponding element
-//     // in the parmNames vector.
-//     // A selection on parentId is done if >= 0.
-//     void getValues (ParmMap& result,
-//                  const std::vector<std::string>& parmNames,
-//                  const Box& domain) const
-//       { itsRep->getValues (result, parmNames, domain); }
-
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
     // A selection on parentId is done if >= 0.

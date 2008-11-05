@@ -75,6 +75,12 @@ namespace BBS {
     virtual double width(size_t n) const = 0;
     // </group>
 
+    // Get all centers.
+    vector<double> centers() const;
+
+    // Get all widths.
+    vector<double> widths() const;
+
     // Is the axis regular?
     virtual bool isRegular() const = 0;
 
@@ -184,7 +190,7 @@ namespace BBS {
     virtual Axis::ShPtr subset (double start, double end, size_t& index) const;
     virtual Axis::ShPtr subset (size_t start, size_t end) const;
     virtual Axis::ShPtr compress(size_t factor) const;
-    
+
   private:
     // Write the contents of \c *this into the blob output stream \a bos.
     virtual void write(BlobOStream& bos) const;
