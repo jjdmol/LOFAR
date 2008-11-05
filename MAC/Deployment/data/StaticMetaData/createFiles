@@ -25,6 +25,25 @@ def setWarning(message):
 
 
 #
+# Find host IP number from DNS
+#
+def findIPNumber(stationName):
+    """
+    Returns the IPnumber for a station LCU as given by the DNS server.
+    In case the station is not known, it will return -1.
+    """
+    command = "host "+stationName+"C"
+    output = os.popen3(command)
+    stdout = output[1].readlines()
+    outline = stdout[0].strip()
+    outwords = outline.split()
+    if (len(outwords) != 4):
+        return "-1"
+    else:
+        return outwords[3]
+    
+
+#
 # findRSPDestNodes(stationName)
 #
 def findRSPDestNodes(stationName):
@@ -121,10 +140,21 @@ def createRSPDriverFile(resultDir, stationName):
 
     # substitute StationInfo
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    ipnumber = findIPNumber(stationName)
+    ip_parts = ipnumber.split('.')
+    if (ip_parts[1] == "151"):
+        ip_prefix = "167"
+    else:
+        ip_prefix = "166"
+
     hexStationID = str("%02x" % int(stationID))
+    ringID = '0'+stationName[2]
+
     RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+    RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
     RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
-    RSPconfig = RSPconfig.replace("@STATION_ID@",   stationID)
+    RSPconfig = RSPconfig.replace("@IP_PREFIX@",   ip_prefix)
+    RSPconfig = RSPconfig.replace("@IP_SUBNET@",   ip_parts[2])
 
     outFile = os.open(resultDir+"/RSPDriver.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
@@ -150,11 +180,24 @@ def createTBBDriverFile(resultDir, stationName):
 
     # substitute StationInfo
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    # Find IP number of data sending side of TBB board; use LCU's IP as basis
+    # for the ip prefix and subnet 
+    ipnumber = findIPNumber(stationName)
+    ip_parts = ipnumber.split('.')
+    if (ip_parts[1] == "151"):
+        ip_prefix = "167"
+    else:
+        ip_prefix = "166"
+    
     hexStationID = str("%02x" % int(stationID))
+    ringID = '0'+stationName[2]
+    
     TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName)
     TBBconfig = TBBconfig.replace("@STATION_HID@",  hexStationID)
     TBBconfig = TBBconfig.replace("@STATION_ID@",   stationID)
-
+    TBBconfig = TBBconfig.replace("@RING_ID@",   ringID)
+    TBBconfig = TBBconfig.replace("@IP_PREFIX@",   ip_prefix)
+    TBBconfig = TBBconfig.replace("@IP_SUBNET@",   ip_parts[2])
     outFile = os.open(resultDir+"/TBBDriver.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, TBBconfig)
     os.close(outFile)
