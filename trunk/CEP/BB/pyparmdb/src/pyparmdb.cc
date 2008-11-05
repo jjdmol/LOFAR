@@ -1,4 +1,4 @@
-//# pyparms.cc: python module for ParmFacade object.
+//# pyparmdb.cc: python module for ParmFacade object.
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -20,7 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <ParmFacade/ParmFacade.h>
+#include <ParmDB/ParmFacade.h>
 
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
@@ -29,28 +29,56 @@
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
 
+#include "Package__Version.cc"
+
 using namespace boost::python;
+using namespace casa;
 using namespace casa::pyrap;
 
 namespace LOFAR { namespace BBS  {
+
+  Record (ParmFacade::*fgetvalues1)(const string&,
+                                    double, double, int,
+                                    double, double, int,
+                                    bool) = &ParmFacade::getValues;
+  Record (ParmFacade::*fgetvalues2)(const string&,
+                                    const vector<double>&,
+                                    const vector<double>&,
+                                    const vector<double>&,
+                                    const vector<double>&,
+                                    bool) = &ParmFacade::getValues;
 
   void pyparmdb()
   {
     class_<ParmFacade> ("ParmDB",
 			init<std::string>())
 
-      .def ("getrange", &ParmFacade::getRange,
+      .def ("getRange", &ParmFacade::getRange,
  	    (boost::python::arg("parmnamepattern")=""))
-      .def ("getnames", &ParmFacade::getNames,
+      .def ("getNames", &ParmFacade::getNames,
  	    (boost::python::arg("parmnamepattern")=""))
-      .def ("getvalues", &ParmFacade::getValuesRec,
+      .def ("getValues", fgetvalues1,
  	    (boost::python::arg("parmnamepattern"),
-	     boost::python::arg("startx"),
-	     boost::python::arg("endx"),
-	     boost::python::arg("nx"),
-	     boost::python::arg("starty"),
-	     boost::python::arg("endy"),
-	     boost::python::arg("ny")))
+	     boost::python::arg("freqv1"),
+	     boost::python::arg("freqv2"),
+	     boost::python::arg("nfreq"),
+	     boost::python::arg("timev1"),
+	     boost::python::arg("timev2"),
+	     boost::python::arg("ntime"),
+	     boost::python::arg("asStartEnd")=false))
+      .def ("getValues", fgetvalues2,
+ 	    (boost::python::arg("parmnamepattern"),
+	     boost::python::arg("freqv1"),
+	     boost::python::arg("freqv2"),
+	     boost::python::arg("timev1"),
+	     boost::python::arg("timev2"),
+	     boost::python::arg("asStartEnd")=false))
+      .def ("getValuesGrid", &ParmFacade::getValuesGrid,
+ 	    (boost::python::arg("parmnamepattern"),
+	     boost::python::arg("freqv1")=-1e30,
+	     boost::python::arg("freqv2")= 1e30,
+	     boost::python::arg("timev1")=-1e30,
+	     boost::python::arg("timev2")= 1e30))
       ;
   }
     
