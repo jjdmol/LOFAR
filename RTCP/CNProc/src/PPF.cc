@@ -8,6 +8,7 @@
 
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
+#include <Interface/Exceptions.h>
 
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
@@ -66,10 +67,10 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
 #endif
 {
   if (!powerOfTwo(nrChannels))
-    throw std::runtime_error("nrChannels must be a power of 2");
+    THROW(CNProcException, "nrChannels must be a power of 2");
 
   if (nrChannels != 256)
-    throw std::runtime_error("nrChannels != 256 not yet implemented");
+    THROW(CNProcException, "nrChannels != 256 not yet implemented");
 
   for (itsLogNrChannels = 0; 1U << itsLogNrChannels != itsNrChannels; itsLogNrChannels ++)
     ;
@@ -161,7 +162,8 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::init_fft()
   fftwf_complex *buf = static_cast<fftwf_complex *>(fftwf_malloc(2 * itsNrChannels * sizeof(fftwf_complex)));
 
   if (buf == 0)
-    throw std::bad_alloc();
+    THROW(AssertError, "Out of memory");
+     
 
   itsFFTWPlan = fftwf_plan_dft_1d(itsNrChannels, buf, buf + itsNrChannels, FFTW_FORWARD, FFTW_ESTIMATE);
   fftwf_free(buf);

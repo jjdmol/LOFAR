@@ -23,6 +23,7 @@
 #include <Common/Exception.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Configuration.h>
+#include <Interface/Exceptions.h>
 #include <FCNP_ClientStream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -75,7 +76,7 @@ void terminate_with_backtrace()
 int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
-
+  
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
@@ -96,9 +97,8 @@ int main(int argc, char **argv)
     }
 
     std::clog << "creating connection to ION ..." << std::endl;
-
+    
     Stream *ionStream;
-
 #if defined HAVE_ZOID && defined HAVE_BGL
     ionStream = new ZoidClientStream;
 #elif 1 &&  defined HAVE_FCNP && defined HAVE_BGP
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
     ionStream = new SocketStream("127.0.0.1", 5000 + locationInfo.rankInPset(), SocketStream::TCP, SocketStream::Client);
 #else
-    throw std::runtime_error("unknown Stream type between ION and CN");
+    THROW(CNProcException, "unknown Stream type between ION and CN");
 #endif    
 
     std::clog << "connection successful" << std::endl;
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
     return 0;
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    std::cerr << "Uncaught Exception: " << ex.what() << std::endl;
+    std::cout << "Uncaught Exception: " << ex << std::endl;
     return 1;
   } catch (std::exception &ex) {
     std::cerr << "Uncaught exception: " << ex.what() << std::endl;
