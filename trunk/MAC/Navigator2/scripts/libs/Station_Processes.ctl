@@ -105,8 +105,6 @@ bool Station_Processes_initList() {
  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",station_result);
   
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent("Station_Processes.ctl:initList","Update");
   return true;
 }
 
@@ -262,7 +260,10 @@ Station_Processes_UpdateStationTree() {
 Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservations) {
   LOG_TRACE("Station_Processes.ctl:activeObsCallback|Found: "+ activeObservations);
   
-  // empty the table
+  // wait a few milisecs to give the g_observationlist time to refill
+  delay(0,500);  // empty the table
+  
+    // empty the table
   activeStationObs.clear();
   station_obsBaseDP="";  
   

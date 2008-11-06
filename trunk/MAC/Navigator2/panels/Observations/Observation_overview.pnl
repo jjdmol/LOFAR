@@ -16,10 +16,6 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
   strreplace(obsName,\"LOFAR_ObsSW_\",\"\");
   setValue(\"observationName\",\"text\",\"Observation: \"+obsName);
   
-  // set the observation selectable items
-  prepareObservationsList();
-  
-  
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".antennaArray\")) {
     dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
@@ -60,9 +56,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
     setValue(\"storageNodeListText\", \"backCol\", \"_dpdoesnotexist\");
   }
   
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"Observation_overview.pnl\",\"Update\");  
-       
+  reload();
 }
 
 updateObsCtrl(string dp1, int claimPeriod,
@@ -132,6 +126,38 @@ updateObsCtrl(string dp1, int claimPeriod,
 void prepareObservationsList() {
   dynAppend(g_observationsList,obsName);
 }
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Observation_overview.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Observation_overview.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  prepareObservationsList();
+
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Observation_overview.pnl\",\"Update\");
+}
+
 " 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
@@ -771,7 +797,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 300 10 401 31
 0 2 2 "0s" 0 0 0 192 0 0  300 10 1
 1
-LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 12 Observation:

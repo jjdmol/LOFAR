@@ -39,6 +39,7 @@
 
 global string   TAB_VIEWS_CTRL_NAME          = "tabView";
 global string   NAVIGATOR_TAB_FILENAME       = "navigator_viewSelection.pnl";
+global bool     tabCtrlHasPanel              = FALSE;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -230,6 +231,7 @@ bool navTabCtrl_showView()
     
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+viewPanels[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, viewPanels[1], makeDynString(""));
+    tabCtrlHasPanel=true;
     return true;
   }
   return false;

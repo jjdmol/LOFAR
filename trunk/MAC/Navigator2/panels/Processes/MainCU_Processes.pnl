@@ -9,10 +9,44 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
 
   baseDP = g_currentDatapoint;
   syst   = dpSubStr(baseDP,DPSUB_SYS);
-    
+   
+  reload(); 
   // set the process selectable items
   MainCU_Processes_initList();  
 }
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"MainCU_Processes.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"MainCU_Processes.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  MainCU_Processes_initList();
+
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"MainCU_Processes.pnl\",\"Update\");
+}
+
 " 0
  E E E E 1 -1 -1 0  10 10
 ""0  1

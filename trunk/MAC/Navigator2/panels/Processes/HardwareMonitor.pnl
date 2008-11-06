@@ -15,9 +15,6 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   // start the logging process
   showLogging(baseDP);
   
-  // set the selectable processes
-  prepareProcesses();
-      
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".status.message\")) {
     dpConnect(\"updateStates\", baseDP + \".status.message\",
@@ -61,14 +58,10 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
   LOG_DEBUG(\"HardwareMonitor.pnl:main|processList found: \"+ result);    
 
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"HardwareMonitor.pnl\",\"Update\");
-  
-
-  // no selection, so no trigger mechanism needed in this panel.   
-  
   // connect for selfUpdates
   showSelfState(baseDP);
+  
+  reload();
 
 }
 
@@ -141,7 +134,40 @@ void prepareProcesses() {
   
   LOG_DEBUG(\"HardwareMonitor.pnl:prepareProcesses|processList found: \"+ result);    
   
-}" 0
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"HardwareMonitor.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"HardwareMonitor.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  prepareProcesses();
+
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"HardwareMonitor.pnl\",\"Update\");
+}
+
+" 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
 E "#uses \"navPanel.ctl\"

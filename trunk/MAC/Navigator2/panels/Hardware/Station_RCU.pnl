@@ -1,6 +1,6 @@
 V 10
 1
-LANG:1 19 station_subrack_rcu
+LANG:1 11 station_RCU
 PANEL,-1 -1 870 803 N "_3DFace" 0
 "main()
 {
@@ -8,6 +8,8 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
   navPanel_initPanel(\"fw_viewBox\");
 
   baseDP = g_currentDatapoint;
+  
+  DebugN(\"BaseDP:\"+baseDP);
   
   dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
   if (strpos(dpAr[dynlen(dpAr)],\"RCU\") > -1) {
@@ -18,15 +20,8 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
   
   setValue(\"rcuLabel\",\"text\",\"RCU\"+rcuNr);
   
-  // set the hardware selectable items for this screen
-  prepareHardwareList();
+ 
   
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
-  
-  
-  // no hardware selection, so no trigger mechanism needed in this panel. 
-
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
@@ -54,6 +49,8 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
     setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);    
   }
+  
+  reload();
 }
 
 void ControlOverflow(string dp1, bool Status,
@@ -110,6 +107,37 @@ void prepareHardwareList() {
   dynAppend(g_RCUList,rcuNr);  
 }
 
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Station_RCU.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Station_RCU.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_RCU.pnl\",\"Update\");
+
+}
 " 0
  E E E E 1 -1 -1 0  130 290
 ""0  1
@@ -120,7 +148,9 @@ int rcuNr;
 
 
 void defineStateAntenna(string anAnt) {
-  string anAntDp = baseDP + \".\" + anAnt;
+  string anAntDp = g_currentDatapoint + \".\" + anAnt;
+  
+  DebugN(\"DP: \" + anAntDp);
 	
   if (dpExists(anAntDp )) {
     dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
