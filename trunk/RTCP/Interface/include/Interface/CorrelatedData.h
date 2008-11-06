@@ -6,6 +6,7 @@
 #include <Interface/Align.h>
 #include <Interface/Allocator.h>
 #include <Interface/Config.h>
+#include <Interface/Exceptions.h>
 #include <Stream/Stream.h>
 
 #include <boost/multi_array.hpp>
@@ -118,7 +119,7 @@ inline void CorrelatedData::read(Stream *str)
 inline void CorrelatedData::write(Stream *str) const
 {
 #if !defined WORDS_BIGENDIAN
-  throw std::logic_error("not implemented: think about endianness");
+  THROW(AssertError, "not implemented: think about endianness");
 #endif
 
   str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
