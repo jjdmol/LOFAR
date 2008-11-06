@@ -13,7 +13,7 @@ namespace LOFAR {
 FileDescriptorBasedStream::~FileDescriptorBasedStream()
 {
   if (close(fd) < 0)
-    throw SystemCallException("close");
+    throw SystemCallException("close", errno, THROW_ARGS);
 }
 
 
@@ -23,7 +23,7 @@ void FileDescriptorBasedStream::read(void *ptr, size_t size)
     ssize_t bytes = ::read(fd, ptr, size);
     
     if (bytes < 0)
-      throw SystemCallException("read");
+      throw SystemCallException("read", errno, THROW_ARGS);
 
     if (bytes == 0) 
       throw EndOfStreamException();
@@ -40,7 +40,7 @@ void FileDescriptorBasedStream::write(const void *ptr, size_t size)
     ssize_t bytes = ::write(fd, ptr, size);
 
     if (bytes < 0)
-      throw SystemCallException("write");
+      throw SystemCallException("write", errno, THROW_ARGS);
 
     size -= bytes;
     ptr   = static_cast<const char *>(ptr) + bytes;
