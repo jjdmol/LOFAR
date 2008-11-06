@@ -13,4 +13,6 @@ openmpi-opt.variant.conf: $(standard) $(openmpi) $(optimize)
 mpich.variant.conf:       $(standard) $(mpich) $(debug)
 mpich-opt.variant.conf:   $(standard) $(mpich) $(optimize)
 
-lofar_root.var:		 
+lofar_root.var:
+
+backtrace.var:          --enable-backtrace	 
