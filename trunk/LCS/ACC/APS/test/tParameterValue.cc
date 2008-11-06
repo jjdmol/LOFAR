@@ -87,6 +87,12 @@ void testVector()
   ASSERT (vecq[1].get() == "\"'{,4' \"");
   ASSERT (vecq[0].getString() == "a,\",[");
   ASSERT (vecq[1].getString() == "'{,4' ");
+  // Test a vector with another kind of quoting.
+  ParameterValue pvq1 ("[\"gain:{11,22}:*\"]");
+  vector<ParameterValue> vecq1 = pvq1.getVector();
+  ASSERT (vecq1.size() == 1);
+  ASSERT (vecq1[0].get() == "\"gain:{11,22}:*\"");
+  ASSERT (vecq1[0].getString() == "gain:{11,22}:*");
 }
 
 void testExpand()
