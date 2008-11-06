@@ -14,14 +14,14 @@ namespace LOFAR {
 FileStream::FileStream(const char *name)
 {
   if ((fd = open(name, O_RDONLY)) < 0)
-    throw SystemCallException("open");
+    throw SystemCallException("open", errno, THROW_ARGS);
 }
 
 
 FileStream::FileStream(const char *name, int mode)
 {
   if ((fd = open(name, O_RDWR | O_CREAT | O_TRUNC, mode)) < 0)
-    throw SystemCallException("open");
+    throw SystemCallException("open", errno, THROW_ARGS);
 }
 
 

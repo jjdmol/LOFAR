@@ -22,13 +22,13 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
     fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (fd < 0)
-    throw SystemCallException("socket");
+    throw SystemCallException("socket", errno, THROW_ARGS);
 
   struct sockaddr_in sa;
   struct hostent     *host;
 
   if ((host = gethostbyname(hostname)) == 0)
-    throw SystemCallException("gethostbyname");
+    throw SystemCallException("gethostbyname", errno, THROW_ARGS);
 
   memset(&sa, 0, sizeof sa);
   sa.sin_family = AF_INET;
@@ -40,22 +40,22 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
       if (errno == ECONNREFUSED)
 	sleep(1);
       else
-	throw SystemCallException("connect");
+	throw SystemCallException("connect", errno, THROW_ARGS);
   } else {
     if (bind(fd, (struct sockaddr *) &sa, sizeof sa) < 0)
-      throw SystemCallException("bind");
+      throw SystemCallException("bind", errno, THROW_ARGS);
 
     if (protocol == TCP) {
       if (listen(fd, 5) < 0)
-	throw SystemCallException("listen");
+	throw SystemCallException("listen", errno, THROW_ARGS);
 
       int sk;
 
       if ((sk = accept(fd, 0, 0)) < 0)
-	throw SystemCallException("accept");
+	throw SystemCallException("accept", errno, THROW_ARGS);
 
       if (close(fd) < 0)
-	throw SystemCallException("close");
+	throw SystemCallException("close", errno, THROW_ARGS);
 
       fd = sk;
     }
