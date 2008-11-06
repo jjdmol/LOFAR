@@ -30,6 +30,7 @@
 #include <Common/lofar_datetime.h>
 //#include <APL/APLCommon/APLUtilities.h>
 #include <Interface/Parset.h>
+#include <Interface/Exceptions.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -74,14 +75,14 @@ void Parset::checkSubbandCount(const char *key) const
   pParset.adoptBuffer(expandedStr);
 
   if (getExpandedUint32Vector(key).size() != nrSubbands())
-    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(getExpandedUint32Vector(key).size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
+    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getExpandedUint32Vector(key).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
 
 void Parset::checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const
 {
   if (list.size() != nrSubbands())
-    throw std::runtime_error(string(key) + " contains wrong number (" + boost::lexical_cast<string>(list.size()) + ") of subbands (expected " + boost::lexical_cast<string>(nrSubbands()) + ')');
+    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(list.size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
 
@@ -104,7 +105,7 @@ void Parset::check() const
   
   for (unsigned subband = 0; subband < slots.size(); subband ++)
     if (slots[subband] >= slotsPerFrame)
-      throw std::runtime_error("Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame");
+      THROW(InterfaceException, "Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame");
   
   // check not needed when using Storage
   if (isDefined("OLAP.CNProc.inputPsets")) {
@@ -115,7 +116,7 @@ void Parset::check() const
 
       for (unsigned subband = 0; subband < boards.size(); subband ++)
         if (boards[subband] >= nrRSPboards)
-	  throw std::runtime_error("Observation.rspBoardList contains rsp board numbers that do not exist");
+	  THROW(InterfaceException, "Observation.rspBoardList contains rsp board numbers that do not exist");
     }
   }
 }
@@ -130,7 +131,7 @@ vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigne
     vector<string> split = StringUtil::split(inputs[i], '/');
 
     if (split.size() != 2 || split[1].substr(0, 3) != "RSP")
-      throw std::runtime_error(string("expected stationname/RSPn pair in \"") + inputs[i] + '"');
+      THROW(InterfaceException, string("expected stationname/RSPn pair in \"") << inputs[i] << '"');
 
     stationsAndRSPs[i].station = split[0];
     stationsAndRSPs[i].rsp     = boost::lexical_cast<unsigned>(split[1].substr(3));
@@ -163,7 +164,7 @@ Stream *Parset::createStream(const string &description, bool asReader)
   else if (split.size() == 1)
     return asReader ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
   else
-    throw std::runtime_error(string("unrecognized connector format: \"" + description + '"'));
+    THROW(InterfaceException, string("unrecognized connector format: \"" + description + '"'));
 }
 
 
@@ -184,7 +185,7 @@ unsigned Parset::nyquistZone() const
       bandFilter == "HB_210_240")
     return 3;
 
-  throw std::runtime_error(string("unknown band filter \"" + bandFilter + '"'));
+  THROW(InterfaceException, string("unknown band filter \"" + bandFilter + '"'));
 }
 
 

@@ -12,6 +12,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     PrintVector.h \
 		     Queue.h \
 		     RSPTimeStamp.h \
-		     SparseSet.h
+		     SparseSet.h \
+		     Exceptions.h
 
 include $(top_srcdir)/Makefile.common

@@ -4,6 +4,8 @@
 #include <memory>
 #include <stdexcept>
 
+#include <Interface/Exceptions.h>
+
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
 #include <cstdlib>
 #else
@@ -29,13 +31,12 @@ template <typename T, size_t ALIGNMENT> class AlignedStdAllocator : public std::
     pointer allocate(size_type size, const_pointer /*hint*/ = 0)
     {
       void *ptr;
-
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
       if (posix_memalign(&ptr, ALIGNMENT, size * sizeof(T)) != 0)
-	throw std::bad_alloc();
+	THROW(AssertError, "Out of memory");
 #else
       if ((ptr = memalign(ALIGNMENT, size * sizeof(T))) == 0)
-	throw std::bad_alloc();
+	THROW(AssertError, "Out of memory");
 #endif
 
       return static_cast<pointer>(ptr);
