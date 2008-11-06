@@ -47,7 +47,8 @@ void check (const VdsPartDesc& vds)
 void doIt()
 {
   VdsPartDesc vds;
-  vds.setName ("/usr/local/xyx", "node1:/usr");
+  vds.setName ("/usr/local/abcd", "node1:/usr");
+  vds.changeBaseName ("xyx");
   vds.setTimes (0, 1, 0.5);
   vds.addBand (2, 20, 100);
   vds.addBand (3, 123456789, 123456792);

@@ -74,6 +74,16 @@ namespace LOFAR { namespace CEP {
     itsFileSys = fileSys;
   }
 
+  void VdsPartDesc::changeBaseName (const string& newBaseName)
+  {
+    string::size_type pos = itsName.rfind ('/');
+    if (pos == string::npos) {
+      itsName = newBaseName;
+    } else {
+      itsName = itsName.substr (0, pos+1) + newBaseName;
+    }
+  }
+
   void VdsPartDesc::setTimes (double startTime, double endTime, double stepTime)
   {
     itsStartTime = startTime;

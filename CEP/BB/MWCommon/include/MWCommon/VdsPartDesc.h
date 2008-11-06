@@ -65,6 +65,9 @@ namespace LOFAR { namespace CEP {
     // Set VDS name and file system.
     void setName (const std::string& name, const std::string& fileSys);
 
+    // Change the base part of the name.
+    void changeBaseName (const string& newBaseName);
+
     // Set the start and end time.
     void setTimes (double startTime, double endTime, double stepTime);
 
