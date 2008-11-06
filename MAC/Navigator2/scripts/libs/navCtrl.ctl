@@ -99,11 +99,12 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
    
-      // update selectors   
-//      dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-//      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     }
     return;
+  }
+  
+  if (anEvent == "Reload") {
+    dpSet(VIEWBOXACTIONDP,"Reload");
   }
   
   if (anEvent == "Update") {

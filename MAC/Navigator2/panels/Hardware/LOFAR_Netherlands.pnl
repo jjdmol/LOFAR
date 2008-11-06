@@ -7,12 +7,7 @@ PANEL,-1 -1 1009 745 N "_3DFace" 0
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
-  // set the hardware selectable items for this screen
-  prepareHardwareList();
-  
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
-  
+  reload();  
 }
 
 void prepareHardwareList() {
@@ -21,7 +16,37 @@ void prepareHardwareList() {
   dynAppend(g_stationList,\"CS016\");  
 }
 
-" 0
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
+
+}" 0
  E E E E 1 -1 -1 0  20 740
 ""0  1
 E "#uses \"navPanel.ctl\"

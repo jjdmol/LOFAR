@@ -99,9 +99,6 @@ void MainCU_Processes_initList() {
  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);
   
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent("MainCU_Processes.ctl:initList","Update");
-  
 }
 
 // ****************************************
@@ -284,6 +281,7 @@ MainCU_Processes_UpdateStationTree() {
       string sts=g_observations["STATIONLIST"][j];
       LOG_DEBUG("MainCU_Processes.ctl:UpdateStationTree|Found Stationlist for this Observation: "+ sts);
       // add stations if not allready there
+
       dyn_string stations = strsplit(sts,",");
       for (int k=1; k<= dynlen(stations);k++) {
         if (!stationTree.itemExists(stations[k])) {
@@ -305,7 +303,8 @@ MainCU_Processes_UpdateStationTree() {
 MainCU_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
   LOG_TRACE("MainCU_Processes.ctl:activeObsCallback|Found: "+ activeObservations);
 
-  // empty the table
+  // wait a few milisecs to give the g_observationlist time to refill
+  delay(0,500);  // empty the table
   activeObs.clear();
   
   // if the active observations list changes the list here should be changed also.

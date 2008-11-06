@@ -12,9 +12,6 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
   TopLabel.text(database+\" \"+$daemonName);
   
   
-  // set the selectable processes
-  prepareProcesses();
-  
   // start the logging process
   navPanel_showLogging(baseDP);
   
@@ -40,14 +37,11 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
     }  
   
  
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent($daemonName+\".pnl\",\"Update\");
-  
-  
-  // no selection, so no trigger mechanism needed in this panel. 
 
   // connect for selfUpdates
   showSelfState(baseDP);
+  
+  reload();
 
   LOG_DEBUG($daemonName+\".pnl:main|HardwareTree found: \"+ result);  
 }
@@ -91,6 +85,39 @@ void prepareProcesses() {
   LOG_DEBUG($daemonName+\".pnl:prepareProcesses|processList found: \"+ result);    
   
 }
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG($daemonName+\".pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG($daemonName+\".pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  prepareProcesses();
+
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent($daemonName+\".pnl\",\"Update\");
+}
+
+
 " 0
  E E E E 1 -1 -1 0  50 50
 ""0  1

@@ -88,6 +88,11 @@ void navPanel_initPanel(string objectName) {
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".processesList")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",makeDynString(""));
   }
+  
+  if ( dpExists(itsActionDp) ) {
+    VIEWBOXACTIONDP=itsActionDp;
+    dpConnect("doAction",false,itsActionDp);
+  }
 }
 
 // ****************************************
@@ -106,15 +111,10 @@ void navPanel_setEvent(dyn_string aSelection,string anEvent) {
     return;
   }
   string event=itsNavigatorObject+"|"+anEvent;
-  if (dpExists(itsEventDp)) {
-     dpSet(itsEventDp,event);
+  if (dpExists(itsEventDp) && dpExists(itsSelectionDp)) {
+     dpSet(itsEventDp,event,itsSelectionDp,aSelection);
   } else {
-    LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+itsEventDp + " Does not exist yet");     
-  }
-  if (dpExists(itsSelectionDp)) {
-    dpSet(itsSelectionDp,aSelection);
-  } else {
-    LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+itsSelectionDp + " Does not exist yet");     
+    LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+itsEventDp +" or " +itsSelectionDp + " Does not exist yet");     
   }
 } 
 

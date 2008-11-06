@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1016 729 N "_3DFace" 0
+PANEL,-1 -1 1016 739 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -10,10 +10,42 @@ PANEL,-1 -1 1016 729 N "_3DFace" 0
   baseDP = g_currentDatapoint;
   syst   = dpSubStr(baseDP,DPSUB_SYS);
     
-  // set the process selectable items
-  Station_Processes_initList();
+  reload();
   
 }
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"Station_Processes.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"Station_Processes.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  Station_Processes_initList();
+
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"Station_Processes.pnl\",\"Update\");
+}
+
 " 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
@@ -433,7 +465,7 @@ LANG:1 0
 1
 "$name""BeamServer"
 3 31 "PANEL_REF32"
-"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -97 31.00000000000001
+"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -97 10.00000000000001
 0
 3 32 "PANEL_REF33"
 "objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -130

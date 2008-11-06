@@ -15,11 +15,6 @@ PANEL,-1 -1 1232 873 N "_3DFace" 1
   while (g_initializing) {
   } 
 
-  // Do a dpQueryConnectSingle() so that we get a list of observations
-  // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
-  navFunct_queryConnectObservations();
-  
-  
   // connect to all event DP's from the objects so when something happens it can be 
   // seen by the framework and the suited actions can be taken
   // Only the framework knows the connections between it's different objects. And decides
@@ -66,7 +61,13 @@ PANEL,-1 -1 1232 873 N "_3DFace" 1
 		setValue(fw_alerts,\"backCol\",\"_dpdoesnotexist\");
   } 
 
+  // Do a dpQueryConnectSingle() so that we get a list of observations
+  // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
+  navFunct_queryConnectObservations();
 
+  
+  
+  
   LOG_TRACE(\"navigator.pnl:Initialize|end\");  
 }
 
@@ -214,6 +215,14 @@ LANG:1 6 Layer1
 1 25 13 "" 10
 0
 1 26 13 "" 11
+0
+1 27 13 "" 12
+0
+1 28 13 "" 13
+0
+1 29 13 "" 14
+0
+1 30 13 "" 15
 0
 0
 LAYER, 1 

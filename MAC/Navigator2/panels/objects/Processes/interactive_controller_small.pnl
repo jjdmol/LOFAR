@@ -25,9 +25,10 @@ void updateTrigger( string dp1, string objectName,
                     string dp2, dyn_string paramList,
                     string dp3, bool invalid) {
 
-
+  
   if (objectName == panelName) {
-    LOG_TRACE(\"interactive_controller_small.pnl:main|updateTrigger: \"+$name+\" objectName: \"+objectName+\" panelName: \"+panelName);
+    LOG_TRACE(\"interactive_controller_small.pnl:main|updateTrigger: \"+$name+\" objectName: \"+objectName+
+              \" panelName: \");
     string observation=\"\";
     string station = \"\";
     if (dynlen(paramList) > 0) {
@@ -122,6 +123,8 @@ void reload(string obsBDP,string station) {
   }
   
   if (station == \"\" || station == MainDBName) {
+    string Dp=MainDBName+dpSubStr(obsBDP,DPSUB_DP);
+    obsBaseDP=Dp;
     visible(false);
   } else {
     string Dp=station+dpSubStr(obsBDP,DPSUB_DP);
@@ -133,10 +136,12 @@ void reload(string obsBDP,string station) {
     oldError=\"\";
     oldAction=\"\";
     oldLogMsg=\"\";
-    dpDisconnect(\"update\", baseDP +\".process.error:_online.._value\",
-                           baseDP +\".process.currentAction:_online.._value\",
-                           baseDP +\".process.logMsg:_online.._value\",
-                           baseDP +\".process.error:_online.._invalid\");
+    if (dpExists(baseDP)+\".process.error\") {
+      dpDisconnect(\"update\", baseDP +\".process.error:_online.._value\",
+                             baseDP +\".process.currentAction:_online.._value\",
+                             baseDP +\".process.logMsg:_online.._value\",
+                             baseDP +\".process.error:_online.._invalid\");
+    }
     connected=false;
   }
   baseDP=obsBaseDP+\"_\"+$name;
@@ -362,6 +367,5 @@ LANG:1 0
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 1 -0.499999999999992 10.5
-1
-"$object""ObsCtrl"
+0
 0

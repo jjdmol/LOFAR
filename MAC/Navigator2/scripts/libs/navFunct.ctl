@@ -29,7 +29,7 @@
 // navFunct_splitEvent                        : Splits an event string into the essentials
 // navFunct_splitAction                       : Splits an actionstring into a dyn_string action + params
 // navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
-// navFunct_queryConnectObservations_Callback : Callback for the above query
+// navFunct_updateObservations                : Callback for the above query
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
 // navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
@@ -124,68 +124,88 @@ bool navFunct_splitAction(string action,dyn_string& actionString) {
 //    None
 // ***************************************
 
+
 void navFunct_queryConnectObservations()
 {
-  
-  
-  string strQuery = "SELECT '.claim.name:_original.._value', '.status.state:_original.._value', '.status.childState:_original.._value', '.stationList:_original.._value', '.receiverBitmap:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \"Observation\" AND  '.claim.name:_original.._value' != \"\"";
-  
-  g_observations[ "DP"          ] = makeDynString();                    
-  g_observations[ "NAME"        ] = makeDynString();
-  g_observations[ "STATE"       ] = makeDynInt();
-  g_observations[ "CHILDSTATE"  ] = makeDynInt();
-  g_observations[ "STATIONLIST" ] = makeDynString();
-  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
-  
-  // Trigger a single query that gets an update when one 
-  // observation changes
-  dpQueryConnectSingle( "navFunct_queryConnectObservations_Callback", 1, "ident_observations", strQuery,50 );
+  if (dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
+    dpConnect("navFunct_updateObservations",true,MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations",
+                                                 MainDBName+"LOFAR_PermSW_MACScheduler.plannedObservations",
+                                                 MainDBName+"LOFAR_PermSW_MACScheduler.finishedObservations");
+  } else {
+    LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: Couldn't connect to MACScheduler!!!" );
+  }     
 }
 
-// ****************************************
-// Name : navFunct_queryConnectObservations_Callback
-// ****************************************
-// Description:
-//    This is the callback that receives info about observations
-//
-// Returns:
-//    None
-// ***************************************
+void navFunct_updateObservations(string dp1, dyn_string active,
+                                 string dp2, dyn_string planned,
+                                 string dp3, dyn_string finished) {
+  dyn_string receiverBitmap;
+  dyn_string stationList;
+  int iPos=1;
 
-void navFunct_queryConnectObservations_Callback( 
-  string strIdent,
-  dyn_dyn_anytype aResult 
-)
-{
-  int iPos;
-  dyn_string strStationList;
+  // Clear mapping
+  mappingClear(g_observations);
+  g_observations[ "DP"          ]    = makeDynString();                    
+  g_observations[ "NAME"        ]    = makeDynString();
+  g_observations[ "STATIONLIST" ]    = makeDynString();
+  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
+  g_observations[ "SCHEDULE" ]       = makeDynString();
   
   
-  LOG_TRACE( "navFunct.ctl:navFunct_queryConnectObservations_Callback| Number of observations in message = " + dynlen( aResult ) );
-  
-  for( int t = 2; t <= dynlen( aResult ); t++)
-  {  
-    string strDP = aResult[t][1];
-    
-    // Is this an existing observation or a new one
-    iPos = dynContains( g_observations[ "DP"         ], strDP );  
-  
-    if( iPos < 1 ){
-      dynAppend( g_observations[ "DP"          ], strDP );
-      iPos = dynlen( g_observations[ "DP" ] );
-    }  
-
-    // Station list is opened and closed with []  we have to strip those
-    string stations = strltrim(strrtrim(aResult[t][5],"]"),"[");
-    // Now store the values 
-    g_observations[ "NAME"           ][iPos] = aResult[t][2];
-    g_observations[ "STATE"          ][iPos] = aResult[t][3];
-    g_observations[ "CHILDSTATE"     ][iPos] = aResult[t][4];
-    g_observations[ "STATIONLIST"    ][iPos] = stations;
-    g_observations[ "RECEIVERBITMAP" ][iPos] = aResult[t][6];
+  for (int i = 1; i<= dynlen(active); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      dpGet(dp+".receiverBitmap",receiverBitmap);
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+active[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "RECEIVERBITMAP" ][iPos]  = receiverBitmap;
+      g_observations[ "SCHEDULE"       ][iPos]  = "active";
+    }      
+  }
+  for (int i = 1; i<= dynlen(planned); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+planned[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      dpGet(dp+".receiverBitmap",receiverBitmap);
+      g_observations[ "NAME"           ][iPos]   = "LOFAR_ObsSW_"+planned[i];
+      g_observations[ "STATIONLIST"    ][iPos]   = stationList;
+      g_observations[ "RECEIVERBITMAP" ][iPos]   = receiverBitmap;
+      g_observations[ "SCHEDULE"       ][iPos]   = "planned";
+    }      
+  }
+  for (int i = 1; i<= dynlen(finished); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      dpGet(dp+".receiverBitmap",receiverBitmap);
+      g_observations[ "NAME"           ][iPos]    = "LOFAR_ObsSW_"+finished[i];
+      g_observations[ "STATIONLIST"    ][iPos]    = stationList;
+      g_observations[ "RECEIVERBITMAP" ][iPos]    = receiverBitmap;
+      g_observations[ "SCHEDULE"       ][iPos]    = "finished";
+    }      
   }
   
-}  
+  // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
+  // in that case a Navigator event should be issued after a change in MACScheduler observations, 
+  // so the involved objects can update themselves.
+  
+  if (tabCtrlHasPanel) {
+    string eventDp     = DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.event";
+    string selectionDp = DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection";
+    string event="navigator|Reload";
+    string selection = "navFunct_updateObservations.ctl";
+    
+    if (dpExists(eventDp) && dpExists(selectionDp)) {
+       dpSet(eventDp,event,selectionDp,selection);
+    } else {
+      LOG_ERROR("navPanel.ctl:navPanel_setEvent| "+eventDp +" or " +selectionDp + " Does not exist yet");     
+    }
+  }
+}
 
 //*******************************************
 // Name: Function navFunct_getArmFromStation
@@ -714,6 +734,8 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   // remove : from station name if there
   strreplace(stationName,":","");
   
+  
+  
   int iPos = dynContains( g_observations[ "NAME"         ], observation );
   if (iPos <=0) {
     LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
@@ -863,7 +885,7 @@ void navFunct_fillObservationsList() {
       string shortObs=g_observations["NAME"][i];
       strreplace(shortObs,"LOFAR_ObsSW_","");
     
-      // If we are have more entries in the staion list we assume we are looking at a panle that has only stations
+      // If we are have more entries in the station list we assume we are looking at a panel that has only stations
       // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
       // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
       
@@ -1087,13 +1109,6 @@ navFunct_fillProcessesTree() {
 navFunct_fillObservationsTree() {
   dyn_string result;
     
-  // get lists of all active,planned and finished observations to compare later
-  dyn_string aO;
-  dyn_string pO;
-  dyn_string fO;
-  dpGet("LOFAR_PermSW_MACScheduler.activeObservations",aO);
-  dpGet("LOFAR_PermSW_MACScheduler.plannedObservations",pO);
-  dpGet("LOFAR_PermSW_MACScheduler.finishedObservations",fO);
     
   dyn_string result;
   dynAppend(result,",planned,planned");
@@ -1111,18 +1126,9 @@ navFunct_fillObservationsTree() {
       return;
     }
            
-    string lvl="";
-    // check in what lvl the searched obs is
-    if (dynContains(aO,g_observationsList[i])>0) {
-      lvl="active";
-    } else if (dynContains(pO,g_observationsList[i])>0) {
-      lvl="planned";
-    } else if (dynContains(fO,g_observationsList[i])>0) {
-      lvl="finished";
-    }
-          
-    string aS=lvl+","+g_observationsList[i]+","+g_observations["DP"][iPos];
-    if (!dynContains(result,aS) && lvl!=""){
+    
+    string aS=g_observations["SCHEDULE"][iPos]+","+g_observationsList[i]+","+g_observations["DP"][iPos];
+    if (!dynContains(result,aS)){
         dynAppend(result,aS);
     }
   }
