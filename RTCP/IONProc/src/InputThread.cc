@@ -30,6 +30,7 @@
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
 #include <Interface/AlignedStdAllocator.h>
+#include <Interface/Exceptions.h>
 #include <Stream/NullStream.h>
 #include <Stream/SystemCallException.h>
 #include <BeamletBuffer.h>
@@ -169,7 +170,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
       if (ex.error == EINTR)
 	break;
       else
-	throw;
+	THROW(IONProcException,"");
     }
 
     ++ itsArgs.packetCounters->nrPacketsReceived;

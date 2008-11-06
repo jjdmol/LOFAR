@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <Interface/Align.h>
+#include <Interface/Exceptions.h>
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <InputThreadAsm.h>
@@ -60,7 +61,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigne
   itsWriteTimer("buffer write", true)
 {
   if (nrTimesPerPacket != itsNrTimesPerPacket)
-    throw std::runtime_error(std::string("OLAP.nrTimesInFrame should be ") + boost::lexical_cast<std::string>(itsNrTimesPerPacket));
+    THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
   pthread_mutex_init(&itsValidDataMutex, 0);
 

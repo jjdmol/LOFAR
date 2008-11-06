@@ -25,6 +25,7 @@
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Parset.h>
+#include <Interface/Exceptions.h>
 #include <InputSection.h>
 #include <OutputSection.h>
 #include <Stream/FileStream.h>
@@ -116,7 +117,7 @@ static void createClientStreams(unsigned nrClients, const std::string &streamTyp
     else if (streamType == "TCP")
       clientStreams[core] = new SocketStream("127.0.0.1", 5000 + core, SocketStream::TCP, SocketStream::Server);
     else
-      throw std::runtime_error("unknown Stream type between ION and CN");
+      THROW(IONProcException, "unknown Stream type between ION and CN");
   }
 }
 
@@ -230,7 +231,7 @@ static void *inputSection(void *parset)
       case 16 : inputTask<i16complex>(ps);
 		break;
 
-      default : throw std::runtime_error("unsupported number of bits per sample");
+      default : THROW(IONProcException, "unsupported number of bits per sample");
     }
   } catch (Exception &ex) {
     std::cerr << "input section caught Exception: " << ex << std::endl;

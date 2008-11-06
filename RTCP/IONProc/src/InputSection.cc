@@ -36,6 +36,7 @@
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/SubbandMetaData.h>
+#include <Interface/Exceptions.h>
 
 #include <pthread.h>
 #include <sys/time.h>
@@ -131,7 +132,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     std::clog << "  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"' << std::endl;
 
     if (station != inputs[0].station)
-      throw std::runtime_error("inputs from multiple stations on one I/O node not supported (yet)");
+      THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
 
     itsInputStreams[i] = Parset::createStream(streamName, true);
   }
@@ -207,12 +208,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataOutputs = ps->getStringVector("OLAP.OLAP_Conn.rawDataOutputs");
-  std::clog << "--GELSM-- rawDataOutputs = " <<  rawDataOutputs << std::endl;
   unsigned	 psetIndex	= ps->inputPsetIndex(itsPsetNumber);
-  std::clog << "--GELSM-- psetIndex = " <<  psetIndex << std::endl;
 
   if (psetIndex >= rawDataOutputs.size())
-    throw std::runtime_error("there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
+    THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
   string rawDataOutput = rawDataOutputs[psetIndex];
   std::clog << "writing raw data to " << rawDataOutput << std::endl;
@@ -383,7 +382,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 
   if (!fileHeaderWritten) {
     if (nrSubbands > 54)
-      throw std::runtime_error("too many subbands for raw data format");
+      THROW(IONProcException, "too many subbands for raw data format");
 
     struct FileHeader {
       uint32	magic;		// 0x3F8304EC, also determines endianness
