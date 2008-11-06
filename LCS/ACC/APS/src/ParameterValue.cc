@@ -91,7 +91,8 @@ namespace LOFAR { namespace ACC { namespace APS {
           squote = !squote;
           quote  = squote;
         }
-      } else if (!squote) {
+      }
+      if (!squote) {
         if (itsValue[i] == '"') {
           dquote = !dquote;
           quote  = dquote;
