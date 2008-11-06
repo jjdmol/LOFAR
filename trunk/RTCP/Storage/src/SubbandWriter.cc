@@ -32,6 +32,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Interface/Exceptions.h>
 
 #ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
@@ -126,7 +127,7 @@ void SubbandWriter::createInputStreams()
       std::cout << "input " << i << ": file:" << filename << std::endl;
       itsInputStreams[i] = new FileStream(filename.c_str());
     } else {
-      throw std::runtime_error("unsupported ION->Storage stream type");
+      THROW(StorageException, "unsupported ION->Storage stream type");
     }
 }
 

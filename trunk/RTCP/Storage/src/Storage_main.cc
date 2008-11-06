@@ -13,6 +13,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Interface/Parset.h>
+#include <Interface/Exceptions.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/Package__Version.h>
 
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
     if (argc == 3)
       std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
     else if (argc != 2)
-      throw std::runtime_error(std::string("usage: ") + argv[0] + " parset");
+      THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
     ACC::APS::ParameterSet parameterSet(argv[1]);
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
     subbandWriter.process();
     subbandWriter.postprocess();
   } catch (Exception &ex) {
-    std::cerr << "caught Exception: " << ex.what() << std::endl;
+    std::cerr << "caught Exception: " << ex << std::endl;
     exit(1);
   } catch (std::exception &ex) {
     std::cerr << "caught std::exception: " << ex.what() << std::endl;
