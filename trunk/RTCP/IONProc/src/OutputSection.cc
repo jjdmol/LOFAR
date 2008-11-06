@@ -23,6 +23,7 @@
 
 #include <Interface/CN_Mapping.h>
 #include <Interface/Allocator.h>
+#include <Interface/Exceptions.h>
 #include <OutputSection.h>
 
 #include <Stream/FileStream.h>
@@ -113,7 +114,7 @@ void OutputSection::connectToStorage(const Parset *ps)
     std::clog << "output section write to file:" << filename << std::endl;
     itsStreamToStorage = new FileStream(filename.c_str(), 0666);
   } else {
-    throw std::runtime_error("unsupported ION->Storage stream type");
+    THROW(IONProcException, "unsupported ION->Storage stream type");
   }
 }
 
@@ -140,7 +141,7 @@ void OutputSection::preprocess(const Parset *ps)
     itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels));
 
   if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
-    throw std::runtime_error("could not create send thread");
+    THROW(IONProcException, "could not create send thread");
 }
 
 
@@ -187,7 +188,7 @@ void OutputSection::postprocess()
   itsSendQueue.append(0); // 0 indicates that no more messages will be sent
 
   if (pthread_join(itsSendThread, 0) != 0)
-    throw std::runtime_error("could not join send thread");
+    THROW(IONProcException, "could not join send thread");
 
   delete itsStreamToStorage; // closes stream, stopping the Storage section
   itsStreamToStorage = 0;
