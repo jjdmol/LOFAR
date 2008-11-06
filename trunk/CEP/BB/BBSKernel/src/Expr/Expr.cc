@@ -362,11 +362,11 @@ Result ExprAPToComplex::getResult (const Request& request)
   const Result& ampl  = itsAmpl.getResultSynced (request, amplRes);
   const Result& phase = itsPhase.getResultSynced (request, phaseRes);
 
-  // Compute main value.
+  // Allocate result.
   Result result;
   result.init();
+
   MatrixTmp matt(tocomplex(cos(phase.getValue()), sin(phase.getValue())));
-  result.setValue (matt * ampl.getValue());
 
   // Compute perturbed values.
   const Result *pvSet[2] = {&ampl, &phase};
@@ -385,6 +385,11 @@ Result ExprAPToComplex::getResult (const Request& request)
 
     pvIter.next();
   }
+
+  // Compute main value.
+  // NB. Order is important because matt is of type MatrixTmp which is modified
+  // in place.
+  result.setValue (matt * ampl.getValue());
 
   return result;
 }
