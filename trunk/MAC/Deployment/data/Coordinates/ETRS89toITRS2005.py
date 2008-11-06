@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
-import sys,pgdb
+#import sys,pgdb
+import sys
 from copy import deepcopy
 from math import *
+#from numpy import *
+from numarray import *
 
 
 INTRO=""" 
@@ -75,8 +78,67 @@ def convert(XEtrs, date_years):
     XShifted = subtract(XEtrs,T00)
     return solve(Matrix, XShifted)
 
+
+def latlonhgt2XYZ(lat, lon, height):
+    """
+    Convert the latitude,longitude,height arguments to a X,Y,Z triple
+    The arguments must be in degrees and meters.
+    """
+    # wgs84 ellips constants
+    wgs84a  = 6378137.0
+    wgs84df = 298.25722356
+    wgs84b  = (1.0-(1.0/wgs84df))*wgs84a
+    e2      =  1.0-((wgs84b*wgs84b)/(wgs84a*wgs84a))
+
+    latrad = radians(lat)
+    lonrad = radians(lon)
+    N = wgs84a / sqrt(1.0-(e2 * pow(sin(latrad),2)))
+    X = (N+height) * cos(latrad) * cos(lonrad)
+    Y = (N+height) * cos(latrad) * sin(lonrad)
+    Z = (N*(1-e2) + height) * sin(latrad)
+
+    return ( X, Y, Z )
     
-    
+
+def I89toI2005(XEtrs89, date_years):
+    """
+    Convert the given Etrs89 coordinates to I2005 coordinates for the given date
+    """
+    # T in cm, S in 10e-9, R in 0.001''
+    # 2005->2000 according to http://itrf.ensg.ign.fr/ITRF_solutions/2005/tp_05-00.php
+    #  ITRF2005   0.1   -0.8    -5.8   0.40    0.000    0.000    0.000
+    #  rates	 -0.2    0.1    -1.8   0.08    0.000    0.000    0.000
+    # 2000->1989 according to  ftp://itrf.ensg.ign.fr/pub/itrf/ITRF.TP
+    #  ITRF89       2.97  4.75 -7.39    5.85    0.00    0.00   -0.18   1988.0    6
+    # (rates        0.00 -0.06 -0.14    0.01    0.00    0.00    0.02)
+
+    T2005to2000 = array([  0.1, -0.8 , -5.8  ]) # ITRS2005 to ITRS2000
+    T2000to1989 = array([ 2.97,  4.75, -7.39 ]) # ITRS2000 to ITRS89 = ETRS89
+    Tdot2005    = array([ -0.2,  0.1,  -1.8  ]) # shift per year for I2005
+    S2005to2000 = 0.4
+    S2000to1989 = 5.85
+    Sdot2005    = 0.08
+    R2005to2000 = array([ 0.0, 0.0,  0.0  ])
+    R2000to1989 = array([ 0.0, 0.0, -0.18 ])
+    Rdot2005    = array([ 0.0, 0.0,  0.0  ])
+
+    Tfixed = T2005to2000 + T2000to1989
+    Rfixed = R2005to2000 + R2000to1989
+    Sfixed = S2005to2000 + S2000to1989
+    Ttot   = (Tfixed + (Tdot2005 * (date_years - 2005.0))) / 100.0     # meters
+    Rtot   = rad_from_mas(Rfixed + (Rdot2005 * (date_years - 2005.0))) # rad
+    Stot   = (Sfixed + (Sdot2005 * (date_years - 2005.0))) / 1.0e9
+    print "Ttot:", Ttot
+    print "Rtot:", Rtot
+    print "Stot:", Stot
+
+    Matrix = array([[        1,  Rtot[2], -Rtot[1]],
+                    [ -Rtot[2],        1,  Rtot[0]],
+                    [  Rtot[1], -Rtot[0],        1]])
+
+    Xnow = Ttot + (1 + Stot) * Matrix * XEtrs89
+    return (Xnow[0][0], Xnow[1][1], Xnow[2][2])
+
 #
 # MAIN
 #
@@ -84,6 +146,12 @@ if __name__ == '__main__':
     if len(sys.argv) != 4:
         print_help()
         sys.exit(0)
+
+    (X, Y, Z) = latlonhgt2XYZ(52.9129392, 6.8690294, 54.1)
+    print X, Y, Z
+    (Xn, Yn, Zn) = I89toI2005([X, Y, Z], 2007.775342466)
+    print Xn, Yn, Zn
+    sys.exit(0)
 
     date_years = float(sys.argv[3]) 
     db = pgdb.connect(user="postgres", host="dop50", database="coordtest")
