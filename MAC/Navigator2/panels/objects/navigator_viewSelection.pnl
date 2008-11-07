@@ -210,7 +210,7 @@ LANG:1 6 state:
 13 13
 "testButton"
 ""
-1 920 2 E E E 1 E 0 E N "_ButtonText" E N "_Button" E E
+1 920 2 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 14 0 0 0 0 0
 E E E
