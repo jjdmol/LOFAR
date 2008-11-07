@@ -179,8 +179,8 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
     // skip the point
     element = substr(dp,strlen(datapoint)+1,((strlen(dp))-(strlen(datapoint)))); 
 
-    // get the ArmName
-    armName=navFunct_getArmFromStation(station);
+    // get the RingName
+    armName=navFunct_getRingFromStation(station);
 
 
     if (bDebug) DebugN("monitorStateChanges.ctl:stationStateTriggered|station : ",station, " DP: " ,datapoint," element: ",element);
