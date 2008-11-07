@@ -61,9 +61,7 @@ PANEL,-1 -1 1232 873 N "_3DFace" 1
 		setValue(fw_alerts,\"backCol\",\"_dpdoesnotexist\");
   } 
 
-  // Do a dpQueryConnectSingle() so that we get a list of observations
-  // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
-  navFunct_queryConnectObservations();
+
 
   
   

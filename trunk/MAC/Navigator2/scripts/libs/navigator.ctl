@@ -106,6 +106,9 @@ void navigator_handleEventInitialize()
   // Initilaize the alarm system
   initNavigatorAlarms();
 
+  // Do a dpQueryConnectSingle() so that we get a list of observations
+  // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
+  navFunct_queryConnectObservations();
   
   // set initialized ready
   g_initializing = false;
