@@ -110,6 +110,8 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 		}
 		cur += HBAProtocolWrite::RESULT_DELAY_STRIDE;
 	}
+	// Copy result for other cache also.
+	Cache::getInstance().getFront().getHBAReadings() = Cache::getInstance().getBack().getHBAReadings();
 
 	// check result
 	if (!ack.hdr.isValidAck(m_hdr)) {
