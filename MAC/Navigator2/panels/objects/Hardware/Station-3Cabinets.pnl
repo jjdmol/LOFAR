@@ -2,7 +2,59 @@ V 10
 1
 LANG:1 7 Station
 PANEL,-1 -1 980 746 N "_3DFace" 0
-E E E E E 1 -1 -1 0  0 0
+"main()
+{
+  //get current database name to determine the station
+  string station = strrtrim(dpSubStr(g_currentDatapoint,DPSUB_SYS),\":\");
+  
+  string mainStationDP=MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(station)+\"_\"+station;
+ 
+  if (dpExists(mainStationDP+\".power48On\") ){
+    dpConnect(\"updatePower48\",mainStationDP+\".power48On\",
+                              mainStationDP+\".power48On:_online.._invalid\");
+  } else {
+    setValue(\"power48On\",\"backCol\",\"_dpdoesnotexist\");
+  }
+  
+  if (dpExists(mainStationDP+\".power220On\") ) {
+    dpConnect(\"updatePower220\",mainStationDP+\".power220On\",
+                               mainStationDP+\".power220On:_online.._invalid\");
+  } else {
+    setValue(\"power220On\",\"backCol\",\"_dpdoesnotexist\");
+  }
+  
+}
+
+void updatePower48(string dp1, bool on,
+                   string dp2, bool invalid) {
+  
+  if (!invalid) {
+    string color=\"Lofar_broken\";
+    if (on) {
+      color=\"Lofar_operational\";
+    } 
+    setValue(\"power48On\",\"backCol\",color);
+    
+  } else {
+    setValue(\"power48On\",\"backCol\",\"Lofar_invalid\");
+  }  
+}
+
+void updatePower220(string dp1, bool on,
+                    string dp2, bool invalid) {
+  
+  if (!invalid) {
+    string color=\"Lofar_broken\";
+    if (on) {
+      color=\"Lofar_operational\";
+    } 
+    setValue(\"power220On\",\"backCol\",color);
+    
+  } else {
+    setValue(\"power220On\",\"backCol\",\"Lofar_invalid\");
+  }  
+}" 0
+ E E E E 1 -1 -1 0  0 0
 ""0  1
 E E 2
 "CBRef" "1"
@@ -251,94 +303,202 @@ E E 0 1 1 0 1 E 1 0 1 0 -10 2  0 3  "pictures/station-sized.bmp" 13434828 E 0 10
 0
 1 2144 107 "" 36
 0
-1 2145 108 "" 0
+1 2145 107 "" 38
 0
-1 2146 108 "" 13
+1 2146 107 "" 39
 0
-1 2147 108 "" 15
+1 2147 108 "" 0
 0
-1 2148 108 "" 16
+1 2148 108 "" 13
 0
-1 2149 108 "" 18
+1 2149 108 "" 15
 0
-1 2150 108 "" 19
+1 2150 108 "" 16
 0
-1 2151 108 "" 20
+1 2151 108 "" 18
 0
-1 2152 108 "" 21
+1 2152 108 "" 19
 0
-1 2153 108 "" 22
+1 2153 108 "" 20
 0
-1 2154 108 "" 24
+1 2154 108 "" 21
 0
-1 2155 108 "" 25
+1 2155 108 "" 22
 0
-1 2156 108 "" 26
+1 2156 108 "" 24
 0
-1 2157 108 "" 27
+1 2157 108 "" 25
 0
-1 2158 108 "" 28
+1 2158 108 "" 26
 0
-1 2159 108 "" 29
+1 2159 108 "" 27
 0
-1 2160 108 "" 30
+1 2160 108 "" 28
 0
-1 2161 108 "" 31
+1 2161 108 "" 29
 0
-1 2162 108 "" 32
+1 2162 108 "" 30
 0
-1 2163 108 "" 33
+1 2163 108 "" 31
 0
-1 2164 108 "" 34
+1 2164 108 "" 32
 0
-1 2165 108 "" 35
+1 2165 108 "" 33
 0
-1 2166 108 "" 36
+1 2166 108 "" 34
 0
-1 2167 109 "" 0
+1 2167 108 "" 35
 0
-1 2168 109 "" 13
+1 2168 108 "" 36
 0
-1 2169 109 "" 15
+1 2169 108 "" 38
 0
-1 2170 109 "" 16
+1 2170 108 "" 39
 0
-1 2171 109 "" 18
+1 2171 109 "" 0
 0
-1 2172 109 "" 19
+1 2172 109 "" 13
 0
-1 2173 109 "" 20
+1 2173 109 "" 15
 0
-1 2174 109 "" 21
+1 2174 109 "" 16
 0
-1 2175 109 "" 22
+1 2175 109 "" 18
 0
-1 2176 109 "" 24
+1 2176 109 "" 19
 0
-1 2177 109 "" 25
+1 2177 109 "" 20
 0
-1 2178 109 "" 26
+1 2178 109 "" 21
 0
-1 2179 109 "" 27
+1 2179 109 "" 22
 0
-1 2180 109 "" 28
+1 2180 109 "" 24
 0
-1 2181 109 "" 29
+1 2181 109 "" 25
 0
-1 2182 109 "" 30
+1 2182 109 "" 26
 0
-1 2183 109 "" 31
+1 2183 109 "" 27
 0
-1 2184 109 "" 32
+1 2184 109 "" 28
 0
-1 2185 109 "" 33
+1 2185 109 "" 29
 0
-1 2186 109 "" 34
+1 2186 109 "" 30
 0
-1 2187 109 "" 35
+1 2187 109 "" 31
 0
-1 2188 109 "" 36
+1 2188 109 "" 32
 0
+1 2189 109 "" 33
+0
+1 2190 109 "" 34
+0
+1 2191 109 "" 35
+0
+1 2192 109 "" 36
+0
+1 2193 109 "" 38
+0
+1 2194 109 "" 39
+0
+6 2195
+"power48"
+""
+1 580 367 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+872 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 -1 1 E 580 367 700 389
+6 2196
+"RECTANGLE2"
+""
+1 580 370 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+874 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 0 1 E 580 390 700 421
+2 2197
+"PRIMITIVE_TEXT10"
+""
+1 697 371 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+876 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 697 371 752 385
+0 2 2 "0s" 0 0 0 192 0 0  697 371 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 10 Power 48 V
+2 2198
+"PRIMITIVE_TEXT11"
+""
+1 697 399 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+878 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 697 399 758 413
+0 2 2 "0s" 0 0 0 192 0 0  697 399 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 11 Power 220 V
+7 2199
+"power48On"
+""
+1 75.00000000000011 575 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+880 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 700.7438016528926 -307.2975206611569 1 E 75 575 5 5
+7 2200
+"power220On"
+""
+1 75 575 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+882 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 700.7438016528926 -278.2975206611569 1 E 75 575 5 5
 0
 LAYER, 1 
 1
@@ -411,15 +571,15 @@ LANG:1 6 Layer8
 "$CabinetNr""2"
 "$SubrackNr""5"
 3 107 "PANEL_REF108"
-"objects/Hardware\\Cabinet_Top.pnl" 50 540 T 869 1 0 1 0 -15
+"objects\\Hardware\\Cabinet_Top.pnl" 50 540 T 869 1 0 1 0 -15
 1
 "$CabinetNr""0"
 3 108 "PANEL_REF109"
-"objects/Hardware\\Cabinet_Top.pnl" 260 550 T 870 1 0 1 0 -25
+"objects\\Hardware\\Cabinet_Top.pnl" 260 550 T 870 1 0 1 0 -25
 1
 "$CabinetNr""1"
 3 109 "PANEL_REF110"
-"objects/Hardware\\Cabinet_Top.pnl" 470 550 T 871 1 0 1 0 -25
+"objects\\Hardware\\Cabinet_Top.pnl" 470 550 T 871 1 0 1 0 -25
 1
 "$CabinetNr""3"
 0
