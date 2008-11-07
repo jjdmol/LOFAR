@@ -23,6 +23,7 @@
 #include <CS1_pp_lib/MADFlagger.h>
 #include <casa/Quanta/MVEpoch.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Utilities/GenSort.h>
 
 #include <CS1_pp_lib/MsInfo.h>
 #include <CS1_pp_lib/RunDetails.h>
@@ -46,32 +47,61 @@ MADFlagger::~MADFlagger()
 {
 }
 
-//===============>>> ComplexMedianFlagger2::ComputeThreshold  <<<============
+//===============>>> MADFlagger::ComputeThreshold  <<<============
 /*Compute Thresholds */
-void MADFlagger::ComputeThreshold(const Cube<Float>& Values,
+
+Cube<Bool> MADFlagger::MakeMask(const Cube<Float>& Values, const Cube<Bool>& Flags,
+                                double MaxLevel, int WindowSize,
+                                int Position, bool Existing)
+{
+  Cube<Bool> Mask(Values.shape(), false);
+  for (int k = WindowSize-1; k >= 0; k--)
+  {
+    for (int i = NumChannels-1; i >= 0; i--)
+    {
+      for (int j = NumPolarizations-1; j >= 0; j--)
+      { Mask(j, i, k) = !isFinite(Values(j, i, k))
+                      || MaxLevel && Values(j, i, Position) > MaxLevel
+                      || (Existing && Flags(j, i, k));
+      }
+    }
+  }
+  return Mask;
+}
+
+//===============>>> MADFlagger::ComputeThreshold  <<<============
+/*Compute Thresholds */
+void MADFlagger::ComputeThreshold(const Cube<Float>& Values, const Cube<Bool>& Mask,
                                   int TWindowSize, int FWindowSize,
                                   int TimePos, int ChanPos, int PolPos,
-                                  float& Z1, float& Z2, Matrix<Float>& Medians)
+                                  float& Z1, float& Z2, Vector<Float>& Medians)
 {
   int tempF = 0;
   int tempT = 0;
   int F = FWindowSize/2;
   int T = TWindowSize/2;
+  int index = 0;
   for (int i = -T; i <= T; i++)
   {
     for (int j = -F; j <= F; j++)
     {
       tempF = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? ChanPos-j : ChanPos+j); //have the channels wrap back upon themselves.
       tempT = (TimePos + i + TWindowSize) % TWindowSize;
-      Medians(i+T, j+F) = Values(PolPos, tempF, tempT); //Fill the Matrix.
+      if (!Mask(PolPos, tempF, tempT))
+      { Medians(index++) = Values(PolPos, tempF, tempT); //Fill temp buffer
+      }
     }
   }
-  Z1 = medianInPlace(Medians);      // Median Vt = Z
-  Medians -= Z1;
-  Medians = abs(Medians);
-  Z2 = medianInPlace(Medians); // Median abs(Vt - Z) = Z'
-  if (isNaN(Z2)) //If there are NaN in the data, then what?
-  { Z1 = 0.0;
+  if (index > 0)
+  {
+    Float* mediansPointer = Medians.data();
+    Z1 = GenSort<Float>::kthLargest(mediansPointer, index, index/2);      // Median Vt = Z
+    Medians -= Z1;
+    Medians = abs(Medians);
+    Z2 = GenSort<Float>::kthLargest(mediansPointer, index, index/2); // Median abs(Vt - Z) = Z'
+  }
+  else //If there are NaN in the data, then what?
+  { Z1 = -1.0;
     Z2 = 0.0;
   }
 }
@@ -80,10 +110,11 @@ void MADFlagger::ComputeThreshold(const Cube<Float>& Values,
 /* This function inspects each visibility in a cetain baseline-band
 and flags on complexe distance, then determines to flag the entire baseline-band
 based on the RMS of the points it didn't flag.*/
-int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
-                                 const Cube<Complex>& Data,
+int MADFlagger::FlagBaselineBand(Cube<Bool>& Flags,
+                                 const Cube<Float>& Data,
+                                 const Cube<Bool>& Mask,
                                  int flagCounter,
-                                 double Threshold, double MaxLevel,
+                                 double Threshold,
                                  int Position, bool Existing,
                                  int TWindowSize, int FWindowSize)
 {
@@ -91,8 +122,7 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
   float Z2             = 0.0;
   int    flagcount     = 0;
   double MAD           = 1.4826;
-  Cube<Float> RealData = amplitude(Data);
-  Matrix<Float> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace
+  Vector<Float> Medians(TWindowSize * FWindowSize);
   for (int i = NumChannels-1; i >= 0; i--)
   {
     bool FlagAllPolarizations = false;
@@ -100,23 +130,23 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
     { //we need to loop twice, once to determine FlagAllPolarizations, then to set the flags
       if (!FlagAllPolarizations /*&& PolarizationsToCheck[j]*/)
       {
-        if (MaxLevel && RealData(j, i, Position) > MaxLevel)
+        if (Mask(j,i,Position))
         { FlagAllPolarizations = true;
         }
         else
-        { ComputeThreshold(RealData, TWindowSize, FWindowSize, Position, i, j, Z1, Z2, Medians);
-          FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(RealData(j, i, Position) - Z1);
+        { ComputeThreshold(Data, Mask, TWindowSize, FWindowSize, Position, i, j, Z1, Z2, Medians);
+          FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(Data(j, i, Position) - Z1);
         }
       }
     }
     for (int j = NumPolarizations-1; j >= 0; j--)
     { //the second loop we set the flags or calculate RMS
       if (FlagAllPolarizations)
-      { Flags(j, i) = true;
+      { Flags(j, i, Position) = true;
         flagcount++;
       }
       else
-      { if (!Existing) { Flags(j, i) = false;}
+      { if (!Existing) { Flags(j, i, Position) = false;}
       }
     }
   }
@@ -137,7 +167,6 @@ void MADFlagger::ProcessTimeslot(DataBuffer& data,
   NumChannels      = info.NumChannels;
   NumPolarizations = info.NumPolarizations;
   int index        = 0;
-  Matrix<Bool> flags;
   for (int i = 0; i < info.NumBands; i++)
   {
     for(int j = 0; j < info.NumAntennae; j++)
@@ -145,13 +174,14 @@ void MADFlagger::ProcessTimeslot(DataBuffer& data,
       for(int k = j; k < info.NumAntennae; k++)
       {
         index    = i * info.NumPairs + info.BaselineIndex[baseline_t(j, k)];
-        flags.reference(data.Flags[index].xyPlane(pos));
 //        if ((BaselineLengths[BaselineIndex[pairii(j, k)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
-        stats(i, j, k) = FlagBaselineBand(flags,
-                                          data.Data[index],
+        Cube<Float> RealData = amplitude(data.Data[index]);
+        Cube<Bool> Mask      = MakeMask(RealData, data.Flags[index], details.MaxThreshold,
+                                        data.WindowSize, pos, details.Existing);
+        stats(i, j, k) = FlagBaselineBand(data.Flags[index],
+                                          RealData, Mask,
                                           stats(i,j,k),
                                           details.Threshold,
-                                          details.MaxThreshold,
                                           pos,
                                           details.Existing,
                                           details.TimeWindow,
