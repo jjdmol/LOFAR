@@ -42,8 +42,6 @@ ExprParm::~ExprParm()
 
 void ExprParm::setPValueFlag()
 {
-    cout << "setPValueFlag(): " << itsParm->getName() << " ["
-       << itsParm->getId() << "]" << endl;
     itsPValueFlag = true;
 }
 
