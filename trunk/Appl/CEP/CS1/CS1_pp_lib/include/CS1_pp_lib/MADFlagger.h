@@ -55,14 +55,21 @@ namespace LOFAR
 
       protected:
       private:
+        casa::Cube<casa::Bool> MakeMask(const casa::Cube<casa::Float>& Values,
+                                        const casa::Cube<casa::Bool>& Flags,
+                                        double MaxLevel, int WindowSize,
+                                        int Position, bool Exsisting);
         void ComputeThreshold(const casa::Cube<casa::Float>& Values,
+                              const casa::Cube<casa::Bool>& Mask,
                               int TWindowSize, int FWindowSize,
                               int TimePos, int ChanPos, int PolPos,
-                              float& Z1, float& Z2, casa::Matrix<casa::Float>& Medians);
-        int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
-                             const casa::Cube<casa::Complex>& Data,
+                              float& Z1, float& Z2,
+                              casa::Vector<casa::Float>& Medians);
+        int FlagBaselineBand(casa::Cube<casa::Bool>& Flags,
+                             const casa::Cube<casa::Float>& Data,
+                             const casa::Cube<casa::Bool>& Mask,
                              int flagCounter,
-                             double Threshold, double MaxLevel,
+                             double Threshold,
                              int Position, bool Existing,
                              int TWindowSize, int FWindowSize);
         int NumChannels;
