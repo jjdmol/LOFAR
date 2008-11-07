@@ -29,6 +29,7 @@ PANEL,-1 -1 1058 288 N "_3DFace" 1
 }
 
 void initialize() {
+  delay(0,500);
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\")) {
     dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR + g_navigatorID+\".alarmsTrigger\");
   } else {
