@@ -2,7 +2,59 @@ V 10
 1
 LANG:1 7 Station
 PANEL,-1 -1 980 784 N "_3DFace" 0
-E E E E E 1 -1 -1 0  0 0
+"main()
+{
+  //get current database name to determine the station
+  string station = strrtrim(dpSubStr(g_currentDatapoint,DPSUB_SYS),\":\");
+  
+  string mainStationDP=MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(station)+\"_\"+station;
+ 
+  if (dpExists(mainStationDP+\".power48On\") ){
+    dpConnect(\"updatePower48\",mainStationDP+\".power48On\",
+                              mainStationDP+\".power48On:_online.._invalid\");
+  } else {
+    setValue(\"power48On\",\"backCol\",\"_dpdoesnotexist\");
+  }
+  
+  if (dpExists(mainStationDP+\".power220On\") ) {
+    dpConnect(\"updatePower220\",mainStationDP+\".power220On\",
+                               mainStationDP+\".power220On:_online.._invalid\");
+  } else {
+    setValue(\"power220On\",\"backCol\",\"_dpdoesnotexist\");
+  }
+  
+}
+
+void updatePower48(string dp1, bool on,
+                   string dp2, bool invalid) {
+  
+  if (!invalid) {
+    string color=\"Lofar_broken\";
+    if (on) {
+      color=\"Lofar_operational\";
+    } 
+    setValue(\"power48On\",\"backCol\",color);
+    
+  } else {
+    setValue(\"power48On\",\"backCol\",\"Lofar_invalid\");
+  }  
+}
+
+void updatePower220(string dp1, bool on,
+                    string dp2, bool invalid) {
+  
+  if (!invalid) {
+    string color=\"Lofar_broken\";
+    if (on) {
+      color=\"Lofar_operational\";
+    } 
+    setValue(\"power220On\",\"backCol\",color);
+    
+  } else {
+    setValue(\"power220On\",\"backCol\",\"Lofar_invalid\");
+  }  
+}" 0
+ E E E E 1 -1 -1 0  0 0
 ""0  1
 E E 2
 "CBRef" "1"
@@ -16,7 +68,7 @@ LANG:1 6 Layer1
 6 2032
 "Border1"
 ""
-1 0 541 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+1 0 541 E E E 1 E 1 E N "_Transparent" E N "_3DFace" E E
  E E
 816 0 0 0 0 0
 E E E
@@ -165,50 +217,154 @@ E E 0 1 1 0 1 E 1 0 1 0 -10 2  0 3  "pictures/small-station-sized.bmp" 13434828 
 0
 1 2101 103 "" 36
 0
-1 2102 104 "" 0
+1 2102 103 "" 38
 0
-1 2103 104 "" 13
+1 2103 103 "" 39
 0
-1 2104 104 "" 15
+1 2104 104 "" 0
 0
-1 2105 104 "" 16
+1 2105 104 "" 13
 0
-1 2106 104 "" 18
+1 2106 104 "" 15
 0
-1 2107 104 "" 19
+1 2107 104 "" 16
 0
-1 2108 104 "" 20
+1 2108 104 "" 18
 0
-1 2109 104 "" 21
+1 2109 104 "" 19
 0
-1 2110 104 "" 22
+1 2110 104 "" 20
 0
-1 2111 104 "" 24
+1 2111 104 "" 21
 0
-1 2112 104 "" 25
+1 2112 104 "" 22
 0
-1 2113 104 "" 26
+1 2113 104 "" 24
 0
-1 2114 104 "" 27
+1 2114 104 "" 25
 0
-1 2115 104 "" 28
+1 2115 104 "" 26
 0
-1 2116 104 "" 29
+1 2116 104 "" 27
 0
-1 2117 104 "" 30
+1 2117 104 "" 28
 0
-1 2118 104 "" 31
+1 2118 104 "" 29
 0
-1 2119 104 "" 32
+1 2119 104 "" 30
 0
-1 2120 104 "" 33
+1 2120 104 "" 31
 0
-1 2121 104 "" 34
+1 2121 104 "" 32
 0
-1 2122 104 "" 35
+1 2122 104 "" 33
 0
-1 2123 104 "" 36
+1 2123 104 "" 34
 0
+1 2124 104 "" 35
+0
+1 2125 104 "" 36
+0
+1 2126 104 "" 38
+0
+1 2127 104 "" 39
+0
+6 2128
+"power48"
+""
+1 580 370 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+869 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 0 -1 1 E 580 367 700 389
+6 2129
+"RECTANGLE2"
+""
+1 580 370 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+871 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 580 390 700 421
+2 2130
+"PRIMITIVE_TEXT10"
+""
+1 587 371 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+872 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 587 371 642 385
+0 2 2 "0s" 0 0 0 192 0 0  587 371 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 10 Power 48 V
+2 2131
+"PRIMITIVE_TEXT11"
+""
+1 587 399 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+874 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 587 399 648 413
+0 2 2 "0s" 0 0 0 192 0 0  587 399 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 11 Power 220 V
+7 2132
+"power48On"
+""
+1 75 575 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+875 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 590.7438016528926 -307.2975206611569 1 E 75 575 5 5
+7 2133
+"power220On"
+""
+1 75 575 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
+ E E
+877 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 590.7438016528926 -278.2975206611569 1 E 75 575 5 5
 0
 LAYER, 1 
 1
