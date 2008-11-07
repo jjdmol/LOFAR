@@ -31,6 +31,7 @@
 // navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
 // navFunct_updateObservations                : Callback for the above query
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
+// navFunct_getArmFromStation                 : Returns the ringName from a stationName
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
 // navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
 // navFunct_receiver2RSP                      : Returns the RSPNr for a RecieverNr
@@ -208,29 +209,51 @@ void navFunct_updateObservations(string dp1, dyn_string active,
 }
 
 //*******************************************
-// Name: Function navFunct_getArmFromStation
+// Name: Function navFunct_getRingFromStation
 // *******************************************
 // 
 // Description:
-//   Will return the armName based upon the stationName. 
-//   for now (CS1 fase) it will return Core, later something smart has to be
+//   Will return the ringName based upon the stationName. 
+//   for now (CS1-20 fase) it will return Core, later something smart has to be
 //   done to give the other ringnames correctly.
 //   It is needed to get the correct datapoints in constructions like:
 //   LOFAR_PermSW_Core_CS010.state when you get a CS010:LOFAR_PermSW.state
 //   change.
 //
 // Returns:
+//    the name of the ring
+// *******************************************
+string navFunct_getRingFromStation(string stationName) {
+
+  	string ringName="";
+  	if (substr(stationName,0,2) == "CS") {
+    	  ringName="Core";
+  	} else if (substr(stationName,0,2) == "RS") {
+    	  ringName="Remote";
+        } else {
+          ringName="Europe";
+        }
+  	return ringName;
+}
+
+//*******************************************
+// Name: Function navFunct_getArmFromStation
+// *******************************************
+// 
+// Description:
+//   Will return the armName based upon the stationName. 
+//
+// Returns:
 //    the name of the arm
 // *******************************************
 string navFunct_getArmFromStation(string stationName) {
 
-  	string armName="";
-  	if (substr(stationName,0,2) == "CS") {
-    	armName="Core";
+  	int armName="";
+  	if (substr(stationName,0,2) == "RS") {
+    	  armName=substr(stationName,2,1);
   	}
   	return armName;
 }
-
 // *******************************************
 // Name : showMapping
 // *******************************************
@@ -554,7 +577,7 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
       if (choice > 1) {
         newDatapoint += "_"+typeList[choice];  // add ObsSW, PermSW or PIC
         if (strpos(typeList[choice],"Ring") >= 0) {
-          newDatapoint += "_" + getArmFromStation(systemName);
+          newDatapoint += "_" + navFunctgetRingFromStation(systemName);
         }
       }
     }
@@ -998,7 +1021,16 @@ navFunct_fillHardwareTree() {
   // add Stations
   if (dynlen(g_stationList) > 1 ) {
     for (int i = 1; i <= dynlen(g_stationList); i++) {
-      dp = g_stationList[i]+":LOFAR";
+      // for ease of selection we use stationlike objects on the main google hardware panels, such
+      // as CEP and Core. Since those are obviously no stations (== databases) we need to set another point to
+      // jump to when doubleclicked
+      if (g_stationList[i] == "CEP") {
+        dp = MainDBName+"LOFAR_CEP";
+      } else if (g_stationList[i] == "Core") {
+        dp = MainDBName+"LOFAR_PIC_Core";
+      } else {        
+        dp = g_stationList[i]+":LOFAR";
+      }
       dynAppend(result,connectTo+","+g_stationList[i]+","+dp);
     }
     lvl="Station";
