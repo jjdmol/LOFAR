@@ -57,7 +57,8 @@
 // navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
 // navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
 // navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
-// navFunct)clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
+// navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
+// navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -765,7 +766,7 @@ bool navFunct_hardware2Obs(string stationName, string observation,
     return false;
   }
   
-  dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
+  dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
   string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
   // if receiverBitmap == "" return false
   if (receiverBitmap == "") {
@@ -836,7 +837,7 @@ void navFunct_fillHardwareLists() {
         return;
       }
   
-      dyn_string obsStations = strsplit(g_observations[ "STATIONLIST"    ][iPos],",");
+      dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
     
       // fill (unique) results in g_stationList
       for (int j=1; j<= dynlen(obsStations); j++) {
@@ -1011,7 +1012,7 @@ void navFunct_fillProcessesList() {
 //     hardwareLists
 //
 // ****************************************
-navFunct_fillHardwareTree() {
+void navFunct_fillHardwareTree() {
   dyn_string result;
   string connectTo="";
   string lvl="";
@@ -1127,7 +1128,7 @@ navFunct_fillHardwareTree() {
 //     processesLists
 //
 // ****************************************
-navFunct_fillProcessesTree() {
+void navFunct_fillProcessesTree() {
   //to do
 }
 
@@ -1138,7 +1139,7 @@ navFunct_fillProcessesTree() {
 //     hardwareLists
 //
 // ****************************************
-navFunct_fillObservationsTree() {
+void navFunct_fillObservationsTree() {
   dyn_string result;
     
     
@@ -1176,7 +1177,7 @@ navFunct_fillObservationsTree() {
 //     Clear all global observations,hardware and processesLists
 //
 // ****************************************
-navFunct_clearGlobalLists() {
+void navFunct_clearGlobalLists() {
   // empty global listings
   dynClear(g_stationList);
   dynClear(g_cabinetList);
@@ -1187,4 +1188,21 @@ navFunct_clearGlobalLists() {
 
   dynClear(g_observationsList);
   dynClear(g_processesList);
+}
+
+// ****************************************
+// Name: navFunct_listToDynString  
+// ****************************************
+//     puts [a,b,d] lists into dynstrings
+//
+// return:  a Dynstring with all the elements between , 
+//          and after cutting away [] if there.
+// ****************************************
+dyn_string navFunct_listToDynString(string aS) {
+  // check for []
+  if (strpos(aS,"[") > -1) {
+    aS=strltrim(aS,"[");
+    aS=strrtrim(aS,"]");
+  }
+  return strsplit(aS,",");
 }

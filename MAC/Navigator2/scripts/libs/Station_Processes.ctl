@@ -234,7 +234,7 @@ Station_Processes_UpdateStationTree() {
       string sts=g_observations["STATIONLIST"][j];
       LOG_DEBUG("Station_Processes.ctl:Station_Processes_UpdateStationTree|Found Stationlist for this Observation: "+ sts);
       // add stations if not allready there
-      dyn_string stations = strsplit(sts,",");
+      dyn_string stations = navFunct_listToDynString(sts);
       for (int k=1; k<= dynlen(stations);k++) {
         if (!stationTree.itemExists(stations[k])) {
           stationTree.appendItem("",stations[k],stations[k]);
@@ -292,7 +292,7 @@ Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservat
       // get the Stationlist from that observation
       string sts=g_observations["STATIONLIST"][j];
       LOG_DEBUG("Station_Processes.ctl:activeObsCallback|Stations found: "+sts);
-      dyn_string stations = strsplit(sts,",");
+      dyn_string stations = navFunct_listToDynString(sts);
       for (int k=1; k<= dynlen(stations);k++) { 
         if (stations[k] == station_selectedStation) {
           if (station_obsBaseDP == "") {
