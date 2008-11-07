@@ -282,7 +282,8 @@ MainCU_Processes_UpdateStationTree() {
       LOG_DEBUG("MainCU_Processes.ctl:UpdateStationTree|Found Stationlist for this Observation: "+ sts);
       // add stations if not allready there
 
-      dyn_string stations = strsplit(sts,",");
+      dyn_string stations = navFunct_listToDynString(sts);
+
       for (int k=1; k<= dynlen(stations);k++) {
         if (!stationTree.itemExists(stations[k])) {
           stationTree.appendItem("",stations[k],stations[k]);

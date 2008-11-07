@@ -225,7 +225,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           int iPos = dynContains(g_observations["NAME"],longObs);
           if (iPos > 0) {
             string s = g_observations["STATIONLIST"][iPos];
-            dyn_string stations=strsplit(s,",");
+            dyn_string stations=navFunct_listToDynString(s);
             for (int k=1; k<= dynlen(stations); k++) {
               if (!dynContains(highlight,stations[k])) {
                 dynAppend(highlight,stations[k]);
