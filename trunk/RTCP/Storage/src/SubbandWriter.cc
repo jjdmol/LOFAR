@@ -30,7 +30,7 @@
 #include <Storage/SubbandWriter.h>
 #include <Storage/MSWriter.h>
 #include <Stream/FileStream.h>
-#include <Stream/NullStream.h>
+#include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
 
