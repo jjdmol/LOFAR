@@ -64,7 +64,10 @@
 #uses "GCFCommon.ctl"
 //#uses "navigator.ctl"
 
-                            
+
+global dyn_string oldActiveObservations;                        
+global dyn_string oldPlannedObservations;                        
+global dyn_string oldFinishedObservations;                        
 
 // ****************************************
 // Name : navFunct_splitEvent
@@ -144,6 +147,43 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   dyn_string receiverBitmap;
   dyn_string stationList;
   int iPos=1;
+  
+  bool update=false;
+  if (oldFinishedObservations != null) {
+    for (int i=0; i <= dynlen(active); i++) {
+      if (dynContains(oldFinishedObservations,active[i]) < 1) {
+        update = true;
+        break;
+      }
+    }
+    if (!update) {
+      for (int i=0; i <= dynlen(planned); i++) {
+        if (dynContains(oldPlannedObservations,planned[i]) < 1) {
+          update = true;
+          break;
+        }
+      }
+    }
+    if (!update) {
+      for (int i=0; i <= dynlen(finished); i++) {
+        if (dynContains(oldFinishedObservations,finished[i]) < 1) {
+          update = true;
+          break;
+        }
+      }
+    }
+  } else {
+    update = true;
+  }
+  if (!update) {
+    return;
+  }
+  
+  oldPlannedObservations = planned;
+  oldActiveObservations = active;
+  oldFinishedObservations = finished;
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_updateObservations|triggered.....");
 
   // Clear mapping
   mappingClear(g_observations);

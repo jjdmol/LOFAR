@@ -56,7 +56,7 @@ const string LOGMESSAGE_DEBUG = "DEBUG";
 const string LOGMESSAGE_TRACE = "TRACE";
 
 // set the loglevel throughout the navigator
-global int  g_logLevel = 0;
+global int  g_logLevel = LOGLEVEL_ERROR;
 global dyn_string g_logScope = "";
 global dyn_string g_searchString="";
 
