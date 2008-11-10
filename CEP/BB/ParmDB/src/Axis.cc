@@ -543,7 +543,7 @@ namespace BBS {
         // Value before first interval uses first interval.
         ASSERTSTR (start==0, "No interval found for value " << x);
         break;
-      } else if (x < e) {
+      } else if (x < e  &&  !casa::near(x,e)) {
         // Inside the interval.
         break;
       } else {
