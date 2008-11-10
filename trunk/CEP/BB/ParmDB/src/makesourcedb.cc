@@ -29,6 +29,9 @@
 // out     gives the sourcedb name which will be created or appended
 // append  defines if the sourcedb is created or appended (default is appended)
 // format  defines the format of the input file
+// center  defines the field center (ra and dec) of a search cone or box
+// radius  defines the radius if searching using a cone
+// width   defines the widths in ra and dec if searching using a box
 //
 // The format string looks like:
 //    name type ra dec cat
@@ -95,6 +98,7 @@
 #include <sstream>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Inputs/Input.h>
+#include <casa/BasicSL/Constants.h>
 #include <unistd.h>
 #include <libgen.h>
 
@@ -445,13 +449,89 @@ double string2pos (const vector<string>& values, int pnr, int hnr, int dnr,
   return 1e-9;
 }
 
+struct SearchInfo
+{
+  double ra, dec, sinDec, cosDec, cosRadius, raStart, raEnd, decStart, decEnd;
+  bool   search;        // false no search info given
+  bool   asCone;        // true is search in a cone, otherwise a box
+};
+
+// Get the search cone or box values.
+SearchInfo getSearchInfo (const string& center, const string& radius,
+                          const string& width)
+{
+  SearchInfo searchInfo;
+  if (center.empty()) {
+    searchInfo.search = false;
+  } else {
+    searchInfo.search = true;
+    vector<string> pos = StringUtil::split (center, ',');
+    ASSERTSTR (pos.size() == 2, "center not specified as ra,dec");
+    searchInfo.ra  = string2pos (pos, 0, -1, -1, -1, -1);
+    searchInfo.dec = string2pos (pos, 1, -1, -1, -1, -1);
+    searchInfo.sinDec = sin(searchInfo.dec);
+    searchInfo.cosDec = cos(searchInfo.dec);
+    ASSERTSTR (radius.empty() != width.empty(),
+               "radius OR width must be given if center is given (not both)");
+    if (radius.empty()) {
+      double raw, decw;
+      searchInfo.asCone = false;
+      pos = StringUtil::split(width, ',');
+      ASSERTSTR (pos.size() == 1  ||  pos.size() == 2,
+                 "width should be specified as 1 or 2 values");
+      raw = string2pos (pos, 0, -1, -1, -1, -1);
+      if (pos.size() > 1) {
+        decw = string2pos (pos, 1, -1, -1, -1, -1);
+      } else {
+        decw = raw;
+      }
+      searchInfo.raStart  = searchInfo.ra  - raw/2;
+      searchInfo.raEnd    = searchInfo.ra  + raw/2;
+      searchInfo.decStart = searchInfo.dec - decw/2;
+      searchInfo.decEnd   = searchInfo.dec + decw/2;
+    } else {
+      searchInfo.asCone = true;
+      pos[0] = radius;
+      searchInfo.cosRadius = cos (string2pos (pos, 0, -1, -1, -1, -1));
+    }
+  }
+  return searchInfo;
+}
+
+bool matchSearchInfo (double ra, double dec, const SearchInfo& si)
+{
+  if (!si.search) {
+    return true;
+  }
+  bool match = false;
+  if (si.asCone) {
+    match = (si.cosRadius <=
+             si.sinDec * sin(dec) + si.cosDec * cos(dec) * cos(si.ra - ra));
+  } else {
+    // Ra can be around 0 or 360 degrees, so make sure all cases are handled.
+    ra -= C::_2pi;
+    for (int i=0; i<4; ++i) {
+      if (ra >= si.raStart  &&  ra <= si.raEnd) {
+        match = true;
+        break;
+      }
+      ra += C::_2pi;
+    }
+    if (match) {
+      match = (dec >= si.decStart  &&  dec <= si.decEnd);
+    }
+  }
+  return match;
+}
+
 void add (ParmMap& defVal, const string& name, double value)
 {
   defVal.define (name, ParmValueSet(ParmValue(value)));
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
-              bool check, int& nrpatch, int& nrsource)
+              bool check, int& nrpatch, int& nrsource,
+              int& nrpatchfnd, int& nrsourcefnd, const SearchInfo& searchInfo)
 {
   //  cout << line << endl;
   // Hold the values.
@@ -513,20 +593,27 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   // Do not check for duplicates yet.
   if (srcName.empty()) {
     ASSERTSTR (!patch.empty(), "Source and/or patch name must be filled in");
-    pdb.addPatch (patch, cat, fluxI, ra, dec, check);
+    if (matchSearchInfo (ra, dec, searchInfo)) {
+      pdb.addPatch (patch, cat, fluxI, ra, dec, check);
+      nrpatchfnd++;
+    }
     nrpatch++;
   } else {
-    if (patch.empty()) {
-      pdb.addSource (srcName, cat, fluxI, srctype, defValues, ra, dec, check);
-    } else {
-      pdb.addSource (patch, srcName, srctype, defValues, ra, dec, check);
+    if (matchSearchInfo (ra, dec, searchInfo)) {
+      if (patch.empty()) {
+        pdb.addSource (srcName, cat, fluxI, srctype, defValues, ra, dec, check);
+      } else {
+        pdb.addSource (patch, srcName, srctype, defValues, ra, dec, check);
+      }
+      nrsourcefnd++;
     }
     nrsource++;
   }
 }
 
 void make (const string& in, const string& out,
-           const string& format, bool append, bool check)
+           const string& format, bool append, bool check,
+           const SearchInfo& searchInfo)
 {
   // Analyze the format string.
   SdbFormat sdbf = getFormat (format);
@@ -534,10 +621,13 @@ void make (const string& in, const string& out,
   ParmDBMeta ptm("casa", out);
   SourceDB pdb(ptm, !append);
   pdb.lock (true);
-  int nrpatch = 0;
-  int nrsource = 0;
+  int nrpatch     = 0;
+  int nrsource    = 0;
+  int nrpatchfnd  = 0;
+  int nrsourcefnd = 0;
   if (in.empty()) {
-    process (string(), pdb, sdbf, check, nrpatch, nrsource);
+    process (string(), pdb, sdbf, check, nrpatch, nrsource,
+             nrpatchfnd, nrsourcefnd, searchInfo);
   } else {
     ifstream infile(in.c_str());
     ASSERTSTR (infile, "File " << in << " could not be opened");
@@ -557,14 +647,15 @@ void make (const string& in, const string& out,
         }
       }
       if (!skip) {
-        process (line, pdb, sdbf, check, nrpatch, nrsource);
+        process (line, pdb, sdbf, check, nrpatch, nrsource,
+                 nrpatchfnd, nrsourcefnd, searchInfo);
       }
       // Read next line
       getline (infile, line);
     }
   }
-  cout << "Wrote " << nrpatch << " patches and "
-       << nrsource << " sources into "
+  cout << "Wrote " << nrpatchfnd << " patches (out of " << nrpatch << ") and "
+       << nrsourcefnd << " sources (out of " << nrsource << ") into "
        << pdb.getParmDBMeta().getTableName() << endl;
   vector<string> dp(pdb.findDuplicatePatches());
   if (dp.size() > 0) {
@@ -576,15 +667,15 @@ void make (const string& in, const string& out,
   }
 }
 
-int main (int argc, const char* argv[])
+int main (int argc, char* argv[])
 {
-  // Niot all version of basename accept a const char.
-  const char* progName = basename(const_cast<char*>(argv[0]));
+  // Not all versions of basename accept a const char.
+  const char* progName = basename(argv[0]);
   INIT_LOGGER(progName);
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2008-10-30");
+    inputs.version ("GvD 2008-Nov-10");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
@@ -595,6 +686,12 @@ int main (int argc, const char* argv[])
                   "Append to possibly existing sourcedb?", "bool");
     inputs.create("check", "false",
                   "Check immediately for duplicate entries?", "bool");
+    inputs.create("center", "",
+                  "Field center as ra,dec", "string");
+    inputs.create("radius", "",
+                  "Cone search radius", "string");
+    inputs.create("width", "",
+                  "Search box width as 1 or 2 values (e.g. 2deg,3deg)", "string");
     inputs.readArguments(argc, argv);
     string in = inputs.getString("in");
     string out = inputs.getString("out");
@@ -602,7 +699,11 @@ int main (int argc, const char* argv[])
     string format = inputs.getString("format");
     bool append = inputs.getBool("append");
     bool check  = inputs.getBool("check");
-    make (in, out, format, append, check);
+    string center = inputs.getString ("center");
+    string radius = inputs.getString ("radius");
+    string width  = inputs.getString ("width");
+    make (in, out, format, append, check,
+          getSearchInfo (center, radius, width));
   } catch (std::exception& x) {
     std::cerr << "Caught exception: " << x.what() << std::endl;
     return 1;
