@@ -67,7 +67,8 @@
 
 global dyn_string oldActiveObservations=makeDynString();                        
 global dyn_string oldPlannedObservations=makeDynString();                        
-global dyn_string oldFinishedObservations=makeDynString();                        
+global dyn_string oldFinishedObservations=makeDynString();  
+global bool firstObservatonsInit=true;                      
 
 // ****************************************
 // Name : navFunct_splitEvent
@@ -171,9 +172,10 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       }
     }
   }
-  if (!update) {
+  if (!update && !firstObservatonsInit ) {
     return;
   }
+  firstObservatonsInit=false; 
   
   oldPlannedObservations = planned;
   oldActiveObservations = active;
