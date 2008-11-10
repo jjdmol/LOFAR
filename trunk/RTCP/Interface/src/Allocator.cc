@@ -15,7 +15,7 @@ Arena::~Arena()
 }
 
 
-MallocedArena::MallocedArena(size_t size, unsigned alignment)
+MallocedArena::MallocedArena(size_t size, size_t alignment)
 {
   itsSize = size;
 
@@ -39,9 +39,42 @@ FixedArena::FixedArena(void *begin, size_t size)
 }
 
 
+Allocator::~Allocator()
+{
+}
+
+
+HeapAllocator::~HeapAllocator()
+{
+}
+
+
+void *HeapAllocator::allocate(size_t size, size_t alignment)
+{
+  void *ptr;
+
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+  if (posix_memalign(&ptr, alignment, size) != 0)
+    throw std::bad_alloc();
+#else
+  if ((ptr = memalign(alignment, size)) == 0)
+    throw std::bad_alloc();
+#endif
+  return ptr;
+}
+
+
+void HeapAllocator::deallocate(void *ptr)
+{
+  free(ptr);
+}
+
+
+HeapAllocator heapAllocator;
+
+
 SparseSetAllocator::SparseSetAllocator(const Arena &arena)
 {
-
   freeList.include(arena.begin(), (void *) ((char *) arena.begin() + arena.size()));
 
 #if defined HAVE_THREADS
@@ -58,7 +91,7 @@ SparseSetAllocator::~SparseSetAllocator()
 }
 
 
-void *SparseSetAllocator::allocate(size_t size, unsigned alignment)
+void *SparseSetAllocator::allocate(size_t size, size_t alignment)
 {
 #if defined HAVE_THREADS
   pthreads_mutex_lock(&mutex);
@@ -99,13 +132,6 @@ void SparseSetAllocator::deallocate(void *ptr)
     pthreads_mutex_unlock(&mutex);
 #endif
   }
-}
-
-
-SparseSetAllocator *SparseSetAllocator::clone() const
-{
-  // What is clone() supposed to do ???  Does CEPFrame use it ???
-  return const_cast<SparseSetAllocator *>(this);
 }
 
 } // namespace RTCP

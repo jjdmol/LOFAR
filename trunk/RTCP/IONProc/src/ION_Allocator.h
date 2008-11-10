@@ -24,35 +24,18 @@
 #ifndef LOFAR_IONPROC_ION_ALLOCATOR_H
 #define LOFAR_IONPROC_ION_ALLOCATOR_H
 
-#include <Common/Allocator.h>
 #include <Interface/Allocator.h>
-#include <Common/Allocator.h>
 
-#if defined HAVE_ZOID
-#define USE_ZOID_ALLOCATOR
-#endif
+#undef FLAT_MEMORY
 
 namespace LOFAR {
 namespace RTCP {
 
-class ION_Allocator: public Allocator
-{
-  public:
-    virtual void	      *allocate(size_t nbytes, unsigned alignment = 1);
-    virtual void	      deallocate(void *);
-
-    virtual ION_Allocator     *clone() const;
-    
-  private:
-#if !defined USE_ZOID_ALLOCATOR
-#if defined HAVE_ZOID || defined FLAT_MEMORY
-    static FixedArena	      arena;
-    static SparseSetAllocator allocator;
+#if defined FLAT_MEMORY
+extern SparseSetAllocator hugeMemoryAllocator;
 #else
-    static HeapAllocator      allocator;
+extern HeapAllocator	  &hugeMemoryAllocator;
 #endif
-#endif
-};
 
 } // end namespace RTCP
 } // end namespace LOFAR

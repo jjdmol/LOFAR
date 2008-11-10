@@ -1,7 +1,6 @@
 #ifndef LOFAR_INTERFACE_ALLOCATOR_H
 #define LOFAR_INTERFACE_ALLOCATOR_H
 
-#include <Common/Allocator.h>
 #include <Interface/SparseSet.h>
 
 #include <map>
@@ -18,20 +17,22 @@ class Arena
   public:
     virtual	~Arena();
 
-    void	*begin() const;
-    size_t	size() const;
+    void	*begin() const { return itsBegin; }
+    size_t	size() const { return itsSize; }
   
   protected:
     void	*itsBegin;
     size_t	itsSize;
 };
 
+
 class MallocedArena : public Arena
 {
   public:
-		MallocedArena(size_t size, unsigned alignment);
+		MallocedArena(size_t size, size_t alignment);
     virtual	~MallocedArena();
 };
+
 
 class FixedArena : public Arena
 {
@@ -40,16 +41,36 @@ class FixedArena : public Arena
 };
 
 
+class Allocator
+{
+  public:
+    virtual			~Allocator();
+
+    virtual void		*allocate(size_t size, size_t alignment = 1) = 0;
+    virtual void		deallocate(void *) = 0;
+};
+
+
+class HeapAllocator : public Allocator
+{
+  public:
+    virtual			~HeapAllocator();
+
+    virtual void		*allocate(size_t size, size_t alignment = 1);
+    virtual void		deallocate(void *);
+};
+
+extern HeapAllocator heapAllocator;
+
+
 class SparseSetAllocator : public Allocator
 {
   public:
 				SparseSetAllocator(const Arena &);
 				~SparseSetAllocator();
 
-    virtual void		*allocate(size_t size, unsigned alignment);
+    virtual void		*allocate(size_t size, size_t alignment);
     virtual void		deallocate(void *);
-
-    virtual SparseSetAllocator	*clone() const;
 
   private:
 #if defined HAVE_THREADS
@@ -60,16 +81,6 @@ class SparseSetAllocator : public Allocator
     std::map<void *, size_t>	sizes;
 };
 
-
-inline void *Arena::begin() const
-{
-  return itsBegin;
-}
-
-inline size_t Arena::size() const
-{
-  return itsSize;
-}
 
 } // namespace RTCP
 } // namespace LOFAR

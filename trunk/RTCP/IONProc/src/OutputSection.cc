@@ -24,11 +24,13 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
-#include <OutputSection.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+
+#include <ION_Allocator.h>
+#include <OutputSection.h>
 
 #include <boost/lexical_cast.hpp>
 #include <cstring>
@@ -132,13 +134,13 @@ void OutputSection::preprocess(const Parset *ps)
   unsigned nrBaselines = ps->nrBaselines();
   unsigned nrChannels  = ps->nrChannelsPerSubband();
 
-  itsTmpSum = new CorrelatedData(nrBaselines, nrChannels);
+  itsTmpSum = new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator);
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsVisibilitySums.push_back(new CorrelatedData(nrBaselines, nrChannels));
+    itsVisibilitySums.push_back(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
 
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels));
+    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
 
   if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
     THROW(IONProcException, "could not create send thread");

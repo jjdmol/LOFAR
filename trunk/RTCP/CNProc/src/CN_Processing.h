@@ -105,11 +105,13 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
     
-    Arena		*itsArenas[3];
+    std::vector<Arena *>	      itsArenas;
+    std::vector<SparseSetAllocator *> itsAllocators;
+
     InputData<SAMPLE_TYPE>	*itsInputData;
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
-    FilteredData	*itsFilteredData;
-    CorrelatedData	*itsCorrelatedData;
+    FilteredData		*itsFilteredData;
+    CorrelatedData		*itsCorrelatedData;
 
 #if defined HAVE_MPI
     bool                itsDoAsyncCommunication;

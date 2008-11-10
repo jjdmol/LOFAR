@@ -84,6 +84,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
 :
   itsStream(str),
   itsLocationInfo(locationInfo),
+  itsArenas(3),
+  itsAllocators(4),
   itsInputData(0),
   itsTransposedData(0),
   itsFilteredData(0),
@@ -97,7 +99,6 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsBeamFormer(0),
   itsCorrelator(0)
 {
-  memset(itsArenas, 0, sizeof itsArenas);
 
 // #if defined HAVE_BGL
 //   getPersonality();
@@ -282,9 +283,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // set and writes to an output data set.  To save memory, two memory buffers
   // are used, and consecutive phases alternately use one of them as input
   // buffer and the other as output buffer.
-  // Since each buffer (arena) in used multiple times, we use multiple
-  // Allocators for a single arena, but the Allocators are hidden in the
-  // implementations of InputData, TransposedData, etc.
+  // Since some buffers (arenas) are used multiple times, we use multiple
+  // Allocators for a single arena.
 
   size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToCNProc) : 0;
   size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToCNProc) : 0;
@@ -295,8 +295,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
   itsArenas[2] = new MallocedArena(filteredDataSize, 32);
 
+  itsAllocators[0] = new SparseSetAllocator(*itsArenas[0]);
+  itsAllocators[1] = new SparseSetAllocator(*itsArenas[1]);
+  itsAllocators[2] = new SparseSetAllocator(*itsArenas[2]);
+  itsAllocators[3] = new SparseSetAllocator(*itsArenas[1]);
+
   if (itsIsTransposeInput) {
-    itsInputData = new InputData<SAMPLE_TYPE>(*itsArenas[0], outputPsets.size(), nrSamplesToCNProc);
+    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc, *itsAllocators[0]);
   }
 
   if (itsIsTransposeOutput) {
@@ -314,9 +319,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     printSubbandList();
 #endif // HAVE_MPI
 
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(*itsArenas[1], itsNrStations, nrSamplesToCNProc);
-    itsFilteredData   = new FilteredData(*itsArenas[2], itsNrStations, nrChannels, nrSamplesPerIntegration);
-    itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines, nrChannels);
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, *itsAllocators[1]);
+    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, *itsAllocators[2]);
+    itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels, *itsAllocators[3]);
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
@@ -520,11 +525,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsBeamFormer;
     delete itsCorrelator;
     delete itsCorrelatedData;
-
-    delete itsArenas[0];
-    delete itsArenas[1];
-    delete itsArenas[2];
   }
+
+  for (unsigned i = 0; i < itsAllocators.size(); i ++)
+    delete itsAllocators[i];
+
+  for (unsigned i = 0; i < itsArenas.size(); i ++)
+    delete itsArenas[i];
 }
 
 

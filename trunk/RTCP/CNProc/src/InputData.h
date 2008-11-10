@@ -3,14 +3,13 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
-#include <Interface/AlignedStdAllocator.h>
+#include <Interface/Align.h>
+#include <Interface/MultiDimArray.h>
 #include <Interface/Config.h>
 #include <Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
 
 #include <Interface/Allocator.h>
-
-#include <boost/multi_array.hpp>
 
 #include <vector>
 
@@ -21,8 +20,7 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class InputData
 {
   public:
-    InputData(const Arena &, unsigned nrSubbands, unsigned nrSamplesToCNProc);
-    ~InputData();
+    InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator = heapAllocator);
 
     void read(Stream *);
 
@@ -33,37 +31,28 @@ template <typename SAMPLE_TYPE> class InputData
     static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToCNProc);
 
   private:
-    SparseSetAllocator			   allocator;
-    unsigned                              itsNrSubbands;
-    unsigned                              itsSubbandIndex;
+    unsigned		    itsNrSubbands;
+    unsigned		    itsSubbandIndex;
 
   public:
-    boost::multi_array_ref<SAMPLE_TYPE, 3> samples; //[outputPsets.size()][itsPS->nrSamplesToCNProc()][NR_POLARIZATIONS]
-
-    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData; //[outputPsets.size()]
+    Cube<SAMPLE_TYPE>	    samples; //[outputPsets.size()][itsPS->nrSamplesToCNProc()][NR_POLARIZATIONS]
+    Vector<SubbandMetaData> metaData; //[outputPsets.size()]
 };
 
 
 template <typename SAMPLE_TYPE> inline size_t InputData<SAMPLE_TYPE>::requiredSize(unsigned nrSubbands, unsigned nrSamplesToCNProc)
 {
-  return sizeof(SAMPLE_TYPE) * nrSubbands * nrSamplesToCNProc * NR_POLARIZATIONS;
+  return align(sizeof(SAMPLE_TYPE) * nrSubbands * nrSamplesToCNProc * NR_POLARIZATIONS, 32);
 }
 
 
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const Arena &arena, unsigned nrSubbands, unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator)
 :
-  allocator(arena),
   itsNrSubbands(nrSubbands),
   itsSubbandIndex(0),
-  samples(static_cast<SAMPLE_TYPE *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToCNProc), 32)), boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS]),
+  samples(boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 32, allocator),
   metaData(nrSubbands)
 {
-}
-
-
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::~InputData()
-{
-  allocator.deallocate(samples.origin());
 }
 
 
@@ -77,16 +66,14 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readMetaData
 // used for asynchronous transpose
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readOne(Stream *str)
 {
-    str->read(samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements() * sizeof(SAMPLE_TYPE));
+  str->read(samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
-    dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
+  dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
 #endif
 
-    itsSubbandIndex++;
-    if(itsSubbandIndex == itsNrSubbands) { // we have read all data
-	itsSubbandIndex = 0;
-    }
+  if (++ itsSubbandIndex == itsNrSubbands) // we have read all data
+    itsSubbandIndex = 0;
 }
 
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::read(Stream *str)
@@ -99,7 +86,7 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::read(Stream 
   str->read(samples.origin(), samples.num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
-    dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
+  dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
 #endif
 }
 
