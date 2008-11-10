@@ -213,7 +213,7 @@ namespace BBS {
     // Default constructor creates one cell from -1e30 till 1e30.
     IrregularAxis();
 
-    // Specify as v1/v2 as width/center or start/end.
+    // Specify as v1/v2 as center/width or start/end.
     IrregularAxis(const vector<double>& v1, const vector<double>& v2,
                   bool asStartEnd, bool checkOrder);
     
@@ -244,8 +244,9 @@ namespace BBS {
   };
 
 
-  // @brief Ordered rrregularly strided cell centered axis.
+  // @brief Ordered irregularly strided cell centered axis.
   // The cells are ordered and disjoint, but gaps may be present.
+  // \todo Implementation needs carefull inspection if gaps are to be allowed.
   class OrderedAxis: public IrregularAxis
   {
   public:
