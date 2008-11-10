@@ -44,7 +44,8 @@ void doIt (const string& msname, int timestep)
   //Axis::ShPtr axis1 (axis.compress (1));
   Axis::ShPtr axis1 (new OrderedAxis(axis));
   cout.precision (20);
-  double last = axis1->lower(0);
+  double last2 = axis1->lower(0);
+  double last3 = axis1->lower(0);
   for (uint i=0; i<times.size(); i+=timestep) {
     uint n = timestep;
     if (n > times.size() - i) {
@@ -53,8 +54,18 @@ void doIt (const string& msname, int timestep)
     Axis::ShPtr axis2 (axis1->subset (i, i+n-1));
     cout << "step " << i << ": " << n << " times  " << axis2->lower(0)
          << ' ' <<  axis2->upper(n-1) << "  " 
-         << casa::near(axis2->lower(0), last) << endl;
-    last = axis2->upper(n-1);
+         << casa::near(axis2->lower(0), last2);
+    last2 = axis2->upper(n-1);
+    vector<double> start, end;
+    for (uint j=0; j<n; ++j) {
+      start.push_back (axis2->lower(j));
+      end.push_back (axis2->upper(j));
+    }
+    OrderedAxis axis3(start, end, true);
+    cout << "  diff: " << axis3.lower(0) - axis2->lower(0)
+         << ' ' <<  axis3.upper(n-1) - axis2->upper(n-1)<< "  " 
+         << casa::near(axis3.lower(0), last3) << endl;
+    last3 = axis3.upper(n-1);
   }
 }
 
