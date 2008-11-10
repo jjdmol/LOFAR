@@ -33,13 +33,13 @@
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
 #include <Interface/Config.h>
+#include <Interface/MultiDimArray.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SparseSet.h>
 #include <LockedRanges.h>
 #include <ReaderWriterSynchronization.h>
 #include <Stream/Stream.h>
 
-#include <boost/multi_array.hpp>
 #include <pthread.h>
 
 
@@ -78,7 +78,7 @@ template<typename SAMPLE_TYPE> class BeamletBuffer
     unsigned				  itsSize, itsHistorySize;
     ReaderAndWriterSynchronization	  *itsSynchronizedReaderWriter;
     LockedRanges			  itsLockedRanges;
-    boost::multi_array_ref<SAMPLE_TYPE, 3> itsSBBuffers;
+    Cube<SAMPLE_TYPE>			  itsSBBuffers;
     int					  itsOffset;
     const static unsigned		  itsAlignment = 32 / (NR_POLARIZATIONS * sizeof(SAMPLE_TYPE));
 

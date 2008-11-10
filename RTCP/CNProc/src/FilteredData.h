@@ -2,11 +2,10 @@
 #define LOFAR_CNPROC_FILTERED_DATA_H
 
 #include <Common/lofar_complex.h>
-#include <Interface/Allocator.h>
+#include <Interface/Align.h>
 #include <Interface/Config.h>
+#include <Interface/MultiDimArray.h>
 #include <Interface/SparseSet.h>
-
-#include <boost/multi_array.hpp>
 
 
 namespace LOFAR {
@@ -15,33 +14,28 @@ namespace RTCP {
 class FilteredData
 {
   public:
-    FilteredData(const Arena &, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
     ~FilteredData();
 
     static size_t requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
-  private:
-    SparseSetAllocator allocator;
-
-  public:
     // The "| 2" significantly improves transpose speeds for particular
     // numbers of stations due to cache conflict effects.  The extra memory
     // is not used.
-    boost::multi_array_ref<fcomplex, 4> samples; //[itsNrChannels][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
-    SparseSet<unsigned>			*flags; //[itsNrStations]
+    MultiDimArray<fcomplex, 4>  samples; //[itsNrChannels][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
+    SparseSet<unsigned>		*flags; //[itsNrStations]
 };
 
 
 inline size_t FilteredData::requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 {
-  return sizeof(fcomplex) * nrChannels * nrStations * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS;
+  return align(sizeof(fcomplex) * nrChannels * nrStations * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS, 32);
 }
 
 
-inline FilteredData::FilteredData(const Arena &arena, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
 :
-  allocator(arena),
-  samples(static_cast<fcomplex *>(allocator.allocate(requiredSize(nrStations, nrChannels, nrSamplesPerIntegration), 32)), boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS]),
+  samples(boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], 32, allocator),
   flags(new SparseSet<unsigned>[nrStations])
 {
 }
@@ -49,7 +43,6 @@ inline FilteredData::FilteredData(const Arena &arena, unsigned nrStations, unsig
 
 inline FilteredData::~FilteredData()
 {
-  allocator.deallocate(samples.origin());
   delete [] flags;
 }
 

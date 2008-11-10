@@ -50,7 +50,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigne
   itsPacketSize(sizeof(struct RSP::header) + nrTimesPerPacket * nrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
   itsSize(align(bufferSize, itsNrTimesPerPacket)),
   itsHistorySize(history),
-  itsSBBuffers(reinterpret_cast<SAMPLE_TYPE *>(ION_Allocator().allocate(nrSubbands * itsSize * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE), 32)), boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS]),
+  itsSBBuffers(boost::extents[nrSubbands][itsSize][NR_POLARIZATIONS], 32, hugeMemoryAllocator),
   itsOffset(0),
 #if defined HAVE_BGP
   itsStride(reinterpret_cast<char *>(itsSBBuffers[1].origin()) - reinterpret_cast<char *>(itsSBBuffers[0].origin())),
@@ -80,7 +80,6 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
 {      
   delete itsSynchronizedReaderWriter;
   pthread_mutex_destroy(&itsValidDataMutex);
-  ION_Allocator().deallocate(itsSBBuffers.origin());
 }
 
 

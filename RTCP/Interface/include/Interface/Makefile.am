@@ -7,6 +7,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     CN_Mapping.h \
 		     CorrelatedData.h \
 		     Config.h \
+		     MultiDimArray.h \
 		     Parset.h \
 		     SubbandMetaData.h \
 		     PrintVector.h \
