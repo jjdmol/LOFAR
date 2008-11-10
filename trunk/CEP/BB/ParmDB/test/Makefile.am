@@ -1,7 +1,7 @@
 check_PROGRAMS        = tAxis tAxisMapping tBox tGrid \
 			tParmValue tParmDBCasa \
 			tParmSet tParmCache tParm tParmFacade \
-			tSourceDBCasa
+			tSourceDBCasa tTimeAxis
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        = $(check_PROGRAMS)
@@ -61,6 +61,10 @@ tParmFacade_DEPENDENCIES	= ../src/libparmdb.la $(LOFAR_DEPEND)
 tSourceDBCasa_SOURCES		= tSourceDBCasa.cc
 tSourceDBCasa_LDADD		= ../src/libparmdb.la
 tSourceDBCasa_DEPENDENCIES	= ../src/libparmdb.la $(LOFAR_DEPEND)
+
+tTimeAxis_SOURCES		= tTimeAxis.cc
+tTimeAxis_LDADD			= ../src/libparmdb.la
+tTimeAxis_DEPENDENCIES		= ../src/libparmdb.la $(LOFAR_DEPEND)
 
 # all files (.run, .stdout, .in, .log_prop, etc.) needed to run tests
 EXTRA_DIST            = $(TESTSCRIPTS) \
