@@ -161,14 +161,16 @@ void SubbandWriter::inputThread()
       try {
 	data->read(itsInputStreams[pset]);
       } catch (Stream::EndOfStreamException &) {
-	itsReceiveQueue.append(0); // signal main thread that this was the last
 	itsFreeQueue.append(data);
-	return;
+	goto end; // nested loop; cannot use "break"
       }
 
       itsReceiveQueue.append(data);
     }
   } while (!nullInput);  // prevent infinite loop when using NullStream
+
+end:
+  itsReceiveQueue.append(0); // signal main thread that this was the last
 }
 
 
