@@ -33,7 +33,7 @@ PANEL,-1 -1 235 131 N "_3DFace" 1
 
 void initialize() {  
   LOG_TRACE(\"navigator_locator.pnl:Initialize|entered\");
-  
+  initTable();
   LOG_TRACE(\"navigator_locator.pnl:Initialize|end\");
         
 }
@@ -65,6 +65,8 @@ void doAction(string aDP, string anAction) {
     return;
   }
   
+  // Update
+  
 }
 
 
@@ -78,6 +80,7 @@ void initTable() {
   Locator.clear();
 
   typeList=navFunct_dpGetFullPathAsTypes(g_currentDatapoint);
+  
   if (dynlen(typeList) <=0 ) {
     return;
   }
