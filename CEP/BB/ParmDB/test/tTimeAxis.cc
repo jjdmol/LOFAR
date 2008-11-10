@@ -32,13 +32,17 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace casa;
 
-void doIt (const string& msname, int timestep)
+void doIt (const string& msname, int timestep, int timestart)
 {
   Table tab(msname);
   Table tabs (tab.sort ("TIME", Sort::Ascending, Sort::NoDuplicates));
   cout<<tab.nrow() <<' '<<tabs.nrow()<<endl;
-  Vector<double> times = ROScalarColumn<double>(tabs, "TIME").getColumn();
-  Vector<double> intvs = ROScalarColumn<double>(tabs, "INTERVAL").getColumn();
+  Vector<double> times1 = ROScalarColumn<double>(tabs, "TIME").getColumn();
+  Vector<double> intvs1 = ROScalarColumn<double>(tabs, "INTERVAL").getColumn();
+  Vector<double> times = times1(Slicer(IPosition(1,timestart),
+                                       IPosition(1,Slicer::MimicSource)));
+  Vector<double> intvs = intvs1(Slicer(IPosition(1,timestart),
+                                       IPosition(1,Slicer::MimicSource)));
   OrderedAxis axis(vector<double>(times.begin(), times.end()),
                    vector<double>(intvs.begin(), intvs.end()));
   //Axis::ShPtr axis1 (axis.compress (1));
@@ -73,11 +77,16 @@ int main (int argc, char* argv[])
 {
   try {
     int timestep = 50;
+    int timestart = 0;
     if (argc > 2) {
       istringstream istr(argv[2]);
       istr >> timestep;
     }
-    doIt (argv[1], timestep);
+    if (argc > 3) {
+      istringstream istr(argv[3]);
+      istr >> timestart;
+    }
+    doIt (argv[1], timestep, timestart);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
