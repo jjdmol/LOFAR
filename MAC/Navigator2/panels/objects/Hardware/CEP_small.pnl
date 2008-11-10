@@ -82,7 +82,7 @@ LANG:1 0
 7 2
 "CEP_highLight"
 ""
-1 127.5495487902535 21.11578083336868 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+1 139.8188321154402 33.39678283495407 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
  "main()
 {
   rClick();
