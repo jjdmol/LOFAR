@@ -65,9 +65,9 @@
 //#uses "navigator.ctl"
 
 
-global dyn_string oldActiveObservations;                        
-global dyn_string oldPlannedObservations;                        
-global dyn_string oldFinishedObservations;                        
+global dyn_string oldActiveObservations=makeDynString();                        
+global dyn_string oldPlannedObservations=makeDynString();                        
+global dyn_string oldFinishedObservations=makeDynString();                        
 
 // ****************************************
 // Name : navFunct_splitEvent
@@ -149,31 +149,27 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   int iPos=1;
   
   bool update=false;
-  if (oldFinishedObservations != null) {
-    for (int i=0; i <= dynlen(active); i++) {
-      if (dynContains(oldFinishedObservations,active[i]) < 1) {
+  for (int i=1; i <= dynlen(active); i++) {
+    if (dynContains(oldFinishedObservations,active[i]) < 1) {
+      update = true;
+      break;
+    }
+  }
+  if (!update) {
+    for (int i=1; i <= dynlen(planned); i++) {
+      if (dynContains(oldPlannedObservations,planned[i]) < 1) {
         update = true;
         break;
       }
     }
-    if (!update) {
-      for (int i=0; i <= dynlen(planned); i++) {
-        if (dynContains(oldPlannedObservations,planned[i]) < 1) {
-          update = true;
-          break;
-        }
+  }
+  if (!update) {
+    for (int i=1; i <= dynlen(finished); i++) {
+      if (dynContains(oldFinishedObservations,finished[i]) < 1) {
+        update = true;
+        break;
       }
     }
-    if (!update) {
-      for (int i=0; i <= dynlen(finished); i++) {
-        if (dynContains(oldFinishedObservations,finished[i]) < 1) {
-          update = true;
-          break;
-        }
-      }
-    }
-  } else {
-    update = true;
   }
   if (!update) {
     return;
