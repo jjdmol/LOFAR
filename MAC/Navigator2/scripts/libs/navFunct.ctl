@@ -616,7 +616,7 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
       if (choice > 1) {
         newDatapoint += "_"+typeList[choice];  // add ObsSW, PermSW or PIC
         if (strpos(typeList[choice],"Ring") >= 0) {
-          newDatapoint += "_" + navFunctgetRingFromStation(systemName);
+          newDatapoint += "_" + navFunct_getRingFromStation(systemName);
         }
       }
     }
