@@ -192,7 +192,11 @@ void showFan(string dp1, bool frontFanInner,
       setValue(\"backFanInner\",\"foreCol\",\"Lofar_broken_came\");
       setValue(\"backFanOuter\",\"foreCol\",\"Lofar_broken_came\");
     }
-    
+    setValue(\"frontFanInner\" , \"visible\"    , TRUE);
+    setValue(\"frontFanOuter\" , \"visible\"    , TRUE);
+    setValue(\"backFanInner\" , \"visible\"    , TRUE);
+    setValue(\"backFanOuter\" , \"visible\"    , TRUE);
+
     
     if(frontFanInner) { 
       setValue(\"frontFanInner\",\"fill\",\"[pattern,[fit,gif,ventilator_ani.gif]]\");

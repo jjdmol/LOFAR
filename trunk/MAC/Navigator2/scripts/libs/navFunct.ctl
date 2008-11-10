@@ -542,6 +542,7 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
       typePath[++index] = dpTypeName("LOFAR_PIC");
       typePath[++index] = dpTypeName("LOFAR_PIC_Core");
     }
+    
     if (strpos(dp,"PermSW") >=0) {
       typePath[++index] = dpTypeName("LOFAR_PermSW");
     }
@@ -551,6 +552,7 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
     if (strpos(dp,"Observation") >=0) {
       typePath[++index] = dpTypeName("LOFAR_ObsSW_Observation");
     }
+
   }        
       
       
@@ -592,6 +594,7 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
   
   dyn_string splitted = strsplit(dp,"_");
   
+ 
   // when we are in the Main database the new datapoint is the old datatpoint upto and including the choice.
   if (systemName == getSystemName() ) {
     for (int i=1; i<= choice; i++) {
@@ -613,10 +616,11 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
       }
     } else {   //   yes we will jump back to maincu level
       newDatapoint=getSystemName()+"LOFAR";
-      if (choice > 1) {
-        newDatapoint += "_"+typeList[choice];  // add ObsSW, PermSW or PIC
-        if (strpos(typeList[choice],"Ring") >= 0) {
+      for (int i=2; i <= dynlen(typeList)&& i <= choice; i++) {
+        if (strpos(typeList[i],"Ring") >= 0) {
           newDatapoint += "_" + navFunct_getRingFromStation(systemName);
+        } else {
+          newDatapoint += "_"+typeList[i];
         }
       }
     }
