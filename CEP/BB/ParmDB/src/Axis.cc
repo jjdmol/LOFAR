@@ -599,9 +599,25 @@ namespace BBS {
     return Axis::ShPtr(new OrderedAxis(centers, widths));
   }
 
-  Axis::ShPtr OrderedAxis::compress (size_t) const
+  Axis::ShPtr OrderedAxis::compress(size_t factor) const
   {
-    ASSERTSTR(false, "UnorderedAxis::compress not implemented");
+    ASSERT(factor > 0);
+    
+    size_t count = static_cast<size_t>(std::ceil(static_cast<double>(size())
+        / factor));
+
+    vector<double> centers(count), widths(count);
+
+    for(size_t i = 0; i < count; ++i)
+    {
+      const size_t start = i * factor;
+      const size_t end = std::min((i + 1) * factor, size()) - 1;
+
+      centers[i] = 0.5 * (upper(end) + lower(start));
+      widths[i] = upper(end) - lower(start);
+    }
+
+    return Axis::ShPtr(new OrderedAxis(centers, widths));
   }
     
   const string& OrderedAxis::classType() const
