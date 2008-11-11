@@ -59,6 +59,7 @@
 // navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
 // navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
+// navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -809,6 +810,7 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   }
   
   dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
+  
   string receiverBitmap = g_observations[ "RECEIVERBITMAP" ][iPos];
   // if receiverBitmap == "" return false
   if (receiverBitmap == "") {
@@ -945,6 +947,27 @@ void navFunct_fillObservationsList() {
     }
   // otherwise hardware  
   } else {
+
+    // we need to expand stationgroup terms like Europe,Remote and Core so that these stations are also involved
+    // in the process of looking what observations are valid.      
+    dyn_string stationList;
+    dyn_string aTemp;
+
+    for (int k=1;k<= dynlen(g_stationList); k++) {
+      if (g_stationList[k] == "Europe") {
+        aTemp=europeStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Remote") {
+        aTemp=remoteStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Core") {
+        aTemp=coreStations;
+        dynAppend(stationList,aTemp);
+      } else {
+        dynAppend(stationList,g_stationList[k]);
+      }
+    }
+      
     // check all available observations
     for (int i = 1; i <= dynlen(g_observations["NAME"]); i++) {
       bool found=false;
@@ -955,12 +978,12 @@ void navFunct_fillObservationsList() {
       // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
       // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
       
-      if (dynlen(g_stationList) > 1) {           
+      if (dynlen(stationList) > 1) {           
         // loop through stationList
-        for (int j=1; j<= dynlen(g_stationList); j++) {
+        for (int j=1; j<= dynlen(stationList); j++) {
         
           //test if station is used in the observation
-          if ( navFunct_hardware2Obs(g_stationList[j], g_observations["NAME"][i],"Station",g_stationList[j],0)) {
+          if ( navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
             if (!dynContains(g_observationsList, shortObs)){
               dynAppend(g_observationsList,shortObs);
               found=true;
@@ -969,7 +992,7 @@ void navFunct_fillObservationsList() {
           if (found) break;
         }
       } else {
-        string station = g_stationList[1];
+        string station = stationList[1];
         found = false;
         
         // check cabinets
@@ -1247,4 +1270,17 @@ dyn_string navFunct_listToDynString(string aS) {
     aS=strrtrim(aS,"]");
   }
   return strsplit(aS,",");
+}
+
+// ****************************************
+// Name: navFunct_fillStationLists  
+// ****************************************
+//     fills globals with available core/europe and remote stations
+//
+// ****************************************
+void navFunct_fillStationLists() {
+  coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
+                               "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032");
+  remoteStations = makeDynString("RS106","RS208","RS302","RS306","RS307","RS503");
+  europeStations = makeDynString("DE001");
 }

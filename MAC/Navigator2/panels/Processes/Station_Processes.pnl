@@ -359,16 +359,6 @@ LANG:1 6 logMsg
 0
 1 214 34 "" 6
 0
-1 215 35 "" 4
-0
-1 216 35 "" 3
-0
-1 217 35 "0" 1
-0
-1 218 35 "" 2
-0
-1 219 35 "" 6
-0
 1 220 36 "" 4
 0
 1 221 36 "" 3
@@ -465,7 +455,7 @@ LANG:1 0
 1
 "$name""BeamServer"
 3 31 "PANEL_REF32"
-"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -97 10.00000000000001
+"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -97 -19.99999999999999
 0
 3 32 "PANEL_REF33"
 "objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -130
@@ -475,20 +465,16 @@ LANG:1 0
 "objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -102
 1
 "$name""SoftwareMonitor"
-3 35 "PANEL_REF36"
-"objects\\Processes\\controller_small.pnl" 10 470 T 41 1 0 1 -10 -74
-1
-"$name""TemperatureMonitor"
 3 36 "PANEL_REF37"
-"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 1 -10 -46
+"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -56.7370242214534
 1
 "$name""MACInfoServer"
 3 37 "PANEL_REF38"
-"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -18
+"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -45
 1
 "$name""StationCtrl"
 3 38 "PANEL_REF39"
-"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 10
+"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 -16
 1
 "$name""DigBoardCtrl"
 0
