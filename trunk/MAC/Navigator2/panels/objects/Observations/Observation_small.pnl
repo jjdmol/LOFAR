@@ -115,7 +115,6 @@ updateObservationsTableValues(string dp1, int state,
   string col=getStateColor(state);
   dyn_string d1=makeDynString(\" \",col);  
   
-  DebugN(\"CAllback with: \" + dp1);
     // this is the temp name
   string dp = dpSubStr(dp1,DPSUB_DP);
   // get the connected Observation
@@ -210,19 +209,19 @@ E
 1
 LANG:1 0 
 
-100 "Start Time" 8 1 0 "s" 1
+100 "Start Time" 9 1 0 "s" 1
 LANG:1 10 Start Time
 E
 1
 LANG:1 0 
 
-115 "Stop Time" 8 1 0 "s" 1
+115 "Stop Time" 9 1 0 "s" 1
 LANG:1 9 Stop Time
 E
 1
 LANG:1 0 
 
-115 "Station List" 48 1 0 "s" 1
+115 "Station List" 46 1 0 "s" 1
 LANG:1 12 Station List
 E
 1

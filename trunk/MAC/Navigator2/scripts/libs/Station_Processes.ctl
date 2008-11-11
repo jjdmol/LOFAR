@@ -54,6 +54,7 @@ bool Station_Processes_initList() {
   station_selectedStation=selectedStation;
   station_obsBaseDP="";
   
+ 
   dynClear(station_result);
   dynClear(station_procList);
   
@@ -240,7 +241,8 @@ Station_Processes_UpdateStationTree() {
           stationTree.appendItem("",stations[k],stations[k]);
           stationTree.ensureItemVisible(stations[k]);
           stationTree.setIcon(stations[k],0,"16_empty.gif");
-          if (k==1) {
+
+          if (stations[k] == selectedStation) {
             stationTree.setSelectedItem(stations[k],true);
             station_selectedStation=stations[k];
           }
