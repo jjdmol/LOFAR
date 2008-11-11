@@ -37,9 +37,8 @@
 #include <Interface/Parset.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/Queue.h>
+#include <Storage/InputThread.h>
 #include <Stream/Stream.h>
-
-#include <pthread.h>
 
 
 namespace LOFAR {
@@ -63,20 +62,11 @@ class SubbandWriter
     void		    writeLogMessage();
     bool		    processSubband(unsigned sb);
 
-    void		    createInputThread();
-    void		    stopInputThread();
-    static void		    *inputThreadStub(void *);
-    void		    inputThread();
-
-  
     const Parset	    *itsPS;
     unsigned		    itsRank;
 
     std::vector<Stream *>   itsInputStreams;
-
-    static const unsigned   nrInputBuffers = 10;
-    Queue<CorrelatedData *> itsFreeQueue, itsReceiveQueue;
-    pthread_t		    itsInputThread;
+    std::vector<InputThread *> itsInputThreads;
 
     unsigned		    itsNStations;
     unsigned		    itsNBaselines;

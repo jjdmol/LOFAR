@@ -1,6 +1,7 @@
 lib_LTLIBRARIES			= libstorage.la
 
 libstorage_la_SOURCES	= Package__Version.cc \
+				  InputThread.cc \
 				  SubbandWriter.cc \
 				  MSWriter.cc      \
 				  MSWriterCasa.cc  \
