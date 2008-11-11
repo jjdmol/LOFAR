@@ -9,6 +9,7 @@ InputThreadAsm.h		\
 ION_Allocator.h			\
 LockedRanges.h			\
 LogThread.h			\
+OutputThread.h			\
 OutputSection.h			\
 ReaderWriterSynchronization.h	\
 RSP.h				\
@@ -26,6 +27,7 @@ InputThread.cc			\
 InputThreadAsm.S		\
 ION_Allocator.cc		\
 LogThread.cc			\
+OutputThread.cc			\
 OutputSection.cc		\
 ReaderWriterSynchronization.cc	\
 WH_DelayCompensation.cc		\

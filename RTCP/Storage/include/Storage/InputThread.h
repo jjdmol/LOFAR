@@ -1,5 +1,7 @@
-//#  OutputSection.h: Collects data from CNs and sends data to Storage
+//#  InputThread.h
 //#
+//#  Copyright (C) 2008
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,45 +20,38 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_IONPROC_OUTPUT_SECTION_H
-#define LOFAR_IONPROC_OUTPUT_SECTION_H
+#ifndef LOFAR_RTCP_STORAGE_INPUT_THREAD_H
+#define LOFAR_RTCP_STORAGE_INPUT_THREAD_H
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/CorrelatedData.h>
-#include <Interface/Parset.h>
-#include <IONProc/OutputThread.h>
+#include <Interface/Queue.h>
 #include <Stream/Stream.h>
 
-#include <vector>
-
+#include <pthread.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-class OutputSection
+class InputThread
 {
   public:
-    OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs);
+			    InputThread(Stream *streamFromION, unsigned nrBaselines, unsigned nrChannels);
+			    ~InputThread();
 
-    void			preprocess(const Parset *);
-    void			process();
-    void			postprocess();
+    static const unsigned   maxReceiveQueueSize = 3;
+    Queue<CorrelatedData *> itsFreeQueue, itsReceiveQueue;
 
   private:
-    void			connectToStorage(const Parset *);
+    static void		    *mainLoopStub(void *inputThread);
+    void		    mainLoop();
 
-    std::vector<CorrelatedData *> itsVisibilitySums;
-    CorrelatedData		*itsTmpSum;
-    std::vector<OutputThread *> itsOutputThreads;
-
-    unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
-    unsigned			itsNrSubbandsPerPset;
-    unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
-
-    const std::vector<Stream *> &itsStreamsFromCNs;
-    std::vector<Stream *>	itsStreamsToStorage;
+    Stream		    *itsStreamFromION; 
+    pthread_t		    thread;
 };
 
-}
-}
+} // namespace RTCP
+} // namespace LOFAR
 
 #endif

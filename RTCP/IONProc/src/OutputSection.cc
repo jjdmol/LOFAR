@@ -56,67 +56,40 @@ OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &s
 }
 
 
-OutputSection::~OutputSection()
-{
-}
-
-
-void *OutputSection::sendThreadStub(void *arg)
-{
-  std::clog << "sendThread started" << std::endl;
-
-  try {
-    static_cast<OutputSection *>(arg)->sendThread();
-  } catch (std::exception &ex) {
-    std::cerr << "Caught std::exception: " << ex.what() << std::endl;
-  } catch (...) {
-    std::cerr << "Caught non-std::exception" << std::endl;
-  }
-
-  std::clog << "sendThread finished" << std::endl;
-  return 0;
-}
-
-
-void OutputSection::sendThread()
-{
-  CorrelatedData *data;
-
-  while ((data = itsSendQueue.remove()) != 0) {
-    data->write(itsStreamToStorage);
-    itsFreeQueue.append(data);
-  }
-}
-
-
 void OutputSection::connectToStorage(const Parset *ps)
 {
   unsigned myPsetIndex       = ps->outputPsetIndex(itsPsetNumber);
   unsigned nrPsetsPerStorage = ps->nrPsetsPerStorage();
   unsigned storageHostIndex  = myPsetIndex / nrPsetsPerStorage;
-  unsigned storagePortIndex  = myPsetIndex % nrPsetsPerStorage;
+  //unsigned storagePortIndex  = myPsetIndex % nrPsetsPerStorage;
 
   string   prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
   string   connectionType    = ps->getString(prefix + "_Transport");
 
-  if (connectionType == "NULL") {
-    std::clog << "output section discards data to null:" << std::endl;
-    itsStreamToStorage = new NullStream;
-  } else if (connectionType == "TCP") {
-    std::string    server = ps->getStringVector(prefix + "_ServerHosts")[storageHostIndex];
-    unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
-    std::clog << "output section connects to tcp:" << server << ':' << port << std::endl;
-    itsStreamToStorage = new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client);
-  } else if (connectionType == "FILE") {
-    std::string filename = ps->getString(prefix + "_BaseFileName") + '.' +
-		    boost::lexical_cast<std::string>(storageHostIndex) + '.' +
-		    boost::lexical_cast<std::string>(storagePortIndex);
+    if (connectionType == "NULL") {
+      std::clog << "subband " << subbandNumber << " written to null:" << std::endl;
+      itsStreamsToStorage.push_back(new NullStream);
+    } else if (connectionType == "TCP") {
+      std::string    server = ps->getStringVector(prefix + "_ServerHosts")[storageHostIndex];
+      //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
+      unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[subbandNumber]);
 
-    std::clog << "output section write to file:" << filename << std::endl;
-    itsStreamToStorage = new FileStream(filename.c_str(), 0666);
-  } else {
-    THROW(IONProcException, "unsupported ION->Storage stream type");
+      std::clog << "subband " << subbandNumber << " written to tcp:" << server << ':' << port << std::endl;
+      itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
+    } else if (connectionType == "FILE") {
+      std::string filename = ps->getString(prefix + "_BaseFileName") + '.' +
+		      boost::lexical_cast<std::string>(storageHostIndex) + '.' +
+		      boost::lexical_cast<std::string>(subbandNumber);
+		      //boost::lexical_cast<std::string>(storagePortIndex);
+
+      std::clog << "subband " << subbandNumber << " written to file:" << filename << std::endl;
+      itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
+    } else {
+      THROW(IONProcException, "unsupported ION->Storage stream type");
+    }
   }
 }
 
@@ -139,11 +112,8 @@ void OutputSection::preprocess(const Parset *ps)
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsVisibilitySums.push_back(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
 
-  for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
-
-  if (pthread_create(&itsSendThread, 0, sendThreadStub, this) != 0)
-    THROW(IONProcException, "could not create send thread");
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
+    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], nrBaselines, nrChannels));
 }
 
 
@@ -155,25 +125,22 @@ void OutputSection::process()
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
-    CorrelatedData *data   = lastTime ? itsFreeQueue.remove() : firstTime ? itsVisibilitySums[subband] : itsTmpSum;
-  
-    unsigned	   channel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-
-    data->read(itsStreamsFromCNs[channel]);
-
-    if (!firstTime)
-      if (lastTime)
-	*data += *itsVisibilitySums[subband];
-      else
-	*itsVisibilitySums[subband] += *data;
+    unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
     if (lastTime) {
-#if 0
-      for (unsigned ch = 1; ch < 256; ch ++)
-	std::clog << std::setprecision(7) << ch << ' ' << abs(data->visibilities[0][ch][0][0]) << std::endl;
-#endif
+      CorrelatedData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
+    
+      data->read(itsStreamsFromCNs[inputChannel]);
 
-      itsSendQueue.append(data);
+      if (!firstTime)
+	*data += *itsVisibilitySums[subband];
+
+      itsOutputThreads[subband]->itsSendQueue.append(data);
+    } else if (firstTime) {
+      itsVisibilitySums[subband]->read(itsStreamsFromCNs[inputChannel]);
+    } else {
+      itsTmpSum->read(itsStreamsFromCNs[inputChannel]);
+      *itsVisibilitySums[subband] += *itsTmpSum;
     }
 
     if (++ itsCurrentComputeCore == itsNrComputeCores)
@@ -187,24 +154,19 @@ void OutputSection::process()
 
 void OutputSection::postprocess()
 {
-  itsSendQueue.append(0); // 0 indicates that no more messages will be sent
-
-  if (pthread_join(itsSendThread, 0) != 0)
-    THROW(IONProcException, "could not join send thread");
-
-  delete itsStreamToStorage; // closes stream, stopping the Storage section
-  itsStreamToStorage = 0;
-
-  for (unsigned subband = 0; subband < itsVisibilitySums.size(); subband ++)
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    itsOutputThreads[subband]->itsSendQueue.append(0); // 0 indicates that no more messages will be sent
+    delete itsOutputThreads[subband];
     delete itsVisibilitySums[subband];
+    delete itsStreamsToStorage[subband];
+  }
 
-  itsVisibilitySums.resize(0);
+  itsOutputThreads.clear();
+  itsVisibilitySums.clear();
+  itsStreamsToStorage.clear();
 
   delete itsTmpSum;
   itsTmpSum = 0;
-
-  for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    delete itsFreeQueue.remove();
 }
 
 }

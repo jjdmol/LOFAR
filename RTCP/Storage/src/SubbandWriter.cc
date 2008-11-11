@@ -107,86 +107,29 @@ void SubbandWriter::createInputStreams()
   string   prefix            = "OLAP.OLAP_Conn.IONProc_Storage";
   string   connectionType    = itsPS->getString(prefix + "_Transport");
 
-  itsInputStreams.resize(itsPS->nrPsetsPerStorage());
+  for (unsigned subband = 0; subband < itsNrSubbandsPerStorage; subband ++) {
+    unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + subband;
 
-  for (unsigned i = 0; i < itsPS->nrPsetsPerStorage(); i ++)
     if (connectionType == "NULL") {
-      std::cout << "input " << i << ": null stream" << std::endl;
-      itsInputStreams[i] = new NullStream;
+      std::cout << "subband " << subbandNumber << " read from null stream" << std::endl;
+      itsInputStreams.push_back(new NullStream);
     } else if (connectionType == "TCP") {
       std::string    server = itsPS->getStringVector(prefix + "_ServerHosts")[itsRank];
-      unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[i]);
+      unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
 
-      std::cout << "input " << i << ": tcp:" << server << ':' << port << std::endl;
-      itsInputStreams[i] = new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server);
+      std::cout << "subband " << subbandNumber << " read from tcp:" << server << ':' << port << std::endl;
+      itsInputStreams.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
     } else if (connectionType == "FILE") {
       std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
 			      boost::lexical_cast<std::string>(itsRank) + '.' +
-			      boost::lexical_cast<std::string>(i);
+			      boost::lexical_cast<std::string>(subbandNumber);
 
-      std::cout << "input " << i << ": file:" << filename << std::endl;
-      itsInputStreams[i] = new FileStream(filename.c_str());
+      std::cout << "subband " << subbandNumber << " read from file:" << filename << std::endl;
+      itsInputStreams.push_back(new FileStream(filename.c_str()));
     } else {
       THROW(StorageException, "unsupported ION->Storage stream type");
     }
-}
-
-
-void *SubbandWriter::inputThreadStub(void *arg)
-{
-  try {
-    static_cast<SubbandWriter *>(arg)->inputThread();
-  } catch (Exception &ex) {
-    std::cerr << "caught Exception: " << ex.what() << std::endl;
-  } catch (std::exception &ex) {
-    std::cerr << "caught std::exception: " << ex.what() << std::endl;
-  } catch (...) {
-    std::cerr << "caught non-std::exception" << std::endl;
-  } 
-
-  return 0;
-}
-
-
-void SubbandWriter::inputThread()
-{
-  bool nullInput = dynamic_cast<NullStream *>(itsInputStreams[0]) != 0;
-
-  do {
-    for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
-      // find out from which input channel we should read
-      unsigned	     pset  = sb / itsNrSubbandsPerPset;
-      CorrelatedData *data = itsFreeQueue.remove();
-
-      try {
-	data->read(itsInputStreams[pset]);
-      } catch (Stream::EndOfStreamException &) {
-	itsFreeQueue.append(data);
-	goto end; // nested loop; cannot use "break"
-      }
-
-      itsReceiveQueue.append(data);
-    }
-  } while (!nullInput);  // prevent infinite loop when using NullStream
-
-end:
-  itsReceiveQueue.append(0); // signal main thread that this was the last
-}
-
-
-void SubbandWriter::createInputThread()
-{
-  if (pthread_create(&itsInputThread, 0, inputThreadStub, this) != 0) {
-    std::cerr << "could not create input thread" << std::endl;
-    exit(1);
   }
-}
-
-
-void SubbandWriter::stopInputThread()
-{
-  if (pthread_join(itsInputThread, 0) != 0)
-    std::cerr << "could not join input thread";
 }
 
 
@@ -203,9 +146,6 @@ void SubbandWriter::preprocess()
     LOG_TRACE_FLOW("SubbandWriter PropertySet not enabled");
   };
 #endif
-
-  for (unsigned i = 0; i < nrInputBuffers; i ++)
-    itsFreeQueue.append(new CorrelatedData(itsNBaselines, itsNChannels));
 
   double startTime = itsPS->startTime();
   LOG_TRACE_VAR_STR("startTime = " << startTime);
@@ -278,7 +218,9 @@ void SubbandWriter::preprocess()
 #endif // defined HAVE_AIPSPP
 
   createInputStreams();
-  createInputThread();
+  
+  for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; sb ++)
+    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsNBaselines, itsNChannels));
 }
 
 
@@ -312,7 +254,7 @@ void SubbandWriter::writeLogMessage()
 
 bool SubbandWriter::processSubband(unsigned sb)
 {
-  CorrelatedData *data = itsReceiveQueue.remove();
+  CorrelatedData *data = itsInputThreads[sb]->itsReceiveQueue.remove();
 
   if (data == 0)
     return false;
@@ -367,7 +309,7 @@ bool SubbandWriter::processSubband(unsigned sb)
   }
 #endif
 
-  itsFreeQueue.append(data);
+  itsInputThreads[sb]->itsFreeQueue.append(data);
   return true;
 }
 
@@ -393,11 +335,12 @@ void SubbandWriter::process()
 
 void SubbandWriter::postprocess() 
 {
-  stopInputThread();
+  for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; sb ++) {
+    delete itsInputThreads[sb];
+    delete itsInputStreams[sb];
+  }
 
-  for (unsigned i = 0; i < itsInputStreams.size(); i ++)
-    delete itsInputStreams[i];
-
+  itsInputThreads.clear();
   itsInputStreams.clear();
 
   delete [] itsFlagsBuffers;	itsFlagsBuffers   = 0;
@@ -409,9 +352,6 @@ void SubbandWriter::postprocess()
 
   itsWriters.clear();
 #endif
-
-  for (unsigned i = 0; i < nrInputBuffers; i ++)
-    delete itsFreeQueue.remove();
 
   delete itsVisibilities;	itsVisibilities   = 0;
 
