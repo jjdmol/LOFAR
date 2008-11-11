@@ -176,6 +176,10 @@ dyn_string 	itsSelectionDp  = \"\";
 bool            bDoubleClicked  = false;
 bool            connected       = false;
 
+string          selectedObservation=\"\";
+string          selectedHardware=\"\";
+string          selectedProcess=\"\";
+
 
 string itsSelection = \"\";
 bool   isSelected   = false;
@@ -226,9 +230,17 @@ void changeSelection(string str) {
 void click(string info) {
   // set delay in case double click was meant
   delay(0, 100); 
-  if (!bDoubleClicked) {  
-   setEvent(info,\"EventClick\");
- }
+  if (!bDoubleClicked) { 
+    
+    if (itsSelection == \"Observations\") {
+      selectedObservation = info;
+    } else if (itsSelection == \"Hardware\") {
+      selectedHardware = info;
+    } else if (itsSelection == \"Processes\") {
+      selectedProcess = info;
+    }         
+    setEvent(info,\"EventClick\");
+  }
 }
 
 void dblClick(string info) {
@@ -267,6 +279,10 @@ void updateHWList()
     hardwareTree.ensureItemVisible(spl[3]);
     hardwareTree.setIcon(spl[3],0,\"16_empty.gif\");
   }
+  if (selectedHardware != \"\") {
+    hardwareTree.setSelectedItem(strsplit(selectedHardware,\"|\")[2],true);
+    setEvent(selectedHardware,\"EventClick\");
+  }
 }
 
 void updateProcList()
@@ -287,6 +303,10 @@ void updateProcList()
     processesTree.appendItem(spl[1],spl[3],spl[2]);
     processesTree.ensureItemVisible(spl[3]);
     processesTree.setIcon(spl[3],0,\"16_empty.gif\");
+  }
+  if (selectedProcess != \"\") {
+    processesTree.setSelectedItem(strsplit(selectedProcess,\"|\")[2],true);
+    setEvent(selectedProcess,\"EventClick\");
   }
 }
 
@@ -309,6 +329,11 @@ void updateObsList()
     observationsTree.ensureItemVisible(spl[3]);
     observationsTree.setIcon(spl[3],0,\"16_empty.gif\");
   }
+  if (selectedObservation != \"\") {
+    observationsTree.setSelectedItem(strsplit(selectedObservation,\"|\")[2],true);
+    setEvent(selectedObservation,\"EventClick\");
+  }
+
 }" 0
  2
 "CBRef" "1"
@@ -330,8 +355,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"selectionMode" "enum 0"
 "allColumnsShowFocus" "bool TRUE"
+"selectionMode" "enum 0"
  10 30 212 378
 10 TreeWidget
 7
