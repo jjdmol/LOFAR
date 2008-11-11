@@ -65,6 +65,7 @@ void dblClick(string originator) {
     if (originator == \"stationTree\" && stationTree.selectedItem()+\":\" != station_selectedStation) {
       LOG_DEBUG(\"ObsSW_Station.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
       g_currentDatapoint=baseDP;
+      selectedStation=stationTree.selectedItem();
       navPanel_setEvent(\"ObsSW_Station|\"+stationTree.getText(stationTree.selectedItem(),0),\"ChangePanel\"); 
     } else if (originator == \"activeObs\") {
 //      LOG_DEBUG(\"ObsSW_Station.pnl.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
@@ -128,14 +129,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"resizeMode" "enum 0"
-"hScrollBarMode" "enum 0"
-"vScrollBarMode" "enum 0"
-"frameShape" "enum 6"
-"defaultRenameAction" "enum 0"
-"backgroundOrigin" "enum 0"
-"selectionMode" "enum 0"
 "frameShadow" "enum 48"
+"selectionMode" "enum 0"
+"backgroundOrigin" "enum 0"
+"defaultRenameAction" "enum 0"
+"frameShape" "enum 6"
+"vScrollBarMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"resizeMode" "enum 0"
  820 20 990 188
 10 TreeWidget
 7
