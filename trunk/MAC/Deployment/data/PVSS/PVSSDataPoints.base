@@ -70,7 +70,6 @@ BeamServer			-			S	P	Y	LOFAR_PermSW_BeamServer
 CalServer			-			S	P	Y	LOFAR_PermSW_CalServer
 HardwareMonitor		HWM			S	P	Y	LOFAR_PermSW_HardwareMonitor
 SoftwareMonitor		SWM			S	P	Y	LOFAR_PermSW_SoftwareMonitor
-TemperatureMonitor	TPM			S	P	Y	LOFAR_PermSW_TemperatureMonitor
 MACInfoServer		MIS			S	P	Y	LOFAR_PermSW_MACInfoServer
 StationCtrl			SC			S	P	Y	LOFAR_PermSW_StationCtrl
 DigBoardCtrl		DBC			S	P	Y	LOFAR_PermSW_DigBoardCtrl
