@@ -124,21 +124,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
 
     return out;
 }    
-/*        
-        << endl << indent << 
-
-        << endl << indent << "Beam: "
-        << (itsModelConfig.beamConfig ? itsModelConfig.beamConfig->type()
-            : "none");
-        
-        if(itsModelConfig.beamConfig)
-        {
-          os << itsModelConfig.beamConfig->type();
-          
-          if(itsModelConfig.beamConfig->type() == "HamakerDipole")
-        
-  os << indent << "
-*/  
 
 
 } //# namespace BBS
