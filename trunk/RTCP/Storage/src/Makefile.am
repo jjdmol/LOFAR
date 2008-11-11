@@ -2,8 +2,9 @@ lib_LTLIBRARIES			= libstorage.la
 
 libstorage_la_SOURCES	= Package__Version.cc \
 				  SubbandWriter.cc \
-				  MSWriter.cc \
-				  MSWriterImpl.cc
+				  MSWriter.cc      \
+				  MSWriterCasa.cc  \
+				  MSWriterNull.cc
 
 bin_PROGRAMS			= versionstorage Storage
 

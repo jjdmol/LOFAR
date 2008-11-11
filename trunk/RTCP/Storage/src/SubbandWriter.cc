@@ -1,5 +1,3 @@
-
-
 //#  SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
 //#
 //#  Copyright (C) 2002-2005
@@ -29,6 +27,8 @@
 #include <Common/lofar_iomanip.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/MSWriter.h>
+#include <Storage/MSWriterNull.h>
+#include <Storage/MSWriterCasa.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -229,11 +229,19 @@ void SubbandWriter::preprocess()
   for (unsigned i = 0; i < itsNrSubbandsPerStorage; i ++) {
     unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + i;
 
-    itsWriters[i] = new MSWriter(
+#if 1
+    itsWriters[i] = new MSWriterCasa(
       itsPS->getMSname(currentSubband).c_str(),
       startTime, itsPS->storageIntegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
       stationNames, itsTimesToIntegrate);
+#else
+    itsWriters[i] = new MSWriterNull(
+      itsPS->getMSname(currentSubband).c_str(),
+      startTime, itsPS->storageIntegrationTime(), itsNChannels,
+      itsNPolSquared, itsNStations, antPos,
+      stationNames, itsTimesToIntegrate);
+#endif
 
     unsigned       beam    = subbandToBeamMapping[currentSubband];
     vector<double> beamDir = itsPS->getBeamDirection(beam);
