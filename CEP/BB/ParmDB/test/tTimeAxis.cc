@@ -60,16 +60,22 @@ void doIt (const string& msname, int timestep, int timestart)
          << ' ' <<  axis2->upper(n-1) << "  " 
          << casa::near(axis2->lower(0), last2);
     last2 = axis2->upper(n-1);
-    vector<double> start, end;
-    for (uint j=0; j<n; ++j) {
-      start.push_back (axis2->lower(j));
-      end.push_back (axis2->upper(j));
+    // Create a few times the same axis.
+    // Each time it converts from start/end to center/width and back.
+    // So let's see what the accumulated rounding effect is.
+    Axis::ShPtr axis3(axis2);
+    for (uint i=0; i<10; ++i) {
+      vector<double> start, end;
+      for (uint j=0; j<n; ++j) {
+        start.push_back (axis3->lower(j));
+        end.push_back (axis3->upper(j));
+      }
+      axis3 = Axis::ShPtr (new OrderedAxis(start, end, true));
     }
-    OrderedAxis axis3(start, end, true);
-    cout << "  diff: " << axis3.lower(0) - axis2->lower(0)
-         << ' ' <<  axis3.upper(n-1) - axis2->upper(n-1)<< "  " 
-         << casa::near(axis3.lower(0), last3) << endl;
-    last3 = axis3.upper(n-1);
+    cout << "  diff: " << axis3->lower(0) - axis2->lower(0)
+         << ' ' <<  axis3->upper(n-1) - axis2->upper(n-1)<< "  " 
+         << casa::near(axis3->lower(0), last3) << endl;
+    last3 = axis3->upper(n-1);
   }
 }
 
