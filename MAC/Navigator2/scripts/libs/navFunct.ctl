@@ -66,10 +66,10 @@
 //#uses "navigator.ctl"
 
 
-global dyn_string oldActiveObservations=makeDynString();                        
-global dyn_string oldPlannedObservations=makeDynString();                        
-global dyn_string oldFinishedObservations=makeDynString();  
-global bool firstObservatonsInit=true;                      
+global dyn_string oldActiveObservations;                        
+global dyn_string oldPlannedObservations;                        
+global dyn_string oldFinishedObservations;  
+                     
 
 // ****************************************
 // Name : navFunct_splitEvent
@@ -135,6 +135,9 @@ bool navFunct_splitAction(string action,dyn_string& actionString) {
 void navFunct_queryConnectObservations()
 {
   if (dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
+    oldPlannedObservations=makeDynString();
+    oldFinishedObservations=makeDynString();
+    oldActiveObservations=makeDynString();
     dpConnect("navFunct_updateObservations",true,MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations",
                                                  MainDBName+"LOFAR_PermSW_MACScheduler.plannedObservations",
                                                  MainDBName+"LOFAR_PermSW_MACScheduler.finishedObservations");
@@ -152,7 +155,7 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   
   bool update=false;
   for (int i=1; i <= dynlen(active); i++) {
-    if (dynContains(oldFinishedObservations,active[i]) < 1) {
+    if (dynContains(oldActiveObservations,active[i]) < 1) {
       update = true;
       break;
     }
@@ -173,11 +176,9 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       }
     }
   }
-  if (!update && !firstObservatonsInit ) {
+  if (!update) {
     return;
   }
-  firstObservatonsInit=false; 
-  
   oldPlannedObservations = planned;
   oldActiveObservations = active;
   oldFinishedObservations = finished;
