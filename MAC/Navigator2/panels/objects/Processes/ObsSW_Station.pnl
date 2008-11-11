@@ -58,7 +58,7 @@ void dblClick(string originator) {
   } else if (originator == \"activeObs\") {
     newDP=stationTree.selectedItem();
   }
-  
+ 
   if (dpExists(newDP) ) {
     baseDP=newDP;
     LOG_TRACE(\"ObsSW_Station.pnl:DoubleClick||selectedStation: \"+station_selectedStation);
@@ -119,7 +119,7 @@ LANG:1 5 ObsSW
 29 4
 "stationTree"
 ""
-1 1182 -113.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 1180 -113.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -128,15 +128,15 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"frameShadow" "enum 48"
-"selectionMode" "enum 0"
-"backgroundOrigin" "enum 0"
-"defaultRenameAction" "enum 0"
-"frameShape" "enum 6"
-"vScrollBarMode" "enum 0"
-"hScrollBarMode" "enum 0"
 "resizeMode" "enum 0"
- 822 20 992 188
+"hScrollBarMode" "enum 0"
+"vScrollBarMode" "enum 0"
+"frameShape" "enum 6"
+"defaultRenameAction" "enum 0"
+"backgroundOrigin" "enum 0"
+"selectionMode" "enum 0"
+"frameShadow" "enum 48"
+ 820 20 990 188
 10 TreeWidget
 7
 0 "expanded" "(string id)"
