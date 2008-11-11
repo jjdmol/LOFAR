@@ -57,6 +57,11 @@ global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
 global dyn_string highlight;           // contains highlight info for objects
 
+global dyn_string coreStations;
+global dyn_string remoteStations;
+global dyn_string europeStations;
+
+
 //======================== Action Handlers =======================================
 //
 // The following functions are used to handle the 'actions' that are 
@@ -70,6 +75,9 @@ void navigator_handleEventInitialize()
 
   // Set the global statecolors/colornames.
   initLofarColors();
+  
+  // fille global stations lists
+  navFunct_fillStationLists();
  
   // Init the connection Watchdog
   GCFCWD_Init();
