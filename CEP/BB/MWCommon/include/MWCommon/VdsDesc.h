@@ -52,7 +52,8 @@ namespace LOFAR { namespace CEP {
   {
   public:
     // Construct with a description of the entire visibility data set.
-    explicit VdsDesc (const VdsPartDesc&);
+    // The description can be empty and set later using setDesc.
+    explicit VdsDesc (const VdsPartDesc& = VdsPartDesc());
 
     // Construct from the given parameterset.
     // @{
@@ -72,6 +73,12 @@ namespace LOFAR { namespace CEP {
     // Get the description of the VDS.
     const VdsPartDesc& getDesc() const
       { return itsDesc; }
+
+    // Set the description of the VDS.
+    // Usually the description is set in the constructor, but this offers
+    // another way of doing it.
+    void setDesc (const VdsPartDesc& desc)
+      { itsDesc = desc; }
 
     // Write it in parset format.
     void write (std::ostream& os) const;
