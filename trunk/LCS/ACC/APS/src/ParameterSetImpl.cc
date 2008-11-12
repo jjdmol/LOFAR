@@ -29,7 +29,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
-#include <cstdlib>
+#include <string>
 
 namespace LOFAR {
   namespace ACC {
@@ -227,142 +227,111 @@ void ParameterSetImpl::readBuffer(const	string&	theBuffer,
 				  const	bool	merge)
 {
 	istringstream		iss(theBuffer, istringstream::in);
-
 	readStream(iss, prefix, merge);
-
 }
 
-//
-// readStream
-// (private)
-//
-// Disentangles the stream and adds the Key-Values pair to the current 
-// ParameterSetImpl.
-//
-void ParameterSetImpl::readStream(istream&	inputStream, 
-				  const string&	prefix,
-				  bool		merge)
+void ParameterSetImpl::readStream (istream& inputStream, 
+                                   const string& prefix,
+                                   bool	merge)
 {
-	char	paramLine[4096];
-	char*	keyStr;
-	char*	valueStr;
-	bool	multiLine = false;			// current line is multiline
-	bool	addToPrev = false;			// previous line was multiline
-	string	lineColl;					// Collects multiline values
-	string	keyCopy;					// Saved key in multiline
-	string	prefixedKey;					// Key with added prefix (which may be an empty string)
+  // Define key and value.
+  string value;
+  string key;
+  // Read first line.
+  string line;
+  getline (inputStream, line);
+  while (inputStream) {
+    // Skip leading and trailing whitespace.
+    uint st  = lskipws (line, 0, line.size());
+    if (line[st] != '#') {                         // skip if only comment
+      uint end = rskipws (line, st, line.size());
+      if (st < end) {                              // skip empty line
+        bool squote = false;            // In a single quoted string?
+        bool dquote = false;            // In a double quoted string?
+        bool quote  = false;            // In a quoted string?
+        uint nonbl  = st;               // Position of last non-blank character
+        uint stval  = st;               // Start of value
+        for (uint i=st; i<end; ++i) {
+          if (!dquote) {
+            if (line[i] == '\'') {
+              squote = !squote;
+              quote  = squote;
+            }
+          }
+          if (!squote) {
+            if (line[i] == '"') {
+              dquote = !dquote;
+              quote  = dquote;
+            }
+          }
+          if (!quote) {
+            if (line[i] == '#') {
+              end = rskipws(line, st, i);         // A comment ends the line
+            } else if (line[i] == '=') {
+              if (! key.empty()) {
+                addMerge (key, value, merge);   // Add previous key/value to map
+                value.erase();
+              }
+              key = prefix + line.substr (st, nonbl-st+1);   // New key
+              stval = i+1;
+            } else if (line[i] != ' '  &&  line[i] != '\t') {
+              nonbl = i;                        // Position of last non-blank
+            }
+          }
+        }
+        if (quote) {
+          THROW (APSException, "Unbalanced quotes in " + line);
+        }
+        // Skip possible whitespace before the value.
+        // A trailing backslash is processed for backward compatibility.
+        if (line[end-1] == '\\') {
+          end = rskipws(line, stval, end-1);
+        }
+        stval = lskipws(line, stval, end);
+        if (stval < end) {
+          // Append the line's non-empty value to the value.
+          if (value.empty()) {
+            value = line.substr(stval, end-stval);
+          } else {
+            // If both quoted, remove last and first quote.
+            // This is just like C where continuated strings have to be
+            // enclosed in quotes on all lines.
+            // Give an error if one is quoted and the other not.
+            if ((line[stval] == '"'          || line[stval] == '\'')  !=
+                (value[value.size()-1] =='"' || value[value.size()-1] =='\'')) {
+              THROW (APSException, "All value lines need to be quoted around "
+                     "continuation line " + line);
+            }
+            if (line[stval] == '"'  ||  line[stval] == '\'') {
+              value = value.substr (0, value.size()-1) +
+                line.substr(stval+1, end-stval-1);
+            } else {
+              value += ' ';
+              value += line.substr(stval, end-stval);
+            }
+          }
+        }
+      }
+    }
+    // Get next line.
+    getline (inputStream, line);
+  }
+  // Add last key.
+  if (! key.empty()) {
+    addMerge (key, value, merge);
+  }
+}
 
-	// Read the file line by line and convert it to Key Value pairs.
-	while (inputStream.getline (paramLine, 4096)) {
-		LOG_TRACE_LOOP(formatString("data:>%s<", paramLine));
-	
-		if (!paramLine[0] || paramLine[0] == '#') {		// skip empty lines
-			continue;									// and comment lines
-			// Note: this way empty and commentline do not interfere
-			// with multiline definitions.
-		}
-		
-		if (addToPrev) {
-			valueStr = paramLine;		// whole line is value
-		}
-		else {
-			// line must have an equal-character of course.
-			char* separator = strstr(paramLine, "=");
-			if (!separator) {
-				THROW (APSException,formatString("No '=' found in %s", paramLine));
-			}
-			*separator = '\0';					// terminate key string
-			valueStr = separator + 1;			// ValueStr starts after = sign
 
-			// skip leading and trailing spaces from key (allowing spaces before = sign)
-			rtrim(keyStr = ltrim(paramLine));
-
-			// add prefix
-			prefixedKey = prefix + string(keyStr);
-		}
-
-		// skip leading spaces from value (allowing space afer = sign)
-		// but don't strip multiline lines
-		if (!addToPrev) {
-			valueStr = ltrim(valueStr);
-		}
-		// skip trailing spaces from value
-		int32 valLen = rtrim(valueStr) - 1;
-
-		// cut of any comment from value part
-		char* hashPos = strchr(valueStr, '#');		// any # in valueStr?
-		if (hashPos) { 
-			// if valueStr is quoted don't bother about the #
-			bool quoted = ((valLen > 0) &&
-						   (*valueStr == '"' || *valueStr == '\'') &&
-						   (*valueStr == valueStr[valLen]));
-			if (!quoted) {
-				*hashPos = '\0';		// cut off at hash
-				// and skip trailing spaces again
-				// Note: valLen already points to '\0' char
-				valLen = rtrim(valueStr, valLen) - 1;
-			} // quoted
-		} // has hash
-
-		// If last char is a \ we enter multiline mode.
-		if (valueStr[valLen] == '\\') {
-			multiLine = true;
-			// cut of backslash and trailing spaces
-			valueStr[valLen] = '\0';
-			valLen = rtrim(valueStr, valLen) - 1;
-			if (!addToPrev) {			// first multiline?
-				keyCopy = prefixedKey;
-			}
-		}
-		else {
-			multiLine = false;
-		}
-
-		// finally check (again) for quoted strings, cutoff quotes
-		valLen = strlen(valueStr)-1;
-                ///		if ((valLen > 0) && (*valueStr == '"' || *valueStr == '\'') &&
-                ///									(*valueStr == valueStr[valLen])) {
-                ///			valueStr[valLen] = '\0';
-                ///			++valueStr;
-                ///		}
-	
-		// if this or previous line is multiline, collect result
-		if (multiLine || addToPrev) {	
-			lineColl.append(valueStr);
-			LOG_TRACE_LOOP_STR("Multiline collecting:" << lineColl);
-		}
-
-		// Store result if this line is not a multiline
-		if (!multiLine) {
-			if (addToPrev) {	// result in tmp strings?
-				valueStr = const_cast<char*>(lineColl.c_str());
-				keyStr   = const_cast<char*>(prefixedKey.c_str());
-			}
-			LOG_TRACE_VAR(formatString("pair:[%s][%s]", prefixedKey.c_str(), valueStr));
-
-			// remove any existed value and insert this value
-			if ((erase(prefixedKey) > 0) && !merge) {
-				LOG_WARN (
-				formatString("Key %s is defined twice. Ignoring first value.", 
-																  prefixedKey.c_str()));
-			}
-			// Finally add to map
-			pair< KeyValueMap::iterator, bool>		result;
-			result = insert(std::make_pair(prefixedKey,
-                                                       ParameterValue(valueStr,
-                                                                      false))); 
-			if (!result.second) {
-				THROW (APSException, 
-					   formatString("Key %s double defined?", keyStr));
-			}
-
-			// Clear tmp strings
-			lineColl.erase();
-			keyCopy.erase();
-		}
-
-		addToPrev = multiLine;
-	}
+void ParameterSetImpl::addMerge (const string& key,
+                                 const string& value,
+                                 bool merge)
+{
+  // remove any existed value and insert this value
+  if ((erase(key) > 0)  &&  !merge) {
+    LOG_WARN ("Key " + key + " is defined twice; ignoring first value");
+  }
+  add (key, ParameterValue(value));
 }
 
 //------------------------- single pair functions ----------------------------
@@ -388,7 +357,7 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 void ParameterSetImpl::add(const string& aKey, const ParameterValue& aValue)
 {
   if (!insert(make_pair(aKey, aValue)).second) {
-    THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
+    THROW (APSException, "add: Key " + aKey + " double defined?"); 
   }
 }
 

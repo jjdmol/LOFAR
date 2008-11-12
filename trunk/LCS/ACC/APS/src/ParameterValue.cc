@@ -31,8 +31,8 @@ namespace LOFAR { namespace ACC { namespace APS {
     : itsValue (value)
   {
     if (trim) {
-      uint st  = ltrim (0, itsValue.size());
-      uint end = rtrim (st, itsValue.size());
+      uint st  = lskipws (0, itsValue.size());
+      uint end = rskipws (st, itsValue.size());
       if (st > 0  ||  end < itsValue.size()) {
         itsValue = itsValue.substr(st, end-st);
       }
@@ -44,26 +44,6 @@ namespace LOFAR { namespace ACC { namespace APS {
     return ParameterValue (expandedArrayString (itsValue));
   }
 
-  uint ParameterValue::ltrim (uint st, uint end) const
-  {
-    for (; st<end; ++st) {
-      if (itsValue[st] != ' '  &&  itsValue[st] != '\t') {
-        break;
-      }
-    }
-    return st;
-  }
-  
-  uint ParameterValue::rtrim (uint st, uint end) const
-  {
-    for (; end>st; --end) {
-      if (itsValue[end-1] != ' '  &&  itsValue[end-1] != '\t') {
-        break;
-      }
-    }
-    return end;
-  }
-  
   vector<ParameterValue> ParameterValue::getVector() const
   {
     // A single value if there is no opening and closing bracket.
@@ -75,7 +55,7 @@ namespace LOFAR { namespace ACC { namespace APS {
     // Allocate result.
     // Empty result if only whitespace between brackets.
     vector<ParameterValue> result;
-    st = ltrim (st, last);
+    st = lskipws (st, last);
     if (st == last) {
       return result;
     }
