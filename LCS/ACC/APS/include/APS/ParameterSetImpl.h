@@ -313,9 +313,14 @@ private:
 	// is thrown when \a aKey is not found. Otherwise, end() is returned.
 	const_iterator	findKV(const string& aKey, bool doThrow = true) const;
 
+        // Merge in a key/value. A warning is logged if already existing
+        // and merge=false.
+        void addMerge (const string& key, const string& value, bool merge);
+
+
+        //# Data members.
 	// Reference count.
 	int itsCount;
-
 	// Key comparison mode.
 	const KeyCompare::Mode itsMode;
 };

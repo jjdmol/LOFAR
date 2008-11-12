@@ -140,11 +140,13 @@ namespace LOFAR { namespace ACC { namespace APS {
   private:
     // Return the position of the first non-whitespace character in itsValue
     // starting at st.
-    uint ltrim (uint st, uint end) const;
+    uint lskipws (uint st, uint end) const
+      { return LOFAR::lskipws (itsValue, st, end); }
   
     // Return the position after the last non-whitespace character in itsValue
     // back from end.
-    uint rtrim (uint st, uint end) const;
+    uint rskipws (uint st, uint end) const
+      { return LOFAR::rskipws (itsValue, st, end); }
 
     // Return the substring with left and right whitespace removed.
     ParameterValue substr (int st, int end) const
