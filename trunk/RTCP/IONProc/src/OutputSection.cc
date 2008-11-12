@@ -101,6 +101,9 @@ void OutputSection::preprocess(const Parset *ps)
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
+  itsSequenceNumber	    = 0;
+
+  itsDroppedCount.resize(itsNrSubbandsPerPset);
 
   connectToStorage(ps);
 
@@ -117,6 +120,25 @@ void OutputSection::preprocess(const Parset *ps)
 }
 
 
+void OutputSection::droppingData(unsigned subband)
+{
+  if (itsDroppedCount[subband] ++ == 0) {
+    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
+    std::clog << "Warning: dropping data for subband " << subbandNumber << std::endl;
+  }
+}
+
+
+void OutputSection::notDroppingData(unsigned subband)
+{
+  if (itsDroppedCount[subband] > 0) {
+    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
+    std::clog << "Warning: dropped " << itsDroppedCount[subband] << " integration times for subband " << subbandNumber << std::endl;
+    itsDroppedCount[subband] = 0;
+  }
+}
+
+
 void OutputSection::process()
 {
   bool firstTime = itsCurrentIntegrationStep == 0;
@@ -128,18 +150,25 @@ void OutputSection::process()
     unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
     if (lastTime) {
-      CorrelatedData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
-    
-      data->read(itsStreamsFromCNs[inputChannel]);
+      if (itsOutputThreads[subband]->itsFreeQueue.empty()) {
+	droppingData(subband);
+	itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
+      } else {
+	notDroppingData(subband);
+	CorrelatedData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
+      
+	data->read(itsStreamsFromCNs[inputChannel], false);
 
-      if (!firstTime)
-	*data += *itsVisibilitySums[subband];
+	if (!firstTime)
+	  *data += *itsVisibilitySums[subband];
 
-      itsOutputThreads[subband]->itsSendQueue.append(data);
+	data->sequenceNumber = itsSequenceNumber;
+	itsOutputThreads[subband]->itsSendQueue.append(data);
+      }
     } else if (firstTime) {
-      itsVisibilitySums[subband]->read(itsStreamsFromCNs[inputChannel]);
+      itsVisibilitySums[subband]->read(itsStreamsFromCNs[inputChannel], false);
     } else {
-      itsTmpSum->read(itsStreamsFromCNs[inputChannel]);
+      itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
       *itsVisibilitySums[subband] += *itsTmpSum;
     }
 
@@ -147,14 +176,17 @@ void OutputSection::process()
       itsCurrentComputeCore = 0;
   }
 
-  if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps)
+  if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
     itsCurrentIntegrationStep = 0;
+    ++ itsSequenceNumber;
+  }
 }
 
 
 void OutputSection::postprocess()
 {
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    notDroppingData(subband); // for final warning message
     itsOutputThreads[subband]->itsSendQueue.append(0); // 0 indicates that no more messages will be sent
     delete itsOutputThreads[subband];
     delete itsVisibilitySums[subband];
@@ -164,6 +196,7 @@ void OutputSection::postprocess()
   itsOutputThreads.clear();
   itsVisibilitySums.clear();
   itsStreamsToStorage.clear();
+  itsDroppedCount.clear();
 
   delete itsTmpSum;
   itsTmpSum = 0;

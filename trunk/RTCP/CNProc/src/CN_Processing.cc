@@ -464,7 +464,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
     static NSTimer writeTimer("send timer", true);
     writeTimer.start();
-    itsCorrelatedData->write(itsStream);
+    itsCorrelatedData->write(itsStream, false);
     writeTimer.stop();
 
 #if defined HAVE_MPI

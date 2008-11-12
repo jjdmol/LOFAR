@@ -67,7 +67,7 @@ void InputThread::mainLoop()
   try {
     for (unsigned count = 0; count < 10; count += increment) {
       data = itsFreeQueue.remove();
-      data->read(itsStreamFromION);
+      data->read(itsStreamFromION, true);
       itsReceiveQueue.append(data);
     }
   } catch (Stream::EndOfStreamException &) {

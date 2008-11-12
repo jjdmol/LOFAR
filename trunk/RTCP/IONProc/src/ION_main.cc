@@ -38,6 +38,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -97,7 +98,6 @@ static void createClientStreams(unsigned nrClients, const std::string &streamTyp
 #endif
 
   clientStreams.resize(nrClients);
-
 
   for (unsigned core = 0; core < nrClients; core ++) {
 #if defined HAVE_ZOID
@@ -284,7 +284,17 @@ static void enableCoreDumps()
 
   if (system("echo /tmp/%e.core >/proc/sys/kernel/core_pattern") < 0)
     std::cerr << "warning: could not change /proc/sys/kernel/core_pattern" << std::endl;
+
+  std::clog << "coredumps enabled" << std::endl;
 }
+
+
+static void ignoreSigPipe()
+{
+  if (signal(SIGPIPE, SIG_IGN) < 0)
+    perror("warning: ignoring SIGPIPE failed");
+}
+
 
 #ifdef FLAT_MEMORY
 static void cat(const char* fn)
@@ -361,8 +371,7 @@ void *master_thread(void *)
   std::clog << "starting master_thread" << std::endl;
 
   enableCoreDumps();
-
-  std::clog << "coredumps" << std::endl;
+  ignoreSigPipe();
 
 #ifdef FLAT_MEMORY
   void *flatmem_addr = mmapFastMemory();
@@ -370,7 +379,6 @@ void *master_thread(void *)
   std::clog << "Flatmem base address : " << flatmem_addr << std::endl;
 
 #endif
-
 
   try {
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME

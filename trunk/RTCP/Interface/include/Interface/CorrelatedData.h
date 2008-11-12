@@ -24,17 +24,18 @@ class CorrelatedData
     CorrelatedData(unsigned nrBaselines, unsigned nrChannels, Allocator &allocator = heapAllocator);
 
     static size_t requiredSize(unsigned nrBaselines, unsigned nrChannels);
-    void	  read(Stream *);
-    void          write(Stream *) const;
+    void	  read(Stream *, bool withSequenceNumber);
+    void          write(Stream *, bool withSequenceNumber) const;
 
     CorrelatedData &operator += (const CorrelatedData &);
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
     Matrix<unsigned short>	nrValidSamples; //[nrBaselines][nrChannels]
     Vector<float>		centroids; //[nrBaselines]
+    uint32_t			sequenceNumber;
 
   private:
-    void			checkEndianness();
+    void			checkEndianness(bool withSequenceNumber);
 
     static size_t visibilitiesSize(unsigned nrBaselines, unsigned nrChannels);
     static size_t nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels);
@@ -75,17 +76,20 @@ inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels,
 }
 
 
-inline void CorrelatedData::read(Stream *str)
+inline void CorrelatedData::read(Stream *str, bool withSequenceNumber)
 {
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->read(&centroids[0], centroids.size() * sizeof(float));
 
-  checkEndianness();
+  if (withSequenceNumber)
+    str->read(&sequenceNumber, sizeof sequenceNumber);
+
+  checkEndianness(withSequenceNumber);
 }
 
 
-inline void CorrelatedData::write(Stream *str) const
+inline void CorrelatedData::write(Stream *str, bool withSequenceNumber) const
 {
 #if !defined WORDS_BIGENDIAN
   THROW(AssertError, "not implemented: think about endianness");
@@ -94,15 +98,21 @@ inline void CorrelatedData::write(Stream *str) const
   str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->write(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->write(&centroids[0], centroids.size() * sizeof(float));
+
+  if (withSequenceNumber)
+    str->write(&sequenceNumber, sizeof sequenceNumber);
 }
 
 
-inline void CorrelatedData::checkEndianness()
+inline void CorrelatedData::checkEndianness(bool withSequenceNumber)
 {
 #if !defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
   dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
   // dataConvert(LittleEndian, &centroids[0], centroids.size());
+
+  if (withSequenceNumber)
+    dataConvert(LittleEndian, &sequenceNumber, 1);
 #endif
 }
 

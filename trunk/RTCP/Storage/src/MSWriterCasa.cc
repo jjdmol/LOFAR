@@ -627,7 +627,7 @@ namespace LOFAR
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
       ASSERT(data != 0);
 
-      std::cout << "write" << std::endl;
+      //std::cout << "write" << std::endl;
 
       MSsetupTimer.start();
 
