@@ -52,8 +52,11 @@ OutputThread::~OutputThread()
     exit(1);
   }
 
-  for (unsigned i = 0; i < maxSendQueueSize; i ++)
+  while (!itsFreeQueue.empty())
     delete itsFreeQueue.remove();
+
+  while (!itsSendQueue.empty())
+    delete itsSendQueue.remove();
 }
 
 
@@ -62,8 +65,13 @@ void OutputThread::mainLoop()
   CorrelatedData *data;
 
   while ((data = itsSendQueue.remove()) != 0) {
-    data->write(itsStreamToStorage);
-    itsFreeQueue.append(data);
+    try {
+      data->write(itsStreamToStorage, true);
+      itsFreeQueue.append(data);
+    } catch (...) {
+      itsFreeQueue.append(data);
+      throw;
+    }
   }
 }
 

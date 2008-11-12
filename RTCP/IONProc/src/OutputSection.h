@@ -44,6 +44,11 @@ class OutputSection
   private:
     void			connectToStorage(const Parset *);
 
+    void			droppingData(unsigned subband);
+    void			notDroppingData(unsigned subband);
+
+    std::vector<unsigned>	itsDroppedCount; // [subband]
+
     std::vector<CorrelatedData *> itsVisibilitySums;
     CorrelatedData		*itsTmpSum;
     std::vector<OutputThread *> itsOutputThreads;
@@ -51,6 +56,7 @@ class OutputSection
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
+    unsigned			itsSequenceNumber;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
     std::vector<Stream *>	itsStreamsToStorage;

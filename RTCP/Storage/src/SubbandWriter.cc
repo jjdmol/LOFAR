@@ -60,6 +60,9 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
 ,itsPropertySet(0)
 #endif
 {
+  if (itsTimesToIntegrate != 1) // FIXME: does not work with dropped blocks
+    THROW(StorageException, "integration on storage nodes is broken");
+
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
@@ -129,6 +132,8 @@ void SubbandWriter::createInputStreams()
     } else {
       THROW(StorageException, "unsupported ION->Storage stream type");
     }
+
+    itsIsNullStream.push_back(dynamic_cast<NullStream *>(itsInputStreams.back()) != 0);
   }
 }
 
@@ -217,6 +222,7 @@ void SubbandWriter::preprocess()
   }
 #endif // defined HAVE_AIPSPP
 
+  itsPreviousSequenceNumbers.resize(itsNrSubbandsPerStorage, -1);
   createInputStreams();
   
   for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; sb ++)
@@ -252,12 +258,34 @@ void SubbandWriter::writeLogMessage()
 }
 
 
+void SubbandWriter::checkForDroppedData(CorrelatedData *data, unsigned sb)
+{
+  unsigned expectedSequenceNumber = itsPreviousSequenceNumbers[sb] + 1;
+
+  if (itsIsNullStream[sb]) {
+    data->sequenceNumber	   = expectedSequenceNumber;
+    itsPreviousSequenceNumbers[sb] = expectedSequenceNumber;
+  } else {
+    unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
+
+    if (droppedBlocks > 0) {
+      unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + sb;
+      std::clog << "Warning: dropped " << droppedBlocks << " block" << (droppedBlocks == 1 ? "" : "s") << " for subband " << subbandNumber << std::endl;
+    }
+
+    itsPreviousSequenceNumbers[sb] = data->sequenceNumber;
+  }
+}
+
+
 bool SubbandWriter::processSubband(unsigned sb)
 {
   CorrelatedData *data = itsInputThreads[sb]->itsReceiveQueue.remove();
 
   if (data == 0)
     return false;
+
+  checkForDroppedData(data, sb);
 
 #if defined HAVE_AIPSPP
   // Write one set of visibilities of size
@@ -302,7 +330,7 @@ bool SubbandWriter::processSubband(unsigned sb)
     }
 
     itsWriteTimer.start();
-    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, itsTimeCounter,
+    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data->sequenceNumber,
 			  itsNVisibilities, newVis, itsFlagsBuffers,
 			  itsWeightsBuffers);
     itsWriteTimer.stop();
@@ -316,7 +344,10 @@ bool SubbandWriter::processSubband(unsigned sb)
 
 void SubbandWriter::process() 
 {
-  while (true) {
+  std::vector<bool> finishedSubbands(itsNrSubbandsPerStorage, false);
+  unsigned	    finishedSubbandsCount = 0;
+
+  while (finishedSubbandsCount < itsNrSubbandsPerStorage) {
     writeLogMessage();
 
 #if defined HAVE_AIPSPP
@@ -325,8 +356,11 @@ void SubbandWriter::process()
 #endif
 
     for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb)
-      if (!processSubband(sb))
-	return;
+      if (!finishedSubbands[sb])
+	if (!processSubband(sb)) {
+	  finishedSubbands[sb] = true;
+	  ++ finishedSubbandsCount;
+	}
 
     ++ itsTimeCounter;
   }
@@ -342,6 +376,7 @@ void SubbandWriter::postprocess()
 
   itsInputThreads.clear();
   itsInputStreams.clear();
+  itsIsNullStream.clear();
 
   delete [] itsFlagsBuffers;	itsFlagsBuffers   = 0;
   delete [] itsWeightsBuffers;	itsWeightsBuffers = 0;
@@ -353,6 +388,7 @@ void SubbandWriter::postprocess()
   itsWriters.clear();
 #endif
 
+  itsPreviousSequenceNumbers.clear();
   delete itsVisibilities;	itsVisibilities   = 0;
 
   cout<<itsWriteTimer<<endl;

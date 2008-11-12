@@ -60,12 +60,14 @@ class SubbandWriter
     void		    clearAllSums();
     void		    createInputStreams();
     void		    writeLogMessage();
+    void		    checkForDroppedData(CorrelatedData *, unsigned sb);
     bool		    processSubband(unsigned sb);
 
     const Parset	    *itsPS;
     unsigned		    itsRank;
 
     std::vector<Stream *>   itsInputStreams;
+    std::vector<bool>	    itsIsNullStream;
     std::vector<InputThread *> itsInputThreads;
 
     unsigned		    itsNStations;
@@ -79,6 +81,7 @@ class SubbandWriter
 
     unsigned		    itsNrSubbandsPerPset;
     unsigned		    itsNrSubbandsPerStorage;
+    std::vector<int>	    itsPreviousSequenceNumbers;
 
     vector<unsigned>	    itsBandIDs;
     unsigned		    itsTimeCounter;

@@ -33,16 +33,19 @@ namespace RTCP {
 template <typename T> class Queue
 {
   public:
-	 Queue();
-	 ~Queue();
+	     Queue();
+	     ~Queue();
 
-    void append(T);
-    T    remove();
+    void     append(T);
+    T	     remove();
+
+    unsigned size() const;
+    bool     empty() const;
 
   private:
-    pthread_mutex_t mutex;
-    pthread_cond_t  newElementAppended;
-    std::list<T>    queue;
+    mutable pthread_mutex_t mutex;
+    pthread_cond_t	    newElementAppended;
+    std::list<T>	    queue;
 };
 
 
@@ -81,6 +84,24 @@ template <typename T> inline T Queue<T>::remove()
   pthread_mutex_unlock(&mutex);
 
   return element;
+}
+
+
+template <typename T> inline unsigned Queue<T>::size() const
+{
+  unsigned size;
+
+  pthread_mutex_lock(&mutex);
+  size = queue.size();
+  pthread_mutex_unlock(&mutex);
+
+  return size;
+}
+
+
+template <typename T> inline bool Queue<T>::empty() const
+{
+  return size() == 0;
 }
 
 } // namespace RTCP
