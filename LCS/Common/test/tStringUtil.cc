@@ -127,6 +127,34 @@ bool testTrim()
 }
 
 
+bool testSkipws()
+{
+  {
+    string str;
+    uint st = lskipws(str, 0, str.size());
+    uint end = rskipws(str, st, str.size());
+    ASSERT (st==0 && end==0);
+  }
+  {
+    string str(" \t \t\t  ");
+    uint st = lskipws(str, 0, str.size());
+    uint end = rskipws(str, st, str.size());
+    ASSERT (st==7 && end==7);
+  }
+  {
+    string str(" \t \t\ta  ");
+    uint st = lskipws(str, 0, str.size());
+    uint end = rskipws(str, st, str.size());
+    ASSERT (st==5 && end==6);
+    ASSERT (lskipws(str, st, end) == st);
+    ASSERT (lskipws(str, st, str.size()) == st);
+    ASSERT (lskipws(str, end, end) == end);
+    ASSERT (lskipws(str, end, str.size()) == str.size());
+  }
+  return true;
+}
+
+
 bool testCase()
 {
   cout << "Lowercase and uppercase a string:" << endl;
@@ -264,6 +292,7 @@ int main()
     testCompare(false) &&
     testCompare(true)  &&
     testTrim()         &&
+    testSkipws()       &&
     testCase()         &&
     testToString()     &&
     testCompactArray() &&
