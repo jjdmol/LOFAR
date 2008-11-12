@@ -101,6 +101,28 @@ const string timeString(time_t		aTime,
 	return (theTimeString);
 }
 
+
+uint lskipws (const string& value, uint st, uint end)
+{
+  for (; st<end; ++st) {
+    if (value[st] != ' '  &&  value[st] != '\t') {
+      break;
+    }
+  }
+  return st;
+}
+  
+uint rskipws (const string& value, uint st, uint end)
+{
+  for (; end>st; --end) {
+    if (value[end-1] != ' '  &&  value[end-1] != '\t') {
+      break;
+    }
+  }
+  return end;
+}
+  
+
 //
 // rtrim(char* CString [,len=0])
 //

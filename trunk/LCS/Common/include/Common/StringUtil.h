@@ -113,6 +113,18 @@ const string timeString(time_t     aTime,
 						bool       gmt = true,
 						char*      format = "%F %T");
 
+// Skip leading whitespace (blanks and horizontal tabs) starting at st.
+// It returns the position of the first non-whitespace character.
+// It returns end if all whitespace.
+// It can be used in combination with rskipws.
+uint lskipws (const string& value, uint st, uint end);
+
+// Skip trailing whitespace (blanks and horizontal tabs) starting at end.
+// It returns the position after the last non-whitespace character, thus
+// value.substr(st, end-st) extracts the significant value.
+// It returns st if all whitespace.
+uint rskipws (const string& value, uint st, uint end);
+
 //
 // rtrim(char* CString [,len])
 //
