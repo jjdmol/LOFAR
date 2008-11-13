@@ -63,27 +63,39 @@ namespace LOFAR { namespace ACC { namespace APS {
     // Get the parameter value in the given type.
     // <group>
     bool   getBool() const
-      { return StringToBool(itsValue); }
+      { return strToBool(itsValue); }
     int    getInt() const
-      { return StringToInt32(itsValue); }
+      { return strToInt(itsValue); }
     uint   getUint() const
-      { return StringToUint32(itsValue); }
+      { return strToUint(itsValue); }
+    int16  getInt16() const
+      { return strToInt16(itsValue); }
+    uint16 getUint16() const
+      { return strToUint16(itsValue); }
+    int32  getInt32() const
+      { return strToInt32(itsValue); }
+    int32  getUint32() const
+      { return strToUint32(itsValue); }
 #ifdef HAVE_LONG_LONG
     int64  getInt64() const
-      { return StringToInt64(itsValue); }
+      { return strToInt64(itsValue); }
     uint64 getUint64() const
-      { return StringToUint64(itsValue); }
+      { return strToUint64(itsValue); }
 #endif
     float  getFloat() const
-      { return StringToFloat(itsValue); }
+      { return strToFloat(itsValue); }
     double getDouble() const
-      { return StringToDouble(itsValue); }
+      { return strToDouble(itsValue); }
     string getString() const;
     time_t getTime() const
       { return StringToTime_t(itsValue); }
     vector<bool>   getBoolVector() const;
     vector<int>    getIntVector() const;
     vector<uint>   getUintVector() const;
+    vector<int16>  getInt16Vector() const;
+    vector<uint16> getUint16Vector() const;
+    vector<int32>  getInt32Vector() const;
+    vector<uint32> getUint32Vector() const;
 #ifdef HAVE_LONG_LONG
     vector<int64>  getInt64Vector() const;
     vector<uint64> getUint64Vector() const;

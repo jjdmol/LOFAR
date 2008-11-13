@@ -503,49 +503,49 @@ inline uint ParameterSet::getUint(const string& aKey, uint aValue) const
 //#	getInt16(key)
 inline int16 ParameterSet::getInt16(const string& aKey) const
 {
-	return getInt(aKey);
+	return itsSet->getInt16(aKey);
 }
 
 //#	getInt16(key, value)
 inline int16 ParameterSet::getInt16(const string& aKey, int16 aValue) const
 {
-        return getInt(aKey, aValue);
+        return itsSet->getInt16(aKey, aValue);
 }
 
 //#	getUint16(key)
 inline uint16 ParameterSet::getUint16(const string& aKey) const
 {
-	return getUint(aKey);
+	return itsSet->getUint16(aKey);
 }
 
 //#	getUint16(key, value)
 inline uint16 ParameterSet::getUint16(const string& aKey, uint16 aValue) const
 {
-        return getUint(aKey, aValue);
+        return itsSet->getUint16(aKey, aValue);
 }
 
 //#	getInt32(key)
 inline int32 ParameterSet::getInt32(const string& aKey) const
 {
-	return getInt(aKey);
+	return itsSet->getInt32(aKey);
 }
 
 //#	getInt32(key, value)
 inline int32 ParameterSet::getInt32(const string& aKey, int32 aValue) const
 {
-        return getInt(aKey, aValue);
+        return itsSet->getInt32(aKey, aValue);
 }
 
 //#	getUint32(key)
 inline uint32 ParameterSet::getUint32(const string& aKey) const
 {
-	return getUint(aKey);
+	return itsSet->getUint32(aKey);
 }
 
 //#	getUint32(key, value)
 inline uint32 ParameterSet::getUint32(const string& aKey, uint32 aValue) const
 {
-        return getUint(aKey, aValue);
+        return itsSet->getUint32(aKey, aValue);
 }
 
 #if HAVE_LONG_LONG
@@ -665,6 +665,66 @@ inline vector<uint> ParameterSet::getUintVector(const string& aKey,
                                                 bool expandable) const
 {
         return itsSet->getUintVector(aKey, aValue, expandable);
+}
+
+//#	getInt16Vector(key)
+inline vector<int16> ParameterSet::getInt16Vector(const string& aKey,
+                                                  bool expandable) const
+{
+	return itsSet->getInt16Vector(aKey, expandable);
+}
+
+//#	getInt16Vector(key, value)
+inline vector<int16> ParameterSet::getInt16Vector(const string& aKey,
+                                                  const vector<int16>& aValue,
+                                                  bool expandable) const
+{
+	return itsSet->getInt16Vector(aKey, aValue, expandable);
+}
+
+//#	getUint16Vector(key)
+inline vector<uint16> ParameterSet::getUint16Vector(const string& aKey,
+                                                    bool expandable) const
+{
+	return itsSet->getUint16Vector(aKey, expandable);
+}
+
+//#	getUint16Vector(key, value)
+inline vector<uint16> ParameterSet::getUint16Vector(const string& aKey,
+                                                    const vector<uint16>& aValue,
+                                                    bool expandable) const
+{
+        return itsSet->getUint16Vector(aKey, aValue, expandable);
+}
+
+//#	getInt32Vector(key)
+inline vector<int32> ParameterSet::getInt32Vector(const string& aKey,
+                                                  bool expandable) const
+{
+	return itsSet->getInt32Vector(aKey, expandable);
+}
+
+//#	getInt32Vector(key, value)
+inline vector<int32> ParameterSet::getInt32Vector(const string& aKey,
+                                                  const vector<int32>& aValue,
+                                                  bool expandable) const
+{
+	return itsSet->getInt32Vector(aKey, aValue, expandable);
+}
+
+//#	getUint32Vector(key)
+inline vector<uint32> ParameterSet::getUint32Vector(const string& aKey,
+                                                    bool expandable) const
+{
+	return itsSet->getUint32Vector(aKey, expandable);
+}
+
+//#	getUint32Vector(key, value)
+inline vector<uint32> ParameterSet::getUint32Vector(const string& aKey,
+                                                    const vector<uint32>& aValue,
+                                                    bool expandable) const
+{
+        return itsSet->getUint32Vector(aKey, aValue, expandable);
 }
 
 #if HAVE_LONG_LONG
