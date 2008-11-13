@@ -31,12 +31,14 @@ namespace BBS {
   AxisMapping::AxisMapping (const Axis& from, const Axis& to)
   {
     size_t nr = from.size();
+    size_t maxto = to.size() - 1;
     itsMapping.reserve (nr);
     itsCenters.reserve (nr);
     itsBorders.reserve (nr);
     size_t inx=0;
     for (size_t i=0; i<nr; ++i) {
-      size_t inxn = to.locate (from.center(i), true, inx);
+      size_t inxn = to.find (from.center(i), true, inx).first;
+      if (inxn > maxto) inxn = maxto;
       if (inxn != inx  &&  i > 0) {
         itsBorders.push_back (i);
       }

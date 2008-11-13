@@ -231,8 +231,8 @@ namespace BBS {
     // Thus add up the start and end values of all cells.
     const Axis& x = *itsAxes[0];
     const Axis& y = *itsAxes[1];
-    double xval = 0;
-    double yval = 0;
+    int64 xval = 0;
+    int64 yval = 0;
     for (uint i=0; i<x.size(); ++i) {
       xval += int64(x.lower(i)) + int64(x.upper(i));
     }

@@ -55,7 +55,7 @@ void doIt (const string& msname, int timestep, int timestart)
     if (n > times.size() - i) {
       n = times.size() - i;
     }
-    Axis::ShPtr axis2 (axis1->subset (i, i+n-1));
+    Axis::ShPtr axis2 (axis1->subset (size_t(i), size_t(i+n-1)));
     cout << "step " << i << ": " << n << " times  " << axis2->lower(0)
          << ' ' <<  axis2->upper(n-1) << "  " 
          << casa::near(axis2->lower(0), last2);
