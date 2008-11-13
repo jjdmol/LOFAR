@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.4 20071017"		# added possibility for custom scripts
+VERSION="v1.5 20081112"		# added possibility for custom scripts
 BINDIR=/opt/lofar/bin
 LOGDIR=/opt/lofar/log
 LEVELTABLE=${BINDIR}/../etc/swlevel.conf
@@ -40,12 +40,12 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) [ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]"
 	echo "0: stop all lofar software"
-	echo "1: Lofar daemons are running"
-	echo "2: RSPDriver is running"
-	echo "3: PVSS database is running"
-	echo "4: Hardwaremonitor is running"
-	echo "5: Servers are running"
-	echo "6: Full MAC is running"
+	echo "1: Lofar daemons and PVSS"
+	echo "2: Lowlevel hardware drivers"
+	echo "3: Calculation services"
+	echo "4: Hardware and software monitors"
+	echo "5: System Health Management"
+	echo "6: MAC is controlling the software"
 	echo ""
 	exit 1
 }
@@ -60,9 +60,12 @@ start_prog()
 	asroot=${2:1}
 	withmpi=${3:1}
 
+	# special check for logging-daemons
+	[ $prog == $logProgToSkip ] && return
+	
 	# check existance
 	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
-	
+
 	# if it is a shell script call the script
 	if [ -f $BINDIR/${prog}.sh ]; then
 		$BINDIR/${prog}.sh start
@@ -112,6 +115,9 @@ stop_prog()
 	withmpi=${3:1}
 	[ ! -z "$asroot" ] && asroot=sudo	
 
+	# special check for logging-daemons
+	[ $prog == $logProgToSkip ] && return
+	
 	# check existance
 	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
 	
@@ -174,6 +180,9 @@ status_prog()
 		levelnr=`echo $line | cut -d":" -f1`
 		prog=`echo $line | cut -d":" -f6`
 
+		# special check for logging-daemons
+		[ $prog == $logProgToSkip ] && continue
+		
 		# check existance
 		[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || continue
 	
@@ -242,6 +251,13 @@ goto_level()
 #
 # MAIN
 #
+
+# Find out if we are running on a PVSS system
+# Note: on PVSS systems LoggingClient must be ignored on non-PVSS system LoggingProcessor.
+logProgToSkip=LoggingProcessor
+if [ -f ${BINDIR}/PVSS00pmon ]; then
+	logProgToSkip=LoggingClient
+fi
 
 # when no argument is given show current level
 if [ -z "$1" ]; then
