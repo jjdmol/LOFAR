@@ -278,10 +278,12 @@ inline std::string toString(long double val, const char* fmt = 0)
 // a means to override the default formatting behaviour by supplying his/her
 // own formatting string, following the well-known <tt>scanf</tt>-like
 // conversions.
+// It uses sscanf, so a converting e.g. '2a' to int succeeds and results in 2.
 //
 // \attention The user is responsible for the correctness of the optional
 // conversion string. No checks are done by the StringTo...() methods.
-
+//
+// \attention These functions will be deprecated in a next release.
 // @{
 
 bool   StringToBool  (const string& aString)                   throw(Exception);
@@ -296,6 +298,31 @@ uint64 StringToUint64(const string& aString,const char* fmt=0) throw(Exception);
 float  StringToFloat (const string& aString,const char* fmt=0) throw(Exception);
 double StringToDouble(const string& aString,const char* fmt=0) throw(Exception);
 
+// @}
+
+// @name Strict conversion of string to numeric value
+// Convert a string to the value of any of the fundamental arithmetic data 
+// types. It checks if the entire string is used for the conversion.
+// An integer value can also be given in hexadecimal format (e.g. 0x123).
+// Leading and trailing whitespace is allowed.
+// It checks if an integer value does not exceed the data type range.
+// @{
+long          strToLong   (const string& aString) throw(Exception);
+int           strToInt    (const string& aString) throw(Exception);
+int32         strToInt32  (const string& aString) throw(Exception);
+int16         strToInt16  (const string& aString) throw(Exception);
+unsigned long strToUlong  (const string& aString) throw(Exception);
+uint          strToUint   (const string& aString) throw(Exception);
+uint32        strToUint32 (const string& aString) throw(Exception);
+uint16        strToUint16 (const string& aString) throw(Exception);
+#if HAVE_LONG_LONG
+int64         strToInt64  (const string& aString) throw(Exception);
+uint64        strToUint64 (const string& aString) throw(Exception);
+#endif
+float         strToFloat  (const string& aString) throw(Exception);
+double        strToDouble (const string& aString) throw(Exception);
+inline bool   strToBool   (const string& aString) throw(Exception)
+  { return StringToBool (aString); }
 // @}
 
 // @name Manupulate strings containing a array specification

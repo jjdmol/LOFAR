@@ -31,6 +31,7 @@
 #include <cstring>
 #include <cstdarg>
 #include <ctime>
+#include <errno.h>
 
 namespace LOFAR
 {
@@ -214,21 +215,192 @@ int32	StringToInt32(const string& aString, const char* fmt) throw(Exception)
 			   sscanf(aString.c_str(), "%d", &theInt)) != 1) {
 		THROW (Exception, aString + " is not an integer value");
 	}
-
 	return (theInt);
 }	
 
-uint32	StringToUint32(const string& aString, const char* fmt) throw(Exception)
+long strToLong (const string& aString) throw(Exception)
 {
-	uint32		theUint;
-	if ((fmt ? sscanf(aString.c_str(), fmt, &theUint) : 
-			   sscanf(aString.c_str(), "%u", &theUint)) != 1) {
-		THROW (Exception, aString + " is not an unsigned integer value");
-	}
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  long val;
+  // Clear errno since strtol does not do it.
+  errno = 0;
+  // We don't want octal values, so use base 10 unless a hex value is given.
+  if (end > st+2  &&  str[st] == '0'  &&  (str[st+1]=='x' || str[st+1]=='X')) {
+    val = strtol (str+st, &endPtr, 0);
+  } else {
+    val = strtol (str+st, &endPtr, 10);
+  }
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside long int range");
+  return val;
+}
 
-	return (theUint);
-}	
+int strToInt (const string& aString) throw(Exception)
+{
+  long val = strToLong (aString);
+  if (sizeof(int) != sizeof(long)) {
+    if (sizeof(int) == 4) {
+      ASSERTSTR (val >= long(-32768)*65536  &&  val <= 2147483647L,
+                 val << " is outside 4-byte int range");
+    }
+  }
+  return val;
+}
 
+int32 strToInt32 (const string& aString) throw(Exception)
+{
+  long val = strToLong (aString);
+  if (sizeof(int32) != sizeof(long)) {
+    ASSERTSTR (val >= long(-32768)*65536  &&  val <= 2147483647L,
+               val << " is outside int32 range");
+  }
+  return val;
+}
+
+int16 strToInt16 (const string& aString) throw(Exception)
+{
+  long val = strToLong (aString);
+  ASSERTSTR (val >= -32768L  &&  val <= 32767L,
+             val << " is outside int16 range");
+  return val;
+}
+
+unsigned long strToUlong (const string& aString) throw(Exception)
+{
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  unsigned long val;
+  // Clear errno since strtoul does not do it.
+  errno = 0;
+  // We don't want octal values, so use base 10 unless a hex value is given.
+  if (end > st+2  &&  str[st] == '0'  &&  (str[st+1]=='x' || str[st+1]=='X')) {
+    val = strtoul (str+st, &endPtr, 0);
+  } else {
+    val = strtoul (str+st, &endPtr, 10);
+  }
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside long uint range");
+  return val;
+}
+
+uint strToUint (const string& aString) throw(Exception)
+{
+  unsigned long val = strToUlong (aString);
+  if (sizeof(uint) != sizeof(unsigned long)) {
+    if (sizeof(uint) == 4) {
+      ASSERTSTR (val <= 4294967295UL,
+                 val << " is outside 4-byte uint range");
+    }
+  }
+  return val;
+}
+
+uint32 strToUint32 (const string& aString) throw(Exception)
+{
+  unsigned long val = strToUlong (aString);
+  if (sizeof(uint32) != sizeof(unsigned long)) {
+    ASSERTSTR (val <= 4294967295UL,
+               val << " is outside uint32 range");
+  }
+  return val;
+}
+
+uint16 strToUint16 (const string& aString) throw(Exception)
+{
+  unsigned long val = strToUlong (aString);
+  ASSERTSTR (val <= 65535UL,
+             val << " is outside uint16 range");
+  return val;
+}
+
+float strToFloat (const string& aString) throw(Exception)
+{
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  // Clear errno since strtof does not do it.
+  errno = 0;
+  double val = strtof (str+st, &endPtr);
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside float range");
+  return val;
+}
+
+double strToDouble (const string& aString) throw(Exception)
+{
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  // Clear errno since strtod does not do it.
+  errno = 0;
+  double val = strtod (str+st, &endPtr);
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside double range");
+  return val;
+}
+
+#if HAVE_LONG_LONG
+int64 strToInt64  (const string& aString) throw(Exception)
+{
+  if (sizeof(int64) == sizeof(long)) return strToLong(aString);
+  ASSERTSTR (sizeof(int64)==sizeof(long long),
+             "strToInt64: sizeof(int64) cannot be handled");
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  long long val;
+  // Clear errno since strtoll does not do it.
+  errno = 0;
+  // We don't want octal values, so use base 10 unless a hex value is given.
+  if (end > st+2  &&  str[st] == '0'  &&  (str[st+1]=='x' || str[st+1]=='X')) {
+    val = strtoll (str+st, &endPtr, 0);
+  } else {
+    val = strtoll (str+st, &endPtr, 10);
+  }
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside long long int range");
+  return val;
+}
+
+uint64 strToUint64 (const string& aString) throw(Exception)
+{
+  if (sizeof(uint64) == sizeof(unsigned long)) return strToUlong(aString);
+  ASSERTSTR (sizeof(uint64)==sizeof(unsigned long long),
+             "strToUint64: sizeof(uint64) cannot be handled");
+  const char* str = aString.c_str();
+  int st  = lskipws(aString, 0, aString.size());
+  int end = rskipws(aString, st, aString.size());
+  char* endPtr;
+  unsigned long long val;
+  // Clear errno since strtoull does not do it.
+  errno = 0;
+  // We don't want octal values, so use base 10 unless a hex value is given.
+  if (end > st+2  &&  str[st] == '0'  &&  (str[st+1]=='x' || str[st+1]=='X')) {
+    val = strtoull (str+st, &endPtr, 0);
+  } else {
+    val = strtoull (str+st, &endPtr, 10);
+  }
+  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
+             aString << " is invalid or outside long long uint range");
+  return val;
+}
+#endif
+
+ 
 #if HAVE_LONG_LONG
 int64	StringToInt64(const string& aString, const char* fmt) throw(Exception)
 {
