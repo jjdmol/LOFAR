@@ -46,10 +46,9 @@ void check1 (const AxisType& axis)
 
 // Test an axis of 10 intervals of width 2 starting at 1.
 template<typename AxisType>
-void check10 (const AxisType& axis, bool isRegular, bool isOrdered)
+void check10 (const AxisType& axis, bool isRegular)
 {
   ASSERT (axis.isRegular() == isRegular);
-  ASSERT (axis.isOrdered() == isOrdered);
   ASSERT (axis == axis);
   ASSERT (! (axis != axis));
   ASSERT (axis.checkIntervals (axis));
@@ -64,10 +63,12 @@ void check10 (const AxisType& axis, bool isRegular, bool isOrdered)
   ASSERT (axis.upper(9) == 21);
   ASSERT (axis.range().first == 1);
   ASSERT (axis.range().second == 21);
-  ASSERT (axis.locate(0.5) == 0);
+  pair<double,bool> res = axis.find(0.5);
+  ASSERT (res.first == 0  &&  !res.second);
   ASSERT (axis.locate(1.5) == 0);
   ASSERT (axis.locate(20) == 9);
-  ASSERT (axis.locate(200) == 9);
+  pair<double,bool> res2 = axis.find(200);
+  ASSERT (res2.first == 10  &&  !res2.second);
   ASSERT (axis.locate(19, true) == 9);
   ASSERT (axis.locate(19, false) == 8);
   {
@@ -100,19 +101,22 @@ void checkGap5 (const AxisType& axis)
   ASSERT (axis.range().first == 0);
   ASSERT (axis.range().second == 25);
   ASSERT (axis.locate(0.5) == 0);
-  ASSERT (axis.locate(-1.5) == 0);
+  pair<double,bool> res1 = axis.find(-1.5);
+  ASSERT (res1.first == 0  &&  !res1.second);
   ASSERT (axis.locate(20) == 4);
-  ASSERT (axis.locate(200) == 4);
-  ASSERT (axis.locate(12, false) == 3);
+  pair<double,bool> res2 = axis.find(200);
+  ASSERT (res2.first == 5  &&  !res2.second);
+  pair<double,bool> res3 = axis.find(12, false);
+  ASSERT (res3.first == 3  &&  !res3.second);
   ASSERT (axis.locate(12, true) == 3);
   ASSERT (axis.locate(16, false) == 3);
-  ASSERT (axis.locate(16, true) == 3);
+  pair<double,bool> res4 = axis.find(16, true);
+  ASSERT (res4.first == 4  &&  !res4.second);
 }
 
 void checkCombAxis (const Axis& axis)
 {
   ASSERT (!axis.isRegular());
-  ASSERT (axis.isOrdered());
   ASSERT (axis.size() == 9);
   double val=1;
   for (int i=0; i<9; ++i) {
@@ -130,17 +134,17 @@ void testRegular()
   check1  (axis1);
   RegularAxis axis2(1,2,10);
   ASSERT (axis2.getId() == 3);      // check1 creates 2 Axis objects
-  check10 (axis2, true, true);
+  check10 (axis2, true);
   RegularAxis axis(1,21,10,true);
   ASSERT (axis.getId() == 7);
-  check10 (axis, true, true);       // check10 creates 3 Axis objects
+  check10 (axis, true);             // check10 creates 3 Axis objects
   Axis::ShPtr clonedAxis(axis.clone());
   ASSERT (clonedAxis->getId() == 7);
-  check10 (*clonedAxis, true, true);
+  check10 (*clonedAxis, true);
   int s1,s2,e1,e2;
   Axis::ShPtr combAxis = axis.combine(axis, s1, e1, s2, e2);
   ASSERT (s1==0 && s2==0 && e1==10 && e2==10);
-  check10 (*combAxis, true, true);
+  check10 (*combAxis, true);
 }
 
 void testOrdered()
@@ -152,13 +156,13 @@ void testOrdered()
     cen[i] = 2*(i+1);
   }
   OrderedAxis axis(cen, vector<double>(10,2));
-  check10 (axis, false, true);
+  check10 (axis, false);
   Axis::ShPtr clonedAxis(axis.clone());
-  check10 (*clonedAxis, false, true);
+  check10 (*clonedAxis, false);
   int s1,s2,e1,e2;
   Axis::ShPtr combAxis = axis.combine(axis, s1, e1, s2, e2);
   ASSERT (s1==0 && s2==0 && e1==10 && e2==10);
-  check10 (*combAxis, false, true);
+  check10 (*combAxis, false);
   // 5 intervals of varying size with gaps between intervals.
   vector<double> s(5);
   vector<double> e(5);
@@ -190,30 +194,6 @@ void testOrdered()
     fail = true;
   }
   ASSERT (fail);
-}
-
-void testUnordered()
-{
-  check1 (UnorderedAxis());
-  // 10 intervals of width 2 starting at 1.
-  vector<double> cen(10);
-  for (uint i=0; i<cen.size(); ++i) {
-    cen[i] = 2*(i+1);
-  }
-  UnorderedAxis axis(cen, vector<double>(10,2));
-  check10 (axis, false, false);
-  Axis::ShPtr clonedAxis(axis.clone());
-  check10 (*clonedAxis, false, false);
-  // 5 intervals of varying size with gaps between intervals.
-  vector<double> s(5);
-  vector<double> e(5);
-  double v = 0;
-  for (uint i=0; i<s.size(); ++i) {
-    s[i] = v;
-    e[i] = v+i+1;
-    v += 2*(i+1);
-  }
-  checkGap5 (UnorderedAxis (s, e, true));
 }
 
 void testCombine()
@@ -286,8 +266,8 @@ void testCombine()
   ASSERT (axis7_21.checkIntervals (axis1_11));
   ASSERT (! axis14_20.checkIntervals (axis1_21));
   ASSERT (! axis1_21.checkIntervals (axis14_20));
-  ASSERT (! axis1_11.checkIntervals (axis13_21));
-  ASSERT (! axis13_21.checkIntervals (axis1_11));
+  ASSERT (axis1_11.checkIntervals (axis13_21));
+  ASSERT (axis13_21.checkIntervals (axis1_11));
 }
 
 int main()
@@ -298,8 +278,6 @@ int main()
     testRegular();
     cout << "testing OrderedAxis ..." << endl;
     testOrdered();
-    cout << "testing UnorderedAxis ..." << endl;
-    testUnordered();
     cout << "testing Axis::combine ..." << endl;
     testCombine();
   } catch (std::exception& x) {
