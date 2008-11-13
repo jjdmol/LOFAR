@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 #include <Common/hexdump.h>
 #include <Common/LofarConstants.h>
+#include <Common/LofarLocators.h>
+//#include <Common/StringUtil.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RTCCommon/PSAccess.h>
 
@@ -1008,6 +1010,12 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       ackout.subband_selection = pIn->subband_selector;
       ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs * 2;
       //MAXMOD
+      LOG_DEBUG(formatString("MAXMOD acm -  first dim %d ",ackout.acmdata().extent(firstDim)));
+      LOG_DEBUG(formatString("MAXMOD acm - second dim %d ",ackout.acmdata().extent(secondDim)));
+      LOG_DEBUG(formatString("MAXMOD acm -  third dim %d ",ackout.acmdata().extent(thirdDim)));
+      LOG_DEBUG(formatString("MAXMOD acm - fourth dim %d ",ackout.acmdata().extent(fourthDim)));
+      //LOG_DEBUG(formatString("MAXMOD acm - fourth dim %d ",ack.stats().extent(fourthDim)));
+      //cout << "MAXMOD ackout.acmdata().shape() = " << ackout.acmdata().shape() << endl;
       LOG_DEBUG(formatString("MAXMOD %d response of ack.stats().size",ack.stats().size()));
       LOG_DEBUG(formatString("MAXMOD %d response of ackout.acmdata().size",ackout.acmdata().size()));
       //cout << "MAXMOD ack.stats = " << ack.stats()(1,1,Range::all(),Range::all()) << endl;
@@ -1023,6 +1031,22 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       ackout.payload_timestamp_sec = ack.timestamp.sec();
       ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
+
+      //hand back the antenna coords
+      vector<string> ArrayNames = _daemon.m_arrays.getNameList();
+      vector<string>::iterator	iter = ArrayNames.begin();
+      vector<string>::iterator	end  = ArrayNames.end();
+      while (iter != end) {
+	//cout << "name          :" << iter->first << endl;
+	//cout << "spectralwindow:" << iter->second->getSPW().getName() << endl;
+	//cout << "RCUmask       :" << iter->second->getRCUMask() << endl;
+	const CAL::AntennaArray * somearray = _daemon.m_arrays.getByName(*iter);
+	//cout << "MISSESSION: iter  :" << *iter << endl;
+	//cout << "MISSESSION: somearray.getName() :" << somearray->getName() << endl;
+	LOG_DEBUG(formatString("MAXMOD Array %s",(*iter).c_str()));
+	iter++;
+      }
+
       maxsend = _missPort.send(ackout);
       LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
       TRAN(MISSession::waiting_state);

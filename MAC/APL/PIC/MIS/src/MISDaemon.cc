@@ -34,6 +34,9 @@
 #include "MIS_Protocol.ph"
 //#include "MISDefines.h"
 #include "MISDaemon.h"
+//MAXMOD add for antenna coords
+//#include <APL/CAL_Protocol/SubArray.h>
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 namespace LOFAR {
 	using namespace MACIO;
@@ -65,8 +68,28 @@ MISDaemon::MISDaemon() :
 		globalParameterSet()->adoptFile(aCL.locate("RemoteStation.conf"),"");
 	}
 	catch (Exception e) {
-		LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
+	        LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
 	}  
+	//MAXMOD
+	//Put the AntennaArrays.conf read in here
+	try {
+	  ConfigLocator  aCL;
+	  // Load antenna arrays
+	  m_arrays.getAll(aCL.locate("AntennaArrays.conf"));
+	  //vector<string> ArrayNames = m_arrays.getNameList();
+	  //vector<string>::iterator	iter = ArrayNames.begin();
+	  //vector<string>::iterator	end  = ArrayNames.end();
+	  //LOG_INFO(formatString("MISDaemon loaded the following Antenna Arrays:"));
+	  //while (iter != end) {
+	    //const CAL::AntennaArray * somearray = m_arrays.getByName(*iter);
+	    //cout << "iter  :" << *iter << endl;
+	    //cout << "somearray.getName() :" << somearray->getName() << endl;
+	    //iter++;
+	  //}
+	}
+	catch (Exception e) {
+	  LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
+	}
 }
 
 //
