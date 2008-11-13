@@ -37,7 +37,13 @@ int main(int argc, char *argv[])
 	MISDaemon misd; 
 	misd.start(); // make initial transition
 
-	GCFTask::run();
-
+	//
+	try {
+	  GCFTask::run();
+	}
+	catch (std::exception& x) {
+	  LOG_INFO_STR("Unexpected exception: " << x.what());
+	  return 1;
+	}
 	return (0);
 }

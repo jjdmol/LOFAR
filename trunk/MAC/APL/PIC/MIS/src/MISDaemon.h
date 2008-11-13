@@ -28,6 +28,9 @@
 #include <GCF/TM/GCF_Control.h>
 //#include <MISPolicyHandler.h>
 
+//MAXMOD add for antenna coords
+#include <APL/CAL_Protocol/SubArray.h>
+
 namespace LOFAR {
 	namespace AMI {  
 
@@ -47,6 +50,9 @@ public:
 //    MISPolicyHandler& 		getPolicyHandler();
     void clientClosed(MISSession& client);
   
+    //MAXMOD
+    CAL::AntennaArrays               m_arrays;       // antenna arrays (read from file)
+
 private: 
 	// state methods
     MACIO::GCFEvent::TResult initial   (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
@@ -60,6 +66,7 @@ private:
 	// admin members
     typedef list<MISSession*> TSessions;
     TSessions				_sessionsGarbage;    
+
 };
 
 inline GCF::TM::GCFTCPPort& MISDaemon::getPortProvider()
