@@ -2,8 +2,9 @@ sbin_SCRIPTS = \
 	flash_images.sh \
 	restart_images.sh \
 	view_images.sh \
-	rsuctl\
+	rsuctl \
 	rsuctl3 \
+	rsuctl3.pl \
 	rsuctl3_reset \
 	README.rsuctl
 
