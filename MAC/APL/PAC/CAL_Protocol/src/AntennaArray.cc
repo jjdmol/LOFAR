@@ -47,23 +47,23 @@ AntennaArray::AntennaArray()
   m_rcuindex = 0;
 }
 
-AntennaArray::AntennaArray(string                  name,
-			   const Array<double, 1>& geoloc,
-			   const Array<double, 3>& pos,
-			   const Array<int16,  2>* rcuindex) 
-  : m_name(name), m_geoloc(geoloc), m_pos(pos)
+AntennaArray::AntennaArray( string                  name,
+							const Array<double, 1>& geoloc,
+							const Array<double, 3>& pos,
+							const Array<int16,  2>* rcuindex) :
+	m_name(name), 
+	m_geoloc(geoloc), 
+	m_pos(pos)
 {
-  m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
+	m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
 
-  if (rcuindex)
-    {
-      m_rcuindex = *rcuindex;
-    }
-  else
-    {
-      firstIndex i;
-      m_rcuindex = i;
-    }
+	if (rcuindex) {
+		m_rcuindex = *rcuindex;
+	}
+	else {
+		firstIndex i;
+		m_rcuindex = i;
+	}
 }
 
 AntennaArray::~AntennaArray()
@@ -90,6 +90,8 @@ AntennaArray& AntennaArray::operator=(const AntennaArray& rhs)
   return *this;
 }
 
+//
+// ---------------- Class ANTENNAARRAYS ---------------
 AntennaArrays::AntennaArrays()
 {
 }
@@ -97,8 +99,7 @@ AntennaArrays::AntennaArrays()
 AntennaArrays::~AntennaArrays()
 {
   for (map<string, const AntennaArray*>::const_iterator it = m_arrays.begin();
-       it != m_arrays.end(); ++it)
-  {
+       it != m_arrays.end(); ++it) {
     if ((*it).second) delete (*it).second;
   }
 }
@@ -128,3 +129,21 @@ void AntennaArrays::getAll(std::string url)
     LOG_INFO_STR("Read array definition '" << arraydata.getName() << "' from file '" << url << "'");
   }
 }
+
+//
+// getNameList() : vector<string>
+//
+vector<string> AntennaArrays::getNameList()
+{
+	vector<string>	names;
+	map<string,const AntennaArray*>::iterator	iter = m_arrays.begin();
+	map<string,const AntennaArray*>::iterator	end  = m_arrays.end();
+
+	while (iter != end) {
+		names.push_back(iter->first);
+		iter++;
+	}
+
+	return (names);
+}
+
