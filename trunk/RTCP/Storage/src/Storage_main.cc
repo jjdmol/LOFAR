@@ -21,6 +21,10 @@
 #include <mpi.h>
 #endif
 
+#include <sys/types.h>
+#include <sys/unistd.h>
+#include <sys/wait.h>
+
 #include <stdexcept>
 
 
@@ -28,31 +32,22 @@ using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
 
-int main(int argc, char *argv[])
+static void child(int argc, char *argv[], int rank)
 {
-  std::string type = "brief";
-  Version::show<StorageVersion> (std::cout, "Storage", type);  
-  
-  ConfigLocator aCL;
-  string        progName = basename(argv[0]);
-  string        logPropFile(progName + ".log_prop");
-  INIT_LOGGER (aCL.locate(logPropFile).c_str());
-  LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
-
-#if defined HAVE_MPI
-  int rank;
-
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#else
-  int rank = 0;
-#endif
-
   try {
     if (argc == 3)
       std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
     else if (argc != 2)
       THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
+
+    std::string type = "brief";
+    Version::show<StorageVersion> (std::cout, "Storage", type);  
+    
+    ConfigLocator aCL;
+    string        progName = basename(argv[0]);
+    string        logPropFile(progName + ".log_prop");
+    INIT_LOGGER (aCL.locate(logPropFile).c_str());
+    LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
     ACC::APS::ParameterSet parameterSet(argv[1]);
@@ -74,10 +69,42 @@ int main(int argc, char *argv[])
     std::cerr << "caught unknown exception" << std::endl;
     exit(1);
   }
+}
+
+
+int main(int argc, char *argv[])
+{
+#if defined HAVE_MPI
+  int rank;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#else
+  int rank = 0;
+#endif
+
+  int status;
+
+  switch (fork()) {
+    case -1 : perror("fork");
+	      break;
+
+    case 0  : child(argc, argv, rank);
+	      break;
+
+    default : if (wait(&status) < 0)
+		perror("wait");
+	      else if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+		std::cerr << "child returned exit status " << WEXITSTATUS(status) << std::endl;
+	      else if (WIFSIGNALED(status))
+		std::cerr << "child killed by signal " << WTERMSIG(status) << std::endl;
+
+	      break;
+  }
 
 #if defined HAVE_MPI
   MPI_Finalize();
 #endif
 
-  return 0;
+  return 0; // always return 0, otherwise mpirun kills other storage processes
 }
