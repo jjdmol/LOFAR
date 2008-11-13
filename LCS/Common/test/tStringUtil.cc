@@ -204,6 +204,58 @@ bool testToString()
   return true;
 }
 
+bool testStrTo()
+{
+  ASSERT (strToLong("-123") == -123);
+  ASSERT (strToLong("  -123  ") == -123);
+  ASSERT (strToLong("  -0123  ") == -123);
+  ASSERT (strToLong(" 0x123 ") == 0x123);
+  ASSERT (strToInt("-123") == -123);
+  ASSERT (strToInt32("-123") == -123);
+  ASSERT (strToInt16(" 124") == 124);
+  ASSERT (strToUlong("1234") == 1234);
+  ASSERT (strToUint("1235") == 1235);
+  ASSERT (strToUint32("1236") == 1236);
+  ASSERT (strToUint16("1237") == 1237);
+  bool fail=false;
+  try {
+    strToInt32("  1234567890000  ");
+  } catch (...) {
+    fail = true;
+  }
+  ASSERT (fail);
+  fail=false;
+  try {
+    strToUint16("  65536  ");
+  } catch (...) {
+    fail = true;
+  }
+  ASSERT (fail);
+  fail=false;
+  try {
+    strToInt16("  6.5  ");
+  } catch (...) {
+    fail = true;
+  }
+  ASSERT (fail);
+  ASSERT (strToFloat("6") == 6);
+  ASSERT (strToFloat("  6.5") == 6.5);
+  ASSERT (strToFloat("  65e-1  ") == 6.5);
+  ASSERT (strToDouble("  6.5  ") == 6.5);
+  fail=false;
+  try {
+    strToDouble("  6.5a  ");
+  } catch (...) {
+    fail = true;
+  }
+  ASSERT (fail);
+#ifdef HAVE_LONG_LONG
+  ASSERT (strToInt64 ("  -12345678901234  ") == int64(-12345678901234LL));
+  ASSERT (strToUint64("   12345678901234  ") == uint64(12345678901234LL));
+#endif
+  return true;
+}
+
 bool testCompactArray()
 {
   cout << "\n*** Testing compacting of Array-strings ***\n";
@@ -276,6 +328,19 @@ bool testExpandArray()
 	DO_EXPAND_TEST("[3*(0;1;2;3)]");
 	DO_EXPAND_TEST("[20*(300..303)]");
 	DO_EXPAND_TEST("[2*(5*0)]");
+
+//         DO_EXPAND_TEST("3*ab");
+//         DO_EXPAND_TEST("3*(ab)");
+//         DO_EXPAND_TEST("3*'ab'");
+//         DO_EXPAND_TEST("3*('ab')");
+//         DO_EXPAND_TEST("3*10.5");
+//         DO_EXPAND_TEST("3*(10.5)");
+//         DO_EXPAND_TEST("lifs0..lifs10");
+//         DO_EXPAND_TEST("lifs00..lifs010");
+//         DO_EXPAND_TEST("lifs000..lifs010");
+//         DO_EXPAND_TEST("2*lifs000..lifs010");
+//         DO_EXPAND_TEST("2*(lifs000..lifs010)");
+//         DO_EXPAND_TEST("2*([1,2])");
   } catch(Exception& e) {
 	LOG_ERROR_STR(e);
 	return (false);
@@ -295,6 +360,7 @@ int main()
     testSkipws()       &&
     testCase()         &&
     testToString()     &&
+    testStrTo()        &&
     testCompactArray() &&
     testExpandArray();
 
