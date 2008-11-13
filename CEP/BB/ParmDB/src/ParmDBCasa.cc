@@ -477,8 +477,8 @@ namespace BBS {
     Array<double> arr(IPosition(2,2,nv));
     double* arrp = arr.data();
     for (int i=0; i<nv; ++i) {
-      *arrp++ = axis.lower(i);
-      *arrp++ = axis.upper(i);
+      *arrp++ = axis.center(i);
+      *arrp++ = axis.width(i);
     }
     col.put (rownr, arr);
   }
@@ -646,14 +646,18 @@ namespace BBS {
   {
     TableExprNode expr;
     if (domain.lowerX() < domain.upperX()) {
+      TableExprNode s (table.col("STARTX"));
+      TableExprNode e (table.col("ENDX"));
       andExpr (expr,
-               domain.lowerX() < table.col("ENDX")  &&
-               domain.upperX() > table.col("STARTX"));
+               domain.lowerX() < e  &&  !near(domain.lowerX(), e, 1e-12)  &&
+               domain.upperX() > s  &&  !near(domain.upperX(), s, 1e-12));
     }
     if (domain.lowerY() < domain.upperY()) {
+      TableExprNode s (table.col("STARTY"));
+      TableExprNode e (table.col("ENDY"));
       andExpr (expr,
-               domain.lowerY() < table.col("ENDY")  &&
-               domain.upperY() > table.col("STARTY"));
+               domain.lowerY() < e  &&  !near(domain.lowerY(), e, 1e-12)  &&
+               domain.upperY() > s  &&  !near(domain.upperY(), s, 1e-12));
     }
     return expr;
   }
