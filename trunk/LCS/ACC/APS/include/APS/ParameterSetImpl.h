@@ -212,6 +212,14 @@ public:
         int	getInt   (const string& aKey, int aValue) const;
 	uint	getUint  (const string& aKey) const;
         uint	getUint  (const string& aKey, uint aValue) const;
+	int16	getInt16 (const string& aKey) const;
+        int16	getInt16 (const string& aKey, int16 aValue) const;
+	uint16	getUint16(const string& aKey) const;
+        uint16	getUint16(const string& aKey, uint16 aValue) const;
+	int32	getInt32 (const string& aKey) const;
+        int32	getInt32 (const string& aKey, int32 aValue) const;
+	uint32	getUint32(const string& aKey) const;
+        uint32	getUint32(const string& aKey, uint32 aValue) const;
 #if HAVE_LONG_LONG
 	int64	getInt64 (const string& aKey) const;
         int64	getInt64 (const string& aKey, int64 aValue) const;
@@ -247,6 +255,26 @@ public:
                                         bool expandable) const;
         vector<uint>	getUintVector  (const string& aKey,
                                         const vector<uint>& aValue,
+                                        bool expandable) const;
+	vector<int16>	getInt16Vector (const string& aKey,
+                                        bool expandable) const;
+        vector<int16>	getInt16Vector (const string& aKey,
+                                        const vector<int16>& aValue,
+                                        bool expandable) const;
+	vector<uint16>	getUint16Vector(const string& aKey,
+                                        bool expandable) const;
+        vector<uint16>	getUint16Vector(const string& aKey,
+                                        const vector<uint16>& aValue,
+                                        bool expandable) const;
+	vector<int32>	getInt32Vector (const string& aKey,
+                                        bool expandable) const;
+        vector<int32>	getInt32Vector (const string& aKey,
+                                        const vector<int32>& aValue,
+                                        bool expandable) const;
+	vector<uint32>	getUint32Vector(const string& aKey,
+                                        bool expandable) const;
+        vector<uint32>	getUint32Vector(const string& aKey,
+                                        const vector<uint32>& aValue,
                                         bool expandable) const;
 #if HAVE_LONG_LONG
 	vector<int64>	getInt64Vector (const string& aKey,
@@ -426,6 +454,62 @@ inline uint ParameterSetImpl::getUint(const string& aKey, uint aValue) const
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
         return it->second.getUint();
+}
+
+//#	getInt16(key)
+inline int16 ParameterSetImpl::getInt16(const string& aKey) const
+{
+        return findKV(aKey)->second.getInt16();
+}
+
+//#	getInt16(key, value)
+inline int16 ParameterSetImpl::getInt16(const string& aKey, int16 aValue) const
+{
+        const_iterator it = findKV(aKey,false);
+	if (it == end()) return aValue;
+        return it->second.getInt16();
+}
+
+//#	getUint16(key)
+inline uint16 ParameterSetImpl::getUint16(const string& aKey) const
+{
+        return findKV(aKey)->second.getUint16();
+}
+
+//#	getUint16(key, value)
+inline uint16 ParameterSetImpl::getUint16(const string& aKey, uint16 aValue) const
+{
+        const_iterator it = findKV(aKey,false);
+	if (it == end()) return aValue;
+        return it->second.getUint16();
+}
+
+//#	getInt32(key)
+inline int32 ParameterSetImpl::getInt32(const string& aKey) const
+{
+        return findKV(aKey)->second.getInt32();
+}
+
+//#	getInt32(key, value)
+inline int32 ParameterSetImpl::getInt32(const string& aKey, int32 aValue) const
+{
+        const_iterator it = findKV(aKey,false);
+	if (it == end()) return aValue;
+        return it->second.getInt32();
+}
+
+//#	getUint32(key)
+inline uint32 ParameterSetImpl::getUint32(const string& aKey) const
+{
+        return findKV(aKey)->second.getUint32();
+}
+
+//#	getUint32(key, value)
+inline uint32 ParameterSetImpl::getUint32(const string& aKey, uint32 aValue) const
+{
+        const_iterator it = findKV(aKey,false);
+	if (it == end()) return aValue;
+        return it->second.getUint32();
 }
 
 #if HAVE_LONG_LONG

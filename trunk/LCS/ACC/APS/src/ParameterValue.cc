@@ -149,6 +149,54 @@ namespace LOFAR { namespace ACC { namespace APS {
     return result;
   }
 
+  vector<int16> ParameterValue::getInt16Vector() const
+  {
+    vector<ParameterValue> vec (getVector());
+    vector<int16> result;
+    result.reserve (vec.size());
+    for (vector<ParameterValue>::const_iterator iter = vec.begin();
+         iter != vec.end(); ++iter) {
+      result.push_back (iter->getInt16());
+    }
+    return result;
+  }
+
+  vector<uint16> ParameterValue::getUint16Vector() const
+  {
+    vector<ParameterValue> vec (getVector());
+    vector<uint16> result;
+    result.reserve (vec.size());
+    for (vector<ParameterValue>::const_iterator iter = vec.begin();
+         iter != vec.end(); ++iter) {
+      result.push_back (iter->getUint16());
+    }
+    return result;
+  }
+
+  vector<int32> ParameterValue::getInt32Vector() const
+  {
+    vector<ParameterValue> vec (getVector());
+    vector<int32> result;
+    result.reserve (vec.size());
+    for (vector<ParameterValue>::const_iterator iter = vec.begin();
+         iter != vec.end(); ++iter) {
+      result.push_back (iter->getInt32());
+    }
+    return result;
+  }
+
+  vector<uint32> ParameterValue::getUint32Vector() const
+  {
+    vector<ParameterValue> vec (getVector());
+    vector<uint32> result;
+    result.reserve (vec.size());
+    for (vector<ParameterValue>::const_iterator iter = vec.begin();
+         iter != vec.end(); ++iter) {
+      result.push_back (iter->getUint32());
+    }
+    return result;
+  }
+
 #ifdef HAVE_LONG_LONG
   vector<int64> ParameterValue::getInt64Vector() const
   {

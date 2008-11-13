@@ -65,7 +65,6 @@ void testVector()
   ASSERT (vec[0].getFloat() == 1);
   ASSERT (vec[0].getDouble() == 1);
   ASSERT (vec[0].getString() == "1");
-  ASSERT (vec[1].getInt() == 2);
   ASSERT (vec[1].getFloat() == 2.5);
   ASSERT (vec[1].getDouble() == 2.5);
   // Test getting the nested value as a vector.
