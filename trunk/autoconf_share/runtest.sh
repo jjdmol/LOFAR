@@ -97,7 +97,7 @@ chmod +w .
 if test -f "$prefix/lofarinit.sh"; then
   lofarinitdir=$prefix
 else
-  lofarinitdir=`pwd | sed -e 's%/LOFAR/.*%/LOFAR/LCS/Tools/src%'`
+  lofarinitdir=`pwd | sed -e 's%\(.*/LOFAR\)/.*%\1/LCS/Tools/src%'`
 fi
 
 if test -r "$lofarinitdir/lofarinit.sh"; then

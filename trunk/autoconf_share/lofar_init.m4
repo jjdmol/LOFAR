@@ -168,15 +168,9 @@ AC_ARG_ENABLE(lib64,
     lofar_use_root=0;
   fi
   # Find root of user LOFAR directory tree.
-  lfr_top=`(cd $srcdir && pwd) | sed -e "s%/LOFAR/.*%%"`
+  lfr_top=`(cd $srcdir && pwd) | sed -e "s%\(.*\)/LOFAR/.*%\1%"`
   lofar_top_srcdir=$lfr_top/LOFAR;
-  lfr_pkg=`(cd $srcdir && pwd) | sed -e "s%$lofar_top_srcdir%%"`
-  lfr_rest=`(echo $lfr_pkg) | sed -e "s%/LOFAR/.*%/LOFAR%"`
-  if test "$lfr_pkg" != "$lfr_rest"; then
-    ]AC_MSG_ERROR([Directory name LOFAR should be used only once in your path])[
-  fi
-  # Remove leading slash.
-  lfr_package=`echo $lfr_pkg | sed -e "s%^/%%"`
+  lfr_pkg=`(cd $srcdir && pwd) | sed -e "s%$lofar_top_srcdir/%%"`
   lofar_sharedir=$lofar_top_srcdir/autoconf_share
   # Determine if the build area has the compiler name in it
   # and get the root of the build tree.

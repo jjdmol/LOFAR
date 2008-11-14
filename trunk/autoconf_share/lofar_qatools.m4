@@ -119,7 +119,7 @@ else
 
     # Get absolute top_srcdir for puretool
     lofar_srcdir=`cd $srcdir && pwd`
-    lofar_base=`echo $lofar_srcdir | sed -e "s%/LOFAR/.*%/LOFAR%"`
+    lofar_base=`echo $lofar_srcdir | sed -e "s%\(.*/LOFAR\)/.*%\1%"`
     lofar_puredir=$lofar_base/autoconf_share
 
     CC="$lofar_puredir/puretool $have_purify $have_quantify $have_purecov "'$(top_builddir)'" $puretools_prefix $CC"
@@ -220,7 +220,7 @@ dnl
     # Get absolute top_srcdir for insuretool
     lofar_curwd=`pwd`
     lofar_srcdir=`cd $srcdir && pwd`
-    lofar_base=`echo $lofar_srcdir | sed -e "s%/LOFAR/.*%/LOFAR%"`
+    lofar_base=`echo $lofar_srcdir | sed -e "s%\(.*/LOFAR\)/.*%\1%"`
     lofar_insuredir=$lofar_base/autoconf_share
 
     CC="$lofar_insuredir/insuretool $have_insure $have_inuse $have_tca "'$(top_builddir)'" $insuretools_prefix $CC"
@@ -278,7 +278,7 @@ AC_ARG_WITH(compiletools,
 if test "$with_compiletools" = "yes"; then
     # Get absolute top_srcdir for comiletool
     lofar_srcdir=`cd $srcdir && pwd`
-    lofar_base=`echo $lofar_srcdir | sed -e "s%/LOFAR/.*%/LOFAR%"`
+    lofar_base=`echo $lofar_srcdir | sed -e "s%\(.*/LOFAR\)/.*%\1%"`
     lofar_tooldir=$lofar_base/autoconf_share
 
 #    CC="$lofar_tooldir/compiletool CC $CC"
