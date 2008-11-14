@@ -1,4 +1,4 @@
-gnu.compiler.conf:	CXX="$CCACHE /usr/bin/g++"
+gnu.compiler.conf: CXX="$CCACHE /usr/bin/g++" --with-cxxflags="-fPIC"
 
 gnu.compiler.aipspp.var: --with-casacore=/app/casacore/ --without-wcs
 python.var: --with-python-version=2.5 --with-python=/usr/include/+pkg+vers --with-python-libdir=/usr/lib
