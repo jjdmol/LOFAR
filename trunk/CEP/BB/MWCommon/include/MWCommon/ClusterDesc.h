@@ -65,6 +65,10 @@ namespace LOFAR { namespace CEP {
     void setName (const std::string& name)
       { itsName = name; }
 
+    // Set head node name.
+    void setHeadNode (const std::string& headNode)
+      { itsHeadNode = headNode; }
+
     // Add a file system it has access to.
     void addNode (const NodeDesc& node);
 
@@ -74,6 +78,10 @@ namespace LOFAR { namespace CEP {
     // Get the name.
     const std::string& getName() const
       { return itsName; }
+
+    // Get the head node.
+    const std::string& getHeadNode() const
+      { return itsHeadNode; }
 
     // Get all nodes.
     const std::vector<NodeDesc>& getNodes() const
@@ -91,6 +99,7 @@ namespace LOFAR { namespace CEP {
     void add2Map (const NodeDesc& node);
 
     std::string itsName;
+    std::string itsHeadNode;
     std::vector<NodeDesc> itsNodes;
     std::map<std::string, std::vector<std::string> > itsFS2Nodes;
   };

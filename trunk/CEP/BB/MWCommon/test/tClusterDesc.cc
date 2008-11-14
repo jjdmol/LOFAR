@@ -17,6 +17,7 @@ using namespace std;
 void check (const ClusterDesc& cl)
 {
   ASSERT (cl.getName() == "cl");
+  ASSERT (cl.getHeadNode() == "");
   ASSERT (cl.getNodes().size() == 2);
   const vector<NodeDesc>& nodes = cl.getNodes();
   ASSERT (nodes[0].getFileSys().size() == 2);
@@ -65,10 +66,46 @@ void doIt()
   check(cl);
 }
 
+void check1 (const ClusterDesc& cl)
+{
+  ASSERT (cl.getName() == "lifs");
+  ASSERT (cl.getHeadNode() == "lifsfen");
+  const vector<NodeDesc>& nodes = cl.getNodes();
+  ASSERT (nodes.size() == 4);
+  for (uint i=0; i<nodes.size(); ++i) {
+    ASSERT (nodes[i].getFileSys().size() == 3);
+    ASSERT (nodes[i].getFileSys()[0] == "/lifs014");
+    ASSERT (nodes[i].getFileSys()[1] == "/lifs015");
+    ASSERT (nodes[i].getFileSys()[2] == nodes[i].getName() + ":/data");
+    ASSERT (nodes[i].getMountPoints()[0] == "/lifs014");
+    ASSERT (nodes[i].getMountPoints()[1] == "/lifs015");
+    ASSERT (nodes[i].getMountPoints()[2] == "/data");
+  }
+  ASSERT (nodes[0].getName() == "lifs001");
+  ASSERT (nodes[1].getName() == "lifs002");
+  ASSERT (nodes[2].getName() == "lifs003");
+  ASSERT (nodes[3].getName() == "lifsfen");
+}
+
+void doParset()
+{
+  // Read from a shorthand parset.
+  ClusterDesc cdesc("tClusterDesc.parset");
+  check1 (cdesc);
+  // Write into full-blown parset file.
+  ofstream fos("tClusterDesc_tmp.fil2");
+  cdesc.write (fos);
+  // Read back.
+  LOFAR::ACC::APS::ParameterSet parset("tClusterDesc_tmp.fil2");
+  ClusterDesc cl2(parset);
+  check1 (cl2);
+}
+
 int main()
 {
   try {
     doIt();
+    doParset();
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
