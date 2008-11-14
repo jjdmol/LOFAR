@@ -117,7 +117,7 @@ class StorageSection(Section):
 			 parsetfile = parsetfile, \
 			 buildvar = 'gnu_openmpi-opt')
 
-        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
+        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses)]
         self.parset['OLAP.OLAP_Conn.IONProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
     def run(self, runlog, timeOut, runCmd = None):

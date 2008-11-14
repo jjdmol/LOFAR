@@ -108,10 +108,9 @@ class MPIJob(Job):
 
     def createMachinefile(self):
         lmf = self.workingDir + 'tmp.machinefile'
-        slaves = self.host.getSlaves(self.noProcesses)
         outf = open(lmf, 'w')
-        for slave in slaves:
-            outf.write(slave.getIntName() + '\n')
+        for i in range(0,self.noProcesses):
+  	    outf.write(self.host.getSlaves()[i].getIntName() + '\n')
         outf.close()
         self.host.sput(lmf, self.workingDir + self.name + '.machinefile')
         os.remove(lmf)

@@ -6,6 +6,7 @@ import datetime
 import os
 import sys
 import shutil
+import scanf
 from optparse import OptionParser
 
 #check hostname
@@ -98,19 +99,20 @@ def doObservation(obsID, parset):
 	    timeOut = ((sz+63)&~63) + 64
 
             if isinstance(sectionTable.get(section), StorageSection):
-		s = ':'
-		for slave in listfen.getSlaves():
-		    machineNr = int(slave.getIntName()[len(slave.getIntName())-1])-1
-		    if len(listfen.getSlaves())-1 != listfen.getSlaves().index(slave):
-			s = s + '%d' % int(machineNr) + ','
-	            else:
-		        s = s + '%d' % int(machineNr)
-			
+	        noProcesses = parset.getNrSubbands() / (parset.subbandsPerPset() * parset.getInt32('OLAP.psetsPerStorage'))
+		scanMask = "list%03d"
+		subStr = ':'
+		for i in range(0,noProcesses):
+		    machineNr = scanf.sscanf(listfen.getSlaves()[i].getIntName(),scanMask)[0]-1
+		    if i < noProcesses-1:
+		        subStr = subStr + '%d' % int(machineNr) + ','
+		    else:
+		        subStr = subStr + '%d' % int(machineNr)	
+		commandStr ='cexec ' + subStr + ' mkdir /data/' + obsID
+		listfen.executeAsync(commandStr).waitForDone()
 		timeOut = (sz+63)&~63
-	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
-		listfen.executeAsync(commandstr).waitForDone()
-		
- 	    sectionTable.get(section).run(runlog, timeOut)
+ 	    
+	    sectionTable.get(section).run(runlog, timeOut)
  
         for section in sectionList:
             print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')
@@ -148,8 +150,9 @@ if __name__ == '__main__':
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime) 
     parset.setPartition(options.partition)
-    parset.subbandsPerPset()
+    parset.subbandsPerPset()    
     parset.psetsPerStorage()
+    parset.storageNodeList()
     
     parset.check()
     
