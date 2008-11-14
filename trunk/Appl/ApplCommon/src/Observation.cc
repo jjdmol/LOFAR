@@ -68,12 +68,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
-cout << "stationList=" << aParSet->getString(prefix+"VirtualInstrument.stationList") << endl;
-cout << "compacted stationList=" << stationList << endl;
-		string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
-		ParameterSet	stParset;
-		stParset.adoptBuffer(stString);
-		stations = stParset.getStringVector("x");
+                cout << "stationList=" << aParSet->getString(prefix+"VirtualInstrument.stationList") << endl;
+                cout << "compacted stationList=" << stationList << endl;
+		stations = aParSet->get(aParSet->getString(prefix+"VirtualInstrument.stationList")).expand().getStringVector();
 	}
 
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
@@ -89,10 +86,8 @@ cout << "compacted stationList=" << stationList << endl;
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
-		string	rcuString("x=" + expandedArrayString(receiverList));
-		ParameterSet	rcuParset;
-		rcuParset.adoptBuffer(rcuString);
-		vector<uint32> RCUnumbers(rcuParset.getUint32Vector("x"));
+		vector<uint32> RCUnumbers(aParSet->get(aParSet->getString(receiverList)).expand().getUint32Vector());
+		
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			RCUset.set();					// assume all receivers.
 		}
@@ -125,15 +120,9 @@ cout << "compacted stationList=" << stationList << endl;
 		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
-		string sbString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"subbandList","[]")));
-		ParameterSet	sbParset;
-		sbParset.adoptBuffer(sbString);
-		newBeam.subbands = sbParset.getInt32Vector("x");
+		newBeam.subbands = aParSet->get(aParSet->getString(beamPrefix+"subbandList","[]")).expand().getInt32Vector();
 		// beamletList
-		string blString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"beamletList", "[]")));
-		ParameterSet	blParset;
-		blParset.adoptBuffer(blString);
-		newBeam.beamlets = blParset.getInt32Vector("x");
+		newBeam.beamlets = aParSet->get(aParSet->getString(beamPrefix+"beamletList", "[]")).expand().getInt32Vector();
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
