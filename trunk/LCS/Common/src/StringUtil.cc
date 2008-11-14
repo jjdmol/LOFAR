@@ -218,6 +218,17 @@ int32	StringToInt32(const string& aString, const char* fmt) throw(Exception)
 	return (theInt);
 }	
 
+uint32	StringToUint32(const string& aString, const char* fmt) throw(Exception)
+{
+	uint32		theUint;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theUint) : 
+			   sscanf(aString.c_str(), "%u", &theUint)) != 1) {
+		THROW (Exception, aString + " is not an unsigned int value");
+	}
+
+	return (theUint);
+}	
+
 long strToLong (const string& aString) throw(Exception)
 {
   const char* str = aString.c_str();
