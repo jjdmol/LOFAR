@@ -41,7 +41,7 @@ shift
 lfr_curdir=`pwd`
 # Get the LOFAR base from the full path of this script.
 lfr_sdir=`dirname $0`
-lfr_root=`(cd $lfr_sdir && pwd) | sed -e "s%/LOFAR/.*%/LOFAR%"`
+lfr_root=`(cd $lfr_sdir && pwd) | sed -e "s%\(.*/LOFAR\).*%\1%"`
 lfr_base=$lfr_root/autoconf_share
 
 # Find package, lofar root, compiler, variant.
