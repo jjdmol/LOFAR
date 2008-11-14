@@ -6,7 +6,7 @@ _pyparameterset_la_LDFLAGS	= -module
 _pyparameterset_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 python_SCRIPTS = __init__.py
-pythondir = $(prefix)/lib/python$(PYTHON_VERSION)/site-packages/lofar/parameterset
+pythondir = $(pythoninstalldir)/parameterset
 libdir    = $(pythondir)
 
 bin_PROGRAMS = versionpyparameterset
