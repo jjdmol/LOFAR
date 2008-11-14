@@ -23,7 +23,13 @@
 #  $Id$
 
 # Set default options.
-NEEDOUTFIL=0;
+NEEDOUTFIL=0
+PYTHONPKG=
+
+# Set srcdir if not defined (in case run by hand).
+if test "$srcdir" = ""; then
+  srcdir="../../../test"
+fi
 
 # Handle possible options.
 while [ $# != 0 ]
@@ -35,13 +41,20 @@ do
   elif [ "$1" = "-nostdout" ]; then
     NEEDOUTFIL=0
     shift
+  elif [ "$1" = "-pythonpkg" ]; then
+    shift
+    PYTHONPKG=$1
+    shift
+  elif [ "$1" = "-nopythonpkg" ]; then
+    PYTHONPKG=
+    shift
   else
     break
   fi
 done
 
 if test $# -lt 1 || test $# -gt 3; then
-  echo "usage: runtest.sh [-stdout] <testname> [<max run-time>] [<precision>]"
+  echo "usage: runtest.sh [-stdout] [-pythonpkg package] <testname> [<max run-time>] [<precision>]"
   exit 1
 fi
 
@@ -132,6 +145,10 @@ if test -f "$srcdir/$1.run"; then
   \rm -f $1.run
   \cp $srcdir/$1.run .
 fi
+if test -f "$srcdir/$1.py"; then
+  \rm -f $1.py
+  \cp $srcdir/$1.py .
+fi
 if test -f "$srcdir/$1.parset"; then
   \rm -f $1.parset
   \cp $srcdir/$1.parset .
@@ -145,15 +162,26 @@ else
   fi
 fi
 
-#
+# For python files create the lofar/package directory, so the tests can
+# be run as if the python files were installed.
+# Note that python looks in . before PYTHONPATH.
+if [ "$PYTHONPKG" != "" ]; then
+  PYTHONDIR=${PROG}_tmp_pythonpkg_dir     # will be removed automatically
+  mkdir -p $PYTHONDIR/lofar/$PYTHONPKG
+  touch $PYTHONDIR/lofar/__init__.py
+  cp $srcdir/../src/*.py $PYTHONDIR/lofar/$PYTHONPKG
+  cp ../src/.libs/*.so $PYTHONDIR/lofar/$PYTHONPKG
+  PYTHONPATH=`pwd`/$PYTHONDIR/:$PYTHONPATH
+  export PYTHONPATH
+fi
+
 # Define source directory and run assay
-#
 LOFAR_PKGSRCDIR=$srcdir
 export LOFAR_PKGSRCDIR
 $lfr_share_dir/assay $1 $MAXTIME $PREC $NEEDOUTFIL
 STS=$?
 
 # Cleanup (mainly for make distcheck).
-\rm -f $1.stdout $1.run $1.in $1.parset $1.log_prop
+\rm -f $1.stdout $1.run $1.py $1.in $1.parset $1.log_prop
 \rm -rf $1.in_*
 exit $STS

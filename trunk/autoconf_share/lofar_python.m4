@@ -36,4 +36,6 @@ AC_DEFUN([lofar_PYTHON],dnl
 AC_PREREQ(2.13)dnl
 ifelse($1, [], [lfr_python_option=0], [lfr_python_option=$1])
 lofar_EXTERNAL(python,[$lfr_python_option],Python.h,"python+vers","/usr/include/python+vers /usr/local/include/python+vers",,,,'-ldl -lutil')
+
+AC_SUBST(pythoninstalldir,"$libdir/python${PYTHON_VERSION}/site-packages/lofar")
 ])
