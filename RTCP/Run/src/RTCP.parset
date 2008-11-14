@@ -1,4 +1,4 @@
-OLAP.OLAP_Conn.IONProc_Storage_Ports = [8300..8363]
+OLAP.OLAP_Conn.IONProc_Storage_Ports = [8300..9291]
 
 # should be one of FCNP, TCP, NULL.  This works for IONProc, but not for
 # CNProc, since CNProc does not open the parset file!

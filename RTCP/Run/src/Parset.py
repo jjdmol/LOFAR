@@ -50,31 +50,45 @@ class Parset(LOFAR_Parset.Parset):
 
     def subbandsPerPset(self):
 	if not self.isDefined('OLAP.subbandsPerPset'):
-	    nrSubbands = self.getNrSubbands()
-	    if nrSubbands == 1 : self['OLAP.subbandsPerPset'] = nrSubbands
-	    elif nrSubbands % 2 != 0:
+	    if self.getNrSubbands() == 1 : self['OLAP.subbandsPerPset'] = 1
+	    elif self.getNrSubbands() % 2 != 0:
 	        print 'Number of subbands(%d) is not even.' %(nrSubbands)
 		sys.exit(0)
 	    else:
-		maxPSets = len(IONodes.get(self.getPartition()))
-		nrStorageNodes = len(listfen.getSlaves())
-		for pSets in range(maxPSets, 0 , -1):
-		    if nrSubbands % pSets == 0 and pSets % nrStorageNodes == 0:
-			subbandPersSet =nrSubbands / pSets
-			self['OLAP.subbandsPerPset'] = subbandPersSet
+		for pSets in range(len(IONodes.get(self.getPartition())), 0 , -1):
+		    if self.getNrSubbands() % pSets == 0:
+			self['OLAP.subbandsPerPset'] = self.getNrSubbands() / pSets
 			break
-		    
+	return self.getInt32('OLAP.subbandsPerPset')		
+    
+    def nrUsedStorageNodes(self):
+        nrStorageNodes = len(listfen.getSlaves())
+	nrPSets = self.getNrSubbands()/self.subbandsPerPset()
+	
+	for nrNodes in range(nrStorageNodes, 0, -1):
+	    if nrPSets % nrNodes == 0:
+	        return nrNodes
+	
     def psetsPerStorage(self):
         if not self.isDefined('OLAP.psetsPerStorage'):
-            nrSubbands = self.getNrSubbands()
-	    if nrSubbands == 1 : self['OLAP.psetsPerStorage'] = nrSubbands
+	    if self.getNrSubbands() == 1 : self['OLAP.psetsPerStorage'] = 1
 	    else:
-	        if not self.isDefined('OLAP.subbandsPerPset'):
-	            self.subbandsPerPset()
-	        nrStorageNodes = len(listfen.getSlaves())
-	    
-	        self['OLAP.psetsPerStorage'] = nrSubbands / self.getInt32('OLAP.subbandsPerPset') / nrStorageNodes
-	    
+	        nrPSets = self.getNrSubbands()/self.subbandsPerPset()
+		nrStorageNodes = self.nrUsedStorageNodes()
+		self['OLAP.psetsPerStorage'] = nrPSets/nrStorageNodes
+
+    def storageNodeList(self):
+	nrSubbands = self.getNrSubbands()
+	nrStorageNodes = self.nrUsedStorageNodes()
+	storageNodes = list()
+	
+	if nrSubbands == 1 : self['Observation.storageNodeList'] = '[0]'
+	else:
+	    for i in range(0,nrSubbands):
+ 		storageNodes.append(i/(nrSubbands/nrStorageNodes))
+	
+	    self['Observation.storageNodeList'] = [s for s in storageNodes]
+
     def setStations(self, stationList):
         self.stationList = stationList
         self['OLAP.nrRSPboards'] = len(stationList)
