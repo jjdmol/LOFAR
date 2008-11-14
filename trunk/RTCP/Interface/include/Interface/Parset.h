@@ -140,8 +140,6 @@ private:
 	void           checkSubbandCount(const char *key) const;
 	void           checkSubbandCountFromObservation(const char *key, const vector<uint32> &list) const;
 	
-	vector<string>   getExpandedStringVector(const string& key) const;
-	vector<unsigned> getExpandedUint32Vector(const string& key) const;
 	vector<double>   centroidPos(const string &stations) const;
 	
 	Observation    itsObservation;
@@ -162,24 +160,6 @@ inline double Parset::startTime() const
 inline double Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
-}
-
-inline vector<string> Parset::getExpandedStringVector(const string& key) const
-{
-  ParameterSet    pParset;
-  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
-  pParset.adoptBuffer(expandedStr);
-
-  return pParset.getStringVector("expandedStr");
-}
-
-inline vector<unsigned> Parset::getExpandedUint32Vector(const string& key) const
-{
-  ParameterSet    pParset;
-  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
-  pParset.adoptBuffer(expandedStr);
-  
-  return pParset.getUint32Vector("expandedStr");  
 }
 
 inline string Parset::stationName(const int index) const
@@ -312,7 +292,7 @@ inline uint32 Parset::nrCoresPerPset() const
 inline unsigned Parset::nrSubbands() const
 {
   if (isDefined("Observation.subbandList"))
-    return getExpandedUint32Vector("Observation.subbandList").size();
+    return get("Observation.subbandList").expand().getUint32Vector().size();
   else
     return itsObservation.getSubbandList().size();   
 } 
@@ -320,7 +300,7 @@ inline unsigned Parset::nrSubbands() const
 inline vector<unsigned> Parset::subbandToBeamMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getExpandedUint32Vector("Observation.beamList");
+    return get("Observation.beamList").expand().getUint32Vector();
   else
     return itsObservation.getBeamList();   
 }
@@ -328,7 +308,7 @@ inline vector<unsigned> Parset::subbandToBeamMapping() const
 inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getExpandedUint32Vector("Observation.rspBoardList");
+    return get("Observation.rspBoardList").expand().getUint32Vector();
   else
     return itsObservation.getRspBoardList();
 }
@@ -337,7 +317,7 @@ inline vector<unsigned> Parset::subbandToRSPboardMapping() const
 inline vector<unsigned> Parset::subbandToRSPslotMapping() const
 {
   if (isDefined("Observation.subbandList"))
-    return getExpandedUint32Vector("Observation.rspSlotList");
+    return get("Observation.rspSlotList").expand().getUint32Vector();
   else
     return itsObservation.getRspSlotList();
 }
