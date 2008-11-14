@@ -57,16 +57,16 @@ namespace BBS {
   {
     itsIsRegular = true;
     ASSERT(width > 0  &&  count > 0);
-    itsCenter.reserve (count);
-    itsWidth.reserve  (count);
-    itsUpper.reserve  (count);
-    itsLower.reserve  (count);
+    itsCenter.resize (count);
+    itsWidth.resize  (count);
+    itsUpper.resize  (count);
+    itsLower.resize  (count);
     for (uint i=0; i<count; ++i) {
-      itsWidth.push_back  (width);
-      itsCenter.push_back (start + width*0.5);
-      itsLower.push_back  (start);
+      itsWidth[i]  = width;
+      itsCenter[i] = start + width*0.5;
+      itsLower[i]  =  start;
       start += width;
-      itsUpper.push_back  (start);
+      itsUpper[i]  = start;
     }
     // Note: small rounding errors will be made and the last Upper value
     // will not be exactly the same as the given v2.
@@ -75,12 +75,12 @@ namespace BBS {
 //     double end = count*width;
 //     uint   nr  = count;
 //     for (uint i=0; i<count; ++i) {
-//       itsLower.push_back  (start);
-//       itsWidth.push_back  ((end-start)/nr);
+//       itsLower[i]  = start;
+//       itsWidth[i]  = (end-start)/nr;
 //       start += itsWidth[i];
 //       --nr;
-//       itsUpper.push_back  (start);
-//       itsCenter.push_back ((itsUpper[i] + itsLower[i]) * 0.5);
+//       itsUpper[i]  = start;
+//       itsCenter[i] = (itsUpper[i] + itsLower[i]) * 0.5;
 //     }
   }
 
@@ -94,20 +94,20 @@ namespace BBS {
     if (!asStartEnd) {
       itsCenter = v1;
       itsWidth  = v2;
-      itsLower.reserve (nr);
-      itsUpper.reserve (nr);
+      itsLower.resize (nr);
+      itsUpper.resize (nr);
       for (uint i=0; i<nr; ++i) {
-        itsLower.push_back (itsCenter[i] - itsWidth[i] * 0.5);
-        itsUpper.push_back (itsLower[i] + itsWidth[i]);
+        itsLower[i] = itsCenter[i] - itsWidth[i] * 0.5;
+        itsUpper[i] = itsLower[i] + itsWidth[i];
       }
     } else {
       itsLower = v1;
       itsUpper = v2;
-      itsCenter.reserve (nr);
-      itsWidth.reserve  (nr);
+      itsCenter.resize (nr);
+      itsWidth.resize  (nr);
       for (uint i=0; i<nr; ++i) {
-        itsCenter.push_back ((v1[i] + v2[i]) * 0.5);
-        itsWidth.push_back  (v2[i] - v1[i]);
+        itsCenter[i] = (v1[i] + v2[i]) * 0.5;
+        itsWidth[i]  = v2[i] - v1[i];
       }
     }
     for (uint i=0; i<nr; ++i) {
@@ -382,6 +382,7 @@ namespace BBS {
         sinx = 1;
       }
     }
+
     index = sinx;
     return subset (size_t(sinx), size_t(einx));
   }
