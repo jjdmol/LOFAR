@@ -70,12 +70,8 @@ Parset::~Parset()
 
 void Parset::checkSubbandCount(const char *key) const
 {
-  ParameterSet    pParset;
-  string expandedStr("expandedStr=" + expandedArrayString(getString(key)));
-  pParset.adoptBuffer(expandedStr);
-
-  if (getExpandedUint32Vector(key).size() != nrSubbands())
-    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(getExpandedUint32Vector(key).size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
+  if (get(key).expand().getUint32Vector().size() != nrSubbands())
+    THROW(InterfaceException, string(key) << " contains wrong number (" << boost::lexical_cast<string>(get(key).expand().getUint32Vector().size()) << ") of subbands (expected " << boost::lexical_cast<string>(nrSubbands()) << ')');
 }
 
 
@@ -203,7 +199,7 @@ vector<double> Parset::subbandToFrequencyMapping() const
   
   vector<unsigned> subbandIds;
   if (isDefined("Observation.subbandList"))
-    subbandIds = getExpandedUint32Vector("Observation.subbandList");
+    subbandIds = get("Observation.subbandList").expand().getUint32Vector();
   else
     subbandIds = itsObservation.getSubbandList();
   vector<double>   subbandFreqs(subbandIds.size());
@@ -315,7 +311,7 @@ string Parset::getMSname(unsigned sb) const
 
 vector<string> Parset::getPortsOf(const string& aKey) const
 {
-  return getExpandedStringVector(aKey + "_Ports");
+  return get(aKey + "_Ports").expand().getStringVector();
 }
 
 vector<double> Parset::getBeamDirection(const unsigned beam) const
