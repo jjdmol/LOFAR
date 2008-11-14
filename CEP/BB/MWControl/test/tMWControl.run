@@ -7,8 +7,10 @@ ClusterName = cl
 NNodes = 2
 Node0.NodeName = $lfrhost
 Node0.NodeFileSys = [node1:/usr]
+Node0.NodeMountPoints = [/user]
 Node1.NodeName = $lfrhost
 Node1.NodeFileSys = [node1:/usr]
+Node1.NodeMountPoints = [/user]
 EOF
 
 # First run tMWControl without MPI.
