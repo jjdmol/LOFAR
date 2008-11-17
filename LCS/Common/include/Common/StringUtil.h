@@ -125,6 +125,21 @@ uint lskipws (const string& value, uint st, uint end);
 // It returns st if all whitespace.
 uint rskipws (const string& value, uint st, uint end);
 
+// Skip past a quoted string.
+// The quote character is the first character (at position st).
+// Usually the quote character is ' or ", but it could be any other character.
+// An exception is thrown if no ending quote character is found.
+uint skipQuoted (const string& str, uint st);
+
+// Skip past the end of a balanced pair of delimiters where nested pairs
+// are also skipped. Delimiters in quoted parts are ignored.
+// The starting delimiter is the first character in the string (at position st).
+// The ending delimiter is given as an argument.
+// The function works well if starting and ending delimiter are the same.
+// An exception is thrown if the delimiters are not balanced.
+// For example, it will skip something like '[[1,2,3],[4,5,6]]'.
+uint skipBalanced (const string& str, uint st, uint end, char endChar);
+
 //
 // rtrim(char* CString [,len])
 //
@@ -327,7 +342,7 @@ inline bool   strToBool   (const string& aString) throw(Exception)
 
 // @name Manupulate strings containing a array specification
 // Array specification are often entered by the user with ranges like 3..32,55..58
-// For converting such a string to a real vector the spec must be expanded so that
+// For converting such a string to a real vector the spec must be expanded so thatr
 // it contains all elements i.s.o. the ranges. 
 // Likewise, when you present a array to the user you often want to show a spec with
 // the ranges i.s.o. all loose elements. The following functions do the conversions.
@@ -342,6 +357,9 @@ string compactedArrayString(const string&	orgStr);
 // by replacing ranges with the fill series.
 // Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
 string expandedArrayString(const string&	orgStr);
+string expandRangeString(const string&);
+string expandMultString(const string&);
+string expandArrayString(const string& str);
 
 // @} 
 

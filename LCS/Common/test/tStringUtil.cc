@@ -25,6 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <Common/lofar_set.h>
 #include <Common/lofar_iostream.h>
 #include <cmath>
@@ -51,6 +52,10 @@ using namespace std;
 
 #define	DO_EXPAND_TEST(x) \
 	cout << (x) << " ==> " << expandedArrayString(x) << endl;
+
+#define	DO_EXPAND1_TEST(x) \
+	cout << (x) << " ==> " << expandArrayString(x) << endl;
+
 
 bool testSplit()
 {
@@ -329,18 +334,68 @@ bool testExpandArray()
 	DO_EXPAND_TEST("[20*(300..303)]");
 	DO_EXPAND_TEST("[2*(5*0)]");
 
-//         DO_EXPAND_TEST("3*ab");
-//         DO_EXPAND_TEST("3*(ab)");
-//         DO_EXPAND_TEST("3*'ab'");
-//         DO_EXPAND_TEST("3*('ab')");
-//         DO_EXPAND_TEST("3*10.5");
-//         DO_EXPAND_TEST("3*(10.5)");
-//         DO_EXPAND_TEST("lifs0..lifs10");
-//         DO_EXPAND_TEST("lifs00..lifs010");
-//         DO_EXPAND_TEST("lifs000..lifs010");
-//         DO_EXPAND_TEST("2*lifs000..lifs010");
-//         DO_EXPAND_TEST("2*(lifs000..lifs010)");
-//         DO_EXPAND_TEST("2*([1,2])");
+        // Some tests of invalid/unclear expansions.
+        cout << "  Some old unclear expansions" << endl;
+        DO_EXPAND_TEST("[3*ab]");
+        DO_EXPAND_TEST("[3*(ab)]");
+        DO_EXPAND_TEST("[3*'ab']");
+        DO_EXPAND_TEST("[3*('ab')]");
+        DO_EXPAND_TEST("[3*10.5]");
+        DO_EXPAND_TEST("[3*(10.5)]");
+        DO_EXPAND_TEST("[lifs0..lifs10]");
+        DO_EXPAND_TEST("[lifs00..lifs010]");
+        DO_EXPAND_TEST("[lifs000..lifs010]");
+        DO_EXPAND_TEST("[2*lifs000..lifs010]");
+        DO_EXPAND_TEST("[2*(lifs000..lifs010)]");
+        DO_EXPAND_TEST("[2*([1,2])]");
+
+        // New expansions.
+        cout << "  The same new expansions" << endl;
+        DO_EXPAND1_TEST("[3*ab]");
+        DO_EXPAND1_TEST("[3*(ab)]");
+        DO_EXPAND1_TEST("[3*'ab']");
+        DO_EXPAND1_TEST("[3*('ab')]");
+        DO_EXPAND1_TEST("[3*10.5]");
+        DO_EXPAND1_TEST("[3*(10.5)]");
+        DO_EXPAND1_TEST("[lifs0..lifs10]");
+        DO_EXPAND1_TEST("[lifs00..lifs010]");
+        DO_EXPAND1_TEST("[lifs000..lifs010]");
+        DO_EXPAND1_TEST("[2*lifs000..lifs010]");
+        DO_EXPAND1_TEST("[2*(lifs000..lifs010)]");
+        DO_EXPAND1_TEST("[2*([1,2])]");
+
+        cout << "  Some more involved new expansions" << endl;
+        DO_EXPAND1_TEST("[abc]");
+        DO_EXPAND1_TEST("[abc0..abc9]");
+        DO_EXPAND1_TEST("['abc0..abc9']");
+        DO_EXPAND1_TEST("[abc000..abc9]");
+        DO_EXPAND1_TEST("[(abc0009  ..  abc4, 010..8)]");
+        DO_EXPAND1_TEST("[/abc/../cd0..3]");
+        DO_EXPAND1_TEST("[3*abc]");
+        DO_EXPAND1_TEST("[3 * [[1,2,3],[4,5,6]], 02*'xx']");
+        DO_EXPAND1_TEST("[3 * [[5*1],[5*2]], 02*'xx']");
+        DO_EXPAND1_TEST("[2*(0,1,2,3), 2*(5;6;7), 2*10..12]");
+        DO_EXPAND1_TEST(" [ 3 * 2 * 10 .. 12 ] ");
+        DO_EXPAND1_TEST(" [3*(2*3*6;2*(12,13))]");
+
+        cout << "  Performance comparison between old and new" << endl;
+        cout << ">>>" << endl;
+        NSTimer tim1;
+        tim1.start();
+        string s1 = expandedArrayString("[abc001..abc10,abc45..abc50]");
+        tim1.stop();
+        tim1.print(cout);
+        cout << "<<<" << endl;
+        cout << s1 << endl;
+        cout << ">>>" << endl;
+        NSTimer tim2;
+        tim2.start();
+        string s2 = expandArrayString("[abc001..abc10,abc45..abc50]");
+        tim2.stop();
+        tim2.print(cout);
+        cout << "<<<" << endl;
+        cout << s2 << endl;
+
   } catch(Exception& e) {
 	LOG_ERROR_STR(e);
 	return (false);

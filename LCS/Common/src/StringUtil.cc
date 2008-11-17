@@ -28,6 +28,7 @@
 #include <Common/StringUtil.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 #include <cstring>
 #include <cstdarg>
 #include <ctime>
@@ -229,6 +230,54 @@ uint32	StringToUint32(const string& aString, const char* fmt) throw(Exception)
 	return (theUint);
 }	
 
+#if HAVE_LONG_LONG
+int64	StringToInt64(const string& aString, const char* fmt) throw(Exception)
+{
+	int64		theLong;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theLong) : 
+			   sscanf(aString.c_str(), "%lld", &theLong)) != 1) {
+		THROW (Exception, aString + " is not a long integer value");
+	}
+
+	return (theLong);
+}	
+
+uint64	StringToUint64(const string& aString, const char* fmt) throw(Exception)
+{
+	uint64		theUlong;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theUlong) : 
+			   sscanf(aString.c_str(), "%llu", &theUlong)) != 1) {
+		THROW (Exception, aString + " is not an unsigned long integer value");
+	}
+
+	return (theUlong);
+}	
+#endif
+
+float	StringToFloat(const string& aString, const char* fmt) throw(Exception)
+{
+	float		theFloat;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theFloat) : 
+			   sscanf(aString.c_str(), "%g", &theFloat)) != 1) {
+		THROW (Exception, aString + " is not a float value");
+	}
+
+	return (theFloat);
+}	
+
+
+double	StringToDouble(const string& aString, const char* fmt) throw(Exception)
+{
+	double		theDouble;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theDouble) : 
+			   sscanf(aString.c_str(), "%lg", &theDouble)) != 1) {
+		THROW (Exception, aString + " is not a double value");
+	}
+
+	return (theDouble);
+}	
+
+
 long strToLong (const string& aString) throw(Exception)
 {
   const char* str = aString.c_str();
@@ -412,53 +461,6 @@ uint64 strToUint64 (const string& aString) throw(Exception)
 #endif
 
  
-#if HAVE_LONG_LONG
-int64	StringToInt64(const string& aString, const char* fmt) throw(Exception)
-{
-	int64		theLong;
-	if ((fmt ? sscanf(aString.c_str(), fmt, &theLong) : 
-			   sscanf(aString.c_str(), "%lld", &theLong)) != 1) {
-		THROW (Exception, aString + " is not a long integer value");
-	}
-
-	return (theLong);
-}	
-
-uint64	StringToUint64(const string& aString, const char* fmt) throw(Exception)
-{
-	uint64		theUlong;
-	if ((fmt ? sscanf(aString.c_str(), fmt, &theUlong) : 
-			   sscanf(aString.c_str(), "%llu", &theUlong)) != 1) {
-		THROW (Exception, aString + " is not an unsigned long integer value");
-	}
-
-	return (theUlong);
-}	
-#endif
-
-float	StringToFloat(const string& aString, const char* fmt) throw(Exception)
-{
-	float		theFloat;
-	if ((fmt ? sscanf(aString.c_str(), fmt, &theFloat) : 
-			   sscanf(aString.c_str(), "%g", &theFloat)) != 1) {
-		THROW (Exception, aString + " is not a float value");
-	}
-
-	return (theFloat);
-}	
-
-
-double	StringToDouble(const string& aString, const char* fmt) throw(Exception)
-{
-	double		theDouble;
-	if ((fmt ? sscanf(aString.c_str(), fmt, &theDouble) : 
-			   sscanf(aString.c_str(), "%lg", &theDouble)) != 1) {
-		THROW (Exception, aString + " is not a double value");
-	}
-
-	return (theDouble);
-}	
-
 //
 // compactedArrayString(string)
 //
@@ -611,6 +613,211 @@ string findRangeElement(const string& orgStr)
 // (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
 // if you change anything structural change the Navigator part also please
 // -----------------------------------------------------------------------
+string expandRangeString (const string& strng)
+{
+  string str(strng);
+  uint i=0;
+  uint last = str.size();
+  while (i < last-1) {
+    if (str[i] == '\''  ||  str[i] == '"') {
+      // Ignore a quoted part.
+      string::size_type pos = str.find (str[i], i+1);
+      ASSERTSTR (pos != string::npos, "Unbalanced quoted string at position "
+                 << i << " in " << str);
+      i = pos;
+    } else if (str[i] == '.'  && str[i+1] == '.') {
+      // Found ..; look back for number and prefix.
+      // First find number.
+      int endnum = rskipws (str, 0, i);
+      int stnum = endnum - 1;
+      while (stnum >= 0  &&  str[stnum] >= '0'  &&  str[stnum] <= '9') {
+        --stnum;
+      }
+      int lennum = endnum - stnum - 1;
+      if (lennum > 0) {
+        int num = strToInt (str.substr (stnum+1, lennum));
+        // Found number, now find possible prefix.
+        // We could say that the prefix has to be alphanumeric, but more
+        // general is to accept all chracters except ({[,*; blank and tab.
+        int stalp = stnum;
+        while (stalp>=0 &&
+               str[stalp]!='(' && str[stalp]!='[' && str[stalp]!='{' &&
+               str[stalp]!=',' && str[stalp]!=';' && str[stalp]!='*' &&
+               str[stalp]!=' ' && str[stalp]!='\t') {
+          --stalp;
+        }
+        stalp++;
+        string prefix = str.substr (stalp, stnum-stalp+1);
+        // Now find part after the .. which can contain the same prefix.
+        i = lskipws (str, i+2, last);
+        if (last-i > prefix.size()  &&
+            str.substr(i, prefix.size()) == prefix) {
+          i += prefix.size();
+        }
+        // Test if a digit.
+        if (isdigit(str[i])) {
+          stnum = i;
+          // Skip to end of number.
+          while (i < last  &&  isdigit(str[i])) {
+            ++i;
+          }
+          endnum = strToInt (str.substr(stnum, i-stnum));
+          // We really have something like xxx000..004
+          // Fill it in in ascending or descending order.
+          ostringstream ostr;
+          if (num < endnum) {
+            for (; num<=endnum; ++num) {
+              ostr << prefix << setfill('0') << setw(lennum) << num;
+              if (num != endnum) ostr << ',';
+            }
+          } else {
+            for (; num>=endnum; --num) {
+              ostr << prefix << setfill('0') << setw(lennum) << num;
+              if (num != endnum) ostr << ',';
+            }
+          }
+          str.replace (stalp, i-stalp, ostr.str());
+          int diff = ostr.str().size() - (i-stalp);
+          i    += diff;
+          last += diff;
+        }
+      }
+    }
+    ++i;
+  }
+  return str;
+}
+
+string expandMultString (const string& strng)
+{
+  string str(strng);
+  uint i=0;
+  uint last = str.size();
+  while (i < last-1) {
+    if (str[i] == '\''  ||  str[i] == '"') {
+      // Ignore a quoted part.
+      i = skipQuoted (str, i);
+    } else {
+      if (str[i] != '*') {
+        ++i;
+      } else {
+        // Found *; look back for digits.
+        int endnum = rskipws (str, 0, i);
+        int stnum = endnum - 1;
+        while (stnum >= 0  &&  str[stnum] >= '0'  &&  str[stnum] <= '9') {
+          --stnum;
+        }
+        stnum++;
+        int lennum = endnum - stnum;
+        if (lennum == 0) {
+          // No number found, so ignore the *.
+          ++i;
+        } else {
+          int num = strToInt (str.substr (stnum, lennum));
+          // Now find the string that has to be multiplied.
+          // This can be a single instance or a set indicated by () or [].
+          // First skip possible whitesapce after *.
+          i = lskipws (str, i+1, last);
+          uint stval = i;
+          string val;
+          if (str[i] == '[') {
+            // A set in [].
+            i = skipBalanced (str, i, last, ']');
+            val = str.substr(stval, i-stval);
+          } else if (str[i] == '(') {
+            // A set in (). Remove the parentheses.
+            i = skipBalanced (str, i, last, ')');
+            val = str.substr(stval+1, i-stval-2);
+            // Replace ; by , (for backward compatibility).
+            uint stv = 0;
+            while (stv < val.size()) {
+              if (val[stv] == '"'  ||  val[stv] == '\'') {
+                stv = skipQuoted (val, stv);
+              } else {
+                if (val[stv] == ';') {
+                  val[stv] = ',';
+                }
+                stv++;
+              }
+            }
+          } else if (str[i] == '"'  ||  str[i] == '\'') {
+            // A quoted string.
+            i = skipQuoted (str, i);
+            val = str.substr(stval, i-stval);
+          } else {
+            // Any other value is ended by ,]).
+            // Also end at a quote to avoid the problem of a delimiter
+            // being part of a quoted string.
+            string::size_type pos = str.find_first_of (",;])\"'", i);
+            if (pos == string::npos) {
+              i = last;
+            } else {
+              i = pos;
+            }
+            val = str.substr(stval, i-stval);
+          }
+          // Insert the values num times separated by a comma.
+          string res;
+          res.reserve (num * (val.size() + 1));
+          for (int j=0; j<num; ++j) {
+            if (j > 0) res += ',';
+            res += val;
+          }
+          // Replace the value by the new result.
+          str.replace (stnum, i-stnum, res);
+          last += res.size() - (i-stnum);
+          // Continue scanning at start of new value (for possible recursion).
+          i = stnum;
+        }
+      }
+    }
+  }
+  return str;
+}
+
+uint skipQuoted (const string& str, uint st)
+{
+  string::size_type pos = str.find (str[st], st+1);
+  ASSERTSTR (pos != string::npos, "Unbalanced quoted string at position "
+             << st << " in " << str);
+  return pos+1;
+}
+
+uint skipBalanced (const string& str, uint st, uint end, char endChar)
+{
+  char ch = str[st++];
+  int nrp = 1;
+  while (st < end) {
+    // First test on end character. In this way it also works well
+    // if start and end character are the same.
+    if (str[st] == endChar) {
+      st++;
+      if (--nrp == 0) return st;
+    } else if (str[st] == ch) {
+      st++;
+      nrp++;
+    } else if (str[st] == '"'  ||  str[st] == '\'') {
+      st = skipQuoted (str, st);
+    } else {
+      st++;
+    }
+  }
+  THROW (Exception, "Unbalanced " << ch << endChar << " in " << str);
+}
+
+string expandArrayString (const string& str)
+{
+  // Only do it if enclosed in brackets.
+  uint st  = lskipws (str, 0, str.size());
+  uint end = rskipws (str, st, str.size());
+  if (st >= end  ||  str[st] != '['  ||  str[end-1] != ']') {
+    return str;
+  }
+  // Do expandMult first, otherwise something like 3*lifs001..003 is not
+  // handled properly.
+  return expandRangeString (expandMultString (str));
+}
+
 string expandedArrayString(const string& orgStr)
 {
   // any ranges in the string?
