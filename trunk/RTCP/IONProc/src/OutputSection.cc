@@ -73,7 +73,7 @@ void OutputSection::connectToStorage(const Parset *ps)
       std::clog << "subband " << subbandNumber << " written to null:" << std::endl;
       itsStreamsToStorage.push_back(new NullStream);
     } else if (connectionType == "TCP") {
-      std::string    server = ps->getStringVector(prefix + "_ServerHosts")[storageHostIndex];
+      std::string    server = ps->storageHostName(prefix + "_ServerHosts", subbandNumber);
       //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
       unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[subbandNumber]);
 
