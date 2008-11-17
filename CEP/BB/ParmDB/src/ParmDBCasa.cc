@@ -495,14 +495,14 @@ namespace BBS {
     }
     ASSERT (arr.shape()[1] == int(n));
     const double* arrp = arr.data();
-    vector<double> vs, ve;
-    vs.reserve(n);
-    ve.reserve(n);
+    vector<double> vc, vw;
+    vc.reserve(n);
+    vw.reserve(n);
     for (uint i=0; i<n; ++i) {
-      vs.push_back (*arrp++);
-      ve.push_back (*arrp++);
+      vc.push_back (*arrp++);
+      vw.push_back (*arrp++);
     }
-    return Axis::ShPtr(new OrderedAxis (vs, ve, true));
+    return Axis::ShPtr(new OrderedAxis (vc, vw, false));
   }
 
   int ParmDBCasa::putName (const string& name, const ParmValueSet& pset)
