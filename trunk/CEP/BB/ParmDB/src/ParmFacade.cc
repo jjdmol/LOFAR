@@ -137,6 +137,13 @@ namespace LOFAR {
       for (uint i=0; i<names.size(); ++i) {
         Parm parm(parmCache, i);
         parm.getResult (result, predictGrid);
+        // If the value is constant, the array has only one element.
+        // In that case resize it to the full grid.
+        if (result.nelements() == 1) {
+          double dval = *result.data();
+          result.resize (IPosition(2, axisx.size(), axisy.size()));
+          result = dval;
+        }
         out.define (names[i], result);
       }
       return out;
