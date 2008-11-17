@@ -188,7 +188,7 @@ AC_ARG_ENABLE(lib64,
   *)
     # root = something
     # Strip the package name from the build path
-    lfr_curroot=`pwd | sed -e "s%$lfr_pkg/.*%%"`
+    lfr_curroot=`pwd | sed -e "s%$lfr_pkg.*%%"`
     ;;
   esac
   lfr_buildcomp=
@@ -381,7 +381,7 @@ AC_ARG_ENABLE(lib64,
   echo "" >> lofar_config.h-pkg;
   # Define the package also for the lofarlogger.
   # Strip after /build which is added by make distcheck.
-  lfr_llpkg=`echo $lfr_package | sed -e "s%/build/.*%%" -e "s%/%.%g"`
+  lfr_llpkg=`echo $lfr_pkg | sed -e "s%/build/.*%%" -e "s%/%.%g"`
   echo "#define LOFARLOGGER_PACKAGE \"$lfr_llpkg\"" >> lofar_config.h-pkg;
   # Do the finalization (in case no lofar_package is used).
   cp lofar_config.h-pkg lofar_config.h
