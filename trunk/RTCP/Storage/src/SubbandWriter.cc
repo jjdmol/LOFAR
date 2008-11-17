@@ -117,7 +117,7 @@ void SubbandWriter::createInputStreams()
       std::cout << "subband " << subbandNumber << " read from null stream" << std::endl;
       itsInputStreams.push_back(new NullStream);
     } else if (connectionType == "TCP") {
-      std::string    server = itsPS->getStringVector(prefix + "_ServerHosts")[itsRank];
+      std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", subbandNumber);
       unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
 
       std::cout << "subband " << subbandNumber << " read from tcp:" << server << ':' << port << std::endl;
