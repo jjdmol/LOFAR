@@ -86,7 +86,7 @@ start_prog()
 			sleep 5
 		else
 			if [ -n "$asroot" ]; then
-				sudo rm -f $LOGDIR/$prog.log*
+				sudo rm -f $LOGDIR/$prog.log.?
 				if [ "$prog" = "RSPDriver" ]; then
 					echo "Starting RSPDriver with nice -20"
 					sudo -b nohup nice -20 $BINDIR/$prog 1>&2 2>/dev/null
@@ -94,7 +94,7 @@ start_prog()
 					sudo -b nohup $BINDIR/$prog 1>&2 2>/dev/null
 				fi
 			else
-				rm -f $LOGDIR/$prog.log*
+				rm -f $LOGDIR/$prog.log*.?
 				nohup $BINDIR/$prog 1>&2 2>/dev/null &
 			fi
 			sleep 1
@@ -268,9 +268,10 @@ if [ -z "$1" ]; then
 fi
 
 # don't allow root to run swlevel because all logfile get root access.
-uid=`id | cut -d'=' -f2 | cut -d'(' -f1`
-if [ $uid -eq 0 ]; then
-	echo "swlevel may NOT be run as root!"
+user=`id | cut -d'(' -f2 | cut -d')' -f1`
+echo $user
+if [ $user != "lofartest" -a $user != "lofarsys" ]; then
+	echo "swlevel must be run as user lofartest or lofarsys!"
 	exit
 fi
 
