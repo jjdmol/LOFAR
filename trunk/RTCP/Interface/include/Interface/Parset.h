@@ -94,6 +94,7 @@ public:
 	bool	       correctBandPass() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         stationName(const int index) const;
+	string         storageHostName(const string& aKey, const int index) const;
 	uint32	       nrPsetsPerStorage() const;
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
@@ -166,6 +167,12 @@ inline string Parset::stationName(const int index) const
 {
   return getStringVector("OLAP.storageStationNames")[index];
 }
+
+inline string Parset::storageHostName(const string& aKey, const int index) const
+{
+  return getStringVector(aKey)[getUint32Vector("OLAP.storageNodeList")[index]];
+}
+
 
 inline string Parset::getTransportType(const string& prefix) const
 {
