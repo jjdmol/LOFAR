@@ -134,6 +134,11 @@ bool navFunct_splitAction(string action,dyn_string& actionString) {
 
 void navFunct_queryConnectObservations()
 {
+  g_observations[ "DP"          ]    = makeDynString();                    
+  g_observations[ "NAME"        ]    = makeDynString();
+  g_observations[ "STATIONLIST" ]    = makeDynString();
+  g_observations[ "RECEIVERBITMAP" ] = makeDynString();
+  g_observations[ "SCHEDULE" ]       = makeDynString();
   if (dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
     oldPlannedObservations=makeDynString();
     oldFinishedObservations=makeDynString();
@@ -192,7 +197,6 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   g_observations[ "STATIONLIST" ]    = makeDynString();
   g_observations[ "RECEIVERBITMAP" ] = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
-  
   
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
