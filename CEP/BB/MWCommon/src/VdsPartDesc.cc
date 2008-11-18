@@ -41,6 +41,10 @@ namespace LOFAR { namespace CEP {
     timeStr = parset.getString ("EndTime");
     ASSERT (MVTime::read (q, timeStr, true));
     itsEndTime = q.getValue ("s");
+    itsTimes   = parset.getDoubleVector ("dCentroid", vector<double>());
+    for (uint i=0; i<itsTimes.size(); ++i) {
+      itsTimes[i] += itsStartTime;
+    }
   }
 
   void VdsPartDesc::write (std::ostream& os, const std::string& prefix) const
@@ -50,10 +54,20 @@ namespace LOFAR { namespace CEP {
       os << prefix << "FileSys    = " << itsFileSys << endl;
     }
     os << prefix << "StartTime  = "
-	<< MVTime::Format(MVTime::YMD,6) << MVTime(itsStartTime/86400) << endl;
+	<< MVTime::Format(MVTime::YMD,9) << MVTime(itsStartTime/86400) << endl;
     os << prefix << "EndTime    = "
-	<< MVTime::Format(MVTime::YMD,6) << MVTime(itsEndTime/86400) << endl;
+	<< MVTime::Format(MVTime::YMD,9) << MVTime(itsEndTime/86400) << endl;
     os << prefix << "StepTime   = " << itsStepTime << endl;
+    if (! itsTimes.empty()) {
+      os << prefix << "dCentroid= [";
+      streamsize oldPrec = os.precision (8);
+      for (uint i=0; i<itsTimes.size(); ++i) {
+        if (i!=0) os << ',';
+        os << itsTimes[i] - itsStartTime;
+      }
+      os << ']' << endl;
+      os.precision (oldPrec);
+    }
     if (! itsNChan.empty()) {
       os << prefix << "NChan      = " << itsNChan << endl;
       streamsize oldPrec = os.precision (12);
@@ -84,11 +98,13 @@ namespace LOFAR { namespace CEP {
     }
   }
 
-  void VdsPartDesc::setTimes (double startTime, double endTime, double stepTime)
+  void VdsPartDesc::setTimes (double startTime, double endTime, double stepTime,
+                              const vector<double>& centroids)
   {
     itsStartTime = startTime;
     itsEndTime   = endTime;
     itsStepTime  = stepTime;
+    itsTimes     = centroids;
   }
 
   void VdsPartDesc::addBand (int nchan, double startFreq, double endFreq)
@@ -118,7 +134,7 @@ namespace LOFAR { namespace CEP {
   {
     bs.putStart ("VdsPartDesc", 1);
     bs << itsName << itsFileSys
-       << itsStartTime << itsEndTime << itsStepTime
+       << itsStartTime << itsEndTime << itsStepTime << itsTimes
        << itsNChan << itsStartFreqs << itsEndFreqs
        << itsParms;
     bs.putEnd();
@@ -129,7 +145,7 @@ namespace LOFAR { namespace CEP {
   {
     bs.getStart ("VdsPartDesc");
     bs >> itsName >> itsFileSys
-       >> itsStartTime >> itsEndTime >> itsStepTime
+       >> itsStartTime >> itsEndTime >> itsStepTime >> itsTimes
        >> itsNChan >> itsStartFreqs >> itsEndFreqs
        >> itsParms;
     bs.getEnd();

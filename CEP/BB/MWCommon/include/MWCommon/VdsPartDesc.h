@@ -56,7 +56,7 @@ namespace LOFAR { namespace CEP {
   public:
     // Construct an empty object.
     VdsPartDesc()
-      : itsStartTime(0), itsStepTime(1)
+      : itsStartTime(0), itsEndTime(1), itsStepTime(1)
       {}
 
     // Construct from the given parameterset.
@@ -69,7 +69,9 @@ namespace LOFAR { namespace CEP {
     void changeBaseName (const string& newBaseName);
 
     // Set the start and end time.
-    void setTimes (double startTime, double endTime, double stepTime);
+    // Optionally the time centroid per time interval can be set.
+    void setTimes (double startTime, double endTime, double stepTime,
+                   const vector<double>& centroid = vector<double>());
 
     // Add a band.
     // <group>
@@ -106,6 +108,8 @@ namespace LOFAR { namespace CEP {
       { return itsEndTime; }
     double getStepTime() const
       { return itsStepTime; }
+    const vector<double>& getTimeCentroids() const
+      { return itsTimes; }
     int getNBand() const
       { return itsNChan.size(); }
     const std::vector<int>& getNChan() const
@@ -128,6 +132,7 @@ namespace LOFAR { namespace CEP {
     double      itsStartTime;
     double      itsEndTime;
     double      itsStepTime;
+    std::vector<double> itsTimes;
     std::vector<int32>  itsNChan;        //# nr of channels per band
     std::vector<double> itsStartFreqs;   //# start freq of each channel
     std::vector<double> itsEndFreqs;     //# end freq of each channel
