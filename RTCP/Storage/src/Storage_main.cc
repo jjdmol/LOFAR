@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	      break;
 
     case 0  : child(argc, argv, rank);
-	      break;
+	      exit(0);
 
     default : if (wait(&status) < 0)
 		perror("wait");
