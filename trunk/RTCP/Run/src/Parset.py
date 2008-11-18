@@ -82,12 +82,12 @@ class Parset(LOFAR_Parset.Parset):
 	nrStorageNodes = self.nrUsedStorageNodes()
 	storageNodes = list()
 	
-	if nrSubbands == 1 : self['Observation.storageNodeList'] = '[0]'
+	if nrSubbands == 1 : self['OLAP.storageNodeList'] = '[0]'
 	else:
 	    for i in range(0,nrSubbands):
  		storageNodes.append(i/(nrSubbands/nrStorageNodes))
 	
-	    self['Observation.storageNodeList'] = [s for s in storageNodes]
+	    self['OLAP.storageNodeList'] = [s for s in storageNodes]
 
     def setStations(self, stationList):
         self.stationList = stationList
