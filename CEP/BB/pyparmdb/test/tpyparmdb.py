@@ -1,6 +1,6 @@
 from lofar.parmdb import *
 
-def showValues (pattern='*', nf=4, nt=2):
+def showValues (pdb, pattern='*', nf=4, nt=2):
     # Get the names.
     print pdb.getNames()
     # Get the range.
@@ -14,5 +14,11 @@ def showValues (pattern='*', nf=4, nt=2):
 # The test is the same as in tParmFacade.cc.
 # Open the parameterset (created in .run file).
 pdb=parmdb("tpyparmdb_tmp.pdb")
-showValues ();
-showValues ('', 1);
+print ">>>"
+print pdb.version("tree")
+print pdb.version("full")
+print pdb.version("top")
+print pdb.version()
+print "<<<"
+showValues (pdb);
+showValues (pdb, '', 1);
