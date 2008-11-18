@@ -708,15 +708,21 @@ string expandMultString (const string& strng)
           --stnum;
         }
         stnum++;
-        int lennum = endnum - stnum;
+        // Only use it if the number is at begin or preceeded by a delimiter.
+        uint j = rskipws(str, 0, stnum);
+        int lennum = 0;
+        if (j==0  ||  str[j-1]==','  ||  str[j-1]=='['  ||  str[j-1]=='(') {
+          lennum = endnum - stnum;
+        }
         if (lennum == 0) {
           // No number found, so ignore the *.
           ++i;
         } else {
+          bool continueAtReplace = true;
           int num = strToInt (str.substr (stnum, lennum));
           // Now find the string that has to be multiplied.
           // This can be a single instance or a set indicated by () or [].
-          // First skip possible whitesapce after *.
+          // First skip possible whitespace after *.
           i = lskipws (str, i+1, last);
           uint stval = i;
           string val;
@@ -740,21 +746,29 @@ string expandMultString (const string& strng)
                 stv++;
               }
             }
-          } else if (str[i] == '"'  ||  str[i] == '\'') {
-            // A quoted string.
-            i = skipQuoted (str, i);
-            val = str.substr(stval, i-stval);
           } else {
             // Any other value is ended by ,]).
-            // Also end at a quote to avoid the problem of a delimiter
-            // being part of a quoted string.
-            string::size_type pos = str.find_first_of (",;])\"'", i);
-            if (pos == string::npos) {
-              i = last;
-            } else {
-              i = pos;
+            while (i < last) {
+              if (str[i] == '"'  ||  str[i] == '\'') {
+                // A quoted string.
+                i = skipQuoted (str, i);
+              } else if (str[i] == '[') {
+                // Another string in brackets.
+                i = skipBalanced (str, i, last, ']');
+              } else if (str[i] == '(') {
+                // Another string in parentheses.
+                i = skipBalanced (str, i, last, ')');
+              } else {
+                if (str[i]==',' || str[i]==']' || str[i]==')') {
+                  // The end of the value.
+                  break;
+                }
+                // Continue with next character.
+                ++i;
+              }
             }
             val = str.substr(stval, i-stval);
+            ///            continueAtReplace = false;
           }
           // Insert the values num times separated by a comma.
           string res;
@@ -766,8 +780,12 @@ string expandMultString (const string& strng)
           // Replace the value by the new result.
           str.replace (stnum, i-stnum, res);
           last += res.size() - (i-stnum);
-          // Continue scanning at start of new value (for possible recursion).
-          i = stnum;
+          // Continue scanning at start of replace (for possible recursion).
+          if (continueAtReplace) {
+            i = stnum;
+          } else {
+            i = stnum + res.size();
+          }
         }
       }
     }
