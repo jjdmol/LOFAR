@@ -378,6 +378,31 @@ bool testExpandArray()
         DO_EXPAND1_TEST(" [ 3 * 2 * 10 .. 12 ] ");
         DO_EXPAND1_TEST(" [3*(2*3*6;2*(12,13))]");
 
+        cout << "  Miscellaneous tests" << endl;
+        cout << "   with new expandArrayString" << endl;
+        DO_EXPAND1_TEST(" [3*'10.5*ab']");
+        DO_EXPAND1_TEST(" [10.5*'ab']");
+        DO_EXPAND1_TEST(" [3*10.5*'ab']");
+        DO_EXPAND1_TEST(" [3*'ab'*2]");
+        DO_EXPAND1_TEST(" [3*ab*2]");
+        DO_EXPAND1_TEST(" [3*3*2]");
+        DO_EXPAND1_TEST(" [3*(3*2)]");
+        DO_EXPAND1_TEST(" [3*10.5*2]");
+        DO_EXPAND1_TEST(" [3*(10.5*2)]");
+        DO_EXPAND1_TEST(" [(1,2,3)]");
+        cout << "   with old expandedArrayString" << endl;
+        DO_EXPAND_TEST(" [3*'10.5*ab']");
+        DO_EXPAND_TEST(" [10.5*'ab']");
+        DO_EXPAND_TEST(" [3*10.5*'ab']");
+        DO_EXPAND_TEST(" [3*'ab'*2]");
+        DO_EXPAND_TEST(" [3*ab*2]");
+        DO_EXPAND_TEST(" [3*3*2]");
+        DO_EXPAND_TEST(" [3*3*2]");
+        DO_EXPAND_TEST(" [3*(3*2)]");
+        DO_EXPAND_TEST(" [3*10.5*2]");
+        DO_EXPAND_TEST(" [3*(10.5*2)]");
+        DO_EXPAND_TEST(" [(1,2,3)]");
+
         cout << "  Performance comparison between old and new" << endl;
         cout << ">>>" << endl;
         NSTimer tim1;
