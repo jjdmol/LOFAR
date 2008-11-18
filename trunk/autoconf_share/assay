@@ -200,7 +200,15 @@
         trap - 0 ; \
         exit $STATUS' 0 1 2 3 15
 
+# If there is a .py file then use it.
+  if [ -f "$PROG.py" ]; then
+    COMMAND="python $PROG.py"
+    LOFAR_CHECKTOOL=
+  fi
+
 # If there is a .run file then use it (not on the Cray).
+# Note: this must be tested after the test on .py file, otherwise it gets
+# overwritten if there is a .py file.
   if [ -f "$PROG.run" ]
   then
     if [ $LOFAR_USECRAY = 1 ]; then
@@ -210,12 +218,6 @@
     COMMAND="./$PROG.run"
     LOFAR_CHECKTOOL="$CHKTOOL"
     export LOFAR_CHECKTOOL
-  fi
-
-# If there is a .py file then use it.
-  if [ -f "$PROG.py" ]; then
-    COMMAND="python $PROG.py"
-    LOFAR_CHECKTOOL=
   fi
 
 # Execute the command.
