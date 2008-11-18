@@ -18,13 +18,17 @@ using namespace LOFAR;
 using namespace LOFAR::CEP;
 using namespace std;
 
-void check (const VdsPartDesc& vds)
+void check (const VdsPartDesc& vds, uint nTimes=0)
 {
   ASSERT (vds.getName() == "/usr/local/xyx");
   ASSERT (vds.getFileSys() == "node1:/usr");
-  ASSERT (vds.getStartTime() == 0);
+  ASSERT (vds.getStartTime() == 0.5);
   ASSERT (vds.getEndTime() == 1);
-  ASSERT (vds.getStepTime() == 0.5);
+  ASSERT (vds.getStepTime() == 0.25);
+  ASSERT (vds.getTimeCentroids().size() == nTimes);
+  if (nTimes > 0) {
+    ASSERT (vds.getTimeCentroids()[0] == 1.);
+  }
   ASSERT (vds.getNChan().size() == 2);
   ASSERT (vds.getNChan()[0] == 2);
   ASSERT (vds.getNChan()[1] == 3);
@@ -49,7 +53,7 @@ void doIt()
   VdsPartDesc vds;
   vds.setName ("/usr/local/abcd", "node1:/usr");
   vds.changeBaseName ("xyx");
-  vds.setTimes (0, 1, 0.5);
+  vds.setTimes (0.5, 1, 0.25);
   vds.addBand (2, 20, 100);
   vds.addBand (3, 123456789, 123456792);
   vds.addParm ("key1", "value1");
@@ -73,6 +77,14 @@ void doIt()
   VdsPartDesc vdsb;
   bis >> vdsb;
   check (vdsb);
+  // Add some times and check again.
+  vdsb.setTimes (0.5, 1, 0.25, vector<double>(10,1));
+  check (vdsb, 10);
+  // Check if times are written as well.
+  ofstream fos2("tVdsPartDesc_tmp.fil2");
+  vdsb.write (fos2, "");
+  VdsPartDesc vdsb2(LOFAR::ACC::APS::ParameterSet("tVdsPartDesc_tmp.fil2"));
+  check(vdsb2, 10);
   vdsb.clearParms();
   ASSERT (vdsb.getParms().size() == 0);
 }
