@@ -37,6 +37,16 @@ using namespace casa::pyrap;
 
 namespace LOFAR { namespace BBS  {
 
+  class PyParmDB : public ParmFacade
+  {
+  public:
+    PyParmDB (const string& tableName)
+      : ParmFacade (tableName)
+    {}
+    string version (const string& type) const
+      { return Version::getInfo<pyparmdbVersion> (type); }
+  };
+
   Record (ParmFacade::*fgetvalues1)(const string&,
                                     double, double, int,
                                     double, double, int,
@@ -50,9 +60,11 @@ namespace LOFAR { namespace BBS  {
 
   void pyparmdb()
   {
-    class_<ParmFacade> ("ParmDB",
-			init<std::string>())
+    class_<PyParmDB> ("ParmDB",
+                      init<std::string>())
 
+      .def ("version", &PyParmDB::version,
+            (boost::python::arg("type")="other"))
       .def ("getRange", &ParmFacade::getRange,
  	    (boost::python::arg("parmnamepattern")=""))
       .def ("getNames", &ParmFacade::getNames,
