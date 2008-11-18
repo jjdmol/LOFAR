@@ -166,13 +166,21 @@ fi
 # be run as if the python files were installed.
 # Note that python looks in . before PYTHONPATH.
 if [ "$PYTHONPKG" != "" ]; then
-  PYTHONDIR=${PROG}_tmp_pythonpkg_dir     # will be removed automatically
+  PYTHONDIR=${1}_tmp_pythonpkg_dir           # will be removed automatically
   mkdir -p $PYTHONDIR/lofar/$PYTHONPKG
   touch $PYTHONDIR/lofar/__init__.py
-  cp $srcdir/../src/*.py $PYTHONDIR/lofar/$PYTHONPKG
-  cp ../src/.libs/*.so $PYTHONDIR/lofar/$PYTHONPKG
+  rm -f $PYTHONDIR/lofar/$PYTHONPKG/*
+  for FIL in $srcdir/../src/*.py
+  do
+      ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
+  done
+  for FIL in `pwd`/../src/.libs/*.so
+  do
+      ln -s $FIL $PYTHONDIR/lofar/$PYTHONPKG
+  done
   PYTHONPATH=`pwd`/$PYTHONDIR/:$PYTHONPATH
   export PYTHONPATH
+  echo "PYTHONPATH=$PYTHONPATH"
 fi
 
 # Define source directory and run assay
