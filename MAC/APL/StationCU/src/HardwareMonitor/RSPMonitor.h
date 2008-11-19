@@ -59,6 +59,8 @@ private:
 
    	GCFEvent::TResult askVersion    		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRSPinfo	  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askTDstatus	  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askSPUstatus	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRCUinfo			 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult waitForNextCycle		 (GCFEvent& e, GCFPortInterface& p);
 
