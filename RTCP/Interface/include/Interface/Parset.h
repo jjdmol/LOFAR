@@ -75,10 +75,8 @@ public:
 	vector<double> getPhaseCentresOf(const string& name) const;	
 	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
-	uint32	       storageIntegrationSteps() const;
 	double         CNintegrationTime() const;
 	double         IONintegrationTime() const;
-	double         storageIntegrationTime() const;
 	uint32         nrSubbandSamples() const;
         uint32         nrSubbandsPerPset() const; 
 	uint32         nrHistorySamples() const;
@@ -226,11 +224,6 @@ inline uint32 Parset::IONintegrationSteps() const
   return getUint32("OLAP.IONProc.integrationSteps");
 }
 
-inline uint32 Parset::storageIntegrationSteps() const
-{
-  return getUint32("OLAP.StorageProc.integrationSteps");
-}
-
 inline double Parset::CNintegrationTime() const
 {
   return nrSubbandSamples() / sampleRate();
@@ -239,11 +232,6 @@ inline double Parset::CNintegrationTime() const
 inline double Parset::IONintegrationTime() const
 {
   return CNintegrationTime() * IONintegrationSteps();
-}
-
-inline double Parset::storageIntegrationTime() const
-{
-  return IONintegrationTime() * storageIntegrationSteps();
 }
 
 inline uint32 Parset::nrSubbandSamples() const
