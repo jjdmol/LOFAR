@@ -32,6 +32,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 //#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
+#include <unistd.h>	// usleep
 
 #include "RSPMonitor.h"
 #include "RCUConstants.h"
@@ -340,6 +341,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
 			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
+			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
@@ -399,7 +401,8 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
   
 	switch (event.signal) {
 
-	case F_ENTRY: {
+	case F_ENTRY: 
+	case F_TIMER: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:getting version info"));
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		RSPGetversionEvent	getVersion;
@@ -412,9 +415,9 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 	case RSP_GETVERSIONACK: {
 		RSPGetversionackEvent		ack(event);
 		if (ack.status != SUCCESS) {
-			LOG_ERROR_STR ("RSP:Failed to get the version information, trying other information");
+			LOG_ERROR_STR ("RSP:Failed to get the version information, retry in 5 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getVersion error"));
-			TRAN(RSPMonitor::askRSPinfo);				// go to next state.
+			itsTimerPort->setTimer(5.0);
 			break;
 		}
 
@@ -423,8 +426,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 		string		DPEname;
 		for (uint32	rsp = 0; rsp < itsNrRSPboards; rsp++) {
 			// RSP board version
-			versionStr = formatString("%d.%d", ack.versions.bp()(rsp).rsp_version >> 4,
-											   ack.versions.bp()(rsp).rsp_version & 0xF);
+			versionStr = formatString("%d", ack.versions.bp()(rsp).rsp_version);
 			itsRSPs[rsp]->setValue(PN_RSP_VERSION, GCFPVString(versionStr), double(ack.timestamp));
 			setObjectState(getName(), itsRSPs[rsp]->getFullScope(), (ack.versions.bp()(rsp).rsp_version) ? 
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
@@ -516,75 +518,77 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 			BoardStatus		bStat = ack.sysstatus.board()(rsp);
 			// board voltages
 			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE12, GCFPVDouble(double(bStat.rsp.voltage_1_2)*(2.5/192.0)), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE25, GCFPVDouble(double(bStat.rsp.voltage_2_5)*(3.3/192.0)), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_VOLTAGE33, GCFPVDouble(double(bStat.rsp.voltage_3_3)*(5.0/192.0)), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			
 			// Ethernet status
 			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_RECEIVED, GCFPVUnsigned(bStat.eth.nof_frames), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_PACKETS_ERROR,    GCFPVUnsigned(bStat.eth.nof_errors), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_LAST_ERROR,       GCFPVUnsigned(bStat.eth.last_error), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".Ethernet", (bStat.eth.nof_frames != 0) ? 
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			
 			// MEP status
 			itsRSPs[rsp]->setValue(PN_RSP_MEP_SEQNR, GCFPVUnsigned(bStat.mep.seqnr), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_MEP_ERROR, GCFPVUnsigned(bStat.mep.error), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 
 			// BP status
 			itsRSPs[rsp]->setValue(PN_RSP_BP_TEMPERATURE, GCFPVDouble(double(bStat.rsp.bp_temp)), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			// AP0
 			itsRSPs[rsp]->setValue(PN_RSP_AP0_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap0_temp)), 
-									double(ack.timestamp));
+									double(ack.timestamp), false);
 			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap0_sync.sample_offset), 
-									double(ack.timestamp));
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap0_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap0_sync.ext_count)), 
-									double(ack.timestamp);
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap0_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP0_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap0_sync.ext_count), 
+									double(ack.timestamp), false);
 
 			// AP1
 			itsRSPs[rsp]->setValue(PN_RSP_AP1_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap1_temp)), 
-									double(ack.timestamp));
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap1_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap1_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap1_sync.ext_count)), 
-									double(ack.timestamp);
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap1_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap1_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP1_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap1_sync.ext_count), 
+									double(ack.timestamp), false);
 
 			// AP2
 			itsRSPs[rsp]->setValue(PN_RSP_AP2_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap2_temp)), 
-									double(ack.timestamp));
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap2_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap2_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap2_sync.ext_count)), 
-									double(ack.timestamp);
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap2_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap2_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP2_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap2_sync.ext_count), 
+									double(ack.timestamp), false);
 
 			// AP3
 			itsRSPs[rsp]->setValue(PN_RSP_AP3_TEMPERATURE,		 GCFPVDouble(double(bStat.rsp.ap3_temp)), 
-									double(ack.timestamp));
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap3_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap3_sync.sample_offset)), 
-									double(ack.timestamp);
-			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap3_sync.ext_count)), 
-									double(ack.timestamp);
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SAMPLE_COUNT, GCFPVUnsigned(bStat.ap3_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_SYNC_COUNT,   GCFPVUnsigned(bStat.ap3_sync.sample_offset), 
+									double(ack.timestamp), false);
+			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap3_sync.ext_count), 
+									double(ack.timestamp), false);
+
+			itsRSPs[rsp]->flush();
 		} // for all boards
 
 		LOG_DEBUG_STR ("RSPboard information updated, going to RCU information");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
+		TRAN(RSPMonitor::askTDstatus);				// go to next state.
 		break;
 	}
 
@@ -607,6 +611,184 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 	return (status);
 }
 
+//
+// askTDstatus(event, port)
+//
+// Read the settings from the clock board
+//
+GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("askTDstatus:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+
+	case F_ENTRY:  {
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:getting clockboard info"));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		RSPGettdstatusEvent	getTDstatus;
+		getTDstatus.timestamp.setNow();
+		getTDstatus.cache = true;
+		getTDstatus.rspmask = bitset<MAX_N_RSPBOARDS>((1<<itsNrRSPboards)-1);
+		itsRSPDriver->send(getTDstatus);
+	}
+	break;
+
+	case RSP_GETTDSTATUSACK: {
+		RSPGettdstatusackEvent		ack(event);
+		if (ack.status != SUCCESS) {
+			LOG_ERROR_STR ("RSP:Failed to get information of the TD board, trying again in next run");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getClockboard error"));
+			// mark the boards as offline
+			for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
+				setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".clockBoard", RTDB_OBJ_STATE_OFF);
+			}
+			TRAN(RSPMonitor::askSPUstatus);				// go to next state.
+			break;
+		}
+
+		// move the information to the database.
+		// Note: there is only one RSPboard in each subrack that controls the clockboard.
+		// The answer contains vales for all RSPBoards.
+		string		versionStr;
+		string		DPEname;
+		for (uint32	rsp = 0; rsp < itsNrRSPboards; rsp++) {
+			TDBoardStatus&	boardStatus = ack.tdstatus.board()(rsp);
+			if (boardStatus.invalid) {		// does this board control the clockboard?
+				continue;					// no, try next
+			}
+
+			// This board controls the clockboard.
+			int	subrack = rsp/4;
+			// set state first
+			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".clockBoard", 
+							(boardStatus.unknown) ?  RTDB_OBJ_STATE_OFF : RTDB_OBJ_STATE_OPERATIONAL);
+
+			if (boardStatus.unknown) {
+				LOG_WARN_STR("ClockBoard information of subrack " << subrack << " not available");
+				continue;
+			}
+
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_TEMPERATURE, 
+									GCFPVDouble(boardStatus.temperature), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK160, 
+									GCFPVBool(boardStatus.pll_160MHz_locked), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_LOCK200, 
+									GCFPVBool(boardStatus.pll_200MHz_locked), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD_FREQ, 
+									GCFPVInteger(boardStatus.output_clock ? 200 : 160), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VFSP, 
+									GCFPVDouble(boardStatus.v2_5 * 3.3 / 192.0), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VCLOCK, 
+									GCFPVDouble(boardStatus.v3_3 * 5.0 / 192.0), double(ack.timestamp), false);
+			itsSubracks[subrack]->flush();
+		}
+
+		LOG_DEBUG_STR ("Clockboard information updated, going to RCU status information");
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		TRAN(RSPMonitor::askSPUstatus);				// go to next state.
+		break;
+	}
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
+		break;
+
+	case F_QUIT:
+		TRAN (RSPMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG_STR ("askVersion, DEFAULT");
+		break;
+	}    
+
+	return (status);
+}
+
+//
+// askSPUstatus(event, port)
+//
+// Read the settings from the Station Power Unit
+//
+GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("askSPUstatus:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+
+	case F_ENTRY:  {
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:getting power info"));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		RSPGetspustatusEvent	getSPUstatus;
+		getSPUstatus.timestamp.setNow();
+		getSPUstatus.cache = true;
+		itsRSPDriver->send(getSPUstatus);
+	}
+	break;
+
+	case RSP_GETSPUSTATUSACK: {
+		RSPGetspustatusackEvent		ack(event);
+		if (ack.status != SUCCESS) {
+			LOG_ERROR_STR ("RSP:Failed to get information of the power board, trying again in next run");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:get powerboard error"));
+			// mark the boards as off-line
+			for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
+				setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".SPU", RTDB_OBJ_STATE_OFF);
+			}
+			TRAN(RSPMonitor::askRCUinfo);				// go to next state.
+			break;
+		}
+
+		// move the information to the database.
+		for (uint32	subrack = 0; subrack < itsNrSubracks; subrack++) {
+			SPUBoardStatus&	boardStatus = ack.spustatus.subrack()(subrack);
+
+			itsSubracks[subrack]->setValue(PN_SRCK_SPU_TEMPERATURE, 
+									GCFPVDouble(boardStatus.temperature), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VDIG,  // RCU
+									GCFPVDouble(boardStatus.v2_5 * 2.5 / 192.0 * 2.0), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VLBA,  // LBA
+									GCFPVDouble(boardStatus.v3_3 * 3.3 / 192.0 * 3.0), double(ack.timestamp), false);
+			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VHBA,  // HBA
+									GCFPVDouble(boardStatus.v12 * 12.0 / 192.0 * 4.01), double(ack.timestamp), false);
+			itsSubracks[subrack]->flush();
+
+			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".SPU", RTDB_OBJ_STATE_OPERATIONAL);
+		}
+
+		LOG_DEBUG_STR ("Clockboard information updated, going to RCU status information");
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
+		break;
+	}
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
+		break;
+
+	case F_QUIT:
+		TRAN (RSPMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG_STR ("askVersion, DEFAULT");
+		break;
+	}    
+
+	return (status);
+}
 
 //
 // askRCUinfo(event, port)
