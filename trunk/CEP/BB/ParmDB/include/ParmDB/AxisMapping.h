@@ -138,7 +138,7 @@ namespace BBS {
         { return itsFrom!=that.itsFrom  ||  itsTo!=that.itsTo; }
       bool operator< (const AxisKey that) const
         { return itsFrom<that.itsFrom  ||
-            itsFrom==that.itsFrom && itsTo < that.itsTo; }
+            (itsFrom==that.itsFrom && itsTo<that.itsTo); }
     };
 
   public:
