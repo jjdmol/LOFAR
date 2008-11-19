@@ -68,10 +68,11 @@ namespace LOFAR { namespace CEP {
     // Change the base part of the name.
     void changeBaseName (const string& newBaseName);
 
-    // Set the start and end time.
-    // Optionally the time centroid per time interval can be set.
+    // Set the observation start and end time.
+    // Optionally the start and end per time interval can be set.
     void setTimes (double startTime, double endTime, double stepTime,
-                   const vector<double>& centroid = vector<double>());
+                   const vector<double>& starts = vector<double>(),
+                   const vector<double>& ends   = vector<double>());
 
     // Add a band.
     // <group>
@@ -81,7 +82,7 @@ namespace LOFAR { namespace CEP {
     // </group>
 
     // Add an extra parameter. It is added to the subset 'Extra.'.
-    // If the paramter already exists, it is replaced.
+    // If the parameter already exists, it is replaced.
     void addParm (const std::string& key, const std::string& value)
       { return itsParms.add (key, value); }
 
@@ -108,8 +109,10 @@ namespace LOFAR { namespace CEP {
       { return itsEndTime; }
     double getStepTime() const
       { return itsStepTime; }
-    const vector<double>& getTimeCentroids() const
-      { return itsTimes; }
+    const vector<double>& getStartTimes() const
+      { return itsStartTimes; }
+    const vector<double>& getEndTimes() const
+      { return itsEndTimes; }
     int getNBand() const
       { return itsNChan.size(); }
     const std::vector<int>& getNChan() const
@@ -132,7 +135,8 @@ namespace LOFAR { namespace CEP {
     double      itsStartTime;
     double      itsEndTime;
     double      itsStepTime;
-    std::vector<double> itsTimes;
+    std::vector<double> itsStartTimes;
+    std::vector<double> itsEndTimes;
     std::vector<int32>  itsNChan;        //# nr of channels per band
     std::vector<double> itsStartFreqs;   //# start freq of each channel
     std::vector<double> itsEndFreqs;     //# end freq of each channel

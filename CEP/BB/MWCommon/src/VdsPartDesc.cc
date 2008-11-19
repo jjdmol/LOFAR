@@ -41,9 +41,14 @@ namespace LOFAR { namespace CEP {
     timeStr = parset.getString ("EndTime");
     ASSERT (MVTime::read (q, timeStr, true));
     itsEndTime = q.getValue ("s");
-    itsTimes   = parset.getDoubleVector ("dCentroid", vector<double>());
-    for (uint i=0; i<itsTimes.size(); ++i) {
-      itsTimes[i] += itsStartTime;
+    itsStartTimes = parset.getDoubleVector ("StartTimesDiff", vector<double>());
+    itsEndTimes   = parset.getDoubleVector ("EndTimesDiff",   vector<double>());
+    ASSERT (itsStartTimes.size() == itsEndTimes.size());
+    double diff = itsStartTime;
+    for (uint i=0; i<itsStartTimes.size(); ++i) {
+      itsStartTimes[i] += diff;
+      diff += itsStepTime;
+      itsEndTimes[i]   += diff;
     }
   }
 
@@ -58,12 +63,26 @@ namespace LOFAR { namespace CEP {
     os << prefix << "EndTime    = "
 	<< MVTime::Format(MVTime::YMD,9) << MVTime(itsEndTime/86400) << endl;
     os << prefix << "StepTime   = " << itsStepTime << endl;
-    if (! itsTimes.empty()) {
-      os << prefix << "dCentroid= [";
-      streamsize oldPrec = os.precision (8);
-      for (uint i=0; i<itsTimes.size(); ++i) {
+    if (! itsStartTimes.empty()) {
+      os << prefix << "StartTimesDiff=[";
+      streamsize oldPrec = os.precision (5);
+      double diff = itsStartTime;
+      for (uint i=0; i<itsStartTimes.size(); ++i) {
         if (i!=0) os << ',';
-        os << itsTimes[i] - itsStartTime;
+        os << itsStartTimes[i] - diff;
+        diff += itsStepTime;
+      }
+      os << ']' << endl;
+      os.precision (oldPrec);
+    }
+    if (! itsEndTimes.empty()) {
+      os << prefix << "EndTimesDiff=[";
+      streamsize oldPrec = os.precision (5);
+      double diff = itsStartTime;
+      for (uint i=0; i<itsEndTimes.size(); ++i) {
+        if (i!=0) os << ',';
+        diff += itsStepTime;
+        os << itsEndTimes[i] - diff;
       }
       os << ']' << endl;
       os.precision (oldPrec);
@@ -99,12 +118,15 @@ namespace LOFAR { namespace CEP {
   }
 
   void VdsPartDesc::setTimes (double startTime, double endTime, double stepTime,
-                              const vector<double>& centroids)
+                              const vector<double>& startTimes,
+                              const vector<double>& endTimes)
   {
-    itsStartTime = startTime;
-    itsEndTime   = endTime;
-    itsStepTime  = stepTime;
-    itsTimes     = centroids;
+    ASSERT (itsStartTimes.size() == itsEndTimes.size());
+    itsStartTime  = startTime;
+    itsEndTime    = endTime;
+    itsStepTime   = stepTime;
+    itsStartTimes = startTimes;
+    itsEndTimes   = endTimes;
   }
 
   void VdsPartDesc::addBand (int nchan, double startFreq, double endFreq)
@@ -134,7 +156,8 @@ namespace LOFAR { namespace CEP {
   {
     bs.putStart ("VdsPartDesc", 1);
     bs << itsName << itsFileSys
-       << itsStartTime << itsEndTime << itsStepTime << itsTimes
+       << itsStartTime << itsEndTime << itsStepTime
+       << itsStartTimes << itsEndTimes
        << itsNChan << itsStartFreqs << itsEndFreqs
        << itsParms;
     bs.putEnd();
@@ -145,7 +168,8 @@ namespace LOFAR { namespace CEP {
   {
     bs.getStart ("VdsPartDesc");
     bs >> itsName >> itsFileSys
-       >> itsStartTime >> itsEndTime >> itsStepTime >> itsTimes
+       >> itsStartTime >> itsEndTime >> itsStepTime
+       >> itsStartTimes >> itsEndTimes
        >> itsNChan >> itsStartFreqs >> itsEndFreqs
        >> itsParms;
     bs.getEnd();
