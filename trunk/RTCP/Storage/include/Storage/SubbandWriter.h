@@ -85,7 +85,6 @@ class SubbandWriter
 
     vector<unsigned>	    itsBandIDs;
     unsigned		    itsTimeCounter;
-    unsigned		    itsTimesToIntegrate;
     bool		    *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
     float		    *itsWeightsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS];
     fcomplex		    *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];

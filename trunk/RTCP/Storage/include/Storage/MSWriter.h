@@ -51,7 +51,6 @@ namespace LOFAR
       int itsNrFreq;
       int itsNrCorr;
       int itsNrTimes;
-      int itsTimesToIntegrate;
       int itsNrPol;
       int itsNrChan;
 

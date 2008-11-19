@@ -66,8 +66,7 @@ namespace LOFAR
       // must have shape [3,nantennas].
       MSWriterCasa (const char* msName, double startTime, double timeStep,
                     int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
-		    const vector<std::string>& storageStationNames, 
-		    int timesToIntegrate);
+		    const vector<std::string>& storageStationNames);
 
       // Destructor
       ~MSWriterCasa();
