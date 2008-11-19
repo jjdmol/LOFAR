@@ -16,10 +16,11 @@ echo "<<<"
 
 # Append the three log files to the output.
 # Wait for the subprocesses to finish.
+# Remove disturbing log4cxx lines
 sleep 5
-cat tmwimager_tmp.log-0
-cat tmwimager_tmp.log-1
-cat tmwimager_tmp.log-2
+grep -v 'log4cxx:' tmwimager_tmp.log-0
+grep -v 'log4cxx:' tmwimager_tmp.log-1
+grep -v 'log4cxx:' tmwimager_tmp.log-2
 
 # Remove the temporary parset part files.
 rm -f tmwimager.parset.part*
