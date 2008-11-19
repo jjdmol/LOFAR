@@ -1,6 +1,6 @@
-//# combinevds.cc: Program to write the description of an MS
+//# combinevds.cc: Program to combine the description of MS parts
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -53,6 +53,9 @@ int main(int argc, const char* argv[])
     for (int i=2; i<argc; ++i) {
       VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(argv[i]));
       casa::Path path(argv[i]);
+      // File name gets the original MS name.
+      // Name gets the name of the VDS file.
+      vpd->setFileName (vpd->getName());
       vpd->setName (path.absoluteName(), vpd->getFileSys());
       vpds.push_back (vpd);
       vpd->clearParms();
@@ -78,7 +81,9 @@ int main(int argc, const char* argv[])
     // Form the global desc.
     globalvpd.setTimes (vpds[0]->getStartTime(),
 			vpds[0]->getEndTime(),
-			vpds[0]->getStepTime());
+			vpds[0]->getStepTime(),
+                        vpds[0]->getStartTimes(),
+                        vpds[0]->getEndTimes());
     VdsDesc gdesc(globalvpd);
 
     // Now add all parts to the global desc and write it.
