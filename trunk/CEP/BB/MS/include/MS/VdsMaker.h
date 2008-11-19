@@ -61,9 +61,12 @@ namespace LOFAR {
     // The given ClusterDesc file will be used to find the file system
     // on which the MS part os located. If the clusterDescName is empty,
     // the file system will be set to unknown.
+    // It can be specified if the vectors holding the start and end time
+    // of each time stamp should be made part of the VDS file.
     static void create (const string& msName, const string& outName,
 			const string& clusterDescName,
-			const string& hostName = string());
+			const string& hostName = string(),
+                        bool fillTimes = true);
 
   private:
     // Get the frequency info for each spectral window in the MS.

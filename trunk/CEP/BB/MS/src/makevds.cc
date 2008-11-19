@@ -32,9 +32,10 @@ int main(int argc, const char* argv[])
 {
   try {
     if (argc < 3) {
-      cout << "Run as:  makevds clusterdesc ms [msvds] [hostname]" << endl;
+      cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]" << endl;
       cout << "  default vds name is <ms>.vds" << endl;
       cout << "  default host name is gethostname()" << endl;
+      cout << "  default writetimes is true (1)" << endl;
       return 0;
     }
     string msvds = string(argv[2]) + ".vds";
@@ -45,7 +46,11 @@ int main(int argc, const char* argv[])
     if (argc > 4) {
       hostName = argv[4];
     }
-    LOFAR::VdsMaker::create (argv[2], msvds, argv[1], hostName);
+    bool writeTimes = true;
+    if (argc > 5) {
+      writeTimes = (argv[5][0]=='f' || argv[5][0]=='F' || argv[5][0]=='0');
+    }
+    LOFAR::VdsMaker::create (argv[2], msvds, argv[1], hostName, writeTimes);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
