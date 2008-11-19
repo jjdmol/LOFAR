@@ -87,8 +87,7 @@ namespace LOFAR
 
     MSWriterCasa::MSWriterCasa (const char* msName, double startTime, double timeStep,
                                 int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
-				const vector<string>& storageStationNames,
-				int timesToIntegrate)
+				const vector<string>& storageStationNames)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
@@ -96,7 +95,6 @@ namespace LOFAR
         itsNrCorr   (ncorr),
 	itsNrTimes  (0),
         itsTimeStep (timeStep),
-	itsTimesToIntegrate(timesToIntegrate),
 	itsStartTime(0),
 	itsField    (),
         itsNrPol    (0),
@@ -582,7 +580,7 @@ namespace LOFAR
     void MSWriterCasa::updateTimes()
     {
       // Calculate the interval, end, and central time.
-      Double interval = (itsNrTimes/itsTimesToIntegrate)*itsTimeStep;
+      Double interval = itsNrTimes*itsTimeStep;
       Double endTime = itsStartTime + interval;
       Double midTime = (itsStartTime + endTime) / 2;
 
@@ -612,7 +610,7 @@ namespace LOFAR
         MSObservationColumns msobsCol(msobs);
         Vector<Double> timeRange(2);
         timeRange(0) = itsStartTime;
-	timeRange(1) = itsStartTime + ((itsNrTimes/itsTimesToIntegrate)*itsTimeStep);
+	timeRange(1) = itsStartTime + (itsNrTimes*itsTimeStep);
         for (uInt i=0; i<msobs.nrow(); i++) {
           msobsCol.timeRange().put (i, timeRange);
         }
@@ -636,7 +634,7 @@ namespace LOFAR
 	if (timeCounter >= itsNrTimes)
 	  itsNrTimes = timeCounter + 1;
 	
-	Double time = itsStartTime + (itsNrTimes/itsTimesToIntegrate - .5) * itsTimeStep;
+	Double time = itsStartTime + (itsNrTimes - .5) * itsTimeStep;
 	
 	// Find the shape of the data array in each table row.
 	IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);

@@ -51,7 +51,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
   itsPS(ps),
   itsRank(rank),
   itsTimeCounter(0),
-  itsTimesToIntegrate(ps->storageIntegrationSteps()),
   itsFlagsBuffers(0),
   itsWeightsBuffers(0),
   itsVisibilities(0),
@@ -60,9 +59,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
 ,itsPropertySet(0)
 #endif
 {
-  if (itsTimesToIntegrate != 1) // FIXME: does not work with dropped blocks
-    THROW(StorageException, "integration on storage nodes is broken");
-
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
@@ -78,7 +74,7 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
   itsNPolSquared = pols*pols;
 
   // itsWeightFactor = the inverse of maximum number of valid samples
-  itsWeightFactor = 1.0 / (ps->CNintegrationSteps() * ps->IONintegrationSteps() * ps->storageIntegrationSteps());
+  itsWeightFactor = 1.0 / (ps->CNintegrationSteps() * ps->IONintegrationSteps());
   
   itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 }
@@ -177,15 +173,15 @@ void SubbandWriter::preprocess()
 #if 1
     itsWriters[i] = new MSWriterCasa(
       itsPS->getMSname(currentSubband).c_str(),
-      startTime, itsPS->storageIntegrationTime(), itsNChannels,
+      startTime, itsPS->IONintegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
-      stationNames, itsTimesToIntegrate);
+      stationNames);
 #else
     itsWriters[i] = new MSWriterNull(
       itsPS->getMSname(currentSubband).c_str(),
-      startTime, itsPS->storageIntegrationTime(), itsNChannels,
+      startTime, itsPS->IONintegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
-      stationNames, itsTimesToIntegrate);
+      stationNames);
 #endif
 
     unsigned       beam    = subbandToBeamMapping[currentSubband];
@@ -211,15 +207,8 @@ void SubbandWriter::preprocess()
   }
   
   // Allocate buffers
-  if (itsTimesToIntegrate > 1) {
-    itsFlagsBuffers   = new bool[itsNrSubbandsPerStorage * itsNVisibilities];
-    itsWeightsBuffers = new float[itsNrSubbandsPerStorage * itsNBaselines * itsNChannels];
-    itsVisibilities   = new fcomplex[itsNrSubbandsPerStorage * itsNVisibilities];
-    clearAllSums();
-  } else {
-    itsFlagsBuffers   = new bool[itsNVisibilities];
-    itsWeightsBuffers = new float[itsNBaselines * itsNChannels];
-  }
+  itsFlagsBuffers   = new bool[itsNVisibilities];
+  itsWeightsBuffers = new float[itsNBaselines * itsNChannels];
 #endif // defined HAVE_AIPSPP
 
   itsPreviousSequenceNumbers.resize(itsNrSubbandsPerStorage, -1);
@@ -227,17 +216,6 @@ void SubbandWriter::preprocess()
   
   for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; sb ++)
     itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsNBaselines, itsNChannels));
-}
-
-
-void SubbandWriter::clearAllSums()
-{
-  assert(itsTimesToIntegrate > 1);
-  memset(itsWeightsBuffers, 0, itsNrSubbandsPerStorage * itsNBaselines * itsNChannels * sizeof(float));
-  memset(itsVisibilities, 0, itsNrSubbandsPerStorage * itsNVisibilities * sizeof(fcomplex));
-  for (unsigned i = 0; i < itsNrSubbandsPerStorage * itsNVisibilities; i++) {
-    itsFlagsBuffers[i] = true;
-  }
 }
 
 
@@ -294,47 +272,20 @@ bool SubbandWriter::processSubband(unsigned sb)
   unsigned short *valSamples = data->nrValidSamples.origin();
   fcomplex	 *newVis     = data->visibilities.origin();
  
-  if (itsTimesToIntegrate > 1) {
-    for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
-      itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
-      bool flagged = valSamples[i] == 0;
-      itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
-      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
-      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
-      itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
-      // Currently we just add the samples, this way the time centroid stays in place
-      // We could also divide by the weight and multiple the sum by the total weight.
-      itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
-      itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
-      itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
-      itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
-    }
-
-    if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
-      itsWriteTimer.start();
-      itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, itsTimeCounter,
-			    itsNVisibilities,
-			    &itsVisibilities[sb * itsNVisibilities],
-			    &itsFlagsBuffers[sb * itsNVisibilities], 
-	&itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
-      itsWriteTimer.stop();
-    }
-  } else {
-    for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
-      itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
-      bool flagged = valSamples[i] == 0;
-      itsFlagsBuffers[4 * i    ] = flagged;
-      itsFlagsBuffers[4 * i + 1] = flagged;
-      itsFlagsBuffers[4 * i + 2] = flagged;
-      itsFlagsBuffers[4 * i + 3] = flagged;
-    }
-
-    itsWriteTimer.start();
-    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data->sequenceNumber,
-			  itsNVisibilities, newVis, itsFlagsBuffers,
-			  itsWeightsBuffers);
-    itsWriteTimer.stop();
+  for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
+    itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
+    bool flagged = valSamples[i] == 0;
+    itsFlagsBuffers[4 * i    ] = flagged;
+    itsFlagsBuffers[4 * i + 1] = flagged;
+    itsFlagsBuffers[4 * i + 2] = flagged;
+    itsFlagsBuffers[4 * i + 3] = flagged;
   }
+
+  itsWriteTimer.start();
+  itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data->sequenceNumber,
+		        itsNVisibilities, newVis, itsFlagsBuffers,
+		        itsWeightsBuffers);
+  itsWriteTimer.stop();
 #endif
 
   itsInputThreads[sb]->itsFreeQueue.append(data);
@@ -349,11 +300,6 @@ void SubbandWriter::process()
 
   while (finishedSubbandsCount < itsNrSubbandsPerStorage) {
     writeLogMessage();
-
-#if defined HAVE_AIPSPP
-    if (itsTimesToIntegrate > 1 && itsTimeCounter % itsTimesToIntegrate == 0)
-      clearAllSums();
-#endif
 
     for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; ++ sb)
       if (!finishedSubbands[sb])

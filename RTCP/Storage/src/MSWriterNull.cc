@@ -40,14 +40,13 @@ namespace LOFAR
 
      MSWriterNull::MSWriterNull (const char* , double , double ,
                                 int nfreq, int ncorr, int nantennas, const vector<double>& ,
-				const vector<string>& , int timesToIntegrate)
+				const vector<string>&)
        : itsNrBand           (0),
 	 itsNrField          (0),
 	 itsNrAnt            (nantennas),
 	 itsNrFreq           (nfreq), 
 	 itsNrCorr           (ncorr),
 	 itsNrTimes          (0),
-	 itsTimesToIntegrate (timesToIntegrate),
 	 itsNrPol            (0),
 	 itsNrChan           (0)
      {

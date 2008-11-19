@@ -45,7 +45,7 @@ namespace LOFAR
     public:
       MSWriterNull(const char* msName, double startTime, double timeStep, 
 		   int nfreq, int ncorr, int nantennas, const vector<double>& antPos, 
-		   const vector<std::string>& storageStationNames, int timesToIntegrate);
+		   const vector<std::string>& storageStationNames);
       ~MSWriterNull();
 
       int addBand(int, int, double, double);
@@ -77,7 +77,6 @@ namespace LOFAR
       int itsNrFreq;
       int itsNrCorr;
       int itsNrTimes;
-      int itsTimesToIntegrate;
       int itsNrPol;
       int itsNrChan;
     };
