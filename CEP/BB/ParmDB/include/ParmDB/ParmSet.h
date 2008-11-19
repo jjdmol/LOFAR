@@ -27,6 +27,7 @@
 #ifndef LOFAR_PARMDB_PARMSET_H
 #define LOFAR_PARMDB_PARMSET_H
 
+#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
