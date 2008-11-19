@@ -65,6 +65,10 @@ namespace LOFAR { namespace CEP {
     // Set VDS name and file system.
     void setName (const std::string& name, const std::string& fileSys);
 
+    // Set the original file name.
+    void setFileName (const std::string& name)
+      { itsFileName = name; }
+
     // Change the base part of the name.
     void changeBaseName (const string& newBaseName);
 
@@ -101,6 +105,8 @@ namespace LOFAR { namespace CEP {
     // @{
     const std::string& getName() const
       { return itsName; }
+    const std::string& getFileName() const
+      { return itsFileName; }
     const std::string& getFileSys() const
       { return itsFileSys; }
     double getStartTime() const
@@ -130,7 +136,8 @@ namespace LOFAR { namespace CEP {
   // </group>
 
   private:
-    std::string itsName;       //# full name of the VDS
+    std::string itsName;       //# full name of the VDS desc
+    std::string itsFileName;   //# full name of the VDS (data set name)
     std::string itsFileSys;    //# name of file system the VDS resides on
     double      itsStartTime;
     double      itsEndTime;
