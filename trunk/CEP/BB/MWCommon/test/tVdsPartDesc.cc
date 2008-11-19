@@ -25,9 +25,13 @@ void check (const VdsPartDesc& vds, uint nTimes=0)
   ASSERT (vds.getStartTime() == 0.5);
   ASSERT (vds.getEndTime() == 1);
   ASSERT (vds.getStepTime() == 0.25);
-  ASSERT (vds.getTimeCentroids().size() == nTimes);
+  ASSERT (vds.getStartTimes().size() == nTimes);
+  ASSERT (vds.getEndTimes().size() == nTimes);
   if (nTimes > 0) {
-    ASSERT (vds.getTimeCentroids()[0] == 1.);
+    ASSERT (vds.getStartTimes()[0] == 1);
+    ASSERT (vds.getStartTimes()[nTimes-1] == 1);
+    ASSERT (vds.getEndTimes()[0] == 2);
+    ASSERT (vds.getEndTimes()[nTimes-1] == 2);
   }
   ASSERT (vds.getNChan().size() == 2);
   ASSERT (vds.getNChan()[0] == 2);
@@ -78,7 +82,7 @@ void doIt()
   bis >> vdsb;
   check (vdsb);
   // Add some times and check again.
-  vdsb.setTimes (0.5, 1, 0.25, vector<double>(10,1));
+  vdsb.setTimes (0.5, 1, 0.25, vector<double>(10,1), vector<double>(10,2));
   check (vdsb, 10);
   // Check if times are written as well.
   ofstream fos2("tVdsPartDesc_tmp.fil2");
