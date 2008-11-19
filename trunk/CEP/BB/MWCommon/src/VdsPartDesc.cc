@@ -27,6 +27,7 @@ namespace LOFAR { namespace CEP {
   VdsPartDesc::VdsPartDesc (const ParameterSet& parset)
   {
     itsName         = parset.getString ("Name");
+    itsFileName     = parset.getString ("FileName", "");
     itsFileSys      = parset.getString ("FileSys", "");
     itsStepTime     = parset.getDouble ("StepTime");
     itsNChan        = parset.getInt32Vector ("NChan", vector<int32>());
@@ -55,6 +56,9 @@ namespace LOFAR { namespace CEP {
   void VdsPartDesc::write (std::ostream& os, const std::string& prefix) const
   {
     os << prefix << "Name       = " << itsName << endl;
+    if (! itsFileName.empty()) {
+      os << prefix << "FileName   = " << itsFileName << endl;
+    }
     if (! itsFileSys.empty()) {
       os << prefix << "FileSys    = " << itsFileSys << endl;
     }
@@ -155,7 +159,7 @@ namespace LOFAR { namespace CEP {
   BlobOStream& VdsPartDesc::toBlob (BlobOStream& bs) const
   {
     bs.putStart ("VdsPartDesc", 1);
-    bs << itsName << itsFileSys
+    bs << itsName << itsFileName << itsFileSys
        << itsStartTime << itsEndTime << itsStepTime
        << itsStartTimes << itsEndTimes
        << itsNChan << itsStartFreqs << itsEndFreqs
@@ -167,7 +171,7 @@ namespace LOFAR { namespace CEP {
   BlobIStream& VdsPartDesc::fromBlob (BlobIStream& bs)
   {
     bs.getStart ("VdsPartDesc");
-    bs >> itsName >> itsFileSys
+    bs >> itsName >> itsFileName >> itsFileSys
        >> itsStartTime >> itsEndTime >> itsStepTime
        >> itsStartTimes >> itsEndTimes
        >> itsNChan >> itsStartFreqs >> itsEndFreqs

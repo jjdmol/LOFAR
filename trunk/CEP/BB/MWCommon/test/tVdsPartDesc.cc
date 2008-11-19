@@ -21,6 +21,7 @@ using namespace std;
 void check (const VdsPartDesc& vds, uint nTimes=0)
 {
   ASSERT (vds.getName() == "/usr/local/xyx");
+  ASSERT (vds.getFileName() == "/usr/local/abcd");
   ASSERT (vds.getFileSys() == "node1:/usr");
   ASSERT (vds.getStartTime() == 0.5);
   ASSERT (vds.getEndTime() == 1);
@@ -56,6 +57,8 @@ void doIt()
 {
   VdsPartDesc vds;
   vds.setName ("/usr/local/abcd", "node1:/usr");
+  ASSERT (vds.getFileName().empty());
+  vds.setFileName ("/usr/local/abcd");
   vds.changeBaseName ("xyx");
   vds.setTimes (0.5, 1, 0.25);
   vds.addBand (2, 20, 100);
