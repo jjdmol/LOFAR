@@ -167,7 +167,6 @@ class Parset(LOFAR_Parset.Parset):
 
     def setIntegrationTime(self, integrationTime):
 	self['OLAP.IONProc.integrationSteps']     = integrationTime
-	self['OLAP.StorageProc.integrationSteps'] = 1
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName
