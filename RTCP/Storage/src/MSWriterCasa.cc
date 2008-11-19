@@ -87,13 +87,15 @@ namespace LOFAR
 
     MSWriterCasa::MSWriterCasa (const char* msName, double startTime, double timeStep,
                                 int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
-				const vector<string>& storageStationNames)
+				const vector<string>& storageStationNames, float weightFactor)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
         itsNrFreq   (nfreq),
         itsNrCorr   (ncorr),
 	itsNrTimes  (0),
+	itsWeightFactor(weightFactor),
+	itsNVisibilities(0),
         itsTimeStep (timeStep),
 	itsStartTime(0),
 	itsField    (),
@@ -106,6 +108,12 @@ namespace LOFAR
         itsMSCol    (0)	
     {
       AlwaysAssert (nantennas >= 0, AipsError);
+
+      // Allocate buffers
+      int nrbasel = itsNrAnt*(itsNrAnt+1)/2;
+      itsNVisibilities = nrbasel * itsNrFreq * itsNrCorr;
+      itsFlagsBuffers   = new bool[itsNVisibilities];
+      itsWeightsBuffers = new float[nrbasel * itsNrFreq];
 
       // Convert the startTime from seconds since 1 Jan 1970 (UTC) to Modified Julian Day.
       AMC::Epoch epoch;
@@ -157,13 +165,13 @@ namespace LOFAR
       itsNrChan = new Block<Int>;
       itsPolnr  = new Block<Int>;
       // Find the baselines in X,Y,Z.
-      itsBaselines = new Cube<double> (3, nantennas, nantennas);
-      Cube<double>& basel = *itsBaselines;
+      itsBaselines = new casa::Cube<double> (3, nantennas, nantennas);
+      casa::Cube<double>& basel = *itsBaselines;
       for (int i=0; i<nantennas; i++) {
-        const Vector<Double>& pos1 = antMPos[i].getValue().getValue();
+        const casa::Vector<Double>& pos1 = antMPos[i].getValue().getValue();
         for (int j=0; j<nantennas; j++) {
 	  // Generate a 3-vector of x,y,z in m
-          const Vector<Double>& pos2 = antMPos[j].getValue().getValue();
+          const casa::Vector<Double>& pos2 = antMPos[j].getValue().getValue();
           basel(0,i,j) = pos2(0) - pos1(0);
           basel(1,i,j) = pos2(1) - pos1(1);
           basel(2,i,j) = pos2(2) - pos1(2);
@@ -187,6 +195,9 @@ namespace LOFAR
       delete itsFrame;
       delete itsMSCol;
       delete itsMS;
+      
+      delete [] itsFlagsBuffers;   itsFlagsBuffers   = 0;
+      delete [] itsWeightsBuffers; itsWeightsBuffers = 0;
     }
 
     int MSWriterCasa::nrPolarizations() const
@@ -215,7 +226,7 @@ namespace LOFAR
 
       // Store the data and flags in two separate files using TiledColumnStMan.
       // Also store UVW with TiledColumnStMan.
-      Vector<String> tsmNames(1);
+      casa::Vector<String> tsmNames(1);
       tsmNames[0] = MS::columnName(MS::DATA);
       td.rwColumnDesc(tsmNames[0]).setShape (IPosition(2,itsNrCorr,itsNrFreq));
       td.defineHypercolumn("TiledData", 3, tsmNames);
@@ -281,9 +292,9 @@ namespace LOFAR
                                double refFreq, double chanWidth)
     {
       AlwaysAssert (nchannels > 0, AipsError);
-      Vector<double> chanWidths(nchannels);
+      casa::Vector<double> chanWidths(nchannels);
       chanWidths = chanWidth;
-      Vector<double> chanFreqs(nchannels);
+      casa::Vector<double> chanFreqs(nchannels);
       indgen (chanFreqs, refFreq - (nchannels-1)*chanWidth/2., chanWidth);
       try {
 	return addBand (npolarizations, nchannels, refFreq, chanFreqs, chanWidths);
@@ -302,8 +313,8 @@ namespace LOFAR
     {
       AlwaysAssert (nchannels > 0, AipsError);
       IPosition shape(1, nchannels);
-      Vector<double> freqs (shape, const_cast<double*>(chanFreqs), SHARE);
-      Vector<double> widths(shape, const_cast<double*>(chanWidths), SHARE);
+      casa::Vector<double> freqs (shape, const_cast<double*>(chanFreqs), SHARE);
+      casa::Vector<double> widths(shape, const_cast<double*>(chanWidths), SHARE);
       try {
 	return addBand (npolarizations, nchannels, refFreq, freqs, widths);
       } catch (AipsError x) {
@@ -316,8 +327,8 @@ namespace LOFAR
     }
 
     int MSWriterCasa::addBand (int npolarizations, int nchannels,
-                               double refFreq, const Vector<double>& chanFreqs,
-                               const Vector<double>& chanWidths)
+                               double refFreq, const casa::Vector<double>& chanFreqs,
+                               const casa::Vector<double>& chanWidths)
     {
       AlwaysAssert (npolarizations==1 || npolarizations==2 || npolarizations==4,
                     AipsError);
@@ -344,8 +355,8 @@ namespace LOFAR
       msddCol.flagRow().put (rownr, False);
       // Add a row to the SPECTRALWINDOW subtable.
       // Find the total bandwidth from the minimum and maximum.
-      Vector<double> stFreqs = chanFreqs - chanWidths/2.;
-      Vector<double> endFreqs = chanFreqs + chanWidths/2.;
+      casa::Vector<double> stFreqs = chanFreqs - chanWidths/2.;
+      casa::Vector<double> endFreqs = chanFreqs + chanWidths/2.;
       double totalBW = max(endFreqs) - min(stFreqs);
       MSSpectralWindow msspw = itsMS->spectralWindow();
       MSSpWindowColumns msspwCol(msspw);
@@ -389,7 +400,7 @@ namespace LOFAR
       MSPolarization mspol = itsMS->polarization();
       MSPolarizationColumns mspolCol(mspol);
       uInt rownr = mspol.nrow();
-      Vector<Int> corrType(npolarizations);
+      casa::Vector<Int> corrType(npolarizations);
       corrType(0) = Stokes::XX;
       if (npolarizations == 2) {
         corrType(1) = Stokes::YY;
@@ -398,7 +409,7 @@ namespace LOFAR
         corrType(2) = Stokes::YX;
         corrType(3) = Stokes::YY;
       }
-      Matrix<Int> corrProduct(2, npolarizations);
+      casa::Matrix<Int> corrProduct(2, npolarizations);
       for (Int i=0; i<npolarizations; i++) {
         corrProduct(0,i) = Stokes::receptor1(Stokes::type(corrType(i)));
         corrProduct(1,i) = Stokes::receptor2(Stokes::type(corrType(i)));
@@ -417,7 +428,7 @@ namespace LOFAR
     {
       MVDirection radec (Quantity(RA,"rad"), Quantity(DEC,"rad"));
       MDirection indir(radec, MDirection::J2000);
-      Vector<MDirection> outdir(1);
+      casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
       itsField = indir;
       // Put the direction into the FIELD subtable.
@@ -462,7 +473,7 @@ namespace LOFAR
                                     const vector<string>& storageStationNames)
     {
       // Determine constants for the ANTENNA subtable.
-      Vector<Double> antOffset(3);
+      casa::Vector<Double> antOffset(3);
       antOffset = 0;
       // Fill the ANTENNA subtable.
       MSAntenna msant = itsMS->antenna();
@@ -486,19 +497,19 @@ namespace LOFAR
     {
       // Determine constants for the FEED subtable.
       Int nRec = 2;
-      Matrix<Double> feedOffset(2,nRec);
+      casa::Matrix<Double> feedOffset(2,nRec);
       feedOffset = 0;
-      Matrix<Complex> feedResponse(nRec,nRec);
+      casa::Matrix<Complex> feedResponse(nRec,nRec);
       feedResponse = Complex(0.0,0.0);
       for (Int rec=0; rec<nRec; rec++) {
         feedResponse(rec,rec) = Complex(1.0,0.0);
       }
-      Vector<String> feedType(nRec);
+      casa::Vector<String> feedType(nRec);
       feedType(0) = "X";
       feedType(1) = "Y";
-      Vector<Double> feedPos(3);
+      casa::Vector<Double> feedPos(3);
       feedPos = 0.0;
-      Vector<Double> feedAngle(nRec);
+      casa::Vector<Double> feedAngle(nRec);
       feedAngle = -C::pi_4;                      // 0 for parallel dipoles
       // Fill the FEED subtable.
       MSFeed msfeed = itsMS->feed();
@@ -525,9 +536,9 @@ namespace LOFAR
     {
       MSObservation msobs = itsMS->observation();
       MSObservationColumns msobsCol(msobs);
-      Vector<String> corrSchedule(1);
+      casa::Vector<String> corrSchedule(1);
       corrSchedule = "corrSchedule";
-      Vector<Double> timeRange(2);
+      casa::Vector<Double> timeRange(2);
       timeRange(0) = itsStartTime;
       timeRange(1) = itsStartTime + itsNrTimes*itsTimeStep;
       
@@ -588,7 +599,7 @@ namespace LOFAR
       {
         MSFeed mssub = itsMS->feed();
         MSFeedColumns mssubCol(mssub);
-        Vector<Double> val(mssub.nrow());
+        casa::Vector<Double> val(mssub.nrow());
         val = midTime;
         mssubCol.time().putColumn (val);
         val = interval;
@@ -598,7 +609,7 @@ namespace LOFAR
       {
         MSPointing mssub = itsMS->pointing();
         MSPointingColumns mssubCol(mssub);
-        Vector<Double> val(mssub.nrow());
+        casa::Vector<Double> val(mssub.nrow());
         val = midTime;
         mssubCol.time().putColumn (val);
         val = interval;
@@ -608,7 +619,7 @@ namespace LOFAR
       {
         MSObservation msobs = itsMS->observation();
         MSObservationColumns msobsCol(msobs);
-        Vector<Double> timeRange(2);
+        casa::Vector<Double> timeRange(2);
         timeRange(0) = itsStartTime;
 	timeRange(1) = itsStartTime + (itsNrTimes*itsTimeStep);
         for (uInt i=0; i<msobs.nrow(); i++) {
@@ -617,11 +628,11 @@ namespace LOFAR
       }
     }
 
-    void MSWriterCasa::write (int bandId, int channelId, 
-                              int nrChannels, int timeCounter, int nrdata, 
-                              const fcomplex* data, const bool* flags,
-                              const float* weights)
+    void MSWriterCasa::write (int bandId, int channelId, int nrChannels, 
+                              CorrelatedData *correlatedData)
     {
+      const fcomplex* data = correlatedData->visibilities.origin();
+  
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
       ASSERT(data != 0);
 
@@ -630,22 +641,37 @@ namespace LOFAR
       MSsetupTimer.start();
 
       try {
+        int nrbasel = itsNrAnt*(itsNrAnt+1)/2;
       
-	if (timeCounter >= itsNrTimes)
-	  itsNrTimes = timeCounter + 1;
+        // Write one set of visibilities of size
+        // fcomplex[nrbasel][nrChannels][npol][npol]
+        unsigned short *valSamples = correlatedData->nrValidSamples.origin();
+      
+        for (int i = 0; i < nrbasel * nrChannels; i ++) {
+          itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
+          bool flagged = valSamples[i] == 0;
+          itsFlagsBuffers[4 * i    ] = flagged;
+          itsFlagsBuffers[4 * i + 1] = flagged;
+          itsFlagsBuffers[4 * i + 2] = flagged;
+          itsFlagsBuffers[4 * i + 3] = flagged;
+        }
+        
+	const float* weights = itsWeightsBuffers;
+	const bool* flags = itsFlagsBuffers;
+      
+	if ((int)correlatedData->sequenceNumber >= itsNrTimes)
+	  itsNrTimes = correlatedData->sequenceNumber + 1;
 	
 	Double time = itsStartTime + (itsNrTimes - .5) * itsTimeStep;
 	
 	// Find the shape of the data array in each table row.
 	IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
 	Int nrel = shape[0];       // == number of polarisations/correlations
-	ASSERTSTR (nrdata == nrel*nrChannels*itsNrAnt*(itsNrAnt+1)/2, 
+	ASSERTSTR ((int)itsNVisibilities == nrel*nrChannels*itsNrAnt*(itsNrAnt+1)/2, 
 		   "incorrect nr of data points for this band; should be " +  
 		   String::toString(nrel*nrChannels*itsNrAnt*(itsNrAnt+1)/2));
 	Array<Bool> defFlags(shape);
-	
-	int nrbasel = itsNrAnt*(itsNrAnt+1)/2;
-	
+			
 	// Add the number of rows needed.
 	int rowNumber = itsMS->nrow();
 	itsMS->addRow (nrbasel);
@@ -670,8 +696,8 @@ namespace LOFAR
 	
 	itsFrame->set (itsField);
 	MVDirection MVd = itsField.getValue();
-	Vector<Double> uvw(3);
-	const Cube<Double>& basel = *itsBaselines;
+	casa::Vector<Double> uvw(3);
+	const casa::Cube<Double>& basel = *itsBaselines;
 	
 	IPosition dShape(2, shape[0], nrChannels); // Shape of data field
 	IPosition wShape(1, nrChannels);           // Shape of weight_spectrum field

@@ -28,6 +28,8 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 
+#include <Interface/CorrelatedData.h>
+
 namespace LOFAR
 {
   namespace RTCP
@@ -41,7 +43,7 @@ namespace LOFAR
       virtual int addBand(int, int, double, double);
       virtual int addBand(int, int, double, const double*, const double*);
       virtual void addField(double, double, unsigned);
-      virtual void write(int, int, int, int, int , const fcomplex*, const bool*, const float*);
+      virtual void write(int, int, int, CorrelatedData*);
 
     private:
 

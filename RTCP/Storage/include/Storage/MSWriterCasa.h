@@ -66,7 +66,7 @@ namespace LOFAR
       // must have shape [3,nantennas].
       MSWriterCasa (const char* msName, double startTime, double timeStep,
                     int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
-		    const vector<std::string>& storageStationNames);
+		    const vector<std::string>& storageStationNames, float weightFactor);
 
       // Destructor
       ~MSWriterCasa();
@@ -92,10 +92,8 @@ namespace LOFAR
       // means the the corresponding data point is flagged as invalid.
       // The flag array is optional. If not given, all flags are False.
       // All data will be written with sigma=0 and weight=1.
-      void write (int bandId, int channelId, 
-                  int nrChannels, int timeCounter, int nrdata,
-                  const fcomplex* data, const bool* flags,
-                  const float* weights);
+      void write (int bandId, int channelId, int nrChannels, 
+                  CorrelatedData *correlatedData);
 
       // Get the number of antennas.
       int nrAntennas() const
@@ -157,9 +155,13 @@ namespace LOFAR
       int itsNrFreq;                     ///< Fixed nr of frequencies (channels)
       int itsNrCorr;                     ///< Fixed nr of correlations (polar.)
       int itsNrTimes;                    ///< nr of exposures
+      float itsWeightFactor;             ///< weight Factor
+      unsigned itsNVisibilities;         ///< nr of visibilities
       double itsTimeStep;                ///< duration of each exposure (sec)
       uint itsTimesToIntegrate;          ///< Number of timeSteps to integrate (sec)
       double itsStartTime;               ///< start time of observation (sec)
+      bool  *itsFlagsBuffers;            ///< [NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
+      float *itsWeightsBuffers;          ///< [NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS];
       casa::MDirection itsField;         ///< field directions
       casa::Block<casa::Int>* itsNrPol;  ///< nr of polarizations for each band
       casa::Block<casa::Int>* itsNrChan; ///< nr of channels for each band

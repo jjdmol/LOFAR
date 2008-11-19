@@ -40,7 +40,7 @@ namespace LOFAR
 
      MSWriterNull::MSWriterNull (const char* , double , double ,
                                 int nfreq, int ncorr, int nantennas, const vector<double>& ,
-				const vector<string>&)
+				const vector<string>&, float)
        : itsNrBand           (0),
 	 itsNrField          (0),
 	 itsNrAnt            (nantennas),
@@ -74,7 +74,7 @@ namespace LOFAR
       itsNrField++;
     }
 
-    void MSWriterNull::write(int, int, int, int, int, const fcomplex*, const bool*, const float*)
+    void MSWriterNull::write(int, int, int, CorrelatedData*)
     {
       //nothing
     }
