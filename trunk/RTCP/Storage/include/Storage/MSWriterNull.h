@@ -45,13 +45,13 @@ namespace LOFAR
     public:
       MSWriterNull(const char* msName, double startTime, double timeStep, 
 		   int nfreq, int ncorr, int nantennas, const vector<double>& antPos, 
-		   const vector<std::string>& storageStationNames);
+		   const vector<std::string>& storageStationNames, float weightFactor);
       ~MSWriterNull();
 
       int addBand(int, int, double, double);
       int addBand(int, int, double, const double*, const double*);
       void addField(double, double, unsigned);
-      void write(int, int, int, int, int, const fcomplex*, const bool*, const float*);
+      void write(int, int, int, CorrelatedData*);
 
 
       inline int nrAntennas() const

@@ -51,8 +51,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
   itsPS(ps),
   itsRank(rank),
   itsTimeCounter(0),
-  itsFlagsBuffers(0),
-  itsWeightsBuffers(0),
   itsVisibilities(0),
   itsWriteTimer ("writing-MS")
 #ifdef USE_MAC_PI
@@ -75,8 +73,6 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
 
   // itsWeightFactor = the inverse of maximum number of valid samples
   itsWeightFactor = 1.0 / (ps->CNintegrationSteps() * ps->IONintegrationSteps());
-  
-  itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 }
 
 
@@ -175,13 +171,13 @@ void SubbandWriter::preprocess()
       itsPS->getMSname(currentSubband).c_str(),
       startTime, itsPS->IONintegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
-      stationNames);
+      stationNames, itsWeightFactor);
 #else
     itsWriters[i] = new MSWriterNull(
       itsPS->getMSname(currentSubband).c_str(),
       startTime, itsPS->IONintegrationTime(), itsNChannels,
       itsNPolSquared, itsNStations, antPos,
-      stationNames);
+      stationNames, itsWeightFactor);
 #endif
 
     unsigned       beam    = subbandToBeamMapping[currentSubband];
@@ -205,10 +201,6 @@ void SubbandWriter::preprocess()
     double refFreq = frequencies[itsRank * itsNrSubbandsPerStorage + sb] - chanWidth / 2;
     itsBandIDs[sb] = itsWriters[sb]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
   }
-  
-  // Allocate buffers
-  itsFlagsBuffers   = new bool[itsNVisibilities];
-  itsWeightsBuffers = new float[itsNBaselines * itsNChannels];
 #endif // defined HAVE_AIPSPP
 
   itsPreviousSequenceNumbers.resize(itsNrSubbandsPerStorage, -1);
@@ -266,25 +258,8 @@ bool SubbandWriter::processSubband(unsigned sb)
   checkForDroppedData(data, sb);
 
 #if defined HAVE_AIPSPP
-  // Write one set of visibilities of size
-  // fcomplex[itsNBaselines][itsNChannels][npol][npol]
-
-  unsigned short *valSamples = data->nrValidSamples.origin();
-  fcomplex	 *newVis     = data->visibilities.origin();
- 
-  for (unsigned i = 0; i < itsNBaselines * itsNChannels; i ++) {
-    itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
-    bool flagged = valSamples[i] == 0;
-    itsFlagsBuffers[4 * i    ] = flagged;
-    itsFlagsBuffers[4 * i + 1] = flagged;
-    itsFlagsBuffers[4 * i + 2] = flagged;
-    itsFlagsBuffers[4 * i + 3] = flagged;
-  }
-
   itsWriteTimer.start();
-  itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data->sequenceNumber,
-		        itsNVisibilities, newVis, itsFlagsBuffers,
-		        itsWeightsBuffers);
+  itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data);
   itsWriteTimer.stop();
 #endif
 
@@ -323,9 +298,6 @@ void SubbandWriter::postprocess()
   itsInputThreads.clear();
   itsInputStreams.clear();
   itsIsNullStream.clear();
-
-  delete [] itsFlagsBuffers;	itsFlagsBuffers   = 0;
-  delete [] itsWeightsBuffers;	itsWeightsBuffers = 0;
 
 #if defined HAVE_AIPSPP
   for (unsigned i = 0; i < itsWriters.size(); i ++)
