@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -DUSES_NEW_IOSTREAM
+AM_CPPFLAGS = -DUSES_NEW_IOSTREAMS
 lib_LTLIBRARIES = libstationcu.la
 libstationcu_la_SOURCES = Package__Version.cc
 
