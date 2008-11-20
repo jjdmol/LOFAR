@@ -54,7 +54,10 @@ double SpectralWindow::getSubbandFreq(int subband) const
   ASSERT(m_numsubbands);
   ASSERT(subband >= 0 && subband <= m_numsubbands);
 
-  return (subband % m_numsubbands) * getSubbandWidth();
+  bool is160 	   = ::fabs(160e6 - m_sampling_freq) < 1e-4;
+  float freqOffset = (is160 ? 80.0e6 : 100.0e6) * (m_nyquist_zone - 1);
+
+  return (freqOffset + ((subband % m_numsubbands) * getSubbandWidth()));
 }
 
 bool SpectralWindow::isSuitable(int subband) const
