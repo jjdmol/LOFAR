@@ -1,4 +1,4 @@
-#include "libstatcal1_0.h"
+#include <libMatlabCal.h>
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -13,12 +13,12 @@ int driver(int argc, char **argv)
 	cerr << "Failed to initialize the MCR" << endl;
 	return -1;
     }
-    if (!libstatcal1_0Initialize())
+    if (!libMatlabCalInitialize())
     {
-	cerr << "Failed to initialize libstatcal1_0.s0" << endl;
+	cerr << "Failed to initialize libMatlabCal.s0" << endl;
 	return -2;
     }
-    cout << "MCR and libstatcal1_0.so successfully initialized" << endl;
+    cout << "MCR and libMatlabCal.so successfully initialized" << endl;
 
 
     try
@@ -102,7 +102,7 @@ int driver(int argc, char **argv)
 	return -4;
     }
 
-    libstatcal1_0Terminate();
+    libMatlabCalTerminate();
     mclTerminateApplication();
     cout << "All garbage has been successfully collected" << endl;
     return 0;
