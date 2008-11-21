@@ -37,23 +37,21 @@ ifelse($1, [], define(DEFAULT_MATLAB_PREFIX,[/usr/local/matlabr12]), define(DEFA
 AC_ARG_WITH(matlab,
 	[  --with-matlab[=PFX]     prefix where Matlab is installed (default=]DEFAULT_MATLAB_PREFIX[)],
 	[with_matlab=$withval],
-	[with_matlab="no"])
+	[with_matlab=""])
 [
 if test "$with_matlab" = "no"; then
   enable_matlab=no
 else
-  if test "$with_matlab" = "yes"; then
-    matlab_prefix=]DEFAULT_MATLAB_PREFIX
-[
-  else
-    matlab_prefix=$withval
-  fi
   enable_matlab=yes
-]
+  if test "X$1" = "X"; then
+    matlab_prefix=]DEFAULT_MATLAB_PREFIX[
+  else
+    matlab_prefix=$1
+  fi
 ##
 ## Check in normal location and suggested location
 ##
-AC_CHECK_FILE([$matlab_prefix/extern/include/matlab.h],
+  ]AC_CHECK_FILE([$matlab_prefix/extern/include/mclmcr.h],
 			[lofar_cv_header_matlab=yes],
 			[lofar_cv_header_matlab=no])dnl
 [
