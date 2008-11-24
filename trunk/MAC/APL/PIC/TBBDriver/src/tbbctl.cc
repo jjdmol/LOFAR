@@ -3292,7 +3292,7 @@ void TBBCtl::mainloop()
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFTask::init(argc, argv, "tbbctl");
   
   LOG_DEBUG(formatString("Program %s has started", argv[0]));
 
