@@ -267,6 +267,14 @@ if [ -z "$1" ]; then
 	exit
 fi
 
+# argument s or -s only returns level, no list
+
+if [ "$1" = "s" -o "$1" = "-s" ]; then
+        level=`cat /tmp/level.admin`
+        echo $level
+        exit
+fi
+
 # don't allow root to run swlevel because all logfile get root access.
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
 echo $user
