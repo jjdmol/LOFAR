@@ -930,7 +930,7 @@ void BeamServer::send_HBAdelays(Timestamp	time)
 	// We must loop over all beams, unfortunately we don't have such a list
 	// because only the beam-factory has access to all beams. So we must
 	// implement the sending of the HBA delays in the beamfactory!
-	LOG_INFO_STR("sending hba delays for interval " << time << " : " << time + (long)(itsComputeInterval-1));
+//	LOG_INFO_STR("sending hba delays for interval " << time << " : " << time + (long)(itsComputeInterval-1));
 	m_beams.sendHBAdelays(time, m_rspdriver);
 }
 
@@ -956,7 +956,6 @@ void BeamServer::compute_weights(Timestamp time)
 //
 void BeamServer::send_weights(Timestamp time)
 {
-	//	LOG_DEBUG_STR("weights_uint16=" << m_weights16);
 	if (!itsSetWeightsEnabled) {
 		return;
 	}
@@ -975,6 +974,14 @@ void BeamServer::send_weights(Timestamp time)
 	sw.weights() = m_weights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
+
+//  for debugging purposes print 40 subbans of 10 antennas for 1 timestamp.
+//	blitz::Array<std::complex<int16>, 2>	sample;
+//	sample.resize (10, 40);		// first 10 antennas and first 40 subbands
+//	sample = complex<int16_t>(0,0);
+//	sample = m_weights16(0, Range(64,74), Range(0,40));
+//	LOG_DEBUG_STR("weights sample=" << sample);
+
 	m_rspdriver.send(sw);
 }
 

@@ -245,7 +245,7 @@ void Beams::sendHBAdelays(RTC::Timestamp				time,
 		request.settings().resize(request.rcumask.count(), MEPHeader::N_HBA_DELAYS);
 		request.settings() = bi->first->getHBAdelays();
 
-		LOG_INFO_STR("sending delays for beam " << bi->first->getName());
+		LOG_INFO_STR("sending HBAdelays for beam " << bi->first->getName());
 		port.send(request);
 	}
 }
