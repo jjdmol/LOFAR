@@ -231,9 +231,13 @@ template <typename SAMPLE_TYPE> void doWork()
     MallocedArena arena0(filteredDataSize, 32);
     MallocedArena arena1(std::max(transposedDataSize, correlatedDataSize), 32);
 
-    TransposedData<SAMPLE_TYPE> transposedData(arena1, nrStations, nrSamplesToCNProc);
-    FilteredData   filteredData(arena0, nrStations, nrChannels, nrSamplesPerIntegration);
-    CorrelatedData correlatedData(arena1, nrBaselines, nrChannels);
+    SparseSetAllocator allocator0(arena1);
+    SparseSetAllocator allocator1(arena0);
+    SparseSetAllocator allocator2(arena1);
+
+    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc, allocator0);
+    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration, allocator1);
+    CorrelatedData correlatedData(nrBaselines, nrChannels, allocator2);
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
     Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
