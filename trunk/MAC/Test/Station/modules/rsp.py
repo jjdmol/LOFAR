@@ -12,11 +12,13 @@
   
   def write_cr_syncoff(tc, msg, blpId=['blp0'], rspId=['rsp0'])
   def write_cr_syncon(tc, msg, blpId=['blp0'], rspId=['rsp0'])
+  def write_cr_sync_delay(tc, msg, syncdelay=0, syncedge=0, blpId=['blp0'], rspId=['rsp0'])
+  def read_cr_sync_delay(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21)
 
-  def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], appLev=21)
-  def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], appLev=21)
+  def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21)
+  def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21)
+  def write_diag_selftest(tc, msg, selftest, blpId=['blp0'], rspId=['rsp0'], applev=21)
   def read_diag_result_buffer(tc, msg, nof, width, blpId=['blp0'], rspId=['rsp0'])
-  def write_diag_selftest(tc, msg, selftest, blpId=['blp0'], rspId=['rsp0'], appLev=21)
   
   def write_rd_smbh_protocol_list(tc, msg, smbh, protocol_list,  polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0'])
   def overwrite_rd_smbh_protocol_results(tc, msg, smbh, polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0'])
@@ -25,6 +27,10 @@
   
   def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0'])
   def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21)
+  
+  def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21)
+  def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21)
+  def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21)
   
   def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'])
   def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'])
@@ -294,12 +300,12 @@ c_sens12v                 = 12.0/192
 ################################################################################
 # Functions
 
-def rspctl(tc, arg, appLev=22):
+def rspctl(tc, arg, applev=22):
   cmd = 'rspctl %s' % arg
   if tc != None:
-    tc.appendLog(appLev,cmd)     # 22: show command line
+    tc.appendLog(applev,cmd)     # 22: show command line
     res = cli.command(cmd)
-    tc.appendLog(appLev+1,res)   # 23: show command return
+    tc.appendLog(applev+1,res)   # 23: show command return
     return res
   else:
     return cli.command(cmd)
@@ -450,7 +456,7 @@ def write_cr_syncoff(tc, msg, blpId=['blp0'], rspId=['rsp0']):
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - blpId  = List of 'blp#'
+  - blpId  = List of 'rsp, blp#'
   - rspId  = List of 'rsp#'
   Return: void
   """
@@ -466,7 +472,7 @@ def write_cr_syncon(tc, msg, blpId=['blp0'], rspId=['rsp0']):
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - blpId  = List of 'blp#'
+  - blpId  = List of 'rsp, blp#'
   - rspId  = List of 'rsp#'
   Return: void
   """
@@ -474,9 +480,65 @@ def write_cr_syncon(tc, msg, blpId=['blp0'], rspId=['rsp0']):
     msg.packAddr(blpId, 'cr', 'syncoff')
     msg.packPayload([0],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+
+
+def write_cr_sync_delay(tc, msg, syncdelay=0, syncedge=0, blpId=['blp0'], rspId=['rsp0']):
+  """CR write external sync input delay
+  
+  Input:
+  - tc        = Testcase
+  - msg       = MepMessage
+  - syncdelay = 0 is reset input delay to hardware default, > 0 increment input delay one time
+  - syncedge  = 0 is capture ext_sync on rising edge, != 0 is on falling edge
+  - blpId     = List of 'rsp, blp#'
+  - rspId     = List of 'rsp#'
+  Return: void
+  """
+  bit0 = syncdelay > 0
+  bit1 = syncedge  > 0
+  syncdata = (bit1 << 1) + bit0
+  for ri in rspId:
+    msg.packAddr(blpId, 'cr', 'syncdelay')
+    msg.packPayload([syncdata],1)
+    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+
+
+def read_cr_sync_delay(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
+  """CR read sync delay bit
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - blpId  = List of one 'rsp, blp#'
+  - rspId  = List of one 'rsp#'
+  - applev = Append logging level
+  Return:
+  - syncdata  = External sync data
+                . bit 0 : '0' is default input delay, '1' is incremented delay
+                . bit 1 : '0' capture external sync on rising edge, '1' on falling edge
+ 
+    tc appendlog messages are reported.
+  """
+  syncdata = -1
+  msg.packAddr(blpId, 'cr', 'syncdelay')
+  readData = rspctl(tc, '--readblock=%s,%s,0,1' % (rspId[0][3:], msg.hexAddr))
+  msg.extractPayload(readData)
+  syncdata = msg.unpackPayload(1, '+')
+  syncdata = syncdata[0]
+  bit0 =  syncdata & 1
+  bit1 = (syncdata & 2) >> 1
+  if   bit0==0 and bit1==0:
+    tc.appendLog(applev, '>>> RSP-%s, BLP-%-8s, read CR sync: default input delay,     default capture on rising edge' % (rspId, blpId))
+  elif bit0==0 and bit1!=0:
+    tc.appendLog(applev, '>>> RSP-%s, BLP-%-8s, read CR sync: default input delay,     capture on falling edge' % (rspId, blpId))
+  elif bit0!=0 and bit1==0:
+    tc.appendLog(applev, '>>> RSP-%s, BLP-%-8s, read CR sync: incremented input delay, default capture on rising edge' % (rspId, blpId))
+  else:
+    tc.appendLog(applev, '>>> RSP-%s, BLP-%-8s, read CR sync: incremented input delay, capture on falling edge' % (rspId, blpId))
+  return syncdata
   
 
-def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], appLev=21):
+def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21):
   """Write DIAG bypass register
   
   Input:
@@ -488,16 +550,16 @@ def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], appLev=21
   - applev = Append logging level
   Return: void
   """
-  tc.appendLog(appLev, '>>> RSP-%s, BLP-%s, write DIAG bypass:' % (rspId, blpId))
-  tc.appendLog(appLev, '      bit(0) : Bypass DC                     = %d' % ((bypass &  1    ) > 0))
-  tc.appendLog(appLev, '      bit(1) : Bypass PFS                    = %d' % ((bypass & (1<<1)) > 0))
-  tc.appendLog(appLev, '      bit(2) : Bypass PFT                    = %d' % ((bypass & (1<<2)) > 0))
-  tc.appendLog(appLev, '      bit(3) : Bypass BF                     = %d' % ((bypass & (1<<3)) > 0))
-  tc.appendLog(appLev, '      bit(4) : SI enable X                   = %d' % ((bypass & (1<<4)) > 0))
-  tc.appendLog(appLev, '      bit(5) : SI enable Y                   = %d' % ((bypass & (1<<5)) > 0))
-  tc.appendLog(appLev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass & (1<<6)) > 0))
-  tc.appendLog(appLev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass & (1<<7)) > 0))
-  tc.appendLog(appLev, '      bit(8) : PFT switching disable         = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, write DIAG bypass:' % (rspId, blpId))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                     = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                    = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                    = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                     = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                   = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                   = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable         = %d' % ((bypass & (1<<8)) > 0))
     
   for ri in rspId:
     msg.packAddr(blpId, 'diag', 'bypass')
@@ -505,31 +567,7 @@ def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], appLev=21
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
   
 
-def write_diag_selftest(tc, msg, selftest, blpId=['rsp'], rspId=['rsp0'], appLev=21):
-  """Write DIAG bypass register
-  
-  Input:
-  - tc       = Testcase
-  - msg      = MepMessage
-  - selftest = Selftest list: [interface, mode, duration, line]
-  - blpId    = List of ['rsp', 'blp#']
-  - rspId    = List of ['rsp#']
-  - applev   = Append logging level
-  Return: void
-  """
-  tc.appendLog(appLev, '>>> RSP-%s write DIAG selftest:' % rspId)
-  tc.appendLog(appLev, '      interface = %d' % selftest[0])
-  tc.appendLog(appLev, '      mode      = %d' % selftest[1])
-  tc.appendLog(appLev, '      duration  = %d' % selftest[2])
-  tc.appendLog(appLev, '      line      = %d' % selftest[3])
-    
-  for ri in rspId:
-    msg.packAddr(blpId, 'diag', 'selftest')
-    msg.packPayload(selftest,1)
-    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
-    
-
-def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], appLev=21):
+def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
   """Read DIAG bypass register
   
   Input:
@@ -542,22 +580,47 @@ def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], appLev=21):
   - bypass = Bypass bits
   """
   msg.packAddr(blpId, 'diag', 'bypass')
-  readData = rspctl('--readblock=%s,%s,0,2' % (rspId[0][3:], msg.hexAddr))
+  readData = rspctl(tc, '--readblock=%s,%s,0,2' % (rspId[0][3:], msg.hexAddr))
   msg.extractPayload(readData)
   bypass = msg.unpackPayload(2, '+')
+  bypass = bypass[0]
   
-  tc.appendLog(appLev, '>>> RSP-%s, BLP-%s, read DIAG bypass:' % (rspId, blpId))
-  tc.appendLog(appLev, '      bit(0) : Bypass DC                     = %d' % ((bypass[0] &  1    ) > 0))
-  tc.appendLog(appLev, '      bit(1) : Bypass PFS                    = %d' % ((bypass[0] & (1<<1)) > 0))
-  tc.appendLog(appLev, '      bit(2) : Bypass PFT                    = %d' % ((bypass[0] & (1<<2)) > 0))
-  tc.appendLog(appLev, '      bit(3) : Bypass BF                     = %d' % ((bypass[0] & (1<<3)) > 0))
-  tc.appendLog(appLev, '      bit(4) : SI enable X                   = %d' % ((bypass[0] & (1<<4)) > 0))
-  tc.appendLog(appLev, '      bit(5) : SI enable Y                   = %d' % ((bypass[0] & (1<<5)) > 0))
-  tc.appendLog(appLev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass[0] & (1<<6)) > 0))
-  tc.appendLog(appLev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass[0] & (1<<7)) > 0))
-  tc.appendLog(appLev, '      bit(8) : PFT switching disable         = %d' % ((bypass[0] & (1<<8)) > 0))
+  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, read DIAG bypass:' % (rspId, blpId))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                     = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                    = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                    = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                     = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                   = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                   = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable         = %d' % ((bypass & (1<<8)) > 0))
   return bypass
 
+
+def write_diag_selftest(tc, msg, selftest, blpId=['rsp'], rspId=['rsp0'], applev=21):
+  """Write DIAG selftest register
+  
+  Input:
+  - tc       = Testcase
+  - msg      = MepMessage
+  - selftest = Selftest list: [interface, mode, duration, line]
+  - blpId    = List of ['rsp', 'blp#']
+  - rspId    = List of ['rsp#']
+  - applev   = Append logging level
+  Return: void
+  """
+  tc.appendLog(applev, '>>> RSP-%s write DIAG selftest:' % rspId)
+  tc.appendLog(applev, '      interface = %d' % selftest[0])
+  tc.appendLog(applev, '      mode      = %d' % selftest[1])
+  tc.appendLog(applev, '      duration  = %d' % selftest[2])
+  tc.appendLog(applev, '      line      = %d' % selftest[3])
+    
+  for ri in rspId:
+    msg.packAddr(blpId, 'diag', 'selftest')
+    msg.packPayload(selftest,1)
+    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+    
 
 def read_diag_result_buffer(tc, msg, nof, width, blpId=['blp0'], rspId=['rsp0']):
   """Read DIAG result buffer
@@ -645,7 +708,7 @@ def overwrite_rd_smbh_protocol_results(tc, msg, smbh, polId=['x', 'y'], blpId=['
   - rspId         = RSP ID: 'rsp#'
   Report:
     tc appendlog messages are reported.
-    tc setResult is set  global env
+    tc setResult is set
   Return: void
   """
   if smbh == 'rcuh':
@@ -1051,6 +1114,133 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
       ret = [retb, ret]
     ret_rsp.append(ret)
   return ret_rsp
+
+
+def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21):
+  """RAD_BP write settings
+
+  Input:
+  - tc       = Testcase
+  - msg      = MepMessage
+  - settings = Lane settings for beamlets and crosslets
+  - rspId    = List of 'rsp#' 
+  - applev   = Append log level
+  Report:
+    tc appendlog messages are reported (see read_rad_settings for lane mode definition).
+  Return: void
+  """ 
+  tc.appendLog(applev, '>>> RSP-%s write RAD settings (= 0x%X):' % (rspId, settings))
+  # beamlet lane modes
+  for i in range(c_nof_lanes):
+    lane_mode = (settings >> (8*i)) & 0x3
+    if   lane_mode==0: tc.appendLog(applev, '      lane(%d): beamlet  mode local' % i)
+    elif lane_mode==1: tc.appendLog(applev, '      lane(%d): beamlet  mode disable' % i)
+    elif lane_mode==2: tc.appendLog(applev, '      lane(%d): beamlet  mode combine' % i)
+    else:              tc.appendLog(applev, '      lane(%d): beamlet  mode remote' % i)
+  # crosslet lane modes
+  for i in range(c_nof_lanes):
+    lane_mode = (settings >> (8*i + 2)) & 0x3
+    if   lane_mode==0: tc.appendLog(applev, '      lane(%d): crosslet mode local' % i)
+    elif lane_mode==1: tc.appendLog(applev, '      lane(%d): crosslet mode disable' % i)
+    elif lane_mode==2: tc.appendLog(applev, '      lane(%d): crosslet mode combine' % i)
+    else:              tc.appendLog(applev, '      lane(%d): crosslet mode remote' % i)
+  for ri in rspId:
+    msg.packAddr(['rsp'], 'rad', 'settings')
+    msg.packPayload([settings],4)
+    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+
+
+def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21):
+  """RAD_BP read settings
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return:
+  - settings = Lane settings for beamlets and crosslets
+      lane mode: one byte for each lane
+        format: XXXXAABB
+        where XX = don't care
+              AA = xlet mode
+              BB = blet mode
+         mode 00 = ignore remote data (only local)  DEFAULT
+         mode 01 = disable
+         mode 10 = combine local and remote data
+         mode 11 = ignore local data (only remote)
+  """
+  msg.packAddr(['rsp'], 'rad', 'settings')
+  readData = rspctl(tc, '--readblock=%s,%s,0,4' % (rspId[0][3:], msg.hexAddr))
+  msg.extractPayload(readData)
+  settings = msg.unpackPayload(4, '+')
+  settings = settings[0]
+  tc.appendLog(applev, '>>> RSP-%s read RAD settings (= 0x%X):' % (rspId, settings))
+  # beamlet lane modes
+  for i in range(c_nof_lanes):
+    lane_mode = (settings >> (8*i)) & 0x3
+    if   lane_mode==0: tc.appendLog(applev, '      lane(%d): beamlet  mode local' % i)
+    elif lane_mode==1: tc.appendLog(applev, '      lane(%d): beamlet  mode disable' % i)
+    elif lane_mode==2: tc.appendLog(applev, '      lane(%d): beamlet  mode combine' % i)
+    else:              tc.appendLog(applev, '      lane(%d): beamlet  mode remote' % i)
+  # crosslet lane modes
+  for i in range(c_nof_lanes):
+    lane_mode = (settings >> (8*i + 2)) & 0x3
+    if   lane_mode==0: tc.appendLog(applev, '      lane(%d): crosslet mode local' % i)
+    elif lane_mode==1: tc.appendLog(applev, '      lane(%d): crosslet mode disable' % i)
+    elif lane_mode==2: tc.appendLog(applev, '      lane(%d): crosslet mode combine' % i)
+    else:              tc.appendLog(applev, '      lane(%d): crosslet mode remote' % i)
+  return settings
+
+
+def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21):
+  """RAD_BP read latency
+
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of 'rsp#'
+  - applev = Append log level
+  Report:  
+    tc appendlog messages are reported.
+  Return:
+  - latency = RI and lane latencies crosslets and beamlets
+  """
+  latency = []
+  nof_rd = 2*c_rad_nof_rx
+  
+  title_str = '>>>         '
+  title_str += 'Ri'
+  for i in range(c_nof_lanes-1,-1,-1):
+    title_str += '    X%d' % i
+  for i in range(c_nof_lanes-1,-1,-1):
+    title_str += '    B%d' % i
+  tc.appendLog(applev, title_str)
+
+  for ri in rspId:
+    lat = []
+    read_mem(tc, msg, 'rad', 'latency', nof_rd, ['rsp'], [ri], 'h', 1, 0)
+    
+    msg.setOffset(0)
+    lane = {}
+    for i in range(c_nof_lanes):
+      lane[i,'b'] = msg.readUnsigned(2)
+      lane[i,'x'] = msg.readUnsigned(2)
+    ring = msg.readUnsigned(2)
+
+    lat_str = 'RSP-%s' % ri
+    lat_str += '%6d' % ring
+    lat.append(ring)
+    for i in range(c_nof_lanes-1,-1,-1):
+      lat_str += '%6d' % lane[i,'x']
+      lat.append(lane[i,'x'])
+    for i in range(c_nof_lanes-1,-1,-1):
+      lat_str += '%6d' % lane[i,'b']
+      lat.append(lane[i,'b'])
+    tc.appendLog(applev, lat_str)
+    latency.append(lat)
+  return latency
 
 
 def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0']):
