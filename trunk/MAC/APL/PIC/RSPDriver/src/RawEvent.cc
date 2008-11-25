@@ -689,11 +689,18 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x12 (RAD) */
   {
-    /* reg = 0x00 (RAD_BP) */
+    /* reg = 0x00 (RAD_SETTINGS) */
     { 0,
-      0,
-      EPA_RAD_BP,   /* WRITE */
-      0,
+      EPA_READ,		/* READ */
+      EPA_RAD_SET,  /* WRITE */
+      EPA_RAD_SET,	/* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
+    /* reg = 0x01 (RAD_LATENCY) */
+    { 0,
+      EPA_READ,		/* READ */
+      EPA_RAD_LAT,  /* WRITE */
+      EPA_RAD_LAT,	/* READACK */
       EPA_WRITEACK, /* WRITEACK */
     },
   },

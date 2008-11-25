@@ -59,7 +59,7 @@ void RADWrite::sendrequest()
     return;
   }
 
-  EPARadBpEvent rad;
+  EPARadSetEvent rad;
 
   rad.hdr.set(MEPHeader::RAD_BP_HDR);
   rad.lanemode = 0;

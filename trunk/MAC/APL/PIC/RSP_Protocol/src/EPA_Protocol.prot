@@ -923,7 +923,7 @@ event = {
 
 event = {
   noheader;
-  signal = RAD_BP;
+  signal = RAD_SET;
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
@@ -933,5 +933,20 @@ event = {
   param = {
     name = "lanemode";
     type = "uint32";
+  };
+};
+
+event = {
+  noheader;
+  signal = RAD_LAT;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "latency";
+    type = "uint16[9]";
   };
 };
