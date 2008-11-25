@@ -61,12 +61,18 @@ verify.add_option('--rand', action='store_true', dest='rand',
   help='Use random data values')
 verify.add_option('--read', action='store_true', dest='read',
   help='Run the testcase read only')
+verify.add_option('--pps_edge', type='string', dest='pps_edge',
+  help='Capture PPS on rising or falling clock edge: r, f', default='r')
+verify.add_option('--pps_delay', type='int', dest='pps_delay',
+  help='Increment PPS input delay in steps of about 75 ps, use 0 for reset', default=1)
 verify.add_option('--diag_mode', type='string', dest='diag_mode',
   help='Diag mode: off, tx, rx, tx_rx, local', default='tx_rx')
 verify.add_option('--diag_sync', type='int', dest='diag_sync',
   help='Diag sync: 0 for pps, > 0 for alt sync interval in s', default=1)
 verify.add_option('--diag_data', type='string', dest='diag_data',
   help='Diag data: lfsr, cntr', default='lfsr')
+verify.add_option('--rad_lane_mode', type='string', dest='rad_lane_mode',
+  help='RAD lane mode: X lane 3:0, B lane 3:0, where 0=local, 1=disable, 2=combine, 3=remote', default='0,0,0,0,0,0,0,0')
 verify.add_option('--client_rcu', type='string', dest='client_rcu',
   help='HBA control via this RCU, power via the other RCU: x or y', default='y')
 verify.add_option('--client_access', type='string', dest='client_access',
@@ -132,9 +138,15 @@ for di in data_str:
 arg_count               = v.opts.count
 arg_rand                = v.opts.rand
 arg_read                = v.opts.read
+arg_pps_edge            = v.opts.pps_edge
+arg_pps_delay           = v.opts.pps_delay
 arg_diag_mode           = v.opts.diag_mode
 arg_diag_sync           = v.opts.diag_sync
 arg_diag_data           = v.opts.diag_data
+rad_lane_mode_str       = v.opts.rad_lane_mode.split(',')
+arg_rad_lane_mode = []
+for lm in rad_lane_mode_str:
+  arg_rad_lane_mode.append(int(lm))
 arg_hba_client_rcu      = v.opts.client_rcu
 arg_hba_client_access   = v.opts.client_access
 arg_hba_client_reg      = v.opts.client_reg
