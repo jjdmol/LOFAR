@@ -10,6 +10,7 @@ test_SCRIPTS = 	README.txt \
 				rsp_version.sh \
 				rsp_xc_160.sh \
 				rsp_xc_200.sh \
+				subrack_production.py \
 				subracktest.sh \
 				tbb_prbs_tester.sh \
 				tbb_version.sh \
