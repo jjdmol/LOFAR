@@ -123,6 +123,7 @@ class MepMessage:
              ('lcu','hdr') :        0,
              ('lcu','data') :       1,
              ('rad','settings') :   0,
+             ('rad','latency') :    1,
              ('tbbi','settingsx') : 0,
              ('tbbi','settingsy') : 1,
              ('tbbi','selmemx') :   2,
