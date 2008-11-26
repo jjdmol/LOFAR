@@ -1,20 +1,13 @@
-check_PROGRAMS			= tpqutil \
-				  tStrategy \
+check_PROGRAMS			= tStrategy \
 				  tCommandQueue
 
-check_SCRIPTS			= tpqutil.sh \
-				  tStrategy.sh \
+check_SCRIPTS			= tStrategy.sh \
 				  tCommandQueue.sh
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS			= tpqutil \
-				  tStrategy \
+CHECKTOOLPROGS			= tStrategy \
 				  tCommandQueue
 #ENDCHECKTOOLPROGS
-
-tpqutil_SOURCES			= tpqutil.cc
-tpqutil_LDADD			= ../src/libbbscontrol.la
-tpqutil_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 tStrategy_SOURCES		= tStrategy.cc
 tStrategy_LDADD			= ../src/libbbscontrol.la
