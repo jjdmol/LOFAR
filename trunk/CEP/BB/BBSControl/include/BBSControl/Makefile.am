@@ -35,7 +35,6 @@ pkginclude_HEADERS = Package__Version.h  \
 	Types.h
 
 noinst_HEADERS = \
-	pqutil.h \
 	QueryBuilder/AddCommand.h \
 	StreamUtil.h
 
