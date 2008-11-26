@@ -350,14 +350,13 @@ void SubArrays::writeGains(SubArray*	anSubArr)
 	FILE* gainFile = fopen(filename, "w");
 
 	if (!gainFile) {
-		LOG_FATAL_STR("failed to open file: " << filename);
-		exit(EXIT_FAILURE);
+		LOG_ERROR_STR("failed to open file: " << filename);
+		return;
 	}
 
 	if (fwrite(gains->getGains().data(), sizeof(complex<double>), gains->getGains().size(), gainFile) != 
 			(size_t)gains->getGains().size()) {
-		LOG_FATAL_STR("failed to write to file: " << filename);
-		exit(EXIT_FAILURE);
+		LOG_ERROR_STR("failed to write to file: " << filename);
 	}
 
 	(void)fclose(gainFile);
