@@ -56,8 +56,7 @@ AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_mutex(new
   pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
   lock(); m_done = false; unlock();
 
-  if (nantennas < 0 || npol < 0 || nsubbands < 0)
-    {
+  if (nantennas < 0 || npol < 0 || nsubbands < 0) {
       nantennas = 0;
       npol = 0;
       nsubbands = 0;
@@ -72,7 +71,8 @@ AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_mutex(new
 
 AntennaGains::~AntennaGains()
 {
-  if (m_mutex) delete m_mutex;
+  if (m_mutex) 
+	delete m_mutex;
 }
 
 unsigned int AntennaGains::getSize()

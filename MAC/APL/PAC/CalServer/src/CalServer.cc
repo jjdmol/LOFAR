@@ -541,6 +541,12 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_ERROR("Empty antenna selection not allowed.");
 		ack.status = ERR_NO_ANTENNAS;
 
+//	TODO: add this code for faster calibration in the future
+//	} else if (start.subbandset.count() == 0) {
+//		// empty selection
+//		LOG_ERROR("Empty subband selection not allowed.");
+//		ack.status = ERR_NO_SUBBANDS;
+
 	} else {
 		// register because this is a cal_start
 		m_clients[start.name] = &port;		// register subarray and port
@@ -837,13 +843,12 @@ void CalServer::write_acc()
 	FILE* accfile = fopen(filename, "w");
 
 	if (!accfile) {
-		LOG_FATAL_STR("failed to open file: " << filename);
-		exit(EXIT_FAILURE);
+		LOG_ERROR_STR("failed to open file: " << filename);
+		return;
 	}
 
 	if ((size_t)newacc.size() != fwrite(newacc.data(), sizeof(complex<double>), newacc.size(), accfile)) {
-		LOG_FATAL_STR("failed to write to file: " << filename);
-		exit(EXIT_FAILURE);
+		LOG_ERROR_STR("failed to write to file: " << filename);
 	}
 
 	(void)fclose(accfile);
