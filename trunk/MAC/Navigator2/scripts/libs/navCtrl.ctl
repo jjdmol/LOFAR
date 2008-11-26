@@ -35,6 +35,7 @@
 // navCtrl_handleProgressBarEvent            : handles progressBar
 // navCtrl_handleHeadLinesEvent              : handles headLines
 // navCtrl_handleAlertEvent                  : handles alert
+// navCtrl_handleFastJumperEvent             : handles fastJumper
 
 #uses "navigator.ctl"
 
@@ -49,6 +50,7 @@ global string   LOCATORACTIONDP;
 global string   PROGRESSBARACTIONDP;
 global string   HEADLINESACTIONDP;
 global string   ALERTSACTIONDP; 
+global string   FASTJUMPERACTIONDP; 
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -95,6 +97,9 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+      
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
@@ -132,6 +137,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     dpSet(LOCATORACTIONDP,"Update");
+    dpSet(FASTJUMPERACTIONDP,"Update");
     dpSet(PROGRESSBARACTIONDP,"Update");
     dpSet(HEADLINESACTIONDP,"Update");
 
@@ -294,6 +300,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
     dpSet(TOPDETAILSELECTIONACTIONDP,"Initialize");
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Initialize");
     dpSet(LOCATORACTIONDP,"Initialize");
+    dpSet(FASTJUMPERACTIONDP,"Initialize");
     dpSet(PROGRESSBARACTIONDP,"Initialize");
     dpSet(HEADLINESACTIONDP,"Initialize");
     dpSet(ALERTSACTIONDP,"Initialize");
@@ -310,6 +317,9 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
         
         // change locator
         dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+
+        // change fastJumper
+        dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
         // inform headLines Object
         dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
@@ -584,6 +594,9 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
     }
   }       
 }
@@ -633,6 +646,10 @@ void navCtrl_handleLocatorEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+      
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
+
     }
   }
   
@@ -759,6 +776,9 @@ void navCtrl_handleAlertsEvent(string dp,string value){
     }
     if (navTabCtrl_showView()) {
         
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
+
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
 
@@ -767,6 +787,60 @@ void navCtrl_handleAlertsEvent(string dp,string value){
     }
   }
 
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Function navCtrl_handleFastJumperEvent
+//
+// handles all interactions after an event from the fastJumper
+//
+///////////////////////////////////////////////////////////////////////////
+void navCtrl_handleFastJumperEvent(string dp,string value){
+  LOG_TRACE("navCtrl.ctl:navCtrl_handleFastJumperEvent|entered with dp: " + dp + " and value: " + value);
+
+  string aShape;
+  string anEvent;
+  dyn_string aSelection;
+  
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_fastJumper.selection")) {
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID+".fw_fastJumper.selection", aSelection);
+  } else {
+    LOG_WARNING("navCtrl.ctl:navCtrl_handleFastJumperEvent| Error getting selection from : " + DPNAME_NAVIGATOR + g_navigatorID+".fw_fastJumper.selection");
+    return;
+  }      
+  
+  // split the event into shape and event
+  if (!navFunct_splitEvent(value,aShape,anEvent) ) {
+    LOG_WARNING("navCtrl.ctl:navCtrl_handleFastJumperEvent| Error splitting event: " + value);
+    return;
+  }
+
+  // ok so now we have all essentials
+  // aShape contains the shape that initiated the event
+  // anEvent contains the initial event
+  // aSelection contains the Selections that belongs to the event  
+  LOG_INFO("navCtrl.ctl:navCtrl_handleFastJumperEvent| Found shape    : " + aShape);
+  LOG_INFO("navCtrl.ctl:navCtrl_handleFastJumperEvent| Found event    : " + anEvent);
+  LOG_INFO("navCtrl.ctl:navCtrl_handleFastJumperEvent| Found selection: " + aSelection);
+  navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
+  // depending on the event received, actions need to be taken
+  
+  if (anEvent == "ChangePanel") {
+    if (navTabCtrl_showView()) {
+      
+      //clear old highlights
+      dynClear(strHighlight);        
+      
+      // change locator
+      dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+      
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
+
+    }
+  }
+  
 }
 ///////////////////////////////////////////////////////////////////////////
 //

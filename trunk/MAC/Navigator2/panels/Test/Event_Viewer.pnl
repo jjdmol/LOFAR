@@ -403,7 +403,7 @@ E E 0 3 1 2 1 E  741 540 727 533
 4 40
 "LINE16"
 ""
-1 530 429 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 530 428.9999999999999 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 50 0 0 0 0 0
 E E E
@@ -413,11 +413,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  530 429 530 650
+E E 0 3 1 2 1 E  530 429 530 740
 4 41
 "LINE17"
 ""
-1 538 637 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 538 721.7058823529412 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 51 0 0 0 0 0
 E E E
@@ -427,11 +427,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  538 637 529 648
+E E 0 3 1 2 1 E  538 722 529 737
 4 42
 "LINE18"
 ""
-1 520 640 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 520 725.9276018099548 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 52 0 0 0 0 0
 E E E
@@ -441,7 +441,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  520 640 529 647
+E E 0 3 1 2 1 E  520 726 529 736
 4 43
 "LINE19"
 ""
@@ -455,11 +455,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  473 430 203 541
+E E 0 3 1 2 1 E  473 430 260 648
 4 44
 "LINE20"
 ""
-1 204 539 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 260.7888888888889 644.1071428571429 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 54 0 0 0 0 0
 E E E
@@ -469,7 +469,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  204 539 227 538
+E E 0 3 1 2 1 E  261 644 279 642
 1 636 0 "" 0
 0
 1 637 1 "" 0
@@ -555,7 +555,7 @@ E E 0 3 1 2 1 E  204 539 227 538
 4 87
 "LINE21"
 ""
-1 204 542 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 260 650 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 117 0 0 0 0 0
 E E E
@@ -565,11 +565,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  204 542 212 521
+E E 0 3 1 2 1 E  260 650 266 630
 4 89
 "LINE23"
 ""
-1 57 335 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 180.6500695840421 293.0769230769232 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 119 0 0 0 0 0
 E E E
@@ -579,11 +579,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  57 335 404 410
+E E 0 3 1 2 1 E  181 293 400 370
 4 90
 "LINE24"
 ""
-1 56 337 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 180 296.2337662337662 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 120 0 0 0 0 0
 E E E
@@ -593,11 +593,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  56 337 62 351
+E E 0 3 1 2 1 E  180 296 184 318
 4 91
 "LINE25"
 ""
-1 62 333 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 183.8620689655173 290 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 121 0 0 0 0 0
 E E E
@@ -607,7 +607,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E  62 333 81 333
+E E 0 3 1 2 1 E  184 290 196 290
 1 677 20 "" 0
 0
 14 134
@@ -727,7 +727,7 @@ LANG:1 14 show g_alarms
 14 181
 "alarm_dp"
 ""
-1 37 640 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 20 730 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 133 0 0 0 0 0
 E E E
@@ -739,12 +739,12 @@ LANG:1 9 Datapoint
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 35 638 322 661
+ 18 728 305 751
 3 "0s" 0 0 0 0 0 -1  E E E
 13 182
 "PUSH_BUTTON4"
 ""
-1 199 671 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 182 761 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 135 0 0 0 0 0
 E E E
@@ -756,7 +756,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 197 669 321 696
+ 180 759 304 786
 
 T 
 1
@@ -778,7 +778,7 @@ LANG:1 8 setAlarm
 14 183
 "alarm_state"
 ""
-1 38 672 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 21 762 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 137 0 0 0 0 0
 E E E
@@ -790,12 +790,12 @@ LANG:1 5 state
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 36 670 88 693
+ 19 760 71 783
 3 "4d" 4 0 0 0 0 -1  E E E
 14 184
 "alarm_message"
 ""
-1 37 704 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 20 794 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 139 0 0 0 0 0
 E E E
@@ -807,7 +807,7 @@ LANG:1 12 alarmmessage
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 35 702 321 725
+ 18 792 304 815
 3 "0s" 0 0 0 0 0 -1  E E E
 13 227
 "PUSH_BUTTON5"
@@ -1522,6 +1522,60 @@ LANG:1 21 show g_processesList
   }
 }" 0
  E E E
+1 678 21 "" 0
+0
+1 679 21 "" 1
+0
+1 680 21 "" 2
+0
+1 681 21 "" 3
+0
+1 682 21 "" 4
+0
+1 683 22 "" 0
+0
+4 685
+"LINE28"
+""
+1 150.611223387143 462.0652258682719 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+202 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  151 462 400 390
+4 686
+"LINE29"
+""
+1 153.3083950292832 463.4530013836702 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+204 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  153 463 178 469
+4 687
+"LINE30"
+""
+1 149.9999999999999 459.5518089689399 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+206 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  150 460 160 454
 0
 LAYER, 1 
 1
@@ -1568,15 +1622,15 @@ LANG:1 0
 1
 "$name""fw_locator"
 3 5 "PANEL_REF6"
-"objects\\Test\\Action.pnl" 413 460 T 109 1 0 1 -42 33
+"objects\\Test\\Action.pnl" 413 460 T 109 1 0 1 -43 220
 1
 "$name""fw_progressBar"
 3 6 "PANEL_REF7"
-"objects\\Test\\Action.pnl" 189 450 T 110 1 0 1 22 4
+"objects\\Test\\Action.pnl" 189 450 T 110 1 0 1 -39 130
 1
 "$name""fw_headLines"
 3 7 "PANEL_REF8"
-"objects\\Test\\Event.pnl" 15 8 T 111 1 0 1 0 1
+"objects\\Test\\Event.pnl" 15 8 T 111 1 0 1 -5 0
 1
 "$name""fw_viewSelection"
 3 9 "PANEL_REF10"
@@ -1592,19 +1646,27 @@ LANG:1 0
 1
 "$name""fw_locator"
 3 17 "PANEL_REF18"
-"objects\\Test\\Event.pnl" 334 642 T 115 U 
+"objects\\Test\\Event.pnl" 334 642 T 115 1 0 1 -4 86
 1
 "$name""fw_progressBar"
 3 18 "PANEL_REF19"
-"objects\\Test\\Event.pnl" -2 533 T 116 U 
+"objects\\Test\\Event.pnl" -2 533 T 116 1 0 1 2 105
 1
 "$name""fw_headLines"
 3 19 "PANEL_REF20"
-"objects\\Test\\Event.pnl" 0 205 T 116 1 0 1 9 46
+"objects\\Test\\Event.pnl" 0 205 T 116 1 0 1 -10 3
 1
 "$name""fw_viewBox"
 3 20 "PANEL_REF21"
-"objects\\Test\\Action.pnl" 207 346 T 122 1 0 1 -103 8
+"objects\\Test\\Action.pnl" 207 346 T 122 1 0 1 -117 -26
 1
 "$name""fw_viewBox"
+3 21 "PANEL_REF22"
+"objects\\Test\\Event.pnl" 0 205 T 197 1 0 1 10 253
+1
+"$name""fw_fastJumper"
+3 22 "PANEL_REF23"
+"objects\\Test\\Action.pnl" 207 346 T 198 1 0 1 -117 64
+1
+"$name""fw_fastJumper"
 0

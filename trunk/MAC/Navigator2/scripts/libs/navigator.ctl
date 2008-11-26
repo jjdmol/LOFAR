@@ -43,7 +43,7 @@
 #uses "navTabCtrl.ctl"
 
 global bool       g_initializing         = true;
-global string     g_currentDatapoint     = "LOFAR";
+global string     g_currentDatapoint     = MainDBName+"LOFAR";
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      // 
@@ -209,6 +209,9 @@ void navigator_clearWorkDPs() {
   }
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_alerts.action")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".fw_alerts.action","");
+  }
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_fastJumper.action")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".fw_fastJumper.action","");
   }
 
 }
