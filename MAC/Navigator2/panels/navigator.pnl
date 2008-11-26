@@ -60,6 +60,11 @@ PANEL,-1 -1 1232 873 N "_3DFace" 1
   } else {
 		setValue(fw_alerts,\"backCol\",\"_dpdoesnotexist\");
   } 
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_fastJumper\")) {
+    dpConnect(\"fw_fastJumperEvent\",false,DPNAME_NAVIGATOR + g_navigatorID + \".fw_fastJumper.event\");
+  } else {
+		setValue(fw_fastJumper,\"backCol\",\"_dpdoesnotexist\");
+  } 
 
 
 
@@ -124,6 +129,12 @@ void fw_alertsEvent(string dp, string event) {
 	LOG_TRACE(\"navigator.pnl:fw_alertsEvent| trigger: \" + event);
   if (event != \"\") {
 	  navCtrl_handleAlertsEvent(dp,event);
+  }     
+}
+void fw_fastJumperEvent(string dp, string event) {
+	LOG_TRACE(\"navigator.pnl:fw_fastJumperEvent| trigger: \" + event);
+  if (event != \"\") {
+	  navCtrl_handleFastJumperEvent(dp,event);
   }     
 }
 " 0
@@ -222,6 +233,10 @@ LANG:1 6 Layer1
 0
 1 30 13 "" 15
 0
+1 31 16 "" 1
+0
+1 32 16 "" 2
+0
 0
 LAYER, 1 
 1
@@ -282,4 +297,8 @@ LANG:1 6 Layer8
 "objects\\navigator_alerts.pnl" 727 845 T 26 1 0 0.89 -737 29.0500000000001
 1
 "$name""fw_alerts"
+3 16 "PANEL_REF17"
+"objects\\navigator_fastJumper.pnl" 580 10 T 26 1 0 1 -10 -9
+1
+"$name""fw_fastJumper"
 0

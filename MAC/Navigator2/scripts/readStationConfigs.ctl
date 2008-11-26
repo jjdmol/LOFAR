@@ -1,4 +1,4 @@
-//# readAntennaConfigs.ctl
+//# readStationConfigs.ctl
 //#
 //#  Copyright (C) 2007-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,8 +23,13 @@
 
 /**
   * Controller that will be run once during station startup.
-  * it will search for an AntenneArrays.conf file in /opt/lofar/etc/
-  * and will fill the pvss database type AntennaArrays with the (allowed)
+  * it will search for different conf files in /opt/lofar/etc/
+  * and will fill the pvss database types for those config files.
+ 
+  * For now we have: 
+
+  * AntennaArrays.conf.
+  * This will be used to fill: AntennaArrays with the (allowed)
   * antenna configurations. 
   *
   * Allowed for now are :  LBA-HBA-LBL-LBH
@@ -34,6 +39,10 @@
   * As FieldCenter now the GPS coordinates are taken, this is not correct
   *
   * For future compatibility we have to consider other earth coordinates also
+  
+  * RemoteStation.conf
+  * This will fill the RemoteStation point with all data available for this station.
+  *
   */
 main()
 { 
@@ -47,12 +56,15 @@ main()
        
   string strCurConfig;
 //  string strDataDir             = "/opt/lofar/etc/";
-  string strDataDir             = "c:/data/CS20_CS010/data/configs/";
-  string strAntArrayConfFile    = strDataDir+"AntennaArrays.conf";
+  string strDataDir               = "c:/data/CS20_CS010/data/configs/";
+  string strAntArrayConfFile      = strDataDir+"AntennaArrays.conf";
+  string strRemoteStationConfFile = strDataDir+"RemoteStation.conf";
 
   dyn_string dynStr_fileContent;
    
-   		
+  //
+  // AntennaArray cycle
+  //		
   dynStr_fileContent = lto_getFile_asDynStr(strAntArrayConfFile);
 
   while (dynlen(dynStr_fileContent) > 3  && index < dynlen(dynStr_fileContent)) {
@@ -65,7 +77,7 @@ main()
     // read ConfigurationName
 
     sscanf(dynStr_fileContent[index++],"%s",strCurConfig);
-    Debug("readAntennaConfigs.ctl:main|Reading  Config for: "+strCurConfig);
+    Debug("readStationConfigs.ctl:main|Reading  Config for: "+strCurConfig);
 
     // read fieldcenter
     sscanf(dynStr_fileContent[index++],"%*d %*s %f %f %f",centerOL,centerNB,centerH);
@@ -118,6 +130,79 @@ main()
     }
     index +=nr_ofAnt+1;
   }
+  
+  //
+  // RemoteStation cycle
+  //	
+  
+  dynStr_fileContent = lto_getFile_asDynStr(strRemoteStationConfFile);
+  //DebugN("fileContent: "+dynStr_fileContent);
+  
+  for (index=1;index <= dynlen(dynStr_fileContent);index++) {
+    if (strpos(dynStr_fileContent[index],"RS.STATION_ID")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        dpSet("remoteStation.stationID",value[2]);
+      }
+    }
+    
+    if (strpos(dynStr_fileContent[index],"RS.N_RSPBOARDS")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        dpSet("remoteStation.N_RSPBoards",value[2]);
+      }
+    }
+    
+    if (strpos(dynStr_fileContent[index],"RS.N_TBBOARDS")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        dpSet("remoteStation.N_TBBoards",value[2]);
+      }
+    }
+
+    if (strpos(dynStr_fileContent[index],"RS.N_LBAS")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        dpSet("remoteStation.N_LBAS",value[2]);
+      }
+    }
+      
+    if (strpos(dynStr_fileContent[index],"RS.N_HBAS")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        dpSet("remoteStation.N_HBAS",value[2]);
+      }
+    }
+  
+    if (strpos(dynStr_fileContent[index],"RS.HBA_SPLIT")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
+          dpSet("remoteStation.HBA_Split",false);
+        } else {
+          dpSet("remoteStation.HBA_Split",true);
+        }
+      }
+    }
+  
+
+    if (strpos(dynStr_fileContent[index],"RS.WIDE_LBAS")>-1) {
+      dyn_string value = strsplit(dynStr_fileContent[index],"=");
+      if (dynlen(value) > 1) {
+        if (substr(value[2],0,1) == "N" ||
+            substr(value[2],0,1) == "n" ||
+            substr(value[2],0,1) == "F" ||
+            substr(value[2],0,1) == "f") {
+          dpSet("remoteStation.wide_LBAS",false);
+        } else {
+          dpSet("remoteStation.wide_LBAS",true);
+        }
+      }
+    }
+  }
 }
 
 dyn_string lto_getFile_asDynStr(string aFileName)
@@ -136,7 +221,7 @@ dyn_string lto_getFile_asDynStr(string aFileName)
 
     if (err!=0) 
     {
-      DebugN("readAntennaConfigs.ctl:lto_getFile_asDynStr|Error during read no. " + err);
+      DebugN("readStationConfigs.ctl:lto_getFile_asDynStr|Error during read no. " + err);
     }
     else
     {
@@ -147,7 +232,7 @@ dyn_string lto_getFile_asDynStr(string aFileName)
     }
     fclose(f); // close file
   } else {
-    DebugN("readAntennaConfigs.ctl:lto_getFile_asDynStr|Error opening file: " + aFileName);
+    DebugN("readStationConfigs.ctl:lto_getFile_asDynStr|Error opening file: " + aFileName);
   }
     
   return aFile_asDynStr;

@@ -109,6 +109,10 @@ void navConfig_setNavigatorID(int newID)
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".fw_alerts.action");
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".fw_alerts.selection");
   
+  navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".fw_fastJumper.event");
+  navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".fw_fastJumper.action");
+  navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".fw_fastJumper.selection");
+
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".navigator.event");
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".navigator.initiator");
   navConfig_resetDP(DPNAME_NAVIGATOR + g_navigatorID+".navigator.selection");

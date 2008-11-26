@@ -47,8 +47,12 @@ void doAction(string aDP, string anAction) {
   }
   
   // EventClick
-  if (actionString[1] == \"ChangeInfo\") {
-    changeInfo(actionString[2]);
+  if (actionString[1] == \"ChangeInfo\" || actionString[1] == \"Update\") {
+    if(dynlen(actionString) > 1) {
+      changeInfo(actionString[2]);
+    } else {
+      changeInfo(g_currentDatapoint);
+    }   
     return;
   }
   // Initialize
