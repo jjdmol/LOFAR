@@ -115,8 +115,8 @@ void GlobalSolveController::run()
 
     // Compute the number of cell chunks to process.
     const uint nCellChunks =
-        static_cast<uint>(ceil(static_cast<double>(itsSolGrid[TIME]->size()
-            / itsCellChunkSize)));
+        static_cast<uint>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
+            / itsCellChunkSize));
 
     CoeffMsg localCoeffMsg(itsKernelId);
     EquationMsg localEqMsg(itsKernelId);
