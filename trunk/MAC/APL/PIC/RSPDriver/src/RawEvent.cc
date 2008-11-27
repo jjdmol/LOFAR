@@ -310,14 +310,20 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,
       EPA_WRITEACK,   /* WRITEACK */
     },
-    /* reg = 0x02 (CR_SOFTDISABLE) */
+    /* reg = 0x02 (CR_SYNCDISABLE) */
     { 0,
-      0,
+      EPA_READ,       /* READ	  */
       EPA_CR_CONTROL, /* WRITE    */
-      0,
+      EPA_CR_CONTROL, /* READACK  */
       EPA_WRITEACK,   /* WRITEACK */
     },
-
+    /* reg = 0x03 (CR_SYNCDELAY) */
+    { 0,
+      EPA_READ,       /* READ	  */
+      EPA_CR_CONTROL, /* WRITE    */
+      EPA_CR_CONTROL, /* READACK  */
+      EPA_WRITEACK,   /* WRITEACK */
+    },
   },
 
   /* pid = 0x0A (XST) */
