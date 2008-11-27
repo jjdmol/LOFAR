@@ -49,21 +49,20 @@ namespace LOFAR
 
     WH_DelayCompensation::WH_DelayCompensation(const Parset *ps,
                                                const string &stationName) :      
-      itsPS     (ps),
       itsNrBeams   (ps->nrBeams()),
       itsStationName(stationName),
       itsConverter (0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       
-      itsNrCalcDelays = itsPS->getUint32("OLAP.DelayComp.nrCalcDelays");
+      itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
      
        // Pre-allocate and initialize storage for the delay vectors.
       itsDelaysAfterEnd.resize(itsNrCalcDelays*itsNrBeams);
       itsObservationEpoch.resize(itsNrCalcDelays);
 
-      getBeamDirections();
-      setPositionDiffs();
+      getBeamDirections(ps);
+      setPositionDiffs(ps);
       
       // Create the AMC converter.
       ASSERT(!itsConverter);
@@ -97,7 +96,7 @@ namespace LOFAR
 
     //##----------------  Private methods  ----------------##//
 
-     void WH_DelayCompensation::getBeamDirections()
+     void WH_DelayCompensation::getBeamDirections(const Parset *ps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       
@@ -113,7 +112,7 @@ namespace LOFAR
       // Get the source directions from the parameter set. 
       // Split the \a dir vector into separate Direction objects.
       for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-        string str = toUpper(itsPS->getBeamDirectionType(beam));
+        string str = toUpper(ps->getBeamDirectionType(beam));
         
 	if      (str == "J2000") dirType = Direction::J2000;
         else if (str == "ITRF")  dirType = Direction::ITRF;
@@ -121,14 +120,14 @@ namespace LOFAR
         else ASSERTSTR(false, "Observation.BeamDirectionType must be one of "
                        "J2000, ITRF, or AZEL");
 
-        vector<double> beamDir = itsPS->getBeamDirection(beam);
+        vector<double> beamDir = ps->getBeamDirection(beam);
 	
         itsBeamDirections[beam] = Direction(beamDir[0], beamDir[1], dirType);
 	LOG_TRACE_VAR_STR(" [" << beam << "] = " << itsBeamDirections[beam]);
       }
     }
 
-    void WH_DelayCompensation::setPositionDiffs()
+    void WH_DelayCompensation::setPositionDiffs(const Parset *ps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
        // Calculate the station to reference station position difference of apply station.
@@ -137,14 +136,14 @@ namespace LOFAR
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
       Position::Types posType(Position::INVALID);
-      string str = toUpper(itsPS->getString("OLAP.DelayComp.positionType"));
+      string str = toUpper(ps->getString("OLAP.DelayComp.positionType"));
       if (str == "ITRF") posType = Position::ITRF;
       else ASSERTSTR(false, "OLAP.DelayComp.positionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
-      const Position pRef(Coord3D(itsPS->getRefPhaseCentres()), posType);
-      const Position phaseCentres(Coord3D(itsPS->getPhaseCentresOf(itsStationName)), posType);
+      const Position pRef(Coord3D(ps->getRefPhaseCentres()), posType);
+      const Position phaseCentres(Coord3D(ps->getPhaseCentresOf(itsStationName)), posType);
       itsPhaseCentres = phaseCentres;
       
       itsPhasePositionDiffs = itsPhaseCentres - pRef;
