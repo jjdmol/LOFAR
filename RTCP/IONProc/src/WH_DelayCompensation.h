@@ -99,7 +99,7 @@ namespace LOFAR
       // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
       // are in radians; the direction type must be one of J2000, ITRF, or
       // AZEL.
-      void getBeamDirections();
+      void getBeamDirections(const Parset *);
 
       // Set the station to reference station position differences for all
       // stations. The choice of reference station is arbitrary (so we choose
@@ -108,7 +108,7 @@ namespace LOFAR
       // \mathbf{p}_0\f$, where \f$\mathbf{p}_0\f$ is the position of the
       // reference station and \f$\mathbf{p}_j\f$ is the position of station
       // \f$j\f$.
-      void setPositionDiffs();
+      void setPositionDiffs(const Parset *);
 
       // Create an instance of an AMC converter, using the data in \c
       // itsConverterConfig.
@@ -127,11 +127,6 @@ namespace LOFAR
       // itsDelaysAtEnd.
       void calculateDelays();
       
-      // The parameter set, containing all configurable variables.
-      // \note Unfortunately we must keep a copy here, because (!@#$%!)
-      // make() needs it. Hopefully, we can get rid of it, some day.
-      const Parset              *itsPS;
-
       // Number of beams.
       const uint                    itsNrBeams;
 
