@@ -189,7 +189,7 @@ namespace LOFAR
       // etc.
       LOG_TRACE_CALC("Beamlet geometrical delays:");
       for (uint i = 0; i < itsObservationEpoch.size() * itsNrBeams; ++i) {
-        itsDelaysAfterEnd[i] = (result.direction[i] * itsPhasePositionDiffs) / speedOfLight;
+        itsDelaysAfterEnd[i] = (result.direction[i] * itsPhasePositionDiffs) * (1.0 / speedOfLight);
 	LOG_TRACE_CALC_STR(" [" << i << "]: " << itsDelaysAfterEnd[i]);
       }
     }
