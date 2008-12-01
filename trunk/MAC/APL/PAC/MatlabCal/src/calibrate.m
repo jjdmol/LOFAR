@@ -28,6 +28,10 @@ function [cal, flags] = calibrate(acc, antpos, srcpos, freq)
 %
 % Stefan Wijnholds, 19 November 2008
 
+    % make sure Matlab does not claim all CPUs
+    maxNumCompThreads(1);
+    disp(['Calibration routine will use ' num2str(maxNumCompThreads) ' cores']);
+
     % parameters
     c = 2.99792e8;           % speed of light in m/s
     uvlimlambda = 4;         % baseline restriction in wavelength
