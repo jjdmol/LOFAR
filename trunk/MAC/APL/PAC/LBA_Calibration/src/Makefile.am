@@ -1,3 +1,4 @@
+pkginclude_HEADERS = Package__Version.h
 
 AM_CPPFLAGS = -I$(top_builddir)/include
 
@@ -24,5 +25,11 @@ BUILT_SOURCES	= liblba_calibration.so
 
 pkgincludedir = $(includedir)/APL/LBA_Calibration
 #pkginclude_HEADERS = $(BUILT_SOURCES)
+
+bin_PROGRAMS = versionlba_calibration 
+
+versionlba_calibration_SOURCES      = Package__Version.cc versionlba_calibration.cc
+versionlba_calibration_LDADD        = 
+versionlba_calibration_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
