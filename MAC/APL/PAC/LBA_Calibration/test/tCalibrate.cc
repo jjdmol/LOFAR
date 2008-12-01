@@ -1,4 +1,4 @@
-#include <APL/MatlabCal/LBA_Calibration.h>
+#include <APL/MatlabCal/lba_calibration.h>
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -57,7 +57,7 @@ int driver(int argc, char **argv)
 		// call calibrate-function
 		mwArray calresult;
 		mwArray mflags;
-		calibrate(2, calresult, mflags, acc, antpos, srcpos, freq);
+		lba_calibration(2, calresult, mflags, acc, antpos, srcpos, freq);
 
 		// retrieve data
 		double *cal_real = new double[512 * 96];
