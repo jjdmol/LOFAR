@@ -1,7 +1,7 @@
 INSTHDRS			= 
 NOINSTHDRS			= 
 TCCHDRS				= 
-pkgincludedir		= $(includedir)/APL/MatlabCal
+pkgincludedir		= $(includedir)/APL/LBA_Calibration
 pkginclude_HEADERS	= $(INSTHDRS) $(TCCHDRS)
 noinst_HEADERS		= $(NOINSTHDRS)
 DOCHDRS				= $(INSTHDRS) $(NOINSTHDRS)

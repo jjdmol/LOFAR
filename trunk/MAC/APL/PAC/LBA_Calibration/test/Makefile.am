@@ -8,7 +8,7 @@ sbin_PROGRAMS = \
 	tCalibrate
 
 tCalibrate_SOURCES 	= $(BUILT_SOURCES) tCalibrate.cc
-tCalibrate_LDADD	= -llba_calibration $(LOFAR_DEPEND)
+tCalibrate_LDADD	= -llba_calibration -L../src/ $(LOFAR_DEPEND)
 tCalibrate_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 BUILT_SOURCES = 
