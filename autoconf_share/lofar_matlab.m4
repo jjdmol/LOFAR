@@ -61,14 +61,14 @@ else
 
 	MATLAB_CPPFLAGS="-I$MATLAB_PATH/extern/include"
 	MATLAB_LDFLAGS="-L$MATLAB_PATH/extern/lib/glnx86"
-	MATLAB_LIBS="-lmx -leng"
+##	MATLAB_LIBS="-lmx -leng"
 
 	echo MATLAB >> pkgext
 	echo "$MATLAB_CPPFLAGS" >> pkgextcppflags
 
 	CPPFLAGS="$CPPFLAGS $MATLAB_CPPFLAGS"
 	LDFLAGS="$LDFLAGS $MATLAB_LDFLAGS"
-	LIBS="$LIBS $MATLAB_LIBS"
+##	LIBS="$LIBS $MATLAB_LIBS"
 ]
 dnl
 AC_SUBST(CPPFLAGS)dnl
