@@ -1,5 +1,5 @@
 # -*- Mode:rpm-spec -*-
-# MatlabCal.spec.in
+# LBA_Calibration.spec.in
 #
 
 ##############################################################################
@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: The MatlabCal library creates a C-library from matlab code.
+Summary: The LBA_Calibration library creates a C-library from matlab code.
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -37,7 +37,7 @@ AutoReqProv: no
 
 %description
 
-The MatlabCal library implements LBA station calibration by compiling Matlab
+The LBA_Calibration library implements LBA station calibration by compiling Matlab
 code with the MatLab compiler into a C-lib that can be used by the CalServer.
 
 ##############################################################################

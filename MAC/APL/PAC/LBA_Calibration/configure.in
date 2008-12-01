@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(MatlabCal, 1.0, no-define)
+AM_INIT_AUTOMAKE(LBA_Calibration, 1.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -59,9 +59,9 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-include/APL/MatlabCal/Makefile
+include/APL/LBA_Calibration/Makefile
 src/Makefile
 test/Makefile
 Makefile
-MatlabCal.spec
+LBA_Calibration.spec
 )

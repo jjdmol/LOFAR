@@ -22,7 +22,7 @@ BUILT_SOURCES	= liblba_calibration.so
 #libcalibrate_la_SOURCES = calibrate.m 
 
 
-pkgincludedir = $(includedir)/APL/MatlabCal
+pkgincludedir = $(includedir)/APL/LBA_Calibration
 #pkginclude_HEADERS = $(BUILT_SOURCES)
 
 include $(top_srcdir)/Makefile.common
