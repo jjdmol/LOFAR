@@ -59,6 +59,7 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/APL/MatlabCal/Makefile
 src/Makefile
 test/Makefile
 Makefile
