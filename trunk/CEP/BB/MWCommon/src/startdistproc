@@ -172,7 +172,7 @@ if test "$fdp" != ""; then
 fi
 
 # Prepend the hosts with the master and extra hosts.
-${fdp}finddproc $dsn $cdn $master $extra > $hfn
+${fdp}finddproc $dsn $cdn $master $extra > $hfn || exit 1
 np=`wc -l $hfn | awk '{print $1}'`
 
 # Run the program as needed.
@@ -181,14 +181,14 @@ if test "$modxx" = "mpi"; then
   mv ${hfn}_tmp $hfn
   echo "mpirun -np $np -machinefile $hfn $program" "$@"
   if test $dry = 0; then
-    mpirun -np $np -machinefile $hfn $program "$@"
+    mpirun -np $np -machinefile $hfn $program "$@" || exit 1
   fi
 elif test "$modxx" = "single"; then
   echo "$program $@"
   if test $dry = 0; then
-    $program "$@"
+    $program "$@" || exit 1
   fi
 else
   echo "socketrun $dry $hfn $modxx $logfile $program" "$@"
-  $pgmpath/socketrun $dry $hfn $modxx "$logfile" $program "$@"
+  $pgmpath/socketrun $dry $hfn $modxx "$logfile" $program "$@" || exit 1
 fi
