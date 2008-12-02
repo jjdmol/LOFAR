@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = load_OTDB_comps load_PICtree PVSS2SAS
+sbin_PROGRAMS = load_OTDB_comps load_PICtree PVSS2SAS
 
 load_OTDB_comps_SOURCES   = load_OTDB_comps.cc
 load_OTDB_comps_DEPENCIES = $(LOFAR_DEPEND)
