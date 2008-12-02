@@ -66,5 +66,6 @@ AC_OUTPUT(
 Makefile
 data/Makefile
 data/bin/Makefile
+data/StaticMetaData/Makefile
 Deployment.spec
 )
