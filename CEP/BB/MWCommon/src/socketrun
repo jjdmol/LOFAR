@@ -28,6 +28,7 @@ np=`wc -l $hfn | awk '{print $1}'`
 
 # The first host is the master one.
 masterhost=
+pidlist=
 rank=0
 for inline in `cat $hfn`
 do
@@ -39,10 +40,21 @@ do
   echo "ssh $host $program socket $masterhost $port $np $rank $part" "$@"
   if test $dry = 0; then
     if test "$logfile" = ""; then
-      ssh -x -f $host $program socket $masterhost $port $np $rank $part "$@"
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" &
     else
-      ssh -x -f $host $program socket $masterhost $port $np $rank $part "$@" > $logfile-$rank 2>&1
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" > $logfile-$rank 2>&1 &
     fi
+    pidlist="$pidlist $!"
   fi
   rank=`expr $rank + 1`
 done
+
+status=0
+for pid in $pidlist
+do
+  if ! wait $pid; then
+    status=1
+  fi
+done
+
+exit $status
