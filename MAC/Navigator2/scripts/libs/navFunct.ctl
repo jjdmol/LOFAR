@@ -60,6 +60,7 @@
 // navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
+// navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -1288,4 +1289,27 @@ void navFunct_fillStationLists() {
                                "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032");
   remoteStations = makeDynString("RS106","RS208","RS302","RS306","RS307","RS503");
   europeStations = makeDynString("DE001");
+}
+
+
+// ****************************************
+// Name: navFunct_getStationFromDP  
+// ****************************************
+//     tries to get the station name out 
+//     of a given DP (like from DP's as:
+//     LOFAR_PIC_Remote_RS002
+//     it will return RS002:
+//
+//     Returns the station Names DB
+// ****************************************
+string navFunct_getStationFromDP(string aDPName) {
+  string aS = dpSubStr(aDPName,DPSUB_DP);
+  string station="";
+  if (strpos(aS,"Core") > -1 ||
+      strpos(aS,"Remote") > -1 ||
+      strpos(aS,"Europe") > -1) {
+    dyn_string aDS = strsplit(aS,"_");
+    aS = aDS[dynlen(aDS)]+":";
+  }
+  return aS;
 }
