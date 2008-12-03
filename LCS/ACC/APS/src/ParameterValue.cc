@@ -41,7 +41,7 @@ namespace LOFAR { namespace ACC { namespace APS {
 
   ParameterValue ParameterValue::expand() const
   {
-    return ParameterValue (expandedArrayString (itsValue));
+    return ParameterValue (expandArrayString (itsValue));
   }
 
   vector<ParameterValue> ParameterValue::getVector() const
@@ -60,25 +60,13 @@ namespace LOFAR { namespace ACC { namespace APS {
       return result;
     }
     // Split on commas, but take quotes, parentheses, and brackets into account.
-    bool squote = false;
-    bool dquote = false;
-    bool quote = false;
     int nrpar=0;
     int nrbracket=0;
-    for (uint i=st; i<last; ++i) {
-      if (!dquote) {
-        if (itsValue[i] == '\'') {
-          squote = !squote;
-          quote  = squote;
-        }
-      }
-      if (!squote) {
-        if (itsValue[i] == '"') {
-          dquote = !dquote;
-          quote  = dquote;
-        }
-      }
-      if (!quote) {
+    uint i = st;
+    while (i < last) {
+      if (itsValue[i] == '\''  ||  itsValue[i] == '"') {
+        i = skipQuoted (itsValue, i);
+      } else {
         if (itsValue[i] == '(') {
           nrpar++;
         } else if (itsValue[i] == ')') {
@@ -95,10 +83,11 @@ namespace LOFAR { namespace ACC { namespace APS {
           }
         }
         ASSERT (nrpar >= 0  &&  nrbracket >= 0);
+        i++;
       }
     }
     result.push_back (ParameterValue(substr(st, last)));
-    ASSERT (!quote  &&  nrpar == 0  &&  nrbracket == 0);
+    ASSERT (nrpar == 0  &&  nrbracket == 0);
     return result;
   }
 
