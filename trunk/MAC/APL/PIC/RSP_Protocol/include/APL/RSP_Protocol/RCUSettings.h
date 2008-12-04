@@ -67,12 +67,24 @@ namespace LOFAR {
 
 	/**
 	 * Set the mode of the receiver.
-	 * @note There is no get mode, since the mapping from raw value to mode is not 1-on-1
 	 */
 	void setMode(RCUMode mode) {
 	  m_value &= ~MODE_MASK;                 // clear mode bits
 	  m_value |= (m_mode[mode % N_MODES] & MODE_MASK); // set new mode bits
 	  m_modified |= MODE_MASK;
+	}
+	int getMode(uint32 rawMode) {
+	  switch (m_value && MODE_MASK) {
+	  case 0x00000000: return(0);
+	  case 0x00017900: return(1);
+	  case 0x00057900: return(2);
+	  case 0x00037A00: return(3);
+	  case 0x00077A00: return(4);
+	  case 0x0007A400: return(5);
+	  case 0x00079400: return(6);
+	  case 0x00078400: return(7);
+	  default: return (-1);
+	  }
 	}
 	bool isModeOff() {
 	  return !(m_value & MODE_MASK);
