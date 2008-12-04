@@ -74,7 +74,7 @@ namespace LOFAR {
 	  m_modified |= MODE_MASK;
 	}
 	int getMode(uint32 rawMode) {
-	  switch (m_value && MODE_MASK) {
+	  switch (m_value & MODE_MASK) {
 	  case 0x00000000: return(0);
 	  case 0x00017900: return(1);
 	  case 0x00057900: return(2);
