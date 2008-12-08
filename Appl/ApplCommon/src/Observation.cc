@@ -68,9 +68,10 @@ Observation::Observation(ParameterSet*		aParSet) :
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
-                cout << "stationList=" << aParSet->getString(prefix+"VirtualInstrument.stationList") << endl;
-                cout << "compacted stationList=" << stationList << endl;
-		stations = aParSet->get(aParSet->getString(prefix+"VirtualInstrument.stationList")).expand().getStringVector();
+        string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
+        ParameterSet    stParset;
+        stParset.adoptBuffer(stString);
+        stations = stParset.getStringVector("x");
 	}
 
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
@@ -86,8 +87,10 @@ Observation::Observation(ParameterSet*		aParSet) :
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
-		vector<uint32> RCUnumbers(aParSet->get(aParSet->getString(receiverList)).expand().getUint32Vector());
-		
+		string  rcuString("x=" + expandedArrayString(receiverList));
+		ParameterSet    rcuParset;
+		rcuParset.adoptBuffer(rcuString);
+		vector<uint32> RCUnumbers(rcuParset.getUint32Vector("x"));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			RCUset.set();					// assume all receivers.
 		}
@@ -98,15 +101,16 @@ Observation::Observation(ParameterSet*		aParSet) :
 		}
 	}
 
-        BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
+	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
 	// get the beams info
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
 	// allocate beamlet 2 beam mapping and reset to 0
-	beamlet2beams.resize(4*aParSet->getUint32("Observation.nrSlotsInFrame"), -1);
-	beamlet2subbands.resize(4*aParSet->getUint32("Observation.nrSlotsInFrame"), -1);
+	int		nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
+	beamlet2beams.resize   (4*nrSlotsInFrame, -1);
+	beamlet2subbands.resize(4*nrSlotsInFrame, -1);
 	
 	set<uint32> subbands;		
 
@@ -120,9 +124,15 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
-		newBeam.subbands = aParSet->get(aParSet->getString(beamPrefix+"subbandList","[]")).expand().getInt32Vector();
-		// beamletList
-		newBeam.beamlets = aParSet->get(aParSet->getString(beamPrefix+"beamletList", "[]")).expand().getInt32Vector();
+        string sbString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"subbandList","[]")));
+        ParameterSet    sbParset;
+        sbParset.adoptBuffer(sbString);
+        newBeam.subbands = sbParset.getInt32Vector("x");
+        // beamletList
+        string blString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"beamletList", "[]")));
+        ParameterSet    blParset;
+        blParset.adoptBuffer(blString);
+        newBeam.beamlets = blParset.getInt32Vector("x");
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
@@ -143,56 +153,57 @@ Observation::Observation(ParameterSet*		aParSet) :
 		}
 	}
 
-        nrRSPboards=0;
-        for (uint32 i(0) ; i < 4; i++) {
-          uint32 bIndex = i * aParSet->getUint32("Observation.nrSlotsInFrame");
-	  uint32 eIndex = bIndex + aParSet->getUint32("Observation.nrSlotsInFrame");
-          for (; bIndex < eIndex; bIndex++) {
-	    if (beamlet2beams[bIndex] != -1) {
-	      nrRSPboards+=1;
-	      break;
-	    }  
-	  }
-        }
+	nrRSPboards=0;
+	for (uint32 i(0) ; i < 4; i++) {
+		uint32 bIndex = i * nrSlotsInFrame;
+		uint32 eIndex = bIndex + nrSlotsInFrame;
+		for (; bIndex < eIndex; bIndex++) {
+			if (beamlet2beams[bIndex] != -1) {
+				nrRSPboards+=1;
+				break;
+			}  
+		}
+	}
 	
 	// OLAP: uStation mode(y/n)
 	uStation = true;
-	for (uint32 s(0) ; s < aParSet->getUint32("Observation.nrSlotsInFrame")-1; s++) {
-           if (beamlet2subbands[s] != beamlet2subbands[s+aParSet->getUint32("Observation.nrSlotsInFrame")]) {
-	     uStation = false;
-	     break;
-	   }
+	for (uint32 s(0) ; s < nrSlotsInFrame-1; s++) {
+		if (beamlet2subbands[s] != beamlet2subbands[s+nrSlotsInFrame]) {
+			uStation = false;
+			break;
+		}
 	}   	
-        
+
 	// OLAP: subbandList
-        for (set<uint32>::const_iterator sb = subbands.begin(); sb != subbands.end(); sb ++) {
-          subbandList.push_back(*sb);
-        }
-        // OLAP: beamList
+	for (set<uint32>::const_iterator sb = subbands.begin(); sb != subbands.end(); sb ++) {
+		subbandList.push_back(*sb);
+	}
+	// OLAP: beamList
 	for (uint32 sb(0) ; sb < subbandList.size(); sb++) {
-          for (uint32 s(0) ; s < beamlet2subbands.size(); s++) {
-	    if (subbandList[sb] == (unsigned)beamlet2subbands[s]) {
-	      beamList.push_back(beamlet2beams[s]);
-	      break;
-	    }  
-	  }    
-        }
-	
+		for (uint32 s(0) ; s < beamlet2subbands.size(); s++) {
+			if (subbandList[sb] == (unsigned)beamlet2subbands[s]) {
+				beamList.push_back(beamlet2beams[s]);
+				break;
+			}  
+		}    
+	}
+
 	// OLAP: rspBoardList & rspSlotList
-        if (uStation) {
-	  for (uint32 s(0) ; s < subbandList.size(); s++) {
-	    rspBoardList.push_back(0);
-	    rspSlotList.push_back(s);
-	  }  
+	if (uStation) {
+		for (uint32 s(0) ; s < subbandList.size(); s++) {
+			rspBoardList.push_back(0);
+			rspSlotList.push_back(s);
+		}  
 	}
 	else {
-	  if (subbandList.size() % nrRSPboards != 0 )
-	    THROW (Exception, "Number of subbands(" << subbandList.size() << ") % " << nrRSPboards << " != 0");
-	    
-	  for (uint32 s(0) ; s < subbandList.size(); s++) {
-	    rspBoardList.push_back(s/(subbandList.size()/nrRSPboards));
-	    rspSlotList.push_back(s%(subbandList.size()/nrRSPboards));
-	  }  
+		if (subbandList.size() % nrRSPboards != 0 ) {
+			THROW (Exception, "Number of subbands(" << subbandList.size() << ") % " << nrRSPboards << " != 0");
+		}
+
+		for (uint32 s(0) ; s < subbandList.size(); s++) {
+			rspBoardList.push_back(s/(subbandList.size()/nrRSPboards));
+			rspSlotList.push_back(s%(subbandList.size()/nrRSPboards));
+		}  
 	}	
 }
 
