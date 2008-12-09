@@ -25,17 +25,36 @@
 #
 # Macro to check for PYTHON installation
 #
-# lofar_PYTHON(option)
-#     option 0 means that PYTHON is optional, otherwise mandatory.
-#
-# e.g. lofar_PYTHON(1)
-# -------------------------
+# lofar_PYTHON()
+# --------------
 #
 AC_DEFUN([lofar_PYTHON],dnl
 [dnl
 AC_PREREQ(2.13)dnl
-ifelse($1, [], [lfr_python_option=0], [lfr_python_option=$1])
-lofar_EXTERNAL(python,[$lfr_python_option],Python.h,"python+vers","/usr/include/python+vers /usr/local/include/python+vers",,,,'-ldl -lutil')
+AM_PATH_PYTHON([2.4])
+[
+# Find python library and include directory and append to paths
+lfr_pyincdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_inc()"`
+lfr_pylibdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.PREFIX"`/lib
+lfr_pyvers=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_version()"`
 
-AC_SUBST(pythoninstalldir,"$libdir/python${PYTHON_VERSION}/site-packages/lofar")
+lfr_pylibs=
+case `uname -s` in
+  Darwin*)
+    lfr_pylibdir="-framework Python"
+    ;;
+  *)
+    lfr_pylibs="-lpython$lfr_pyvers"
+    lfr_pylibdir="-L$lfr_pylibdir"
+    ;;
+esac
+
+CPPFLAGS="$CPPFLAGS -I$lfr_pyincdir"
+LDFLAGS="$LDFLAGS $lfr_pylibdir"
+LIBS="$libs $lfr_pylibs"
+]
+    AC_SUBST(CPPFLAGS)dnl
+    AC_SUBST(LDFLAGS)dnl
+    AC_SUBST(LIBS)dnl
+
 ])
