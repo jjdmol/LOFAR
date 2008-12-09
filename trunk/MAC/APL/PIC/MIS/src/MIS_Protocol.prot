@@ -745,6 +745,14 @@ event = {
         type = "uint16";
     };
     param = {
+        name = "geopos"; // station geographic location
+	type = "double[]"; 
+    };
+    param = {
+        name = "antcoords"; // antenna coordinates (Xpol xyz, Ypol xyz)
+	type = "double[]"; 
+    };
+    param = {
         // I cannot figure out how arrays automatically get arrayNOE class members
         // I cannot get the acmdata blitz array to behave similarly.
         // So I will hard-code it here.
@@ -754,7 +762,7 @@ event = {
     param = {
         name = "acmdata"; // antenna correlation matrix
         //type = "double[]"; // *** FORMAT TO BE DEFINED ***
-	type = "XCStatistics"; // *** FORMAT TO BE DEFINED ***
+	type = "XCStatistics"; 
 	userdefined;
     };
 };
