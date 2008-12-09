@@ -71,7 +71,7 @@ EXTRA_DIST            = $(TESTSCRIPTS) \
 			tparmdb.run tparmdb.in tparmdb.stdout \
 			tParmFacade.run tParmFacade.stdout \
 			tmakesourcedb.run tmakesourcedb.in \
-			tamkesourcedb.in_2 tmakesourcedb.stdout
+			tmakesourcedb.in_2 tmakesourcedb.stdout
 
 
 include $(top_srcdir)/Makefile.common
