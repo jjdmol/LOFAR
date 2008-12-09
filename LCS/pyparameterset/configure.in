@@ -48,7 +48,7 @@ dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
 dnl Checks for Python
-AM_PATH_PYTHON
+lofar_PYTHON
 
 dnl
 dnl Check for LOFAR specific things
@@ -61,7 +61,6 @@ lofar_INTERNAL(LCS/pytools,pytools,,,,"")
 lofar_EXTERNAL(pyrap,1,pyrap/Converters/PycBasicData.h)
 lofar_AIPSPP(1,"-lcasa")
 lofar_EXTERNAL(boost,1,boost/python.hpp,boost_python)
-lofar_PYTHON(1)
 
 dnl
 dnl Output Makefiles

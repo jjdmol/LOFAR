@@ -5,9 +5,11 @@ _pyparameterset_la_SOURCES	= pyparameterset.cc
 _pyparameterset_la_LDFLAGS	= -module
 _pyparameterset_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-python_SCRIPTS = __init__.py
-pythondir = $(pythoninstalldir)/parameterset
-libdir    = $(pythondir)
+lofarpython_PYTHON = __init__.py
+lofarpythondir = $(pythondir)/lofar/parameterset
+libdir         = $(lofarpythondir)
+
+pkginclude_HEADERS = Package__Version.h
 
 bin_PROGRAMS = versionpyparameterset
 
