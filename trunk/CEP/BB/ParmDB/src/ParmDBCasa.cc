@@ -273,6 +273,7 @@ namespace BBS {
     if (! expr.isNull()) {
       table = table(expr);
     }
+    Vector<uInt> origRownrs = table.rowNumbers();
     // Create the table accessor objects.
     ROScalarColumn<String> nameCol(nmtab, "NAME");
     ROScalarColumn<int>    typeCol(nmtab, "FUNKLETTYPE");
@@ -322,7 +323,7 @@ namespace BBS {
                                    getInterval(ivyCol, row, sy, ey, ny)),
                               values);
           }
-          pval->setRowId (row);
+          pval->setRowId (origRownrs[row]);
           values.push_back (pval);
           domains.push_back (Box(Point(sx,sy), Point(ex,ey)));
         }
