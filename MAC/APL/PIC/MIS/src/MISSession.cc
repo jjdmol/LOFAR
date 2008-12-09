@@ -712,6 +712,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
 	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
 	}
 
+      //
       // subscribe to statistics updates
       RSPGetstatsEvent getstats;
 
@@ -857,6 +858,8 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
   static MISAntennaCorrelationMatrixRequestEvent* pIn(0);
   //MAXMOD
   ssize_t maxsend;
+  static int N_HBA = 0;
+  static int N_LBA = 0;
 
   switch (e.signal)
     {
@@ -869,7 +872,11 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         //ackout.invalid = new uint8[_nrOfRCUs];
 	ackout.invalid = new uint32[_nrOfRCUs];
         ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs;
-        //ackout.data = new double[_nrOfRCUs * 512];
+	ackout.geoposNOE = 3;
+	ackout.geopos = new double[3];  //lat,lon,h
+	ackout.antcoordsNOE = _nrOfRCUs * 3 * 2;
+	ackout.antcoords = new double[_nrOfRCUs * 3 * 2];  //xyz Xpol, xyz Ypol
+        //ackout.data = new double[_nrOfRCUs * 512];  // PROBLEM why doesn't this give an error? I see no 'data' element
       }
       assert(_pRememberedEvent);
       pIn = (MISAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
@@ -934,11 +941,29 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         break;
       }
       
+      //MAXMOD guess observing freq (Low or High)
+      N_HBA = 0; N_LBA = 0;
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
+        {
+	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
+	  //determine RCU mode and hence array 'LBA' or 'HBA' 
+	  //Ignore possibility of subarrays, for now.
+	  //see RCUSettings.h
+	  //This might be insufficient -- perhaps not all ON RCUs are being used. should check somehow.
+	  //int nyqzone = ack.settings()(rcuout).getNyquistZone();
+	  int rcumode = ack.settings()(rcuout).getMode(ackout.rcu_settings[rcuout]);
+	  if ((rcumode >= 1) && (rcumode <= 4)) {
+	    N_LBA++ ;
+	  }
+	  if ((rcumode >= 5) && (rcumode <= 7)) {
+	    N_HBA++ ;
+	  }
+	  // rcumode = -1 => indeterminate RCU mode
+	  // rcumode =  0 => RCU off
+	}
+      LOG_DEBUG(formatString("MAXMOD N_LBA = %d, N_HBA = %d",N_LBA, N_HBA));
+
       //MAXMOD do as rspctl does
-      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++){
-	ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
-      }
-      
       // SET subbands for XC
       RSPSetsubbandsEvent  setsubbands;
 
@@ -1033,19 +1058,102 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
 
       //hand back the antenna coords
-      vector<string> ArrayNames = _daemon.m_arrays.getNameList();
-      vector<string>::iterator	iter = ArrayNames.begin();
-      vector<string>::iterator	end  = ArrayNames.end();
-      while (iter != end) {
+      //arrayname from obs frequency (Low or High)
+      // I have been assured that working stations will either be "LBA" or "HBA"
+      //How do I tell which array ('HBA' or 'LBA') to hand back? from ackout.rcu_settings.
+      //Ignore possibility of subarrays, for now.
+      string targetarrayname;
+      if ((N_LBA == 0) && (N_HBA == 0)){ //all RCUs off
+	targetarrayname = "LBA";       //doesnt matter
+      }
+      if (N_LBA > N_HBA) {
+	targetarrayname = "LBA";
+      }
+      if (N_LBA < N_HBA) {
+	targetarrayname = "HBA";
+      }
+      if (N_LBA == N_HBA) {   //confused
+	targetarrayname = "LBA";
+      }
+
+      //search for AntennaArray with that name;
+      // I have been assured that working stations will either be "LBA" or "HBA"
+      // but if none found, special case: test station has FTS-1-LBA, FTS-1-HBA 
+      // otherwise, return zeros
+      const CAL::AntennaArray * targetarray = _daemon.m_arrays.getByName(targetarrayname);
+      if (targetarray == NULL){
+	if (targetarrayname == "LBA") { 
+	  targetarrayname = "FTS-1-LBA";
+	}
+	else {
+	  targetarrayname = "FTS-1-HBA";
+	}
+	targetarray = _daemon.m_arrays.getByName(targetarrayname);
+      }
+      if (targetarray != NULL){
+	LOG_DEBUG(formatString("MAXMOD N_LBA=%d, N_HBA=%d, targetarray %s",N_LBA,N_HBA,targetarray->getName().c_str()));
+      }
+      else{
+	LOG_DEBUG(formatString("MAXMOD N_LBA=%d, N_HBA=%d, targetarray is NULL",N_LBA, N_HBA));
+      }
+      
+      //unsigned int ndimfoo = targetarray->getGeoLoc().dimensions();
+      //LOG_DEBUG(formatString("MAXMOD rank GeoLoc = %u",ndimfoo));
+      //for (unsigned int i = 0; i < ndimfoo; i++){
+      //LOG_DEBUG(formatString("MAXMOD size of dim %u of GeoLoc = %u",i, targetarray->getGeoLoc().extent(i)));
+      //}
+      //ndimfoo = targetarray->getAntennaPos().dimensions();
+      //LOG_DEBUG(formatString("MAXMOD rank AntennaPos = %u",ndimfoo));
+      //for (unsigned int i = 0; i < ndimfoo; i++){
+      //	LOG_DEBUG(formatString("MAXMOD size of dim %u of AntennaPos = %u",i, targetarray->getAntennaPos().extent(i)));
+      //}
+
+      if (targetarray != NULL){
+	for (int i = 0; i < targetarray->getGeoLoc().extent(firstDim); i++){
+	  //ackout.geopos[i] = *(const_cast<double *>(targetarray->getGeoLoc()(i).data()));
+	  ackout.geopos[i] = targetarray->getGeoLoc()(i);
+	  LOG_DEBUG(formatString("MAXMOD ackout.geopos[%d]=%f",i,ackout.geopos[i]));
+	}
+      
+	for (int i = 0; i < targetarray->getAntennaPos().extent(firstDim) ; i ++){
+	  //ackout.antcoords[i*6]   = *(const_cast<double *>(targetarray->getAntennaPos()(i,0,0).data()));
+	  ackout.antcoords[i*6]   = targetarray->getAntennaPos()(i,0,0);
+	  ackout.antcoords[i*6+1] = targetarray->getAntennaPos()(i,0,1);
+	  ackout.antcoords[i*6+2] = targetarray->getAntennaPos()(i,0,2);
+	  ackout.antcoords[i*6+3] = targetarray->getAntennaPos()(i,1,0);
+	  ackout.antcoords[i*6+4] = targetarray->getAntennaPos()(i,1,1);
+	  ackout.antcoords[i*6+5] = targetarray->getAntennaPos()(i,1,2);
+	  LOG_DEBUG(formatString("MAXMOD AntennaPos i=%d",i));
+	  //LOG_DEBUG(formatString("MAXMOD (Xpol-x1) ackout.antcoords[%d]=%f",i*6,ackout.antcoords[i*6]));
+	}
+      }
+      else {
+	//No matching array found in config file -- return obviously wrong values
+	LOG_DEBUG(formatString("MAXMOD No Matching AntennaArray, returning [1],[1]"));
+	ackout.geoposNOE = 1;
+	//ackout.geopos = new double[1];
+	ackout.geopos[0] = 1;
+	ackout.antcoordsNOE = 1;
+	//ackout.antcoords = new double[1];
+	ackout.antcoords[0] = 1;
+      }
+	
+      //vector<string> ArrayNames = _daemon.m_arrays.getNameList();
+      //vector<string>::iterator	iter = ArrayNames.begin();
+      //vector<string>::iterator	end  = ArrayNames.end();
+      //while (iter != end) {
 	//cout << "name          :" << iter->first << endl;
 	//cout << "spectralwindow:" << iter->second->getSPW().getName() << endl;
 	//cout << "RCUmask       :" << iter->second->getRCUMask() << endl;
-	const CAL::AntennaArray * somearray = _daemon.m_arrays.getByName(*iter);
+	//const CAL::AntennaArray * somearray = _daemon.m_arrays.getByName(*iter);
 	//cout << "MISSESSION: iter  :" << *iter << endl;
 	//cout << "MISSESSION: somearray.getName() :" << somearray->getName() << endl;
-	LOG_DEBUG(formatString("MAXMOD Array %s",(*iter).c_str()));
-	iter++;
-      }
+	//LOG_DEBUG(formatString("MAXMOD Array %s",(*iter).c_str()));
+	//LOG_DEBUG(formatString("MAXMOD somearray %s",somearray->getName().c_str()));
+	//LOG_DEBUG_STR("MAXMOD getGeoLoc: :" << somearray->getGeoLoc());
+	//iter++;
+      //}
+
 
       maxsend = _missPort.send(ackout);
       LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
