@@ -5,9 +5,9 @@ _parmdb_la_SOURCES	= pyparmdb.cc
 _parmdb_la_LDFLAGS	= -module
 _parmdb_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-python_SCRIPTS = __init__.py
-pythondir = $(pythoninstalldir)/parmdb
-libdir    = $(pythondir)
+lofarpython_PYTHON	= __init__.py
+lofarpythondir		= $(pythondir)/lofar/parmdb
+libdir			= $(lofarpythondir)
 
 bin_PROGRAMS = versionpyparmdb
 
