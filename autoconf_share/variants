@@ -35,7 +35,7 @@ zoid.var:
 threads.var:              --with-threads
 sse.var:                  --without-sse
 shmem.var:                --with-shmem
-python.var:               --with-python-version=2.3 --with-python=/usr/include/+pkg+vers --with-python-libdir=/usr/lib
+python.var:
 boost.var:
 cppflags.var:
 backtrace.var:

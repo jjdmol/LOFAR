@@ -200,7 +200,7 @@ if [ "$with_wcs" != "no" ]; then
     ]AC_CHECK_FILE([$with_wcs/include/wcslib/wcs.h],
 	          [lfr_wcs=$with_wcs/include], [lfr_wcs=no])[
     if test $lfr_wcs = no; then
-      ]AC_MSG_ERROR([wcs.h not found in WCS directory $with_wcs])[
+      ]AC_MSG_ERROR([wcslib/wcs.h not found in WCS directory $with_wcs])[
     fi
   fi
   AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$lfr_wcs"
