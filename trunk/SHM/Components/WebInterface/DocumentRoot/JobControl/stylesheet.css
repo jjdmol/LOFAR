@@ -1,0 +1,179 @@
+body
+{
+	margin: 0em;
+}
+
+/*
+	menu
+*/
+div.menu
+{
+	left: 0px;
+	top: 0px;
+	width: 128px;
+	position: fixed;
+}
+
+div.content
+{
+	left: 150px;
+	top: 50px;
+	position: absolute;
+}
+
+table
+{
+	border-collapse: collapse;
+}
+
+tr.header td
+{
+	background-color: #b2cbd7;
+}
+	
+tr.job td
+{
+	border-top: solid 1px #c2d0d7;
+	border-bottom: solid 1px #c2d0d7;
+}
+
+tr.job_err td
+{
+	border-top: solid 1px #c2d0d7;
+	border-bottom: solid 1px #c2d0d7;
+	background-color: #ffc6c6;
+}
+
+td
+{
+	font-size: small;
+	padding-left: 1.0em;
+	padding-right: 1.0em;
+}
+
+td.menu_item
+{
+	color: #404040;
+	background-color: #a0a0a0;
+	border-top: solid 1px #707070;
+	border-bottom: solid 1px #707070;
+	padding: 0.20em 0.20em;
+	font-size: x-small;
+}
+
+td.indicator
+{
+	width: 1px;
+	padding: 0em 0em;
+	background-color: #707070;
+	border-top: solid 1px #707070;
+	border-bottom: solid 1px #707070;
+}
+
+td.spacer
+{
+	width: 2px;
+	padding: 0em 0em;
+	background-color: #a0a0a0;
+	border-top: solid 1px #707070;
+	border-bottom: solid 1px #707070;
+}
+
+td.right
+{
+	text-align: right;
+	padding-left: 0em;
+}
+
+td.state
+{
+	vertical-align: middle;
+	text-align: left;
+	padding-left: 0em;
+	padding-right: 0em;
+}
+
+td.ticket_no
+{
+	text-align: right;
+	padding-right: 0em;
+}
+
+td.ticket_no_image
+{
+	padding-left: 0em;
+}
+
+td.nowrap
+{
+	white-space: nowrap;
+}
+
+img
+{
+	vertical-align: middle;
+}
+
+img.state
+{
+	border: solid 1px #000000;
+}
+
+form
+{
+	margin: 0 0;
+}
+
+a:link
+{
+	color: #000000;
+	text-decoration: underline;
+}
+
+a:visited
+{
+	color: #000000;
+}
+
+a.job:link
+{
+	text-decoration: none;
+}
+
+a.job:visited
+{
+	text-decoration: none;
+}
+
+a.job:hover
+{
+	text-decoration: underline;
+}
+
+div.menu a:link
+{
+	color: #404040;
+	text-decoration: none;
+}
+
+div.menu a:visited
+{
+	color: #404040;
+	text-decoration: none;
+}
+
+div.menu a:hover
+{
+	text-decoration: underline;
+}
+
+/*****************************************************************************/
+
+*.copyright-notice {
+    font-size   : xx-small;
+    font-style  : italic;
+    font-weight : bold;
+}
+
+/*****************************************************************************/
+
