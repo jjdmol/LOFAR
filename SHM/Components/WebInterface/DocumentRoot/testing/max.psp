@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<%
+
+import sys
+sys.path.append("/home/lofartest/SHM/Components/LofarPython")
+sys.path.append("/home/lofartest/SHM/Components/JobScripts")
+
+import lofar.shm.nanostamp
+import lofar.shm.db
+
+import system_stata
+import max_funcs as uf
+from cgi import parse_qs
+from urllib import urlencode
+
+req.add_common_vars()
+qs = parse_qs(req.subprocess_env['QUERY_STRING'])
+
+command = qs.get('command', ['view-system-directory'])[0]
+sc_name = qs.get('sc_name', ['unknown'])[0]
+si_name = qs.get('si_name', ['unknown'])[0]
+
+def system_directory_table():
+		
+	rows = ['cs001','cs008','cs010','cs016']
+	cols = ['name','status']
+	return uf.format_table(rows,cols)
+
+pass
+%>\
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+
+    <head>
+        <title>LOFAR System Health Management Console</title>
+        <link rel="stylesheet" type="text/css" href="lofar-shm_max.css" />
+        <meta http-equiv="refresh" content="30" />
+    </head>
+
+    <body>
+
+        <h1><div align="center">LOFAR SHM Console</div></h1>
+
+        <h2><div align="center">Overall System Status: <%=system_stata.overall_status()%></div></h2>
+	<hr>
+
+<%
+if command == 'view-system-directory':
+%>\
+        <h3>All Subsystems</h3>
+
+        <%=system_directory_table()%>
+    
+        <%pass%>\
+	<div id="footer">
+        <%=uf.footer(req, line_indent = 8 * ' ')%>
+	</div>
+
+    </body>
+</html>
