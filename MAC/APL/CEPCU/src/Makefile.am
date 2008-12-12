@@ -1,6 +1,6 @@
 pkginclude_HEADERS = Package__Version.h
 
-SUBDIRS = OnlineControl # OfflineControl ACCControl
+SUBDIRS = ApplController OnlineControl # OfflineControl 
 
 bin_PROGRAMS = versioncepcu
 
