@@ -874,8 +874,8 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs;
 	ackout.geoposNOE = 3;
 	ackout.geopos = new double[3];  //lat,lon,h
-	ackout.antcoordsNOE = _nrOfRCUs * 3 * 2;
-	ackout.antcoords = new double[_nrOfRCUs * 3 * 2];  //xyz Xpol, xyz Ypol
+	ackout.antcoordsNOE = _nrOfRCUs * 3 ;
+	ackout.antcoords = new double[_nrOfRCUs * 3];  //xyz Xpol, xyz Ypol
         //ackout.data = new double[_nrOfRCUs * 512];  // PROBLEM why doesn't this give an error? I see no 'data' element
       }
       assert(_pRememberedEvent);
@@ -1080,16 +1080,21 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       // I have been assured that working stations will either be "LBA" or "HBA"
       // but if none found, special case: test station has FTS-1-LBA, FTS-1-HBA 
       // otherwise, return zeros
-      const CAL::AntennaArray * targetarray = _daemon.m_arrays.getByName(targetarrayname);
-      if (targetarray == NULL){
+      char hostName[200];
+      gethostname(hostName, 200);
+      LOG_DEBUG(formatString("MAXMOD gethostname = %s",hostName));
+
+      const CAL::AntennaArray * targetarray;
+      if (strncmp(hostName,"CS001T",6) == 0){
+	//test station
 	if (targetarrayname == "LBA") { 
 	  targetarrayname = "FTS-1-LBA";
 	}
 	else {
 	  targetarrayname = "FTS-1-HBA";
 	}
-	targetarray = _daemon.m_arrays.getByName(targetarrayname);
       }
+      targetarray = _daemon.m_arrays.getByName(targetarrayname);
       if (targetarray != NULL){
 	LOG_DEBUG(formatString("MAXMOD N_LBA=%d, N_HBA=%d, targetarray %s",N_LBA,N_HBA,targetarray->getName().c_str()));
       }
@@ -1114,7 +1119,19 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	  ackout.geopos[i] = targetarray->getGeoLoc()(i);
 	  LOG_DEBUG(formatString("MAXMOD ackout.geopos[%d]=%f",i,ackout.geopos[i]));
 	}
-      
+
+	//MAXMOD DEBUG
+	/**
+	LOG_DEBUG_STR("MAXMOD targetarray->getAntennaPos : " << targetarray->getAntennaPos());
+	for (int i = 0; i < targetarray->getAntennaPos().extent(firstDim) ; i ++){
+	  for (int j = 0; j < targetarray->getAntennaPos().extent(secondDim) ; j ++){
+	    for (int k = 0; k < targetarray->getAntennaPos().extent(thirdDim) ; k ++){
+	      LOG_DEBUG(formatString("MAXMOD targetarray->getAntennaPos(%d,%d,%d) =  %f", i,j,k,targetarray->getAntennaPos()(i,j,k)));
+	    }
+	  }
+	}
+	**/
+ 
 	for (int i = 0; i < targetarray->getAntennaPos().extent(firstDim) ; i ++){
 	  //ackout.antcoords[i*6]   = *(const_cast<double *>(targetarray->getAntennaPos()(i,0,0).data()));
 	  ackout.antcoords[i*6]   = targetarray->getAntennaPos()(i,0,0);
@@ -1123,7 +1140,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	  ackout.antcoords[i*6+3] = targetarray->getAntennaPos()(i,1,0);
 	  ackout.antcoords[i*6+4] = targetarray->getAntennaPos()(i,1,1);
 	  ackout.antcoords[i*6+5] = targetarray->getAntennaPos()(i,1,2);
-	  LOG_DEBUG(formatString("MAXMOD AntennaPos i=%d",i));
+	  LOG_DEBUG(formatString("MAXMOD AntennaPos row %d",i));
 	  //LOG_DEBUG(formatString("MAXMOD (Xpol-x1) ackout.antcoords[%d]=%f",i*6,ackout.antcoords[i*6]));
 	}
       }
