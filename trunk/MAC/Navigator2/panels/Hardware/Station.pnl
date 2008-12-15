@@ -36,22 +36,22 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
     // representation can be chosen.
     //
     // The first found will be drawn and will be the default choice.    
-    dyn_string arrays =dpNames(sysName+\"*\",\"AntennaArrays\");
+
+    dynAppend(arrays,\"HBA\");
+    dynAppend(arrays,\"LBA\");
     LOG_DEBUG(\"Station.pnl:initialize|DPNames found:\"+arrays);
     bool fill=true;
     arrayList.deleteAllItems();
     for (int i=1; i<= dynlen(arrays);i++) {
-      arrayList.appendItem(dpSubStr(arrays[i],DPSUB_DP));
+      arrayList.appendItem(arrays[i]);
       if (fill) {
         setValue (\"arrayList\", \"selectedPos\", 1);
       }
-      dpConnect(\"updatePositions\",fill,arrays[i]+\".centerOL:_online.._value\",
-                                       arrays[i]+\".centerNB:_online.._value\",
-                                       arrays[i]+\".centerH:_online.._value\",
-                                       arrays[i]+\".antennaOffsetsOL:_online.._value\",
-                                       arrays[i]+\".antennaOffsetsNB:_online.._value\",
-                                       arrays[i]+\".antennaOffsetsH:_online.._value\",
-                                       arrays[i]+\".centerOL:_online.._invalid\");
+     
+      dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrays[i]+\".centerOL\",
+                                       sysName+\"remoteStation.\"+arrays[i]+\".centerNB\",
+                                       sysName+\"remoteStation.\"+arrays[i]+\".centerH\",
+                                       sysName+\"remoteStation.\"+arrays[i]+\".centerOL:_online.._invalid\");
 
       if (fill) {
         fill=false;
@@ -86,9 +86,6 @@ void doAction(string aDP, string anAction) {
 void updatePositions(string dp1, float cOL,
                      string dp2, float cNB,
                      string dp3, float cH,
-                     string dp4, dyn_float aOL,
-                     string dp5, dyn_float aNB,
-                     string dp6, dyn_float aH,
                      string dp7, bool invalid) {
   
   // Check if the update concerns the current view
@@ -98,15 +95,19 @@ void updatePositions(string dp1, float cOL,
   if (strpos(dp1,txt) < 0) {    //not found match
     return;
   }
+  
+  dyn_string OL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string NB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string H= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
            
   // found match, save found strings and redraw screen
   
   centerOL = cOL;
   centerNB = cNB;
   centerH  = cH;
-  antennaOffsetsOL = aOL;
-  antennaOffsetsNB = aNB;
-  antennaOffsetsH  = aH;
+  dpGet(OL,antennaOffsetsOL);
+  dpGet(NB,antennaOffsetsNB);
+  dpGet(H,antennaOffsetsH);
   
   redraw(txt);
 }
@@ -119,6 +120,7 @@ string baseDP=\"\";
 int mainpanel_midX;
 int mainpanel_midY;
 dyn_string refNames;
+dyn_string arrays;
 
 float centerOL;
 float centerNB;
@@ -231,6 +233,8 @@ void redraw(string mode) {
   }
   
   // trigger that the panel values are calculated and ready
+  dynClear(highlight);
+  dynClear(strHighlight);
   navPanel_setEvent(\"Station.pnl\",\"Update\");
 }
 
@@ -239,16 +243,20 @@ void updateField() {
   // Check if the update concerns the current view
   string txt;
   getValue (\"arrayList\", \"selectedText\", txt);  
-  
-  string field=sysName+txt;
+
+  dyn_string OL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string NB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string H= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
+
+  string field=sysName+\"remoteStation.\"+txt;
   if (dpExists(field+\".centerOL:_online.._value\")) {
     // found match, save found strings and redraw screen
     dpGet(field+\".centerOL:_online.._value\",centerOL,
           field+\".centerNB:_online.._value\",centerNB,
-          field+\".centerH:_online.._value\",centerH,
-          field+\".antennaOffsetsOL:_online.._value\",antennaOffsetsOL,          
-          field+\".antennaOffsetsNB:_online.._value\",antennaOffsetsNB,          
-          field+\".antennaOffsetsH:_online.._value\",antennaOffsetsH);          
+          field+\".centerH:_online.._value\",centerH);
+     dpGet(OL,antennaOffsetsOL);          
+     dpGet(NB,antennaOffsetsNB);          
+     dpGet(H,antennaOffsetsH);          
     redraw(txt);
   } else {
     LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOL:_online.._value\");

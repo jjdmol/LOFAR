@@ -876,6 +876,8 @@ bool navFunct_hardware2Obs(string stationName, string observation,
 //     also fill the db Point with the new tree          
 // ****************************************
 void navFunct_fillHardwareLists() {
+  dynClear(strHighlight);
+  dynClear(highlight);
   // fill hardware based on available observations
   if (dynlen(g_observationsList) > 0) {
     for (int i=1; i<= dynlen(g_observationsList); i++) {
@@ -929,6 +931,8 @@ void navFunct_fillHardwareLists() {
 // ****************************************
 
 void navFunct_fillObservationsList() {
+  dynClear(strHighlight);
+  dynClear(highlight);
 
   // check if processList is filled
   if (dynlen(g_processesList) > 0) {
@@ -1072,6 +1076,8 @@ void navFunct_fillObservationsList() {
 // ****************************************
 
 void navFunct_fillProcessesList() {
+  dynClear(strHighlight);
+  dynClear(highlight);
   
   // to do
 }
