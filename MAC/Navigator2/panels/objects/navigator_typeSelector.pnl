@@ -90,7 +90,7 @@ void doAction(string aDP, string anAction) {
   if (connected) {
     dpDisconnect(\"doHighlight\",DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\");
   }
-  dpConnect( \"doHighlight\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+  dpConnect( \"doHighlight\",false,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
   connected = true;
 }
 
@@ -355,8 +355,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
+"allColumnsShowFocus" "bool TRUE"
  10 30 212 378
 10 TreeWidget
 7

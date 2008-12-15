@@ -156,7 +156,8 @@ void reload(string obsBDP,string station) {
   } else {
     LOG_ERROR(\"interactive_controller_small.pnl:reload|Couldn't find DP to connect to: \"+baseDP);
   }	
-
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
 }

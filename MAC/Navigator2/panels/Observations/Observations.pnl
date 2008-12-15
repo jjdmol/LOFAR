@@ -16,7 +16,9 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   baseDP = g_currentDatapoint+\"_PermSW_MACScheduler\";
   syst   = dpSubStr(baseDP,DPSUB_SYS);
     
- 
+   // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
   // connect for selfUpdates
   showSelfState(baseDP);
   

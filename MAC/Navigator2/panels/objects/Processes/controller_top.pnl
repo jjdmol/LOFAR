@@ -47,7 +47,9 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
     }  
   
 
-
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
   // connect for selfUpdates
   showSelfState(baseDP);
 

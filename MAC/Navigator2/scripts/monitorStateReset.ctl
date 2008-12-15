@@ -29,10 +29,13 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = false;
+global bool bDebug = true;
+global dyn_string dpList;
+global dyn_int    dpStates;
+global dyn_string msgs;
 
 main () {
-
+  
   // Set the global statecolors/colornames.
   initLofarColors();
 
@@ -90,6 +93,12 @@ void resetStateTriggered(string dp1, string trigger,
   //
   // first find out if the involved DP resides on this system or not
 
+  dynClear(dpList);
+  dynClear(dpStates);
+  dynClear(msgs);
+  
+
+    
   if (bDebug) DebugN("monitorStateResets.ctl:resetStateTriggered|entered with trigger:", trigger);
   string database=dpSubStr(trigger,DPSUB_SYS);
   
@@ -101,30 +110,184 @@ void resetStateTriggered(string dp1, string trigger,
     dpGet(trigger+".status.state",originatorState);
     if (bDebug) DebugN("monitorStateResets.ctl:resetStateTriggered|the original state is: "+ getStateColor(originatorState));
     
-    
-    
-    //since this dp is part of this system we need to get a full list of all de dp's that belong to this dp tree, where
-    // dp is the top.  We only are allowed to set a state higher
-    if (setStates(bareDP,state,originatorState,message)) {
-      // now do the same for the childStates
-      if (!setChildStates(bareDP,state,originatorState,message)) {
-        return;
+    // we might need alarmresets only
+    if (state > 1000) {
+      doAlarmReset(database,bareDP,state,originatorState,message);
+    } else {
+      doReset(database,bareDP,state,originatorState,message);
+    }
+  }
+}
+
+void doReset(string database,string bareDP,int state, int originatorState,string message) {
+  //since this dp is part of this system we need to get a full list of all de dp's that belong to this dp tree, where
+  // dp is the top.  We only are allowed to set a state higher, also keep a list of all the dp's we are setting.
+  if (setStates(bareDP,state,originatorState,message)) {
+    // now do the same for the childStates
+    if (!setChildStates(bareDP,state,originatorState,message)) {
+      return;
+    } else {
+      // since we were able to set the states and the childstates without errors
+      // we need to trigger the alarmsystem to update the alarmsList.
+      if (dpExists(MainDBName+DPNAME_NAVIGATOR + ".alarms")) {
+        dpSetWait(MainDBName+DPNAME_NAVIGATOR + ".alarms.dpResetList",dpList,
+                  MainDBName+DPNAME_NAVIGATOR + ".alarms.dpResetStates",dpStates,
+                  MainDBName+DPNAME_NAVIGATOR + ".alarms.dpResetMsgs",msgs);
       } else {
-        // since we were able to set the states and the childstates without errors
-        // we can finish it up by setting the __navObjectState with the last original dp
-        // so the values will be set in the remainder of the tree
-        if (dpExists("__navObjectState.DPName")) {
-          dpSet("__navObjectState.DPName",bareDP+".status.state",
-                "__navObjectState.stateNr",state,
-                "__navObjectState.message",message,
-                "__navObjectState.force",FALSE);
-        }
-      } 
-    }     
+        DebugTN("monitorStateResets.ctl:resetStateTriggered|ERROR!!!: Couldn't find "+MainDBName+DPNAME_NAVIGATOR + ".alarms");
+      }    
+    
+      // and we also need to finish it up by setting the __navObjectState with the original dp
+      // so the values will be set in the remainder of the tree
+      if (dpExists("__navObjectState.DPName")) {
+        dpSet("__navObjectState.DPName",database+bareDP+".status.state",
+              "__navObjectState.stateNr",state,
+              "__navObjectState.message",message,
+              "__navObjectState.force",FALSE);
+      } else {
+        DebugTN("monitorStateResets.ctl:resetStateTriggered|ERROR!!!: Couldn't find __navObjectState.DPName");
+      }
+    }    
+  } 
+}  
+
+bool doAlarmReset(string database,string DP,int state, int originatorState,string message) {
+  string branch="PIC";
+  bool changed=false;
+  // select all WENT states
+  string query = "SELECT '_online.._value' FROM '" + DP + "*.**.status.state' WHERE '_online.._value' == 56  OR  '_online.._value' == 46";
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|composed query: "+query);
+    
+  dyn_dyn_anytype tab;
+    
+  if (dpQuery(query,tab)<0) {
+    DebugTN("monitorStateResets.ctl:doAlarmReset|ERROR during dpQuery");
+    return false;
+  }
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|results query: "+tab);
+    
+  // prepare a large dynarray with existing values and one with the values belonging to that dp
+  if (dynlen(tab) < 2) {
+    return true;
+  }
+  dyn_string stationNames;
+  dyn_string dpMsgs;
+  
+  for(int z=2;z<=dynlen(tab);z++){
+    // in the process of searching through all dpnames we also have to monitor if a reset has to be tranferred from MainCU
+    // to all or a station. for now this is only when the DPName is of DPType "Station"
+    // if found we will add the name to a list so we can trigger all stations later
+    if (dpTypeName(dpSubStr(tab[z][1],DPSUB_DP)) == "Station") {
+      string aS = navFunct_getStationFromDP(tab[z][1]);
+      if (dpExists(aS) ) {
+        dynAppend(stationNames,aS);
+      }
+    }
+    
+    if (dpExists(tab[z][1]) ){
+      string msgDp=navFunct_dpStripLastElement(tab[z][1])+".message";
+      int newstate=-1;
+      if (tab[z][2] == 56) {
+        newstate=50;
+      } else if (tab[z][2]==46) {
+        newstate=40;    
+      } else {
+        DebugN("monitorStateResets.ctl:doAlarmReset|ERROR: wrong alarm state:"+tab[z][2]);
+      }   
+      dynAppend(dpList,tab[z][1]);
+      dynAppend(dpStates,newstate);
+      dynAppend(dpMsgs,msgDp);
+      dynAppend(msgs,message);
+    }
+  }
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found dps   : "+dpList);
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found states: "+dpStates);
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found msgdps: "+dpMsgs);
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found msgs  : "+msgs);
+  
+  // if stationNames are found then we need to trigger the stations reset also
+  for (int i=1; i<= dynlen(stationNames);i++) {
+      if (dpSetWait(stationNames[i]+"__resetObjectState.DPName",stationNames[i]+"LOFAR_"+branch,
+                    stationNames[i]+"__resetObjectState.stateNr",state,
+                    stationNames[i]+"__resetObjectState.message",message) < 0) {
+        DebugTN("monitorStateResets.ctl:setState|ERROR during dpSetWait for all stations");
+      }
+  }  
+
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found involved stations:"+stationNames);
+    
+  if (dynlen(dpList) > 0) {
+    changed=true;
+    if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|found dp's to set: "+dpList);
+    if (dpSetWait(dpList,dpStates,dpMsgs,msgs)){
+      DebugTN("monitorStateResets.ctl:doAlarmReset|ERROR during dpSet");
+    }
+  }
+  
+  // and same for childstate
+  string query = "SELECT '_online.._value' FROM '" + DP + "*.**.status.childState' WHERE '_online.._value' == 56  OR  '_online.._value' == 46";
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|composed query: "+query);
+    
+  dyn_dyn_anytype tab;
+    
+  if (dpQuery(query,tab)<0) {
+    DebugTN("monitorStateResets.ctl:doAlarmReset|ERROR during dpQuery");
+    return false;
+  }
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|results query: "+tab);
+    
+  // prepare a large dynarray with existing values and one with the values belonging to that dp
+  if (dynlen(tab) < 2) {
+    return true;
+  }
+  dynClear(dpList);
+  dynClear(dpStates);
+  dynClear(dpMsgs);
+  dynClear(msgs);
+  
+  for(int z=2;z<=dynlen(tab);z++){
+    if (dpExists(tab[z][1]) ){
+      string msgDp=navFunct_dpStripLastElement(tab[z][1])+".message";
+      int newstate=-1;
+      if (tab[z][2] == 56) {
+        newstate=50;
+      } else if (tab[z][2]==46) {
+        newstate=40;    
+      } else {
+        DebugN("monitorStateResets.ctl:doAlarmReset|ERROR: wrong alarm state:"+tab[z][2]);
+      }   
+      dynAppend(dpList,tab[z][1]);
+      dynAppend(dpStates,newstate);
+      dynAppend(dpMsgs,msgDp);
+      dynAppend(msgs,message);
+    }
+  }
+  if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|Found involved stations:"+stationNames);
+    
+  if (dynlen(dpList) > 0) {
+    changed=true;
+    if (bDebug) DebugN("monitorStateResets.ctl:doAlarmReset|found dp's to set: "+dpList);
+    if (dpSetWait(dpList,dpStates,dpMsgs,msgs)){
+      DebugTN("monitorStateResets.ctl:doAlarmReset|ERROR during dpSet");
+    }
+  }
+  
+  if (changed) {  
+    // and we also need to finish it up by setting the __navObjectState with the original dp
+    // so the values will be set in the remainder of the tree
+    if (dpExists("__navObjectState.DPName")) {
+      dpSet("__navObjectState.DPName",database+DP+".status.state",
+            "__navObjectState.stateNr",state,
+            "__navObjectState.message",message,
+            "__navObjectState.force",FALSE);
+    } else {
+      DebugTN("monitorStateResets.ctl:resetStateTriggered|ERROR!!!: Couldn't find __navObjectState.DPName");
+    }
   }
 }
     
 bool setStates(string DP,int state, int originatorState,string message) {
+  string branch="PIC";
   string query = "SELECT '_online.._value' FROM '" + DP + "*.**.status.state' WHERE '_online.._value' < " + state + " OR  '_online.._value' == "+OPERATIONAL + " OR '_online.._value' == "+ originatorState;
   if (bDebug) DebugN("monitorStateResets.ctl:setStates|composed query: "+query);
     
@@ -135,29 +298,49 @@ bool setStates(string DP,int state, int originatorState,string message) {
     return false;
   }
   if (bDebug) DebugN("monitorStateResets.ctl:setStates|results query: "+tab);
-  dyn_string valDPs;
-  dyn_string msgDPs;
-  dyn_string msgs;
-  dyn_anytype values;
     
   // prepare a large dynarray with existing values and one with the values belonging to that dp
   if (dynlen(tab) < 2) {
     return true;
   }
-    
+  dyn_string stationNames;
+  dyn_string dpMsgs;
+  
   for(int z=2;z<=dynlen(tab);z++){
+    // in the process of searching through all dpnames we also have to monitor if a reset has to be tranferred from MainCU
+    // to all or a station. for now this is only when the DPName is of DPType "Station"
+    // if found we will add the name to a list so we can trigger all stations later
+    if (dpTypeName(dpSubStr(tab[z][1],DPSUB_DP)) == "Station") {
+      string aS = navFunct_getStationFromDP(tab[z][1]);
+      if (dpExists(aS) ) {
+        dynAppend(stationNames,aS);
+      }
+    }
     if (dpExists(tab[z][1]) ){
-      dynAppend(valDPs,tab[z][1]);
-      dynAppend(values,state);
-      dynAppend(msgDPs,tab[z][1]);
+      string msgDp=navFunct_dpStripLastElement(tab[z][1])+".message";
+
+      dynAppend(dpList,tab[z][1]);
+      dynAppend(dpStates,state);
+      dynAppend(dpMsgs,msgDp);
       dynAppend(msgs,message);
     }
   }
+  
+  // if stationNames are found then we need to trigger the stations reset also
+  for (int i=1; i<= dynlen(stationNames);i++) {
+      if (dpSetWait(stationNames[i]+"__resetObjectState.DPName",stationNames[i]+"LOFAR_"+branch,
+                    stationNames[i]+"__resetObjectState.stateNr",state,
+                    stationNames[i]+"__resetObjectState.message",message) < 0) {
+        DebugTN("monitorStateResets.ctl:setState|ERROR during dpSetWait for all stations");
+        return false;
+      }
+  }  
+
+  if (bDebug) DebugN("monitorStateResets.ctl:setStates|Found involved stations:"+stationNames);
     
-  // if dps found, do an update of all values in one go.
-  if (dynlen(valDPs) > 0) {
-    if (bDebug) DebugN("monitorStateResets.ctl:setState|found dp's to set: "+valDPs);
-    if (dpSetWait(valDPs,values,msgDPs,msgs) < 0) {
+  if (dynlen(dpList) > 0) {
+    if (bDebug) DebugN("monitorStateResets.ctl:setState|found dp's to set: "+dpList);
+    if (dpSetWait(dpList,dpStates,dpMsgs,msgs)){
       DebugTN("monitorStateResets.ctl:setState|ERROR during dpSet");
       return false;
     }
@@ -180,29 +363,29 @@ bool setChildStates(string DP,int state, int originatorState, string message) {
   if (bDebug) DebugN("monitorStateResets.ctl:setChildState|results query: "+tab);
   dyn_string valDPs;
   dyn_string msgDPs;
-  dyn_string msgs;
+  dyn_string msgStr;
   dyn_anytype values;
     
   // prepare a large dynarray with existing values and one with the values belonging to that dp
   if (dynlen(tab) < 2) {
     return true;
   }
-    
+
   for(int z=2;z<=dynlen(tab);z++){
     if (dpExists(tab[z][1]) ){
-      // for childStates we need to check if leaf = True, if so we are in the bottom of the tree, 
-      // where dp's do NOT have children anymore, so childStates need not to be set.
+      string msgDp=navFunct_dpStripLastElement(tab[z][1])+".message";
+      
       dynAppend(valDPs,tab[z][1]);
       dynAppend(values,state);
-      dynAppend(msgDPs,tab[z][1]);
-      dynAppend(msgs,message);
+      dynAppend(msgDPs,msgDp);
+      dynAppend(msgStr,message);
     }
   }
     
   // if dps found, do an update of all values in one go.
   if (dynlen(valDPs) > 0) {
     if (bDebug) DebugN("monitorStateResets.ctl:setChildState|found dp's to set: "+valDPs);
-    if (dpSetWait(valDPs,values,msgDPs,msgs)){
+    if (dpSetWait(valDPs,values,msgDPs,msgStr)){
       DebugTN("monitorStateResets.ctl:setChildState|ERROR during dpSet");
       return false;
     }

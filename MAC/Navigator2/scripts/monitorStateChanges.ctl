@@ -220,6 +220,8 @@ void objectStateTriggered(string dp1, string trigger,
   //                               
   // This State should be set to childState=bad in all upper (LOFAR-PIC_Cabinet0_Subrack0_RSPBoard0) treenodes
   // ofcourse we need to monitor if this statechange is allowed.
+  // if force false we also monitor the first digit of the state (1-5) if the 1st digit of the current state matches, not
+  // state change allowed (to avoid ACK'ed alarms go back to came for example)
   
 
 
@@ -275,7 +277,7 @@ void objectStateTriggered(string dp1, string trigger,
 // element        = state or childState needs 2b checked 
 // state          = new state
 // message        = message if applied by __navObjectState
-// force          = boolean indicating if states > 10 are allowed to be lowered or not
+// force          = boolean indicating if states > 10 are allowed to be lowered or not and check first digit old against new state
 // stationTrigger = check if the stationTrigger fired this. In that case the state/childState
 //                  is a pure copy from the station to the MCU point, so childState should be 
 //                  treated as state and just be copied, not evaluated.
@@ -305,7 +307,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
         if (bDebug) DebugN("monitorStateChanges.ctl:setStates|original val: "+aVal+ " state to set to: " + state);
         if (aVal <=10 && state <= 0) {
           dpSet(datapoint+"."+element,state);
-        } else if (aVal <= state) {
+        } else if (aVal <= state && floor(aVal/10)!=floor(state/10) ){
           dpSet(datapoint+"."+element,state);
         } else {
           if (bDebug) DebugN("monitorStateChanges.ctl:setStates|State not changed because of force conditions");

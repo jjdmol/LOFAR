@@ -29,10 +29,10 @@
   * For now we have: 
 
   * AntennaArrays.conf.
-  * This will be used to fill: AntennaArrays with the (allowed)
+  * This will be used to fill: Antenna deltaX deltaY and deltaH fields for LBA and HBA
   * antenna configurations. 
   *
-  * Allowed for now are :  LBA-HBA-LBL-LBH
+  * Allowed for now are :  LBA-HBA
   *
   * The files contain fieldcenter coordinates in OL-NB-Height
   * and Antenna positions in OL-NB-Height Offsets from the fieldCenter.
@@ -75,10 +75,12 @@ main()
     dyn_float antConfFileNB;
     dyn_float antConfFileH;
     // read ConfigurationName
-
-    sscanf(dynStr_fileContent[index++],"%s",strCurConfig);
+    string str;
+    sscanf(dynStr_fileContent[index++],"%s",str);
+    strCurConfig=strtoupper(str);
     Debug("readStationConfigs.ctl:main|Reading  Config for: "+strCurConfig);
 
+    
     // read fieldcenter
     sscanf(dynStr_fileContent[index++],"%*d %*s %f %f %f",centerOL,centerNB,centerH);
     //DebugN("Reading  Config for center OL,NB,H:" + centerOL + " " + centerNB + " " + centerH);
@@ -89,9 +91,7 @@ main()
    
     // Select on allowed configurations
     if ((strpos(strCurConfig,"LBA") > -1 && strlen(strCurConfig) == 3) || 
-         (strpos(strCurConfig,"HBA") > -1 && strlen(strCurConfig) == 3) ||
-         (strpos(strCurConfig,"LBL") > -1 && strlen(strCurConfig) == 3) ||
-         (strpos(strCurConfig,"LBH") > -1 && strlen(strCurConfig) == 3) ) {
+         (strpos(strCurConfig,"HBA") > -1 && strlen(strCurConfig) == 3)) {
       DebugN("--> will be read");
 
       for (int ix = index; ix < nr_ofAnt + index; ix++ )
@@ -113,18 +113,19 @@ main()
       //DebugN("antConfFileOL: "+antConfFileOL);
       
       // All the reading has been done.
-      // Create the DP if not exists, and fill the values
-      //
-      if (! dpExists(strCurConfig)) {
-        dpCreate(strCurConfig,"AntennaArrays");
+      dpSet("remoteStation."+strCurConfig+".centerOL",centerOL,
+            "remoteStation."+strCurConfig+".centerNB",centerNB,
+            "remoteStation."+strCurConfig+".centerH",centerH);
+      
+      for (int i=1; i<= nr_ofAnt;i++) {
+        string ant=(i-1);
+        if (i<=10) {
+          ant = "0"+(i-1);
+        }
+        dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
+            strCurConfig+ant+".deltaY",antConfFileNB[i],
+            strCurConfig+ant+".deltaH",antConfFileH[i]);
       }
-      dpSet(strCurConfig+".centerOL",centerOL,
-            strCurConfig+".centerNB",centerNB,
-            strCurConfig+".centerH",centerH,
-            strCurConfig+".antennaOffsetsOL",antConfFileOL,
-            strCurConfig+".antennaOffsetsNB",antConfFileNB,
-            strCurConfig+".antennaOffsetsH",antConfFileH
-            );
     } else {
       DebugN("--> will be skipped");
     }

@@ -160,6 +160,27 @@ void setAlarms(string dp,dyn_time times,dyn_string names, dyn_string messages, d
   }
 }
 
+// *******************************************
+// Name : stateToStatus
+// *******************************************
+// Description:
+// returns the alarmstatus derived from the state
+//
+//
+// Returns:
+//    the derived status
+// *******************************************
+int stateToStatus(int aState) {
+  if (aState == SUSPICIOUS || aState == BROKEN) {
+    return ACK;
+  } else if (aState == SUSPICIOUS_CAME || aState == BROKEN_CAME) {
+    return CAME;
+  } else if (aState == SUSPICIOUS_WENT || aState == BROKEN_WENT) {
+    return WENT;
+  }
+  return -1;
+}
+
 
 
 

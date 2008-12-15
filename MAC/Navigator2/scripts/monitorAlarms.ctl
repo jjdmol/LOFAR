@@ -31,6 +31,7 @@
 // 
 
 bool bDebug=true;
+bool occupied=false;
 
 main () {
 
@@ -63,14 +64,7 @@ void initCtrlAlarmSystem()  {
   // This point keeps a dyn_int array with all active distributed connections
   // and will generate a callback everytime a station goes off-, or on- line
 
-  // read initial alarms from database.
-  if (dpExists(DPNAME_NAVIGATOR +  ".alarms")) {
-    getAlarms(DPNAME_NAVIGATOR +  ".alarms",
-              g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
-  } else {
-    DebugTN("monitorAlarms.ctl:initCtrlAlarmSystem|Couldn't get alarms from navigator");
-  }
-  
+ 
   if (dpExists("_DistConnections.Dist.ManNums")) {
     dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
   } else {
@@ -97,11 +91,35 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   
   if (isConnected) {
     dpQueryDisconnect("objectStateCallback","objectState"); 
+    dpDisconnect("resetTriggered",DPNAME_NAVIGATOR +  ".alarms.dpResetList",
+                                  DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
+                                  DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
+    dpDisconnect("rereadTriggered",DPNAME_NAVIGATOR +  ".alarms.rereadAlarms");
   }
   
+  // also connect to the resetTrigger dp to receive a trigger that the internal global list needs a reread
+  // (in case ACK did remove an alarm for example)
+  if (dpExists(DPNAME_NAVIGATOR +  ".alarms.rereadAlarms")) {
+    dpConnect("rereadTriggered",false,DPNAME_NAVIGATOR +  ".alarms.rereadAlarms");
+  } else {
+    DebugTN("monitorAlarms.ctl:distSystemTriggered|Couldn't connect to"+DPNAME_NAVIGATOR +  ".alarms.rereadAlarms");
+  }  
+
   // Connect to the dp elements that we use to receive
   // a new claim in the MainDB
   dpQueryConnectAll( "objectStateCallback",true,"objectState",query,20); 
+  
+  // also connect to the dpResetList dp to receive lists if dp's that need to be cleared from the global list and thus from the
+  // datapoint in the database
+  if (dpExists(DPNAME_NAVIGATOR +  ".alarms.dpResetList")) {
+    dpConnect("resetTriggered",DPNAME_NAVIGATOR +  ".alarms.dpResetList",
+                               DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
+                               DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
+  } else {
+    DebugTN("monitorAlarms.ctl:distSystemTriggered|Couldn't connect to"+DPNAME_NAVIGATOR +  ".alarms.dpResetList");
+  }
+  
+  
   isConnected = true; 
 }
 
@@ -116,12 +134,19 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 //    None
 // *******************************************
 void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
+  
+  while (occupied) {
+    delay(0,25);    
+  }
+  
+  occupied = true;
   int iPos;
   
   if (bDebug) DebugTN( "monitorAlarms.ctl:objectStateCallback| Number of states in callback = " + dynlen( aResult ) );
   if (bDebug) DebugTN("Result: "+ aResult);
   
   if (dynlen(aResult) <= 0) {
+    occupied = false;
     return;
   } 
   
@@ -134,16 +159,37 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   bool force     = aResult[5][2];
   int aStatus    = CAME;
   
-  // Is this an existing Timestamp DP state combo or a new one
-  iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
+  if (aDP==""){
+    if (bDebug) DebugN("Return on empty dp");
+    occupied = false;
+    return;
+  }
   
+  // Is this an existing DP or a new one
+  iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
-  // if state < 40 we might need to remove an ACK'ed alarm 
+  
+  if (bDebug) DebugN("iPos:" + iPos);
+  if (bDebug) DebugN("dpnames in global:"+g_alarms[ "DPNAME"         ]);
+  if(iPos>0 && bDebug)  DebugN("floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
+  if (bDebug) DebugN("floor state: "+floor(state/10));
+  if (bDebug) DebugN("force: "+force);
+  
+  // check if existing dp.
+  // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
+  if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
+    if (bDebug) DebugN("return on condition mismatch");
+    occupied = false;
+    return;
+  }
+    
+    
+  // if state < 40 we might need to remove an ACK'ed or WENT ALARM
   // if status != ACK then we need to keep it and let ACK command remove it
   // otherwise it can't be an alarm, so return.
   if (state < 40)  {
     bool changed = false;
-    if (iPos > 0 && g_alarms["STATUS"][iPos] == ACK) {
+    if (iPos > 0 && g_alarms["STATUS"][iPos] == ACK ) {
       dynRemove(g_alarms["DPNAME" ],iPos);
       dynRemove(g_alarms["TIME"   ],iPos);
       dynRemove(g_alarms["STATE"  ],iPos);
@@ -167,11 +213,15 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
         DebugTN("monitorAlarms.ctl:objectStateCallback|Couldn't write alarms to navigator");
       }
     }
-         
+    if (bDebug) DebugN("return on state < 40");   
+    occupied = false;
     return;
   }
     
+  
+  // in the remainder of the cases, the state was 
   if( iPos < 1 ){
+    if (bDebug) DebugN("Need to append new alarm");
     dynAppend( g_alarms[ "DPNAME"          ], aDP );
     iPos = dynlen( g_alarms[ "DPNAME" ] );
     if (state == BROKEN) aStatus=ACK;
@@ -182,6 +232,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     if (state == SUSPICIOUS_CAME) aStatus=CAME;
     
   } else {
+    if (bDebug) DebugN("Need to examine if alarm update is needed");
     // it was an existing DP, so we have to compare the status.
      
     int oldState=g_alarms["STATE"][iPos];
@@ -194,7 +245,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
         } else if (state == BROKEN_CAME) {
           aStatus = CAME;
         } else {
-          if (bDebug) DebugTNTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
+          DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
           aStatus = WENT;
         }
       } else if (oldState  == BROKEN_WENT) {
@@ -242,8 +293,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
         } else {
           aStatus = CAME;
         }        
-  		}
-
+      }
     }
   }
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Datapoint - "+aDP);
@@ -259,12 +309,104 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   g_alarms[ "STATUS"  ][iPos] = aStatus;
     
   
-  // fill initial alarms from database.
+  storeAlarms();
+  occupied = false;
+}
+
+void resetTriggered(string dp1, dyn_string aDPList,
+                    string dp2, dyn_int aStateList,
+                    string dp3, dyn_string aMsgList) {
+    while (occupied) {
+      delay(0,25);    
+    }
+    occupied=true;
+    
+    if (bDebug) DebugTN("monitorAlarms.ctl:resetTriggered|resetList received: "+ aDPList);
+    bool changed = false;
+    int iPos=-1;
+    time aTime     = getCurrentTime();    
+    // we have to loop through the supplied dplists,
+    // we need to check if the new state is an alarm,
+    // if it is an alarm (40-56)
+    // check if available in alarm list, if not, add it.
+    // if it is, and it differs from the old, update the old one
+    //
+    // if the state is not an alarm, but the dp is in the alarm list
+    // remove the alarm.
+    
+    // start checking over all supplied dps
+    for (int i=1;i <= dynlen(aDPList); i++) {
+      iPos = dynContains( g_alarms[ "DPNAME"         ], aDPList[i] );
+    
+      // check if state >= start alarm type states
+      if (aStateList[i] >= SUSPICIOUS  ) {
+        if (iPos > 0) {
+          if (g_alarms["STATE"][iPos] != aStateList[i]) {
+            g_alarms["TIME"][iPos] = aTime;
+            g_alarms["STATE"][iPos]=aStateList[i];
+            g_alarms["MESSAGE"][iPos]=aMsgList[i];
+            g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+            changed=true;
+          }
+        } else {
+          iPos=dynAppend(g_alarms["DPNAME" ],aDPList[i]);
+          g_alarms["TIME"][iPos] = aTime;
+          g_alarms["STATE"][iPos]=aStateList[i];
+          g_alarms["MESSAGE"][iPos]=aMsgList[i];
+          g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+          changed=true;
+        }
+      } else {
+        // If it was in the list it can be removed now
+        if (iPos > 0) {
+          dynRemove(g_alarms["DPNAME" ],iPos);
+          dynRemove(g_alarms["TIME"   ],iPos);
+          dynRemove(g_alarms["STATE"  ],iPos);
+          dynRemove(g_alarms["MESSAGE"],iPos);
+          dynRemove(g_alarms["STATUS" ],iPos);
+          changed=true;
+        } 
+      }
+    }  
+    
+    if (changed) {
+      storeAlarms();
+    }
+    occupied = false;  
+}
+
+void rereadTriggered(string dp1, bool aB) {
+  if (bDebug) DebugTN("monitorAlarms.ctl:rereadTriggered|reread internal alarmList");
+  while (occupied) {
+    delay(0,25);    
+  }
+  occupied=true;
+    
+  readAlarms();
+  occupied=false;
+}
+
+
+void storeAlarms() {
+  // store alarms in database.
   if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
     if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Storing the alarms in db");
     setAlarms(DPNAME_NAVIGATOR + ".alarms",
               g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
   } else {
     DebugTN("monitorAlarms.ctl:objectStateCallback|Couldn't write alarms to navigator ");
+  }
+}
+
+
+void readAlarms() {
+  mappingClear(g_alarms);
+    
+  // read initial alarms from database.
+  if (dpExists(DPNAME_NAVIGATOR +  ".alarms")) {
+    getAlarms(DPNAME_NAVIGATOR +  ".alarms",
+              g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
+  } else {
+    DebugTN("monitorAlarms.ctl:initCtrlAlarmSystem|Couldn't get alarms from navigator");
   }
 }
