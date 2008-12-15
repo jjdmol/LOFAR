@@ -800,8 +800,8 @@ if [ $boot != 0 ]; then
       md5sum boot.md5 configure > boot.md5-check
       pwd >> $curwd/build.log
     fi
-   )
     echo $pkg '# bootstrapped at' `date` >> $curwd/build.result
+   ) || [ "$kopt" == "-k" ] || exit 1
   done
   echo "" >> build.log
 fi
