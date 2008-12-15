@@ -235,6 +235,7 @@ do
   echo "status=$stat" >> $logfile
   if [ "$stat" != 0 ]; then
     status=$stat
+    echo " !!! Build of package $pkg failed !!!" | tee -a $logfile
     [ $kopt = 0 ] && break
   fi
 done
