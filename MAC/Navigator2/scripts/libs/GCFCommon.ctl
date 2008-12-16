@@ -167,7 +167,9 @@ int getStateNumber(string aState) {
 void showSelfState(string aDP) {
   	// check if the required datapoint for this view are accessible
   	if (dpExists(aDP+".status.state")) {
-    	  dpConnect("updateSelfState",aDP + ".status.state", aDP + ".status.state:_online.._invalid");
+          if (dpConnect("updateSelfState",aDP + ".status.state", aDP + ".status.state:_online.._invalid")==-1) {
+            setValue("selfState.light","backCol","Lofar_invalid");
+          }          
   	} 
   	else {
           setValue("selfState.light","backCol","_dpdoesnotexist");
@@ -186,7 +188,9 @@ void showSelfState(string aDP) {
 void showChildState(string aDP) {
   	// check if the requiered datapoint for this view are accessible
   	if (dpExists(aDP+".status.childState")) {
-    	  dpConnect("updateChildState",aDP + ".status.childState", aDP + ".status.childState:_online.._invalid");
+          if (dpConnect("updateChildState",aDP + ".status.childState", aDP + ".status.childState:_online.._invalid") == -1) {
+      	    setValue("childStateBorder","foreCol","Lofar_invalid");
+          } 
   	} 
   	else {
     	  setValue("childStateBorder","foreCol","_dpdoesnotexist");

@@ -237,6 +237,31 @@ LANG:1 6 Layer1
 0
 1 32 16 "" 2
 0
+15 33
+"CLOCK1"
+""
+1 780 1 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+26 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 780 1 900 23
+E 1 1 "%H:%M:%S" "%d/%m/%y"
+1 1 1 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+
 0
 LAYER, 1 
 1
@@ -290,7 +315,7 @@ LANG:1 6 Layer8
 "$name""fw_progressBar"
 "$progressBarDPE""Test"
 3 12 "fw_viewSelection"
-"objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.9763779527559 7
+"objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.976377952755904 7
 1
 "$name""fw_viewSelection"
 3 13 "fw_alerts"

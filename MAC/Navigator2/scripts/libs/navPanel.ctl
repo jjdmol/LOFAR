@@ -419,6 +419,7 @@ void navPanel_statePopup(string baseDP) {
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|define popup for DP: "+baseDP);
  
   int idx=1;
+//  dynInsertAt(popup,"PUSH_BUTTON,Acknowledge All,3,1",idx++);
   dynInsertAt(popup,"CASCADE_BUTTON,Set State, 1",idx++);
   dynInsertAt(popup,"CASCADE_BUTTON,Set Recursive State, 1",idx++);
   dynInsertAt(popup,"Set State",idx++);
@@ -439,7 +440,14 @@ void navPanel_statePopup(string baseDP) {
   
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|popup returned: "+state);
   bool recursive = false;
-  if (state == 10 ) {
+  bool ackall = false;
+  if (state == 3) {
+    ackall = true;
+    recursive=true;
+    // add 1000 to state to indicate a big non existing state, so we are able to receive that in the monitor reset controller
+    // and see it's not a normal reset.
+    state+=1000;
+  } else if (state == 10 ) {
     state = 0;
   } else if (state == 20) {
     state = 0;
@@ -452,6 +460,7 @@ void navPanel_statePopup(string baseDP) {
   }        
 
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|recursive="+recursive);
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|ackall="+ackall);
   
   string database = dpSubStr(baseDP,DPSUB_SYS);
   string bareDP = dpSubStr(baseDP,DPSUB_DP);
@@ -473,7 +482,65 @@ void navPanel_statePopup(string baseDP) {
             database+"__resetObjectState.stateNr",state,
             database+"__resetObjectState.message",message);
     }
-
+    
+    //as last we also need to loop through the global alarms and throw away went states, 
+    // and set CAME to ACK for all alarms starting at the given DP
+    
+    if (ackall) {
+      dyn_string dps;
+      bool changed=false;
+      // change CAME to ACK and collect all dps that are WENT
+      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|bareDP to start from:"+bareDP);
+      for (int i=1;i<=dynlen(g_alarms["DPNAME"]);i++) {
+        // only if DP is in wanted DP range
+        if (strpos(g_alarms["DPNAME"][i],bareDP)>-1) {
+          if (g_alarms["STATUS"][i] == CAME) {
+            g_alarms["STATUS"][i] = ACK;
+            if (g_alarms["STATE"][i] == 56) {
+              g_alarms["STATE"][i] = 50;
+            } else if (g_alarms["STATE"] == 46) {
+              g_alarms["STATE"][i] = 40;
+            }
+            changed=true;
+          } else if (g_alarms["STATUS"][i] == WENT) {
+            dynAppend(dps,g_alarms["DPNAME"][i]);
+          }
+        }
+      
+        // now remove found WENTs from mapping
+        if (dynlen(dps) > 0) {
+          changed=true;
+          for (int i=1; i<= dynlen(dps); i++) {
+            int iPos=dynContains(g_alarms["DPNAME"],dps[i]);
+            if (iPos > 0) {
+              dynRemove(g_alarms["DPNAME" ],iPos);
+              dynRemove(g_alarms["TIME"   ],iPos);
+              dynRemove(g_alarms["STATE"  ],iPos);
+              dynRemove(g_alarms["MESSAGE"],iPos);
+              dynRemove(g_alarms["STATUS" ],iPos);
+            }
+          }
+        }
+      }
+      // if something changed, rewrite mapping and trigger monitor alarm controllers
+      if (changed) {
+        // rewrite database  
+        if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
+          LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Storing the alarms in db");
+          setAlarms(DPNAME_NAVIGATOR + ".alarms",
+                    g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
+        } else {
+          LOG_ERROR("navPanel.ctl:navPanel_statePopup|Couldn't write alarms to navigator");
+        }
+        // trigger reread for monitorAlarmCtrl
+        if (dpExists(DPNAME_NAVIGATOR + ".alarms.rereadAlarms")) {
+          LOG_DEBUG("navPanel.ctl:navPanel_statePopup|trigger monitorAlarms");
+          dpSet(DPNAME_NAVIGATOR + ".alarms.rereadAlarms",true);
+        } else {
+          LOG_ERROR("navPanel.ctl:navPanel_statePopup|Couldn't write alarms.rereadAlarms");
+        }  
+      }
+    }      
   }
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|end (re)set states reached");
 }
