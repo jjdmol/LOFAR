@@ -113,6 +113,9 @@ inline void CorrelatedData::checkEndianness(bool withSequenceNumber)
 
   if (withSequenceNumber)
     dataConvert(LittleEndian, &sequenceNumber, 1);
+#else
+  // suppress unused parameter warning
+  (void)withSequenceNumber;
 #endif
 }
 
