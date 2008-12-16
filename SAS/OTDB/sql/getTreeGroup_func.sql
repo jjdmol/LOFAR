@@ -59,6 +59,8 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 	  ELSE 
 		IF $1 = 2 THEN
 		  vQuery := \' AND t.starttime <= now() AND t.stoptime > now() \';
+		  vQuery := vQuery || \' AND t.state > \' || TSscheduled;
+		  vQuery := vQuery || \' AND t.state < \' || TSfinished;
 	    ELSE 
 		  IF $1 = 3 THEN
 			vQuery := \' AND t.state >= \' || TSfinished;
