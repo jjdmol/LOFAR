@@ -26,6 +26,7 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
+#include <ION_Allocator.h>
 #include <InputSection.h>
 #include <OutputSection.h>
 #include <Stream/FileStream.h>
@@ -296,71 +297,42 @@ static void ignoreSigPipe()
 }
 
 
-#ifdef FLAT_MEMORY
-static void cat(const char* fn)
-{
-  FILE* fp;
-  char buf[256];
-  printf("[%s]\n",fn);
-  fp = fopen( fn, "r");
-  if( !fp ) {
-    fprintf(stderr,"Fail to open %s\n", fn);
-    exit(1);
-  }
-  while( fgets( buf,sizeof(buf), fp)!= 0 ) {
-    printf("%s",buf);
-  }
-  fclose(fp);
-}
+#if defined FLAT_MEMORY
 
-static void * mmapFastMemory()
+static void   *flatMemoryAddress = reinterpret_cast<void *>(0x50000000);
+static size_t flatMemorySize     = 1536 * 1024 * 1024;
+
+static void mmapFlatMemory()
   /* 
 
   mmap a fixed area of flat memory space to increase performance. 
-  currently only 768 MiB can be allocated, we mmap() the maximum
+  currently only 1.5 GiB can be allocated, we mmap() the maximum
   available amount
 
   */
 {
-  unsigned size = 0;
-  char buf[80];
-  FILE* fp;
-  int fd;
-  void *flatmem_mmap_addr;
+  int fd = open("/dev/flatmem", O_RDONLY);
 
-  fp = fopen( "/proc/meminfo", "r");
-  if( !fp ) {
-    perror("fopen");
+  if (fd < 0) { 
+    perror("open(\"/dev/flatmem\", O_RDONLY)");
     exit(1);
   }
-  while( fgets(buf,sizeof(buf),fp)!=(char*)0 ) {
-    if( strstr(buf, "FlatMem:") ) {
-      char* p = strtok( buf," \t\n");
-      p = strtok(NULL," \t\n");
-      size = atoi(p) * 1024*1024;
-      break;
-    }
-  }
-  fclose(fp);
-
-  /* get flatmem address */
-  fd = open("/dev/flatmem", O_RDONLY);
-  if (fd < 0) {
-    fprintf(stderr, "/dev/flatmem does not exist\n");
+ 
+  if (mmap(flatMemoryAddress, flatMemorySize, PROT_READ, MAP_PRIVATE | MAP_FIXED, fd, 0) == MAP_FAILED) {
+    perror("mmap flat memory");
     exit(1);
-  }
-  
-  /* 0x40000000 is usually the lowest virtual address of free vm start in 256MB alignment */
-  flatmem_mmap_addr = mmap((void*)0x50000000, size , PROT_READ, MAP_PRIVATE, fd, 0);
-  if( flatmem_mmap_addr == MAP_FAILED) {
-    perror("mmap");
-    exit(1);
-  }
-  
-  cat("/proc/self/maps");
+  } 
 
-  return flatmem_mmap_addr;
+  close(fd);
+  std::clog << "mapped " << flatMemorySize << " bytes of fast memory at " << flatMemoryAddress << std::endl;
 }
+
+static void unmapFlatMemory()
+{
+  if (munmap(flatMemoryAddress, flatMemorySize) < 0)
+    perror("munmap flat memory");
+}
+
 #endif
 
 void *master_thread(void *)
@@ -373,14 +345,11 @@ void *master_thread(void *)
   enableCoreDumps();
   ignoreSigPipe();
 
-#ifdef FLAT_MEMORY
-  void *flatmem_addr = mmapFastMemory();
-
-  std::clog << "Flatmem base address : " << flatmem_addr << std::endl;
-
+  try {
+#if defined FLAT_MEMORY
+    mmapFlatMemory();
 #endif
 
-  try {
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
 
     pthread_t input_thread_id, output_thread_id;
@@ -449,6 +418,10 @@ void *master_thread(void *)
 
       std::clog << "lofar__fini: output thread joined" << std::endl;
     }
+
+#if defined FLAT_MEMORY
+    unmapFlatMemory();
+#endif
   } catch (Exception &ex) {
     std::cerr << "main thread caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
