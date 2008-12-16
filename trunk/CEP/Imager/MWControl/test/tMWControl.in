@@ -8,8 +8,8 @@ Strategy.Correlation.Selection = ALL        # one of AUTO, CROSS, ALL
 Strategy.Correlation.Type = [ XX, YY ]      # which (cross)correlations to use
 Strategy.WorkDomainSize.Freq = 1e+6         # work domain size: f(Hz) 
 Strategy.WorkDomainSize.Time = 10           # work domain size: t(s)
-Strategy.Integration.Freq = 1;              # integration interval: f(Hz)
-Strategy.Integration.Time = 0.1;            # integration interval: t(s)
+Strategy.Integration.Freq = 1               # integration interval: f(Hz)
+Strategy.Integration.Time = 0.1             # integration interval: t(s)
 
 InputData      = INDATA            # MS input data column 
 ParmDB.Instrument       = test.mep          # instrument parameters (MS table)
@@ -24,8 +24,8 @@ Step.xyz1.Sources       = [ 3C343 ]         # list of sources
 Step.xyz1.ExtraSources  = [ M81 ]           # list of sources outside patch
 Step.xyz1.InstrumentModel = [ Bandpass,   \ # Instrument model
                            DirGain, Phase ]
-Step.xyz1.Integration.Freq = 2;             # integration interval: f(Hz)
-Step.xyz1.Integration.Time = 0.5;           # integration interval: t(s)
+Step.xyz1.Integration.Freq = 2              # integration interval: f(Hz)
+Step.xyz1.Integration.Time = 0.5            # integration interval: t(s)
 Step.xyz1.Correlation.Selection = CROSS     # one of AUTO, CROSS, ALL
 Step.xyz1.Correlation.Type = [ XX, XY,    \ # which (cross) correlations to use
                                YX, YY ]

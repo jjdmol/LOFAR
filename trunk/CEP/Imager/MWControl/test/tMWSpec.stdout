@@ -2,12 +2,12 @@ MWMultiSpec specification:
  Full name: 
 . MWMultiSpec specification: xyz1
 .  Full name: xyz1
-Baselines.Station1="      [ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]"
-Baselines.Station2="      [ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]"
+Baselines.Station1=[ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
+Baselines.Station2=[ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
 Correlation.Selection=CROSS
-Correlation.Type=[ XX, XY,                               YX, YY ]
+Correlation.Type=[ XX, XY, YX, YY ]
 ExtraSources=[ M81 ]
-InstrumentModel=[ Bandpass,                           DirGain, Phase ]
+InstrumentModel=[ Bandpass, DirGain, Phase ]
 Integration.Freq=2;
 Integration.Time=0.5;
 Sources=[ 3C343 ]
@@ -17,7 +17,7 @@ Steps=[ sl1, sl2 ]
 Baselines.Station1=[ CS*,  RS1* ]
 Baselines.Station2=[ RS1*, RS2* ]
 Correlation.Selection=CROSS
-Correlation.Type=[ XX, XY,                               YX, YY ]
+Correlation.Type=[ XX, XY, YX, YY ]
 ExtraSources=[ M81 ]
 InstrumentModel=[ Bandpass, Phase ]
 Integration.Freq=2;
@@ -35,10 +35,10 @@ Sources=[ 3C343 ]
 Steps=[ sl1, sl2 ]
 . . MWLocalSpec specification: sl2
 . .  Full name: xyz1.sl2
-Baselines.Station1="      [ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]"
-Baselines.Station2="      [ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]"
+Baselines.Station1=[ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
+Baselines.Station2=[ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
 Correlation.Selection=CROSS
-Correlation.Type=[ XX, XY,                               YX, YY ]
+Correlation.Type=[ XX, XY, YX, YY ]
 ExtraSources=[ M81 ]
 InstrumentModel=[ DirGain, Phase ]
 Integration.Freq=2;

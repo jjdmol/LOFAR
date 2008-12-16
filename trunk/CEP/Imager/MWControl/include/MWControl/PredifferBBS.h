@@ -74,7 +74,7 @@ class PredifferBBS: public PredifferProxy
 			 LOFAR::BlobOStream& out);
 
   private:
-    LOFAR::BBS::Prediffer* itsPrediffer;
+    /* LOFAR::BBS::Prediffer* */ int* itsPrediffer;
   };
 
 }} // end namespaces
