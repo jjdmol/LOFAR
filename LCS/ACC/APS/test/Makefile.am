@@ -1,8 +1,6 @@
 
-check_PROGRAMS		= tKeyPrefix tParameterValue \
-			  tParameterSet tParameterSetPerf
+check_PROGRAMS		= tParameterValue tParameterSet tParameterSetPerf
 
-tKeyPrefix_SOURCES	= tKeyPrefix.cc
 tParameterValue_SOURCES	= tParameterValue.cc
 tParameterSet_SOURCES	= tParameterSet.cc
 tParameterSetPerf_SOURCES= tParameterSetPerf.cc
@@ -10,9 +8,8 @@ tParameterSetPerf_SOURCES= tParameterSetPerf.cc
 LDADD			= ../src/libaps.la
 DEPENDENCIES		= ../src/libaps.la $(LOFAR_DEPEND) 
 
-TESTSCRIPTS 		= tKeyPrefix.sh \
-			  tParameterValue.sh \
-			  tParameterSet_test.sh \
+TESTSCRIPTS 		= tParameterValue.sh \
+			  tParameterSet.sh \
 			  tParameterSetPerf.sh \
 			  tgetparsetvalue.sh
 

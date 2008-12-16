@@ -1,7 +1,6 @@
 lib_LTLIBRARIES		= libaps.la
 
 libaps_la_SOURCES	= Package__Version.cc  \
-	KeyPrefix.cc \
 	KVpair.cc \
 	ParameterSet.cc \
 	ParameterSetImpl.cc \
