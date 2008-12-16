@@ -34,7 +34,7 @@ dist_python_SCRIPTS = 	\
 			LOFAR_Jobs.py \
 			CS1_RSPCtl.py \
 			CS1_Run.py \
-			CS1_Sections.py \
+			CS1_Sections.py
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = 

@@ -57,7 +57,7 @@ lofar_COMPILETOOLS
 lofar_PVSS(1)
 lofar_INTERNAL(LCS/Common, Common,, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS,, 1, APS/ParameterSet.h,,)
-lofar_INTERNAL(Appl/ApplCommon, ApplCommon,, 1, ApplCommon/Observation.h,,)
+lofar_INTERNAL(LCS/ApplCommon, ApplCommon,, 1, ApplCommon/Observation.h,,)
 lofar_INTERNAL(LCS/ACC/ALC, ALC,, 1, ALC/ApplControl.h,,)
 lofar_INTERNAL(LCS/ACC/PLC, PLC,, 1, PLC/PCCmd.h,,)
 dnl lofar_INTERNAL(SAS/OTDB, OTDB, , 1, OTDB/OTDBconnection.h,,)
