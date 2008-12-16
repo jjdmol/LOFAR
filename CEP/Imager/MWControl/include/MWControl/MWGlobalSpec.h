@@ -1,4 +1,4 @@
-//# MWGlobalStep.h: Class representing a global step in the MWSpec composite pattern
+//# MWGlobalStep.h: A global step in the MWSpec composite pattern
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

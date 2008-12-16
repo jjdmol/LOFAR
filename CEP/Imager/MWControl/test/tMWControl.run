@@ -13,6 +13,11 @@ Node1.NodeFileSys = [node1:/usr]
 Node1.NodeMountPoints = [/user]
 EOF
 
+# Exit if this is a test run.
+if test "$1" != ""; then
+  exit 0
+fi
+
 # First run tMWControl without MPI.
 # It makes no sense to continue if this fails.
 \rm -f tMWControl_tmp.cout*

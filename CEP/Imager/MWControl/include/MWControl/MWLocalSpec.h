@@ -1,4 +1,4 @@
-//# MWLocalStep.h: Class representing a local step in the MWSpec composite pattern
+//# MWLocalStep.h: A local step in the MWSpec composite pattern
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

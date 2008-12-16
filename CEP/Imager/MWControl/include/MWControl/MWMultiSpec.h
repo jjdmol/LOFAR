@@ -1,4 +1,4 @@
-//# MWMultiSpec.h: Class representing a multi step in the MWSpec composite pattern
+//# MWMultiSpec.h: A multi step in the MWSpec composite pattern
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
