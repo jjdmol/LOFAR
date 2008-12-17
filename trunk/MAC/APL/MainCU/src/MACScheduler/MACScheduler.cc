@@ -609,7 +609,7 @@ void MACScheduler::_updatePlannedList()
 			string				filename(observationParset(obsID));
 			if (!tm.exportTree(obsID, topNode.nodeID(), filename)) {
 				LOG_ERROR_STR ("Cannot create ParameterSet '" << filename << 
-								"' for new observatio. Observation CANNOT BE STARTED!");
+								"' for new observation. Observation CANNOT BE STARTED!");
 			}
 			else {
 				// Claim a DP in PVSS and write obssettings to it so the operator can see it.
@@ -618,9 +618,11 @@ void MACScheduler::_updatePlannedList()
 				itsPreparedObs[obsID] = false;	// requested claim but no answer yet.
 			}
 		}
-
-		// always add to PVSS list.
-		plannedArr.push_back(new GCFPVString(obsName));
+		else {
+			// only add observations to the PVSS list when the claim was succesfull
+			// otherwise thing will go wrong in the Navigator
+			plannedArr.push_back(new GCFPVString(obsName));
+		}
 	
 		// should this observation (have) be(en) started?
 		time_duration	timeBeforeStart(plannedDBlist[idx].starttime - currentTime);
