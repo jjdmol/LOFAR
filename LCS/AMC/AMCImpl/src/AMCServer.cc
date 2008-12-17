@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <AMCImpl/ConverterServer.h>
 #include <cstdlib>
 
@@ -33,8 +34,14 @@ using namespace LOFAR::AMC;
 
 int main(int argc, const char* const argv[])
 {
-  INIT_VAR_LOGGER(argv[0], "AMCServer");
+  // Init logsystem
+  ConfigLocator	aCL;
+  string	logpropFile(basename(argv[0]));
+  logpropFile.append(".log_prop");
+  INIT_VAR_LOGGER(aCL.locate(logpropFile).c_str(), "AMCServer");
+  LOG_INFO_STR ("Initialized logsystem with: " << aCL.locate(logpropFile));
 
+  // Report ourself to the LogggingProcessor
   LOG_INFO("MACProcessScope: LOFAR_PermSW_AMCServer");
 
   // Listen port (default: 31337)
