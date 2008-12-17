@@ -26,8 +26,8 @@
 #include <Common/lofar_iostream.h>
 #include <iterator>
 
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 

@@ -30,7 +30,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <APS/ParameterValue.h>
+#include <Common/ParameterValue.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>

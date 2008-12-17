@@ -24,6 +24,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	FileLocator.h \
 	hexdump.h \
 	i4complex.h \
+	KVpair.h \
 	lofar_algorithm.h \
 	lofar_bitset.h \
 	LofarConstants.h \
@@ -56,6 +57,9 @@ pkginclude_HEADERS = Package__Version.h  \
 	lofar_vector.h \
 	Numeric.h \
 	ObjectFactory.h \
+	ParameterValue.h \
+	ParameterSet.h \
+	ParameterSetImpl.h \
 	PrettyUnits.h \
 	Process.h \
 	RunOnNode.h \

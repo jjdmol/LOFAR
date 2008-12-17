@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <APS/ParameterSetImpl.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSetImpl.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/StreamUtil.h>

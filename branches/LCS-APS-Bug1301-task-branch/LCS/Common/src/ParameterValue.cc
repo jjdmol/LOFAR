@@ -21,8 +21,8 @@
 //#  $Id$
 
 #include<lofar_config.h>
-#include <APS/ParameterValue.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterValue.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR { namespace ACC { namespace APS {

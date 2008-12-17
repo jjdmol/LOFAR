@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <stdexcept>
 #include <iostream>

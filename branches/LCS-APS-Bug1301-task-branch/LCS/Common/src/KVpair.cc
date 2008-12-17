@@ -26,7 +26,7 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<Common/StringUtil.h>
-#include<APS/KVpair.h>
+#include<Common/KVpair.h>
 #include<time.h>
 
 namespace LOFAR {

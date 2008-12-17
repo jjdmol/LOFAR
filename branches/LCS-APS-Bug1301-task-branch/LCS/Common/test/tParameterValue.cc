@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <APS/ParameterValue.h>
+#include <Common/ParameterValue.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 

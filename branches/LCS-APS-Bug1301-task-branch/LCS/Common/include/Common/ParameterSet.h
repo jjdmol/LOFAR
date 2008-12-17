@@ -30,8 +30,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <APS/ParameterSetImpl.h>
-#include <APS/KVpair.h>
+#include <Common/ParameterSetImpl.h>
+#include <Common/KVpair.h>
 
 namespace LOFAR {
   namespace ACC {
