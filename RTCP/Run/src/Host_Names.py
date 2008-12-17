@@ -40,6 +40,7 @@ romein      = UserId(bgfen0,'romein')
 lofarsys    = UserId(bgfen0,'lofarsys')
 broekema    = UserId(bgfen0,'broekema')
 nieuwpoo    = UserId(bgfen0,'nieuwpoo')
+mol         = UserId(bgfen0,'mol')
 
 IONodes = dict({ \
   'R000-B00' : [ \
