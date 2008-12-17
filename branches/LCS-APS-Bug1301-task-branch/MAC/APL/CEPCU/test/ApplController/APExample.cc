@@ -28,7 +28,7 @@
 #include <libgen.h>
 #include <Common/LofarLogger.h>
 #include <PLC/ProcControlServer.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <APCmdImpl.h>
 
 using namespace LOFAR;

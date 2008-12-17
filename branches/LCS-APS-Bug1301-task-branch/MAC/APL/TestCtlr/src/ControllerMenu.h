@@ -42,7 +42,7 @@
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 // forward declaration
 

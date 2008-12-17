@@ -30,7 +30,7 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/lofar_bitset.h>
 
 namespace LOFAR {

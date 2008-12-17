@@ -32,7 +32,7 @@
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
 #include <Common/LofarLogger.h>

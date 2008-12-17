@@ -29,7 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>

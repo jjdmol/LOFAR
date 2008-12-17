@@ -31,7 +31,7 @@
 #include "GTM_ETHSocket.h"
 #include <GTM_Defines.h>
 #include <errno.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR 
 {

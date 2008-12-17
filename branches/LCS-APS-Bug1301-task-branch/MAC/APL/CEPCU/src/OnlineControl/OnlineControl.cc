@@ -26,8 +26,8 @@
 #include <Common/StreamUtil.h>
 //#include <Common/lofar_vector.h>
 //#include <Common/lofar_string.h>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
 #include <MACIO/MACServiceInfo.h>

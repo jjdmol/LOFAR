@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <iostream>
 #include <sys/time.h>

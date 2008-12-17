@@ -33,7 +33,7 @@
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 //# For getpid() and pid_t.

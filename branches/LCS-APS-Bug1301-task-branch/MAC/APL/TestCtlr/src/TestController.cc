@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>

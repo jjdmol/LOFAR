@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <BBSControl/CorrectStep.h>
 #include <BBSControl/CommandVisitor.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {

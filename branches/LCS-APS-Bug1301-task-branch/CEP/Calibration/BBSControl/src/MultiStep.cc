@@ -25,7 +25,7 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
 

@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include "GTM_TCPServerSocket.h"
 #include <ServiceBroker/ServiceBrokerTask.h>
 //#include <ServiceBroker/GSB_Defines.h>

@@ -31,7 +31,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_string.h>
 #include <PL/PersistenceBroker.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 using LOFAR::ACC::APS::ParameterSet;
 

@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>

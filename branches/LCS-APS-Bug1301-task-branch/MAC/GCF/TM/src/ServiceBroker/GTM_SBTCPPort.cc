@@ -28,7 +28,7 @@
 //#include "GSB_Defines.h"
 #include <MACIO/MACServiceInfo.h>
 #include <PortImpl/GTM_TCPServerSocket.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR {
  namespace GCF {

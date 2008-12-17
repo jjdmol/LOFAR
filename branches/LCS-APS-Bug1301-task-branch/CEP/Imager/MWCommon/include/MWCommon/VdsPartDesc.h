@@ -28,7 +28,7 @@
 // @author Ger van Diepen (diepen AT astron nl)
 
 //# Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
 #include <string>

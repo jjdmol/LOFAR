@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 
 #if defined HAVE_MPI
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
 #include <PLC/ACCmain.h>

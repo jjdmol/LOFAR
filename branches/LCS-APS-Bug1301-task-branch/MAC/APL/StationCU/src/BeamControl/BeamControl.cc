@@ -25,7 +25,7 @@
 #include <Common/Version.h>
 #include <ApplCommon/Observation.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
 #include <MACIO/MACServiceInfo.h>

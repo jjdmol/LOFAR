@@ -31,7 +31,7 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBvalue.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 using namespace LOFAR::ACC::APS;
 

@@ -27,8 +27,8 @@
 #include <BBSControl/Types.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
 

@@ -30,7 +30,7 @@
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
 #include <GCF/TM/GCF_Task.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR {
  namespace GCF {

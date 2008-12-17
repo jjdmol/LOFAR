@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/Utils.h>
 #include <MACIO/MACServiceInfo.h>

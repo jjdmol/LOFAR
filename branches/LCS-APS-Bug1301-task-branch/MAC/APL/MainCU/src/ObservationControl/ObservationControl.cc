@@ -24,7 +24,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/Observation.h>
 #include <MACIO/MACServiceInfo.h>

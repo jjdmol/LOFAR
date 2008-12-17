@@ -26,7 +26,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/SB_Protocol.ph>
 #include <MACIO/GCF_Event.h>

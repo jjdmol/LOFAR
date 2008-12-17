@@ -31,7 +31,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_vector.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 using namespace LOFAR::ACC::APS;
 

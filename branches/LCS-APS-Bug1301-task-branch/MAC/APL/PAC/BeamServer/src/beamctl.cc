@@ -27,7 +27,7 @@
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <MACIO/MACServiceInfo.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include "beamctl.h"
 

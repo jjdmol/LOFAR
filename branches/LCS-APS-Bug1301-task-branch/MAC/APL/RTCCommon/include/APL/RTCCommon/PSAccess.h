@@ -25,7 +25,7 @@
 #ifndef PSACCESS_H_
 #define PSACCESS_H_
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 using LOFAR::ACC::APS::ParameterSet;
 using LOFAR::ACC::APS::globalParameterSet;
 

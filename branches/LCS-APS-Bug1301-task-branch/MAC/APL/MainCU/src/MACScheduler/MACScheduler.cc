@@ -25,7 +25,7 @@
 #include <Common/StringUtil.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>

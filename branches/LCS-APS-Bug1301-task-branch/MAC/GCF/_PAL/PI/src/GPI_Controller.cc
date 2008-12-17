@@ -26,7 +26,7 @@
 #include "GPI_CEPServer.h"
 #include "GPI_RTCServer.h"
 #include <GCF/Protocols/PI_Protocol.ph>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR 
 {

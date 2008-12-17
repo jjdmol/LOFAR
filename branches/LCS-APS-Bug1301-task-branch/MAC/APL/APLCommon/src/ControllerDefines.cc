@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
 #include <Common/SystemUtil.h>
-#include <APS/ParameterSet.h>					// indexValue
+#include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
 #include "Controller_Protocol.ph"

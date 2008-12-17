@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <MACIO/MACServiceInfo.h>
 #include <DriverSettings.h>
 

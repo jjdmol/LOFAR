@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include "KeyValueLoggerMaster.h"
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>

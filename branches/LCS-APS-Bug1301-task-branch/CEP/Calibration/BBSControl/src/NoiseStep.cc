@@ -25,7 +25,7 @@
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {

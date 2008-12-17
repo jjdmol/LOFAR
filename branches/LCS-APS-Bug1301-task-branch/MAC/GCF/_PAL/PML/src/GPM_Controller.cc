@@ -28,7 +28,7 @@
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_SysConnGuard.h>
 #include <GCF/Utils.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/GCF_ServiceInfo.h>
 

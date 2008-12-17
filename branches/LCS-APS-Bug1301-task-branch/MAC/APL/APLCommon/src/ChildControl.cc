@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>

@@ -33,7 +33,7 @@
 
 #include <Common/lofar_fstream.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 using LOFAR::ACC::APS::ParameterSet;
 using std::ifstream;
 

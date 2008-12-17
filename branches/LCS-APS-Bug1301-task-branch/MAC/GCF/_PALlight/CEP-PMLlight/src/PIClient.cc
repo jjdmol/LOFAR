@@ -25,7 +25,7 @@
 #include <PIClient.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/Utils.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Transport/TH_Socket.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>

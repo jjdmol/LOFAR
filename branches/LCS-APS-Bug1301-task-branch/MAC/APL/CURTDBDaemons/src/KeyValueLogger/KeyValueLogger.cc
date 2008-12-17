@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/KVT_Protocol.ph>

@@ -31,7 +31,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 

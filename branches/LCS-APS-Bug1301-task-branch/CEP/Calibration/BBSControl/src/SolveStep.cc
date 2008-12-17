@@ -26,7 +26,7 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 

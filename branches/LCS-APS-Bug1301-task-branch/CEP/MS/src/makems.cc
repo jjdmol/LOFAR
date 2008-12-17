@@ -26,7 +26,7 @@
 #include <MS/DH_MSMake.h>
 #include <MS/MSCreate.h>
 #include <MS/MSDesc.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>

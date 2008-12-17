@@ -34,7 +34,7 @@
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <stdlib.h>

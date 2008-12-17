@@ -25,7 +25,7 @@
 
 //# Includes
 #include <PLC/ProcCtrlRemote.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

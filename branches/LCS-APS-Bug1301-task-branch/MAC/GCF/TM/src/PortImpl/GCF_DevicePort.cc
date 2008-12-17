@@ -28,7 +28,7 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <errno.h>
 
 namespace LOFAR 

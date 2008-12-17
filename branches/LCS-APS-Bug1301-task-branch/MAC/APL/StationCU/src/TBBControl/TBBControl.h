@@ -29,7 +29,7 @@
 #include <Common/lofar_datetime.h>
 
 //# ACC Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Port.h>

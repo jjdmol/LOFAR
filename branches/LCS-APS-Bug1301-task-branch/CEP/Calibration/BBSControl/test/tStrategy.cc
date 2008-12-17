@@ -25,7 +25,7 @@
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/MultiStep.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

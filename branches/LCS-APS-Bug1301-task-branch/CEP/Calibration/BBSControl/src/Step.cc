@@ -33,8 +33,8 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 

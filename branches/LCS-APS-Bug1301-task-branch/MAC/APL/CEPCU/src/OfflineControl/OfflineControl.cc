@@ -23,8 +23,8 @@
 #include <Common/LofarLogger.h>
 
 #include <boost/shared_array.hpp>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>

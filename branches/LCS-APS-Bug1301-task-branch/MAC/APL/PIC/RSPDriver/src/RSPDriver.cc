@@ -30,7 +30,7 @@
 
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>

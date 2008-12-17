@@ -26,7 +26,7 @@
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <stdio.h>
 #include <GCF/Utils.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR 
 {

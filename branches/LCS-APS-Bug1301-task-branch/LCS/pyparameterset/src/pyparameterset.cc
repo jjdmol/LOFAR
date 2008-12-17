@@ -20,7 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>

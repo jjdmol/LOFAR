@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <ApplCommon/Observation.h>
 
 using namespace LOFAR;

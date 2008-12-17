@@ -33,7 +33,7 @@
 #include <Common/Exception.h>
 #include <Common/Net/Socket.h>
 #include <Common/Net/FdSet.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include "ACRequestPool.h"
 
 using namespace LOFAR::ACC::APS;

@@ -27,7 +27,7 @@
 
 //# Includes
 #include <PLC/ProcessControl.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/lofar_tribool.h>
 
 using namespace LOFAR::ACC::PLC;
