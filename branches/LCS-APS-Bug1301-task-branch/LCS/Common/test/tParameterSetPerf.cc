@@ -26,7 +26,6 @@
 #include <Common/Timer.h>
 
 using namespace LOFAR;
-using namespace ACC::APS;
 
 void test()
 {

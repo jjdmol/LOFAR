@@ -32,7 +32,6 @@
 #include "../Package__Version.h"
 
 using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;

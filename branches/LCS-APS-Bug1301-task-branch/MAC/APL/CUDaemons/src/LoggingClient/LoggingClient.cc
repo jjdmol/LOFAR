@@ -36,7 +36,6 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
-	using namespace ACC::APS;
 	using namespace GCF::TM;
     namespace CUDaemons {
 

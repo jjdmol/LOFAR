@@ -41,7 +41,6 @@
 namespace LOFAR {
 	using namespace MACIO;
 	using namespace GCF::TM;
-	using namespace ACC::APS;
 	namespace AMI {
 
 //

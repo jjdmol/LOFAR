@@ -33,7 +33,6 @@
 #include <Common/ParameterSet.h>
 
 namespace LOFAR {
-	using namespace ACC::APS;
  namespace GCF {
   namespace TM {
 

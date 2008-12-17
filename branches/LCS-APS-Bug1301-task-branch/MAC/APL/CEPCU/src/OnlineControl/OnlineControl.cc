@@ -51,7 +51,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
     using namespace ACC::ALC;
 	namespace CEPCU {
 	

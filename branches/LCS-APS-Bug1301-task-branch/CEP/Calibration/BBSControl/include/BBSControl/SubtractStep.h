@@ -47,7 +47,7 @@ namespace LOFAR
 	SingleStep(parent) {}
 
       SubtractStep(const string& name, 
-                   const ACC::APS::ParameterSet& parSet,
+                   const ParameterSet& parSet,
                    const Step* parent);
 
       // Accept a CommandVisitor that wants to process \c *this.

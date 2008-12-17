@@ -46,7 +46,6 @@
 #include <unistd.h>    // for sleep()
 
 
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR
 {

@@ -26,8 +26,6 @@
 #define PSACCESS_H_
 
 #include <Common/ParameterSet.h>
-using LOFAR::ACC::APS::ParameterSet;
-using LOFAR::ACC::APS::globalParameterSet;
 
 #define __psaccess__convert_i getInt32
 #define __psaccess__convert_f getFloat

@@ -51,7 +51,6 @@
 
 #include <stdlib.h>
 
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR 
 {
@@ -112,7 +111,7 @@ namespace LOFAR
 
       try {
         uint32 kernelId =
-            LOFAR::ACC::APS::globalParameterSet()->getUint32("Kernel.Id");
+            globalParameterSet()->getUint32("Kernel.Id");
 
         // Create a new CommandQueue. This will open a connection to the
         // blackboard database.

@@ -130,7 +130,7 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	CAMmap					itsCEPapplications;
-    ACC::APS::ParameterSet  itsResultParams;
+    ParameterSet  itsResultParams;
 
 	CTState::CTstateNr		itsState;
 

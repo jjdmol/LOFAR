@@ -34,7 +34,7 @@ namespace LOFAR
   {
     namespace PLC
     {
-      using namespace APS;
+      using LOFAR::ParameterSet;
 
       ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl) :
         ProcCtrlProxy(aProcCtrl)

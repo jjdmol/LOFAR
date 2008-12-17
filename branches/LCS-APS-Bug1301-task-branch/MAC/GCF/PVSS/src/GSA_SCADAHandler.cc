@@ -48,11 +48,11 @@ GSASCADAHandler* GSASCADAHandler::instance()
 //#define PARAM_DEFAULT_PVSS_CMDLINE "mac.controller.pvss.cmdline"
 //    string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
 //    char* appName = strrchr(GCFTask::_argv[0], '/');
-//    if (!ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam)) {            
+//    if (!globalParameterSet()->isDefined(pvssCmdLineParam)) {            
 //      pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
 //    }
-//    if (ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam)) {
-//      cmdline += ACC::APS::globalParameterSet()->getString(pvssCmdLineParam);
+//    if (globalParameterSet()->isDefined(pvssCmdLineParam)) {
+//      cmdline += globalParameterSet()->getString(pvssCmdLineParam);
 //    }
 
     // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 

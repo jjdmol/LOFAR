@@ -26,7 +26,6 @@
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
-using namespace ACC::APS;
 
 void testScalar()
 {

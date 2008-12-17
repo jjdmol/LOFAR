@@ -49,7 +49,6 @@ namespace LOFAR
   namespace BBS
   {
     using LOFAR::operator<<;
-    using ACC::APS::ParameterSet;
 
     namespace QueryBuilder
     {

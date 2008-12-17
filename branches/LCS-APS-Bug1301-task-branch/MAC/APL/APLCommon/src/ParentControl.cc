@@ -38,7 +38,6 @@
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
-  using namespace ACC::APS;
   namespace APLCommon {
 
 typedef struct stateFlow_t {

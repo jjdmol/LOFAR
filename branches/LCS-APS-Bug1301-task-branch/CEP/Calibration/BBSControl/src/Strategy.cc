@@ -34,8 +34,6 @@
 
 namespace LOFAR
 {
-  using ACC::APS::ParameterSet;
-  using ACC::APS::APSException;
 
   namespace BBS
   {
@@ -146,7 +144,7 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void Strategy::write(ACC::APS::ParameterSet& ps) const
+    void Strategy::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       ps.add("DataSet", itsDataSet);
@@ -168,7 +166,7 @@ namespace LOFAR
     }
 
 
-    void Strategy::read(const ACC::APS::ParameterSet& ps)
+    void Strategy::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 

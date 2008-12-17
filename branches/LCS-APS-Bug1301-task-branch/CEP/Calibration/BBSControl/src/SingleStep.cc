@@ -33,7 +33,6 @@ namespace LOFAR
 {
   namespace BBS
   {
-    using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
     //##--------   P u b l i c   m e t h o d s   --------##//

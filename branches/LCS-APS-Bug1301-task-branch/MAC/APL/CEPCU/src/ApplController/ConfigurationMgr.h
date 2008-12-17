@@ -33,7 +33,6 @@
 #include <PL/PersistenceBroker.h>
 #include <Common/ParameterSet.h>
 
-using LOFAR::ACC::APS::ParameterSet;
 
 namespace LOFAR {
   namespace ACC {

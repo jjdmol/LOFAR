@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APS_PARAMETERSET_H
-#define LOFAR_APS_PARAMETERSET_H
+#ifndef LOFAR_COMMON_PARAMETERSET_H
+#define LOFAR_COMMON_PARAMETERSET_H
 
 // \file
 // Implements a map of Key-Value pairs.
@@ -34,10 +34,8 @@
 #include <Common/KVpair.h>
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
 
-// \addtogroup APS
+// \addtogroup Common
 // @{
 
 //# Description of class.
@@ -818,8 +816,6 @@ inline vector<time_t> ParameterSet::getTimeVector(const string& aKey,
         return itsSet->getTimeVector(aKey, aValue, expandable);
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR
 
 #endif

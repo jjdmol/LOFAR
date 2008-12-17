@@ -31,7 +31,6 @@
 
 using namespace LOFAR;
 	//using namespace GCFCommon;
-using namespace ACC::APS;
 using namespace TBB;
 
 

@@ -30,8 +30,6 @@
 
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
 
 //-------------------------- creation and destroy ---------------------------
 static ParameterSet* globalParameterSetInstance = 0;
@@ -122,6 +120,4 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 	return os;
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR

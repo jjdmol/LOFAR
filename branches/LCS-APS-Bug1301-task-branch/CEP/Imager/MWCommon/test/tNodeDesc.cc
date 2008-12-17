@@ -39,7 +39,7 @@ void doIt()
   ofstream fos("tNodeDesc_tmp.fil");
   node.write (fos, "");
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tNodeDesc_tmp.fil");
+  ParameterSet parset("tNodeDesc_tmp.fil");
   NodeDesc node2(parset);
   check(node2);
   node = node2;

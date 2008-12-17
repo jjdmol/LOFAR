@@ -60,7 +60,7 @@ namespace LOFAR { namespace CEP {
       {}
 
     // Construct from the given parameterset.
-    explicit VdsPartDesc (const ACC::APS::ParameterSet&);
+    explicit VdsPartDesc (const ParameterSet&);
 
     // Set VDS name and file system.
     void setName (const std::string& name, const std::string& fileSys);
@@ -91,7 +91,7 @@ namespace LOFAR { namespace CEP {
       { return itsParms.add (key, value); }
 
     // Get access to the extra parameters.
-    const ACC::APS::ParameterSet& getParms() const
+    const ParameterSet& getParms() const
       { return itsParms; }
 
     // Clear the extra parameters.
@@ -147,7 +147,7 @@ namespace LOFAR { namespace CEP {
     std::vector<int32>  itsNChan;        //# nr of channels per band
     std::vector<double> itsStartFreqs;   //# start freq of each channel
     std::vector<double> itsEndFreqs;     //# end freq of each channel
-    ACC::APS::ParameterSet itsParms;     //# extra parameters
+    ParameterSet itsParms;     //# extra parameters
   };
     
   // Put/get the object to/from a blob.

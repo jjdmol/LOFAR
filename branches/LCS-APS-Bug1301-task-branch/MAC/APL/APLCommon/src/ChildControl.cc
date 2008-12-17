@@ -42,7 +42,6 @@ using namespace boost;
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
-  using namespace ACC::APS;
   namespace APLCommon {
 
 //-------------------------- creation and destroy ---------------------------

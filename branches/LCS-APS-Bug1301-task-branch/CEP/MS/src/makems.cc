@@ -188,7 +188,7 @@ void createMSSeq (const string& msName, int seqnr,
 
 void doMaster (bool send)
 {
-  APS::ParameterSet params ("makems.cfg");
+  ParameterSet params ("makems.cfg");
   // Get the various parameters.
   double startFreq = params.getDouble ("StartFreq");
   double stepFreq  = params.getDouble ("StepFreq");

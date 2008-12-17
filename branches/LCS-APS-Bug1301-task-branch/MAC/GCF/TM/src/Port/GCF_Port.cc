@@ -36,7 +36,6 @@
 #include <GCF/TM/GCF_DevicePort.h>
 
 namespace LOFAR {
-	using namespace ACC::APS;
  namespace GCF {
   namespace TM {
 

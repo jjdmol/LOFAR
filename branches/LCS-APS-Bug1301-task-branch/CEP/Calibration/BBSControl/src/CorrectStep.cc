@@ -31,7 +31,7 @@ namespace LOFAR
   {
 
     CorrectStep::CorrectStep(const string& name, 
-                             const ACC::APS::ParameterSet& parSet,
+                             const ParameterSet& parSet,
                              const Step* parent) :
       SingleStep(name, parent)
     {

@@ -52,7 +52,7 @@ public:
 	TBBObservation();
 	~TBBObservation() { };
 	
-	explicit	TBBObservation (ACC::APS::ParameterSet*		aParSet);
+	explicit	TBBObservation (ParameterSet*		aParSet);
 	
 	typedef bitset<256> RCUset_t;
 	

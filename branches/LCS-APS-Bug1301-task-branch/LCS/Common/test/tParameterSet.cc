@@ -36,7 +36,6 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
 
 int doIt(KeyCompare::Mode mode)
 {

@@ -111,7 +111,7 @@ bool GCFDevicePort::open()
     {
       // retrieve the device name from the parameter set
       setDeviceName(
-          ACC::APS::globalParameterSet()->getString(
+          globalParameterSet()->getString(
               formatString(
                   "mac.ns.%s.%s.deviceName",
                   _pTask->getName().c_str(),

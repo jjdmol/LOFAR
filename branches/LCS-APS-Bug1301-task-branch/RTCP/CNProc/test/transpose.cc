@@ -53,7 +53,7 @@ class DH_RSP : public DataHolder
   public:
     typedef i4complex SampleType;
 
-    DH_RSP(const string &name, const ACC::APS::ParameterSet &ps);
+    DH_RSP(const string &name, const ParameterSet &ps);
 
     DataHolder	 *clone() const;
     virtual void init();
@@ -65,7 +65,7 @@ class DH_RSP : public DataHolder
 };
 
 
-DH_RSP::DH_RSP(const string &name, const ACC::APS::ParameterSet &ps)
+DH_RSP::DH_RSP(const string &name, const ParameterSet &ps)
 :
   DataHolder(name, "DH_RSP")
 {
@@ -218,7 +218,7 @@ class WH_Transpose : public WorkHolder
   public:
     typedef i4complex SampleType;
 
-    WH_Transpose(const string &name, const ACC::APS::ParameterSet &ps, unsigned rank, MPI_Comm comm);
+    WH_Transpose(const string &name, const ParameterSet &ps, unsigned rank, MPI_Comm comm);
 
     virtual void preprocess();
     virtual void process();
@@ -230,7 +230,7 @@ class WH_Transpose : public WorkHolder
 
     void			 allToAll();
 
-    const ACC::APS::ParameterSet &itsParamSet;
+    const ParameterSet &itsParamSet;
     unsigned			 itsCoreNumber, itsPsetNumber, itsPsetIndex;
     unsigned			 itsNrStations, itsNrCorrelatorPsets, itsNrPsets;
     unsigned			 itsPhase;
@@ -242,7 +242,7 @@ class WH_Transpose : public WorkHolder
 };
 
 
-WH_Transpose::WH_Transpose(const string &name, const ACC::APS::ParameterSet &ps, unsigned rank, MPI_Comm communicator)
+WH_Transpose::WH_Transpose(const string &name, const ParameterSet &ps, unsigned rank, MPI_Comm communicator)
 :
   WorkHolder(0, 0, name, string("WH_Transpose")),
   itsParamSet(ps),

@@ -62,7 +62,7 @@ class ActiveObs : public GCFFsm
 public:
 	ActiveObs (const string&			name,
 			   State					initial,
-			   ACC::APS::ParameterSet*	aPS,
+			   ParameterSet*	aPS,
 			   GCFTask&					task);
 	virtual ~ActiveObs();
 

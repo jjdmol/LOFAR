@@ -30,7 +30,6 @@
 
 using namespace std;
 using namespace LOFAR::CEP;
-using LOFAR::ACC::APS::ParameterSet;
 
 int main(int argc, const char* argv[])
 {

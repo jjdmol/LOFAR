@@ -41,7 +41,6 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace Deployment;
-	using namespace ACC::APS;
 	namespace Test {
 	
 //

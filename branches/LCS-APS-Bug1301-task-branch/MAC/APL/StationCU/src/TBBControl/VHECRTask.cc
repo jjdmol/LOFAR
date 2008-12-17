@@ -26,7 +26,6 @@
 #include "VHECRTask.h"
 
 namespace LOFAR {
-  //	using namespace ACC::APS;
   namespace StationCU {
     
     //

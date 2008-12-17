@@ -33,7 +33,6 @@
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::PLC;
 
 //

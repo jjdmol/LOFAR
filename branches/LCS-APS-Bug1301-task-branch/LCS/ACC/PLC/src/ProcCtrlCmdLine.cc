@@ -35,7 +35,7 @@ namespace LOFAR
   {
     namespace PLC
     {
-      using APS::ParameterSet;
+//       using LOFAR::ParameterSet;
 
       //## --------   P u b l i c   m e t h o d s   -------- ##//
 

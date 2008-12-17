@@ -39,7 +39,6 @@
 
 namespace LOFAR {
   using namespace MACIO;
-  using namespace ACC::APS;
   using namespace OTDB;
   using namespace Deployment;
   namespace GCF {

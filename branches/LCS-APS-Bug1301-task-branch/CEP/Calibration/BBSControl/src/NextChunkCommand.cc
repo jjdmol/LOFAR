@@ -35,8 +35,6 @@ namespace LOFAR
 {
   namespace BBS 
   {
-    using ACC::APS::ParameterSet;
-    using ACC::APS::KVpair;
 
     // Register NextChunkCommand with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private

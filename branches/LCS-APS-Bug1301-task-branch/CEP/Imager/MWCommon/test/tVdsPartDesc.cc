@@ -69,7 +69,7 @@ void doIt()
   ofstream fos("tVdsPartDesc_tmp.fil");
   vds.write (fos, "");
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tVdsPartDesc_tmp.fil");
+  ParameterSet parset("tVdsPartDesc_tmp.fil");
   VdsPartDesc vds2(parset);
   check(vds2);
   vds = vds2;
@@ -90,7 +90,7 @@ void doIt()
   // Check if times are written as well.
   ofstream fos2("tVdsPartDesc_tmp.fil2");
   vdsb.write (fos2, "");
-  VdsPartDesc vdsb2(LOFAR::ACC::APS::ParameterSet("tVdsPartDesc_tmp.fil2"));
+  VdsPartDesc vdsb2(ParameterSet("tVdsPartDesc_tmp.fil2"));
   check(vdsb2, 10);
   vdsb.clearParms();
   ASSERT (vdsb.getParms().size() == 0);

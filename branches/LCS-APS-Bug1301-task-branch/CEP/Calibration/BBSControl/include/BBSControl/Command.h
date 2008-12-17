@@ -33,7 +33,7 @@
 namespace LOFAR
 {
   //# Forward declarations
-  namespace ACC { namespace APS { class ParameterSet; } }
+  class ParameterSet;
 
   namespace BBS
   {
@@ -56,10 +56,10 @@ namespace LOFAR
       virtual const string& type() const = 0;
 
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const = 0;
+      virtual void write(ParameterSet& ps) const = 0;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps) = 0;
+      virtual void read(const ParameterSet& ps) = 0;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -77,12 +77,12 @@ namespace LOFAR
       friend ostream& operator<<(ostream&, const Command&);
 
       // Write the contents of a Command to a ParameterSet.
-      friend ACC::APS::ParameterSet& 
-      operator<<(ACC::APS::ParameterSet&, const Command&);
+      friend ParameterSet& 
+      operator<<(ParameterSet&, const Command&);
 
       // Read the contents of a ParameterSet into a Command.
-      friend ACC::APS::ParameterSet& 
-      operator>>(ACC::APS::ParameterSet&, Command&);
+      friend ParameterSet& 
+      operator>>(ParameterSet&, Command&);
     };
 
     // Factory that can be used to generate new Command objects.

@@ -24,7 +24,6 @@
 #include <MWControl/MWMultiSpec.h>
 #include <MWControl/MWParameterHandler.h>
 
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::CEP;
 using namespace std;
 

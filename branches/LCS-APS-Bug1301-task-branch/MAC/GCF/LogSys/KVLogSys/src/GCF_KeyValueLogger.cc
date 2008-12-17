@@ -31,8 +31,6 @@
 #include <time.h>
 
 namespace LOFAR {
-  using ACC::APS::ParameterSet;
-  using ACC::APS::globalParameterSet;
 
   namespace GCF {
 	using namespace TM;

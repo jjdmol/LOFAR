@@ -37,8 +37,6 @@
 
 namespace LOFAR {
 	using namespace OTDB;  
-	using ACC::APS::ParameterSet;
-	using ACC::APS::globalParameterSet;
 	namespace GCF {
 		using namespace TM;
 		namespace LogSys {

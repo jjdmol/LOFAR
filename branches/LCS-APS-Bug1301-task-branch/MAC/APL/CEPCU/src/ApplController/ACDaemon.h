@@ -36,7 +36,6 @@
 #include <Common/ParameterSet.h>
 #include "ACRequestPool.h"
 
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace ACC {

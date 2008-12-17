@@ -47,7 +47,6 @@
 #include "ItemList.h"
 #include "ProcRuler.h"
 
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::ALC;
 using namespace LOFAR::ACC::PLC;
 

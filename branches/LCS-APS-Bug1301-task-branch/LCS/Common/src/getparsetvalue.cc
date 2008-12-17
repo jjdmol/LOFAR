@@ -44,7 +44,7 @@ int main (int argc, const char* argv[])
       iss >> inx;
       useAll = false;
     }
-    LOFAR::ACC::APS::ParameterSet parset(argv[1]);
+    LOFAR::ParameterSet parset(argv[1]);
     if (useAll) {
       std::string value = parset.getString (argv[2]);
       std::cout << value << std::endl;

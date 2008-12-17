@@ -98,7 +98,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_IFNAME,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _ifname += ACC::APS::globalParameterSet()->getString(ifNameParam);      
+      _ifname += globalParameterSet()->getString(ifNameParam);      
     }
     catch (...)
     {
@@ -115,7 +115,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_MACADDR,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _destMacStr += ACC::APS::globalParameterSet()->getString(destMacParam);      
+      _destMacStr += globalParameterSet()->getString(destMacParam);      
     }
     catch (...)
     {
@@ -132,7 +132,7 @@ bool GCFETHRawPort::open()
           PARAM_ETH_ETHERTYPE,
           getTask()->getName().c_str(),
           getRealName().c_str());
-      _ethertype += ACC::APS::globalParameterSet()->getInt32(ethertypeParam);      
+      _ethertype += globalParameterSet()->getInt32(ethertypeParam);      
     }
     catch (...)
     {

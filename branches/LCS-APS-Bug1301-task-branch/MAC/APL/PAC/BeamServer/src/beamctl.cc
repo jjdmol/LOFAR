@@ -67,7 +67,6 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
-using namespace ACC::APS;
 using namespace BS;
 using namespace RTC;
 using namespace CAL_Protocol;
@@ -501,7 +500,7 @@ int main(int argc, char** argv)
   cout << "Reading configuration files" << endl;
   try {
   	LOFAR::ConfigLocator cl;
-		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
+		globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
 	}
 	catch (LOFAR::Exception e) {
 		cerr << "Failed to load configuration files: " << e.text() << endl;

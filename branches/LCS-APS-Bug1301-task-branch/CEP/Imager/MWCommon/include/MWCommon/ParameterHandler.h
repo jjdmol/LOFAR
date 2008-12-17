@@ -34,7 +34,6 @@
 namespace LOFAR { namespace CEP {
 
   //# Put ParameterSet into LOFAR::CEP namespace for ease of use.
-  using LOFAR::ACC::APS::ParameterSet;
 
   // @ingroup MWCommon
   // @brief Handle a LOFAR .parset file

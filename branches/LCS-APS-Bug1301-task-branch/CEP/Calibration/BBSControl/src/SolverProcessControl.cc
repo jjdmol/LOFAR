@@ -49,7 +49,6 @@
 
 namespace LOFAR
 {
-  using namespace ACC::APS;
 
   namespace BBS
   {

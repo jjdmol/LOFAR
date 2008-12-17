@@ -35,7 +35,6 @@
 using namespace LOFAR;
 using namespace LOFAR::BS;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::ACC::APS;
 
 //
 // MAIN

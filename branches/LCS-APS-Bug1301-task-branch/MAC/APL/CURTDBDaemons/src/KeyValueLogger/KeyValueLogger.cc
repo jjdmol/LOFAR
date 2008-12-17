@@ -211,7 +211,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
 
-		int32	timeStamp = ACC::APS::indexValue(logEvent.key, "{}");
+		int32	timeStamp = indexValue(logEvent.key, "{}");
 		rtrim  (logEvent.key, "{}01234565789");	 // cut off timestamp
 		// replace all but last . with underscore.
 		string::reverse_iterator	riter	= logEvent.key.rbegin();
@@ -253,7 +253,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
 		for (uint32 i = 0; i < logEvent.msgCount; i++) {
-			int32	timeStamp = ACC::APS::indexValue(logEvent.keys.theVector[i], "{}");
+			int32	timeStamp = indexValue(logEvent.keys.theVector[i], "{}");
 			rtrim  (logEvent.keys.theVector[i], "{}01234565789");	 // cut off timestamp
 			// replace all but last . with underscore.
 			string::reverse_iterator	riter	= logEvent.keys.theVector[i].rbegin();

@@ -116,8 +116,8 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
     map<string, CEPApplicationManager*>	itsCepApplications;
-    map<string, ACC::APS::ParameterSet>	itsCepAppParams;
-    ACC::APS::ParameterSet				itsResultParams;
+    map<string, ParameterSet>	itsCepAppParams;
+    ParameterSet				itsResultParams;
 	map<string, vector<string> >		itsProcessDependencies;
 	map<string, time_t>					itsCepAppStartTimes;
 

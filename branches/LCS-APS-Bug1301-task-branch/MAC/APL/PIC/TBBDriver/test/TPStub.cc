@@ -38,7 +38,6 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace ACC::APS;
 using namespace TP_Protocol;
 using namespace TBB;
 using namespace TBB_Test;

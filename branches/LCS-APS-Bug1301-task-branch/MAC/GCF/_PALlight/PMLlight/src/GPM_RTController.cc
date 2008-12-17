@@ -49,8 +49,8 @@ GPMRTController::GPMRTController() :
 
   // initialize the port
   _propertyInterface.init(*this, "client", GCFPortInterface::SAP, PI_PROTOCOL);
-  ACC::APS::globalParameterSet()->adoptFile("gcf-pmllight.conf");
-  ACC::APS::globalParameterSet()->adoptFile("PropertyInterface.conf");
+  globalParameterSet()->adoptFile("gcf-pmllight.conf");
+  globalParameterSet()->adoptFile("PropertyInterface.conf");
 }
 
 GPMRTController* GPMRTController::instance(bool temporary)

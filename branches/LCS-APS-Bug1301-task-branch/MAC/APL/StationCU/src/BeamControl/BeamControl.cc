@@ -47,7 +47,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
 	namespace StationCU {
 	
 // static pointer to this object for signal handler

@@ -34,7 +34,6 @@
 #include <ALC/DH_ApplControl.h>
 #include <Common/ParameterSet.h>
 
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {

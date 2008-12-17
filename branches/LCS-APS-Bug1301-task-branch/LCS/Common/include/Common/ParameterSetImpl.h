@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APS_PARAMETERSETIMPL_H
-#define LOFAR_APS_PARAMETERSETIMPL_H
+#ifndef LOFAR_COMMON_PARAMETERSETIMPL_H
+#define LOFAR_COMMON_PARAMETERSETIMPL_H
 
 // \file
 // Implements a map of Key-Value pairs.
@@ -40,9 +40,8 @@
 #include <Common/StringUtil.h>
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
-// \addtogroup APS
+
+// \addtogroup Common
 // @{
 
 const char PC_QUAL_STABLE[]   = { "stable"        };
@@ -598,8 +597,6 @@ inline time_t ParameterSetImpl::getTime(const string& aKey, const time_t& aValue
         return it->second.getTime();
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR
 
 #endif

@@ -52,7 +52,7 @@ class Observation
 public:
 	Observation();
 	~Observation();
-	explicit	Observation (ACC::APS::ParameterSet*		aParSet);
+	explicit	Observation (ParameterSet*		aParSet);
 
 	// global function for converting filtername to nyquist zone
 	static uint32 nyquistzoneFromFilter(const string&	filterName);

@@ -33,7 +33,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/ParameterSet.h>
 
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace ACC {

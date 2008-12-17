@@ -32,10 +32,6 @@
 #include <string>
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
-
-      using LOFAR::operator<<;
 
 //-------------------------- creation and destroy ---------------------------
 //
@@ -642,6 +638,4 @@ string	ParameterSetImpl::locateModule(const string&	shortKey) const
 	return ("");
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR

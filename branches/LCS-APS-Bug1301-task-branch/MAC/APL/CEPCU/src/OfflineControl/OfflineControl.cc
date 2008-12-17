@@ -46,7 +46,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
     using namespace ACC::ALC;
 	namespace CEPCU {
 	
@@ -451,7 +450,7 @@ uint16_t OfflineControl::doClaim(const string& cntlrName)
 	  CEPApplicationManagerPtr accClient(new CEPApplicationManager(*this, procName));
 	  itsCepApplications[procName] = accClient;
 	  
-	  ACC::APS::ParameterSet params;
+	  ParameterSet params;
 	  params.clear();
 	  // import the ApplCtrl section
 	  params.adoptCollection(globalParameterSet()->makeSubset("ApplCtrl", "ApplCtrl"));
@@ -493,7 +492,7 @@ uint16_t OfflineControl::doPrepare(const string& cntlrName)
 
   try
   {
-	map<string, ACC::APS::ParameterSet>::iterator it;
+	map<string, ParameterSet>::iterator it;
 	for(it = itsCepAppParams.begin(); it != itsCepAppParams.end();++it)
 	{
 	  // only start processes that do not depend on other processes
@@ -518,7 +517,7 @@ uint16_t OfflineControl::doPrepare(const string& cntlrName)
 //
 void OfflineControl::prepareProcess(const string& cntlrName, const string& procName, const time_t startTime)
 {
-  map<string, ACC::APS::ParameterSet>::iterator it = itsCepAppParams.find(procName);
+  map<string, ParameterSet>::iterator it = itsCepAppParams.find(procName);
   if(it != itsCepAppParams.end()) {
 	string procName = it->second.getString("ApplCtrl.process[1].ID");
 	string hostName = it->second.getString("ApplCtrl.hostname");
@@ -592,7 +591,7 @@ void OfflineControl::prepareProcess(const string& cntlrName, const string& procN
 void OfflineControl::doRelease(void)
 {
   try {
-	map<string, ACC::APS::ParameterSet>::iterator it;
+	map<string, ParameterSet>::iterator it;
 	for(it = itsCepAppParams.begin(); it != itsCepAppParams.end();++it) {
 	  string hostName, remoteFile, resultFile, procName;
 	  hostName = it->second.getString("ApplCtrl.hostname");
@@ -650,7 +649,7 @@ void OfflineControl::appBooted(const string& procName, uint16 result)
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
   {
 	map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
-	map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+	map<string, ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
 	map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
 	if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
     {
@@ -686,7 +685,7 @@ void OfflineControl::appDefined(const string& procName, uint16 result)
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {
 	map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
-	map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+	map<string, ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
 	map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
 	if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
     {
@@ -791,7 +790,7 @@ void OfflineControl::appQuitDone(const string& procName, uint16 result)
 			// If the list only contains the finished process, the new process can be started
 			if(itDep->second.size() == 1)
 			{
-			  map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+			  map<string, ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
 			  if(itParam != itsCepAppParams.end())
 			  {
 				// boot the process in 30 seconds
@@ -852,7 +851,7 @@ void OfflineControl::appRecovered(const string& procName, uint16 /*result*/)
   LOG_INFO_STR("appRecovered from " << procName);
   
   map<string,CEPApplicationManagerPtr>::iterator itApp = itsCepApplications.find(procName);
-  map<string, ACC::APS::ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
+  map<string, ParameterSet>::iterator itParam = itsCepAppParams.find(procName);
   map<string,time_t>::iterator itStart = itsCepAppStartTimes.find(procName);
   if(itApp != itsCepApplications.end() && itParam != itsCepAppParams.end() && itStart != itsCepAppStartTimes.end())
   {

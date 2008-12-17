@@ -31,7 +31,7 @@ namespace LOFAR
   {
 
     PredictStep::PredictStep(const string& name, 
-                             const ACC::APS::ParameterSet& parSet,
+                             const ParameterSet& parSet,
                              const Step* parent) :
       SingleStep(name, parent)
     {

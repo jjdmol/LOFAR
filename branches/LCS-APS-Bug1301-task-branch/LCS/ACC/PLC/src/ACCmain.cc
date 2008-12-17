@@ -41,7 +41,7 @@ namespace LOFAR {
   namespace ACC {
     namespace PLC {
 
-using namespace APS;
+using LOFAR::ParameterSet;
 
 //
 // ACCmain(argc, argv, procCtrl*)

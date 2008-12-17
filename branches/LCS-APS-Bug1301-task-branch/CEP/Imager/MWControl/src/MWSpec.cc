@@ -33,7 +33,6 @@
 namespace std {
   using LOFAR::operator<<;
 }
-using namespace LOFAR::ACC::APS;
 using namespace std;
 
 namespace LOFAR { namespace CEP {

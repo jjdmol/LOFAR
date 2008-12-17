@@ -68,7 +68,6 @@
 
 namespace LOFAR
 {
-  using ACC::APS::ParameterSet;
 
   namespace BBS 
   {

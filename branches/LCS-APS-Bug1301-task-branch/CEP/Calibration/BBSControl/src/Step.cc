@@ -40,8 +40,6 @@
 
 namespace LOFAR
 {
-  using ACC::APS::ParameterSet;
-  using ACC::APS::APSException;
 
   namespace BBS
   {

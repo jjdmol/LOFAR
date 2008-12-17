@@ -56,7 +56,6 @@ using namespace std;
 using namespace LOFAR;
 using namespace APLCommon;
 using namespace RTC;
-using namespace ACC::APS;
 using namespace StationCU;
 	
 // static pointer to this object for signal handler

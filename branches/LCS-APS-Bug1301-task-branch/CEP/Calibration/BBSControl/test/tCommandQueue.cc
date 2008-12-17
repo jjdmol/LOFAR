@@ -42,7 +42,6 @@
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
-using namespace LOFAR::ACC::APS;
 
 int main(int /*argc*/, char* argv[])
 {

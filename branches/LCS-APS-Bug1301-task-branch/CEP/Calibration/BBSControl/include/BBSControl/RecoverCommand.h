@@ -39,10 +39,10 @@ namespace LOFAR
       virtual const string& type() const;
 
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
+      virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps);
+      virtual void read(const ParameterSet& ps);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

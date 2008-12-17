@@ -34,7 +34,6 @@ namespace LOFAR
 {
   namespace BBS
   {
-    using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
 
