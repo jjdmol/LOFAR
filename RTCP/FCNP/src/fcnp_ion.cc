@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <pthread.h>
+#include <signal.h>
 
 #include "fcnp_ion.h"
 #include "protocol.h"
@@ -108,7 +109,7 @@ static int			fd;
 static _BGP_Atomic		sendMutex	      = {0};
 static pthread_mutex_t		scheduledRequestsLock = PTHREAD_MUTEX_INITIALIZER;
 static Semaphore		recvSema(1); // could have used mutex, but this is slower!???  livelock???
-static volatile bool stop;
+static volatile bool		stop, stopped;
 
 
 // Reading the tree status words seems to be expensive.  These wrappers
@@ -374,6 +375,7 @@ static void *pollThread(void *)
   if (useInterrupts)
     std::clog << "received " << nrInterrupts << " vc0 interrupts" << std::endl;
 
+  stopped = true;
   return 0;
 }
 
@@ -564,10 +566,25 @@ static void drainFIFO()
 static pthread_t thread;
 
 
+static void sigHandler(int)
+{
+}
+
+
 void init(bool enableInterrupts)
 {
-  if (enableInterrupts)
+  if (enableInterrupts) {
     std::clog << "Warning: FCNP with interrupts is not stable!" << std::endl;
+
+    struct sigaction sa;
+
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags   = 0;
+    sa.sa_handler = sigHandler;
+
+    if (sigaction(SIGUSR1, &sa, 0) != 0)
+      perror("sigaction");
+  }
 
   useInterrupts = enableInterrupts;
 
@@ -585,6 +602,14 @@ void init(bool enableInterrupts)
 void end()
 {
   stop = true;
+
+  if (useInterrupts)
+    while (!stopped) {
+      if (pthread_kill(thread, SIGUSR1) != 0)
+	perror("pthread_kill");
+
+      usleep(25000);
+    }
 
   if (pthread_join(thread, 0) != 0) {
     perror("pthread_join");
