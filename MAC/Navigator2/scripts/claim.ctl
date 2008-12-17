@@ -44,6 +44,9 @@ global bool isConnected = false;
 global bool isClient = true;
 // contains the old known system to be able to check of the dist callback was caused by the master
 global dyn_int oldSystemList;
+// contains all known claimable DPTypes
+global dyn_string claimableTypes;
+
 
 void main()
 {
@@ -52,7 +55,10 @@ void main()
   DebugN( "ClaimManager is starting   " );
   DebugN( "***************************" );
   
-
+  // append all Claimable types, for now only Observations needed
+  dynAppend(claimableTypes,"Observation");
+  
+  
   if (bDebug){
     DebugN("SystemID: "+ getSystemId() + " MainDBName: " + MainDBName );
     DebugN("SystemID(MainDBName) : " + MainDBID + "GetSystemName: "+getSystemName());
@@ -64,6 +70,9 @@ void main()
   } else {
       if (bDebug) DebugN("Running on Client System");
   }
+  
+  // check if datapoints for all types are available, if not, then create them
+  checkAndCreateDPs();
   
   if (isClient) {
   	// Routine to connect to _DistConnections.ManNums.
@@ -668,6 +677,96 @@ string  FindFreeClaim(
   // Return the result
   return strDP;
 }  
+
+// *******************************************
+// Name : checkAndCreateDPs
+// *******************************************
+// Description:
+//    Checks if all DP's for a given type
+//    are available, and if not, then will create them
+//
+// Returns:
+//    None
+// *******************************************
+void checkAndCreateDPs() {
+  
+  // loop over all claimable types and check if the needed DP's allready exist
+  for (int i=1; i<= dynlen(claimableTypes); i++) {
+    // check for Temp Observation points, we need 100 off all of them, if one is not available we
+    // will create it on the fly
+    //For Master the temppoints are:
+    //
+    //    DPType          DP's
+    //    Observation:    LOFAR_ObsSW_TempObs0001-0100
+    //    ObsCtrl:        LOFAR_ObsSW_TempObs0001-0100_ObsCtrl
+    //    OnlineCtrl:     LOFAR_ObsSW_TempObs0001-0100_OnlineCtrl
+    //    Correlator:     LOFAR_ObsSW_TempObs0001-0100_OnlineCtrl_Correlator
+    //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineCtrl_StorageAppl
+    // 
+    // And for the Stations:   
+    //
+    //    DPType          DP's
+    //    StnObservation: LOFAR_ObsSW_TempObs0001-0100
+    //    BeamCtrl:       LOFAR_ObsSW_TempObs0001-0100_BeamCtrl
+    //    CalCtrl:        LOFAR_ObsSW_TempObs0001-0100_CalCtrl
+    //    TBBCtrl:       LOFAR_ObsSW_TempObs0001-0100_TBBCtrl
+
+    
+    if (claimableTypes[i] == "Observation") {
+      //different points for Client and Master
+      for (int j=1;j<=100;j++) {
+        string pre;
+        if (j < 10) {
+          pre ="000"+j;
+        } else if (j < 100) {
+          pre ="00"+j;
+        } else if (j < 1000) {
+          pre = "0"+j;
+        }
+        
+        if (isClient) {
+          //StnObservation
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre,"StnObservation");
+          }
+          //BeamCtrl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_BeamCtrl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_BeamCtrl","BeamCtrl");
+          }
+          //CalCtrl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CalCtrl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CalCtrl","CalCtrl");
+          }
+          //TBBCtrl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_TBBCtrl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_TBBCtrl","TBBCtrl");
+          }
+        } else {
+          //Observation
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre,"Observation");
+          }
+          //ObsCtrl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_ObsCtrl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_ObsCtrl","ObsCtrl");
+          }
+          //OnlineCtrl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl","OnlineCtrl");
+          }
+          //Correlator
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl_Correlator")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl_Correlator","Correlator");
+          }
+          //StorageAppl
+          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl_StorageAppl")) {
+            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl_StorageAppl","StorageAppl");
+          }
+        } // end iscClient
+      } // end Observation counter loop
+    } // end Observation Type
+  } // end claimable Types loop
+}
 
 // *******************************************
 // Name : showMapping
