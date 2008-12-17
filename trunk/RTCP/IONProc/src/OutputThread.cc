@@ -25,6 +25,7 @@
 
 #include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
+#include <Stream/SystemCallException.h>
 
 
 namespace LOFAR {
@@ -38,19 +39,15 @@ OutputThread::OutputThread(Stream *streamToStorage, unsigned nrBaselines, unsign
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
 
-  if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-    std::cerr << "could not create output thread" << std::endl;
-    exit(1);
-  }
+  if (pthread_create(&thread, 0, mainLoopStub, this) != 0)
+    throw SystemCallException("pthread_create output thread", errno, THROW_ARGS);
 }
 
 
 OutputThread::~OutputThread()
 {
-  if (pthread_join(thread, 0) != 0) {
-    std::cerr << "could not join output thread" << std::endl;
-    exit(1);
-  }
+  if (pthread_join(thread, 0) != 0)
+    throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
 
   while (!itsFreeQueue.empty())
     delete itsFreeQueue.remove();
