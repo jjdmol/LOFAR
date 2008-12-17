@@ -141,6 +141,9 @@ static void configureCNs(const Parset &parset)
 {
   CN_Command	    command(CN_Command::PREPROCESS);
   CN_Configuration configuration;
+  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
+  Matrix<double>    &phaseCentres = configuration.phaseCentres();
+  
 
   configuration.nrStations()              = parset.nrStations();
   configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
@@ -156,6 +159,18 @@ static void configureCNs(const Parset &parset)
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
   configuration.tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
   configuration.refFreqs()                = parset.subbandToFrequencyMapping();
+  configuration.nrPencilRings()           = parset.getUint32("OLAP.DelayComp.nrPencilRings");
+  configuration.pencilRingSize()          = parset.getDouble("OLAP.DelayComp.pencilRingSize");
+  configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
+
+  phaseCentres.resize( inputs.size(), 3 );
+  for( unsigned stat = 0; stat < inputs.size(); stat++ ) {
+    std::vector<double> phaseCentre = parset.getPhaseCentresOf( inputs[stat].station );
+
+    for( unsigned dim = 0; dim < 3; dim++ ) {
+      phaseCentres[stat][dim] = phaseCentre[dim];
+    }
+  }
 
   std::clog << "configuring " << nrCoresPerPset << " cores ...";
   std::clog.flush();

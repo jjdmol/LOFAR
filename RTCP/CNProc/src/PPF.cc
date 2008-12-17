@@ -337,6 +337,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
     if (itsDelayCompensation) {
       computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
+
+      // forward (pencil) beam forming information
+      for( unsigned i = 0; i < 3; i++ ) {
+        filteredData->metaData[stat].beamDirectionAtBegin[i] = transposedData->metaData[stat].beamDirectionAtBegin[i];
+        filteredData->metaData[stat].beamDirectionAfterEnd[i] = transposedData->metaData[stat].beamDirectionAfterEnd[i];
+      }
+
     }
 
     const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();

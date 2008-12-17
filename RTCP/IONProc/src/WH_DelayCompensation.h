@@ -87,9 +87,13 @@ namespace LOFAR
 
       ~WH_DelayCompensation();
 
-      vector<double> calcDelaysForEachTimeNrDirections(vector<double> &startIntegrationTime);
+      vector<AMC::Direction> calculateAllBeamDirections(vector<double> &startIntegrationTime);
+
+      const AMC::Position& getPositionDiffs() const;
+
+      double getDelay( AMC::Direction &direction ) const;
       
-     private:
+    private:
       // Copying is not allowed
       WH_DelayCompensation (const WH_DelayCompensation& that);
       WH_DelayCompensation& operator= (const WH_DelayCompensation& that);
@@ -121,11 +125,9 @@ namespace LOFAR
       // itsResultAfterEnd.
       void doConvert();
 
-      // Calculate the delays for all stations for the epoch after the end of
-      // the current time interval and store the results in itsDelaysAfterEnd.
-      // \post itsDelaysAtBegin contain the data previously contained by
-      // itsDelaysAtEnd.
-      void calculateDelays();
+      // Calculate the beam directions  for all stations for the epoch after the end of
+      // the current time interval and store the results in itsBeamDirectionsAfterEnd.
+      void calculateDirections();
       
       // Number of beams.
       const uint                    itsNrBeams;
@@ -152,9 +154,9 @@ namespace LOFAR
       // Station to reference station position difference vectors.
       AMC::Position                 itsPhasePositionDiffs;
 
-       // Delays for all stations for the epoch after the end of the current
-      // time interval.
-      vector<double>                itsDelaysAfterEnd;
+      // Beam directions for all stations, for the epoch after the end of
+      // the current time interval.
+      vector<AMC::Direction>        itsBeamDirectionsAfterEnd;
       
       unsigned                      itsNrCalcDelays;
       

@@ -43,6 +43,14 @@ void CN_Configuration::read(Stream *str)
 
   itsRefFreqs.resize(itsMarshalledData.itsRefFreqsSize);
   memcpy(&itsRefFreqs[0], itsMarshalledData.itsRefFreqs, itsMarshalledData.itsRefFreqsSize * sizeof(double));
+
+  itsRefPhaseCentre.resize(3);
+  memcpy(&itsRefPhaseCentre[0], itsMarshalledData.itsRefPhaseCentre, 3 * sizeof(double));
+
+  itsPhaseCentres.resize(nrStations(),3);
+  for( unsigned stat = 0; stat < nrStations(); stat++ ) {
+    memcpy(&itsPhaseCentres[stat][0], &itsMarshalledData.itsPhaseCentres[stat*3], 3 * sizeof(double));
+  }
 }
 
 
@@ -63,7 +71,12 @@ void CN_Configuration::write(Stream *str)
   itsMarshalledData.itsRefFreqsSize = itsRefFreqs.size();
   assert(itsMarshalledData.itsRefFreqsSize <= MAX_SUBBANDS);
   memcpy(itsMarshalledData.itsRefFreqs, &itsRefFreqs[0], itsMarshalledData.itsRefFreqsSize * sizeof(double));
-  
+
+  memcpy(itsMarshalledData.itsRefPhaseCentre, &itsRefPhaseCentre[0], 3 * sizeof(double));
+  for( unsigned stat = 0; stat < nrStations(); stat++ ) {
+    memcpy(&itsMarshalledData.itsPhaseCentres[stat*3], &itsPhaseCentres[stat][0], 3 * sizeof(double));
+  }
+
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
 }
 

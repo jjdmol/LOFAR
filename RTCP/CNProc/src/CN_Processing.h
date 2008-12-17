@@ -45,6 +45,7 @@
 #include <PPF.h>
 #include <Correlator.h>
 #include <BeamFormer.h>
+#include <PencilBeams.h>
 
 #include <LocationInfo.h>
 
@@ -120,6 +121,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 #endif
     PPF<SAMPLE_TYPE>	*itsPPF;
     BeamFormer          *itsBeamFormer;
+    PencilBeams         *itsPencilBeamFormer;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

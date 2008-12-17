@@ -97,6 +97,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
 #endif
   itsPPF(0),
   itsBeamFormer(0),
+  itsPencilBeamFormer(0),
   itsCorrelator(0)
 {
 
@@ -307,6 +308,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   if (itsIsTransposeOutput) {
     unsigned nrSubbandsPerPset	= configuration.nrSubbandsPerPset();
     unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
+    PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
     // TODO: logicalNode assumes output psets are consecutively numbered
 
     itsCenterFrequencies = configuration.refFreqs();
@@ -325,6 +327,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
+    itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres());
 
     itsCorrelator     = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(),
 				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
@@ -396,6 +399,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 #endif
   } // itsIsTransposeInput
 
+
 #if defined HAVE_MPI
   if(!itsDoAsyncCommunication) {
     if (itsIsTransposeInput || itsIsTransposeOutput) {
@@ -453,6 +457,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
     computeTimer.start();
     itsBeamFormer->formBeams(itsFilteredData);
+    //itsPencilBeamFormer->formPencilBeams(itsFilteredData);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
     computeTimer.stop();
@@ -523,6 +528,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsPPF;
     delete itsFilteredData;
     delete itsBeamFormer;
+    delete itsPencilBeamFormer;
     delete itsCorrelator;
     delete itsCorrelatedData;
   }
