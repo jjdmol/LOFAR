@@ -41,7 +41,7 @@
 #endif
 
 #if defined HAVE_FCNP && defined HAVE_BGP
-#include <fcnp_cn.h>
+#include <FCNP/fcnp_cn.h>
 #endif
 
 // if exceptions are not caught, an attempt is made to create a backtrace

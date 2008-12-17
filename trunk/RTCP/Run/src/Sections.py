@@ -25,7 +25,7 @@ class Section(object):
         return self.package.split('/')[-1]
 
     def run(self, runlog, timeOut, runCmd = None):
-        if '_bgp' in self.buildvar:
+        if 'bgp_cn' in self.buildvar:
             self.runJob = CNJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
@@ -132,7 +132,7 @@ class IONProcSection(Section):
                          host = host, \
 			 workingDir = workingDir, \
 			 parsetfile = parsetfile, \
-			 buildvar = 'gnu_opt')
+			 buildvar = 'gnubgp_ion')
 	
         self.inOutPsets(parset)
 	
@@ -150,7 +150,7 @@ class CNProcSection(Section):
                          host = host, \
 			 workingDir = workingDir, \
 			 parsetfile = parsetfile, \
-			 buildvar = 'gnubgp_bgp')
+			 buildvar = 'gnubgp_cn')
 
         nstations = parset.getNStations()
         clock = parset.getClockString()
