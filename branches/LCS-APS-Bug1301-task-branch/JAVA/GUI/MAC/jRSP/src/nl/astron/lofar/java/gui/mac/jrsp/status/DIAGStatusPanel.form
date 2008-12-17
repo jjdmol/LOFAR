@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <Properties>
+    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+        <TitledBorder title="DIAG"/>
+      </Border>
+    </Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" attributes="0">
+              <EmptySpace pref="27" max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Component id="lblAp0RiErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblSerdesErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblCepErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblLcuErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblRcuyErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblRcuxErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblRiErrors" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblMode" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblIfUnderTest" alignment="1" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="txtIfUnderTest" min="-2" pref="64" max="-2" attributes="0"/>
+                                  <Component id="txtMode" min="-2" pref="64" max="-2" attributes="0"/>
+                                  <Component id="txtRiErrors" min="-2" pref="64" max="-2" attributes="0"/>
+                              </Group>
+                              <Component id="txtRcuxErrors" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtRcuyErrors" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtLcuErrors" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtCepErrors" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Component id="txtSerdesErrors" alignment="1" min="-2" pref="64" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="txtAp0RiErrors" min="-2" pref="64" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblAp1RiErrors" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="txtAp1RiErrors" min="-2" pref="64" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblAp2RiErrors" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="txtAp2RiErrors" min="-2" pref="64" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <Component id="lblAp3RiErrors" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="txtAp3RiErrors" min="-2" pref="64" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" attributes="0">
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="txtIfUnderTest" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblIfUnderTest" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtMode" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblRiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtRiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblRcuxErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtRcuxErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblRcuyErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtRcuyErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblLcuErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtLcuErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblCepErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtCepErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblSerdesErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtSerdesErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="lblAp0RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtAp0RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="txtAp1RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp1RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="txtAp2RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp2RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="txtAp3RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblAp3RiErrors" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace pref="17" max="32767" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Component class="javax.swing.JLabel" name="lblIfUnderTest">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Interface"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblMode">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Mode"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblRiErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="RI Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblRcuxErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="RCUX Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblRcuyErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="RCUY Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblLcuErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="LCU Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblCepErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="CEP Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblSerdesErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="SERDES Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp0RiErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP0 RI Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtIfUnderTest">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtMode">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtRiErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtRcuxErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtRcuyErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtLcuErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtCepErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtSerdesErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp0RiErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp1RiErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP1 RI Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp1RiErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp2RiErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP2 RI Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp2RiErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblAp3RiErrors">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="AP3 RI Errors"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="txtAp3RiErrors">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="horizontalAlignment" type="int" value="4"/>
+      </Properties>
+    </Component>
+  </SubComponents>
+</Form>

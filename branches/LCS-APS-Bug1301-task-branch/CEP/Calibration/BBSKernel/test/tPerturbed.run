@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Set srcdir if needed.
+# It might not be set if the .run file is executed directly instead of
+# by 'make check'.
+if [ "$srcdir" = "" ]; then
+  srcdir=../../../test
+fi
+
+# Create the ParmDB tables for tPerturbed.
+$srcdir/makeDemoParmDB tPerturbed
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+if [ ! -d $LOFARDATAROOT/BBS2/demo3.MS_p1 ]; then
+  exit 3
+fi
+
+echo "run1 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER $LOFARDATAROOT/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN.REALIMAG 'RA:*' 'DEC:*' 'StokesI:*'
+status=$?
+
+echo "run2 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER $LOFARDATAROOT/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'RA:*' 'DEC:*' 'StokesI:*'
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
+
+echo "run3 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER $LOFARDATAROOT/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'gain:*'
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
+
+echo "run4 ..."
+$LOFAR_CHECKTOOL ./tPerturbed $USER $LOFARDATAROOT/BBS2/demo3.MS_p1 tPerturbed_tmp.demo_instr tPerturbed_tmp.demo_sky TOTALGAIN 'RA:*' 'DEC:*' 'StokesI:*'
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
+
+exit $status

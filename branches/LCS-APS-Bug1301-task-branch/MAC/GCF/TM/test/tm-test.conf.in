@@ -1,0 +1,3 @@
+mac.ns.ECHO.server.type=TCP
+mac.top.PING.client.remoteservice=ECHO:server
+mac.ns.ECHO.spid.deviceName=/dev/spid0

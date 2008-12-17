@@ -1,0 +1,6 @@
+// \ingroup APL
+// \defgroup CURTDBDaemons Control Unit RTDB Daemons
+//
+// The CURTDBDaemonms package contains several daemons for MAC machines that support
+// the basic infra-structure of MAC. All deamons depend on PVSS.
+

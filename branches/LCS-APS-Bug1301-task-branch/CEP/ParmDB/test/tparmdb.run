@@ -1,0 +1,4 @@
+#!/bin/sh
+
+../src/parmdb < tparmdb.in > tparmdb_tmp.outtmp
+sed -e '/Assertion: /d' tparmdb_tmp.outtmp

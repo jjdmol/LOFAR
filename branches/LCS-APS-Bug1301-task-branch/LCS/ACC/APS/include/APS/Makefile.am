@@ -1,0 +1,11 @@
+pkginclude_HEADERS = Package__Version.h  \
+	Exceptions.h \
+	KVpair.h \
+	ParameterValue.h \
+	ParameterSet.h \
+	ParameterSetImpl.h
+
+
+noinst_HEADERS = 
+
+include $(top_srcdir)/Makefile.common

@@ -1,0 +1,10 @@
+# -- PIC--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  PIC          1.0.1  development 'node constraint'  "Physical Instrument Component"
+uses  @ring@       1.0.0  development 'node constraint'  "One of the four ring-areas"
+#uses  Connection   1.0.1  development 'node constraint'  "Connections between nodes"
+uses  Cluster      1.0.1  development 'node constraint'  "The central clusters"
