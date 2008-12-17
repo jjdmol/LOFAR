@@ -20,6 +20,8 @@ Observation.MSNameMask = /data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS
 # Variables for the DelayCompensation
 OLAP.DelayComp.positionType  = ITRF  # should be ITRF
 OLAP.DelayComp.nrCalcDelays = 16
+OLAP.DelayComp.nrPencilRings = 0
+OLAP.DelayComp.pencilRingSize = 0.01
 
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16

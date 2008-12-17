@@ -57,8 +57,8 @@ namespace LOFAR
       
       itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
      
-       // Pre-allocate and initialize storage for the delay vectors.
-      itsDelaysAfterEnd.resize(itsNrCalcDelays*itsNrBeams);
+       // Pre-allocate and initialize storage for the beam direction vectors.
+      itsBeamDirectionsAfterEnd.resize(itsNrCalcDelays*itsNrBeams);
       itsObservationEpoch.resize(itsNrCalcDelays);
 
       getBeamDirections(ps);
@@ -80,7 +80,7 @@ namespace LOFAR
       itsConverter = 0;
     }
 
-    vector<double> WH_DelayCompensation::calcDelaysForEachTimeNrDirections(vector<double> &startIntegrationTime)
+    vector<Direction> WH_DelayCompensation::calculateAllBeamDirections(vector<double> &startIntegrationTime)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       for (uint i = 0; i < startIntegrationTime.size(); i++) {
@@ -88,15 +88,25 @@ namespace LOFAR
       }	
       
       // Calculate the delays for the epoch after the end of the current time
-      // interval. Put the results in itsDelaysAtBegin and itsDelaysAfterEnd.
-      calculateDelays();
+      // interval. Put the results in itsBeamDirectionsAfterEnd.
+      calculateDirections();
       
-      return itsDelaysAfterEnd;
+      return itsBeamDirectionsAfterEnd;
+    }
+
+    const Position& WH_DelayCompensation::getPositionDiffs() const
+    {
+      return itsPhasePositionDiffs;
+    }
+
+    double WH_DelayCompensation::getDelay( Direction &dir ) const
+    {
+      return dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
     }
 
     //##----------------  Private methods  ----------------##//
 
-     void WH_DelayCompensation::getBeamDirections(const Parset *ps)
+    void WH_DelayCompensation::getBeamDirections(const Parset *ps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       
@@ -156,8 +166,7 @@ namespace LOFAR
       return new ConverterImpl();  
     }
 
-
-    void WH_DelayCompensation::calculateDelays()
+    void WH_DelayCompensation::calculateDirections()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -175,9 +184,8 @@ namespace LOFAR
       ASSERTSTR(result.direction.size() == itsObservationEpoch.size() * itsNrBeams,
 		result.direction.size() << " == " << itsObservationEpoch.size() * itsNrBeams);
 
-      LOG_TRACE_CALC("Beamlet directions:");
       for (uint i = 0; i < result.direction.size(); ++i) {
-        LOG_TRACE_CALC_STR(" [" << i << "] = " << result.direction[i]);
+        itsBeamDirectionsAfterEnd[i] = result.direction[i];
       }
      
       // From the source coordinates in ITRF, calculate the geometrical
@@ -188,8 +196,7 @@ namespace LOFAR
       // etc.
       LOG_TRACE_CALC("Beamlet geometrical delays:");
       for (uint i = 0; i < itsObservationEpoch.size() * itsNrBeams; ++i) {
-        itsDelaysAfterEnd[i] = (result.direction[i] * itsPhasePositionDiffs) * (1.0 / speedOfLight);
-	LOG_TRACE_CALC_STR(" [" << i << "]: " << itsDelaysAfterEnd[i]);
+	LOG_TRACE_CALC_STR(" [" << i << "]: " << getDelay( itsBeamDirectionsAfterEnd[i]) );
       }
     }
 

@@ -39,6 +39,8 @@ struct SubbandMetaData
     void		setFlags(const SparseSet<unsigned> &);
 
     float		delayAtBegin, delayAfterEnd;
+    double              beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+
     unsigned		alignmentShift;
 
   private:

@@ -36,6 +36,7 @@
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
 #include <LogThread.h>
+#include <AMCBase/Direction.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
@@ -86,7 +87,9 @@ template <typename SAMPLE_TYPE> class InputSection {
    
     std::vector<double>		 itsDelaysAtBegin;
     std::vector<double>		 itsDelaysAfterEnd;
-    std::vector<double>		 itsNrCalcDelaysForEachTimeNrDirections;
+    std::vector<AMC::Direction>	 itsBeamDirectionsAtBegin;
+    std::vector<AMC::Direction>	 itsBeamDirectionsAfterEnd;
+    std::vector<AMC::Direction>	 itsAllBeamDirections;
     unsigned			 itsNrCalcDelays;
     unsigned			 itsCounter;
     unsigned			 itsNrPsets;

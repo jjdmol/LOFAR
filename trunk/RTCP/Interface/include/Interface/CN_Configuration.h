@@ -24,6 +24,7 @@
 #define LOFAR_INTERFACE_CN_CONFIGURATION_H
 
 #include <Stream/Stream.h>
+#include <Interface/MultiDimArray.h>
 
 #include <vector>
 
@@ -46,16 +47,23 @@ class CN_Configuration
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
     std::vector<double>	  &refFreqs();
+    unsigned              &nrPencilRings();
+    double                &pencilRingSize();
+    std::vector<double>   &refPhaseCentre();
+    Matrix<double>        &phaseCentres();
     
     void		  read(Stream *);
     void		  write(Stream *);
 
     static const unsigned MAX_PSETS    = 64;
     static const unsigned MAX_SUBBANDS = 248;
+    static const unsigned MAX_STATIONS = 100;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
+    std::vector<double>	  itsRefPhaseCentre;
+    Matrix<double>        itsPhaseCentres;
 
     struct MarshalledData
     {
@@ -73,6 +81,10 @@ class CN_Configuration
       unsigned		  itsRefFreqsSize;
       unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS], itsTabList[MAX_PSETS];
       double		  itsRefFreqs[MAX_SUBBANDS];
+      unsigned            itsNrPencilRings;
+      double              itsPencilRingSize;
+      double              itsRefPhaseCentre[3];
+      double              itsPhaseCentres[MAX_STATIONS * 3];
     } itsMarshalledData;
 };
 
@@ -145,6 +157,26 @@ inline std::vector<unsigned> &CN_Configuration::tabList()
 inline std::vector<double> & CN_Configuration::refFreqs()
 {
   return itsRefFreqs;
+}
+
+inline unsigned &CN_Configuration::nrPencilRings()
+{
+  return itsMarshalledData.itsNrPencilRings;
+}
+
+inline double &CN_Configuration::pencilRingSize()
+{
+  return itsMarshalledData.itsPencilRingSize;
+}
+
+inline std::vector<double> &CN_Configuration::refPhaseCentre()
+{
+  return itsRefPhaseCentre;
+}
+
+inline Matrix<double> &CN_Configuration::phaseCentres()
+{
+  return itsPhaseCentres;
 }
 
 } // namespace RTCP
