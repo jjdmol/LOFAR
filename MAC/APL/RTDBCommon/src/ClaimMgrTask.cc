@@ -144,7 +144,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 
 	case F_INIT: {
 		LOG_DEBUG("Create propertySet for accessing the ClaimManaher");
-		itsResolveState = RO_CREATING;
+		itsResolveState = RO_CREATING;	// 1
 		itsClaimMgrPS = new RTDBPropertySet("ClaimManager", "ClaimManager", PSAT_RW, this);
 		itsTimerPort->setTimer(5.0);
 	}
@@ -153,7 +153,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 	case DP_CREATED: {
 		DPCreatedEvent	dpEvent(event);
 		LOG_DEBUG_STR("Result of creating '" << dpEvent.DPname << "' = " << dpEvent.result);
-		itsResolveState = RO_CREATED;
+		itsResolveState = RO_CREATED; // 2
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.5); // give RTDB time to get the original value.
 	}
@@ -165,21 +165,19 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		LOG_DEBUG_STR("itsResolveState=" << itsResolveState);
 
 		switch (itsResolveState) {
-		case RO_CREATED:
+		case RO_CREATED:		// 2
 			itsResolveState = RO_READY;
 			itsTimerPort->setTimer(0.1);
 			break;
 
-		case RO_READY:
+		case RO_READY:			// 4
 			if (itsObjectType.empty() || itsNameInAppl.empty()) {
 				LOG_DEBUG_STR("Nothing to claim");
 				break;
 			}
 			// request a DPname
-			itsClaimMgrPS->setValue("request.typeName",      
-							GCFPVString(itsObjectType), 0.0, false);
-			itsClaimMgrPS->setValue("request.newObjectName", 
-							GCFPVString(itsNameInAppl), 0.0, false);
+			itsClaimMgrPS->setValue("request.typeName",      GCFPVString(itsObjectType), 0.0, false);
+			itsClaimMgrPS->setValue("request.newObjectName", GCFPVString(itsNameInAppl), 0.0, false);
 			itsClaimMgrPS->flush();
 			itsResolveState = RO_ASKED;
 			// clear result fields
@@ -188,8 +186,10 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			itsTimerPort->setTimer(3.0);		// don't wait forever.
 		break;
 
-		case RO_ASKED:
-			LOG_ERROR_STR("No response from ClaimManager in 3 seconds");
+		case RO_ASKED:		// 3
+			LOG_ERROR_STR("No response from ClaimManager in 3 seconds, retrying");
+			itsResolveState = RO_READY;
+			itsTimerPort->setTimer(0.0);
 			// ???
 		break;
 		}
@@ -208,17 +208,11 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 						<< fldContents <<"' iso " << itsNameInAppl);
 			itsFieldsReceived++;
 		}
-		else if (dpEvent.DPname.find("response.typeName") != string::npos) {
-			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
-			ASSERTSTR(fldContents == itsObjectType, "CM returned answer for type '" 
-						<< fldContents <<"' iso " << itsObjectType);
-			itsFieldsReceived++;
-		}
 		else if (dpEvent.DPname.find("response.DPName") != string::npos) {
 			itsResultDPname = ((GCFPVString*)(dpEvent.value._pValue))->getValue();
 			itsFieldsReceived++;
 		}
-		if (itsFieldsReceived >= 3) {
+		if (itsFieldsReceived >= 2) {
 			LOG_DEBUG_STR("ClaimMgr:" << itsNameInAppl << "=" << itsResultDPname);
 			// Report claimresult back to the user
 			CMClaimResultEvent	cmEvent;
@@ -226,12 +220,12 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			cmEvent.nameInAppl	= itsNameInAppl;
 			cmEvent.DPname		= itsResultDPname;
 			itsReplyPort->send(cmEvent);
-			// clear admin to reaceive a new calim request.
+			// clear admin to receive a new claim request.
 			itsObjectType.clear();
 			itsNameInAppl.clear();
 			itsResultDPname.clear();
 			itsResolveState = RO_READY;
-			itsTimerPort->cancelAllTimers();
+//			itsTimerPort->cancelAllTimers();
 		}
 	}
 	break;

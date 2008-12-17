@@ -150,7 +150,7 @@ GCFEvent::TResult ObsClaimer::idle_state (GCFEvent& event, GCFPortInterface& por
 					iter->second->state = OS_CLAIMING;
 					itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_"+iter->second->obsName, *itsITCPort);
 					// will result in CM_CLAIM_RESULT event
-					break;
+					break;	// claim one at the time.
 				}
 				++iter;
 			}
@@ -212,7 +212,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent	dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-			itsTimerPort->cancelAllTimers();
+//			itsTimerPort->cancelAllTimers();
 			itsTimerPort->setTimer(0.0);
         }
 		break;
