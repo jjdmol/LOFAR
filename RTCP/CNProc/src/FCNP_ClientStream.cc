@@ -28,9 +28,8 @@
 #include <Common/Timer.h>
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
+#include <FCNP/fcnp_cn.h>
 #include <FCNP_ClientStream.h>
-
-#include <fcnp_cn.h>
 
 #include <cstring>
 #include <vector>

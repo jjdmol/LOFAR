@@ -128,4 +128,4 @@ class CNJob(Job):
 
     def run(self, runlog, parsetfile, timeOut, runCmd):
         self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
-        Job.run(self, runlog, parsetfile, timeOut, 'mpirun -partition ' + self.partition + ' -mode VN -label -env \'DCMF_COLLECTIVES=0 BG_MAPPING=XYZT\' -cwd ' + self.workingDir + ' -exe ' + os.path.join(self.workingDir, self.executable.split('/')[-1] + ' -args'))
+        Job.run(self, runlog, parsetfile, timeOut, 'mpirun -partition ' + self.partition + ' -mode VN -label -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/cephome/romein/lib.bgp -cwd ' + self.workingDir + ' -exe ' + os.path.join(self.workingDir, self.executable.split('/')[-1] + ' -args'))

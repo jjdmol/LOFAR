@@ -5,8 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(CNProc, 1.0, no-define)
-AM_PROG_AS(gcc)
+AM_INIT_AUTOMAKE(FCNP, 1.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -53,17 +52,8 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 dnl lofar_BLITZ
-lofar_MPI
-lofar_FFTW3F(0)
-lofar_FFTW2(0)
-
+dnl lofar_MPI
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Stream,Stream,,1,Stream/Stream.h,,)
-lofar_INTERNAL(RTCP/Interface,Interface,,1,Interface/Config.h,,)
-lofar_INTERNAL(RTCP/FCNP,FCNP,,0,FCNP/fcnp_cn.h,fcnp_cn)
-lofar_EXTERNAL(boost,1,boost/multi_array.hpp,"")
-lofar_EXTERNAL(mass,0,"",,/opt/mass)
-dnl lofar_EXTERNAL(fcnp,0,fcnp_cn.h,fcnp_cn,/cephome/romein/packages/fcnp)
 
 dnl
 dnl Output Makefiles
@@ -72,5 +62,5 @@ AC_OUTPUT(
 src/Makefile
 test/Makefile
 Makefile
-CNProc.spec
+FCNP.spec
 )

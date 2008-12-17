@@ -28,9 +28,8 @@
 #include <Common/Timer.h>
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
+#include <FCNP/fcnp_ion.h>
 #include <FCNP_ServerStream.h>
-
-#include <fcnp_ion.h>
 
 #include <algorithm>
 #include <cstring>

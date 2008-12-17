@@ -55,8 +55,8 @@ extern "C" {
 #endif
 
 #if defined HAVE_FCNP && defined __PPC__
+#include <FCNP/fcnp_ion.h>
 #include <FCNP_ServerStream.h>
-#include <fcnp_ion.h>
 #endif
 
 using namespace LOFAR;
@@ -93,7 +93,7 @@ static void createClientStreams(unsigned nrClients, const std::string &streamTyp
 {
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP") {
-    FCNP_ION::init();
+    FCNP_ION::init(false);
     fcnp_inited = true;
   }
 #endif
