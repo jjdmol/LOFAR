@@ -38,6 +38,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <execinfo.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/resource.h>
@@ -59,8 +60,33 @@ extern "C" {
 #include <FCNP_ServerStream.h>
 #endif
 
+// if exceptions are not caught, an attempt is made to create a backtrace
+// from the place where the exception is thrown.
+#undef CATCH_EXCEPTIONS
+
+
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+
+
+#if !defined CATCH_EXCEPTIONS
+
+void terminate_with_backtrace()
+{
+  std::cerr << "terminate_with_backtrace()" << std::endl;
+
+  void *buffer[100];
+  int  nptrs     = backtrace(buffer, 100);
+  char **strings = backtrace_symbols(buffer, nptrs);
+
+  for (int i = 0; i < nptrs; i ++)
+    std::cerr << i << ": " << strings[i] << std::endl;
+
+  free(strings);
+  abort();
+}
+
+#endif
 
 
 static char	   **global_argv;
@@ -234,7 +260,10 @@ static void *inputSection(void *parset)
 {
   std::clog << "starting input section" << std::endl;
 
+#if defined CATCH_EXCEPTIONS
   try {
+#endif
+
     Parset *ps = static_cast<Parset *>(parset);
 
     switch (ps->nrBitsPerSample()) {
@@ -249,6 +278,8 @@ static void *inputSection(void *parset)
 
       default : THROW(IONProcException, "unsupported number of bits per sample");
     }
+
+#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     std::cerr << "input section caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
@@ -256,6 +287,7 @@ static void *inputSection(void *parset)
   } catch (...) {
     std::cerr << "input section caught non-std::exception: " << std::endl;
   }
+#endif
 
   std::clog << "input section finished" << std::endl;
   return 0;
@@ -266,7 +298,10 @@ static void *outputSection(void *parset)
 {
   std::clog << "starting output section" << std::endl;
 
+#if defined CATCH_EXCEPTIONS
   try {
+#endif
+
     OutputSection outputSection(myPsetNumber, clientStreams);
 
     outputSection.preprocess(static_cast<Parset *>(parset));
@@ -275,6 +310,8 @@ static void *outputSection(void *parset)
       outputSection.process();
 
     outputSection.postprocess();
+
+#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     std::cerr << "output section caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
@@ -282,6 +319,7 @@ static void *outputSection(void *parset)
   } catch (...) {
     std::cerr << "output section caught non-std::exception: " << std::endl;
   }
+#endif
 
   std::clog << "output section finished" << std::endl;
   return 0;
@@ -360,7 +398,10 @@ void *master_thread(void *)
   enableCoreDumps();
   ignoreSigPipe();
 
+#if defined CATCH_EXCEPTIONS
   try {
+#endif
+
 #if defined FLAT_MEMORY
     mmapFlatMemory();
 #endif
@@ -437,6 +478,8 @@ void *master_thread(void *)
 #if defined FLAT_MEMORY
     unmapFlatMemory();
 #endif
+
+#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     std::cerr << "main thread caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
@@ -444,6 +487,7 @@ void *master_thread(void *)
   } catch (...) {
     std::cerr << "main thread caught non-std::exception: " << std::endl;
   }
+#endif
 
   if (pthread_detach(pthread_self()) != 0) {
     std::cerr << "could not detach master thread" << std::endl;
@@ -583,6 +627,10 @@ void lofar__fini(void)
 
 int main(int argc, char **argv)
 {
+#if !defined CATCH_EXCEPTIONS
+  std::set_terminate(terminate_with_backtrace);
+#endif
+
   global_argv = argv;
 
   if (argc == 3) {
