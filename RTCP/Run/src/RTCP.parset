@@ -29,7 +29,7 @@ OLAP.nrTimesInFrame = 16
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5
-OLAP.delayCompensation = F
+OLAP.delayCompensation = T
 OLAP.correctBandPass = T
 
 Observation.nrSlotsInFrame = 36
