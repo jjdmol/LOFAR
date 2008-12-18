@@ -36,6 +36,7 @@
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 #include <RSP.h>
+#include <Scheduling.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -102,24 +103,6 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::sigHandler(int)
 }
 
 
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::setAffinity()
-{
-#if 1 && __linux__
-  cpu_set_t cpu_set;
-
-  CPU_ZERO(&cpu_set);
-
-  for (unsigned cpu = 1; cpu < 4; cpu ++)
-    CPU_SET(cpu, &cpu_set);
-
-  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    std::clog << "WARNING: sched_setaffinity failed" << std::endl;
-    perror("sched_setaffinity");
-  }
-#endif
-}
-
-
 template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(void *inputThread)
 {
   try {
@@ -139,7 +122,9 @@ template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(voi
 
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-  setAffinity();
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+#endif
 
   const unsigned maxNrPackets = 128;
   TimeStamp	 actualstamp  = itsArgs.startTime - itsArgs.nrTimesPerPacket;

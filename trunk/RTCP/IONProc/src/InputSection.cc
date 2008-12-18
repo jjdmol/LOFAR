@@ -31,6 +31,7 @@
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
 #include <ION_Allocator.h>
+#include <Scheduling.h>
 //#include <TH_ZoidServer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
@@ -64,6 +65,10 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
   itsLogThread(0),
   itsDelayTimer("delay")
 {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+#endif
+
   raisePriority();
 }
 

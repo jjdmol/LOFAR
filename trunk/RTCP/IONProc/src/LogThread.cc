@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <LogThread.h>
+#include <Scheduling.h>
 #include <Interface/PrintVector.h>
 
 #include <algorithm>
@@ -71,6 +72,10 @@ void *LogThread::logThreadStub(void *arg)
 
 void LogThread::logThread()
 {
+#if defined HAVE_BGP_ION
+  runOnCore0();
+#endif
+
   std::clog << "LogThread running" << std::endl;
 
   // non-atomic updates from other threads cause race conditions, but who cares

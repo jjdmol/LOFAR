@@ -13,6 +13,7 @@ OutputThread.h			\
 OutputSection.h			\
 ReaderWriterSynchronization.h	\
 RSP.h				\
+Scheduling.h			\
 SlidingPointer.h		\
 WallClockTime.h			\
 WH_DelayCompensation.h		\
@@ -30,6 +31,7 @@ LogThread.cc			\
 OutputThread.cc			\
 OutputSection.cc		\
 ReaderWriterSynchronization.cc	\
+Scheduling.cc			\
 WH_DelayCompensation.cc		\
 FCNP_ServerStream.cc		\
 Package__Version.cc
