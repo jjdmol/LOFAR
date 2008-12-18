@@ -64,7 +64,6 @@ template<typename SAMPLE_TYPE> class InputThread
 
   private:
     static void		  sigHandler(int);
-    static void		  setAffinity();
   
     volatile bool	  stop, stopped;
 

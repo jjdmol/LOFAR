@@ -26,7 +26,7 @@
 
 #include <Interface/Allocator.h>
 
-#undef FLAT_MEMORY
+#define FLAT_MEMORY
 
 namespace LOFAR {
 namespace RTCP {

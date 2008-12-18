@@ -39,8 +39,19 @@ OutputThread::OutputThread(Stream *streamToStorage, unsigned nrBaselines, unsign
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
 
-  if (pthread_create(&thread, 0, mainLoopStub, this) != 0)
+  pthread_attr_t attr;
+
+  if (pthread_attr_init(&attr) != 0)
+    throw SystemCallException("pthread_attr_init output thread", errno, THROW_ARGS);
+
+  if (pthread_attr_setstacksize(&attr, 65536) != 0)
+    throw SystemCallException("pthread_attr_setstacksize output thread", errno, THROW_ARGS);
+
+  if (pthread_create(&thread, &attr, mainLoopStub, this) != 0)
     throw SystemCallException("pthread_create output thread", errno, THROW_ARGS);
+
+  if (pthread_attr_destroy(&attr) != 0)
+    throw SystemCallException("pthread_attr_destroy output thread", errno, THROW_ARGS);
 }
 
 
