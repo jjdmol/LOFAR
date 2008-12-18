@@ -402,21 +402,37 @@ static void initHeaders()
 }
 
 
-static void getConfiguration(const std::vector<unsigned> &psetDimensions)
+static void getConfiguration()
 {
   unsigned xPos = personality.Network_Config.Xcoord;
   unsigned yPos = personality.Network_Config.Ycoord;
   unsigned zPos = personality.Network_Config.Zcoord;
 
-  assert(psetDimensions.size() == 3);
-
+  unsigned xPsetSize, yPsetSize, zPsetSize;
   unsigned psetSize = personality.Network_Config.PSetSize;
 
-  unsigned xPsetSize = psetDimensions[0];
-  unsigned yPsetSize = psetDimensions[1];
-  unsigned zPsetSize = psetDimensions[2];
+  switch (psetSize) {
+    case 16 :	xPsetSize = 4, yPsetSize = 2, zPsetSize = 2;
+		break;
 
-  assert(xPsetSize * yPsetSize * zPsetSize == psetSize);
+    case 32 :	xPsetSize = 4, yPsetSize = 4, zPsetSize = 2;
+		break;
+
+    case 64 :	xPsetSize = 4, yPsetSize = 4, zPsetSize = 4;
+		break;
+
+    case 128 :	xPsetSize = 4, yPsetSize = 4, zPsetSize = 8;
+		break;
+
+    case 256 :	xPsetSize = 8, yPsetSize = 4, zPsetSize = 8;
+		break;
+
+    case 512 :	xPsetSize = 8, yPsetSize = 8, zPsetSize = 8;
+		break;
+
+    default :	std::cerr << "FCNP: cannot determine PSet dimensions" << std::endl;
+		exit(1);
+  }
 
   unsigned xPsetPos = xPos % xPsetSize;
   unsigned yPsetPos = yPos % yPsetSize;
@@ -487,11 +503,11 @@ static void drainFIFO()
 }
 
 
-void init(const std::vector<unsigned> &psetDimensions)
+void init()
 {
   getPersonality();
   openShm();
-  getConfiguration(psetDimensions);
+  getConfiguration();
   initHeaders();
   allocateMutexes();
   drainFIFO();

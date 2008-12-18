@@ -7,8 +7,7 @@
 
 namespace FCNP_CN
 {
-  // /proc/personality.sh gives wrong BG_PSETSIZE; provide dimensions manually
-  void init(const std::vector<unsigned> &psetDimensions);
+  void init();
 
   // ptr and size must be a multiple of 16!
   void CNtoION_ZeroCopy(const void *ptr, size_t size);

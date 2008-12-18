@@ -102,13 +102,7 @@ int main(int argc, char **argv)
 #if defined HAVE_ZOID && defined HAVE_BGL
     ionStream = new ZoidClientStream;
 #elif 1 &&  defined HAVE_FCNP && defined HAVE_BGP
-    std::vector<unsigned> psetDimensions(3);
-
-    psetDimensions[0] = 4;
-    psetDimensions[1] = 2;
-    psetDimensions[2] = 2;
-
-    FCNP_CN::init(psetDimensions);
+    FCNP_CN::init();
     ionStream = new FCNP_ClientStream;
 #elif 0
     ionStream = new NullStream;
