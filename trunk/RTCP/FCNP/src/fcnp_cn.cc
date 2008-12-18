@@ -1,3 +1,7 @@
+#include <lofar_config.h>
+
+#if defined HAVE_BGP_CN
+
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -503,3 +507,5 @@ void init(const std::vector<unsigned> &psetDimensions)
 }
 
 } // namespace FCNP_CN
+
+#endif // defined HAVE_BGP_CN
