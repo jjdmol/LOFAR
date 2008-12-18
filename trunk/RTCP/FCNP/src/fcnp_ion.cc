@@ -1,3 +1,7 @@
+#include <lofar_config.h>
+
+#if defined HAVE_BGP_ION
+
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/mman.h>
@@ -110,6 +114,22 @@ static _BGP_Atomic		sendMutex	      = {0};
 static pthread_mutex_t		scheduledRequestsLock = PTHREAD_MUTEX_INITIALIZER;
 static Semaphore		recvSema(1); // could have used mutex, but this is slower!???  livelock???
 static volatile bool		stop, stopped;
+
+
+static void setAffinity()
+{
+  cpu_set_t cpu_set;
+
+  CPU_ZERO(&cpu_set);
+
+  for (unsigned cpu = 1; cpu < 4; cpu ++)
+    CPU_SET(cpu, &cpu_set);
+
+  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
+    std::cerr << "WARNING: sched_setaffinity failed" << std::endl;
+    perror("sched_setaffinity");
+  }
+}
 
 
 // Reading the tree status words seems to be expensive.  These wrappers
@@ -327,14 +347,15 @@ static void handleWriteRequest(RequestPacket *request, char *ptr, size_t bytesTo
 
 static void *pollThread(void *)
 {
-  RequestPacket request __attribute__((aligned(16)));
-  unsigned	nrInterrupts = 0;
+  //setAffinity();
 
-  while (!stop) {
-    _BGP_TreePtpHdr header;
+  _BGP_TreePtpHdr header;
+  RequestPacket   request __attribute__((aligned(16)));
+  unsigned	  nrInterrupts = 0;
 
-    if (useInterrupts) {
-      if (!checkForIncomingPacket()) {
+  if (useInterrupts) {
+    while (!stop) {
+      /*if (!checkForIncomingPacket())*/ { // not thread safe!
 	int word;
 
 	read(fd, &word, sizeof word); // wait for Irq packet
@@ -350,7 +371,12 @@ static void *pollThread(void *)
       }
 
       recvSema.up();
-    } else {
+    }
+
+    std::clog << "received " << nrInterrupts << " vc0 interrupts" << std::endl;
+    stopped = true;
+  } else {
+    while (!stop) {
       if (checkForIncomingPacket()) {
 	_bgp_vcX_pkt_receive(&header.word, &request, vc0);
 	assert(header.Irq);
@@ -372,10 +398,6 @@ static void *pollThread(void *)
     }
   }
 
-  if (useInterrupts)
-    std::clog << "received " << nrInterrupts << " vc0 interrupts" << std::endl;
-
-  stopped = true;
   return 0;
 }
 
@@ -466,22 +488,6 @@ void writeUnaligned(unsigned rankInPSet, const void *ptr, size_t size)
   }
 }
 #endif
-
-
-static void setAffinity()
-{
-  cpu_set_t cpu_set;
-
-  CPU_ZERO(&cpu_set);
-
-  for (unsigned cpu = 1; cpu < 4; cpu ++)
-    CPU_SET(cpu, &cpu_set);
-
-  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    std::cerr << "WARNING: sched_setaffinity failed" << std::endl;
-    perror("sched_setaffinity");
-  }
-}
 
 
 static void openVC0()
@@ -620,3 +626,5 @@ void end()
 }
 
 } // namespace FCNP_ION
+
+#endif // defined HAVE_BGP_ION
