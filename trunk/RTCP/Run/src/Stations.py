@@ -55,6 +55,12 @@ CS010_HBA2 = [Station('CS010_HBA2', '10.170.0.45', ['10.170.0.45:4352'])]
 CS010_HBA3 = [Station('CS010_HBA3', '10.170.0.46', ['10.170.0.46:4353'])]
 CS010_4HBAs = CS010_HBA0 + CS010_HBA1 + CS010_HBA2 + CS010_HBA3
 
+CS010_TILE1 = [Station('CS010_TILE1', '10.170.0.41', ['10.170.0.41:4346'])]
+CS010_TILE2 = [Station('CS010_TILE2', '10.170.0.42', ['10.170.0.42:4351'])]
+CS010_TILE5 = [Station('CS010_TILE5', '10.170.0.45', ['10.170.0.45:4352'])]
+CS010_TILE6 = [Station('CS010_TILE6', '10.170.0.46', ['10.170.0.46:4353'])]
+CS010_4Tiles = CS010_TILE1 + CS010_TILE2 + CS010_TILE5 + CS010_TILE6
+
 CS010     = [Station('CS010', '10.170.0.41', ['10.170.0.41:4346', '10.170.0.41:4351', '10.170.0.41:4352', '10.170.0.41:4353'])]
 
 CS016_us0 = [Station('CS016_us0', '10.170.0.49', ['10.170.0.49:4346'])]
@@ -104,3 +110,7 @@ AllStations      = CS001 + CS010 + CS016
 AllMicroStations = CS001_4us + CS010_4us + CS016_4us
 AllDipoles       = CS010_4dipoles + CS016_4dipoles
 AllHBAs          = CS010_4HBAs + CS001_4HBAs + CS016_4HBAs
+Mixed            = CS010_4Tiles + CS001_4HBAs + CS016_4HBAs
+
+CS001CS016Dipoles = CS001_4dipoles + CS016_4dipoles
+
