@@ -199,6 +199,10 @@ class Parset(LOFAR_Parset.Parset):
 		for s in subbandList:
 		    subbands.add(s)
 		index +=1
+		
+	    if not self.isDefined('Observation.nrBeams'):
+	      	self['Observation.nrBeams'] = index
+	
 	    return len(subbands)
 
     def getStationNamesAndRSPboardNumbers(self, psetNumber):
