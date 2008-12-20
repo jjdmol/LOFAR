@@ -494,15 +494,19 @@ create_dpt_file()
 		# create PVSStypes
 		echo "TypeName"
 		echo "${dpt}.${dpt}	1#1"
-		echo "	status	41#2:ObjectStatus"
-		let count=3
+		let count=2
+		# DPs in the LOFAR tree need an ObjectStatus element
+		if [ "LOFAR${dp#LOFAR}" == "${dp}" ];then
+			echo "	status	41#2:ObjectStatus"
+			let count=count+1
+		fi
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
 			echo "	process	41#3:ProcessStatus"
-			let count=4
+			let count=count+1
 		fi
 
 		if [ -f ${dpt}.dpdef ]; then
@@ -632,11 +636,13 @@ create_dp_file()
 		fi
 		prevdpt=${dpt}
 
-		# Create MasterDataPoint
-		echo "DpName	TypeName	ID"
-		echo "_mp_${dpt}	${dpt}	0"
-		echo "_dt_${dpt}	_DynamicDatapoints	0"
-		echo ""
+		# Create MasterDataPoint for LOFAR tree elements
+		if [ "LOFAR${dp#LOFAR}" == "${dp}" ];then
+			echo "DpName	TypeName	ID"
+			echo "_mp_${dpt}	${dpt}	0"
+			echo "_dt_${dpt}	_DynamicDatapoints	0"
+			echo ""
+		fi
 
 		# if software then create an hourarchive for the logMsg in the MasterDataPoint
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
@@ -780,7 +786,7 @@ shift				# remove '--'
 
 
 # define the input files
-STATIONINFOFILE=../StaticMetaData/StationInfo
+STATIONINFOFILE=../StaticMetaData/StationInfo.dat
 COMPONENT_FILE=PVSSbase.dpdef
 CLUSTERFILE=Clusters.list
 RINGFILE=Rings.list
