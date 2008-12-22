@@ -651,7 +651,7 @@ create_dp_file()
 				number_dps >>${DESTDIR}/${DP_FILE}
 
 	# Setup the values of the antenna datapoints
-	if [ $NRLBAS > 0 -o $NRHBAS > 0 ]; then
+	if [ $NRLBAS -gt 0 -o $NRHBAS -gt 0 ]; then
 	(
 		echo ""
 		echo "ElementName	TypeName	_original.._value	_original.._status"
