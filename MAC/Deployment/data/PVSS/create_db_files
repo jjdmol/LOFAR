@@ -661,24 +661,24 @@ create_dp_file()
 				Subrack=RSPboard/4
 				Cabinet=Subrack/2
 				if (antNr < nrHBAs) {
-					printf "HBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "HBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2;
-					printf "HBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "HBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
 				}
 				if (RSPboard >= nrRSPs) {	# use of both LBL and LBH input?
 					RSPboard=antNr/4 - nrRSPs
 					Subrack=RSPboard/4
 					Cabinet=Subrack/2
-					printf "LBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "LBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8)+1;
-					printf "LBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "LBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8);
 				}
 				else {
-					printf "LBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "LBA%02d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2;
-					printf "LBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d\"	0x101\n", 
+					printf "LBA%02d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
 							antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
 				}
 			}
