@@ -80,7 +80,7 @@ if test "$with_pvss" != "no"; then
 			[lfr_lib_pvss=no])[
   fi
 
-  if test "$lfr_lib_pvss" != "no" ; then
+  if test "$lfr_lib_pvssd" != "no" ; then
     lfr_lib_linux_pvss=$lfr_lib_pvss/../api/lib.linux
     PVSS_LDFLAGS="-L$lfr_lib_pvss"
 ##    PVSS_OBJS="$lfr_lib_linux_pvss/DpConfig.o $lfr_lib_linux_pvss/DpConfigManager.o"
@@ -108,7 +108,7 @@ dnl
   else
     if test "$enable_pvss" = "yes" ; then
 ]
-      AC_MSG_ERROR([Could not find pvss library in $pvss_prefix])
+      AC_MSG_ERROR([Could not find PVSS header files or library])
 [
     fi
     enable_pvss=no
