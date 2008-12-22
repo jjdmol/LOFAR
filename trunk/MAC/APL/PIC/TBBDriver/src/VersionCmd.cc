@@ -41,7 +41,7 @@ VersionCmd::VersionCmd()
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBVersionAckEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 		itsTBBackE->boardid[boardnr]			= 0;
 		itsTBBackE->swversion[boardnr]  	= 0;

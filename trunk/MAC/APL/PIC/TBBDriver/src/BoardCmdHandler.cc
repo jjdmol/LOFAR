@@ -155,8 +155,8 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 					TS->setBoardState(itsCmd->getBoardNr(),boardError);
 				}
 				itsCmd->saveTpAckEvent(event); // max retries or done, save zero's
-				if (itsCmd->getSleepTime() > 0) {
-					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());
+				if (itsCmd->getSleepTime() > 0.0) {
+					itsSleepTimer->setTimer(itsCmd->getSleepTime());
 					itsCmd->setSleepTime(0.0);
 				} else {
 					TRAN(BoardCmdHandler::send_state);
@@ -178,8 +178,8 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
 				itsCmd->saveTpAckEvent(event);
-				if (itsCmd->getSleepTime()) {
-					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());
+				if (itsCmd->getSleepTime() > 0.0) {
+					itsSleepTimer->setTimer(itsCmd->getSleepTime());
 					itsCmd->setSleepTime(0);
 				} else {
 					TRAN(BoardCmdHandler::send_state);

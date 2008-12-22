@@ -136,7 +136,7 @@ void WritefCmd::sendTpEvent()
         erasefEvent->status = 0;
         erasefEvent->addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
         TS->boardPort(getBoardNr()).send(*erasefEvent);
-        TS->boardPort(getBoardNr()).setTimer((long)1); // erase time sector is 500 mSec
+        TS->boardPort(getBoardNr()).setTimer(1.0); // erase time sector is 500 mSec
         delete erasefEvent;
       } break;
       
@@ -152,9 +152,8 @@ void WritefCmd::sendTpEvent()
           itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
           itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
         }
-        
         TS->boardPort(getBoardNr()).send(*itsTPE);
-        TS->boardPort(getBoardNr()).setTimer((long)1);
+        TS->boardPort(getBoardNr()).setTimer(1.0);
       } break;
       
       // stage 3, verify flash
@@ -164,7 +163,7 @@ void WritefCmd::sendTpEvent()
         readfEvent->status  = 0;
         readfEvent->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
         TS->boardPort(getBoardNr()).send(*readfEvent);
-        TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+        TS->boardPort(getBoardNr()).setTimer(1.0);
         delete readfEvent;
       } break;
       
@@ -204,7 +203,7 @@ void WritefCmd::sendTpEvent()
         memcpy(&itsTPE->data[2],info,sizeof(info)); 
         
         TS->boardPort(getBoardNr()).send(*itsTPE);
-        TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+        TS->boardPort(getBoardNr()).setTimer(1.0);
         LOG_DEBUG_STR("Writing image info");
         LOG_DEBUG_STR(formatString("%u %u",itsTPE->data[0],itsTPE->data[1]));
       } break;
@@ -216,7 +215,7 @@ void WritefCmd::sendTpEvent()
         itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
         readfEvent->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
         TS->boardPort(getBoardNr()).send(*readfEvent);
-        TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+        TS->boardPort(getBoardNr()).setTimer(1.0);
         LOG_DEBUG_STR("Verifying image info");
         delete readfEvent;
       } break;
@@ -240,6 +239,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
         TPErasefAckEvent *erasefAckEvent = new TPErasefAckEvent(event);
         
         if (erasefAckEvent->status == 0) {
+          setSleepTime(0.50);
           itsSector++;
           if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_IMAGE)) {
             itsStage = write_flash;
@@ -256,6 +256,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
         itsTPackE = new TPWritefAckEvent(event);
           
           if (itsTPackE->status == 0) {
+            setSleepTime(0.002);
             itsStage = verify_flash;    
           } else {
             itsTBBackE->status_mask |= TBB_FLASH_ERROR;
@@ -303,6 +304,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
         itsTPackE = new TPWritefAckEvent(event);
           
         if (itsTPackE->status == 0) {
+          setSleepTime(0.002);
           itsStage = verify_info;   
         } else {
           itsTBBackE->status_mask |= TBB_FLASH_ERROR;

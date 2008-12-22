@@ -41,7 +41,7 @@ ConfigCmd::ConfigCmd()
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBConfigAckEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 	}
 	setWaitAck(true);		
@@ -104,7 +104,8 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
 		itsTPackE = new TPConfigAckEvent(event);
-		
+		TS->setImageNr(getBoardNr(), itsTPE->imagenr);
+		TS->setFreeToReset(getBoardNr(), false);
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
@@ -112,6 +113,9 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 		delete itsTPackE;
 	}
 	nextBoardNr();
+	if (isDone()) { 
+	   setSleepTime(15.0);
+	}
 }
 
 // ----------------------------------------------------------------------------

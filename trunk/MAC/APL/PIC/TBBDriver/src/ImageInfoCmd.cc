@@ -82,15 +82,15 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBE = new TBBImageInfoEvent(event);
 	
 	setBoardNr(itsTBBE->board);	
-	itsTBBackE->board = itsTBBE->board;	
+	itsTBBackE->board = getBoardNr();	
 	
 	itsTBBackE->status_mask = 0;
+	itsTBBackE->active_image = TS->getImageNr(getBoardNr());
 	itsImage = 0;
 		
 	// initialize TP send frame
 	itsTPE->opcode	= TPREADF;
 	itsTPE->status	=	0;
-	
 	delete itsTBBE;	
 }
 

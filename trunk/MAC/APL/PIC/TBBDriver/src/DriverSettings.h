@@ -26,8 +26,6 @@
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
-//#include <GCF/TM/GCF_ETHRawPort.h>
-//#include <GCF/TM/GCF_DevicePort.h>
 #include <Common/LofarTypes.h>
 
 
@@ -35,10 +33,10 @@
 namespace LOFAR {
   namespace TBB {
 
-static const int DRIVER_VERSION = 200; // 2.00 
+static const int DRIVER_VERSION = 201; // 2.00 
 
-//enum BoardStateT {noBoard, newBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
-enum BoardStateT {noBoard, resetBoard, boardReset, clearBoard, boardCleared, freeBoard, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, freeBoard, boardFreed, boardReady, boardError};
+
 // info for all channels
 struct ChannelInfo
 {
@@ -68,6 +66,8 @@ struct BoardInfo
 	GCFPortInterface* port;
 	BoardStateT boardState; 
 	uint32	memorySize;
+	uint32   imageNr;
+	bool     freeToReset;
 	string	srcIp;
 	string	dstIp;
 	string	srcMac;
@@ -165,6 +165,11 @@ public:
 		
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
+	
+	uint32 getImageNr(int32 boardnr);
+	void setImageNr(int32 boardnr,uint32 image);
+	bool getFreeToReset(int32 boardnr);
+	void setFreeToReset(int32 boardnr, bool reset);
 	
 friend class TBBDriver;
 
@@ -282,7 +287,11 @@ inline	void TbbSettings::setTriggerMode(int16 triggermode){ itsTriggerMode = tri
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }
-
+inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boardnr].imageNr); }
+inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
+inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
+inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
+  
   } // namespace TBB
 } // namespace LOFAR
 

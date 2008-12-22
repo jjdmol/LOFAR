@@ -67,7 +67,7 @@ namespace LOFAR {
 				
 				int32 itsStage;
 				// variables holding data from tp cmd
-				uint32	itsChannelMask[MAX_N_TBBBOARDS];
+				uint32	itsChannelMask[MAX_N_TBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

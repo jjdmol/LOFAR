@@ -39,7 +39,7 @@ StatusCmd::StatusCmd()
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBStatusAckEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 		itsTBBackE->V12[boardnr]	= 0;
 		itsTBBackE->V25[boardnr]	= 0;

@@ -100,7 +100,7 @@ void TbbSettings::getTbbSettings()
   }
   
   // setMaxBoards() must be set 2e
-  setMaxBoards(MAX_N_TBBBOARDS);
+  setMaxBoards(MAX_N_TBBOARDS);
   
   try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
   catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
@@ -219,9 +219,11 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
-		itsBoardInfo[nr].boardState = boardReset;
+		itsBoardInfo[nr].boardState = setImage1;
 		itsBoardInfo[nr].memorySize = 0;
-		itsBoardInfo[nr].srcIp = "";
+		itsBoardInfo[nr].imageNr = 0;
+	   itsBoardInfo[nr].freeToReset = true;
+      itsBoardInfo[nr].srcIp = "";
 		itsBoardInfo[nr].dstIp = "";
 		itsBoardInfo[nr].srcMac = "";
 		itsBoardInfo[nr].dstMac = "";
