@@ -2,23 +2,23 @@ check_PROGRAMS				= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tSta
 
 tControllerDefines_SOURCES	= tControllerDefines.cc
 tControllerDefines_LDADD	= ../src/libaplcommon.la
-tControllerDefines_DEPENCIES= ../src/libaplcommon.la $(LOFAR_DEPEND)
+tControllerDefines_DEPENDENCIES= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 tAPLUtilities_SOURCES		= tAPLUtilities.cc
 tAPLUtilities_LDADD			= ../src/libaplcommon.la
-tAPLUtilities_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+tAPLUtilities_DEPENDENCIES	= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 tbitsetUtil_SOURCES			= tbitsetUtil.cc
 tbitsetUtil_LDADD			= ../src/libaplcommon.la
-tbitsetUtil_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+tbitsetUtil_DEPENDENCIES	= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 tOutOfBand_SOURCES			= tOutOfBand.cc
 tOutOfBand_LDADD			= ../src/libaplcommon.la
-tOutOfBand_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+tOutOfBand_DEPENDENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 tStationInfo_SOURCES		= tStationInfo.cc
 tStationInfo_LDADD			= ../src/libaplcommon.la
-tStationInfo_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+tStationInfo_DEPENDENCIES	= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 TESTSCRIPTS					= tControllerDefines_test.sh
 
