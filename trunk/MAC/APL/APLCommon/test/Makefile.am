@@ -1,4 +1,5 @@
-check_PROGRAMS				= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tStationInfo
+check_PROGRAMS		= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tStationInfo
+AM_CPPFLAGS			= -I../src/
 
 tControllerDefines_SOURCES	= tControllerDefines.cc
 tControllerDefines_LDADD	= ../src/libaplcommon.la
