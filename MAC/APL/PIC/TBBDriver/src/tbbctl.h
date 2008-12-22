@@ -38,7 +38,7 @@
 namespace LOFAR {
   namespace TbbCtl {
   	
-// MAX_N_TBBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
+// MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
 static const int BOARDCMD = 1;
 static const int RCUCMD = 2;
@@ -163,7 +163,7 @@ public:
 	int getMaxSelections(void) const
 	{
 		int maxbits = 0;
-		if (itsCmdType == BOARDCMD) maxbits = MAX_N_TBBBOARDS; 
+		if (itsCmdType == BOARDCMD) maxbits = MAX_N_TBBOARDS; 
 		if (itsCmdType == RCUCMD)   maxbits = MAX_N_RCUS;
 		return(maxbits);	
 	}
@@ -852,7 +852,7 @@ private:
 	
   // dimensions of the connected hardware
 	uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
-	int			itsMemory[MAX_N_TBBBOARDS];
+	int			itsMemory[MAX_N_TBBOARDS];
 	int			itsMaxBoards;
 	int			itsMaxChannels;
 					

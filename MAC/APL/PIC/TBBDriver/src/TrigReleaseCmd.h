@@ -61,8 +61,8 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				int32		itsStage;
-				uint32	itsChannelStopMask[MAX_N_TBBBOARDS];
-				uint32	itsChannelStartMask[MAX_N_TBBBOARDS];
+				uint32	itsChannelStopMask[MAX_N_TBBOARDS];
+				uint32	itsChannelStartMask[MAX_N_TBBOARDS];
 				
 				TPTrigReleaseEvent			*itsTPE;
 				TPTrigReleaseAckEvent		*itsTPackE;

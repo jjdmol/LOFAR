@@ -42,7 +42,7 @@ ResetCmd::ResetCmd():
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBResetAckEvent();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) { 
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 	}
 	setWaitAck(true);	
@@ -115,7 +115,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	}	else {
 		itsTPackE = new TPResetAckEvent(event);
 		if (itsTPackE->status == 0) {
-			TS->setBoardState(getBoardNr(),boardReset);
+			TS->setBoardState(getBoardNr(),setImage1);
 		} else {
 			TS->setBoardState(getBoardNr(),boardError);
 		}
@@ -134,7 +134,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	if (itsBoardNr < TS->maxBoards()) {
 		setBoardNr(itsBoardNr);
 	} else {
-		setSleepTime(3.0);
+		setSleepTime(20.0);
 		setDone(true);
 	}
 }

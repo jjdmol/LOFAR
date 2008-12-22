@@ -41,7 +41,7 @@ RecordCmd::RecordCmd():
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBRecordAckEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 		itsChannelMask[boardnr] = 0;
 	}

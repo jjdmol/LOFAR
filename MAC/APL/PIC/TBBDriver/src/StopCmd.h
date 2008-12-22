@@ -60,7 +60,7 @@ namespace LOFAR {
 			private:
 				TbbSettings *TS;
 				
-				uint32	itsChannelMask[MAX_N_TBBBOARDS];
+				uint32	itsChannelMask[MAX_N_TBBOARDS];
 				uint32	itsRcuStatus;
 				
 				TPStopEvent			*itsTPE;

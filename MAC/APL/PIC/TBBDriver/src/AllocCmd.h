@@ -65,7 +65,7 @@ namespace LOFAR {
 				int32		itsStage;
 				//uint32	itsBoardMask;  // mask indicates the boards to communicate with
 				uint32	itsRcuStatus;
-				uint32	itsChannelMask[MAX_N_TBBBOARDS];
+				uint32	itsChannelMask[MAX_N_TBBOARDS];
 								
 				TPAllocEvent			*itsTPE;
 				TPAllocAckEvent		*itsTPackE;

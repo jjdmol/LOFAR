@@ -40,7 +40,7 @@ SizeCmd::SizeCmd()
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBSizeAckEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 		itsTBBackE->npages[boardnr] 			= 0;
 	}

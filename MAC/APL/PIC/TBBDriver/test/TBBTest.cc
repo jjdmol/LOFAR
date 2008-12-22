@@ -129,7 +129,7 @@ GCFEvent::TResult TBBTest::test001(GCFEvent& e, GCFPortInterface& port)
 			{
 				TBBAllocAckEvent ack(e);
 				LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
-				for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+				for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 				LOG_INFO_STR("Alloc test OK");
@@ -183,7 +183,7 @@ GCFEvent::TResult TBBTest::test002(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBAllocAckEvent ack(e);
 			LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Free test OK");
@@ -237,7 +237,7 @@ GCFEvent::TResult TBBTest::test003(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBRecordAckEvent ack(e);
 	
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Record test OK");
@@ -291,7 +291,7 @@ GCFEvent::TResult TBBTest::test004(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBStopAckEvent ack(e);
 	
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Stop test OK");
@@ -446,7 +446,7 @@ GCFEvent::TResult TBBTest::test007(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBModeAckEvent ack(e);
 
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) {
 				TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 			}
 			LOG_INFO_STR("Udp test OK");
@@ -512,7 +512,7 @@ GCFEvent::TResult TBBTest::test008(GCFEvent& e, GCFPortInterface& port)
 				LOG_INFO_STR(formatString("mp3version   = 0X%08X", ack.mp3version[cnt]));
 			}
 			//LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Version test OK");
@@ -568,7 +568,7 @@ GCFEvent::TResult TBBTest::test009(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBSizeAckEvent ack(e);
 
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Size test OK");
@@ -622,7 +622,7 @@ GCFEvent::TResult TBBTest::test010(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBSizeAckEvent ack(e);
 
-			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+			for (int boardnr = 0; boardnr < MAX_N_TBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
 			LOG_INFO_STR("Size test OK");
