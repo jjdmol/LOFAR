@@ -139,7 +139,7 @@ void PencilRings::computeBeamCoordinates()
   }
 }
 
-PencilBeams::PencilBeams(PencilCoordinates coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> refPhaseCentre, Matrix<double> phaseCentres )
+PencilBeams::PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres )
 :
   itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
@@ -147,8 +147,8 @@ PencilBeams::PencilBeams(PencilCoordinates coordinates, unsigned nrStations, uns
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsCenterFrequency(centerFrequency),
   itsChannelBandwidth(channelBandwidth),
-  itsRefPhaseCentre(refPhaseCentre),
-  itsPencilBeamData( boost::extents[1][1][1][1], 32 )
+  itsPencilBeamData( boost::extents[1][1][1][1], 32 ),
+  itsRefPhaseCentre(refPhaseCentre)
   //itsPencilBeamData( boost::extents[nrChannels][coordinates.getCoordinates().size()][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS], 32 )
 {
   // derived constants
