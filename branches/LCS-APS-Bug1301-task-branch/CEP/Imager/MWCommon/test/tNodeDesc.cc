@@ -12,8 +12,9 @@
 #include <ostream>
 #include <fstream>
 
-using namespace LOFAR::CEP;
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::CEP;
 
 void check (const NodeDesc& node)
 {

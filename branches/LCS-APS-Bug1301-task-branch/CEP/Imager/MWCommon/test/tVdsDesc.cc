@@ -12,9 +12,10 @@
 #include <ostream>
 #include <fstream>
 
-using namespace LOFAR::CEP;
-using namespace casa;
 using namespace std;
+using namespace casa;
+using namespace LOFAR;
+using namespace LOFAR::CEP;
 
 void checkVds (const VdsPartDesc& vds, double endTime)
 {
