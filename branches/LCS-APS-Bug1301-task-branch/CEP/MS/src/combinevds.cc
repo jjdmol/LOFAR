@@ -23,12 +23,14 @@
 #include <lofar_config.h>
 #include <MWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <casa/OS/Path.h>
-#include<stdexcept>
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
 
 using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::CEP;
 
 int main(int argc, const char* argv[])

@@ -38,7 +38,7 @@ namespace LOFAR {
 // Default constructor
 //
 ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
-	: KeyValueMap(mode),
+	: KVMap(mode),
 	  itsCount (1),
 	  itsMode(mode)
 {}
@@ -48,7 +48,7 @@ ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 //
 ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
 				   KeyCompare::Mode	mode)
-	: KeyValueMap(mode), 
+	: KVMap(mode), 
 	  itsCount (1),
 	  itsMode(mode)
 {

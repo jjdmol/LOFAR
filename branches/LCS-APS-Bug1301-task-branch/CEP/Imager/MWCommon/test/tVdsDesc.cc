@@ -8,6 +8,7 @@
 
 #include <MWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <ostream>
 #include <fstream>
 

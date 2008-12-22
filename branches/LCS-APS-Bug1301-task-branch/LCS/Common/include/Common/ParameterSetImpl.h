@@ -56,7 +56,7 @@ typedef StringUtil::Compare			KeyCompare;
 // A key/value map is defined as a map of strings. The third template
 // parameter, \c KeyCompare, is the string comparison functor that will be
 // used to compare keys.
-typedef map <string, ParameterValue, KeyCompare>	KeyValueMap;
+typedef map <string, ParameterValue, KeyCompare>	KVMap;
 
 //# Description of class.
 // The ParameterSetImpl class is a key-value implementation of the type
@@ -66,11 +66,11 @@ typedef map <string, ParameterValue, KeyCompare>	KeyValueMap;
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
-class ParameterSetImpl : public KeyValueMap
+class ParameterSetImpl : public KVMap
 {
 public:
-	typedef KeyValueMap::iterator		iterator;
-	typedef KeyValueMap::const_iterator	const_iterator;
+	typedef KVMap::iterator		iterator;
+	typedef KVMap::const_iterator	const_iterator;
 
 	// \name Construction and Destruction
 	// A ParameterSetImpl can be constructed as empty collection, can be

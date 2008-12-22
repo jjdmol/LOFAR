@@ -11,6 +11,7 @@
 #include <Blob/BlobOBufString.h>
 #include <Blob/BlobIBufString.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <ostream>
 #include <fstream>
 

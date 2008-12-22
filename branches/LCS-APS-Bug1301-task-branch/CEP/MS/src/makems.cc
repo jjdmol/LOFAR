@@ -48,7 +48,6 @@
 #include <sstream>
 
 using namespace LOFAR;
-using namespace ACC;
 using namespace casa;
 using namespace std;
 
