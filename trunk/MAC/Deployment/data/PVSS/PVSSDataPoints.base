@@ -73,6 +73,7 @@ SoftwareMonitor		SWM			S	P	Y	LOFAR_PermSW_SoftwareMonitor
 MACInfoServer		MIS			S	P	Y	LOFAR_PermSW_MACInfoServer
 StationCtrl			SC			S	P	Y	LOFAR_PermSW_StationCtrl
 DigBoardCtrl		DBC			S	P	Y	LOFAR_PermSW_DigBoardCtrl
+Antenna				-			S	P	N	@antenna@
 StnObsSW			-			S	P	N	LOFAR_ObsSW
 StnObservation		OBS			S	O	N	LOFAR_ObsSW_@observation@
 BeamCtrl			BC			S	O	Y	LOFAR_ObsSW_@observation@_BeamCtrl
