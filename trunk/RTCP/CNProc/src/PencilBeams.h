@@ -134,7 +134,7 @@ class PencilRings: public PencilCoordinates
 class PencilBeams
 {
   public:
-    PencilBeams(PencilCoordinates coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> refPhaseCentre, Matrix<double> phaseCentres );
+    PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres );
 
     void formPencilBeams( FilteredData *filteredData );
 

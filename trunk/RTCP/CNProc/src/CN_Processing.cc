@@ -327,9 +327,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
-#if 0
     itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres());
-#endif
 
     itsCorrelator     = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(),
 				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
@@ -532,9 +530,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsPPF;
     delete itsFilteredData;
     delete itsBeamFormer;
-#if 0
     delete itsPencilBeamFormer;
-#endif
     delete itsCorrelator;
     delete itsCorrelatedData;
   }
