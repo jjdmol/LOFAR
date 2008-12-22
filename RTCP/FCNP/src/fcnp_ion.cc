@@ -349,13 +349,17 @@ static void *pollThread(void *)
 {
   //setAffinity();
 
-  _BGP_TreePtpHdr header;
-  RequestPacket   request __attribute__((aligned(16)));
-  unsigned	  nrInterrupts = 0;
+  _BGP_TreePtpHdr     header;
+  _BGP_TreeFifoStatus stat;
+  RequestPacket	      request __attribute__((aligned(16)));
+  unsigned	      nrInterrupts = 0;
+
 
   if (useInterrupts) {
     while (!stop) {
-      /*if (!checkForIncomingPacket())*/ { // not thread safe!
+      stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+
+      if (stat.RecHdrCount == 0) {
 	int word;
 
 	read(fd, &word, sizeof word); // wait for Irq packet
