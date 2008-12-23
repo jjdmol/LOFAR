@@ -100,6 +100,7 @@ public:
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
 	string         getTransportType(const string& prefix) const;
+	string         outputDataType() const;
 
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
@@ -380,6 +381,11 @@ inline string Parset::partitionName() const
 inline bool Parset::realTime() const
 {
   return getBool("OLAP.realTime");
+}
+
+inline string Parset::outputDataType() const
+{
+  return getString("OLAP.outputDataType");
 }
 
 

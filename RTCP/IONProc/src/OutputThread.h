@@ -25,8 +25,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/CorrelatedData.h>
+#include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
+#include <Interface/Parset.h>
 #include <Stream/Stream.h>
 
 #include <pthread.h>
@@ -37,11 +38,11 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(Stream *streamToStorage, unsigned nrBaselines, unsigned nrChannels);
+			    OutputThread(Stream *streamToStorage, const Parset &ps);
 			    ~OutputThread();
 
     static const unsigned   maxSendQueueSize = 3;
-    Queue<CorrelatedData *> itsFreeQueue, itsSendQueue;
+    Queue<StreamableData *> itsFreeQueue, itsSendQueue;
 
   private:
     static void		    *mainLoopStub(void *outputThread);

@@ -188,6 +188,7 @@ static void configureCNs(const Parset &parset)
   configuration.nrPencilRings()           = parset.getUint32("OLAP.DelayComp.nrPencilRings");
   configuration.pencilRingSize()          = parset.getDouble("OLAP.DelayComp.pencilRingSize");
   configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
+  configuration.outputDataType()          = parset.outputDataType();
 
   phaseCentres.resize( inputs.size(), 3 );
   for( unsigned stat = 0; stat < inputs.size(); stat++ ) {

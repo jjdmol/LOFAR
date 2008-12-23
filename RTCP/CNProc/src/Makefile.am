@@ -6,7 +6,6 @@ CorrelatorAsm.h		\
 FFT_Asm.h		\
 FIR_Asm.h		\
 InputData.h		\
-FilteredData.h		\
 TransposedData.h	\
 FIR.h			\
 PPF.h			\

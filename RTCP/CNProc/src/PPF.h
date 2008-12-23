@@ -8,7 +8,7 @@
 
 #include <FIR.h>
 #include <TransposedData.h>
-#include <FilteredData.h>
+#include <Interface/FilteredData.h>
 #include <Interface/AlignedStdAllocator.h>
 
 #include <boost/multi_array.hpp>

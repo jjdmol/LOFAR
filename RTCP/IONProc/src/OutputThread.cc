@@ -26,18 +26,18 @@
 #include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
-
+#include <Interface/DataHolder.h>
 
 namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(Stream *streamToStorage, unsigned nrBaselines, unsigned nrChannels)
+OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
   itsStreamToStorage(streamToStorage)
 {
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
+    itsFreeQueue.append(newDataHolder( ps.outputDataType(), ps, hugeMemoryAllocator ));
 
   pthread_attr_t attr;
 
@@ -70,7 +70,7 @@ OutputThread::~OutputThread()
 
 void OutputThread::mainLoop()
 {
-  CorrelatedData *data;
+  StreamableData *data;
 
   while ((data = itsSendQueue.remove()) != 0) {
     try {

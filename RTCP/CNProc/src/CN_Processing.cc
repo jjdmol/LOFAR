@@ -29,7 +29,7 @@
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
-
+#include <Interface/DataHolder.h>
 #include <cassert>
 #include <complex>
 #include <cmath>
@@ -90,6 +90,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsTransposedData(0),
   itsFilteredData(0),
   itsCorrelatedData(0),
+  itsOutputData(0),
+  itsOutputDataType(""),
 #if defined HAVE_BGL || defined HAVE_BGP
   itsDoAsyncCommunication(false),
   itsTranspose(0),
@@ -267,6 +269,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
   itsNrStations	                   = configuration.nrStations();
+  itsOutputDataType                = configuration.outputDataType();
   itsOutputPsetSize                = outputPsets.size();
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
@@ -324,6 +327,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, *itsAllocators[1]);
     itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, *itsAllocators[2]);
     itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels, *itsAllocators[3]);
+
+    if( itsOutputDataType == "CorrelatedData" ) {
+      itsOutputData = itsCorrelatedData;
+    } else if( itsOutputDataType == "FilteredData" ) {
+      itsOutputData = itsFilteredData;
+    } else {
+      std::clog << "Invalid outputDataType: " << itsOutputDataType << std::endl;
+    }
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
@@ -471,7 +482,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
     static NSTimer writeTimer("send timer", true);
     writeTimer.start();
-    itsCorrelatedData->write(itsStream, false);
+    itsOutputData->write(itsStream, false);
     writeTimer.stop();
 
 #if defined HAVE_MPI

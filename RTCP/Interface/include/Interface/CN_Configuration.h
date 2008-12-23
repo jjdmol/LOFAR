@@ -27,7 +27,7 @@
 #include <Interface/MultiDimArray.h>
 
 #include <vector>
-
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -51,6 +51,7 @@ class CN_Configuration
     double                &pencilRingSize();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
+    std::string           &outputDataType();
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -58,12 +59,14 @@ class CN_Configuration
     static const unsigned MAX_PSETS    = 64;
     static const unsigned MAX_SUBBANDS = 248;
     static const unsigned MAX_STATIONS = 100;
+    static const unsigned MAX_OUTPUTDATATYPE_LENGTH = 128;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
     Matrix<double>        itsPhaseCentres;
+    std::string           itsOutputDataType;
 
     struct MarshalledData
     {
@@ -85,6 +88,7 @@ class CN_Configuration
       double              itsPencilRingSize;
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
+      char                itsOutputDataType[MAX_OUTPUTDATATYPE_LENGTH];
     } itsMarshalledData;
 };
 
@@ -177,6 +181,11 @@ inline std::vector<double> &CN_Configuration::refPhaseCentre()
 inline Matrix<double> &CN_Configuration::phaseCentres()
 {
   return itsPhaseCentres;
+}
+
+inline std::string &CN_Configuration::outputDataType()
+{
+  return itsOutputDataType;
 }
 
 } // namespace RTCP

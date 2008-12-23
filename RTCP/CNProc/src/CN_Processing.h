@@ -36,9 +36,10 @@
 #include <Interface/Allocator.h>
 
 #include <InputData.h>
-#include <FilteredData.h>
+#include <Interface/FilteredData.h>
 #include <TransposedData.h>
 #include <Interface/CorrelatedData.h>
+#include <Interface/StreamableData.h>
 
 #include <Transpose.h>
 #include <AsyncTranspose.h>
@@ -54,7 +55,7 @@
 #include <rts.h>
 #endif
 
-
+#include <string>
 
 namespace LOFAR {
 namespace RTCP {
@@ -113,6 +114,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
     FilteredData		*itsFilteredData;
     CorrelatedData		*itsCorrelatedData;
+    StreamableData		*itsOutputData;
+    std::string                 itsOutputDataType;
 
 #if defined HAVE_MPI
     bool                itsDoAsyncCommunication;
