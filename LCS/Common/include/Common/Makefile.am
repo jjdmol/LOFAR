@@ -63,6 +63,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	PrettyUnits.h \
 	Process.h \
 	RunOnNode.h \
+	Semaphore.h \
 	Singleton.h \
 	Stopwatch.h \
 	StreamUtil.h \
