@@ -25,7 +25,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <MACIO/MACServiceInfo.h>
@@ -52,7 +52,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
 	namespace MainCU {
 
 //

@@ -8,11 +8,13 @@
 
 #include <MWCommon/ClusterDesc.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <ostream>
 #include <fstream>
 
-using namespace LOFAR::CEP;
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::CEP;
 
 void check (const ClusterDesc& cl)
 {
@@ -59,7 +61,7 @@ void doIt()
   ofstream fos("tClusterDesc_tmp.fil");
   cl.write (fos);
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tClusterDesc_tmp.fil");
+  ParameterSet parset("tClusterDesc_tmp.fil");
   ClusterDesc cl2(parset);
   check(cl2);
   cl = cl2;
@@ -96,7 +98,7 @@ void doParset()
   ofstream fos("tClusterDesc_tmp.fil2");
   cdesc.write (fos);
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tClusterDesc_tmp.fil2");
+  ParameterSet parset("tClusterDesc_tmp.fil2");
   ClusterDesc cl2(parset);
   check1 (cl2);
 }

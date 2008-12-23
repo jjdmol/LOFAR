@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <APS/ParameterSetImpl.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSetImpl.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/StreamUtil.h>
@@ -32,17 +32,13 @@
 #include <string>
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
-
-      using LOFAR::operator<<;
 
 //-------------------------- creation and destroy ---------------------------
 //
 // Default constructor
 //
 ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
-	: KeyValueMap(mode),
+	: KVMap(mode),
 	  itsCount (1),
 	  itsMode(mode)
 {}
@@ -52,7 +48,7 @@ ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 //
 ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
 				   KeyCompare::Mode	mode)
-	: KeyValueMap(mode), 
+	: KVMap(mode), 
 	  itsCount (1),
 	  itsMode(mode)
 {
@@ -642,6 +638,4 @@ string	ParameterSetImpl::locateModule(const string&	shortKey) const
 	return ("");
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR

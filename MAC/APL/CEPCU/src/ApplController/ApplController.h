@@ -37,7 +37,7 @@
 #include <Transport/TH_Socket.h>
 #include <ALC/ApplControlServer.h>	//# communication stub
 #include <PLC/DH_ProcControl.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/EventPort.h>
 #include "ACCmdImpl.h"				//# the real implementation
 #include "ACDaemonComm.h"
@@ -47,7 +47,6 @@
 #include "ItemList.h"
 #include "ProcRuler.h"
 
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::ALC;
 using namespace LOFAR::ACC::PLC;
 

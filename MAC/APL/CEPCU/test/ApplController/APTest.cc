@@ -30,12 +30,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <PLC/ProcControlServer.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <APCmdImpl.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::PLC;
 
 //

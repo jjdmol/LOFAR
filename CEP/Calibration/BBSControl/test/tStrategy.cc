@@ -25,12 +25,11 @@
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/MultiStep.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
-using namespace LOFAR::ACC::APS;
 
 // Compare files. Return true if equal, otherwise false.
 bool compareFiles(const char* f1, const char* f2)

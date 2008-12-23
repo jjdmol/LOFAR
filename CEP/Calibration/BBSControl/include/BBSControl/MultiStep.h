@@ -48,7 +48,7 @@ namespace LOFAR
       // object being created. The third argument is used to pass a
       // backreference to the parent Step object.
       MultiStep(const string& name,
-                const ACC::APS::ParameterSet& parset,
+                const ParameterSet& parset,
                 const Step* parent);
 
       // Default constructor. Construct an empty MultiStep object and make
@@ -72,18 +72,18 @@ namespace LOFAR
 
     private:
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
+      virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps);
+      virtual void read(const ParameterSet& ps);
 
       // Write the individual Step objects in \a itsSteps, which make up
       // this MultiStep, to the ParameterSet \a ps.
-      void writeSteps(ACC::APS::ParameterSet& ps) const;
+      void writeSteps(ParameterSet& ps) const;
 
       // Read the individual Step objects, which make up this MultiStep,
       // from the ParameterSet \a ps and store them in \a itsSteps.
-      void readSteps(const ACC::APS::ParameterSet& ps);
+      void readSteps(const ParameterSet& ps);
 
       // Implementation of getAllSteps() for MultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this

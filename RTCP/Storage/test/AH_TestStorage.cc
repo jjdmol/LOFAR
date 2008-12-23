@@ -45,7 +45,7 @@ namespace LOFAR
 
       LOG_TRACE_FLOW_STR("Start of tAH_Storage::define()");
       
-      ACC::APS::ParameterSet parameterSet("RTCP.parset");
+      ParameterSet parameterSet("RTCP.parset");
       Parset itsPS(&parameterSet);
        
       

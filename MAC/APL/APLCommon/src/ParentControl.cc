@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -38,7 +38,6 @@
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
-  using namespace ACC::APS;
   namespace APLCommon {
 
 typedef struct stateFlow_t {

@@ -37,7 +37,7 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
@@ -49,7 +49,6 @@
 
 namespace LOFAR
 {
-  using namespace ACC::APS;
 
   namespace BBS
   {

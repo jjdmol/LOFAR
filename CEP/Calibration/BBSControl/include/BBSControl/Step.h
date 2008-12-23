@@ -39,7 +39,7 @@
 namespace LOFAR
 {
   //# Forward Declarations.
-  namespace ACC { namespace APS { class ParameterSet; } }
+  class ParameterSet;
 
   namespace BBS
   {
@@ -92,7 +92,7 @@ namespace LOFAR
       // otherwise it is a SingleStep. The third, optional, argument is used
       // to pass a backreference to the parent Step object.
       static shared_ptr<Step> create(const string& name,
-                                     const ACC::APS::ParameterSet& parSet,
+                                     const ParameterSet& parSet,
                                      const Step* parent = 0);
 
       // Print the contents of \c *this in human readable form into the output
@@ -123,12 +123,12 @@ namespace LOFAR
       // @}
 
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
+      virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this,
       // overriding the default values, "inherited" from the parent step
       // object.
-      virtual void read(const ACC::APS::ParameterSet& ps);
+      virtual void read(const ParameterSet& ps);
 
     protected:
       // Default constructor. Construct an empty Step object and make it a
@@ -140,7 +140,7 @@ namespace LOFAR
       // object being created. The third argument is used to pass a
       // backreference to the parent Step object.
 //       Step(const string& name, 
-//            const ACC::APS::ParameterSet& parSet,
+//            const ParameterSet& parSet,
 //            const Step* parent);
       Step(const string& name, const Step* parent);
 

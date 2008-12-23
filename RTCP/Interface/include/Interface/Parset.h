@@ -23,15 +23,13 @@
 #ifndef LOFAR_INTERFACE_PARSET_H
 #define LOFAR_INTERFACE_PARSET_H
 
-#if defined HAVE_APS
-
 // \file
 // class/struct that holds the Parset information
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
@@ -53,11 +51,11 @@ namespace RTCP {
 // The Parset class is a public struct that can be used as base-class
 // for holding Parset related information.
 // It can be instantiated with a parset containing Parset information.
-class Parset: public ACC::APS::ParameterSet
+class Parset: public ParameterSet
 {
 public:
 	Parset();
-	Parset(ACC::APS::ParameterSet *aParSet);
+	Parset(ParameterSet *aParSet);
 	~Parset();
 	 
 	void           check() const;
@@ -388,5 +386,4 @@ inline bool Parset::realTime() const
 } // namespace RTCP
 } // namespace LOFAR
 
-#endif // defined HAVE_APS
 #endif

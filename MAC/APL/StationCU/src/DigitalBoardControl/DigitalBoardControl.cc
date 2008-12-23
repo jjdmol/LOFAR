@@ -24,7 +24,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -45,7 +45,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
 	namespace StationCU {
 	
 // static pointer to this object for signal handler

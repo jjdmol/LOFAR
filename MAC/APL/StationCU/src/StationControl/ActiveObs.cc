@@ -41,7 +41,6 @@
 #include "ActiveObs.h"
 
 namespace LOFAR {
-	using ACC::APS::ParameterSet;
 	using namespace APLCommon;
 	using namespace MACIO;
 	using namespace GCF::TM;

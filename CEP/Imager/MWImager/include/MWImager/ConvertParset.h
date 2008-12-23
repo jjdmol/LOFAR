@@ -43,13 +43,13 @@ namespace LOFAR {
     // Convert the input parset file (in SAS format) to the output parset
     // (in cimager format).
     // The output parset is written if the output name is not empty.
-    static ACC::APS::ParameterSet convertParset (const std::string& nameIn,
+    static ParameterSet convertParset (const std::string& nameIn,
 						 const std::string& nameOut);
 
     // Convert the input parset (in SAS format) to the output parset
     // (in cimager format).
     // The output parset is written if the output name is not empty.
-    static ACC::APS::ParameterSet convertParset (const ACC::APS::ParameterSet&,
+    static ParameterSet convertParset (const ParameterSet&,
 						 const std::string& nameOut);
 
     // Append the parameters of in to the output.
@@ -57,8 +57,8 @@ namespace LOFAR {
     // Parameter names in the <src>old2newNameMap</src> are renamed.
     // Parameters defined in the <src>defaults</src> are written in the output
     // if not defined in the input.
-    static void convert (ACC::APS::ParameterSet& out,
-			 const ACC::APS::ParameterSet& in,
+    static void convert (ParameterSet& out,
+			 const ParameterSet& in,
 			 const std::map<std::string,std::string>& old2NewNameMap,
 			 const std::map<std::string,std::string>& defaults,
 			 const std::string& prefix);

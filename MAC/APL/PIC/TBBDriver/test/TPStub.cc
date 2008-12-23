@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <iostream>
 #include <sys/time.h>
@@ -38,7 +38,6 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace ACC::APS;
 using namespace TP_Protocol;
 using namespace TBB;
 using namespace TBB_Test;

@@ -26,7 +26,7 @@
 //# Includes
 #include <PLC/ProcCtrlCmdLine.h>
 #include <PLC/PCCmd.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -35,7 +35,7 @@ namespace LOFAR
   {
     namespace PLC
     {
-      using APS::ParameterSet;
+//       using LOFAR::ParameterSet;
 
       //## --------   P u b l i c   m e t h o d s   -------- ##//
 

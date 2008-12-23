@@ -25,13 +25,12 @@
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {
 namespace BBS 
 {
-using ACC::APS::ParameterSet;
 using LOFAR::operator<<;
 
 NoiseStep::NoiseStep(const Step* parent)
@@ -41,7 +40,7 @@ NoiseStep::NoiseStep(const Step* parent)
 }    
 
 NoiseStep::NoiseStep(const string& name,
-    const ACC::APS::ParameterSet& parset,
+    const ParameterSet& parset,
     const Step* parent)
     : SingleStep(name, parent)
 {
@@ -89,7 +88,7 @@ const string& NoiseStep::type() const
 
 //##--------   P r i v a t e   m e t h o d s   --------##//
 
-void NoiseStep::write(ACC::APS::ParameterSet& ps) const
+void NoiseStep::write(ParameterSet& ps) const
 {
     LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     SingleStep::write(ps);
@@ -102,7 +101,7 @@ void NoiseStep::write(ACC::APS::ParameterSet& ps) const
     LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
 }
 
-void NoiseStep::read(const ACC::APS::ParameterSet& ps)
+void NoiseStep::read(const ParameterSet& ps)
 {
     LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     SingleStep::read(ps);

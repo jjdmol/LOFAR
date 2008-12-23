@@ -39,7 +39,6 @@
 namespace LOFAR 
 {
   using namespace AMC;
-  using ACC::APS::ParameterSet;
 
   namespace RTCP 
   {

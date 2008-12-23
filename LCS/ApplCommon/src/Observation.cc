@@ -31,7 +31,6 @@
 #include <Common/lofar_set.h>
 
 namespace LOFAR {
-	using namespace ACC::APS;
 
 Observation::Observation() :
 	name(),

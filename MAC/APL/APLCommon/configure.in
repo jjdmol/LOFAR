@@ -55,7 +55,6 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(LCS/ACC/APS, APS, , 1, APS/ParameterSet.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,"",)
 dnl lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, boost_date_time)

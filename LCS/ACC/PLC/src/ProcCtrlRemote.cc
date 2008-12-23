@@ -25,7 +25,7 @@
 
 //# Includes
 #include <PLC/ProcCtrlRemote.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -34,7 +34,7 @@ namespace LOFAR
   {
     namespace PLC
     {
-      using namespace APS;
+      using LOFAR::ParameterSet;
 
       ProcCtrlRemote::ProcCtrlRemote(ProcessControl* aProcCtrl) :
         ProcCtrlProxy(aProcCtrl)

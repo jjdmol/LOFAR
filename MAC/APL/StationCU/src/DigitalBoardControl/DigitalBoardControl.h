@@ -28,7 +28,7 @@
 #include <Common/lofar_string.h>
 
 //# ACC Includes
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 //# GCF Includes
 #include <MACIO/GCF_Event.h>

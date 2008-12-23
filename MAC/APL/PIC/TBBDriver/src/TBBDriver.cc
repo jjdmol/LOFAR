@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <APL/RTCCommon/daemonize.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <Common/hexdump.h>
 
@@ -72,7 +72,6 @@
 #define ETHERTYPE_TP 0x7BB0     // letters of TBB
 
 using namespace LOFAR;
-using namespace ACC::APS;
 using namespace TBB;
 
 static bool   itsDaemonize  = false;
@@ -1333,8 +1332,8 @@ int main(int argc, char** argv)
   LOG_DEBUG_STR("Reading configuration files");
   try {
     LOFAR::ConfigLocator cl;
-    LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
-    LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));  
+    LOFAR::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
+    LOFAR::globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));  
   }
   catch (LOFAR::Exception& e) {
     LOG_ERROR_STR("Failed to load configuration files: " << e.text());

@@ -44,7 +44,7 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include "ObsClaimer.h"
 

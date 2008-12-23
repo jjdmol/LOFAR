@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include "GTM_TCPServerSocket.h"
 #include <ServiceBroker/ServiceBrokerTask.h>
 //#include <ServiceBroker/GSB_Defines.h>
@@ -36,7 +36,6 @@
 #include <errno.h>
 
 namespace LOFAR {
-  using namespace ACC::APS;
   namespace GCF {
     using namespace SB;
     namespace TM {
@@ -198,8 +197,8 @@ bool GCFTCPPort::open()
 	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
 	string portNumParam = formatString(PARAM_TCP_PORTNR, 
 						getTask()->getName().c_str(), getRealName().c_str());
-	if (ACC::APS::globalParameterSet()->isDefined(portNumParam)) {
-		_portNumber = ACC::APS::globalParameterSet()->getInt32(portNumParam);
+	if (globalParameterSet()->isDefined(portNumParam)) {
+		_portNumber = globalParameterSet()->getInt32(portNumParam);
 	}
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port

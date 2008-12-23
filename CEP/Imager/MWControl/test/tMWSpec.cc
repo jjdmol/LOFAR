@@ -23,10 +23,11 @@
 #include <lofar_config.h>
 #include <MWControl/MWMultiSpec.h>
 #include <MWControl/MWParameterHandler.h>
+#include <Common/ParameterSet.h>
+#include <Common/lofar_iostream.h>
 
-using namespace LOFAR::ACC::APS;
+using namespace LOFAR;
 using namespace LOFAR::CEP;
-using namespace std;
 
 int main()
 {

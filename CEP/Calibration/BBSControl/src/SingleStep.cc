@@ -26,14 +26,13 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
     //##--------   P u b l i c   m e t h o d s   --------##//

@@ -27,7 +27,7 @@
 //#  $Id$
 
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Attrib.h>

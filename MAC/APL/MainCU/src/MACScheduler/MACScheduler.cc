@@ -25,7 +25,7 @@
 #include <Common/StringUtil.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -51,7 +51,6 @@ using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace ACC::APS;
 	namespace MainCU {
 
 // static (this) pointer used for signal handling
@@ -224,7 +223,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
       
 		// Try to connect to the SAS database.
-		ACC::APS::ParameterSet* pParamSet = ACC::APS::globalParameterSet();
+		ParameterSet* pParamSet = globalParameterSet();
 		string username	= pParamSet->getString("OTDBusername");
 		string DBname 	= pParamSet->getString("OTDBdatabasename");
 		string password	= pParamSet->getString("OTDBpassword");

@@ -50,7 +50,7 @@ static void child(int argc, char *argv[], int rank)
     LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
-    ACC::APS::ParameterSet parameterSet(argv[1]);
+    ParameterSet parameterSet(argv[1]);
     Parset parset(&parameterSet);
     parset.adoptFile("OLAP.parset");
 

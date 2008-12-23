@@ -23,8 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_APS
-
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
@@ -54,9 +52,9 @@ Parset::Parset()
 }
 
 
-Parset::Parset(ACC::APS::ParameterSet *aParSet) 
+Parset::Parset(ParameterSet *aParSet) 
 :
-  ACC::APS::ParameterSet(*aParSet),
+  ParameterSet(*aParSet),
   itsObservation(aParSet)
 {
    check();
@@ -347,5 +345,3 @@ int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 
 } // namespace RTCP
 } // namespace LOFAR
-
-#endif // defined HAVE_APS

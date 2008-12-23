@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_RawPort.h>
@@ -36,7 +36,6 @@
 #include <GCF/TM/GCF_DevicePort.h>
 
 namespace LOFAR {
-	using namespace ACC::APS;
  namespace GCF {
   namespace TM {
 

@@ -25,7 +25,7 @@
 #include <PIClient.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/Utils.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Transport/TH_Socket.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
@@ -114,11 +114,11 @@ void PIClient::run()
     try
     {
       LOG_DEBUG("Setup connection");
-      ACC::APS::globalParameterSet()->adoptFile("PropertyInterface.conf");
+      globalParameterSet()->adoptFile("PropertyInterface.conf");
 
       _dhPIClient.init();
-      TH_Socket*  pTH = new TH_Socket(ACC::APS::globalParameterSet()->getString(PARAM_PI_HOST), 
-                                      ACC::APS::globalParameterSet()->getString(PARAM_PI_PORT), 
+      TH_Socket*  pTH = new TH_Socket(globalParameterSet()->getString(PARAM_PI_HOST), 
+                                      globalParameterSet()->getString(PARAM_PI_PORT), 
                                       false);
       LOG_DEBUG("Try to connect");
       pTH->init();

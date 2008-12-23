@@ -53,7 +53,7 @@
 namespace LOFAR
 {
   //# Forward Declarations
-  namespace ACC { namespace APS { class ParameterSet; } }
+  class ParameterSet;
 
   namespace BBS
   {
@@ -254,7 +254,7 @@ namespace LOFAR
 
         // Constructor for select-like queries. The result is returned as a
         // string.
-        ExecQuery(const string& query, ACC::APS::ParameterSet& result);
+        ExecQuery(const string& query, ParameterSet& result);
 
         // This method will be invoked by the perform() method of your
         // pqxx::connection class to execute the query stored in itsQuery. The
@@ -273,13 +273,13 @@ namespace LOFAR
       private:
         // Empty ParameterSet, used to initialize itsResult properly, when the
         // one-argument constructor is used.
-        static ACC::APS::ParameterSet emptyResult;
+        static ParameterSet emptyResult;
 
         // String containing the query to be executed.
         const string itsQuery;
 
         // Reference to the ParameterSet that will hold the query result.
-        ACC::APS::ParameterSet& itsResult;
+        ParameterSet& itsResult;
 
         // The result of the executed query must be stored internally, because
         // it will be written in operator() and will be read in on_commit().
@@ -291,7 +291,7 @@ namespace LOFAR
       // optional argument \a doAlwaysPrefix indicates whether keys should
       // always be prefixed with \c _row(<row-nr>) or not. By default, when
       // only one row is returned, the prefix \c _row(0). is dropped.
-      ACC::APS::ParameterSet execQuery(const string& query,
+      ParameterSet execQuery(const string& query,
                                        bool doAlwaysPrefix = false) const;
 
       // Connection to the PostgreSQL database. The pqxx::connection object

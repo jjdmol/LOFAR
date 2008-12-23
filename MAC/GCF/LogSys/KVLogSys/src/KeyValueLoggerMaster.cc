@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include "KeyValueLoggerMaster.h"
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
@@ -37,8 +37,6 @@
 
 namespace LOFAR {
 	using namespace OTDB;  
-	using ACC::APS::ParameterSet;
-	using ACC::APS::globalParameterSet;
 	namespace GCF {
 		using namespace TM;
 		namespace LogSys {
