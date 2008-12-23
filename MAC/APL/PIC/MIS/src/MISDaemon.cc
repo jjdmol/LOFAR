@@ -67,7 +67,7 @@ MISDaemon::MISDaemon() :
 		ConfigLocator	aCL;
 		globalParameterSet()->adoptFile(aCL.locate("RemoteStation.conf"),"");
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 	        LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
 	}  
 	//MAXMOD
@@ -87,7 +87,7 @@ MISDaemon::MISDaemon() :
 	    //iter++;
 	  //}
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 	  LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
 	}
 }
