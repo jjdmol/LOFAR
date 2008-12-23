@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 
 //# Includes
-#define	HAVE_LOG4CPLUS
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_fstream.h>
