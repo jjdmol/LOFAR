@@ -222,7 +222,7 @@ public:
 #ifdef CLIENT
 		AMC::ConverterClient* converter = 0;
 		try { converter = new AMC::ConverterClient("localhost"); }
-		catch (Exception e) {
+		catch (Exception& e) {
 			LOG_FATAL("Failed to connect to amcserver on localhost");
 			exit(EXIT_FAILURE);
 		}
@@ -336,7 +336,7 @@ int main(int argc, char** argv)
 		ConfigLocator cl;
 		globalParameterSet()->adoptFile(cl.locate("BeamServer.conf"));
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 		cerr << "Failed to load configuration files: " << e.text() << endl;
 		exit(EXIT_FAILURE);
 	}

@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 		// set global bf_gain
 		g_bf_gain = globalParameterSet()->getInt32("BeamServer.BF_GAIN");
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 		LOG_FATAL_STR("Failed to load configuration files: " << e.text());
 		exit(EXIT_FAILURE);
 	}
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
 		GCFTask::run();
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 		LOG_FATAL_STR("Exception: " << e.text());
 		exit(EXIT_FAILURE);
 	}

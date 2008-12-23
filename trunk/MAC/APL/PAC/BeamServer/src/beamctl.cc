@@ -503,7 +503,7 @@ int main(int argc, char** argv)
   	LOFAR::ConfigLocator cl;
 		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
 	}
-	catch (LOFAR::Exception e) {
+	catch (LOFAR::Exception& e) {
 		cerr << "Failed to load configuration files: " << e.text() << endl;
 		exit(EXIT_FAILURE);
 	}
@@ -677,7 +677,7 @@ int main(int argc, char** argv)
 
   try {
     ctl.mainloop();
-  } catch (Exception e) {
+  } catch (Exception& e) {
     cerr << "Exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }

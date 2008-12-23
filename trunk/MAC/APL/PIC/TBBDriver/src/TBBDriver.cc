@@ -1336,7 +1336,7 @@ int main(int argc, char** argv)
     LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
     LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));  
   }
-  catch (LOFAR::Exception e) {
+  catch (LOFAR::Exception& e) {
     LOG_ERROR_STR("Failed to load configuration files: " << e.text());
     exit(EXIT_FAILURE);
   }
@@ -1348,7 +1348,7 @@ int main(int argc, char** argv)
 	try {
     LOFAR::GCF::TM::GCFTask::run();
   }
-  catch (LOFAR::Exception e) {
+  catch (LOFAR::Exception& e) {
     LOG_ERROR_STR("Exception: " << e.text());
     exit(EXIT_FAILURE);
   }

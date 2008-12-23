@@ -240,7 +240,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			pthread_mutex_unlock(&m_globallock); // unlock global lock
 #endif
 
-		} catch (Exception e)  {
+		} catch (Exception& e)  {
 
 #ifdef USE_CAL_THREAD
 			pthread_mutex_unlock(&m_globallock); // unlock global lock
@@ -898,7 +898,7 @@ int main(int argc, char** argv)
 
 		GCFTask::run();
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 		LOG_ERROR_STR("Exception: " << e.text());
 		exit(EXIT_FAILURE);
 	}
