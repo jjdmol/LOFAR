@@ -27,14 +27,13 @@
 // @brief Handle a LOFAR .parset file
 // @author Ger van Diepen (diepen AT astron nl)
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 
 namespace LOFAR { namespace CEP {
 
   //# Put ParameterSet into LOFAR::CEP namespace for ease of use.
-  using LOFAR::ACC::APS::ParameterSet;
 
   // @ingroup MWCommon
   // @brief Handle a LOFAR .parset file

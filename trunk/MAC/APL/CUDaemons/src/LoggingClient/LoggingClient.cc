@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/Version.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 //#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/LOG_Protocol.ph>
@@ -36,7 +36,6 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
-	using namespace ACC::APS;
 	using namespace GCF::TM;
     namespace CUDaemons {
 

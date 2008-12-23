@@ -34,7 +34,7 @@
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/RTCCommon/PSAccess.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 using namespace std;
 using namespace blitz;

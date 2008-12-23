@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSresult.h>
@@ -41,7 +41,6 @@
 namespace LOFAR {
 	using namespace MACIO;
 	using namespace GCF::TM;
-	using namespace ACC::APS;
 	namespace AMI {
 
 //

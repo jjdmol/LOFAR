@@ -20,7 +20,6 @@ namespace std {
 }
 using namespace std;
 using namespace casa;
-using LOFAR::ACC::APS::ParameterSet;
 
 namespace LOFAR { namespace CEP {
 

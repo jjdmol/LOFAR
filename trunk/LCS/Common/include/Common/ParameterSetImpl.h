@@ -22,15 +22,15 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APS_PARAMETERSETIMPL_H
-#define LOFAR_APS_PARAMETERSETIMPL_H
+#ifndef LOFAR_COMMON_PARAMETERSETIMPL_H
+#define LOFAR_COMMON_PARAMETERSETIMPL_H
 
 // \file
 // Implements a map of Key-Value pairs.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <APS/ParameterValue.h>
+#include <Common/ParameterValue.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
@@ -40,9 +40,8 @@
 #include <Common/StringUtil.h>
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
-// \addtogroup APS
+
+// \addtogroup Common
 // @{
 
 const char PC_QUAL_STABLE[]   = { "stable"        };
@@ -57,7 +56,7 @@ typedef StringUtil::Compare			KeyCompare;
 // A key/value map is defined as a map of strings. The third template
 // parameter, \c KeyCompare, is the string comparison functor that will be
 // used to compare keys.
-typedef map <string, ParameterValue, KeyCompare>	KeyValueMap;
+typedef map <string, ParameterValue, KeyCompare>	KVMap;
 
 //# Description of class.
 // The ParameterSetImpl class is a key-value implementation of the type
@@ -67,11 +66,11 @@ typedef map <string, ParameterValue, KeyCompare>	KeyValueMap;
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
-class ParameterSetImpl : public KeyValueMap
+class ParameterSetImpl : public KVMap
 {
 public:
-	typedef KeyValueMap::iterator		iterator;
-	typedef KeyValueMap::const_iterator	const_iterator;
+	typedef KVMap::iterator		iterator;
+	typedef KVMap::const_iterator	const_iterator;
 
 	// \name Construction and Destruction
 	// A ParameterSetImpl can be constructed as empty collection, can be
@@ -598,8 +597,6 @@ inline time_t ParameterSetImpl::getTime(const string& aKey, const time_t& aValue
         return it->second.getTime();
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR
 
 #endif

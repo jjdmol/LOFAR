@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APS_PARAMETERVALUE_H
-#define LOFAR_APS_PARAMETERVALUE_H
+#ifndef LOFAR_COMMON_PARAMETERVALUE_H
+#define LOFAR_COMMON_PARAMETERVALUE_H
 
 // \file
 // The value of a parameter
@@ -33,7 +33,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/StringUtil.h>
 
-namespace LOFAR { namespace ACC { namespace APS {
+namespace LOFAR { 
 
   class ParameterValue
   {
@@ -168,6 +168,6 @@ namespace LOFAR { namespace ACC { namespace APS {
     string itsValue;
   };
 
-}}}
+}
 
 #endif

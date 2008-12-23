@@ -25,11 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <ApplCommon/Observation.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
 
 int main (int	argc, char* argv[]) 
 {

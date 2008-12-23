@@ -52,7 +52,7 @@
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/RTCCommon/PSAccess.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <fstream>
 #include <signal.h>
 #include <getopt.h>

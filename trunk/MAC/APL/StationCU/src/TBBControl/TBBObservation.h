@@ -30,7 +30,7 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/lofar_bitset.h>
 
 namespace LOFAR {
@@ -52,7 +52,7 @@ public:
 	TBBObservation();
 	~TBBObservation() { };
 	
-	explicit	TBBObservation (ACC::APS::ParameterSet*		aParSet);
+	explicit	TBBObservation (ParameterSet*		aParSet);
 	
 	typedef bitset<256> RCUset_t;
 	

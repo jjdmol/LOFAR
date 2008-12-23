@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
       THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
 
     std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
-    ACC::APS::ParameterSet parameterSet(argv[1]);
+    ParameterSet parameterSet(argv[1]);
     Parset parset(&parameterSet);
     parset.adoptFile("OLAP.parset");
 

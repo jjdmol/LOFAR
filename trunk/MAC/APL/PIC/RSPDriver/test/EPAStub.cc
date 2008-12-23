@@ -32,7 +32,7 @@
 #include <APL/RSP_Protocol/BeamletWeights.h>
 
 #include <APL/RTCCommon/PSAccess.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <iostream>
 #include <sys/time.h>

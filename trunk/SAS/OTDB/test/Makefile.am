@@ -19,7 +19,7 @@ tVTtree_SOURCES				= tVTtree.cc
 tVHtree_SOURCES				= tVHtree.cc
 
 tVHvalue_SOURCES			= tVHvalue.cc
-tVHvalue_LDADD				= ../src/libotdb.la -lpqxx -laps
+tVHvalue_LDADD				= ../src/libotdb.la -lpqxx
 
 tConnection_SOURCES			= tConnection.cc
 

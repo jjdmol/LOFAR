@@ -20,7 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <pyrap/Converters/PycExcp.h>
 #include <pyrap/Converters/PycBasicData.h>
@@ -34,7 +34,7 @@
 using namespace boost::python;
 using namespace casa::pyrap;
 
-namespace LOFAR { namespace ACC { namespace APS {
+namespace LOFAR { 
 
   class PyParameterSet : public ParameterSet
   {
@@ -232,7 +232,7 @@ namespace LOFAR { namespace ACC { namespace APS {
       ;
   }
     
-}}}
+}
 
 
 // Define the python module itself.
@@ -240,7 +240,7 @@ BOOST_PYTHON_MODULE(_pyparameterset)
 {
   casa::pyrap::register_convert_excp();
   casa::pyrap::register_convert_basicdata();
-  casa::pyrap::register_convert_std_vector<LOFAR::ACC::APS::ParameterValue>();
+  casa::pyrap::register_convert_std_vector<ParameterValue>();
   casa::pyrap::register_convert_std_vector<bool>();
   casa::pyrap::register_convert_std_vector<int>();
   casa::pyrap::register_convert_std_vector<float>();
@@ -248,6 +248,6 @@ BOOST_PYTHON_MODULE(_pyparameterset)
   casa::pyrap::register_convert_std_vector<std::string>();
   //  casa::pyrap::register_convert_casa_record();
 
-  LOFAR::ACC::APS::pyparametervalue();
-  LOFAR::ACC::APS::pyparameterset();
+  pyparametervalue();
+  pyparameterset();
 }

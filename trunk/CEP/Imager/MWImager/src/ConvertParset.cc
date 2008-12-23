@@ -28,7 +28,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
 
@@ -65,18 +64,18 @@ namespace LOFAR {
     }
   }
 
-  ACC::APS::ParameterSet MWImager::convertParset (const string& nameIn,
+  ParameterSet MWImager::convertParset (const string& nameIn,
 						  const string& nameOut)
   {
-    return convertParset (ACC::APS::ParameterSet(nameIn), nameOut);
+    return convertParset (ParameterSet(nameIn), nameOut);
   }
 
-  ACC::APS::ParameterSet MWImager::convertParset (const ACC::APS::ParameterSet& parset,
+  ParameterSet MWImager::convertParset (const ParameterSet& parset,
 						  const string& nameOut)
   {
     map<string,string> emptyMap;
-    ACC::APS::ParameterSet out;
-    ACC::APS::ParameterSet in (parset);
+    ParameterSet out;
+    ParameterSet in (parset);
     // The output name is the base MS name minus the possible extension
     // and directory.
     string outname = in.getString ("dataset");
@@ -90,7 +89,7 @@ namespace LOFAR {
     }
     // Convert the gridder keywords.
     {
-      ACC::APS::ParameterSet grin = in.makeSubset ("Gridder.");
+      ParameterSet grin = in.makeSubset ("Gridder.");
       in.subtractSubset ("Gridder.");
       // Get the gridder type.
       string type = grin.getString ("type");
@@ -100,7 +99,7 @@ namespace LOFAR {
     }
     // Convert the solver keywords.
     {
-      ACC::APS::ParameterSet soin = in.makeSubset ("Solver.");
+      ParameterSet soin = in.makeSubset ("Solver.");
       in.subtractSubset ("Solver.");
       // Get the solver type (dirty, clean).
       string type = soin.getString ("type");
@@ -111,7 +110,7 @@ namespace LOFAR {
     }
     // Convert the images keywords.
     {
-      ACC::APS::ParameterSet imin = in.makeSubset ("Images.");
+      ParameterSet imin = in.makeSubset ("Images.");
       in.subtractSubset ("Images.");
       // Combine ra,dec,type into a single string.
       string angle1    = imin.getString ("ra");

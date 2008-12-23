@@ -28,7 +28,7 @@
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_SysConnGuard.h>
 #include <GCF/Utils.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/GCF_ServiceInfo.h>
 
@@ -69,7 +69,7 @@ GPMController::GPMController() :
 	// read in the configuration files.
 //	ConfigLocator 	aCL;
 //	LOG_DEBUG ("Adopting config file: PropertyAgent.conf");
-//	ACC::APS::globalParameterSet()->adoptFile(aCL.locate("PropertyAgent.conf"));
+//	globalParameterSet()->adoptFile(aCL.locate("PropertyAgent.conf"));
 
 	// Start task that monitor (dis)connecting systems.
 	_pSysConnGuard->registerTask(*this);

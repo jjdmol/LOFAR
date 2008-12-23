@@ -21,13 +21,13 @@
 //#  $Id$
 
 #include<lofar_config.h>
-#include <APS/ParameterValue.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterValue.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR { namespace ACC { namespace APS {
+namespace LOFAR { 
 
-      ParameterValue::ParameterValue (const string& value, bool trim)
+  ParameterValue::ParameterValue (const string& value, bool trim)
     : itsValue (value)
   {
     if (trim) {
@@ -38,7 +38,7 @@ namespace LOFAR { namespace ACC { namespace APS {
       }
     }
   }
-
+  
   ParameterValue ParameterValue::expand() const
   {
     return ParameterValue (expandArrayString (itsValue));
@@ -285,4 +285,4 @@ time_t ParameterValue::StringToTime_t (const string& aString)
   return theTime;
 }
 
-}}}
+}

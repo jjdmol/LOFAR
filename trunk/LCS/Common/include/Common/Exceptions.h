@@ -49,6 +49,12 @@ namespace LOFAR
   //
   EXCEPTION_CLASS(NotImplemented, Exception);
 
+  //
+  // This exception will be thrown when an error occurs in the ParameterSet
+  // classes.
+  //
+  EXCEPTION_CLASS(APSException, Exception);
+
 } // namespace ASTRON
 
 #endif

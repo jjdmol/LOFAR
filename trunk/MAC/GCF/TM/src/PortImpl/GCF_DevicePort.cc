@@ -28,7 +28,7 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <errno.h>
 
 namespace LOFAR 
@@ -111,7 +111,7 @@ bool GCFDevicePort::open()
     {
       // retrieve the device name from the parameter set
       setDeviceName(
-          ACC::APS::globalParameterSet()->getString(
+          globalParameterSet()->getString(
               formatString(
                   "mac.ns.%s.%s.deviceName",
                   _pTask->getName().c_str(),

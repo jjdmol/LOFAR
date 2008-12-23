@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APS_KVPAIR_H
-#define LOFAR_APS_KVPAIR_H
+#ifndef LOFAR_COMMON_KVPAIR_H
+#define LOFAR_COMMON_KVPAIR_H
 
 // \file
 // Implements a KV pair as a pair<string, string>.
@@ -36,9 +36,7 @@
 
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
-// \addtogroup APS
+// \addtogroup Common
 // @{
 
 // Implements a KV pair as a pair<string, string>.
@@ -61,8 +59,6 @@ public:
 };
 
 // @} addgroup
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR
 
 #endif

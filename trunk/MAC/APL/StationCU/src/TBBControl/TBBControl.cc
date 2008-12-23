@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/Utils.h>
 #include <MACIO/MACServiceInfo.h>
@@ -56,7 +56,6 @@ using namespace std;
 using namespace LOFAR;
 using namespace APLCommon;
 using namespace RTC;
-using namespace ACC::APS;
 using namespace StationCU;
 	
 // static pointer to this object for signal handler

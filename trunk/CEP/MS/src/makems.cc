@@ -26,7 +26,7 @@
 #include <MS/DH_MSMake.h>
 #include <MS/MSCreate.h>
 #include <MS/MSDesc.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>
@@ -48,7 +48,6 @@
 #include <sstream>
 
 using namespace LOFAR;
-using namespace ACC;
 using namespace casa;
 using namespace std;
 
@@ -188,7 +187,7 @@ void createMSSeq (const string& msName, int seqnr,
 
 void doMaster (bool send)
 {
-  APS::ParameterSet params ("makems.cfg");
+  ParameterSet params ("makems.cfg");
   // Get the various parameters.
   double startFreq = params.getDouble ("StartFreq");
   double stepFreq  = params.getDouble ("StepFreq");

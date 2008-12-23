@@ -52,7 +52,7 @@ namespace LOFAR
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
       // is a pointer to the Step object that is the parent of \c *this.
       SolveStep(const string& name,
-                const ACC::APS::ParameterSet& parset,
+                const ParameterSet& parset,
                 const Step* parent);
 
       virtual ~SolveStep();
@@ -83,10 +83,10 @@ namespace LOFAR
 
     private:
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
+      virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps);
+      virtual void read(const ParameterSet& ps);
 
       vector<string> itsParms;         ///< Names of the solvable parameters
       vector<string> itsExclParms;     ///< Parameters excluded from solve

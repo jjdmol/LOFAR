@@ -33,8 +33,7 @@
 
 #include <Common/lofar_fstream.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
-using LOFAR::ACC::APS::ParameterSet;
+#include <Common/ParameterSet.h>
 using std::ifstream;
 
 #include <signal.h>
@@ -101,7 +100,7 @@ void GCFTask::init(int argc, char** argv, const string&	logfile)
 	}
 
 	// Read in the ParameterSet of the task (<task>.conf)
-	ParameterSet*	pParamSet = ACC::APS::globalParameterSet();
+	ParameterSet*	pParamSet = globalParameterSet();
 	string			configFile(aCL.locate(procName + ".conf"));
 	if (!configFile.empty()) {
 		LOG_INFO_STR ("Using parameterfile: " << configFile);

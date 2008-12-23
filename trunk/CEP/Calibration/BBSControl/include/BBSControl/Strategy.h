@@ -37,7 +37,7 @@
 namespace LOFAR
 {
   //# Forward declarations
-  namespace ACC { namespace APS { class ParameterSet; } }
+  class ParameterSet;
 
   namespace BBS
   {
@@ -55,7 +55,7 @@ namespace LOFAR
       Strategy() {}
 
       // Create a solve strategy for the given work domain.
-      Strategy(const ACC::APS::ParameterSet& aParamSet);
+      Strategy(const ParameterSet& aParamSet);
 
       // Destructor.
       ~Strategy();
@@ -64,10 +64,10 @@ namespace LOFAR
       virtual const string& type() const;
 
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
+      virtual void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps);
+      virtual void read(const ParameterSet& ps);
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
@@ -100,10 +100,10 @@ namespace LOFAR
     private:
       // Read the Step objects from the parameter set \a ps and store them
       // in \a itsSteps.
-      bool readSteps(const ACC::APS::ParameterSet& ps);
+      bool readSteps(const ParameterSet& ps);
 
       // Write the Step objects in \a itsSteps to parameter set \a ps.
-      void writeSteps(ACC::APS::ParameterSet& ps) const;
+      void writeSteps(ParameterSet& ps) const;
 
       // Name of the Measurement Set
       string                 itsDataSet;

@@ -27,8 +27,8 @@
 #include <libgen.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
+#include <Common/ParameterSet.h>
+#include <Common/Exceptions.h>
 #include <PLC/ProcControlServer.h>
 #include <PLC/ProcCtrlCmdLine.h>
 #include <PLC/ProcCtrlRemote.h>
@@ -41,7 +41,7 @@ namespace LOFAR {
   namespace ACC {
     namespace PLC {
 
-using namespace APS;
+using LOFAR::ParameterSet;
 
 //
 // ACCmain(argc, argv, procCtrl*)

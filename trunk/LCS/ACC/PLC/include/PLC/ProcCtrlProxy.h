@@ -34,11 +34,11 @@
 
 namespace LOFAR
 {
+  //# Forward declarations
+  class ParameterSet;
+
   namespace ACC
   {
-    //# Forward declarations
-    namespace APS { class ParameterSet; }
-
     namespace PLC 
     {
       //# Forward declarations
@@ -96,7 +96,7 @@ namespace LOFAR
         // derived classes.
         // \return 0 : success
         // \return 1 : failure
-        virtual int operator()(const APS::ParameterSet& arg) = 0;
+        virtual int operator()(const ParameterSet& arg) = 0;
 
       private:
         // Pointer to the "real" ProcessControl object.

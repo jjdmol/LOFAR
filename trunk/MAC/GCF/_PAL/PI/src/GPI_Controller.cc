@@ -26,7 +26,7 @@
 #include "GPI_CEPServer.h"
 #include "GPI_RTCServer.h"
 #include <GCF/Protocols/PI_Protocol.ph>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR 
 {
@@ -44,7 +44,7 @@ GPIController::GPIController() :
   // initialize the port provider
   _rtcClientPortProvider.init(*this, "rtc-provider", GCFPortInterface::MSPP, PI_PROTOCOL);
   _cepClientPortProvider.init(*this, "cep-provider", GCFPortInterface::MSPP, PI_PROTOCOL);
-  ACC::APS::globalParameterSet()->adoptFile("PropertyAgent.conf");  
+  globalParameterSet()->adoptFile("PropertyAgent.conf");  
 }
 
 GPIController::~GPIController()

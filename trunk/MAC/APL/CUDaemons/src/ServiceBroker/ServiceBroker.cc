@@ -26,7 +26,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/SB_Protocol.ph>
 #include <MACIO/GCF_Event.h>
@@ -244,12 +244,12 @@ void ServiceBroker::acceptConnectRequest()
 //
 void ServiceBroker::readRanges()
 {
-	ASSERTSTR (ACC::APS::globalParameterSet()->isDefined("firstPortNumber") && 
-	    	   ACC::APS::globalParameterSet()->isDefined("lastPortNumber"), 
+	ASSERTSTR (globalParameterSet()->isDefined("firstPortNumber") && 
+	    	   globalParameterSet()->isDefined("lastPortNumber"), 
 				"Ranges not specified in ParameterSet");
 
-	itsLowerLimit = ACC::APS::globalParameterSet()->getUint16("firstPortNumber");
-	itsUpperLimit = ACC::APS::globalParameterSet()->getUint16("lastPortNumber");
+	itsLowerLimit = globalParameterSet()->getUint16("firstPortNumber");
+	itsUpperLimit = globalParameterSet()->getUint16("lastPortNumber");
 
 	ASSERTSTR(itsLowerLimit < itsUpperLimit, "Invalid portnumber range specified");
 	ASSERTSTR(itsLowerLimit > 1023, "Portnumbers below 1024 may not be used");
@@ -271,11 +271,11 @@ void ServiceBroker::readRanges()
 							itsLowerLimit, itsUpperLimit, itsNrPorts));
 
 	// Finally read or construct name of adminfile.
-	if (!ACC::APS::globalParameterSet()->isDefined("adminFile")) {
+	if (!globalParameterSet()->isDefined("adminFile")) {
 		itsAdminFile = "./SB.admin";
 	}
 	else {
-		itsAdminFile = ACC::APS::globalParameterSet()->getString("adminFile");
+		itsAdminFile = globalParameterSet()->getString("adminFile");
 	}
 	LOG_INFO_STR ("Using file " << itsAdminFile << " for administration");
 }

@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>
@@ -35,8 +35,6 @@ namespace LOFAR
 {
   namespace BBS 
   {
-    using ACC::APS::ParameterSet;
-    using ACC::APS::KVpair;
 
     // Register NextChunkCommand with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private

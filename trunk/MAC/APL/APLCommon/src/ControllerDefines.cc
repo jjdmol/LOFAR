@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
 #include <Common/SystemUtil.h>
-#include <APS/ParameterSet.h>					// indexValue
+#include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
 #include "Controller_Protocol.ph"
@@ -165,7 +165,7 @@ bool	isSharedController(uint16		cntlrType)
 // Get the ObservationNr from the controllername.
 uint32	getObservationNr (const string&	controllerName)
 {
-	return (ACC::APS::indexValue(controllerName, "{}"));
+	return (indexValue(controllerName, "{}"));
 }
 
 //
@@ -176,7 +176,7 @@ uint16	getInstanceNr (const string&	controllerName)
 {
 	string		cntlrName (controllerName);		// destroyable copy
 	rtrim(cntlrName, "{}0123456789");
-	return (ACC::APS::indexValue(cntlrName, "[]"));
+	return (indexValue(cntlrName, "[]"));
 }
 
 //

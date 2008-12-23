@@ -56,7 +56,7 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>

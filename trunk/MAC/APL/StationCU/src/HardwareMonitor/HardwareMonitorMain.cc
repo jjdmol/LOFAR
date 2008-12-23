@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "RSPMonitor.h"
@@ -32,7 +32,6 @@
 #include "../Package__Version.h"
 
 using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;

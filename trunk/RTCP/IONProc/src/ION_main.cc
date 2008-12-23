@@ -410,7 +410,7 @@ void *master_thread(void *)
 
     pthread_t input_thread_id, output_thread_id;
     std::clog << "trying to use " << global_argv[1] << " as ParameterSet" << std::endl;
-    ACC::APS::ParameterSet parameterSet(global_argv[1]);
+    ParameterSet parameterSet(global_argv[1]);
     Parset parset(&parameterSet);
 
     parset.adoptFile("OLAP.parset");
@@ -534,7 +534,7 @@ static void tryToGetPersonality()
   nrPsets      = 1;
 
   try {
-    ACC::APS::ParameterSet personality("/proc/personality.sh");
+    ParameterSet personality("/proc/personality.sh");
 
 #if defined HAVE_ZOID // compiler bug: exceptions cause crashes
     try {

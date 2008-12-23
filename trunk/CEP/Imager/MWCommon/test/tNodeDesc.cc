@@ -8,11 +8,13 @@
 
 #include <MWCommon/NodeDesc.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <ostream>
 #include <fstream>
 
-using namespace LOFAR::CEP;
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::CEP;
 
 void check (const NodeDesc& node)
 {
@@ -39,7 +41,7 @@ void doIt()
   ofstream fos("tNodeDesc_tmp.fil");
   node.write (fos, "");
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tNodeDesc_tmp.fil");
+  ParameterSet parset("tNodeDesc_tmp.fil");
   NodeDesc node2(parset);
   check(node2);
   node = node2;

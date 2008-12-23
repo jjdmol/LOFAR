@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/CommandVisitor.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -31,7 +31,7 @@ namespace LOFAR
   {
 
     ShiftStep::ShiftStep(const string& name, 
-                         const ACC::APS::ParameterSet& parSet,
+                         const ParameterSet& parSet,
                          const Step* parent) :
       SingleStep(name, parent)
     {

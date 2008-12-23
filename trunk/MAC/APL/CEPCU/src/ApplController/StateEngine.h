@@ -32,9 +32,8 @@
 //# Includes
 #include <Common/Exception.h>
 #include <ALC/DH_ApplControl.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
-using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {

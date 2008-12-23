@@ -24,14 +24,12 @@
 #include <lofar_config.h>
 
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
 
 namespace LOFAR {
-  namespace ACC {
-    namespace APS {
 
 //-------------------------- creation and destroy ---------------------------
 static ParameterSet* globalParameterSetInstance = 0;
@@ -122,6 +120,4 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 	return os;
 }
 
-    } // namespace APS
-  } // namespace ACC
 } // namespace LOFAR

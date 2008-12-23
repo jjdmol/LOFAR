@@ -30,10 +30,9 @@
 #include <GCF/TM/GCF_Protocols.h>
 #include <GTM_Defines.h>
 #include <Timer/GTM_TimerHandler.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR {
-	using namespace ACC::APS;
  namespace GCF {
   namespace TM {
 

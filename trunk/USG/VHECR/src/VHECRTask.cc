@@ -21,12 +21,11 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include "VHECRTask.h"
 
 namespace LOFAR {
-	using namespace ACC::APS;
 	namespace StationCU {
 	
 //

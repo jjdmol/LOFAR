@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_datetime.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/TreeValue.h>
 #include <OTDB/OTDBtypes.h>

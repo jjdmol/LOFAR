@@ -31,7 +31,6 @@
 #include "TBBObservation.h"
 
 using namespace LOFAR;
-using namespace ACC::APS;
 using namespace StationCU;
 using namespace APLCommon;
 

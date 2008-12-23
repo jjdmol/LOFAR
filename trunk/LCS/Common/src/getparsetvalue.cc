@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <stdexcept>
 #include <iostream>
@@ -44,7 +44,7 @@ int main (int argc, const char* argv[])
       iss >> inx;
       useAll = false;
     }
-    LOFAR::ACC::APS::ParameterSet parset(argv[1]);
+    LOFAR::ParameterSet parset(argv[1]);
     if (useAll) {
       std::string value = parset.getString (argv[2]);
       std::cout << value << std::endl;

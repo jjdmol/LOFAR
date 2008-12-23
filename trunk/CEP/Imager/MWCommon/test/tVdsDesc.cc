@@ -8,12 +8,14 @@
 
 #include <MWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <ostream>
 #include <fstream>
 
-using namespace LOFAR::CEP;
-using namespace casa;
 using namespace std;
+using namespace casa;
+using namespace LOFAR;
+using namespace LOFAR::CEP;
 
 void checkVds (const VdsPartDesc& vds, double endTime)
 {
@@ -60,7 +62,7 @@ void doIt()
   ofstream fos("tVdsDesc_tmp.fil");
   vfds.write (fos);
   // Read back.
-  LOFAR::ACC::APS::ParameterSet parset("tVdsDesc_tmp.fil");
+  ParameterSet parset("tVdsDesc_tmp.fil");
   VdsDesc vfds2(parset);
   check(vfds2);
   vfds = vfds2;

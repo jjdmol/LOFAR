@@ -24,15 +24,13 @@
 
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <KVL_Protocol.ph>
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
 
 namespace LOFAR {
-  using ACC::APS::ParameterSet;
-  using ACC::APS::globalParameterSet;
 
   namespace GCF {
 	using namespace TM;

@@ -25,7 +25,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/SystemUtil.h>
 
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -41,7 +41,6 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace Deployment;
-	using namespace ACC::APS;
 	namespace Test {
 	
 //
