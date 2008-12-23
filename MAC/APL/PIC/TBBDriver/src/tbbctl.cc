@@ -3301,7 +3301,7 @@ int main(int argc, char** argv)
   try {
     tbbctl.mainloop();
   }
-  catch (Exception e) {
+  catch (Exception& e) {
     cout << "Exception: " << e.text() << endl;
       cout << endl;
       cout << "== abnormal termination of tbbctl ============================================" << endl;

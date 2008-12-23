@@ -3373,7 +3373,7 @@ int main(int argc, char** argv)
 	try {
 		c.mainloop();
 	}
-	catch (Exception e) {
+	catch (Exception& e) {
 		cerr << "Exception: " << e.text() << endl;
 		exit(EXIT_FAILURE);
 	}
