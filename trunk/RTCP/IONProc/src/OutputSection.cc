@@ -24,6 +24,9 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
+#include <Interface/StreamableData.h>
+#include <Interface/CorrelatedData.h>
+#include <Interface/DataHolder.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -51,20 +54,21 @@ namespace RTCP {
 OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
 :
   itsPsetNumber(psetNumber),
+  itsParset(0),
   itsStreamsFromCNs(streamsFromCNs)
 {
 }
 
 
-void OutputSection::connectToStorage(const Parset *ps)
+void OutputSection::connectToStorage()
 {
-  unsigned myPsetIndex       = ps->outputPsetIndex(itsPsetNumber);
-  unsigned nrPsetsPerStorage = ps->nrPsetsPerStorage();
+  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
+  unsigned nrPsetsPerStorage = itsParset->nrPsetsPerStorage();
   unsigned storageHostIndex  = myPsetIndex / nrPsetsPerStorage;
   //unsigned storagePortIndex  = myPsetIndex % nrPsetsPerStorage;
 
   string   prefix	     = "OLAP.OLAP_Conn.IONProc_Storage";
-  string   connectionType    = ps->getString(prefix + "_Transport");
+  string   connectionType    = itsParset->getString(prefix + "_Transport");
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
@@ -73,14 +77,14 @@ void OutputSection::connectToStorage(const Parset *ps)
       std::clog << "subband " << subbandNumber << " written to null:" << std::endl;
       itsStreamsToStorage.push_back(new NullStream);
     } else if (connectionType == "TCP") {
-      std::string    server = ps->storageHostName(prefix + "_ServerHosts", subbandNumber);
+      std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
       //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
-      unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[subbandNumber]);
+      unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
 
       std::clog << "subband " << subbandNumber << " written to tcp:" << server << ':' << port << std::endl;
       itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
     } else if (connectionType == "FILE") {
-      std::string filename = ps->getString(prefix + "_BaseFileName") + '.' +
+      std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
 		      boost::lexical_cast<std::string>(storageHostIndex) + '.' +
 		      boost::lexical_cast<std::string>(subbandNumber);
 		      //boost::lexical_cast<std::string>(storagePortIndex);
@@ -93,30 +97,28 @@ void OutputSection::connectToStorage(const Parset *ps)
   }
 }
 
-
 void OutputSection::preprocess(const Parset *ps)
 {
+  itsParset                 = ps;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber	    = 0;
+  itsOutputDataType         = ps->outputDataType();
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
-  connectToStorage(ps);
+  connectToStorage();
 
-  unsigned nrBaselines = ps->nrBaselines();
-  unsigned nrChannels  = ps->nrChannelsPerSubband();
-
-  itsTmpSum = new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator);
+  itsTmpSum = newDataHolder( itsOutputDataType, *ps, hugeMemoryAllocator );
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsVisibilitySums.push_back(new CorrelatedData(nrBaselines, nrChannels, hugeMemoryAllocator));
+    itsSums.push_back(newDataHolder( itsOutputDataType, *ps, hugeMemoryAllocator ));
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], nrBaselines, nrChannels));
+    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
 }
 
 
@@ -144,6 +146,13 @@ void OutputSection::process()
   bool firstTime = itsCurrentIntegrationStep == 0;
   bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
+  if( firstTime != lastTime && !itsTmpSum->isIntegratable() )
+  {
+    // not integratable, so don't try
+    std::clog << "Warning: not integrating received data because data type is not integratable" << std::endl;
+    lastTime = firstTime;
+  }
+
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
@@ -155,21 +164,21 @@ void OutputSection::process()
 	itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
       } else {
 	notDroppingData(subband);
-	CorrelatedData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
+	StreamableData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
       
 	data->read(itsStreamsFromCNs[inputChannel], false);
 
 	if (!firstTime)
-	  *data += *itsVisibilitySums[subband];
+	  *data += *itsSums[subband];
 
 	data->sequenceNumber = itsSequenceNumber;
 	itsOutputThreads[subband]->itsSendQueue.append(data);
       }
     } else if (firstTime) {
-      itsVisibilitySums[subband]->read(itsStreamsFromCNs[inputChannel], false);
+      itsSums[subband]->read(itsStreamsFromCNs[inputChannel], false);
     } else {
       itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
-      *itsVisibilitySums[subband] += *itsTmpSum;
+      *itsSums[subband] += *itsTmpSum;
     }
 
     if (++ itsCurrentComputeCore == itsNrComputeCores)
@@ -189,12 +198,12 @@ void OutputSection::postprocess()
     notDroppingData(subband); // for final warning message
     itsOutputThreads[subband]->itsSendQueue.append(0); // 0 indicates that no more messages will be sent
     delete itsOutputThreads[subband];
-    delete itsVisibilitySums[subband];
+    delete itsSums[subband];
     delete itsStreamsToStorage[subband];
   }
 
   itsOutputThreads.clear();
-  itsVisibilitySums.clear();
+  itsSums.clear();
   itsStreamsToStorage.clear();
   itsDroppedCount.clear();
 

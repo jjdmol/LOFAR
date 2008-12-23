@@ -7,6 +7,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/Config.h>
 #include <Interface/Exceptions.h>
+#include <Interface/StreamableData.h>
 #include <Interface/MultiDimArray.h>
 #include <Stream/Stream.h>
 
@@ -18,24 +19,25 @@
 namespace LOFAR {
 namespace RTCP {
 
-class CorrelatedData
+class CorrelatedData: public StreamableData
 {
   public:
     CorrelatedData(unsigned nrBaselines, unsigned nrChannels, Allocator &allocator = heapAllocator);
 
     static size_t requiredSize(unsigned nrBaselines, unsigned nrChannels);
-    void	  read(Stream *, bool withSequenceNumber);
-    void          write(Stream *, bool withSequenceNumber) const;
 
-    CorrelatedData &operator += (const CorrelatedData &);
+    virtual StreamableData &operator += (const StreamableData &);
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
     Matrix<unsigned short>	nrValidSamples; //[nrBaselines][nrChannels]
     Vector<float>		centroids; //[nrBaselines]
-    uint32_t			sequenceNumber;
+
+  protected:
+    virtual void readData(Stream *);
+    virtual void writeData(Stream *) const;
 
   private:
-    void			checkEndianness(bool withSequenceNumber);
+    void			checkEndianness();
 
     static size_t visibilitiesSize(unsigned nrBaselines, unsigned nrChannels);
     static size_t nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels);
@@ -69,6 +71,7 @@ inline size_t CorrelatedData::requiredSize(unsigned nrBaselines, unsigned nrChan
 
 inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels, Allocator &allocator)
 :
+  StreamableData(true),
   visibilities(boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], 32, allocator),
   nrValidSamples(boost::extents[nrBaselines][nrChannels], 32, allocator),
   centroids(nrBaselines, 32, allocator)
@@ -76,20 +79,17 @@ inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels,
 }
 
 
-inline void CorrelatedData::read(Stream *str, bool withSequenceNumber)
+inline void CorrelatedData::readData(Stream *str)
 {
   str->read(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->read(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->read(&centroids[0], centroids.size() * sizeof(float));
 
-  if (withSequenceNumber)
-    str->read(&sequenceNumber, sizeof sequenceNumber);
-
-  checkEndianness(withSequenceNumber);
+  checkEndianness();
 }
 
 
-inline void CorrelatedData::write(Stream *str, bool withSequenceNumber) const
+inline void CorrelatedData::writeData(Stream *str) const
 {
 #if !defined WORDS_BIGENDIAN
   THROW(AssertError, "not implemented: think about endianness");
@@ -98,30 +98,22 @@ inline void CorrelatedData::write(Stream *str, bool withSequenceNumber) const
   str->write(visibilities.origin(), visibilities.num_elements() * sizeof(fcomplex));
   str->write(nrValidSamples.origin(), nrValidSamples.num_elements() * sizeof(unsigned short));
   //str->write(&centroids[0], centroids.size() * sizeof(float));
-
-  if (withSequenceNumber)
-    str->write(&sequenceNumber, sizeof sequenceNumber);
 }
 
 
-inline void CorrelatedData::checkEndianness(bool withSequenceNumber)
+inline void CorrelatedData::checkEndianness()
 {
 #if !defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, visibilities.origin(), visibilities.num_elements());
   dataConvert(LittleEndian, nrValidSamples.origin(), nrValidSamples.num_elements());
   // dataConvert(LittleEndian, &centroids[0], centroids.size());
-
-  if (withSequenceNumber)
-    dataConvert(LittleEndian, &sequenceNumber, 1);
-#else
-  // suppress unused parameter warning
-  (void)withSequenceNumber;
 #endif
 }
 
-
-inline CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
+inline StreamableData &CorrelatedData::operator += (const StreamableData &other_)
 {
+  const CorrelatedData &other = dynamic_cast<const CorrelatedData&>(other_);
+
   // add visibilities
   {
     fcomplex	   *dst	 = visibilities.origin();

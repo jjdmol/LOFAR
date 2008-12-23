@@ -31,6 +31,7 @@ OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5
 OLAP.delayCompensation = T
 OLAP.correctBandPass = T
+OLAP.outputDataType = CorrelatedData
 
 Observation.nrSlotsInFrame = 36
 

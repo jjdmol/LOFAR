@@ -1,7 +1,7 @@
 #ifndef LOFAR_CNPROC_BEAM_FORMER_H
 #define LOFAR_CNPROC_BEAM_FORMER_H
 
-#include <FilteredData.h>
+#include <Interface/FilteredData.h>
 
 #include <cassert>
 

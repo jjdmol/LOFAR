@@ -21,13 +21,12 @@
 #ifndef LOFAR_IONPROC_OUTPUT_SECTION_H
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
-#include <Interface/CorrelatedData.h>
 #include <Interface/Parset.h>
-#include <IONProc/OutputThread.h>
+#include <Interface/StreamableData.h>
 #include <Stream/Stream.h>
+#include <IONProc/OutputThread.h>
 
 #include <vector>
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -42,21 +41,23 @@ class OutputSection
     void			postprocess();
 
   private:
-    void			connectToStorage(const Parset *);
+    void			connectToStorage();
 
     void			droppingData(unsigned subband);
     void			notDroppingData(unsigned subband);
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
 
-    std::vector<CorrelatedData *> itsVisibilitySums;
-    CorrelatedData		*itsTmpSum;
+    std::vector<StreamableData *> itsSums;
+    StreamableData		*itsTmpSum;
     std::vector<OutputThread *> itsOutputThreads;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
     unsigned			itsSequenceNumber;
+    const Parset                *itsParset;
+    string                      itsOutputDataType;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
     std::vector<Stream *>	itsStreamsToStorage;

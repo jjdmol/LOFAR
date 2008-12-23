@@ -7,7 +7,7 @@
 
 
 #include <BandPass.h>
-#include <FilteredData.h>
+#include <Interface/FilteredData.h>
 #include <Interface/CorrelatedData.h>
 
 #include <cassert>

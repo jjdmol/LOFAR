@@ -7,6 +7,8 @@ pkginclude_HEADERS = Package__Version.h \
 		     CN_Mapping.h \
 		     CorrelatedData.h \
 		     Config.h \
+		     DataHolder.h \
+		     FilteredData.h \
 		     MultiDimArray.h \
 		     Parset.h \
 		     SubbandMetaData.h \
@@ -14,6 +16,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     Queue.h \
 		     RSPTimeStamp.h \
 		     SparseSet.h \
-		     Exceptions.h
+		     Exceptions.h \
+		     StreamableData.h
 
 include $(top_srcdir)/Makefile.common

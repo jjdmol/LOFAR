@@ -4,7 +4,7 @@
 #include <vector>
 #include <cmath>
 
-#include <FilteredData.h>
+#include <Interface/FilteredData.h>
 
 namespace LOFAR {
 namespace RTCP {
