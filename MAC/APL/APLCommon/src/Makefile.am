@@ -16,7 +16,7 @@ libaplcommon_la_CPPFLAGS =  -DBOOST_DISABLE_THREADS \
 							-fmessage-length=0 \
 							-fdiagnostics-show-location=once
 
-libaplcommon_la_SOURCES  = Package__Version.cc   $(DOCHDRS) \
+libaplcommon_la_SOURCES   = Package__Version.cc \
 							StartDaemon_Protocol.cc \
 							Controller_Protocol.cc \
 							APLUtilities.cc \
