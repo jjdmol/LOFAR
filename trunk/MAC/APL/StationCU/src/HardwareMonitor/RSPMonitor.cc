@@ -22,11 +22,14 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
+#include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
+#include <APS/ParameterSet.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/AntennaMapper.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -38,6 +41,7 @@
 #include "RCUConstants.h"
 #include "PVSSDatapointDefs.h"
 
+#define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -45,6 +49,7 @@ namespace LOFAR {
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
+	using namespace ACC::APS;
 	namespace StationCU {
 	
 //
@@ -55,11 +60,14 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	itsOwnPropertySet	(0),
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
+	itsDPservice		(0),
 	itsPollInterval		(10),
 	itsNrRCUs			(0),
 	itsNrRSPboards		(0),
 	itsNrSubracks		(0),
-	itsNrCabinets		(0)
+	itsNrCabinets		(0),
+	itsRCUquery			(0),
+	itsAntMapper		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -72,6 +80,9 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	ASSERTSTR(itsRSPDriver, "Cannot allocate TCPport to RSPDriver");
 	itsRSPDriver->setInstanceNr(0);
 
+	itsDPservice = new DPservice(this);
+	ASSERTSTR(itsDPservice, "Can't allocate DPservice");
+
 }
 
 
@@ -82,11 +93,15 @@ RSPMonitor::~RSPMonitor()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsRSPDriver) {
-		itsRSPDriver->close();
-	}
+	if (itsRSPDriver)	itsRSPDriver->close();
 
-	// ...
+	if (itsDPservice)	delete itsDPservice;
+
+	if (itsTimerPort)	delete itsTimerPort;
+
+	if (itsRSPDriver)	delete itsRSPDriver;
+
+	if (itsAntMapper)	delete itsAntMapper;
 }
 
 
@@ -245,15 +260,20 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 						 	((itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK) ? 1 : 0);
 		itsNrCabinets  = (itsNrSubracks /NR_SUBRACKS_PER_CABINET)  + 
 						 	((itsNrSubracks%NR_SUBRACKS_PER_CABINET) ? 1 : 0);
+		
+		// Read number of Antenna's from RemoteStation.conf file.
+		ConfigLocator	CL;
+		ParameterSet	RSconf(CL.locate("RemoteStation.conf"));
+		itsNrHBAs = RSconf.getInt("RS.N_HBAS", 0);
+		itsNrLBAs = RSconf.getInt("RS.N_LBAS", 0);
 
 		// inform user
 		LOG_DEBUG(formatString("nr RCUs      = %d",ack.n_rcus));
 		LOG_DEBUG(formatString("nr RSPboards = %d",ack.max_rspboards));
 		LOG_DEBUG(formatString("nr Subracks  = %d", itsNrSubracks));
 		LOG_DEBUG(formatString("nr Cabinets  = %d", itsNrCabinets));
-		LOG_DEBUG_STR("("<<itsNrRSPboards<<"/"<<NR_RSPBOARDS_PER_SUBRACK<<") + (("<<itsNrRSPboards<<"%"<<NR_RSPBOARDS_PER_SUBRACK<<") ? 1 : 0)");
-		LOG_DEBUG_STR("("<<itsNrRSPboards<<"/"<<NR_RSPBOARDS_PER_SUBRACK<<") = " << itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK);
-		LOG_DEBUG_STR("("<<itsNrRSPboards<<"%"<<NR_RSPBOARDS_PER_SUBRACK<<") = " << itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK);
+		LOG_DEBUG(formatString("nr LBAs      = %d", itsNrLBAs));
+		LOG_DEBUG(formatString("nr HBAs      = %d", itsNrHBAs));
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -263,6 +283,12 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		if (itsNrRSPboards * NR_RCUS_PER_RSPBOARD != itsNrRCUs) {
 			LOG_INFO_STR("RSP:Station not fully equiped, only " << itsNrRCUs << " of " 
 						<< itsNrRSPboards * NR_RCUS_PER_RSPBOARD << "RCUs");
+		}
+		if (itsNrLBAs > (itsNrRCUs / 2)) {
+			LOG_INFO_STR("LBA antennas are connected to LBL and LBH inputs of the RCUs");
+		}
+		else {
+			LOG_INFO_STR("LBL inputs of the RCUs are not used.");
 		}
 
 		LOG_DEBUG ("Going to allocate the property-sets");
@@ -361,9 +387,9 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			ASSERTSTR(itsRCUs[rcu], "Allocation of PS for rcu " << rcu << " failed.");
 		}
-		LOG_DEBUG_STR("Allocation of all propertySets successfull, going to operational mode");
+		LOG_DEBUG_STR("Allocation of all propertySets successfull, going to subscribe to RCU states");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		TRAN(RSPMonitor::askVersion);
+		TRAN(RSPMonitor::subscribeToRCUs);
 	}
 	break;
 
@@ -373,6 +399,74 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 
 	case DP_SET:
 		break;
+
+	case F_QUIT:
+		TRAN (RSPMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
+		break;
+	}    
+
+	return (status);
+}
+
+
+//
+// subscribeToRCUs(event, port)
+//
+// Get a subscription to the state of the RCU's
+//
+GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event, 
+											  GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("subscribeToRCUs:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+
+	case F_ENTRY: {
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:Subscribe to RCUstates"));
+		// time to init our RCU admin
+		itsAntMapper = new AntennaMapper(itsNrRCUs, itsNrLBAs, itsNrHBAs);
+		itsRCUstates.resize(itsNrRCUs);
+		itsRCUstates = RTDB_OBJ_STATE_OFF;
+		itsRCUInputStates.resize(itsNrRCUs, AntennaMapper::RI_MAX_INPUTS);
+		itsRCUInputStates = false;
+
+		itsDPservice->query("'LOFAR_PIC_*.status.state'", "_DPT=\"RCU\"");
+		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
+	}
+	break;
+
+	case F_TIMER: {
+		ASSERTSTR(itsRCUquery, "No response on the query for the RCU states");
+		LOG_DEBUG_STR("No initial values received for RCU states, going to ask version info");
+		TRAN(RSPMonitor::askVersion);
+	}
+	break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2RSP
+	break;
+
+	case DP_QUERY_SUBSCRIBED: {
+		DPQuerySubscribedEvent		DPevent(event);
+		ASSERTSTR(DPevent.result == SA_NO_ERROR, "Query on RCU states returned error code " << DPevent.result);
+		itsRCUquery = DPevent.QryID;
+		LOG_DEBUG_STR("RCU queryID = " << itsRCUquery << ", waiting for first response");
+	}
+	break;
+
+	case DP_QUERY_CHANGED: {
+		_doQueryChanged(event);
+		itsTimerPort->cancelAllTimers();
+		LOG_DEBUG_STR("States of RCU's received, going to ask version info");
+		TRAN(RSPMonitor::askVersion);
+	}
+	break;
 
 	case F_QUIT:
 		TRAN (RSPMonitor::finish_state);
@@ -462,6 +556,10 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 		break;
 
 	case DP_SET:
+		break;
+
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
 		break;
 
 	case F_QUIT:
@@ -599,6 +697,10 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 	case DP_SET:
 		break;
 
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
 	case F_QUIT:
 		TRAN (RSPMonitor::finish_state);
 		break;
@@ -699,6 +801,10 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 	case DP_SET:
 		break;
 
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
 	case F_QUIT:
 		TRAN (RSPMonitor::finish_state);
 		break;
@@ -778,6 +884,10 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 	case DP_SET:
 		break;
 
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
 	case F_QUIT:
 		TRAN (RSPMonitor::finish_state);
 		break;
@@ -836,7 +946,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		// move the information to the database.
 		string		versionStr;
 		string		DPEname;
-		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
+		for (int	rcu = 0; rcu < (int)itsNrRCUs; rcu++) {
 			uint32		rawValue = ack.settings()(rcu).getRaw();
 			LOG_DEBUG(formatString("Updating rcu %d with %08lX", rcu, rawValue));
 			// update all RCU variables
@@ -876,9 +986,38 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 			itsRCUs[rcu]->flush();
 			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ? 
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
+
+			// update own RCU admin also
+			itsRCUInputStates(rcu, AntennaMapper::RI_LBL) = rawValue & LBL_ANT_POWER_MASK;
+			itsRCUInputStates(rcu, AntennaMapper::RI_LBH) = rawValue & LBH_ANT_POWER_MASK;
+			itsRCUInputStates(rcu, AntennaMapper::RI_HBA) = rawValue & HBA_ANT_POWER_MASK;
+			itsRCUstates(rcu) = (rawValue & ADC_POWER_MASK) ? RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF;
+
 		} // for all boards
 
-		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
+		LOG_DEBUG ("Updated all RCU information, updating antenna states");
+		for (uint ant = 0; ant < itsNrLBAs; ant++) {
+			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA)) ||
+				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA))) {
+				setObjectState(getName(), formatString("LBA%02d", ant), 
+								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
+			}
+			else {
+				setObjectState(getName(), formatString("LBA%02d", ant), RTDB_OBJ_STATE_OFF);
+			}
+		}
+		for (uint ant = 0; ant < itsNrHBAs; ant++) {
+			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA)) ||
+				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA))) {
+				setObjectState(getName(), formatString("HBA%02d", ant), 
+								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
+			}
+			else {
+				setObjectState(getName(), formatString("HBA%02d", ant), RTDB_OBJ_STATE_OFF);
+			}
+		}
+
+		LOG_DEBUG ("Updated all station information, waiting for next cycle");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 	}
@@ -889,6 +1028,10 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		break;
 
 	case DP_SET:
+		break;
+
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
 		break;
 
 	case F_QUIT:
@@ -941,6 +1084,10 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 	case DP_SET:
 		break;
 
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
 	case F_QUIT:
 		TRAN (RSPMonitor::finish_state);
 		break;
@@ -965,6 +1112,44 @@ void RSPMonitor::_disconnectedHandler(GCFPortInterface& port)
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:connection lost"));
 		TRAN (RSPMonitor::connect2RSP);
 	}
+}
+
+
+//
+// _doQueryChanged(event)
+//
+void RSPMonitor::_doQueryChanged(GCFEvent&		event)
+{
+	DPQueryChangedEvent		DPevent(event);
+	if (DPevent.result != SA_NO_ERROR) {
+		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for query " << DPevent.QryID);
+		return;
+	}
+
+	int				nrDPs    = ((GCFPVDynArr*)(DPevent.DPnames._pValue))->getValue().size();
+	GCFPVDynArr*	DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
+	GCFPVDynArr*	DPvalues = (GCFPVDynArr*)(DPevent.DPvalues._pValue);
+	// register all states
+	for (int idx = 0; idx < nrDPs; ++idx) {
+		string 				nameStr = DPnames->getValue() [idx]->getValueAsString();
+		int  				status  = ((GCFPVInteger *)(DPvalues->getValue()[idx]))->getValue();
+		uint				rcuNr;
+		// get rcuNr from name
+		if (sscanf(nameStr.c_str(), "%*s_RCU%d.%*s", &rcuNr) != 1) {
+			LOG_WARN_STR("Unrecognized datapointname ignored: " << nameStr);
+			continue;
+		}
+
+		// check rcuNr
+		if (rcuNr >= itsNrRCUs) {
+			LOG_WARN_STR("Illegal RCUnumber " << rcuNr << " in " << nameStr << ", ignoring status change!");
+			continue;
+		}
+
+		// store for later
+		itsRCUstates(rcuNr) = status;
+		LOG_INFO(formatString("RCU %d = %d", rcuNr, status));
+	} // for
 }
 
 //
