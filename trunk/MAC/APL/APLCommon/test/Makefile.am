@@ -1,4 +1,4 @@
-check_PROGRAMS		= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tStationInfo
+check_PROGRAMS		= tControllerDefines tAPLUtilities tbitsetUtil tOutOfBand tStationInfo tAntennaMapper
 AM_CPPFLAGS			= -I../src/
 
 tControllerDefines_SOURCES	= tControllerDefines.cc
@@ -20,6 +20,10 @@ tOutOfBand_DEPENDENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
 tStationInfo_SOURCES		= tStationInfo.cc
 tStationInfo_LDADD			= ../src/libaplcommon.la
 tStationInfo_DEPENDENCIES	= ../src/libaplcommon.la $(LOFAR_DEPEND)
+
+tAntennaMapper_SOURCES		= tAntennaMapper.cc
+tAntennaMapper_LDADD		= ../src/libaplcommon.la
+tAntennaMapper_DEPENDENCIES	= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
 TESTSCRIPTS					= tControllerDefines_test.sh
 
