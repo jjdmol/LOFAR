@@ -88,7 +88,7 @@ private:
 
 	uint32						itsNrRCUs;
 	uint32						itsNrTBboards;
-	bitset<MAX_N_TBBBOARDS>		itsBoardMask;
+	bitset<MAX_N_TBBOARDS>		itsBoardMask;
 
 	vector<RTDBPropertySet*>	itsTBBs;
 	vector<RTDBPropertySet*>	itsRCUs;

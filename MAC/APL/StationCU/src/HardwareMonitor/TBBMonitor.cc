@@ -250,7 +250,7 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 		TBBGetConfigAckEvent	ack(event);
 	
 		// calc size of the propertyset vectors
-		itsBoardMask   = bitset<MAX_N_TBBBOARDS>(ack.active_boards_mask);
+		itsBoardMask   = bitset<MAX_N_TBBOARDS>(ack.active_boards_mask);
 		itsNrTBboards  = ack.max_boards;
 		itsNrRCUs	   = itsNrTBboards * NR_RCUS_PER_TBBOARD;
 

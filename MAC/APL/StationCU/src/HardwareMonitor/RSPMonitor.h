@@ -24,12 +24,15 @@
 #define STATIONCU_RSP_MONITOR_H
 
 //# Common Includes
+#include <blitz/array.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
 //# GCF Includes
+#include <APL/APLCommon/AntennaMapper.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/RTDB/DPservice.h>
 
 // forward declaration
 
@@ -42,6 +45,8 @@ using	GCF::TM::GCFTCPPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
+using	GCF::RTDB::DPservice;
+using	APLCommon::AntennaMapper;
 
 
 class RSPMonitor : public GCFTask
@@ -56,6 +61,7 @@ private:
    	GCFEvent::TResult connect2RSP   		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askConfiguration 		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult createPropertySets	 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribeToRCUs		 (GCFEvent& e, GCFPortInterface& p);
 
    	GCFEvent::TResult askVersion    		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRSPinfo	  		 (GCFEvent& e, GCFPortInterface& p);
@@ -71,14 +77,16 @@ private:
 	RSPMonitor(const RSPMonitor&);
    	RSPMonitor& operator=(const RSPMonitor&);
 
+	// helper functions
    	void _disconnectedHandler(GCFPortInterface& port);
+	void _doQueryChanged	 (GCFEvent&			event);
 
 	// Data members
 	RTDBPropertySet*			itsOwnPropertySet;
 
 	GCFTimerPort*				itsTimerPort;
-
 	GCFTCPPort*					itsRSPDriver;
+	DPservice*					itsDPservice;
 
 	uint32						itsPollInterval;
 
@@ -86,11 +94,19 @@ private:
 	uint32						itsNrRSPboards;
 	uint32						itsNrSubracks;
 	uint32						itsNrCabinets;
+	uint32						itsNrLBAs;
+	uint32						itsNrHBAs;
 
 	vector<RTDBPropertySet*>	itsCabinets;
 	vector<RTDBPropertySet*>	itsSubracks;
 	vector<RTDBPropertySet*>	itsRSPs;
 	vector<RTDBPropertySet*>	itsRCUs;
+
+	blitz::Array<uint,1>		itsRCUstates;		// actual status of the RCUs
+	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs
+	int							itsRCUquery;		// ID of the PVSS query
+	AntennaMapper*				itsAntMapper;
+
 };
 
   };//StationCU
