@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.5 20081112"		# added possibility for custom scripts
+VERSION="v1.6 20081229"		# exiting with level as return value
 BINDIR=/opt/lofar/bin
 LOGDIR=/opt/lofar/log
 LEVELTABLE=${BINDIR}/../etc/swlevel.conf
@@ -270,9 +270,9 @@ fi
 # argument s or -s only returns level, no list
 
 if [ "$1" = "s" -o "$1" = "-s" ]; then
-        level=`cat /tmp/level.admin`
+        let level=`cat /tmp/level.admin`
         echo $level
-        exit
+        exit $level
 fi
 
 # don't allow root to run swlevel because all logfile get root access.
@@ -298,3 +298,4 @@ status_prog
 
 # save for later
 echo $level >/tmp/level.admin
+exit $level
