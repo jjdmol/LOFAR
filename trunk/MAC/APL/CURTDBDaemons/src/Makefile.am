@@ -3,7 +3,7 @@ libcurtdbdaemons_la_SOURCES = Package__Version.cc
 
 pkginclude_HEADERS = Package__Version.h
 
-SUBDIRS = LoggingProcessor KeyValueLogger SASGateway
+SUBDIRS = LoggingProcessor KeyValueLogger SASGateway SoftwareMonitor
 
 bin_PROGRAMS = versioncurtdbdaemons
 
