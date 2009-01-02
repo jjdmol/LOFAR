@@ -2,6 +2,8 @@
 
 #if defined HAVE_BGP_ION
 
+#include <Common/Semaphore.h>
+
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/mman.h>
@@ -31,56 +33,14 @@
 
 namespace FCNP_ION {
 
-class Semaphore
-{
-  public:
-    Semaphore(unsigned level = 0)
-    :
-      level(level)
-    {
-      pthread_mutex_init(&mutex, 0);
-      pthread_cond_init(&increasedLevel, 0);
-    }
-
-    ~Semaphore()
-    {
-      pthread_mutex_destroy(&mutex);
-      pthread_cond_destroy(&increasedLevel);
-    }
-
-    void up()
-    {
-      pthread_mutex_lock(&mutex);
-      ++ level;
-      pthread_cond_signal(&increasedLevel);
-      pthread_mutex_unlock(&mutex);
-    }
-
-    void down()
-    {
-      pthread_mutex_lock(&mutex);
-
-      while (level == 0)
-	pthread_cond_wait(&increasedLevel, &mutex);
-
-      -- level;
-      pthread_mutex_unlock(&mutex);
-    }
-
-  private:
-    pthread_mutex_t mutex;
-    pthread_cond_t  increasedLevel;
-    unsigned	    level;
-};
-
 
 class Handshake {
   public:
     struct CnRequest {
       RequestPacket packet __attribute__ ((aligned(16)));
-      Semaphore     slotFree, slotFilled;
+      Semaphore     slotFilled;
 
-      CnRequest() : slotFree(1), slotFilled(0) {}
+      CnRequest() : slotFilled(0) {}
     } cnRequest;
 
     struct IonRequest {
@@ -129,7 +89,7 @@ static void setAffinity()
 
   CPU_ZERO(&cpu_set);
 
-  for (unsigned cpu = 1; cpu < 4; cpu ++)
+  for (unsigned cpu = 2; cpu < 2; cpu ++)
     CPU_SET(cpu, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
@@ -193,7 +153,51 @@ static inline bool checkForIncomingPacket()
 }
 
 
-static void handshakeComplete(Handshake *handshake)
+inline static void copyPacket(RequestPacket *dst, const RequestPacket *src)
+{
+  unsigned sixteen;
+
+  asm volatile (
+    "lfpdx  0,0,%1;"
+    "lfpdux 1,%1,%2;"
+    "lfpdux 2,%1,%2;"
+    "lfpdux 3,%1,%2;"
+    "lfpdux 4,%1,%2;"
+    "lfpdux 5,%1,%2;"
+    "stfpdx 0,0,%0;"
+    "stfpdux 1,%0,%2;"
+    "stfpdux 2,%0,%2;"
+    "lfpdux 6,%1,%2;"
+    "lfpdux 7,%1,%2;"
+    "lfpdux 0,%1,%2;"
+    "stfpdux 3,%0,%2;"
+    "stfpdux 4,%0,%2;"
+    "stfpdux 5,%0,%2;"
+    "lfpdux 1,%1,%2;"
+    "lfpdux 2,%1,%2;"
+    "lfpdux 3,%1,%2;"
+    "stfpdux 6,%0,%2;"
+    "stfpdux 7,%0,%2;"
+    "stfpdux 0,%0,%2;"
+    "lfpdux 4,%1,%2;"
+    "lfpdux 5,%1,%2;"
+    "lfpdux 6,%1,%2;"
+    "stfpdux 1,%0,%2;"
+    "stfpdux 2,%0,%2;"
+    "stfpdux 3,%0,%2;"
+    "lfpdux 7,%1,%2;"
+    "stfpdux 4,%0,%2;"
+    "stfpdux 5,%0,%2;"
+    "stfpdux 6,%0,%2;"
+    "stfpdux 7,%0,%2;"
+    : "=b" (dst), "=b" (src), "=r" (sixteen)
+    : "0" (dst), "1" (src), "2" (16)
+    : "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7", "memory"
+  );
+}
+
+
+inline static void handshakeComplete(Handshake *handshake)
 {
   pthread_mutex_lock(&scheduledRequestsLock);
   scheduledWriteRequests.push_back(handshake);
@@ -274,33 +278,31 @@ static void handleRequest(const RequestPacket *request)
       sendAck(request);
     }
   } else {
-    // avoid race conditions between two consecutive requests from the CN
-    cnRequest->slotFree.down();
-    cnRequest->packet = *request; // TODO: avoid "large" memcpy
+    copyPacket(&cnRequest->packet, request); // TODO: avoid "large" memcpy
     cnRequest->slotFilled.up();
   }
 }
 
 
-static void handleReadRequest(RequestPacket *request, const char *ptr, size_t bytesToGo)
+static size_t handleReadRequest(RequestPacket *request, const char *ptr, size_t requestedSize)
 {
-  assert(bytesToGo % 16 == 0 && request->size % 16 == 0);
-
-  bytesToGo = request->size = std::min(request->size, bytesToGo);
+  assert(requestedSize % 16 == 0 && request->size % 16 == 0);
 
 #if defined USE_TIMER
   unsigned long long start_time = _bgp_GetTimeBase();
-  size_t size = bytesToGo;
 #endif
 
-  memcpy(request->messageHead, ptr, bytesToGo % _BGP_TREE_PKT_MAX_BYTES);
-  ptr += bytesToGo % _BGP_TREE_PKT_MAX_BYTES;
-  bytesToGo &= ~(_BGP_TREE_PKT_MAX_BYTES - 1);
+  size_t negotiatedSize = std::min(request->size, requestedSize);
+
+  request->size = negotiatedSize;
+  memcpy(request->messageHead, ptr, negotiatedSize % _BGP_TREE_PKT_MAX_BYTES);
+
+  const char *end = ptr + negotiatedSize;
+  ptr += negotiatedSize % _BGP_TREE_PKT_MAX_BYTES;
 
   sendAck(request);
 
   // now send the remaining data, which must be a multiple of the packet size
-  assert(bytesToGo % _BGP_TREE_PKT_MAX_BYTES == 0);
 
   _BGP_TreePtpHdr header;
 
@@ -310,8 +312,6 @@ static void handleReadRequest(RequestPacket *request, const char *ptr, size_t by
   header.PtpTarget = request->rank;
   header.CsumMode  = _BGP_TREE_CSUM_NONE;
 
-  const char *end = ptr + bytesToGo;
-
   for (; ptr < end - 15 * _BGP_TREE_PKT_MAX_BYTES; ptr += 16 * _BGP_TREE_PKT_MAX_BYTES)
     send16Packets(&header, (void *) ptr);
 
@@ -320,32 +320,34 @@ static void handleReadRequest(RequestPacket *request, const char *ptr, size_t by
 
 #if defined USE_TIMER
   unsigned long long stop_time = _bgp_GetTimeBase();
-  std::cout << "read " << size << " bytes to " << request->rankInPSet << " @ " << (8 * size / ((stop_time - start_time) / 850e6) / 1e9) << " Gib/s" << std::endl;
+  std::cout << "read " << negotiatedSize << " bytes to " << request->rankInPSet << " @ " << (8 * negotiatedSize / ((stop_time - start_time) / 850e6) / 1e9) << " Gib/s" << std::endl;
 #endif
+
+  return negotiatedSize;
 }
 
 
-static void handleWriteRequest(RequestPacket *request, char *ptr, size_t bytesToGo)
+static size_t handleWriteRequest(RequestPacket *request, char *ptr, size_t requestedSize)
 {
-  assert(bytesToGo % 16 == 0 && request->size % 16 == 0);
-
-  bytesToGo = request->size = std::min(request->size, bytesToGo);
+  assert(requestedSize % 16 == 0 && request->size % 16 == 0);
 
 #if defined USE_TIMER
   unsigned long long start_time = _bgp_GetTimeBase();
-  size_t size = bytesToGo;
 #endif
 
-  memcpy(ptr, request->messageHead, bytesToGo % _BGP_TREE_PKT_MAX_BYTES);
-  ptr += bytesToGo % _BGP_TREE_PKT_MAX_BYTES;
-  bytesToGo &= ~(_BGP_TREE_PKT_MAX_BYTES - 1);
+  size_t negotiatedSize = std::min(request->size, requestedSize);
+
+  request->size = negotiatedSize;
+  memcpy(ptr, request->messageHead, negotiatedSize % _BGP_TREE_PKT_MAX_BYTES);
+
+  const char *end = ptr + negotiatedSize;
+  ptr += negotiatedSize % _BGP_TREE_PKT_MAX_BYTES;
 
   sendAck(request);
 
   // now receive the remaining data, which must be a multiple of the packet size
-  assert(bytesToGo % _BGP_TREE_PKT_MAX_BYTES == 0);
 
-  for (const char *end = ptr + bytesToGo; ptr < end;) {
+  while (ptr < end) {
     _BGP_TreePtpHdr header;
 
     waitForIncomingPacket();
@@ -359,8 +361,10 @@ static void handleWriteRequest(RequestPacket *request, char *ptr, size_t bytesTo
 
 #if defined USE_TIMER
   unsigned long long stop_time = _bgp_GetTimeBase();
-  std::cout << "write " << size << " bytes from " << request->rankInPSet << " @ " << (8 * size / ((stop_time - start_time) / 850e6) / 1e9) << " Gib/s" << std::endl;
+  std::cout << "write " << negotiatedSize << " bytes from " << request->rankInPSet << " @ " << (8 * negotiatedSize / ((stop_time - start_time) / 850e6) / 1e9) << " Gib/s" << std::endl;
 #endif
+
+  return negotiatedSize;
 }
 
 
@@ -421,12 +425,11 @@ void IONtoCN_ZeroCopy(unsigned rankInPSet, const void *ptr, size_t size)
     static pthread_mutex_t streamingSendMutex = PTHREAD_MUTEX_INITIALIZER;
 
     pthread_mutex_lock(&streamingSendMutex);
-    handleReadRequest(&handshake->cnRequest.packet, static_cast<const char *>(ptr), size);
+    size_t negotiatedSize = handleReadRequest(&handshake->cnRequest.packet, static_cast<const char *>(ptr), size);
     pthread_mutex_unlock(&streamingSendMutex);
 
-    size -= handshake->cnRequest.packet.size;
-    ptr = (const void *) ((const char *) ptr + handshake->cnRequest.packet.size);
-    handshake->cnRequest.slotFree.up();
+    size -= negotiatedSize;
+    ptr = (const void *) ((const char *) ptr + negotiatedSize);
   }
 
   //pthread_mutex_unlock(&handshake->ionRequest.mutex);
@@ -447,13 +450,11 @@ void CNtoION_ZeroCopy(unsigned rankInPSet, void *ptr, size_t size)
     handshake->cnRequest.slotFilled.down();
 
     recvSema.down();
-    handleWriteRequest(&handshake->cnRequest.packet, handshake->ionRequest.ptr, handshake->ionRequest.size);
+    size_t negotiatedSize = handleWriteRequest(&handshake->cnRequest.packet, handshake->ionRequest.ptr, handshake->ionRequest.size);
     recvSema.up();
 
-    size -= handshake->cnRequest.packet.size;
-    ptr = (void *) ((char *) ptr + handshake->cnRequest.packet.size);
-
-    handshake->cnRequest.slotFree.up();
+    size -= negotiatedSize;
+    ptr = (void *) ((char *) ptr + negotiatedSize);
   }
 
   //pthread_mutex_unlock(&handshake->ionRequest.mutex);
@@ -568,8 +569,6 @@ static void sigHandler(int)
 void init(bool enableInterrupts)
 {
   if (enableInterrupts) {
-    std::clog << "Warning: FCNP with interrupts is not stable!" << std::endl;
-
     struct sigaction sa;
 
     sigemptyset(&sa.sa_mask);
