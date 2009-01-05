@@ -64,6 +64,12 @@ def out_rcus(xcdata,disregard=[]):
     '''find outlier autocorr amps'''
 
     d = scipy.diag(xcdata)
+
+    #Note d is not in order of RCUs; it is X-pol then Y-pol.
+    #So, reorder.
+    idx = concatenate((arange(0,len(d),2),arange(1,len(d),2)))
+    d = d[idx]
+    
     # dd contains those values I DONT want to disregard
     dd = d[scipy.setdiff1d(range(len(d)),disregard)]
     
@@ -139,7 +145,8 @@ def classify(xst, rcu_byte = []):
     '''classify cross corr matrix as NOMINAL or otherwise'''
 
     if ((len(xst) < 2) or (len(rcu_byte) < 2)):
-        return [None];
+        #return [None];
+        return ['INVALID']
 
     n_rcus = xst.shape[0]
     

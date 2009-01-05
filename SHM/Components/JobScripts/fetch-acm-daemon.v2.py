@@ -221,6 +221,7 @@ def main():
 
         query = "INSERT INTO lofar.antennacorrelationmatrices(time, si_id, rcu_settings, subband, geo_loc, ant_coord, acm_data, classification) VALUES (TIMESTAMP WITH TIME ZONE '%(time_string)s UTC', '%(station_id)s', '%(rcu_settings_string)s', '%(subband_string)s', '%(geoloc_string)s','%(antcoord_string)s', '%(acm_string)s', %(classification)s);" % response
         #print query[-200:]+'...'
+        # print "len = ",len(antcoord_array),"\n",response["antcoord_string"]
         
         if options.commit:
             try:

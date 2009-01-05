@@ -11,6 +11,7 @@ import datetime
 #import misc_info
 
 sites = ["cs001","cs008","cs010","cs016"]
+
 obsdatatypes = ["rsp","sst","xst","sky"]
 job_path = '/home/lofartest/SHM/Components/JobScripts/'
 site_info = {}
@@ -30,11 +31,36 @@ class datatypeform(forms.Form):
                                              ('xst','Crosscorrelation Statistics'),
                                              ('sky','Sky Map') ) )
 class ObservedData:
-    def __init__(self,system='cs010',qtime=datetime.datetime.utcnow()):
+    def __init__(self,system='cs001',qtime=datetime.datetime.utcnow()):
         self.datasource = system
         self.date   =  qtime
         self.classification = []
 
+class Stations:
+    def __init__(self):
+        self.names = []
+        self.ids   = []
+        self.ports = []
+        self.inets = []
+        self.number = 0
+
+    def get_station_list(self):
+        db = lofar.shm.db.SysHealthDatabase()
+        db.open()
+
+        query = "SELECT * FROM Lofar.MacInformationServers;"
+        results = db.perform_query(query)
+        db.close()
+        count = 0
+        for inst in results:
+            if (inst.si_id > 100) and (inst.si_id < 10000):
+                self.names.append(inst.si_name.lower())
+                self.ids.append(int(inst.si_id))
+                self.ports.append(inst.mis_port)
+                self.inets.append(inst.mis_address)
+                count += 1
+        return count
+        
 class XST(ObservedData):
 
     def __init__(self, system, qtime):
@@ -51,7 +77,7 @@ class XST(ObservedData):
         db.open()
 
         query = "SELECT si_id, subband, time, rcu_settings, classification,"\
-                "acm_data FROM Lofar.AntennaCorrelationMatrices WHERE "\
+                "geo_loc, ant_coord, acm_data FROM Lofar.AntennaCorrelationMatrices WHERE "\
                 "(time <= %s) and " \
                 "(si_id = %04d) ORDER BY time DESC LIMIT 3;"%\
                 (thing.date.strftime("'%Y-%m-%d %H:%M:%S+00'"),display.name_to_si_id(thing.datasource))
@@ -314,11 +340,13 @@ def xst(request,station='cs001',plotnumber=0):
         #        else:
         #            classifs['nominal'].append(seqnr)
  
+    siites = Stations()
+    siites.get_station_list()
     return render_to_response('data_shm.html',
                               {'data'  : d,
                                'classifs' : classifs,
                                'types' : obsdatatypes,
-                               'sites' : sites,
+                               'sites' : siites.names,
                                'ipaddr': request.META['REMOTE_ADDR'],
                                })
         
@@ -417,11 +445,13 @@ def sst(request,station='cs001',plotnumber=0):
                     else:
                         classifs['nominal'].append(dbinst.rcu_id)
     #assert False
+    siites = Stations()
+    siites.get_station_list()
     return render_to_response('data_shm.html',
                               {'data'     : d,
                                'classifs' : classifs,
                                'types'    : obsdatatypes,
-                               'sites'    : sites,
+                               'sites'    : siites.names,
                                'ipaddr'   : request.META['REMOTE_ADDR'],
                                })
     
@@ -485,15 +515,17 @@ def rsp(request,station='cs001',plotnumber=0):
                 else:
                     classifs['offnominal'].append(dbinst.rsp_id)
 
+    siites = Stations()
+    siites.get_station_list()
     return render_to_response('data_shm.html',
                               {'query_time' : view_date,
                                'data'  : d,
                                'classifs' : classifs,
                                'types' : obsdatatypes,
-                               'sites' : sites,
+                               'sites' : siites.names,
                                'ipaddr': request.META['REMOTE_ADDR'],
                                })
-def sky(request,station='cs010',plotnumber=0):
+def sky(request,station='cs001',plotnumber=0):
 
     if (request.method == 'POST'):
         view_date = dateform(request.POST)
@@ -549,11 +581,13 @@ def sky(request,station='cs010',plotnumber=0):
         #        else:
         #            classifs['nominal'].append(seqnr)
  
+    siites = Stations()
+    siites.get_station_list()
     return render_to_response('data_shm.html',
                               {'data'  : d,
                                'classifs' : classifs,
                                'types' : obsdatatypes,
-                               'sites' : sites,
+                               'sites' : siites.names,
                                'ipaddr': request.META['REMOTE_ADDR'],
                                })
         
@@ -565,9 +599,9 @@ def defaultpage(request):
             query_date = view_date.clean_data['epoch']
         else:
             query_date = datetime.datetime.utcnow()
-        d = SKY('cs010',query_date)
+        d = SKY('cs001',query_date)
     else:
-        d = SKY('cs010',datetime.datetime.utcnow())
+        d = SKY('cs001',datetime.datetime.utcnow())
 
     dbres = []
     classifs = {}
@@ -580,11 +614,13 @@ def defaultpage(request):
     else:
         classifs = {'nominal':[], 'offnominal':[]}
     
+    siites = Stations()
+    siites.get_station_list()
     return render_to_response('data_shm_default.html',
                               {'data'    : d,
                                'classifs': classifs,
                                'types'   : obsdatatypes,
-                               'sites'   : sites,
+                               'sites'   : siites.names,
                                'ipaddr'  : request.META['REMOTE_ADDR'],
                                'reload_url' :  '/shm/data/',
                                })
