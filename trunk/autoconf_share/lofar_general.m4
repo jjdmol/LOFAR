@@ -297,9 +297,10 @@ AC_DEFUN([lofar_BACKTRACE],
     AC_CHECK_HEADER([execinfo.h],[
       AC_CHECK_FUNCS([backtrace], [
         AC_DEFINE(HAVE_BACKTRACE, 1, [Define if backtrace() is available])
-        # Need to check for -liberty first, because static library -lbfd depends
-        # on to -liberty; otherwise library order in $(LIBS) will be wrong.
+        # Check for -liberty and -lz first, because static library -lbfd
+        # depends on them; otherwise library order in $(LIBS) will be wrong.
         AC_SEARCH_LIBS([xexit], [iberty])
+        AC_SEARCH_LIBS([inflate], [z])
         AC_CHECK_HEADER([bfd.h],[
           AC_SEARCH_LIBS([bfd_init], [bfd], [
             AC_DEFINE(HAVE_BFD, 1, [Define if libbfd is available])
