@@ -251,6 +251,28 @@ EP_childPanelOn()
 // SimpleCtrlScriptEnd {EP_childPanelOn}
 " 0
  E E E
+22 14
+"panelChoice"
+""
+1 860 30 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 858 28 1012 49
+0
+
+E
+E
+E
+ 1 0
 0
 LAYER, 1 
 1
