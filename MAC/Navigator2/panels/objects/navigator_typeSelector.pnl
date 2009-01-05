@@ -104,8 +104,6 @@ void doHighlight(string dp1,bool aTrigger) {
   if (dynlen(highlight) < 1) {
     return;
   }
-  
-  
     
   if (itsSelection == \"Processes\") {
     // action asked for highlighting of processes so we have to determine
@@ -145,6 +143,7 @@ void doHighlight(string dp1,bool aTrigger) {
  */
 void selectTreeItems(shape tree,string parent) {
 
+  delay(0,50);
   LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered highlight: \"+highlight+\" parent: \"+parent);
   dyn_string ids = tree.children(parent);
   
@@ -355,8 +354,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"selectionMode" "enum 0"
 "allColumnsShowFocus" "bool TRUE"
+"selectionMode" "enum 0"
  10 30 212 378
 10 TreeWidget
 7

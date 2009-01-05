@@ -16,10 +16,24 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
   setValue(\"selfState.light\",\"foreCol\",\"_Transparent\");
   
 
-  // connect for childUpdates
-  showChildState(CoreDP);
-  // connect for selfUpdates
-  showSelfState(CoreDP);
+  // check if any remotestation exist allready
+  bool coreExist=false;
+  for (int i = 1; i<= dynlen(remoteStations);i++) {
+    if (dpExists(coreStations[i]+\":LOFAR\")) {
+      coreExist=true;
+    }
+    if (coreExist) break;
+  }
+  if (coreExist) {
+    // connect for childUpdates
+    showChildState(CoreDP);
+    // connect for selfUpdates
+    showSelfState(CoreDP);
+  } else {
+    setValue(\"selfState.light\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"childStateBorder\",\"foreCol\",\"_dpdoesnotexist\");
+  }
+
 }" 0
  E "main(int x, int y)
 {
