@@ -543,11 +543,11 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
     typePath[++index] = dpTypeName("LOFAR");
     if (dp=="LOFAR"){
       typePath[++index] = dpTypeName("LOFAR_PIC");
-      typePath[++index] = dpTypeName("LOFAR_PIC_Core");
+      typePath[++index] = dpTypeName("LOFAR_PIC_"+navFunct_getRingFromStation(getSystemName()));
     }
     if (strpos(dp,"PIC") >=0) {
       typePath[++index] = dpTypeName("LOFAR_PIC");
-      typePath[++index] = dpTypeName("LOFAR_PIC_Core");
+      typePath[++index] = dpTypeName("LOFAR_PIC_"+navFunct_getRingFromStation(getSystemName()));
     }
     
     if (strpos(dp,"PermSW") >=0) {
@@ -1100,12 +1100,14 @@ void navFunct_fillHardwareTree() {
   if (dynlen(g_stationList) > 1 ) {
     for (int i = 1; i <= dynlen(g_stationList); i++) {
       // for ease of selection we use stationlike objects on the main google hardware panels, such
-      // as CEP and Core. Since those are obviously no stations (== databases) we need to set another point to
+      // as CEP , Remote and Core. Since those are obviously no stations (== databases) we need to set another point to
       // jump to when doubleclicked
       if (g_stationList[i] == "CEP") {
         dp = MainDBName+"LOFAR_CEP";
       } else if (g_stationList[i] == "Core") {
         dp = MainDBName+"LOFAR_PIC_Core";
+      } else if (g_stationList[i] == "Remote") {
+        dp = MainDBName+"LOFAR_PIC";
       } else {        
         dp = g_stationList[i]+":LOFAR";
       }
@@ -1294,7 +1296,7 @@ void navFunct_fillStationLists() {
   coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
                                "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032");
   remoteStations = makeDynString("RS106","RS208","RS302","RS306","RS307","RS503");
-  europeStations = makeDynString("DE001");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","FR606","SE607","UK608");
 }
 
 
