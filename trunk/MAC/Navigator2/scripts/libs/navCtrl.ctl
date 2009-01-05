@@ -91,7 +91,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   
  
-  // TabChanged: The Tab has changed, so a new panle needs to be initialized and put in place
+  // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
         
@@ -153,9 +153,12 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     // use this piece of hardware. In all cases the global lists should have been filled prior to this
     // command, so if needed we can also use these lists to determine the involved parties.
     
-        
-    // Empty highlight string
+
+    
     dynClear(highlight);
+    
+    
+        
         
     // ACTIVE_TAB can be used to see if we are looking at Hardware, processes or observations
     
@@ -841,6 +844,22 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
     }
   }
   
+}
+
+navCtrl_highlightCheckGroups() {
+  // check highlightlist for Core and Remote
+  // if available, add the involved Core and/or Remote Stations
+  if (dynContains(highlight,"Core")) {
+    for (int i=1; i<= dynlen(coreStations); i++) {
+      dynAppend(highlight,coreStations[i]);
+    }
+  }
+
+  if (dynContains(highlight,"Remote")) {
+    for (int i=1; i<= dynlen(remoteStations); i++) {
+      dynAppend(highlight,remoteStations[i]);
+    }
+  }
 }
 ///////////////////////////////////////////////////////////////////////////
 //

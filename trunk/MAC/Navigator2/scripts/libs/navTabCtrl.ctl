@@ -33,6 +33,7 @@
 // navTabCtrl_showView                   : Sets the panelView(s)
 // navTabCtrl_getSelectedView            : Returns the caption of the currently selected view
 // navTabCtrl_getNrTabs                  : Returns the nr of available tabs
+// navTabCtrl_fillPanelChoice            : fills panelchoice with possible panels on this point and ennablesdisables the choice
 
 
 #uses "navigator.ctl"
@@ -206,7 +207,7 @@ string navTabCtrl_getSelectedView()
 // Shows the tab 
 //
 ///////////////////////////////////////////////////////////////////////////
-bool navTabCtrl_showView()
+bool navTabCtrl_showView(int panelNr=1)
 {
   LOG_TRACE("navTabCtrl.ctl:navTabCtrl_showView|entered");
 
@@ -229,9 +230,17 @@ bool navTabCtrl_showView()
     // remove old view
     navTabCtrl_removeView();
     
-    LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+viewPanels[1]);
-    setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, viewPanels[1], makeDynString(""));
+    if (panelNr > dynlen(viewPanels)) {
+      panelNr=1;
+    }
+    
+    LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+viewPanels[panelNr]);
+    setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, viewPanels[panelNr], makeDynString(""));
     tabCtrlHasPanel=true;
+    
+    // fill and disable/enable the panelChoice combobox
+    navTabCtrl_fillPanelChoice(viewPanels);
+    
     return true;
   }
   return false;
@@ -253,4 +262,34 @@ void navTabCtrl_removeView()
   
   setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, "" , makeDynString(""));
   
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+// navTabCtrl_fillPanelChoice
+// 
+// fills panelchoice with possible panels on this point and enables or 
+// disables the choice
+//
+///////////////////////////////////////////////////////////////////////////
+void navTabCtrl_fillPanelChoice(dyn_string panels) {
+  shape cb=getShape("panelChoice");
+
+  cb.deleteAllItems();
+  
+  for ( int i = 1; i <= dynlen(panels); i++) {
+    dyn_string splitted = strsplit(panels[i],"/\\.");
+    string panel=splitted[dynlen(splitted)-1]; 
+    cb.appendItem(panel);
+  }
+  dyn_string data;
+  getValue(cb,"items",data);
+
+  cb.selectedPos(1);
+  if (cb.itemCount > 1) {
+    cb.visible(true);
+  } else {
+    cb.visible(false);
+  }        
 }
