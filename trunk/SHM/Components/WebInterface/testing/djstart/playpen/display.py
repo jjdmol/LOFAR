@@ -7,6 +7,7 @@ os.environ[ 'HOME' ] = '/tmp/'
 #import scipy, numpy, numarray, time
 import scipy, numpy, time
 import xcstats_classifier_max_v2
+import station_geom
 #import rcu_settings_masks
 import rcu_settings_masks_v2
 #import sbstats_classifier_max
@@ -25,14 +26,33 @@ from pylab import cm
 import cStringIO
 import ephem
 import re
+import lofar.shm.db
 
 #######################################
 # These two fcns should become db look-ups, or something else.
 def name_to_si_id(name):
-    return int(name[-3:])+1000
+    db = lofar.shm.db.SysHealthDatabase()
+    db.open()
+    
+    query = "SELECT * FROM Lofar.MacInformationServers WHERE si_name = '" + name.upper() + "';"
+    results = db.perform_query(query)
+    db.close()     
+    
+    assert len(results) == 1
+    return results[0].si_id
+    #return int(name[-3:])+500
 
 def si_id_to_name(id):
-    return "CS%03d" % (id-1000)
+    db = lofar.shm.db.SysHealthDatabase()
+    db.open()
+    
+    query = "SELECT * FROM Lofar.MacInformationServers WHERE si_id = " + str(id) + ";"
+    results = db.perform_query(query)
+    db.close()     
+
+    assert len(results) == 1
+    return results[0].si_name.upper()
+    #return "CS%03d" % (id-500)
 ########################################
 
 def ang_separation(ra1,dec1,ra2,dec2):
@@ -46,7 +66,7 @@ def xst(dbinst, thumb=True):
     
     #N is the number of crossed dipoles = 1/2 the number of rcus
     N = int(scipy.sqrt(len(dbinst.acm_data)/2.)/2.)
-    assert N in [16,32,48,96]
+    assert N in [8,16,32,48,96]
         
     xcm = xcstats_classifier_max_v2.unflatten(dbinst.acm_data,N)
     rspstatus = rcu_settings_masks_v2.rcu_status(dbinst.rcu_settings)
@@ -65,6 +85,8 @@ def xst(dbinst, thumb=True):
             classification_text = 'NOMINAL'
         elif dbinst.classification == ['INVALID'] * len(dbinst.classification):
             classification_text = 'INVALID'
+        elif dbinst.classification == ['DISABLED'] * len(dbinst.classification):
+            classification_text = 'DISABLED'
         else:
             bad_rcus = []
             for i in range(len(dbinst.classification)):
@@ -80,7 +102,21 @@ def xst(dbinst, thumb=True):
     else:
         fig = Figure(frameon=False, dpi=96)
 
+        
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    # a bit of fooling around with labels
+    tick_interval = N / 4
+    tick_indices = range(tick_interval-1,2*N,tick_interval)
+    tick_labels = [("%d"%(2*d))   for d in tick_indices[:len(tick_indices)/2]] + \
+                  [("%d"%(2*(d-N)+1)) for d in tick_indices[len(tick_indices)/2:]]
+    tick_indices = [0] + tick_indices
+    tick_labels = ['0'] + tick_labels
+    
+    ax.set_xticks(tick_indices)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(tick_indices)
+    ax.set_yticklabels(tick_labels)
+    
     ax.imshow(scipy.log(1.0e-3 + abs(xcm)), interpolation='nearest', origin='lower', cmap=cm.gray)
     ax.set_title("Station %s / Subband #%03d \n %s"% (si_id_to_name(dbinst.si_id), dbinst.subband[0], dbinst.time),family='sans-serif')
 
@@ -120,11 +156,14 @@ def sky(dbinst, thumb=True):
 
     #N is the number of crossed dipoles = 1/2 the number of rcus
     N = int(scipy.sqrt(len(dbinst.acm_data)/2.)/2.)
-    assert N in [16,32,48,96]
+    assert N in [8,16,32,48,96]
         
     xcm = xcstats_classifier_max_v2.unflatten(dbinst.acm_data,N)
     #[polar,cart] = xcstats_classifier_max_v2.array_geom(dbinst.si_id, status, dbinst.time)
-    [polar,cart] = xcstats_classifier_max_v2.array_geom(dbinst.si_id, dbinst.rcu_settings, dbinst.time)
+    if ((len(dbinst.geo_loc) == 1) or (len(dbinst.ant_coord) == 1)):
+        [polar,cart] = xcstats_classifier_max_v2.array_geom(dbinst.si_id, dbinst.rcu_settings, dbinst.time)
+    else:
+        [polar,cart] = station_geom.Locations(dbinst.geo_loc, dbinst.ant_coord)
 
     on_rcus = rcu_settings_masks_v2.on_off_rcus(dbinst.rcu_settings)
 
@@ -430,7 +469,8 @@ def sst(dbinst, thumb=True):
 
     output = cStringIO.StringIO()
 
-    spectrum = numarray.array(map(float, dbinst.spectrum))
+    #spectrum = numpy.asarray(map(float, dbinst.spectrum))
+    spectrum = numpy.asarray(dbinst.spectrum,dtype=float)
     #(classification, mean_power, peak_power, med_chan) = sbstats_classifier_max.classify(spectrum)
     #classification_string = '\'{' + str.join(",", classification) + '}\''
     

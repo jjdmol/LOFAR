@@ -77,7 +77,7 @@ class XST(ObservedData):
         db.open()
 
         query = "SELECT si_id, subband, time, rcu_settings, classification,"\
-                "acm_data FROM Lofar.AntennaCorrelationMatrices WHERE "\
+                "geo_loc, ant_coord, acm_data FROM Lofar.AntennaCorrelationMatrices WHERE "\
                 "(time <= %s) and " \
                 "(si_id = %04d) ORDER BY time DESC LIMIT 3;"%\
                 (thing.date.strftime("'%Y-%m-%d %H:%M:%S+00'"),display.name_to_si_id(thing.datasource))

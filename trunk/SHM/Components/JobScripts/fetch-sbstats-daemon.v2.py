@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.4
 
 import os
 import sys
@@ -8,6 +8,7 @@ import lofar.shm
 import optparse
 import misconnection
 import numpy
+#import sbstats_classifier_max_new
 import sbstats_classifier_max_v2
 from lofar.shm.nanostamp import ns2dt, now2ns
 import socket
@@ -143,13 +144,14 @@ def main():
 
         # response["station_id"] = 501
         # response["station_id"] = 1000 + int(re.search('\d+',peer_info["node_id"]).group(0))
-        response["station_id"] = 501
+        response["station_id"] = MIS_SI_ID
         response["time_string"] = str(ns2dt(response["payload_ns"]))
         invalid_array           = numpy.fromstring(response["invalid"], dtype=numpy.int32)
         rcu_settings_array      = numpy.fromstring(response["rcu_settings"], dtype=numpy.int32)
         #invalid_array           = numpy.asarray(response["invalid"], dtype=numpy.int32)
         #rcu_settings_array      = numpy.asarray(response["rcu_settings"], dtype=numpy.int32)
         num_rcu                 = len(rcu_settings_array)
+        #spectrum                = numarray.fromstring(response["data"], numarray.Float64, [num_rcu,512])
         spectrum                = numpy.fromstring(response["data"],dtype=numpy.float64).reshape(num_rcu,512)
         assert len(response["data"])    == 8*512*num_rcu # sizeof(double) * 512 * #RCUs
 
