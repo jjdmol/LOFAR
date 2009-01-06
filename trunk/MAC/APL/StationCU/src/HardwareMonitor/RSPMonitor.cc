@@ -1135,6 +1135,7 @@ void RSPMonitor::_doQueryChanged(GCFEvent&		event)
 		int  				status  = ((GCFPVInteger *)(DPvalues->getValue()[idx]))->getValue();
 		uint				rcuNr;
 		// get rcuNr from name
+		// note: name is like: RS002:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU4.status.state
 		if (sscanf(nameStr.c_str(), "%*s_RCU%d.%*s", &rcuNr) != 1) {
 			LOG_WARN_STR("Unrecognized datapointname ignored: " << nameStr);
 			continue;

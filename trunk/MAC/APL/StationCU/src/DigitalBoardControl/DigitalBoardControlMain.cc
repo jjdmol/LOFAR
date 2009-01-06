@@ -30,6 +30,10 @@ using namespace LOFAR::StationCU;
 
 int main(int argc, char* argv[])
 {
+	if (argc < 2) {
+		return (1);
+	}
+
 	// args: cntlrname, parentHost, parentService
 	GCFTask::init(argc, argv, "DigitalBoardControl");
 
