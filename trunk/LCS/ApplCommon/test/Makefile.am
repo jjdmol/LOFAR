@@ -1,16 +1,17 @@
-check_PROGRAMS				= tObservation
+check_PROGRAMS			= tObservation
 
 tObservation_SOURCES		= tObservation.cc
-tObservation_LDADD			= ../src/libapplcommon.la
+tObservation_LDADD		= ../src/libapplcommon.la
 tObservation_DEPENCIES		= ../src/libapplcommon.la $(LOFAR_DEPEND)
 
-TESTSCRIPTS					= 
+TESTSCRIPTS			= tObservation.sh
 
 
-TESTS						= $(TESTSCRIPTS)
+TESTS				= $(TESTSCRIPTS)
 
-EXTRA_DIST					= tObservation.log_prop \
-							  $(TESTSCRIPTS)
+EXTRA_DIST			= tObservation.log_prop tObservation.parset \
+				  tObservation.stdout \
+				  $(TESTSCRIPTS)
 
 NOINSTHDRS =
 

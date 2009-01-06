@@ -67,10 +67,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
-        string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
-        ParameterSet    stParset;
-        stParset.adoptBuffer(stString);
-        stations = stParset.getStringVector("x");
+                stations = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);
 	}
 
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
@@ -86,10 +83,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
-		string  rcuString("x=" + expandedArrayString(receiverList));
-		ParameterSet    rcuParset;
-		rcuParset.adoptBuffer(rcuString);
-		vector<uint32> RCUnumbers(rcuParset.getUint32Vector("x"));
+		vector<uint32> RCUnumbers (aParSet->getUint32Vector(prefix+"receiverList", true));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			RCUset.set();					// assume all receivers.
 		}
@@ -123,15 +117,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
-        string sbString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"subbandList","[]")));
-        ParameterSet    sbParset;
-        sbParset.adoptBuffer(sbString);
-        newBeam.subbands = sbParset.getInt32Vector("x");
-        // beamletList
-        string blString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"beamletList", "[]")));
-        ParameterSet    blParset;
-        blParset.adoptBuffer(blString);
-        newBeam.beamlets = blParset.getInt32Vector("x");
+                newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
+                // beamletList
+                newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
@@ -166,7 +154,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	
 	// OLAP: uStation mode(y/n)
 	uStation = true;
-	for (uint32 s(0) ; s < nrSlotsInFrame-1; s++) {
+	for (int s(0) ; s < nrSlotsInFrame-1; s++) {
 		if (beamlet2subbands[s] != beamlet2subbands[s+nrSlotsInFrame]) {
 			uStation = false;
 			break;
