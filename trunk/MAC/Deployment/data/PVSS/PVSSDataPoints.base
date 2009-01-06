@@ -44,7 +44,7 @@ StorageAppl			STRAPPL		C	O	Y	LOFAR_ObsSW_@observation@_OnlineCtrl_StorageAppl
 #OfflineCtrl		OFFLCTRL	C	O	N	LOFAR_ObsSW_@observation@_OfflineCtrl
 #CImager			CIMG		C	O	N	LOFAR_ObsSW_@observation@_OfflineCtrl_CImager
 Ring				-			C	O	N	LOFAR_ObsSW_@observation@_@ring@
-Station				-			C	O	Y	LOFAR_ObsSW_@observation@_@ring@_@station@
+Station				-			C	O	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
 StnLOFAR			-			S	P	N	LOFAR
 StnPIC				-			S	P	N	LOFAR_PIC
@@ -74,6 +74,7 @@ MACInfoServer		MIS			S	P	Y	LOFAR_PermSW_MACInfoServer
 StationCtrl			SC			S	P	Y	LOFAR_PermSW_StationCtrl
 DigBoardCtrl		DBC			S	P	Y	LOFAR_PermSW_DigBoardCtrl
 Antenna				ANT			S	P	N	@antenna@
+RemoteStation		-			S	P	N	remoteStation
 StnObsSW			-			S	P	N	LOFAR_ObsSW
 StnObservation		OBS			S	O	N	LOFAR_ObsSW_@observation@
 BeamCtrl			BC			S	O	Y	LOFAR_ObsSW_@observation@_BeamCtrl
