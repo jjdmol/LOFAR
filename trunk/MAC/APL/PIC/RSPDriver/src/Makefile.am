@@ -19,7 +19,6 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	rspctl.conf 
 
-#	RemoteStation.conf
 #	RSPDriver.conf
 
 clean-local:
@@ -31,7 +30,6 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	rspctl.conf 
 
-#	RemoteStation.conf
 #	RSPDriver.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
