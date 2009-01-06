@@ -51,9 +51,6 @@ using namespace std;
 	cout << (x) << " ==> " << compactedArrayString(x) << endl;
 
 #define	DO_EXPAND_TEST(x) \
-	cout << (x) << " ==> " << expandedArrayString(x) << endl;
-
-#define	DO_EXPAND1_TEST(x) \
 	cout << (x) << " ==> " << expandArrayString(x) << endl;
 
 
@@ -309,33 +306,7 @@ bool testExpandArray()
 {	
   cout << "\n*** Testing expanding of Array-strings ***\n";
   try {
-	DO_EXPAND_TEST("[ a,b,c ]");
-	DO_EXPAND_TEST("[ aa01,aa06 ]");
-	DO_EXPAND_TEST("[ aa01,aa02 ]");
-	DO_EXPAND_TEST("[ aa01..aa02 ]");
-	DO_EXPAND_TEST("[ aa01..aa03 ]");
-	DO_EXPAND_TEST("[ aa01..aa03,aa04 ]");
-	DO_EXPAND_TEST("[ aa01..aa03,aa05 ]");
-	DO_EXPAND_TEST("[ aa02,aa05..aa07]");
-	DO_EXPAND_TEST("[ aa02,aa05..aa04]");
-	DO_EXPAND_TEST("[ aa02,aa05..aa05]");
-
-	DO_EXPAND_TEST("[ aa01..ba03,aa05 ]");
-	DO_EXPAND_TEST("[ aa01..aa03,ba05 ]");
-	DO_EXPAND_TEST("[ aa01,ab03,aa05 ]");
-	DO_EXPAND_TEST("[ aa01,ab03..aa05 ]");
-	DO_EXPAND_TEST("[ aa01,aa03..ab05 ]");
-	DO_EXPAND_TEST("[ aa01,bb03..bb05 ]");
-
-	DO_EXPAND_TEST("[0..191]");
-	DO_EXPAND_TEST("[0,1,2,6,3,4,10..19,16]");
-	DO_EXPAND_TEST("[36*0]");
-	DO_EXPAND_TEST("[3*(0;1;2;3)]");
-	DO_EXPAND_TEST("[20*(300..303)]");
-	DO_EXPAND_TEST("[2*(5*0)]");
-
-        // Some tests of invalid/unclear expansions.
-        cout << "  Some old unclear expansions" << endl;
+        // Test expansions.
         DO_EXPAND_TEST("[3*ab]");
         DO_EXPAND_TEST("[3*(ab)]");
         DO_EXPAND_TEST("[3*'ab']");
@@ -349,69 +320,33 @@ bool testExpandArray()
         DO_EXPAND_TEST("[2*(lifs000..lifs010)]");
         DO_EXPAND_TEST("[2*([1,2])]");
 
-        // New expansions.
-        cout << "  The same new expansions" << endl;
-        DO_EXPAND1_TEST("[3*ab]");
-        DO_EXPAND1_TEST("[3*(ab)]");
-        DO_EXPAND1_TEST("[3*'ab']");
-        DO_EXPAND1_TEST("[3*('ab')]");
-        DO_EXPAND1_TEST("[3*10.5]");
-        DO_EXPAND1_TEST("[3*(10.5)]");
-        DO_EXPAND1_TEST("[lifs0..lifs10]");
-        DO_EXPAND1_TEST("[lifs00..lifs010]");
-        DO_EXPAND1_TEST("[lifs000..lifs010]");
-        DO_EXPAND1_TEST("[2*lifs000..lifs010]");
-        DO_EXPAND1_TEST("[2*(lifs000..lifs010)]");
-        DO_EXPAND1_TEST("[2*([1,2])]");
+        cout << "  Some more involved expansions" << endl;
+        DO_EXPAND_TEST("[abc]");
+        DO_EXPAND_TEST("[abc0..abc9]");
+        DO_EXPAND_TEST("['abc0..abc9']");
+        DO_EXPAND_TEST("[abc000..abc9]");
+        DO_EXPAND_TEST("[(abc0009  ..  abc4, 010..8)]");
+        DO_EXPAND_TEST("[/abc/../cd0..3]");
+        DO_EXPAND_TEST("[3*abc]");
+        DO_EXPAND_TEST("[3 * [[1,2,3],[4,5,6]], 02*'xx']");
+        DO_EXPAND_TEST("[3 * [[5*1],[5*2]], 02*'xx']");
+        DO_EXPAND_TEST("[2*(0,1,2,3), 2*(5;6;7), 2*10..12]");
+        DO_EXPAND_TEST(" [ 3 * 2 * 10 .. 12 ] ");
+        DO_EXPAND_TEST(" [3*(2*3*6;2*(12,13))]");
 
-        cout << "  Some more involved new expansions" << endl;
-        DO_EXPAND1_TEST("[abc]");
-        DO_EXPAND1_TEST("[abc0..abc9]");
-        DO_EXPAND1_TEST("['abc0..abc9']");
-        DO_EXPAND1_TEST("[abc000..abc9]");
-        DO_EXPAND1_TEST("[(abc0009  ..  abc4, 010..8)]");
-        DO_EXPAND1_TEST("[/abc/../cd0..3]");
-        DO_EXPAND1_TEST("[3*abc]");
-        DO_EXPAND1_TEST("[3 * [[1,2,3],[4,5,6]], 02*'xx']");
-        DO_EXPAND1_TEST("[3 * [[5*1],[5*2]], 02*'xx']");
-        DO_EXPAND1_TEST("[2*(0,1,2,3), 2*(5;6;7), 2*10..12]");
-        DO_EXPAND1_TEST(" [ 3 * 2 * 10 .. 12 ] ");
-        DO_EXPAND1_TEST(" [3*(2*3*6;2*(12,13))]");
-
-        cout << "  Miscellaneous tests" << endl;
-        cout << "   with new expandArrayString" << endl;
-        DO_EXPAND1_TEST(" [3*'10.5*ab']");
-        DO_EXPAND1_TEST(" [10.5*'ab']");
-        DO_EXPAND1_TEST(" [3*10.5*'ab']");
-        DO_EXPAND1_TEST(" [3*'ab'*2]");
-        DO_EXPAND1_TEST(" [3*ab*2]");
-        DO_EXPAND1_TEST(" [3*3*2]");
-        DO_EXPAND1_TEST(" [3*(3*2)]");
-        DO_EXPAND1_TEST(" [3*10.5*2]");
-        DO_EXPAND1_TEST(" [3*(10.5*2)]");
-        DO_EXPAND1_TEST(" [(1,2,3)]");
-        cout << "   with old expandedArrayString" << endl;
+        cout << "  Miscellaneous tests with expandArrayString" << endl;
         DO_EXPAND_TEST(" [3*'10.5*ab']");
         DO_EXPAND_TEST(" [10.5*'ab']");
         DO_EXPAND_TEST(" [3*10.5*'ab']");
         DO_EXPAND_TEST(" [3*'ab'*2]");
         DO_EXPAND_TEST(" [3*ab*2]");
         DO_EXPAND_TEST(" [3*3*2]");
-        DO_EXPAND_TEST(" [3*3*2]");
         DO_EXPAND_TEST(" [3*(3*2)]");
         DO_EXPAND_TEST(" [3*10.5*2]");
         DO_EXPAND_TEST(" [3*(10.5*2)]");
         DO_EXPAND_TEST(" [(1,2,3)]");
 
-        cout << "  Performance comparison between old and new" << endl;
-        cout << ">>>" << endl;
-        NSTimer tim1;
-        tim1.start();
-        string s1 = expandedArrayString("[abc001..abc10,abc45..abc50]");
-        tim1.stop();
-        tim1.print(cout);
-        cout << "<<<" << endl;
-        cout << s1 << endl;
+        cout << "  Performance test of expandArrayString" << endl;
         cout << ">>>" << endl;
         NSTimer tim2;
         tim2.start();
