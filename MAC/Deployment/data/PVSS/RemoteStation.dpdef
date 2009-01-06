@@ -1,0 +1,14 @@
+stationID		int
+N_RSPBoards		int
+N_TBBoards		int
+N_LBAS			int
+N_HBAS			int
+HBA_Split		bool
+wide_LBAS		bool
+HBA.centerOL	float
+HBA.centerNB	float
+HBA.centerH		float
+LBA.centerOL	float
+LBA.centerNB	float
+LBA.centerH		float
+
