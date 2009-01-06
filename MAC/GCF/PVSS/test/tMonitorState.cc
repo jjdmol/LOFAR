@@ -81,7 +81,7 @@ GCFEvent::TResult tMonitorState::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		try {
 			LOG_DEBUG("Taking subscribtion: FROM 'state' WHERE _DP='LOFAR_PIC_*'");
 //			result = itsService->dpQuerySubscribeAll("'LOFAR_PIC_*.state' WHERE _DPT=\"RCU\" AND '_online.._online_bad' = \"FALSE\" ","");
-			result = itsService->dpQuerySubscribeAll("'LOFAR_PIC_*.state'", "_DPT=\"RCU\"");
+			result = itsService->dpQuerySubscribeSingle("'LOFAR_PIC_*.status.state'", "_DPT=\"RCU\"");
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Taking subscription went wrong:" << PVSSerrstr(result));
