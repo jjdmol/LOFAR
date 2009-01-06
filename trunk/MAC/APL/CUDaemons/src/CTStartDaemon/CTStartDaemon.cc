@@ -481,8 +481,9 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 		CTiter	controller = itsActiveCntlrs.find(inMsg.cntlrName);
 		// controller must be known! [310507]
 		if (!isController(controller)) {
-			LOG_WARN_STR ("PROGRAMMING ERROR, controller " << inMsg.cntlrName << 
-												" should have bin in the administration");
+			// [301208] by allowing unknown controllers we can startup the StationController with swlevel.
+//			LOG_WARN_STR ("PROGRAMMING ERROR, controller " << inMsg.cntlrName << 
+//												" should have been in the administration");
 		}
 		else {
 			// controller already registered?
