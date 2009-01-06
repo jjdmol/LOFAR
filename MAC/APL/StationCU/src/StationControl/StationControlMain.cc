@@ -22,11 +22,13 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 
 #include "StationControl.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::StationCU;
@@ -34,7 +36,7 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, "StationControl");
+	GCFTask::init(argc, argv, basename(argv[0]));
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
@@ -42,7 +44,14 @@ int main(int argc, char* argv[])
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
 
-	StationControl	sc(argv[1]);
+	string		myName;
+	if (argc < 2) {		// started by swlevel?
+		myName = formatString("%s:%s", myHostname(false).c_str(),  basename(argv[0]));
+	}
+	else {
+		myName = argv[1];
+	}
+	StationControl	sc(myName.c_str());
 	sc.start(); 	// make initial transition
 
 	GCFTask::run();
