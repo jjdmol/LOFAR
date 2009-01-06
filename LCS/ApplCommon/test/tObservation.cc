@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
 {
   INIT_LOGGER(argv[0]);
   try {
-    ASSERT (argc >= 1);
+    ASSERT (argc > 1);
     ParameterSet parSet2(argv[1]);
     Observation  obs2(&parSet2);
     cout << obs2 << endl;
