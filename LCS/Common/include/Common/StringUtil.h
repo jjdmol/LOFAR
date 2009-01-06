@@ -348,19 +348,24 @@ inline bool   strToBool   (const string& aString) throw(Exception)
 // the ranges i.s.o. all loose elements. The following functions do the conversions.
 
 // @{
-// Given een array string ( '[ xx, xx, xx ]' ) this utility compacts the string
+// Given a string 'xx, xx, xx' this utility compacts the string
 // by replacing series with range.
 // Eg. [ lii001, lii002, lii003, lii005 ] --> [ lii001..lii003, lii005 ]
 string compactedArrayString(const string&	orgStr);
 
-// Given een array string ( '[ xx..xx, xx ]' ) this utility expands the string
+// Given a string 'xx..xx, xx' this utility expands the string
 // by replacing ranges with the fill series.
 // Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
-string expandedArrayString(const string&	orgStr);
 string expandRangeString(const string&);
-string expandMultString(const string&);
-string expandArrayString(const string& str);
 
+// Given a string like '3*str' this utility expands the string
+// by replacing the string 3 times.
+// Eg. [3*0] --> [0,0,0]
+string expandMultString(const string&);
+
+// Apply expandMultString and expandRangeString (in that order) for an array
+// string which must be enclosed in square brackets.
+string expandArrayString(const string&);
 // @} 
 
 } // namespace LOFAR
