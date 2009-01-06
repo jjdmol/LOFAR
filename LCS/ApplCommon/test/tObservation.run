@@ -1,0 +1,3 @@
+#! /bin/sh
+
+tObservation tObservation.in_parset1
