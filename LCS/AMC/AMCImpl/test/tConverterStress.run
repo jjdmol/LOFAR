@@ -36,7 +36,7 @@ then
   if [ -f tConverterStress.log_prop ]
   then
     sed -e "s/tConverterStress_tmp/AMCServer_tmp/" \
-      tConverterStress.log_prop > $SERVER.log_prop
+      tConverterStress.log_prop > AMCServer.log_prop
   fi
 
   # Exit and interrupt handler. $! is the process id of the last background 
@@ -47,7 +47,7 @@ then
           rm -f AMCServer_tmp.log; \
         fi; \
         if kill -0 $! 2>/dev/null; then kill -9 $! 2>/dev/null; fi; \
-        rm -f $SERVER.log_prop \
+        rm -f AMCServer.log_prop \
         exit $STATUS' 0 1 2 3 15
 
   # Start the server in the background.
