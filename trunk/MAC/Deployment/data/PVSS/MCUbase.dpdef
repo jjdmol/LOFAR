@@ -74,42 +74,41 @@ NavigatorInstance.NavigatorInstance	1#1
 
 TypeName
 NavPanelConfig.NavPanelConfig	1#1
-	LOFAR_Hardware	9#2
-	LOFAR_Processes	9#3
-	LOFAR_Observations	9#4
-	StnLOFAR_Hardware	9#5
-	StnPIC_Hardware	9#6
-	Cabinet_Hardware	9#7
-	SubRack_Hardware	9#8
-	TBBoard_Hardware	9#9
-	RSPBoard_Hardware	9#10
-	RCU_Hardware	9#11
-	Ring_Hardware	9#12
-	StnLOFAR_Processes	9#13
-	CTStartDaemon_Processes	9#14
-	KVLogger_Processes	9#15
-	LogProcessor_Processes	9#16
-	ServiceBroker_Processes	9#17
-	MACScheduler_Processes	9#18
-	SoftwareMonitor_Processes	9#19
-	HardwareMonitor_Processes	9#20
-	DigBoardCtrl_Processes	9#21
-	StationCtrl_Processes	9#22
-	TemperatureMonitor_Processes	9#23
-	BeamCtrl_Processes	9#24
-	CalCtrl_Processes	9#25
-	TBBCtrl_Processes	9#26
-	AMCServer_Processes	9#27
-	ObsCtrl_Processes	9#28
-	SASGateway_Processes	9#29
-	Correlator_Processes	9#30
-	StorageAppl_Processes	9#31
-	RSPDriver_Processes	9#32
-	TBBDriver_Processes	9#33
-	CalServer_Processes	9#34
-	BeamServer_Processes	9#35
-	MACInfoServer_Processes	9#36
-	Observation_Observations	9#37
+	LOFAR_Processes	9#2
+	LOFAR_Observations	9#3
+	StnLOFAR_Hardware	9#4
+	StnPIC_Hardware	9#5
+	Cabinet_Hardware	9#6
+	SubRack_Hardware	9#7
+	TBBoard_Hardware	9#8
+	RSPBoard_Hardware	9#9
+	RCU_Hardware	9#10
+	Ring_Hardware	9#11
+	StnLOFAR_Processes	9#12
+	CTStartDaemon_Processes	9#13
+	KVLogger_Processes	9#14
+	LogProcessor_Processes	9#15
+	ServiceBroker_Processes	9#16
+	MACScheduler_Processes	9#17
+	SoftwareMonitor_Processes	9#18
+	HardwareMonitor_Processes	9#19
+	DigBoardCtrl_Processes	9#20
+	StationCtrl_Processes	9#21
+	TemperatureMonitor_Processes	9#22
+	BeamCtrl_Processes	9#23
+	CalCtrl_Processes	9#24
+	TBBCtrl_Processes	9#25
+	AMCServer_Processes	9#26
+	ObsCtrl_Processes	9#27
+	SASGateway_Processes	9#28
+	Correlator_Processes	9#29
+	StorageAppl_Processes	9#30
+	RSPDriver_Processes	9#31
+	TBBDriver_Processes	9#32
+	CalServer_Processes	9#33
+	BeamServer_Processes	9#34
+	MACInfoServer_Processes	9#35
+	Observation_Observations	9#36
 
 TypeName
 GCFWatchDog.GCFWatchDog	1#1
@@ -143,7 +142,6 @@ root	NavPanelConfig	0
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status
 __navigator.TabViews	Navigator	"Hardware","Observations","Processes","Reports","Alerts"	0x101
-root.LOFAR_Hardware	NavPanelConfig	"Hardware/LOFAR_Remote.pnl"	0x101
 root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"	0x101
 root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"	0x101
 root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"	0x101
@@ -153,7 +151,7 @@ root.SubRack_Hardware	NavPanelConfig	"Hardware/Station_Subrack.pnl"	0x101
 root.TBBoard_Hardware	NavPanelConfig	"Hardware/Station_TBBoard.pnl"	0x101
 root.RSPBoard_Hardware	NavPanelConfig	"Hardware/Station_RSPBoard.pnl"	0x101
 root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101
-root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Core.pnl"	0x101
+root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe","Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote","Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101
 root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101
 root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101
 root.KVLogger_Processes	NavPanelConfig	"Processes/KVLogger.pnl"	0x101
