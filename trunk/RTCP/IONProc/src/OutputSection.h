@@ -57,7 +57,6 @@ class OutputSection
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
     unsigned			itsSequenceNumber;
     const Parset                *itsParset;
-    CN_Mode                     itsMode;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
     std::vector<Stream *>	itsStreamsToStorage;

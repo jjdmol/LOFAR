@@ -106,16 +106,15 @@ void OutputSection::preprocess(const Parset *ps)
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber	    = 0;
-  itsMode                   = ps->mode();
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
   connectToStorage();
 
-  itsTmpSum = newDataHolder( itsMode, *ps, hugeMemoryAllocator );
+  itsTmpSum = newDataHolder( *ps, hugeMemoryAllocator );
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsSums.push_back(newDataHolder( itsMode, *ps, hugeMemoryAllocator ));
+    itsSums.push_back(newDataHolder( *ps, hugeMemoryAllocator ));
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
@@ -146,11 +145,11 @@ void OutputSection::process()
   bool firstTime = itsCurrentIntegrationStep == 0;
   bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-  if( firstTime != lastTime && !itsTmpSum->isIntegratable() )
+  if( itsNrIntegrationSteps > 1 && !itsTmpSum->isIntegratable() )
   {
     // not integratable, so don't try
     std::clog << "Warning: not integrating received data because data type is not integratable" << std::endl;
-    lastTime = firstTime;
+    lastTime = firstTime = true;
   }
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {

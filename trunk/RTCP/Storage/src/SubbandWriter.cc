@@ -33,6 +33,7 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
+#include <Interface/CN_Mode.h>
 
 #ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
@@ -207,7 +208,7 @@ void SubbandWriter::preprocess()
   createInputStreams();
   
   for (unsigned sb = 0; sb < itsNrSubbandsPerStorage; sb ++)
-    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsNBaselines, itsNChannels));
+    itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS));
 }
 
 
@@ -228,7 +229,7 @@ void SubbandWriter::writeLogMessage()
 }
 
 
-void SubbandWriter::checkForDroppedData(CorrelatedData *data, unsigned sb)
+void SubbandWriter::checkForDroppedData(StreamableData *data, unsigned sb)
 {
   unsigned expectedSequenceNumber = itsPreviousSequenceNumbers[sb] + 1;
 
@@ -250,7 +251,7 @@ void SubbandWriter::checkForDroppedData(CorrelatedData *data, unsigned sb)
 
 bool SubbandWriter::processSubband(unsigned sb)
 {
-  CorrelatedData *data = itsInputThreads[sb]->itsReceiveQueue.remove();
+  StreamableData *data = itsInputThreads[sb]->itsReceiveQueue.remove();
 
   if (data == 0)
     return false;
@@ -258,9 +259,13 @@ bool SubbandWriter::processSubband(unsigned sb)
   checkForDroppedData(data, sb);
 
 #if defined HAVE_AIPSPP
-  itsWriteTimer.start();
-  itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data);
-  itsWriteTimer.stop();
+  if( itsPS->mode().outputDataType() == CN_Mode::CORRELATEDDATA ) {
+    itsWriteTimer.start();
+    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, static_cast<CorrelatedData*>(data));
+    itsWriteTimer.stop();
+  } else {
+    std::clog << "Warning: no support for writing non-CorrelatedData. dropping." << std::endl;
+  }
 #endif
 
   itsInputThreads[sb]->itsFreeQueue.append(data);
