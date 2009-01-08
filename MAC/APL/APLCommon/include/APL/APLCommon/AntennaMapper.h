@@ -56,11 +56,11 @@ public:
 	~AntennaMapper() {}
 
 	// Convert an antennanumber to the RCU the X-pole or Y-pole is connected
-	int	XRCU(int	antNr);
-	int	YRCU(int	antNr);
+	int	XRCU(int	antNr) const;
+	int	YRCU(int	antNr) const;
 
 	// Convert an antennanumber to the RCUinputType the antenna is connected.
-	int	RCUinput(int	antNr, int antennaType);
+	int	RCUinput(int	antNr, int antennaType) const;
 
 private:
 	// Default constructor.
@@ -77,19 +77,26 @@ private:
 
 // ----- inline functions -----
 
-inline int	AntennaMapper::XRCU(int	antNr)
+inline int	AntennaMapper::XRCU(int	antNr) const
 {
 	return ((antNr <= itsRCUs/2) ? 2*antNr : 2*antNr+1 - itsRCUs);
 }
 
-inline int AntennaMapper::YRCU(int	antNr)
+inline int AntennaMapper::YRCU(int	antNr) const
 {
 	return ((antNr <= itsRCUs/2) ? 2*antNr+1 : 2*antNr - itsRCUs);
 }
 
-inline int AntennaMapper::RCUinput(int	antNr, int antType)
+inline int AntennaMapper::RCUinput(int	antNr, int antType) const
 {
-	return ((antType == AT_HBA) ? RI_HBA : (antNr < itsRCUs/2) ? RI_LBL : RI_LBH);
+	if (antType == AT_HBA)
+		return (RI_HBA);
+	if (antNr < itsRCUs/2) 
+		return (RI_LBL);
+	return (RI_LBH);
+
+	// Using this oneliner gives unresolved references to the RI_xxx values!!!
+//	return ((antType == AT_HBA) ? RI_HBA : (antNr < itsRCUs/2) ? RI_LBL : RI_LBH);
 }
 
 // @}
