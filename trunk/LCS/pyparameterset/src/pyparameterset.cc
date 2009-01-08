@@ -240,7 +240,7 @@ BOOST_PYTHON_MODULE(_pyparameterset)
 {
   casa::pyrap::register_convert_excp();
   casa::pyrap::register_convert_basicdata();
-  casa::pyrap::register_convert_std_vector<ParameterValue>();
+  casa::pyrap::register_convert_std_vector<LOFAR::ParameterValue>();
   casa::pyrap::register_convert_std_vector<bool>();
   casa::pyrap::register_convert_std_vector<int>();
   casa::pyrap::register_convert_std_vector<float>();
@@ -248,6 +248,6 @@ BOOST_PYTHON_MODULE(_pyparameterset)
   casa::pyrap::register_convert_std_vector<std::string>();
   //  casa::pyrap::register_convert_casa_record();
 
-  pyparametervalue();
-  pyparameterset();
+  LOFAR::pyparametervalue();
+  LOFAR::pyparameterset();
 }
