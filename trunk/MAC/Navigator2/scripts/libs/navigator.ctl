@@ -43,7 +43,7 @@
 #uses "navTabCtrl.ctl"
 
 global bool       g_initializing         = true;
-global string     g_currentDatapoint     = MainDBName+"LOFAR";
+global string     g_currentDatapoint     = MainDBName+"LOFAR_PIC_Europe";
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      // 
@@ -56,6 +56,7 @@ global dyn_int    g_RCUList;           // holds valid RCU's for choices in the v
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
 global dyn_string highlight;           // contains highlight info for objects
+global string     panelSelection       = ""; // holds selected panel
 
 global dyn_string coreStations;
 global dyn_string remoteStations;

@@ -5,8 +5,8 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
 "main()
 {
   
-  baseDP       = MainDBName+\"LOFAR_PIC\";
-  RemoteDP        = baseDP+\"_Remote\";
+  baseDP       = MainDBName+\"LOFAR_PIC_Remote\";
+  RemoteDP        = baseDP;
   
 
   setValue(\"\",\"toolTipText\",\"Remote\");
@@ -72,6 +72,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"Remote_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
+    panelSelection=\"LOFAR_Remote.pnl\";
     navPanel_setEvent(\"Remote\",\"ChangePanel\");
   }
   

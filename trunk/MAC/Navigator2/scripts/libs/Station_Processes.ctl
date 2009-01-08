@@ -50,11 +50,10 @@ global string station_obsBaseDP              = "";
 // ***************************************
 bool Station_Processes_initList() {
   station_selectedObservation=selectedObservation;
-  station_selectedStation=dpSubStr(g_currentDatapoint,DPSUB_SYS);
-  station_selectedStation=selectedStation;
+  station_selectedStation=syst;
   station_obsBaseDP="";
   
- 
+  
   dynClear(station_result);
   dynClear(station_procList);
   
@@ -96,6 +95,7 @@ bool Station_Processes_initList() {
       }
     }
   }
+  LOG_TRACE("Station_Processes.ctl:initList|station_result composed: "+ station_result);
   
   if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
     setValue("activeStationObs","backCol","_dpdoesnotexist");

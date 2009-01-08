@@ -16,9 +16,9 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
   setValue(\"selfState.light\",\"foreCol\",\"_Transparent\");
   
 
-  // check if any remotestation exist allready
+  // check if any corestation exist allready
   bool coreExist=false;
-  for (int i = 1; i<= dynlen(remoteStations);i++) {
+  for (int i = 1; i<= dynlen(coreStations);i++) {
     if (dpExists(coreStations[i]+\":LOFAR\")) {
       coreExist=true;
     }
@@ -72,6 +72,7 @@ void dblClick() {
 
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"Core_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    panelSelection=\"LOFAR_Core.pnl\";
     g_currentDatapoint=baseDP;
     navPanel_setEvent(\"Core\",\"ChangePanel\");
   }

@@ -310,7 +310,20 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
     return;
   }
   
-  // TabChanged: The Tab has changed, so a new panle needs to be initialized and put in place
+  //ChangePanel
+  if (anEvent == "ChangePanel") {
+   
+    if (navTabCtrl_showView()) {
+        
+      // change locator
+      dpSet(LOCATORACTIONDP,"ChangeSelection|"+g_currentDatapoint);
+
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+g_currentDatapoint);
+    }
+  }  
+  
+  // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
   if (anEvent == "TabChanged") {
     if (aSelection != ACTIVE_TAB) {
       navTabCtrl_removeView();

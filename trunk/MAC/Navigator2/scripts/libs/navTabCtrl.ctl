@@ -166,7 +166,13 @@ dyn_string navTabCtrl_getViewPanels()
     g_currentDatapoint = navFunct_dpStripLastElement(g_currentDatapoint);
     string dp = dpSubStr(g_currentDatapoint,DPSUB_SYS);
     if (dp == "") {
-      g_currentDatapoint=MainDBName+"LOFAR";
+      if (ACTIVE_TAB == "Hardware") {
+        g_currentDatapoint=MainDBName+"LOFAR_PIC_Europe";
+      } else if (ACTIVE_TAB == "Observations") {
+        g_currentDatapoint=MainDBName+"LOFAR_ObsSW";
+      } else if (ACTIVE_TAB == "Processes") {
+        g_currentDatapoint=MainDBName+"LOFAR_PermSW";
+      }        
       if (lowestLevel) {
         return dpViews;
       } else {
@@ -234,12 +240,34 @@ bool navTabCtrl_showView(int panelNr=1)
       panelNr=1;
     }
     
-    LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+viewPanels[panelNr]);
-    setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, viewPanels[panelNr], makeDynString(""));
+    // check if chosen panel exists in the list
+    int nr=0;
+    for (int i=1;i<=dynlen(viewPanels);i++) {
+      if (strpos(viewPanels[i],panelSelection)>-1) {
+        nr=i;
+        break;
+      }
+    }
+    
+    if (nr > 0){
+      panelNr=nr;
+    } else {
+      panelSelection = "";
+    }   
+    
+    // check if the panel also has a DPName if available set g_currentDatapoint to that dpName
+    dyn_string splitName = strsplit(viewPanels[panelNr],":");
+    if (dynlen(splitName) > 1) {
+      string syst=dpSubStr(g_currentDatapoint,DPSUB_SYS);
+      LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|found new datapoint: "+splitName[2]+" for sys:" + syst);      
+      g_currentDatapoint=syst+splitName[2];
+    }
+    LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+splitName[1]);
+    setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, splitName[1], makeDynString(""));
     tabCtrlHasPanel=true;
     
     // fill and disable/enable the panelChoice combobox
-    navTabCtrl_fillPanelChoice(viewPanels);
+    navTabCtrl_fillPanelChoice(viewPanels,panelNr);
     
     return true;
   }
@@ -273,7 +301,7 @@ void navTabCtrl_removeView()
 // disables the choice
 //
 ///////////////////////////////////////////////////////////////////////////
-void navTabCtrl_fillPanelChoice(dyn_string panels) {
+void navTabCtrl_fillPanelChoice(dyn_string panels,int panelNr) {
   shape cb=getShape("panelChoice");
 
   cb.deleteAllItems();
@@ -291,5 +319,7 @@ void navTabCtrl_fillPanelChoice(dyn_string panels) {
     cb.visible(true);
   } else {
     cb.visible(false);
-  }        
+  }
+  cb.selectedPos(panelNr);
+        
 }
