@@ -56,7 +56,7 @@ inline void StokesData::checkEndianness()
 
 inline void StokesData::readData(Stream *str)
 {
-  str->read(samples.origin(), samples.num_elements() * sizeof(fcomplex));
+  str->read(samples.origin(), samples.num_elements() * sizeof(float));
 
   checkEndianness();
 }
@@ -68,7 +68,7 @@ inline void StokesData::writeData(Stream *str) const
   THROW(AssertError, "not implemented: think about endianness");
 #endif
 
-  str->write(samples.origin(), samples.num_elements() * sizeof(fcomplex));
+  str->write(samples.origin(), samples.num_elements() * sizeof(float));
 }
 
 
