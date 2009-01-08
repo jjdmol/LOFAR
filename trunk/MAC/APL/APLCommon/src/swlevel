@@ -247,27 +247,28 @@ if [ -f ${BINDIR}/PVSS00pmon ]; then
 	logProgToSkip=LoggingClient
 fi
 
-# when no argument is given show current level
-if [ -z "$1" ]; then
-	level=`cat /tmp/level.admin`
-	echo "Current level is $level"
-	status_prog
-	exit
-fi
-
-# argument s or -s only returns level, no list
-
-if [ "$1" = "s" -o "$1" = "-s" ]; then
-        let level=`cat /tmp/level.admin`
-        echo $level
+# when no argument, or (-)s is given show current level and exit with
+# level as exit state. Exit state is 255 is level is unknown.
+if [ -z "$1" -o "$1" = "s" -o "$1" = "-s" ]; then
+        if [ -e /tmp/level.admin ]; then
+          level=`cat /tmp/level.admin`
+          echo "Currently set level is $level"
+        else
+          level=-1
+          echo "Currently set level unknown"
+        fi
+        # argument s or -s only returns level, no list
+        if [ -z "$1" ]; then
+            status_prog
+        fi
         exit $level
 fi
 
 # don't allow root to run swlevel because all logfile get root access.
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
-echo $user
+#echo $user
 if [ $user != "lofartest" -a $user != "lofarsys" ]; then
-	echo "swlevel must be run as user lofartest or lofarsys!"
+	echo "you are ${user}. swlevel must be run as user lofartest or lofarsys!"
 	exit
 fi
 
