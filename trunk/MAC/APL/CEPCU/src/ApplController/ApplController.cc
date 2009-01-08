@@ -374,11 +374,7 @@ void ApplController::createParSubsets()
 			// This processSet is an MPI program
 			LOG_TRACE_COND_STR("mpi process " << procName);
 			// fill 'nodes' with all nodenames of variable _nodes.
-			string	nodeList("x=" + 
-					expandedArrayString(basePS.getString(procPrefix+"._nodes")));
-			ParameterSet	nlPS;
-			nlPS.adoptBuffer(nodeList);
-			nodes = nlPS.getStringVector("x");
+			nodes = basePS.getStringVector(procPrefix+"._nodes", true);// true:expand
 
 			itsProcRuler.add(PR_MPI(basePS.getString(procPrefix + "._hostname"),
 									procName,

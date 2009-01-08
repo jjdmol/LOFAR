@@ -25,7 +25,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
-#include <APS/ParameterSet.h>
+#include <Common/ParameterSet.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
@@ -57,7 +57,6 @@ namespace LOFAR {
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
-	using namespace ACC::APS;
 	namespace RTDBDaemons {
 	
 //
