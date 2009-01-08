@@ -22,7 +22,7 @@
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
 #include <Interface/Parset.h>
-#include <Interface/StreamableData.h>
+#include <Interface/CN_Mode.h>
 #include <Stream/Stream.h>
 #include <IONProc/OutputThread.h>
 
@@ -57,7 +57,7 @@ class OutputSection
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
     unsigned			itsSequenceNumber;
     const Parset                *itsParset;
-    string                      itsOutputDataType;
+    CN_Mode                     itsMode;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
     std::vector<Stream *>	itsStreamsToStorage;

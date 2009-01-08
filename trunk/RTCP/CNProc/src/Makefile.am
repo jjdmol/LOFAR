@@ -16,7 +16,8 @@ Correlator.h		\
 CN_Processing.h	        \
 FCNP_ClientStream.h     \
 AsyncCommunication.h    \
-PencilBeams.h
+PencilBeams.h           \
+Stokes.h
 
 NOINSTHDRS 		=
 
@@ -51,7 +52,8 @@ CN_Processing_main.cc    	\
 CN_Processing.cc		\
 FCNP_ClientStream.cc            \
 AsyncCommunication.cc           \
-PencilBeams.cc
+PencilBeams.cc                  \
+Stokes.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\

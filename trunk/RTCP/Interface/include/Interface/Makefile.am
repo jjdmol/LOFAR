@@ -5,6 +5,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     CN_Command.h \
 		     CN_Configuration.h \
 		     CN_Mapping.h \
+		     CN_Mode.h \
 		     CorrelatedData.h \
 		     Config.h \
 		     DataHolder.h \
@@ -17,6 +18,8 @@ pkginclude_HEADERS = Package__Version.h \
 		     RSPTimeStamp.h \
 		     SparseSet.h \
 		     Exceptions.h \
-		     StreamableData.h
+		     StreamableData.h \
+		     PencilBeamData.h \
+                     StokesData.h
 
 include $(top_srcdir)/Makefile.common

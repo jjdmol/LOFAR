@@ -25,6 +25,7 @@
 
 #include <Stream/Stream.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/CN_Mode.h>
 
 #include <vector>
 #include <string>
@@ -39,6 +40,7 @@ class CN_Configuration
     unsigned		  &nrBitsPerSample();
     unsigned		  &nrChannelsPerSubband();
     unsigned		  &nrSamplesPerIntegration();
+    unsigned		  &nrSamplesPerStokesIntegration();
     unsigned		  &nrSamplesToCNProc();
     unsigned		  &nrUsedCoresPerPset();
     unsigned		  &nrSubbandsPerPset();
@@ -51,7 +53,7 @@ class CN_Configuration
     double                &pencilRingSize();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
-    std::string           &outputDataType();
+    CN_Mode               &mode();
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -59,14 +61,13 @@ class CN_Configuration
     static const unsigned MAX_PSETS    = 64;
     static const unsigned MAX_SUBBANDS = 248;
     static const unsigned MAX_STATIONS = 100;
-    static const unsigned MAX_OUTPUTDATATYPE_LENGTH = 128;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
     Matrix<double>        itsPhaseCentres;
-    std::string           itsOutputDataType;
+    CN_Mode               itsMode;
 
     struct MarshalledData
     {
@@ -74,6 +75,7 @@ class CN_Configuration
       unsigned		  itsNrBitsPerSample;
       unsigned		  itsNrChannelsPerSubband;
       unsigned		  itsNrSamplesPerIntegration;
+      unsigned		  itsNrSamplesPerStokesIntegration;
       unsigned		  itsNrSamplesToCNProc;
       unsigned		  itsNrUsedCoresPerPset;
       unsigned		  itsNrSubbandsPerPset;
@@ -88,7 +90,6 @@ class CN_Configuration
       double              itsPencilRingSize;
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
-      char                itsOutputDataType[MAX_OUTPUTDATATYPE_LENGTH];
     } itsMarshalledData;
 };
 
@@ -111,6 +112,11 @@ inline unsigned &CN_Configuration::nrChannelsPerSubband()
 inline unsigned &CN_Configuration::nrSamplesPerIntegration()
 {
   return itsMarshalledData.itsNrSamplesPerIntegration;
+}
+
+inline unsigned &CN_Configuration::nrSamplesPerStokesIntegration()
+{
+  return itsMarshalledData.itsNrSamplesPerStokesIntegration;
 }
 
 inline unsigned &CN_Configuration::nrSamplesToCNProc()
@@ -183,9 +189,9 @@ inline Matrix<double> &CN_Configuration::phaseCentres()
   return itsPhaseCentres;
 }
 
-inline std::string &CN_Configuration::outputDataType()
+inline CN_Mode &CN_Configuration::mode()
 {
-  return itsOutputDataType;
+  return itsMode;
 }
 
 } // namespace RTCP

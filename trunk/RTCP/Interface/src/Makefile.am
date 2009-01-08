@@ -6,7 +6,8 @@ libinterface_la_SOURCES	        = Package__Version.cc \
 				  CN_Mapping.cc \
 				  Parset.cc \
 				  RSPTimeStamp.cc \
-				  DataHolder.cc
+				  DataHolder.cc \
+				  CN_Mode.cc 
 
 configfilesdir			= $(bindir)
 

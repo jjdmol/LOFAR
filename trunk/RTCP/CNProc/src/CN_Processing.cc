@@ -85,13 +85,13 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsStream(str),
   itsLocationInfo(locationInfo),
   itsArenas(3),
-  itsAllocators(4),
+  itsAllocators(6),
   itsInputData(0),
   itsTransposedData(0),
   itsFilteredData(0),
   itsCorrelatedData(0),
-  itsOutputData(0),
-  itsOutputDataType(""),
+  itsPencilBeamData(0),
+  itsMode(),
 #if defined HAVE_BGL || defined HAVE_BGP
   itsDoAsyncCommunication(false),
   itsTranspose(0),
@@ -269,10 +269,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
   itsNrStations	                   = configuration.nrStations();
-  itsOutputDataType                = configuration.outputDataType();
+  itsMode                          = configuration.mode();
   itsOutputPsetSize                = outputPsets.size();
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
+  unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
   unsigned nrSamplesToCNProc	   = configuration.nrSamplesToCNProc();
   std::vector<unsigned> station2BeamFormedStation = configuration.tabList();
   
@@ -282,6 +283,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsBeamFormer = new BeamFormer(itsNrStations, nrSamplesPerIntegration, station2BeamFormedStation, nrChannels);
   unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
   unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
+  PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers
@@ -294,15 +296,49 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToCNProc) : 0;
   size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
   size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
+  size_t pencilBeamDataSize = itsIsTransposeOutput ? PencilBeamData::requiredSize(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration) : 0;
+  size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
 
-  itsArenas[0] = new MallocedArena(inputDataSize, 32);
-  itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
-  itsArenas[2] = new MallocedArena(filteredDataSize, 32);
+  // define the mapping between arenas and datasets
+  const unsigned nrArenas = 3;
+  const unsigned nrDatasets = 6;
 
-  itsAllocators[0] = new SparseSetAllocator(*itsArenas[0]);
-  itsAllocators[1] = new SparseSetAllocator(*itsArenas[1]);
-  itsAllocators[2] = new SparseSetAllocator(*itsArenas[2]);
-  itsAllocators[3] = new SparseSetAllocator(*itsArenas[1]);
+  struct {
+    size_t size;
+    unsigned arena;
+  } mapping[nrDatasets] = {
+    { inputDataSize,      0 },
+    { transposedDataSize, 1 },
+    { filteredDataSize,   2 },
+    { correlatedDataSize, 1 },
+    { pencilBeamDataSize, 1 },
+    { stokesDataSize,     2 }
+  };
+
+  if( !itsMode.isCoherent() ) {
+    // for incoherent modes, the filtered data is used for stokes, so they cannot overlap.
+    mapping[5].arena = 1; // stokesData
+  }
+
+  // create the arenas
+  for( unsigned arena = 0; arena < nrArenas; arena++ ) {
+    // compute the size of the largest dataset for this arena
+    unsigned size = 0;
+
+    for( unsigned dataset = 0; dataset < nrDatasets; dataset++ ) {
+      if( mapping[dataset].arena == arena ) {
+        size = std::max( size, mapping[dataset].size );
+      }
+    }
+
+    // create the actual arena
+    itsArenas[arena] = new MallocedArena( size, 32 );
+  }
+
+  // create the allocators
+  for( unsigned dataset = 0; dataset < nrDatasets; dataset++ ) {
+    itsAllocators[dataset] = new SparseSetAllocator(*itsArenas[mapping[dataset].arena]);
+  }
 
   if (itsIsTransposeInput) {
     itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc, *itsAllocators[0]);
@@ -311,7 +347,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   if (itsIsTransposeOutput) {
     unsigned nrSubbandsPerPset	= configuration.nrSubbandsPerPset();
     unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
-    PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
     // TODO: logicalNode assumes output psets are consecutively numbered
 
     itsCenterFrequencies = configuration.refFreqs();
@@ -327,14 +362,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, *itsAllocators[1]);
     itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, *itsAllocators[2]);
     itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels, *itsAllocators[3]);
-
-    if( itsOutputDataType == "CorrelatedData" ) {
-      itsOutputData = itsCorrelatedData;
-    } else if( itsOutputDataType == "FilteredData" ) {
-      itsOutputData = itsFilteredData;
-    } else {
-      std::clog << "Invalid outputDataType: " << itsOutputDataType << std::endl;
-    }
+    itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, *itsAllocators[4]);
+    itsStokesData     = new StokesData(itsMode, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *itsAllocators[5]);
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
@@ -357,13 +386,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #endif // HAVE_MPI
 }
 
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
-  totalProcessingTimer.start();
-  NSTimer totalTimer("total processing", LOG_CONDITION);
-  totalTimer.start();
-
 #if defined HAVE_MPI
   if(itsDoAsyncCommunication) {
     if (itsIsTransposeInput) {
@@ -430,69 +454,142 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     }
   }
 #endif // HAVE_MPI
+}
 
-  if (itsIsTransposeOutput) {
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
+{
 #if defined HAVE_MPI
-    if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
+  if (LOG_CONDITION)
+    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
 
-    if(itsDoAsyncCommunication) {
-      NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
+  if(itsDoAsyncCommunication) {
+    NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
 
-      for (unsigned i = 0; i < itsNrStations; i ++) {
-	asyncReceiveTimer.start();
-	unsigned stat = itsAsyncTranspose->waitForAnyReceive();
-	asyncReceiveTimer.stop();
+    for (unsigned i = 0; i < itsNrStations; i ++) {
+      asyncReceiveTimer.start();
+      unsigned stat = itsAsyncTranspose->waitForAnyReceive();
+      asyncReceiveTimer.stop();
 
-	computeTimer.start();
-	itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-	itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
-	computeTimer.stop();
-      }
-    } else {
-      for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-	computeTimer.start();
-	itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-	itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
-	computeTimer.stop();
-      }
+      computeTimer.start();
+      itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+      itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+      computeTimer.stop();
     }
-#else // NO MPI
+  } else {
     for (unsigned stat = 0; stat < itsNrStations; stat ++) {
       computeTimer.start();
       itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
       itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
       computeTimer.stop();
     }
-#endif // HAVE_MPI
-
+  }
+#else // NO MPI
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
-    itsBeamFormer->formBeams(itsFilteredData);
-#if 0
-    itsPencilBeamFormer->formPencilBeams(itsFilteredData);
-#endif
-    itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
-    itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
+    itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
     computeTimer.stop();
+  }
+#endif // HAVE_MPI
+}
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
+{
+  computeTimer.start();
+  itsBeamFormer->formBeams(itsFilteredData);
+  computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams()
+{
+  computeTimer.start();
+  itsPencilBeamFormer->formPencilBeams(itsFilteredData,itsPencilBeamData);
+  computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateStokes()
+{
+  computeTimer.start();
+  if( itsMode.isCoherent() ) {
+    itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
+  } else {
+    itsStokes->calculateIncoherent(itsFilteredData,itsStokesData,itsNrStations);
+  }
+  computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
+{
+  computeTimer.start();
+  itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
+  itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
+  computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( StreamableData *outputData )
+{
 #if defined HAVE_MPI
-    if (LOG_CONDITION)
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime() << '\n';
+  if (LOG_CONDITION)
+    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime() << '\n';
 #endif // HAVE_MPI
 
-    static NSTimer writeTimer("send timer", true);
-    writeTimer.start();
-    itsOutputData->write(itsStream, false);
-    writeTimer.stop();
+  static NSTimer writeTimer("send timer", true);
+  writeTimer.start();
+  outputData->write(itsStream, false);
+  writeTimer.stop();
 
 #if defined HAVE_MPI
-    if(itsDoAsyncCommunication && itsIsTransposeInput) {
-      NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
-      waitAsyncSendTimer.start();
-      itsAsyncTranspose->waitForAllSends();
-      waitAsyncSendTimer.stop();
-    }
+  if(itsDoAsyncCommunication && itsIsTransposeInput) {
+    NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
+    waitAsyncSendTimer.start();
+    itsAsyncTranspose->waitForAllSends();
+    waitAsyncSendTimer.stop();
+  }
 #endif
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
+{
+  totalProcessingTimer.start();
+  NSTimer totalTimer("total processing", LOG_CONDITION);
+  totalTimer.start();
+
+  // transpose/obtain input data
+  transpose();
+
+  if (itsIsTransposeOutput) {
+    filter();
+
+    switch( itsMode.mode() ) {
+      case CN_Mode::FILTER:
+        sendOutput( itsFilteredData );
+        break;
+
+      case CN_Mode::CORRELATE:
+        formBeams();
+        sendOutput( itsCorrelatedData );
+        break;
+
+      case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
+        formPencilBeams();
+        sendOutput( itsPencilBeamData );
+        break;
+
+      case CN_Mode::COHERENT_STOKES_I:
+      case CN_Mode::COHERENT_ALLSTOKES:
+        formPencilBeams();
+        // fallthrough to incoherent modes
+
+      case CN_Mode::INCOHERENT_STOKES_I:
+      case CN_Mode::INCOHERENT_ALLSTOKES:
+        calculateStokes();
+        sendOutput( itsStokesData );
+        break;
+
+      default:
+        std::clog << "Invalid mode: " << itsMode << endl;
+        break;
+    }
   } // itsIsTransposeOutput
 
 #if defined HAVE_MPI

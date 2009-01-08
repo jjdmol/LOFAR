@@ -31,9 +31,10 @@ OLAP.nrSecondsOfBuffer = 4
 OLAP.maxNetworkDelay = 0.5
 OLAP.delayCompensation = T
 OLAP.correctBandPass = T
-OLAP.outputDataType = CorrelatedData
 
+Observation.mode = Correlate
 Observation.nrSlotsInFrame = 36
+Observation.stokesIntegrationSteps = 16
 
 #Observation.bandFilter = LBL_10_80
 #Observation.bandFilter = LBL_30_80

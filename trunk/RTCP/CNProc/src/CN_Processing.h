@@ -33,12 +33,16 @@
 #include <Interface/CN_Configuration.h>
 #endif
 
+#include <Interface/CN_Mode.h>
+
 #include <Interface/Allocator.h>
 
 #include <InputData.h>
 #include <Interface/FilteredData.h>
 #include <TransposedData.h>
 #include <Interface/CorrelatedData.h>
+#include <Interface/PencilBeamData.h>
+#include <Interface/StokesData.h>
 #include <Interface/StreamableData.h>
 
 #include <Transpose.h>
@@ -47,6 +51,7 @@
 #include <Correlator.h>
 #include <BeamFormer.h>
 #include <PencilBeams.h>
+#include <Stokes.h>
 
 #include <LocationInfo.h>
 
@@ -83,6 +88,15 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     virtual void	postprocess();
 
   private:
+    void                transpose();
+    void                filter();
+    void                formBeams();
+    void                formPencilBeams();
+    void                calculateStokes();
+    void                correlate();
+
+    void                sendOutput( StreamableData *outputData );
+
 #if 0
     void		checkConsistency(Parset *) const;
 #endif
@@ -114,8 +128,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
     FilteredData		*itsFilteredData;
     CorrelatedData		*itsCorrelatedData;
-    StreamableData		*itsOutputData;
-    std::string                 itsOutputDataType;
+    PencilBeamData              *itsPencilBeamData;
+    StokesData                  *itsStokesData;
+    CN_Mode                     itsMode;
 
 #if defined HAVE_MPI
     bool                itsDoAsyncCommunication;
@@ -125,6 +140,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     PPF<SAMPLE_TYPE>	*itsPPF;
     BeamFormer          *itsBeamFormer;
     PencilBeams         *itsPencilBeamFormer;
+    Stokes              *itsStokes;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

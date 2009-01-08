@@ -106,16 +106,16 @@ void OutputSection::preprocess(const Parset *ps)
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber	    = 0;
-  itsOutputDataType         = ps->outputDataType();
+  itsMode                   = ps->mode();
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
   connectToStorage();
 
-  itsTmpSum = newDataHolder( itsOutputDataType, *ps, hugeMemoryAllocator );
+  itsTmpSum = newDataHolder( itsMode, *ps, hugeMemoryAllocator );
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsSums.push_back(newDataHolder( itsOutputDataType, *ps, hugeMemoryAllocator ));
+    itsSums.push_back(newDataHolder( itsMode, *ps, hugeMemoryAllocator ));
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
