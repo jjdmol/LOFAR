@@ -31,6 +31,7 @@ namespace RTCP {
 void CN_Configuration::read(Stream *str)
 {
   str->read(&itsMarshalledData, sizeof itsMarshalledData);
+  itsMode.read(str);
 
   itsInputPsets.resize(itsMarshalledData.itsInputPsetsSize);
   memcpy(&itsInputPsets[0], itsMarshalledData.itsInputPsets, itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
@@ -51,8 +52,6 @@ void CN_Configuration::read(Stream *str)
   for( unsigned stat = 0; stat < nrStations(); stat++ ) {
     memcpy(&itsPhaseCentres[stat][0], &itsMarshalledData.itsPhaseCentres[stat*3], 3 * sizeof(double));
   }
-
-  itsOutputDataType = itsMarshalledData.itsOutputDataType;
 }
 
 
@@ -79,13 +78,9 @@ void CN_Configuration::write(Stream *str)
     memcpy(&itsMarshalledData.itsPhaseCentres[stat*3], &itsPhaseCentres[stat][0], 3 * sizeof(double));
   }
 
-  strncpy( itsMarshalledData.itsOutputDataType, itsOutputDataType.c_str(), MAX_OUTPUTDATATYPE_LENGTH );
-  // make sure the string is 0-terminated
-  itsMarshalledData.itsOutputDataType[MAX_OUTPUTDATATYPE_LENGTH] = 0;
-
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
+  itsMode.write(str);
 }
-
 
 } // namespace RTCP
 } // namespace LOFAR

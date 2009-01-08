@@ -141,8 +141,6 @@ void PencilRings::computeBeamCoordinates()
 
 PencilBeams::PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres )
 :
-  itsPencilBeamData( boost::extents[1][1][1][1], 32 ),
-  //itsPencilBeamData( boost::extents[nrChannels][coordinates.getCoordinates().size()][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS], 32 )
   itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
   itsNrChannels(nrChannels),
@@ -204,51 +202,28 @@ fcomplex PencilBeams::phaseShift( double frequency, double delay )
   return makefcomplex( std::sin(phi), std::cos(phi) );
 }
 
-void PencilBeams::formPartialCenterBeam( MultiDimArray<fcomplex,4> &samples, std::vector<unsigned> stations, bool add, float factor )
+void PencilBeams::computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations )
 {
-  // the center beam has a delay of 0 for all stations, since we already
-  // corrected for it
+  float factor = 1.0 / stations.size();
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+    double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-        //fcomplex &dest  = itsPencilBeamData[ch][0][time][pol];
-        fcomplex &dest  = itsPencilBeamData[0][0][0][0];
-        fcomplex sample = makefcomplex( 0, 0 );
-
-        for( unsigned stat = 0; stat < stations.size(); stat++ ) {
-          sample += samples[ch][stations[stat]][time][pol];
-        }
-
-        dest = (add ? dest : 0) + sample * factor;
-      }
-    }
-  }
-}
-
-void PencilBeams::formPartialBeams( MultiDimArray<fcomplex,4> &samples, std::vector<unsigned> stations, std::vector<unsigned> beams, bool add, float factor )
-{
-  double frequency = itsBaseFrequency;
-
-  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-        for( unsigned beam = 0; beam < beams.size(); beam++ ) {
-          //fcomplex &dest  = itsPencilBeamData[ch][beams[beam]][time][pol];
-          fcomplex &dest  = itsPencilBeamData[0][0][0][0];
+        for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+          fcomplex &dest  = out[ch][beam][time][pol];
           fcomplex sample = makefcomplex( 0, 0 );
 
           for( unsigned stat = 0; stat < stations.size(); stat++ ) {
-            fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beams[beam]] );
-            sample += samples[ch][stations[stat]][time][pol] * shift;
+            // note: for beam #0 (central beam), the shift is 0
+            fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beam] );
+            sample += in[ch][stations[stat]][time][pol] * shift;
           }
 
-          dest = (add ? dest : 0) + sample * factor;
+          dest = sample * factor;
         }
       }
     }
-
-    frequency += itsChannelBandwidth;
   }
 }
 
@@ -262,13 +237,8 @@ std::ostream& operator<<(std::ostream &str, std::vector<unsigned> &v)
   return str;
 }
 
-void PencilBeams::formPencilBeams( FilteredData *filteredData )
+void PencilBeams::calculateAllDelays( FilteredData *filteredData )
 {
-  float factor = 1.0/itsNrStations;
-
-  // TODO: fetch a list of stations to beam form. for now, we assume
-  // we use all stations
-
   // calculate the delays for each station for this integration period
   for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
     // todo: interpolate per time step?
@@ -278,32 +248,25 @@ void PencilBeams::formPencilBeams( FilteredData *filteredData )
 
     calculateDelays( stat, beamDirAverage );
   }
+}
 
-  // combine 6 stations at a time
-  for( unsigned stat = 0; stat < itsNrStations; stat += 6 ) {
-      std::vector<unsigned> stations;
+void PencilBeams::formPencilBeams( FilteredData *filteredData, PencilBeamData *pencilBeamData )
+{
+  // TODO: fetch a list of stations to beam form. for now, we assume
+  // we use all stations
 
-      stations.reserve( 6 );
-      for( unsigned i = 0; i < 6 && stat+i < itsNrStations; i++ ) {
-        stations.push_back( stat+i );
-      }
+  calculateAllDelays( filteredData );
 
-      // form the central pencil beam (beam #0)
-      std::clog << "Forming central beam for stations " << stations << std::endl;
-      formPartialCenterBeam( filteredData->samples, stations, stat > 0, factor );
+  // select stations
+  std::vector<unsigned> stations;
 
-      // form the other beams, 6 at a time
-      for( unsigned beam = 1; beam < itsCoordinates.size(); beam += 6 ) {
-        std::vector<unsigned> beams;
-
-        for( unsigned i = 0; i < 6 && beam+i < itsCoordinates.size(); i++ ) {
-          beams.push_back( beam+i );
-        }
-
-        std::clog << "Forming partial beams " << beams << " for stations " << stations << std::endl;
-        formPartialBeams( filteredData->samples, stations, beams, stat > 0, factor );
-      }
+  for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
+    stations.push_back( stat );
   }
+
+  std::clog << "Forming beams for stations " << stations << std::endl;
+
+  computeComplexVoltages( filteredData->samples, pencilBeamData->samples, stations );
 }
 
 } // namespace RTCP

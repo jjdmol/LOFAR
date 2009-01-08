@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include <Interface/FilteredData.h>
+#include <Interface/PencilBeamData.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -86,6 +87,9 @@ class PencilCoordinates
     std::vector<PencilCoord3D>& getCoordinates()
     { return itsCoordinates; }
 
+    size_t size() const
+    { return itsCoordinates.size(); }
+
   private:
     std::vector<PencilCoord3D>  itsCoordinates;
 };
@@ -136,15 +140,18 @@ class PencilBeams
   public:
     PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres );
 
-    void formPencilBeams( FilteredData *filteredData );
+    void formPencilBeams( FilteredData *filteredData, PencilBeamData *pencilBeamData );
+
+    size_t nrCoordinates() const { return itsCoordinates.size(); }
 
   private:
     fcomplex phaseShift( double frequency, double delay );
-    void formPartialCenterBeam( MultiDimArray<fcomplex,4> &samples, std::vector<unsigned> stations, bool add, float factor );
-    void formPartialBeams( MultiDimArray<fcomplex,4> &samples, std::vector<unsigned> stations, std::vector<unsigned> beams, bool add, float factor );
+    void computeBeams( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations );
     void calculateDelays( unsigned stat, const PencilCoord3D &beamDir );
+    void calculateAllDelays( FilteredData *filteredData );
 
-    MultiDimArray<fcomplex,4>  itsPencilBeamData; // [nrChannels][itsCoordinates.size()][nrSamplesPerIntegration | 2][NR_POLARIZATIONS] // has a size of [1][1][1][1] for now, until a better storage method is devised
+    void computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations );
+
     std::vector<PencilCoord3D> itsCoordinates;
     unsigned                itsNrStations;
     unsigned                itsNrChannels;

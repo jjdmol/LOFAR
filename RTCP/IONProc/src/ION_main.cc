@@ -170,11 +170,11 @@ static void configureCNs(const Parset &parset)
   std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
   Matrix<double>    &phaseCentres = configuration.phaseCentres();
   
-
   configuration.nrStations()              = parset.nrStations();
   configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
   configuration.nrChannelsPerSubband()	  = parset.nrChannelsPerSubband();
   configuration.nrSamplesPerIntegration() = parset.CNintegrationSteps();
+  configuration.nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
   configuration.nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
   configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
@@ -185,10 +185,10 @@ static void configureCNs(const Parset &parset)
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
   configuration.tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
   configuration.refFreqs()                = parset.subbandToFrequencyMapping();
-  configuration.nrPencilRings()           = parset.getUint32("OLAP.DelayComp.nrPencilRings");
-  configuration.pencilRingSize()          = parset.getDouble("OLAP.DelayComp.pencilRingSize");
+  configuration.nrPencilRings()           = parset.nrPencilRings();
+  configuration.pencilRingSize()          = parset.pencilRingSize();
   configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
-  configuration.outputDataType()          = parset.outputDataType();
+  configuration.mode()                    = parset.mode();
 
   phaseCentres.resize( inputs.size(), 3 );
   for( unsigned stat = 0; stat < inputs.size(); stat++ ) {

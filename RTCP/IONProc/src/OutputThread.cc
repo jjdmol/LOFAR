@@ -27,6 +27,7 @@
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
 #include <Interface/DataHolder.h>
+#include <Interface/CN_Mode.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -36,8 +37,10 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
   itsStreamToStorage(streamToStorage)
 {
+  CN_Mode mode = ps.mode();
+
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(newDataHolder( ps.outputDataType(), ps, hugeMemoryAllocator ));
+    itsFreeQueue.append(newDataHolder( mode, ps, hugeMemoryAllocator ));
 
   pthread_attr_t attr;
 

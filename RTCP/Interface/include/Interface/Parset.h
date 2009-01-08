@@ -34,6 +34,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
+#include <Interface/CN_Mode.h>
 #include <ApplCommon/Observation.h>
 #include <Stream/Stream.h>
 
@@ -73,6 +74,7 @@ public:
 	vector<double> getPhaseCentresOf(const string& name) const;	
 	uint32	       CNintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
+	uint32	       stokesIntegrationSteps() const;
 	double         CNintegrationTime() const;
 	double         IONintegrationTime() const;
 	uint32         nrSubbandSamples() const;
@@ -100,7 +102,11 @@ public:
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
 	string         getTransportType(const string& prefix) const;
-	string         outputDataType() const;
+	CN_Mode        mode() const;
+
+	uint32	       nrPencilRings() const;
+	uint32	       nrPencilBeams() const;
+	double	       pencilRingSize() const;
 
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
@@ -221,6 +227,11 @@ inline uint32 Parset::CNintegrationSteps() const
 inline uint32 Parset::IONintegrationSteps() const
 {
   return getUint32("OLAP.IONProc.integrationSteps");
+}
+
+inline uint32 Parset::stokesIntegrationSteps() const
+{
+  return getUint32("Observation.stokesIntegrationSteps");
 }
 
 inline double Parset::CNintegrationTime() const
@@ -383,9 +394,24 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline string Parset::outputDataType() const
+inline CN_Mode Parset::mode() const
 {
-  return getString("OLAP.outputDataType");
+  return CN_Mode(getString("Observation.mode"));
+}
+
+inline uint32 Parset::nrPencilRings() const
+{
+  return getUint32("OLAP.DelayComp.nrPencilRings");
+}
+
+inline uint32 Parset::nrPencilBeams() const
+{
+  return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1;
+}
+
+inline double Parset::pencilRingSize() const
+{
+  return getDouble("OLAP.DelayComp.pencilRingSize");
 }
 
 

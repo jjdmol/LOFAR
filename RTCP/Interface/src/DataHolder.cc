@@ -4,22 +4,32 @@
 #include <Interface/DataHolder.h>
 #include <Interface/CorrelatedData.h>
 #include <Interface/FilteredData.h>
+#include <Interface/PencilBeamData.h>
+#include <Interface/StokesData.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-StreamableData *newDataHolder( const string name, const Parset &ps, Allocator &allocator )
+StreamableData *newDataHolder( CN_Mode &mode, const Parset &ps, Allocator &allocator )
 {
-  if( name == "CorrelatedData" ) {
-    return new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator );
-  } else if( name == "FilteredData" ) {
-    return new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
-  }
+  switch( mode.outputDataType() ) {
+    case CN_Mode::CORRELATEDDATA:
+      return new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator );
 
-  return 0;
+    case CN_Mode::FILTEREDDATA:
+      return new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+
+    case CN_Mode::PENCILBEAMDATA:
+      return new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+
+    case CN_Mode::STOKESDATA:
+      return new StokesData( mode, ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator );
+
+    default:
+      std::cerr << "newDataHolder: Cannot create data object for mode " << mode << std::endl;
+      return 0;
+  }
 }
 
 } // namespace RTCP
 } // namespace LOFAR
-
-
