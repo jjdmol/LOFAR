@@ -6,12 +6,15 @@
 #include <Interface/FilteredData.h>
 #include <Interface/PencilBeamData.h>
 #include <Interface/StokesData.h>
+#include <Interface/CN_Mode.h>
 
 namespace LOFAR {
 namespace RTCP {
 
-StreamableData *newDataHolder( CN_Mode &mode, const Parset &ps, Allocator &allocator )
+StreamableData *newDataHolder( const Parset &ps, Allocator &allocator )
 {
+  CN_Mode mode = ps.mode();
+
   switch( mode.outputDataType() ) {
     case CN_Mode::CORRELATEDDATA:
       return new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator );
