@@ -37,10 +37,8 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
   itsStreamToStorage(streamToStorage)
 {
-  CN_Mode mode = ps.mode();
-
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(newDataHolder( mode, ps, hugeMemoryAllocator ));
+    itsFreeQueue.append(newDataHolder( ps, hugeMemoryAllocator ));
 
   pthread_attr_t attr;
 

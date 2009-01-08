@@ -24,6 +24,8 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
+#include <Interface/DataHolder.h>
+#include <Interface/StreamableData.h>
 #include <Stream/NullStream.h>
 
 
@@ -31,12 +33,13 @@ namespace LOFAR {
 namespace RTCP {
 
 
-InputThread::InputThread(Stream *streamFromION, unsigned nrBaselines, unsigned nrChannels)
+InputThread::InputThread(Stream *streamFromION, const Parset *ps)
 :
-  itsStreamFromION(streamFromION)
+  itsStreamFromION(streamFromION),
+  itsPS(ps)
 {
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-    itsFreeQueue.append(new CorrelatedData(nrBaselines, nrChannels));
+    itsFreeQueue.append(newDataHolder(*itsPS));
 
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
     std::cerr << "could not create input thread" << std::endl;
@@ -62,7 +65,7 @@ void InputThread::mainLoop()
   // limit reads from NullStream to 10 blocks; otherwise unlimited
   bool		 nullInput = dynamic_cast<NullStream *>(itsStreamFromION) != 0;
   unsigned	 increment = nullInput ? 1 : 0;
-  CorrelatedData *data     = 0;
+  StreamableData *data     = 0;
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {

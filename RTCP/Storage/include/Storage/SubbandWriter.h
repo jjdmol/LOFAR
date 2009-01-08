@@ -35,7 +35,7 @@
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
-#include <Interface/CorrelatedData.h>
+#include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Storage/InputThread.h>
 #include <Stream/Stream.h>
@@ -60,7 +60,7 @@ class SubbandWriter
     void		    clearAllSums();
     void		    createInputStreams();
     void		    writeLogMessage();
-    void		    checkForDroppedData(CorrelatedData *, unsigned sb);
+    void		    checkForDroppedData(StreamableData *, unsigned sb);
     bool		    processSubband(unsigned sb);
 
     const Parset	    *itsPS;

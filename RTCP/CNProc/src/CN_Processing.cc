@@ -321,6 +321,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   // create the arenas
+  unsigned totalSize = 0;
   for( unsigned arena = 0; arena < nrArenas; arena++ ) {
     // compute the size of the largest dataset for this arena
     unsigned size = 0;
@@ -333,7 +334,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     // create the actual arena
     itsArenas[arena] = new MallocedArena( size, 32 );
+    totalSize += size;
   }
+
+  std::clog << "Allocated " << totalSize*1.0/1024/1024 << " MByte for the arenas." << std::endl;
+
 
   // create the allocators
   for( unsigned dataset = 0; dataset < nrDatasets; dataset++ ) {
@@ -368,6 +373,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
     itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres());
+    itsStokes           = new Stokes(itsMode, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
 
     itsCorrelator     = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(),
 				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());

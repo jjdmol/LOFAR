@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/CorrelatedData.h>
+#include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Stream/Stream.h>
 
@@ -37,16 +37,17 @@ namespace RTCP {
 class InputThread
 {
   public:
-			    InputThread(Stream *streamFromION, unsigned nrBaselines, unsigned nrChannels);
+			    InputThread(Stream *streamFromION, const Parset *ps);
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;
-    Queue<CorrelatedData *> itsFreeQueue, itsReceiveQueue;
+    Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
 
   private:
     static void		    *mainLoopStub(void *inputThread);
     void		    mainLoop();
 
+    const Parset            *itsPS;
     Stream		    *itsStreamFromION; 
     pthread_t		    thread;
 };
