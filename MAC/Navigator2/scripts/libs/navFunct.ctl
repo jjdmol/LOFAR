@@ -586,7 +586,7 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
 //    Returns Dpname 
 // ****************************************
 string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
-  
+  LOG_DEBUG("navFunct.ctl:navFunct_getDPFromTypePath|typeList: "+ typeList+" choice: "+choice); 
   if (dynlen(typeList) == "" || choice <=0) {
     return  g_currentDatapoint;
   }
@@ -622,13 +622,12 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
         newDatapoint +=splitted[i];
       }
     } else {   //   yes we will jump back to maincu level
-      newDatapoint=getSystemName()+"LOFAR";
-      for (int i=2; i <= dynlen(typeList)&& i <= choice; i++) {
-        if (strpos(typeList[i],"Ring") >= 0) {
-          newDatapoint += "_" + navFunct_getRingFromStation(systemName);
-        } else {
-          newDatapoint += "_"+typeList[i];
-        }
+      if (ACTIVE_TAB == "Hardware") {
+        newDatapoint=MainDBName+"LOFAR_PIC_Europe";
+      } else if (ACTIVE_TAB == "Observations") {
+        newDatapoint=MainDBName+"LOFAR_ObsSW";
+      } else if (ACTIVE_TAB == "Processes") {
+        newDatapoint=MainDBName+"LOFAR_PermSW";
       }
     }
   }    

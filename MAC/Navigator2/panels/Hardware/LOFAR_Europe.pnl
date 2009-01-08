@@ -191,9 +191,9 @@ LANG:1 6 Layer8
 1
 "$Station""UK608"
 3 21 "PANEL_REF22"
-"objects/Hardware\\Core_smalll.pnl" 366 255 T 42 1 0 1 1 -8
+"objects\\Hardware\\Core_smalll.pnl" 366 255 T 42 1 0 1 1 -8
 0
 3 22 "PANEL_REF23"
-"objects/Hardware\\Remote_smalll.pnl" 346 224 T 43 1 0 1 5 0
+"objects\\Hardware\\Remote_smalll.pnl" 346 224 T 43 1 0 1 5 0
 0
 0

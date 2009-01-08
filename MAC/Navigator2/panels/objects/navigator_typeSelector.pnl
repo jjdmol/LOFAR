@@ -76,6 +76,10 @@ void doAction(string aDP, string anAction) {
 
   // Update
   if (actionString[1]== \"Update\") {
+    // empty prior selections
+    selectedObservation = \"\";
+    selectedHardware = \"\";
+    selectedProcess = \"\";
     // fill Hardware
     updateHWList();
        
@@ -231,7 +235,7 @@ void click(string info) {
   delay(0, 100); 
   if (!bDoubleClicked) { 
     
-    if (itsSelection == \"Observations\") {
+  if (itsSelection == \"Observations\") {
       selectedObservation = info;
     } else if (itsSelection == \"Hardware\") {
       selectedHardware = info;
@@ -245,6 +249,15 @@ void click(string info) {
 void dblClick(string info) {
   // indicate this is a doubleClick
   bDoubleClicked = true; 
+  
+  // empty prior selections
+  if (itsSelection == \"Observations\") {
+    selectedObservation = \"\";
+  } else if (itsSelection == \"Hardware\") {
+    selectedHardware = \"\";
+  } else if (itsSelection == \"Processes\") {
+    selectedProcess = \"\";
+  }
     
   // change Active datapoint to the one from this observation.
   setEvent(info,\"ChangePanel\");
@@ -279,6 +292,7 @@ void updateHWList()
     hardwareTree.setIcon(spl[3],0,\"16_empty.gif\");
   }
   if (selectedHardware != \"\") {
+    LOG_TRACE(\"navigator_typeSelector.pnl:updateHWList|setting selection \" +strsplit(selectedHardware,\"|\")[2] );
     hardwareTree.setSelectedItem(strsplit(selectedHardware,\"|\")[2],true);
     setEvent(selectedHardware,\"EventClick\");
   }
@@ -304,6 +318,7 @@ void updateProcList()
     processesTree.setIcon(spl[3],0,\"16_empty.gif\");
   }
   if (selectedProcess != \"\") {
+    LOG_TRACE(\"navigator_typeSelector.pnl:updateProcList|setting selection \" +strsplit(selectedProcess,\"|\")[2] );
     processesTree.setSelectedItem(strsplit(selectedProcess,\"|\")[2],true);
     setEvent(selectedProcess,\"EventClick\");
   }
@@ -329,6 +344,7 @@ void updateObsList()
     observationsTree.setIcon(spl[3],0,\"16_empty.gif\");
   }
   if (selectedObservation != \"\") {
+    LOG_TRACE(\"navigator_typeSelector.pnl:updateObsList|setting selection \" +strsplit(selectedObservation,\"|\")[2] );
     observationsTree.setSelectedItem(strsplit(selectedObservation,\"|\")[2],true);
     setEvent(selectedObservation,\"EventClick\");
   }
@@ -368,7 +384,17 @@ LANG:1 8 hardware
 0 "clicked" "(string id, int column)"
 "  click(typeSelector.text+\"|\"+hardwareTree.getText(hardwareTree.selectedItem(),0));"
 0 "doubleClicked" "(string id, int column)"
-"  dblClick(typeSelector.text+\"|\"+hardwareTree.selectedItem());"
+"  string txt=hardwareTree.getText(hardwareTree.selectedItem(),0);
+  if (txt == \"Core\") {
+    panelSelection=\"LOFAR_Core.pnl\";
+  } else if (txt == \"Remote\") {
+    panelSelection=\"LOFAR_Remote.pnl\";
+  } else if (txt == \"Europe\") {
+    panelSelection=\"LOFAR_Europe.pnl\";
+  } else {
+    panelSelection=\"\";
+  }
+  dblClick(typeSelector.text+\"|\"+txt);"
 0 "rightClicked" "(string id, int column)"
 "  rClick(typeSelector.text+\"|\"+hardwareTree.getText(hardwareTree.selectedItem(),0));"
 0 "itemRenamed" "(string id, int column, string text)"
