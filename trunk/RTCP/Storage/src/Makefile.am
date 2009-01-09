@@ -5,7 +5,8 @@ libstorage_la_SOURCES	= Package__Version.cc \
 				  SubbandWriter.cc \
 				  MSWriter.cc      \
 				  MSWriterCasa.cc  \
-				  MSWriterNull.cc
+				  MSWriterNull.cc  \
+				  MSWriterFile.cc
 
 bin_PROGRAMS			= versionstorage Storage
 

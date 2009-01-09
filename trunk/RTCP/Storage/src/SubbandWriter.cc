@@ -29,6 +29,7 @@
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MSWriterCasa.h>
+#include <Storage/MSWriterFile.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
@@ -168,11 +169,21 @@ void SubbandWriter::preprocess()
     unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + i;
 
 #if 1
-    itsWriters[i] = new MSWriterCasa(
-      itsPS->getMSname(currentSubband).c_str(),
-      startTime, itsPS->IONintegrationTime(), itsNChannels,
-      itsNPolSquared, itsNStations, antPos,
-      stationNames, itsWeightFactor);
+    if( itsPS->mode().outputDataType() == CN_Mode::CORRELATEDDATA ) {
+      // use CasaCore for CorrelatedData
+      itsWriters[i] = new MSWriterCasa(
+        itsPS->getMSname(currentSubband).c_str(),
+        startTime, itsPS->IONintegrationTime(), itsNChannels,
+        itsNPolSquared, itsNStations, antPos,
+        stationNames, itsWeightFactor);
+    } else {
+      // write to disk otherwise
+      itsWriters[i] = new MSWriterFile(
+        itsPS->getMSname(currentSubband).c_str(),
+        startTime, itsPS->IONintegrationTime(), itsNChannels,
+        itsNPolSquared, itsNStations, antPos,
+        stationNames, itsWeightFactor);
+    }
 #else
     itsWriters[i] = new MSWriterNull(
       itsPS->getMSname(currentSubband).c_str(),
@@ -259,13 +270,9 @@ bool SubbandWriter::processSubband(unsigned sb)
   checkForDroppedData(data, sb);
 
 #if defined HAVE_AIPSPP
-  if( itsPS->mode().outputDataType() == CN_Mode::CORRELATEDDATA ) {
-    itsWriteTimer.start();
-    itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, static_cast<CorrelatedData*>(data));
-    itsWriteTimer.stop();
-  } else {
-    std::clog << "Warning: no support for writing non-CorrelatedData. dropping." << std::endl;
-  }
+  itsWriteTimer.start();
+  itsWriters[sb]->write(itsBandIDs[sb], 0, itsNChannels, data);
+  itsWriteTimer.stop();
 #endif
 
   itsInputThreads[sb]->itsFreeQueue.append(data);

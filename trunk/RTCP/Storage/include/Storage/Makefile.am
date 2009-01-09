@@ -5,6 +5,7 @@ noinst_HEADERS =		\
 	SubbandWriter.h		\
 	MSWriter.h		\
 	MSWriterCasa.h		\
-	MSWriterNull.h
+	MSWriterNull.h		\
+	MSWriterFile.h
 
 include $(top_srcdir)/Makefile.common

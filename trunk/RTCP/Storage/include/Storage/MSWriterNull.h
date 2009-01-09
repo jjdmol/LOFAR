@@ -51,7 +51,7 @@ namespace LOFAR
       int addBand(int, int, double, double);
       int addBand(int, int, double, const double*, const double*);
       void addField(double, double, unsigned);
-      void write(int, int, int, CorrelatedData*);
+      void write(int, int, int, StreamableData*);
 
 
       inline int nrAntennas() const

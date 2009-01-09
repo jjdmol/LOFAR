@@ -65,7 +65,8 @@ inline void StokesData::readData(Stream *str)
 inline void StokesData::writeData(Stream *str) const
 {
 #if !defined WORDS_BIGENDIAN
-  THROW(AssertError, "not implemented: think about endianness");
+  std::clog << "Warning: writing data in little endian." << std::endl;
+  //THROW(AssertError, "not implemented: think about endianness");
 #endif
 
   str->write(samples.origin(), samples.num_elements() * sizeof(float));
