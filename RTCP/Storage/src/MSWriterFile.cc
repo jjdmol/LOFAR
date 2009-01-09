@@ -25,7 +25,7 @@
 #include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
 #include <Storage/MSWriter.h>
-#include <Storage/MSWriterNull.h>
+#include <Storage/MSWriterFile.h>
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -38,7 +38,7 @@ namespace LOFAR
   namespace RTCP
   {
 
-     MSWriterNull::MSWriterNull (const char* , double , double ,
+     MSWriterFile::MSWriterFile (const char*msName, double , double ,
                                 int nfreq, int ncorr, int nantennas, const vector<double>& ,
 				const vector<string>&, float)
        : itsNrBand           (0),
@@ -48,35 +48,35 @@ namespace LOFAR
 	 itsNrCorr           (ncorr),
 	 itsNrTimes          (0),
 	 itsNrPol            (0),
-	 itsNrChan           (0)
+	 itsNrChan           (0),
+         itsFile             (msName,00666)
      {
-       
      }
 
-    MSWriterNull::~MSWriterNull()
+    MSWriterFile::~MSWriterFile()
     {
     }
 
-    int MSWriterNull::addBand(int, int, double, double)
-    {
-      itsNrBand++;
-      return itsNrBand;
-    }
-
-    int MSWriterNull::addBand(int, int, double, const double*, const double*)
+    int MSWriterFile::addBand(int, int, double, double)
     {
       itsNrBand++;
       return itsNrBand;
     }
 
-    void MSWriterNull::addField(double, double, unsigned)
+    int MSWriterFile::addBand(int, int, double, const double*, const double*)
+    {
+      itsNrBand++;
+      return itsNrBand;
+    }
+
+    void MSWriterFile::addField(double, double, unsigned)
     {
       itsNrField++;
     }
 
-    void MSWriterNull::write(int, int, int, StreamableData*)
+    void MSWriterFile::write(int, int, int, StreamableData *data)
     {
-      //nothing
+      data->write( &itsFile, true );
     }
 
 

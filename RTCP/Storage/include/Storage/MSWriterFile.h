@@ -1,6 +1,6 @@
-//  MSMriter.h: Base class MSWriter
+//  MSMriterNull.h: null implementation of MSWriter
 //
-//  Copyright (C) 2008
+//  Copyright (C) 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -18,35 +18,61 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id$
+//  $Id: MSWriterImpl.h 11891 2008-10-14 13:43:51Z gels $
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_STORAGE_MSWRITER_H
-#define LOFAR_STORAGE_MSWRITER_H
 
+#ifndef LOFAR_STORAGE_MSWRITERFILE_H
+#define LOFAR_STORAGE_MSWRITERFILE_H
+
+
+//# Includes
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 
-#include <Interface/StreamableData.h>
+#include <Storage/MSWriter.h>
+
+#include <Stream/FileStream.h>
+
+//# Forward declarations
 
 namespace LOFAR
 {
+
   namespace RTCP
   {
-    class MSWriter
+    class MSWriterFile : public MSWriter
     {
     public:
-      MSWriter();
-      virtual ~MSWriter();
+      MSWriterFile(const char* msName, double startTime, double timeStep, 
+		   int nfreq, int ncorr, int nantennas, const vector<double>& antPos, 
+		   const vector<std::string>& storageStationNames, float weightFactor);
+      ~MSWriterFile();
 
-      virtual int addBand(int, int, double, double);
-      virtual int addBand(int, int, double, const double*, const double*);
-      virtual void addField(double, double, unsigned);
-      virtual void write(int, int, int, StreamableData*);
+      int addBand(int, int, double, double);
+      int addBand(int, int, double, const double*, const double*);
+      void addField(double, double, unsigned);
+      void write(int, int, int, StreamableData *data);
+
+
+      inline int nrAntennas() const
+      { return itsNrAnt; }
+      
+      inline int nrBands() const
+      { return itsNrBand; }
+
+      inline int nrFields() const
+      { return itsNrField; }
+      
+      inline int nrPolarizations() const
+      { return itsNrPol; }
+
+      inline int nrTimes() const
+      { return itsNrTimes; }
+
 
     private:
-
       int itsNrBand;
       int itsNrField;
       int itsNrAnt;
@@ -55,9 +81,9 @@ namespace LOFAR
       int itsNrTimes;
       int itsNrPol;
       int itsNrChan;
-
+      FileStream itsFile;
     };
-  } // namespace RTCP
-} // namespace LOFAR
+  }
+}
 
 #endif

@@ -49,7 +49,7 @@ namespace LOFAR
     void MSWriter::addField(double, double, unsigned)
     {}
     
-    void MSWriter::write(int, int, int, CorrelatedData*)
+    void MSWriter::write(int, int, int, StreamableData*)
     {}
 
   }

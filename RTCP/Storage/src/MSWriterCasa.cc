@@ -32,6 +32,7 @@
 #include <Common/Timer.h>
 
 #include <Storage/MSWriterCasa.h>
+#include <Interface/CorrelatedData.h>
 
 #include <ms/MeasurementSets.h>
 #include <tables/Tables/IncrementalStMan.h>
@@ -629,12 +630,13 @@ namespace LOFAR
     }
 
     void MSWriterCasa::write (int bandId, int channelId, int nrChannels, 
-                              CorrelatedData *correlatedData)
+                              StreamableData *data)
     {
-      const fcomplex* data = correlatedData->visibilities.origin();
+      CorrelatedData *correlatedData = dynamic_cast<CorrelatedData*>(data);
+      const fcomplex* visibilityData = correlatedData->visibilities.origin();
   
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
-      ASSERT(data != 0);
+      ASSERT(visibilityData != 0);
 
       //std::cout << "write" << std::endl;
 
@@ -746,7 +748,7 @@ namespace LOFAR
 	      // Write all polarisations and nrChannels for each baseline.
 	      // The input data array has shape nrant,nrant,nchan(subs),npol.
 	      // So we can form an AIPS++ array for each baseline.
-	      Array<Complex> dataArray(dShape, (Complex*)data, SHARE);
+	      Array<Complex> dataArray(dShape, (Complex*)visibilityData, SHARE);
 	      IPosition start(2, 0, channelId);
 	      IPosition leng(2, shape[0], nrChannels);
 	      dataArray.apply(std::conj); // Temporary fix, necessary to prevent flipping of the sky, since
@@ -766,7 +768,7 @@ namespace LOFAR
             IPosition leng(2, shape[0], nrChannels);     // Length: ncorr, nchan
             itsMSCol->flag().putSlice(rowNumber, Slicer(start, leng), flagArray);
           }
-          data += nrel*nrChannels;  // Go to next baseline data
+          visibilityData += nrel*nrChannels;  // Go to next baseline data
           if (flags != 0) {
             flags += nrel*nrChannels;
           }

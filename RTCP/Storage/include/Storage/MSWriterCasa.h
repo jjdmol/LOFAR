@@ -93,7 +93,7 @@ namespace LOFAR
       // The flag array is optional. If not given, all flags are False.
       // All data will be written with sigma=0 and weight=1.
       void write (int bandId, int channelId, int nrChannels, 
-                  CorrelatedData *correlatedData);
+                  StreamableData *data);
 
       // Get the number of antennas.
       int nrAntennas() const
