@@ -573,6 +573,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
       case CN_Mode::CORRELATE:
         formBeams();
+        correlate();
         sendOutput( itsCorrelatedData );
         break;
 
