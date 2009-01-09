@@ -11,41 +11,24 @@ BUILT_SOURCES =
 clean-local:
 	rm -f *.ph
 
-EXTRA_DIST = \
-	$(BUILT_SOURCES) \
-	rc.status
+EXTRA_DIST 	= $(BUILT_SOURCES) \
+			  rc.status
 
-etcdir=$(prefix)/etc
-etc_SCRIPTS = \
-	rc.status
+etcdir		= $(prefix)/etc
+etc_SCRIPTS = rc.status
 
 sysconf_DATA =
 
 lib_LTLIBRARIES = librtccommon.la libgnuplot_i.la
 
-librtccommon_la_SOURCES = Package__Version.cc  \
-	Timestamp.cc \
-	Subject.cc \
-	daemonize.c \
-	RegisterState.cc
+librtccommon_la_SOURCES   = Package__Version.cc  \
+							CableAttenuation.cc \
+							Timestamp.cc \
+							Subject.cc \
+							daemonize.c \
+							RegisterState.cc
 
-libgnuplot_i_la_SOURCES = \
-	gnuplot_i.cc
-
-%.properties: $(MAC_CONFIG)/%.properties
-	cp $< $@
-
-%.conf: %.conf.in
-	cp $< $@
-
-%.log_prop: %.log_prop.in
-	cp $< $@
-
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
-	cp $< $@
+libgnuplot_i_la_SOURCES  = gnuplot_i.cc
 
 bin_PROGRAMS = versionrtccommon
 
