@@ -10,6 +10,7 @@ pkginclude_HEADERS = Package__Version.h  \
 					 Timestamp.h \
 					 daemonize.h \
 					 RegisterState.h \
-					 CableAttenuation.h
+					 CableAttenuation.h \
+					 RCUCables.h
 
 include $(top_srcdir)/Makefile.common
