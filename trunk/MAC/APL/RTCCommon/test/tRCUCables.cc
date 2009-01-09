@@ -1,4 +1,4 @@
-//#  tCableAttenuation.cc: test reading in the attenuation.conf file.
+//#  tRCUCables.cc: test reading in the CableDelays.conf file.
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,56 +28,65 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/hexdump.h>
-#include <APL/RTCCommon/CableAttenuation.h>
+#include <APL/RTCCommon/RCUCables.h>
 
 using namespace LOFAR;
 using namespace LOFAR::RTC;
 
 int main (int	argc, char*	argv[])
 {
-	INIT_LOGGER("tCableAttenuation");
+	INIT_LOGGER("tRCUCables");
 
 	// good file
-	CableAttenuation	CA1("tCableAttenuation.in_1");	
-	LOG_DEBUG_STR("Length  50 is " << (CA1.isLegalLength( 50) ? "" : "NOT") << " a legal length");
-	LOG_DEBUG_STR("Length  60 is " << (CA1.isLegalLength( 60) ? "" : "NOT") << " a legal length");
-	LOG_DEBUG_STR("Length  80 is " << (CA1.isLegalLength( 80) ? "" : "NOT") << " a legal length");
-	LOG_DEBUG_STR("Length 130 is " << (CA1.isLegalLength(130) ? "" : "NOT") << " a legal length");
+	RCUCables	RC1("tRCUCables.in_CableAtts", "tRCUCables.in_1");
+	// Note: test it in 4 loops iso 1 because the results are easier to interpret than.
+	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
+		LOG_DEBUG_STR("Largest delay for mode  " << rcuMode << ": " << RC1.getLargestDelay(rcuMode));
+	}
+	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
+		LOG_DEBUG_STR("Largest atten for mode  " << rcuMode << ": " << RC1.getLargestAtt  (rcuMode));
+	}
+	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
+		LOG_DEBUG_STR("Delay for RCU 5 in mode " << rcuMode << ": " << RC1.getDelay(5, rcuMode));
+	}
+	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
+		LOG_DEBUG_STR("Atten for RCU 5 in mode " << rcuMode << ": " << RC1.getAtt  (5, rcuMode));
+	}
 
 	try {
-		CableAttenuation	CA2("tCableAttenuation.in_2");
+		RCUCables	RC2("tRCUCables.in_CableAtts", "tRCUCables.in_2");
 	}
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
 
 	try {
-		CableAttenuation	CA3("tCableAttenuation.in_3");
+		RCUCables	RC3("tRCUCables.in_CableAtts", "tRCUCables.in_3");
 	}
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
 
 	try {
-		CableAttenuation	CA4("tCableAttenuation.in_4");
+		RCUCables	RC4("tRCUCables.in_CableAtts", "tRCUCables.in_4");
 	}
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
 
 	try {
-		CableAttenuation	CA5("tCableAttenuation.in_5");
+		RCUCables	RC5("tRCUCables.in_CableAtts", "tRCUCables.in_5");
+
 	}
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
 
 	try {
-		CableAttenuation	CA6("tCableAttenuation.in_6");
+		RCUCables	RC6("tRCUCables.in_CableAtts", "tRCUCables.in_6");
 	}
 	catch (Exception& ex) {
 		LOG_INFO_STR("Expected exception:" << ex.what());
 	}
-
 }
 

@@ -105,10 +105,28 @@ CableAttenuation::CableAttenuation(const string&	filename)
 	LOG_DEBUG_STR(itsAtts);
 }
 
+//
+// isLegalLength(cableLength)
+//
+bool	CableAttenuation::isLegalLength (int	cableLength) const
+{
+	try {
+		(void) cableLen2Index(cableLength);
+		return (true);
+	}
+	catch (Exception&	e) {
+	}
+
+	return (false);
+}
+
+// 
+// cableLen2Index(cableLen)
+//
 // Converts a cablelength into an index in the itsAtts array.
 int CableAttenuation::cableLen2Index(int	cableLen) const
 {
-	for (int i = itsCableLengths.size() -1; i > 0; i--) {
+	for (int i = itsCableLengths.size() -1; i >= 0; i--) {
 		if (itsCableLengths(i) == cableLen) {
 			return (i);
 		}
@@ -116,11 +134,13 @@ int CableAttenuation::cableLen2Index(int	cableLen) const
 	ASSERTSTR(false, "Cablelength " << cableLen << " is not a legal cablelength:" << itsCableLengths);
 }
 
-
+// 
+// getAttenuation(cableLen, rcuMode)
+//
 // Returns the attenuation in dB for the given cable length and rcumode.
 float	CableAttenuation::getAttenuation(int	cableLength, int	rcuMode) const
 {
-	ASSERTSTR(rcuMode > 0 && rcuMode <= MAX_RCU_MODE, 
+	ASSERTSTR(rcuMode >= 0 && rcuMode <= MAX_RCU_MODE, 
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 	return (itsAtts(rcuMode, cableLen2Index(cableLength)));
 }

@@ -1,4 +1,4 @@
-//#  CableAttenuation.h: Interface class for the Attenuation.conf file
+//#  RCUCables.h: Interface class for the cable characteristics.
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_RTCCOMMON_CABLEATTENUATION_H
-#define LOFAR_RTCCOMMON_CABLEATTENUATION_H
+#ifndef LOFAR_RTCCOMMON_RCUCABLES_H
+#define LOFAR_RTCCOMMON_RCUCABLES_H
 
 // \file
-// Interface class for the Attenuation.conf file.
+// Interface class for the cable characteristics.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -35,7 +35,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
-
+#include <APL/RTCCommon/CableAttenuation.h>
 
 namespace LOFAR {
   namespace RTC{
@@ -46,35 +46,46 @@ namespace LOFAR {
 //# Forward Declarations
 //class forward;
 
-// The CableAttenuation class is an interface for the Attenuation.conf file.
+// The RCUCables class is an interface for the Attenuation.conf file.
 //It reads in the file and stores the values in its datamembers. Defines some
 //useful functions for accessing the data.
 
-class CableAttenuation
+class RCUCables
 {
 public:
-	CableAttenuation(const string&	filename);
-	~CableAttenuation();
+	RCUCables(const string&	attFilename, const string&	delayFilename);
+	~RCUCables();
 
-	// Returns the attenuation in dB for the given cable length and rcumode.
-	float	getAttenuation(int	cableLength, int	rcuMode) const;
+	// Returns the attenuation in dB for the given rcu when operation in the given rcumode.
+	float	getAtt  (int	rcuNr, int	rcuMode) const;
 
-	// Checks if the given length is a length that is defined in the Attenuation file.
-	bool	isLegalLength (int	cableLength) const;
+	// Returns the delay in ns for the given rcu when operation in the given rcumode.
+	float	getDelay(int	rcuNr, int	rcuMode) const;
+
+	// Returns the largest attenuation in dB when operation in the given rcumode.
+	float	getLargestAtt  (int	rcuMode) const;
+
+	// Returns the largest delay in ns when operation in the given rcumode.
+	float	getLargestDelay(int	rcuMode) const;
 
 private:
 	// Default construction and Copying is not allowed.
-	CableAttenuation();
-	CableAttenuation (const CableAttenuation& that);
-	CableAttenuation& operator= (const CableAttenuation& that);
+	RCUCables();
+	RCUCables (const RCUCables& that);
+	RCUCables& operator= (const RCUCables& that);
 
-	//# private functions
-	// Converts a cablelength into an index in the itsAtts array.
-	int CableAttenuation::cableLen2Index(int	cableLen) const;
+	static const int MAX_RCU_INPUTS = 3;
+	static const int MAX_RCU_MODE   = 7;
 
 	//# Data members
-	blitz::Array<int, 1>	itsCableLengths;
-	blitz::Array<float,2>	itsAtts;
+	float		itsLargestLBAdelay;
+	float		itsLargestHBAdelay;
+	int			itsLargestLBAlen;
+	int			itsLargestHBAlen;
+
+	CableAttenuation*			itsCableAtts;
+	blitz::Array<int,  2>		itsCableLengths;
+	blitz::Array<float,2>		itsCableDelays;
 };
 
 // @}
