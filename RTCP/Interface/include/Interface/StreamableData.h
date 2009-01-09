@@ -62,7 +62,7 @@ inline void StreamableData::read( Stream *str, bool withSequenceNumber )
     str->read( &sequenceNumber, sizeof sequenceNumber );
 
 #if !defined WORDS_BIGENDIAN
-    dataConvert( LittleEndian, sequenceNumber );
+    dataConvert( LittleEndian, &sequenceNumber, 1 );
 #endif
   }
 }
@@ -75,12 +75,11 @@ inline void StreamableData::write( Stream *str, bool withSequenceNumber ) const
 #if !defined WORDS_BIGENDIAN
     uint32_t sn = sequenceNumber;
 
-    dataConvert( LittleEndian, sn );
+    dataConvert( LittleEndian, &sn, 1 );
     str->write( &sn, sizeof sn );
 #else
     str->write( &sequenceNumber, sizeof sequenceNumber );
 #endif
-
   }
 }
 
