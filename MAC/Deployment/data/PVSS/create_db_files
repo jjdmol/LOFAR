@@ -130,9 +130,9 @@ substitute_antenna()
 		if (hasAntenna > 0) {
 			for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
 				if (antNr < nrHBAs) {
-					printf "HBA%02d	%s\n", antNr, $2;
+					printf "HBA%d	%s\n", antNr, $2;
 				}
-				printf "LBA%02d	%s\n", antNr, $2;
+				printf "LBA%d	%s\n", antNr, $2;
 			}
 		}
 		else {
