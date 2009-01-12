@@ -1,6 +1,6 @@
 SUBDIRS=src
 
-ACLOCAL_AMFLAGS = -I $(top_srcdir)/autoconf_share
+ACLOCAL_AMFLAGS = -I autoconf_share
 
 DISTCHECK_CONFIGURE_FLAGS=\
       --with-common=$(prefix)
