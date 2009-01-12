@@ -998,21 +998,21 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		for (uint ant = 0; ant < itsNrLBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_LBA))) {
-				setObjectState(getName(), formatString("LBA%02d", ant), 
+				setObjectState(getName(), formatString("LBA%d", ant), 
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
-				setObjectState(getName(), formatString("LBA%02d", ant), RTDB_OBJ_STATE_OFF);
+				setObjectState(getName(), formatString("LBA%d", ant), RTDB_OBJ_STATE_OFF);
 			}
 		}
 		for (uint ant = 0; ant < itsNrHBAs; ant++) {
 			if (itsRCUInputStates(itsAntMapper->XRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA)) ||
 				itsRCUInputStates(itsAntMapper->YRCU(ant), itsAntMapper->RCUinput(ant, AntennaMapper::AT_HBA))) {
-				setObjectState(getName(), formatString("HBA%02d", ant), 
+				setObjectState(getName(), formatString("HBA%d", ant), 
 								MAX2(itsRCUstates(itsAntMapper->XRCU(ant)), itsRCUstates(itsAntMapper->YRCU(ant)) ) );
 			}
 			else {
-				setObjectState(getName(), formatString("HBA%02d", ant), RTDB_OBJ_STATE_OFF);
+				setObjectState(getName(), formatString("HBA%d", ant), RTDB_OBJ_STATE_OFF);
 			}
 		}
 
