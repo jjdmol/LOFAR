@@ -31,7 +31,15 @@ EXTRA_DIST	=	$(TESTSCRIPTS) \
 			tProcess.log_prop tProcess.run tProcess.stdout \
 			tRunOnNode.log_prop tRunOnNode.stdout \
 			tNumeric.run tNumeric.stdout \
-			tObjectFactory.stdout tPrettyUnits.stdout
+			tObjectFactory.stdout tPrettyUnits.stdout \
+			tParameterSet.in_merge_nocase \
+			tParameterSet.in_merge_normal \
+			tParameterSet.in_param_nocase \
+			tParameterSet.in_param_normal \
+			tParameterSetPerf.run \
+			tgetparsetvalue.parset \
+			tgetparsetvalue.run \
+			tgetparsetvalue.stdout
 
 testLogger_SOURCES		= testLogger.cc
 tAllocator_SOURCES		= tAllocator.cc
