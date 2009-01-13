@@ -25,7 +25,8 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
     RCUYDP=sysName+RCUY;
     
     baseDP=dpSubStr(RCUXDP,DPSUB_SYS_DP);
-  
+    baseDPX=baseDP;
+    baseDPY= dpSubStr(RCUYDP,DPSUB_SYS_DP);  
   
     //determine rcu nr's used
     dyn_string x=strsplit(navFunct_dpStripLastElement(RCUXDP),\"_\");
@@ -64,25 +65,27 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   
   // check if the required datapoints for this view are enabled and accessible
   if (dpExists(antennaDP+ \".status.state\") &&
-      dpExists(RCUXDP) && 
-      dpExists(RCUYDP)) {
-    dpConnect(\"updateAntenna\",antennaDP  + \".status.state\",
-                              RCUXDP,
- 	                      RCUYDP,
-                              antennaDP  + \".status.state:_online.._invalid\"); 
+      dpExists(baseDPX) && 
+      dpExists(baseDPY)) {
+    dpConnect(\"updateLBAAntenna\",antennaDP  + \".status.state\",
+                                 RCUXDP,
+ 	                         RCUYDP,
+                                 baseDPX+ \".status.state\",
+                                 baseDPY+ \".status.state\",
+                                 antennaDP  + \".status.state:_online.._invalid\"); 
   } else {
     setValue(\"LBA\", \"backCol\", \"_dpdoesnotexist\");
   }	
 }
 
-void updateAntenna(string dp1, int state,
-                   string dp2, bool x_enabled,
-                   string dp3, bool y_enabled,
-                   string dp4, bool invalid)
+void updateLBAAntenna(string dp1, int state,
+                      string dp2, bool x_enabled,
+                      string dp3, bool y_enabled,
+                      string dp4, int x_state,
+                      string dp5, int y_state,
+                      string dp6, bool invalid)
 {
   
-  string RCUXStateDP=dpSubStr(dp2,DPSUB_SYS_DP)+\".status.state\";
-  string RCUYStateDP=dpSubStr(dp3,DPSUB_SYS_DP)+\".status.state\";
   string AntennaCol;
   string XCol;
   string YCol;
@@ -93,21 +96,16 @@ void updateAntenna(string dp1, int state,
     YCol=AntennaCol;
   } else {
     AntennaCol = getStateColor(state);
-    AntennaCol = getStateColor(state);
-    int xs;
-    int ys;
-    dpGet(RCUXStateDP,xs);
-    dpGet(RCUYStateDP,ys);
-    if (xs > OPERATIONAL || x_enabled) {
-      XCol=getStateColor(xs);
+    if (x_state > OPERATIONAL || x_enabled) {
+      XCol=getStateColor(x_state);
     } else {
       XCol=\"Lofar_off\";
     }       	  
-    if (ys > OPERATIONAL || y_enabled) {
-      YCol=getStateColor(ys);
+    if (y_state > OPERATIONAL || y_enabled) {
+      YCol=getStateColor(y_state);
     } else {
       YCol=\"Lofar_off\";
-    }  
+    }       	  
   }
   setValue(\"LBA\", \"backCol\", AntennaCol);
   setValue(\"RCUX\", \"foreCol\", XCol);
@@ -131,6 +129,8 @@ void updateAntenna(string dp1, int state,
 E "#uses \"navPanel.ctl\"
 
 string baseDP;
+string baseDPX;
+string baseDPY;
 string RCUXDP;
 string RCUYDP;
 
