@@ -93,20 +93,21 @@ void updateAntenna(string dp1, int state,
     YCol=AntennaCol;
   } else {
     AntennaCol = getStateColor(state);
-    if (x_enabled) {
-      string s;
-      dpGet(RCUXStateDP,s);
-      XCol=getStateColor(s);
+    AntennaCol = getStateColor(state);
+    int xs;
+    int ys;
+    dpGet(RCUXStateDP,xs);
+    dpGet(RCUYStateDP,ys);
+    if (xs > OPERATIONAL || x_enabled) {
+      XCol=getStateColor(xs);
     } else {
       XCol=\"Lofar_off\";
     }       	  
-    if (y_enabled) {
-      string s;
-      dpGet(RCUYStateDP,s);
-      YCol=getStateColor(s);
+    if (ys > OPERATIONAL || y_enabled) {
+      YCol=getStateColor(ys);
     } else {
       YCol=\"Lofar_off\";
-    }       	  
+    }  
   }
   setValue(\"LBA\", \"backCol\", AntennaCol);
   setValue(\"RCUX\", \"foreCol\", XCol);
