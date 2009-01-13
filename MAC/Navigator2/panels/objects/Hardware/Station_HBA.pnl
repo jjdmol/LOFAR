@@ -23,7 +23,10 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   if (RCUX != \"\" && RCUY != \"\") {
     RCUXDP=sysName+RCUX;
     RCUYDP=sysName+RCUY;
+    
     baseDP=dpSubStr(RCUXDP,DPSUB_SYS_DP);  
+    baseDPX=baseDP;
+    baseDPY=dpSubStr(RCUYDP,DPSUB_SYS_DP);  
   
     //determine rcu nr's used
     dyn_string x=strsplit(navFunct_dpStripLastElement(RCUXDP),\"_\");
@@ -61,12 +64,14 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
 
   // check if the required datapoints for this view are enabled and accessible
   if (dpExists(antennaDP+ \".status.state\") &&
-      dpExists(RCUXDP) && 
-      dpExists(RCUYDP)) {
+      dpExists(baseDPX) && 
+      dpExists(baseDPY)) {
     dpConnect(\"updateHBAAntenna\",antennaDP  + \".status.state\",
                                  RCUXDP,
  	                         RCUYDP,
-                                 antennaDP  + \".status.state:_online.._invalid\"); 
+                                 baseDPX+ \".status.state\",
+                                 baseDPY+ \".status.state\",
+                                 antennaDP  + \".status.state:_online.._invalid\");
   } else {
     setValue(\"HBA\", \"backCol\", \"_dpdoesnotexist\");
   }	
@@ -75,11 +80,11 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
 void updateHBAAntenna(string dp1, int state,
                       string dp2, bool x_enabled,
                       string dp3, bool y_enabled,
-                      string dp4, bool invalid)
+                      string dp4, int x_state,
+                      string dp5, int y_state,
+                      string dp6, bool invalid)
 {
   
-  string RCUXStateDP=dpSubStr(dp2,DPSUB_SYS_DP)+\".status.state\";
-  string RCUYStateDP=dpSubStr(dp3,DPSUB_SYS_DP)+\".status.state\";
   string AntennaCol;
   string XCol;
   string YCol;
@@ -90,17 +95,13 @@ void updateHBAAntenna(string dp1, int state,
     YCol=AntennaCol;
   } else {
     AntennaCol = getStateColor(state);
-    int xs;
-    int ys;
-    dpGet(RCUXStateDP,xs);
-    dpGet(RCUYStateDP,ys);
-    if (xs > OPERATIONAL || x_enabled) {
-      XCol=getStateColor(xs);
+    if (x_state > OPERATIONAL || x_enabled) {
+      XCol=getStateColor(x_state);
     } else {
       XCol=\"Lofar_off\";
     }       	  
-    if (ys > OPERATIONAL || y_enabled) {
-      YCol=getStateColor(ys);
+    if (y_state > OPERATIONAL || y_enabled) {
+      YCol=getStateColor(y_state);
     } else {
       YCol=\"Lofar_off\";
     }       	  
@@ -109,6 +110,7 @@ void updateHBAAntenna(string dp1, int state,
   setValue(\"RCUX\", \"foreCol\", XCol);
   setValue(\"RCUY\", \"foreCol\", YCol);
 }
+
 " 0
  E "main(int x, int y)
 {
@@ -127,6 +129,8 @@ void updateHBAAntenna(string dp1, int state,
 E "#uses \"navPanel.ctl\"
 
 string baseDP;
+string baseDPX;
+string baseDPY;
 string RCUXDP;
 string RCUYDP;
 
