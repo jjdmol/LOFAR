@@ -96,7 +96,6 @@ class Section(object):
 
 	parset['OLAP.CNProc.inputPsets']  = inputPsets
 	parset['OLAP.CNProc.outputPsets'] = outputPsets
-	parset['OLAP.CNProc.psetDimensions'] = psetDimensions.get(self.partition)
 	parset.checkRspBoardList()
 	
 class StorageSection(Section):
