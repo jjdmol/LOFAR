@@ -168,7 +168,8 @@ static void configureCNs(const Parset &parset)
   CN_Command	    command(CN_Command::PREPROCESS);
   CN_Configuration configuration;
   std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
-  Matrix<double>    &phaseCentres = configuration.phaseCentres();
+  Matrix<double>    &phaseCentres      = configuration.phaseCentres();
+  Matrix<double>    &manualPencilBeams = configuration.manualPencilBeams();
   
   configuration.nrStations()              = parset.nrStations();
   configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
@@ -187,6 +188,7 @@ static void configureCNs(const Parset &parset)
   configuration.refFreqs()                = parset.subbandToFrequencyMapping();
   configuration.nrPencilRings()           = parset.nrPencilRings();
   configuration.pencilRingSize()          = parset.pencilRingSize();
+  configuration.nrManualPencilBeams()     = parset.nrManualPencilBeams();
   configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
   configuration.mode()                    = parset.mode();
 
@@ -196,6 +198,15 @@ static void configureCNs(const Parset &parset)
 
     for( unsigned dim = 0; dim < 3; dim++ ) {
       phaseCentres[stat][dim] = phaseCentre[dim];
+    }
+  }
+
+  manualPencilBeams.resize( parset.nrManualPencilBeams(), 2 );
+  for( unsigned beam = 0; beam < parset.nrManualPencilBeams(); beam++ ) {
+    std::vector<double> coordinates = parset.getManualPencilBeam( beam );
+
+    for( unsigned dim = 0; dim < 2; dim++ ) {
+      manualPencilBeams[beam][dim] = coordinates[dim];
     }
   }
 

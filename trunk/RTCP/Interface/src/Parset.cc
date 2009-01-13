@@ -312,6 +312,20 @@ vector<string> Parset::getPortsOf(const string& aKey) const
   return get(aKey + "_Ports").expand().getStringVector();
 }
 
+vector<double> Parset::getManualPencilBeam(const unsigned pencil) const
+{
+  char buf[50];
+  std::vector<double> pencilBeam(2);
+ 
+  sprintf(buf, "Observation.Pencil[%d].angle1", pencil);
+  pencilBeam[0] = getDouble(buf);
+  sprintf(buf, "Observation.Pencil[%d].angle2", pencil);
+  pencilBeam[1] = getDouble(buf);
+
+  return pencilBeam;
+}
+
+
 vector<double> Parset::getBeamDirection(const unsigned beam) const
 {
   char buf[50];
@@ -324,6 +338,7 @@ vector<double> Parset::getBeamDirection(const unsigned beam) const
 
   return beamDirs;
 }
+
 
 string Parset::getBeamDirectionType(const unsigned beam) const
 {

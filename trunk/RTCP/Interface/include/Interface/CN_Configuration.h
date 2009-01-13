@@ -51,6 +51,8 @@ class CN_Configuration
     std::vector<double>	  &refFreqs();
     unsigned              &nrPencilRings();
     double                &pencilRingSize();
+    unsigned              &nrManualPencilBeams();
+    Matrix<double>        &manualPencilBeams();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
     CN_Mode               &mode();
@@ -58,14 +60,16 @@ class CN_Configuration
     void		  read(Stream *);
     void		  write(Stream *);
 
-    static const unsigned MAX_PSETS    = 64;
-    static const unsigned MAX_SUBBANDS = 248;
-    static const unsigned MAX_STATIONS = 100;
+    static const unsigned MAX_PSETS       = 64;
+    static const unsigned MAX_SUBBANDS    = 248;
+    static const unsigned MAX_STATIONS    = 100;
+    static const unsigned MAX_PENCILBEAMS = 256;
 
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
+    Matrix<double>        itsManualPencilBeams;
     Matrix<double>        itsPhaseCentres;
     CN_Mode               itsMode;
 
@@ -90,6 +94,8 @@ class CN_Configuration
       double              itsPencilRingSize;
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
+      unsigned            itsNrManualPencilBeams;
+      double              itsManualPencilBeams[MAX_PENCILBEAMS * 2];
     } itsMarshalledData;
 };
 
@@ -177,6 +183,16 @@ inline unsigned &CN_Configuration::nrPencilRings()
 inline double &CN_Configuration::pencilRingSize()
 {
   return itsMarshalledData.itsPencilRingSize;
+}
+
+inline unsigned &CN_Configuration::nrManualPencilBeams()
+{
+  return itsMarshalledData.itsNrManualPencilBeams;
+}
+
+inline Matrix<double> &CN_Configuration::manualPencilBeams()
+{
+  return itsManualPencilBeams;
 }
 
 inline std::vector<double> &CN_Configuration::refPhaseCentre()

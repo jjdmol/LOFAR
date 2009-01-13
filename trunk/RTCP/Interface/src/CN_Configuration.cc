@@ -52,6 +52,11 @@ void CN_Configuration::read(Stream *str)
   for( unsigned stat = 0; stat < nrStations(); stat++ ) {
     memcpy(&itsPhaseCentres[stat][0], &itsMarshalledData.itsPhaseCentres[stat*3], 3 * sizeof(double));
   }
+
+  itsManualPencilBeams.resize(nrManualPencilBeams(),2);
+  for( unsigned beam = 0; beam < nrManualPencilBeams(); beam++ ) {
+    memcpy(&itsManualPencilBeams[beam][0], &itsMarshalledData.itsManualPencilBeams[beam*2], 2 * sizeof(double));
+  }
 }
 
 
@@ -76,6 +81,11 @@ void CN_Configuration::write(Stream *str)
   memcpy(itsMarshalledData.itsRefPhaseCentre, &itsRefPhaseCentre[0], 3 * sizeof(double));
   for( unsigned stat = 0; stat < nrStations(); stat++ ) {
     memcpy(&itsMarshalledData.itsPhaseCentres[stat*3], &itsPhaseCentres[stat][0], 3 * sizeof(double));
+  }
+
+  itsManualPencilBeams.resize(nrManualPencilBeams(),2);
+  for( unsigned beam = 0; beam < nrManualPencilBeams(); beam++ ) {
+    memcpy(&itsMarshalledData.itsManualPencilBeams[beam*2], &itsManualPencilBeams[beam][0], 2 * sizeof(double));
   }
 
   str->write(&itsMarshalledData, sizeof itsMarshalledData);

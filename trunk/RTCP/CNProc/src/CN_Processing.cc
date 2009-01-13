@@ -283,7 +283,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsBeamFormer = new BeamFormer(itsNrStations, nrSamplesPerIntegration, station2BeamFormedStation, nrChannels);
   unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
   unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
+
+  // include both the pencil rings and the manually defined pencil beam coordinates
   PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
+  pencilCoordinates += PencilCoordinates( configuration.manualPencilBeams() );
 
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers

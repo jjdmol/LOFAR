@@ -104,9 +104,12 @@ public:
 	string         getTransportType(const string& prefix) const;
 	CN_Mode        mode() const;
 
+	uint32         nrManualPencilBeams() const;
+	vector<double> getManualPencilBeam( const unsigned pencil ) const;
 	uint32	       nrPencilRings() const;
-	uint32	       nrPencilBeams() const;
 	double	       pencilRingSize() const;
+
+	uint32	       nrPencilBeams() const;
 
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
@@ -401,17 +404,22 @@ inline CN_Mode Parset::mode() const
 
 inline uint32 Parset::nrPencilRings() const
 {
-  return getUint32("OLAP.DelayComp.nrPencilRings");
+  return getUint32("Observation.nrPencilRings");
+}
+
+inline uint32 Parset::nrManualPencilBeams() const
+{
+  return getUint32("Observation.nrPencils");
 }
 
 inline uint32 Parset::nrPencilBeams() const
 {
-  return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1;
+  return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams();
 }
 
 inline double Parset::pencilRingSize() const
 {
-  return getDouble("OLAP.DelayComp.pencilRingSize");
+  return getDouble("Observation.pencilRingSize");
 }
 
 
