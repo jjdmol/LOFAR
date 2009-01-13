@@ -82,13 +82,17 @@ class PencilCoordinates
 {
   public:
     PencilCoordinates() {}
-    PencilCoordinates( std::vector<PencilCoord3D> coordinates ): itsCoordinates(coordinates) {}
+    PencilCoordinates( const std::vector<PencilCoord3D> &coordinates ): itsCoordinates(coordinates) {}
+    PencilCoordinates( const Matrix<double> &coordinates );
 
     std::vector<PencilCoord3D>& getCoordinates()
     { return itsCoordinates; }
 
     size_t size() const
     { return itsCoordinates.size(); }
+
+
+    PencilCoordinates& operator+=( const PencilCoordinates &rhs );
 
   private:
     std::vector<PencilCoord3D>  itsCoordinates;

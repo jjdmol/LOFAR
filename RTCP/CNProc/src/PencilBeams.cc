@@ -14,6 +14,24 @@
 namespace LOFAR {
 namespace RTCP {
 
+PencilCoordinates& PencilCoordinates::operator+=( const PencilCoordinates &rhs )
+{
+  itsCoordinates.reserve( itsCoordinates.size() + rhs.size() );
+  for( unsigned i = 0; i < rhs.size(); i++ ) {
+     itsCoordinates.push_back( rhs.itsCoordinates[i] );
+  }
+
+  return *this;
+}
+
+PencilCoordinates::PencilCoordinates( const Matrix<double> &coordinates )
+{
+  itsCoordinates.reserve( coordinates.size() );
+  for( unsigned i = 0; i < coordinates.size(); i++ ) {
+    itsCoordinates.push_back( PencilCoord3D( coordinates[i][0], coordinates[i][1] ) );
+  }
+}
+
 PencilRings::PencilRings(unsigned nrRings, double ringWidth):
   itsNrRings(nrRings),
   itsRingWidth(ringWidth)
