@@ -419,7 +419,7 @@ void navPanel_statePopup(string baseDP) {
   LOG_DEBUG("navPanel.ctl:navPanel_statePopup|define popup for DP: "+baseDP);
  
   int idx=1;
-  dynInsertAt(popup,"PUSH_BUTTON,Acknowledge All,3,1",idx++);
+//  dynInsertAt(popup,"PUSH_BUTTON,Acknowledge All,3,1",idx++);
   dynInsertAt(popup,"CASCADE_BUTTON,Set State, 1",idx++);
   dynInsertAt(popup,"CASCADE_BUTTON,Set Recursive State, 1",idx++);
   dynInsertAt(popup,"Set State",idx++);

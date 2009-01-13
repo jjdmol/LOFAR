@@ -159,7 +159,7 @@ void redraw(string mode) {
   if (strpos(mode,\"LBA\") > -1 || strpos(mode,\"LBL\") > -1 || strpos(mode,\"LBH\") > -1) {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
   } else if (strpos(mode,\"HBA\") > -1) {
-    addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
+    addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
   }
   
         
