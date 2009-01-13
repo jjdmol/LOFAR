@@ -98,7 +98,7 @@ void updateHBAAntenna(string dp1, int state,
       XCol=\"Lofar_off\";
     }       	  
     if (y_enabled) {
-      string state;
+      string s;
       dpGet(RCUYStateDP,s);
       YCol=getStateColor(s);
     } else {
