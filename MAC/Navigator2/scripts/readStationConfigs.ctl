@@ -119,9 +119,6 @@ main()
       
       for (int i=1; i<= nr_ofAnt;i++) {
         string ant=(i-1);
-        if (i<=10) {
-          ant = "0"+(i-1);
-        }
         dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
             strCurConfig+ant+".deltaY",antConfFileNB[i],
             strCurConfig+ant+".deltaH",antConfFileH[i]);

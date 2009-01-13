@@ -1,6 +1,6 @@
 V 10
 3
-LANG:1 4 aLBA
+LANG:1 4 aHBA
 LANG:6 0 
 LANG:30 0 
 PANEL,-1 -1 241 145 N "_3DFace" 4
@@ -12,9 +12,9 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
 {
   baseDP  = g_currentDatapoint;
   
-  curLBA= $aNr;
+  curHBA= $aNr;
   sysName=dpSubStr(baseDP,DPSUB_SYS);
-  string antennaDP=sysName+\"LBA\"+curLBA;
+  string antennaDP=sysName+\"HBA\"+curHBA;
   string RCUX;
   string RCUY;
   dpGet(antennaDP+\".RCUX\",RCUX);
@@ -23,14 +23,12 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   if (RCUX != \"\" && RCUY != \"\") {
     RCUXDP=sysName+RCUX;
     RCUYDP=sysName+RCUY;
-    
-    baseDP=dpSubStr(RCUXDP,DPSUB_SYS_DP);
-  
+    baseDP=dpSubStr(RCUXDP,DPSUB_SYS_DP);  
   
     //determine rcu nr's used
     dyn_string x=strsplit(navFunct_dpStripLastElement(RCUXDP),\"_\");
     dyn_string y=strsplit(navFunct_dpStripLastElement(RCUYDP),\"_\");
-
+  
     curXRCU = substr(x[dynlen(x)],3);
     curYRCU = substr(y[dynlen(y)],3);
   
@@ -43,14 +41,14 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   
   string strColor   = \"yellow\";
   
-  string strToolTip=\"Antenna: \"+curLBA;
+  string strToolTip=\"Antenna: \"+curHBA;
   strToolTip += \" located on: Cabinet:\" + cabinet;
   strToolTip += \" ->Subrack\" + subrack;
   strToolTip += \" -> TBB\" + tbboard;
   strToolTip += \" -> RSP\" + rspboard;
   strToolTip += \" -> RCU\" + curXRCU + \" && RCU\" + curYRCU;
   strToolTip += \"---------\";
-  strToolTip += \" (LBA\" + curLBA + \")\";
+  strToolTip += \" (HBA\" + curHBA + \")\";
 
   strToolTip += \"\\n diff from centerOL:\" + $aOL;
   strToolTip += \"\\n diff from centerNB:\" + $aNB;
@@ -58,27 +56,26 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
     
   antennaHighlight.toolTipText  = strToolTip;
   aNr.toolTipText   = strToolTip;
-  LBA.toolTipText  = strToolTip;
+  HBA.toolTipText  = strToolTip;
   antennaBG.toolTipText  = strToolTip;
 
-  
   // check if the required datapoints for this view are enabled and accessible
   if (dpExists(antennaDP+ \".status.state\") &&
       dpExists(RCUXDP) && 
       dpExists(RCUYDP)) {
-    dpConnect(\"updateAntenna\",antennaDP  + \".status.state\",
-                              RCUXDP,
- 	                      RCUYDP,
-                              antennaDP  + \".status.state:_online.._invalid\"); 
+    dpConnect(\"updateHBAAntenna\",antennaDP  + \".status.state\",
+                                 RCUXDP,
+ 	                         RCUYDP,
+                                 antennaDP  + \".status.state:_online.._invalid\"); 
   } else {
-    setValue(\"LBA\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"HBA\", \"backCol\", \"_dpdoesnotexist\");
   }	
 }
 
-void updateAntenna(string dp1, int state,
-                   string dp2, bool x_enabled,
-                   string dp3, bool y_enabled,
-                   string dp4, bool invalid)
+void updateHBAAntenna(string dp1, int state,
+                      string dp2, bool x_enabled,
+                      string dp3, bool y_enabled,
+                      string dp4, bool invalid)
 {
   
   string RCUXStateDP=dpSubStr(dp2,DPSUB_SYS_DP)+\".status.state\";
@@ -101,14 +98,14 @@ void updateAntenna(string dp1, int state,
       XCol=\"Lofar_off\";
     }       	  
     if (y_enabled) {
-      string s;
+      string state;
       dpGet(RCUYStateDP,s);
       YCol=getStateColor(s);
     } else {
       YCol=\"Lofar_off\";
     }       	  
   }
-  setValue(\"LBA\", \"backCol\", AntennaCol);
+  setValue(\"HBA\", \"backCol\", AntennaCol);
   setValue(\"RCUX\", \"foreCol\", XCol);
   setValue(\"RCUY\", \"foreCol\", YCol);
 }
@@ -139,7 +136,7 @@ int    tbboard;
 int    rspboard;
 int    curXRCU;
 int    curYRCU;
-int    curLBA;
+int    curHBA;
 bool   bDoubleClicked  = false;
 
 // routine for single mouse click
@@ -159,7 +156,7 @@ void dblClick() {
   // In an Antenna there are an X and an Y rcu ofcourse, but since we can only jump to 
   // a single RCU  we go to the X (and 1st) one
   if (dpExists(baseDP) ) {
-    LOG_DEBUG(\"Station_LBA.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    LOG_DEBUG(\"Station_HBA.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     navPanel_setEvent(\"RCU\"+curXRCU,\"ChangePanel\");   
   }
@@ -171,7 +168,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"Antenna\"+curLBA,\"EventRightClick\");
+  navPanel_setEvent(\"Antenna\"+curHBA,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -181,78 +178,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-4 2
-"RCUY"
-""
-1 0 0 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- "main()
-{
-  rclick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-1 0 0 0 0 0
-E E E
-0
-3
-LANG:1 0 
-LANG:6 0 
-LANG:30 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 4 1 0 1 E  45 45 5 5
-7 7
-"antennaHighlight"
-""
-1 70.08811188811188 80 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-6 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-"main()
-{
-    dpConnect( \"StationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
-}
-
-void StationCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"Station_LBA.pnl:StationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_LBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for RCU\" + curXRCU +
-             \" or RCU\" + curYRCU);
-  bool bHighlight=false;
-  if (dynContains(highlight,\"RCU\"+curXRCU) ||dynContains(highlight,\"RCU\"+curYRCU) ) {
-    bHighlight=true;
-  }
-  LOG_DEBUG(\"Station_LBA.pnl:StationCallback|Highlight request: \"+bHighlight);
-  antennaHighlight.visible = bHighlight;
-    
-}" 0
- "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E 1.297052154195012 0 1.285714285714286 -65.83365079365082 -77.89714285714287 1 E 70 80 10 10
 4 3
 "RCUX"
 ""
@@ -281,16 +206,20 @@ E "main()
   click();
 }" 0
  0 4 1 0 1 E  5 45 45 5
-7 4
-"LBA"
+4 2
+"RCUY"
 ""
-1 6 7 E E E 1 E 1 E N "_Transparent" E N "White" E E
- E "main()
+1 0 0 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ "main()
 {
-    dblClick();
+  rclick();
+}" 0
+ "main()
+{
+  dblClick();
 }" 0
 
-3 0 0 0 0 0
+1 0 0 0 0 0
 E E E
 0
 3
@@ -302,13 +231,13 @@ LANG:30 0
 "dashclr"N "_Transparent"
 E "main()
 {
-    click();
+  click();
 }" 0
- 0 1 1 0 1 E 1.003813124493654 0 1.003813124493654 -6.144542263029976 -7.14835538752363 1 E 31 32 10 10
+ 0 4 1 0 1 E  45 45 5 5
 6 6
 "antennaBG"
 ""
-1 40 70 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+1 40 70 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  "main()
 {
   rClick();
@@ -331,6 +260,76 @@ E "main()
   click();
 }" 0
  0 1 1 2 1 E 1 0 1 -35 -65 1 E 40 70 80 110
+6 8
+"antennaHighlight"
+""
+1 90 60 E E E 1 E 1 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+    dpConnect( \"StationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void StationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for RCU\" + curXRCU +
+             \" or RCU\" + curYRCU);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"RCU\"+curXRCU) ||dynContains(highlight,\"RCU\"+curYRCU) ) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Highlight request: \"+bHighlight);
+  antennaHighlight.visible = bHighlight;
+    
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -78 -48 1 E 90 60 116 86
+6 9
+"HBA"
+""
+1 130 90 E E E 1 E 1 E N "_Transparent" E N "White" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 15 15 35 35
 2 5
 "aNr"
 ""
