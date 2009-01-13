@@ -53,10 +53,17 @@ bool AntennaArrayData::getNextFromFile(string filename)
     return false;
   }
 
-  getline(m_file, m_name); // get name
-  if ("" == m_name) {
-    m_file.close();
-    return false;
+  // The file may have comment lines at the top. These lines start with '#'
+  // and must be skipped, first.
+ 
+  m_name = "#"; 
+  while (m_name[0] == "#") { 
+    getline(m_file, m_name); // get name
+    // No empty lines are allowed.
+    if ("" == m_name) {
+      m_file.close();
+      return false;
+    }
   }
 
   m_file >> m_geoloc; // get geographical location 1-d array with 3 elements
