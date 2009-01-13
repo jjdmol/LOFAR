@@ -29,20 +29,55 @@ def setWarning(message):
 #
 def findIPNumber(stationName):
     """
-    Returns the IPnumber for a station LCU as given by the DNS server.
+    Returns the IPnumber for a station LCU.
     In case the station is not known, it will return -1.
     """
-    command = "host "+stationName+"C"
-    output = os.popen3(command)
-    stdout = output[1].readlines()
-    outline = stdout[0].strip()
-    outwords = outline.split()
-    if (len(outwords) != 4):
-        return "-1"
-    else:
-        return outwords[3]
     
+    localStationName = os.getenv("HOSTNAME")[0:5].lower()
+    if (localStationName == stationName):
+        command = "hostname -i"
+        output = os.popen3(command)
+        stdout = output[1].readlines()
+        outline = stdout[0].strip()
+        outwords = outline.split()
+        if (len(outwords) != 1):
+            return "-1"
+        else:
+            return outwords[0]
+    else:
+        command = "host "+stationName+"C"
+        output = os.popen3(command)
+        stdout = output[1].readlines()
+        outline = stdout[0].strip()
+        outwords = outline.split()
+        if (len(outwords) != 4):
+            return "-1"
+        else:
+            return outwords[3]
+        
 
+#
+# Copies a set of fixed test files to the config dir
+# To be used when setting up a LCU for test/validation
+#
+def copyTestFiles(dataDir):
+
+    testFile = dataDir+"/RSPDriver.conf.test"
+    # the existence of /opt/lofar/etc has been checked in main() already
+    destFile = "/opt/lofar/etc/RSPDriver.conf"
+    command = "cp -f "+testFile+ " " + destFile
+    os.system(command);
+    testFile = dataDir+"/TBBDriver.conf.test"
+    destFile = "/opt/lofar/etc/TBBDriver.conf"
+    command = "cp -f "+testFile+ " " + destFile
+    os.system(command);
+    testFile = dataDir+"/RemoteStation.conf.test"
+    destFile = "/opt/lofar/etc/RemoteStation.conf"
+    command = "cp -f "+testFile+ " " + destFile
+    os.system(command);
+
+    
+    
 #
 # findRSPDestNodes(stationName)
 #
@@ -223,7 +258,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
 
 # MAIN
 
-if (len(sys.argv) == 0):
+if (len(sys.argv) == 1):
     print "Provide arguments: localhost or <rootdir> <stationname>"
     sys.exit(1)
     
@@ -237,16 +272,23 @@ if (sys.argv[1] == "localhost"):
     # Find out stationname from env. var. HOSTNAME (e.g., CS010C)
     if (os.getenv("HOSTNAME")) :
         stationName = os.getenv("HOSTNAME")[0:5].lower()
+        print stationName
         if (os.path.exists("/opt/lofar/etc")):
             resultDir = "/opt/lofar/etc"
             dataDir = resultDir + "/StaticMetaData"
         else:
             print "Cannot find output directory /opt/lofar/etc"
             sys.exit(1)
-                
-        createRSPDriverFile    (resultDir, stationName, dataDir) 
-        createTBBDriverFile    (resultDir, stationName, dataDir)
-        createRemoteStationFile(resultDir, stationName, dataDir)
+
+        # If the hostname is like 'lcu001', this lcu is set up to be tested
+        # in the lab before a station is assigned. We can then use a set of
+        # fixed test configuration files.
+        if (stationName[0:3].lower() == "lcu"):
+            copyTestFiles(dataDir)
+        else:
+            createRSPDriverFile    (resultDir, stationName, dataDir) 
+            createTBBDriverFile    (resultDir, stationName, dataDir)
+            createRemoteStationFile(resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -261,9 +303,10 @@ else:
     resultRoot = sys.argv[1]
     dataDir = sys.argv[2]
     stationList = []
+    print resultRoot, dataDir, stationList
     
     if sys.argv[3] == "all":
-        stationList = findAllStations()
+        stationList = findAllStations(dataDir)
     else:
         stationList = sys.argv[3:]
 
@@ -275,6 +318,7 @@ else:
         else:
             os.makedirs(resultDir)
 
+        print resultDir, stationName, dataDir
         createRSPDriverFile    (resultDir, stationName, dataDir) 
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)

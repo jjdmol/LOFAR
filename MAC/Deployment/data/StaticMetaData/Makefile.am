@@ -12,6 +12,9 @@ sysconf_DATA = DipoleModel.conf \
 staticmeta_DATA = RemoteStation.conf.tmpl \
                   RSPDriver.conf.tmpl \
                   TBBDriver.conf.tmpl \
+                  RemoteStation.conf.test \
+                  RSPDriver.conf.test \
+                  TBBDriver.conf.test \
                   StationInfo.dat \
                   TBBConnections.dat \
                   RSPConnections.dat \
