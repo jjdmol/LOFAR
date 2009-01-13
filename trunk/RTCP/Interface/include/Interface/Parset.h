@@ -97,7 +97,6 @@ public:
 	vector<uint32> inputPsets() const;
 	vector<uint32> outputPsets() const;
 	vector<uint32> tabList() const;
-	vector<uint32> psetDimensions() const;
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
@@ -364,12 +363,6 @@ inline vector<uint32> Parset::outputPsets() const
 inline vector<uint32> Parset::tabList() const
 {
   return getUint32Vector("OLAP.CNProc.tabList");
-}
-
-
-inline vector<uint32> Parset::psetDimensions() const
-{
-  return getUint32Vector("OLAP.CNProc.psetDimensions");
 }
 
 inline int Parset::inputPsetIndex(uint32 pset) const
