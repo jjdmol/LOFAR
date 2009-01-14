@@ -92,11 +92,11 @@ inline int AntennaMapper::RCUinput(int	antNr, int antType) const
 	if (antType == AT_HBA)
 		return (RI_HBA);
 	if (antNr < itsRCUs/2) 
-		return (RI_LBL);
-	return (RI_LBH);
+		return (RI_LBH);
+	return (RI_LBL);
 
 	// Using this oneliner gives unresolved references to the RI_xxx values!!!
-//	return ((antType == AT_HBA) ? RI_HBA : (antNr < itsRCUs/2) ? RI_LBL : RI_LBH);
+//	return ((antType == AT_HBA) ? RI_HBA : (antNr < itsRCUs/2) ? RI_LBH : RI_LBL);
 }
 
 // @}
