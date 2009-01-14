@@ -70,7 +70,7 @@ private:
 
 	//# private functions
 	// Converts a cablelength into an index in the itsAtts array.
-	int CableAttenuation::cableLen2Index(int	cableLen) const;
+	int cableLen2Index(int	cableLen) const;
 
 	//# Data members
 	blitz::Array<int, 1>	itsCableLengths;
