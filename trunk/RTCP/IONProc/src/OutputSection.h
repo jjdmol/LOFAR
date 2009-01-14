@@ -57,6 +57,7 @@ class OutputSection
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
     unsigned			itsSequenceNumber;
     const Parset                *itsParset;
+    bool                        itsRealTime;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
     std::vector<Stream *>	itsStreamsToStorage;
