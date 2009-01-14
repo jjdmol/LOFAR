@@ -106,6 +106,7 @@ void OutputSection::preprocess(const Parset *ps)
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
   itsSequenceNumber	    = 0;
+  itsRealTime               = ps->realTime();
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
@@ -118,6 +119,13 @@ void OutputSection::preprocess(const Parset *ps)
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
+
+  if( itsNrIntegrationSteps > 1 && !itsTmpSum->isIntegratable() )
+  {
+    // not integratable, so don't try
+    std::clog << "Warning: not integrating received data because data type is not integratable" << std::endl;
+    itsNrIntegrationSteps = 1;
+  }
 }
 
 
@@ -145,20 +153,13 @@ void OutputSection::process()
   bool firstTime = itsCurrentIntegrationStep == 0;
   bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-  if( itsNrIntegrationSteps > 1 && !itsTmpSum->isIntegratable() )
-  {
-    // not integratable, so don't try
-    std::clog << "Warning: not integrating received data because data type is not integratable" << std::endl;
-    lastTime = firstTime = true;
-  }
-
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
     unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
     if (lastTime) {
-      if (itsOutputThreads[subband]->itsFreeQueue.empty()) {
+      if (itsRealTime && itsOutputThreads[subband]->itsFreeQueue.empty()) {
 	droppingData(subband);
 	itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
       } else {
