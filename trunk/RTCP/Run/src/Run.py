@@ -204,7 +204,7 @@ if __name__ == '__main__':
 	outf.write(str(measurementnumber + 1) + '\n')
 	outf.close()
 	dbfile = open(MSdatabaseFile, 'a')
-	dateStr = time.strftime('%Y %0m %0d %H %M %S', time.gmtime()).split()
+	dateStr = parset.getString('Observation.startTime').strftime('%Y %0m %0d %H %M %S').split()
 	MS = parset.getString('Observation.MSNameMask')
 	MS = MS.replace('${YEAR}', dateStr[0])
 	MS = MS.replace('${MONTH}', dateStr[1])
