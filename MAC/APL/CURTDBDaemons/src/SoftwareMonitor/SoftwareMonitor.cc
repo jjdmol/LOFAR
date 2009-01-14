@@ -263,7 +263,9 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 			processMap_t::iterator	procPtr = itsProcessMap.find(iter->name);
 			iter->pid = (procPtr != itsProcessMap.end()) ? procPtr->second : 0;
 			// TODO: BE ABLE TO HANDLE LOFAR_ObsSW DATAPOINTS
-			string	DPname(formatString(iter->permSW ? "LOFAR_PermSW_%s" : "LOFAR_ObsSW_%s", iter->name.c_str()));
+			string	DPname(formatString(iter->permSW ? 
+							((iter->level == 1) ? "LOFAR_PermSW_Daemons_%s" : "LOFAR_PermSW_%s") : "LOFAR_ObsSW_%s", 
+							iter->name.c_str()));
 			if (iter->pid) {					// process is running?
 				setObjectState(getName(), DPname, RTDB_OBJ_STATE_OPERATIONAL);		// mark it operational whether or not it should be running
 				iter->errorCnt = 0;
