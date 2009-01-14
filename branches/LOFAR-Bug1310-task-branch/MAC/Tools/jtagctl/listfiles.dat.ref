@@ -1,0 +1,7 @@
+=== jtagctl (Revision: 1.6 )
+=== Connected to JTAG ECB on localhost:3800
+=== Saved files:
+	Type	Filename		Size
+	GEN	GenFile		123
+	APL	AplFile		456
+	CNN	CnnFile		789

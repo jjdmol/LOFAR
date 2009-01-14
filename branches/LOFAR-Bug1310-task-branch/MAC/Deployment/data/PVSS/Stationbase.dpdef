@@ -1,0 +1,28 @@
+# Station PVSS Database types
+
+# DpType
+TypeName
+RemoteStation.RemoteStation	1#1
+	stationID	21#2
+	N_RSPBoards	21#3
+	N_TBBoards	21#4
+	N_LBAS	21#5
+	N_HBAS	21#6
+	HBA_Split	23#7
+	wide_LBAS	23#8
+	HBA	1#9
+		centerOL	22#10
+		centerNB	22#11
+		centerH	22#12
+	LBA	1#13
+		centerOL	22#14
+		centerNB	22#15
+		centerH	22#16
+
+# Create missing CtrlDbg internals and DP for remoteStation
+# Datapoint/DpId
+DpName	TypeName	ID
+_CtrlDebug_CTRL_5	_CtrlDebug	0
+_CtrlDebug_CTRL_6	_CtrlDebug	0
+remoteStation	RemoteStation	0
+

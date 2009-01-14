@@ -1,0 +1,10 @@
+{% block header %}
+<h1> {{header_title}} </h1>
+<h2> Current {{system}} Status: {% ifnotequal diagnosis "nominal" %}
+                              <font color="#F00000">{{diagnosis}}</font>
+                           {%else%}
+                              {{diagnosis}}
+                           {%endifnotequal%}
+</h2>
+{%now "j-M-Y"%}  {%now "G:i:s O"%}
+{% endblock header%}

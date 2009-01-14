@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<%
+
+import sys
+sys.path.append("/home/lofartest/SHM/Components/LofarPython")
+sys.path.append("/home/lofartest/SHM/Components/JobScripts")
+
+import lofar.shm.nanostamp
+import lofar.shm.db
+
+#import lofar.shm.utility_functions as uf
+import utility_functions as uf
+from cgi import parse_qs
+from urllib import urlencode
+
+shmdb = lofar.shm.db.SysHealthDatabase()
+shmdb.open()
+
+req.add_common_vars()
+qs = parse_qs(req.subprocess_env['QUERY_STRING'])
+
+command = qs.get('command', ['view-system-directory'])[0]
+sc_name = qs.get('sc_name', ['unknown'])[0]
+si_name = qs.get('si_name', ['unknown'])[0]
+
+def system_directory_table(shmdb, **kw):
+    return uf.query_table(shmdb, "SELECT "
+                                 "replace('<a href=\"?command=view-system-instance&si_name=$si_name$\">$si_name$</a>', '$si_name$', si_name) AS name, "
+                                 "replace('<a href=\"?command=view-system-class&sc_name=$sc_name$\">$sc_name$</a>'   , '$sc_name$', sc_name) AS class, "
+                                 "si_description AS description "
+                                 "FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances "
+                                 "ORDER BY si_id;", **kw)
+
+def system_instance_table(shmdb, si_name, **kw):
+    return uf.query_table(shmdb, "SELECT "
+                                 "replace('<a href=\"?command=view-system-instance&si_name=$si_name$\">$si_name$</a>', '$si_name$', si_name) AS name, "
+                                 "replace('<a href=\"?command=view-system-class&sc_name=$sc_name$\">$sc_name$</a>'   , '$sc_name$', sc_name) AS class, "
+                                 "si_description AS description "
+                                 "FROM Systems.SystemInstances NATURAL JOIN Systems.SystemClasses "
+                                 "WHERE si_name = '%(si_name)s';" % vars(), **kw)
+
+def system_class_instances_table(shmdb, sc_name, **kw):
+    return uf.query_table(shmdb, "SELECT "
+                                 "replace('<a href=\"?command=view-system-instance&si_name=$si_name$\">$si_name$</a>', '$si_name$', si_name) AS name, "
+                                 "si_description AS description "
+                                 "FROM Systems.SystemClasses NATURAL JOIN Systems.SystemInstances "
+                                 "WHERE sc_name = '%(sc_name)s' "
+                                 "ORDER BY si_id;" % vars(), **kw)
+
+def system_class_table(shmdb, sc_name, **kw):
+    return uf.query_table(shmdb, "SELECT "
+                                 "replace('<a href=\"?command=view-system-class&sc_name=$sc_name$\">$sc_name$</a>', '$sc_name$', sc_name) AS class, "
+                                 "sc_description AS description "
+                                 "FROM Systems.SystemClasses "
+                                 "WHERE sc_name = '%(sc_name)s';" % vars(), **kw)
+
+def system_instance_status(shmdb, si_name, **kw):
+    return uf.query_table(shmdb, "SELECT * FROM Observations.GetAllSystemValuesOnTime(now(), '%(si_name)s') ORDER BY name;" % vars(), **kw)
+
+pass
+%>\
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+
+    <head>
+        <title>LOFAR System Health Management Console</title>
+        <link rel="stylesheet" type="text/css" href="lofar-shm.css" />
+        <meta http-equiv="refresh" content="30" />
+    </head>
+
+    <body>
+
+        <h1>LOFAR SHM Console</h1>
+
+        <table class="menu">
+            <tr>
+                <th><a href="?command=view-system-directory">System Directory</a></th>
+                <th><a href="JobControl/">Job Control</a></th>
+            </tr>
+        </table>
+
+<%
+if command == 'view-system-directory':
+%>\
+        <h2>All Systems</h2>
+
+        <%=system_directory_table(shmdb, line_indent = 8 * ' ')%>
+
+<%
+elif command == 'view-system-instance':
+%>\
+        <h2>System "<%=si_name%>"</h2>
+
+        <%=system_instance_table(shmdb, si_name, line_indent = 8 * ' ')%>
+
+        <h3>Most Recent Status</h3>
+
+        <%=system_instance_status(shmdb, si_name, line_indent = 8 * ' ')%>
+
+<%
+        results = shmdb.perform_query("SELECT DISTINCT rcu_id FROM Lofar.SubbandStatistics NATURAL JOIN Systems.SystemInstances WHERE si_name = '%(si_name)s';" % vars())
+
+        if len(results) > 0:
+            pass
+%>\
+        <h3>Most Recent Subband Statistics</h3>
+
+<%
+            for result in results:
+%>\
+        <p><img src="plot-sbstats.cgi?si_name=<%=si_name%>&rcu_id=<%=result.rcu_id%>"></p>
+<%
+            pass
+        pass
+%>\
+
+<%
+elif command == 'view-system-class':
+%>\
+        <h2>System Class "<%=sc_name%>"</h2>
+
+        <%=system_class_table(shmdb,  sc_name, line_indent = 8 * ' ')%>
+        <h3>Instances of class "<%=sc_name%>"</h3>
+        <%=system_class_instances_table(shmdb,  sc_name, line_indent = 8 * ' ')%>
+<%
+pass
+%>\
+        <%=uf.footer(req, line_indent = 8 * ' ')%>
+
+    </body>
+</html>
+<%
+shmdb.close()
+%>\
