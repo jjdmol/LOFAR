@@ -34,6 +34,7 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/SubtractStep.h>
+#include <BBSControl/AddStep.h>
 #include <BBSControl/CorrectStep.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
@@ -146,6 +147,16 @@ namespace LOFAR
 
 
       void AddCommand::visit(const SubtractStep &command)
+      {
+        LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
+      }
+
+      void AddCommand::visit(const AddStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 

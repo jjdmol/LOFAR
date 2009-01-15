@@ -30,6 +30,7 @@
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/SubtractStep.h>
+#include <BBSControl/AddStep.h>
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
@@ -96,6 +97,8 @@ namespace LOFAR
             step.reset(new SolveStep(name, parset, parent));
           else if (oper == "SUBTRACT")
             step.reset(new SubtractStep(name, parset, parent));
+          else if (oper == "ADD")
+            step.reset(new AddStep(name, parset, parent));
           else if (oper == "CORRECT")
             step.reset(new CorrectStep(name, parset, parent));
           else if (oper == "PREDICT")

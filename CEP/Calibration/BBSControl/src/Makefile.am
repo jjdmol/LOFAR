@@ -32,6 +32,7 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	Strategy.cc \
 	StreamUtil.cc \
 	SubtractStep.cc \
+	AddStep.cc \
 	SynchronizeCommand.cc \
 	Types.cc
 

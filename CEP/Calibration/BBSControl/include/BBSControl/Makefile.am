@@ -31,6 +31,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	Step.h \
 	Strategy.h \
 	SubtractStep.h \
+	AddStep.h \
 	SynchronizeCommand.h \
 	Types.h
 

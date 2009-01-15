@@ -38,6 +38,7 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/SubtractStep.h>
+#include <BBSControl/AddStep.h>
 #include <BBSControl/CorrectStep.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
@@ -373,6 +374,54 @@ void CommandExecutor::visit(const SubtractStep &command)
     Evaluator evaluator(itsChunk, itsModel);
     evaluator.setSelection(baselines, products);
     evaluator.process(Evaluator::SUBTRACT);
+
+    // De-initialize model.
+    itsModel->clearExpressions();
+
+    // Optionally write the simulated visibilities.
+    if(!command.outputColumn().empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+            command.outputColumn(), false);
+    }
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
+}
+
+void CommandExecutor::visit(const AddStep &command)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a AddStep");
+    LOG_DEBUG_STR("Command: " << endl << command);
+
+    ASSERTSTR(itsChunk, "No visibility data available.");
+    ASSERTSTR(itsModel, "No model available.");
+
+    // Parse visibility selection.
+    vector<baseline_t> baselines;
+    vector<string> products;
+    
+    if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command)))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to parse"
+            " visibility selection.");
+        return;
+    }        
+        
+    // Initialize model.
+    if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to initialize"
+            " model.");
+        return;
+    }
+        
+    // Compute simulated visibilities.
+    Evaluator evaluator(itsChunk, itsModel);
+    evaluator.setSelection(baselines, products);
+    evaluator.process(Evaluator::ADD);
 
     // De-initialize model.
     itsModel->clearExpressions();
