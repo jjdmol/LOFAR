@@ -85,6 +85,7 @@ namespace LOFAR
       virtual void visit(const MultiStep &command);
       virtual void visit(const PredictStep &command);
       virtual void visit(const SubtractStep &command);
+      virtual void visit(const AddStep &command);
       virtual void visit(const CorrectStep &command);
       virtual void visit(const SolveStep &command);
       virtual void visit(const ShiftStep &command);

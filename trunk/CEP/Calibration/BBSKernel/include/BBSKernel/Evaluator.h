@@ -1,4 +1,4 @@
-//# Evaluator.h: Evaluate a model and assign the result to or subtract it from
+//# Evaluator.h: Evaluate a model and assign the result to or subtract/add it from/to
 //# the visibility data in the chunk.
 //#
 //# Copyright (C) 2008
@@ -25,7 +25,7 @@
 #define LOFAR_BB_BBS_EVALUATOR_H
 
 // \file
-// Evaluate a model and assign the result to or subtract it from the visibility
+// Evaluate a model and assign the result to or subtract/add it from/to the visibility
 // data in the chunk.
 
 #include <BBSKernel/Model.h>
@@ -48,6 +48,7 @@ public:
     {
         ASSIGN = 0,
         SUBTRACT,
+        ADD,
         N_Mode
     };
     
@@ -72,6 +73,8 @@ private:
     void blAssign(uint threadId, const baseline_t &baseline, 
         const Request &request);
     void blSubtract(uint threadId, const baseline_t &baseline,
+        const Request &request);
+    void blAdd(uint threadId, const baseline_t &baseline,
         const Request &request);
 
     VisData::Pointer    itsChunk;

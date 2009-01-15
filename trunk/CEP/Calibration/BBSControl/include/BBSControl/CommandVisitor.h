@@ -40,6 +40,7 @@ namespace LOFAR
     class MultiStep;
     class PredictStep;
     class SubtractStep;
+    class AddStep;
     class CorrectStep;
     class SolveStep;
     class ShiftStep;
@@ -72,6 +73,7 @@ namespace LOFAR
       virtual void visit(const MultiStep &command) = 0;
       virtual void visit(const PredictStep &command) = 0;
       virtual void visit(const SubtractStep &command) = 0;
+      virtual void visit(const AddStep &command) = 0;
       virtual void visit(const CorrectStep &command) = 0;
       virtual void visit(const SolveStep &command) = 0;
       virtual void visit(const ShiftStep &command) = 0;

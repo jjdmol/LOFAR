@@ -100,6 +100,9 @@ void Evaluator::process(Mode mode)
     case SUBTRACT:        
         blProcessor = &Evaluator::blSubtract;
         break;
+    case ADD:        
+        blProcessor = &Evaluator::blAdd;
+        break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
     }            
@@ -230,6 +233,57 @@ void Evaluator::blSubtract(uint, const baseline_t &baseline,
             for(size_t ch = 0; ch < nChannels; ++ch)
             {
                 vdata[ts][ch] -= sample_t(*re, *im);
+                ++re;
+                ++im;
+            }
+        }
+    }
+}
+
+void Evaluator::blAdd(uint, const baseline_t &baseline,
+    const Request &request)
+{
+    // Find baseline index.
+    const VisDimensions &dims = itsChunk->getDimensions();    
+    const uint blIndex = dims.getBaselineIndex(baseline);
+
+    // Evaluate the model.
+    JonesResult jresult = itsModel->evaluate(baseline, request);
+
+    // Put the results into a single array for easier handling.
+    const Result *modelJRes[4];
+    modelJRes[0] = &(jresult.getResult11());
+    modelJRes[1] = &(jresult.getResult12());
+    modelJRes[2] = &(jresult.getResult21());
+    modelJRes[3] = &(jresult.getResult22());
+
+    const uint nChannels = dims.getChannelCount();
+    const uint nTimeslots = dims.getTimeslotCount();
+
+    for(size_t i = 0; i < 4; ++i)
+    {
+        if(itsProductMask[i] == -1)
+        {
+            continue;
+        }
+        
+        // Get a view on the relevant slice of the chunk.
+        typedef boost::multi_array<sample_t, 4>::index_range Range;
+        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
+        
+        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
+            [itsProductMask[i]]]);
+
+        // Get pointers to the real and imaginary values.
+        const double *re = 0, *im = 0;
+        modelJRes[i]->getValue().dcomplexStorage(re, im);
+
+        // Add from visibilities.
+        for(size_t ts = 0; ts < nTimeslots; ++ts)
+        {
+            for(size_t ch = 0; ch < nChannels; ++ch)
+            {
+                vdata[ts][ch] += sample_t(*re, *im);
                 ++re;
                 ++im;
             }
