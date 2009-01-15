@@ -28,9 +28,11 @@ class StokesData: public StreamableData
 
   protected:
     virtual void readData( Stream* );
-    virtual void writeData( Stream* ) const;
+    virtual void writeData( Stream* );
 
   private:
+    bool itsHaveWarnedLittleEndian;
+
     void checkEndianness();
 };
 
@@ -42,7 +44,8 @@ inline size_t StokesData::requiredSize(CN_Mode &mode, unsigned nrPencilBeams, un
 inline StokesData::StokesData(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator)
 :
   StreamableData(false),
-  samples(boost::extents[nrChannels][mode.isCoherent() ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][mode.nrStokes()], 32, allocator)
+  samples(boost::extents[nrChannels][mode.isCoherent() ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][mode.nrStokes()], 32, allocator),
+  itsHaveWarnedLittleEndian(false)
 {
 }
 
@@ -62,10 +65,14 @@ inline void StokesData::readData(Stream *str)
 }
 
 
-inline void StokesData::writeData(Stream *str) const
+inline void StokesData::writeData(Stream *str)
 {
 #if !defined WORDS_BIGENDIAN
-  std::clog << "Warning: writing data in little endian." << std::endl;
+  if( !itsHaveWarnedLittleEndian ) {
+    itsHaveWarnedLittleEndian = true;
+
+    std::clog << "Warning: writing data in little endian." << std::endl;
+  }
   //THROW(AssertError, "not implemented: think about endianness");
 #endif
 

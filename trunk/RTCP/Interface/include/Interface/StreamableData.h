@@ -36,7 +36,7 @@ class StreamableData {
     virtual ~StreamableData() {}
 
     void read(Stream*, bool withSequenceNumber);
-    void write(Stream*, bool withSequenceNumber) const;
+    void write(Stream*, bool withSequenceNumber);
 
     bool isIntegratable()
     { return integratable; }
@@ -51,7 +51,7 @@ class StreamableData {
 
     // a subclass should override these to marshall its data
     virtual void readData(Stream*) = 0;
-    virtual void writeData(Stream*) const = 0;
+    virtual void writeData(Stream*) = 0;
 };
 
 inline void StreamableData::read( Stream *str, bool withSequenceNumber )
@@ -67,7 +67,7 @@ inline void StreamableData::read( Stream *str, bool withSequenceNumber )
   readData( str );
 }
 
-inline void StreamableData::write( Stream *str, bool withSequenceNumber ) const
+inline void StreamableData::write( Stream *str, bool withSequenceNumber )
 {
   if( withSequenceNumber ) {
 #if !defined WORDS_BIGENDIAN

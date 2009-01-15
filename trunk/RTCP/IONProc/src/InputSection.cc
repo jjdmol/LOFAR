@@ -162,6 +162,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   std::clog << "nrBitsPerSample = " << ps->nrBitsPerSample() << std::endl;
 
   itsDelayCompensation	      = ps->delayCompensation();
+  itsNeedDelays               = ps->delayCompensation() || ps->nrPencilBeams() > 0;
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
@@ -175,7 +176,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
 
   itsSyncedStamp = TimeStamp(seconds, samples);
  
-  if (itsDelayCompensation) {
+  if (itsNeedDelays) {
     itsDelaysAtBegin.resize(itsNrBeams);
     itsDelaysAfterEnd.resize(itsNrBeams);
     itsBeamDirectionsAtBegin.resize(itsNrBeams);
@@ -244,7 +245,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::limitFlagsLength(
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
 {
-  if (itsDelayCompensation) {
+  if (itsNeedDelays) {
     itsCounter ++;
     itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
     itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd; // from previous integration
@@ -356,7 +357,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNode()
     // create and send all metadata in one "large" message
     std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData(itsNrPsets);
 
-    if( itsDelayCompensation ) {
+    if( itsNeedDelays ) {
       for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
         unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
         unsigned rspBoard = itsSubbandToRSPboardMapping[subband];

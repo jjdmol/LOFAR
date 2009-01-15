@@ -34,7 +34,7 @@ class CorrelatedData: public StreamableData
 
   protected:
     virtual void readData(Stream *);
-    virtual void writeData(Stream *) const;
+    virtual void writeData(Stream *);
 
   private:
     void			checkEndianness();
@@ -89,7 +89,7 @@ inline void CorrelatedData::readData(Stream *str)
 }
 
 
-inline void CorrelatedData::writeData(Stream *str) const
+inline void CorrelatedData::writeData(Stream *str) 
 {
 #if !defined WORDS_BIGENDIAN
   THROW(AssertError, "not implemented: think about endianness");
