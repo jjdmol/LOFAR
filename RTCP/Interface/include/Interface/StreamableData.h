@@ -56,8 +56,6 @@ class StreamableData {
 
 inline void StreamableData::read( Stream *str, bool withSequenceNumber )
 {
-  readData( str );
-
   if( withSequenceNumber ) {
     str->read( &sequenceNumber, sizeof sequenceNumber );
 
@@ -65,12 +63,12 @@ inline void StreamableData::read( Stream *str, bool withSequenceNumber )
     dataConvert( LittleEndian, &sequenceNumber, 1 );
 #endif
   }
+
+  readData( str );
 }
 
 inline void StreamableData::write( Stream *str, bool withSequenceNumber ) const
 {
-  writeData( str );
-
   if( withSequenceNumber ) {
 #if !defined WORDS_BIGENDIAN
     uint32_t sn = sequenceNumber;
@@ -81,6 +79,8 @@ inline void StreamableData::write( Stream *str, bool withSequenceNumber ) const
     str->write( &sequenceNumber, sizeof sequenceNumber );
 #endif
   }
+
+  writeData( str );
 }
 
 } // namespace RTCP
