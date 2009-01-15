@@ -27,7 +27,7 @@ class PencilBeamData: public StreamableData
 
   protected:
     virtual void readData( Stream* );
-    virtual void writeData( Stream* ) const;
+    virtual void writeData( Stream* );
 
   private:
     void checkEndianness();
@@ -62,7 +62,7 @@ inline void PencilBeamData::readData(Stream *str)
 }
 
 
-inline void PencilBeamData::writeData(Stream *str) const
+inline void PencilBeamData::writeData(Stream *str)
 {
 #if !defined WORDS_BIGENDIAN
   THROW(AssertError, "not implemented: think about endianness");

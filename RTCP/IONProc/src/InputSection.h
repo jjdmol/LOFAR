@@ -71,6 +71,7 @@ template <typename SAMPLE_TYPE> class InputSection {
 #endif
 
     bool			 itsDelayCompensation;
+    bool			 itsNeedDelays;
     bool			 itsIsRealTime;
     std::vector<unsigned>	 itsSubbandToBeamMapping;
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;

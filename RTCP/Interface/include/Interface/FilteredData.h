@@ -30,7 +30,7 @@ class FilteredData: public StreamableData
 
   protected:
     virtual void readData( Stream* );
-    virtual void writeData( Stream* ) const;
+    virtual void writeData( Stream* );
 
   private:
     void checkEndianness();
@@ -77,7 +77,7 @@ inline void FilteredData::readData(Stream *str)
 }
 
 
-inline void FilteredData::writeData(Stream *str) const
+inline void FilteredData::writeData(Stream *str)
 {
 #if !defined WORDS_BIGENDIAN
   THROW(AssertError, "not implemented: think about endianness");
