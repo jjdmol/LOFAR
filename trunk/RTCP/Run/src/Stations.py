@@ -93,8 +93,8 @@ for RSP in range(1, 5):
   for IP in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62]:
     inputs = ['10.170.0.' + str(IP) + ':' + str(port) for port in range(4346, 4346 + RSP)]
 
-    if IP != 62:
-      inputs = RSP * ['null:']
+    #if IP != 62:
+      #inputs = RSP * ['null:']
 
     exec 'S' + str(IP) + '_' + str(RSP) + '=[Station(\'S' + str(IP) + '\',\'10.170.0.' + str(IP) + '\',' + str(inputs) + ')]'
 
