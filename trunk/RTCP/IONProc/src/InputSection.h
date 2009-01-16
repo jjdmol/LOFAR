@@ -57,7 +57,6 @@ template <typename SAMPLE_TYPE> class InputSection {
     
   private:
     void			 startThreads();
-    static void			 raisePriority();
     static void			 limitFlagsLength(SparseSet<unsigned> &flags);
 
     void			 computeDelays();

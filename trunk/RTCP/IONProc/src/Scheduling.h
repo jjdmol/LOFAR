@@ -33,6 +33,7 @@ namespace RTCP {
 // threads on this core.
 extern void doNotRunOnCore0();
 extern void runOnCore0();
+extern void raisePriority();
 #endif
 
 } // namespace RTCP

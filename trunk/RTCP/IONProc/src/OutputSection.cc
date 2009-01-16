@@ -34,6 +34,7 @@
 
 #include <ION_Allocator.h>
 #include <OutputSection.h>
+#include <Scheduling.h>
 
 #include <boost/lexical_cast.hpp>
 #include <cstring>
@@ -57,6 +58,10 @@ OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &s
   itsParset(0),
   itsStreamsFromCNs(streamsFromCNs)
 {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+  raisePriority();
+#endif
 }
 
 
