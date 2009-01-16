@@ -87,6 +87,13 @@ void *unalignedShmPtr;
 
 static inline void waitForFreeSendSlot()
 {
+#if 1
+  _BGP_TreeFifoStatus stat;
+
+  do
+    _bgp_TreeGetStatusVC0(&stat);
+  while (stat.InjPyldCount > (_BGP_TREE_STATUS_MAX_PKTS - 1) * 16);
+#else
   // only use this function while sendMutex locked!
   unsigned slotsFree = shm->minimumNumberOfFreeSendFIFOslots;
 
@@ -97,11 +104,18 @@ static inline void waitForFreeSendSlot()
     slotsFree = _BGP_TREE_STATUS_MAX_PKTS - std::max(stat.InjHdrCount, (stat.InjPyldCount + 15) / 16);
   }
   shm->minimumNumberOfFreeSendFIFOslots = slotsFree - 1;
+#endif
 }
 
 
 static inline bool checkForIncomingPacket()
 {
+#if 1
+  _BGP_TreeFifoStatus stat;
+
+  _bgp_TreeGetStatusVC0(&stat);
+  return stat.RecPyldCount >= 16;
+#else
   // only use this function while recvMutex locked!
   unsigned slotsFilled = shm->minimumNumberOfFilledReceiveFIFOslots;
 
@@ -117,6 +131,7 @@ static inline bool checkForIncomingPacket()
 
   shm->minimumNumberOfFilledReceiveFIFOslots = slotsFilled - 1;
   return true;
+#endif
 }
 
 
