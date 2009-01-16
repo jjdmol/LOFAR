@@ -79,8 +79,10 @@ static pthread_mutex_t		sendMutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 static pthread_mutex_t		scheduledRequestsLock = PTHREAD_MUTEX_INITIALIZER;
-static Semaphore		recvSema(1); // could have used mutex, but this is slower!???  livelock???
+static pthread_mutex_t		recvMutex = PTHREAD_MUTEX_INITIALIZER;
 static volatile bool		stop, stopped;
+
+static _BGP_Atomic		nrMatchedWriteRequest = _BGP_ATOMIC_INIT(0);
 
 
 static void setAffinity()
@@ -89,7 +91,7 @@ static void setAffinity()
 
   CPU_ZERO(&cpu_set);
 
-  for (unsigned cpu = 2; cpu < 2; cpu ++)
+  for (unsigned cpu = 1; cpu <= 3; cpu ++)
     CPU_SET(cpu, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
@@ -99,12 +101,30 @@ static void setAffinity()
 }
 
 
+static void raisePriority()
+{
+  struct sched_param sched_param;
+
+  sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
+
+  if (pthread_setschedparam(pthread_self(), SCHED_RR, &sched_param) < 0)
+    perror("pthread_setschedparam");
+}
+
+
 // Reading the tree status words seems to be expensive.  These wrappers
 // minimize the number of status word reads.  Do not read/send packets
 // without consulting these functions!
 
 static inline void waitForFreeSendSlot()
 {
+#if 1
+  _BGP_TreeFifoStatus stat;
+
+  do
+    stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+  while (stat.InjPyldCount > (_BGP_TREE_STATUS_MAX_PKTS - 1) * 16);
+#else
   // only use this function while sendMutex locked!
 
   static unsigned minimumNumberOfFreeSendFIFOslots;
@@ -117,6 +137,7 @@ static inline void waitForFreeSendSlot()
   }
 
   -- minimumNumberOfFreeSendFIFOslots;
+#endif
 }
 
 
@@ -125,6 +146,13 @@ static unsigned minimumNumberOfFilledReceiveFIFOslots;
 
 static inline void waitForIncomingPacket()
 {
+#if 1
+  _BGP_TreeFifoStatus stat;
+
+  do
+    stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+  while (stat.RecPyldCount < 16);
+#else
   while (minimumNumberOfFilledReceiveFIFOslots == 0) {
     _BGP_TreeFifoStatus stat;
 
@@ -133,11 +161,18 @@ static inline void waitForIncomingPacket()
   }
 
   -- minimumNumberOfFilledReceiveFIFOslots;
+#endif
 }
 
 
 static inline bool checkForIncomingPacket()
 {
+#if 1
+  _BGP_TreeFifoStatus stat;
+
+  stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+  return stat.RecPyldCount >= 16;
+#else
   if (minimumNumberOfFilledReceiveFIFOslots == 0) {
     _BGP_TreeFifoStatus stat;
 
@@ -150,6 +185,7 @@ static inline bool checkForIncomingPacket()
 
   -- minimumNumberOfFilledReceiveFIFOslots;
   return true;
+#endif
 }
 
 
@@ -205,7 +241,7 @@ inline static void handshakeComplete(Handshake *handshake)
 }
 
 
-static inline void sendPacket(_BGP_TreePtpHdr *header, const void *ptr)
+static inline void lockSendFIFO()
 {
 #if defined USE_SPIN_LOCKS
   while (!_bgp_test_and_set(&sendMutex, 1))
@@ -213,16 +249,32 @@ static inline void sendPacket(_BGP_TreePtpHdr *header, const void *ptr)
 #else
   pthread_mutex_lock(&sendMutex);
 #endif
+}
 
-  waitForFreeSendSlot();
-  _bgp_vcX_pkt_inject(&header->word, const_cast<void *>(ptr), vc0);
 
+static inline void unlockSendFIFO()
+{
 #if defined USE_SPIN_LOCKS
   _bgp_msync();
   sendMutex.atom = 0;
 #else
   pthread_mutex_unlock(&sendMutex);
 #endif
+}
+
+
+static inline void sendPacketNoLocking(_BGP_TreePtpHdr *header, const void *ptr)
+{
+  waitForFreeSendSlot();
+  _bgp_vcX_pkt_inject(&header->word, const_cast<void *>(ptr), vc0);
+}
+
+
+static inline void sendPacket(_BGP_TreePtpHdr *header, const void *ptr)
+{
+  lockSendFIFO();
+  sendPacketNoLocking(header, ptr);
+  unlockSendFIFO();
 }
 
 
@@ -231,24 +283,14 @@ static inline void sendPacket(_BGP_TreePtpHdr *header, const void *ptr)
 
 static inline void send16Packets(_BGP_TreePtpHdr *header, void *ptr)
 {
-#if defined USE_SPIN_LOCKS
-  while (!_bgp_test_and_set(&sendMutex, 1))
-    ;
-#else
-  pthread_mutex_lock(&sendMutex);
-#endif
+  lockSendFIFO();
 
   for (char *p = (char *) ptr, *end = p + 16 * _BGP_TREE_PKT_MAX_BYTES; p < end; p += _BGP_TREE_PKT_MAX_BYTES) {    
     waitForFreeSendSlot();
     _bgp_vcX_pkt_inject(&header->word, p, vc0);
   }
 
-#if defined USE_SPIN_LOCKS
-  _bgp_msync();
-  sendMutex.atom = 0;
-#else
-  pthread_mutex_unlock(&sendMutex);
-#endif
+  unlockSendFIFO();
 }
 
 
@@ -256,11 +298,15 @@ static void sendAck(const RequestPacket *ack)
 {
   _BGP_TreePtpHdr header;
 
+#if 0
   header.Class	   = 0;
   header.Ptp	   = 1;
   header.Irq	   = 1;
   header.PtpTarget = ack->rank;
   header.CsumMode  = _BGP_TREE_CSUM_NONE;
+#else
+  header.word	   = (1 << 27) | (1 << 26) | (ack->rank << 2);
+#endif
 
   sendPacket(&header, ack);
 }
@@ -306,17 +352,25 @@ static size_t handleReadRequest(RequestPacket *request, const char *ptr, size_t 
 
   _BGP_TreePtpHdr header;
 
+#if 0
   header.Class	   = 0;
   header.Ptp	   = 1;
   header.Irq	   = 0;
   header.PtpTarget = request->rank;
   header.CsumMode  = _BGP_TREE_CSUM_NONE;
+#else
+  header.word	   = (1 << 27) | (request->rank << 2);
+#endif
 
   for (; ptr < end - 15 * _BGP_TREE_PKT_MAX_BYTES; ptr += 16 * _BGP_TREE_PKT_MAX_BYTES)
     send16Packets(&header, (void *) ptr);
 
+  lockSendFIFO();
+
   for (; ptr < end; ptr += _BGP_TREE_PKT_MAX_BYTES)
-    sendPacket(&header, (void *) ptr);
+    sendPacketNoLocking(&header, (void *) ptr);
+
+  unlockSendFIFO();
 
 #if defined USE_TIMER
   unsigned long long stop_time = _bgp_GetTimeBase();
@@ -370,17 +424,21 @@ static size_t handleWriteRequest(RequestPacket *request, char *ptr, size_t reque
 
 static void *pollThread(void *)
 {
-  //setAffinity();
+  setAffinity();
+  raisePriority();
 
   _BGP_TreePtpHdr     header;
   _BGP_TreeFifoStatus stat;
   RequestPacket	      request __attribute__((aligned(16)));
   unsigned	      nrInterrupts = 0;
 
-
   while (!stop) {
     if (useInterrupts) {
-      stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+      unsigned long long maxWaitTime = _bgp_GetTimeBase() + 50 * 850; // 50 us
+
+      do
+	stat.status_word = _bgp_In32((uint32_t *) (vc0 + _BGP_TRx_Sx));
+      while (stat.RecHdrCount == 0 && _bgp_GetTimeBase() < maxWaitTime);
 
       if (stat.RecHdrCount == 0) {
 	int word;
@@ -390,15 +448,19 @@ static void *pollThread(void *)
       }
     }
 
-    recvSema.down();
+    if (_BGP_ATOMIC_READ((&nrMatchedWriteRequest)) == 0) {
+      pthread_mutex_lock(&recvMutex);
 
-    if (checkForIncomingPacket()) {
-      _bgp_vcX_pkt_receive(&header.word, &request, vc0);
-      assert(header.Irq);
-      handleRequest(&request);
+      if (checkForIncomingPacket()) {
+	_bgp_vcX_pkt_receive(&header.word, &request, vc0);
+	pthread_mutex_unlock(&recvMutex);
+
+	assert(header.Irq);
+	handleRequest(&request);
+      } else {
+	pthread_mutex_unlock(&recvMutex);
+      }
     }
-
-    recvSema.up();
   }
 
   if (useInterrupts) {
@@ -449,9 +511,11 @@ void CNtoION_ZeroCopy(unsigned rankInPSet, void *ptr, size_t size)
 
     handshake->cnRequest.slotFilled.down();
 
-    recvSema.down();
+    _bgp_fetch_and_add(&nrMatchedWriteRequest, 1);
+    pthread_mutex_lock(&recvMutex);
     size_t negotiatedSize = handleWriteRequest(&handshake->cnRequest.packet, handshake->ionRequest.ptr, handshake->ionRequest.size);
-    recvSema.up();
+    pthread_mutex_unlock(&recvMutex);
+    _bgp_fetch_and_add(&nrMatchedWriteRequest, -1);
 
     size -= negotiatedSize;
     ptr = (void *) ((char *) ptr + negotiatedSize);
@@ -581,7 +645,6 @@ void init(bool enableInterrupts)
 
   useInterrupts = enableInterrupts;
 
-  //setAffinity();
   openVC0();
   drainFIFO();
 
