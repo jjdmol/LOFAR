@@ -11,7 +11,8 @@ Stokes::Stokes( CN_Mode &mode, unsigned nrChannels, unsigned nrSamplesPerIntegra
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
-  itsNrStokes(mode.nrStokes())
+  itsNrStokes(mode.nrStokes()),
+  itsIsCoherent(mode.isCoherent())
 {
 }
 
@@ -31,11 +32,18 @@ void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4
 {
   unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
   bool allStokes = itsNrStokes == 4;
+  bool coherent = itsIsCoherent;
+
+  std::clog << "Calculating " << itsNrStokes << " Stokes for " << nrBeams << " beam(s)." << std::endl;
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time += integrationSteps ) {
+      float stokesI = 0, stokesQ = 0, stokesU = 0, stokesV = 0;
+
       for( unsigned beam = 0; beam < nrBeams; beam++ ) {
-        float stokesI = 0, stokesQ = 0, stokesU = 0, stokesV = 0;
+        if( coherent ) {
+          stokesI = stokesQ = stokesU = stokesV = 0;
+        }
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
             // assert: two polarizations
@@ -54,6 +62,19 @@ void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4
         }
 
         #define dest out[ch][beam][time / integrationSteps]
+        if( coherent ) {
+          dest[0] = stokesI;
+          if( allStokes ) {
+            dest[1] = stokesQ;
+            dest[2] = stokesU;
+            dest[3] = stokesV;
+          }
+        }
+        #undef dest
+      }
+
+      if( !coherent ) {
+        #define dest out[ch][0][time / integrationSteps]
         dest[0] = stokesI;
         if( allStokes ) {
           dest[1] = stokesQ;
@@ -64,7 +85,8 @@ void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4
       }
     }
   }
-  
+
+  std::clog << "Done calculating Stokes" << std::endl;
 }
 
 } // namespace RTCP

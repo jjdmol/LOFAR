@@ -24,6 +24,7 @@ class Stokes
     unsigned                itsNrSamplesPerIntegration;
     unsigned                itsNrSamplesPerStokesIntegration;
     unsigned                itsNrStokes;
+    bool                    itsIsCoherent;
 
     void computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4> &out, unsigned nrBeams );
 };
