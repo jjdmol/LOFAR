@@ -32,17 +32,25 @@ pidlist=
 rank=0
 for inline in `cat $hfn`
 do
-  host=`echo $inline | sed -e 's%#.*%%'`
-  part=`echo $inline | sed -e 's%.*#%%'`
+  host=`echo $inline | awk -F'#' '{print $1'}`
+  rest=`echo $inline | awk -F'#' '{print $2'}`
+  part=`echo $rest | awk -F',' '{print $1'}`
+  fsys=`echo $rest | awk -F',' '{print $2'}`
+  if test "$part" = ""; then
+    part=.
+  fi
+  if test "$fsys" = ""; then
+    fsys=.
+  fi
   if test "$masterhost" = ""; then
     masterhost=$host
   fi
-  echo "ssh $host $program socket $masterhost $port $np $rank $part" "$@"
+  echo "ssh $host $program socket $masterhost $port $np $rank $part $fsys" "$@"
   if test $dry = 0; then
     if test "$logfile" = ""; then
-      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" &
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys "$@" &
     else
-      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" > $logfile-$rank 2>&1 &
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys "$@" > $logfile-$rank 2>&1 &
     fi
     pidlist="$pidlist $!"
   fi
