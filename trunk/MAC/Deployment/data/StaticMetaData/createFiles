@@ -51,7 +51,8 @@ def findIPNumber(stationName):
         outline = stdout[0].strip()
         outwords = outline.split()
         if (len(outwords) != 4):
-            return "-1"
+            return "10.150.1.1"
+#            return "-1"
         else:
             return outwords[3]
         
@@ -207,7 +208,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     TBBfile = open(dataDir+"/TBBDriver.conf.tmpl")
     TBBconfig = TBBfile.read()
     TBBfile.close()
-    for tbbNr in range(0,11):
+    for tbbNr in range(0,12):
         if str(tbbNr) in tbbDestNode.keys():
             (ip, mac) = findIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac+"   # "+tbbDestNode[str(tbbNr)])
@@ -233,10 +234,14 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     TBBconfig = TBBconfig.replace("@RING_ID@",   ringID)
     TBBconfig = TBBconfig.replace("@IP_PREFIX@",   ip_prefix)
     TBBconfig = TBBconfig.replace("@IP_SUBNET@",   ip_parts[2])
-    outFile = os.open(resultDir+"/TBBDriver.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    outFile = os.open(dataDir+"/TBBDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, TBBconfig)
     os.close(outFile)
-
+    # An ugly way to get rid of all lines in the template file that are not
+    # filled yet.
+    cmd = "grep -v '@' "+dataDir+"/TBBDriver.conf.tmp > "+resultDir+"/TBBDriver.conf";
+    os.system(cmd);
+    
 def createRemoteStationFile(resultDir, stationName, dataDir):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
@@ -322,7 +327,7 @@ else:
         createRSPDriverFile    (resultDir, stationName, dataDir) 
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
-
+        
 if len(warnings) > 0:
     print "The following warnings occured:"
     print warnings
