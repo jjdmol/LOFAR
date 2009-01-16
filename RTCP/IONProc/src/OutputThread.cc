@@ -23,9 +23,11 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <Common/Semaphore.h>
 #include <IONProc/OutputThread.h>
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
+#include <Scheduling.h>
 #include <Interface/DataHolder.h>
 #include <Interface/CN_Mode.h>
 
@@ -45,7 +47,7 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
   if (pthread_attr_init(&attr) != 0)
     throw SystemCallException("pthread_attr_init output thread", errno, THROW_ARGS);
 
-  if (pthread_attr_setstacksize(&attr, 65536) != 0)
+  if (pthread_attr_setstacksize(&attr, 262144) != 0)
     throw SystemCallException("pthread_attr_setstacksize output thread", errno, THROW_ARGS);
 
   if (pthread_create(&thread, &attr, mainLoopStub, this) != 0)
@@ -73,9 +75,17 @@ void OutputThread::mainLoop()
 {
   StreamableData *data;
 
+#if defined HAVE_BGP_ION
+  runOnCore0();
+#endif
+
+  static Semaphore semaphore(1);
+
   while ((data = itsSendQueue.remove()) != 0) {
     try {
+      semaphore.down();
       data->write(itsStreamToStorage, true);
+      semaphore.up();
       itsFreeQueue.append(data);
     } catch (...) {
       itsFreeQueue.append(data);

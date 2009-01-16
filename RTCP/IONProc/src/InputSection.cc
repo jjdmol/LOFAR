@@ -67,26 +67,14 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
 {
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
-#endif
-
   raisePriority();
+#endif
 }
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
   std::clog << "InputSection::~InputSection" << std::endl;
-}
-
-
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::raisePriority()
-{
-  struct sched_param sched_param;
-
-  sched_param.sched_priority = 99;
-
-  if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sched_param) < 0)
-    perror("pthread_setschedparam");
 }
 
 
