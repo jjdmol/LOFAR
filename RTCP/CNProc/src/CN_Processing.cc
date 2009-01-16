@@ -93,7 +93,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsPencilBeamData(0),
   itsMode(),
 #if defined HAVE_BGL || defined HAVE_BGP
-  itsDoAsyncCommunication(false),
+  itsDoAsyncCommunication(true),
   itsTranspose(0),
   itsAsyncTranspose(0),
 #endif
