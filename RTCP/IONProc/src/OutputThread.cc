@@ -30,6 +30,7 @@
 #include <Scheduling.h>
 #include <Interface/DataHolder.h>
 #include <Interface/CN_Mode.h>
+#include <IONProc/Lock.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -100,11 +101,11 @@ void *OutputThread::mainLoopStub(void *outputThread)
   try {
     static_cast<OutputThread *>(outputThread)->mainLoop();
   } catch (Exception &ex) {
-    std::cerr << "caught Exception: " << ex.what() << std::endl;
+    cerr_logger("caught Exception: " << ex.what());
   } catch (std::exception &ex) {
-    std::cerr << "caught std::exception: " << ex.what() << std::endl;
+    cerr_logger("caught std::exception: " << ex.what());
   } catch (...) {
-    std::cerr << "caught non-std:exception" << std::endl;
+    cerr_logger("caught non-std:exception");
   }
 
   //static_cast<OutputThread *>(outputThread)->stopped = true;

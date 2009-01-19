@@ -25,6 +25,7 @@
 
 #include <Interface/Align.h>
 #include <Interface/Exceptions.h>
+#include <IONProc/Lock.h>
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <InputThreadAsm.h>
@@ -188,7 +189,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize, itsSize);
 
-    std::clog << "reset BeamletBuffer" << std::endl;
+    clog_logger("reset BeamletBuffer");
   }
 }
 
@@ -238,7 +239,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
       pthread_mutex_unlock(&itsValidDataMutex);
     }
 
-    //std::clog << "timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset << std::endl;
+    //clog_logger(""timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset");
   }
 
   unsigned endI = startI + itsNrTimesPerPacket;

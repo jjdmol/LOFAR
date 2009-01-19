@@ -26,6 +26,7 @@
 #include <LogThread.h>
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
+#include <IONProc/Lock.h>
 
 #include <algorithm>
 
@@ -42,7 +43,7 @@ LogThread::LogThread(unsigned nrRspBoards)
   itsShouldStop(false)
 {
   if (pthread_create(&thread, 0, logThreadStub, this) != 0) {
-    std::cerr << "could not create input thread" << std::endl;
+    cerr_logger("could not create input thread");
     exit(1);
   }
 }
@@ -53,11 +54,11 @@ LogThread::~LogThread()
   itsShouldStop = true;
 
   if (pthread_join(thread, 0) != 0) {
-    std::cerr << "could not join input thread" << std::endl;
+    cerr_logger("could not join input thread");
     exit(1);
   }
 
-  std::clog << "LogThread stopped" << std::endl;
+  clog_logger("LogThread stopped");
 }
 
 
@@ -76,15 +77,16 @@ void LogThread::logThread()
   runOnCore0();
 #endif
 
-  std::clog << "LogThread running" << std::endl;
+  clog_logger("LogThread running");
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
   while (!itsShouldStop) {
+    std::stringstream logStr;
     bool somethingRejected = false;
 
     for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      std::clog << (rsp == 0 ? "received [" : ",") << itsCounters[rsp].nrPacketsReceived;
+      logStr << (rsp == 0 ? "received [" : ",") << itsCounters[rsp].nrPacketsReceived;
       itsCounters[rsp].nrPacketsReceived = 0;
 
       if (itsCounters[rsp].nrPacketsRejected > 0)
@@ -93,11 +95,12 @@ void LogThread::logThread()
 
     if (somethingRejected)
       for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-	std::clog << (rsp == 0 ? "] packets, rejected [" : ",") << itsCounters[rsp].nrPacketsRejected;
+	logStr << (rsp == 0 ? "] packets, rejected [" : ",") << itsCounters[rsp].nrPacketsRejected;
 	itsCounters[rsp].nrPacketsRejected = 0;
       }
 
-    std::clog << "] packets" << std::endl;
+    logStr << "] packets";
+    clog_logger(logStr.str());
     sleep(1);
   }
 }
