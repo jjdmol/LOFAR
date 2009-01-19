@@ -33,6 +33,7 @@
 #include <ION_Allocator.h>
 #include <Scheduling.h>
 //#include <TH_ZoidServer.h>
+#include <IONProc/Lock.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
@@ -74,7 +75,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
-  std::clog << "InputSection::~InputSection" << std::endl;
+  clog_logger("InputSection::~InputSection");
 }
 
 
@@ -115,14 +116,15 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
 
   itsInputStreams.resize(itsNrInputs);
 
-  std::clog << "input list:" << std::endl;
+  clog_logger("input list:");
+  
 
   for (unsigned i = 0; i < itsNrInputs; i ++) {
     string    &station	 = inputs[i].station;
     unsigned  rsp	 = inputs[i].rsp;
     string    streamName = ps->getInputStreamName(station, rsp);
 
-    std::clog << "  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"' << std::endl;
+    clog_logger("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
 
     if (station != inputs[0].station)
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
@@ -145,9 +147,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNrCoresPerPset	= ps->nrCoresPerPset();
   itsSampleDuration     = ps->sampleDuration();
 
-  std::clog << "nrSubbands = " << ps->nrSubbands() << std::endl;
-  std::clog << "nrStations = " << ps->nrStations() << std::endl;
-  std::clog << "nrBitsPerSample = " << ps->nrBitsPerSample() << std::endl;
+  clog_logger("nrSubbands = " << ps->nrSubbands());
+  clog_logger("nrStations = " << ps->nrStations());
+  clog_logger("nrBitsPerSample = " << ps->nrBitsPerSample());
 
   itsDelayCompensation	      = ps->delayCompensation();
   itsNeedDelays               = ps->delayCompensation() || ps->nrPencilBeams() > 0;
@@ -194,7 +196,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
    
   itsIsRealTime       = ps->realTime();
   itsMaxNetworkDelay  = ps->maxNetworkDelay();
-  std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples" << std::endl;
+  clog_logger("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
   itsBBuffers.resize(itsNrInputs);
   itsDelayedStamps.resize(itsNrBeams);
@@ -214,7 +216,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
   string rawDataOutput = rawDataOutputs[psetIndex];
-  std::clog << "writing raw data to " << rawDataOutput << std::endl;
+  clog_logger("writing raw data to " << rawDataOutput);
   rawDataStream = Parset::createStream(rawDataOutput, false);
 #endif
 
@@ -304,7 +306,8 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::startTransaction(
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage() const
 {
-  std::clog << itsSyncedStamp;
+  std::stringstream logStr;
+  logStr << itsSyncedStamp;
 
   if (itsIsRealTime) {
     struct timeval tv;
@@ -314,20 +317,21 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage()
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
     double expectedTime = (itsSyncedStamp + itsNSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
 
-    std::clog << " late: " << PrettyTime(currentTime - expectedTime);
+    logStr << " late: " << PrettyTime(currentTime - expectedTime);
   }
 
   if (itsDelayCompensation) {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      std::clog << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
+      logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
 
-    std::clog << "]";
+    logStr << "]";
   }
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
-    std::clog << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
+    logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
   
-  std::clog << std::endl;
+  logStr << "";
+  clog_logger(logStr.str());
 }
 
 
@@ -503,13 +507,13 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
   itsSyncedStamp += itsNSamplesPerSec;
 
   timer.stop();
-  std::clog << "ION->CN: " << PrettyTime(timer.getElapsed()) << std::endl;
+  clog_logger("ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
 {
-  std::clog << "InputSection::postprocess" << std::endl;
+  clog_logger("InputSection::postprocess");
 
   for (unsigned i = 0; i < itsInputThreads.size(); i ++)
     delete itsInputThreads[i];

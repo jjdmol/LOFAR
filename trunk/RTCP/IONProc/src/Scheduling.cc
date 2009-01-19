@@ -26,6 +26,7 @@
 #if defined HAVE_BGP_ION
 
 #include <IONProc/Scheduling.h>
+#include <IONProc/Lock.h>
 
 #include <iostream>
 #include <cstdio>
@@ -46,7 +47,7 @@ void doNotRunOnCore0()
     CPU_SET(cpu, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    std::clog << "WARNING: sched_setaffinity failed" << std::endl;
+    clog_logger("WARNING: sched_setaffinity failed");
     perror("sched_setaffinity");
   }
 }
@@ -60,7 +61,7 @@ void runOnCore0()
   CPU_SET(0, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    std::clog << "WARNING: sched_setaffinity failed" << std::endl;
+    clog_logger("WARNING: sched_setaffinity failed");
     perror("sched_setaffinity");
   }
 }

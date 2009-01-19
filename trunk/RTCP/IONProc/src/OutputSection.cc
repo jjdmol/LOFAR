@@ -32,6 +32,7 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 
+#include <IONProc/Lock.h>
 #include <ION_Allocator.h>
 #include <OutputSection.h>
 #include <Scheduling.h>
@@ -79,14 +80,14 @@ void OutputSection::connectToStorage()
     unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
     if (connectionType == "NULL") {
-      std::clog << "subband " << subbandNumber << " written to null:" << std::endl;
+      clog_logger("subband " << subbandNumber << " written to null:");
       itsStreamsToStorage.push_back(new NullStream);
     } else if (connectionType == "TCP") {
       std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
       //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
       unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
 
-      std::clog << "subband " << subbandNumber << " written to tcp:" << server << ':' << port << std::endl;
+      clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
       itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
     } else if (connectionType == "FILE") {
       std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
@@ -94,7 +95,7 @@ void OutputSection::connectToStorage()
 		      boost::lexical_cast<std::string>(subbandNumber);
 		      //boost::lexical_cast<std::string>(storagePortIndex);
 
-      std::clog << "subband " << subbandNumber << " written to file:" << filename << std::endl;
+      clog_logger("subband " << subbandNumber << " written to file:" << filename);
       itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
     } else {
       THROW(IONProcException, "unsupported ION->Storage stream type");
@@ -128,7 +129,7 @@ void OutputSection::preprocess(const Parset *ps)
   if( itsNrIntegrationSteps > 1 && !itsTmpSum->isIntegratable() )
   {
     // not integratable, so don't try
-    std::clog << "Warning: not integrating received data because data type is not integratable" << std::endl;
+    clog_logger("Warning: not integrating received data because data type is not integratable");
     itsNrIntegrationSteps = 1;
   }
 }
@@ -138,7 +139,7 @@ void OutputSection::droppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] ++ == 0) {
     unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
-    std::clog << "Warning: dropping data for subband " << subbandNumber << std::endl;
+    clog_logger("Warning: dropping data for subband " << subbandNumber);
   }
 }
 
@@ -147,7 +148,7 @@ void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
     unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
-    std::clog << "Warning: dropped " << itsDroppedCount[subband] << " integration times for subband " << subbandNumber << std::endl;
+    clog_logger("Warning: dropped " << itsDroppedCount[subband] << " integration times for subband " << subbandNumber);
     itsDroppedCount[subband] = 0;
   }
 }
