@@ -33,6 +33,9 @@
 // radius  defines the radius if searching using a cone
 // width   defines the widths in ra and dec if searching using a box
 //
+//// Also minflux (skip if < minflux), maxflux (always if >= maxflux),
+//// beammodel (only WSRT for time being); if beammodel, convert to app flux. 
+//
 // The format string looks like:
 //    name type ra dec cat
 // It defines the fields in the input file and which separator is used between
@@ -667,6 +670,35 @@ void make (const string& in, const string& out,
   }
 }
 
+// Read the format from the file.
+// It should be contained in a line like # format = .
+string readFormat (string file, const string& catFile)
+{
+  // Use catalog itself if needed.
+  if (file == ".") {
+    file = catFile;
+  }
+  // Read file until format line is found.
+  ifstream infile(file.c_str());
+  ASSERTSTR (infile, "File " << file
+             << " containing format string could not be opened");
+  string line;
+  getline (infile, line);
+  casa::Regex regex("# *format *= *");
+  while (infile) {
+    if (line.size() > 0  &&  line[0] == '#') {
+      String sline(line);
+      if (sline.matches (regex)) {
+        sline.gsub (regex, string());
+        return sline;
+      }
+    }
+    getline (infile, line);
+  }
+  ASSERTSTR (infile, "No line starting with '# format =' found in " << file);
+  return string();
+}
+
 int main (int argc, char* argv[])
 {
   // Not all versions of basename accept a const char.
@@ -681,7 +713,8 @@ int main (int argc, char* argv[])
     inputs.create("out", "",
                   "Output sourcedb name", "string");
     inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi",
-                  "Format of the input lines", "string");
+                  "Format of the input lines or name of file containing format",
+                  "string");
     inputs.create("append", "true",
                   "Append to possibly existing sourcedb?", "bool");
     inputs.create("check", "false",
@@ -691,7 +724,15 @@ int main (int argc, char* argv[])
     inputs.create("radius", "",
                   "Cone search radius", "string");
     inputs.create("width", "",
-                  "Search box width as 1 or 2 values (e.g. 2deg,3deg)", "string");
+                  "Search box width as 1 or 2 values (e.g. 2deg,3deg)",
+                  "string");
+    inputs.create("minflux", "",
+                  "Only select sources >= minflux Jy", "string");
+    inputs.create("maxflux", "",
+                  "Always select sources >= maxflux Jy", "string");
+    inputs.create("beammodel", "",
+                  "If given, apply beammodel to make fluxes apparent",
+                  "WSRT or LOFAR");
     inputs.readArguments(argc, argv);
     string in = inputs.getString("in");
     string out = inputs.getString("out");
@@ -702,6 +743,15 @@ int main (int argc, char* argv[])
     string center = inputs.getString ("center");
     string radius = inputs.getString ("radius");
     string width  = inputs.getString ("width");
+    double minFlux = inputs.getDouble ("minflux");
+    double maxFlux = inputs.getDouble ("maxflux");
+    string beamModel = inputs.getString ("beammodel");
+    // Check if the format is a string with commas or a single string which is
+    // the name of a file containing the format. A value of . means it is in
+    // the catalog file itself.
+    if (format.find(',') == string::npos) {
+      format = readFormat (format, in);
+    }
     make (in, out, format, append, check,
           getSearchInfo (center, radius, width));
   } catch (std::exception& x) {

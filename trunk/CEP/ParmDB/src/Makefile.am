@@ -27,6 +27,9 @@ makesourcedb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 pythondir = $(bindir)
 dist_python_SCRIPTS = 
 
+scriptdir = $(bindir)
+dist_script_SCRIPTS = setupparmdb setupparmdb-part
+
 versionparmdb_SOURCES      = versionparmdb.cc
 versionparmdb_LDADD        = libparmdb.la
 versionparmdb_DEPENDENCIES = libparmdb.la $(LOFAR_DEPEND)
