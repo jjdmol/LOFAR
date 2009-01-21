@@ -56,8 +56,8 @@ bool AntennaArrayData::getNextFromFile(string filename)
   // The file may have comment lines at the top. These lines start with '#'
   // and must be skipped, first.
  
-  m_name = "#"; 
-  while (m_name[0] == "#") { 
+  m_name = '#'; 
+  while (m_name[0] == '#') { 
     getline(m_file, m_name); // get name
     // No empty lines are allowed.
     if ("" == m_name) {
