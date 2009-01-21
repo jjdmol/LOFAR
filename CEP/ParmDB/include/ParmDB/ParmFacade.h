@@ -38,7 +38,7 @@
 namespace LOFAR { namespace BBS {
 
 
-  // \ingroup ParmFacade
+  // \ingroup ParmDB
   // @{
 
   // ParmFacade is the high level interface to the Parameter Data Base.
