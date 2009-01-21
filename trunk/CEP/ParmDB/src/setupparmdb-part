@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# setupparmdb-part: The distributed part of setupparmdb
+#
+# Copyright (C) 2009
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+if test $# != 12; then
+  echo "run as:   setupparmdb-part dummy dummy dummy dummy rank ms-part filesys"
+  echo "                           lofarroot srccat pdb wd dry"
+  exit 1
+fi
+
+shift
+shift
+shift
+shift
+seqnr=$1
+msn=$2
+shift
+lroot=$3
+srccat=$4
+pdb=$5
+wd=$6
+dry=$7
+
+
+# Initialize lofar environment.
+. $lroot/lofarinit.sh
+
+# If not set, get the working directory from data set name.
+if test "$wd" = ""  -o  "$wd" = "..."; then
+  wd=`dirname "$msn"`
+fi
+
+# Set to working directory.
+cd $wd  ||  exit 1
+
+# Get the MS name from the VDS file.
+# If an MS name is given, use that.
+if test ! -d "$msn"; then
+  msn=`getparsetvalue $msn FileName`
+fi
+
+# Create the instrument ParmDB.
+# Insert defaults for non-zero parameters.
+echo "Create $msn/$pdb.instr"
+if test "$dry" != dry; then
+  parmdb <<EOF
+create tablename="$msn/$pdb.instr"
+adddef Gain:11:Ampl  values=1
+adddef Gain:22:Ampl  values=1
+adddef Gain:11:Real  values=1
+adddef Gain:22:Real  values=1
+quit
+EOF
+fi
+
+# Create the sky ParmDB.
+echo "Create $msn/$pdb.sky from $srccat"
+if test "$dry" != dry; then
+  makesourcedb in=$srccat out=$msn/$pdb.sky
+fi
