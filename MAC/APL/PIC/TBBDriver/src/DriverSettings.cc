@@ -98,8 +98,13 @@ void TbbSettings::getTbbSettings()
   	catch (...) { LOG_INFO_STR(formatString("%s not found",chname)); configOK = false; } 
   }
   
+  int32 n_tbboards = MAX_N_TBBOARDS;
+  try { n_tbboards = globalParameterSet()->getInt32("RS.N_TBBOARDS"); }
+  catch (...) { LOG_INFO_STR(formatString("RS.N_TBBOARDS not found")); }
+  LOG_INFO_STR(formatString("RS.N_TBBOARDS=%d", n_tbboards));
   // setMaxBoards() must be set 2e
-  setMaxBoards(MAX_N_TBBOARDS);
+  setMaxBoards(n_tbboards);
+  //setMaxBoards(MAX_N_TBBOARDS);
   
   try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
   catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
