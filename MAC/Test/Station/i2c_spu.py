@@ -45,12 +45,12 @@ tc_result = 1
 if volt_5v  < 4.5 or volt_5v  > 5.5:
   print 'Value %f for 5 V is wrong' % volt_5v
   tc_result = 0
-if volt_8v  < 7.5 or volt_8v  > 8.5:
+if volt_8v  < 7.0 or volt_8v  > 8.5:
   print 'Value %f for 8 V is wrong' % volt_8v
   tc_result = 0
-#if volt_48v < 47  or volt_48v > 49:
-#  print 'Value %f for 48 V is wrong' % volt_48v
-#  tc_result = 0
+if volt_48v < 44  or volt_48v > 49:
+  print 'Value %f for 48 V is wrong' % volt_48v
+  tc_result = 0
 if volt_3v3 < 3.0 or volt_3v3  > 4.0:
   print 'Value %f for 3.3 V is wrong' % volt_3v3
   tc_result = 0
