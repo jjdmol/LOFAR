@@ -207,7 +207,7 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
      //          = (baseline * coordinate / c) - (baseline * beamdir) / c
      //          = delayoffset - baselinesec * beamdir
      //
-     // further reduced by the delay we already compensate for when doing regular beam forming (the centre of the beam)
+     // further reduced by the delay we already compensate for when doing regular beam forming (the centre of the beam). that compensation is done at the IONode (sample shift) and the PPF (phase shift)
      itsDelays[stat][i] = itsDelayOffsets[stat][i] - itsBaselinesSeconds[stat] * beamDir - compensatedDelay;
   }
 }
