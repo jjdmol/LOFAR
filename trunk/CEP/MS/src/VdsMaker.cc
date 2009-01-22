@@ -204,6 +204,7 @@ void VdsMaker::create (const string& msName, const string& outName,
     ClusterDesc cdesc((ParameterSet(clusterDescName)));
     msd.setName (absName, findFileSys(absName, cdesc, hostName));
   }
+  msd.setFileName (absName);
   // Get freq info.
   // Fill in correlation info.
   vector<string> corrNames;
