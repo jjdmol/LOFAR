@@ -8,37 +8,39 @@ nof_rcu=32
 
 rm -f *.log
 rm -f *.diff
-rm -f *.dat
-rm -f *.nfo
+rm -f ./prbs/*.*
+rm -f ./prbs/.*
 
 
 # Set up RCU and RSP, make sure waveform generator is off
-rspctl --wg=0
 rspctl --rcuprsg=1
+sleep 1
 rspctl --tbbmode=transient
 
-# Set up TBB
+sleep 5
+# set up TBB
 nof_slices=10   # one slice contains 1024 transient (raw data) samples
 
 tbbctl --free
 tbbctl --alloc
 tbbctl --rec
 
-sleep 5
+sleep 0.1
 
 # Freeze and get the captured data from TBB
+cd ./prbs
 tbbctl --stop
 for ((i = 0; i < $nof_rcu; i++)) do
   tbbctl --readpage=$i,0,$nof_slices
 done
-
+cd ..
 # Verify the PRBS
 python prbs_dir_test.py
 
 
 echo ""
-diff prbs_dir_test.log prbs_dir_test.gold > prbs_dir_test.diff
-if [ -e prbs_dir_test.log ] && [ -e prbs_dir_test.gold ] && [ -e prbs_dir_test.diff ] && ! [ -s prbs_dir_test.diff ]; then
+diff prbs_dir_test.log ./gold/prbs_dir_test.gold > prbs_dir_test.diff
+if [ -e prbs_dir_test.log ] && [ -e ./gold/prbs_dir_test.gold ] && [ -e prbs_dir_test.diff ] && ! [ -s prbs_dir_test.diff ]; then
   # The files exists AND has the diff size 0
   echo "RCU -> RSP -> TBB interfaces test went OK"
 else
