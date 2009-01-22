@@ -48,16 +48,16 @@ void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
             // assert: two polarizations
 
-            fcomplex &sumX = in[ch][beam][time+fractime][0];
-            float powerX = sqr( real(sumX) ) + sqr( imag(sumX) );
-            fcomplex &sumY = in[ch][beam][time+fractime][1];
-            float powerY = sqr( real(sumY) ) + sqr( imag(sumY) );
+            fcomplex &polX = in[ch][beam][time+fractime][0];
+            float powerX = sqr( real(polX) ) + sqr( imag(polX) );
+            fcomplex &polY = in[ch][beam][time+fractime][1];
+            float powerY = sqr( real(polY) ) + sqr( imag(polY) );
 
             stokesI += powerX + powerY;
             if( allStokes ) {
               stokesQ += powerX - powerY;
-              stokesU += 2*real(sumX * conj(sumY));
-              stokesV += 2*imag(sumX * conj(sumY));
+              stokesU += real(polX * conj(polY));
+              stokesV += imag(polX * conj(polY));
             }
         }
 
