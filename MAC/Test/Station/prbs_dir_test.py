@@ -12,21 +12,22 @@ import commands
 
 # Open file for processing	
 def open_dir() :
-#	os.chdir('c:/test')
-	files = os.listdir('.')
+	files = os.listdir('./prbs/.')
 	files.sort()
-	return files
+#	print files
+        return files
 
 def open_file(files, file_nr) :
-	if files[file_nr][-3:] == 'dat':
-		fileinfo = os.stat(files[file_nr])
+        file_name = './prbs/' + files[file_nr][:]
+ 	if files[file_nr][-3:] == 'dat':
+                fileinfo = os.stat(file_name)
 		size = int(fileinfo.st_size)
-		f=open(files[file_nr],'rb')
+		f=open(file_name,'rb')
 		max_frames = size/(88 + 1024*2 + 4)
 		frames_to_proces=max_frames
 	else :
 		frames_to_proces=0
-		f=open(files[file_nr],'rb')
+		f=open(file_name,'rb')
 	return f, frames_to_proces	
 
 
@@ -89,7 +90,7 @@ def main() :
 		o_ta=0
 		o_tb=0
 		(f, frames_to_proces) = open_file(files, file_cnt)
-		if frames_to_proces >1 :
+		if frames_to_proces >0 :
 			for frame_cnt in range(frames_to_proces):
 				data_list, ta, tb = read_frame(f, (frame_cnt==0), frame_cnt, f_log)
                                 if (((ta==o_ta) and tb==(o_tb+1024)) or (ta == (o_ta+1))) :
