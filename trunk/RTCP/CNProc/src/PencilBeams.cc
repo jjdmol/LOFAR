@@ -217,7 +217,7 @@ fcomplex PencilBeams::phaseShift( double frequency, double delay )
   double phaseShift = delay * frequency;
   double phi = -2 * M_PI * phaseShift;
 
-  return makefcomplex( std::sin(phi), std::cos(phi) );
+  return makefcomplex( std::cos(phi), std::sin(phi) );
 }
 
 void PencilBeams::computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations )
@@ -233,7 +233,7 @@ void PencilBeams::computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDi
           fcomplex sample = makefcomplex( 0, 0 );
 
           for( unsigned stat = 0; stat < stations.size(); stat++ ) {
-            // note: for beam #0 (central beam), the shift is 0
+            // note: for beam #0 (central beam), the shift is 1
             fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beam] );
             sample += in[ch][stations[stat]][time][pol] * shift;
           }
