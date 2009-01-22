@@ -59,6 +59,7 @@ WritefCmd::WritefCmd():
   itsTBBE     = 0;
   itsTBBackE  = new TBBWriteImageAckEvent();
   itsImageData  = new uint8[FL_IMAGE_SIZE];
+  memset(itsImageData,0xFF,FL_IMAGE_SIZE);
   
   itsTBBackE->status_mask = 0;
   setWaitAck(true);
@@ -112,6 +113,41 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
     setDone(true);
   }
   
+  // save Image info in last block
+  time_t write_time;
+  time(&write_time);
+        
+  // print write date and used TP and MP filename
+  char info[256];
+  memset(info,0,256);
+        
+  char *tp_name = strrchr(itsFileNameTp,'/');
+  if (tp_name == 0) {
+    tp_name = itsFileNameTp;
+  } else {
+    tp_name += 1;
+  } 
+        
+  char *mp_name = strrchr(itsFileNameMp,'/');
+  if (mp_name == 0) {
+    mp_name = itsFileNameMp;
+  } else {
+    mp_name += 1;
+  }
+        
+  sprintf(info," %s %s ",tp_name,mp_name);
+  LOG_DEBUG_STR(formatString("ImageInfo: %s",info));
+  
+  int addr = (FL_BLOCKS_IN_IMAGE - 1) * FL_BLOCK_SIZE;
+  memset(&itsImageData[addr],0x00,FL_BLOCK_SIZE);
+  
+  memcpy(&itsImageData[addr],&itsTBBE->version,sizeof(uint32));
+  addr += sizeof(uint32); 
+  memcpy(&itsImageData[addr],&write_time,sizeof(uint32));
+  addr += sizeof(uint32); 
+  memcpy(&itsImageData[addr],info,sizeof(info)); 
+       
+
   // set start of image, 1 image-set = 2 pages
   itsImage  = itsTBBE->image;
   itsSector = (itsImage * FL_SECTORS_IN_IMAGE);
@@ -136,7 +172,7 @@ void WritefCmd::sendTpEvent()
         erasefEvent->status = 0;
         erasefEvent->addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
         TS->boardPort(getBoardNr()).send(*erasefEvent);
-        TS->boardPort(getBoardNr()).setTimer(1.0); // erase time sector is 500 mSec
+        TS->boardPort(getBoardNr()).setTimer(5.0); // erase time sector is 500 mSec
         delete erasefEvent;
       } break;
       
@@ -153,7 +189,7 @@ void WritefCmd::sendTpEvent()
           itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
         }
         TS->boardPort(getBoardNr()).send(*itsTPE);
-        TS->boardPort(getBoardNr()).setTimer(1.0);
+        TS->boardPort(getBoardNr()).setTimer(5.0);
       } break;
       
       // stage 3, verify flash
@@ -163,63 +199,10 @@ void WritefCmd::sendTpEvent()
         readfEvent->status  = 0;
         readfEvent->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
         TS->boardPort(getBoardNr()).send(*readfEvent);
-        TS->boardPort(getBoardNr()).setTimer(1.0);
+        TS->boardPort(getBoardNr()).setTimer(5.0);
         delete readfEvent;
       } break;
-      
-      case write_info: {
-        // save Image info in last block
-        itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
-        itsTPE->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-        for (int i = 0; i < 256; i++) {
-          itsTPE->data[i]  = 0;
-        }
-        time_t write_time;
-        time(&write_time);
-        
-        // print write date and used TP and MP filename
-        char info[256];
-        memset(info,0,256);
-        
-        char *tp_name = strrchr(itsFileNameTp,'/');
-        if (tp_name == 0) {
-          tp_name = itsFileNameTp;
-        } else {
-          tp_name += 1;
-        } 
-        
-        char *mp_name = strrchr(itsFileNameMp,'/');
-        if (mp_name == 0) {
-          mp_name = itsFileNameMp;
-        } else {
-          mp_name += 1;
-        }
-        
-        sprintf(info," %s %s ",tp_name,mp_name);
-        LOG_DEBUG_STR(formatString("ImageInfo: %s",info));
-        
-        itsTPE->data[0] = static_cast<uint32>(itsTBBE->version);
-        itsTPE->data[1] = static_cast<uint32>(write_time);
-        memcpy(&itsTPE->data[2],info,sizeof(info)); 
-        
-        TS->boardPort(getBoardNr()).send(*itsTPE);
-        TS->boardPort(getBoardNr()).setTimer(1.0);
-        LOG_DEBUG_STR("Writing image info");
-        LOG_DEBUG_STR(formatString("%u %u",itsTPE->data[0],itsTPE->data[1]));
-      } break;
-      
-      case verify_info: {
-        TPReadfEvent *readfEvent = new TPReadfEvent();
-        readfEvent->opcode  = TPREADF;
-        readfEvent->status  = 0;
-        itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
-        readfEvent->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-        TS->boardPort(getBoardNr()).send(*readfEvent);
-        TS->boardPort(getBoardNr()).setTimer(1.0);
-        LOG_DEBUG_STR("Verifying image info");
-        delete readfEvent;
-      } break;
-      
+     
       default : {
       } break;
     }
@@ -239,7 +222,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
         TPErasefAckEvent *erasefAckEvent = new TPErasefAckEvent(event);
         
         if (erasefAckEvent->status == 0) {
-          setSleepTime(0.50);
+          //setSleepTime(0.50);
           itsSector++;
           if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_IMAGE)) {
             itsStage = write_flash;
@@ -256,87 +239,56 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
         itsTPackE = new TPWritefAckEvent(event);
           
           if (itsTPackE->status == 0) {
-            setSleepTime(0.002);
-            itsStage = verify_flash;    
+            //setSleepTime(0.002);
+            itsBlock++;
           } else {
             itsTBBackE->status_mask |= TBB_FLASH_ERROR;
             LOG_DEBUG_STR("Received status > 0 (WritefCmd(write_flash stage))");
             setDone(true);
           }
+          
+          if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_IMAGE)) {
+            itsBlock  = (itsImage * FL_BLOCKS_IN_IMAGE);
+            itsDataPtr = 0; 
+            itsStage = verify_flash;    
+          }
+          
           delete itsTPackE;
       } break;
       
       case verify_flash: {
         // check if write-data is read-data
         bool same = true;
+        uint32 testdata;
         
         TPReadfAckEvent *readfAckEvent = new TPReadfAckEvent(event);
         
         if (readfAckEvent->status == 0) {
           for (int i = 0; i < (FL_BLOCK_SIZE / 4); i++) {
-            if (readfAckEvent->data[i] != itsTPE->data[i]) {
-              LOG_DEBUG_STR(formatString("data (%d) %d not same 0x%08X 0x%08X (WritefCmd(verify_flash stage))",itsBlock,i,readfAckEvent->data[i],itsTPE->data[i]));
-              same = false; 
+            testdata  = itsImageData[itsDataPtr]; itsDataPtr++;
+            testdata |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
+            testdata |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
+            testdata |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
+     
+            if (readfAckEvent->data[i] != testdata) {
+              LOG_DEBUG_STR(formatString("block(%d) uint32(%d) NOT same 0x%08X 0x%08X (WritefCmd(verify_flash stage))",
+                                      itsBlock,i,readfAckEvent->data[i],testdata));
+              itsTBBackE->status_mask |= TBB_FLASH_ERROR;
+              setDone(true);
             }
           }
-          if (same) {
-            itsBlock++;
-            itsStage = write_flash;
-          } else {
-            itsTBBackE->status_mask |= TBB_FLASH_ERROR;
+          itsBlock++;
+          if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_IMAGE)) {
             setDone(true);
-          }
-          
-          int nextByte = ((itsBlock - (itsImage * FL_BLOCKS_IN_IMAGE)) * FL_BLOCK_SIZE); 
-          if (nextByte > itsImageSize) {
-            //setDone(true);
-            itsStage = write_info;
           }
         } else {
           itsTBBackE->status_mask |= TBB_FLASH_ERROR;
           LOG_DEBUG_STR("Received status > 0 (WritefCmd(verify_flash stage))");
           setDone(true);
-        }       
-        delete readfAckEvent;
-      } break;
-      
-      case write_info: {
-        itsTPackE = new TPWritefAckEvent(event);
-          
-        if (itsTPackE->status == 0) {
-          setSleepTime(0.002);
-          itsStage = verify_info;   
-        } else {
-          itsTBBackE->status_mask |= TBB_FLASH_ERROR;
-          LOG_DEBUG_STR(formatString("Received status > 0 (0x%08X) (WritefCmd(write_info stage))",itsTPackE->status));
-          setDone(true);
         }
-        delete itsTPackE;
+        delete readfAckEvent;
       } break;
       
-      case verify_info: {
-      // check if write-data is read-data
-        bool same = true;
-        
-        TPReadfAckEvent *readfAckEvent = new TPReadfAckEvent(event);
-        
-        if (readfAckEvent->status == 0) {
-          for (int i = 0; i < 64; i++) {
-            if (readfAckEvent->data[i] != itsTPE->data[i]) {
-              LOG_DEBUG_STR(formatString("image info %d not same 0x%08X 0x%08X (WritefCmd(verify_info stage))",i,readfAckEvent->data[i],itsTPE->data[i]));
-              same = false; 
-            }
-          }
-          if (!same) {
-            itsTBBackE->status_mask |= TBB_FLASH_ERROR; 
-          }
-        } else {
-          itsTBBackE->status_mask |= TBB_FLASH_ERROR;
-          LOG_DEBUG_STR(formatString("Received status > 0 (0x%08X) (WritefCmd(verify_info stage))",readfAckEvent->status));
-        }       
-        delete readfAckEvent;
-        setDone(true);
-      } break;
       
       default : {
       } break;
@@ -408,13 +360,14 @@ bool WritefCmd::readFiles()
 
 uint8 WritefCmd::charToHex(int ch)
 {
-  if ((ch >= '0') && (ch <= '9')) {
-    return (ch & 0x0F);
-  } 
+  uint8 hex = 0;
   
-  if (((ch >= 'A') && (ch <= 'F')) || ((ch >= 'a') && (ch <= 'f'))) {
-    return ((ch & 0x0F) + 9);
-  }
-  return (0);
+  if ((ch >= '0') && (ch <= '9')) {
+    hex = static_cast<uint8>(ch & 0x0F);
+  } 
+  else if (((ch >= 'A') && (ch <= 'F')) || ((ch >= 'a') && (ch <= 'f'))) {
+    hex = static_cast<uint8>((ch & 0x0F) + 9);
+  } 
+  return (hex);
 }
 

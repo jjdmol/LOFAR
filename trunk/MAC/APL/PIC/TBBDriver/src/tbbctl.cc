@@ -56,7 +56,7 @@ using namespace LOFAR;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
 
-static const long DELAY = 5; 
+static const double DELAY = 30.0; 
 
 //---- ALLOC  ----------------------------------------------------------------
 AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
@@ -796,7 +796,7 @@ GCFEvent::TResult ModeCmd::ack(GCFEvent& e)
    TBBModeAckEvent ack(e);
    cout << "TBB  Info" << endl;
    cout << "---  -------------------------------------------------------" << endl;  
-   for (int i = 0; i < MAX_N_TBBOARDS; i++) {
+   for (int i = 0; i < itsMaxBoards; i++) {
       if (ack.status_mask[i] & TBB_SUCCESS) {
          cout << formatString(" %2d  mode set and UDP/IP configured", i) << endl;
       }  else {         
@@ -887,8 +887,8 @@ GCFEvent::TResult SizeCmd::ack(GCFEvent& e)
             cout << formatString(" %2d  %8d  %6.3f GByte",bnr,ack.npages[bnr],gbyte) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
+         }
       }
-   }
    }
    cout << endl;
    cout << "1 page = 2048 Bytes" << endl;
@@ -953,7 +953,7 @@ ClearCmd::ClearCmd(GCFPortInterface& port) : Command(port)
 {
    cout << endl;
    cout << "== TBB =============================================== clear in progress ====" << endl;
-   cout << " wait 5 seconds" << endl;
+   //cout << " wait 5 seconds" << endl;
    cout << endl;
 }
 
@@ -963,7 +963,7 @@ void ClearCmd::send()
    TBBClearEvent event;
    event.boardmask = getBoardMask();
    itsPort.send(event);
-   itsPort.setTimer(5.0);
+   itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -992,7 +992,7 @@ ResetCmd::ResetCmd(GCFPortInterface& port) : Command(port)
 {
    cout << endl;
    cout << "== TBB =============================================== reset in progress ====" << endl;
-   cout << " reset can take 20 seconds" << endl;
+   cout << " reset to image-0 take 15 seconds" << endl;
    cout << endl;
 }
 
@@ -1014,13 +1014,13 @@ GCFEvent::TResult ResetCmd::ack(GCFEvent& e)
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
          if (ack.status_mask[bnr] & TBB_SUCCESS) {
-            cout << formatString(" %2d  board is reset",bnr ) << endl;
+            cout << formatString(" %2d  board is reset to image-0",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
          }
       }
    }
-   cout << " setting up the boards can take 30 seconds" << endl;
+   cout << " automatic reconfigure to image-1 and clearing registers take another 15 seconds" << endl;
    
    setCmdDone(true);
 
@@ -1032,7 +1032,7 @@ ConfigCmd::ConfigCmd(GCFPortInterface& port) : Command(port)
 {
    cout << endl;
    cout << "== TBB ========================================= reconfigure TP and MP's ====" << endl;
-   cout << " wait 10 seconds" << endl;
+   cout << " wait 15 seconds" << endl;
    cout << endl;
 }
 
@@ -1246,7 +1246,7 @@ void ErasefCmd::send()
    cout << endl;
    cout << "     erasing will take about 8 seconds" << endl;   
    itsPort.send(event);
-   itsPort.setTimer(16.0);
+   itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1286,9 +1286,9 @@ void ReadfCmd::send()
    event.image = itsPage;
    cout << formatString(" %2d  reading flash memory of image %d", getBoard(), itsPage) << endl;
    cout << endl;
-   cout << "     reading will take about 30 seconds" << endl;  
+   cout << "     reading will take about 10 seconds" << endl;  
    itsPort.send(event);
-   itsPort.setTimer(24.0);
+   itsPort.setTimer(60.0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1789,7 +1789,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
    return(GCFEvent::HANDLED);
 }
 
-//---- EADPAGE ------------------------------------------------------------------
+//---- READPAGE ------------------------------------------------------------------
 ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
    itsRcu(0),itsStartPage(0),itsPages(1),itsCmdStage(0),itsPage(0),itsTotalSize(0),itsStartAddr(0),itsSize(0),itsBoard(0),itsMp(0),
    itsStationId(0),itsRspId(0),itsRcuId(0),itsSampleFreq(0),itsTime(0),itsSampleNr(0),itsSamplesPerFrame(0),
@@ -2041,6 +2041,8 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
          cout <<   "         |" << flush;
          
          snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsFreqBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
+         //next row for testset
+         //snprintf(basefilename, PATH_MAX, "%s_board%02d_rcu%02d",(itsFreqBands == 0)?"rw":"sb",itsStationId,itsRcuId);
       }
       itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
       
@@ -2260,9 +2262,9 @@ void TBBCtl::commandHelp(int level)
 //====END OF COMMANDS==========================================================================
 //-----------------------------------------------------------------------------
 TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::initial, name),
-   itsCommand(0),itsActiveBoards(0),itsMaxBoards(0),itsMaxChannels(0),itsArgc(argc),itsArgv(argv)
+   itsCommand(0),itsArgc(argc),itsArgv(argv)
 {
-   for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) {
+   for(int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
       itsMemory[boardnr] = 0;
    }
   registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
@@ -2302,7 +2304,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
     } break;
 
       case TBB_DRIVER_BUSY_ACK: {
-      cout << endl << "=x=x=   DRIVER BUSY, try again   =x=x=" << endl << flush;
+      cout << endl << "=x=x=   DRIVER BUSY, with setting up boards, try again   =x=x=" << endl << flush;
       GCFTask::stop();    
     }
 
@@ -2311,14 +2313,12 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
       itsMaxBoards      = ack.max_boards;
       itsActiveBoards   = ack.active_boards_mask;
       itsMaxChannels = itsMaxBoards * 16;
-      
-      //cout << endl;
-      //cout << formatString("Max nr of TBB boards = %d",itsMaxBoards) << endl;
-         //cout << formatString("Max nr of Channels   = %d",itsMaxChannels)//cout << endl;;
-         //cout << endl;
-         //cout << formatString("Active boards mask   = 0x%03X",itsActiveBoards)//cout << endl;;
+      if (itsActiveBoards == 0) {
+        cout << "=x=x=   NO boards available   =x=x=" << endl << flush;
+        GCFTask::stop();    
+      }      
          
-         // send subscribe 
+      // send subscribe 
       TBBSubscribeEvent subscribe;
          subscribe.triggers = false;
          subscribe.hardware = true;
@@ -2934,10 +2934,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                int page = 0;
                int numitems = sscanf(optarg, "%d,%d", &board, &page);
                
-               if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= MAX_N_TBBOARDS) {
+               if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
                   cout << "Error: invalid page value. Should be of the format " << endl;
                   cout <<  "       '--eraseimage=board, image'" << endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ", image=0..15" << endl; 
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..15" << endl; 
                   exit(EXIT_FAILURE);
                }
                erasefcmd->setPage(page);
@@ -2957,10 +2957,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                int page = 0;
                int numitems = sscanf(optarg, "%d,%d", &board, &page);
                
-               if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= MAX_N_TBBOARDS) {
+               if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
                   cout << "Error: invalid image value. Should be of the format " << endl;
                   cout << "       '--readimage=board, image'"<< endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ", image=0..31" << endl;  
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;  
                   exit(EXIT_FAILURE);
                }
                readfcmd->setPage(page);
@@ -2985,10 +2985,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                memset(filename_mp,0,64);
                
                int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,]", &board, &page, &version, filename_tp, filename_mp);
-               if (numitems < 5 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= MAX_N_TBBOARDS) {
+               if (numitems < 5 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
                   cout << "Error: invalid values. Should be of the format " << endl;
                   cout << "       '--writeimage=board, image, file-tp, file-mp'"<< endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ", image=0..31" << endl;  
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;  
                   exit(EXIT_FAILURE);
                }
                
@@ -3011,10 +3011,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
             if (optarg) {
                int board = 0;
                int numitems = sscanf(optarg, "%d", &board);
-               if (numitems < 1 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS) {
+               if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
                   cout << "Error: invalid values. Should be of the format " << endl;
                   cout <<  "       '--imageinfo=board'"<< endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << endl;   
+                  cout << "       board=0.." << (itsMaxBoards - 1) << endl;   
                   exit(EXIT_FAILURE);
                }
                select.clear();
@@ -3037,10 +3037,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                
                int numitems = sscanf(optarg, "%d,%x,%x,%x", &board,&mp,&startaddr, &size);
                
-               if (numitems < 3 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS || mp > 3) {
+               if (numitems < 3 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
                   cout << "Error: invalid read ddr value. Should be of the format " << endl;
                   cout <<  "       '--readw=board, mp, addr'" << endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ",  mp=0..3,  addr=0x.." << endl;  
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x.." << endl;  
                   exit(EXIT_FAILURE);
                }
                readwcmd->setMp(mp);
@@ -3065,10 +3065,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                uint32 wordhi = 0;
                
                int numitems = sscanf(optarg, "%d,%d,%x,%x,%x", &board,&mp,&addr,&wordlo,&wordhi);
-               if (numitems < 5 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS || mp > 3) {
+               if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
                   cout << "Error: invalid write ddr value. Should be of the format " << endl;
                   cout <<  "       '--writew=board, mp, addr, wordlo, wordhi'"<< endl; 
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ",  mp=0..3,  addr=0x..,  wordlo=0x..,  wordhi=0x.." << endl;  
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x..,  wordlo=0x..,  wordhi=0x.." << endl;  
                   exit(EXIT_FAILURE);
                }
                writewcmd->setMp(mp);
@@ -3090,10 +3090,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                int32 board = 0;
                               
                int numitems = sscanf(optarg, "%d", &board);
-               if (numitems < 1 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS) {
+               if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
                   cout << "Error: invalid write ddr value. Should be of the format " << endl;
                   cout << "       '--testddr=board' "<< endl;  
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << endl;
+                  cout << "       board=0.." << (itsMaxBoards - 1) << endl;
                   exit(EXIT_FAILURE);
                }
                select.clear();
@@ -3116,10 +3116,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                               
                int numitems = sscanf(optarg, "%d,%u,%u,%u", &board, &mp, &pid, &regid);
                
-               if (numitems < 4 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS || mp > 3 || pid > 7 || regid > 7) {
+               if (numitems < 4 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
                   cout << "Error: invalid read register value. Should be of the format" << endl;
                   cout << "       '--readreg=board, mp, pid, regid'" << endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;  
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;  
                   exit(EXIT_FAILURE);
                }
                if ((REG_TABLE_3[pid][regid] == REG_WRITE_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {
@@ -3151,10 +3151,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
                char datastr[256];
                
                int numitems = sscanf(optarg, "%d,%u,%u,%u,%s", &board, &mp, &pid, &regid, datastr);
-               if (numitems < 5 || numitems == EOF || board < 0 || board >= MAX_N_TBBOARDS || mp > 3 || pid > 7 || regid > 7) {
+               if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
                   cout << "Error: invalid write register value. Should be of the format " << endl;
                   cout <<  "       '--writereg=board, mp, pid, regid, data1, data2 etc.'" << endl;
-                  cout << "       board=0.." << (MAX_N_TBBOARDS - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;   
+                  cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;   
                   exit(EXIT_FAILURE);
                }
                if ((REG_TABLE_3[pid][regid] == REG_READ_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {
@@ -3172,7 +3172,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
             dstr = strtok (datastr," ,");
             while (dstr != NULL)
             {
-                  val = strtol(dstr,NULL,16);
+                  val = strtoul(dstr,NULL,16);
                   //cout << formatString("%08x ",val);
                writercmd->setData(wordcnt,val);
                   wordcnt++;
@@ -3303,12 +3303,12 @@ int main(int argc, char** argv)
   }
   catch (Exception& e) {
     cout << "Exception: " << e.text() << endl;
-      cout << endl;
-      cout << "== abnormal termination of tbbctl ============================================" << endl;
+    cout << endl;
+    cout << "== abnormal termination of tbbctl ============================================" << endl;
     exit(EXIT_FAILURE);
   }
    cout << endl;
-   cout << "== normal termination of tbbctl ==============================================" << endl;
+   // cout << "== normal termination of tbbctl ==============================================" << endl;
 
   return(0);
 }

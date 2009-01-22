@@ -111,9 +111,9 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	delete itsTPackE;
 	
 	nextBoardNr();
-	if (isDone()) {
-		setSleepTime(3.0); // clearing the registers will last 3 seconds
-	}
+	//if (isDone()) {
+	//	setSleepTime(3.0); // clearing the registers will last 3 seconds
+	//}
 }
 
 // ----------------------------------------------------------------------------

@@ -31,20 +31,20 @@ using namespace LOFAR;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using	namespace TBB;
-
 // information about the flash memory
-static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_PAGES 				= 32; // 32 pages in flash
-static const int FL_N_SECTORS				= 512; // 512 sectors in flash
-static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
+static const int FL_SIZE            = 64 * 1024 *1024; // 64 MB in bytes
+static const int FL_N_SECTORS       = 512; // 512 sectors in flash
+static const int FL_N_BLOCKS        = 65536; // 65336 blocks in flash
+static const int FL_N_IMAGES        = 16; // 16 images in flash
 
-static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
-static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
-static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
+static const int FL_IMAGE_SIZE      = FL_SIZE / FL_N_IMAGES; // 4194304 bytes  
+static const int FL_SECTOR_SIZE     = FL_SIZE / FL_N_SECTORS; // 131.072 bytes
+static const int FL_BLOCK_SIZE      = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
 
-static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
-static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
-static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
+static const int FL_SECTORS_IN_IMAGE = FL_IMAGE_SIZE / FL_SECTOR_SIZE; // 32 sectors per image
+static const int FL_BLOCKS_IN_SECTOR = FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
+static const int FL_BLOCKS_IN_IMAGE  = FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 4096 blocks per image
+
 
 //--Constructors for a ErasefCmd object.----------------------------------------
 ErasefCmd::ErasefCmd():
@@ -89,7 +89,7 @@ void ErasefCmd::saveTbbEvent(GCFEvent& event)
 	}
 	
 	itsImage = itsTBBE->image;
-	itsSector = (itsImage * FL_SECTORS_IN_PAGE);
+	itsSector = (itsImage * FL_SECTORS_IN_IMAGE);
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPERASEF;
@@ -103,7 +103,7 @@ void ErasefCmd::sendTpEvent()
 {
 	itsTPE->addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
 	TS->boardPort(getBoardNr()).send(*itsTPE);
-	TS->boardPort(getBoardNr()).setTimer((long)1); // erase time of sector = 500 mSec
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout()); // erase time of sector = 500 mSec
 }
 
 // ----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ void ErasefCmd::saveTpAckEvent(GCFEvent& event)
 		if (itsBoardStatus == 0) {
 			itsSector++; 
 			
-			if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_PAGE)) {
+			if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_IMAGE)) {
 				setDone(true);
 			}
 		}

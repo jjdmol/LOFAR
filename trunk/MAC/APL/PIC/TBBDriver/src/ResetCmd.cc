@@ -102,7 +102,7 @@ void ResetCmd::sendTpEvent()
 {
 	if (TS->boardPort(getBoardNr()).isConnected()) {
 			TS->boardPort(getBoardNr()).send(*itsTPE);
-			TS->boardPort(getBoardNr()).setTimer(1.0);
+			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 	}
 }
 
@@ -114,7 +114,8 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 		TS->setBoardState(getBoardNr(),noBoard);
 	}	else {
 		itsTPackE = new TPResetAckEvent(event);
-		if (itsTPackE->status == 0) {
+		TS->setImageNr(getBoardNr(), 0);
+    if (itsTPackE->status == 0) {
 			TS->setBoardState(getBoardNr(),setImage1);
 		} else {
 			TS->setBoardState(getBoardNr(),boardError);
@@ -134,7 +135,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	if (itsBoardNr < TS->maxBoards()) {
 		setBoardNr(itsBoardNr);
 	} else {
-		setSleepTime(20.0);
+		setSleepTime(15.0);
 		setDone(true);
 	}
 }

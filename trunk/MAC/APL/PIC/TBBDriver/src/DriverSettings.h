@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace TBB {
 
-static const int DRIVER_VERSION = 201; // 2.00 
+static const int DRIVER_VERSION = 205; // 2.00 
 
 enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, freeBoard, boardFreed, boardReady, boardError};
 

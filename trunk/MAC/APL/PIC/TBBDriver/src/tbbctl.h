@@ -72,7 +72,15 @@ static const int REG_SIZE[8][8] = {
 	{1,1,1,8,4,16,4,16}};
 		
 static const int TBB_LISTEN_ONE_SHOT = 0;
-static const int TBB_LISTEN_CONTINUES = 1;  	
+static const int TBB_LISTEN_CONTINUES = 1;
+
+// dimensions of the connected hardware
+uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
+int			itsMemory[MAX_N_TBBOARDS];
+int			itsMaxBoards;
+int			itsMaxChannels;
+
+  	
 //-----------------------------------------------------------------------------
 // class Command :base class for control commands towards the TBBDriver.
 //
@@ -163,8 +171,8 @@ public:
 	int getMaxSelections(void) const
 	{
 		int maxbits = 0;
-		if (itsCmdType == BOARDCMD) maxbits = MAX_N_TBBOARDS; 
-		if (itsCmdType == RCUCMD)   maxbits = MAX_N_RCUS;
+		if (itsCmdType == BOARDCMD) maxbits = itsMaxBoards; 
+		if (itsCmdType == RCUCMD)   maxbits = itsMaxChannels;
 		return(maxbits);	
 	}
 	
@@ -849,13 +857,7 @@ private:
 	GCFTimerPort*	itsCmdTimer;
   // the command to execute
   Command* 	itsCommand;
-	
-  // dimensions of the connected hardware
-	uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
-	int			itsMemory[MAX_N_TBBOARDS];
-	int			itsMaxBoards;
-	int			itsMaxChannels;
-					
+				
 		
   // commandline parameters
   int   	itsArgc;

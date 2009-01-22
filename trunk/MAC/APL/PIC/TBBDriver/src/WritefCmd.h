@@ -38,12 +38,13 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 		
-		enum flashStage {idle, erase_flash, write_flash, verify_flash, write_info, verify_info};
 		
 		class WritefCmd : public Command 
 		{
 			public:
-				// Constructors for a WritefCmd object.
+		    enum flashStage {idle, erase_flash, write_flash, verify_flash};
+				
+        // Constructors for a WritefCmd object.
 				WritefCmd();
 	  
 				// Destructor for WritefCmd.
@@ -81,8 +82,7 @@ namespace LOFAR {
 				TPWritefAckEvent			*itsTPackE;
 				TBBWriteImageEvent		*itsTBBE;
 				TBBWriteImageAckEvent	*itsTBBackE;
-				uint8									*itsImageData;
-				
+				uint8									*itsImageData; // data from hex files
 				
 				// variables holding data from tp cmd
 				uint32	itsBoardStatus;
