@@ -38,8 +38,9 @@ if opts.serial_nr==None:
 # Define subrack testlog class for pass/fail and logging
 vlev = opts.verbosity
 testId = ''
-logName = 'SUBR-%05d-%05d.dat' % (opts.batch_nr, opts.serial_nr)
-
+appLev = False
+logName = '/home/lofartest/subracktest/data/SUBR-%05d-%05d.dat' % (opts.batch_nr, opts.serial_nr)
+cli.command('rm -f /home/lofartest/subracktest/data/SUBR-%05d-%05d.dat', appLev) 
 sr = testlog.Testlog(vlev, testId, logName)
 
 sr.setResult('PASSED')
@@ -86,7 +87,7 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/tbb_version.gold')
   sr.setResult('FAILED')
-  
+ 
 
 ################################################################################
 sr.setId('SPU status - ')
@@ -94,6 +95,7 @@ sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RSP - SPU I2C interface by reading the SPU sensor data')
 sr.appendLog(21,'')
 
+res = cli.command('python i2c_spu.py')
 res = cli.command('python i2c_spu.py')
 if res.find('wrong')==-1:
   sr.appendLog(11,'>>> RSP - SPU I2c interface test went OK')
@@ -148,14 +150,14 @@ sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RCU - RSP - TBB LVDS interfaces by capturing pseudo random data on TBB')
 sr.appendLog(21,'')
 
-#res = cli.command('./tbb_prbs_tester.sh')
-#if res.find('wrong')==-1:
-#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
-#else:
-#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
-#  sr.appendLog(11,'CLI:')
-#  sr.appendLog(11,res,1,1,1)
-#  sr.setResult('FAILED')
+res = cli.command('./tbb_prbs_tester.sh')
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
+else:
+  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.setResult('FAILED')
 
 
 ################################################################################
