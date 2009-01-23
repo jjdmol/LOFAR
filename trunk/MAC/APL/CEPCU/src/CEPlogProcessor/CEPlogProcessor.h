@@ -38,7 +38,7 @@
 
 namespace LOFAR {
   namespace APL {
-// \addtogroup ACCbin
+// \addtogroup CEPCU
 // @{
 
 
@@ -90,7 +90,7 @@ private:
 };
 
 // @} addgroup
-  } // namespace ACC
+  } // namespace APL
 } // namespace LOFAR
 
 #endif
