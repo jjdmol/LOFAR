@@ -54,8 +54,9 @@ namespace LOFAR {
       int nparts = vds.getParts().size();
       string cdescName = vds.getDesc().getClusterDescName();
       // Start all clients.
-      string command("startdistproc -mode 0 -nomasterhost -cdn " +
-                     cdescName + "parmdbclient");
+      string command("startdistproc -mode " + itsPort +
+                     " -nowait -nomasterhost -cdn " +
+                     cdescName + " parmdbclient");
       // Accept a connection from the clients and check if they are
       // initialized correctly.
       itsConn.addConnections (nparts);
