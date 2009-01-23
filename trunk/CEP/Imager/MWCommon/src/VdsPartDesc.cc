@@ -28,6 +28,7 @@ namespace LOFAR { namespace CEP {
     itsName         = parset.getString ("Name");
     itsFileName     = parset.getString ("FileName", "");
     itsFileSys      = parset.getString ("FileSys", "");
+    itsCDescName    = parset.getString ("ClusterDesc", "");
     itsStepTime     = parset.getDouble ("StepTime");
     itsNChan        = parset.getInt32Vector ("NChan", vector<int32>());
     itsStartFreqs   = parset.getDoubleVector ("StartFreqs", vector<double>());
@@ -60,6 +61,9 @@ namespace LOFAR { namespace CEP {
     }
     if (! itsFileSys.empty()) {
       os << prefix << "FileSys    = " << itsFileSys << endl;
+    }
+    if (! itsCDescName.empty()) {
+      os << prefix << "ClusterDesc= " << itsCDescName << endl;
     }
     os << prefix << "StartTime  = "
 	<< MVTime::Format(MVTime::YMD,9) << MVTime(itsStartTime/86400) << endl;
@@ -158,7 +162,7 @@ namespace LOFAR { namespace CEP {
   BlobOStream& VdsPartDesc::toBlob (BlobOStream& bs) const
   {
     bs.putStart ("VdsPartDesc", 1);
-    bs << itsName << itsFileName << itsFileSys
+    bs << itsName << itsFileName << itsFileSys << itsCDescName
        << itsStartTime << itsEndTime << itsStepTime
        << itsStartTimes << itsEndTimes
        << itsNChan << itsStartFreqs << itsEndFreqs
@@ -170,7 +174,7 @@ namespace LOFAR { namespace CEP {
   BlobIStream& VdsPartDesc::fromBlob (BlobIStream& bs)
   {
     bs.getStart ("VdsPartDesc");
-    bs >> itsName >> itsFileName >> itsFileSys
+    bs >> itsName >> itsFileName >> itsFileSys >> itsCDescName
        >> itsStartTime >> itsEndTime >> itsStepTime
        >> itsStartTimes >> itsEndTimes
        >> itsNChan >> itsStartFreqs >> itsEndFreqs
