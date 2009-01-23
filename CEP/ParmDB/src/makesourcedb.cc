@@ -39,7 +39,7 @@
 // The format string can be given as an argument. If its value starts with a <
 // it means that it is read from the file following it. No file means from the
 // text file (headers) itself. A format string in a file is like a normal
-// format string, but preceeded with '#(' and followed by ')format'.
+// format string, but preceeded with '#(' and followed by ')=format'.
 // Whitespace is allowed between these characters.
 //
 // A format string looks like:
@@ -690,7 +690,9 @@ string readFormat (string file, const string& catFile)
              << " containing format string could not be opened");
   string line;
   getline (infile, line);
-  casa::Regex regex("# *`( *.* *) *format *$");
+  casa::Regex regex("^ *# *\\( *.* *\\) *= *format *$");
+  casa::Regex regexs1("^ *# *\\( *");
+  casa::Regex regexs2("\\) *= *format *$");
   while (infile) {
     uInt st=0;
     st = lskipws(line, st, line.size());   // skip whitespace
@@ -698,9 +700,10 @@ string readFormat (string file, const string& catFile)
       if (line[st] != '#') {
         break;                             // data line
       }
-      String sline(line);
+      casa::String sline(line);
       if (sline.matches (regex)) {
-        sline.gsub (regex, string());
+        sline.gsub (regexs1, string());
+        sline.gsub (regexs2, string());
         return sline;
       }
     }
