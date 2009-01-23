@@ -35,7 +35,7 @@ AM_PATH_PYTHON([2.4])
 [
 # Find python library and include directory and append to paths
 lfr_pyincdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_inc()"`
-lfr_pylibdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.PREFIX"`/lib
+lfr_pylibdir=`$PYTHON -c "from distutils import sysconfig; print sysconfig.PREFIX"`/$lofar_libdirext
 lfr_pyvers=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_version()"`
 
 lfr_pylibs=
