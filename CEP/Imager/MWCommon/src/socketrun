@@ -11,13 +11,15 @@
 # This script starts a distributed process to process a datasets.
 # The processes will use sockets for communication.
 #
-# run as:  socketrun dry hfn port logfile program [arg1 arg2 ...]
+# run as:  socketrun dry hfn port wait logfile program [arg1 arg2 ...]
 
 dry=$1
 shift
 hfn=$1
 shift
 port=$1
+shift
+wait=$1
 shift
 logfile=$1
 shift
@@ -57,12 +59,15 @@ do
   rank=`expr $rank + 1`
 done
 
+# If needed, wait for the processes to end.
 status=0
-for pid in $pidlist
-do
-  if ! wait $pid; then
-    status=1
-  fi
-done
+if test "$wait" = 1; then
+  for pid in $pidlist
+  do
+    if ! wait $pid; then
+      status=1
+    fi
+  done
+fi
 
 exit $status

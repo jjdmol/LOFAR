@@ -22,6 +22,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
 modxx=single
+wait=1
 dsn=
 cdn=
 hfn=
@@ -78,6 +79,12 @@ do
     shift
     modxx="$1"
     shift
+  elif [ "$1" = "-wait" ]; then
+    shift
+    wait=1
+  elif [ "$1" = "-nowait" ]; then
+    shift
+    wait=0
   elif [ "$1" = "-masterhost" ]; then
     shift
     master="$1"
@@ -189,6 +196,6 @@ elif test "$modxx" = "single"; then
     $program "$@" || exit 1
   fi
 else
-  echo "socketrun $dry $hfn $modxx $logfile $program" "$@"
-  $pgmpath/socketrun $dry $hfn $modxx "$logfile" $program "$@" || exit 1
+  echo "socketrun $dry $hfn $modxx $wait $logfile $program" "$@"
+  $pgmpath/socketrun $dry $hfn $modxx $wait "$logfile" $program "$@" || exit 1
 fi
