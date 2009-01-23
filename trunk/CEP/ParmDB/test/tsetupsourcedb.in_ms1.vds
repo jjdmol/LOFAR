@@ -1,7 +1,7 @@
-Name = tsetupparmdb.in_ms1
-FileName = tsetupparmdb_tmp.ms1
+Name = tsetupsourcedb.in_ms1
+FileName = tsetupsourcedb_tmp.ms1
 FileSys = node1:/usr
-ClusterDesc = tsetupparmdb.in_cd
+ClusterDesc = tsetupsourcedb.in_cd
 StartTime = 0
 EndTime = 2
 StepTime = 0.5
