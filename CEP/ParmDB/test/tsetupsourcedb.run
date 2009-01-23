@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Add . to PATH.
+PATH=.:$PATH
+export PATH
+
+# Set srcdir if undefined (if run outside 'make check')
+if test "$srcdir" = ""; then
+  srcdir=../../../src
+fi
+
+# Create directories to create the sourcedb-s in.
+# They must match the FileName in in_ms*.vds.
+rm -rf tsetupsourcedb_tmp.ms0
+rm -rf tsetupsourcedb_tmp.ms1
+rm -rf tsetupsourcedb_tmp.ms2
+mkdir tsetupsourcedb_tmp.ms0
+mkdir tsetupsourcedb_tmp.ms1
+mkdir tsetupsourcedb_tmp.ms2
+
+# Combine the vds files.
+combinevds tsetupsourcedb_tmp.vd tsetupsourcedb.in_ms{0,1,2}.vds
+
+# Enclose output in angle brackets to exclude it from the assay diff.
+echo ">>>"
+$srcdir/../src/setupsourcedb -overwrite tsetupsourcedb_tmp.vd tsetupsourcedb.in "" "" tsetupsourcedb_tmp.log dry tsetupsourcedb_tmp.hfn
+echo "<<<"
+
+# Append the three log files to the output.
+# Wait for the subprocesses to finish.
+sleep 5
+grep -v 'log4cxx:' tsetupsourcedb_tmp.log-0
+grep -v 'log4cxx:' tsetupsourcedb_tmp.log-1
+grep -v 'log4cxx:' tsetupsourcedb_tmp.log-2

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# setupparmdb-part: The distributed part of setupparmdb
+# setupsourcedb-part: The distributed part of setupsourcedb
 #
 # Copyright (C) 2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,9 +26,9 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 11; then
-  echo "run as:  setupparmdb-part dummy dummy dummy dummy rank ms-part filesys"
-  echo "                          lofarroot pdbfile pdbname dry"
+if test $# != 12; then
+  echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank ms-part filesys"
+  echo "                            lofarroot pdbfile pdbname overwrite dry"
   exit 1
 fi
 
@@ -40,17 +40,18 @@ seqnr=$1
 msn=$2
 shift
 lroot=$3
-pdbfile=$4
+srccat=$4
 pdb=$5
-dry=$6
+overwrite=$6
+dry=$7
 
 
 # Initialize lofar environment.
 . $lroot/lofarinit.sh
 
-# Check if a parmdb name is given (if empty, the MS gets deleted hereafter).
+# Check if a sourcedb name is given.
 if test "$pdb" = ""; then
-  echo "setupparmdb-part: empty pdb name given"
+  echo "setupsourcedb-part:empty pdb name given"
   exit 1
 fi
 
@@ -60,10 +61,11 @@ if test ! -d "$msn"; then
   msn=`getparsetvalue $msn FileName`
 fi
 
-# Create the instrument ParmDB.
-# Insert defaults for non-zero parameters.
-echo "Create $msn/$pdb (copy of $pdbfile)"
+# Append to the SourceDB. Delete it first if overwrite is given.
+echo "Create $msn/$pdb from $srccat"
 if test "$dry" != dry; then
-  rm -rf $msn/$pdb           # this is safe because $pdb is not empty
-  cp -r $pdbfile $msn/$pdb
+  if $overwrite = 1; then
+    rm -rf $msn/$pdb.sky
+  fi
+  makesourcedb in=$srccat out=$msn/$pdb.sky
 fi

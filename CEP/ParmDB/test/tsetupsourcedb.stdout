@@ -5,6 +5,6 @@ ssh localhost /Users/diepen/sim/LOFAR/CEP/Imager/MWImager/src/setupparmdb-part s
 ssh localhost /Users/diepen/sim/LOFAR/CEP/Imager/MWImager/src/setupparmdb-part socket localhost 0 3 1 tsetupparmdb.in_ms1.vds node1:/usr /Users/diepen/sim/LOFAR/installed/gnu_debug parmdb /Users/diepen/sim/LOFAR/CEP/Imager/MWImager/build/gnu_debug/test dry
 ssh localhost /Users/diepen/sim/LOFAR/CEP/Imager/MWImager/src/setupparmdb-part socket localhost 0 3 2 tsetupparmdb.in_ms2.vds node1:/usr /Users/diepen/sim/LOFAR/installed/gnu_debug parmdb /Users/diepen/sim/LOFAR/CEP/Imager/MWImager/build/gnu_debug/test dry
 <<<
-Create tsetupparmdb_tmp.ms0/parmdb (copy of tsetupparmdb_tmp.parmdb.template)
-Create tsetupparmdb_tmp.ms1/parmdb (copy of tsetupparmdb_tmp.parmdb.template)
-Create tsetupparmdb_tmp.ms2/parmdb (copy of tsetupparmdb_tmp.parmdb.template)
+Create tsetupsourcedb_tmp.ms0/sourcedb from tsetupsourcedb.in
+Create tsetupsourcedb_tmp.ms1/sourcedb from tsetupsourcedb.in
+Create tsetupsourcedb_tmp.ms2/sourcedb from tsetupsourcedb.in

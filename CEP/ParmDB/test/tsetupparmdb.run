@@ -18,9 +18,12 @@ mkdir tsetupparmdb_tmp.ms0
 mkdir tsetupparmdb_tmp.ms1
 mkdir tsetupparmdb_tmp.ms2
 
+# Combine the vds files.
+combinevds tsetupparmdb_tmp.vd tsetupparmdb.in_ms{0,1,2}.vds
+
 # Enclose output in angle brackets to exclude it from the assay diff.
 echo ">>>"
-$srcdir/../src/setupparmdb tsetupparmdb.in_vd sourcecat "" tsetupparmdb.in_cd `pwd` tsetupparmdb_tmp.log dry tsetupparmdb_tmp.hfn
+$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.vd "" "" "" tsetupparmdb_tmp.log dry tsetupparmdb_tmp.hfn
 echo "<<<"
 
 # Append the three log files to the output.
@@ -29,6 +32,3 @@ sleep 5
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-0
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-1
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-2
-
-# Remove the temporary parset part files.
-rm -f tsetupparmdb.parset.part*
