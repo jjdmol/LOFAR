@@ -11,7 +11,7 @@ node1
 node2
 node1
 
-socketrun 1 tstartdproc_tmp.out3 3851  prog1 -arg a b
+socketrun 1 tstartdproc_tmp.out3 3851 1  prog1 -arg a b
 ssh localhost prog1 socket localhost 3851 4 0 . . -arg a b
 ssh node1 prog1 socket localhost 3851 4 1 /usr/local/xyx0 node1:/usr -arg a b
 ssh node2 prog1 socket localhost 3851 4 2 /usr/local/xyx1 node1:/usr -arg a b
