@@ -1,10 +1,9 @@
 lib_LTLIBRARIES			= libbbscontrol.la
 
 libbbscontrol_la_SOURCES	= Package__Version.cc  \
+	AddStep.cc \
 	BlobStreamableConnection.cc \
 	Command.cc \
-	CommandExecutor.cc \
-	CommandQueue.cc \
 	CommandResult.cc \
 	CorrectStep.cc \
 	FinalizeCommand.cc \
@@ -19,11 +18,12 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	NextChunkCommand.cc \
 	NoiseStep.cc \
 	PredictStep.cc \
-	QueryBuilder/AddCommand.cc \
 	RecoverCommand.cc \
 	RefitStep.cc \
 	SenderId.cc \
 	ShiftStep.cc \
+    SharedState.cc \
+    SharedStateTransactors.cc \
 	SingleStep.cc \
 	SolverProcessControl.cc \
 	SolveStep.cc \
@@ -32,7 +32,6 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	Strategy.cc \
 	StreamUtil.cc \
 	SubtractStep.cc \
-	AddStep.cc \
 	SynchronizeCommand.cc \
 	Types.cc
 
@@ -53,5 +52,8 @@ SolverControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 versionbbscontrol_SOURCES      = versionbbscontrol.cc
 versionbbscontrol_LDADD        = libbbscontrol.la
 versionbbscontrol_DEPENDENCIES = libbbscontrol.la $(LOFAR_DEPEND)
+
+scriptdir = $(bindir)
+dist_script_SCRIPTS = calibrate calibrate-part
 
 include $(top_srcdir)/Makefile.common

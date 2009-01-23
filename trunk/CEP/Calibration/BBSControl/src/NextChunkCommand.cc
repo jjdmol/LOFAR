@@ -48,9 +48,9 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    void NextChunkCommand::accept(CommandVisitor &visitor) const
+    CommandResult NextChunkCommand::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

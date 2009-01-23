@@ -39,9 +39,9 @@ namespace LOFAR
     }
 
 
-    void CorrectStep::accept(CommandVisitor &visitor) const
+    CommandResult CorrectStep::accept(CommandVisitor &visitor) const
     {
-        visitor.visit(*this);
+        return visitor.visit(*this);
     }
 
 

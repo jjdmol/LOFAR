@@ -31,6 +31,7 @@
 #include <BBSControl/SynchronizeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/SharedState.h>
 
 #include <Common/ParameterSet.h>
 #include <Blob/BlobIStream.h>
@@ -45,6 +46,7 @@
 
 #include <unistd.h>    // for sleep()
 
+#include <Common/StreamUtil.h>
 
 
 namespace LOFAR
@@ -54,19 +56,13 @@ namespace LOFAR
     // Unnamed namespace, used to define local (static) variables, etc.
     namespace
     {
-      uint nrLocalCtrls(0);     // Number of local controllers
-      uint nrGlobalSolvers(0);  // Number of global solvers
-      uint nrClients(0);        // Number of clients (sum of the above two)
-
       // IDs of the last "next chunk" and "finalize" commands (if any).
       CommandId nextChunkId(0);
       CommandId finalizeId(0);
-      
-      bool dummy1 = BlobStreamableFactory::instance().registerClass<RegularAxis>("RegularAxis");
-      bool dummy2 = BlobStreamableFactory::instance().registerClass<OrderedAxis>("OrderedAxis");      
     }
 
-
+    using LOFAR::operator<<;
+    
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     GlobalProcessControl::GlobalProcessControl() :
@@ -91,7 +87,7 @@ namespace LOFAR
     tribool GlobalProcessControl::define()
     {
       LOG_INFO("GlobalProcessControl::define()");
-      
+
       try {
     	// Retrieve the strategy from the parameter set.
     	itsStrategy.reset(new Strategy(*globalParameterSet()));
@@ -99,17 +95,12 @@ namespace LOFAR
     	// Retrieve the steps in the strategy in sequential order.
         itsSteps = itsStrategy->getAllSteps();
     	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
-
-        // Read MetaMeasurement file.	
-        ifstream fin(itsStrategy->dataSet().c_str());
-        BlobIBufStream bufs(fin);
-        BlobIStream ins(bufs);
-        ins >> itsMetaMeasurement;
       }
       catch (Exception& e) {
-	LOG_ERROR_STR(e);
+        LOG_ERROR_STR(e);
         return false;
       }
+      
       // All went well.
       return true;
     }
@@ -120,80 +111,83 @@ namespace LOFAR
       LOG_INFO("GlobalProcessControl::init()");
 
       try {
-        // Create a new CommandQueue. This will open a connection to the
-        // blackboard database.
-        itsCommandQueue.reset
-          (new CommandQueue(globalParameterSet()->getString("BBDB.Name"),
-                            globalParameterSet()->getString("BBDB.Username"),
-                            globalParameterSet()->getString("BBDB.Host"),
-                            globalParameterSet()->getString("BBDB.Port")));
+        ParameterSet *ps = globalParameterSet();
+        ASSERT(ps);
+        
+        // Read Observation descriptor.
+        itsVdsDesc = CEP::VdsDesc(ps->getString("Observation"));
 
-        // Register for the "result" trigger, which fires when a new result is
-        // posted to the blackboard database.
-        itsCommandQueue->registerTrigger(CommandQueue::Trigger::Result);
+        string key = ps->getString("BBDB.Key", "default");
+        itsSharedState.reset(new SharedState(key,
+            ps->getString("BBDB.Name"),
+            ps->getString("BBDB.User"),
+            ps->getString("BBDB.Host", "localhost"),
+            ps->getString("BBDB.Port", "5432")));
 
-        // Retrieve the number of kernels.
-        nrLocalCtrls = globalParameterSet()->getUint32("Control.KernelCount");
-        LOG_DEBUG_STR("Number of kernels: " << nrLocalCtrls);
+        if(!itsSharedState->registerAsControl())
+        {
+          LOG_ERROR_STR("Could not register as control. There may be stale"
+            " state in the database for key: " << key);
+          return false;
+        }
 
-        // Retrieve the number of global solvers.
-        nrGlobalSolvers =
-          globalParameterSet()->getUint32("Control.SolverCount");
-        LOG_DEBUG_STR("Number of global solvers: " << nrGlobalSolvers);
+        itsSharedState->initRegister(itsVdsDesc, ps->getBool("UseSolver",
+            false));
 
-        // Send the strategy.
-        itsCommandQueue->setStrategy(*itsStrategy);
+        if(!itsSharedState->setRunState(SharedState::WAITING_FOR_WORKERS))
+        {        
+            THROW(BBSControlException, "Unable to set run state");
+        }
 
-        // Send an "initialize" command to the queue.
-        CommandId id = itsCommandQueue->addCommand(InitializeCommand());
-        LOG_DEBUG_STR("Initialize command has ID: " << id);
+        // Wait for workers to register.
+        while(itsSharedState->slotsAvailable())
+        {
+            sleep(3);
+        }
 
-        // Get a reference to the results registered in our local result map
-        // for the given command-id.
-        ResultMapType::mapped_type& results = itsResults[id];
+        if(!itsSharedState->setRunState(SharedState::COMPUTING_WORKER_INDEX))
+        {        
+            THROW(BBSControlException, "Unable to set run state");
+        }
+        
+        createWorkerIndex();
+        itsTimeAxis = itsSharedState->getGlobalTimeAxis();
+        ASSERT(itsTimeAxis);
+        
+        if(!itsSharedState->setRunState(SharedState::PROCESSING))
+        {        
+            THROW(BBSControlException, "Unable to set run state");
+        }
 
-        // Wait until all "clients" have acknowledged the "initialize"
-        // command.
-        nrClients = nrLocalCtrls + nrGlobalSolvers;
-        while (results.size() < nrClients) {
+        InitializeCommand initCmd(*globalParameterSet());
+        bool cmdDone = false;
 
-          LOG_DEBUG("Waiting for result trigger ...");
-          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
-
-            // Retrieve the new results from the command queue.
-            vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
-
-            for (uint i = 0; i < newResults.size(); ++i) {
-              LOG_DEBUG_STR(newResults[i].first << " returned: " << 
-                            newResults[i].second.asString());
+        CommandId cmdId = itsSharedState->addCommand(initCmd);
+        LOG_DEBUG_STR("Initialize command has ID: " << cmdId);
+        
+        // Wait for workers to execute initialize command.
+        cmdDone = false;
+        while(!cmdDone)
+        {
+            if(itsSharedState->waitForResult())
+            {
+                CommandStatus status = itsSharedState->getCommandStatus(cmdId);
+                LOG_DEBUG_STR("Command status: #result: " << status.nResults
+                    << " #fail: " << status.nFail);
+                LOG_DEBUG_STR(status.nResults << " out of "
+                    << itsSharedState->getWorkerCount()
+                    << " workers have responded");
+                    
+                if(status.nFail > 0)
+                {
+                    LOG_ERROR_STR("One or more workers reported failure.");
+                    itsSharedState->setRunState(SharedState::FAILED);
+                    return false;
+                }
+                    
+                cmdDone = (status.nResults == itsSharedState->getWorkerCount());
             }
-
-            // Add the new results to our local results vector.
-            results.insert(results.end(), 
-                           newResults.begin(), newResults.end());
-          }
-          ASSERT(results.size() <= nrClients);
-          LOG_DEBUG_STR(results.size() << " out of " << nrClients << 
-                        " clients have responded");
         }
-
-        // Did all "clients" respond with an "OK" status?
-        // Here we have to iterate over all elements in result -- a count()
-        // will not do, because result is a vector<pair<SenderId,
-        // CmdResult> > instead of a "plain" vector<CmdResult>. Could this be
-        // avoided by choosing a different STL container for ResultMapType??
-        LOG_TRACE_CALC("Results:");
-        uint notOk(0);
-        for (uint i = 0; i < results.size(); ++i) {
-          LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
-          if (!results[i].second) {
-            LOG_DEBUG_STR(results[i].first << " returned: " << 
-                          results[i].second.asString());
-            notOk++;
-          }
-        }
-        LOG_DEBUG_STR(notOk << " out of " << nrClients << 
-                      " clients returned an error status");
 
         // Set the steps iterator to the *end* of the steps vector. This
         // sounds odd, but it is a safety net to insure that all local
@@ -204,29 +198,39 @@ namespace LOFAR
         // should do is send a "next chunk" command.
         setState(NEXT_CHUNK);
 
-        // Determine ROI in frequency.
-        const RegionOfInterest &roi = itsStrategy->regionOfInterest();
-        pair<double, double> range = itsMetaMeasurement.getFreqRange();
-        itsFreqStart = range.first;
-        itsFreqEnd = range.second;
+        // Get frequency range of the observation.
+        const SharedState::WorkerDescriptor &kernel0 =
+            itsSharedState->getWorkerByIndex(SharedState::KERNEL, 0);
+        itsFreqStart = kernel0.grid[0]->range().first;
+        size_t nKernels = itsSharedState->getWorkerCount(SharedState::KERNEL);
+        const SharedState::WorkerDescriptor &kernelN =
+            itsSharedState->getWorkerByIndex(SharedState::KERNEL, nKernels - 1);
+        itsFreqEnd = kernelN.grid[0]->range().second;
 
-        // Determine ROI in time.
-        const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
-
+        // Get time window.
+        vector<string> window =
+            globalParameterSet()->getStringVector("TimeWindow",
+                vector<string>());
+                
         itsTimeStart = 0;
-        itsTimeEnd = timeAxis->size() - 1;
+        itsTimeEnd = itsTimeAxis->size() - 1;
+
         casa::Quantity time;
-        if(!roi.time.empty() && casa::MVTime::read(time, roi.time[0])) {
-          const size_t tslot = timeAxis->locate(time.getValue("s"));
-          if(tslot < timeAxis->size()) {
-            itsTimeStart = tslot;
-          }
+        if(!window.empty() && casa::MVTime::read(time, window[0]))
+        {
+            const size_t tslot = itsTimeAxis->locate(time.getValue("s"));
+            if(tslot < itsTimeAxis->size())
+            {
+                itsTimeStart = tslot;
+            }
         }
-        if(roi.time.size() > 1 && casa::MVTime::read(time, roi.time[1])) {
-          itsTimeEnd = timeAxis->locate(time.getValue("s"), false);
+        if(window.size() > 1 && casa::MVTime::read(time, window[1]))
+        {
+            itsTimeEnd = itsTimeAxis->locate(time.getValue("s"), false);
         }
+        
         itsChunkStart = itsTimeStart;
-        itsChunkSize = itsStrategy->chunkSize();
+        itsChunkSize = globalParameterSet()->getUint32("ChunkSize", 0);
         if(itsChunkSize == 0) {
           // If chunk size equals 0, take the whole region of interest
           // as a single chunk.
@@ -235,15 +239,14 @@ namespace LOFAR
         LOG_DEBUG_STR("Time range: [" << itsTimeStart << "," << itsTimeEnd
                       << "]");
         LOG_DEBUG_STR("Chunk size: " << itsChunkSize << " time slot(s)");
-
-        // Only return true if none of the local controllers returned an error
-        // status.
-        return notOk == 0;
+        
       }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return false;
-      }
+        catch (Exception& e) {
+            LOG_ERROR_STR(e);
+            return false;
+        }
+     
+      return true;
     }
 
 
@@ -260,16 +263,14 @@ namespace LOFAR
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
           ASSERT(itsChunkStart <= itsTimeEnd);
 
-          const Axis::ShPtr timeAxis = itsMetaMeasurement.getTimeAxis();
-          const double start = timeAxis->lower(itsChunkStart);
-          const double end =
-            timeAxis->upper(std::min(itsChunkStart + itsChunkSize - 1,
-                                     itsTimeEnd));
+          const double start = itsTimeAxis->lower(itsChunkStart);
+          const double end = itsTimeAxis->upper(std::min(itsChunkStart
+            + itsChunkSize - 1, itsTimeEnd));
           
           itsChunkStart += itsChunkSize;
           
           NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);          
-          nextChunkId = itsCommandQueue->addCommand(cmd);
+          nextChunkId =  itsSharedState->addCommand(cmd, SharedState::KERNEL);
           LOG_DEBUG_STR("Next-chunk command has ID: " << nextChunkId);
 
           setState(NEXT_CHUNK_WAIT);
@@ -284,24 +285,35 @@ namespace LOFAR
           // switch to RUN state.
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK_WAIT");
 
-          // Get a reference to the results registered in our local result map
-          // for the given command-id.
-          ResultMapType::mapped_type& results = itsResults[nextChunkId];
+            if(itsSharedState->waitForResult())
+            {
+                CommandStatus status = itsSharedState->getCommandStatus(nextChunkId);
 
-          LOG_DEBUG("Waiting for result trigger ...");
-          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+/*
+                vector<pair<ProcessId, CommandResult> > results =
+                    itsSharedState->getResults(nextChunkId);
+                
+                for(size_t i = 0; i < results.size(); ++i)
+                {
+                    if(!results[i].second)
+                    {
+                        LOG_ERROR_STR("Worker " << results[i].first.hostname
+                            << ":" << results[i].first.pid << " returned "
+                            << results[i].second.asString() << " ("
+                            << results[i].second.message() << ")");
+                    }
+                }
+*/
+                
+//                if(status.nResults - status.nFail > 0)
+                if(status.nResults == itsSharedState->getWorkerCount(SharedState::KERNEL))
+                {
+                    setState(RUN);
+                    itsStepsIterator = itsSteps.begin();
+                }
+            }                    
 
-            // Retrieve the new results from the command queue.
-            vector<ResultType> newResults = 
-              itsCommandQueue->getNewResults(nextChunkId);
-
-            // Add the new results to our local results vector.
-            results.insert(results.end(), 
-                           newResults.begin(), newResults.end());
-
-            // If any of the local controllers have responded with an OK
-            // status, switch to RUN state and set the steps iterator to the
-            // beginning of the strategy.
+            /*
             for (uint i = 0; i < newResults.size(); ++i) {
               LOG_DEBUG_STR(newResults[i].first << " returned: " << 
                             newResults[i].second.asString());
@@ -312,31 +324,7 @@ namespace LOFAR
                 break;
               }
             }
-          }
-          
-          // If we're still in NEXT_CHUNK_WAIT state and if all local
-          // controllers have responded, check if all returned an OUT_OF_DATA
-          // status. If so, we're done and must switch to FINALIZE state.
-          if (itsState == NEXT_CHUNK_WAIT && results.size() == nrClients) {
-            uint nrOutOfData(0);
-            for (uint i = 0; i < results.size(); ++i) {
-              if (results[i].first.type() == SenderId::KERNEL &&
-                  results[i].second == CommandResult::OUT_OF_DATA) {
-                nrOutOfData++;
-              }
-            }
-            if (nrOutOfData == nrLocalCtrls) {
-              LOG_DEBUG("All local controllers responded with OUT_OF_DATA.");
-              setState(FINALIZE);
-            } else {
-              LOG_DEBUG("One or more local controllers returned with "
-                        "an error status");
-              // Returning false might not be the best thing to do in the end
-              // -- doing a LOG_WARN() is probably better -- but it will
-              // (hopefully) make debugging easier.
-              return false;
-            }
-          }
+            */
           break;
         }
 
@@ -348,7 +336,10 @@ namespace LOFAR
           LOG_TRACE_FLOW("RunState::RUN");
 
           if (itsStepsIterator != itsSteps.end()) {
-            itsCommandQueue->addCommand(**itsStepsIterator++);
+            if((*itsStepsIterator)->type() != "Solve")
+                itsSharedState->addCommand(**itsStepsIterator++, SharedState::KERNEL);
+            else
+                itsSharedState->addCommand(**itsStepsIterator++);
             //             setState(WAIT);
           } else if(itsChunkStart > itsTimeEnd) {
             setState(FINALIZE);
@@ -359,6 +350,7 @@ namespace LOFAR
         }
 
 
+            /*
         case WAIT: {
           // Wait for a trigger from the database. If trigger received within
           // time-out period, switch to RUN state.
@@ -369,6 +361,7 @@ namespace LOFAR
           }
           break;
         }
+          */
 
 
         case FINALIZE: {
@@ -377,7 +370,7 @@ namespace LOFAR
           // the strategy as 'done'.
           LOG_TRACE_FLOW("RunState::FINALIZE");
 
-          finalizeId = itsCommandQueue->addCommand(FinalizeCommand());
+          finalizeId = itsSharedState->addCommand(FinalizeCommand());
           LOG_DEBUG_STR("Finalize command has ID: " << finalizeId);
 
           setState(FINALIZE_WAIT);
@@ -392,56 +385,25 @@ namespace LOFAR
           // to the QUIT state.
           LOG_TRACE_FLOW("RunState::FINALIZE_WAIT");
 
-          // Get a reference to the results registered in our local result map.
-          ResultMapType::mapped_type& results = itsResults[finalizeId];
-
-          // Did all "clients" acknowledge the "finalize" command?
-          if (results.size() < nrClients) { 
-            // No, wait for a result.
-            LOG_DEBUG("Waiting for result trigger ...");
-            
-            if (itsCommandQueue->
-                waitForTrigger(CommandQueue::Trigger::Result)) {
-
-              // Retrieve the new results from the command queue.
-              vector<ResultType> newResults = 
-                itsCommandQueue->getNewResults(finalizeId);
-
-              // Add the new results to our local results vector.
-              results.insert(results.end(), 
-                             newResults.begin(), newResults.end());
-            }
-            LOG_DEBUG_STR(results.size() << " out of " << nrClients << 
-                          " clients have responded");
-          }
-          else { 
-            // Yes, all clients have responded.
-            ASSERT(results.size() <= nrClients);
-
-            // Did all local controllers respond with an "OK" status?
-            LOG_TRACE_CALC("Results:");
-            uint notOk(0);
-            for (uint i = 0; i < results.size(); ++i) {
-              LOG_TRACE_CALC_STR(results[i].first << " - " << 
-                                 results[i].second);
-              if (!results[i].second) {
-                LOG_DEBUG_STR(results[i].first << " returned: " << 
-                              results[i].second.asString());
-                notOk++;
-              }
-            }
-            LOG_DEBUG_STR(notOk << " out of " << nrClients << 
-                          " clients returned an error status");
-
-            // Only set strategy state flag to "done" if none of the local
-            // controllers returned an error status.
-            if (notOk == 0) {
-              itsCommandQueue->setStrategyDone();
-            }
-
-            // Switch to QUIT state.
-            setState(QUIT);
-          }
+            if(itsSharedState->waitForResult())
+            {
+                CommandStatus status = itsSharedState->getCommandStatus(finalizeId);
+                
+                if(status.nResults == itsSharedState->getWorkerCount())
+                {
+                    if(status.nFail != 0)
+                    {
+                        itsSharedState->setRunState(SharedState::FAILED);
+                    }
+                    else
+                    {
+                        itsSharedState->setRunState(SharedState::DONE);
+                    }
+                
+                    // Switch to QUIT state.
+                    setState(QUIT);
+                }
+            }                    
           break;
         }
 
@@ -534,6 +496,58 @@ namespace LOFAR
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
 
+    void GlobalProcessControl::createWorkerIndex()
+    {
+        vector<SharedState::WorkerDescriptor> kernels =
+            itsSharedState->getWorkersByType(SharedState::KERNEL);
+        ASSERT(kernels.size() > 0);
+            
+        vector<pair<ProcessId, double> > index(kernels.size());
+        for(size_t i = 0; i < kernels.size(); ++i)
+        {
+            index[i] = make_pair(kernels[i].id, kernels[i].grid[0]->lower(0));
+        }
+        
+        stable_sort(index.begin(), index.end(), LessKernel());
+
+        for(size_t i = 0; i < kernels.size(); ++i)
+        {
+            if(!itsSharedState->setIndex(index[i].first, i))
+            {
+                THROW(BBSControlException, "Unable to set worker index.");
+            }
+        }
+
+        vector<SharedState::WorkerDescriptor> solvers =
+            itsSharedState->getWorkersByType(SharedState::SOLVER);
+            
+        for(size_t i = 0; i < solvers.size(); ++i)
+        {
+            if(!itsSharedState->setIndex(solvers[i].id, i))
+            {
+                THROW(BBSControlException, "Unable to set worker index.");
+            }
+        }
+    }
+    
+    /*
+    Axis::ShPtr GlobalProcessControl::createTimeAxis()
+    {
+        vector<SharedState::WorkerDescriptor> kernels =
+            itsSharedState->getWorkersByType(SharedState::KERNEL);
+        ASSERT(kernels.size() > 0);
+
+        int s1, e1, s2, e2;
+        Axis::ShPtr axis = kernels[0].grid[1];
+        for(size_t i = 1; i < kernels.size(); ++i)
+        {
+            axis = axis->combine(*kernels[i].grid[1], s1, e1, s2, e2);
+        }
+
+        return axis;
+    }
+    */
+    
     void GlobalProcessControl::setState(RunState state) 
     {
       itsState = state;
@@ -558,101 +572,6 @@ namespace LOFAR
       if (UNDEFINED < itsState && itsState < N_States) return states[itsState];
       else return states[N_States];
     }
-     
-
-#if 0
-    bool GlobalProcessControl::execCommand(const Command& cmd)
-    {
-      // Send the command \a cmd to the queue
-      CommandId id = itsCommandQueue->addCommand(cmd);
-      LOG_DEBUG_STR(cmd.type() << " command has ID: " << id);
-
-      // Get a reference to the results registered in our local result map
-      // for the given command-id.
-      ResultMapType::mapped_type& results = itsResults[id];
-
-      // Wait until all local controllers have posted a result.
-      while (results.size() < itsNrLocalCtrls) {
-
-        LOG_DEBUG("Waiting for result trigger ...");
-        if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
-
-          // Retrieve the new results from the command queue.
-          vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
-
-          // Add the new results to our local results vector.
-          results.insert(results.end(), 
-                         newResults.begin(), newResults.end());
-        }
-        LOG_DEBUG_STR(results.size() << " out of " << itsNrLocalCtrls << 
-                      " local controllers have responded");
-      }
-
-      // Did all local controllers respond with an "OK" status?
-      // Here we have to iterate over all elements in result -- a count() will
-      // not do, because result is a vector< pair<SenderId, CmdResult> >
-      // instead of a "plain" vector<CmdResult>. Could this be avoided by
-      // choosing a different STL container for ResultMapType??
-      LOG_TRACE_CALC("Results:");
-      uint notOk(0);
-      for (uint i = 0; i < results.size(); ++i) {
-        LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
-        if (!results[i].second) {
-          LOG_DEBUG_STR("Local controller " << results[i].first <<
-                        " returned: " << results[i].second.asString());
-          notOk++;
-        }
-      }
-      LOG_DEBUG_STR(notOk << " out of " << itsNrLocalCtrls << 
-                    " local controllers returned an error status");
-
-    }
-#endif
-
-
-#if 0
-    vector<ResultType>
-    GlobalProcessControl::waitForResults(const CommandId& id)
-    {
-      LOG_DEBUG("Waiting for result trigger ...");
-      if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
-        
-        // Retrieve the new results from the command queue.
-        vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
-
-        // Get a reference to the results registered in our local result map
-        // for the given command-id. If we're worried about exception safety,
-        // we should not use a reference here, but get a copy which should
-        // later be swapped with the orginal.
-        ResultMapType::mapped_type& results = itsResults[id];
-        
-        // Add the new results to our local results vector.
-        results.insert(results.end(), newResults.begin(), newResults.end());
-        
-        // Return the new results.
-        return newResults;
-      }
-    }
-
-
-    ResultMapType GlobalProcessControl::waitForResults()
-    {
-      LOG_DEBUG("Waiting for result trigger ...");
-      if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
-        
-        // Retrieve the new results from the command queue.
-        ResultMapType newResults = itsCommandQueue->getNewResults();
-
-        // Insert the results in our local result map. If we're worried about
-        // exception safety, we should make a copy of our local result map,
-        // which should later be swapped with the orginal.
-        itsResults.insert(newResults.begin(), newResults.end());
-
-        // Return the new results.
-        return newResults;
-      }
-    }
-#endif
 
 
   } // namespace BBS

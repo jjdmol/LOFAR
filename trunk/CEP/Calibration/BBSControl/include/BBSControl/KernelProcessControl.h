@@ -29,13 +29,27 @@
 // Local (kernel) process controller
 
 //# Includes
+#include <BBSControl/SharedState.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/BlobStreamableConnection.h>
-#include <BBSControl/CommandExecutor.h>
+//#include <BBSControl/CommandExecutor.h>
+#include <BBSControl/CommandVisitor.h>
 #include <BBSControl/SolveStep.h>
+#include <BBSControl/Types.h>
+
+#include <BBSKernel/Measurement.h>
+#include <BBSKernel/Model.h>
+#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/VisData.h>
+
+#include <PLC/ProcessControl.h>
+
+#include <ParmDB/SourceDB.h>
 
 #include <Common/lofar_smartptr.h>
-#include <PLC/ProcessControl.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
@@ -46,16 +60,10 @@ namespace BBS
 
 // Implementation of the ProcessControl interface for the local Kernel
 // controller.
-class KernelProcessControl: public ACC::PLC::ProcessControl
+class KernelProcessControl: public ACC::PLC::ProcessControl,
+                            public CommandVisitor
 {
 public:
-    enum State
-    {
-        INIT,
-        RUN,
-        WAIT
-    };
-
     // Constructor
     KernelProcessControl();
 
@@ -76,17 +84,81 @@ public:
     virtual string  askInfo(const string& keylist);
     // @}
 
+    // @name Implementation of CommandVisitor interface.
+    // @{
+    virtual CommandResult visit(const InitializeCommand &command);
+    virtual CommandResult visit(const FinalizeCommand &command);
+    virtual CommandResult visit(const NextChunkCommand &command);
+    virtual CommandResult visit(const RecoverCommand &command);
+    virtual CommandResult visit(const SynchronizeCommand &command);
+    virtual CommandResult visit(const MultiStep &command);
+    virtual CommandResult visit(const PredictStep &command);
+    virtual CommandResult visit(const SubtractStep &command);
+    virtual CommandResult visit(const AddStep &command);
+    virtual CommandResult visit(const CorrectStep &command);
+    virtual CommandResult visit(const SolveStep &command);
+    virtual CommandResult visit(const ShiftStep &command);
+    virtual CommandResult visit(const RefitStep &command);
+    virtual CommandResult visit(const NoiseStep &command);
+    // @}
+
 private:
+    enum State
+    {
+      UNDEFINED,
+      WAIT,
+      RUN,
+      //# Insert new types here!
+      N_State
+    };
+
+    CommandResult unsupported(const Command &command) const;
+
+    // Set run state to \a state
+    void setState(State state);
+
+    // Return the current state as a string.
+    const string& showState() const;
+
+    bool parseProductSelection(vector<string> &result, const Step &command)
+        const;
+
+    bool parseBaselineSelection(vector<baseline_t> &result,
+        const Step &command) const;
+
     State                                   itsState;
 
-    // Command Queue.
-    shared_ptr<CommandQueue>                itsCommandQueue;
+    // Shared State.
+    scoped_ptr<SharedState>                 itsSharedState;
+    
+    KernelIndex                             itsKernelIndex;
+    
+    // Measurement.
+    Measurement::Pointer                    itsMeasurement;
+    string                                  itsInputColumn;
+    
+    // Global time axis.
+    Axis::ShPtr                             itsGlobalTimeAxis;
+    
+    // Chunk.
+    Box                                     itsDomain;
+    VisSelection                            itsChunkSelection;
+    VisData::Pointer                        itsChunk;
+
+    // Model
+    Model::Pointer                          itsModel;
+
+    // Source Database
+    shared_ptr<SourceDB>                    itsSourceDb;
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
     
+    // Command Queue.
+//    shared_ptr<CommandQueue>                itsCommandQueue;
+
     // Command Executor.
-    scoped_ptr<CommandExecutor>             itsCommandExecutor;
+//    scoped_ptr<CommandExecutor>             itsCommandExecutor;
 };
 //@}
 

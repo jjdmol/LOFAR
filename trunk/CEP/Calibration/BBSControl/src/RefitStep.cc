@@ -39,9 +39,9 @@ namespace LOFAR
     }
 
 
-    void RefitStep::accept(CommandVisitor &visitor) const
+    CommandResult RefitStep::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

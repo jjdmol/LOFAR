@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/Types.h>
-#include <BBSControl/Command.h>
+//#include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -46,8 +46,9 @@ namespace LOFAR
 
     // \addtogroup BBSControl
     // @{
+     //: public Command
 
-    class Strategy : public Command
+    class Strategy
     {
     public:
       // Default constructor. Create an empty strategy, which is useful when
@@ -55,22 +56,22 @@ namespace LOFAR
       Strategy() {}
 
       // Create a solve strategy for the given work domain.
-      Strategy(const ParameterSet& aParamSet);
+      Strategy(const ParameterSet& ps);
 
       // Destructor.
       ~Strategy();
 
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const;
+//      // Return the command type of \c *this as a string.
+//      virtual const string& type() const;
 
       // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ParameterSet& ps) const;
+//      virtual void write(ACC::APS::ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ParameterSet& ps);
+//      virtual void read(const ACC::APS::ParameterSet& ps);
 
       // Accept a CommandVisitor that wants to process \c *this.
-      virtual void accept(CommandVisitor &visitor) const;
+//      virtual CommandResult accept(CommandVisitor &visitor) const;
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
@@ -84,56 +85,56 @@ namespace LOFAR
 
       // Indicate whether the Steps contained in \c itsSteps should also be
       // written when write(ParameterSet&) is called.
-      void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
+//      void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
 
       // @name Accessor methods
       // @{
-      string            dataSet()          const { return itsDataSet; }
-      PDB               parmDB()           const { return itsPDB; }
-      vector<string>    stations()         const { return itsStations; }
-      string            inputColumn()      const { return itsInputColumn; }
-      RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
-      uint32            chunkSize()        const { return itsChunkSize; }
-      Correlation       correlation()      const { return itsCorrelation; }
+//      string            dataSet()          const { return itsDataSet; }
+//      PDB               parmDB()           const { return itsPDB; }
+//      vector<string>    stations()         const { return itsStations; }
+//      string            inputColumn()      const { return itsInputColumn; }
+//      RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
+//      uint32            chunkSize()        const { return itsChunkSize; }
+//      Correlation       correlation()      const { return itsCorrelation; }
       // @}
 
     private:
       // Read the Step objects from the parameter set \a ps and store them
       // in \a itsSteps.
-      bool readSteps(const ParameterSet& ps);
+//      bool readSteps(const ACC::APS::ParameterSet& ps);
 
       // Write the Step objects in \a itsSteps to parameter set \a ps.
-      void writeSteps(ParameterSet& ps) const;
+//      void writeSteps(ACC::APS::ParameterSet& ps) const;
 
       // Name of the Measurement Set
-      string                 itsDataSet;
+//      string                 itsDataSet;
 
       // Information about the parameter database.
-      PDB                    itsPDB;
+//      PDB                    itsPDB;
 
       // Names of the stations to use. Names may contains wildcards, like \c *
       // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
       // they will be passed unaltered by BBS control.
-      vector<string>         itsStations;
+//      vector<string>         itsStations;
 
       // Name of the MS input column
-      string                 itsInputColumn;
+//      string                 itsInputColumn;
 
       // Region of interest
-      RegionOfInterest       itsRegionOfInterest;
+//      RegionOfInterest       itsRegionOfInterest;
 
       // Chunk size (#timeslots)
-      uint32                 itsChunkSize;
+//      uint32                 itsChunkSize;
 
       // Selection type of the correlation products.
-      Correlation            itsCorrelation;
+//      Correlation            itsCorrelation;
 
       // Sequence of steps that comprise this solve strategy.
       vector< shared_ptr<const Step> > itsSteps;
 
       // Flag indicating whether the Step objects in \c itsSteps should
       // also be written when write(ParameterSet&) is called.
-      bool                   itsWriteSteps;
+//      bool                   itsWriteSteps;
     };
 
     // Write the contents of a Strategy to an output stream.

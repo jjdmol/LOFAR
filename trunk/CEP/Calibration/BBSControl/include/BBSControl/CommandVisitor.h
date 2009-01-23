@@ -26,6 +26,8 @@
 // \file 
 // Abstract visitor class for the Command class
 
+#include <BBSControl/CommandResult.h>
+
 namespace LOFAR
 {
   namespace BBS
@@ -36,7 +38,6 @@ namespace LOFAR
     class NextChunkCommand;
     class RecoverCommand;
     class SynchronizeCommand;
-    class Strategy;
     class MultiStep;
     class PredictStep;
     class SubtractStep;
@@ -64,21 +65,20 @@ namespace LOFAR
     public:
       virtual ~CommandVisitor() = 0;
 
-      virtual void visit(const InitializeCommand &command) = 0;
-      virtual void visit(const FinalizeCommand &command) = 0;
-      virtual void visit(const NextChunkCommand &command) = 0;
-      virtual void visit(const RecoverCommand &command) = 0;
-      virtual void visit(const SynchronizeCommand &command) = 0;
-      virtual void visit(const Strategy &command) = 0;
-      virtual void visit(const MultiStep &command) = 0;
-      virtual void visit(const PredictStep &command) = 0;
-      virtual void visit(const SubtractStep &command) = 0;
-      virtual void visit(const AddStep &command) = 0;
-      virtual void visit(const CorrectStep &command) = 0;
-      virtual void visit(const SolveStep &command) = 0;
-      virtual void visit(const ShiftStep &command) = 0;
-      virtual void visit(const RefitStep &command) = 0;
-      virtual void visit(const NoiseStep &command) = 0;
+      virtual CommandResult visit(const InitializeCommand &command) = 0;
+      virtual CommandResult visit(const FinalizeCommand &command) = 0;
+      virtual CommandResult visit(const NextChunkCommand &command) = 0;
+      virtual CommandResult visit(const RecoverCommand &command) = 0;
+      virtual CommandResult visit(const SynchronizeCommand &command) = 0;
+      virtual CommandResult visit(const MultiStep &command) = 0;
+      virtual CommandResult visit(const PredictStep &command) = 0;
+      virtual CommandResult visit(const SubtractStep &command) = 0;
+      virtual CommandResult visit(const AddStep &command) = 0;
+      virtual CommandResult visit(const CorrectStep &command) = 0;
+      virtual CommandResult visit(const SolveStep &command) = 0;
+      virtual CommandResult visit(const ShiftStep &command) = 0;
+      virtual CommandResult visit(const RefitStep &command) = 0;
+      virtual CommandResult visit(const NoiseStep &command) = 0;
     };
 
     //# Pure virtual destructor has to be defined...

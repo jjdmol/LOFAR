@@ -1,9 +1,8 @@
 pkginclude_HEADERS = Package__Version.h  \
+	AddStep.h \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
 	Command.h \
-	CommandExecutor.h \
-	CommandQueue.h \
 	CommandResult.h \
 	CommandVisitor.h \
 	CorrectStep.h \
@@ -24,6 +23,8 @@ pkginclude_HEADERS = Package__Version.h  \
 	RefitStep.h \
 	SenderId.h \
 	ShiftStep.h \
+	SharedState.h \
+	SharedStateTransactors.h \
 	SingleStep.h \
 	SolverProcessControl.h \
 	SolveStep.h \
@@ -31,12 +32,10 @@ pkginclude_HEADERS = Package__Version.h  \
 	Step.h \
 	Strategy.h \
 	SubtractStep.h \
-	AddStep.h \
 	SynchronizeCommand.h \
 	Types.h
 
 noinst_HEADERS = \
-	QueryBuilder/AddCommand.h \
 	StreamUtil.h
 
 include $(top_srcdir)/Makefile.common

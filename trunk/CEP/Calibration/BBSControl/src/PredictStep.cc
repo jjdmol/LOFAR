@@ -39,9 +39,9 @@ namespace LOFAR
     }
 
 
-    void PredictStep::accept(CommandVisitor &visitor) const
+    CommandResult PredictStep::accept(CommandVisitor &visitor) const
     {
-        visitor.visit(*this);
+        return visitor.visit(*this);
     }
 
 

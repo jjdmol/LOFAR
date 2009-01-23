@@ -31,13 +31,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <BBSControl/CommandQueue.h>
+#include <BBSControl/CommandVisitor.h>
 #include <BBSControl/KernelConnection.h>
+#include <BBSControl/SharedState.h>
 #include <BBSControl/SolveTask.h>
 #include <BBSControl/SolveStep.h>
 
 #include <PLC/ProcessControl.h>
 #include <Common/lofar_smartptr.h>
+#include <Common/Net/Socket.h>
 
 namespace LOFAR
 {
@@ -50,7 +52,8 @@ namespace LOFAR
 
     // Implementation of the ProcessControl interface for the BBS solver
     // component.
-    class SolverProcessControl: public ACC::PLC::ProcessControl
+    class SolverProcessControl: public ACC::PLC::ProcessControl,
+                                public CommandVisitor
     {
     public:
       // Default constructor.
@@ -73,26 +76,38 @@ namespace LOFAR
       virtual string  askInfo(const string& keylist);
       // @}
 
+      // @name Implementation of CommandVisitor interface.
+      // @{
+      virtual CommandResult visit(const InitializeCommand &command);
+      virtual CommandResult visit(const FinalizeCommand &command);
+      virtual CommandResult visit(const NextChunkCommand &command);
+      virtual CommandResult visit(const RecoverCommand &command);
+      virtual CommandResult visit(const SynchronizeCommand &command);
+      virtual CommandResult visit(const MultiStep &command);
+      virtual CommandResult visit(const PredictStep &command);
+      virtual CommandResult visit(const SubtractStep &command);
+      virtual CommandResult visit(const AddStep &command);
+      virtual CommandResult visit(const CorrectStep &command);
+      virtual CommandResult visit(const SolveStep &command);
+      virtual CommandResult visit(const ShiftStep &command);
+      virtual CommandResult visit(const RefitStep &command);
+      virtual CommandResult visit(const NoiseStep &command);
+      // @}
+      
     private:
-      enum RunState {
-        UNDEFINED = -1,
+      enum State
+      {
+        UNDEFINED,
         WAIT,
-        GET_COMMAND,
-        SOLVE,
-        QUIT,
-        //# Insert new types HERE !!
-        N_States
+        RUN,
+        //# Insert new types here!
+        N_State
       };
 
-      // Returns whether the current solver control process controls a global
-      // solver or not. 
-      // \note For the time being we will assume that, when the number of
-      // kernels that will connect to the solver control process is more than
-      // one, the solver control process controls a global solver.
-      bool isGlobal() const;
-
+      CommandResult unsupported(const Command &command) const;
+      
       // Set run state to \a state
-      void setState(RunState state);
+      void setState(State state);
 
       // Return the current state as a string.
       const string& showState() const;
@@ -105,25 +120,21 @@ namespace LOFAR
       void setSolveTasks(const vector<uint>& groups,
                          const SolverOptions& options);
 
-      // (Run) state of the solver control process
-      RunState itsState;
+      // State of the solver control process.
+      State itsState;
 
-      // Number of kernels that will connect to this solver control process.
-      uint itsNrKernels;
+      // Shared control state.
+      scoped_ptr<SharedState>   itsSharedState;
 
-      // Connection to the command queue.
-      scoped_ptr<CommandQueue> itsCommandQueue;
-
-      // Sender ID, used when posting results to the command queue.
-      SenderId itsSenderId;
+      Socket  itsSocket;
 
       // Command that should be executed next, or is currently being
       // executed.
-      NextCommandType itsCommand;
+//      NextCommandType itsCommand;
 
       // Current solve command. We need to keep track of it, because we need
       // the information in it between different calls to the run() method.
-      shared_ptr<const SolveStep> itsSolveStep;
+//      shared_ptr<const SolveStep> itsSolveStep;
 
       // Vector of kernels.
       vector<KernelConnection> itsKernels;
@@ -131,6 +142,7 @@ namespace LOFAR
       // Container of solve tasks. Each task is executed by a different kernel
       // group.
       vector<SolveTask> itsSolveTasks;
+      
     };
 
     // @}

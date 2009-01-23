@@ -30,8 +30,6 @@
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/Types.h>
-
-#include <BBSKernel/MetaMeasurement.h>
 #include <BBSKernel/Measurement.h>
 //#include <BBSKernel/NoiseGenerator.h>
 #include <BBSKernel/Model.h>
@@ -39,6 +37,8 @@
 #include <BBSKernel/VisData.h>
 
 #include <ParmDB/SourceDB.h>
+
+#include <MWCommon/VdsDesc.h>
 
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
@@ -64,13 +64,7 @@ namespace LOFAR
     {
     public:
       CommandExecutor(KernelId id,
-                      shared_ptr<CommandQueue> &queue,
-                      shared_ptr<BlobStreamableConnection> &solver)
-        :   itsKernelId(id),
-            itsCommandQueue(queue),
-            itsGlobalSolver(solver)
-      {
-      }
+                      shared_ptr<BlobStreamableConnection> &solver);
 
       virtual ~CommandExecutor();
 
@@ -110,7 +104,8 @@ namespace LOFAR
       KernelId                                itsKernelId;
       
       // Measurement.
-      MetaMeasurement                         itsMetaMeasurement;
+      CEP::VdsDesc                            itsVdsDesc;
+      Axis::ShPtr                             itsTimeAxis;
       Measurement::Pointer                    itsMeasurement;
       string                                  itsInputColumn;
 
@@ -128,9 +123,6 @@ namespace LOFAR
       // Noise generator (put here to keep state across chunks).
 //      NoiseGenerator                          itsNoiseGenerator;
       
-      // CommandQueue.
-      shared_ptr<CommandQueue>                itsCommandQueue;
-
       // Connection to the global solver.
       shared_ptr<BlobStreamableConnection>    itsGlobalSolver;
 

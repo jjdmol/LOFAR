@@ -25,11 +25,15 @@
 #include <BBSControl/CommandVisitor.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
+#include <Common/ParameterSet.h>
+#include <BBSControl/StreamUtil.h>
 
 namespace LOFAR
 {
   namespace BBS 
   {
+    using LOFAR::operator<<;
 
     // Register InitializeCommand with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
@@ -43,9 +47,18 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    void InitializeCommand::accept(CommandVisitor &visitor) const
+    InitializeCommand::InitializeCommand()
     {
-      visitor.visit(*this);
+    }
+
+    InitializeCommand::InitializeCommand(const ParameterSet& ps)
+    {
+        read(ps);
+    }
+    
+    CommandResult InitializeCommand::accept(CommandVisitor &visitor) const
+    {
+      return visitor.visit(*this);
     }
 
 
@@ -59,21 +72,43 @@ namespace LOFAR
     void InitializeCommand::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
       Command::print(os);
+      os << boolalpha
+        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << noboolalpha
+        << endl << indent << "Stations: " << itsStations
+        << endl << indent << "Input column: " << itsInputColumn
+        << endl << indent << itsCorrelation;
     }
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void InitializeCommand::write(ParameterSet&) const
+    void InitializeCommand::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      ps.add("UseSolver", toString(itsUseSolver));
+      ps.add("Stations", toString(itsStations));
+      ps.add("InputColumn", itsInputColumn);
+      ps.add("Correlation.Selection", itsCorrelation.selection);
+      ps.add("Correlation.Type", toString(itsCorrelation.type));
     }
 
 
-    void InitializeCommand::read(const ParameterSet&)
+    void InitializeCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      
+      itsUseSolver              = ps.getBool("UseSolver", false);
+      itsStations               =
+        ps.getStringVector("Stations", vector<string>());
+      itsInputColumn            = ps.getString("InputColumn", "DATA");
+      itsCorrelation.selection  =
+        ps.getString("Correlation.Selection", "CROSS");
+      itsCorrelation.type       =
+        ps.getStringVector("Correlation.Type", vector<string>());
     }
 
 

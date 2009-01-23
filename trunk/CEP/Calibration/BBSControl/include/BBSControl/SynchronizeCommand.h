@@ -49,7 +49,7 @@ namespace LOFAR
       virtual void print(ostream& os) const;
 
       // Accept a CommandVisitor that wants to process \c *this.
-      virtual void accept(CommandVisitor &visitor) const;
+      virtual CommandResult accept(CommandVisitor &visitor) const;
 
     };
 

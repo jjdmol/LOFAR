@@ -51,7 +51,7 @@ namespace LOFAR
                    const Step* parent);
 
       // Accept a CommandVisitor that wants to process \c *this.
-      virtual void accept(CommandVisitor &visitor) const;
+      virtual CommandResult accept(CommandVisitor &visitor) const;
 
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;

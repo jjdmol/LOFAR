@@ -40,10 +40,10 @@ namespace LOFAR
 namespace BBS 
 {
 
-GlobalSolveController::GlobalSolveController(const KernelId &id,
+GlobalSolveController::GlobalSolveController(const KernelIndex &index,
     const VisData::Pointer &chunk, const Model::Pointer &model,
     const shared_ptr<BlobStreamableConnection> &solver)
-    :   itsKernelId(id),
+    :   itsKernelIndex(index),
         itsChunk(chunk),
         itsModel(model),
         itsSolver(solver),
@@ -101,7 +101,7 @@ void GlobalSolveController::run()
     ASSERTSTR(itsInitFlag, "Controller not initialized.");
 
     // Exchange coefficient index with solver.
-    CoeffIndexMsg localIndexMsg(itsKernelId);
+    CoeffIndexMsg localIndexMsg(itsKernelIndex);
     localIndexMsg.getContents() = itsCoeffIndex;
     itsSolver->sendObject(localIndexMsg);
 
@@ -118,8 +118,8 @@ void GlobalSolveController::run()
         static_cast<uint>(ceil(static_cast<double>(itsSolGrid[TIME]->size())
             / itsCellChunkSize));
 
-    CoeffMsg localCoeffMsg(itsKernelId);
-    EquationMsg localEqMsg(itsKernelId);
+    CoeffMsg localCoeffMsg(itsKernelIndex);
+    EquationMsg localEqMsg(itsKernelIndex);
 
     Location chunkStart(0, 0);
     Location chunkEnd(itsSolGrid[FREQ]->size() - 1,
@@ -195,7 +195,7 @@ void GlobalSolveController::run()
         chunkStart.second += itsCellChunkSize;
     }
 
-    itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
+    itsSolver->sendObject(ChunkDoneMsg(itsKernelIndex));
 }
 
 void GlobalSolveController::makeCoeffIndex(const ParmGroup &solvables)

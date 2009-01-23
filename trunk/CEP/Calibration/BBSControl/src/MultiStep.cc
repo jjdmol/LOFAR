@@ -63,9 +63,9 @@ namespace LOFAR
     }
 
 
-    void MultiStep::accept(CommandVisitor &visitor) const
+    CommandResult MultiStep::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

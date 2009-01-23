@@ -43,9 +43,9 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    void RecoverCommand::accept(CommandVisitor &visitor) const
+    CommandResult RecoverCommand::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

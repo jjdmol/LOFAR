@@ -28,16 +28,29 @@
 
 #include <BBSControl/SolverProcessControl.h>
 #include <BBSControl/BlobStreamableConnection.h>
-#include <BBSControl/CommandQueue.h>
 #include <BBSControl/Messages.h>
-#include <BBSControl/InitializeCommand.h>
-#include <BBSControl/NextChunkCommand.h>
-#include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
 
+#include <BBSControl/InitializeCommand.h>
+#include <BBSControl/FinalizeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/RecoverCommand.h>
+#include <BBSControl/SynchronizeCommand.h>
+
+#include <BBSControl/MultiStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/AddStep.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/ShiftStep.h>
+#include <BBSControl/RefitStep.h>
+#include <BBSControl/NoiseStep.h>
+
 #include <Common/ParameterSet.h>
+
 #include <Blob/BlobStreamable.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
@@ -65,8 +78,8 @@ namespace LOFAR
 
     SolverProcessControl::SolverProcessControl() :
       ProcessControl(),
-      itsState(UNDEFINED),
-      itsNrKernels(0)
+      itsState(UNDEFINED)
+//      itsNrKernels(0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
@@ -81,16 +94,6 @@ namespace LOFAR
     tribool SolverProcessControl::define()
     {
       LOG_INFO("SolverProcessControl::define()");
-      try {
-        itsNrKernels = globalParameterSet()->getUint32("Solver.KernelCount");
-        itsSenderId = 
-          SenderId(SenderId::SOLVER,
-            globalParameterSet()->getUint32("Solver.Id"));
-      }
-      catch(Exception& e) {
-        LOG_ERROR_STR(e);
-        return false;
-      }
       return true;
     }
 
@@ -99,84 +102,43 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::init()");
       try {
-        // Socket acceptor. In the global case, it will become a TCP listen
-        // socket; in the local case a Unix domain socket. The acceptor can be
-        // a stack object, since we don't need it anymore, once all kernels
-        // have connected.
-        Socket acceptor("SolverProcessControl");
+        ASSERT(globalParameterSet());
+        const ParameterSet &ps = *globalParameterSet();
+        
+        // Connect to the shared control state.
+        string key = ps.getString("BBDB.Key", "default");
+        itsSharedState.reset(new SharedState(key,
+            ps.getString("BBDB.Name"),
+            ps.getString("BBDB.User"),
+            ps.getString("BBDB.Host", "localhost"),
+            ps.getString("BBDB.Port", "5432")));
+            
+        // Initialize a TCP listen socket that will accept incoming kernel
+        // connections.
+        itsSocket.setName("Solver");
+        int32 backlog = ps.getInt32("ConnectionBacklog", 10);
+        itsSocket.initServer(ps.getString("Port"), Socket::TCP, backlog);
 
-        // Socket connector. In the global case, this will become a TCP socket
-        // accepted by the listening socket; in the local case, a Unix domain
-        // socket. The connector is a heap object, since we need it in the
-        // run() method.
-        shared_ptr<BlobStreamableConnection> connector;
-
-        if (isGlobal()) {
-          LOG_DEBUG("This is a global solver.");
-
-          // Create a new CommandQueue. This will open a connection to the
-          // blackboard database.
-          itsCommandQueue.reset
-            (new CommandQueue(globalParameterSet()->getString("BBDB.Name"),
-                              globalParameterSet()->getString("BBDB.Username"),
-                              globalParameterSet()->getString("BBDB.Host"),
-                              globalParameterSet()->getString("BBDB.Port")));
-
-          // Register for the "command" trigger, which fires when a new
-          // command is posted to the blackboard database.
-          itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
-
-          // Create a TCP listen socket that will accept incoming kernel
-          // connections.
-          acceptor.initServer(globalParameterSet()->getString("Solver.Port"), 
-                              Socket::TCP);
-        }
-        else {
-          LOG_DEBUG("This is a local solver.");
-
-          // Create a Unix domain socket to connect to "our" kernel.
-          ostringstream oss;
-          oss << "=Solver_" << getenv("USER") 
-              << globalParameterSet()->getInt32("Solver.Id");
-          acceptor.initServer(oss.str(), Socket::LOCAL);
+        // Poll until Control is ready to accept workers.
+        // TODO: Create a trigger for updates to the run state so polling
+        // is no longer necessary.
+        LOG_INFO_STR("Waiting for Control...");
+        while(itsSharedState->getRunState() == SharedState::WAITING_FOR_CONTROL)
+        {
+          sleep(3);
         }
 
-        //  Wait for all kernels to connect.
-        LOG_DEBUG_STR("Waiting for " << itsNrKernels << 
-                      " kernel(s) to connect ...");
-        itsKernels.resize(itsNrKernels);
-
-        for (uint i = 0; i < itsNrKernels; ++i) {
-          connector.reset(new BlobStreamableConnection(acceptor.accept()));
-          if (!connector->connect()) {
-            THROW (IOException, "Failed to connect kernel");
-          }
-
-          scoped_ptr<const KernelIdMsg>
-            msg(dynamic_cast<KernelIdMsg*>(connector->recvObject()));
-          if (!msg) {
-            THROW (SolverControlException, 
-                   "Illegal message. Expected a KernelIdMsg");
-          }
-
-          KernelId id(msg->getKernelId());
-          try {
-            itsKernels.at(id) = KernelConnection(connector, id);
-          } catch (std::out_of_range&) {
-            connector.reset();
-            LOG_ERROR_STR("Kernel ID (" << id << ") out of range. "
-                          "Disconnected kernel");
-          }
-
-          LOG_DEBUG_STR("Kernel " << i+1 << " of " << itsNrKernels << 
-                        " connected (id=" << id << ")");
+        // Try to register as solver.
+        if(!itsSharedState->registerAsSolver(ps.getUint("Port"))) {
+          LOG_ERROR("Registration denied.");
+          return false;
         }
-
+        
         // Switch to GET_COMMAND state, indicating that we're ready to receive
         // commands.
-        setState(GET_COMMAND);
+        LOG_INFO_STR("Registration OK.");
+        setState(RUN);
       }
-
       catch (Exception& e) {
         LOG_ERROR_STR(e);
         return false;
@@ -193,93 +155,67 @@ namespace LOFAR
 
       try {
         switch(itsState) {
-
-        default: {
-          LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
-          return false;
-          break;
-        }
-
-        case UNDEFINED: {
-          LOG_WARN("RunState UNDEFINED; init() must be called first!");
-          return false;
-          break;
-        }
-
-        case WAIT: {
-          LOG_TRACE_FLOW_STR("RunState::" << showState());
-          LOG_DEBUG("Waiting for command trigger ...");
-          if (itsCommandQueue->
-              waitForTrigger(CommandQueue::Trigger::Command)) {
-            setState(GET_COMMAND);
+          default: {
+            LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
+            return false;
+            break;
           }
-          break;
-        }
 
-        case GET_COMMAND: {
-          LOG_TRACE_FLOW_STR("RunState::" << showState());
-          LOG_DEBUG("Retrieving command ...");
-          itsCommand = itsCommandQueue->getNextCommand();
-
-          if(itsCommand.first)
-          {
-            // If Command is a SolveStep, we should initiate a solve operation.
-            shared_ptr<const SolveStep> solveStep = 
-              dynamic_pointer_cast<const SolveStep>(itsCommand.first);
-            if (solveStep) {
-              setSolveTasks(solveStep->calibrationGroups(), 
-                            solveStep->solverOptions());
-              setState(SOLVE);
-            } 
-            else {
-              itsCommandQueue->
-                addResult(itsCommand.second, CommandResult::OK, itsSenderId);
-              // If we've received a "finalize" command, we should quit.
-              if (dynamic_pointer_cast<const FinalizeCommand>(itsCommand.first))
-                setState(QUIT);
+          case UNDEFINED: {
+            LOG_WARN("RunState UNDEFINED; init() must be called first!");
+            return false;
+            break;
+          }
+          
+          case WAIT: {
+            // Wait for modification (insert) of the command queue. Note that this
+            // call falls through whenever an insert is detected.
+            if(itsSharedState->waitForCommand())
+            {
+              setState(RUN);
             }
-          } 
-          else {
-            LOG_DEBUG("Received empty command. Ignored");
-            setState(WAIT);
+            break;
           }
-          break;
-        }
 
-        case SOLVE: {
-          LOG_TRACE_FLOW_STR("RunState::" << showState());
+          case RUN: {
+            pair<CommandId, shared_ptr<Command> > command =
+              itsSharedState->getCommand();
 
-          // Call the run() method on each kernel group. In the current
-          // implementation, this is a serialized operation. Once we run each
-          // kernel group in its own thread, we can parallellize
-          // things. Threads will also make it possible to return swiftly from
-          // the current method, so that we can promptly react to ACC
-          // commands.
-          //
-          // [Q] Should we let run() return a bool or do we handle error
-          // conditions with exceptions. I think the former (bools) is a
-          // better choice, since we're planning on running each task in a
-          // separate thread, and it is usually a bad thing to handle an
-          // exception in a different thread than in which it was thrown.
-          bool done = true;
-          for (uint i = 0; i < itsSolveTasks.size(); ++i) {
-            done = itsSolveTasks[i].run() && done;
+            // Did we receive a valid command?
+            if(command.second) {
+              LOG_DEBUG_STR("Executing a " << command.second->type()
+                << "command.");
+
+              // Try to execute the command.
+              CommandResult result = command.second->accept(*this);
+
+              // Report the result to the global controller.
+              if(!itsSharedState->addResult(command.first, result)) {
+                  LOG_ERROR("Failed to report result to the controller");
+                  return false;
+              }
+      
+              // If an error occurred, log a descriptive message and exit.
+              if(result.is(CommandResult::ERROR)) {
+                  LOG_ERROR_STR("Error executing " << command.second->type()
+                      << " command: " << result.message());
+                  return false;
+              }
+
+              // If the command was a finalize command, log that we are done
+              // and exit.
+              if(command.second->type() == "Finalize") {
+                  LOG_INFO("Run completed succesfully.");
+                  clearRunState();
+              }
+            }
+            else {
+              LOG_DEBUG("Command not addressed to this process. Skipped.");
+              setState(WAIT);
+            }
+            break;
           }
-          // OK, all SolveTasks are done; we can post the result.
-          if(done) {
-            itsCommandQueue->
-              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
-            setState(GET_COMMAND);
-          }
-          break;
-        }
-
-        case QUIT: {
-          LOG_TRACE_FLOW_STR("RunState::" << showState());
-          clearRunState();
-        }
-
-        } // switch
+        } // switch(itsState)        
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
@@ -301,9 +237,9 @@ namespace LOFAR
     tribool SolverProcessControl::release()
     {
       LOG_INFO("SolverProcessControl::release()");
-      itsState = UNDEFINED;
+      setState(UNDEFINED);
       /* Here we should properly close all connections to the outside world.
-         I.e. our connection to the command queue, and the connections
+         I.e. our connection to the shared state, and the connections
          that we've accepted from the kernels.
       */
       return indeterminate;
@@ -349,37 +285,191 @@ namespace LOFAR
     }
 
 
-    //##--------   P r i v a t e   m e t h o d s   --------##//
-
-    bool SolverProcessControl::isGlobal() const
+    CommandResult SolverProcessControl::visit(const InitializeCommand&)
     {
-      return true;
-      return itsNrKernels > 1;
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+        // Create a TCP socket accepted by the listening socket.
+        shared_ptr<BlobStreamableConnection> connection;
+
+        const size_t nKernels =
+          itsSharedState->getWorkerCount(SharedState::KERNEL);
+
+        //  Wait for all kernels to connect.
+        LOG_DEBUG_STR("Waiting for " << nKernels << " kernel(s) to connect...");
+
+        itsKernels.resize(nKernels);
+        for (uint i = 0; i < nKernels; ++i) {
+          connection.reset(new BlobStreamableConnection(itsSocket.accept()));
+          if (!connection->connect()) {
+            THROW (IOException, "Unable to connect to kernel");
+          }
+
+          scoped_ptr<const ProcessIdMsg>
+            msg(dynamic_cast<ProcessIdMsg*>(connection->recvObject()));
+          if (!msg) {
+            THROW (SolverControlException, "Protocol error. Expected a"
+              " ProcessIdMsg");
+          }
+            
+          if(!itsSharedState->isKernel(msg->getProcessId())) {
+            connection.reset();
+            THROW (SolverControlException, "Connected process is not a"
+                " registered kernel process; disconnected");
+          }
+    
+          SharedState::WorkerDescriptor descriptor =
+            itsSharedState->getWorkerById(msg->getProcessId());
+          KernelIndex index = descriptor.index;
+
+          try {
+            itsKernels.at(index) = KernelConnection(connection, index);
+          } catch (std::out_of_range&) {
+            connection.reset();
+            LOG_ERROR_STR("Kernel index (" << index << ") out of range;"
+                          " disconnected");
+          }
+
+          LOG_DEBUG_STR("Kernel " << i+1 << " of " << nKernels << 
+                        " connected (index=" << index << ")");
+        }
+
+        return CommandResult(CommandResult::OK, "Ok.");
+    }
+
+    CommandResult SolverProcessControl::visit(const FinalizeCommand&)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return CommandResult(CommandResult::OK, "Ok.");
+    }
+
+    CommandResult SolverProcessControl::visit(const NextChunkCommand &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(dynamic_cast<const Command&>(command));
+    }
+
+    CommandResult SolverProcessControl::visit(const RecoverCommand &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const SynchronizeCommand &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const MultiStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const PredictStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const SubtractStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const AddStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const CorrectStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const SolveStep &command)
+    {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      
+      // Initialize a solve task for each calibration group.
+      setSolveTasks(command.calibrationGroups(), command.solverOptions());
+
+      // Call the run() method on each kernel group. In the current
+      // implementation, this is a serialized operation. Once we run each
+      // kernel group in its own thread, we can parallellize
+      // things. Threads will also make it possible to return swiftly from
+      // the current method, so that we can promptly react to ACC
+      // commands.
+      //
+      // [Q] Should we let run() return a bool or do we handle error
+      // conditions with exceptions. I think the former (bools) is a
+      // better choice, since we're planning on running each task in a
+      // separate thread, and it is usually a bad thing to handle an
+      // exception in a different thread than in which it was thrown.
+      bool done = false;
+      while(!done)
+      {
+        done = true;
+        for (uint i = 0; i < itsSolveTasks.size(); ++i) {
+          done = itsSolveTasks[i].run() && done;
+        }
+      }
+      
+      return CommandResult(CommandResult::OK, "Ok.");
+    }
+
+    CommandResult SolverProcessControl::visit(const ShiftStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const RefitStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
+    }
+
+    CommandResult SolverProcessControl::visit(const NoiseStep &command)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        return unsupported(command);
     }
 
 
-    void SolverProcessControl::setState(RunState state) 
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    CommandResult SolverProcessControl::unsupported(const Command &command)
+      const
+    {
+      ostringstream message;
+      message << "Received unsupported command (" << command.type() << ")";
+      return CommandResult(CommandResult::ERROR, message.str());
+    }
+
+    void SolverProcessControl::setState(State state)
     {
       itsState = state;
       LOG_DEBUG_STR("Switching to " << showState() << " state");
     }
 
-
     const string& SolverProcessControl::showState() const
     {
       //# Caution: Always keep this array of strings in sync with the enum
       //#          State that is defined in the header file!
-      static const string states[N_States+1] = {
+      static const string states[N_State+1] = {
+        "UNDEFINED",
         "WAIT",
-        "GET_COMMAND",
-        "SOLVE",
-        "QUIT",
-        "<UNDEFINED>"  //# This should ALWAYS be last !!
+        "RUN",
+        "<UNKNOWN>"  //# This should ALWAYS be last !!
       };
-      if (UNDEFINED < itsState && itsState < N_States) return states[itsState];
-      else return states[N_States];
+      if (UNDEFINED < itsState && itsState < N_State) return states[itsState];
+      else return states[N_State];
     }
-
 
     void SolverProcessControl::setSolveTasks(const vector<uint>& groups,
         const SolverOptions& options)

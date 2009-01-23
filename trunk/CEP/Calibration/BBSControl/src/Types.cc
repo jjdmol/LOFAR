@@ -26,9 +26,6 @@
 #include <BBSControl/StreamUtil.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
-#include <Blob/BlobArray.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
 
 namespace LOFAR
 {
@@ -38,40 +35,6 @@ namespace LOFAR
 
     //# -------  ostream operators  ------- #//
 
-    ostream& operator<<(ostream& os, const BBDB& obj)
-    {
-      os << "Blackboard database:";
-      Indent id;
-      os << endl << indent << "Host: "     << obj.host
-	 << endl << indent << "Port: "     << obj.port
-	 << endl << indent << "Name: "   << obj.name
-	 << endl << indent << "Username: " << obj.username
-	 << endl << indent << "Password: " << obj.password;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const PDB& obj)
-    {
-      os << "Parameter database:";
-      Indent id;
-      os << endl << indent << "Instrument table: " << obj.instrument
-	 << endl << indent << "Sky table: " << obj.sky
-	 << endl << indent << "History table: "    << obj.history;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const RegionOfInterest& obj)
-    {
-      os << "Region of interest:";
-      Indent id;
-      os << endl << indent << "Frequency: " << obj.freq
-         << endl << indent << "Time: "      << obj.time;
-      return os;
-    }
-    
-    
     ostream& operator<<(ostream& os, const CellSize& obj)
     {
       os << "Cell size:";
@@ -115,42 +78,6 @@ namespace LOFAR
       os << endl << indent << "Station1: " << obj.station1
 	 << endl << indent << "Station2: " << obj.station2;
       return os;
-    }
-
-
-    //# -------  BlobOStream operators  ------- #//
-
-    BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
-    {
-      bos << obj.selection
-	  << obj.type;
-      return bos;
-    }
-
-
-    BlobOStream& operator<<(BlobOStream& bos, const Baselines& obj)
-    {
-      bos << obj.station1
-	  << obj.station2;
-      return bos;
-    }
-
-
-    //# -------  BlobIStream operators  ------- #//
-
-    BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
-    {
-      bis >> obj.selection
-          >> obj.type;
-      return bis;
-    }
-
-
-    BlobIStream& operator>>(BlobIStream& bis, Baselines& obj)
-    {
-      bis >> obj.station1
-	  >> obj.station2;
-      return bis;
     }
 
   } // namespace BBS

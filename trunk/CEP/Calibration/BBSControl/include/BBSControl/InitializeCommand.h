@@ -27,6 +27,9 @@
 // Concrete "initialize" command
 
 #include <BBSControl/Command.h>
+#include <BBSControl/Types.h>
+#include <Common/LofarTypes.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -43,6 +46,12 @@ namespace LOFAR
     class InitializeCommand : public Command
     {
     public:
+      // Default constructor.
+      InitializeCommand();
+
+      // Create an InitializeCommand from the given parset.
+      InitializeCommand(const ParameterSet& ps);
+
       // Destructor.
       virtual ~InitializeCommand() {}
 
@@ -60,8 +69,26 @@ namespace LOFAR
       virtual void print(ostream& os) const;
 
       // Accept a CommandVisitor that wants to process \c *this.
-      virtual void accept(CommandVisitor &visitor) const;
+      virtual CommandResult accept(CommandVisitor &visitor) const;
 
+      bool              useSolver()        const { return itsUseSolver; }
+      vector<string>    stations()         const { return itsStations; }
+      string            inputColumn()      const { return itsInputColumn; }
+      Correlation       correlation()      const { return itsCorrelation; }
+
+    private:
+      bool                   itsUseSolver;
+      
+      // Names of the stations to use. Names may contains wildcards, like \c *
+      // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
+      // they will be passed unaltered by BBS control.
+      vector<string>         itsStations;
+
+      // Name of the MS input column.
+      string                 itsInputColumn;
+
+      // Selection type of the correlation products.
+      Correlation            itsCorrelation;
     };
 
     // @}

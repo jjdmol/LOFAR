@@ -61,7 +61,7 @@ namespace LOFAR
       virtual ~MultiStep();
 
       // Accept a CommandVisitor that wants to process \c *this.
-      virtual void accept(CommandVisitor &visitor) const;
+      virtual CommandResult accept(CommandVisitor &visitor) const;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

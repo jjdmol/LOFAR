@@ -40,7 +40,8 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward declarations
-    class KernelIdMsg;
+//    class KernelIdMsg;
+    class ProcessIdMsg;
     class CoeffIndexMsg;
     class CoefficientMsg;
     class EquationMsg;
@@ -78,7 +79,8 @@ namespace LOFAR
 
     private:
 
-      virtual void handle(const KernelIdMsg &message);
+//      virtual void handle(const KernelIdMsg &message);
+      virtual void handle(const ProcessIdMsg &message);
       virtual void handle(const CoeffIndexMsg &message);
       virtual void handle(const CoeffMsg &message);
       virtual void handle(const EquationMsg &message);
@@ -133,7 +135,8 @@ namespace LOFAR
       // to work correctly once we allow kernels to send message of different
       // types interleaved. For the time being this will certainly not be the
       // case, but it is something to keep in the back of our minds.
-      set<KernelId> itsKernelMessageReceived;
+//      set<KernelId> itsKernelMessageReceived;
+      set<KernelIndex> itsKernelMessageReceived;
 
       // The solver associated with this kernel group.
       Solver itsSolver;

@@ -55,9 +55,9 @@ NoiseStep::~NoiseStep()
     LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 }
 
-void NoiseStep::accept(CommandVisitor &visitor) const
+CommandResult NoiseStep::accept(CommandVisitor &visitor) const
 {
-    visitor.visit(*this);
+    return visitor.visit(*this);
 }
 
 const string& NoiseStep::operation() const
