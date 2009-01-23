@@ -54,7 +54,7 @@ namespace LOFAR { namespace CEP {
     // Set up the client side of a connection.
     // Upon the first send or receive it connects to the server
     // on the given host and port.
-    // If the making the connection fails, it will sleep one second and try
+    // If making the connection fails, it will sleep one second and try
     // again for up to 60 attempts. In this way the case is handled
     // where a server is started a bit later than a client.
     SocketConnection (const std::string& hostName, const std::string& port);
