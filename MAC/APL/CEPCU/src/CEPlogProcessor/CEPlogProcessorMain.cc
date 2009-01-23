@@ -31,7 +31,7 @@
 #include "CEPlogProcessor.h"
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::APL;
 
 //
 // MAIN (parameterfile)
@@ -58,7 +58,7 @@ int main (int /*argc*/, char* argv[]) {
 	LOG_INFO_STR("Starting up: " << argv[0]);
 
 	try {
-//#if REAL_DAEMON
+#if REAL_DAEMON
 		pid_t pid = fork();
 		switch (pid) {
 		case -1:	// error
@@ -71,7 +71,7 @@ int main (int /*argc*/, char* argv[]) {
 			LOG_INFO_STR("Daemon succesfully started, pid = " << pid);
 			return (0);
 		}
-//#endif		
+#endif		
 		// TODO: active the next two calls.
 //		setsid();		// disconnect from terminalsession
 //		chdir("/");		// might be on a mounted file system
