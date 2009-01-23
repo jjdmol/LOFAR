@@ -29,6 +29,7 @@
 #include <Common/Singleton.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
+#include <BBSControl/CommandResult.h>
 
 namespace LOFAR
 {
@@ -71,7 +72,7 @@ namespace LOFAR
       // \code
       // visitor.visit(*this);
       // \endcode
-      virtual void accept(CommandVisitor &visitor) const = 0;
+      virtual CommandResult accept(CommandVisitor &visitor) const = 0;
 
       // Write the contents of a Command to an output stream.
       friend ostream& operator<<(ostream&, const Command&);

@@ -28,10 +28,12 @@
 
 //# Includes
 #include <BBSControl/CommandResult.h>
-#include <BBSControl/CommandQueue.h>
+//#include <BBSControl/CommandQueue.h>
+#include <BBSControl/SharedState.h>
 
 #include <ParmDB/Axis.h>
-#include <BBSKernel/MetaMeasurement.h>
+
+#include <MWCommon/VdsDesc.h>
 
 #include <PLC/ProcessControl.h>
 
@@ -44,7 +46,7 @@ namespace LOFAR
     //# Forward Declarations.
     class Strategy;
     class Step;
-    class CommandQueue;
+//    class CommandQueue;
 
     // \addtogroup BBSControl
     // @{
@@ -75,20 +77,32 @@ namespace LOFAR
       // @}
 
     private:
-        enum RunState {
-          UNDEFINED = -1,
-          NEXT_CHUNK,
-          NEXT_CHUNK_WAIT,
-          RUN,
-          WAIT,
-          RECOVER,
-          FINALIZE,
-          FINALIZE_WAIT,
-          QUIT,
-          //# Insert new types HERE !!
-          N_States
-        };
+      enum RunState {
+        UNDEFINED = -1,
+        NEXT_CHUNK,
+        NEXT_CHUNK_WAIT,
+        RUN,
+        WAIT,
+        RECOVER,
+        FINALIZE,
+        FINALIZE_WAIT,
+        QUIT,
+        //# Insert new types HERE !!
+        N_States
+      };
 
+      struct LessKernel
+      {
+        bool operator()(const pair<ProcessId, double> &lhs,
+          const pair<ProcessId, double> &rhs)
+        {
+          return lhs.second < rhs.second;
+        }
+      };
+        
+      void createWorkerIndex();
+//      Axis::ShPtr createTimeAxis();
+      
       // Set run state to \a state
       void setState(RunState state);
 
@@ -108,13 +122,13 @@ namespace LOFAR
       // arrive within the time-out period (which is a modifiable property of
       // the CommandQueue), then \c itsResults will be updated. These new
       // results will also be returned as a vector of ResultType.
-      vector<ResultType> waitForResults(const CommandId& cmdId);
+//      vector<ResultType> waitForResults(const CommandId& cmdId);
 
       // Wait for results for any command. If new results arrive within the
       // time-out period (which is a modifiable property of the CommandQueue),
       // then \c itsResults will be updated. These new results will also be
       // returned as ResultMapType.
-      ResultMapType waitForResults();
+//      ResultMapType waitForResults();
 
       // State of the global process controller.
       RunState itsState;
@@ -122,7 +136,7 @@ namespace LOFAR
       // Keep track of the status of the commands sent to the command queue.
       // Once a local controller has executed a command, it will post a
       // result, which we can use to update our administration.
-      ResultMapType itsResults;
+//      ResultMapType itsResults;
 
       // The strategy that will be executed by this controller.
       scoped_ptr<Strategy> itsStrategy;
@@ -137,10 +151,14 @@ namespace LOFAR
       // execute one Step.
       vector< shared_ptr<const Step> >::const_iterator itsStepsIterator;
 
+      // Shared State.
+      scoped_ptr<SharedState>  itsSharedState;
+    
       // CommandQueue where strategies and steps can be "posted".
-      scoped_ptr<CommandQueue> itsCommandQueue;
+//      scoped_ptr<CommandQueue> itsCommandQueue;
       
-      MetaMeasurement       itsMetaMeasurement;
+      CEP::VdsDesc          itsVdsDesc;
+      Axis::ShPtr           itsTimeAxis;
       double                itsFreqStart, itsFreqEnd;
       size_t                itsTimeStart, itsTimeEnd;
       size_t                itsChunkStart, itsChunkSize;

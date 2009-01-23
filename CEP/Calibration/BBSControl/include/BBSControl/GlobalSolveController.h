@@ -48,8 +48,8 @@ namespace BBS
 class GlobalSolveController
 {
 public:
-    GlobalSolveController(const KernelId &id, const VisData::Pointer &chunk,
-        const Model::Pointer &model,
+    GlobalSolveController(const KernelIndex &index,
+        const VisData::Pointer &chunk, const Model::Pointer &model,
         const shared_ptr<BlobStreamableConnection> &solver);
     ~GlobalSolveController();
     
@@ -73,7 +73,7 @@ private:
     void setCoeff(const vector<double> &coeff, const Location &cell,
         const vector<uint> &mapping) const;
 
-    KernelId                                itsKernelId;
+    KernelIndex                                itsKernelIndex;
     VisData::Pointer                        itsChunk;
     Model::Pointer                          itsModel;
     shared_ptr<BlobStreamableConnection>    itsSolver;

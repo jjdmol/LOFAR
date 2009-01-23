@@ -39,9 +39,9 @@ namespace LOFAR
     }
 
 
-    void SubtractStep::accept(CommandVisitor &visitor) const
+    CommandResult SubtractStep::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

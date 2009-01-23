@@ -42,14 +42,14 @@ namespace LOFAR
       typedef shared_ptr<BlobStreamableConnection> Connection;
 
       KernelConnection() :
-        itsId(KernelId(-1))
+        itsIndex(KernelIndex(-1))
       {}
 
-      KernelConnection(const Connection& connection, const KernelId& id) :
-        itsConnection(connection), itsId(id)
+      KernelConnection(const Connection& connection, const KernelIndex& index) :
+        itsConnection(connection), itsIndex(index)
       {}
 
-      const KernelId& id() const { return itsId; }
+      const KernelIndex& index() const { return itsIndex; }
 
       // Receive a kernel message.
       shared_ptr<const KernelMessage> recvMessage() const;
@@ -62,7 +62,7 @@ namespace LOFAR
       Connection itsConnection;
 
       // ID of the kernel we're connected to.
-      KernelId itsId;
+      KernelIndex itsIndex;
     };
 
   } // namespace BBS

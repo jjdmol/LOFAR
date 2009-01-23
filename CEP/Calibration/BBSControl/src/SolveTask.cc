@@ -60,11 +60,11 @@ namespace LOFAR
         // Receive messages from our kernel(s); for the time being we'll use
         // a round-robin "polling". Every message is handed over to the
         // kernel group that currently "holds" the kernel identified by the
-        // kernel-id in the received message.
+        // kernel-index in the received message.
         // Note that the current implementation assumes blocking I/O. 
         for (uint i = 0; i < itsKernels.size(); ++i) {
-          LOG_TRACE_STAT_STR("Kernel #" << i << " (id=" << 
-                             itsKernels[i].id() << ") : recvObject()");
+          LOG_TRACE_STAT_STR("Kernel #" << i << " (index=" << 
+                             itsKernels[i].index() << ") : recvObject()");
           shared_ptr<const KernelMessage> msg(itsKernels[i].recvMessage());
           if (msg) msg->passTo(*this);
         }
@@ -76,7 +76,8 @@ namespace LOFAR
 
     //##--------  P r i v a t e   m e t h o d s  --------##//
 
-    void SolveTask::handle(const KernelIdMsg &message)
+    void SolveTask::handle(const ProcessIdMsg &message)
+//    void SolveTask::handle(const KernelIdMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       error("Illegal", message);
@@ -86,7 +87,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       LOG_DEBUG_STR("SolveTask: Handling " << message.type() << 
-                    ", kernel-id = " << message.getKernelId());
+                    ", kernel-index = " << message.getKernelIndex());
 
       switch (itsState) {
       default:
@@ -99,11 +100,11 @@ namespace LOFAR
 
       case INDEXING:
         // Check to see whether this kernel has already sent a CoeffIndexMsg.
-        if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
+        if (!itsKernelMessageReceived.insert(message.getKernelIndex()).second) {
           error("Duplicate", message);
         }
         // Set the coefficient index in the solver
-        itsSolver.setCoeffIndex(message.getKernelId(), message.getContents());
+        itsSolver.setCoeffIndex(message.getKernelIndex(), message.getContents());
 
         // If all kernels have sent a CoeffIndexMsg, we should send a the
         // merged coefficient indices back to our kernels.
@@ -125,7 +126,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       LOG_DEBUG_STR("SolveTask: Handling " << message.type() << 
-                    ", kernel-id = " << message.getKernelId());
+                    ", kernel-index = " << message.getKernelIndex());
 
       switch (itsState) {
       default:
@@ -134,11 +135,11 @@ namespace LOFAR
 
       case INITIALIZING:
         // Check to see whether this kernel has already sent a CoeffMsg.
-        if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
+        if (!itsKernelMessageReceived.insert(message.getKernelIndex()).second) {
           error("Duplicate", message);
         }
         // Set initial coefficients in the solver.
-        itsSolver.setCoeff(message.getKernelId(), message.getContents());
+        itsSolver.setCoeff(message.getKernelIndex(), message.getContents());
 
         // If all kernels have sent a CoeffMsg, we can start iterating.
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
@@ -161,11 +162,11 @@ namespace LOFAR
 
       case ITERATING:
         // Check to see whether this kernel has already sent a CoeffMsg.
-        if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
+        if (!itsKernelMessageReceived.insert(message.getKernelIndex()).second) {
           error("Duplicate", message);
         }
         // Set equations in the solver.
-        itsSolver.setEquations(message.getKernelId(), message.getContents());
+        itsSolver.setEquations(message.getKernelIndex(), message.getContents());
 
         // If all kernels have sent an EquationMsg, we can let the solver
         // perform one iteration. 
@@ -198,7 +199,7 @@ namespace LOFAR
 
       case INITIALIZING:
         // Check to see whether this kernel has already sent a ChunkDoneMsg.
-        if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
+        if (!itsKernelMessageReceived.insert(message.getKernelIndex()).second) {
           error("Duplicate", message);
         }
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
@@ -237,7 +238,7 @@ namespace LOFAR
     void SolveTask::error(const string& prefix, const KernelMessage& message)
     {
       THROW (SolveTaskException, prefix << " message " << message.type() << 
-             " received from kernel (id=" << message.getKernelId() <<
+             " received from kernel (index=" << message.getKernelIndex() <<
              ") while in " << showState() << " state");
     }
 

@@ -64,9 +64,9 @@ namespace LOFAR
     }
 
 
-    void SolveStep::accept(CommandVisitor &visitor) const
+    CommandResult SolveStep::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

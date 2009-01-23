@@ -7,6 +7,10 @@ $$
 $$
 LANGUAGE plpgsql;
 
+CREATE TRIGGER modify_register
+    AFTER INSERT OR UPDATE OR DELETE ON blackboard.worker_register
+    FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
+
 CREATE TRIGGER insert_command
     AFTER INSERT ON blackboard.command
     FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
@@ -14,3 +18,4 @@ CREATE TRIGGER insert_command
 CREATE TRIGGER insert_result
     AFTER INSERT ON blackboard.result
     FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
+

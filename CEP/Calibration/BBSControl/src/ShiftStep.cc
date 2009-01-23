@@ -39,9 +39,9 @@ namespace LOFAR
     }
 
 
-    void ShiftStep::accept(CommandVisitor &visitor) const
+    CommandResult ShiftStep::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
 
 

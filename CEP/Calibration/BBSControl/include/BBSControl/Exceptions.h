@@ -56,8 +56,15 @@ namespace LOFAR
     // Exception class for the database access layer.
     EXCEPTION_CLASS(DatabaseException, BBSControlException);
 
+    // Exception class to signal failed data translation to / from the database
+    // access layer.
+    EXCEPTION_CLASS(TranslationException, DatabaseException);
+
     // Exception class for the command queue.
     EXCEPTION_CLASS(CommandQueueException, BBSControlException);
+
+    // Exception class for the shared state.
+    EXCEPTION_CLASS(SharedStateException, BBSControlException);
 
     //  @}
 

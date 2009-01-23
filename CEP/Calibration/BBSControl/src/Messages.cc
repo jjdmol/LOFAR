@@ -43,7 +43,8 @@ namespace LOFAR
     using LOFAR::operator>>;
 
     // -------------------------------------------------------------------- //
-    const string KernelIdMsg::theirClassType = "KernelIdMsg";
+//    const string KernelIdMsg::theirClassType = "KernelIdMsg";
+    const string ProcessIdMsg::theirClassType = "ProcessIdMsg";
     const string CoeffIndexMsg::theirClassType = "CoeffIndexMsg";
     const string MergedCoeffIndexMsg::theirClassType = "MergedCoeffIndexMsg";
     const string CoeffMsg::theirClassType = "CoeffMsg";
@@ -56,8 +57,10 @@ namespace LOFAR
     // private storage area and are only visible inside this compilation unit.
     namespace
     {
+//      bool dummy1 = BlobStreamableFactory::instance().
+//        registerClass<KernelIdMsg>("KernelIdMsg");
       bool dummy1 = BlobStreamableFactory::instance().
-        registerClass<KernelIdMsg>("KernelIdMsg");
+        registerClass<ProcessIdMsg>("ProcessIdMsg");
       bool dummy2 = BlobStreamableFactory::instance().
         registerClass<CoeffIndexMsg>("CoeffIndexMsg");
       bool dummy3 = BlobStreamableFactory::instance().
@@ -75,17 +78,18 @@ namespace LOFAR
     // -------------------------------------------------------------------- //
     void KernelMessage::write(BlobOStream& bos) const
     {
-      bos << static_cast<int32>(itsKernelId);
+      bos << static_cast<int32>(itsKernelIndex);
     }
 
     void KernelMessage::read(BlobIStream& bis)
     {
-      int32 id;
-      bis >> id;
-      itsKernelId = static_cast<KernelId>(id);
+      int32 index;
+      bis >> index;
+      itsKernelIndex = static_cast<KernelIndex>(index);
     }
 
     // -------------------------------------------------------------------- //
+/*
     void KernelIdMsg::passTo(KernelMessageHandler &handler) const
     {
       handler.handle(*this);
@@ -104,6 +108,30 @@ namespace LOFAR
     const string& KernelIdMsg::classType() const
     {
       return KernelIdMsg::theirClassType;
+    }
+*/
+
+    // -------------------------------------------------------------------- //
+    void ProcessIdMsg::passTo(KernelMessageHandler &handler) const
+    {
+      handler.handle(*this);
+    }
+
+    void ProcessIdMsg::write(BlobOStream& bos) const
+    {
+      super::write(bos);
+      bos << itsProcessId.hostname << itsProcessId.pid;
+    }
+
+    void ProcessIdMsg::read(BlobIStream& bis)
+    {
+      super::read(bis);
+      bis >> itsProcessId.hostname >> itsProcessId.pid;
+    }
+
+    const string& ProcessIdMsg::classType() const
+    {
+      return ProcessIdMsg::theirClassType;
     }
 
     // -------------------------------------------------------------------- //

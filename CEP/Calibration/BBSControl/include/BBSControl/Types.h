@@ -36,9 +36,6 @@
 
 namespace LOFAR
 {
-  class BlobIStream;
-  class BlobOStream;
-
   namespace BBS
   {
     // \addtogroup BBSControl
@@ -46,37 +43,10 @@ namespace LOFAR
 
     // Typedefs
     // @{
-    typedef int CommandId;
-    typedef uint KernelId;
+    typedef int32 CommandId;
+    typedef int32 KernelIndex;
     // @}
 
-    // Information about the Blackboard database.
-    struct BBDB
-    {
-      BBDB() : port(0) {}
-      string host;           ///< Host name or IP address of the BB DBMS
-      uint16 port;           ///< Port used by BB DBMS
-      string name;           ///< Name of the BB database
-      string username;       ///< Username for accessing the DBMS
-      string password;       ///< Password for accessing the DBMS
-    };
-
-    // Information about the parameter database.
-    // \note These are currently AIPS++ MS tables.
-    struct PDB
-    {
-      string instrument;     ///< Instrument parameters (MS table)
-      string sky;	         ///< Local sky parameters (MS table)
-      string history;        ///< History (MS table)
-    };
-
-    // Selection of the data domain that is to be processed.
-    struct RegionOfInterest
-    {
-      vector<uint32> freq; 
-      vector<string> time;
-    };    
-    
     // Cell size is defined along the frequency and the time axis, in number
     // of channels and number of timeslots respectively.
     struct CellSize
@@ -139,22 +109,10 @@ namespace LOFAR
 
     // Write the contents of these types in human readable form.
     // @{
-    ostream& operator<<(ostream&, const BBDB&);
-    ostream& operator<<(ostream&, const PDB&);
     ostream& operator<<(ostream&, const CellSize&);
-    ostream& operator<<(ostream&, const RegionOfInterest&);
     ostream& operator<<(ostream&, const SolverOptions&);
     ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Baselines&);
-    // @}
-
-    // Blob I/O stream methods
-    // @{
-    BlobOStream& operator<<(BlobOStream&, const Correlation&);
-    BlobOStream& operator<<(BlobOStream&, const Baselines&);
-
-    BlobIStream& operator>>(BlobIStream&, Correlation&);
-    BlobIStream& operator>>(BlobIStream&, Baselines&);
     // @}
 
     // @}

@@ -44,18 +44,19 @@ namespace LOFAR
     // storage area and is only visible in this compilation unit.
     namespace
     {
-      bool dummy = CommandFactory::instance().
-        registerClass<Strategy>("Strategy");
+//      bool dummy = CommandFactory::instance().
+//        registerClass<Strategy>("Strategy");
     }
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    Strategy::Strategy(const ParameterSet& aParSet) :
-      itsWriteSteps(false)
+    Strategy::Strategy(const ParameterSet& ps)// :
+//      itsWriteSteps(false)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
+        /*
       // Get the name of the Measurement Set.
       itsDataSet = aParSet.getString("DataSet");
 
@@ -88,13 +89,14 @@ namespace LOFAR
         ps.getString("Correlation.Selection");
       itsCorrelation.type = 
         ps.getStringVector("Correlation.Type", vector<string>());
-
+        */
+        
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(Step::create(steps[i], aParSet, 0));
+        itsSteps.push_back(Step::create(steps[i], ps, 0));
       }
     }
 
@@ -104,27 +106,29 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
-
-    void Strategy::accept(CommandVisitor &visitor) const
+/*
+    CommandResult Strategy::accept(CommandVisitor &visitor) const
     {
-      visitor.visit(*this);
+      return visitor.visit(*this);
     }
-
+*/
 
     void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      os << endl << indent << "Measurement Set: " << itsDataSet
-	 << endl << indent << itsPDB
-	 << endl << indent << "Strategy:";
+//      os << endl << indent << "Measurement Set: " << itsDataSet
+//	 << endl << indent << itsPDB
+//	 << endl << indent << "Strategy:";
+//      Indent id;
+//      os << endl << indent << "Input column: " << itsInputColumn
+//	 << endl << indent << itsRegionOfInterest
+//	 << endl << indent << "Chunk size: " << itsChunkSize
+//	 << endl << indent << itsCorrelation
+//	 << endl << indent << "Stations: " << itsStations;
+      os << endl << indent << "Steps:";
       Indent id;
-      os << endl << indent << "Input column: " << itsInputColumn
-	 << endl << indent << itsRegionOfInterest
-	 << endl << indent << "Chunk size: " << itsChunkSize
-	 << endl << indent << itsCorrelation
-	 << endl << indent << "Stations: " << itsStations;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	os << endl << indent << *itsSteps[i];
+    	os << endl << indent << *itsSteps[i];
       }
     }
  
@@ -143,7 +147,7 @@ namespace LOFAR
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
-
+/*
     void Strategy::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -164,8 +168,8 @@ namespace LOFAR
                          (itsWriteSteps ? "Yes" : "No"));
       if (itsWriteSteps) writeSteps(ps);
     }
-
-
+*/
+/*
     void Strategy::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -192,15 +196,15 @@ namespace LOFAR
       LOG_TRACE_COND_STR("Read the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
     }
-
-
+*/
+/*
     const string& Strategy::type() const
     {
       static const string theType("Strategy");
       return theType;
     }
-
-
+*/
+/*
     bool Strategy::readSteps(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -237,7 +241,7 @@ namespace LOFAR
         itsSteps[i]->write(ps);
       }
     }
-
+*/
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 

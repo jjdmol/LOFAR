@@ -75,99 +75,38 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
+CommandExecutor::CommandExecutor(KernelId id, //const SourceDB &soureDb
+    shared_ptr<BlobStreamableConnection> &solver)
+    :   itsKernelId(id),
+        itsGlobalSolver(solver)
+{
+}
+
+
 CommandExecutor::~CommandExecutor()
 {
 }
 
 
-void CommandExecutor::visit(const InitializeCommand &/*command*/)
+void CommandExecutor::visit(const InitializeCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling an InitializeCommand");
 
-    shared_ptr<const Strategy> strategy(itsCommandQueue->getStrategy());
-    ASSERT(strategy);
-
-    // Read MetaMeasurement file.
-    try
-    {
-        ifstream fin(strategy->dataSet().c_str());
-        BlobIBufStream bufs(fin);
-        BlobIStream ins(bufs);
-        ins >> itsMetaMeasurement;
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Unable to read meta" 
-            " measurement.");
-        return;
-    }        
-
-    if(itsKernelId >= itsMetaMeasurement.getPartCount())
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Kernel id does not map"
-          " to any measurement in " + strategy->dataSet());
-        return;
-    }
-    
-    try
-    {
-        // Open measurement.
-        string path = itsMetaMeasurement.getPath(itsKernelId);
-        LOG_INFO_STR("Input: " << path << "::" << strategy->inputColumn());
-
-        itsInputColumn = strategy->inputColumn();
-        itsMeasurement.reset(new MeasurementAIPS(path));
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Unable to open"
-          " measurement: " + itsMetaMeasurement.getPath(itsKernelId));
-        return;
-    }
-
-    
-    try
-    {
-        // Open sky model database.
-        itsSourceDb.reset(new SourceDB(ParmDBMeta("casa",
-            strategy->parmDB().sky)));
-        ParmManager::instance().initCategory(SKY, itsSourceDb->getParmDB());
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to open sky"
-            " model database: " + strategy->parmDB().sky);
-        return;
-    }        
-
-
-    try
-    {
-        // Open instrument model parameter database.
-        ParmManager::instance().initCategory(INSTRUMENT,
-            ParmDB(ParmDBMeta("casa", strategy->parmDB().instrument)));
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to open"
-            " instrument model parameter database: "
-            + strategy->parmDB().instrument);
-        return;
-    }        
+    itsInputColumn = command.inputColumn();
 
     // Create model.
-    itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-        itsMeasurement->getPhaseCenter()));
+//    itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
+//        itsMeasurement->getPhaseCenter()));
 
     // Initialize the chunk selection from information in strategy.
-    if(!strategy->stations().empty())
+    if(!command.stations().empty())
     {
-        itsChunkSelection.setStations(strategy->stations());
+        itsChunkSelection.setStations(command.stations());
     }
     
-    Correlation correlation = strategy->correlation();
+    Correlation correlation = command.correlation();
     if(!correlation.type.empty())
     {
         itsChunkSelection.setPolarizations(correlation.type);
@@ -521,7 +460,7 @@ void CommandExecutor::visit(const SolveStep &command)
         // Construct solution grid.
         const CellSize &cellSize(command.cellSize());
 
-        Axis::ShPtr freqAxis(itsMetaMeasurement.getFreqAxis(itsKernelId));
+        Axis::ShPtr freqAxis(itsMeasurement->getDimensions().getFreqAxis());
         if(cellSize.freq == 0)
         {
             const pair<double, double> range = freqAxis->range();
@@ -533,7 +472,7 @@ void CommandExecutor::visit(const SolveStep &command)
             freqAxis = freqAxis->compress(cellSize.freq);
         }
 
-        Axis::ShPtr timeAxis(itsMetaMeasurement.getTimeAxis());
+        Axis::ShPtr timeAxis(itsTimeAxis);
         const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
         const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
         ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
@@ -584,24 +523,48 @@ void CommandExecutor::visit(const SolveStep &command)
         const CellSize &cellSize(command.cellSize());
 
         // Determine group id.
-        vector<uint32> groupEnd = command.calibrationGroups();
-        partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
-        const size_t groupId = upper_bound(groupEnd.begin(), groupEnd.end(),
-            itsKernelId) - groupEnd.begin();
-        ASSERT(groupId < groupEnd.size());
+        const vector<uint32> &groups = command.calibrationGroups();
+        vector<uint32> groupIndex(groups.size());
+        partial_sum(groups.begin(), groups.end(), groupIndex.begin());
+        const size_t groupId = upper_bound(groupIndex.begin(), groupIndex.end(),
+            itsKernelId) - groupIndex.begin();
+        ASSERT(groupId < groupIndex.size());
         LOG_DEBUG_STR("Group id: " << groupId);
+
+/*        
+        const size_t partBegin = groupId > 0 ? groupIndex[groupId - 1] : 0;
+        const size_t partEnd = groupIndex[groupId] - 1;
         
-        double freqBegin = itsMetaMeasurement.getFreqRange(groupId > 0
-            ? groupEnd[groupId - 1] : 0).first;
-        double freqEnd =
-            itsMetaMeasurement.getFreqRange(groupEnd[groupId] - 1).second;
+        const CEP::VdsPartDesc &descriptor = itsVdsDesc.getDesc();
+    
+        // Find the begin and end frequency of all the band in the group.
+        const size_t nParts = partEnd - partBegin;
+        vector<double> freqBegin(nParts);
+        vector<double> freqEnd(nParts;
+        
+
+        // Find fist and last band.
+        const vector<int> &nchan = descriptor.getNChan();
+        vector<int> bandIndex(nchan.size()); 
+        partial_sum(nchan.begin(), nchan.end(), bandIndex.begin());
+
+        const size_t bandStart = partBegin > 0 ? bandIndex[partBegin - 1]
+        const size_t bandEnd
+
+        const double freqBegin = descriptor.getStartFreqs()[ : 0];
+*/        
+        
+        const CEP::VdsPartDesc &descriptor = itsVdsDesc.getDesc();
+        double freqBegin = descriptor.getStartFreqs()[groupId > 0
+            ? groupIndex[groupId - 1] : 0];
+        double freqEnd = descriptor.getEndFreqs()[groupIndex[groupId] - 1];
             
-        LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin << " - "
-            << freqEnd);
+        LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin
+            << " - " << freqEnd);
         Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
             1));
 
-        Axis::ShPtr timeAxis(itsMetaMeasurement.getTimeAxis());
+        Axis::ShPtr timeAxis(itsTimeAxis);
         const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
         const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
         ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
