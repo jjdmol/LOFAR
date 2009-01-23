@@ -224,6 +224,9 @@ if [ "$with_wcs" != "no" ]; then
   fi
   if [ "$with_wcs_libdir" != "$AIPSPP_LIB_PATH" ]; then
     AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_wcs_libdir"
+    if test "$lofar_no_rpath" = 0; then
+      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$with_wcs_libdir"
+    fi
   fi
   AIPSPP_LIBS="$AIPSPP_LIBS -lwcs"
 fi
@@ -236,6 +239,9 @@ if test "$with_pgplot" != "no"; then
     ]AC_MSG_ERROR([given PGPLOT directory not found])[
   fi
   AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_pgplot"
+  if test "$lofar_no_rpath" = 0; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$with_pgplot"
+  fi
   AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
 fi
 
