@@ -79,12 +79,14 @@ int main(int argc, const char* argv[])
     }
 
     // Set the times in the global desc (using the first part).
+    // Set the clusterdesc name.
     // Form the global desc.
     globalvpd.setTimes (vpds[0]->getStartTime(),
 			vpds[0]->getEndTime(),
 			vpds[0]->getStepTime(),
                         vpds[0]->getStartTimes(),
                         vpds[0]->getEndTimes());
+    globalvpd.setClusterDescName (vpds[0]->getClusterDescName());
     VdsDesc gdesc(globalvpd);
 
     // Now add all parts to the global desc and write it.
