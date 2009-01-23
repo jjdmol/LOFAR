@@ -4,7 +4,8 @@ libparmdb_la_SOURCES = Package__Version.cc  \
 Axis.cc AxisMapping.cc Box.cc Grid.cc \
 ParmValue.cc ParmSet.cc ParmMap.cc ParmCache.cc \
 ParmDBMeta.cc ParmDB.cc ParmDBCasa.cc ParmDBLocker.cc \
-Parm.cc ParmFacade.cc \
+Parm.cc \
+ParmFacadeRep.cc ParmFacadeLocal.cc ParmFacadeDistr.cc ParmFacade.cc \
 SourceDB.cc SourceDBCasa.cc
 #ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 
@@ -14,11 +15,15 @@ SourceDB.cc SourceDBCasa.cc
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
 bin_PROGRAMS = versionparmdb \
-		parmdb makesourcedb
+		parmdb parmdbclient makesourcedb
 
-parmdb_SOURCES		= parmdb_main.cc
-parmdb_LDADD		= libparmdb.la
-parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
+parmdb_SOURCES			= parmdb_main.cc
+parmdb_LDADD			= libparmdb.la
+parmdb_DEPENDENCIES		= libparmdb.la $(LOFAR_DEPEND)
+
+parmdbclient_SOURCES		= parmdbclient.cc
+parmdbclient_LDADD		= libparmdb.la
+parmdbclient_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
 makesourcedb_SOURCES		= makesourcedb.cc
 makesourcedb_LDADD		= libparmdb.la
