@@ -69,6 +69,10 @@ namespace LOFAR { namespace CEP {
     void setFileName (const std::string& name)
       { itsFileName = name; }
 
+    // Set the name of the ClusterDesc file used.
+    void setClusterDescName (const std::string& cdName)
+      { itsCDescName = cdName; }
+
     // Change the base part of the name.
     void changeBaseName (const string& newBaseName);
 
@@ -109,6 +113,8 @@ namespace LOFAR { namespace CEP {
       { return itsFileName; }
     const std::string& getFileSys() const
       { return itsFileSys; }
+    const std::string& getClusterDescName() const
+      { return itsCDescName; }
     double getStartTime() const
       { return itsStartTime; }
     double getEndTime() const
@@ -139,6 +145,7 @@ namespace LOFAR { namespace CEP {
     std::string itsName;       //# full name of the VDS desc
     std::string itsFileName;   //# full name of the VDS (data set name)
     std::string itsFileSys;    //# name of file system the VDS resides on
+    std::string itsCDescName;  //# name of ClusterDesc file used
     double      itsStartTime;
     double      itsEndTime;
     double      itsStepTime;
