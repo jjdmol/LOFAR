@@ -36,7 +36,13 @@
 //// Also minflux (skip if < minflux), maxflux (always if >= maxflux),
 //// beammodel (only WSRT for time being); if beammodel, convert to app flux. 
 //
-// The format string looks like:
+// The format string can be given as an argument. If its value starts with a <
+// it means that it is read from the file following it. No file means from the
+// text file (headers) itself. A format string in a file is like a normal
+// format string, but preceeded with '#(' and followed by ')format'.
+// Whitespace is allowed between these characters.
+//
+// A format string looks like:
 //    name type ra dec cat
 // It defines the fields in the input file and which separator is used between
 // the fields (in this example all fields are separated by whitespace).
@@ -675,18 +681,23 @@ void make (const string& in, const string& out,
 string readFormat (string file, const string& catFile)
 {
   // Use catalog itself if needed.
-  if (file == ".") {
+  if (file.empty()) {
     file = catFile;
   }
-  // Read file until format line is found.
+  // Read file until format line is found or until non-comment is found.
   ifstream infile(file.c_str());
   ASSERTSTR (infile, "File " << file
              << " containing format string could not be opened");
   string line;
   getline (infile, line);
-  casa::Regex regex("# *format *= *");
+  casa::Regex regex("# *`( *.* *) *format *$");
   while (infile) {
-    if (line.size() > 0  &&  line[0] == '#') {
+    uInt st=0;
+    st = lskipws(line, st, line.size());   // skip whitespace
+    if (st < line.size()) {
+      if (line[st] != '#') {
+        break;                             // data line
+      }
       String sline(line);
       if (sline.matches (regex)) {
         sline.gsub (regex, string());
@@ -695,7 +706,7 @@ string readFormat (string file, const string& catFile)
     }
     getline (infile, line);
   }
-  ASSERTSTR (infile, "No line starting with '# format =' found in " << file);
+  // No format line found, so use default.
   return string();
 }
 
@@ -707,7 +718,7 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2008-Nov-10");
+    inputs.version ("GvD 2009-Jan-26");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
@@ -746,11 +757,15 @@ int main (int argc, char* argv[])
     double minFlux = inputs.getDouble ("minflux");
     double maxFlux = inputs.getDouble ("maxflux");
     string beamModel = inputs.getString ("beammodel");
-    // Check if the format is a string with commas or a single string which is
-    // the name of a file containing the format. A value of . means it is in
-    // the catalog file itself.
-    if (format.find(',') == string::npos) {
-      format = readFormat (format, in);
+    // Check if the format has to be read from a file.
+    // It is if it starts with a <. Te filename should follow it. An empty
+    // filename means reading from the catalog file itself.
+    if (! format.empty()  &&  format[0] == '<') {
+      // Skip optional whitespace.
+      uInt st=1;
+      st = lskipws (format, st, format.size());
+      // Read format from file.
+      format = readFormat (format.substr(st), in);
     }
     make (in, out, format, append, check,
           getSearchInfo (center, radius, width));
