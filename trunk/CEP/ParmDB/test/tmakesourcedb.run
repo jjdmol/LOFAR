@@ -1,6 +1,6 @@
 #!/bin/sh
 
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format=","
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="< "
 ../src/parmdb <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
