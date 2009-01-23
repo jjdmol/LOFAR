@@ -1,5 +1,6 @@
 Name       = /Users/diepen/LOFAR.MS2
 FileSys    = /Users/diepen
+ClusterDesc= /Users/diepen/cdesc.data
 StartTime  = 2007/07/27/16:04:49
 EndTime    = 2007/07/28/16:04:48
 StepTime   = 30.199

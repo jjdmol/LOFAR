@@ -196,11 +196,14 @@ void VdsMaker::create (const string& msName, const string& outName,
   // Fill in MS path and name.
   Path mspr(msName);
   string absName = mspr.absoluteName();
-  // If the ClusterDesc file is given, try to find filesys.
+  // If the ClusterDesc file is given, try to find filesys and put its
+  // absolute path into the VdsPartDesc.
   // Otherwise it is unknown.
   if (clusterDescName.empty()) {
     msd.setName (absName, "unknown");
   } else {
+    Path cdpath(clusterDescName);
+    msd.setClusterDescName (cdpath.absoluteName());
     ClusterDesc cdesc((ParameterSet(clusterDescName)));
     msd.setName (absName, findFileSys(absName, cdesc, hostName));
   }

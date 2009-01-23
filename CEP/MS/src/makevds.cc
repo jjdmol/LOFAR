@@ -35,7 +35,7 @@ int main(int argc, const char* argv[])
       cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]" << endl;
       cout << "  default vds name is <ms>.vds" << endl;
       cout << "  default host name is gethostname()" << endl;
-      cout << "  default writetimes is true (1)" << endl;
+      cout << "  default writetimes is false (0)" << endl;
       return 0;
     }
     string msvds = string(argv[2]) + ".vds";
@@ -46,9 +46,9 @@ int main(int argc, const char* argv[])
     if (argc > 4) {
       hostName = argv[4];
     }
-    bool writeTimes = true;
+    bool writeTimes = false;
     if (argc > 5) {
-      writeTimes = (argv[5][0]=='f' || argv[5][0]=='F' || argv[5][0]=='0');
+      writeTimes = (argv[5][0]=='t' || argv[5][0]=='T' || argv[5][0]=='1');
     }
     LOFAR::VdsMaker::create (argv[2], msvds, argv[1], hostName, writeTimes);
   } catch (exception& x) {
