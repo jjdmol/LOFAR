@@ -12,7 +12,7 @@ TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmSet.sh tParmCache tParm.sh tParmFacade.sh \
 			tparmdb.sh \
 			tSourceDBCasa.sh tmakesourcedb.sh \
-			tsetupparmdb.sh
+			tsetupparmdb.sh tsetupsourcedb.sh
 
 # scripts and possible programs to run tests
 TESTS	              = $(TESTSCRIPTS)
@@ -74,9 +74,13 @@ EXTRA_DIST            = $(TESTSCRIPTS) \
 			tmakesourcedb.run tmakesourcedb.in \
 			tmakesourcedb.in_2 tmakesourcedb.stdout \
 			tsetupparmdb.run tsetupparmdb.stdout \
-			tsetupparmdb.in_cd tsetupparmdb.in_vd \
+			tsetupparmdb.in_cd \
 			tsetupparmdb.in_ms0.vds tsetupparmdb.in_ms1.vds \
 			tsetupparmdb.in_ms2.vds
+			tsetupsourcedb.run tsetupsourcedb.stdout \
+			tsetupsourcedb.in tsetupsourcedb.in_cd \
+			tsetupsourcedb.in_ms0.vds tsetupsourcedb.in_ms1.vds \
+			tsetupsourcedb.in_ms2.vds
 
 
 include $(top_srcdir)/Makefile.common

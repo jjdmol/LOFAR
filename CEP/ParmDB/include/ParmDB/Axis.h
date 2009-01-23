@@ -45,6 +45,7 @@ namespace BBS {
   class Axis: public BlobStreamable
   {
   public:
+    // Define a shared_ptr for this class.
     typedef shared_ptr<Axis> ShPtr;
 
     // The constructor sets the unique id.

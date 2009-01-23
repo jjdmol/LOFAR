@@ -1,4 +1,4 @@
-//# ParmFacade.h: Data access the parameter database
+//# ParmFacadeLocal.h: Data access the parameter database
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,20 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_PARMDB_PARMFACADE_H
-#define LOFAR_PARMDB_PARMFACADE_H
+#ifndef LOFAR_PARMDB_PARMFACADELOCAL_H
+#define LOFAR_PARMDB_PARMFACADELOCAL_H
 
 // \file
-// Data access the parameter database.
+// Data access the a local parameter database.
 
 //# Includes
 #include <ParmDB/ParmFacadeRep.h>
+#include <ParmDB/ParmDB.h>
+#include <casa/Containers/Record.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_set.h>
+#include <Common/lofar_string.h>
 
 
 namespace LOFAR { namespace BBS {
@@ -37,7 +42,7 @@ namespace LOFAR { namespace BBS {
   // \ingroup ParmDB
   // @{
 
-  // ParmFacade is the high level interface to the Parameter Data Base.
+  // ParmFacadeLocal is the high level interface to a local Parameter Data Base.
   // The current version assumes it is an AIPS++ table; with a few extra
   // constructor arguments it can easily be changed to other types of
   // databases.
@@ -55,62 +60,42 @@ namespace LOFAR { namespace BBS {
   // file name pattern that can be given in the UNIX shells (e.g. RA:*).
   // Thus it is not a full regular expression.
 
-  class ParmFacade
+  class ParmFacadeLocal : public ParmFacadeRep
   {
   public:
     // Make a connection to the given ParmTable.
-    ParmFacade (const string& tableName);
+    ParmFacadeLocal (const string& tableName);
 
     // The destructor disconnects.
-    ~ParmFacade();
-
-    // Get the version info (tree, top, full or other)
-    string version (const string& type) const;
+    virtual ~ParmFacadeLocal();
 
     // Get the domain range (as startx,endx,starty,endy) of the given
     // parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
-    vector<double> getRange (const string& parmNamePattern = "") const
-      { return itsRep->getRange (parmNamePattern); }
+    virtual vector<double> getRange (const string& parmNamePattern = "") const;
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    vector<string> getNames (const string& parmNamePattern = "") const
-      { return itsRep->getNames (parmNamePattern); }
-
-    // Get the values of the given parameters on the given regular grid
-    // where v1/v2 represents center/width or start/end.
-    // The vector values in the map are in fact 2-dim arrays with axes nfreq
-    // and ntime.
-    map<string, vector<double> > getValuesMap (const string& parmNamePattern,
-                                               double freqv1, double freqv2,
-                                               int nfreq,
-                                               double timev1, double timev2,
-                                               int ntime,
-                                               bool asStartEnd=false);
+    virtual vector<string> getNames (const string& parmNamePattern = "") const;
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
-    casa::Record getValues (const string& parmNamePattern,
-                            double freqv1, double freqv2, int nfreq,
-                            double timev1, double timev2, int ntime,
-                            bool asStartEnd=false)
-      { return itsRep->getValues (parmNamePattern, freqv1, freqv2, nfreq,
-                                  timev1, timev2, ntime, asStartEnd); }
+    virtual casa::Record getValues (const string& parmNamePattern,
+                                    double freqv1, double freqv2, int nfreq,
+                                    double timev1, double timev2, int ntime,
+                                    bool asStartEnd=false);
 
     // Get the values of the given parameters on the given grid where v1/v2
     // represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
-    casa::Record getValues (const string& parmNamePattern,
-                            const vector<double>& freqv1,
-                            const vector<double>& freqv2,
-                            const vector<double>& timev1,
-                            const vector<double>& timev2,
-                            bool asStartEnd=false)
-      { return itsRep->getValues (parmNamePattern, freqv1, freqv2,
-                                  timev1, timev2, asStartEnd); }
+    virtual casa::Record getValues (const string& parmNamePattern,
+                                    const vector<double>& freqv1,
+                                    const vector<double>& freqv2,
+                                    const vector<double>& timev1,
+                                    const vector<double>& timev2,
+                                    bool asStartEnd=false);
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to Array<value>.
@@ -118,19 +103,22 @@ namespace LOFAR { namespace BBS {
     // used for each parameters. Their names have the form <parmname>/xx
     // where xx is freqs, freqwidths, times, and timewidths. Their values
     // are the center and width of each cell.
-    casa::Record getValuesGrid (const string& parmNamePattern,
-                                double sfreq=-1e30, double efreq=1e30,
-                                double stime=-1e30, double etime=1e30)
-      { return itsRep->getValuesGrid (parmNamePattern, sfreq, efreq,
-                                      stime, etime); }
+    virtual casa::Record getValuesGrid (const string& parmNamePattern,
+                                        double sfreq=-1e30, double efreq=1e30,
+                                        double stime=-1e30, double etime=1e30);
 
   private:
-    // Convert a record to a map.
-    map<string,vector<double> > record2Map (const casa::Record& rec) const;
+    // Get the values for the given predict grid
+    casa::Record doGetValues (const string& parmNamePattern,
+                              const Grid& predictGrid);
+
+    // Get the detailed grid from this value set.
+    // Limit it to the given domain.
+    Grid getGrid (const ParmValueSet& valueSet, const Box& domain);
 
 
     //# Data members
-    ParmFacadeRep::ShPtr itsRep;
+    ParmDB itsPDB;
   };
 
   // @}
