@@ -55,8 +55,7 @@ namespace LOFAR { namespace CEP {
 	  rank  = MPIConnection::getRank();
 	}
 	// If only one MPI node, we may run in a single process
-	// or in multiple processes connected via sockets.
-	// Find out from argv.
+	// or in multiple processes connected via sockets (a port is given).
 	if (nnode <= 1  &&  !port.empty()) {
 	  nnode = nproc;
 	  rank  = procRank;
