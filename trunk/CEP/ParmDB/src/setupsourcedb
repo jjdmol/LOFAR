@@ -44,7 +44,7 @@ do
     overwrite=1
     shift
   elif [ "$1" = "-nooverwrite" ]; then
-    overwrite=1
+    overwrite=0
     shift
   else
     break
