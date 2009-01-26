@@ -546,9 +546,12 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
   writeTimer.start();
   outputData->write(itsStream, false);
   writeTimer.stop();
+}
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingInput()
+{
 #if defined HAVE_MPI
-  if(itsDoAsyncCommunication && itsIsTransposeInput) {
+  if(itsDoAsyncCommunication) {
     NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
     waitAsyncSendTimer.start();
     itsAsyncTranspose->waitForAllSends();
@@ -601,6 +604,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         break;
     }
   } // itsIsTransposeOutput
+
+  if( itsIsTransposeInput ) {
+    finishSendingInput();
+  }
 
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
