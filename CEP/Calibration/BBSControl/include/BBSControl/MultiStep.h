@@ -43,6 +43,10 @@ namespace LOFAR
     class MultiStep : public Step
     {
     public:
+      typedef vector< shared_ptr<const Step> >::const_iterator const_iterator;
+      typedef vector< shared_ptr<const Step> >::const_reverse_iterator
+        const_reverse_iterator;
+
       // Construct a MultiStep. \a name identifies the step name in the
       // parameter set file. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
@@ -69,6 +73,19 @@ namespace LOFAR
 
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
+      
+      // Provide const iteration over the steps that compose this multi-step.
+      const_iterator begin() const
+      { return itsSteps.begin(); }
+      const_iterator end() const
+      { return itsSteps.end(); }
+
+      // Provide const reverse iteration over the steps that compose this multi-
+      // step (needed for StrategyIterator).
+      const_reverse_iterator rbegin() const
+      { return itsSteps.rbegin(); }
+      const_reverse_iterator rend() const
+      { return itsSteps.rend(); }
 
     private:
       // Write the contents of \c *this into the ParameterSet \a ps.
@@ -84,12 +101,6 @@ namespace LOFAR
       // Read the individual Step objects, which make up this MultiStep,
       // from the ParameterSet \a ps and store them in \a itsSteps.
       void readSteps(const ParameterSet& ps);
-
-      // Implementation of getAllSteps() for MultiStep. It retrieves all
-      // steps by calling getAllSteps() on all steps that comprise this
-      // multistep.
-      virtual void 
-      doGetAllSteps(vector< shared_ptr<const Step> >& steps) const;
 
       // Check to see if there's an infinite recursion present in the
       // definition of a MultiStep. This can happen when one of the steps

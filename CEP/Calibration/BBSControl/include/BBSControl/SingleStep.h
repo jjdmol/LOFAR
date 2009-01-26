@@ -65,9 +65,6 @@ namespace LOFAR
       // information for this step can be retrieved from the parameter set \a
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
       // is a pointer to the Step object that is the parent of \c *this.
-//       SingleStep(const string& name,
-//                     const ParameterSet& parset,
-//                     const Step* parent);
       SingleStep(const string& name, const Step* parent);
 
       // Write the contents of \c *this into the ParameterSet \a ps.

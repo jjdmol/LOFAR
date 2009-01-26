@@ -42,7 +42,7 @@ usage()
     echo "options:"
     echo "  -h, --help      display this help text"
     echo "  -v, --verbose   be verbose"
-    echo "  -f, --force     clean control db for key"
+    echo "  -f, --force     clean control database, sourcedb, and parmdb"
     echo "  --dry           do not execute any command"
     echo "  --key keyname   unique key to identify the run (default: default)"
     echo "  --cluster-desc  cluster description file"
@@ -284,13 +284,30 @@ fi
 # SETUP PARAMETER DATABASES
 #
 
-event "execute setupparmdb"
+overwrite="-nooverwrite"
+if test ${force} -eq 1; then
+    overwrite="-overwrite"
+fi
+
+event "execute setupsourcedb"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "setupparmdb \"${observation}\" \"${catalogue}\" parmdb \"${cluster_desc}\" \"${wd}\" \"${key}_setupparmdb-part_$$.log\" nodry"
+    echo "setupsourcedb \"${overwrite}\" \"${observation}\" \"${catalogue}\" \"\" \"${cluster_desc}\" \"${key}_setupsourcedb-part_$$.log\" nodry"
 fi
 
 if test ${dry} -eq 0; then
-    setupparmdb "${observation}" "${catalogue}" parmdb "${cluster_desc}" "${wd}" "${key}_setupparmdb-part_$$.log" nodry
+    setupsourcedb "${overwrite}" "${observation}" "${catalogue}" "" "${cluster_desc}" "${key}_setupsourcedb-part_$$.log" nodry
+    if test $? -ne 0; then
+        error "setupsourcedb or remote setupsourcedb-part process(es) failed"
+    fi
+fi
+
+event "execute setupparmdb"
+if test ${verbose} -eq 1 -o ${dry} -eq 1; then
+    echo "setupparmdb \"${overwrite}\" \"${observation}\" \"\" \"\" \"${cluster_desc}\" \"${key}_setupparmdb-part_$$.log\" nodry"
+fi
+
+if test ${dry} -eq 0; then
+    setupparmdb "${overwrite}" "${observation}" "" "" "${cluster_desc}" "${key}_setupparmdb-part_$$.log" nodry
     if test $? -ne 0; then
         error "setupparmdb or remote setupparmdb-part process(es) failed"
     fi
@@ -376,11 +393,11 @@ done
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" parmdb nodry"
+    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" parmdb sourcedb nodry"
 fi    
 
 if test ${dry} -eq 0; then
-    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" parmdb nodry
+    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" parmdb sourcedb nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"

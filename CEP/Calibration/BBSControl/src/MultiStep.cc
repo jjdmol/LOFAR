@@ -136,18 +136,6 @@ namespace LOFAR
       }
     }
 
-
-    void
-    MultiStep::doGetAllSteps(vector< shared_ptr<const Step> >& steps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector< shared_ptr<const Step> > substeps = itsSteps[i]->getAllSteps();
-	steps.insert(steps.end(), substeps.begin(), substeps.end());
-      }
-    }
-    
-
     void MultiStep::infiniteRecursionCheck(const string& nm) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");

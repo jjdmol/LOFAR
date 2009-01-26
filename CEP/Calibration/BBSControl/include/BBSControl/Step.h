@@ -43,10 +43,6 @@ namespace LOFAR
 
   namespace BBS
   {
-    //# Forward Declarations.
-    class MultiStep;
-    class StrategyController;
-
     // \addtogroup BBSControl
     // @{
 
@@ -74,16 +70,6 @@ namespace LOFAR
       // of this step, preceeded by that of its parent, etc., separated by
       // dots.
       string fullName() const;
-
-      // Get all steps that this step consists of. The result will be a vector
-      // containing pointers to all steps, sorted pre-order depth-first.
-      //
-      // \todo Instead of making getAllSteps() a member function, returning a
-      // vector of Step*, it would be better to have a StepIterator
-      // class that can be used to iterate over the all steps. I had some
-      // trouble getting that thingy working, so, due to time constraints, I
-      // implemented things the ugly way.
-      vector< shared_ptr<const Step> > getAllSteps() const;
 
       // Create a new step object. The new step can either be a SingleStep
       // or a MultiStep object. This is determined by examining the
@@ -136,21 +122,12 @@ namespace LOFAR
       Step(const Step* parent = 0) : itsParent(parent) {}
 
       // Construct a Step. \a name identifies the step name in the
-      // parameter set file. It does \e not uniquely identify the step \e
+      // parameter set. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
       // backreference to the parent Step object.
-//       Step(const string& name, 
-//            const ParameterSet& parSet,
-//            const Step* parent);
       Step(const string& name, const Step* parent);
 
     private:
-      // Implementation of getAllSteps(). The default implementation adds \c
-      // this to the vector \a steps.
-      // \note This method must be overridden by MultiStep.
-      virtual void
-      doGetAllSteps(vector< shared_ptr<const Step> >& steps) const;
-
       // Name of this step.
       string                 itsName;
 

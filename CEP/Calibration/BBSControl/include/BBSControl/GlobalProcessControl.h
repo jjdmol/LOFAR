@@ -27,6 +27,7 @@
 // Implementation of ACC/PLC ProcessControl class
 
 //# Includes
+#include <BBSControl/Strategy.h>
 #include <BBSControl/CommandResult.h>
 //#include <BBSControl/CommandQueue.h>
 #include <BBSControl/SharedState.h>
@@ -44,7 +45,7 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations.
-    class Strategy;
+//    class Strategy;
     class Step;
 //    class CommandQueue;
 
@@ -140,16 +141,18 @@ namespace LOFAR
 
       // The strategy that will be executed by this controller.
       scoped_ptr<Strategy> itsStrategy;
+      
+      StrategyIterator itsStrategyIterator;
 
       // Vector containing all the separate steps, in sequential order, that
       // the strategy consists of.
-      vector< shared_ptr<const Step> >  itsSteps;
+//      vector< shared_ptr<const Step> >  itsSteps;
 
       // Iterator for keeping track where we left while traversing the vector
       // \c itsSteps. We need this iterator, because the run() method will be
       // invoked several times by ACCmain. In each call to run() we must
       // execute one Step.
-      vector< shared_ptr<const Step> >::const_iterator itsStepsIterator;
+//      vector< shared_ptr<const Step> >::const_iterator itsStepsIterator;
 
       // Shared State.
       scoped_ptr<SharedState>  itsSharedState;
