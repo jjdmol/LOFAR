@@ -1,25 +1,44 @@
-CREATE TABLE blackboard.shared_state
+--------------------
+-- SESSION STATES --
+--------------------
+
+-- -1 - FAILED
+--  0 - WAITING_FOR_CONTROL
+--  1 - WAITING_FOR_WORKERS
+--  2 - COMPUTING_WORKER_INDEX
+--  3 - workerING
+--  4 - DONE
+
+------------------
+-- WORKER TYPES --
+------------------
+
+-- 0 - KERNEL
+-- 1 - SOLVER
+
+
+CREATE TABLE blackboard.session
 (
     id                  SERIAL                      PRIMARY KEY,
     key                 TEXT                        NOT NULL UNIQUE,
     control_hostname    TEXT                        ,
     control_pid         BIGINT                      ,
-    run_state           INTEGER                     NOT NULL DEFAULT 0,
-    run_start           TIMESTAMP WITH TIME ZONE    NOT NULL DEFAULT now(),
-    run_finish          TIMESTAMP WITH TIME ZONE
+    state               INTEGER                     NOT NULL DEFAULT 0,
+    start               TIMESTAMP WITH TIME ZONE    NOT NULL DEFAULT now(),
+    finish              TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE blackboard.worker_register
+CREATE TABLE blackboard.worker
 (
     id              SERIAL      PRIMARY KEY,    
-    state_id        INTEGER     NOT NULL
+    session_id      INTEGER     NOT NULL
                                 REFERENCES
-                                blackboard.shared_state (id)
+                                blackboard.session (id)
                                 ON DELETE CASCADE,
     hostname        TEXT        ,
     pid             BIGINT      ,
     index           INTEGER     ,
-    worker_type     CHARACTER   NOT NULL,
+    type            INTEGER     NOT NULL,
     port            INTEGER     ,
     filesystem      TEXT        ,
     path            TEXT        ,
@@ -28,17 +47,17 @@ CREATE TABLE blackboard.worker_register
     axis_time_lower BYTEA       ,
     axis_time_upper BYTEA       ,
     
-    UNIQUE (state_id, hostname, pid)
+    UNIQUE (session_id, hostname, pid)
 );
 
 CREATE TABLE blackboard.command
 (
     id          SERIAL      PRIMARY KEY,
-    state_id    INTEGER     NOT NULL
+    session_id  INTEGER     NOT NULL
                             REFERENCES
-                            blackboard.shared_state (id)
+                            blackboard.session (id)
                             ON DELETE CASCADE,
-    target      CHARACTER   ,
+    addressee   INTEGER     ,
     type        TEXT        NOT NULL,
     name        TEXT        ,
     args        TEXT
@@ -52,7 +71,7 @@ CREATE TABLE blackboard.result
                                             ON DELETE CASCADE,
     worker_id   INTEGER                     NOT NULL
                                             REFERENCES
-                                            blackboard.worker_register (id)
+                                            blackboard.worker (id)
                                             ON DELETE CASCADE,
     timestamp   TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     result_code INTEGER                     ,
