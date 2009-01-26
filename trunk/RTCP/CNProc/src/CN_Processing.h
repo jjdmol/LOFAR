@@ -96,6 +96,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void                correlate();
 
     void                sendOutput( StreamableData *outputData );
+    void                finishSendingInput();
 
 #if 0
     void		checkConsistency(Parset *) const;
