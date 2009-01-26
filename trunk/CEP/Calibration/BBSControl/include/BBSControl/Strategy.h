@@ -1,4 +1,4 @@
-//# Strategy.h: The properties for solvable parameters
+//# Strategy.h: Strategy (sequence of Steps) to calibrate the visibility data.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,15 +24,14 @@
 #define LOFAR_BBSCONTROL_BBSSTRATEGY_H
 
 // \file
-// The properties for solvable parameters
+// Strategy (sequence of Steps) to calibrate the visibility data.
 
-//# Includes
 #include <BBSControl/Types.h>
-//#include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
+#include <Common/lofar_stack.h>
 
 namespace LOFAR
 {
@@ -43,10 +42,10 @@ namespace LOFAR
   {
     //# Forward declarations
     class Step;
+    class StrategyIterator;
 
     // \addtogroup BBSControl
     // @{
-     //: public Command
 
     class Strategy
     {
@@ -61,85 +60,54 @@ namespace LOFAR
       // Destructor.
       ~Strategy();
 
-//      // Return the command type of \c *this as a string.
-//      virtual const string& type() const;
-
       // Write the contents of \c *this into the ParameterSet \a ps.
-//      virtual void write(ACC::APS::ParameterSet& ps) const;
+      void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-//      virtual void read(const ACC::APS::ParameterSet& ps);
-
-      // Accept a CommandVisitor that wants to process \c *this.
-//      virtual CommandResult accept(CommandVisitor &visitor) const;
+      void read(const ParameterSet& ps);
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
-      // Return the steps that this strategy consists of. Multisteps are
-      // expanded recursively until only single steps remain. Expansion is
-      // done in pre-order, depth-first.
-      // \todo Do we really want to implement such "iterator-like behaviour"
-      // in this class?
-      vector< shared_ptr<const Step> > getAllSteps() const;
-
-      // Indicate whether the Steps contained in \c itsSteps should also be
-      // written when write(ParameterSet&) is called.
-//      void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
-
-      // @name Accessor methods
-      // @{
-//      string            dataSet()          const { return itsDataSet; }
-//      PDB               parmDB()           const { return itsPDB; }
-//      vector<string>    stations()         const { return itsStations; }
-//      string            inputColumn()      const { return itsInputColumn; }
-//      RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
-//      uint32            chunkSize()        const { return itsChunkSize; }
-//      Correlation       correlation()      const { return itsCorrelation; }
-      // @}
-
     private:
-      // Read the Step objects from the parameter set \a ps and store them
-      // in \a itsSteps.
-//      bool readSteps(const ACC::APS::ParameterSet& ps);
+      shared_ptr<const Step> getRoot() const
+      { return itsRoot; }
 
-      // Write the Step objects in \a itsSteps to parameter set \a ps.
-//      void writeSteps(ACC::APS::ParameterSet& ps) const;
-
-      // Name of the Measurement Set
-//      string                 itsDataSet;
-
-      // Information about the parameter database.
-//      PDB                    itsPDB;
-
-      // Names of the stations to use. Names may contains wildcards, like \c *
-      // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
-      // they will be passed unaltered by BBS control.
-//      vector<string>         itsStations;
-
-      // Name of the MS input column
-//      string                 itsInputColumn;
-
-      // Region of interest
-//      RegionOfInterest       itsRegionOfInterest;
-
-      // Chunk size (#timeslots)
-//      uint32                 itsChunkSize;
-
-      // Selection type of the correlation products.
-//      Correlation            itsCorrelation;
-
-      // Sequence of steps that comprise this solve strategy.
-      vector< shared_ptr<const Step> > itsSteps;
-
-      // Flag indicating whether the Step objects in \c itsSteps should
-      // also be written when write(ParameterSet&) is called.
-//      bool                   itsWriteSteps;
+      // Root step of the strategy tree.
+      shared_ptr<Step>  itsRoot;
+      
+      friend class StrategyIterator;
     };
 
     // Write the contents of a Strategy to an output stream.
     ostream& operator<<(ostream&, const Strategy&);
 
+    // Iterate over all the SingleSteps (leaf nodes) of a Strategy.
+    class StrategyIterator
+    {
+    public:
+      // Default constructor. Creates an StrategyIterator that iterates over an
+      // empty Strategy. Allows easy incorporation of a StrategyIterator as a
+      // class member.
+      StrategyIterator() {}
+      
+      // Create an StrategyIterator for the given Strategy.
+      StrategyIterator(const Strategy &strategy);
+      
+      // Is the iterator pointing at the end of the Strategy?
+      bool atEnd() const;
+      
+      // Return the current Step.
+      shared_ptr<const Step> operator*() const;
+      
+      // Advance the iterator (prefix).
+      void operator++();
+      
+    private:
+      shared_ptr<const Step>          itsCurrent;
+      stack<shared_ptr<const Step> >  itsStack;
+    };
+   
     // @}
 
   } // namespace BBS

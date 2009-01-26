@@ -1,4 +1,4 @@
-//#  Strategy.cc: 
+//#  Strategy.cc: Strategy (sequence of Steps) to calibrate the visibility data.
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,13 +23,13 @@
 #include <lofar_config.h>
 
 #include <BBSControl/Strategy.h>
-#include <BBSControl/Step.h>
-#include <BBSControl/Types.h>
-#include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSControl/MultiStep.h>
+#include <BBSControl/Step.h>
+#include <BBSControl/StreamUtil.h>
+#include <BBSControl/Types.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
-#include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -39,217 +39,101 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    // Register Strategy with the CommandFactory. Use an anonymous
-    // namespace. This ensures that the variable `dummy' gets its own private
-    // storage area and is only visible in this compilation unit.
-    namespace
-    {
-//      bool dummy = CommandFactory::instance().
-//        registerClass<Strategy>("Strategy");
-    }
-
-
     //##--------   P u b l i c   m e t h o d s   --------##//
-
-    Strategy::Strategy(const ParameterSet& ps)// :
-//      itsWriteSteps(false)
+      
+    Strategy::Strategy(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-        /*
-      // Get the name of the Measurement Set.
-      itsDataSet = aParSet.getString("DataSet");
-
-      // Retrieve the parameter database related key/value pairs.
-      itsPDB.instrument = aParSet.getString("ParmDB.Instrument");
-      itsPDB.sky = aParSet.getString("ParmDB.Sky");
-      itsPDB.history = aParSet.getString("ParmDB.History");
-
-      // Create a subset of \a aParSet, containing only the relevant keys for
-      // a Strategy.
-      ParameterSet ps(aParSet.makeSubset("Strategy."));
-
-      // ID's of the stations to be used by this strategy.
-      itsStations = ps.getStringVector("Stations");
-
-      // Get the name of the MS input column
-      itsInputColumn = ps.getString("InputColumn");
-
-      // Get the region of interest (optional)
-      itsRegionOfInterest.freq =
-        ps.getUint32Vector("RegionOfInterest.Freq", vector<uint32>());
-      itsRegionOfInterest.time =
-        ps.getStringVector("RegionOfInterest.Time", vector<string>());
-
-      // Get the chunk size for this strategy
-      itsChunkSize = ps.getUint32("ChunkSize", 0);
-
-      // Get the correlation product selection (ALL, AUTO, or CROSS)
-      itsCorrelation.selection = 
-        ps.getString("Correlation.Selection");
-      itsCorrelation.type = 
-        ps.getStringVector("Correlation.Type", vector<string>());
-        */
-        
-      // This strategy consists of the following steps.
-      vector<string> steps(ps.getStringVector("Steps"));
-
-      // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(Step::create(steps[i], ps, 0));
+      try {
+        itsRoot = Step::create("Root", ps, 0);
+      } catch(BBSControlException &e) {
+        THROW(BBSControlException, "Unable to find root step of strategy;"
+          " please ensure a (multi-)step called 'Root' (case sensitive) is"
+          " defined in the parset");
       }
     }
-
 
     Strategy::~Strategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
-/*
-    CommandResult Strategy::accept(CommandVisitor &visitor) const
-    {
-      return visitor.visit(*this);
-    }
-*/
-
     void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//      os << endl << indent << "Measurement Set: " << itsDataSet
-//	 << endl << indent << itsPDB
-//	 << endl << indent << "Strategy:";
-//      Indent id;
-//      os << endl << indent << "Input column: " << itsInputColumn
-//	 << endl << indent << itsRegionOfInterest
-//	 << endl << indent << "Chunk size: " << itsChunkSize
-//	 << endl << indent << itsCorrelation
-//	 << endl << indent << "Stations: " << itsStations;
-      os << endl << indent << "Steps:";
-      Indent id;
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-    	os << endl << indent << *itsSteps[i];
-      }
+      ASSERT(itsRoot);
+      itsRoot->print(os);
     }
  
-
-    vector< shared_ptr<const Step> > Strategy::getAllSteps() const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector< shared_ptr<const Step> > steps;
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector< shared_ptr<const Step> > substeps =
-          itsSteps[i]->getAllSteps();
-	steps.insert(steps.end(), substeps.begin(), substeps.end());
-      }
-      return steps;
-    }
-
-
-    //##--------   P r i v a t e   m e t h o d s   --------##//
-/*
     void Strategy::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      ps.add("DataSet", itsDataSet);
-      ps.add("ParmDB.Instrument", itsPDB.instrument);
-      ps.add("ParmDB.Sky", itsPDB.sky);
-      ps.add("ParmDB.History", itsPDB.history);
-      ps.add("Strategy.Stations", toString(itsStations));
-      ps.add("Strategy.InputColumn", itsInputColumn);
-      ps.add("Strategy.ChunkSize", toString(itsChunkSize));
-      ps.add("Strategy.RegionOfInterest.Freq", 
-             toString(itsRegionOfInterest.freq));
-      ps.add("Strategy.RegionOfInterest.Time",
-             toString(itsRegionOfInterest.time));
-      ps.add("Strategy.Correlation.Selection", itsCorrelation.selection);
-      ps.add("Strategy.Correlation.Type", toString(itsCorrelation.type));
-      LOG_TRACE_COND_STR("Write the Step objects as well?  " <<
-                         (itsWriteSteps ? "Yes" : "No"));
-      if (itsWriteSteps) writeSteps(ps);
+      itsRoot->write(ps);
     }
-*/
-/*
+
     void Strategy::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      itsDataSet                 = ps.getString("DataSet");
-      itsPDB.instrument          = ps.getString("ParmDB.Instrument");
-      itsPDB.sky                 = ps.getString("ParmDB.Sky");
-      itsPDB.history             = ps.getString("ParmDB.History");
-      itsStations                = ps.getStringVector("Strategy.Stations");
-      itsInputColumn             = ps.getString("Strategy.InputColumn");
-      itsChunkSize               = ps.getUint32("Strategy.ChunkSize");
-      itsRegionOfInterest.freq   =
-        ps.getUint32Vector("Strategy.RegionOfInterest.Freq");
-      itsRegionOfInterest.time   =
-        ps.getStringVector("Strategy.RegionOfInterest.Time");
-      itsCorrelation.selection   =
-        ps.getString("Strategy.Correlation.Selection");
-      itsCorrelation.type        = 
-        ps.getStringVector("Strategy.Correlation.Type");
-
-      // Read back the Step objects? Set \c itsWriteSteps to \c false, if
-      // no steps were specified in the parameter set.
-      itsWriteSteps = readSteps(ps);
-      LOG_TRACE_COND_STR("Read the Step objects as well?  " <<
-                         (itsWriteSteps ? "Yes" : "No"));
-    }
-*/
-/*
-    const string& Strategy::type() const
-    {
-      static const string theType("Strategy");
-      return theType;
-    }
-*/
-/*
-    bool Strategy::readSteps(const ParameterSet& ps)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      vector<string> steps;
-      try {
-        steps = ps.getStringVector("Strategy.Steps");
-        LOG_TRACE_COND_STR("Strategy.Steps = " << steps);
-        for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(Step::create(steps[i], ps, 0));
-        }
-        return true;
-      } catch (APSException&) {
-        return false;
-      }
+      itsRoot->read(ps);
     }
 
-
-    void Strategy::writeSteps(ParameterSet& ps) const
-    {
-      ostringstream oss;
-
-      // Write the "Steps" key/value pair
-      oss << "Strategy.Steps = [ ";
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-        if (i > 0) oss << ", ";
-        oss << itsSteps[i]->name();
-      }
-      oss << " ]";
-      ps.adoptBuffer(oss.str());
-
-      // Write the Step objects, one by one.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-        itsSteps[i]->write(ps);
-      }
-    }
-*/
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 
-    ostream& operator<<(ostream& os, const Strategy& bs)
+    ostream& operator<<(ostream& os, const Strategy& in)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      bs.print(os); 
+      in.print(os); 
       return os;
+    }
+
+
+    //##--------   P u b l i c   m e t h o d s   --------##//
+
+    StrategyIterator::StrategyIterator(const Strategy &strategy) {
+      itsStack.push(strategy.getRoot());
+      // Traverse to the first leaf Step.
+      this->operator++();
+    }
+
+    bool StrategyIterator::atEnd() const {
+      return !itsCurrent;
+    }
+
+    shared_ptr<const Step> StrategyIterator::operator*() const {
+      return itsCurrent;
+    }
+
+    void StrategyIterator::operator++() {
+      if(itsStack.empty()) {
+        itsCurrent.reset();
+        return;
+      }
+      
+      shared_ptr<const Step> step(itsStack.top());
+      itsStack.pop();
+      
+      // If the current Step is not a leaf Step, push all its children in
+      // reverse order (such that the first child will be popped from the stack
+      // first).
+      shared_ptr<const MultiStep> multi =
+        dynamic_pointer_cast<const MultiStep>(step);
+      
+      if(multi) {
+        MultiStep::const_reverse_iterator revIt = multi->rbegin();
+        MultiStep::const_reverse_iterator revItEnd = multi->rend();
+        while(revIt != revItEnd) {
+          itsStack.push(*revIt);
+          ++revIt;
+        }
+        
+        // Recursive call to traverse to a leaf Step.
+        this->operator++();
+      } else {
+        // Iterator arrived at a leaf Step; update the current Step and exit.
+        itsCurrent = step;
+      }
     }
 
   } // namespace BBS

@@ -43,11 +43,11 @@ echo "calibrate-part (script to calibrate a single MS)"
 echo
 
 # Check argument count.
-if test $# != 17; then
+if test $# != 18; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        ms filesystem lofarroot wd key db-host db-port db-name"
-  echo "        db-user solver-port parmdb-basename dry"
+  echo "        db-user solver-port parmdb sourcedb dry"
   exit 1
 fi
 
@@ -67,7 +67,8 @@ db_name=$8
 db_user=$9
 solver_port=$10
 parmdb=$11
-dry=$12
+sourcedb=$12
+dry=$13
 
 echo "arguments:"
 echo "    ms: ${ms}"
@@ -82,6 +83,7 @@ echo "    db name: ${db_name}"
 echo "    db user: ${db_user}"
 echo "    solver port: ${solver_port}"
 echo "    parmdb: ${parmdb}"
+echo "    sourcedb: ${sourcedb}"
 echo "    dry: ${dry}"
 echo
 
@@ -122,8 +124,8 @@ BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
 BBDB.Port = ${db_port}
 
-ParmDB.Sky = "${ms}/${parmdb}.sky"
-ParmDB.Instrument = "${ms}/${parmdb}.instrument"
+ParmDB.Sky = "${ms}/${sourcedb}"
+ParmDB.Instrument = "${ms}/${parmdb}"
 EOF
 fi
 

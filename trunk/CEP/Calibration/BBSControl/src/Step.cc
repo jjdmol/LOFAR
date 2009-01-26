@@ -63,16 +63,6 @@ namespace LOFAR
       return name;
     }
 
-
-    vector< shared_ptr<const Step> > Step::getAllSteps() const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector< shared_ptr<const Step> > steps;
-      doGetAllSteps(steps);
-      return steps;
-    }
-
-
     shared_ptr<Step> Step::create(const string& name,
                                         const ParameterSet& parset,
                                         const Step* parent)
@@ -284,16 +274,6 @@ namespace LOFAR
         << endl << indent << itsModelConfig;
     }
 
-
-    //##--------   P r i v a t e   m e t h o d s   --------##//
-
-    void 
-    Step::doGetAllSteps(vector< shared_ptr<const Step> >& steps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      steps.push_back(shared_from_this());
-    }
-    
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 

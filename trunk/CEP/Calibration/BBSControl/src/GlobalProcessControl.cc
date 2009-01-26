@@ -89,12 +89,8 @@ namespace LOFAR
       LOG_INFO("GlobalProcessControl::define()");
 
       try {
-    	// Retrieve the strategy from the parameter set.
-    	itsStrategy.reset(new Strategy(*globalParameterSet()));
-
-    	// Retrieve the steps in the strategy in sequential order.
-        itsSteps = itsStrategy->getAllSteps();
-    	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+      	// Retrieve the strategy from the parameter set.
+      	itsStrategy.reset(new Strategy(*globalParameterSet()));
       }
       catch (Exception& e) {
         LOG_ERROR_STR(e);
@@ -192,7 +188,7 @@ namespace LOFAR
         // Set the steps iterator to the *end* of the steps vector. This
         // sounds odd, but it is a safety net to insure that all local
         // controllers execute a "next chunk" command prior to any step.
-        itsStepsIterator = itsSteps.end();
+//        itsStepsIterator = itsSteps.end();
 
         // Switch to NEXT_CHUNK state, indicating that the next thing we
         // should do is send a "next chunk" command.
@@ -305,11 +301,12 @@ namespace LOFAR
                 }
 */
                 
-//                if(status.nResults - status.nFail > 0)
-                if(status.nResults == itsSharedState->getWorkerCount(SharedState::KERNEL))
+                if(status.nResults - status.nFail > 0)
+//                if(status.nResults == itsSharedState->getWorkerCount(SharedState::KERNEL))
                 {
                     setState(RUN);
-                    itsStepsIterator = itsSteps.begin();
+//                    itsStepsIterator = itsSteps.begin();
+                    itsStrategyIterator = StrategyIterator(*itsStrategy);
                 }
             }                    
 
@@ -335,11 +332,18 @@ namespace LOFAR
           // to the NEXT_CHUNK state.
           LOG_TRACE_FLOW("RunState::RUN");
 
-          if (itsStepsIterator != itsSteps.end()) {
-            if((*itsStepsIterator)->type() != "Solve")
-                itsSharedState->addCommand(**itsStepsIterator++, SharedState::KERNEL);
+//          if (itsStepsIterator != itsSteps.end()) {
+          if (itsStrategyIterator.atEnd()) {
+//            if((*itsStepsIterator)->type() != "Solve")
+//                itsSharedState->addCommand(**itsStepsIterator++, SharedState::KERNEL);
+//            else
+//                itsSharedState->addCommand(**itsStepsIterator++);
+            if((*itsStrategyIterator)->type() != "Solve")
+                itsSharedState->addCommand(**itsStrategyIterator, SharedState::KERNEL);
             else
-                itsSharedState->addCommand(**itsStepsIterator++);
+                itsSharedState->addCommand(**itsStrategyIterator);
+
+            ++itsStrategyIterator;
             //             setState(WAIT);
           } else if(itsChunkStart > itsTimeEnd) {
             setState(FINALIZE);
