@@ -27,8 +27,9 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 11; then
-  echo "run as:   mwimager-part dummy dummy dummy dummy rank ms-part filesys"
+if test $# != 12; then
+  echo "run as:   mwimager-part dummy dummy dummy dummy rank"
+  echo "                        ms-part filesys ms-part-vds"
   echo "                        lofarroot parset-file wd dry"
   exit 1
 fi
@@ -38,12 +39,11 @@ shift
 shift
 shift
 seqnr=$1
-msn=$2
-shift
-lroot=$3
-psn=$4
-wd=$5
-dry=$6
+msn=$4
+lroot=$5
+psn=$6
+wd=$7
+dry=$8
 
 psnbase=`basename $psn`
 
