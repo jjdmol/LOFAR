@@ -44,8 +44,8 @@ namespace LOFAR
     // Exception class for the global controller.
     EXCEPTION_CLASS(GlobalControlException, BBSControlException);
 
-    // Exception class for the local controller.
-    EXCEPTION_CLASS(LocalControlException, BBSControlException);
+    // Exception class for the kernel controller.
+    EXCEPTION_CLASS(KernelControlException, BBSControlException);
 
     // Exception class for the (global) solver controller.
     EXCEPTION_CLASS(SolverControlException, BBSControlException);
