@@ -29,10 +29,8 @@
 // Local (kernel) process controller
 
 //# Includes
-#include <BBSControl/SharedState.h>
-#include <BBSControl/CommandQueue.h>
+#include <BBSControl/CalSession.h>
 #include <BBSControl/BlobStreamableConnection.h>
-//#include <BBSControl/CommandExecutor.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/Types.h>
@@ -58,8 +56,8 @@ namespace BBS
 // \addtogroup BBSControl
 // @{
 
-// Implementation of the ProcessControl interface for the local Kernel
-// controller.
+// Implementation of the ProcessControl and the CommandVisitor interface for the
+// local Kernel controller.
 class KernelProcessControl: public ACC::PLC::ProcessControl,
                             public CommandVisitor
 {
@@ -128,9 +126,10 @@ private:
 
     State                                   itsState;
 
-    // Shared State.
-    scoped_ptr<SharedState>                 itsSharedState;
+    // Calibration session information.
+    scoped_ptr<CalSession>                  itsCalSession;
     
+    // 0-based index of this kernel process.
     KernelIndex                             itsKernelIndex;
     
     // Measurement.
@@ -153,13 +152,8 @@ private:
 
     // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
-    
-    // Command Queue.
-//    shared_ptr<CommandQueue>                itsCommandQueue;
-
-    // Command Executor.
-//    scoped_ptr<CommandExecutor>             itsCommandExecutor;
 };
+
 //@}
 
 } // namespace BBS

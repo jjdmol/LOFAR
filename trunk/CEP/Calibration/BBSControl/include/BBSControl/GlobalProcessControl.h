@@ -28,27 +28,17 @@
 
 //# Includes
 #include <BBSControl/Strategy.h>
-#include <BBSControl/CommandResult.h>
-//#include <BBSControl/CommandQueue.h>
-#include <BBSControl/SharedState.h>
-
-#include <ParmDB/Axis.h>
-
-#include <MWCommon/VdsDesc.h>
-
-#include <PLC/ProcessControl.h>
+#include <BBSControl/CalSession.h>
 
 #include <Common/lofar_smartptr.h>
+#include <PLC/ProcessControl.h>
+#include <ParmDB/Axis.h>
+#include <MWCommon/VdsDesc.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    //# Forward Declarations.
-//    class Strategy;
-    class Step;
-//    class CommandQueue;
-
     // \addtogroup BBSControl
     // @{
 
@@ -78,93 +68,50 @@ namespace LOFAR
       // @}
 
     private:
-      enum RunState {
+      enum State {
         UNDEFINED = -1,
         NEXT_CHUNK,
         NEXT_CHUNK_WAIT,
         RUN,
-        WAIT,
-        RECOVER,
         FINALIZE,
         FINALIZE_WAIT,
         QUIT,
         //# Insert new types HERE !!
-        N_States
+        N_State
       };
 
-      struct LessKernel
-      {
-        bool operator()(const pair<ProcessId, double> &lhs,
-          const pair<ProcessId, double> &rhs)
-        {
-          return lhs.second < rhs.second;
-        }
-      };
-        
-      void createWorkerIndex();
-//      Axis::ShPtr createTimeAxis();
-      
       // Set run state to \a state
-      void setState(RunState state);
+      void setState(State state);
 
-      // Return the current state as a string.
+      // Return the run state as a string.
       const string& showState() const;
 
-#if 0
-      // Post the command \a cmd to the command queue and wait until all local
-      // controllers have executed the command.
-      bool execCommand(const Command& cmd);
-
-      // Number of local controllers.
-      uint itsNrLocalCtrls;
-#endif
-
-      // Wait for results for the command with id \a cmdId. If new results
-      // arrive within the time-out period (which is a modifiable property of
-      // the CommandQueue), then \c itsResults will be updated. These new
-      // results will also be returned as a vector of ResultType.
-//      vector<ResultType> waitForResults(const CommandId& cmdId);
-
-      // Wait for results for any command. If new results arrive within the
-      // time-out period (which is a modifiable property of the CommandQueue),
-      // then \c itsResults will be updated. These new results will also be
-      // returned as ResultMapType.
-//      ResultMapType waitForResults();
-
-      // State of the global process controller.
-      RunState itsState;
-
-      // Keep track of the status of the commands sent to the command queue.
-      // Once a local controller has executed a command, it will post a
-      // result, which we can use to update our administration.
-//      ResultMapType itsResults;
+      // Assign an index to each kernel process starting from 0. The index is
+      // sorted on start frequency. Also, each solver process is assigned an
+      // index (starting from 0, sorted on worker id).
+      void createWorkerIndex();
+      
+      // State of the control process controller.
+      State                     itsState;
 
       // The strategy that will be executed by this controller.
-      scoped_ptr<Strategy> itsStrategy;
+      scoped_ptr<Strategy>      itsStrategy;
       
-      StrategyIterator itsStrategyIterator;
+      // Iterator used to iterate over the leaf-nodes (SingleSteps) of the
+      // Strategy.
+      StrategyIterator          itsStrategyIterator;
 
-      // Vector containing all the separate steps, in sequential order, that
-      // the strategy consists of.
-//      vector< shared_ptr<const Step> >  itsSteps;
+      // Calibration session information.
+      scoped_ptr<CalSession>    itsCalSession;
 
-      // Iterator for keeping track where we left while traversing the vector
-      // \c itsSteps. We need this iterator, because the run() method will be
-      // invoked several times by ACCmain. In each call to run() we must
-      // execute one Step.
-//      vector< shared_ptr<const Step> >::const_iterator itsStepsIterator;
-
-      // Shared State.
-      scoped_ptr<SharedState>  itsSharedState;
-    
-      // CommandQueue where strategies and steps can be "posted".
-//      scoped_ptr<CommandQueue> itsCommandQueue;
-      
-      CEP::VdsDesc          itsVdsDesc;
-      Axis::ShPtr           itsTimeAxis;
-      double                itsFreqStart, itsFreqEnd;
-      size_t                itsTimeStart, itsTimeEnd;
-      size_t                itsChunkStart, itsChunkSize;
+      // Id of the command that the controller is waiting for.
+      CommandId                 itsWaitId;
+          
+      CEP::VdsDesc              itsVdsDesc;
+      Axis::ShPtr               itsGlobalTimeAxis;
+      double                    itsFreqStart, itsFreqEnd;
+      size_t                    itsTimeStart, itsTimeEnd;
+      size_t                    itsChunkStart, itsChunkSize;
     };
 
     // @}

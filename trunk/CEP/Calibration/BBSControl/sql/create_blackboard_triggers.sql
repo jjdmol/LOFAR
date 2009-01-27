@@ -7,7 +7,7 @@ $$
 $$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER modify_worker
+CREATE TRIGGER modify_worker_register
     AFTER INSERT OR UPDATE OR DELETE ON blackboard.worker
     FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
 

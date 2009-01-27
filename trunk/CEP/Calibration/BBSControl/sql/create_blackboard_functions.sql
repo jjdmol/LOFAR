@@ -24,7 +24,7 @@ $$
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION blackboard.set_session_state(_session_id INTEGER,
+CREATE OR REPLACE FUNCTION blackboard.set_state(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _state INTEGER, OUT _status INTEGER) AS
 $$
     BEGIN
@@ -51,7 +51,7 @@ $$
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION blackboard.get_session_state(_session_id INTEGER,
+CREATE OR REPLACE FUNCTION blackboard.get_state(_session_id INTEGER,
     OUT _status INTEGER, OUT _state INTEGER) AS
 $$
     BEGIN
@@ -75,7 +75,7 @@ LANGUAGE plpgsql;
 ------------------
 
 CREATE OR REPLACE FUNCTION blackboard.create_kernel_slot(_session_id INTEGER,
-    _hostname TEXT, _pid BIGINT, _filesystem TEXT, _path TEXT)
+    _hostname TEXT, _pid BIGINT, _filesys TEXT, _path TEXT)
 RETURNS VOID AS
 $$
     BEGIN
@@ -87,8 +87,8 @@ $$
             RAISE EXCEPTION 'Operation not permitted';
         END IF;
 
-        INSERT INTO blackboard.worker (session_id, type, filesystem, path)
-            VALUES  (_session_id, 0, _filesystem, _path);
+        INSERT INTO blackboard.worker (session_id, type, filesys, path)
+            VALUES  (_session_id, 0, _filesys, _path);
     END;
 $$    
 LANGUAGE plpgsql;
@@ -135,7 +135,7 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION blackboard.register_as_kernel(_session_id INTEGER,
-    _hostname TEXT, _pid BIGINT, _filesystem TEXT, _path TEXT,
+    _hostname TEXT, _pid BIGINT, _filesys TEXT, _path TEXT,
     _axis_freq_lower BYTEA, _axis_freq_upper BYTEA, _axis_time_lower BYTEA,
     _axis_time_upper BYTEA, OUT _status INTEGER) AS
 $$
@@ -159,7 +159,7 @@ $$
             AND     type = 0
             AND     hostname IS NULL
             AND     pid IS NULL
-            AND     filesystem = _filesystem
+            AND     filesys = _filesys
             AND     path = _path;
         
         IF FOUND THEN
@@ -213,7 +213,7 @@ $$
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION blackboard.get_workers(_session_id INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_worker_register(_session_id INTEGER)
 RETURNS SETOF blackboard.worker AS
 $$
     SELECT *
@@ -304,7 +304,7 @@ $$
         -- Get the worker_id of the calling process. Because there is no stored
         -- procedure that can change the worker_id assigned to a process after
         -- it has registered, concurrent transactions are harmless. Therefore,
-        -- the worker table does not need to be locked.
+        -- the worker register does not need to be locked.
         SELECT id
             INTO    _worker_id
             FROM    blackboard.worker
@@ -346,7 +346,7 @@ LANGUAGE plpgsql;
 -- COMMAND --
 -------------
 
-CREATE OR REPLACE FUNCTION blackboard.add_command(_session_id INTEGER,
+CREATE OR REPLACE FUNCTION blackboard.post_command(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _addressee INTEGER, _type TEXT, _name TEXT,
     _args TEXT, OUT _status INTEGER, OUT _id INTEGER) AS
 $$
@@ -378,7 +378,7 @@ LANGUAGE plpgsql;
 -- RESULT --
 ------------
 
-CREATE OR REPLACE FUNCTION blackboard.add_result(_session_id INTEGER,
+CREATE OR REPLACE FUNCTION blackboard.post_result(_session_id INTEGER,
     _hostname TEXT, _pid BIGINT, _command_id INTEGER, _result_code INTEGER,
     _message TEXT, OUT _status INTEGER) AS
 $$
@@ -397,7 +397,7 @@ $$
         -- Get the worker_id of the calling process. Because there is no stored
         -- procedure that can change the worker_id assigned to a process after
         -- it has registered, concurrent transactions are harmless. Therefore,
-        -- the worker table does not need to be locked.
+        -- the worker register does not need to be locked.
         SELECT id
             INTO    _worker_id
             FROM    blackboard.worker

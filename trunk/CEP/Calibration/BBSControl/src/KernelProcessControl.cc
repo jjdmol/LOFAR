@@ -26,7 +26,6 @@
 #include <lofar_config.h>
 
 #include <BBSControl/KernelProcessControl.h>
-#include <BBSControl/CommandQueue.h>
 #include <BBSControl/Messages.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/Strategy.h>
@@ -66,7 +65,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <BBSControl/SharedState.h>
 #include <BBSControl/LocalSolveController.h>
 #include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
@@ -85,9 +83,9 @@ namespace LOFAR
     // Forces registration with Object Factory.
     namespace
     {
-      InitializeCommand cmd1;
-      FinalizeCommand   cmd2;
-      NextChunkCommand  cmd3;
+      InitializeCommand cmd0;
+      FinalizeCommand   cmd1;
+      NextChunkCommand  cmd2;
     }
 
 
@@ -122,13 +120,14 @@ namespace LOFAR
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
 
-        string filesystem = ps->getString("ObservationPart.Filesystem");
+        string filesys = ps->getString("ObservationPart.Filesystem");
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
 
         try {
-          // Open measurement.
+          // Open observation part.
+          LOG_INFO_STR("Observation part: " << filesys << " : " << path);
           itsMeasurement.reset(new MeasurementAIPS(path));
         }
         catch(Exception &e) {
@@ -137,6 +136,7 @@ namespace LOFAR
 
         try {
           // Open sky model parameter database.
+          LOG_INFO_STR("Sky model: " << skyDb);
           itsSourceDb.reset(new SourceDB(ParmDBMeta("casa", skyDb)));
           ParmManager::instance().initCategory(SKY, itsSourceDb->getParmDB());
         }
@@ -148,6 +148,7 @@ namespace LOFAR
 
         try {
           // Open instrument model parameter database.
+          LOG_INFO_STR("Instrument model: " << instrumentDb);
           ParmManager::instance().initCategory(INSTRUMENT,
             ParmDB(ParmDBMeta("casa", instrumentDb)));
         }
@@ -155,26 +156,23 @@ namespace LOFAR
           LOG_ERROR_STR("Failed to open instrument model parameter database: "
             << instrumentDb);
           return false;
-        }        
+        }
 
         string key = ps->getString("BBDB.Key", "default");
-        itsSharedState.reset(new SharedState(key,
+        itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
           ps->getString("BBDB.User"),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "5432")));
             
         // Poll until Control is ready to accept workers.
-        // TODO: Create a trigger for updates to the run state so polling
-        // is no longer necessary.
-        while(itsSharedState->getRunState() == SharedState::WAITING_FOR_CONTROL)
-        {
+        while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
           sleep(3);
         }
 
+        // Try to register as kernel.
         const VisDimensions &dims = itsMeasurement->getDimensions();
-        if(!itsSharedState->registerAsKernel(filesystem, path, dims.getGrid()))
-        {
+        if(!itsCalSession->registerAsKernel(filesys, path, dims.getGrid())) {
           LOG_ERROR("Registration denied.");
           return false;
         }
@@ -182,8 +180,7 @@ namespace LOFAR
         LOG_INFO_STR("Registration OK.");
         setState(RUN);
       }
-      catch(Exception& e)
-      {
+      catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
@@ -199,21 +196,15 @@ namespace LOFAR
       try {
         switch(itsState) {
           default: {
-            LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
-            return false;
-            break;
-          }
-
-          case UNDEFINED: {
-            LOG_WARN("RunState UNDEFINED; init() must be called first!");
+            LOG_ERROR_STR("Unexpected state: " << showState());
             return false;
             break;
           }
           
           case WAIT: {
-            // Wait for modification (insert) of the command queue. Note that this
-            // call falls through whenever an insert is detected.
-            if(itsSharedState->waitForCommand())
+            // Wait for a command. Note that this call falls through whenever
+            // a new command is inserted.
+            if(itsCalSession->waitForCommand())
             {
               setState(RUN);
             }
@@ -222,7 +213,7 @@ namespace LOFAR
 
           case RUN: {
             pair<CommandId, shared_ptr<Command> > command =
-              itsSharedState->getCommand();
+                itsCalSession->getCommand();
             
             if(command.second) {
               LOG_DEBUG_STR("Executing a " << command.second->type()
@@ -232,10 +223,7 @@ namespace LOFAR
               CommandResult result = command.second->accept(*this);
 
               // Report the result to the global controller.
-              if(!itsSharedState->addResult(command.first, result)) {
-                  LOG_ERROR("Failed to report result to the controller.");
-                  return false;
-              }
+              itsCalSession->postResult(command.first, result);
 
               // If an error occurred, log a descriptive message and exit.
               if(result.is(CommandResult::ERROR)) {
@@ -329,35 +317,36 @@ namespace LOFAR
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         
         // Get the index of this kernel process.
-        itsKernelIndex = itsSharedState->getIndex();
+        itsKernelIndex = itsCalSession->getIndex();
         
         // Construct global time axis.
-        itsGlobalTimeAxis = itsSharedState->getGlobalTimeAxis();
+        itsGlobalTimeAxis = itsCalSession->getGlobalTimeAxis();
         ASSERT(itsGlobalTimeAxis);
 
         // Try to connect to a solver if required.
         // TODO: Retry a couple of times if connect() fails?
         if(command.useSolver())
         {
-            SharedState::WorkerDescriptor solver =
-                itsSharedState->getWorkerByIndex(SharedState::SOLVER, 0);
+            ProcessId solverId =
+                itsCalSession->getWorkerByIndex(CalSession::SOLVER, 0);
+            const size_t port = itsCalSession->getPort(solverId);
                 
-            LOG_DEBUG_STR("Defining connection: solver@" << solver.id.hostname
-                << ":" << solver.port);
+            LOG_DEBUG_STR("Defining connection: solver@" << solverId.hostname
+                << ":" << port);
 
-            ostringstream bla;
-            bla << solver.port;
-            itsSolver.reset(new BlobStreamableConnection(solver.id.hostname,
-                bla.str(), Socket::TCP));
+            ostringstream tmp;
+            tmp << port;
+            itsSolver.reset(new BlobStreamableConnection(solverId.hostname,
+                tmp.str(), Socket::TCP));
 
             if(!itsSolver->connect())
             {        
-                return CommandResult(CommandResult::ERROR, "Unable to connect to"
-                    " solver.");
+                return CommandResult(CommandResult::ERROR, "Unable to connect"
+                    " to solver.");
             }
 
             // Make our process id known to the global solver.
-            itsSolver->sendObject(ProcessIdMsg(itsSharedState->getProcessId()));
+            itsSolver->sendObject(ProcessIdMsg(itsCalSession->getProcessId()));
         }
 
         itsInputColumn = command.inputColumn();
@@ -747,11 +736,15 @@ namespace LOFAR
             const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
             const size_t last = groupIndex[groupId] - 1;
             
-            SharedState::WorkerDescriptor desc;
-            desc = itsSharedState->getWorkerByIndex(SharedState::KERNEL, first);
-            const double freqBegin = desc.grid[0]->range().first;
-            desc = itsSharedState->getWorkerByIndex(SharedState::KERNEL, last);
-            const double freqEnd = desc.grid[0]->range().second;
+            // Get frequency range of the calibration group.
+            ProcessId kernel0 =
+                itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
+            const double freqBegin =
+                itsCalSession->getGrid(kernel0)[0]->range().first;
+            ProcessId kernelN =
+                itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
+            const double freqEnd =
+                itsCalSession->getGrid(kernelN)[0]->range().second;
                 
             LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin
                 << " - " << freqEnd);

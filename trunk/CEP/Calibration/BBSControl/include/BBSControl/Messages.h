@@ -29,7 +29,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
-#include <BBSControl/SharedState.h>
+#include <BBSControl/CalSession.h>
 #include <BBSControl/Types.h>
 
 namespace LOFAR

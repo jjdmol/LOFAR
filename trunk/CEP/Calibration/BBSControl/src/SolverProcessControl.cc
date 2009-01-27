@@ -69,9 +69,9 @@ namespace LOFAR
 
     namespace
     {
-      InitializeCommand initCmd;
-      NextChunkCommand  nextChunkCmd;
-      FinalizeCommand   finalizeCmd;
+      InitializeCommand cmd0;
+      NextChunkCommand  cmd1;
+      FinalizeCommand   cmd2;
     }
 
     //##----   P u b l i c   m e t h o d s   ----##//
@@ -79,7 +79,6 @@ namespace LOFAR
     SolverProcessControl::SolverProcessControl() :
       ProcessControl(),
       itsState(UNDEFINED)
-//      itsNrKernels(0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
@@ -102,40 +101,35 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::init()");
       try {
-        ASSERT(globalParameterSet());
-        const ParameterSet &ps = *globalParameterSet();
+        const ParameterSet *ps = globalParameterSet();
+        ASSERT(ps);
         
-        // Connect to the shared control state.
-        string key = ps.getString("BBDB.Key", "default");
-        itsSharedState.reset(new SharedState(key,
-            ps.getString("BBDB.Name"),
-            ps.getString("BBDB.User"),
-            ps.getString("BBDB.Host", "localhost"),
-            ps.getString("BBDB.Port", "5432")));
+        // Initialize the calibration session.
+        string key = ps->getString("BBDB.Key", "default");
+        itsCalSession.reset(new CalSession(key,
+            ps->getString("BBDB.Name"),
+            ps->getString("BBDB.User"),
+            ps->getString("BBDB.Host", "localhost"),
+            ps->getString("BBDB.Port", "5432")));
             
         // Initialize a TCP listen socket that will accept incoming kernel
         // connections.
         itsSocket.setName("Solver");
-        int32 backlog = ps.getInt32("ConnectionBacklog", 10);
-        itsSocket.initServer(ps.getString("Port"), Socket::TCP, backlog);
+        int32 backlog = ps->getInt32("ConnectionBacklog", 10);
+        itsSocket.initServer(ps->getString("Port"), Socket::TCP, backlog);
 
         // Poll until Control is ready to accept workers.
-        // TODO: Create a trigger for updates to the run state so polling
-        // is no longer necessary.
         LOG_INFO_STR("Waiting for Control...");
-        while(itsSharedState->getRunState() == SharedState::WAITING_FOR_CONTROL)
-        {
+        while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
           sleep(3);
         }
 
         // Try to register as solver.
-        if(!itsSharedState->registerAsSolver(ps.getUint("Port"))) {
+        if(!itsCalSession->registerAsSolver(ps->getUint("Port"))) {
           LOG_ERROR("Registration denied.");
           return false;
         }
         
-        // Switch to GET_COMMAND state, indicating that we're ready to receive
-        // commands.
         LOG_INFO_STR("Registration OK.");
         setState(RUN);
       }
@@ -156,21 +150,15 @@ namespace LOFAR
       try {
         switch(itsState) {
           default: {
-            LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
-            return false;
-            break;
-          }
-
-          case UNDEFINED: {
-            LOG_WARN("RunState UNDEFINED; init() must be called first!");
+            LOG_ERROR_STR("Unexpected state: " << showState());
             return false;
             break;
           }
           
           case WAIT: {
-            // Wait for modification (insert) of the command queue. Note that this
-            // call falls through whenever an insert is detected.
-            if(itsSharedState->waitForCommand())
+            // Wait for a command. Note that this call falls through whenever
+            // a new command is inserted.
+            if(itsCalSession->waitForCommand())
             {
               setState(RUN);
             }
@@ -179,7 +167,7 @@ namespace LOFAR
 
           case RUN: {
             pair<CommandId, shared_ptr<Command> > command =
-              itsSharedState->getCommand();
+              itsCalSession->getCommand();
 
             // Did we receive a valid command?
             if(command.second) {
@@ -190,23 +178,20 @@ namespace LOFAR
               CommandResult result = command.second->accept(*this);
 
               // Report the result to the global controller.
-              if(!itsSharedState->addResult(command.first, result)) {
-                  LOG_ERROR("Failed to report result to the controller");
-                  return false;
-              }
+              itsCalSession->postResult(command.first, result);
       
               // If an error occurred, log a descriptive message and exit.
               if(result.is(CommandResult::ERROR)) {
-                  LOG_ERROR_STR("Error executing " << command.second->type()
-                      << " command: " << result.message());
-                  return false;
+                LOG_ERROR_STR("Error executing " << command.second->type()
+                  << " command: " << result.message());
+                return false;
               }
 
               // If the command was a finalize command, log that we are done
               // and exit.
               if(command.second->type() == "Finalize") {
-                  LOG_INFO("Run completed succesfully.");
-                  clearRunState();
+                LOG_INFO("Run completed succesfully.");
+                clearRunState();
               }
             }
             else {
@@ -287,54 +272,51 @@ namespace LOFAR
 
     CommandResult SolverProcessControl::visit(const InitializeCommand&)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        // Create a TCP socket accepted by the listening socket.
-        shared_ptr<BlobStreamableConnection> connection;
+      // Create a TCP socket accepted by the listening socket.
+      shared_ptr<BlobStreamableConnection> connection;
 
-        const size_t nKernels =
-          itsSharedState->getWorkerCount(SharedState::KERNEL);
+      const size_t nKernels = itsCalSession->getWorkerCount(CalSession::KERNEL);
 
-        //  Wait for all kernels to connect.
-        LOG_DEBUG_STR("Waiting for " << nKernels << " kernel(s) to connect...");
+      //  Wait for all kernels to connect.
+      LOG_DEBUG_STR("Waiting for " << nKernels << " kernel(s) to connect...");
 
-        itsKernels.resize(nKernels);
-        for (uint i = 0; i < nKernels; ++i) {
-          connection.reset(new BlobStreamableConnection(itsSocket.accept()));
-          if (!connection->connect()) {
-            THROW (IOException, "Unable to connect to kernel");
-          }
-
-          scoped_ptr<const ProcessIdMsg>
-            msg(dynamic_cast<ProcessIdMsg*>(connection->recvObject()));
-          if (!msg) {
-            THROW (SolverControlException, "Protocol error. Expected a"
-              " ProcessIdMsg");
-          }
-            
-          if(!itsSharedState->isKernel(msg->getProcessId())) {
-            connection.reset();
-            THROW (SolverControlException, "Connected process is not a"
-                " registered kernel process; disconnected");
-          }
-    
-          SharedState::WorkerDescriptor descriptor =
-            itsSharedState->getWorkerById(msg->getProcessId());
-          KernelIndex index = descriptor.index;
-
-          try {
-            itsKernels.at(index) = KernelConnection(connection, index);
-          } catch (std::out_of_range&) {
-            connection.reset();
-            LOG_ERROR_STR("Kernel index (" << index << ") out of range;"
-                          " disconnected");
-          }
-
-          LOG_DEBUG_STR("Kernel " << i+1 << " of " << nKernels << 
-                        " connected (index=" << index << ")");
+      itsKernels.resize(nKernels);
+      for(uint i = 0; i < nKernels; ++i) {
+        connection.reset(new BlobStreamableConnection(itsSocket.accept()));
+        if(!connection->connect()) {
+          THROW(IOException, "Unable to connect to kernel");
         }
 
-        return CommandResult(CommandResult::OK, "Ok.");
+        scoped_ptr<const ProcessIdMsg>
+          msg(dynamic_cast<ProcessIdMsg*>(connection->recvObject()));
+        if(!msg) {
+          THROW(SolverControlException, "Protocol error. Expected a"
+            " ProcessIdMsg");
+        }
+          
+        if(!itsCalSession->isKernel(msg->getProcessId())) {
+          connection.reset();
+          THROW(SolverControlException, "Process " << msg->getProcessId()
+            << "is not a registered kernel process; disconnected");
+        }
+  
+        KernelIndex index = itsCalSession->getIndex(msg->getProcessId());
+
+        try {
+          itsKernels.at(index) = KernelConnection(connection, index);
+        } catch (std::out_of_range&) {
+          connection.reset();
+          THROW(SolverControlException, "Kernel index (" << index << ") out of"
+            " range; disconnected");
+        }
+
+        LOG_DEBUG_STR("Kernel " << i+1 << " of " << nKernels << " connected"
+          " (index=" << index << ")");
+      }
+
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult SolverProcessControl::visit(const FinalizeCommand&)
@@ -402,8 +384,7 @@ namespace LOFAR
       // implementation, this is a serialized operation. Once we run each
       // kernel group in its own thread, we can parallellize
       // things. Threads will also make it possible to return swiftly from
-      // the current method, so that we can promptly react to ACC
-      // commands.
+      // the current method, so that we can promptly react to ACC command.
       //
       // [Q] Should we let run() return a bool or do we handle error
       // conditions with exceptions. I think the former (bools) is a
@@ -414,7 +395,7 @@ namespace LOFAR
       while(!done)
       {
         done = true;
-        for (uint i = 0; i < itsSolveTasks.size(); ++i) {
+        for(uint i = 0; i < itsSolveTasks.size(); ++i) {
           done = itsSolveTasks[i].run() && done;
         }
       }
@@ -467,7 +448,7 @@ namespace LOFAR
         "RUN",
         "<UNKNOWN>"  //# This should ALWAYS be last !!
       };
-      if (UNDEFINED < itsState && itsState < N_State) return states[itsState];
+      if(UNDEFINED < itsState && itsState < N_State) return states[itsState];
       else return states[N_State];
     }
 
@@ -492,8 +473,8 @@ namespace LOFAR
       // connections to each kernel group.
       for (uint i = 0; i < groups.size(); ++i) {
         advance(end, groups[i]);
-        itsSolveTasks.push_back
-          (SolveTask(vector<KernelConnection>(beg, end), options));
+        itsSolveTasks.push_back(SolveTask(vector<KernelConnection>(beg, end),
+          options));
         beg = end;
       }
     }

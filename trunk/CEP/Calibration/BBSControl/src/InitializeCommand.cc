@@ -53,7 +53,7 @@ namespace LOFAR
 
     InitializeCommand::InitializeCommand(const ParameterSet& ps)
     {
-        read(ps);
+      read(ps);
     }
     
     CommandResult InitializeCommand::accept(CommandVisitor &visitor) const
