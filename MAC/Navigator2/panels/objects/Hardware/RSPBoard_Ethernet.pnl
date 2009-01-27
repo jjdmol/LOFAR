@@ -11,9 +11,9 @@ PANEL,-1 -1 560 213 N "_3DFace" 0
   if(!dpExists(baseDP + \".packetsReceived:_online.._value\") ||
      !dpExists(baseDP + \".packetsError:_online.._value\") ||
      !dpExists(baseDP + \".lastError:_online.._value\")) {
-    setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"output_lastError\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"output_packetsReceived\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_packetsError\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_lastError\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"output_packetsReceived\", \"text\", \"error\");
     setValue(\"output_packetsError\"   , \"text\", \"error\");
     setValue(\"output_lastError\"      , \"text\", \"error\");
@@ -22,7 +22,7 @@ PANEL,-1 -1 560 213 N "_3DFace" 0
     setValue(\"output_packetsReceived\", \"backCol\", \"white\");
     setValue(\"output_packetsError\", \"backCol\", \"white\");
     setValue(\"output_lastError\", \"backCol\", \"white\");
-    dpConnect(\"BoardETHDetails\", baseDP + \".packetsReceived:_online.._value\",
+    dpConnect(\"boardETHDetails\", baseDP + \".packetsReceived:_online.._value\",
                                  baseDP + \".packetsError:_online.._value\",
                                  baseDP + \".lastError:_online.._value\");
   }
@@ -40,7 +40,7 @@ E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
 
-BoardETHDetails(string dp1, int packetsReceived,
+void boardETHDetails(string dp1, int packetsReceived,
                 string dp2, int packetsError,
                 string dp3, int lastError)
 {

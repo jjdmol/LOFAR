@@ -59,14 +59,16 @@ GCFCWD_Init() {
   
   // retrieve old settings
   
-  dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
-                                      CWD_DP+".name",
-                                      CWD_DP+".online",
-                                      CWD_DP+".lastUptime",
-                                      CWD_DP+".lastDowntime");
-
-
-  LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+  if (dpExists(CWD_DP+".systemID")) {
+    dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
+                                        CWD_DP+".name",
+                                        CWD_DP+".online",
+                                        CWD_DP+".lastUptime",
+                                        CWD_DP+".lastDowntime");
+    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+  } else {
+    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
+  } 
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +91,7 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
   int  iPos;
   // check all current systems and update mapping
   for (int i = 1; i <= dynlen(systemID); i++) {
+    bool changed=false;
     iPos=dynContains ( g_connections[ "SYSTEM" ],systemID[i]);
 
     // if the system was not yet available just add
@@ -98,8 +101,38 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
     }  
     // now store the values    
     g_connections[ "NAME" ][iPos]     = name[i];
-    g_connections[ "UP" ][iPos]       = up[i];
+    if (dynlen(g_connections["UP"])>= iPos ) {
+      if (g_connections[ "UP" ][iPos] != up[i]){
+        g_connections[ "UP" ][iPos]       = up[i];
+        changed=true;
+      }
+    } else {
+        g_connections[ "UP" ][iPos]       = up[i];
+        changed=true;
+    }
     g_connections[ "UPTIME" ][iPos]   = upTime[i];
     g_connections[ "DOWNTIME" ][iPos] = downTime[i];
+    
+    // we need to reflect the status of the stations up/down also in the "MainDBName+LOFAR_PIC_[Ring].status.childState
+    if (changed) {
+      // changed to up, childstate is highest childstate of all stations.state and .childStates
+      // else 
+      // changed to down, childstate will be set to dpOffline
+      if (up[i]) {
+        if (dpExists(MainDBName+"__navObjectState.DPName")) {
+            dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
+                  MainDBName+"__navObjectState.stateNr",OPERATIONAL,
+                  MainDBName+"__navObjectState.message","System came online",
+                  MainDBName+"__navObjectState.force",true);
+        }        
+      } else {
+        if (dpExists(MainDBName+"__navObjectState.DPName")) {
+            dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
+                  MainDBName+"__navObjectState.stateNr",DPOFFLINE,
+                  MainDBName+"__navObjectState.message","System went offline",
+                  MainDBName+"__navObjectState.force",false);
+        }
+      }
+    }
   }
 }

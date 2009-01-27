@@ -72,8 +72,11 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
                                  baseDPX+ \".status.state\",
                                  baseDPY+ \".status.state\",
                                  antennaDP  + \".status.state:_online.._invalid\");
+    if (!navFunct_dpReachable(antennaDP)) {
+      updateHBAAntenna(\"\",0,\"\",false,\"\",false,\"\",0,\"\",0,\"\",true);
+    }
   } else {
-    setValue(\"HBA\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"HBA\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }	
 }
 
@@ -90,7 +93,11 @@ void updateHBAAntenna(string dp1, int state,
   string YCol;
 
   if (invalid) {
-    AntennaCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      AntennaCol=\"Lofar_dpOffline\";
+    } else {
+      AntennaCol=\"Lofar_invalid\";
+    }
     XCol=AntennaCol;
     YCol=AntennaCol;
   } else {

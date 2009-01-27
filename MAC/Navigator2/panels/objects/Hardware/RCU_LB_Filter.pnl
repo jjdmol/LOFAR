@@ -8,16 +8,19 @@ PANEL,-1 -1 390 296 N "_3DFace" 0
   baseDP=g_currentDatapoint;
   
   if(dpExists(baseDP + \".LBAFilterSel\")) {
-    dpConnect(\"ControlLBFilter\", baseDP + \".LBAFilterSel:_online.._value\",
+    dpConnect(\"controlLBFilter\", baseDP + \".LBAFilterSel:_online.._value\",
                                  baseDP + \".LBAFilterSel:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      controlLBFilter(\"\",0,\"\",true);
+    }
   } else {
-    setValue(\"txt_state\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_state\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
 }
 
 
-ControlLBFilter(string dp1, unsigned filter,
-                string dp2, bool invalid) {
+void controlLBFilter(string dp1, unsigned filter,
+                     string dp2, bool invalid) {
 
   if(!invalid) {
     if (filter == 0) {

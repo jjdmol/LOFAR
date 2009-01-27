@@ -314,6 +314,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
           return;
         }
       }
+      dpSet(datapoint+".status.message",message);
       
     } else {
       if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");

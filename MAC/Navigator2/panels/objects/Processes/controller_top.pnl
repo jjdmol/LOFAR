@@ -28,23 +28,25 @@ PANEL,-1 -1 1013 750 N "_3DFace" 1
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".status.message\")) {
-    dpConnect(\"updateStates\", baseDP + \".status.message\",
-		              baseDP + \".process.currentAction\",
-		              baseDP + \".process.error\",
-		              baseDP + \".process.startTime\",
-		              baseDP + \".process.stopTime\",
-		              baseDP + \".process.processID\", 
-		              baseDP + \".status.message:_online.._invalid\");
-    } else {
-      LOG_ERROR($ctrlName+\".pnl:main|Couldn't find DP to connect to: \"+baseDP);
-      setValue(\"myLogTable\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"statusMessage\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"processAction\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"processError\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"processStartTime\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"processStopTime\", \"backCol\", \"_dpdoesnotexist\");
-      setValue(\"processID\", \"backCol\", \"_dpdoesnotexist\");
-    }  
+    if (dpConnect(\"updateStates\", baseDP + \".status.message\",
+		                  baseDP + \".process.currentAction\",
+		                  baseDP + \".process.error\",
+		                  baseDP + \".process.startTime\",
+		                  baseDP + \".process.stopTime\",
+		                  baseDP + \".process.processID\", 
+                                  baseDP + \".status.message:_online.._invalid\") == -1) {
+      LOG_ERROR(\"controller_top.pnl:main|Couldn't connect to: \"+baseDP+\" \"+getLastError());
+    }
+  } else {
+    LOG_ERROR($ctrlName+\".pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    setValue(\"myLogTable\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"statusMessage\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processAction\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processError\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processStartTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processStopTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processID\", \"backCol\", \"Lofar_dpdoesnotexist\");
+  }  
   
 
   // pass baseDP to selfstate Object to work with
@@ -63,7 +65,7 @@ updateStates(string dp1, string message,
              string dp6, unsigned processID,
              string dp7, bool invalid)
 {
-  LOG_DEBUG($ctrlName+\".pnl:update|entered with: \"+ message + \" action: \" + action + \" error: \" + error);  
+  LOG_DEBUG(\"controller_top.pnl:updateStates|entered for \"+$ctrlName+\" with: \"+ message + \" action: \" + action + \" error: \" + error);  
   if (!invalid) {
     setValue(\"statusMessage\", \"text\", message);
     setValue(\"processAction\", \"text\", action);

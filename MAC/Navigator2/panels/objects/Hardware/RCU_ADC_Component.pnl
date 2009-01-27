@@ -11,19 +11,25 @@ PANEL,-1 -1 279 349 N "_3DFace" 0
   if (dpExists(baseDP + \".VddVccEnable:_online.._value\") &&
       dpExists(baseDP + \".nofOverflow:_online.._value\")) {
     setValue(\"txt_component\", \"text\", \"ADC\");
-    dpConnect(\"ControlComponent\", baseDP + \".VddVccEnable:_online.._value\",
-				  baseDP + \".nofOverflow:_online.._value\",
-	                          baseDP + \".VddVccEnable:_online.._invalid\");
+    if (dpConnect(\"controlComponent\", baseDP + \".VddVccEnable:_online.._value\",
+				      baseDP + \".nofOverflow:_online.._value\",
+                                      baseDP + \".VddVccEnable:_online.._invalid\") == -1) {
+      LOG_ERROR(\"RCU_ADC_Component.pnl:main|Couldn't connect to:\"+baseDP+\" \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      controlComponent(\"\",false,\"\",0,\"\",true);
+    }
   } else {
-    setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
+    LOG_ERROR(\"RCU_ADC_Component.pnl:main|Couldn't find dp to connect to:\"+baseDP);
+    setValue(\"rect_overflow\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);    
-    setValue(\"status\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"status\", \"backCol\", \"Lofar_dpdoesnotexist\");
     VddVccEnable=FALSE;
     navPanel_checkDataPath();
   }
 }
 
-ControlComponent(string dp1, bool Status,
+controlComponent(string dp1, bool Status,
                  string dp2, unsigned nofOverflow,
                  string dp3, bool invalid) {
   string SymbolCol; 
@@ -38,7 +44,11 @@ ControlComponent(string dp1, bool Status,
     }
     VddVccEnable=Status;
   } else {
-    SymbolCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol=\"Lofar_dpOffline\";
+    } else {
+      SymbolCol=\"Lofar_invalid\";
+    }
     setValue(\"txt_overflow\" , \"visible\", FALSE);
     VddVccEnable=FALSE;
   }

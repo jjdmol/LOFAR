@@ -38,8 +38,11 @@ PANEL,-1 -1 255 122 N "_3DFace" 1
 				      baseDP + \".TBB.mode:_online.._value\",
                                       baseDP + \".TBB.startAddr:_online.._value\",
                                       baseDP + \".TBB.bufSize:_online.._value\",
-                                      baseDP + \".TBB.mode:_online.._invalid\") < 0) {
+                                      baseDP + \".TBB.mode:_online.._invalid\") == -1) {
       LOG_DEBUG(\"RCU_TBB.pnl:Initialize|Error connecting to: \" + baseDP + \".TBB.error\");
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTBBDetails(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
     }
   } else {
     LOG_DEBUG(\"RCU_TBB.pnl:Initialize|Error connecting to: \" + baseDP + \".TBB.error\");

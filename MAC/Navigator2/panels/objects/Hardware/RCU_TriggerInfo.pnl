@@ -18,6 +18,9 @@ PANEL,-1 -1 321 408 N "_3DFace" 0
                                       baseDP + \".Trigger.coeff2:_online.._value\",
                                       baseDP + \".Trigger.coeff3:_online.._value\",
                                       baseDP + \".Trigger.coeff3:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTriggerDetails(\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",true);
+    }
   } else {
     LOG_ERROR(\"RCU_TriggerInfo.pnl:Initialize|Error connecting to : \"+baseDP+ \".Trigger.startlevel\");
     setValue(\"txt_startlevel\" , \"text\", \"\");

@@ -42,8 +42,12 @@
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
 
-global bool       g_initializing         = true;
-global string     g_currentDatapoint     = MainDBName+"LOFAR_PIC_Europe";
+global bool       g_initializing          = true;
+global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
+global string     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
+global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
+
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
 global mapping    g_observations;      // 

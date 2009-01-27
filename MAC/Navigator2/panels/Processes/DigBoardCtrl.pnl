@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1013 750 N "_3DFace" 0
+PANEL,-1 -1 1013 754 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -12,13 +12,18 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    dpConnect(\"updateDigBoardCtrl\", baseDP + \".connected\",
-		                    baseDP + \".clock\",
-		                    baseDP + \".connected:_online.._invalid\");
+    if (dpConnect(\"updateDigBoardCtrl\", baseDP + \".connected\",
+		                        baseDP + \".clock\",
+                                        baseDP + \".connected:_online.._invalid\") == -1) {
+      LOG_ERROR(\"DigBoardCtrl.pnl:main|Couldn't connect to: \"+baseDP);
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateDigBoardCtrl(\"\",false,\"\",0,\"\",true);
+    }
   } else {
     LOG_ERROR(\"DigBoardCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"enabledText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"clockText\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"enabledText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"clockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
   reload();
 }
@@ -36,8 +41,12 @@ updateDigBoardCtrl(string dp1, bool connected,
       setValue(\"connectedText\", \"backCol\", \"red\");
     }
   } else {
-    setValue(\"connectedText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"clockText\", \"backCol\", \"Lofar_invalid\");
+    string SymbolCol = \"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymboLCol = \"Lofar_dpOffline\";
+    }
+    setValue(\"connectedText\", \"backCol\", SymbolCol);
+    setValue(\"clockText\", \"backCol\", SymbolCol);
   }  
 }
 

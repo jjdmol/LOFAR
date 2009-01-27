@@ -13,14 +13,14 @@ PANEL,-1 -1 980 784 N "_3DFace" 0
     dpConnect(\"updatePower48\",mainStationDP+\".power48On\",
                               mainStationDP+\".power48On:_online.._invalid\");
   } else {
-    setValue(\"power48On\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"power48On\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
   
   if (dpExists(mainStationDP+\".power220On\") ) {
     dpConnect(\"updatePower220\",mainStationDP+\".power220On\",
                                mainStationDP+\".power220On:_online.._invalid\");
   } else {
-    setValue(\"power220On\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"power220On\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
   
 }

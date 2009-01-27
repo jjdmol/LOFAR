@@ -12,41 +12,61 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".OTDB.connected\")) {
-    dpConnect(\"updateOTDB\", baseDP + \".OTDB.connected\",
-                            baseDP + \".OTDB.lastPoll\",
-                            baseDP + \".OTDB.pollinterval\",
-              		    baseDP + \".OTDB.connected:_online.._invalid\");
+    if (dpConnect(\"updateOTDB\", baseDP + \".OTDB.connected\",
+                                baseDP + \".OTDB.lastPoll\",
+                                baseDP + \".OTDB.pollinterval\",
+                            	baseDP + \".OTDB.connected:_online.._invalid\")== -1) {
+      LOG_ERROR(\"MACScheduler.pnl:main|Couldn't connect to: \"+baseDP+\".OTDB.connected\");
+    }
+    if (!navFunct_dpReachable(baseDP+\".OTDB.connected\")) {
+      updateOTDB(\"\",false,\"\",\"\",\"\",0,\"\",true);
+    }
   } else {
     LOG_ERROR(\"MACScheduler.pnl:main|Couldn't find DP to connect to: \"+baseDP+\".OTDB.connected\");
-    setValue(\"PlannedObservationList\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"PlannedObservationList\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
 
     // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".plannedObservations\")) {
-    dpConnect(\"updatePlannedObs\", baseDP + \".plannedObservations\",
-		                  baseDP + \".plannedObservations:_online.._invalid\");
+    if (dpConnect(\"updatePlannedObs\", baseDP + \".plannedObservations\",
+                  		      baseDP + \".plannedObservations:_online.._invalid\") == -1) {
+     LOG_ERROR(\"MACScheduler.pnl:main|Couldn't connect to: \"+baseDP+\".plannedObservations\");
+    }
+    if (!navFunct_dpReachable(baseDP+\".plannedObservations\")) {
+      updatePlannedObs(\"\",makeDynString,\"\",true);
+    }     
   } else {
     LOG_ERROR(\"MACScheduler.pnl:main|Couldn't find DP to connect to: \"+baseDP+\".plannedObservations\");
-    setValue(\"PlannedObservationList\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"PlannedObservationList\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
   
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".activeObservations\")) {
-    dpConnect(\"updateActiveObs\", baseDP + \".activeObservations\",
-		                  baseDP + \".activeObservations:_online.._invalid\");
+    if (dpConnect(\"updateActiveObs\", baseDP + \".activeObservations\",
+                  		     baseDP + \".activeObservations:_online.._invalid\") == -1 ) {
+      LOG_ERROR(\"MACScheduler.pnl:main|Couldn't connect to: \"+baseDP+\".activeObservations\");
+    }
+    if (!navFunct_dpReachable(baseDP+\".activeObservations\")) {
+      updateActiveObs(\"\",makeDynString,\"\",true);
+    }
   } else {
     LOG_ERROR(\"MACScheduler.pnl:main|Couldn't find DP to connect to: \"+baseDP+\".activeObservations\");
-    setValue(\"ActiveObservationList\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"ActiveObservationList\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }  
 
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".finishedObservations\")) {
-    dpConnect(\"updateFinishedObs\", baseDP + \".finishedObservations\",
-		                  baseDP + \".finishedObservations:_online.._invalid\");
+    if( dpConnect(\"updateFinishedObs\", baseDP + \".finishedObservations\",
+              		               baseDP + \".finishedObservations:_online.._invalid\")== -1){
+      LOG_ERROR(\"MACScheduler.pnl:main|Couldn't connect to: \"+baseDP+\".finishedObservations\");
+    }
+    if (!navFunct_dpReachable(baseDP+\".finishedObservations\")) {
+      updateFinishedObs(\"\",makeDynString,\"\",true);
+    }
   } else {
     LOG_ERROR(\"MACScheduler.pnl:main|Couldn't find DP to connect to: \"+baseDP+\".finishedObservations\");
-    setValue(\"FinisheddObservationList\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"FinisheddObservationList\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }  
 
 
@@ -64,7 +84,11 @@ updatePlannedObs(string dp1, dyn_string obsList,
       PlannedObservationList.appendItem(obsList[i]);
     }
   } else {
-    setValue(\"PlannedObservationList\", \"backCol\", \"Lofar_invalid\");
+    if (dp == \"\") {
+      setValue(\"PlannedObservationList\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"PlannedObservationList\", \"backCol\", \"Lofar_invalid\");
+    }
   }
 }
 
@@ -79,7 +103,11 @@ updateActiveObs(string dp1, dyn_string obsList,
       ActiveObservationList.appendItem(obsList[i]);
     }
   } else {
-    setValue(\"ActiveObservationList\", \"backCol\", \"Lofar_invalid\");
+    if (dp == \"\") {
+      setValue(\"ActiveObservationList\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"ActiveObservationList\", \"backCol\", \"Lofar_invalid\");
+    }    
   }
 }
 
@@ -94,7 +122,11 @@ updateFinishedObs(string dp1, dyn_string obsList,
       FinishedObservationList.appendItem(obsList[i]);
     }
   } else {
-    setValue(\"FinishedObservationList\", \"backCol\", \"Lofar_invalid\");
+    if (dp1 == \"\") {
+      setValue(\"FinishedObservationList\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"FinishedObservationList\", \"backCol\", \"Lofar_invalid\");
+    }
   }
 }
 
@@ -112,9 +144,15 @@ updateOTDB(string dp1, bool connected,
     setValue(\"txt_OTDBpollinterval\",\"backCol\",\"_Window\");
     setValue(\"txt_OTDBpollinterval\",\"text\",pollinterval);
   } else {
-    setValue(\"txt_OTDBconnected\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"txt_OTDBlastPoll\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"txt_OTDBpollinterval\", \"backCol\", \"Lofar_invalid\");
+    if (dp1 == \"\") {
+      setValue(\"txt_OTDBconnected\", \"backCol\", \"Lofar_invalid\");
+      setValue(\"txt_OTDBlastPoll\", \"backCol\", \"Lofar_invalid\");
+      setValue(\"txt_OTDBpollinterval\", \"backCol\", \"Lofar_invalid\");
+    } else {
+      setValue(\"txt_OTDBconnected\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"txt_OTDBlastPoll\", \"backCol\", \"Lofar_idpOffline\");
+      setValue(\"txt_OTDBpollinterval\", \"backCol\", \"Lofar_dpOffline\");
+    }
   }
 }
 

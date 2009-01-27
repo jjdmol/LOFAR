@@ -28,12 +28,14 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
 void prepareObservationsList() {
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".plannedObservations\")) {
-    dpConnect(\"updateObservationsList\", baseDP +\".plannedObservations:_online.._value\",
-                                        baseDP +\".activeObservations:_online.._value\",
-                                        baseDP +\".finishedObservations:_online.._value\",
-                                        baseDP +\".plannedObservations:_online.._invalid\");
+    if (dpConnect(\"updateObservationsList\", baseDP +\".plannedObservations:_online.._value\",
+                                            baseDP +\".activeObservations:_online.._value\",
+                                            baseDP +\".finishedObservations:_online.._value\",
+                                            baseDP +\".plannedObservations:_online.._invalid\")== -1) {
+      LOG_ERROR(\"Observations.pnl:prepareObservationsList| Couldn't connect to\" + baseDP+\".plannedObservations\");
+    }
   } else {
-    LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"Observation_small.pnl:prepareObservationsList|\"+baseDP+\".plannedObservations doesn't exist\");
   }	
 }
 

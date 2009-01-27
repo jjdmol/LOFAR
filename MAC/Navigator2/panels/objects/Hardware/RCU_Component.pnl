@@ -11,10 +11,13 @@ PANEL,-1 -1 384 349 N "_3DFace" 2
   LOG_TRACE(\"DP: \" + baseDP + \"  Component: \"+$Component);
   if (dpExists(baseDP + \".\" + $Component)) {
     setValue(\"txt_comp\", \"text\", $Caption);
-    dpConnect(\"ControlComponent\", baseDP + \".\" + $Component + \":_online.._value\",
+    dpConnect(\"controlComponent\", baseDP + \".\" + $Component + \":_online.._value\",
                                   baseDP + \".\" + $Component + \":_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      controlComponent(\"\",false,\"\",true);
+    }
   } else {
-    setValue(\"STS_RCU\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"STS_RCU\", \"backCol\", \"Lofar_dpdoesnotexist\");
     if ($Component == \"VlEnable\") {
       VlEnable=FALSE;
     } else {
@@ -25,8 +28,8 @@ PANEL,-1 -1 384 349 N "_3DFace" 2
 }
 
 
-ControlComponent(string dp1, bool Status,
-                 string dp2, bool invalid)
+void controlComponent(string dp1, bool Status,
+                      string dp2, bool invalid)
 {
 
   string SymbolCol; 
@@ -37,7 +40,11 @@ ControlComponent(string dp1, bool Status,
       SymbolCol=\"Lofar_off\";
     }
   } else {
-    SymbolCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol=\"Lofar_dpOffline\";
+    } else {
+      SymbolCol=\"Lofar_invalid\";
+    }
   }
 
   if ($Component == \"VlEnable\") {

@@ -7,16 +7,19 @@ PANEL,-1 -1 147 92 N "_3DFace" 0
   baseDP=g_currentDatapoint;
 
   if(dpExists(baseDP + \".HBAFilterSel\")) {
-    dpConnect(\"ControlHBFilter\", baseDP + \".HBAFilterSel:_online.._value\",
+    dpConnect(\"controlHBFilter\", baseDP + \".HBAFilterSel:_online.._value\",
                                  baseDP + \".HBAFilterSel:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      controlHBFilter(\"\",0,\"\",true);
+    }
   } else {
-    setValue(\"txt_state\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_state\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
 }
 
 
-ControlHBFilter(string dp1, unsigned filter,
-                string dp2, bool invalid) {
+void controlHBFilter(string dp1, unsigned filter,
+                     string dp2, bool invalid) {
 
   if(!invalid) {
     if (filter == 2) {
@@ -33,7 +36,11 @@ ControlHBFilter(string dp1, unsigned filter,
       setValue(\"txt_filter\" , \"text\" , \"Filter OFF\" );
     }
   } else {
-    setValue(\"txt_state\", \"backCol\", \"Lofar_invalid\");
+    if (dp1 == \"\") {
+      setValue(\"txt_state\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"txt_state\", \"backCol\", \"Lofar_invalid\");
+    }
     setValue(\"txt_filter\" , \"text\" , \"\" );
   }
 }" 0

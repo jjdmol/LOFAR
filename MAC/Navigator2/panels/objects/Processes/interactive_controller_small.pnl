@@ -13,9 +13,11 @@ PANEL,-1 -1 785 105 N "_3DFace" 2
   
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\") ){
-    dpConnect(\"updateTrigger\", DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._value\",
-                               DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList:_online.._value\",
-                               DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._invalid\");
+    if (dpConnect(\"updateTrigger\", DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._value\",
+                                   DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList:_online.._value\",
+                                   DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName:_online.._invalid\") == -1) {
+      LOG_ERROR(\"interactive_controller_small.pnl:main|Couldn't connect to: \"+DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName \"+ getLastError() );
+    }
   } else {
     LOG_ERROR(\"interactive_controller_small.pnl:main|Couldn't find DP to connect to: \"+DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\" );
   }	  
@@ -31,6 +33,7 @@ void updateTrigger( string dp1, string objectName,
               \" panelName: \");
     string observation=\"\";
     string station = \"\";
+    
     if (dynlen(paramList) > 0) {
       observation=paramList[1];
     }
@@ -148,13 +151,19 @@ void reload(string obsBDP,string station) {
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.error\")) {
-    dpConnect(\"update\", baseDP +\".process.error:_online.._value\",
-                        baseDP +\".process.currentAction:_online.._value\",
-                        baseDP +\".process.logMsg:_online.._value\",
-                        baseDP +\".process.error:_online.._invalid\");
-    connected=true;
+    if (dpConnect(\"update\", baseDP +\".process.error:_online.._value\",
+                            baseDP +\".process.currentAction:_online.._value\",
+                            baseDP +\".process.logMsg:_online.._value\",
+                            baseDP +\".process.error:_online.._invalid\") == -1) {
+    } else {
+      if (!navFunct_dpReachable(baseDP)) {
+        update(\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+      }
+      connected=true;
+    }
   } else {
     LOG_ERROR(\"interactive_controller_small.pnl:reload|Couldn't find DP to connect to: \"+baseDP);
+    myTable.deleteAllLines();
   }	
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
@@ -176,7 +185,11 @@ update(string dp1, string error,
 {
   string col=\"Lofar_operational\";
   if (invalid) {
-    col = \"Lofar_invalid\";
+    if (dp1 == \"\") {
+      col=\"Lofar_dpOffline\";
+    } else {
+      col = \"Lofar_invalid\";
+    }
   } else if (!connected) {
     col = \"Lofar_off\";
   }

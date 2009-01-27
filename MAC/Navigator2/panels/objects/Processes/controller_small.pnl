@@ -14,10 +14,12 @@ PANEL,-1 -1 1031 124 N "_3DFace" 1
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.error\")) {
-    dpConnect(\"updateController\", baseDP +\".process.error:_online.._value\",
-                                  baseDP +\".process.currentAction:_online.._value\",
-                                  baseDP +\".process.logMsg:_online.._value\",
-                                  baseDP +\".process.error:_online.._invalid\");
+    if (dpConnect(\"updateController\", baseDP +\".process.error:_online.._value\",
+                                      baseDP +\".process.currentAction:_online.._value\",
+                                      baseDP +\".process.logMsg:_online.._value\",
+                                      baseDP +\".process.error:_online.._invalid\") == -1) {
+      LOG_ERROR(\"controller_small.pnl:main|Couldn't connect to: \"+baseDP+\" \"+getLastError());
+    }
   } else {
     LOG_ERROR(\"controller_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
   }	
@@ -33,8 +35,10 @@ updateController(string dp1, string error,
                  string dp3, string logMsg,
                  string dp4, bool invalid)
 {
-  myTable.deleteAllLines();
-  myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",logMsg);  
+  if (! invalid) {
+    myTable.deleteAllLines();
+    myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",logMsg);  
+  }
 }" 0
  E "main(int x, int y)
 {

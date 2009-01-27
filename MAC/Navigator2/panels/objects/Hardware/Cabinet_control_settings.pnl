@@ -16,7 +16,7 @@ PANEL,-1 -1 500 400 N "_3DFace" 1
   }
   
   if (! dpExists(baseDP)) {
-    dpSet(\"cabinet_top\",\"backCol\",\"_dpdoesnotexist\");
+    dpSet(\"cabinet_top\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
   
   
@@ -24,12 +24,16 @@ PANEL,-1 -1 500 400 N "_3DFace" 1
   
   // back and front door
   if (dpExists(baseDP + \".tempMin\")) {
-    dpConnect(\"updateMinMax\", baseDP + \".tempMin\",
-                              baseDP + \".tempMax\",
-                              baseDP + \".tempMaxMax\",
-                              baseDP + \".humidityMax\",
-                              baseDP + \".humidityMaxMax\",
-	                      baseDP + \".tempMin:_online.._invalid\");
+    if (dpConnect(\"updateMinMax\", baseDP + \".tempMin\",
+                                  baseDP + \".tempMax\",
+                                  baseDP + \".tempMaxMax\",
+                                  baseDP + \".humidityMax\",
+                                  baseDP + \".humidityMaxMax\",
+                                  baseDP + \".tempMin:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Cabinet_control_settings.pnl:main|Couldn't connect to dp : \"+ baseDP+ \" \"+ getLastError());
+    }
+  } else {
+    LOG_ERROR(\"Cabinet_control_settings.pnl:main|Couldn't find dp to connect to: \"+ baseDP);
   }
 }
 

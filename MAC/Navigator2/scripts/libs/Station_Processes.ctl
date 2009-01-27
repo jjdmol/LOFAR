@@ -50,13 +50,23 @@ global string station_obsBaseDP              = "";
 // ***************************************
 bool Station_Processes_initList() {
   station_selectedObservation=selectedObservation;
-  station_selectedStation=syst;
+  if (strtok(station_selectedStation,":") < 0) {
+    station_selectedStation=selectedStation+":";
+  } else {
+    station_selectedStation=selectedStation;
+  }
+  
+
+//  station_selectedStation=syst;
   station_obsBaseDP="";
   
   
   dynClear(station_result);
   dynClear(station_procList);
   
+  if (!dpReachable(station_selectedStation)) {
+    return;
+  }
   int z;
   dyn_dyn_anytype tab;
   //PermSW + PermSW_Daemons
@@ -69,7 +79,6 @@ bool Station_Processes_initList() {
 
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
   dynSortAsc(aDS);
-  
   for(z=1;z<=dynlen(aDS);z++){
     
     // strip .status.state from station_result
@@ -80,8 +89,7 @@ bool Station_Processes_initList() {
     
 
     // strip all including PermsSW out of the string
-    strreplace(aS,syst+dpSubStr(baseDP,DPSUB_DP)+"_PermSW_","");
-
+    strreplace(aS,station_selectedStation+dpSubStr(baseDP,DPSUB_DP)+"_PermSW_","");
 
     // Remainder should be PermsSW Programs + Daemons  split on _ 
     dyn_string spl=strsplit(aS,"_");
@@ -98,9 +106,16 @@ bool Station_Processes_initList() {
   LOG_TRACE("Station_Processes.ctl:initList|station_result composed: "+ station_result);
   
   if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
-    setValue("activeStationObs","backCol","_dpdoesnotexist");
+    setValue("activeStationObs","backCol","Lofar_dpdoesnotexist");
   } else {
-    dpConnect("Station_Processes_ActiveStationObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations");
+    if (dpConnect("Station_Processes_ActiveStationObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations") == -1) {
+      LOG_ERROR("Station_Processes.ctl:initList|couldn't connect to activeObservations "+getLastError());
+    } else {
+      if (!navFunct_dpReachable("LOFAR_PermSW_MACScheduler.activeObservations")) { 
+        setValue("activeStationObs","backCol","Lofar_dpOffline");
+      }
+    }
+      
   }
 
  
@@ -123,7 +138,11 @@ bool Station_Processes_UpdateStationControllers() {
 
   // check if selection is made, and the selection is indeed a new one
   if (newSelectedStation != 0) {
-    station_selectedStation = newSelectedStation;
+    if (strtok(newSelectedStation,":") < 0) {
+      station_selectedStation=newSelectedStation+":";
+    } else {
+      station_selectedStation=newSelectedStation;
+    }
     stationDBName.text(station_selectedStation);
     
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamCtrlPanel",
@@ -147,7 +166,7 @@ bool Station_Processes_UpdateStationControllers() {
 // ****************************************
 // Description:  
 //   takes the general station_results and adds the (changed) 
-//   observation and station ctrl'ers
+//   observation station ctrl'ers
 //  
 // ***************************************
 bool Station_Processes_UpdateProcessesList() {
@@ -194,6 +213,7 @@ bool Station_Processes_UpdateProcessesList() {
       // strip all including Observation out of the string
       strreplace(aS,obsDP+"_","");
 
+      
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
@@ -245,6 +265,11 @@ Station_Processes_UpdateStationTree() {
           if (stations[k] == selectedStation) {
             stationTree.setSelectedItem(stations[k],true);
             station_selectedStation=stations[k];
+            if (strtok(stations[k],":") < 0) {
+              station_selectedStation=stations[k]+":";
+            } else {
+              station_selectedStation=stations[k];
+            }
           }
         }
       }
@@ -296,7 +321,7 @@ Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservat
       LOG_DEBUG("Station_Processes.ctl:activeObsCallback|Stations found: "+sts);
       dyn_string stations = navFunct_listToDynString(sts);
       for (int k=1; k<= dynlen(stations);k++) { 
-        if (stations[k] == station_selectedStation) {
+        if (strpos(station_selectedStation,stations[k]) > -1) {
           if (station_obsBaseDP == "") {
             station_obsBaseDP=realName;
           }

@@ -61,6 +61,7 @@
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -144,11 +145,13 @@ void navFunct_queryConnectObservations()
     oldPlannedObservations=makeDynString();
     oldFinishedObservations=makeDynString();
     oldActiveObservations=makeDynString();
-    dpConnect("navFunct_updateObservations",true,MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations",
-                                                 MainDBName+"LOFAR_PermSW_MACScheduler.plannedObservations",
-                                                 MainDBName+"LOFAR_PermSW_MACScheduler.finishedObservations");
+    if (dpConnect("navFunct_updateObservations",true,MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations",
+                                                     MainDBName+"LOFAR_PermSW_MACScheduler.plannedObservations",
+                                                     MainDBName+"LOFAR_PermSW_MACScheduler.finishedObservations") == -1) {
+      LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: Couldn't connect to MACScheduler!!! "  + getLastError() );
+    } 
   } else {
-    LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: Couldn't connect to MACScheduler!!!" );
+    LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: MACScheduler points don't exist!!!");
   }     
 }
 
@@ -821,7 +824,35 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   if (receiverBitmap == "") {
     return false;
   }  
- 
+  
+  // expand stationList with virtual groups (Core, Remote & Europe), so they can be highlighted when available
+  bool coreFound  = false;
+  bool remoteFound = false;
+  bool europeFound = false;
+  for (int i=1; i<= dynlen(obsStations); i++) {
+    if (!coreFound && navFunct_getRingFromStation(obsStations[i])=="Core") {
+      coreFound=true;
+    } else if (!remoteFound && navFunct_getRingFromStation(obsStations[i])=="Remote") {
+      remoteFound=true;
+    } else if (!europeFound && navFunct_getRingFromStation(obsStations[i])=="Europe") {
+      europeFound=true;
+    } 
+    if (coreFound && remoteFound && europeFound) {
+      break;
+    }
+  }
+  
+  if (coreFound) {
+    dynAppend(obsStations,"Core");
+  }
+  if (remoteFound) {
+    dynAppend(obsStations,"Remote");
+  }
+  if (europeFound) {
+    dynAppend(obsStations,"Europe");
+  }
+
+  
   // if station is not in stationList return false
   if (!dynContains(obsStations,stationName)) {
     flag = false;
@@ -1319,4 +1350,31 @@ string navFunct_getStationFromDP(string aDPName) {
     aS = aDS[dynlen(aDS)]+":";
   }
   return aS;
+}
+
+// ****************************************
+// Name: navFunct_dpReachable 
+// ****************************************
+//  Tries to determine if a (dist) system is (still)
+//  reachable.  This because if a dist system allready was
+//  up, but goed down, a reload of a panel gives dpExists = true
+//  and a dpConnect gives no erro, but just no callback. 
+//  so there is no way to determine if a dist system is still reachable.
+//
+//     Returns true if system is still reachable
+// ****************************************
+bool navFunct_dpReachable(string aDP) {
+  string sys = dpSubStr(aDP,DPSUB_SYS);
+  // check if system is in our active connections. (if not dpExists should have given false ealier...
+  if (sys == MainDBName) {
+    return true;
+  }
+  int iPos = dynContains ( g_connections[ "NAME" ],sys);
+  if (iPos <= 0 ){
+    return false;
+  }
+  
+
+  // return state of the connection
+  return g_connections[ "UP" ][iPos];
 }

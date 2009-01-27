@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 994 412 N "_3DFace" 0
+PANEL,-1 -1 994 411 N "_3DFace" 0
 "main()
 {
   mainDBName.text(MainDBName);
@@ -34,9 +34,11 @@ void click(string originator) {
     dynClear(g_processesList);
     if (originator == \"stationTree\") {
       MainCU_Processes_UpdateStationControllers();
+      navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
     } else if (originator == \"activeObs\") {
       MainCU_Processes_UpdateMainControllers();
-      MainCU_Processes_UpdateStationTree();      
+      MainCU_Processes_UpdateStationTree(); 
+      navPanel_setEvent(activeObs.getText(activeObs.selectedItem(),0),\"EventClick\");     
     }
   }
 }
@@ -123,14 +125,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"frameShadow" "enum 48"
-"selectionMode" "enum 0"
-"backgroundOrigin" "enum 0"
-"defaultRenameAction" "enum 0"
-"frameShape" "enum 6"
-"vScrollBarMode" "enum 0"
-"hScrollBarMode" "enum 0"
 "resizeMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"vScrollBarMode" "enum 0"
+"frameShape" "enum 6"
+"defaultRenameAction" "enum 0"
+"backgroundOrigin" "enum 0"
+"selectionMode" "enum 0"
+"frameShadow" "enum 48"
  822 20 992 347
 10 TreeWidget
 7

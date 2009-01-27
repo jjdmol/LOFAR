@@ -53,7 +53,7 @@ void reload() {
   navFunct_clearGlobalLists();
   
   // set the observation selectable items
-  Station_Processes_initList();
+  prepareProcesses();
 
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"StorageAppl.pnl\",\"Update\");

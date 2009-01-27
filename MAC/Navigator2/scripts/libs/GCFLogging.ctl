@@ -56,7 +56,7 @@ const string LOGMESSAGE_DEBUG = "DEBUG";
 const string LOGMESSAGE_TRACE = "TRACE";
 
 // set the loglevel throughout the navigator
-global int  g_logLevel = LOGLEVEL_ERROR;
+global int  g_logLevel = LOGLEVEL_WARN;
 global dyn_string g_logScope = "";
 global dyn_string g_searchString="";
 
@@ -309,25 +309,27 @@ void LOG_MESSAGE(int level, string logmessage, dyn_anytype message)
 void initLog(string logDP)
 {
   DPNAME_LOGLEVEL=logDP;
-	if(!g_logInitialized) {
-		if(dpExists(DPNAME_LOGLEVEL)) {
-			dyn_errClass err;
-			dpGet(DPNAME_LOGLEVEL+".logLevel",g_logLevel);
-			err = getLastError();
-			if (dynlen(err) > 0) {
-				errorDialog(err);
-			}
-			// monitor future updates:
-			dpConnect("loglevelUpdated",DPNAME_LOGLEVEL+".logLevel",
-                                                    DPNAME_LOGLEVEL+".logScope",
-                                                    DPNAME_LOGLEVEL+".searchString");
-			err = getLastError();
-			if (dynlen(err) > 0) {
-				errorDialog(err);
-			}
-		}
-		g_logInitialized=true;
-	}
+  if(!g_logInitialized) {
+    if(dpExists(DPNAME_LOGLEVEL)) {
+      dyn_errClass err;
+      if (dpGet(DPNAME_LOGLEVEL+".logLevel",g_logLevel)== -1) {
+        err = getLastError();
+        if (dynlen(err) > 0) {
+          errorDialog(err);
+        }
+      }
+      // monitor future updates:
+      if (dpConnect("loglevelUpdated",DPNAME_LOGLEVEL+".logLevel",
+                                      DPNAME_LOGLEVEL+".logScope",
+                                      DPNAME_LOGLEVEL+".searchString") == -1) {
+        err = getLastError();
+        if (dynlen(err) > 0) {
+          errorDialog(err);
+        }
+      }
+    }
+    g_logInitialized=true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

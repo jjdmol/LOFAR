@@ -9,8 +9,7 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
 
   baseDP = g_currentDatapoint;
   
-  DebugN(\"BaseDP:\"+baseDP);
-  
+
   dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
   if (strpos(dpAr[dynlen(dpAr)],\"RCU\") > -1) {
     rcuNr = substr(dpAr[dynlen(dpAr)],3,strlen(dpAr[dynlen(dpAr)]));
@@ -30,23 +29,32 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
 
  
   if (dpExists(baseDP + \".InputEnable:_online.._value\")) {
-    dpConnect(\"ShowInputLines\", baseDP + \".InputEnable:_online.._value\",
-	                        baseDP + \".InputEnable:_online.._invalid\");
+    if (dpConnect(\"ShowInputLines\", baseDP + \".InputEnable:_online.._value\",
+                  	                            baseDP + \".InputEnable:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_RCU.pnl:Initialize|couldn't connect to \"+baseDP + \".InputEnable \" + getLastError());
+    }      
   }
   
   if (dpExists(baseDP + \".Delay:_online.._value\")) {
-    dpConnect(\"ShowDelay\", baseDP + \".Delay:_online.._value\",
-	                   baseDP + \".Delay:_online.._invalid\");
+    if (dpConnect(\"ShowDelay\", baseDP + \".Delay:_online.._value\",
+                  	       baseDP + \".Delay:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_RCU.pnl:Initialize|couldn't connect to \"+baseDP + \".Delay \" + getLastError());
+    }      
   }
 
   if (dpExists(baseDP + \".VddVccEnable:_online.._value\") &&
       dpExists(baseDP + \".nofOverflow:_online.._value\")) {
     setValue(\"txt_component\", \"text\", \"ADC\");
-    dpConnect(\"ControlOverflow\", baseDP + \".VddVccEnable:_online.._value\",
-	 		         baseDP + \".nofOverflow:_online.._value\",
-	                         baseDP + \".VddVccEnable:_online.._invalid\");
+    if (dpConnect(\"ControlOverflow\", baseDP + \".VddVccEnable:_online.._value\",
+	   		             baseDP + \".nofOverflow:_online.._value\",
+                                     baseDP + \".VddVccEnable:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_RCU.pnl:Initialize|couldn't connect to \"+baseDP + \".VddVccEnable \" + getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP + \".VddVccEnable\")) {
+      ControlOverflow(\"\",false,\"\",0,\"\",true);
+    }      
   } else {
-    setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"rect_overflow\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);    
   }
   
@@ -68,6 +76,9 @@ void ControlOverflow(string dp1, bool Status,
     }
   } else {
     SymbolCol=\"Lofar_invalid\";
+    if (dp1==\"\") {
+      SymbolCol= \"Lofar_dpOffline\";
+    }
     setValue(\"txt_overflow\" , \"visible\", FALSE);
   }
 }
@@ -150,13 +161,18 @@ int rcuNr;
 void defineStateAntenna(string anAnt) {
   string anAntDp = g_currentDatapoint + \".\" + anAnt;
   
-  DebugN(\"DP: \" + anAntDp);
 	
   if (dpExists(anAntDp )) {
-    dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
-	                         anAntDp + \":_online.._invalid\");
+    if (dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
+                  	                             anAntDp + \":_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_RCU.pnl:defineStateAntenna|Couldn't connect to \"+anAntDp+ \" \"+getLastError());
+      setValue(\"\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    } 
+    if (!navFunct_dpReachable(anAntDp)) {
+      setStateAntenna(\"\",false,\"\",true);
+    }
   } else {
-    setValue(\"\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
 }
 
@@ -193,7 +209,12 @@ void setStateAntenna(string dp1, bool enabled,
       }	
     }
   } else {
-    setValue(\"\", \"backCol\", \"Lofar_invalid\");
+    if (dp1==\"\") {
+      setValue(\"\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"\", \"backCol\", \"Lofar_invalid\");
+    }
+    
     if (strpos(dp1,\"LBLEnable\") > -1)  {
       LBLEnable=FALSE;
       setValue(\"line1_lblpath\" , \"foreCol\" , \"Lofar_off\");

@@ -12,19 +12,25 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    dpConnect(\"updateBeamCtrl\", baseDP + \".connected\",
-		                baseDP + \".subArray\",
-                                baseDP + \".beamName\",
-                                baseDP + \".directionType\",
-                                baseDP + \".angle1\",
-                                baseDP + \".angle2\",
-                                baseDP + \".subbandList\",
-                                baseDP + \".beamletList\",
-		                baseDP + \".connected:_online.._invalid\");
+    if (dpConnect(\"updateBeamCtrl\", baseDP + \".connected\",
+	 	                    baseDP + \".subArray\",
+                                    baseDP + \".beamName\",
+                                    baseDP + \".directionType\",
+                                    baseDP + \".angle1\",
+                                    baseDP + \".angle2\",
+                                    baseDP + \".subbandList\",
+                                    baseDP + \".beamletList\",
+                                    baseDP + \".connected:_online.._invalid\") == -1) {
+      LOG_ERROR(\"BeamCtrl.pnl:main|Couldn'tconnect to: \"+baseDP);
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateBeamCtrl(\"\",false,\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),\"\",makeDynFloat(),
+                     \"\",makeDynString(),\"\",makeDynString(),\"\",true);
+    }
   } else {
     LOG_ERROR(\"BeamCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"enabledText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"clockText\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"enabledText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"clockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
   
   reload();
@@ -57,8 +63,12 @@ updateBeamCtrl(string dp1, bool connected,
     }
     
   } else {
-    setValue(\"connectedText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"subArrayText\", \"backCol\", \"Lofar_invalid\");
+    string SymbolCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol=\"Lofar_dpOffline\";
+    }
+    setValue(\"connectedText\", \"backCol\",SymbolCol );
+    setValue(\"subArrayText\", \"backCol\", SymbolCol);
     beamTable.enabled(false);
   }  
 }
