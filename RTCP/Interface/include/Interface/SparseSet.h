@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -62,6 +63,10 @@ template <typename T> class SparseSet {
     SparseSet<T> &operator |= (const SparseSet<T> &);
     SparseSet<T> &operator += (size_t count);
     SparseSet<T> &operator -= (size_t count);
+
+    // Scale the ranges. Assumes T to be some integer type.
+    SparseSet<T> &operator /= (size_t shrinkFactor);
+
     SparseSet<T> subset(T first, T last) const;
 
     const Ranges &getRanges() const;
@@ -256,6 +261,35 @@ template <typename T> SparseSet<T> &SparseSet<T>::operator -= (size_t count)
 
   for (iterator it = ranges.begin(); it != ranges.end(); it ++)
     it->begin -= count, it->end -= count;
+
+  return *this;
+}
+
+template <typename T> SparseSet<T> &SparseSet<T>::operator /= (size_t shrinkFactor)
+{
+  iterator prev = ranges.end();
+
+  if( shrinkFactor == 1 ) {
+    /* nothing changes */
+    return *this;
+  }
+
+  for (iterator it = ranges.begin(); it != ranges.end(); it ++) {
+    it->begin = static_cast<T>(floor( static_cast<double>(it->begin) / shrinkFactor ));
+    it->end = static_cast<T>(ceil( static_cast<double>(it->end) / shrinkFactor ));
+
+    /* The gap between two ranges might have disappeared. The ranges can
+       even overlap due to the differences in rounding. */
+    if( prev != ranges.end() && prev->end >= it->begin ) {
+      /* combine tuples */
+      it->begin = prev->begin;
+
+      /* it would be invalidated by the erase, so reobtain it */
+      it = ranges.erase(prev);
+    }
+
+    prev = it;
+  }
 
   return *this;
 }
