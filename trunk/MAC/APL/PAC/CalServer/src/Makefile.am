@@ -17,8 +17,6 @@ BUILT_SOURCES = \
 	CalServer.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
-	LBAntennas.conf \
-	HBAntennas.conf \
 	AntennaArrays.conf
 
 EXTRA_DIST = $(BUILT_SOURCES)
@@ -27,8 +25,6 @@ sysconf_DATA = \
 	CalServer.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
-	LBAntennas.conf \
-	HBAntennas.conf \
 	AntennaArrays.conf
 
 %.conf: %.conf.in
