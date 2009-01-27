@@ -92,7 +92,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void                filter();
     void                formBeams();
     void                formPencilBeams();
-    void                calculateStokes();
+    void                calculateCoherentStokes();
+    void                calculateIncoherentStokes();
     void                correlate();
 
     void                sendOutput( StreamableData *outputData );
