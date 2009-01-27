@@ -1,4 +1,4 @@
-//# SharedStateTransactors.cc: Transactors responsible for calling stored
+//# CalSessionTransactors.cc: Transactors responsible for calling stored
 //# procedures and for all required parameter/return value conversions.
 //#
 //# Copyright (C) 2009
@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/SharedStateTransactors.h>
+#include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Step.h>
 
@@ -36,101 +36,96 @@ namespace LOFAR
 namespace BBS 
 {
 
-
-//----------------------------------------------------------------------------//
-
-PQInitSharedState::PQInitSharedState(const string &key, int32 &id)
-    :   pqxx::transactor<>("PQInitSharedState"),
+PQInitSession::PQInitSession(const string &key, int32 &id)
+    :   pqxx::transactor<>("PQInitSession"),
         itsKey(key),
         itsId(id)
 {
 }
         
-void PQInitSharedState::operator()(argument_type &transaction)
+void PQInitSession::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.init_shared_state('"
+    query << "SELECT * FROM blackboard.init_session('"
         << transaction.esc(itsKey) << "')";
     LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQInitSharedState::on_commit()
+void PQInitSession::on_commit()
 {
     itsId = itsQueryResult[0]["_id"].as<int32>();
 }
 
 
-PQSetRunState::PQSetRunState(int32 id, const ProcessId &pid, int32 &status,
-    SharedState::RunState state)
-    :   pqxx::transactor<>("PQSetRunState"),
+PQSetState::PQSetState(int32 id, const ProcessId &pid, CalSession::State state,
+    int32 &status)
+    :   pqxx::transactor<>("PQSetState"),
         itsId(id),
         itsProcessId(pid),
-        itsStatus(status),
-        itsRunState(state)
+        itsState(state),
+        itsStatus(status)
 {
 }
         
-void PQSetRunState::operator()(argument_type &transaction)
+void PQSetState::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.set_run_state("
+    query << "SELECT * FROM blackboard.set_state("
         << itsId << ",'"
         << transaction.esc(itsProcessId.hostname) << "',"
         << itsProcessId.pid << ","
-        << static_cast<int32>(itsRunState) << ")";
+        << static_cast<int32>(itsState) << ")";
     LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQSetRunState::on_commit()
+void PQSetState::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
-PQGetRunState::PQGetRunState(int32 id, int32 &status,
-    SharedState::RunState &state)
-    :   pqxx::transactor<>("PQGetRunState"),
+PQGetState::PQGetState(int32 id, int32 &status, CalSession::State &state)
+    :   pqxx::transactor<>("PQGetState"),
         itsId(id),
         itsStatus(status),
-        itsRunState(state)
+        itsState(state)
 {
 }
 
-void PQGetRunState::operator()(argument_type &transaction)
+void PQGetState::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.get_run_state(" << itsId << ")";
+    query << "SELECT * FROM blackboard.get_state(" << itsId << ")";
     LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQGetRunState::on_commit()
+void PQGetState::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
     
     if(itsStatus == 0)
     {
-        int32 runState = itsQueryResult[0]["_run_state"].as<int32>();
+        int32 state = itsQueryResult[0]["_state"].as<int32>();
 
-        if(runState < SharedState::FAILED
-            || runState >= SharedState::N_RunState)
+        if(state < CalSession::FAILED || state >= CalSession::N_State)
         {
-            THROW(TranslationException, "Invalid run state: " << runState);
+            THROW(TranslationException, "Invalid session state: " << state);
         }
-        LOG_DEBUG_STR("RUN STATE: " << runState);
-        itsRunState = static_cast<SharedState::RunState>(runState);
+        LOG_DEBUG_STR("RUN STATE: " << state);
+        itsState = static_cast<CalSession::State>(state);
     }
 }
 
 
-PQInitRegister::PQInitRegister(int32 id, const ProcessId &pid,
+PQInitWorkerRegister::PQInitWorkerRegister(int32 id, const ProcessId &pid,
     const CEP::VdsDesc &vds, bool useSolver)
-    :   pqxx::transactor<>("PQInitRegister"),
+    :   pqxx::transactor<>("PQInitWorkerRegister"),
         itsId(id),
         itsProcessId(pid),
         itsVdsDesc(vds),
@@ -138,7 +133,7 @@ PQInitRegister::PQInitRegister(int32 id, const ProcessId &pid,
 {
 }    
 
-void PQInitRegister::operator()(argument_type &transaction)
+void PQInitWorkerRegister::operator()(argument_type &transaction)
 {
     ostringstream query;
         
@@ -196,12 +191,11 @@ void PQRegisterAsControl::on_commit()
 
 
 PQRegisterAsKernel::PQRegisterAsKernel(int32 id, const ProcessId &pid,
-    const string &filesystem, const string &path, const Grid &grid,
-    int32 &status)
+    const string &filesys, const string &path, const Grid &grid, int32 &status)
     :   pqxx::transactor<>("PQRegisterAsKernel"),
         itsId(id),
         itsProcessId(pid),
-        itsFilesystem(filesystem),
+        itsFilesys(filesys),
         itsPath(path),
         itsGrid(grid),
         itsStatus(status)
@@ -221,7 +215,7 @@ void PQRegisterAsKernel::operator()(argument_type &transaction)
         << itsId << ",'"
         << transaction.esc(itsProcessId.hostname) << "',"
         << itsProcessId.pid << ",'"
-        << transaction.esc(itsFilesystem) << "','"
+        << transaction.esc(itsFilesys) << "','"
         << transaction.esc(itsPath) << "',E'"
         << pack_vector(transaction, itsGrid[0]->lowers()) << "',E'"
         << pack_vector(transaction, itsGrid[0]->uppers()) << "',E'"
@@ -238,7 +232,7 @@ void PQRegisterAsKernel::on_commit()
 }
 
 PQRegisterAsSolver::PQRegisterAsSolver(int32 id, const ProcessId &pid,
-    size_t port, int32 &status)
+    int32 port, int32 &status)
     :   pqxx::transactor<>("PQRegisterAsSolver"),
         itsId(id),
         itsProcessId(pid),
@@ -266,26 +260,26 @@ void PQRegisterAsSolver::on_commit()
 }
 
 
-PQGetRegister::PQGetRegister(int32 id, vector<size_t> &count,
-    vector<SharedState::WorkerDescriptor> &workers)
-    :   pqxx::transactor<>("PQGetRegister"),
+PQGetWorkerRegister::PQGetWorkerRegister(int32 id, vector<size_t> &count,
+    vector<CalSession::Worker> &workers)
+    :   pqxx::transactor<>("PQGetWorkerRegister"),
         itsId(id),
         itsCount(count),
         itsWorkers(workers)
 {
-    ASSERT(itsCount.size() == SharedState::N_WorkerType);
+    ASSERT(itsCount.size() == CalSession::N_WorkerType);
 }
         
-void PQGetRegister::operator()(argument_type &transaction)
+void PQGetWorkerRegister::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.get_register(" << itsId << ")";
+    query << "SELECT * FROM blackboard.get_worker_register(" << itsId << ")";
     LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQGetRegister::on_commit()
+void PQGetWorkerRegister::on_commit()
 {
     fill(itsCount.begin(), itsCount.end(), 0);
     
@@ -294,26 +288,13 @@ void PQGetRegister::on_commit()
     while(rowIt != rowItEnd)
     {
         // Parse worker type.
-        SharedState::WorkerType workerType;
-
-        string type = rowIt["worker_type"].as<string>();
-        if(type.size() != 1)
+        int32 type = rowIt["type"].as<int32>();
+        if(type < CalSession::KERNEL || type >= CalSession::N_WorkerType)
         {
             THROW(TranslationException, "Invalid worker type: " << type);
         }
-
-        if(type[0] == 'K')
-        {
-            workerType = SharedState::KERNEL;
-        }
-        else if(type[0] == 'S')
-        {
-            workerType = SharedState::SOLVER;
-        }
-        else
-        {
-            THROW(TranslationException, "Invalid worker type: " << type);
-        }
+        CalSession::WorkerType workerType = 
+            static_cast<CalSession::WorkerType>(type);
 
         // Update slot counter.
         ++itsCount[workerType];
@@ -327,13 +308,13 @@ void PQGetRegister::on_commit()
         }
 
         // Parse worker type specific information.
-        SharedState::WorkerDescriptor descriptor;
-        descriptor.id.hostname = rowIt["hostname"].as<string>();
-        descriptor.id.pid = rowIt["pid"].as<int64>();
-        descriptor.type = workerType;
-        descriptor.index = rowIt["index"].as<int32>(-1);
+        CalSession::Worker worker;
+        worker.id.hostname = rowIt["hostname"].as<string>();
+        worker.id.pid = rowIt["pid"].as<int64>();
+        worker.type = workerType;
+        worker.index = rowIt["index"].as<int32>(-1);
 
-        if(workerType == SharedState::KERNEL)
+        if(workerType == CalSession::KERNEL)
         {
             if(rowIt["path"].is_null()
                 || rowIt["axis_freq_lower"].is_null()
@@ -342,13 +323,13 @@ void PQGetRegister::on_commit()
                 || rowIt["axis_time_upper"].is_null())
             {
                 THROW(TranslationException, "Kernel information should not be"
-                    " NULL for worker " << descriptor.id.hostname << ":"
-                    << descriptor.id.pid);
+                    " NULL for worker " << worker.id.hostname << ":"
+                    << worker.id.pid);
             }
 
             // Get measurement part.
-            descriptor.filesystem = rowIt["filesystem"].as<string>();
-            descriptor.path = rowIt["path"].as<string>();
+            worker.filesys = rowIt["filesys"].as<string>();
+            worker.path = rowIt["path"].as<string>();
             
             // Unpack frequency axis.
             pqxx::binarystring freqLower(rowIt["axis_freq_lower"]);
@@ -366,23 +347,21 @@ void PQGetRegister::on_commit()
                 unpack_vector<double>(timeUpper),
                 true));
             
-            descriptor.grid = Grid(freqAxis, timeAxis);
+            worker.grid = Grid(freqAxis, timeAxis);
         }
         else
         {
-            ASSERT(workerType == SharedState::SOLVER);
-
             if(rowIt["port"].is_null())
             {
                 THROW(TranslationException, "Solver information should not be"
-                    " NULL for worker " << descriptor.id.hostname << ":"
-                    << descriptor.id.pid);
+                    " NULL for worker " << worker.id.hostname << ":"
+                    << worker.id.pid);
             }
-            
-            descriptor.port = rowIt["port"].as<int32>();
+
+            worker.port = rowIt["port"].as<size_t>();
         }
 
-        itsWorkers.push_back(descriptor);
+        itsWorkers.push_back(worker);
         LOG_DEBUG_STR("Found worker... Type: " << type);
         
         ++rowIt;
@@ -390,75 +369,71 @@ void PQGetRegister::on_commit()
 }
 
 
-PQSetIndex::PQSetIndex(int32 id, const ProcessId &pid, const ProcessId &target,
-    int32 index, int32 &status)
-    :   pqxx::transactor<>("PQSetIndex"),
+PQSetWorkerIndex::PQSetWorkerIndex(int32 id, const ProcessId &pid,
+    const ProcessId &worker, int32 index, int32 &status)
+    :   pqxx::transactor<>("PQSetWorkerIndex"),
         itsId(id),
         itsProcessId(pid),
-        itsTarget(target),
+        itsWorker(worker),
         itsIndex(index),
         itsStatus(status)
 {
     ASSERT(index >= 0);
 }
 
-void PQSetIndex::operator()(argument_type &transaction)
+void PQSetWorkerIndex::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.set_index("
+    query << "SELECT * FROM blackboard.set_worker_index("
         << itsId << ",'"
         << transaction.esc(itsProcessId.hostname) << "',"
         << itsProcessId.pid << ",'"
-        << transaction.esc(itsTarget.hostname) << "',"
-        << itsTarget.pid << ","
+        << transaction.esc(itsWorker.hostname) << "',"
+        << itsWorker.pid << ","
         << itsIndex << ")";
     LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQSetIndex::on_commit()
+void PQSetWorkerIndex::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
 
 
-PQAddCommand::PQAddCommand(int32 id, const ProcessId &pid, SharedState::WorkerType target,
-    const Command &cmd, int32 &status, int32 &cmdId)
-    :   pqxx::transactor<>("PQAddCommand"),
+PQPostCommand::PQPostCommand(int32 id, const ProcessId &pid,
+    CalSession::WorkerType addressee, const Command &cmd, int32 &status,
+    int32 &cmdId)
+    :   pqxx::transactor<>("PQPostCommand"),
         itsId(id),
         itsProcessId(pid),
-        itsTarget(target),
+        itsAddressee(addressee),
         itsCommand(cmd),
         itsStatus(status),
         itsCommandId(cmdId)
 {
 }
 
-void PQAddCommand::operator()(argument_type &transaction)
+void PQPostCommand::operator()(argument_type &transaction)
 {
-    string target;
-    if(itsTarget >= SharedState::N_WorkerType)
+    ostringstream query;
+
+    query << "SELECT * FROM blackboard.post_command("
+        << itsId
+        << ",'" << transaction.esc(itsProcessId.hostname) << "'"
+        << "," << itsProcessId.pid;
+        
+    if(itsAddressee != CalSession::N_WorkerType)
     {
-        target = "NULL";
-    }
-    else if(itsTarget == SharedState::KERNEL)
-    {
-        target = "'K'";
+        query << "," << static_cast<int32>(itsAddressee);
     }
     else
     {
-        target = "'S'";
+        query << ",NULL";
     }
-    
-    ostringstream query;
 
-    query << "SELECT * FROM blackboard.add_command("
-        << itsId
-        << ",'" << transaction.esc(itsProcessId.hostname) << "'"
-        << "," << itsProcessId.pid
-        << "," << target
-        << ",'" << transaction.esc(toLower(itsCommand.type())) << "'";
+    query << ",'" << transaction.esc(toLower(itsCommand.type())) << "'";
 
     // Only Step and its derivatives have an attribute 'name'. As this is also
     // used to distinguish between Step (or a derived class) and Command (or a
@@ -481,7 +456,7 @@ void PQAddCommand::operator()(argument_type &transaction)
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQAddCommand::on_commit()
+void PQPostCommand::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
 
@@ -492,9 +467,9 @@ void PQAddCommand::on_commit()
 }
 
 
-PQAddResult::PQAddResult(int32 id, const ProcessId &pid, const CommandId &cmdId,
+PQPostResult::PQPostResult(int32 id, const ProcessId &pid, const CommandId &cmdId,
     const CommandResult &cmdResult, int32 &status)
-    :   pqxx::transactor<>("PQAddResult"),
+    :   pqxx::transactor<>("PQPostResult"),
         itsId(id),
         itsProcessId(pid),
         itsCommandId(cmdId),
@@ -503,10 +478,10 @@ PQAddResult::PQAddResult(int32 id, const ProcessId &pid, const CommandId &cmdId,
 {
 }        
 
-void PQAddResult::operator()(argument_type &transaction)
+void PQPostResult::operator()(argument_type &transaction)
 {
     ostringstream query;
-    query << "SELECT * FROM blackboard.add_result("
+    query << "SELECT * FROM blackboard.post_result("
         << itsId
         << ",'" << transaction.esc(itsProcessId.hostname) << "'"
         << "," << itsProcessId.pid
@@ -518,7 +493,7 @@ void PQAddResult::operator()(argument_type &transaction)
     itsQueryResult = transaction.exec(query.str());
 }
 
-void PQAddResult::on_commit()
+void PQPostResult::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
 }
@@ -597,11 +572,11 @@ void PQGetCommand::on_commit()
 
 
 PQGetCommandStatus::PQGetCommandStatus(const CommandId &id, int32 &status,
-    SharedState::WorkerType &target, CommandStatus &commandStatus)
+    CalSession::WorkerType &addressee, CommandStatus &commandStatus)
     :   pqxx::transactor<>("PQGetCommandStatus"),
         itsCommandId(id),
         itsStatus(status),
-        itsTarget(target),
+        itsAddressee(addressee),
         itsCommandStatus(commandStatus)
 {
 }
@@ -622,35 +597,22 @@ void PQGetCommandStatus::on_commit()
 
     if(itsStatus == 0)
     {
-        if(itsQueryResult[0]["_target"].is_null())
+        itsAddressee = CalSession::N_WorkerType;
+
+        if(!itsQueryResult[0]["_addressee"].is_null())
         {
-            itsTarget = SharedState::N_WorkerType;
-        }
-        else
-        {
-            string tmp = itsQueryResult[0]["_target"].as<string>();
-            if(tmp.size() != 1)
+            int32 addressee = itsQueryResult[0]["_addressee"].as<int32>();
+            if(addressee < 0 || addressee >= CalSession::N_WorkerType)
             {
-                THROW(TranslationException, "Invalid worker type: " << tmp);
+                THROW(TranslationException, "Invalid addressee: " << addressee);
             }
 
-            if(tmp[0] == 'K')
-            {
-                itsTarget = SharedState::KERNEL;
-            }
-            else if(tmp[0] == 'S')
-            {
-                itsTarget = SharedState::SOLVER;
-            }
-            else
-            {
-                THROW(TranslationException, "Invalid worker type: " << tmp);
-            }
+            itsAddressee = static_cast<CalSession::WorkerType>(addressee);
         }
 
-        itsCommandStatus.nResults =
+        itsCommandStatus.finished =
             itsQueryResult[0]["_result_count"].as<size_t>();
-        itsCommandStatus.nFail = itsQueryResult[0]["_fail_count"].as<size_t>();
+        itsCommandStatus.failed = itsQueryResult[0]["_fail_count"].as<size_t>();
     }
 }
 

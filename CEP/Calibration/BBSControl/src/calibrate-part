@@ -43,11 +43,11 @@ echo "calibrate-part (script to calibrate a single MS)"
 echo
 
 # Check argument count.
-if test $# != 18; then
+if test $# != 19; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
-  echo "        ms filesystem lofarroot wd key db-host db-port db-name"
-  echo "        db-user solver-port parmdb sourcedb dry"
+  echo "        part filesystem partvds lofarroot wd key db-host db-port"
+  echo "        db-name db-user solver-port parmdb sourcedb dry"
   exit 1
 fi
 
@@ -56,23 +56,25 @@ shift
 shift
 shift
 shift   # ignore rank
-ms=$1
+part=$1
 filesys=$2
-lofarroot=$3
-wd=$4
-key=$5
-db_host=$6
-db_port=$7
-db_name=$8
-db_user=$9
-solver_port=$10
-parmdb=$11
-sourcedb=$12
-dry=$13
+partvds=$3
+lofarroot=$4
+wd=$5
+key=$6
+db_host=$7
+db_port=$8
+db_name=$9
+db_user=$10
+solver_port=$11
+parmdb=$12
+sourcedb=$13
+dry=$14
 
 echo "arguments:"
-echo "    ms: ${ms}"
+echo "    part: ${part}"
 echo "    filesys: ${filesys}"
+echo "    part vds: ${partvds}"
 echo "    wd: ${wd}"
 echo
 echo "    lofarroot: ${lofarroot}"
@@ -94,14 +96,14 @@ fi
 . ${lofarroot}/lofarinit.sh
 
 # Get the MS name from the vds file. If an MS name is given, use that instead.
-if test ! -d "${ms}"; then
-  tmp=`getparsetvalue ${ms} FileName` || error "Key \"FileName\" not found in: ${ms}"
-  ms=${tmp}
-fi
+#if test ! -d "${ms}"; then
+#  tmp=`getparsetvalue ${ms} FileName` || error "Key \"FileName\" not found in: ${ms}"
+#  ms=${tmp}
+#fi
 
 # Check preconditions.
-if test ! -d "${ms}"; then
-    error "not a directory: ${ms}"
+if test ! -d "${part}"; then
+    error "not a directory: ${part}"
 fi
 
 if test ! -d "${wd}"; then
@@ -116,7 +118,7 @@ echo "create ${wd}/${key}_kernel_$$.parset"
 if test "${dry}" != "dry"; then
     cat > "${key}_kernel_$$.parset" << EOF
 ObservationPart.Filesystem = "${filesys}"
-ObservationPart.Path = "${ms}"
+ObservationPart.Path = "${part}"
 
 BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
@@ -124,8 +126,8 @@ BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
 BBDB.Port = ${db_port}
 
-ParmDB.Sky = "${ms}/${sourcedb}"
-ParmDB.Instrument = "${ms}/${parmdb}"
+ParmDB.Sky = "${part}/${sourcedb}"
+ParmDB.Instrument = "${part}/${parmdb}"
 EOF
 fi
 

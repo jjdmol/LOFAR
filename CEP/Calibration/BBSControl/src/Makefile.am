@@ -3,6 +3,8 @@ lib_LTLIBRARIES			= libbbscontrol.la
 libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	AddStep.cc \
 	BlobStreamableConnection.cc \
+	CalSession.cc \
+	CalSessionTransactors.cc \
 	Command.cc \
 	CommandResult.cc \
 	CorrectStep.cc \
@@ -20,10 +22,7 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	PredictStep.cc \
 	RecoverCommand.cc \
 	RefitStep.cc \
-	SenderId.cc \
 	ShiftStep.cc \
-    SharedState.cc \
-    SharedStateTransactors.cc \
 	SingleStep.cc \
 	SolverProcessControl.cc \
 	SolveStep.cc \

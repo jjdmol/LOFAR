@@ -30,10 +30,12 @@
 usage()
 {
     echo "usage:"
-    echo "  calibrate [options] <parset> <catalogue> <working-dir>"
+    echo "  calibrate [options] <observation> <parset> <catalogue> <work-dir>"
     echo
     echo "arguments:"
+    echo "  <observation>   observation (gds file)"
     echo "  <parset>        parset containing the calibration strategy"
+    echo "                  NOTE: should not contain Observation or BBDB keys"
     echo "  <catalogue>     initial sky model (in makesourcedb format)"
     echo "                  NOTE: must be reachable from all remote hosts"
     echo "  <working-dir>   directory where remote processes will execute"
@@ -43,14 +45,16 @@ usage()
     echo "  -h, --help      display this help text"
     echo "  -v, --verbose   be verbose"
     echo "  -f, --force     clean control database, sourcedb, and parmdb"
-    echo "  --dry           do not execute any command"
-    echo "  --key keyname   unique key to identify the run (default: default)"
+    echo "  --dry           do not start any processes"
+    echo "  --key keyname   unique key to identify the session"
+    echo "                  (default: default)"
     echo "  --cluster-desc  cluster description file"
     echo "                  (default: ~/CEP.clusterdesc)"
     echo "  --db host:port  host and port where the control db is running"
     echo "                  (default: localhost:5432)"
     echo "  --db-name name  name of the control db (default: ${USER})"
     echo "  --db-user user  name of the control db user (default: ${USER})"
+    echo "  --parmdb        path to a non-default instrument parmdb to use"
     echo "  --solver-port   global solver port (default: 5665)."
     
     exit 1
@@ -58,13 +62,13 @@ usage()
 
 error()
 {
-    echo `date` "[FAIL] error: $1"
+    echo "\033[1;31m"`date` "[FAIL] error: $1\033[m"
     exit 1
 }
 
 event()
 {
-    echo `date`" $1"
+    echo "\033[1;32m`date` $1\033[m"
 }
 
 kill_all()
@@ -105,8 +109,10 @@ key="default"
 force=0
 dry=0
 cluster_desc="${HOME}/CEP.clusterdesc"
+parmdb=
 
 # Arguments
+observation=
 parset=
 catalogue=
 wd=
@@ -164,6 +170,14 @@ do
 
     db_user=$1
     shift
+  elif test "$1" = "--parmdb"; then
+    if test $# -le 1; then
+        error "$1 needs an additional argument"
+    fi
+    shift
+
+    parmdb=$1
+    shift
   elif test "$1" = "--solver-port"; then
     if test $# -le 1; then
         error "$1 needs an additional argument"
@@ -185,24 +199,32 @@ do
   fi
 done
 
-if test $# -ne 3 -o ${help} -eq 1; then
+if test $# -ne 4 -o ${help} -eq 1; then
     usage
 fi
 
 # Get arguments.
-parset=$1
-catalogue=$2
-wd=$3
+observation=$1
+parset=$2
+catalogue=$3
+wd=$4
 
 # Get absolute paths.
+tmp=`dirname ${observation}`
+observation=`cd ${tmp} > /dev/null; pwd`/`basename ${observation}`
 tmp=`dirname ${cluster_desc}`
 cluster_desc=`cd ${tmp} > /dev/null; pwd`/`basename ${cluster_desc}`
 tmp=`dirname ${parset}`
 parset=`cd ${tmp} > /dev/null; pwd`/`basename ${parset}`
 tmp=`dirname ${catalogue}`
 catalogue=`cd ${tmp} > /dev/null; pwd`/`basename ${catalogue}`
+if test "${parmdb}"; then
+    tmp=`dirname ${parmdb}`
+    parmdb=`cd ${tmp} > /dev/null; pwd`/`basename ${parmdb}`
+fi
 
 echo "arguments:"
+echo "    observation: ${observation}"
 echo "    parset: ${parset}"
 echo "    catalogue: ${catalogue}"
 echo "    wd: ${wd}"
@@ -213,6 +235,7 @@ if test ${verbose} -eq 1; then
     echo "    db: ${db_host}:${db_port}"
     echo "    db name: ${db_name}"
     echo "    db user: ${db_user}"
+    echo "    parmdb: ${parmdb}"
     echo "    solver: ${solver}"
     echo "    solver port: ${solver_port}"
     echo "    cluster_desc: ${cluster_desc}"
@@ -224,6 +247,10 @@ if test ${verbose} -eq 1; then
 fi
 
 # Test preconditions.
+if test ! -r "${observation}"; then
+    error "unreadable file: ${observation}"
+fi
+
 if test ! -r "${parset}"; then
     error "unreadable file: ${parset}"
 fi
@@ -236,13 +263,17 @@ if test ! -r "${cluster_desc}"; then
     error "unreadable file: ${cluster_desc}"
 fi
 
+if test "${parmdb}" -a ! -d "${parmdb}"; then
+    error "not a directory: ${parmdb}"
+fi
+
 # Try to get observation gds file from parset
 event "retrieve information from parset"
-parset_observation=`getparsetvalue ${parset} Observation 2>/dev/null` || error "Key \"Observation\" not found in: ${parset}"
+#parset_observation=`getparsetvalue ${parset} Observation 2>/dev/null` || error "Key \"Observation\" not found in: ${parset}"
 parset_solver=`getparsetvalue ${parset} UseSolver 2>/dev/null | cut -c1` || parset_solver=
 
 echo "information from parset:"
-echo "    Observation: ${parset_observation}"
+#echo "    Observation: ${parset_observation}"
 echo "    UseSolver: ${parset_solver}"
 echo
 
@@ -251,16 +282,6 @@ if test "${parset_solver}" = "T" -o "${parset_solver}" = "t" -o "${parset_solver
     solver=1
 fi    
 
-# Get absolute path.
-tmp=`dirname ${parset_observation}`
-observation=`cd ${tmp} > /dev/null; pwd`/`basename ${parset_observation}`
-
-if test ! -r "${observation}"; then
-    error "unreadable file: ${observation}"
-fi
-
-
-#
 # CLEAN DATABASE
 #
 
@@ -269,7 +290,7 @@ if test ${force} -eq 1; then
 
     if test ${dry} -eq 0; then
         psql -h ${db_host} -p ${db_port} -U ${db_user} -d ${db_name} --set ON_ERROR_STOP= >/dev/null 2>&1 << EOF
-DELETE FROM blackboard.shared_state WHERE key='${key}';
+DELETE FROM blackboard.session WHERE key='${key}';
 VACUUM;
 ANALYZE;
 EOF
@@ -303,11 +324,11 @@ fi
 
 event "execute setupparmdb"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "setupparmdb \"${overwrite}\" \"${observation}\" \"\" \"\" \"${cluster_desc}\" \"${key}_setupparmdb-part_$$.log\" nodry"
+    echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${parmdb}\" \"\" \"${cluster_desc}\" \"${key}_setupparmdb-part_$$.log\" nodry"
 fi
 
 if test ${dry} -eq 0; then
-    setupparmdb "${overwrite}" "${observation}" "" "" "${cluster_desc}" "${key}_setupparmdb-part_$$.log" nodry
+    setupparmdb "${overwrite}" "${observation}" "${parmdb}" "" "${cluster_desc}" "${key}_setupparmdb-part_$$.log" nodry
     if test $? -ne 0; then
         error "setupparmdb or remote setupparmdb-part process(es) failed"
     fi
@@ -321,6 +342,7 @@ fi
 event "create parset ${key}_control_$$.parset"
 if test ${dry} -eq 0; then
     cat > "${key}_control_$$.parset" << EOF
+Observation = "${observation}"
 BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
@@ -341,7 +363,6 @@ BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
 BBDB.Host = "${db_host}"
 BBDB.Port = ${db_port}
-
 EOF
     fi
 fi
@@ -376,16 +397,16 @@ if test ${solver} -eq 1; then
     fi
 fi
 
-sleep 2
-event "check if process(es) are live: ${pidlist}"
-for pid in ${pidlist}; do
-    if ! ps -p ${pid} >/dev/null 2>&1; then
-    
-        kill_all "${pidlist}"
-        error "process ${pid} terminated unexpectedly"
-    fi
-done
-
+if test ${dry} -eq 0; then
+    sleep 2
+    event "check if process(es) are live: ${pidlist}"
+    for pid in ${pidlist}; do
+        if ! ps -p ${pid} >/dev/null 2>&1; then
+            kill_all "${pidlist}"
+            error "process ${pid} terminated unexpectedly"
+        fi
+    done
+fi
 
 #
 # EXECUTE REMOTE PROCESS(ES)
@@ -393,11 +414,11 @@ done
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" parmdb sourcedb nodry"
+    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" instrument sky nodry"
 fi    
 
 if test ${dry} -eq 0; then
-    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" parmdb sourcedb nodry
+    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" instrument sky nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"
@@ -421,7 +442,7 @@ done
 if test ${status} -ne 0; then
     error "GlobalControl/SolverControl process(es) terminated unexpectedly"
 else
-    echo `date` "[OK] done!"
+    echo "\033[1;32m`date` [OK] done!\033[m"
 fi
 
 exit ${status}

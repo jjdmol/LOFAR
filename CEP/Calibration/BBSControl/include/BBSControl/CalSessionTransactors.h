@@ -1,4 +1,4 @@
-//# SharedStateTransactors.h: Transactors responsible for calling stored
+//# CalSessionTransactors.h: Transactors responsible for calling stored
 //# procedures and for all required parameter/return value conversions.
 //#
 //# Copyright (C) 2009
@@ -21,18 +21,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_SHAREDSTATETRANSACTORS_H
-#define LOFAR_BBSCONTROL_SHAREDSTATETRANSACTORS_H
+#ifndef LOFAR_BBSCONTROL_CALSESSIONTRANSACTORS_H
+#define LOFAR_BBSCONTROL_CALSESSIONTRANSACTORS_H
 
 // \file
 // Transactors responsible for calling stored procedures and for all required
 // parameter/return value conversions.
 
+// NOTE: Because the pqxx transactor framework copies the transactor object
+// at the start of each retry and because pqxx::connection_base::perform()
+// returns void, it is not possible to get a reference to the transactor object
+// for which the transaction eventually succeeded. Therefore, all transactors
+// defined here use output arguments (non-const references) to return
+// information from the tranactor object.
 
-// Have to pass arguments by non-const ref. because functor may be copied.
-// Let all pqxx exception propagate.
-// Convert error codes (business logic) into either return values or exceptions. -> export them to the outside of the transactor.
-// throw a TranslationException when encoutering invalid values.
+// NOTE: pqxx specific exceptions are not caught here but are deliberately
+// propagated to the caller.
 
 #if defined(HAVE_PQXX)
 # include <pqxx/transactor>
@@ -41,7 +45,7 @@
 # error libpqxx, the C++ API to PostgreSQL, is required
 #endif
 
-#include <BBSControl/SharedState.h>
+#include <BBSControl/CalSession.h>
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
@@ -51,20 +55,16 @@
 
 namespace LOFAR
 {
-//namespace CEP
-//{
-//    class VdsDesc;
-//}
 namespace BBS
 {
 
 // \addtogroup BBSControl
 // @{
 
-class PQInitSharedState: public pqxx::transactor<>
+class PQInitSession: public pqxx::transactor<>
 {
 public:
-    PQInitSharedState(const string &key, int32 &id);
+    PQInitSession(const string &key, int32 &id);
     void operator()(argument_type &transaction);
     void on_commit();
 
@@ -74,45 +74,45 @@ private:
     pqxx::result    itsQueryResult;
 };
 
-class PQSetRunState: public pqxx::transactor<>
+class PQSetState: public pqxx::transactor<>
 {
 public:
-    PQSetRunState(int32 id, const ProcessId &pid, int32 &status,
-        SharedState::RunState state);
-    void operator()(argument_type &transaction);
-    void on_commit();
-
-private:    
-    const int32                 itsId;
-    const ProcessId             &itsProcessId;
-    int32                       &itsStatus;
-    const SharedState::RunState itsRunState;
-    pqxx::result                itsQueryResult;
-};
-
-class PQGetRunState: public pqxx::transactor<>
-{
-public:
-    PQGetRunState(int32 id, int32 &status, SharedState::RunState &state);
+    PQSetState(int32 id, const ProcessId &pid, CalSession::State state,
+        int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
     const int32             itsId;
+    const ProcessId         &itsProcessId;
+    const CalSession::State itsState;
     int32                   &itsStatus;
-    SharedState::RunState   &itsRunState;
     pqxx::result            itsQueryResult;
 };
 
-class PQInitRegister: public pqxx::transactor<>
+class PQGetState: public pqxx::transactor<>
 {
 public:
-    PQInitRegister(int32 id, const ProcessId &pid, const CEP::VdsDesc &vds,
-        bool useSolver);//, int &result);
+    PQGetState(int32 id, int32 &status, CalSession::State &state);
+    void operator()(argument_type &transaction);
+    void on_commit();
+
+private:    
+    const int32         itsId;
+    int32               &itsStatus;
+    CalSession::State   &itsState;
+    pqxx::result        itsQueryResult;
+};
+
+class PQInitWorkerRegister: public pqxx::transactor<>
+{
+public:
+    PQInitWorkerRegister(int32 id, const ProcessId &pid,
+        const CEP::VdsDesc &vds, bool useSolver);
     void operator()(argument_type &transaction);
 
 private:    
-    int32               itsId;
+    const int32         itsId;
     const ProcessId     &itsProcessId;
     const CEP::VdsDesc  &itsVdsDesc;
     bool                itsUseSolver;
@@ -135,7 +135,7 @@ private:
 class PQRegisterAsKernel: public pqxx::transactor<>
 {
 public:
-    PQRegisterAsKernel(int32 id, const ProcessId &pid, const string &filesystem,
+    PQRegisterAsKernel(int32 id, const ProcessId &pid, const string &filesys,
         const string &path, const Grid &grid, int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
@@ -143,7 +143,7 @@ public:
 private:    
     const int32     itsId;
     const ProcessId &itsProcessId;
-    const string    &itsFilesystem;
+    const string    &itsFilesys;
     const string    &itsPath;
     const Grid      &itsGrid;
     int32           &itsStatus;
@@ -153,7 +153,7 @@ private:
 class PQRegisterAsSolver: public pqxx::transactor<>
 {
 public:
-    PQRegisterAsSolver(int32 id, const ProcessId &pid, size_t port,
+    PQRegisterAsSolver(int32 id, const ProcessId &pid, int32 port,
         int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
@@ -161,76 +161,77 @@ public:
 private:    
     const int32     itsId;
     const ProcessId &itsProcessId;
-    const size_t    itsPort;
+    const int32     itsPort;
     int32           &itsStatus;
     pqxx::result    itsQueryResult;
 };
 
-class PQGetRegister: public pqxx::transactor<>
+class PQGetWorkerRegister: public pqxx::transactor<>
 {
 public:
-    PQGetRegister(int32 id, vector<size_t> &count,
-        vector<SharedState::WorkerDescriptor> &workers);
+    PQGetWorkerRegister(int32 id, vector<size_t> &count,
+        vector<CalSession::Worker> &workers);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
-    const int32                             itsId;
-    vector<size_t>                          &itsCount;
-    vector<SharedState::WorkerDescriptor>   &itsWorkers;
-    pqxx::result                            itsQueryResult;
+    const int32                 itsId;
+    vector<size_t>              &itsCount;
+    vector<CalSession::Worker>  &itsWorkers;
+    pqxx::result                itsQueryResult;
 };
 
-class PQSetIndex: public pqxx::transactor<>
+class PQSetWorkerIndex: public pqxx::transactor<>
 {
 public:
-    PQSetIndex(int32 id, const ProcessId &pid, const ProcessId &target,
+    PQSetWorkerIndex(int32 id, const ProcessId &pid, const ProcessId &worker,
         int32 index, int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
-    const int32                 itsId;
-    const ProcessId             &itsProcessId;
-    const ProcessId             &itsTarget;
-    const int32                 itsIndex;
-    int32                       &itsStatus;
-    pqxx::result                itsQueryResult;
+    const int32     itsId;
+    const ProcessId &itsProcessId;
+    const ProcessId &itsWorker;
+    const int32     itsIndex;
+    int32           &itsStatus;
+    pqxx::result    itsQueryResult;
 };
 
-class PQAddCommand: public pqxx::transactor<>
+class PQPostCommand: public pqxx::transactor<>
 {
 public:
-    PQAddCommand(int32 id, const ProcessId &pid, SharedState::WorkerType target,
-        const Command &cmd, int32 &status, CommandId &cmdId);
+    PQPostCommand(int32 id, const ProcessId &pid,
+        CalSession::WorkerType addressee, const Command &cmd, int32 &status,
+        CommandId &cmdId);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
-    const int32                 itsId;
-    const ProcessId             &itsProcessId;
-    const SharedState::WorkerType            itsTarget;
-    const Command               &itsCommand;
-    int32                       &itsStatus;
-    CommandId                   &itsCommandId;
-    pqxx::result                itsQueryResult;
+    const int32                     itsId;
+    const ProcessId                 &itsProcessId;
+    const CalSession::WorkerType    itsAddressee;
+    const Command                   &itsCommand;
+    int32                           &itsStatus;
+    CommandId                       &itsCommandId;
+    pqxx::result                    itsQueryResult;
 };
 
-class PQAddResult: public pqxx::transactor<>
+class PQPostResult: public pqxx::transactor<>
 {
 public:
-    PQAddResult(int32 id, const ProcessId &pid, const CommandId &id,
+    PQPostResult(int32 id, const ProcessId &pid, const CommandId &id,
         const CommandResult &result, int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
-    const int32                             itsId;
-    const ProcessId                         &itsProcessId;
-    const int32                             itsCommandId;
-    const CommandResult                     &itsCommandResult;
-    int32                                   &itsStatus;
-    pqxx::result                            itsQueryResult;
+    const int32         itsId;
+    const ProcessId     &itsProcessId;
+    const int32         itsCommandId;
+    const CommandResult &itsCommandResult;
+    int32               &itsStatus;
+    pqxx::result        itsQueryResult;
 };
 
 class PQGetCommand: public pqxx::transactor<>
@@ -253,16 +254,16 @@ class PQGetCommandStatus: public pqxx::transactor<>
 {
 public:
     PQGetCommandStatus(const CommandId &id, int32 &status,
-        SharedState::WorkerType &target, CommandStatus &commandStatus);
+        CalSession::WorkerType &addressee, CommandStatus &commandStatus);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:    
-    const int32                             itsCommandId;
-    int32                                   &itsStatus;
-    SharedState::WorkerType                 &itsTarget;    
-    CommandStatus                           &itsCommandStatus;
-    pqxx::result                            itsQueryResult;
+    const int32             itsCommandId;
+    int32                   &itsStatus;
+    CalSession::WorkerType  &itsAddressee;  
+    CommandStatus           &itsCommandStatus;
+    pqxx::result            itsQueryResult;
 };
 
 class PQGetResults: public pqxx::transactor<>

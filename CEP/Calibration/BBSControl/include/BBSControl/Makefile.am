@@ -1,7 +1,8 @@
 pkginclude_HEADERS = Package__Version.h  \
 	AddStep.h \
 	BlobStreamableConnection.h \
-	BlobStreamableVector.h \
+	CalSession.h \
+	CalSessionTransactors.h \
 	Command.h \
 	CommandResult.h \
 	CommandVisitor.h \
@@ -21,10 +22,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	PredictStep.h \
 	RecoverCommand.h \
 	RefitStep.h \
-	SenderId.h \
 	ShiftStep.h \
-	SharedState.h \
-	SharedStateTransactors.h \
 	SingleStep.h \
 	SolverProcessControl.h \
 	SolveStep.h \

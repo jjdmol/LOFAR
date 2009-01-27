@@ -31,11 +31,10 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#include <BBSControl/CalSession.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/KernelConnection.h>
-#include <BBSControl/SharedState.h>
 #include <BBSControl/SolveTask.h>
-#include <BBSControl/SolveStep.h>
 
 #include <PLC/ProcessControl.h>
 #include <Common/lofar_smartptr.h>
@@ -45,13 +44,11 @@ namespace LOFAR
 {
   namespace BBS
   {
-    class SolverOptions;
-    
     // \addtogroup BBSControl
     // @{
 
-    // Implementation of the ProcessControl interface for the BBS solver
-    // component.
+    // Implementation of the ProcessControl and the CommandVisitor interface
+    // for the BBS solver component.
     class SolverProcessControl: public ACC::PLC::ProcessControl,
                                 public CommandVisitor
     {
@@ -104,6 +101,7 @@ namespace LOFAR
         N_State
       };
 
+      // Returns a CommandResult with a descriptive message.
       CommandResult unsupported(const Command &command) const;
       
       // Set run state to \a state
@@ -121,28 +119,20 @@ namespace LOFAR
                          const SolverOptions& options);
 
       // State of the solver control process.
-      State itsState;
+      State                     itsState;
 
-      // Shared control state.
-      scoped_ptr<SharedState>   itsSharedState;
+      // Calibration session information.
+      scoped_ptr<CalSession>    itsCalSession;
 
-      Socket  itsSocket;
-
-      // Command that should be executed next, or is currently being
-      // executed.
-//      NextCommandType itsCommand;
-
-      // Current solve command. We need to keep track of it, because we need
-      // the information in it between different calls to the run() method.
-//      shared_ptr<const SolveStep> itsSolveStep;
+      // Listen socket.
+      Socket                    itsSocket;
 
       // Vector of kernels.
-      vector<KernelConnection> itsKernels;
+      vector<KernelConnection>  itsKernels;
       
       // Container of solve tasks. Each task is executed by a different kernel
       // group.
-      vector<SolveTask> itsSolveTasks;
-      
+      vector<SolveTask>         itsSolveTasks;
     };
 
     // @}

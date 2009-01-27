@@ -60,11 +60,8 @@ namespace LOFAR
     // access layer.
     EXCEPTION_CLASS(TranslationException, DatabaseException);
 
-    // Exception class for the command queue.
-    EXCEPTION_CLASS(CommandQueueException, BBSControlException);
-
     // Exception class for the shared state.
-    EXCEPTION_CLASS(SharedStateException, BBSControlException);
+    EXCEPTION_CLASS(CalSessionException, BBSControlException);
 
     //  @}
 

@@ -40,7 +40,7 @@ CREATE TABLE blackboard.worker
     index           INTEGER     ,
     type            INTEGER     NOT NULL,
     port            INTEGER     ,
-    filesystem      TEXT        ,
+    filesys         TEXT        ,
     path            TEXT        ,
     axis_freq_lower BYTEA       ,
     axis_freq_upper BYTEA       ,
