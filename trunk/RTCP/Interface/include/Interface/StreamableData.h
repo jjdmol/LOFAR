@@ -4,6 +4,8 @@
 #include <Stream/Stream.h>
 #include <Common/LofarTypes.h>
 #include <Interface/Parset.h>
+#include <Interface/MultiDimArray.h>
+#include <Interface/SparseSet.h>
 #include <Interface/Allocator.h>
 #include <Common/DataConvert.h>
 
@@ -54,6 +56,27 @@ class StreamableData {
     virtual void writeData(Stream*) = 0;
 };
 
+// A typical data set contains a MultiDimArray of tuples and a set of flags.
+template <typename T, unsigned DIM> class SampleData: public StreamableData {
+  public:
+    typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
+
+    SampleData( bool isIntegratable, const ExtentList &extents, unsigned nrFlags, Allocator &allocator = heapAllocator );
+    virtual ~SampleData();
+
+    MultiDimArray<T,DIM> samples;
+    SparseSet<unsigned>  *flags;
+
+  protected:
+    virtual void checkEndianness();
+
+    virtual void readData(Stream*);
+    virtual void writeData(Stream*);
+
+  private:
+    bool                 itsHaveWarnedLittleEndian;
+};
+
 inline void StreamableData::read( Stream *str, bool withSequenceNumber )
 {
   if( withSequenceNumber ) {
@@ -82,6 +105,49 @@ inline void StreamableData::write( Stream *str, bool withSequenceNumber )
 
   writeData( str );
 }
+
+template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData( bool isIntegratable, const ExtentList &extents, unsigned nrFlags, Allocator &allocator ):
+  StreamableData( isIntegratable ),
+  samples( extents, 32, allocator ),
+  flags( new SparseSet<unsigned>[nrFlags] ),
+  itsHaveWarnedLittleEndian( false )
+{
+}
+
+template <typename T, unsigned DIM> inline SampleData<T,DIM>::~SampleData()
+{
+  delete [] flags;
+}
+
+
+template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
+{
+#if !defined WORDS_BIGENDIAN
+  dataConvert(LittleEndian, samples.origin(), samples.num_elements());
+#endif
+}
+
+template <typename T, unsigned DIM> inline void SampleData<T,DIM>::readData( Stream *str )
+{
+  str->read(samples.origin(), samples.num_elements() * sizeof (T) );
+
+  checkEndianness();
+}
+
+template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData( Stream *str )
+{
+#if !defined WORDS_BIGENDIAN
+  if( !itsHaveWarnedLittleEndian ) {
+    itsHaveWarnedLittleEndian = true;
+
+    std::clog << "Warning: writing data in little endian." << std::endl;
+  }
+  //THROW(AssertError, "not implemented: think about endianness");
+#endif
+
+  str->write(samples.origin(), samples.num_elements() * sizeof (T) );
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

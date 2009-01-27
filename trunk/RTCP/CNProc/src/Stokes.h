@@ -26,7 +26,7 @@ class Stokes
     unsigned                itsNrStokes;
     bool                    itsIsCoherent;
 
-    void computeStokes( MultiDimArray<fcomplex,4> &in, MultiDimArray<float,4> &out, unsigned nrBeams );
+    void computeStokes( MultiDimArray<fcomplex,4> &in, SparseSet<unsigned> *inflags, StokesData *out, unsigned nrBeams );
 };
 
 } // namespace RTCP

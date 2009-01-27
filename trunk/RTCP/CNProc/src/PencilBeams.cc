@@ -220,25 +220,43 @@ fcomplex PencilBeams::phaseShift( double frequency, double delay )
   return makefcomplex( std::cos(phi), std::sin(phi) );
 }
 
-void PencilBeams::computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations )
+void PencilBeams::computeComplexVoltages( FilteredData *in, PencilBeamData *out, std::vector<unsigned> stations )
 {
   float factor = 1.0 / stations.size();
+
+  /* TODO: filter out stations with too much flagged data */
+
+  /* conservative flagging: flag output if any input was flagged */
+  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+    out->flags[beam].reset();
+
+    for (unsigned stat = 0; stat < stations.size(); stat++ ) {
+      out->flags[beam] |= in->flags[stations[stat]]; 
+    }
+  }
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
         for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
-          fcomplex &dest  = out[ch][beam][time][pol];
-          fcomplex sample = makefcomplex( 0, 0 );
+          fcomplex &dest  = out->samples[ch][beam][time][pol];
 
-          for( unsigned stat = 0; stat < stations.size(); stat++ ) {
-            // note: for beam #0 (central beam), the shift is 1
-            fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beam] );
-            sample += in[ch][stations[stat]][time][pol] * shift;
+          if( !out->flags[beam].test(time) ) {
+            /* combine the stations for this beam */
+            fcomplex sample = makefcomplex( 0, 0 );
+
+            for( unsigned stat = 0; stat < stations.size(); stat++ ) {
+              // note: for beam #0 (central beam), the shift is 1
+              fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beam] );
+              sample += in->samples[ch][stations[stat]][time][pol] * shift;
+            }
+
+            dest = sample * factor;
+          } else {
+            /* data is flagged */
+            dest = makefcomplex( 0, 0 );
           }
-
-          dest = sample * factor;
         }
       }
     }
@@ -282,9 +300,7 @@ void PencilBeams::formPencilBeams( FilteredData *filteredData, PencilBeamData *p
     stations.push_back( stat );
   }
 
-  std::clog << "Forming beams for stations " << stations << std::endl;
-
-  computeComplexVoltages( filteredData->samples, pencilBeamData->samples, stations );
+  computeComplexVoltages( filteredData, pencilBeamData, stations );
 }
 
 } // namespace RTCP

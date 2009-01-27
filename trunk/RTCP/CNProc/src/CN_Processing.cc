@@ -516,14 +516,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams
   computeTimer.stop();
 }
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateStokes()
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokes()
 {
   computeTimer.start();
-  if( itsMode.isCoherent() ) {
-    itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
-  } else {
-    itsStokes->calculateIncoherent(itsFilteredData,itsStokesData,itsNrStations);
-  }
+  itsStokes->calculateIncoherent(itsFilteredData,itsStokesData,itsNrStations);
+  computeTimer.stop();
+}
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes()
+{
+  computeTimer.start();
+  itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
   computeTimer.stop();
 }
 
@@ -591,11 +594,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
       case CN_Mode::COHERENT_STOKES_I:
       case CN_Mode::COHERENT_ALLSTOKES:
         formPencilBeams();
-        // fallthrough to incoherent modes
+        calculateCoherentStokes();
+        sendOutput( itsStokesData );
+        break;
 
       case CN_Mode::INCOHERENT_STOKES_I:
       case CN_Mode::INCOHERENT_ALLSTOKES:
-        calculateStokes();
+        calculateIncoherentStokes();
         sendOutput( itsStokesData );
         break;
 
