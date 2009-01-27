@@ -13,27 +13,20 @@
 namespace LOFAR {
 namespace RTCP {
 
-class FilteredData: public StreamableData
+class FilteredData: public SampleData<fcomplex,4>
 {
   public:
+    typedef SampleData<fcomplex,4> SuperType;
+
     FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
-    ~FilteredData();
 
     static size_t requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 
-    // The "| 2" significantly improves transpose speeds for particular
-    // numbers of stations due to cache conflict effects.  The extra memory
-    // is not used.
-    MultiDimArray<fcomplex, 4>  samples; //[itsNrChannels][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
-    SparseSet<unsigned>		*flags; //[itsNrStations]
     Vector<SubbandMetaData>     metaData; //[itsNrStations]
 
   protected:
     virtual void readData( Stream* );
     virtual void writeData( Stream* );
-
-  private:
-    void checkEndianness();
 };
 
 
@@ -46,45 +39,25 @@ inline size_t FilteredData::requiredSize(unsigned nrStations, unsigned nrChannel
 
 inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
 :
-  StreamableData(false),
-  samples(boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], 32, allocator),
-  flags(new SparseSet<unsigned>[nrStations]),
+  // The "| 2" significantly improves transpose speeds for particular
+  // numbers of stations due to cache conflict effects.  The extra memory
+  // is not used.
+  SuperType::SampleData(false,boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations, allocator),
   metaData(nrStations, 32, allocator)
 {
 }
 
-
-inline FilteredData::~FilteredData()
-{
-  delete [] flags;
-}
-
-
-inline void FilteredData::checkEndianness()
-{
-#if !defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples.origin(), samples.num_elements());
-#endif
-}
-
-
 inline void FilteredData::readData(Stream *str)
 {
-  str->read(samples.origin(), samples.num_elements() * sizeof(fcomplex));
   str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
-
-  checkEndianness();
+  SuperType::readData(str);
 }
 
 
 inline void FilteredData::writeData(Stream *str)
 {
-#if !defined WORDS_BIGENDIAN
-  THROW(AssertError, "not implemented: think about endianness");
-#endif
-
-  str->write(samples.origin(), samples.num_elements() * sizeof(fcomplex));
   str->write(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
+  SuperType::writeData(str);
 }
 
 

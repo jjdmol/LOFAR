@@ -14,26 +14,14 @@
 namespace LOFAR {
 namespace RTCP {
 
-class StokesData: public StreamableData
+class StokesData: public SampleData<float,4>
 {
   public:
+    typedef SampleData<float,4> SuperType;
+
     StokesData(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator = heapAllocator);
 
     static size_t requiredSize(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
-
-    // The "| 2" significantly improves transpose speeds for particular
-    // numbers of stations due to cache conflict effects.  The extra memory
-    // is not used.
-    MultiDimArray<float, 4>  samples; //[itsNrChannels][nrBeams()][itsNrSamplesPerIntegration | 2][nrStokes()] CACHE_ALIGNED
-
-  protected:
-    virtual void readData( Stream* );
-    virtual void writeData( Stream* );
-
-  private:
-    bool itsHaveWarnedLittleEndian;
-
-    void checkEndianness();
 };
 
 inline size_t StokesData::requiredSize(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
@@ -43,42 +31,12 @@ inline size_t StokesData::requiredSize(CN_Mode &mode, unsigned nrPencilBeams, un
 
 inline StokesData::StokesData(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator)
 :
-  StreamableData(false),
-  samples(boost::extents[nrChannels][mode.isCoherent() ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][mode.nrStokes()], 32, allocator),
-  itsHaveWarnedLittleEndian(false)
+  // The "| 2" significantly improves transpose speeds for particular
+  // numbers of stations due to cache conflict effects.  The extra memory
+  // is not used.
+  SuperType::SampleData(false, boost::extents[nrChannels][mode.isCoherent() ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][mode.nrStokes()], mode.isCoherent() ? nrPencilBeams : 1, allocator)
 {
 }
-
-inline void StokesData::checkEndianness()
-{
-#if !defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples.origin(), samples.num_elements());
-#endif
-}
-
-
-inline void StokesData::readData(Stream *str)
-{
-  str->read(samples.origin(), samples.num_elements() * sizeof(float));
-
-  checkEndianness();
-}
-
-
-inline void StokesData::writeData(Stream *str)
-{
-#if !defined WORDS_BIGENDIAN
-  if( !itsHaveWarnedLittleEndian ) {
-    itsHaveWarnedLittleEndian = true;
-
-    std::clog << "Warning: writing data in little endian." << std::endl;
-  }
-  //THROW(AssertError, "not implemented: think about endianness");
-#endif
-
-  str->write(samples.origin(), samples.num_elements() * sizeof(float));
-}
-
 
 } // namespace RTCP
 } // namespace LOFAR

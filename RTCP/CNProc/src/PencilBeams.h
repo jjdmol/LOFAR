@@ -154,7 +154,7 @@ class PencilBeams
     void calculateDelays( unsigned stat, const PencilCoord3D &beamDir );
     void calculateAllDelays( FilteredData *filteredData );
 
-    void computeComplexVoltages( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations );
+    void computeComplexVoltages( FilteredData *filteredData, PencilBeamData *pencilBeamData, std::vector<unsigned> stations );
 
     std::vector<PencilCoord3D> itsCoordinates;
     unsigned                itsNrStations;
