@@ -1,4 +1,4 @@
-//# parmdbclient.cc: Client handling a distributed ParmDB part
+//# parmdbremote.cc: Remote handling a distributed ParmDB part
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -124,7 +124,7 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
       getValuesGrid (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     default:
-      ASSERTSTR(false, "parmdbclient: unknown command-id "
+      ASSERTSTR(false, "parmdbremote: unknown command-id "
                 << bbi.getOperation());
     }
     // Finish the blobstreams and write the result message.
@@ -134,41 +134,32 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
   }
 }
 
-int main (int argc, const char* argv[])
+int main (int argc, char* argv[])
 {
   const char* progName = basename(argv[0]);
   INIT_LOGGER(progName);
   SocketConnection::ShPtr conn;
   try {
-    ASSERTSTR (argc >= 7, "Use as: parmdbclient socket <host> "
-               "<port> <#processes> <rank> <mspart>");
-    string host (argv[2]);
-    string port (argv[3]);
-    istringstream iss(argv[4]);
-    int nnode, rank;
-    iss >> nnode;
-    istringstream iss1(argv[5]);
-    iss1 >> rank;
-    string fname(argv[6]);
+    ASSERTSTR (argc >= 4, "Use as: parmdbremote <host> <port> <mspart>");
+    string host (argv[1]);
+    string port (argv[2]);
+    string fname(argv[3]);
     // Setup the connection.
     conn = SocketConnection::ShPtr(new SocketConnection(host, port));
-    // Open the ParmDB after getting its name from the VDS file.
-    {
-      VdsPartDesc vds((ParameterSet(fname)));
-      fname = vds.getFileName();
-    }
+    // Open the ParmDB.
     ParmFacadeLocal parmdb(fname);
     {
-      // Tell master init was successful.
+      // Tell master the MS-part to process.
       BlobString bufout;
       MWBlobOut bbo(bufout, 1, 0);
+      bbo.blobStream() << fname;
       bbo.finish();
       conn->write (bufout);
     }
     // Handle requests.
     doIt (*conn, parmdb);
   } catch (std::exception& x) {
-    LOG_FATAL (string("Unexpected exception in parmdbclient: ") + x.what());
+    LOG_FATAL (string("Unexpected exception in parmdbremote: ") + x.what());
     // Tell master there is an error.
     BlobString bufout;
     MWBlobOut bbo(bufout, 0, 0);

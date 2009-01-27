@@ -31,6 +31,11 @@
 #include <MWCommon/SocketConnectionSet.h>
 #include <Common/lofar_vector.h>
 
+//# Forward Declaration.
+namespace casa {
+  class Record;
+}
+
 namespace LOFAR { namespace BBS {
 
 
@@ -114,7 +119,10 @@ namespace LOFAR { namespace BBS {
     void freePort();
     // </group>
 
-    //# Data membe rs
+    // Read a Record from the BlobStream.
+    void getRecord (BlobIStream& bis, casa::Record& rec);
+
+    //# Data members
     string                itsPort;      //# declare this before itsConn!!
     mutable LOFAR::CEP::SocketConnectionSet itsConn;
     static int            theirNextPort;

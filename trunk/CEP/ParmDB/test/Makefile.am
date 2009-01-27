@@ -9,7 +9,8 @@ CHECKTOOLPROGS        = $(check_PROGRAMS)
 # scripts used to run tests
 TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmValue.sh tParmDBCasa.sh \
-			tParmSet.sh tParmCache tParm.sh tParmFacade.sh \
+			tParmSet.sh tParmCache tParm.sh \
+			tParmFacade.sh tParmFacadeDistr.sh \
 			tparmdb.sh \
 			tSourceDBCasa.sh tmakesourcedb.sh \
 			tsetupparmdb.sh tsetupsourcedb.sh
@@ -71,6 +72,7 @@ tTimeAxis_DEPENDENCIES		= ../src/libparmdb.la $(LOFAR_DEPEND)
 EXTRA_DIST            = $(TESTSCRIPTS) \
 			tparmdb.run tparmdb.in tparmdb.stdout \
 			tParmFacade.run tParmFacade.stdout \
+			tParmFacadeDistr.run tParmFacadeDistr.stdout \
 			tmakesourcedb.run tmakesourcedb.in \
 			tmakesourcedb.in_2 tmakesourcedb.stdout \
 			tsetupparmdb.run tsetupparmdb.stdout \

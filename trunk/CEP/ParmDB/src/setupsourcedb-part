@@ -26,8 +26,9 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 12; then
-  echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank ms-part filesys"
+if test $# != 13; then
+  echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
+  "                                 ms-part filesys ms-part-vds"
   echo "                            lofarroot pdbfile pdbname overwrite dry"
   exit 1
 fi
@@ -37,13 +38,12 @@ shift
 shift
 shift
 seqnr=$1
-msn=$2
-shift
-lroot=$3
-srccat=$4
-pdb=$5
-overwrite=$6
-dry=$7
+msn=$4
+lroot=$5
+srccat=$6
+pdb=$7
+overwrite=$8
+dry=$9
 
 
 # Initialize lofar environment.
