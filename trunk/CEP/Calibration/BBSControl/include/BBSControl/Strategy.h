@@ -55,26 +55,65 @@ namespace LOFAR
       Strategy() {}
 
       // Create a solve strategy for the given work domain.
-      Strategy(const ParameterSet& ps);
+      Strategy(const ParameterSet& in);
 
       // Destructor.
       ~Strategy();
 
+      string getInputColumn() const
+      { return itsInputColumn; }
+
+      vector<string> getStations() const
+      { return itsStations; }
+      
+      Correlation getCorrelation() const
+      { return itsCorrelation; }
+      
+      vector<string> getTimeWindow() const
+      { return itsTimeWindow; }
+      
+      size_t getChunkSize() const
+      { return itsChunkSize; }
+      
+      bool useSolver() const
+      { return itsUseSolver; }
+
       // Write the contents of \c *this into the ParameterSet \a ps.
-      void write(ParameterSet& ps) const;
+//      void write(ParameterSet& ps) const;
 
       // Read the contents from the ParameterSet \a ps into \c *this.
-      void read(const ParameterSet& ps);
+//      void read(const ParameterSet& ps);
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
 
     private:
-      shared_ptr<const Step> getRoot() const
-      { return itsRoot; }
+//      shared_ptr<const Step> getRoot() const
+//      { return itsRoot; }
+
+      // Name of the input column.
+      string                 itsInputColumn;
+
+      // Names of the stations to use. Names may contains wildcards, like \c *
+      // and \c ?.
+      vector<string>         itsStations;
+
+      // Correlation product selection.
+      Correlation            itsCorrelation;
+
+      // Time window.
+      vector<string>         itsTimeWindow;
+
+      // Size in timeslots of the block of data that will be processed as a
+      // single chunk.
+      size_t                 itsChunkSize;
+
+      // Connect to the global solver?
+      bool                   itsUseSolver;
 
       // Root step of the strategy tree.
-      shared_ptr<Step>  itsRoot;
+//      shared_ptr<Step>  itsRoot;
+      vector<shared_ptr<const Step> >   itsSteps;
       
       friend class StrategyIterator;
     };

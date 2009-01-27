@@ -270,7 +270,7 @@ fi
 # Try to get observation gds file from parset
 event "retrieve information from parset"
 #parset_observation=`getparsetvalue ${parset} Observation 2>/dev/null` || error "Key \"Observation\" not found in: ${parset}"
-parset_solver=`getparsetvalue ${parset} UseSolver 2>/dev/null | cut -c1` || parset_solver=
+parset_solver=`getparsetvalue ${parset} Strategy.UseSolver 2>/dev/null | cut -c1` || parset_solver=
 
 echo "information from parset:"
 #echo "    Observation: ${parset_observation}"

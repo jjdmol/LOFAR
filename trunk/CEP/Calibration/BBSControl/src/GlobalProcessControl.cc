@@ -90,7 +90,7 @@ namespace LOFAR
 
       try {
       	// Retrieve the strategy from the parameter set.
-      	itsStrategy.reset(new Strategy(*globalParameterSet()));
+      	itsStrategy = Strategy(*globalParameterSet());
       }
       catch (Exception& e) {
         LOG_ERROR_STR(e);
@@ -130,8 +130,7 @@ namespace LOFAR
 
         // Initialize the register and switch the session state to allow workers
         // to register.
-        itsCalSession->initWorkerRegister(itsVdsDesc, ps->getBool("UseSolver",
-            false));
+        itsCalSession->initWorkerRegister(itsVdsDesc, itsStrategy.useSolver());
         itsCalSession->setState(CalSession::WAITING_FOR_WORKERS);
 
         // Wait for workers to register.
@@ -162,9 +161,8 @@ namespace LOFAR
         itsTimeStart = 0;
         itsTimeEnd = itsGlobalTimeAxis->size() - 1;
 
-        const vector<string> window = ps->getStringVector("TimeWindow",
-            vector<string>());
-                
+        const vector<string> &window = itsStrategy.getTimeWindow();
+
         casa::Quantity time;
         if(!window.empty() && casa::MVTime::read(time, window[0])) {
           const pair<size_t, bool> result =
@@ -179,7 +177,7 @@ namespace LOFAR
         }
         
         itsChunkStart = itsTimeStart;
-        itsChunkSize = ps->getUint32("ChunkSize", 0);
+        itsChunkSize = itsStrategy.getChunkSize();
         if(itsChunkSize == 0) {
           // If chunk size equals 0, take the whole observation as a single
           // chunk.
@@ -196,7 +194,7 @@ namespace LOFAR
         // Send InitializeCommand and wait for a reply from all workers.
         const size_t nWorkers = itsCalSession->getWorkerCount();
 
-        InitializeCommand initCmd(*ps);
+        InitializeCommand initCmd(itsStrategy);
         CommandId initId = itsCalSession->postCommand(initCmd);
         LOG_DEBUG_STR("Initialize command has ID: " << initId);
         
@@ -285,7 +283,7 @@ namespace LOFAR
 
               if(status.finished > status.failed) {
                 setState(RUN);
-                itsStrategyIterator = StrategyIterator(*itsStrategy);
+                itsStrategyIterator = StrategyIterator(itsStrategy);
               }
             }
 
