@@ -33,13 +33,17 @@ namespace LOFAR {
 
   using namespace blitz;
 
-#define MAX2(a,b) ((a) > (b) ? (a) : (b))
+#define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
 //
 // Constructor
 //
 RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
-	itsCableAtts(new CableAttenuation(attFilename))
+	itsSmallestLBAdelay(10000.0),
+	itsSmallestHBAdelay(10000.0),
+	itsSmallestLBAlen  (10000),
+	itsSmallestHBAlen  (10000),
+	itsCableAtts	   (new CableAttenuation(attFilename))
 {
 	#define EXPECTED_NR_COLUMNS	7
 
@@ -89,11 +93,11 @@ RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
 			itsCableDelays (rcuNr, 1) = LBHdelay;
 			itsCableDelays (rcuNr, 2) = HBAdelay;
 
-			// keep track of longest cable in LBA and HBA group.
-			itsLargestLBAlen   = MAX2(itsLargestLBAlen  , MAX2(LBLlen, LBHlen));
-			itsLargestHBAlen   = MAX2(itsLargestHBAlen  , HBAlen);
-			itsLargestLBAdelay = MAX2(itsLargestLBAdelay, MAX2(LBLdelay, LBHdelay));
-			itsLargestHBAdelay = MAX2(itsLargestHBAdelay, HBAdelay);
+			// keep track of shortest cable in LBA and HBA group.
+			itsSmallestLBAlen   = MIN2(itsSmallestLBAlen  , MIN2(LBLlen, LBHlen));
+			itsSmallestHBAlen   = MIN2(itsSmallestHBAlen  , HBAlen);
+			itsSmallestLBAdelay = MIN2(itsSmallestLBAdelay, MIN2(LBLdelay, LBHdelay));
+			itsSmallestHBAdelay = MIN2(itsSmallestHBAdelay, HBAdelay);
 
 			// update admin and go on
 			prevRcuNr++;
@@ -104,8 +108,8 @@ RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
 	ASSERTSTR(prevRcuNr != -1, "File " << delayFilename << " does not contain valid information");
 
 	LOG_DEBUG_STR("Found cable specs for " << prevRcuNr << " RCUs");
-	LOG_DEBUG_STR("Longest LBA cable is " << itsLargestLBAlen << "m");
-	LOG_DEBUG_STR("Longest HBA cable is " << itsLargestHBAlen << "m");
+	LOG_DEBUG_STR("Shortest LBA cable is " << itsSmallestLBAlen << "m");
+	LOG_DEBUG_STR("Shortest HBA cable is " << itsSmallestHBAlen << "m");
 	LOG_TRACE_STAT_STR(itsCableDelays);
 }
 
@@ -155,15 +159,15 @@ float	RCUCables::getDelay(int	rcuNr, int	rcuMode) const
 }
 
 // Returns the largest attenuation in dB when operation in the given rcumode.
-float	RCUCables::getLargestAtt  (int	rcuMode) const
+float	RCUCables::getSmallestAtt  (int	rcuMode) const
 {
-	return (itsCableAtts->getAttenuation((rcuMode < 5) ? itsLargestLBAlen : itsLargestHBAlen, rcuMode));
+	return (itsCableAtts->getAttenuation((rcuMode < 5) ? itsSmallestLBAlen : itsSmallestHBAlen, rcuMode));
 }
 
 // Returns the largest delay in ns when operation in the given rcumode.
-float	RCUCables::getLargestDelay(int	rcuMode) const
+float	RCUCables::getSmallestDelay(int	rcuMode) const
 {
-	return (rcuMode < 5 ? (rcuMode == 0) ? 0.0 : itsLargestLBAdelay : itsLargestHBAdelay);
+	return (rcuMode < 5 ? (rcuMode == 0) ? 0.0 : itsSmallestLBAdelay : itsSmallestHBAdelay);
 }
 
   } // namespace RTC

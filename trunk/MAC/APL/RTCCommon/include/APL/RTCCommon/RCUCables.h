@@ -63,10 +63,10 @@ public:
 	float	getDelay(int	rcuNr, int	rcuMode) const;
 
 	// Returns the largest attenuation in dB when operation in the given rcumode.
-	float	getLargestAtt  (int	rcuMode) const;
+	float	getSmallestAtt  (int	rcuMode) const;
 
 	// Returns the largest delay in ns when operation in the given rcumode.
-	float	getLargestDelay(int	rcuMode) const;
+	float	getSmallestDelay(int	rcuMode) const;
 
 private:
 	// Default construction and Copying is not allowed.
@@ -78,10 +78,10 @@ private:
 	static const int MAX_RCU_MODE   = 7;
 
 	//# Data members
-	float		itsLargestLBAdelay;
-	float		itsLargestHBAdelay;
-	int			itsLargestLBAlen;
-	int			itsLargestHBAlen;
+	float		itsSmallestLBAdelay;
+	float		itsSmallestHBAdelay;
+	int			itsSmallestLBAlen;
+	int			itsSmallestHBAlen;
 
 	CableAttenuation*			itsCableAtts;
 	blitz::Array<int,  2>		itsCableLengths;
