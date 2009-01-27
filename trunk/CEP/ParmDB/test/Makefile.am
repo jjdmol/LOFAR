@@ -72,7 +72,7 @@ tTimeAxis_DEPENDENCIES		= ../src/libparmdb.la $(LOFAR_DEPEND)
 EXTRA_DIST            = $(TESTSCRIPTS) \
 			tparmdb.run tparmdb.in tparmdb.stdout \
 			tParmFacade.run tParmFacade.stdout \
-			tParmFacadeDistr.run tParmFacadeDistr.stdout \
+			tParmFacadeDistr.run \
 			tmakesourcedb.run tmakesourcedb.in \
 			tmakesourcedb.in_2 tmakesourcedb.stdout \
 			tsetupparmdb.run tsetupparmdb.stdout \
