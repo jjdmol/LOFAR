@@ -83,5 +83,5 @@ export PATH
 if test "$1" = ""; then
   $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd
   echo ""
-  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb '*' 1
+  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*' 1
 fi
