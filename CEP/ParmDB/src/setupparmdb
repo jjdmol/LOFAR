@@ -62,8 +62,8 @@ if test $help = 1; then
   echo "       ms-gds        name of global VDS file of the MS"
   echo "       parmdb-templ  name of the template parmdb to be copied"
   echo "                     if not given, a default parmdb is created"
-  echo "       parmdb-name   extension name of new parmdb (defaults to parmdb)"
-  echo "                     e.g. for 100319.MS the name 100319.parmdb is used"
+  echo "       parmdb-name   extension name of new parmdb (defaults to instrument)"
+  echo "                     e.g. for 100319.MS the name 100319.instrument is used"
   echo "       clusterdesc   name of clusterdesc file"
   echo "                     default is $HOME/CEP.clusterdesc"
   echo "       logfile       root name of logfile of each subprocess"
@@ -89,7 +89,7 @@ if test $# != 0; then
   shift
 fi
 if test "$pdb" = ""; then
-  pdb=parmdb
+  pdb=instrument
 fi
 cdn=
 if test $# != 0; then
