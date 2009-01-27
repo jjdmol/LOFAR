@@ -347,18 +347,18 @@ namespace LOFAR
         itsSolver->sendObject(ProcessIdMsg(itsCalSession->getProcessId()));
       }
 
-      itsInputColumn = command.inputColumn();
+      itsInputColumn = command.getInputColumn();
 
       // Create model.
       itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
         itsMeasurement->getPhaseCenter()));
 
       // Initialize the chunk selection.
-      if(!command.stations().empty()) {
-        itsChunkSelection.setStations(command.stations());
+      if(!command.getStations().empty()) {
+        itsChunkSelection.setStations(command.getStations());
       }
       
-      Correlation correlation = command.correlation();
+      Correlation correlation = command.getCorrelation();
       if(!correlation.type.empty()) {
         itsChunkSelection.setPolarizations(correlation.type);
       }

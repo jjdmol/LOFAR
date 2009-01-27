@@ -33,8 +33,12 @@
 
 namespace LOFAR
 {
+  class ParameterSet;
+
   namespace BBS
   {
+    class Strategy;
+    
     // \addtogroup BBSControl
     // @{
 
@@ -49,8 +53,8 @@ namespace LOFAR
       // Default constructor.
       InitializeCommand();
 
-      // Create an InitializeCommand from the given parset.
-      InitializeCommand(const ParameterSet& ps);
+      // Create an InitializeCommand from the given Strategy.
+      InitializeCommand(const Strategy& strategy);
 
       // Destructor.
       virtual ~InitializeCommand() {}
@@ -71,24 +75,31 @@ namespace LOFAR
       // Accept a CommandVisitor that wants to process \c *this.
       virtual CommandResult accept(CommandVisitor &visitor) const;
 
-      bool              useSolver()        const { return itsUseSolver; }
-      vector<string>    stations()         const { return itsStations; }
-      string            inputColumn()      const { return itsInputColumn; }
-      Correlation       correlation()      const { return itsCorrelation; }
+      string getInputColumn() const
+      { return itsInputColumn; }
+
+      vector<string> getStations() const
+      { return itsStations; }
+      
+      Correlation getCorrelation() const
+      { return itsCorrelation; }
+      
+      bool useSolver() const
+      { return itsUseSolver; }
 
     private:
-      bool                   itsUseSolver;
-      
-      // Names of the stations to use. Names may contains wildcards, like \c *
-      // and \c ?. Expansion of wildcards will be done in the BBS kernel, so
-      // they will be passed unaltered by BBS control.
-      vector<string>         itsStations;
-
-      // Name of the MS input column.
+      // Name of the input column.
       string                 itsInputColumn;
 
-      // Selection type of the correlation products.
+      // Names of the stations to use. Names may contains wildcards, like \c *
+      // and \c ?.
+      vector<string>         itsStations;
+
+      // Correlation product selection.
       Correlation            itsCorrelation;
+
+      // Connect to the global solver?
+      bool                   itsUseSolver;
     };
 
     // @}

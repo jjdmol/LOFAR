@@ -95,7 +95,7 @@ namespace LOFAR
       State                     itsState;
 
       // The strategy that will be executed by this controller.
-      scoped_ptr<Strategy>      itsStrategy;
+      Strategy                  itsStrategy;
       
       // Iterator used to iterate over the leaf-nodes (SingleSteps) of the
       // Strategy.

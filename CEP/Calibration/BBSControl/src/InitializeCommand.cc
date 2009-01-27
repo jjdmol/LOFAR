@@ -21,13 +21,16 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/CommandVisitor.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/StreamUtil.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/ParameterSet.h>
-#include <BBSControl/StreamUtil.h>
 
 namespace LOFAR
 {
@@ -48,12 +51,16 @@ namespace LOFAR
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     InitializeCommand::InitializeCommand()
+      : itsUseSolver(false)
     {
     }
 
-    InitializeCommand::InitializeCommand(const ParameterSet& ps)
+    InitializeCommand::InitializeCommand(const Strategy& strategy)
     {
-      read(ps);
+      itsInputColumn = strategy.getInputColumn();
+      itsStations = strategy.getStations();
+      itsCorrelation = strategy.getCorrelation();
+      itsUseSolver = strategy.useSolver();
     }
     
     CommandResult InitializeCommand::accept(CommandVisitor &visitor) const
@@ -74,12 +81,12 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       Command::print(os);
-      os << boolalpha
-        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
-        << noboolalpha
-        << endl << indent << "Stations: " << itsStations
+      os << endl << indent << "Stations: " << itsStations
         << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << itsCorrelation;
+        << endl << indent << itsCorrelation
+        << boolalpha
+        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << noboolalpha;
     }
 
 
@@ -89,28 +96,24 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      ps.add("UseSolver", toString(itsUseSolver));
       ps.add("Stations", toString(itsStations));
       ps.add("InputColumn", itsInputColumn);
       ps.add("Correlation.Selection", itsCorrelation.selection);
       ps.add("Correlation.Type", toString(itsCorrelation.type));
+      ps.add("UseSolver", toString(itsUseSolver));
     }
 
 
     void InitializeCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      
-      itsUseSolver              = ps.getBool("UseSolver", false);
-      itsStations               =
-        ps.getStringVector("Stations", vector<string>());
-      itsInputColumn            = ps.getString("InputColumn", "DATA");
-      itsCorrelation.selection  =
-        ps.getString("Correlation.Selection", "CROSS");
-      itsCorrelation.type       =
-        ps.getStringVector("Correlation.Type", vector<string>());
+      itsStations = ps.getStringVector("Stations", vector<string>());
+      itsInputColumn = ps.getString("InputColumn", "DATA");
+      itsCorrelation.selection = ps.getString("Correlation.Selection", "CROSS");
+      itsCorrelation.type = ps.getStringVector("Correlation.Type",
+        vector<string>());
+      itsUseSolver = ps.getBool("UseSolver", false);
     }
-
 
   } //# namespace BBS
 

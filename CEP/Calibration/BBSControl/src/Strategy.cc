@@ -28,9 +28,11 @@
 #include <BBSControl/Step.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Types.h>
+
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -41,16 +43,44 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
       
-    Strategy::Strategy(const ParameterSet& ps)
+    Strategy::Strategy(const ParameterSet& parset)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+  
+      // Create a subset of \a aParSet, containing only the relevant keys for
+      // the Strategy.
+      ParameterSet ps(parset.makeSubset("Strategy."));
 
-      try {
-        itsRoot = Step::create("Root", ps, 0);
-      } catch(BBSControlException &e) {
-        THROW(BBSControlException, "Unable to find root step of strategy;"
-          " please ensure a (multi-)step called 'Root' (case sensitive) is"
-          " defined in the parset");
+      // Get the name of the input column
+      itsInputColumn = ps.getString("InputColumn", "DATA");
+
+      // Selected stations.
+      itsStations = ps.getStringVector("Stations", vector<string>());
+
+      // Get the correlation product selection (ALL, AUTO, or CROSS)
+      itsCorrelation.selection = ps.getString("Correlation.Selection", "CROSS");
+      itsCorrelation.type = ps.getStringVector("Correlation.Type",
+        vector<string>());
+
+      // Get the time window.
+      itsTimeWindow = ps.getStringVector("TimeWindow", vector<string>());
+
+      // Get the chunk size.
+      itsChunkSize = ps.getUint32("ChunkSize", 0);
+
+      // Use a (global) solver?
+      itsUseSolver = ps.getBool("UseSolver", false);
+
+      // This strategy consists of the following steps.
+      vector<string> steps(ps.getStringVector("Steps"));
+      
+      if(steps.empty()) {
+        THROW(BBSControlException, "Strategy contains no steps");
+      }
+      
+      // Try to create a step for each name in \a steps.
+      for(size_t i = 0; i < steps.size(); ++i) {
+        itsSteps.push_back(Step::create(steps[i], parset, 0));
       }
     }
 
@@ -62,22 +92,22 @@ namespace LOFAR
     void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      ASSERT(itsRoot);
-      itsRoot->print(os);
+    	os << indent << "Strategy:";
+      Indent indent0;
+      os << endl << indent << "Input column: " << itsInputColumn
+        << endl << indent << "Stations: " << itsStations
+        << endl << indent << itsCorrelation
+        << endl << indent << "TimeWindow: " << itsTimeWindow
+        << endl << indent << "ChunkSize: " << itsChunkSize
+        << boolalpha
+        << endl << indent << "UseSolver: " << boolalpha << itsUseSolver
+        << noboolalpha
+        << endl << indent << "Steps:";
+      Indent indent1;
+      for(size_t i = 0; i < itsSteps.size(); ++i) {
+    	  os << endl << indent << *itsSteps[i];
+      }
     }
- 
-    void Strategy::write(ParameterSet& ps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      itsRoot->write(ps);
-    }
-
-    void Strategy::read(const ParameterSet& ps)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      itsRoot->read(ps);
-    }
-
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 
@@ -92,7 +122,18 @@ namespace LOFAR
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     StrategyIterator::StrategyIterator(const Strategy &strategy) {
-      itsStack.push(strategy.getRoot());
+      // Push the top-level Steps in reverse order such that the first Step
+      // is popped first.
+      vector<shared_ptr<const Step> >::const_reverse_iterator revIt =
+        strategy.itsSteps.rbegin();
+      vector<shared_ptr<const Step> >::const_reverse_iterator revItEnd =
+        strategy.itsSteps.rend();
+      while(revIt != revItEnd)
+      {
+        itsStack.push(*revIt);
+        ++revIt;
+      }
+
       // Traverse to the first leaf Step.
       this->operator++();
     }
