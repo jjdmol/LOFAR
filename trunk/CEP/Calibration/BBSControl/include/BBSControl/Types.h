@@ -47,30 +47,6 @@ namespace LOFAR
     typedef int32 KernelIndex;
     // @}
 
-    // Cell size is defined along the frequency and the time axis, in number
-    // of channels and number of timeslots respectively.
-    struct CellSize
-    {
-      CellSize() : freq(0), time(0) {}
-      uint32 freq;	         ///< Size in frequency (number of channels).
-      uint32 time;           ///< Size in time (number of timeslots).
-    };
-
-    // Options for the solver.
-    struct SolverOptions
-    {
-      SolverOptions() : maxIter(0), epsValue(0), epsDerivative(0),
-                        colFactor(0), lmFactor(0), balancedEqs(false),
-                        useSVD(false) {}
-      uint32 maxIter;        ///< Maximum number of iterations
-      double epsValue;       ///< Value convergence threshold
-      double epsDerivative;  ///< Derivative convergence threshold
-      double colFactor;      ///< Colinearity factor
-      double lmFactor;       ///< Levenberg-Marquardt factor
-      bool   balancedEqs;    ///< Indicates well-balanced normal equations
-      bool   useSVD;         ///< Use singular value decomposition.
-    };
-
     // Information about which correlation products (auto, cross, or both),
     // and which polarizations should be used.
     struct Correlation
@@ -107,12 +83,36 @@ namespace LOFAR
       vector<string> station2;
     };
 
+    // Cell size is defined along the frequency and the time axis, in number
+    // of channels and number of timeslots respectively.
+    struct CellSize
+    {
+      CellSize() : freq(0), time(0) {}
+      uint32 freq;	         ///< Size in frequency (number of channels).
+      uint32 time;           ///< Size in time (number of timeslots).
+    };
+
+    // Options for the solver.
+    struct SolverOptions
+    {
+      SolverOptions() : maxIter(0), epsValue(0), epsDerivative(0),
+                        colFactor(0), lmFactor(0), balancedEqs(false),
+                        useSVD(false) {}
+      uint32 maxIter;        ///< Maximum number of iterations
+      double epsValue;       ///< Value convergence threshold
+      double epsDerivative;  ///< Derivative convergence threshold
+      double colFactor;      ///< Colinearity factor
+      double lmFactor;       ///< Levenberg-Marquardt factor
+      bool   balancedEqs;    ///< Indicates well-balanced normal equations
+      bool   useSVD;         ///< Use singular value decomposition.
+    };
+
     // Write the contents of these types in human readable form.
     // @{
-    ostream& operator<<(ostream&, const CellSize&);
-    ostream& operator<<(ostream&, const SolverOptions&);
     ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Baselines&);
+    ostream& operator<<(ostream&, const CellSize&);
+    ostream& operator<<(ostream&, const SolverOptions&);
     // @}
 
     // @}

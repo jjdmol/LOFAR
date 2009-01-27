@@ -73,7 +73,6 @@
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Solver.h>
 
-
 namespace LOFAR 
 {
   namespace BBS 
@@ -258,125 +257,120 @@ namespace LOFAR
 
     tribool KernelProcessControl::pause(const string& /*condition*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return indeterminate;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return indeterminate;
     }
 
 
     tribool KernelProcessControl::release()
     {
-        LOG_INFO("KernelProcessControl::release()");
-        LOG_WARN("Not supported");
-        /* Here we should properly clean-up; i.e. close open sockets, etc. */
-        return indeterminate;
+      LOG_INFO("KernelProcessControl::release()");
+      LOG_WARN("Not supported");
+      /* Here we should properly clean-up; i.e. close open sockets, etc. */
+      return indeterminate;
     }
 
 
     tribool KernelProcessControl::quit()
     {
-        LOG_DEBUG("KernelProcessControl::quit()");
-        return true;
+      LOG_DEBUG("KernelProcessControl::quit()");
+      return true;
     }
 
 
     tribool KernelProcessControl::snapshot(const string& /*destination*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return indeterminate;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return indeterminate;
     }
 
 
     tribool KernelProcessControl::recover(const string& /*source*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return indeterminate;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return indeterminate;
     }
 
 
     tribool KernelProcessControl::reinit(const string& /*configID*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return indeterminate;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return indeterminate;
     }
 
 
     string KernelProcessControl::askInfo(const string& /*keylist*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return string("");
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return string("");
     }
 
 
     //##----   CommandVisitor interface implementation   ----##//
     CommandResult KernelProcessControl::visit(const InitializeCommand &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        
-        // Get the index of this kernel process.
-        itsKernelIndex = itsCalSession->getIndex();
-        
-        // Construct global time axis.
-        itsGlobalTimeAxis = itsCalSession->getGlobalTimeAxis();
-        ASSERT(itsGlobalTimeAxis);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      
+      // Get the index of this kernel process.
+      itsKernelIndex = itsCalSession->getIndex();
+      
+      // Construct global time axis.
+      itsGlobalTimeAxis = itsCalSession->getGlobalTimeAxis();
+      ASSERT(itsGlobalTimeAxis);
 
-        // Try to connect to a solver if required.
-        // TODO: Retry a couple of times if connect() fails?
-        if(command.useSolver())
-        {
-            ProcessId solverId =
-                itsCalSession->getWorkerByIndex(CalSession::SOLVER, 0);
-            const size_t port = itsCalSession->getPort(solverId);
-                
-            LOG_DEBUG_STR("Defining connection: solver@" << solverId.hostname
-                << ":" << port);
+      // Try to connect to a solver if required.
+      // TODO: Retry a couple of times if connect() fails?
+      if(command.useSolver()) {
+        ProcessId solverId =
+          itsCalSession->getWorkerByIndex(CalSession::SOLVER, 0);
+        const size_t port = itsCalSession->getPort(solverId);
+            
+        LOG_DEBUG_STR("Defining connection: solver@" << solverId.hostname
+          << ":" << port);
 
-            ostringstream tmp;
-            tmp << port;
-            itsSolver.reset(new BlobStreamableConnection(solverId.hostname,
-                tmp.str(), Socket::TCP));
+        // BlobStreamableConnection takes a 'port' argument of type string?
+        ostringstream tmp;
+        tmp << port;
+        itsSolver.reset(new BlobStreamableConnection(solverId.hostname,
+          tmp.str(), Socket::TCP));
 
-            if(!itsSolver->connect())
-            {        
-                return CommandResult(CommandResult::ERROR, "Unable to connect"
-                    " to solver.");
-            }
-
-            // Make our process id known to the global solver.
-            itsSolver->sendObject(ProcessIdMsg(itsCalSession->getProcessId()));
+        if(!itsSolver->connect()) {        
+          return CommandResult(CommandResult::ERROR, "Unable to connect to"
+            " solver.");
         }
 
-        itsInputColumn = command.inputColumn();
+        // Make our process id known to the global solver.
+        itsSolver->sendObject(ProcessIdMsg(itsCalSession->getProcessId()));
+      }
 
-        // Create model.
-        itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
-            itsMeasurement->getPhaseCenter()));
+      itsInputColumn = command.inputColumn();
 
-        // Initialize the chunk selection.
-        if(!command.stations().empty())
-        {
-            itsChunkSelection.setStations(command.stations());
-        }
-        
-        Correlation correlation = command.correlation();
-        if(!correlation.type.empty())
-        {
-            itsChunkSelection.setPolarizations(correlation.type);
-        }
-        
-        if(correlation.selection == "AUTO")
-        {
-            itsChunkSelection.setBaselineFilter(VisSelection::AUTO);
-        }
-        else if(correlation.selection == "CROSS")
-        {
-            itsChunkSelection.setBaselineFilter(VisSelection::CROSS);
-        }
+      // Create model.
+      itsModel.reset(new Model(itsMeasurement->getInstrument(), *itsSourceDb,
+        itsMeasurement->getPhaseCenter()));
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      // Initialize the chunk selection.
+      if(!command.stations().empty()) {
+        itsChunkSelection.setStations(command.stations());
+      }
+      
+      Correlation correlation = command.correlation();
+      if(!correlation.type.empty()) {
+        itsChunkSelection.setPolarizations(correlation.type);
+      }
+      
+      if(correlation.selection == "AUTO") {
+        itsChunkSelection.setBaselineFilter(VisSelection::AUTO);
+      }
+      else if(correlation.selection == "CROSS") {
+        itsChunkSelection.setBaselineFilter(VisSelection::CROSS);
+      }
+
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const FinalizeCommand&)
@@ -387,445 +381,400 @@ namespace LOFAR
 
     CommandResult KernelProcessControl::visit(const NextChunkCommand &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        // Check preconditions. Currently it is assumed that each chunk spans the
-        // frequency axis of the _entire_ (meta) measurement.
-        const pair<double, double> freqRangeCmd(command.getFreqRange());
-        const VisDimensions &dimsObs = itsMeasurement->getDimensions();
-        const pair<double, double> freqRangeObs(dimsObs.getFreqRange());
-        ASSERT((freqRangeObs.first >= freqRangeCmd.first
-            || casa::near(freqRangeObs.first, freqRangeCmd.first))
-            && (freqRangeObs.second <= freqRangeCmd.second)
-            || casa::near(freqRangeObs.second, freqRangeCmd.second));
+      // Check preconditions. Currently it is assumed that each chunk spans the
+      // frequency axis of the _entire_ (meta) measurement.
+      const pair<double, double> freqRangeCmd(command.getFreqRange());
+      const VisDimensions &dimsObs = itsMeasurement->getDimensions();
+      const pair<double, double> freqRangeObs(dimsObs.getFreqRange());
+      ASSERT((freqRangeObs.first >= freqRangeCmd.first
+        || casa::near(freqRangeObs.first, freqRangeCmd.first))
+        && (freqRangeObs.second <= freqRangeCmd.second)
+        || casa::near(freqRangeObs.second, freqRangeCmd.second));
 
-        // Update domain.
-        const pair<double, double> timeRangeCmd(command.getTimeRange());
-        itsDomain = Box(Point(freqRangeCmd.first, timeRangeCmd.first),
-            Point(freqRangeCmd.second, timeRangeCmd.second));
+      // Update domain.
+      const pair<double, double> timeRangeCmd(command.getTimeRange());
+      itsDomain = Box(Point(freqRangeCmd.first, timeRangeCmd.first),
+        Point(freqRangeCmd.second, timeRangeCmd.second));
 
-        // Notify ParmManager. NB: The domain from the NextChunkCommand is used for
-        // parameters. This domain spans the entire meta measurement in frequency
-        // (even though locally visibility data is available for only a small part
-        // of this domain).
-        ParmManager::instance().setDomain(itsDomain);
-        
-        // Update chunk selection.
-        itsChunkSelection.clear(VisSelection::TIME_START);
-        itsChunkSelection.clear(VisSelection::TIME_END);
-        itsChunkSelection.setTimeRange(timeRangeCmd.first, timeRangeCmd.second);
+      // Notify ParmManager. NB: The domain from the NextChunkCommand is used for
+      // parameters. This domain spans the entire meta measurement in frequency
+      // (even though locally visibility data is available for only a small part
+      // of this domain).
+      ParmManager::instance().setDomain(itsDomain);
+      
+      // Update chunk selection.
+      itsChunkSelection.clear(VisSelection::TIME_START);
+      itsChunkSelection.clear(VisSelection::TIME_END);
+      itsChunkSelection.setTimeRange(timeRangeCmd.first, timeRangeCmd.second);
 
-        // Deallocate chunk.
-        ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
-            "Chunk shoud be unique (or uninitialized) by now.");
-        itsChunk.reset();
+      // Deallocate chunk.
+      ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
+        "Chunk shoud be unique (or uninitialized) by now.");
+      itsChunk.reset();
 
-        LOG_DEBUG("Reading chunk...");
-        try
-        {
-            itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
-                true);
-        }
-        catch(Exception &ex)
-        {
-            return CommandResult(CommandResult::ERROR, "Failed to read chunk.");
-        }
+      LOG_DEBUG("Reading chunk...");
+      try
+      {
+        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
+          true);
+      }
+      catch(Exception &ex)
+      {
+        return CommandResult(CommandResult::ERROR, "Failed to read chunk.");
+      }
 
-        // Display information about chunk.
-        LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
+      // Display information about chunk.
+      LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const RecoverCommand &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
     CommandResult KernelProcessControl::visit(const SynchronizeCommand &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
     CommandResult KernelProcessControl::visit(const MultiStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
     CommandResult KernelProcessControl::visit(const PredictStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        ASSERTSTR(itsChunk, "No visibility data available.");
-        ASSERTSTR(itsModel, "No model available.");
+      ASSERTSTR(itsChunk, "No visibility data available.");
+      ASSERTSTR(itsModel, "No model available.");
 
-        // Parse visibility selection.
-        vector<baseline_t> baselines;
-        vector<string> products;
-        
-        if(!(parseBaselineSelection(baselines, command)
-            && parseProductSelection(products, command)))
-        {        
-            return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-                " selection.");
-        }        
-            
-        // Initialize model.
-        if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
-        {
-            return CommandResult(CommandResult::ERROR, "Unable to initialize"
-                " model.");
-        }
-            
-        // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, itsModel);
-        evaluator.setSelection(baselines, products);
-        evaluator.process(Evaluator::ASSIGN);
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
+      
+      if(!(parseBaselineSelection(baselines, command)
+        && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }        
+          
+      // Initialize model.
+      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+          " model.");
+      }
+          
+      // Compute simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.process(Evaluator::ASSIGN);
 
-        // De-initialize model.
-        itsModel->clearExpressions();
+      // De-initialize model.
+      itsModel->clearExpressions();
 
-        // Optionally write the simulated visibilities.
-        if(!command.outputColumn().empty())
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputColumn(), false);
-        }
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), false);
+      }
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const SubtractStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        ASSERTSTR(itsChunk, "No visibility data available.");
-        ASSERTSTR(itsModel, "No model available.");
+      ASSERTSTR(itsChunk, "No visibility data available.");
+      ASSERTSTR(itsModel, "No model available.");
 
-        // Parse visibility selection.
-        vector<baseline_t> baselines;
-        vector<string> products;
-        
-        if(!(parseBaselineSelection(baselines, command)
-            && parseProductSelection(products, command)))
-        {        
-            return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-                " selection.");
-        }        
-            
-        // Initialize model.
-        if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
-        {
-            return CommandResult(CommandResult::ERROR, "Unable to initialize"
-                " model.");
-        }
-            
-        // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, itsModel);
-        evaluator.setSelection(baselines, products);
-        evaluator.process(Evaluator::SUBTRACT);
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
+      
+      if(!(parseBaselineSelection(baselines, command)
+          && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }        
+          
+      // Initialize model.
+      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+          " model.");
+      }
+          
+      // Compute simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.process(Evaluator::SUBTRACT);
 
-        // De-initialize model.
-        itsModel->clearExpressions();
+      // De-initialize model.
+      itsModel->clearExpressions();
 
-        // Optionally write the simulated visibilities.
-        if(!command.outputColumn().empty())
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputColumn(), false);
-        }
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), false);
+      }
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const AddStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        ASSERTSTR(itsChunk, "No visibility data available.");
-        ASSERTSTR(itsModel, "No model available.");
+      ASSERTSTR(itsChunk, "No visibility data available.");
+      ASSERTSTR(itsModel, "No model available.");
 
-        // Parse visibility selection.
-        vector<baseline_t> baselines;
-        vector<string> products;
-        
-        if(!(parseBaselineSelection(baselines, command)
-            && parseProductSelection(products, command)))
-        {        
-            return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-                " selection.");
-        }        
-            
-        // Initialize model.
-        if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
-        {
-            return CommandResult(CommandResult::ERROR, "Unable to initialize"
-                " model.");
-        }
-            
-        // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, itsModel);
-        evaluator.setSelection(baselines, products);
-        evaluator.process(Evaluator::ADD);
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
+      
+      if(!(parseBaselineSelection(baselines, command)
+          && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }        
+          
+      // Initialize model.
+      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+          " model.");
+      }
+          
+      // Compute simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.process(Evaluator::ADD);
 
-        // De-initialize model.
-        itsModel->clearExpressions();
+      // De-initialize model.
+      itsModel->clearExpressions();
 
-        // Optionally write the simulated visibilities.
-        if(!command.outputColumn().empty())
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputColumn(), false);
-        }
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), false);
+      }
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const CorrectStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-        ASSERTSTR(itsChunk, "No visibility data available.");
-        ASSERTSTR(itsModel, "No model available.");
+      ASSERTSTR(itsChunk, "No visibility data available.");
+      ASSERTSTR(itsModel, "No model available.");
 
-        // Parse visibility selection.
-        vector<baseline_t> baselines;
-        vector<string> products;
-        
-        if(!(parseBaselineSelection(baselines, command)
-            && parseProductSelection(products, command)))
-        {        
-            return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
-                " selection.");
-        }        
-            
-        // Initialize model.
-        if(!itsModel->makeInvExpressions(command.modelConfig(), itsChunk,
-            baselines))
-        {
-            return CommandResult(CommandResult::ERROR, "Unable to initialize"
-                " model.");
-        }
-            
-        // Compute simulated visibilities.
-        Evaluator evaluator(itsChunk, itsModel);
-        evaluator.setSelection(baselines, products);
-        evaluator.process(Evaluator::ASSIGN);
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
+      
+      if(!(parseBaselineSelection(baselines, command)
+          && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
+          " selection.");
+      }        
+          
+      // Initialize model.
+      if(!itsModel->makeInvExpressions(command.modelConfig(), itsChunk,
+          baselines)) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+          " model.");
+      }
+          
+      // Compute simulated visibilities.
+      Evaluator evaluator(itsChunk, itsModel);
+      evaluator.setSelection(baselines, products);
+      evaluator.process(Evaluator::ASSIGN);
 
-        // De-initialize model.
-        itsModel->clearExpressions();
+      // De-initialize model.
+      itsModel->clearExpressions();
 
-        // Optionally write the simulated visibilities.
-        if(!command.outputColumn().empty())
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputColumn(), false);
-        }
+      // Optionally write the simulated visibilities.
+      if(!command.outputColumn().empty()) {
+        itsMeasurement->write(itsChunkSelection, itsChunk,
+          command.outputColumn(), false);
+      }
 
-        return CommandResult(CommandResult::OK, "Ok.");
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const SolveStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        
-        ASSERTSTR(itsChunk, "No visibility data available.");
-        ASSERTSTR(itsModel, "No model available.");
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      
+      ASSERTSTR(itsChunk, "No visibility data available.");
+      ASSERTSTR(itsModel, "No model available.");
 
-        // Parse visibility selection.
-        vector<baseline_t> baselines;
-        vector<string> products;
-        
-        if(!(parseBaselineSelection(baselines, command)
-            && parseProductSelection(products, command)))
-        {        
-            return CommandResult(CommandResult::ERROR, "Unable to parse"
-                " visibility selection.");
-        }
-            
-        // Initialize model.
-        if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines))
-        {
-            return CommandResult(CommandResult::ERROR, "Unable to initialize"
-                " model.");
-        }
-        
-        try
-        {
+      // Parse visibility selection.
+      vector<baseline_t> baselines;
+      vector<string> products;
+      
+      if(!(parseBaselineSelection(baselines, command)
+          && parseProductSelection(products, command))) {
+        return CommandResult(CommandResult::ERROR, "Unable to parse"
+          " visibility selection.");
+      }
+          
+      // Initialize model.
+      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+        return CommandResult(CommandResult::ERROR, "Unable to initialize"
+          " model.");
+      }
+      
+      try
+      {
         if(command.calibrationGroups().empty())
         {
-            // Construct solution grid.
-            const CellSize &cellSize(command.cellSize());
+          // Construct solution grid.
+          const CellSize &cellSize(command.cellSize());
 
-            Axis::ShPtr freqAxis(itsMeasurement->getDimensions().getFreqAxis());
-            if(cellSize.freq == 0)
-            {
-                const pair<double, double> range = freqAxis->range();
-                freqAxis.reset(new RegularAxis(range.first, range.second
-                    - range.first, 1));
-            }
-            else if(cellSize.freq > 1)
-            {
-                freqAxis = freqAxis->compress(cellSize.freq);
-            }
+          Axis::ShPtr freqAxis(itsMeasurement->getDimensions().getFreqAxis());
+          if(cellSize.freq == 0) {
+            const pair<double, double> range = freqAxis->range();
+            freqAxis.reset(new RegularAxis(range.first, range.second
+              - range.first, 1));
+          } else if(cellSize.freq > 1) {
+            freqAxis = freqAxis->compress(cellSize.freq);
+          }
 
-            Axis::ShPtr timeAxis(itsGlobalTimeAxis);
-            const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
-            const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
-            ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
-            timeAxis = timeAxis->subset(timeStart, timeEnd);
+          Axis::ShPtr timeAxis(itsGlobalTimeAxis);
+          const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
+          const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
+          ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
+          timeAxis = timeAxis->subset(timeStart, timeEnd);
 
-            if(cellSize.time == 0)
-            {
-                const pair<double, double> range = timeAxis->range();
-                timeAxis.reset(new RegularAxis(range.first, range.second
-                    - range.first, 1));
-            }
-            else if(cellSize.time > 1)
-            {
-                timeAxis = timeAxis->compress(cellSize.time);
-            }
+          if(cellSize.time == 0) {
+            const pair<double, double> range = timeAxis->range();
+            timeAxis.reset(new RegularAxis(range.first, range.second
+              - range.first, 1));
+          } else if(cellSize.time > 1) {
+            timeAxis = timeAxis->compress(cellSize.time);
+          }
 
-            Grid grid(freqAxis, timeAxis);
+          Grid grid(freqAxis, timeAxis);
 
-            // Determine the number of cells to process simultaneously.
-            uint cellChunkSize = command.cellChunkSize() == 0 ? grid[TIME]->size()
-                : command.cellChunkSize();
+          // Determine the number of cells to process simultaneously.
+          uint cellChunkSize = (command.cellChunkSize() == 0 ?
+            grid[TIME]->size() : command.cellChunkSize());
 
-//            try
-//            {
-                LocalSolveController controller(itsChunk, itsModel,
-                    command.solverOptions());
+          LocalSolveController controller(itsChunk, itsModel,
+            command.solverOptions());
 
-                controller.init(command.parms(), command.exclParms(), grid,
-                    baselines, products, cellChunkSize, command.propagate());
+          controller.init(command.parms(), command.exclParms(), grid,
+            baselines, products, cellChunkSize, command.propagate());
 
-                controller.run();
+          controller.run();
 
-                // Store solutions to disk.
-                // TODO: Revert solutions on failure?
-                ParmManager::instance().flush();
-        
-//                return CommandResult(CommandResult::OK, "Ok.");
-//            }
-//            catch(Exception &ex)
-//            {
-//                return CommandResult(CommandResult::ERROR, "Unable to"
-//                    " initialize or run local solve controller.");
-//            }
+          // Store solutions to disk.
+          // TODO: Revert solutions on failure?
+          ParmManager::instance().flush();
+        } else {
+          // Construct solution grid.
+          const CellSize &cellSize(command.cellSize());
+
+          // Determine group id.
+          const vector<uint32> &groups = command.calibrationGroups();
+          vector<uint32> groupIndex(groups.size());
+          partial_sum(groups.begin(), groups.end(), groupIndex.begin());
+          const size_t groupId = upper_bound(groupIndex.begin(),
+            groupIndex.end(), itsKernelIndex) - groupIndex.begin();
+          ASSERT(groupId < groupIndex.size());
+          LOG_DEBUG_STR("Group id: " << groupId);
+
+          // Determine the index of the first and the last kernel in the
+          // calibration group that this kernel is part of.
+          const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
+          const size_t last = groupIndex[groupId] - 1;
+          
+          // Get frequency range of the calibration group.
+          ProcessId firstKernel =
+              itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
+          const double freqBegin =
+              itsCalSession->getGrid(firstKernel)[0]->range().first;
+          ProcessId lastKernel =
+              itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
+          const double freqEnd =
+              itsCalSession->getGrid(lastKernel)[0]->range().second;
+              
+          LOG_DEBUG_STR("Group freq range: [" << setprecision(15) << freqBegin
+              << "," << freqEnd << "]");
+          Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
+              1));
+
+          Axis::ShPtr timeAxis(itsGlobalTimeAxis);
+          const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
+          const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
+          ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
+          timeAxis = timeAxis->subset(timeStart, timeEnd);
+
+          if(cellSize.time == 0) {
+            const pair<double, double> range = timeAxis->range();
+            timeAxis.reset(new RegularAxis(range.first, range.second
+              - range.first, 1));
+          } else if(cellSize.time > 1) {
+            timeAxis = timeAxis->compress(cellSize.time);
+          }
+
+          Grid grid(freqAxis, timeAxis);
+
+          // Determine the number of cells to process simultaneously.
+          uint cellChunkSize = (command.cellChunkSize() == 0 ?
+            grid[TIME]->size() : command.cellChunkSize());
+
+          GlobalSolveController controller(itsKernelIndex, itsChunk, itsModel,
+            itsSolver);
+
+          controller.init(command.parms(), command.exclParms(), grid, baselines,
+            products, cellChunkSize, command.propagate());
+
+          controller.run();
+
+          // Store solutions to disk.
+          // TODO: Revert solutions on failure?
+          ParmManager::instance().flush();
         }
-        else
-        {
-            // Construct solution grid.
-            const CellSize &cellSize(command.cellSize());
+      }
+      catch(Exception &ex)
+      {
+          // De-initialize model.
+          itsModel->clearExpressions();
+          return CommandResult(CommandResult::ERROR, "Unable to initialize or"
+              " run solve controller.");
+      }
 
-            // Determine group id.
-            const vector<uint32> &groups = command.calibrationGroups();
-            vector<uint32> groupIndex(groups.size());
-            partial_sum(groups.begin(), groups.end(), groupIndex.begin());
-            const size_t groupId = upper_bound(groupIndex.begin(), groupIndex.end(),
-                itsKernelIndex) - groupIndex.begin();
-            ASSERT(groupId < groupIndex.size());
-            LOG_DEBUG_STR("Group id: " << groupId);
-
-            // Determine the index of the first and the last kernel in the
-            // calibration group that this kernel is part of.
-            const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
-            const size_t last = groupIndex[groupId] - 1;
-            
-            // Get frequency range of the calibration group.
-            ProcessId kernel0 =
-                itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
-            const double freqBegin =
-                itsCalSession->getGrid(kernel0)[0]->range().first;
-            ProcessId kernelN =
-                itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
-            const double freqEnd =
-                itsCalSession->getGrid(kernelN)[0]->range().second;
-                
-            LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin
-                << " - " << freqEnd);
-            Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
-                1));
-
-            Axis::ShPtr timeAxis(itsGlobalTimeAxis);
-            const size_t timeStart = timeAxis->locate(itsDomain.lowerY());
-            const size_t timeEnd = timeAxis->locate(itsDomain.upperY(), false);
-            ASSERT(timeStart <= timeEnd && timeEnd < timeAxis->size());
-            timeAxis = timeAxis->subset(timeStart, timeEnd);
-
-            if(cellSize.time == 0)
-            {
-                const pair<double, double> range = timeAxis->range();
-                timeAxis.reset(new RegularAxis(range.first, range.second
-                    - range.first, 1));
-            }
-            else if(cellSize.time > 1)
-            {
-                timeAxis = timeAxis->compress(cellSize.time);
-            }
-
-            Grid grid(freqAxis, timeAxis);
-
-            // Determine the number of cells to process simultaneously.
-            uint cellChunkSize = command.cellChunkSize() == 0 ? grid[TIME]->size()
-                : command.cellChunkSize();
-
-//            try
-//            {
-                GlobalSolveController controller(itsKernelIndex, itsChunk, itsModel,
-                    itsSolver);
-
-                controller.init(command.parms(), command.exclParms(), grid,
-                    baselines, products, cellChunkSize, command.propagate());
-
-                controller.run();
-
-                // Store solutions to disk.
-                // TODO: Revert solutions on failure?
-                ParmManager::instance().flush();
-        
-//                return CommandResult(CommandResult::OK, "Ok.");
-//            }
-//            catch(Exception &ex)
-//            {
-//                return CommandResult(CommandResult::ERROR, "Unable to"
-//                    " initialize or run global solve controller.");
-//            }
-        }
-        }
-        catch(Exception &ex)
-        {
-            // De-initialize model.
-            itsModel->clearExpressions();
-            return CommandResult(CommandResult::ERROR, "Unable to initialize or"
-                " run solve controller.");
-        }
-
-        // De-initialize model.
-        itsModel->clearExpressions();
-        return CommandResult(CommandResult::OK, "Ok.");
+      // De-initialize model.
+      itsModel->clearExpressions();
+      return CommandResult(CommandResult::OK, "Ok.");
     }
 
     CommandResult KernelProcessControl::visit(const ShiftStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
     CommandResult KernelProcessControl::visit(const RefitStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
     CommandResult KernelProcessControl::visit(const NoiseStep &command)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return unsupported(command);
     }
 
 
@@ -858,14 +807,14 @@ namespace LOFAR
       else return states[N_State];
     }
 
-    bool KernelProcessControl::parseBaselineSelection(vector<baseline_t> &result,
-        const Step &command) const
+    bool KernelProcessControl::parseBaselineSelection
+        (vector<baseline_t> &result, const Step &command) const
     {
         const string &filter = command.correlation().selection;
         if(!filter.empty() && filter != "AUTO" && filter != "CROSS")
         {
-            LOG_ERROR_STR("Correlation.Selection should be empty or one of \"AUTO\""
-                ", \"CROSS\".");
+            LOG_ERROR_STR("Correlation.Selection should be empty or one of"
+              " \"AUTO\", \"CROSS\".");
             return false;
         }
 
@@ -873,8 +822,8 @@ namespace LOFAR
         const vector<string> &station2 = command.baselines().station2;
         if(station1.size() != station2.size())
         {
-            LOG_ERROR("Baselines.Station1 and Baselines.Station2 should have the"
-                "same length.");
+            LOG_ERROR("Baselines.Station1 and Baselines.Station2 should have"
+              " the same length.");
             return false;
         }
         
@@ -908,22 +857,22 @@ namespace LOFAR
 
             try
             {
-                transform(station1.begin(), station1.end(), stationRegex1.begin(),
-                    ptr_fun(casa::Regex::fromPattern));
-                transform(station2.begin(), station2.end(), stationRegex2.begin(),
-                    ptr_fun(casa::Regex::fromPattern));
+                transform(station1.begin(), station1.end(),
+                  stationRegex1.begin(), ptr_fun(casa::Regex::fromPattern));
+                transform(station2.begin(), station2.end(),
+                  stationRegex2.begin(), ptr_fun(casa::Regex::fromPattern));
             }
             catch(casa::AipsError &ex)
             {
-                LOG_ERROR_STR("Error parsing include/exclude pattern (exception: "
-                    << ex.what() << ")");
+                LOG_ERROR_STR("Error parsing include/exclude pattern"
+                  " (exception: " << ex.what() << ")");
                 return false;
             }
 
             for(size_t i = 0; i < stationRegex1.size(); ++i)
             {
-                // Find the indices of all the stations of which the name matches
-                // the regex specified in the context.
+                // Find the indices of all the stations of which the name
+                // matches the regex specified in the context.
                 set<uint> stationGroup1, stationGroup2;
 
                 const Instrument &instrument = itsMeasurement->getInstrument();
@@ -942,9 +891,9 @@ namespace LOFAR
                     }
                 }
 
-                // Generate all possible baselines (pairs) from the two groups of
-                // station indices. If a baseline is available in the chunk _and_
-                // matches the baseline filter, select it for processing.
+                // Generate all possible baselines (pairs) from the two groups
+                // of station indices. If a baseline is available in the chunk
+                // _and_ matches the baseline filter, select it for processing.
                 const VisDimensions &dims = itsChunk->getDimensions();
 
                 for(set<uint>::const_iterator it1 = stationGroup1.begin();

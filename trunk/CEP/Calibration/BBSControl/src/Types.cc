@@ -35,6 +35,25 @@ namespace LOFAR
 
     //# -------  ostream operators  ------- #//
 
+    ostream& operator<<(ostream& os, const Correlation& obj)
+    {
+      os << "Correlation:";
+      Indent id;
+      os << endl << indent << "Selection: " << obj.selection
+         << endl << indent << "Type: "      << obj.type;
+      return os;
+    }
+
+
+    ostream& operator<<(ostream& os, const Baselines& obj)
+    {
+      os << "Baselines:";
+      Indent id;
+      os << endl << indent << "Station1: " << obj.station1
+         << endl << indent << "Station2: " << obj.station2;
+      return os;
+    }
+
     ostream& operator<<(ostream& os, const CellSize& obj)
     {
       os << "Cell size:";
@@ -58,25 +77,6 @@ namespace LOFAR
          << endl << indent << "Balanced equations: "     << obj.balancedEqs
          << endl << indent << "Use SVD: "                << obj.useSVD
          << noboolalpha;
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const Correlation& obj)
-    {
-      os << "Correlation:";
-      Indent id;
-      os << endl << indent << "Selection: " << obj.selection
-	 << endl << indent << "Type: "      << obj.type;
-      return os;
-    }
-
-
-    ostream& operator<<(ostream& os, const Baselines& obj)
-    {
-      os << "Baselines:";
-      Indent id;
-      os << endl << indent << "Station1: " << obj.station1
-	 << endl << indent << "Station2: " << obj.station2;
       return os;
     }
 
