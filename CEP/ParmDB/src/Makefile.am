@@ -15,15 +15,15 @@ SourceDB.cc SourceDBCasa.cc
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
 bin_PROGRAMS = versionparmdb \
-		parmdb parmdbclient makesourcedb
+		parmdb parmdbremote makesourcedb
 
 parmdb_SOURCES			= parmdb_main.cc
 parmdb_LDADD			= libparmdb.la
 parmdb_DEPENDENCIES		= libparmdb.la $(LOFAR_DEPEND)
 
-parmdbclient_SOURCES		= parmdbclient.cc
-parmdbclient_LDADD		= libparmdb.la
-parmdbclient_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
+parmdbremote_SOURCES		= parmdbremote.cc
+parmdbremote_LDADD		= libparmdb.la
+parmdbremote_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
 makesourcedb_SOURCES		= makesourcedb.cc
 makesourcedb_LDADD		= libparmdb.la
@@ -33,7 +33,9 @@ pythondir = $(bindir)
 dist_python_SCRIPTS = 
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = setupparmdb setupparmdb-part
+dist_script_SCRIPTS =	setupparmdb setupparmdb-part \
+			setupsourcedb setupsourcedb-part \
+			startparmdbdistr parmdbremote-scr
 
 versionparmdb_SOURCES      = versionparmdb.cc
 versionparmdb_LDADD        = libparmdb.la

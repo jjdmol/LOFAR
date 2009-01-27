@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacade.h>
 #include <ParmDB/ParmFacadeLocal.h>
+#include <ParmDB/ParmFacadeDistr.h>
+#include <tables/Tables/Table.h>
 
 using namespace std;
 using namespace casa;
@@ -37,8 +39,15 @@ namespace LOFAR {
   namespace BBS {
 
     ParmFacade::ParmFacade (const string& tableName)
-      : itsRep(new ParmFacadeLocal(tableName))
-    {}
+    {
+      // If it is a table, open it directly.
+      // Otherwise it is a distributed ParmDB.
+      if (Table::isReadable(tableName)) {
+        itsRep = ParmFacadeRep::ShPtr(new ParmFacadeLocal(tableName));
+      } else {
+        itsRep = ParmFacadeRep::ShPtr(new ParmFacadeDistr(tableName));
+      }
+    }
 
     ParmFacade::~ParmFacade()
     {}

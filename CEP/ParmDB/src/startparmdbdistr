@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+# Find the hostname.
+host=`uname -n`
+# If we cannot connect to it, replace it by localhost.
+ssh $host date > /dev/null 2>&1
+if test $? != 0; then
+  host=localhost
+fi
+
+# Start parmdbremote for each part.
+startdistproc -mode "$1" -nowait -masterhost localhost -nostartmaster \
+              -cdn "$2" -dsn "$3" $pgmpath/parmdbremote-scr "$LOFARROOT" `pwd`

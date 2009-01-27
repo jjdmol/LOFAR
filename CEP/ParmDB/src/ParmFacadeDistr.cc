@@ -28,6 +28,7 @@
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
 #include <casa/IO/AipsIO.h>
+#include <Common/lofar_iostream.h>
 
 using namespace LOFAR::CEP;
 using namespace casa;
@@ -50,23 +51,29 @@ namespace LOFAR {
       : itsPort (getPort()),
         itsConn (itsPort)
     {
-      VdsDesc vds(tableName);
-      int nparts = vds.getParts().size();
-      string cdescName = vds.getDesc().getClusterDescName();
-      // Start all clients.
-      string command("startdistproc -mode " + itsPort +
-                     " -nowait -nomasterhost -cdn " +
-                     cdescName + " parmdbclient");
+      // Get info from VDS. It is automatically closed thereafter.
+      int nparts;
+      string cdescName;
+      {
+        VdsDesc vds(tableName);
+        nparts    = vds.getParts().size();
+        cdescName = vds.getDesc().getClusterDescName();
+      }
+      // Start all remote processes.
+      string command("startparmdbdistr " + itsPort + ' ' +
+                     cdescName + ' ' + tableName);
+      ASSERT (system(command.c_str()) == 0);
       // Accept a connection from the clients and check if they are
       // initialized correctly.
       itsConn.addConnections (nparts);
-      ASSERT (system(command.c_str()) == 0);
       BlobString buf;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
-        bbi.finish();
         ASSERT (bbi.getOperation() == 1);    // ensure successful init
+        string fname;
+        bbi.blobStream() >> fname;
+        bbi.finish();
       }
     }
 
@@ -110,14 +117,23 @@ namespace LOFAR {
       bbo.blobStream() << parmNamePattern;
       bbo.finish();
       itsConn.writeAll (buf);
+      vector<double> range, result;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        if (i == 0) {
+          bbi.blobStream() >> result;
+        } else {
+          bbi.blobStream() >> range;
+          if (range[0] < result[0]) result[0] = range[0];
+          if (range[1] > result[1]) result[1] = range[1];
+          if (range[2] < result[2]) result[2] = range[2];
+          if (range[3] > result[3]) result[3] = range[3];
+        }
         bbi.finish();
-        ASSERT (bbi.getOperation() == 1);    // ensure successful init
       }
-      vector<double> res(4);
-      return res;
+      return result;
     }
 
     // Get all parameter names in the table.
@@ -128,14 +144,19 @@ namespace LOFAR {
       bbo.blobStream() << parmNamePattern;
       bbo.finish();
       itsConn.writeAll (buf);
+      vector<string> names, result;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        if (i == 0) {
+          bbi.blobStream() >> result;
+        } else {
+          bbi.blobStream() >> names;
+        }
         bbi.finish();
-        ASSERT (bbi.getOperation() == 1);    // ensure successful init
       }
-      vector<string> res;
-      return res;
+      return result;
     }
 
     Record ParmFacadeDistr::getValues (const string& parmNamePattern,
@@ -145,17 +166,24 @@ namespace LOFAR {
     {
       BlobString buf;
       MWBlobOut bbo(buf, 3, 0);
-      bbo.blobStream() << parmNamePattern;
+      bbo.blobStream() << parmNamePattern
+                       << freqv1 << freqv2 << nfreq
+                       << timev1 << timev2 << ntime << asStartEnd;
       bbo.finish();
       itsConn.writeAll (buf);
+      Record values, result;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        if (i == 0) {
+          getRecord (bbi.blobStream(), result);
+        } else {
+          getRecord (bbi.blobStream(), values);
+        }
         bbi.finish();
-        ASSERT (bbi.getOperation() == 1);    // ensure successful init
       }
-      Record res;
-      return res;
+      return result;
     }
 
     Record ParmFacadeDistr::getValues (const string& parmNamePattern,
@@ -167,17 +195,23 @@ namespace LOFAR {
     {
       BlobString buf;
       MWBlobOut bbo(buf, 4, 0);
-      bbo.blobStream() << parmNamePattern;
+      bbo.blobStream() << parmNamePattern
+                       << freqv1 << freqv2 << timev1 << timev2 << asStartEnd;
       bbo.finish();
       itsConn.writeAll (buf);
+      Record values, result;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        if (i == 0) {
+          getRecord (bbi.blobStream(), result);
+        } else {
+          getRecord (bbi.blobStream(), values);
+        }
         bbi.finish();
-        ASSERT (bbi.getOperation() == 1);    // ensure successful init
       }
-      Record res;
-      return res;
+      return result;
     }
 
     Record ParmFacadeDistr::getValuesGrid (const string& parmNamePattern,
@@ -186,17 +220,30 @@ namespace LOFAR {
     {
       BlobString buf;
       MWBlobOut bbo(buf, 5, 0);
-      bbo.blobStream() << parmNamePattern;
+      bbo.blobStream() << parmNamePattern
+                       << sfreq << efreq << stime << etime;
       bbo.finish();
       itsConn.writeAll (buf);
+      Record values, result;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        if (i == 0) {
+          getRecord (bbi.blobStream(), result);
+        } else {
+          getRecord (bbi.blobStream(), values);
+        }
         bbi.finish();
-        ASSERT (bbi.getOperation() == 1);    // ensure successful init
       }
-      Record res;
-      return res;
+      return result;
+    }
+
+    void ParmFacadeDistr::getRecord (BlobIStream& bis, Record& rec)
+    {
+      BlobAipsIO baio(bis);
+      casa::AipsIO aio(&baio);
+      aio >> rec;
     }
 
   } // namespace ParmDB
