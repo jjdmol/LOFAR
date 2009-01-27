@@ -1,4 +1,4 @@
-testdir		 =	$(prefix)/test/modules
+testdir		 =	$(prefix)/stationtest/modules
 test_SCRIPTS = 	cli.py \
 				mep.py \
 				rsp.py \
@@ -7,4 +7,3 @@ test_SCRIPTS = 	cli.py \
 				testlog.py
 
 include $(top_srcdir)/Makefile.common
-

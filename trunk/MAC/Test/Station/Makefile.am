@@ -1,6 +1,6 @@
 SUBDIRS = modules gold tc
 
-testdir		 =  $(prefix)/test
+testdir		 =  $(prefix)/stationtest
 test_SCRIPTS = 	README.txt \
 				i2c_spu.py \
 				i2c_td.py \
@@ -21,4 +21,3 @@ test_SCRIPTS = 	README.txt \
 				xc_200_verify.sh 
 
 include $(top_srcdir)/Makefile.common
-
