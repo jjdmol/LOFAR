@@ -65,7 +65,7 @@ fi
 echo "Create $msn/$pdb from $srccat"
 if test "$dry" != dry; then
   if $overwrite = 1; then
-    rm -rf $msn/$pdb.sky
+    rm -rf $msn/$pdb
   fi
-  makesourcedb in=$srccat out=$msn/$pdb.sky
+  makesourcedb in=$srccat out=$msn/$pdb
 fi

@@ -62,8 +62,8 @@ if test $help = 1; then
   echo "       ms-gds        name of global VDS file of the MS"
   echo "       srccat        name of ASCII file containing sources in the"
   echo "                     standard makesourcedb format"
-  echo "       sourcedb-name   extension name of new sourcedb (defaults to sourcedb)"
-  echo "                     e.g. for 100319.MS the name 100319.sourcedb is used"
+  echo "       sourcedb-name   extension name of new sourcedb (defaults to sky)"
+  echo "                     e.g. for 100319.MS the name 100319.sky is used"
   echo "       clusterdesc   name of clusterdesc file"
   echo "                     default is $HOME/CEP.clusterdesc"
   echo "       logfile       root name of logfile of each subprocess"
@@ -86,7 +86,7 @@ if test $# != 0; then
   shift
 fi
 if test "$pdb" = ""; then
-  pdb=sourcedb
+  pdb=sky
 fi
 cdn=
 if test $# != 0; then
