@@ -1,10 +1,10 @@
-testdir		 =  $(prefix)/test/tc
+testdir		 =  $(prefix)/stationtest/tc
 test_SCRIPTS = 	bist.py \
 				empty.py \
 				hba_client.py \
 				hba_server.py \
 				prsg.py \
-				rad_lane_mode.py \
+				rad_lanemode.py \
 				rad_latency.py \
 				serdes.py \
 				spustat.py \
@@ -13,4 +13,3 @@ test_SCRIPTS = 	bist.py \
 				tdstat.py
 
 include $(top_srcdir)/Makefile.common
-

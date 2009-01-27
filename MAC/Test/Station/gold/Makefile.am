@@ -1,4 +1,4 @@
-testdir		 =  $(prefix)/test/gold
+testdir		 =  $(prefix)/stationtest/gold
 test_SCRIPTS = 	prbs_dir_test.gold \
 				rsp_version.gold \
 				tbb_version.gold \
@@ -7,4 +7,3 @@ test_SCRIPTS = 	prbs_dir_test.gold \
 				xst_200_odd.gold
 
 include $(top_srcdir)/Makefile.common
-
