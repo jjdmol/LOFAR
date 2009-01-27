@@ -39,6 +39,7 @@ global dyn_string procList;
 global string selectedObservation    = "";
 global string selectedStation        = "";
 global string obsBaseDP              = "";
+global string stationObsDP           = "";
 
 
 // ****************************************
@@ -92,9 +93,15 @@ void MainCU_Processes_initList() {
   }
   
   if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
-    setValue("activeObs","backCol","_dpdoesnotexist");
+    setValue("activeObs","backCol","Lofar_dpdoesnotexist");
   } else {
-    dpConnect("MainCU_Processes_ActiveObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations");
+    if (dpConnect("MainCU_Processes_ActiveObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations") == -1) {
+      LOG_ERROR("MainCU_Processes.ctl:initList|couldn't connect to activeObservations.");
+    } else {
+      if (!navFunct_dpReachable("LOFAR_PermSW_MACScheduler.activeObservations")) { 
+        setValue("activeObs","backCol","Lofar_dpOffline");
+      }
+    }        
   }
  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);
@@ -140,19 +147,26 @@ void MainCU_Processes_UpdateMainControllers() {
 void MainCU_Processes_UpdateStationControllers() {
   string newSelectedStation=stationTree.getText(stationTree.selectedItem(),0);
 
+  
   LOG_TRACE("MainCU_Processes.ctl:updateStationControllers|selected station: "+ selectedStation +" New: "+ newSelectedStation);
   // check if selection is made, and the selection is indeed a new one
   if (newSelectedStation != 0) {  
-    selectedStation = newSelectedStation;
+    if (strtok(newSelectedStation,":") < 0) {
+      selectedStation=newSelectedStation+":";
+    } else {
+      selectedStation=newSelectedStation;
+    }
     stationDBName.text(selectedStation);
+    // set to selected station
+
     MainCU_Processes_UpdateProcessesList();
 
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP,selectedStation));
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP,selectedStation));
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","TBBCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP,selectedStation));
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
     
   }
 }
@@ -217,15 +231,15 @@ void MainCU_Processes_UpdateProcessesList() {
     }
     
     //same for station controllers (check if a station exists)
-    if (selectedStation != "" && dpExists(selectedStation+":LOFAR") ){
+    if (selectedStation != "" && dpExists(selectedStation+"LOFAR") ){
       
       // strip system and add station
-      string stationObsDP=selectedStation+":"+dpSubStr(obsDP,DPSUB_DP);
+      stationObsDP=selectedStation+dpSubStr(obsDP,DPSUB_DP);
       // add station to selected Observation
-      dynAppend(list,obsDP+","+selectedStation+","+stationObsDP);
+      dynAppend(list,obsDP+","+strltrim(selectedStation,":")+","+stationObsDP);
 
       //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
-      dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+":'", tab);
+      dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+"'", tab);
       LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);
       
       aDS=navFunct_getDynString(tab, 2,1);
@@ -283,6 +297,7 @@ MainCU_Processes_UpdateStationTree() {
       // add stations if not allready there
 
       dyn_string stations = navFunct_listToDynString(sts);
+      dynSortAsc(stations);
 
       for (int k=1; k<= dynlen(stations);k++) {
         if (!stationTree.itemExists(stations[k])) {
@@ -291,7 +306,11 @@ MainCU_Processes_UpdateStationTree() {
           stationTree.setIcon(stations[k],0,"16_empty.gif");
           if (k==1) {
             stationTree.setSelectedItem(stations[k],true);
-            selectedStation=stations[k];
+            if (strpos(stations[k],":") < 0) {
+              selectedStation=stations[k]+":";
+            } else {
+              selectedStation=stations[k];
+            }
           }
         }
       }

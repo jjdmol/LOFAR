@@ -20,6 +20,9 @@ PANEL,-1 -1 735 210 N "_3DFace" 0
     dpConnect(\"updateSubrackClock\",baseDP + \".temperature\",
                                    baseDP + \".freq\",
                                    baseDP + \".temperature:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      updateSubrackClock(\"\",0,\"\",0,\"\",true);
+    }
     // connect for version updates
     dpConnect(\"navPanel_showVersion\", baseDP +\".version:_online.._value\");
   } else {
@@ -32,23 +35,26 @@ PANEL,-1 -1 735 210 N "_3DFace" 0
      !dpExists(baseDP + \".lock160:_online.._value\") ||
      !dpExists(baseDP + \".lock200:_online.._value\"))
   {
-    setValue(\"txt_Vfsp\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"txt_Vclock\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"lock160\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"lock200\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_Vfsp\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_Vclock\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"lock160\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"lock200\", \"backCol\", \"Lofar_dpdoesnotexist\");
     return;
   }
   else
   {
-     dpConnect(\"SubrackSPUDetails\", baseDP + \".Vfsp:_online.._value\",
-																   baseDP + \".Vclock:_online.._value\",
-                                   baseDP + \".lock160:_online.._value\",
-                                   baseDP + \".lock200:_online.._value\",
-                                   baseDP + \".Vfsp:_online.._invalid\");
+     dpConnect(\"subrackSPUDetails\", baseDP + \".Vfsp:_online.._value\",
+	                	    baseDP + \".Vclock:_online.._value\",
+                                    baseDP + \".lock160:_online.._value\",
+                                    baseDP + \".lock200:_online.._value\",
+                                    baseDP + \".Vfsp:_online.._invalid\");
+     if (!navFunct_dpReachable(baseDP)) {
+       subrackSPUDetails(\"\",0,\"\",0,\"\",false,\"\",false,\"\",true);
+     }
   }	
 }
 
-updateSubrackClock(string dp1, float temperature,
+void updateSubrackClock(string dp1, float temperature,
                  string dp2, int freq,
 							   string dp3, bool invalid)
 {
@@ -67,11 +73,11 @@ E "#uses \"navPanel.ctl\"
 
 string          baseDP         = \"\";
 
-SubrackSPUDetails(string dp1, float Vfsp,
-                  string dp2, float Vclock,
-                  string dp3, bool  lock160,
-                  string dp4, bool  lock200,
-                  string dp5, bool  invalid)
+void subrackSPUDetails(string dp1, float Vfsp,
+                       string dp2, float Vclock,
+                       string dp3, bool  lock160,
+                       string dp4, bool  lock200,
+                       string dp5, bool  invalid)
 {
     setValue(\"txt_Vfsp\"   , \"text\", Vfsp);
     setValue(\"txt_Vclock\" , \"text\", Vclock);

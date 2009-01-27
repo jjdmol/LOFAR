@@ -241,6 +241,8 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
               }
             }
           }
+        } else if (ACTIVE_TAB == "Processes") {
+          dynAppend(highlight,aSelection[i]);
         }
       }         
     }      
@@ -326,6 +328,10 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
   if (anEvent == "TabChanged") {
     if (aSelection != ACTIVE_TAB) {
+      
+      // if on the other Tab a dp was saved restore it, and also
+      // keep the current datapoint save in de tabDatapoint
+      navTabCtrl_saveAndRestoreCurrentDP(aSelection);
       navTabCtrl_removeView();
       
       ACTIVE_TAB = aSelection;
@@ -432,9 +438,9 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
   
   if (anEvent == "ChangeSelection") {
     if (target == "bottom") {
-      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"update");
+      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     } else {
-      dpSet(TOPDETAILSELECTIONACTIONDP,"update");
+      dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
     }
   }
   
@@ -470,7 +476,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
                 }
               }
             }
-          } else {
+          } else if (dynlen(g_stationList) == 1){
             station=g_stationList[1];
             for (int k = 1; k<= dynlen(g_cabinetList); k++) {
               if (navFunct_hardware2Obs(station, longObs,"Cabinet","",g_cabinetList[k])) {
@@ -597,7 +603,8 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
 
     //check if a tab change should be initiated
     if (ACTIVE_TAB != typeSelector && typeSelector != "") {
-      LOG_DEBUG("Active tab should be changed to : "+ typeSelector);
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|Active tab should be changed to : "+ typeSelector);
+      navTabCtrl_saveAndRestoreCurrentDP(typeSelector);
       ACTIVE_TAB = typeSelector;
       navTabCtrl_setSelectedTab(typeSelector);
     }

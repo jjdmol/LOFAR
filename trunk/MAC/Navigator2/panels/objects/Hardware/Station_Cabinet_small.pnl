@@ -54,7 +54,6 @@ void dblClick() {
   bDoubleClicked = true;   
   
   if (dpExists(baseDP) ) {
-    DebugTN(baseDP+\" seems to exist?\");
     LOG_DEBUG(\"Station_Cabinet_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     navPanel_setEvent(\"Cabinet\"+cNr,\"ChangePanel\");

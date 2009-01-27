@@ -16,7 +16,7 @@ PANEL,-1 -1 512 400 N "_3DFace" 1
   }
   
   if (! dpExists(baseDP)) {
-    setValue(\"cabinet_top\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"cabinet_top\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
   
   
@@ -24,45 +24,79 @@ PANEL,-1 -1 512 400 N "_3DFace" 1
   
   // back and front door
   if (dpExists(baseDP + \".frontDoorOpen\")) {
-    dpConnect(\"showDoor\", baseDP + \".frontDoorOpen\",
-                          baseDP + \".backDoorOpen\",
-                          baseDP + \".doorControl\",
-	                  baseDP + \".frontDoorOpen:_online.._invalid\");
+    if (dpConnect(\"showDoor\", baseDP + \".frontDoorOpen\",
+                              baseDP + \".backDoorOpen\",
+                              baseDP + \".doorControl\",
+                              baseDP + \".frontDoorOpen:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".frontDoorOpen \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP+\".frontDoorOpen\")) {
+      showDoor(\"\",false,\"\",false,\"\",false,\"\",true);
+    }                                        
+  } else {
+    LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't find dp to connect to:\"+baseDP+\".frontDoorOpen\");
   }
     
   // back and front Inner and Outer fans
   if (dpExists(baseDP + \".frontFanInner\")) {
-    dpConnect(\"showFan\", baseDP + \".frontFanInner\",
-                         baseDP + \".frontFanOuter\",
-                         baseDP + \".frontAirflow\",
-                         baseDP + \".backFanInner\",
-                         baseDP + \".backFanOuter\",
-                         baseDP + \".backAirflow\",
-	                 baseDP + \".frontFanInner:_online.._invalid\");
+    if (dpConnect(\"showFan\", baseDP + \".frontFanInner\",
+                             baseDP + \".frontFanOuter\",
+                             baseDP + \".frontAirflow\",
+                             baseDP + \".backFanInner\",
+                             baseDP + \".backFanOuter\",
+                             baseDP + \".backAirflow\",
+                             baseDP + \".frontFanInner:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".frontFanInner \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP+\".frontFanInner\")) {
+      showFan(\"\",false,\"\",false,\"\",false,\"\",false,\"\",false,\"\",false,\"\",true);
+    }                                        
+  } else {
+    LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't find dp to connect to:\"+baseDP+\".frontFanInner\");
   }
  
   
   // temperature issues
   if (dpExists(baseDP + \".temperature\")) {
-    dpConnect(\"updateTemp\", baseDP + \".temperature\",
+    if (dpConnect(\"updateTemp\", baseDP + \".temperature\",
                             baseDP + \".temperatureSensor\",
                             baseDP + \".tempAlarm\",
-	                    baseDP + \".temperature:_online.._invalid\");
-  }
-  
+                            baseDP + \".temperature:_online.._invalid\")== -1) {
+      LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".temperature \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP+\".temperature\")) {
+      updateTemp(\"\",0,\"\",false,\"\",0,\"\",true);
+    }                                        
+  } else {
+    LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't find dp to connect to:\"+baseDP+\".temperature\");
+  }  
   
   // humidity issues
   if (dpExists(baseDP + \".humidity\")) {
-    dpConnect(\"updateHumidity\", baseDP + \".humidity\",
-                                baseDP + \".humidityControl\",
-                                baseDP + \".humidityAlarm\",
-	                        baseDP + \".humidity:_online.._invalid\");
+    if (dpConnect(\"updateHumidity\", baseDP + \".humidity\",
+                                    baseDP + \".humidityControl\",
+                                    baseDP + \".humidityAlarm\",
+                                    baseDP + \".humidity:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".humidity \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP+\".humidity\")) {
+      updateHumidity(\"\",0,\"\",false,\"\",0,\"\",true);
+    }                                        
+  } else {
+    LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".humidity\");
   }
     
   // mode issues
   if (dpExists(baseDP + \".controlMode\")) {
-    dpConnect(\"updateControlMode\", baseDP + \".controlMode\",
-	                           baseDP + \".controlMode:_online.._invalid\");
+    if (dpConnect(\"updateControlMode\", baseDP + \".controlMode\",
+                  	               baseDP + \".controlMode:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".controlMode \"+getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP+\".controlMode\")) {
+      updateControlMode(\"\",0,\"\",true);
+    }                                        
+  } else {
+    LOG_ERROR(\"Cabinet_Top.pnl:main|Couldn't connect to:\"+baseDP+\".controlMode\");
   }
 }
 
@@ -95,6 +129,13 @@ void updateTemp(string dp1, float temperature,
         
       
   } else {
+    if (dp1 == \"\") {
+      setValue(\"tempAlarm\",\"backCol\",\"Lofar_dpOffline\");
+      setValue(\"temperatureSensor\",\"backCol\",\"Lofar_dpOffline\");
+    } else {
+      setValue(\"tempAlarm\",\"backCol\",\"Lofar_invalid\");
+      setValue(\"temperatureSensor\",\"backCol\",\"Lofar_invalid\");
+    }
     setValue(\"temperature\",\"text\",\"????\");
     setValue(\"tempAlarm\",\"backCol\",\"Lofar_off\");
     setValue(\"temperatureSensor\",\"backCol\",\"Lofar_off\");
@@ -125,9 +166,14 @@ void updateHumidity(string dp1, float humidity,
     }
 
   } else {
+    if (dp1 == \"\") {
+      setValue(\"humidityAlarm\",\"backCol\",\"Lofar_dpOffline\");
+      setValue(\"humidityControl\",\"backCol\",\"Lofar_dpOffLine\");
+    } else {
+      setValue(\"humidityAlarm\",\"backCol\",\"Lofar_invalid\");
+      setValue(\"humidityControl\",\"backCol\",\"Lofar_invalid\");
+    }
     setValue(\"humidity\",\"text\",\"????\");
-    setValue(\"humidityAlarm\",\"backCol\",\"Lofar_off\");
-    setValue(\"humidityControl\",\"backCol\",\"Lofar_off\");
   }
 }
 
@@ -159,11 +205,15 @@ void showDoor(string dp1, bool frontDoorOpen,
     }
 
   } else {
+    if (dp1 == \"\") {
+      setValue(\"doorControl\",\"backCol\",\"Lofar_dpOffline\");
+    } else {
+      setValue(\"doorControl\",\"backCol\",\"Lofar_invalid\");
+    }
     setValue(\"backDoor_open\"  , \"visible\"    , FALSE);
     setValue(\"backDoor_closed\" , \"visible\"    ,FALSE);
     setValue(\"frontDoor_open\"  , \"visible\"    , FALSE);
     setValue(\"frontDoor_closed\" , \"visible\"    ,FALSE);
-    setValue(\"doorControl\",\"backCol\",\"Lofar_off\");
   }
 }
 

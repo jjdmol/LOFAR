@@ -12,20 +12,24 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    dpConnect(\"updateCalCtrl\", baseDP + \".connected\",
-		               baseDP + \".antennaArray\",
-                               baseDP + \".rcus\",
-                               baseDP + \".filter\",
-                               baseDP + \".nyquistzone\",
-                               baseDP + \".beamNames\",
-		               baseDP + \".connected:_online.._invalid\");
+    if ( dpConnect(\"updateCalCtrl\", baseDP + \".connected\",
+		                   baseDP + \".antennaArray\",
+                                   baseDP + \".rcus\",
+                                   baseDP + \".filter\",
+                                   baseDP + \".nyquistzone\",
+                                   baseDP + \".beamNames\",
+                                   baseDP + \".connected:_online.._invalid\") == -1) {
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateCalCtrl(\"\",false,\"\",\"\",\"\",\"\",\"\",\"\",\"\",0,\"\".makeDynString(),\"\",true);
+    }
   } else {
     LOG_ERROR(\"CalCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"connectedText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"antennaArrayText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"rcusText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"filterText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"nyquistzoneText\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"connectedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"antennaArrayText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"rcusText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"filterText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"nyquistzoneText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     beamTable.enabled(false);
   } 
   reload();
@@ -58,11 +62,15 @@ updateCalCtrl(string dp1, bool connected,
     }
     
   } else {
-    setValue(\"connectedText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"antennaText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"rcusText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"filterText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"nyquistzoneText\", \"backCol\", \"Lofar_invalid\");
+    string SymbolCol = \"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol = \"Lofar_dpOffline\";
+    }
+    setValue(\"connectedText\", \"backCol\", SymbolCol );
+    setValue(\"antennaText\", \"backCol\", SymbolCol);
+    setValue(\"rcusText\", \"backCol\", SymbolCol);
+    setValue(\"filterText\", \"backCol\", SymbolCol);
+    setValue(\"nyquistzoneText\", \"backCol\", SymbolCol);
     beamTable.enabled(false);
   }  
 }

@@ -34,7 +34,8 @@ void click(string originator) {
     dynClear(g_RCUList);
 
     dynClear(g_observationsList);
-    dynClear(g_processesList);    
+    dynClear(g_processesList);
+   
     if (originator == \"stationTree\") {
       navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
     } else if (originator == \"activeObs\") {
@@ -43,6 +44,7 @@ void click(string originator) {
       stationObservationName.text(station_selectedObservation);
       setValue(\"stationObservationName\",\"text\",station_selectedObservation);
       Station_Processes_UpdateStationTree();      
+      navPanel_setEvent(activeStationObs.getText(activeStationObs.selectedItem(),0),\"EventClick\");
     }
   }
 }

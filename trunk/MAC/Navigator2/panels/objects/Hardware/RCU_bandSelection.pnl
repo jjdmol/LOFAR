@@ -9,8 +9,11 @@ PANEL,-1 -1 507 438 N "_3DFace" 1
   baseDP= g_currentDatapoint;
    
   if (dpExists(baseDP + \".\" + $Component + \":_online.._value\"))	{
-    dpConnect(\"ShowBandSelLines\", baseDP + \".\" + $Component + \":_online.._value\",
+    dpConnect(\"showBandSelLines\", baseDP + \".\" + $Component + \":_online.._value\",
 	                          baseDP + \".\" + $Component + \":_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      showBandSelLines(\"\",false,\"\",true);
+    }
   } else {
     if ($Component == \"bandSelLblLbh\" ) {
       bandSelLblLbh=FALSE;
@@ -22,8 +25,8 @@ PANEL,-1 -1 507 438 N "_3DFace" 1
 }
 
 
-ShowBandSelLines(string dp1, bool highBandSel,
-                 string dp2, bool invalid)
+void showBandSelLines(string dp1, bool highBandSel,
+                      string dp2, bool invalid)
 {
   if(!invalid) {
     setValue(\"line_unknown\" , \"visible\" , FALSE);

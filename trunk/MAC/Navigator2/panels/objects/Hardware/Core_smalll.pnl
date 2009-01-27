@@ -30,8 +30,8 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
     // connect for selfUpdates
     showSelfState(CoreDP);
   } else {
-    setValue(\"selfState.light\",\"backCol\",\"_dpdoesnotexist\");
-    setValue(\"childStateBorder\",\"foreCol\",\"_dpdoesnotexist\");
+    setValue(\"selfState.light\",\"backCol\",\"Lofar_dpdoesnotexist\");
+    setValue(\"childStateBorder\",\"foreCol\",\"Lofar_dpdoesnotexist\");
   }
 
 }" 0

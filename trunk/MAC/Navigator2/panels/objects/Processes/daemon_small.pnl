@@ -14,9 +14,14 @@ PANEL,-1 -1 1019 43 N "_3DFace" 1
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.processID\")) {
-    dpConnect(\"updateDaemon\", baseDP +\".process.processID:_online.._value\",
-                              baseDP +\".process.logMsg:_online.._value\",
-                              baseDP +\".process.processID:_online.._invalid\");
+    if (dpConnect(\"updateDaemon\", baseDP +\".process.processID:_online.._value\",
+                                  baseDP +\".process.logMsg:_online.._value\",
+                                  baseDP +\".process.processID:_online.._invalid\") == -1) {
+      LOG_ERROR($name+\"_small.pnl:main|Couldn't connect to: \"+baseDP+ \" \"+ getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateDaemon(\"\",0,\"\",\"\",\"\",true);
+    }
   } else {
     LOG_ERROR($name+\"_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
   }	
@@ -33,7 +38,11 @@ updateDaemon(string dp1, unsigned processID,
 {
   string col=\"Lofar_operational\";
   if (invalid) {
-    col = \"Lofar_invalid\";
+    if (dp1 == \"\" ) {
+      col = \"Lofar_dpOffline\";
+    } else {
+      col = \"Lofar_invalid\";
+    }
   } else if (processID == 0) {
     col = \"Lofar_off\";
   }

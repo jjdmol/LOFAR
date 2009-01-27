@@ -13,6 +13,9 @@ PANEL,-1 -1 326 191 N "_3DFace" 0
                                   baseDP + \".TBB.startAddr:_online.._value\",
                                   baseDP + \".TBB.bufSize:_online.._value\",
                                   baseDP + \".TBB.mode:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTBBDetails(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+    }
   } else {
     setValue(\"txt_error\"        , \"text\", \"?????\");
     setValue(\"txt_mode\"         , \"text\", \"?????\");

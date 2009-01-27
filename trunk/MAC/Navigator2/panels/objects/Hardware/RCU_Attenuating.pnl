@@ -6,16 +6,19 @@ PANEL,-1 -1 230 170 N "_3DFace" 0
 {
   baseDP= g_currentDatapoint;
   if(dpExists(baseDP + \".Attenuation\")) {
-    dpConnect(\"ShowAttenuation\", baseDP + \".Attenuation:_original.._value\" ,
+    dpConnect(\"showAttenuation\", baseDP + \".Attenuation:_original.._value\" ,
 	                         baseDP + \".Attenuation:_online.._invalid\" );
+    if (!navFunct_dpReachable(baseDP)){
+      showAttenuation(\"\",0,\"\",true);
+    }
   } else {
-    setValue(\"rect_attenuation\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"rect_attenuation\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"txt_attValue\", \"visible\", FALSE );
   }
 }
 
-ShowAttenuation(string dp1, unsigned attenuation ,
-                string dp2, bool invalid) {
+void showAttenuation(string dp1, unsigned attenuation ,
+                     string dp2, bool invalid) {
   setValue(\"txt_attValue\", \"visible\", TRUE );
   if (!invalid)	{
     setValue(\"txt_attValue\", \"text\", attenuation );

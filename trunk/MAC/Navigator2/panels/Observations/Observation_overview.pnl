@@ -18,42 +18,48 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".antennaArray\")) {
-    dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
-		               baseDP + \".preparePeriod\",
-                               baseDP + \".startTime\",
-                               baseDP + \".stopTime\",
-                               baseDP + \".bandFilter\",
-                               baseDP + \".nyquistzone\",
-                               baseDP + \".antennaArray\",
-                               baseDP + \".receiverList\",
-                               baseDP + \".sampleClock\",
-                               baseDP + \".measurementSet\",
-                               baseDP + \".stationList\",
-                               baseDP + \".inputNodeList\",
-                               baseDP + \".BGLNodeList\",
-                               baseDP + \".storageNodeList\",
-                               baseDP + \".Beams.directionType\",
-                               baseDP + \".Beams.angle1\",
-                               baseDP + \".Beams.angle2\",
-                               baseDP + \".Beams.subbandList\",
-                               baseDP + \".Beams.beamletList\",
-		               baseDP + \".stationList:_online.._invalid\");
+    if (dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
+	 	                   baseDP + \".preparePeriod\",
+                                   baseDP + \".startTime\",
+                                   baseDP + \".stopTime\",
+                                   baseDP + \".bandFilter\",
+                                   baseDP + \".nyquistzone\",
+                                   baseDP + \".antennaArray\",
+                                   baseDP + \".receiverList\",
+                                   baseDP + \".sampleClock\",
+                                   baseDP + \".measurementSet\",
+                                   baseDP + \".stationList\",
+                                   baseDP + \".inputNodeList\",
+                                   baseDP + \".BGLNodeList\",
+                                   baseDP + \".storageNodeList\",
+                                   baseDP + \".Beams.directionType\",
+                                   baseDP + \".Beams.angle1\",
+                                   baseDP + \".Beams.angle2\",
+                                   baseDP + \".Beams.subbandList\",
+                                   baseDP + \".Beams.beamletList\",
+                                   baseDP + \".stationList:_online.._invalid\") == -1) {
+      LOG_ERROR(\"ObsCtrl.pnl:main|Couldn't connect to : \"+baseDP);
+    } 
+    if (!navFunct_dpReachable(baseDP)) {
+      updateObsCtrl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+                    \"\",makeDynFloat(),\"\",makeDynString(),\"\",makeDynString(),\"\",true);
+    }
   } else {
     LOG_ERROR(\"ObsCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"claimPeriodText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"preparePeriodText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"startTimeText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"stopTimeText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"bandFilterText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"nyquistzoneText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"antennaArrayText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"receiverListText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"sampleClockText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"measurementSetText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"stationListText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"inputNodeListText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"BGLNodeListText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"storageNodeListText\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"claimPeriodText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"preparePeriodText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"startTimeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stopTimeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"bandFilterText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"nyquistzoneText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"antennaArrayText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"receiverListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"sampleClockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"measurementSetText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"inputNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"storageNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
   
   reload();
@@ -82,7 +88,7 @@ updateObsCtrl(string dp1, int claimPeriod,
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObsCtrl|entered\");
   beamTable.deleteAllLines();
-  
+  string SymbolCol=\"_Window\";
   if (!invalid) {
     beamTable.enabled(true);
     setValue(\"claimPeriodText\", \"text\", claimPeriod);
@@ -105,22 +111,27 @@ updateObsCtrl(string dp1, int claimPeriod,
     }
     
   } else {
-    setValue(\"claimPeriodText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"preparePeriodText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"startTimeText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"stopTimeText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"bandFilterText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"nyquistzoneText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"antennaArrayText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"receiverListText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"sampleClockText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"measurementSetText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"stationListText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"inputNodeListText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"storageNodeListText\", \"backCol\", \"Lofar_invalid\");
+    SymbolCol = \"Lofar_invalid\";
+    if (dp1==\"\") {
+      SymbolCol=\"Lofar_dpOffline\";
+    }
     beamTable.enabled(false);
-  }  
+  }
+  setValue(\"claimPeriodText\", \"backCol\", SymbolCol);
+  setValue(\"preparePeriodText\", \"backCol\", SymbolCol);
+  setValue(\"startTimeText\", \"backCol\", SymbolCol);
+  setValue(\"stopTimeText\", \"backCol\", SymbolCol);
+  setValue(\"bandFilterText\", \"backCol\", SymbolCol);
+  setValue(\"nyquistzoneText\", \"backCol\", SymbolCol);
+  setValue(\"antennaArrayText\", \"backCol\", SymbolCol);
+  setValue(\"receiverListText\", \"backCol\", SymbolCol);
+  setValue(\"sampleClockText\", \"backCol\", SymbolCol);
+  setValue(\"measurementSetText\", \"backCol\", SymbolCol);
+  setValue(\"stationListText\", \"backCol\", SymbolCol);
+  setValue(\"inputNodeListText\", \"backCol\", SymbolCol);
+  setValue(\"BGLNodeListText\", \"backCol\", SymbolCol);
+  setValue(\"storageNodeListText\", \"backCol\", SymbolCol);
+  
 }
 
 void prepareObservationsList() {

@@ -91,8 +91,12 @@ void navPanel_initPanel(string objectName) {
   
   if ( dpExists(itsActionDp) ) {
     VIEWBOXACTIONDP=itsActionDp;
-    dpConnect("doAction",false,itsActionDp);
-  }
+    if (dpConnect("doAction",false,itsActionDp) == -1){
+      LOG_ERROR("navPanel.ctl:navPanel_initPanel|Couldn't connect to "+itsActionDp+ " " + getLastError());
+    }        
+  } else {
+    LOG_ERROR("navPanel.ctl:navPanel_initPanel|"+itsActionDp+ " does not exist");
+  }      
 }
 
 // ****************************************
@@ -305,7 +309,9 @@ navPanel_showLogging(string aDP)
     }
 	
     // connect to logging
-    dpConnect("navPanel_updateLogging",dpLog);
+    if (dpConnect("navPanel_updateLogging",dpLog) == -1) {
+      LOG_ERROR("navPanel.ctl:navPanel_showLogging|Couldn't connect to "+dpLog+ " " + getLastError());
+    }
   } else {
     LOG_DEBUG("navPanel.ctl:navPanel_showLogging|error connecting to: "+ dpLog);
   }    

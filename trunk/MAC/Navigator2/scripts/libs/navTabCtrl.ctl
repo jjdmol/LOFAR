@@ -34,7 +34,7 @@
 // navTabCtrl_getSelectedView            : Returns the caption of the currently selected view
 // navTabCtrl_getNrTabs                  : Returns the nr of available tabs
 // navTabCtrl_fillPanelChoice            : fills panelchoice with possible panels on this point and ennablesdisables the choice
-
+// navTabCtrl_saveAndRestoreCurrentDP    : saves the currentDP to a global reflecting the tab, and restores the old to current if the new tab had a saved DP
 
 #uses "navigator.ctl"
 
@@ -158,7 +158,7 @@ dyn_string navTabCtrl_getViewPanels()
         return dpViews;
       }
     } else {
-   	LOG_ERROR("navTabCtrl.ctl:navTabCtrl_getViewPanels|panelConfigDP doesn't exist: "+ panelConfigDP);
+   	LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|panelConfigDP doesn't exist: "+ panelConfigDP);
     }
     // Strip last element and retry
     // check if g_currentDatapoint < DB:LOFAR,
@@ -270,7 +270,11 @@ bool navTabCtrl_showView(int panelNr=1)
     navTabCtrl_fillPanelChoice(viewPanels,panelNr);
     
     return true;
-  }
+  } else{
+    shape cb=getShape("panelChoice");
+    cb.visible(false);
+    g_currentDatapoint=""; 
+  }   
   return false;
 }
 
@@ -322,4 +326,33 @@ void navTabCtrl_fillPanelChoice(dyn_string panels,int panelNr) {
   }
   cb.selectedPos(panelNr);
         
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// navTabCtrl_saveAndRestoreCurrentDP
+// 
+// saves the g_currentDatapoint to a g_last"+ACTIVE_TAB+"Datapoint
+// and if g_last"+newtab+"Datapoint != empty restore that point to g_currentDatapoint
+//
+///////////////////////////////////////////////////////////////////////////
+void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
+
+  if (ACTIVE_TAB == "Hardware" ) {
+    g_lastHardwareDatapoint = g_currentDatapoint;
+  } else  if (ACTIVE_TAB == "Processes" ) {
+    g_lastProcessesDatapoint = g_currentDatapoint;
+  } else  if (ACTIVE_TAB == "Observations" ) {
+    g_lastObservationsDatapoint = g_currentDatapoint;
+  }
+  
+  if (newtab == "Hardware" ) {
+    g_currentDatapoint = g_lastHardwareDatapoint;
+  } else  if (newtab == "Processes" ) {
+    g_currentDatapoint = g_lastProcessesDatapoint;
+  } else  if (newtab == "Observations" ) {
+    g_currentDatapoint = g_lastObservationsDatapoint;
+  } else {
+    g_currentDatapoint = "LOFAR";
+  }     
 }

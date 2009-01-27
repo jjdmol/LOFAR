@@ -36,6 +36,9 @@ PANEL,-1 -1 156 157 N "_3DFace" 1
   // connect for TBB value updates
     dpConnect(\"updateMPTemp\",baseDP+\".tempMP\"+mpNr,
  	                       baseDP+\".tempMP\"+mpNr+\":_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      updateMPTemp(\"\",0,\"\",true);
+    }
   } else {
     setValue(\"txt_temperature\", \"text\", \"??\");
   }	
@@ -50,7 +53,7 @@ PANEL,-1 -1 156 157 N "_3DFace" 1
 
 
 updateMPTemp(string dp1, float temperature, 
-						 string dp2, bool invalid)
+	     string dp2, bool invalid)
 {
 	if (invalid) 
 	{

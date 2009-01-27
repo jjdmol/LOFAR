@@ -12,29 +12,34 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    dpConnect(\"updateTBBCtrl\", baseDP + \".connected\",
-		               baseDP + \".trigger.rcuNr\",
-		               baseDP + \".trigger.sequenceNr\",
-		               baseDP + \".trigger.time\",
-		               baseDP + \".trigger.sampleNr\",
-		               baseDP + \".trigger.sum\",
-		               baseDP + \".trigger.nrSamples\",
-		               baseDP + \".trigger.peakValue\",
-		               baseDP + \".trigger.flags\",
-		               baseDP + \".trigger.table\",
-		               baseDP + \".connected:_online.._invalid\");
+    if (dpConnect(\"updateTBBCtrl\", baseDP + \".connected\",
+		                   baseDP + \".trigger.rcuNr\",
+		                   baseDP + \".trigger.sequenceNr\",
+		                   baseDP + \".trigger.time\",
+		                   baseDP + \".trigger.sampleNr\",
+		                   baseDP + \".trigger.sum\",
+		                   baseDP + \".trigger.nrSamples\",
+		                   baseDP + \".trigger.peakValue\",
+		                   baseDP + \".trigger.flags\",
+		                   baseDP + \".trigger.table\",
+                               	   baseDP + \".connected:_online.._invalid\") == -1) {
+      LOG_ERROR(\"TBBCtrl.pnl:main|Couldn't  connect to: \"+baseDP);
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateTBBCtrl(\"\", false, \"\",0,\"\",0,\"\",\"\",\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",\"\",\"\",true);
+    }
   } else {
     LOG_ERROR(\"TBBCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"connectedText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"rcuNrText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"sequenceNrText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"timeText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"sampleNrText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"sumText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"nrSamplesText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"peakValueText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"flagsText\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"tableText\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"connectedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"rcuNrText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"sequenceNrText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"timeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"sampleNrText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"sumText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"nrSamplesText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"peakValueText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"flagsText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"tableText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
   
   reload(); 
@@ -53,7 +58,7 @@ updateTBBCtrl(string dp1, bool connected,
               string dp11, bool invalid)
 {
   LOG_TRACE(\"TBBCtrl.pnl:updateTBBCtrl|entered\");
-  
+  string SymbolCol= \"_Window\";
   if (!invalid) {
     if (connected) {
       setValue(\"connectedText\", \"backCol\", \"green\");
@@ -71,17 +76,21 @@ updateTBBCtrl(string dp1, bool connected,
     setValue(\"tableText\", \"text\", table);
     
   } else {
-    setValue(\"connectedText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"rcuNrText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"sequenceNrText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"timeText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"sampleNrText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"sumText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"nrSamplesText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"peakValueText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"flagsText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"tableText\", \"backCol\", \"Lofar_invalid\");
-  }  
+    SymbolCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol = \"Lofar_dpOffline\";
+    }
+  }
+  setValue(\"connectedText\", \"backCol\", SymbolCol);
+  setValue(\"rcuNrText\", \"backCol\", SymbolCol);
+  setValue(\"sequenceNrText\", \"backCol\", SymbolCol);
+  setValue(\"timeText\", \"backCol\", SymbolCol);
+  setValue(\"sampleNrText\", \"backCol\", SymbolCol);
+  setValue(\"sumText\", \"backCol\", SymbolCol);
+  setValue(\"nrSamplesText\", \"backCol\", SymbolCol);
+  setValue(\"peakValueText\", \"backCol\",SymbolCol);
+  setValue(\"flagsText\", \"backCol\", SymbolCol);
+  setValue(\"tableText\", \"backCol\", SymbolCol);  
 }
 
 void prepareProcesses() {

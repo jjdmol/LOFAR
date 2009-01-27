@@ -19,43 +19,55 @@ PANEL,-1 -1 952 723 N "_3DFace" 0
   
  
   if(!dpExists(baseDP + \".boardID:_online.._value\")) {
-    setValue(\"txt_boardid\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"txt_boardid\",\"backCol\",\"Lofar_dpdoesnotexist\");
     setValue(\"txt_boardid\",\"text\",\"0000\");
   } else {
-    dpConnect(\"setBoardID\", baseDP + \".boardID:_online.._value\",
-    			    baseDP + \".boardID:_online.._invalid\");
+    if (dpConnect(\"setBoardID\", baseDP + \".boardID:_online.._value\",
+       	  		        baseDP + \".boardID:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".boardID \"+ getLastError());
+    }
   }
 
   if(!dpExists(baseDP + \".RAMSize:_online.._value\")) {
-    setValue(\"txt_ramsize\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"txt_ramsize\",\"backCol\",\"Lofar_dpdoesnotexist\");
     setValue(\"txt_ramsize\",\"text\",\"????\");
   } else {
-    dpConnect(\"setRAMSize\", baseDP + \".RAMSize:_online.._value\",
-    			    baseDP + \".RAMSize:_online.._invalid\");
+    if (dpConnect(\"setRAMSize\", baseDP + \".RAMSize:_online.._value\",
+       	 		        baseDP + \".RAMSize:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".RAMsize \"+ getLastError());
+    }
   }
 
   if(!dpExists(baseDP + \".voltage12:_online.._value\")) {
-    setValue(\"txt_voltage12\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"txt_voltage12\",\"backCol\",\"Lofar_dpdoesnotexist\");
     setValue(\"txt_voltage12\",\"text\",\"0000\");
   } else {
-    dpConnect(\"setV12\", baseDP + \".voltage12:_online.._value\",
-    			baseDP + \".voltage12:_online.._invalid\");
+    if (dpConnect(\"setV12\", baseDP + \".voltage12:_online.._value\",
+       			    baseDP + \".voltage12:_online.._invalid\") == -1 ) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage12 \"+ getLastError());
+    }
+      
   }
 
   if(!dpExists(baseDP + \".voltage25:_online.._value\")) {
-    setValue(\"txt_voltage25\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"txt_voltage25\",\"backCol\",\"Lofar_dpdoesnotexist\");
     setValue(\"txt_voltage25\",\"text\",\"0000\");
   } else {
-    dpConnect(\"setV25\", baseDP + \".voltage25:_online.._value\",
-    			baseDP + \".voltage25:_online.._invalid\");
+    if (dpConnect(\"setV25\", baseDP + \".voltage25:_online.._value\",
+                  	    baseDP + \".voltage25:_online.._invalid\") == -1 ) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage25 \"+ getLastError());
+    }
+      
   }
 
   if(!dpExists(baseDP + \".voltage33:_online.._value\")) {
-    setValue(\"txt_voltage33\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"txt_voltage33\",\"backCol\",\"Lofar_dpdoesnotexist\");
     setValue(\"txt_voltage33\",\"text\",\"0000\");
   } else {
-    dpConnect(\"setV33\", baseDP + \".voltage33:_online.._value\",
-    			baseDP + \".voltage33:_online.._invalid\");
+    if (dpConnect(\"setV33\", baseDP + \".voltage33:_online.._value\",
+                  	    baseDP + \".voltage33:_online.._invalid\") == -1) {
+      LOG_ERROR(\"Station_TBBoard.pnl:Initialize|couldn't connect to \"+baseDP + \".voltage33 \"+ getLastError());
+    }
   }
 
   reload();  

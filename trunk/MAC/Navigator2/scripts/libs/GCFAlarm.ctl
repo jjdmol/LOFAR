@@ -73,7 +73,9 @@ void initNavigatorAlarms(){
 
   // connect to alarm point and read initial alarms from database.
   if (dpExists(DPNAME_NAVIGATOR +  ".alarms")) {
-    dpConnect("alarmSystemTriggered",true,DPNAME_NAVIGATOR +  ".alarms.time");
+    if (dpConnect("alarmSystemTriggered",true,DPNAME_NAVIGATOR +  ".alarms.time")== -1) {
+      LOG_ERROR("GCFAlarm.ctl:initCtrlAlarmSystem|Couldn't connect to alarm point, alarms will not be updated");  
+    }
   } else {
     LOG_ERROR("GCFAlarm.ctl:initCtrlAlarmSystem|Couldn't connect to alarm point, alarms will not be updated");  
   } 

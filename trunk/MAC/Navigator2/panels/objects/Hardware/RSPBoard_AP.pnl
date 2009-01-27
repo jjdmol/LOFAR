@@ -16,16 +16,16 @@ PANEL,-1 -1 184 193 N "_3DFace" 1
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
     dpConnect(\"navPanel_showVersion\", baseDP +\".version:_online.._value\");
   } else {
-    setValue(\"rect_AP\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"rect_AP\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"txt_temperature\", \"text\", \"x.x\");
   }
 
   if(!dpExists(baseDP + \".SYNC.sampleCount:_online.._value\") ||
      !dpExists(baseDP + \".SYNC.syncCount:_online.._value\") ||
      !dpExists(baseDP + \".SYNC.errorCount:_online.._value\")) {
-    setValue(\"output_syncCount\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"output_sampleCount\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"output_errorCount\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"output_syncCount\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_sampleCount\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_errorCount\", \"backCol\", \"Lofar_dpdoesnotexist\");
     return;
   } else {
     setValue(\"output_syncCount\", \"backCol\", \"white\");

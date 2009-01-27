@@ -65,6 +65,7 @@ void initLofarColors() {
     stateColor [50] = "Lofar_broken";
     stateColor [53] = "Lofar_broken_went";
     stateColor [56] = "Lofar_broken_came";
+    stateColor [60] = "Lofar_dpOffline";
     
   	stateName [0]  = "off";
     stateName [10] = "operational";
@@ -76,8 +77,9 @@ void initLofarColors() {
     stateName [50] = "broken";
     stateName [53] = "broken_went";
     stateName [56] = "broken_came";
+    stateName [60] = "dp_Offline";
     
-  	stateNumber ["off"]             = 0;
+    stateNumber ["off"]             = 0;
     stateNumber ["operational"]     = 10;
     stateNumber ["maintenance"]     = 20;
     stateNumber ["test"]            = 30;
@@ -87,7 +89,7 @@ void initLofarColors() {
     stateNumber ["broken"]          = 50;
     stateNumber ["broken_went"]     = 53;
     stateNumber ["broken_came"]     = 56;
-    
+    stateNumber ["dpOffline"]       = 60;
 }
 
 
@@ -101,6 +103,7 @@ const int SUSPICIOUS_CAME  = 46;
 const int BROKEN           = 50;
 const int BROKEN_WENT      = 53;
 const int BROKEN_CAME      = 56;
+const int DPOFFLINE        = 60;
 
 
 
@@ -167,12 +170,16 @@ int getStateNumber(string aState) {
 void showSelfState(string aDP) {
   	// check if the required datapoint for this view are accessible
   	if (dpExists(aDP+".status.state")) {
-          if (dpConnect("updateSelfState",aDP + ".status.state", aDP + ".status.state:_online.._invalid")==-1) {
+          if (dpConnect("updateSelfState",aDP + ".status.state", 
+                        aDP + ".status.state:_online.._invalid")==-1) {
             setValue("selfState.light","backCol","Lofar_invalid");
-          }          
+          }
+          if (!navFunct_dpReachable(aDP+".status.state")) {
+           updateSelfState("",0,"",true);
+          }              
   	} 
   	else {
-          setValue("selfState.light","backCol","_dpdoesnotexist");
+          setValue("selfState.light","backCol","Lofar_dpdoesnotexist");
   	}
 }
 
@@ -191,9 +198,12 @@ void showChildState(string aDP) {
           if (dpConnect("updateChildState",aDP + ".status.childState", aDP + ".status.childState:_online.._invalid") == -1) {
       	    setValue("childStateBorder","foreCol","Lofar_invalid");
           } 
+          if (!navFunct_dpReachable(aDP+".status.childState")) {
+            updateChildState("",0,"",true);
+          }              
   	} 
   	else {
-    	  setValue("childStateBorder","foreCol","_dpdoesnotexist");
+    	  setValue("childStateBorder","foreCol","Lofar_dpdoesnotexist");
   	}
 }
 
@@ -210,10 +220,14 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
   	string SymbolCol;
 	
   	if (invalid) {
-    	SymbolCol = "Lofar_invalid";
+          if (dp1 == "") {
+       	    SymbolCol = "Lofar_dpOffline";
+          } else {
+       	    SymbolCol = "Lofar_invalid";
+          }
   	}	
   	else {
-    	SymbolCol = getStateColor(state);
+    	  SymbolCol = getStateColor(state);
   	}
   	setValue("childStateBorder", "foreCol", SymbolCol);
 }
@@ -230,10 +244,14 @@ updateSelfState(string dp1, int state, string dp2, bool invalid) {
   	string SymbolCol;
 
   	if (invalid) {
-    	SymbolCol = "Lofar_invalid";
+          if (dp1 == "") {
+       	    SymbolCol = "Lofar_dpOffline";
+          } else {
+       	    SymbolCol = "Lofar_invalid";
+          }
   	}
   	else {
-    	SymbolCol = getStateColor(state);
+      	  SymbolCol = getStateColor(state);
   	}
   	setValue("selfState.light", "backCol", SymbolCol);
 }

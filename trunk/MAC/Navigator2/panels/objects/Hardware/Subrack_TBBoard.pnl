@@ -38,17 +38,20 @@ PANEL,-1 -1 120 455 N "_3DFace" 1
      !dpExists(baseDP + \".voltage25:_online.._value\") ||
      !dpExists(baseDP + \".voltage33:_online.._value\"))
   {
-    setValue(\"txt_voltage12\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"txt_voltage25\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"txt_voltage33\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_voltage12\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage25\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"txt_voltage33\", \"backCol\", \"Lofar_dpdoesnotexist\");
     return;
   }
   else
   {
-    dpConnect(\"BoardDetails\", baseDP + \".voltage12:_online.._value\",
-							 baseDP + \".voltage25:_online.._value\",
-               baseDP + \".voltage33:_online.._value\",
-               baseDP + \".voltage12:_online.._invalid\");
+    dpConnect(\"boardDetails\", baseDP + \".voltage12:_online.._value\",
+			      baseDP + \".voltage25:_online.._value\",
+                              baseDP + \".voltage33:_online.._value\",
+                              baseDP + \".voltage12:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      boardDetails(\"\",0,\"\",0,\"\",0,\"\",true);
+    }
   }
       
 
@@ -59,7 +62,7 @@ PANEL,-1 -1 120 455 N "_3DFace" 1
   showSelfState(baseDP);
 }
 
-BoardDetails(string dp1, float voltage12,
+void boardDetails(string dp1, float voltage12,
              string dp2, float voltage25,
              string dp3, float voltage33,
              string dp4, bool invalid)

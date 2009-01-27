@@ -15,8 +15,10 @@ PANEL,-1 -1 999 240 N "_3DFace" 1
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".\"+$name)) {
-    dpConnect(\"updateObservations\", baseDP +\".\"+$name+\":_online.._value\",
-                                    baseDP +\".\"+$name+\":_online.._invalid\");
+    if (dpConnect(\"updateObservations\", baseDP +\".\"+$name+\":_online.._value\",
+                                        baseDP +\".\"+$name+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"Observation_small.pnl:main|Couldn't connect to: \"+baseDP);
+    }
   } else {
     LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
   }	
@@ -93,14 +95,20 @@ updateObservations(string dp1, dyn_string obs,
     if (dpExists(obsDP)) {
       myTable.appendLine(\"Name\",obs[i]);
     
-      dpConnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
-                                                obsDP + \".startTime\",
-                                                obsDP + \".stopTime\",
-                                                obsDP + \".runState\",
-                                                obsDP + \".stationList\",
-                                                obsDP + \".status.state:_online.._invalid\");    
+      if (dpConnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
+                                                    obsDP + \".startTime\",
+                                                    obsDP + \".stopTime\",
+                                                    obsDP + \".runState\",
+                                                    obsDP + \".stationList\",
+                                                    obsDP + \".status.state:_online.._invalid\") == -1) {
+        LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: couldn't connect to : \"+obsDP+ \" \" + getLastError());
+      }
+      if (!navFunct_dpReachable(obsDP) ){
+        updateObservationsTableValues(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+      }
+         
     } else {
-      LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: couldn't connect to : \"+obsDP);   
+      LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp \"+obsDP+\" doesn't exist.\");   
     }
   }
 }

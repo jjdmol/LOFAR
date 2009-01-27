@@ -12,6 +12,9 @@ PANEL,-1 -1 163 120 N "_3DFace" 0
   // connect for TBB value updates
     dpConnect(\"updateTPTemp\",baseDP+\".tempTP\",
                              baseDP+\".tempTP:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)){
+      updateTPTemp(\"\",0,\"\",true);
+    }
   } else {
     setValue(\"txt_temperature\", \"text\", \"??\");
   }	

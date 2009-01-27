@@ -155,6 +155,10 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   time aTime     = getCurrentTime();
   string aDP     = aResult[2][2];
   int state      = (int)aResult[3][2];
+  
+  if (state == 60) {
+    return;
+  }
   string message = aResult[4][2];
   bool force     = aResult[5][2];
   int aStatus    = CAME;

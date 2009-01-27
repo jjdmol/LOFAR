@@ -28,14 +28,17 @@ PANEL,-1 -1 120 400 N "_3DFace" 1
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".status.state\")) {
     dpConnect(\"updateRCU\",baseDP + \".status.state\",
- 	                  baseDP + \".status.state:_online.._invalid\"); 
+ 	                  baseDP + \".status.state:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      updateRCU(\"\",0,\"\",true);
+    } 
   } else {
-    setValue(\"RCUstr\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"RCUstr\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }	
 }
 
-updateRCU(string dp1, int state,
-  		    string dp2, bool invalid)
+void updateRCU(string dp1, int state,
+               string dp2, bool invalid)
 {
   string SymbolCol;
 
@@ -43,7 +46,11 @@ updateRCU(string dp1, int state,
   string toolTip=\"RCU\"+rcuNr;
   
   if (invalid) {
-    SymbolCol=\"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymbolCol=\"Lofar_dpOffline\";
+    } else {
+      SymbolCol=\"Lofar_invalid\";
+    }
   } else {
     SymbolCol=getStateColor(state);	  
   }

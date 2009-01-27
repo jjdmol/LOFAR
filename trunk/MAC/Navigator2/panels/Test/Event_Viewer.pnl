@@ -25,15 +25,15 @@ PANEL,-1 -1 1165 830 N "_3DFace" 0
   if ( dpExists(itsEventDp) ) {
     dpConnect(\"doEvent\",false,itsEventDp);
   } else {
-    setValue(\"text_event\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"text_event\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }      
   
   if ( !dpExists(itsSelectionDp) ) {
-    setValue(\"text_selection\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"text_selection\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
 
   if ( !dpExists(itsInitiatorDp) ) {
-    setValue(\"text_initiator\",\"backCol\",\"_dpdoesnotexist\");
+    setValue(\"text_initiator\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
 
 }

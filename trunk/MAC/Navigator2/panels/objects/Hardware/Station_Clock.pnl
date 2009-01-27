@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 242 65 N "_3DFace" 0
+PANEL,-1 -1 242 64 N "_3DFace" 0
 "main()
 {
   baseDP=g_currentDatapoint;
@@ -11,6 +11,9 @@ PANEL,-1 -1 242 65 N "_3DFace" 0
   if(dpExists(baseDP +\".clock:_online.._value\")) {
     dpConnect(\"setClock\", baseDP +\".clock:_online.._value\",
                           baseDP +\".clock:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      setClock(\"\",0,\"\",true);
+    }
   } else {
     setValue(\"stationClockTxt\", \"text\", \"xxx\");
   }
