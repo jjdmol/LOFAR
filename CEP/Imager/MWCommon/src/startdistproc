@@ -28,6 +28,7 @@ cdn=
 hfn=
 fdp=
 master=localhost
+startmaster=1
 extra=
 dry=0
 logfile=
@@ -92,6 +93,12 @@ do
   elif [ "$1" = "-nomasterhost" ]; then
     shift
     master=
+  elif [ "$1" = "-startmaster" ]; then
+    shift
+    startmaster=1
+  elif [ "$1" = "-nostartmaster" ]; then
+    shift
+    startmaster=0
   elif [ "$1" = "-extrahosts" ]; then
     shift
     extra="$1"
@@ -125,7 +132,7 @@ if [ $help = 1 ]; then
   echo '              [-hfn hostfilename] [-fdp finddproc-path]'
   echo '              [-logfile logfilename] [-[no]dry]'
   echo '              [-extrahosts "host1 host2 ..."] [-noextrahosts]'
-  echo '              [-masterhost host] program [arg1 arg2 ...]'
+  echo '              [-masterhost host] [-startmaster] program [arg1 arg2 ...]'
   echo ''
   echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
   echo '  -cdn clusterdescname  The name of the file describing the cluster.'
@@ -144,9 +151,16 @@ if [ $help = 1 ]; then
   echo '  -masterhost host      The name of the host the master runs on.'
   echo '                        The default is localhost.'
   echo '                        -nomasterhost means that no master process is started.'
+  echo '  -startmaster          Start the master process (which is the default).'
+  echo '                        -nostartmaster can be used to indicate that the'
+  echo '                        master process is running already. In that case'
+  echo '                        only a socket connection mode can be used.'
   echo '  -extrahosts hosts     The hosts to be used for extra processes (e.g. solvers).'
   echo '                        Multiple hosts have to be separated by whitespace'
   echo '                        and enclosed in quotes.'
+  echo '  program               name of the program to start.'
+  echo '  arg1 arg2 ..          Optional extra arguments which are passed to'
+  echo '                        the program to start.'
   echo '  -h -help --help       This help text.'
   exit 0
 fi
@@ -162,6 +176,12 @@ fi
 if test "$cdn" = ""; then
   echo "Error: no clusterdesc name given (use -cdn)"
   exit 1
+fi
+if test $startmaster = 0; then
+  if test $modxx = "mpi"  -a  $modxx = "single"; then
+    echo "Error: -nostartmaster cannot be used with mode=mpi or single"
+    exit 1
+  fi
 fi
 if test ! -f "$dsn"; then
   echo "Error: dataset $dsn not found"
@@ -179,7 +199,12 @@ if test "$fdp" != ""; then
 fi
 
 # Prepend the hosts with the master and extra hosts.
-${fdp}finddproc $dsn $cdn $master $extra > $hfn || exit 1
+# Only give a master if it needs to be started.
+masterh=$master
+if test $startmaster = 0; then
+  masterh=
+fi
+${fdp}finddproc $dsn $cdn $masterh $extra > $hfn || exit 1
 np=`wc -l $hfn | awk '{print $1}'`
 
 # Run the program as needed.
@@ -196,6 +221,6 @@ elif test "$modxx" = "single"; then
     $program "$@" || exit 1
   fi
 else
-  echo "socketrun $dry $hfn $modxx $wait $logfile $program" "$@"
-  $pgmpath/socketrun $dry $hfn $modxx $wait "$logfile" $program "$@" || exit 1
+  echo "socketrun $dry $hfn '$master' $modxx $wait $logfile $program" "$@"
+  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program "$@" || exit 1
 fi
