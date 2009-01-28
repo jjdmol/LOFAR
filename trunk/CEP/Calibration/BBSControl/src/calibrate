@@ -33,30 +33,35 @@ usage()
     echo "  calibrate [options] <observation> <parset> <catalogue> <work-dir>"
     echo
     echo "arguments:"
-    echo "  <observation>   observation (gds file)"
-    echo "  <parset>        parset containing the calibration strategy"
-    echo "                  NOTE: should not contain Observation or BBDB keys"
-    echo "  <catalogue>     initial sky model (in makesourcedb format)"
-    echo "                  NOTE: must be reachable from all remote hosts"
-    echo "  <working-dir>   directory where remote processes will execute"
-    echo "                  NOTE: assumes homogeneous cluster layout"
+    echo "  <observation>     observation (gds file)"
+    echo "  <parset>          parset containing the calibration strategy"
+    echo "                    NOTE: should not contain Observation or BBDB keys"
+    echo "  <catalogue>       initial sky model (in makesourcedb format)"
+    echo "                    NOTE: must be reachable from all remote hosts"
+    echo "  <working-dir>     directory where remote processes will execute"
+    echo "                    NOTE: assumes homogeneous cluster layout"
     echo
     echo "options:"
-    echo "  -h, --help      display this help text"
-    echo "  -v, --verbose   be verbose"
-    echo "  -f, --force     clean control database, sourcedb, and parmdb"
-    echo "  --dry           do not start any processes"
-    echo "  --key keyname   unique key to identify the session"
-    echo "                  (default: default)"
-    echo "  --cluster-desc  cluster description file"
-    echo "                  (default: ~/CEP.clusterdesc)"
-    echo "  --db host:port  host and port where the control db is running"
-    echo "                  (default: localhost:5432)"
-    echo "  --db-name name  name of the control db (default: ${USER})"
-    echo "  --db-user user  name of the control db user (default: ${USER})"
-    echo "  --parmdb        path to a non-default instrument parmdb to use"
-    echo "  --solver-port   global solver port (default: 5665)."
-    
+    echo "  -h, --help        display this help text"
+    echo "  -v, --verbose     be verbose"
+    echo "  -f, --force       clean control database, sky model parmdb, and"
+    echo "                    instrument model parmdb"
+    echo "  --dry             do not start any processes"
+    echo "  --key keyname     unique key to identify the session"
+    echo "                    (default: default)"
+    echo "  --cluster-desc    cluster description file"
+    echo "                    (default: ~/CEP.clusterdesc)"
+    echo "  --db host:port    host and port where the control db is running"
+    echo "                    (default: localhost:5432)"
+    echo "  --db-name name    name of the control db (default: ${USER})"
+    echo "  --db-user user    name of the control db user (default: ${USER})"
+    echo "  --solver-port     global solver port (default: 5665)."
+    echo "  --instrument-db   path to a non-default instrument model parmdb"
+    echo "  --instrument-name basename for the instrument model pparmdb"
+    echo "                    (default: instrument)"
+    echo "  --sky-name        basename for the sky model parmdb"
+    echo "                    (default: sky)"
+    echo "  --no-setup        do not setup an instrument and sky model parmdb"
     exit 1
 }
 
@@ -109,7 +114,10 @@ key="default"
 force=0
 dry=0
 cluster_desc="${HOME}/CEP.clusterdesc"
-parmdb=
+instrument_db=
+instrument_name="instrument"
+sky_name="sky"
+setup=1
 
 # Arguments
 observation=
@@ -132,6 +140,9 @@ do
   elif test "$1" = "--dry"; then
     shift
     dry=1
+  elif test "$1" = "--no-setup"; then
+    shift
+    setup=0
   elif test "$1" = "--key"; then
     if test $# -le 1; then
         error "$1 needs an additional argument"
@@ -170,13 +181,29 @@ do
 
     db_user=$1
     shift
-  elif test "$1" = "--parmdb"; then
+  elif test "$1" = "--instrument-db"; then
     if test $# -le 1; then
         error "$1 needs an additional argument"
     fi
     shift
 
-    parmdb=$1
+    instrument_db=$1
+    shift
+  elif test "$1" = "--instrument-name"; then
+    if test $# -le 1; then
+        error "$1 needs an additional argument"
+    fi
+    shift
+
+    instrument_name=$1
+    shift
+  elif test "$1" = "--sky-name"; then
+    if test $# -le 1; then
+        error "$1 needs an additional argument"
+    fi
+    shift
+
+    sky_name=$1
     shift
   elif test "$1" = "--solver-port"; then
     if test $# -le 1; then
@@ -218,9 +245,9 @@ tmp=`dirname ${parset}`
 parset=`cd ${tmp} > /dev/null; pwd`/`basename ${parset}`
 tmp=`dirname ${catalogue}`
 catalogue=`cd ${tmp} > /dev/null; pwd`/`basename ${catalogue}`
-if test "${parmdb}"; then
-    tmp=`dirname ${parmdb}`
-    parmdb=`cd ${tmp} > /dev/null; pwd`/`basename ${parmdb}`
+if test "${instrument_db}"; then
+    tmp=`dirname ${instrument_db}`
+    instrument_db=`cd ${tmp} > /dev/null; pwd`/`basename ${instrument_db}`
 fi
 
 echo "arguments:"
@@ -232,14 +259,16 @@ echo
 
 if test ${verbose} -eq 1; then
     echo "    key: ${key}"
+    echo "    cluster_desc: ${cluster_desc}"
     echo "    db: ${db_host}:${db_port}"
     echo "    db name: ${db_name}"
     echo "    db user: ${db_user}"
-    echo "    parmdb: ${parmdb}"
     echo "    solver: ${solver}"
     echo "    solver port: ${solver_port}"
-    echo "    cluster_desc: ${cluster_desc}"
-    echo
+    echo "    instrument db: ${instrument_db}"
+    echo "    instrument name: ${instrument_name}"
+    echo "    sky name: ${sky_name}"
+    echo "    setup: ${setup}"
     echo "    force: ${force}"
     echo "    dry: ${dry}"
     echo "    verbose: ${verbose}"
@@ -263,8 +292,8 @@ if test ! -r "${cluster_desc}"; then
     error "unreadable file: ${cluster_desc}"
 fi
 
-if test "${parmdb}" -a ! -d "${parmdb}"; then
-    error "not a directory: ${parmdb}"
+if test "${instrument_db}" -a ! -d "${instrument_db}"; then
+    error "not a directory: ${instrument_db}"
 fi
 
 # Try to get observation gds file from parset
@@ -305,35 +334,36 @@ fi
 # SETUP PARAMETER DATABASES
 #
 
-overwrite="-nooverwrite"
-if test ${force} -eq 1; then
-    overwrite="-overwrite"
-fi
+if test ${setup} -eq 1; then
+  overwrite="-nooverwrite"
+  if test ${force} -eq 1; then
+      overwrite="-overwrite"
+  fi
 
-event "execute setupsourcedb"
-if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "setupsourcedb \"${overwrite}\" \"${observation}\" \"${catalogue}\" \"\" \"${cluster_desc}\" \"${key}_setupsourcedb-part_$$.log\" nodry"
-fi
+  event "execute setupsourcedb"
+  if test ${verbose} -eq 1 -o ${dry} -eq 1; then
+      echo "setupsourcedb \"${overwrite}\" \"${observation}\" \"${catalogue}\" \"${sky_name}\" \"${cluster_desc}\" \"${key}_setupsourcedb-part_$$.log\" nodry"
+  fi
 
-if test ${dry} -eq 0; then
-    setupsourcedb "${overwrite}" "${observation}" "${catalogue}" "" "${cluster_desc}" "${key}_setupsourcedb-part_$$.log" nodry
-    if test $? -ne 0; then
-        error "setupsourcedb or remote setupsourcedb-part process(es) failed"
-    fi
-fi
+  if test ${dry} -eq 0; then
+      setupsourcedb "${overwrite}" "${observation}" "${catalogue}" "${sky_name}" "${cluster_desc}" "${key}_setupsourcedb-part_$$.log" nodry
+      if test $? -ne 0; then
+          error "setupsourcedb or remote setupsourcedb-part process(es) failed"
+      fi
+  fi
 
-event "execute setupparmdb"
-if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${parmdb}\" \"\" \"${cluster_desc}\" \"${key}_setupparmdb-part_$$.log\" nodry"
-fi
+  event "execute setupparmdb"
+  if test ${verbose} -eq 1 -o ${dry} -eq 1; then
+      echo "setupparmdb \"${overwrite}\" \"${observation}\" \"${instrument_db}\" \"${instrument_name}\" \"${cluster_desc}\" \"${key}_setupparmdb-part_$$.log\" nodry"
+  fi
 
-if test ${dry} -eq 0; then
-    setupparmdb "${overwrite}" "${observation}" "${parmdb}" "" "${cluster_desc}" "${key}_setupparmdb-part_$$.log" nodry
-    if test $? -ne 0; then
-        error "setupparmdb or remote setupparmdb-part process(es) failed"
-    fi
+  if test ${dry} -eq 0; then
+      setupparmdb "${overwrite}" "${observation}" "${instrument_db}" "${instrument_name}" "${cluster_desc}" "${key}_setupparmdb-part_$$.log" nodry
+      if test $? -ne 0; then
+          error "setupparmdb or remote setupparmdb-part process(es) failed"
+      fi
+  fi
 fi
-
 
 #
 # CREATE PARSETS
@@ -414,11 +444,11 @@ fi
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" instrument sky nodry"
+    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" \"${instrument_name}\" \"${sky_name}\" nodry"
 fi    
 
 if test ${dry} -eq 0; then
-    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" instrument sky nodry
+    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" "${instrument_name}" "${sky_name}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"
