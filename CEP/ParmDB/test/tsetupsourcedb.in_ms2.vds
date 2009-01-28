@@ -1,4 +1,4 @@
-Name = tsetupsourcedb.in_ms2
+Name = tsetupsourcedb_tmp.ms2
 FileName = tsetupsourcedb_tmp.ms2
 FileSys = node1:/usr
 ClusterDesc = tsetupsourcedb.in_cd

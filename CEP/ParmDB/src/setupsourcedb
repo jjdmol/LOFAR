@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# setupsourcedb: Script to create the BBS SourceDB for a distributed MS
+# setupsourcedb: Script to create a distributed SourceDB for a distributed MS
 #
 # Copyright (C) 2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -52,7 +52,7 @@ do
 done
 
 # Check arguments.
-if test $# = 0  -o  $# = 1; then
+if test $# = 0; then
   help=1
 fi
 if test $help = 1; then
@@ -73,6 +73,8 @@ if test $help = 1; then
   echo "       hfn           name of the hostfile (machinefile) created"
   echo "                     by startdistproc"
   echo "                     Only needed for test purposes"
+  echo "       wd            working directory to use on remote hosts"
+  echo "                     default is same directory as MS part"
   exit 1
 fi
 
@@ -111,25 +113,33 @@ if test $# != 0; then
   hfn=$1
   shift
 fi
+wd=
+if test $# != 0; then
+  wd=$1
+  shift
+fi
+if test "$wd" = ""; then
+  wd=...
+fi
 
 # Generate a VDS file name for the sourcedb-s.
-# This is the file that has to be used in pyparmdb.
+# This is the file that has to be used in pysourcedb.
 # Its name is the MS-vds one with the extension replaced by $pdb.
 vdsname=`echo $msvds | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
 if test -e $vdsname; then
   if test $overwrite = 0; then
-    echo "Error, sourcedb $vdsname already exists"
+    echo "Error, distributed sourcedb $vdsname already exists"
     exit 1
   else
-    echo "Sourcedb $vdsname will be overwritten"
+    echo "Distributed sourcedb $vdsname will be overwritten"
   fi
 fi
 
 # It is possible to give an MS instead of a VDS file.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$srccat' '$pdb' '$overwrite' '$dry'"
-  setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$srccat" "$pdb" "$overwrite" "$dry"
+  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry'"
+  setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
   exit
 fi
 
@@ -140,6 +150,8 @@ fi
 # Make all file names absolute.
 dn=`dirname $msvds`
 msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
+dn=`dirname $srccat`
+srccat=`cd $dn > /dev/null; pwd`/`basename $srccat`
 dn=`dirname $cdn`
 cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
 if test "$hfn" != ""; then
@@ -148,8 +160,8 @@ if test "$hfn" != ""; then
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$LOFARROOT' '$srccat' '$pdb' '$overwrite' '$dry'"
-startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$LOFARROOT" "$srccat" "$pdb" "$overwrite" "$dry"
+echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry'"
+startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
 
 # Create a VDS file for the sourcedb-s by copying it.
 # This is the file that has to be used in pyparmdb.

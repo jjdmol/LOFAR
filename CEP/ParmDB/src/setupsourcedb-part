@@ -26,10 +26,10 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 13; then
+if test $# != 14; then
   echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
   "                                 ms-part filesys ms-part-vds"
-  echo "                            lofarroot pdbfile pdbname overwrite dry"
+  echo "                            lofarroot wd pdbfile pdbname overwrite dry"
   exit 1
 fi
 
@@ -38,12 +38,13 @@ shift
 shift
 shift
 seqnr=$1
-msn=$4
+msn=$2
 lroot=$5
-srccat=$6
-pdb=$7
-overwrite=$8
-dry=$9
+wd=$6
+srccat=$7
+pdb=$8
+overwrite=$9
+dry=${10}
 
 
 # Initialize lofar environment.
@@ -55,16 +56,16 @@ if test "$pdb" = ""; then
   exit 1
 fi
 
-# Get the MS name from the VDS file.
-# If an MS name is given, use that.
-if test ! -d "$msn"; then
-  msn=`getparsetvalue $msn FileName`
+# Set the working directory; derive it if needed.
+if test "$wd" = ""  -o  "$wd" = "..."; then
+  wd=`dirname "$msn"`
 fi
+cd $wd  ||  exit 1
 
 # Append to the SourceDB. Delete it first if overwrite is given.
 echo "Create $msn/$pdb from $srccat"
 if test "$dry" != dry; then
-  if $overwrite = 1; then
+  if test $overwrite = 1; then
     rm -rf $msn/$pdb
   fi
   makesourcedb in=$srccat out=$msn/$pdb

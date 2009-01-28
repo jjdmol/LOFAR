@@ -1,9 +1,5 @@
 #!/bin/sh
 
-# Add . to PATH.
-PATH=.:$PATH
-export PATH
-
 # Set srcdir if undefined (if run outside 'make check')
 if test "$srcdir" = ""; then
   srcdir=../../../src
@@ -23,7 +19,7 @@ combinevds tsetupparmdb_tmp.vd tsetupparmdb.in_ms{0,1,2}.vds
 
 # Enclose output in angle brackets to exclude it from the assay diff.
 echo ">>>"
-$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.vd "" "" "" tsetupparmdb_tmp.log dry tsetupparmdb_tmp.hfn
+$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.vd pdbfile "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn `pwd`
 echo "<<<"
 
 # Append the three log files to the output.
@@ -32,3 +28,9 @@ sleep 5
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-0
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-1
 grep -v 'log4cxx:' tsetupparmdb_tmp.log-2
+
+# Check if the three parmdbs and overall VDS exist.
+test -d tsetupparmdb_tmp.ms0/instrument  ||  exit 1
+test -d tsetupparmdb_tmp.ms1/instrument  ||  exit 1
+test -d tsetupparmdb_tmp.ms2/instrument  ||  exit 1
+test -e tsetupparmdb_tmp.instrument  ||  exit 1
