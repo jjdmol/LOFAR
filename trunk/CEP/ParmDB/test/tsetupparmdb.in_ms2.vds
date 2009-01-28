@@ -1,4 +1,4 @@
-Name = tsetupparmdb.in_ms2
+Name = tsetupparmdb_tmp.ms2
 FileName = tsetupparmdb_tmp.ms2
 FileSys = node1:/usr
 ClusterDesc = tsetupparmdb.in_cd

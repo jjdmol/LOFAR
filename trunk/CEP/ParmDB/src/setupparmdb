@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# setupparmdb: Script to create the BBS ParmDB for a distributed MS
+# setupparmdb: Script to create a distributed ParmDB for a distributed MS
 #
 # Copyright (C) 2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -57,7 +57,7 @@ if test $# = 0; then
 fi
 if test $help = 1; then
   echo "run as:  setupparmdb [-overwrite] ms-gds [parmdb-templ] [parmdb-name]"
-  echo "                     [clusterdesc] [logfile] [dry] [hfn]"
+  echo "                     [clusterdesc] [logfile] [dry] [hfn] [wd]"
   echo "       -overwrite    overwrite parmdb if already existing"
   echo "       ms-gds        name of global VDS file of the MS"
   echo "       parmdb-templ  name of the template parmdb to be copied"
@@ -73,6 +73,8 @@ if test $help = 1; then
   echo "       hfn           name of the hostfile (machinefile) created"
   echo "                     by startdistproc"
   echo "                     Only needed for test purposes"
+  echo "       wd            working directory to use on remote hosts"
+  echo "                     default is same directory as MS part"
   exit 1
 fi
 
@@ -114,6 +116,14 @@ if test $# != 0; then
   hfn=$1
   shift
 fi
+wd=
+if test $# != 0; then
+  wd=$1
+  shift
+fi
+if test "$wd" = ""; then
+  wd=...
+fi
 
 # Generate a VDS file name for the parmdb-s.
 # This is the file that has to be used in pyparmdb.
@@ -121,16 +131,17 @@ fi
 vdsname=`echo $msvds | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
 if test -e $vdsname; then
   if test $overwrite = 0; then
-    echo "Error, parmdb $vdsname already exists"
+    echo "Error, distributed parmdb $vdsname already exists"
     exit 1
   else
-    echo "Parmdb $vdsname will be overwritten"
+    echo "Distributed parmdb $vdsname will be overwritten"
   fi
 fi
 
 # If no pdb file given, create a default one.
 madetmpl=0
 if test "$pdbfile" = ""; then
+  echo "Creating template parmdb $vdsname.template"
   madetmpl=1
   pdbfile=$vdsname.template
   parmdb <<EOF
@@ -146,9 +157,9 @@ fi
 # It is possible to give an MS instead of a VDS file.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$pdbfile' '$pdb' '$dry'"
-  setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$pdbfile" "$pdb" "$dry"
-  test $madetmpl = 1  &&  rm -rf $vdsname.template
+  echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry'"
+  setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry"
+  test $madetmpl = 0  ||  rm -rf $vdsname.template
   exit
 fi
 
@@ -159,6 +170,8 @@ fi
 # Make all file names absolute.
 dn=`dirname $msvds`
 msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
+dn=`dirname $pdbfile`
+pdbfile=`cd $dn > /dev/null; pwd`/`basename $pdbfile`
 dn=`dirname $cdn`
 cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
 if test "$hfn" != ""; then
@@ -167,8 +180,8 @@ if test "$hfn" != ""; then
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$LOFARROOT' '$pdbfile' '$pdb' '$dry'"
-startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$LOFARROOT" "$pdbfile" "$pdb" "$dry"
+echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry'"
+startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry"
 
 # Create a VDS file for the parmdb-s by copying it.
 # This is the file that has to be used in pyparmdb.
@@ -176,4 +189,4 @@ startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfi
 # Refer in it to the actual pdb filename.
 echo "Create overall VDS $vdsname"
 sed -e "s%\(Part.*\.FileName *= *[^ #]*\)%\1/$pdb%" $msvds > $vdsname
-test $madetmpl = 1  &&  rm -rf $vdsname.template
+test $madetmpl = 0  ||  rm -rf $vdsname.template

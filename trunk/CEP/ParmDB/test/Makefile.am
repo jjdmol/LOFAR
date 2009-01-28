@@ -10,7 +10,7 @@ CHECKTOOLPROGS        = $(check_PROGRAMS)
 TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmValue.sh tParmDBCasa.sh \
 			tParmSet.sh tParmCache tParm.sh \
-			tParmFacade.sh tParmFacadeDistr.sh \
+			tParmFacade.sh \
 			tparmdb.sh \
 			tSourceDBCasa.sh tmakesourcedb.sh \
 			tsetupparmdb.sh tsetupsourcedb.sh
@@ -75,12 +75,12 @@ EXTRA_DIST            = $(TESTSCRIPTS) \
 			tParmFacadeDistr.run \
 			tmakesourcedb.run tmakesourcedb.in \
 			tmakesourcedb.in_2 tmakesourcedb.stdout \
-			tsetupparmdb.run tsetupparmdb.stdout \
+			tsetupparmdb.run \
 			tsetupparmdb.in_cd \
 			tsetupparmdb.in_ms0.vds tsetupparmdb.in_ms1.vds \
 			tsetupparmdb.in_ms2.vds
-			tsetupsourcedb.run tsetupsourcedb.stdout \
-			tsetupsourcedb.in tsetupsourcedb.in_cd \
+			tsetupsourcedb.run tsetupsourcedb.in \
+			tsetupsourcedb.in_cd \
 			tsetupsourcedb.in_ms0.vds tsetupsourcedb.in_ms1.vds \
 			tsetupsourcedb.in_ms2.vds
 

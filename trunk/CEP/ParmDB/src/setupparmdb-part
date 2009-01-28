@@ -26,42 +26,44 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-if test $# != 12; then
+if test $# != 13; then
   echo "run as:  setupparmdb-part dummy dummy dummy dummy rank"
   "                               ms-part filesys ms-part-vds"
-  echo "                          lofarroot pdbfile pdbname dry"
+  echo "                          lofarroot wd pdbfile pdbname dry"
   exit 1
 fi
+
+echo $*
 
 shift
 shift
 shift
 shift
 seqnr=$1
-msn=$4
+msn=$2
 lroot=$5
-pdbfile=$6
-pdb=$7
-dry=$8
+wd=$6
+pdbfile=$7
+pdb=$8
+dry=$9
 
 
-# Initialize lofar environment.
-. $lroot/lofarinit.sh
+# Initialize lofar environment (not needed).
+# . $lroot/lofarinit.sh
 
-# Check if a parmdb name is given (if empty, the MS gets deleted hereafter).
+# Check if a parmdb name is given (otherwise the MS gets deleted hereafter).
 if test "$pdb" = ""; then
   echo "setupparmdb-part: empty pdb name given"
   exit 1
 fi
 
-# Get the MS name from the VDS file.
-# If an MS name is given, use that.
-if test ! -d "$msn"; then
-  msn=`getparsetvalue $msn FileName`
+# Set the working directory; derive it if needed.
+if test "$wd" = ""  -o  "$wd" = "..."; then
+  wd=`dirname "$msn"`
 fi
+cd $wd  ||  exit 1
 
 # Create the instrument ParmDB.
-# Insert defaults for non-zero parameters.
 echo "Create $msn/$pdb (copy of $pdbfile)"
 if test "$dry" != dry; then
   rm -rf $msn/$pdb           # this is safe because $pdb is not empty
