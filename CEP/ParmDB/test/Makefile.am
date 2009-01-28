@@ -10,7 +10,7 @@ CHECKTOOLPROGS        = $(check_PROGRAMS)
 TESTSCRIPTS           = tAxis.sh tAxisMapping.sh tBox.sh tGrid.sh \
 			tParmValue.sh tParmDBCasa.sh \
 			tParmSet.sh tParmCache tParm.sh \
-			tParmFacade.sh \
+			tParmFacade.sh tParmFacadeDistr.sh \
 			tparmdb.sh \
 			tSourceDBCasa.sh tmakesourcedb.sh \
 			tsetupparmdb.sh tsetupsourcedb.sh
