@@ -5,7 +5,7 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 			tRunOnNode tTimer tNumeric tSingleton \
 			tObjectFactory tSystemUtil tSaxpy tPrettyUnits \
 			tParameterValue tParameterSet tParameterSetPerf \
-			tBacktrace
+			tBacktrace tReadLine
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
@@ -15,7 +15,8 @@ TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
 			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
 			tObjectFactory.sh tPrettyUnits.sh \
 			tParameterValue.sh tParameterSet.sh \
-			tParameterSetPerf.sh tgetparsetvalue.sh
+			tParameterSetPerf.sh tgetparsetvalue.sh \
+			tReadLine.sh
 
 TESTS		=	$(TESTSCRIPTS)
 
@@ -25,7 +26,7 @@ EXTRA_DIST	=	$(TESTSCRIPTS) \
 			tDataConvert.stdout \
 			tStringUtil.stdout \
 			tStreamUtil.stdout \
-			tHexdump.log_prop \
+			tHexdump.log_prop tHexdump.run tHexdump.stdout \
 			testSocket.run \
 			tComplex.stdout \
 			tProcess.log_prop tProcess.run tProcess.stdout \
@@ -36,10 +37,12 @@ EXTRA_DIST	=	$(TESTSCRIPTS) \
 			tParameterSet.in_merge_normal \
 			tParameterSet.in_param_nocase \
 			tParameterSet.in_param_normal \
+			tParameterSet.stdout \
 			tParameterSetPerf.run \
 			tgetparsetvalue.parset \
 			tgetparsetvalue.run \
-			tgetparsetvalue.stdout
+			tgetparsetvalue.stdout \
+			tReadLine.run tReadLine.in tReadLine.stdout
 
 testLogger_SOURCES		= testLogger.cc
 tAllocator_SOURCES		= tAllocator.cc
@@ -65,6 +68,7 @@ tBacktrace_SOURCES		= tBacktrace.cc
 tParameterValue_SOURCES		= tParameterValue.cc
 tParameterSet_SOURCES		= tParameterSet.cc
 tParameterSetPerf_SOURCES	= tParameterSetPerf.cc
+tReadLine_SOURCES		= tReadLine.cc
 
 LDADD				= ../src/libcommon.la
 DEPENDENCIES			= ../src/libcommon.la $(LOFAR_DEPEND)

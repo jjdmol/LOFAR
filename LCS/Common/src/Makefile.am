@@ -24,6 +24,7 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	ParameterValue.cc \
 	PrettyUnits.cc \
 	Process.cc \
+	ReadLine.cc \
 	RunOnNode.cc \
 	Stopwatch.cc \
 	StreamUtil.cc \
