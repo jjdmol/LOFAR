@@ -60,7 +60,7 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsDPservice		(0),
-	itsPollInterval		(10),
+	itsPollInterval		(15),
 	itsNrRCUs			(0),
 	itsNrRSPboards		(0),
 	itsNrSubracks		(0),
@@ -346,26 +346,30 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			if (rcu % (NR_RCUS_PER_CABINET) == 0) {
 				cabinet++;
 				string	PSname(formatString(cabinetNameMask.c_str(), cabinet));
-				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
+//				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
+				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
 			}
 
 			// new subrack?
 			if (rcu % (NR_RCUS_PER_SUBRACK) == 0) {
 				subrack++;
 				string	PSname(formatString(subrackNameMask.c_str(), cabinet, subrack));
-				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
+//				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
+				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO, this);
 			}
 
 			// new RSPboard?
 			if (rcu % (NR_RCUS_PER_RSPBOARD) == 0) {
 				RSP++;
 				string	PSname(formatString(rspboardNameMask.c_str(), cabinet, subrack, RSP));
-				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
+//				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
+				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
 			}
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
+//			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
+			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
 			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
@@ -681,6 +685,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 									double(ack.timestamp), false);
 
 			itsRSPs[rsp]->flush();
+			usleep(1000); // wait 1 ms
 		} // for all boards
 
 		LOG_DEBUG_STR ("RSPboard information updated, going to RCU information");
@@ -785,6 +790,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 			itsSubracks[subrack]->setValue(PN_SRCK_CLOCK_BOARD__VCLOCK, 
 									GCFPVDouble(boardStatus.v3_3 * 5.0 / 192.0), double(ack.timestamp), false);
 			itsSubracks[subrack]->flush();
+			usleep(1000); // wait 1 ms
 		}
 
 		LOG_DEBUG_STR ("Clockboard information updated, going to RCU status information");
@@ -866,6 +872,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 			itsSubracks[subrack]->setValue(PN_SRCK_SPU__VHBA,  // HBA
 									GCFPVDouble(boardStatus.v12 * 12.0 / 192.0 * 4.01), double(ack.timestamp), false);
 			itsSubracks[subrack]->flush();
+			usleep(1000); // wait 1 ms
 
 			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".SPU", RTDB_OBJ_STATE_OPERATIONAL);
 		}
@@ -983,6 +990,22 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 						GCFPVUnsigned(uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->flush();
+			usleep(1000); // wait 1 ms
+			if (rcu == 0) {
+				LOG_DEBUG_STR("PN_RCU_DELAY        (0x00007F):" << uint32(rawValue & DELAY_MASK));
+                LOG_DEBUG_STR("PN_RCU_INPUT_ENABLE (0x000080):" << (rawValue & INPUT_ENABLE_MASK));
+                LOG_DEBUG_STR("PN_RCU_LBL_ENABLE   (0x000100):" << (rawValue & LBL_ANT_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_LBH_ENABLE   (0x000200):" << (rawValue & LBH_ANT_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_HBA_ENABLE   (0x000400):" << (rawValue & HBA_ANT_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_SEL_LBA_HBA  (0x000800):" << (rawValue & USE_LB_MASK));
+                LOG_DEBUG_STR("PN_RCU_HBAFILTERSEL (0x003000):" << ((rawValue & HB_FILTER_MASK) >> HB_FILTER_OFFSET));
+                LOG_DEBUG_STR("PN_RCU_VL_ENABLE    (0x004000):" << (rawValue & LB_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_VH_ENABLE    (0x008000):" << (rawValue & HB_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_VDD_VCC_EN   (0x010000):" << (rawValue & ADC_POWER_MASK));
+                LOG_DEBUG_STR("PN_RCU_SEL_LBL_LBH  (0x020000):" << (rawValue & USE_LBH_MASK));
+                LOG_DEBUG_STR("PN_RCU_LBAFILTERSEL (0x040000):" << ((rawValue & LB_FILTER_MASK) >> LB_FILTER_OFFSET));
+                LOG_DEBUG_STR("PN_RCU_ATTENUATION  (0xF80000):" << (uint32((rawValue & ATT_MASK) >> ATT_OFFSET)));
+			}
 			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ? 
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 
@@ -1135,7 +1158,12 @@ void RSPMonitor::_doQueryChanged(GCFEvent&		event)
 		uint				rcuNr;
 		// get rcuNr from name
 		// note: name is like: RS002:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU4.status.state
-		if (sscanf(nameStr.c_str(), "%*s_RCU%d.%*s", &rcuNr) != 1) {
+		string::size_type	rcuPos = nameStr.find("_RCU");
+		if (rcuPos == string::npos) {
+			LOG_WARN_STR("Unrecognized datapointname ignored: " << nameStr);
+			continue;
+		}
+		if (sscanf(nameStr.substr(rcuPos).c_str(), "_RCU%d.%*s", &rcuNr) != 1) {
 			LOG_WARN_STR("Unrecognized datapointname ignored: " << nameStr);
 			continue;
 		}
