@@ -16,8 +16,10 @@ $$
         END;
 
         -- Should always succeed.
+        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
         SELECT id
-            INTO STRICT _id
+--            INTO STRICT _id
+            INTO    _id
             FROM    blackboard.session
             WHERE   key = _key;
     END;
@@ -329,10 +331,12 @@ $$
             RETURN;
         END IF;
 
+        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
         SELECT type, name, args
-            INTO STRICT _type, _name, _args
-            FROM        blackboard.command
-            WHERE       id = _id;
+--            INTO STRICT _type, _name, _args
+            INTO    _type, _name, _args
+            FROM    blackboard.command
+            WHERE   id = _id;
             
         IF FOUND THEN
             _status := 0;
@@ -361,13 +365,18 @@ $$
             RETURN;
         END IF;
 
+        -- STRICT is a postgresql 8.2 feature, so it cannot be used.
+        -- RETURNING is a postgresql 8.2 feature, so it cannot be used.
         INSERT
             INTO        blackboard.command(session_id, addressee, type, name,
                         args)
-            VALUES      (_session_id, _addressee, _type, _name, _args)
-            RETURNING   id
-            INTO STRICT _id;
-            
+            VALUES      (_session_id, _addressee, _type, _name, _args);
+--            RETURNING   id
+--            INTO STRICT _id;
+
+        SELECT lastval()
+            INTO    _id;
+
         _status := 0;
     END;
 $$
