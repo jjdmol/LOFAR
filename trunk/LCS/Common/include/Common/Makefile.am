@@ -62,6 +62,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	ParameterSetImpl.h \
 	PrettyUnits.h \
 	Process.h \
+	ReadLine.h \
 	RunOnNode.h \
 	Semaphore.h \
 	Singleton.h \
