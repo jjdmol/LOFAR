@@ -32,19 +32,20 @@
 #include <Blob/KeyValueMap.h>
 #include <Blob/KeyParser.h>
 #include <Common/StreamUtil.h>
+#include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
 #include <casa/Containers/Block.h>
 #include <casa/Exceptions/Error.h>
-#include <iostream>
-#include <string>
+#include <Common/lofar_string.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_fstream.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <libgen.h>
 
-using namespace std;
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
@@ -105,23 +106,23 @@ int getType (const string& str)
   throw AipsError (strc + " is an unknown funklet type");
 }
 
-void showValues (std::ostream& os, const Array<double>& values,
+void showValues (ostream& ostr, const Array<double>& values,
                  const Array<bool>& mask)
 {
   int n = values.size();
   if (n > 0) {
     const double* v = values.data();
-    os << v[0];
+    ostr << v[0];
     for (int i=1; i<n; i++) {
-      os << ',' << v[i];
+      ostr << ',' << v[i];
     }
   }
-  os << "  shape=" << values.shape();
+  ostr << "  shape=" << values.shape();
   if (mask.size() > 0) {
     const bool* v = mask.data();
-    os << "  mask=" << v[0];
+    ostr << "  mask=" << v[0];
     for (int i=1; i<n; i++) {
-      os << ',' << v[i];
+      ostr << ',' << v[i];
     }
   }
 }
@@ -165,17 +166,16 @@ void showHelp()
   cerr << endl;
 }
 
-PTCommand getCommand (char*& str)
+PTCommand getCommand (string& line)
 {
   PTCommand cmd = NOCMD;
-  while (*str == ' ') {
-    str++;
+  uint st = lskipws(line, 0, line.size());
+  uint sst = st;
+  while (st < line.size()  &&  line[st] != ' ') {
+    st++;
   }
-  const char* sstr = str;
-  while (*str != ' ' && *str != '\0') {
-    str++;
-  }
-  string sc(sstr, str-sstr);
+  string sc = line.substr(sst, st-sst);
+  line = line.substr(st);
   if (sc == "range") {
     cmd = RANGE;
   } else if (sc == "show"  ||  sc == "list") {
@@ -210,7 +210,7 @@ PTCommand getCommand (char*& str)
   return cmd;
 }
 
-std::string getUserName()
+string getUserName()
 {
 #ifndef USE_NOSOCKETS
   passwd* aPwd;
@@ -222,29 +222,28 @@ std::string getUserName()
 }
 
 
-std::string getParmName (char*& str)
+string getParmName (string& line)
 {
-  while (*str == ' ') {
-    str++;
+  uint st = lskipws (line, 0, line.size());
+  if (st >= line.size()) {
+    return string();
   }
-  if (*str == '\0') {
-    return "";
-  }
-  char* sstr = str;
+  uint sst=st;
   bool foundeq = false;
-  while (*str != ' ' && *str != '\0') {
-    if (*str == '=') {
+  while (st < line.size()  &&  line[st] != ' ') {
+    if (line[st] == '=') {
       foundeq = true;
       break;
     }
-    str++;
+    st++;
   }
   // If an = was found, no parm is given.
   if (foundeq) {
-    str = sstr;
-    return "";
+    return string();
   }
-  return std::string(sstr, str-sstr);
+  string name = line.substr(sst, st-sst);
+  line = line.substr(st);
+  return name;
 }
 
 // Check the shape and return the size.
@@ -274,7 +273,7 @@ int getShape (const KeyValueMap& kvmap, IPosition& shape, int defsize=1)
   return getSize(shape);
 }
 
-vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
+vector<double> getArray (const KeyValueMap& kvmap, const string& arrName,
                          uint size=0, double defaultValue = 1)
 {
   vector<double> res(size, 0.);
@@ -303,7 +302,7 @@ vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
 }
 
 // Return as Block instead of vector, because vector<bool> uses bits.
-Block<bool> getMask (const KeyValueMap& kvmap, const std::string& arrName,
+Block<bool> getMask (const KeyValueMap& kvmap, const string& arrName,
                      uint size)
 {
   Block<bool> res(size, false);
@@ -410,17 +409,17 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
   return Box(make_pair(st[0], end[0]), make_pair(st[1], end[1]));
 }
 
-void showDomain (const Box& domain)
+void showDomain (const Box& domain, ostream& ostr)
 {
-  cout << " freq=[" << domain.lowerX()/1e6 << " MHz "
+  ostr << " freq=[" << domain.lowerX()/1e6 << " MHz "
        << '+'<< domain.widthX()/1e3 << " KHz]";
-  cout << " time=[" << MVTime::Format(MVTime::YMD, 6)
+  ostr << " time=[" << MVTime::Format(MVTime::YMD, 6)
        << MVTime(Quantity(domain.lowerY(), "s")) << " "
        << '+' << domain.widthY() << " sec]";
 }
 
 // IMPLEMENTATION OF THE COMMANDS
-void showNames (const string& pattern, PTCommand type)
+void showNames (const string& pattern, PTCommand type, ostream& ostr)
 {
   vector<string> names;
   if (type == NAMES) {
@@ -434,28 +433,28 @@ void showNames (const string& pattern, PTCommand type)
       names.push_back (iter->first);
     }
   }
-  cout << "names: " << names << endl;
+  ostr << "names: " << names << endl;
 }
 
 void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
-               const ParmValueSet& pvset, bool showAll)
+               const ParmValueSet& pvset, bool showAll, ostream& ostr)
 {
-  cout << parmName;
-  cout << "  type=" << int2type(pvset.getType());
-  cout << endl;
+  ostr << parmName;
+  ostr << "  type=" << int2type(pvset.getType());
+  ostr << endl;
   if (showAll) {
-    cout << "    domain: ";
-    showDomain (domain);
-    cout << endl;
+    ostr << "    domain: ";
+    showDomain (domain, ostr);
+    ostr << endl;
   }
-  cout << "    values:  ";
-  showValues (cout, parm.getValues(), pvset.getSolvableMask());
-  cout << endl;
-  cout << "    pert=" << pvset.getPerturbation()
+  ostr << "    values:  ";
+  showValues (ostr, parm.getValues(), pvset.getSolvableMask());
+  ostr << endl;
+  ostr << "    pert=" << pvset.getPerturbation()
        << " pert_rel=" << bool2char(pvset.getPertRel()) << endl;
 }
 
-void showParms (ParmMap& parmSet, bool showAll)
+void showParms (ParmMap& parmSet, bool showAll, ostream& ostr)
 {
   int nr=0;
   for (ParmMap::iterator iter = parmSet.begin();
@@ -466,20 +465,20 @@ void showParms (ParmMap& parmSet, bool showAll)
       showParm (parmName,
                 iter->second.getFirstParmValue(),
                 iter->second.getGrid().getBoundingBox(),
-                iter->second, showAll);
+                iter->second, showAll, ostr);
       nr++;
     } else {
       for (uint i=0; i<iter->second.size(); ++i) {
         showParm (parmName,
                   iter->second.getParmValue(i),
                   iter->second.getGrid().getCell(i),
-                  iter->second, showAll);
+                  iter->second, showAll, ostr);
         nr++;
       }
     }
   }
   if (nr != 1) {
-    cout << parmSet.size() << " parms and " << nr << " values found" << endl;
+    ostr << parmSet.size() << " parms and " << nr << " values found" << endl;
   }
 }
 
@@ -494,7 +493,7 @@ int countParms (const ParmMap& parmSet)
   return nr;
 }
 
-void newParm (const std::string& parmName, const KeyValueMap& kvmap)
+void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
 {
   ParmSet parmset;
   ParmId parmid = parmset.addParm (*parmtab, parmName);
@@ -558,13 +557,13 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   vector<Box> domains(1, domain);
   pvset = ParmValueSet (Grid(domains), valvec, defval,
                         ParmValue::FunkletType(type), pert, pertrel);
-  showParm (parmName, *pval, domain, pvset, true);
+  showParm (parmName, *pval, domain, pvset, true, ostr);
   pvset.setDirty();
   cache.flush();
-  cout << "Wrote new record for parameter " << parmName << endl;
+  ostr << "Wrote new record for parameter " << parmName << endl;
 }
 
-void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
+void newDefParm (const string& parmName, KeyValueMap& kvmap, ostream& ostr)
 {
   // Get possible funklet type.
   int type = getType (kvmap.getString("type", ""));
@@ -591,13 +590,13 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
   if (mask.size() > 0) {
     pvset.setSolvableMask (Array<Bool>(shape, mask.storage(), SHARE));
   }
-  showParm (parmName, pval, Box(), pvset, false);
+  showParm (parmName, pval, Box(), pvset, false, ostr);
   parmtab->putDefValue (parmName, pvset);
-  cout << "Wrote new defaultvalue record for parameter " << parmName << endl;
+  ostr << "Wrote new defaultvalue record for parameter " << parmName << endl;
 }
 
 void updateDefParm (const string& parmName, const ParmValueSet& pvset,
-                    KeyValueMap& kvmap)
+                    KeyValueMap& kvmap, ostream& ostr)
 {
   ParmValue pval = pvset.getFirstParmValue();
   int type = pvset.getType();
@@ -630,47 +629,38 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
   }
   ParmValueSet newset(newval, ParmValue::FunkletType(type), pert, pertrel);
   newset.setSolvableMask (mask);
-  showParm (parmName, newval, Box(), newset, false);
+  showParm (parmName, newval, Box(), newset, false, ostr);
   parmtab->putDefValue (parmName, newset);
 }
 
-void updateDefParms (ParmMap& parmSet, KeyValueMap& kvmap)
+void updateDefParms (ParmMap& parmSet, KeyValueMap& kvmap, ostream& ostr)
 {
   for (ParmMap::iterator iter = parmSet.begin();
        iter != parmSet.end();
        iter++) {
-    updateDefParm (iter->first, iter->second, kvmap);
+    updateDefParm (iter->first, iter->second, kvmap, ostr);
   }
 }
 
 
-void doIt (bool noPrompt)
+void doIt (bool noPrompt, ostream& ostr)
 {
   parmtab = 0;
-  const int buffersize = 1024000;
-  char cstra[buffersize];
+  string line;
   // Loop until stop is given.
   while (true) {
     try {
       if (!noPrompt) {
         cerr << "Command: ";
       }
-      char* cstr = cstra;
-      if (! cin.getline (cstr, buffersize)) {
+      if (!readLineSkip (line, "Command: ", "#")) {
         break;
-      } 
-      while (*cstr == ' ') {
-        cstr++;
       }
-      // Skip empty lines and comment lines.
-      if (cstr[0] == 0  ||  cstr[0] == '#') {
-        continue;
-      }
-      if (cstr[0] == '?') {
+      if (line[0] == '?') {
         showHelp();
       } else {
-        PTCommand cmd = getCommand (cstr);
-        ASSERTSTR(cmd!=NOCMD, "invalid command given: " << cstr);
+        PTCommand cmd = getCommand (line);
+        ASSERTSTR(cmd!=NOCMD, "invalid command given: " << line);
         if (cmd == QUIT) {
           break;
         }
@@ -678,7 +668,7 @@ void doIt (bool noPrompt)
         if (cmd == OPEN) {
           ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
           // Connect to database.
-          KeyValueMap kvmap = KeyParser::parse (cstr);
+          KeyValueMap kvmap = KeyParser::parse (line);
           string dbUser = kvmap.getString ("user", getUserName());
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
@@ -690,7 +680,7 @@ void doIt (bool noPrompt)
         } else if (cmd == CREATE)  {
           ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
           // create dataBase
-          KeyValueMap kvmap = KeyParser::parse (cstr);
+          KeyValueMap kvmap = KeyParser::parse (line);
           string dbUser = kvmap.getString ("user", getUserName());
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
@@ -709,8 +699,8 @@ void doIt (bool noPrompt)
             parmtab->clearTables();
           } else {
             // Other commands expect a possible parmname and keywords
-            parmName = getParmName (cstr);
-            KeyValueMap kvmap = KeyParser::parse (cstr);
+            parmName = getParmName (line);
+            KeyValueMap kvmap = KeyParser::parse (line);
             // For list functions the parmname defaults to *.
             // Otherwise a parmname or pattern must be given.
             if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
@@ -727,18 +717,18 @@ void doIt (bool noPrompt)
               if (cmd == NEWDEF) {
                 ASSERTSTR (parmset.empty(),
                            "the parameter already exists");
-                newDefParm (parmName, kvmap);
+                newDefParm (parmName, kvmap, ostr);
               } else if (cmd == SHOWDEF) {
-                showParms (parmset, false);
+                showParms (parmset, false, ostr);
               } else if (cmd == UPDDEF) {
                 ASSERTSTR (! parmset.empty(), "parameter not found");
-                updateDefParms (parmset, kvmap);
-                cout << "Updated " << nrparm << " parm defaultvalue records"
+                updateDefParms (parmset, kvmap, ostr);
+                ostr << "Updated " << nrparm << " parm defaultvalue records"
                      << endl;
               } else if (cmd == DELDEF) {
                 ASSERTSTR (! parmset.empty(), "parameter not found");
                 parmtab->deleteDefValues (parmName);
-                cout << "Deleted " << nrparm << " parm defaultvalue records"
+                ostr << "Deleted " << nrparm << " parm defaultvalue records"
                      << endl;
               }
             } else if (cmd==NEW || cmd==DEL || cmd==SHOW) {
@@ -751,22 +741,22 @@ void doIt (bool noPrompt)
               if (cmd == NEW) {
                 ASSERTSTR (parmset.empty(),
                            "the parameter/domain already exists");
-                newParm (parmName, kvmap);
+                newParm (parmName, kvmap, ostr);
               } else if (cmd == SHOW) {
-                showParms (parmset, true);
+                showParms (parmset, true, ostr);
               } else if (cmd == DEL) {
                 ASSERTSTR (! parmset.empty(), "parameter/domain not found");
                 parmtab->deleteValues (parmName, domain);
-                cout << "Deleted " << nrvalrec << " value records (of "
+                ostr << "Deleted " << nrvalrec << " value records (of "
                      << nrparm << " parms)" << endl;
               }
             } else if (cmd==NAMES || cmd==NAMESDEF)  {
               // show names matching the pattern.
-              showNames (parmName, cmd);
+              showNames (parmName, cmd, ostr);
             } else if (cmd == RANGE) {
-              cout << "Range: ";
-              showDomain (parmtab->getRange (parmName));
-              cout << endl;
+              ostr << "Range: ";
+              showDomain (parmtab->getRange (parmName), ostr);
+              ostr << endl;
             } else {
               cerr << "Unknown command given" << endl;
             }
@@ -787,9 +777,14 @@ int main (int argc, char *argv[])
   INIT_LOGGER(progName);
   
   try {
-    doIt (argc > 1);
+    if (argc > 1) {
+      ofstream ostr(argv[1]);
+      doIt (argc > 1, ostr);
+    } else {
+      doIt (true, cout);
+    }
   } catch (std::exception& x) {
-    std::cerr << "Caught exception: " << x.what() << std::endl;
+    cerr << "Caught exception: " << x.what() << endl;
     return 1;
   }
   
