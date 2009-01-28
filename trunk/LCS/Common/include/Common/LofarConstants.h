@@ -43,6 +43,8 @@ namespace LOFAR {
 	static const int NR_RCUS_PER_TBBOARD      = (NR_TBBOARDS_PER_RSPBOARD * NR_RCUS_PER_RSPBOARD);
 	static const int NR_RCUS_PER_SUBRACK      = (NR_RCUS_PER_RSPBOARD * NR_RSPBOARDS_PER_SUBRACK);
 	static const int NR_RCUS_PER_CABINET      = (NR_RCUS_PER_SUBRACK  * NR_SUBRACKS_PER_CABINET);
+
+	static const int NR_RCU_MODES			  = 7;
 }
 
 #endif
