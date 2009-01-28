@@ -1,0 +1,92 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 500 400 N "_3DFace" 0
+"main()
+{
+  baseDP=\"LOFAR_PIC\";
+  if (dpExists(baseDP + \".status.state\")) {
+    if (dpConnect(\"updateHWStateCB\", baseDP + \".status.state\",
+                                     baseDP + \".status.childState\",
+                                     baseDP + \".status.state:_online.._invalid\") == -1) {
+      LOG_ERROR(\"lofar_HW_state.pnl:main|Couldn't connect to: \"+baseDP+ \" \" + getLastError());
+    }
+    if (!navFunct_dpReachable(baseDP) ) {
+      updateHWStateCB(\"\",0,\"\",0,\"\",true);
+    }
+  } else {
+    LOG_ERROR(\"lofar_HW_state.pnl:main|Couldn't find dp to connect to: \"+baseDP);
+    setValue(\"hardware_status\",\"backCol\",\"Lofar_dpdoesnotexist\");
+  }
+}
+
+void updateHWStateCB(string dp1, int state,
+                     string dp2, int childState,
+                     string dp3, bool invalid) {
+
+  if (invalid) {
+    if (dp1 == \"\") {
+      setValue(\"hardware_status\", \"backCol\", \"Lofar_dpOffline\");
+    } else {
+      setValue(\"hardware_status\", \"backCol\", \"Lofar_invalid\");
+    }
+  } else {
+    setValue(\"hardware_status\", \"backCol\",getStateColor(state) );
+    setValue(\"hardware_status\", \"foreCol\",getStateColor(childState) );
+  }
+}" 0
+ E E E E 1 -1 -1 0  35 25
+""0  1
+E "string baseDP=\"\";" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 1
+"hardware_status"
+""
+1 20 20 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E U  1 E 20 20 69 26
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
