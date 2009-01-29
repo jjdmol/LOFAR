@@ -103,7 +103,7 @@ void ShowInputLines(string dp1, bool inputEnable,
   navPanel_checkDataPath();
 }
 
-void ShowDelay(string dp1, unsigned delayVal,
+void ShowDelay(string dp1, float delayVal,
                string dp2, bool invalid) {
   if(!invalid) {
     setValue(\"txt_delay\" , \"text\" , delayVal);

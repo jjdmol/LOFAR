@@ -17,7 +17,7 @@ PANEL,-1 -1 230 170 N "_3DFace" 0
   }
 }
 
-void showAttenuation(string dp1, unsigned attenuation ,
+void showAttenuation(string dp1, float attenuation ,
                      string dp2, bool invalid) {
   setValue(\"txt_attValue\", \"visible\", TRUE );
   if (!invalid)	{
