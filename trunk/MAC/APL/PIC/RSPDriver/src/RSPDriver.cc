@@ -28,6 +28,7 @@
 
 #include <MACIO/MACServiceInfo.h>
 
+#include <APL/RTCCommon/RCUCables.h>
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
 #include <Common/ParameterSet.h>
@@ -48,6 +49,7 @@
 #include "RSPDriver.h"
 #include "Command.h"
 #include "StationSettings.h"
+#include "CableSettings.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
@@ -228,6 +230,9 @@ RSPDriver::RSPDriver(string name) :
 	ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == (g_instancenr != -1), 
 				"--instance option does not match OPERATION_MODE setting");
 	LOG_DEBUG_STR (*ssp);
+
+	LOG_DEBUG("Setting up cable characteristics for Attenuation.conf and CableDelays.conf");
+	CableSettings*	cableSet = new CableSettings(&RCUCables("Attenuation.conf", "CableDelays.conf"));
 
 	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
 	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {

@@ -951,7 +951,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	  //see RCUSettings.h
 	  //This might be insufficient -- perhaps not all ON RCUs are being used. should check somehow.
 	  //int nyqzone = ack.settings()(rcuout).getNyquistZone();
-	  int rcumode = ack.settings()(rcuout).getMode(ackout.rcu_settings[rcuout]);
+	  int rcumode = ack.settings()(rcuout).getMode();
 	  if ((rcumode >= 1) && (rcumode <= 4)) {
 	    N_LBA++ ;
 	  }

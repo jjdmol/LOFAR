@@ -28,6 +28,7 @@
 #include <blitz/array.h>
 
 #include "StationSettings.h"
+#include "CableSettings.h"
 #include "SetRCUCmd.h"
 
 using namespace blitz;
@@ -64,27 +65,45 @@ void SetRCUCmd::ack(CacheBuffer& /*cache*/)
 
 void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
-    if (m_event->rcumask[cache_rcu]) {
+	bool			newMode 	  = m_event->settings()(0).isModeModified();
+	uint32			mode 		  = m_event->settings()(0).getMode();
+	CableSettings*	cableSettings = CableSettings::instance();
+	float			delayStep	  = 1000.0 / cache.getClock();
 
-      // make change
-      cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			// make change
+			cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
+			
+			// Apply delays and attenuation when mode was changed.
+			if (newMode) {
+				cache.getRCUSettings()()(cache_rcu).setDelay(
+							(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep));
+				cache.getRCUSettings()()(cache_rcu).setAttenuation(
+							(uint8) ((-0.125 + cableSettings->getAtt(cache_rcu, mode)) / -0.25));
+				if (cache_rcu == 0) {
+					LOG_DEBUG(formatString("RCU 0 new Delay   : %f/2.0 + %f / %f = %d", 
+						delayStep, cableSettings->getDelay(0, mode), delayStep, 
+						(uint8) ((delayStep/2.0 + cableSettings->getDelay(cache_rcu, mode)) / delayStep)));
+					LOG_DEBUG(formatString("RCU 0 new Atten   : -0.125  + %f / -0.25 = %d", cableSettings->getAtt(0, mode),
+						(uint8) ((-0.125 + cableSettings->getAtt(cache_rcu, mode)) / -0.25)));
+					LOG_DEBUG(formatString("RCU 0 new RawMode : %08lX", cache.getRCUSettings()()(0).getRaw()));
+				}
+			}
 
-      if (setModFlag) {
+			if (setModFlag) {
+				// only write RCU Handler settings if modified
+				if (m_event->settings()(0).isHandlerModified()) {
+					cache.getCache().getState().rcusettings().write(cache_rcu);
+				}
 
-	// only write RCU Handler settings if modified
-	if (m_event->settings()(0).isHandlerModified()) {
-	  cache.getCache().getState().rcusettings().write(cache_rcu);
-	}
-
-	// only write RCU Protocol settings if modified
-	if (m_event->settings()(0).isProtocolModified()) {
-	  cache.getCache().getState().rcuprotocol().write(cache_rcu);
-	}
-      }
-    }
-  }
+				// only write RCU Protocol settings if modified
+				if (m_event->settings()(0).isProtocolModified()) {
+					cache.getCache().getState().rcuprotocol().write(cache_rcu);
+				}
+			}
+		} // if in mask
+	} // for
 }
 
 void SetRCUCmd::complete(CacheBuffer& /*cache*/)
