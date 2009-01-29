@@ -15,7 +15,7 @@ class BandPass {
   private:
     void		computeCorrectionFactors(unsigned nrChannels);
 
-    static const float	stationFilterConstants[65536];
+    static const float	stationFilterConstants[];
     
     float		*factors;
 };

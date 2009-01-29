@@ -25,7 +25,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-const float BandPass::stationFilterConstants[65536] =
+const float BandPass::stationFilterConstants[] =
 {
      36,    36,    35,    35,    34,    33,    32,    31,
      29,    28,    26,    25,    23,    21,    20,    18,
