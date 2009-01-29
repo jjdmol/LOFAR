@@ -39,8 +39,8 @@ if opts.serial_nr==None:
 vlev = opts.verbosity
 testId = ''
 appLev = False
-logName = '/home/lofartest/subracktest/data/SUBR-%05d-%05d.dat' % (opts.batch_nr, opts.serial_nr)
-cli.command('rm -f /home/lofartest/subracktest/data/SUBR-%05d-%05d.dat', appLev) 
+logName = '/opt/stationtest/data/SUBR-%05d-%05d.dat' % (opts.batch_nr, opts.serial_nr)
+cli.command('rm -f /opt/stationtest/data/SUBR-%05d-%05d.dat', appLev) 
 sr = testlog.Testlog(vlev, testId, logName)
 
 sr.setResult('PASSED')
