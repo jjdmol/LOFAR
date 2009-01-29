@@ -158,7 +158,7 @@ fi
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
   echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$pdbfile' '$pdb' '$dry'"
-  setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry"
+  $pgmpath/setupparmdb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$pdbfile" "$pdb" "$dry"
   test $madetmpl = 0  ||  rm -rf $vdsname.template
   exit
 fi
