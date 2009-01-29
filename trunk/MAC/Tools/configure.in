@@ -1,0 +1,10 @@
+AC_INIT
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(Tools, 1.0, no-define)
+
+AC_PROG_LIBTOOL
+
+AC_OUTPUT(
+	Clock/Makefile
+	Makefile
+)
