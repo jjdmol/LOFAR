@@ -96,6 +96,7 @@ private:
 	uint32						itsNrCabinets;
 	uint32						itsNrLBAs;
 	uint32						itsNrHBAs;
+	uint32						itsClock;
 
 	vector<RTDBPropertySet*>	itsCabinets;
 	vector<RTDBPropertySet*>	itsSubracks;

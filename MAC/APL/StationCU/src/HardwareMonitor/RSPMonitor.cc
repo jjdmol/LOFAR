@@ -228,7 +228,7 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 //
 // askConfiguration(event, port)
 //
-// Take subscription on clock modifications
+// Ask the configuration of the station
 //
 GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -315,7 +315,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 //
 // createPropertySets(event, port)
 //
-// Retrieve sampleclock from RSP driver
+// Create PropertySets for all hardware.
 //
 GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -487,7 +487,7 @@ GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event,
 //
 // askVersion(event, port)
 //
-// Set sampleclock from RSP driver
+// Ask the firmware version of the boards
 //
 GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -581,7 +581,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 //
 // askRSPinfo(event, port)
 //
-// Set sampleclock from RSP driver
+// Ask the information of the RSP boards
 //
 GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -720,7 +720,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 //
 // askTDstatus(event, port)
 //
-// Read the settings from the clock board
+// Ask the settings of the clock board.
 //
 GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -791,6 +791,9 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 									GCFPVDouble(boardStatus.v3_3 * 5.0 / 192.0), double(ack.timestamp), false);
 			itsSubracks[subrack]->flush();
 			usleep(1000); // wait 1 ms
+
+			// copy clock settings for later.
+			itsClock = boardStatus.output_clock ? 200 : 160;
 		}
 
 		LOG_DEBUG_STR ("Clockboard information updated, going to RCU status information");
@@ -909,7 +912,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 //
 // askRCUinfo(event, port)
 //
-// Normal operation state. 
+// Get the info of the RCU's
 //
 GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port)
 {
@@ -957,7 +960,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 			LOG_DEBUG(formatString("Updating rcu %d with %08lX", rcu, rawValue));
 			// update all RCU variables
 			itsRCUs[rcu]->setValue(PN_RCU_DELAY, 
-						GCFPVUnsigned(uint32(rawValue & DELAY_MASK)),
+						GCFPVDouble((1000.0 / itsClock) * uint32(rawValue & DELAY_MASK)),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_INPUT_ENABLE, 
 						GCFPVBool(rawValue & INPUT_ENABLE_MASK),
@@ -987,10 +990,11 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 						GCFPVUnsigned((rawValue & LB_FILTER_MASK) >> LB_FILTER_OFFSET),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_ATTENUATION, 
-						GCFPVUnsigned(uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
+						GCFPVDouble(0.25 * uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->flush();
 			usleep(1000); // wait 1 ms
+#if 0
 			if (rcu == 0) {
 				LOG_DEBUG_STR("PN_RCU_DELAY        (0x00007F):" << uint32(rawValue & DELAY_MASK));
                 LOG_DEBUG_STR("PN_RCU_INPUT_ENABLE (0x000080):" << (rawValue & INPUT_ENABLE_MASK));
@@ -1006,6 +1010,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
                 LOG_DEBUG_STR("PN_RCU_LBAFILTERSEL (0x040000):" << ((rawValue & LB_FILTER_MASK) >> LB_FILTER_OFFSET));
                 LOG_DEBUG_STR("PN_RCU_ATTENUATION  (0xF80000):" << (uint32((rawValue & ATT_MASK) >> ATT_OFFSET)));
 			}
+#endif
 			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ? 
 															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 
@@ -1071,7 +1076,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 //
 // waitForNextCycle(event, port)
 //
-// Take subscription on clock modifications
+// Wait for our next cycle.
 //
 GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event, 
 													GCFPortInterface& port)
