@@ -20,3 +20,4 @@ insure.variant.conf:     --with-insuretools=/usr/local/insure/bin.linux2 $(aipsp
 
 mpich.var:		 --with-mpich=/usr/local/mpich
 
+readline.var:            --without-readline
