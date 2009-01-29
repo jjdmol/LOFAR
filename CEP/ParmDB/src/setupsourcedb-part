@@ -56,6 +56,13 @@ if test "$pdb" = ""; then
   exit 1
 fi
 
+# For 'make check' we need to qualify where makesourcedb is.
+case "$wd" in
+*/test)
+  pgmpath=../src/
+  ;;
+esac
+
 # Set the working directory; derive it if needed.
 if test "$wd" = ""  -o  "$wd" = "..."; then
   wd=`dirname "$msn"`
@@ -68,5 +75,5 @@ if test "$dry" != dry; then
   if test $overwrite = 1; then
     rm -rf $msn/$pdb
   fi
-  makesourcedb in=$srccat out=$msn/$pdb
+  ${pgmpath}makesourcedb in=$srccat out=$msn/$pdb
 fi

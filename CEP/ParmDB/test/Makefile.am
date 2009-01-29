@@ -76,11 +76,11 @@ EXTRA_DIST            = $(TESTSCRIPTS) \
 			tmakesourcedb.run tmakesourcedb.in \
 			tmakesourcedb.in_2 tmakesourcedb.stdout \
 			tsetupparmdb.run \
-			tsetupparmdb.in_cd \
+			tsetupparmdb.in_cd tsetupparmdb.in_gds \
 			tsetupparmdb.in_ms0.vds tsetupparmdb.in_ms1.vds \
 			tsetupparmdb.in_ms2.vds
 			tsetupsourcedb.run tsetupsourcedb.in \
-			tsetupsourcedb.in_cd \
+			tsetupsourcedb.in_cd tsetupsourcedb.in_gds \
 			tsetupsourcedb.in_ms0.vds tsetupsourcedb.in_ms1.vds \
 			tsetupsourcedb.in_ms2.vds
 

@@ -5,6 +5,11 @@ if test "$srcdir" = ""; then
   srcdir=../../../src
 fi
 
+# Add src directory to PATH (to find parmdb).
+PATH=../src:$PATH
+export PATH
+which parmdb
+
 # Create directories to create the parmdb-s in.
 # They must match the FileName in in_ms*.vds.
 rm -rf tsetupparmdb_tmp.ms0
@@ -14,12 +19,11 @@ mkdir tsetupparmdb_tmp.ms0
 mkdir tsetupparmdb_tmp.ms1
 mkdir tsetupparmdb_tmp.ms2
 
-# Combine the vds files.
-combinevds tsetupparmdb_tmp.vd tsetupparmdb.in_ms{0,1,2}.vds
-
 # Enclose output in angle brackets to exclude it from the assay diff.
+# Use _tmp name for the gds, so the resulting parmdb also gets a _tmp name.
+cp tsetupparmdb.in_gds tsetupparmdb_tmp.gds
 echo ">>>"
-$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.vd "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn `pwd`
+$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.gds "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn `pwd`  ||  exit 1
 echo "<<<"
 
 # Append the three log files to the output.

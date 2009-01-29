@@ -139,7 +139,7 @@ fi
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
   echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry'"
-  setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
+  $pgmpath/setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
   exit
 fi
 
