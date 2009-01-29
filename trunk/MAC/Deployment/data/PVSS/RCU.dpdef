@@ -3,7 +3,7 @@
 #
 
 # RSPboard info
-Delay					uint
+Delay					float
 InputEnable				bool
 
 # Power on the input
@@ -25,7 +25,7 @@ bandSelLblLbh			bool
 LBAFilterSel			uint
 
 # Attenuation
-Attenuation				uint
+Attenuation				float
 
 # Info from RSPboard or derived
 nofOverflow				uint
