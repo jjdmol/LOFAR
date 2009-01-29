@@ -474,7 +474,13 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
         for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 
           if (mask[rcuout]) {
-            logMessage(cout,formatString("RCU[%2d].control=0x%08x",rcuout, ack.settings()(rcuin++).getRaw()));
+            logMessage(cout,formatString("RCU[%2d].control=0x%08x => mode:%d, delay=%02d, att=%02d",
+					rcuout, 
+					ack.settings()(rcuin).getRaw(), 
+					ack.settings()(rcuin).getMode(), 
+					ack.settings()(rcuin).getDelay(), 
+					ack.settings()(rcuin).getAttenuation()));
+					rcuin++;
           }
         }
       }

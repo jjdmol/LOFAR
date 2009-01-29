@@ -67,6 +67,8 @@ RSPDriverFiles = \
 	Cache.cc \
 	StationSettings.h \
 	StationSettings.cc \
+	CableSettings.h \
+	CableSettings.cc \
 	\
 	SetWeightsCmd.h \
 	SetWeightsCmd.cc \
