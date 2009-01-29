@@ -1,28 +1,134 @@
+include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-foreach (LCS_Common_test
-    testLogger
-    tAllocator
-    tDataConvert
-    tFileLocator
-    tStringUtil
-    tStreamUtil
-    tHexdump
-    testSocket
-    tComplex
-    tProcess
-    tRunOnNode
-    tTimer
-    tNumeric
-    tSingleton
-#    tObjectFactory
-    tSystemUtil
-    tSaxpy
-    tPrettyUnits
-    )
-  ## compiler instructions
-  add_executable (${LCS_Common_test} ${LCS_Common_test}.cc)
-  ## linker instructions
-  target_link_libraries (${LCS_Common_test} common)
-  ## testing instructions
-  add_test (${LCS_Common_test} ${LCS_Common_test})
-endforeach (LCS_Common_test)
+set (CHECKTOOLPROGS
+  testLogger
+  tAllocator
+  tDataConvert
+  tFileLocator
+  tStringUtil
+  tStreamUtil
+  tHexdump
+  testSocket
+  tComplex
+  tProcess
+  tRunOnNode
+  tTimer
+  tNumeric
+  tSingleton
+  tObjectFactory
+  tSystemUtil
+  tSaxpy
+  tPrettyUnits
+  tParameterValue
+  tParameterSet
+  tParameterSetPerf
+  tBacktrace)
+
+add_executable(testLogger testLogger.cc)
+add_executable(tAllocator tAllocator.cc)
+add_executable(tDataConvert tDataConvert.cc)
+add_executable(tFileLocator tFileLocator.cc)
+add_executable(tStringUtil tStringUtil.cc)
+add_executable(tStreamUtil tStreamUtil.cc)
+add_executable(tHexdump tHexdump.cc)
+add_executable(testSocket testSocket.cc)
+add_executable(tComplex tComplex.cc)
+add_executable(tProcess tProcess.cc)
+add_executable(tRunOnNode tRunOnNode.cc)
+add_executable(tTimer tTimer.cc)
+add_executable(tNumeric tNumeric.cc)
+add_executable(tSingleton tSingleton.cc)
+add_executable(tObjectFactory tObjectFactory.cc Shapes.cc Coordinates.cc)
+add_executable(tSystemUtil tSystemUtil.cc)
+add_executable(tSaxpy tSaxpy.cc)
+add_executable(tPrettyUnits tPrettyUnits.cc)
+add_executable(tParameterValue tParameterValue.cc)
+add_executable(tParameterSet tParameterSet.cc)
+add_executable(tParameterSetPerf tParameterSetPerf.cc)
+add_executable(tBacktrace tBacktrace.cc)
+
+foreach (prog ${CHECKTOOLPROGS})
+  add_test(${prog} ${prog})
+  target_link_libraries(${prog} common)
+endforeach (prog CHECKTOOLPROGS)
+
+
+########### install files ###############
+
+
+
+
+#original Makefile.am contents follow:
+
+## programs to run through supplied checktools
+#CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
+#			tFileLocator tStringUtil tStreamUtil \
+#			tHexdump testSocket tComplex tProcess \
+#			tRunOnNode tTimer tNumeric tSingleton \
+#			tObjectFactory tSystemUtil tSaxpy tPrettyUnits \
+#			tParameterValue tParameterSet tParameterSetPerf \
+#			tBacktrace
+#
+#check_PROGRAMS	=	$(CHECKTOOLPROGS)
+#
+#TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
+#			tFileLocator.sh tStringUtil.sh tStreamUtil.sh \
+#			tHexdump.sh testSocket.sh tComplex.sh tProcess.sh \
+#			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
+#			tObjectFactory.sh tPrettyUnits.sh \
+#			tParameterValue.sh tParameterSet.sh \
+#			tParameterSetPerf.sh tgetparsetvalue.sh
+#
+#TESTS		=	$(TESTSCRIPTS)
+#
+#EXTRA_DIST	=	$(TESTSCRIPTS) \
+#			testLogger.log_prop testLogger.debug \
+#			testLogger.in_log4cxx.log_prop \
+#			tDataConvert.stdout \
+#			tStringUtil.stdout \
+#			tStreamUtil.stdout \
+#			tHexdump.log_prop \
+#			testSocket.run \
+#			tComplex.stdout \
+#			tProcess.log_prop tProcess.run tProcess.stdout \
+#			tRunOnNode.log_prop tRunOnNode.stdout \
+#			tNumeric.run tNumeric.stdout \
+#			tObjectFactory.stdout tPrettyUnits.stdout \
+#			tParameterSet.in_merge_nocase \
+#			tParameterSet.in_merge_normal \
+#			tParameterSet.in_param_nocase \
+#			tParameterSet.in_param_normal \
+#			tParameterSetPerf.run \
+#			tgetparsetvalue.parset \
+#			tgetparsetvalue.run \
+#			tgetparsetvalue.stdout
+#
+#testLogger_SOURCES		= testLogger.cc
+#tAllocator_SOURCES		= tAllocator.cc
+#tDataConvert_SOURCES		= tDataConvert.cc
+#tFileLocator_SOURCES		= tFileLocator.cc
+#tStringUtil_SOURCES		= tStringUtil.cc
+#tStreamUtil_SOURCES		= tStreamUtil.cc
+#tHexdump_SOURCES		= tHexdump.cc
+#testSocket_SOURCES		= testSocket.cc
+#tComplex_SOURCES		= tComplex.cc
+#tProcess_SOURCES		= tProcess.cc
+#tRunOnNode_SOURCES		= tRunOnNode.cc
+#tTimer_SOURCES			= tTimer.cc
+#tNumeric_SOURCES		= tNumeric.cc
+#tSingleton_SOURCES		= tSingleton.cc
+#tObjectFactory_SOURCES		= tObjectFactory.cc \
+#				  Shapes.h Shapes.cc \
+#				  Coordinates.h Coordinates.cc
+#tSystemUtil_SOURCES		= tSystemUtil.cc
+#tSaxpy_SOURCES			= tSaxpy.cc
+#tPrettyUnits_SOURCES		= tPrettyUnits.cc
+#tBacktrace_SOURCES		= tBacktrace.cc
+#tParameterValue_SOURCES		= tParameterValue.cc
+#tParameterSet_SOURCES		= tParameterSet.cc
+#tParameterSetPerf_SOURCES	= tParameterSetPerf.cc
+#
+#LDADD				= ../src/libcommon.la
+#DEPENDENCIES			= ../src/libcommon.la $(LOFAR_DEPEND)
+#
+#include $(top_srcdir)/Makefile.common
