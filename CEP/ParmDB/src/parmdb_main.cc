@@ -32,6 +32,7 @@
 #include <Blob/KeyValueMap.h>
 #include <Blob/KeyParser.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
 
