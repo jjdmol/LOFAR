@@ -19,7 +19,7 @@ humidity			float
 humidityMax			float
 humidityMaxMax		float
 
-controlMode			int
+controlMode			string
 temperatureSensor	bool
 humidityControl		bool
 doorControl			bool
