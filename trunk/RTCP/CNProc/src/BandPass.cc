@@ -2080,13 +2080,14 @@ const float BandPass::stationFilterConstants[] =
 
 BandPass::BandPass(bool correct, unsigned nrChannels)
 :
-  factors(new float[nrChannels])
+  factors(new float[nrChannels]),
+  squaredFactors(new float[nrChannels])
 {
   if (correct)
     computeCorrectionFactors(nrChannels);
   else
     for (unsigned i = 0; i < nrChannels; i ++)
-      factors[i] = 1.0;
+      factors[i] = squaredFactors[i] = 1.0;
 }
 
 
@@ -2124,7 +2125,8 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
     fcomplex l = out[(i - 3 * nrChannels / 2) % 262144U];
     fcomplex r = out[i + nrChannels / 2];
 
-    factors[i] = pow(2, 50) / abs(m * m + l * l + r * r);
+    squaredFactors[i] = pow(2, 50) / abs(m * m + l * l + r * r);
+    factors[i] = sqrt(squaredFactors[i]);
   }
 }
 
@@ -2132,6 +2134,7 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
 BandPass::~BandPass()
 {
   delete [] factors;
+  delete [] squaredFactors;
 }
 
 } // namespace RTCP

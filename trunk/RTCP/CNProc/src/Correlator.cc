@@ -130,7 +130,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 		sum += filteredData->samples[ch][itsStationMapping[stat1]][time][pol1] 
 		  * conj(filteredData->samples[ch][itsStationMapping[stat2]][time][pol2]);
 	      }
-	      sum *= itsCorrelationWeights[nrValid] * itsBandPass.correctionFactors()[ch];
+	      sum *= itsCorrelationWeights[nrValid] * itsBandPass.squaredCorrectionFactors()[ch];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
@@ -271,7 +271,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.correctionFactors(), itsNrBaselines, itsNrChannels);
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels);
 #endif
   weightTimer.stop();
 #endif  
