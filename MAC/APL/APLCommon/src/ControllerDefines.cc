@@ -37,7 +37,6 @@
 using namespace boost;
 
 namespace LOFAR {
-  using namespace Deployment;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
@@ -234,7 +233,6 @@ string observationParset(int	obsID)
 //
 //  A PropSetMask may contain the markers:
 //	@ring@
-//	@arm@
 //	@station@
 //  @instance@
 //	@observation@
@@ -258,10 +256,7 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 
 	if ((pos = psName.find("@ring@")) != string::npos) {
-		psName.replace(pos, 6, string("ring")+lexical_cast<string>(stationRingNr()));
-	}
-	if ((pos = psName.find("@arm@")) != string::npos) {
-		psName.replace(pos, 5, string("arm")+lexical_cast<string>(stationArmNr()));
+		psName.replace(pos, 6, stationRingName());
 	}
 	if ((pos = psName.find("@instance@")) != string::npos) {
 		uint16	instanceNr = getInstanceNr(controllerName);

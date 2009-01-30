@@ -45,7 +45,6 @@ namespace LOFAR {
 	using namespace MACIO;
 	using namespace GCF::TM;
 	using namespace GCF::RTDB;
-	using namespace Deployment;
 	namespace StationCU {
 
 //

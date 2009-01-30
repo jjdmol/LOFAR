@@ -29,7 +29,7 @@ using namespace std;
 #include <Common/LofarTypes.h>
 #include <APL/APLCommon/StationInfo.h>
 
-using namespace LOFAR::Deployment;
+using namespace LOFAR::APLCommon;
 
 int	main (int	argc, char*	argv[]) {
 	string	input;

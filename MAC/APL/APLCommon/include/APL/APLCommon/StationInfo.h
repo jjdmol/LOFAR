@@ -32,9 +32,9 @@
 //# Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace Deployment {
+  namespace APLCommon {
 
-// \addtogroup Deployment
+// \addtogroup APLCommon
 // @{
 
 #define LOFAR_BASE_LOCATION		"/opt/lofar"
@@ -52,10 +52,9 @@ namespace LOFAR {
 //		  ring = 1..9  [ 2 digits ]
 //		  CUType = C | W
 //
-uint16	stationRingNr();									// 0..99; 0 = error
-uint16	stationArmNr();										// 0..5	; 0 = error
-int16	stationTypeValue();									//-1..2 : for resp. error, CS, RS, ES
-string	stationTypeStr();									// "", CS, RS, ES
+int16	stationTypeValue();									// 0..2 : for resp. error, CS, RS, ES
+string	stationTypeStr();									// CS, RS, ES
+string	stationRingName();									// Core, Remote, Europe
 string	PVSSDatabaseName(const string&	someName = "");		// hostname w/o CUtype
 string	realHostname(const string&	someName);				// adds 'C' when it is missing.
 
@@ -64,7 +63,7 @@ string  SAS2PVSSname(const string& SASname);				// convert SAS DPname to PVSS DP
 
 
 // @}
-  } // namespace Deployment
+  } // namespace APLCommon
 } // namespace LOFAR
 
 #endif

@@ -46,7 +46,6 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
-using namespace LOFAR::Deployment;
 using namespace boost::posix_time;
 using namespace std;
 

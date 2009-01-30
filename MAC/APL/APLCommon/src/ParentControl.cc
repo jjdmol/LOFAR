@@ -36,7 +36,6 @@
 #include <StartDaemon_Protocol.ph>
 
 namespace LOFAR {
-  using namespace Deployment;
   using namespace GCF::TM;
   namespace APLCommon {
 

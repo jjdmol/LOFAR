@@ -38,9 +38,9 @@
 #include "../Package__Version.h"
 
 namespace LOFAR {
+  using namespace APLCommon;
   using namespace MACIO;
   using namespace OTDB;
-  using namespace Deployment;
   namespace GCF {
     using namespace TM;
     using namespace PVSS;
