@@ -11,19 +11,26 @@ class BandPass {
 			~BandPass();
 
     const float		*correctionFactors() const;
+    const float		*squaredCorrectionFactors() const;
 
   private:
     void		computeCorrectionFactors(unsigned nrChannels);
 
     static const float	stationFilterConstants[];
     
-    float		*factors;
+    float		*factors, *squaredFactors;
 };
 
 
 inline const float *BandPass::correctionFactors() const
 {
   return factors;
+}
+
+
+inline const float *BandPass::squaredCorrectionFactors() const
+{
+  return squaredFactors;
 }
 
 } // namespace RTCP
