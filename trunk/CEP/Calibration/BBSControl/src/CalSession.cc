@@ -35,10 +35,10 @@
 #include <Common/ParameterSet.h>
 #include <BBSControl/Step.h>
 
-// For gethostname() and getpid().
+// gethostname() and getpid()
 #include <unistd.h>
 
-// For numeric_limits<int32>
+// numeric_limits<int32>
 // TODO: Create lofar_limits.h in Common.
 #include <limits>
 
@@ -95,40 +95,6 @@ namespace
         }
         return tv;
     }
-/*
-    struct MatchWorkerOnIndex: public std::unary_function<CalSession::Worker, bool>
-    {
-        MatchWorkerOnIndex(CalSession::WorkerType type, int index)
-            :   itsType(type),
-                itsIndex(index)
-        {
-        }
-        
-        bool operator()(const CalSession::Worker &worker) const
-        {
-            return worker.type == itsType && worker.index == itsIndex;
-        }
-        
-    private:
-        CalSession::WorkerType  itsType;
-        int         itsIndex;
-    };
-    struct MatchWorkerOnId: public std::unary_function<CalSession::Worker, bool>
-    {
-        MatchWorkerOnId(const ProcessId &id)
-            :   itsProcessId(id)
-        {
-        }
-        
-        bool operator()(const CalSession::Worker &worker) const
-        {
-            return worker.id == itsProcessId;
-        }
-        
-    private:
-        const ProcessId &itsProcessId;
-    };
-*/    
 }
 
 ostream& operator<<(ostream& os, const ProcessId &obj)
@@ -136,8 +102,8 @@ ostream& operator<<(ostream& os, const ProcessId &obj)
     return os << obj.hostname << ":" << obj.pid;
 }
 
-CalSession::CalSession(const string &key, const string &db,
-    const string &user, const string &host, const string &port)
+CalSession::CalSession(const string &key, const string &db, const string &user,
+    const string &password, const string &host, const string &port)
     :   itsSessionId(-1)
 {
     // Determine the ProcessId of this worker.
@@ -146,9 +112,13 @@ CalSession::CalSession(const string &key, const string &db,
     ASSERT(status == 0);    
     itsProcessId = ProcessId(string(hostname), getpid());
 
-    string opts("dbname=" + db  + " user=" + user + " host=" + host + " port="
-        + port);
-
+    // Build connection string.
+    string opts("dbname='" + db + "' user='" + user + "' host='" + host
+      + "' port=" + port);
+    if(!password.empty()) {
+      opts += " password='" + password + "'";
+    }
+    
     try
     {
         LOG_DEBUG_STR("Connecting to database: " << opts);

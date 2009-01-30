@@ -27,18 +27,14 @@
 // \file
 // Control state that is shared between the controller and all worker processes.
 
-//# The following #includes are not really necessary to compile the code,
-//# but it avoids the need to #include them whenever any of the public
-//# typedefs \c NextCommandType, \c ResultType, or \a ResultMapType are used.
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandResult.h>
-#include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
 
-#include <Common/lofar_smartptr.h>
-#include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_smartptr.h>
+#include <Common/lofar_string.h>
 
 #include <ParmDB/Grid.h>
 
@@ -133,7 +129,8 @@ public:
     };
 
     CalSession(const string &key, const string &db, const string &user,
-        const string &host = "localhost", const string &port="5432");
+        const string &password = "", const string &host = "localhost",
+        const string &port = "5432");
     ~CalSession();
 
     ProcessId getProcessId() const;
