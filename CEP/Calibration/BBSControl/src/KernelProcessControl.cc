@@ -161,6 +161,7 @@ namespace LOFAR
         itsCalSession.reset(new CalSession(key,
           ps->getString("BBDB.Name"),
           ps->getString("BBDB.User"),
+          ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "5432")));
             
