@@ -24,10 +24,11 @@
 #
 # $Id$
 #
-VERSION="v1.6 20081229"		# exiting with level as return value
+VERSION="v1.7 20090130"		# loading image 1 before starting RSPdriver
 BINDIR=/opt/lofar/bin
-LOGDIR=/opt/lofar/log
-LEVELTABLE=${BINDIR}/../etc/swlevel.conf
+LOGDIR=${BINDIR}/../log
+ETCDIR=${BINDIR}/../etc
+LEVELTABLE=${ETCDIR}/swlevel.conf
 
 #
 # SyntaxError msg
@@ -48,6 +49,31 @@ SyntaxError()
 	echo "6: MAC is controlling the software"
 	echo ""
 	exit 1
+}
+
+#
+# selectImage1()
+#
+selectImage1()
+{
+	let nrRSPs=`grep RSPBOARDS ${ETCDIR}/RemoteStation.conf | cut -d'=' -f2 | sed 's/ //g'`
+	let board=0
+	while [ $board -lt $nrRSPs ]
+	do
+		# get version of RSPboard
+		let version=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$board:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+		boardHex=`echo 16 o $board p q | dc`
+		# if board has reset itself to image 0, load image 1 again
+		if [ $version -le 1 ]; then
+			echo "Loading image 1 on RSPboard $board..."
+			sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
+			sleep 3
+		fi
+		# show version of the firmware that is loaded.
+		version=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g'`
+		echo $board" : "$version
+		let board=$board+1
+	done
 }
 
 #
@@ -84,6 +110,7 @@ start_prog()
 			if [ -n "$asroot" ]; then
 				sudo rm -f $LOGDIR/$prog.log.?
 				if [ "$prog" = "RSPDriver" ]; then
+					selectImage1
 					echo "Starting RSPDriver with nice -20"
 					sudo -b nohup nice -20 $BINDIR/$prog 1>&2 2>/dev/null
 				else
@@ -239,6 +266,7 @@ goto_level()
 #
 # MAIN
 #
+
 
 # Find out if we are running on a PVSS system
 # Note: on PVSS systems LoggingClient must be ignored on non-PVSS system LoggingProcessor.
