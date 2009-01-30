@@ -44,7 +44,6 @@
 
 
 namespace LOFAR {
-	using namespace Deployment;
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;

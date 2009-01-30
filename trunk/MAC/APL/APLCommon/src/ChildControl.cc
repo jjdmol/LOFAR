@@ -40,7 +40,6 @@
 using namespace boost;
 
 namespace LOFAR {
-  using namespace Deployment;
   using namespace GCF::TM;
   namespace APLCommon {
 

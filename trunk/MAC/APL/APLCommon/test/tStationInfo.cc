@@ -30,7 +30,7 @@
 #include <boost/regex.hpp>
 
 using namespace LOFAR;
-using namespace LOFAR::Deployment;
+using namespace LOFAR::APLCommon;
 
 int main (int	argc, char* argv[]) 
 {
@@ -38,8 +38,7 @@ int main (int	argc, char* argv[])
 	
 	LOG_INFO_STR("myHostname(short) = " << myHostname(false));
 	LOG_INFO_STR("myHostname(long)  = " << myHostname(true));
-	LOG_INFO_STR("ringNumber = " << stationRingNr());
-	LOG_INFO_STR("armNumber  = " << stationArmNr());
+	LOG_INFO_STR("ringName = " << stationRingName());
 	LOG_INFO_STR("PVSSDBname = " << PVSSDatabaseName());
 	LOG_INFO_STR("hostname of CS010  = " << realHostname("CS010"));
 	LOG_INFO_STR("hostname of CS010C = " << realHostname("CS010C"));

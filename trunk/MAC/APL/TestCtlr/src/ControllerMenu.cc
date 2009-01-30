@@ -40,7 +40,6 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
-	using namespace Deployment;
 	namespace Test {
 	
 //
@@ -634,7 +633,7 @@ void ControllerMenu::_doActionMenu()
 //
 // _connectedHandler(port)
 //
-void ControllerMenu::_connectedHandler(GCFPortInterface& port)
+void ControllerMenu::_connectedHandler(GCFPortInterface& /*port*/)
 {
 }
 

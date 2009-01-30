@@ -34,49 +34,16 @@
 using namespace boost;
 
 namespace LOFAR {
-  namespace Deployment {
+  namespace APLCommon {
 
 static	char*	stationTypeTable[] = { "CS", "RS", "ES" };
-
-//
-// stationRingNr()
-//
-// Syntax of hostname: <stationType><arm><ring>
-//	with: stationType = CS | RS | <countrycode>
-//		  arm = 1..5   [ 1 digit  ]
-//		  ring = 1..9  [ 2 digits ]
-//
-uint16	stationRingNr()
-{
-	if (!isdigit(myHostname(false).substr(2,1)[0])) {
-		return(0);
-	}
-	return (lexical_cast<uint16>(myHostname(false).substr(3,2)));
-}
-
-//
-// stationArmNr()
-//
-// Syntax of hostname: <stationType><arm><ring>
-//	with: stationType = CS | RS | ES<countrycode>
-//		  arm = 1..5   [ 1 digit  ]
-//		  ring = 1..9  [ 2 digits ]
-//
-uint16	stationArmNr()
-{
-	if (!isdigit(myHostname(false).substr(2,1)[0])) {
-		return(0);
-	}
-	return (lexical_cast<uint16>(myHostname(false).substr(2,1)));
-}
+static	char*	ringTypeTable[]    = { "Core", "Remote", "Europe" };
 
 //
 // stationTypeValue()
 //
-// Syntax of hostname: <stationType><arm><ring>
-//	with: stationType = CS | RS | ES<countrycode>
-//		  arm = 1..5   [ 1 digit  ]
-//		  ring = 1..9  [ 2 digits ]
+// Returns the stationType (0..2) of the current machine.
+// The the returned value is an index in the stationTypeTable or ringTypeTable.
 //
 int16	stationTypeValue()
 {
@@ -88,28 +55,30 @@ int16	stationTypeValue()
 		return (1);
 	}
 
-	return (-1);
+	return (2);
 }
 
 
 //
 // stationTypeStr()
 //
-// Syntax of hostname: <stationType><arm><ring>
-//	with: stationType = CS | RS | ES<countrycode>
-//		  arm = 1..5   [ 1 digit  ]
-//		  ring = 1..9  [ 2 digits ]
+// Returns the unified stationtype (CS | RS | ES).
 //
 string	stationTypeStr()
 {
-	int16	stsType = stationTypeValue();
-	if (stsType < 0) {
-		return ("ES");
-	}
-
-	return (stationTypeTable[stsType]);
+	return (stationTypeTable[stationTypeValue()]);
 }
 
+
+//
+// stationRingName()
+//
+// Returns the name of the ring the station belongs to.
+//
+string	stationRingName()
+{
+	return (ringTypeTable[stationTypeValue()]);
+}
 
 //
 // PVSSDatabaseName
@@ -251,5 +220,5 @@ string SAS2PVSSname(const string&	SASname)
 
 
 
-  } // namespace Deployment
+  } // namespace APLCommon
 } // namespace LOFAR
