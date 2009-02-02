@@ -935,6 +935,23 @@ StationControl::ObsIter StationControl::_searchObsByTimerID(uint32	timerID)
 	return (iter);
 }
 
+//
+// _updateObsListInPVSS()
+//
+// Refresh the contents of the activeObservations datafield in PVSS.
+//
+void StationControl::_updateObsListInPVSS()
+{
+	ObsIter		iter(itsObsMap.begin());
+	ObsIter		end (itsObsMap.end());
+
+	GCFPValueArray		obsArr;
+	while (iter != end) {
+		obsArr.push_back(new GCFPVString(iter->first));
+		++iter;
+	}
+	itsOwnPropSet->setValue(PN_SC_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, obsArr));
+}
 
 //
 // _disconnectedHandler(port)
