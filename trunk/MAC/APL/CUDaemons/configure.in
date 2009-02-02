@@ -67,7 +67,7 @@ src/Makefile
 test/Makefile
 src/ServiceBroker/Makefile
 src/CTStartDaemon/Makefile
-src/LoggingClient/Makefile
+src/LogClient/Makefile
 Makefile
 CUDaemons.spec
 )

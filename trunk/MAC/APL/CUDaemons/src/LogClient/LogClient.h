@@ -1,4 +1,4 @@
-//#  LoggingClient.h: PVSS-less logging processor
+//#  LogClient.h: PVSS-less logging processor
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOGGINGPROCESSOR_H
 
 // \file 
-// PVSS-less LoggingProcessor that passes the message to a PVSS-bound LoggingProcessor.
+// PVSS-less LogProcessor that passes the message to a PVSS-bound LogProcessor.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
@@ -40,11 +40,11 @@ namespace LOFAR {
 	using namespace GCF::TM;
     namespace CUDaemons {
 
-class LoggingClient : public GCFTask
+class LogClient : public GCFTask
 {
 public:
-	explicit LoggingClient (const string&	name);
-	~LoggingClient ();
+	explicit LogClient (const string&	name);
+	~LogClient ();
 
 private: 
 	// state methods
@@ -71,16 +71,16 @@ private:
 	uint32				itsCLMtimerID;	// timeout timer for messages.
 
 	// client adminsitration
-	struct	LogClient {
+	struct	LogProc {
 		string		DPname;
 		int32		msgCnt;
 		int32		errCnt;
 		bool		valid;
-		LogClient() : msgCnt(-10),errCnt(0),valid(false) {};
-		explicit LogClient(const string& name) : DPname(name),msgCnt(-10),errCnt(0),valid(false) {};
+		LogProc() : msgCnt(-10),errCnt(0),valid(false) {};
+		explicit LogProc(const string& name) : DPname(name),msgCnt(-10),errCnt(0),valid(false) {};
 	};
-	typedef map<GCFPortInterface*, LogClient> 	LogClientMap;
-	LogClientMap 	 		itsClients;
+	typedef map<GCFPortInterface*, LogProc> 	LogProcMap;
+	LogProcMap 	 		itsClients;
 
 	typedef list<GCFPortInterface*> 			ClientsList;
 	ClientsList  	      	itsClientsGarbage;
