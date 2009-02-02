@@ -1,6 +1,6 @@
 SUBDIRS = modules gold tc
 
-testdir		 =  $(prefix)/stationtest
+testdir	=  $(prefix)/stationtest
 test_SCRIPTS = 	README.txt \
 				i2c_spu.py \
 				i2c_td.py \
@@ -10,7 +10,7 @@ test_SCRIPTS = 	README.txt \
 				rsp_version.sh \
 				rsp_xc_160.sh \
 				rsp_xc_200.sh \
-`				station_production.py \
+				station_production.py \
 				subrack_production.py \
 				subracktest.sh \
                                 subrackplustest.sh \
