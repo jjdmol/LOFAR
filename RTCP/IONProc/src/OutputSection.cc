@@ -173,7 +173,6 @@ void OutputSection::process()
     for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
       bool firstTime = itsCurrentIntegrationSteps[output] == 0;
       bool lastTime  = itsCurrentIntegrationSteps[output] == itsNrIntegrationSteps[output] - 1;
-      std::clog << "reading subband " << subband << " and output " << output << "(first,last)=" << firstTime << "," << lastTime << std::endl;
 
       if (lastTime) {
         if (itsRealTime && itsOutputThreads[subband]->itsFreeQueue[output].empty()) {
