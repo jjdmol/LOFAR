@@ -58,8 +58,8 @@ namespace LOFAR {
       Box dom = itsPDB.getRange (pp);
       vector<double> res(4);
       res[0] = dom.lowerX();
-      res[1] = dom.lowerY();
-      res[2] = dom.upperX();
+      res[1] = dom.upperX();
+      res[2] = dom.lowerY();
       res[3] = dom.upperY();
       return res;
     }
@@ -158,17 +158,23 @@ namespace LOFAR {
       Array<double> result;
       for (uint i=0; i<names.size(); ++i) {
         Grid grid (getGrid (parmCache.getValueSet(i), domain));
-        Parm parm(parmCache, i);
-        parm.getResult (result, grid);
-        out.define (names[i], result);
-        ginfo.define (names[i] + ";freqs",
-                      Vector<double>(grid[0]->centers()));
-        ginfo.define (names[i] + ";times",
-                      Vector<double>(grid[1]->centers()));
-        ginfo.define (names[i] + ";freqwidths",
-                      Vector<double>(grid[0]->widths()));
-        ginfo.define (names[i] + ";timewidths",
-                      Vector<double>(grid[1]->widths()));
+        if (!grid.isDefault()) {
+          // There should be data in this domain. 
+          Parm parm(parmCache, i);
+          parm.getResult (result, grid);
+          if (result.size() > 0) {
+            // There is data in this domain.
+            out.define (names[i], result);
+            ginfo.define (names[i] + ";freqs",
+                          Vector<double>(grid[0]->centers()));
+            ginfo.define (names[i] + ";times",
+                          Vector<double>(grid[1]->centers()));
+            ginfo.define (names[i] + ";freqwidths",
+                          Vector<double>(grid[0]->widths()));
+            ginfo.define (names[i] + ";timewidths",
+                          Vector<double>(grid[1]->widths()));
+          }
+        }
       }
       out.defineRecord ("_grid", ginfo);
       return out;

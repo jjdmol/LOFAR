@@ -3,32 +3,39 @@
 # If first argument is non-empty, only the files are created.
 # It makes it possible to run the debugger on tParmFacadeDistr.
 
+#Set srcdir if undefined (if run outside 'make check')
+if test "$srcdir" = ""; then
+  srcdir=../../../src
+fi
+
 # The test uses 2 remote pdb-s, so create them.
+echo "Filling pdb1"
 ../src/parmdb <<EOF > tParmFacadeDistr_tmp.pdbout
  create tablename='tParmFacadeDistr_tmp.pdb1'
  add parm1 domain=[1,5,4,10],values=2
- add parm2 type='polc', domain=[1,5,4,10], values=[2,0.1], nx=2
+ add parm2 domain=[1,5,4,10],values=4
  quit
 EOF
 if [ $? != 0 ]; then
   cat tParmFacadeDistr_tmp.pdbout
   exit 1
 fi
+echo "Filling pdb2"
 ../src/parmdb <<EOF > tParmFacadeDistr_tmp.pdbout
  create tablename='tParmFacadeDistr_tmp.pdb2'
- add parm1 domain=[1,5,10,15],values=2
- add parm2 type='polc', domain=[1,5,10,15], values=[2,0.1], nx=2
+ add parm1 domain=[8,12,4,10],values=3
+ add parm2 domain=[8,12,4,10],values=5
  quit
 EOF
 if [ $? != 0 ]; then
   cat tParmFacadeDistr_tmp.pdbout
   exit 1
 fi
-
 fname1=`pwd`/tParmFacadeDistr_tmp.pdb1
 fname2=`pwd`/tParmFacadeDistr_tmp.pdb2
 cdname=`pwd`/tParmFacadeDistr_tmp.cd
 
+echo "Creating cd and vd files"
 cat > tParmFacadeDistr_tmp.cd <<EOF
 ClusterName = cl
 NNodes = 2
@@ -74,14 +81,16 @@ EOF
 # Make a symlink to scripts in src, so they can be found.
 # Make sure . is in PATH.
 rm -f startparmdbdistr parmdbremote-scr parmdbremote
-ln -s ../../../src/startparmdbdistr
-ln -s ../../../src/parmdbremote-scr
+ln -s $srcdir/../src/startparmdbdistr
+ln -s $srcdir/../src/parmdbremote-scr
 ln -s ../src/parmdbremote
 PATH=.:$PATH
 export PATH
 
 if test "$1" = ""; then
-  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd
+  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd > tParmFacadeDistr_tmp.out1
   echo ""
-  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*' 1
+  $LOFAR_CHECKTOOL ./tParmFacade tParmFacadeDistr_tmp.pdb.vd '*1' 1 > tParmFacadeDistr_tmp.out2
+  sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out1
+  sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out2
 fi

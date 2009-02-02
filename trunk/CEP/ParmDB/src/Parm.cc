@@ -199,18 +199,21 @@ namespace BBS {
     } else {
       // Perturbed values need to be calculated. Make room for them.
       result.resize (itsPerturbations.size() + 1);
+      // If no values found, return an empty array..
       ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-      if (pvset.getType() != ParmValue::Scalar) {
-        // It is a funklet, so evaluate it.
-        getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
-                        itsCache->getAxisMappingCache());
-      } else {
-        // We have scalar values, thus only one perturbed value.
-        // First get result and add perturbed value to it.
-        DBGASSERT (itsPerturbations.size() == 1);
-        getResult (result[0], predictGrid);
-        result[1].resize (result[0].shape());
-        result[1] = result[0] + itsPerturbations[0];
+      if (!pvset.empty()) {
+        if (pvset.getType() != ParmValue::Scalar) {
+          // It is a funklet, so evaluate it.
+          getResultCoeff (&(result[0]), predictGrid, pvset, itsPerturbations,
+                          itsCache->getAxisMappingCache());
+        } else {
+          // We have scalar values, thus only one perturbed value.
+          // First get result and add perturbed value to it.
+          DBGASSERT (itsPerturbations.size() == 1);
+          getResult (result[0], predictGrid);
+          result[1].resize (result[0].shape());
+          result[1] = result[0] + itsPerturbations[0];
+        }
       }
     }
   }
@@ -219,6 +222,10 @@ namespace BBS {
   {
     // Get the values.
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
+    if (pvset.empty()) {
+      result.resize();
+      return;
+    }
     if (pvset.getType() != ParmValue::Scalar) {
       // It is a funklet, so evaluate it.
       getResultCoeff (&result, predictGrid, pvset, vector<double>(),

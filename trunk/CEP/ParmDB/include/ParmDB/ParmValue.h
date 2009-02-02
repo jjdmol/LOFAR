@@ -201,6 +201,10 @@ namespace BBS {
     uint size() const
       { return itsValues.size(); }
 
+    // No ParmValues?
+    bool empty() const
+      { return itsValues.size() == 0; }
+
     // Get the first ParmValue. If there are no ParmValues, the default
     // ParmValue is returned.
     const ParmValue& getFirstParmValue() const;

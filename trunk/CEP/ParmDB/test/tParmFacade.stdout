@@ -1,8 +1,11 @@
+>start<
 Names: [parm1,parm2]
-Range: [1,5,4,10]
+Range: [1,4,5,10]
+>end<
 parm1 [2,2,2,2,2,2,2,2]
 parm2 [2.0125,2.0375,2.0625,2.0875,2.0125,2.0375,2.0625,2.0875]
 
+>start<
 parm1 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
 [2]
 
@@ -17,12 +20,36 @@ parm2;freqs [2.5]
 parm2;times [7.5]
 parm2;freqwidths [3]
 parm2;timewidths [5]
+>end<
+>start<
+parm1 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
+[2]
 
+parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
+[2.05]
+
+parm1;freqs [2.5]
+parm1;times [7.5]
+parm1;freqwidths [3]
+parm1;timewidths [5]
+parm2;freqs [2.5]
+parm2;times [7.5]
+parm2;freqwidths [3]
+parm2;timewidths [5]
+>end<
+>start<
+>end<
+>start<
+>end<
+
+>start<
 Names: [parm1,parm2]
-Range: [1,5,4,10]
+Range: [1,4,5,10]
+>end<
 parm1 [2,2]
 parm2 [2.05,2.05]
 
+>start<
 parm1 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
 [2]
 
@@ -37,3 +64,24 @@ parm2;freqs [2.5]
 parm2;times [7.5]
 parm2;freqwidths [3]
 parm2;timewidths [5]
+>end<
+>start<
+parm1 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
+[2]
+
+parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
+[2.05]
+
+parm1;freqs [2.5]
+parm1;times [7.5]
+parm1;freqwidths [3]
+parm1;timewidths [5]
+parm2;freqs [2.5]
+parm2;times [7.5]
+parm2;freqwidths [3]
+parm2;timewidths [5]
+>end<
+>start<
+>end<
+>start<
+>end<

@@ -30,10 +30,12 @@
 #include <ParmDB/ParmFacadeRep.h>
 #include <MWCommon/SocketConnectionSet.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_set.h>
 
 //# Forward Declaration.
 namespace casa {
   class Record;
+  class String;
 }
 
 namespace LOFAR { namespace BBS {
@@ -63,6 +65,9 @@ namespace LOFAR { namespace BBS {
   class ParmFacadeDistr : public ParmFacadeRep
   {
   public:
+    // Define the possible commands.
+    enum Command {Quit, GetRange, GetValues, GetValuesVec, GetValuesGrid};
+
     // Make a connection to the given distributed ParmTable.
     // It starts the remote processes which connect to this object.
     ParmFacadeDistr (const string& tableName);
@@ -122,9 +127,25 @@ namespace LOFAR { namespace BBS {
     // Read a Record from the BlobStream.
     void getRecord (BlobIStream& bis, casa::Record& rec);
 
+    // Check if the names of remote client inx are equal to the first one.
+    void checkNames (const vector<string>& names, uint inx) const;
+
+    // Find all parm names in the records and add them to the set.
+    void findParmNames (const vector<casa::Record>& recs,
+                        set<casa::String>& names) const;
+
+    // Combine the info for the given parm from all records.
+    // The info can be the same in some records meaning that a fully or partial
+    // global solve is done and distributed to all parmdbs.
+    void combineInfo (const casa::String& name,
+                      const vector<casa::Record>& recs,
+                      casa::Record& result, casa::Record& gridRec) const;
+
     //# Data members
     string                itsPort;      //# declare this before itsConn!!
     mutable LOFAR::CEP::SocketConnectionSet itsConn;
+    vector<string>        itsPartNames;
+    vector<string>        itsParmNames;
     static int            theirNextPort;
     static vector<string> theirFreePorts;
   };
