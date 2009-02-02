@@ -40,23 +40,28 @@ def fetch(db, elements, sources, stations):
 
     return ampl
     
-
-# Solution based flagging...
-#
-# Arguments:
-# ----------
-# msName: name of the measurement to flag
-# dbName: name of solution parameter database
-# threshold: threshold for the flagging algorithm (median of the absolute distance to the median)
-#            typical values 2, 3, 4
-# storeFlags: (default True) if set to False, the flags will not be written to the measurement
-# updateMain: (default False) if set to True, both the FLAG and the FLAG_ROW column will be updated
-#                             if set to False, only the FLAG_ROW column will be updated
-# cutoffLow: (default None) if set, all values less than or equal to cutoffLow will be flagged
-# cutoffHigh: (default None) if set, all values greater than or equal to cutoffHigh will be flagged
-# debug: (default False) if set to True, a plot is generated for each station that show what has been flagged
-#
 def flag(msName, dbName, half_window, threshold, storeFlags=True, updateMain=False, cutoffLow=None, cutoffHigh=None, debug=False):
+    """
+    Solution based flagging.
+    
+    msName:         name of the measurement to flag
+    dbName:         name of solution parameter database
+    half_window:    half the size of the window used in the flagging algorithm
+    threshold:      threshold for the flagging algorithm (median of the absolute
+                    distance to the median); typical values 2, 3, 4
+    storeFlags:     (default True) if set to False, the flags will not be
+                    written to the measurement
+    updateMain:     (default False) if set to True, both the FLAG and the
+                    FLAG_ROW column will be updated if set to False, only the
+                    FLAG_ROW column will be updated
+    cutoffLow:      (default None) if set, all values less than or equal to
+                    cutoffLow will be flagged
+    cutoffHigh:     (default None) if set, all values greater than or equal to
+                    cutoffHigh will be flagged
+    debug:          (default False) if set to True, a plot is generated for each
+                    station that show what has been flagged
+    """
+
     # Read station names from MS.
     antennaTable = pyrap.tables.table("%s/ANTENNA" % msName)
     stations = antennaTable.getcol("NAME")
@@ -140,5 +145,4 @@ def flag(msName, dbName, half_window, threshold, storeFlags=True, updateMain=Fal
                     for i in range(0, n_samples):
                         msFlags[i, :, :] |= flags[i]
                     baseline.putcol("FLAG", msFlags)
-                
 
