@@ -390,11 +390,11 @@ int Beam::calcNewTrack(RTC::Timestamp	begintime,
 		}
 #endif
 
-		LOG_INFO_STR(formatString("direction=(%f,%f,%f) @ ",
+		LOG_DEBUG_STR(formatString("direction=(%f,%f,%f) @ ",
 						m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)) << track[t].time());
 	} // for pointings in compute interval
 
-	LOG_INFO_STR("Current pointing (" << current_pointing.angle0() << ", " 
+	LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " 
 									   << current_pointing.angle1() <<
 										") @ time " << current_pointing.time());
 	//logPointing(current_pointing);
