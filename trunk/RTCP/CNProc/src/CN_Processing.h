@@ -35,7 +35,7 @@
 
 #include <Interface/CN_Mode.h>
 
-#include <Interface/Allocator.h>
+#include <ArenaMapping.h>
 
 #include <InputData.h>
 #include <Interface/FilteredData.h>
@@ -124,8 +124,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
     
-    std::vector<Arena *>	      itsArenas;
-    std::vector<SparseSetAllocator *> itsAllocators;
+    ArenaMapping        itsMapping;
 
     InputData<SAMPLE_TYPE>	*itsInputData;
     TransposedData<SAMPLE_TYPE>	*itsTransposedData;
