@@ -1,20 +1,20 @@
 # Executables
-bin_PROGRAMS 				= LoggingProcessor
+bin_PROGRAMS 				= LogProcessor
 
-#LoggingProcessor_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
+#LogProcessor_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 #							  -Wno-deprecated \
 #							  -fmessage-length=0 \
 #							  -fdiagnostics-show-location=once
 
-LoggingProcessor_SOURCES	= ../Package__Version.cc \
-							  LoggingProcessor.cc \
-							  LoggingProcessorMain.cc
-LoggingProcessor_LDADD		= $(LOFAR_DEPEND) $(libdir)/liblog_protocol.a
-LoggingProcessor_DEPENDENCIES=$(LOFAR_DEPEND)
+LogProcessor_SOURCES	= ../Package__Version.cc \
+							  LogProcessor.cc \
+							  LogProcessorMain.cc
+LogProcessor_LDADD		= $(LOFAR_DEPEND) $(libdir)/liblog_protocol.a
+LogProcessor_DEPENDENCIES=$(LOFAR_DEPEND)
 
 bin_SCRIPTS					= 
 
-NOINSTHDRS 					= LoggingProcessor.h
+NOINSTHDRS 					= LogProcessor.h
 
 INSTHDRS 					= 
 
@@ -30,7 +30,7 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir				= $(bindir)
 configfiles_DATA 			= 
 
-sysconf_DATA				= LoggingProcessor.conf \
-							  LoggingProcessor.log_prop 
+sysconf_DATA				= LogProcessor.conf \
+							  LogProcessor.log_prop 
 
 include $(top_srcdir)/Makefile.common

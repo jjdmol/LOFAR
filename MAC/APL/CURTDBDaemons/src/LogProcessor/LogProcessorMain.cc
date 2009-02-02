@@ -23,17 +23,17 @@
 #include <lofar_config.h>
 
 #include <GCF/TM/GCF_Control.h>
-#include "LoggingProcessor.h"
+#include "LogProcessor.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDBDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "LoggingProcessor");
+	GCFTask::init(argc, argv, "LogProcessor");
 //	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
 
-	LoggingProcessor clp("LoggingProcessor"); 
+	LogProcessor clp("LogProcessor"); 
 	clp.start(); // make initial transition
 
 	GCFTask::run();

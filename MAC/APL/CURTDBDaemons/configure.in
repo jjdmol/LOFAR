@@ -72,7 +72,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 test/Makefile
-src/LoggingProcessor/Makefile
+src/LogProcessor/Makefile
 src/KeyValueLogger/Makefile
 src/SASGateway/Makefile
 src/SoftwareMonitor/Makefile
