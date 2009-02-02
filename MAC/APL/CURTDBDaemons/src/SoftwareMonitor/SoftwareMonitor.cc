@@ -27,17 +27,22 @@
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
 
-#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
-#include <APL/RTDBCommon/RTDButilities.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <APL/RTDBCommon/RTDButilities.h>
+
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "SoftwareMonitor.h"
 #include "PVSSDatapointDefs.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 enum {
 	SW_FLD_LEVEL = 0,
@@ -51,8 +56,8 @@ enum {
 
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
+using namespace boost::posix_time;
 namespace LOFAR {
-	using namespace Deployment;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
@@ -73,7 +78,7 @@ SoftwareMonitor::SoftwareMonitor(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	itsDPservice = new DPservice(this);
+	itsDPservice = new DPservice(this);	// don't report back
 	ASSERTSTR(itsDPservice, "Can't allocate DPservice");
 
 	itsPollInterval      = globalParameterSet()->getInt("pollInterval", 		15);
@@ -90,9 +95,9 @@ SoftwareMonitor::~SoftwareMonitor()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsDPservice)	delete itsDPservice;
+	if (itsDPservice)		delete itsDPservice;
 
-	if (itsTimerPort)	delete itsTimerPort;
+	if (itsTimerPort)		delete itsTimerPort;
 }
 
 
@@ -205,6 +210,8 @@ GCFEvent::TResult SoftwareMonitor::readSWlevels(GCFEvent& 		  event,
 					proc.runsUnderMPI = atoi(field[SW_FLD_MPI].c_str());
 					proc.permSW		  = !field[SW_FLD_UP].empty();
 					proc.pid		  = 0;
+					proc.startTime	  = 0;
+					proc.stopTime	  = 0;
 					proc.errorCnt	  = 0;
 					itsLevelList.push_back(proc);
 				}
@@ -262,14 +269,34 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 			// TODO: BE ABLE TO HANDLE MULTIPLE INSTANCES OF A PROCESS (e.g. ObservationControl)
 			processMap_t::iterator	procPtr = itsProcessMap.find(iter->name);
 			iter->pid = (procPtr != itsProcessMap.end()) ? procPtr->second : 0;
-			// TODO: BE ABLE TO HANDLE LOFAR_ObsSW DATAPOINTS
 			string	DPname(formatString(iter->permSW ? 
 							((iter->level == 1) ? "LOFAR_PermSW_Daemons_%s" : "LOFAR_PermSW_%s") : "LOFAR_ObsSW_%s", 
 							iter->name.c_str()));
+
 			if (iter->pid) {					// process is running?
-				setObjectState(getName(), DPname, RTDB_OBJ_STATE_OPERATIONAL);		// mark it operational whether or not it should be running
+				// mark it operational whether or not it should be running
+				setObjectState(getName(), DPname, RTDB_OBJ_STATE_OPERATIONAL);		
 				iter->errorCnt = 0;
-			}
+
+				// update startTime when not done before
+				if (iter->startTime == 0) {
+					int				fd;
+					char			statFile  [256];
+					struct stat		statStruct;
+					sprintf(statFile, "/proc/%d/cmdline", iter->pid);
+					if ((fd = stat(statFile, &statStruct)) != -1) {
+						iter->startTime = statStruct.st_ctime;
+					}
+					else {	// retrieval of time failed assume 'now'
+						iter->startTime = time(0);
+					}
+					itsDPservice->setValue(DPname+".ProcessStatus.startTime", 
+											to_simple_string(from_time_t(iter->startTime)), LPT_STRING);
+					itsDPservice->setValue(DPname+".ProcessStatus.processID", 
+											GCFPVInteger(iter->pid), LPT_INTEGER);
+				}
+			} // process is running
+
 			else {								// process is not running
 				if (iter->level > curLevel) {	// should it be down?
 					setObjectState(getName(), DPname, RTDB_OBJ_STATE_OFF);			// yes
@@ -285,11 +312,18 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 					else {
 						setObjectState(getName(), DPname, RTDB_OBJ_STATE_OFF);
 					}
+					iter->errorCnt++;
+				} // proces not running but it should have been running
+				
+				// update stopTime is not done already.
+				if (iter->startTime > iter->stopTime) {
+					iter->stopTime = time(0);
+					itsDPservice->setValue(DPname+".ProcessStatus.stopTime", 
+											to_simple_string(from_time_t(iter->stopTime)), LPT_STRING);
 				}
-				iter->errorCnt++;
-			}
+			} // process not running
 			iter++;
-		}
+		} // while iter
 		TRAN(SoftwareMonitor::waitForNextCycle);
 	}
 	break;

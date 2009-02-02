@@ -29,8 +29,8 @@
 
 // GCF Includes
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/RTDB/RTDB_PropertySet.h>
 #include <GCF/RTDB/DPservice.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 
 // forward declaration
 
@@ -81,6 +81,8 @@ private:
 		bool		permSW;
 		// actual info
 		int			pid;			// TODO: make is suitable for multiple instances
+		time_t		startTime;
+		time_t		stopTime;
 		int			errorCnt;
 	};
 	vector<Process>			itsLevelList;		// list that represents swlevel.conf
