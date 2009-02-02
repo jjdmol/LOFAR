@@ -32,7 +32,7 @@ LogProcessor		-			C	P	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker		- 			C	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
 CTStartDaemon		-			C	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon
 SASGateway			-			C	P	Y	LOFAR_PermSW_Daemons_SASGateway
-KVLogger			-			C	P	Y	LOFAR_PermSW_Daemons_KVLogger
+KeyValueLogger		-			C	P	Y	LOFAR_PermSW_Daemons_KeyValueLogger
 SoftwareMonitor		-			C	P	Y	LOFAR_PermSW_SoftwareMonitor
 MACScheduler		MS			C	P	Y	LOFAR_PermSW_MACScheduler
 ObsSW				-			C	P	N	LOFAR_ObsSW
