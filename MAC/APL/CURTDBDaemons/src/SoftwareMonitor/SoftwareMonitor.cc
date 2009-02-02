@@ -272,6 +272,7 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 			string	DPname(formatString(iter->permSW ? 
 							((iter->level == 1) ? "LOFAR_PermSW_Daemons_%s" : "LOFAR_PermSW_%s") : "LOFAR_ObsSW_%s", 
 							iter->name.c_str()));
+			LOG_DEBUG_STR(iter->name << ":" << iter->pid << ":" << iter->startTime << ":" << iter->stopTime);
 
 			if (iter->pid) {					// process is running?
 				// mark it operational whether or not it should be running
@@ -290,9 +291,10 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 					else {	// retrieval of time failed assume 'now'
 						iter->startTime = time(0);
 					}
-					itsDPservice->setValue(DPname+".ProcessStatus.startTime", 
+					LOG_DEBUG_STR("startime of " << iter->name << " = " << to_simple_string(from_time_t(iter->startTime)));
+					itsDPservice->setValue(DPname+".process.startTime", 
 											to_simple_string(from_time_t(iter->startTime)), LPT_STRING);
-					itsDPservice->setValue(DPname+".ProcessStatus.processID", 
+					itsDPservice->setValue(DPname+".process.processID", 
 											GCFPVInteger(iter->pid), LPT_INTEGER);
 				}
 			} // process is running
@@ -318,7 +320,8 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 				// update stopTime is not done already.
 				if (iter->startTime > iter->stopTime) {
 					iter->stopTime = time(0);
-					itsDPservice->setValue(DPname+".ProcessStatus.stopTime", 
+					LOG_DEBUG_STR("stopime of " << iter->name << " = " << to_simple_string(from_time_t(iter->stopTime)));
+					itsDPservice->setValue(DPname+".process.stopTime", 
 											to_simple_string(from_time_t(iter->stopTime)), LPT_STRING);
 				}
 			} // process not running
