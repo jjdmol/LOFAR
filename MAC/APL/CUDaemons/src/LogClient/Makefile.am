@@ -1,13 +1,13 @@
 # Executables
-bin_PROGRAMS 				= LoggingClient
+bin_PROGRAMS 				= LogClient
 
-LoggingClient_SOURCES		= ../Package__Version.cc \
-							  LoggingClient.cc \
-							  LoggingClientMain.cc
+LogClient_SOURCES		= ../Package__Version.cc \
+							  LogClient.cc \
+							  LogClientMain.cc
 
 bin_SCRIPTS					= 
 
-INSTHDRS 					= LoggingClient.h
+INSTHDRS 					= LogClient.h
 
 NOINSTHDRS 					= 
 
@@ -28,7 +28,6 @@ lib_LTLIBRARIES         	=
 configfilesdir				= $(bindir)
 configfiles_DATA 			= 
 
-sysconf_DATA				= LoggingClient.conf \
-							  LoggingClient.log_prop 
+sysconf_DATA				= LogClient.conf
 
 include $(top_srcdir)/Makefile.common

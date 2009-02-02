@@ -1,4 +1,4 @@
-//#  LoggingClientMain.cc: main loop of LoggingClient
+//#  LogClientMain.cc: main loop of LogClient
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,18 +23,18 @@
 #include <lofar_config.h>
 
 #include <GCF/TM/GCF_Control.h>
-#include "LoggingClient.h"
+#include "LogClient.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CUDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "LoggingClient");
+	GCFTask::init(argc, argv, "LogClient");
 
-//	LOG_INFO("MACProcessScope: LOFAR_PermSW_LoggingClient");
+//	LOG_INFO("MACProcessScope: LOFAR_PermSW_LogClient");
 
-	LoggingClient LC("LoggingClient"); 
+	LogClient LC("LogClient"); 
 	LC.start(); // make initial transition
 
 	GCFTask::run();

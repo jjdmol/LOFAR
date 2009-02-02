@@ -1,4 +1,4 @@
-//#  LoggingClient.cc: Filters and stores logmessages
+//#  LogClient.cc: Filters and stores logmessages
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,7 +30,7 @@
 #include <MACIO/LOG_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
 #include <log4cplus/socketappender.h>
-#include "LoggingClient.h"
+#include "LogClient.h"
 #include "../Package__Version.h"
 
 using namespace log4cplus;
@@ -44,8 +44,8 @@ namespace LOFAR {
 //
 // CodeloggingClient()
 //
-LoggingClient::LoggingClient(const string&	myName) :
-	GCFTask((State)&LoggingClient::initial, myName),
+LogClient::LogClient(const string&	myName) :
+	GCFTask((State)&LogClient::initial, myName),
 	itsTimerPort		(0),
 	itsListener 		(0),
 	itsCLmaster			(0),
@@ -58,8 +58,8 @@ LoggingClient::LoggingClient(const string&	myName) :
 	itsInSeqnr			(1),
 	itsOutSeqnr			(1)
 {
-	LOG_DEBUG_STR("LoggingClient(" << myName << ")");
-	LOG_INFO(Version::getInfo<CUDaemonsVersion>("LoggingClient"));
+	LOG_DEBUG_STR("LogClient(" << myName << ")");
+	LOG_INFO(Version::getInfo<CUDaemonsVersion>("LogClient"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);
@@ -93,9 +93,9 @@ LoggingClient::LoggingClient(const string&	myName) :
 //
 // ~CodeloggingClient()
 //
-LoggingClient::~LoggingClient()
+LogClient::~LogClient()
 {
-	LOG_DEBUG_STR("~LoggingClient()");
+	LOG_DEBUG_STR("~LogClient()");
 	
 	if (itsTimerPort) {	
 		delete itsTimerPort;
@@ -113,7 +113,7 @@ LoggingClient::~LoggingClient()
 //
 // Try to open our listener socket and startup connection process with master Logger.
 //
-GCFEvent::TResult LoggingClient::initial(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult LogClient::initial(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
@@ -130,7 +130,7 @@ GCFEvent::TResult LoggingClient::initial(GCFEvent& event, GCFPortInterface& port
 	case F_CONNECTED:
 		// Listener is opened. Startup connection with CLmaster and go to the right mode.
 		itsCLmaster->open();
-		TRAN(LoggingClient::operational);
+		TRAN(LogClient::operational);
 	break;
 
 	case F_DISCONNECTED:
@@ -148,7 +148,7 @@ GCFEvent::TResult LoggingClient::initial(GCFEvent& event, GCFPortInterface& port
 //
 // operational(event, port)
 //
-GCFEvent::TResult LoggingClient::operational(GCFEvent&			event, 
+GCFEvent::TResult LogClient::operational(GCFEvent&			event, 
 											 GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
@@ -194,7 +194,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 		}
 
 		// must be a client.
-		LogClientMap::iterator	iter = itsClients.find(&port);
+		LogProcMap::iterator	iter = itsClients.find(&port);
 		if (iter == itsClients.end()) {
 			LOG_INFO("Connection lost to a not-registered LofarLogger client.");
 		}
@@ -309,7 +309,7 @@ LOG_DEBUG_STR("Storing message " << itsInSeqnr);
 //
 // _readFromPortData(port, buf)
 //
-bool LoggingClient::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
+bool LogClient::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 {
 	size_t res, read = 0;  
 	do { 
@@ -329,7 +329,7 @@ bool LoggingClient::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 //
 // Some messages were removed or added to the Msgbuffer send the next.
 //
-void LoggingClient::_activateBuffer()
+void LogClient::_activateBuffer()
 {
 	LOG_TRACE_FLOW("_activateBuffer()");
 
@@ -374,7 +374,7 @@ LOG_DEBUG_STR("PoolMsg " << i << ": " << iter->second.message);
 // Tries to load the contents of the next message file to the MsgBuffer.
 // Returns true if the MsgBuffer was changed.
 //
-bool LoggingClient::_loadNextMessageFile()
+bool LogClient::_loadNextMessageFile()
 {
 	LOG_TRACE_FLOW("_loadNextMessageFile()");
 //	ifstream	admFile(filename.c_str(), ifstream::in);
@@ -396,13 +396,13 @@ bool LoggingClient::_loadNextMessageFile()
 // The 'valid' flag is also used when the DP does not exist in the database
 // or when database report more than 10 errors on that DP.
 //
-string LoggingClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
+string LogClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 									 	 GCFPortInterface&			port)
 {
 	// Known client ?
-	LogClientMap::iterator iter = itsClients.find(&port);
+	LogProcMap::iterator iter = itsClients.find(&port);
 	if (iter == itsClients.end()) {
-		itsClients[&port] = LogClient();	// no, new client
+		itsClients[&port] = LogProc();	// no, new client
 		iter = itsClients.find(&port);
 	}
 	else {	// yes, known client
@@ -448,7 +448,7 @@ string LoggingClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 		}
 	} 
 	DPname.append(".logMsg");
-	itsClients[&port] = LogClient(DPname);
+	itsClients[&port] = LogProc(DPname);
 	itsClients[&port].msgCnt = 0;
 	itsClients[&port].valid = true;
 	LOG_INFO_STR("Starting log-stream for " << DPname);
@@ -459,9 +459,9 @@ string LoggingClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 //
 // _registerFailure(port)
 //
-void LoggingClient::_registerFailure(GCFPortInterface&		port)
+void LogClient::_registerFailure(GCFPortInterface&		port)
 {
-	LogClientMap::iterator iter = itsClients.find(&port);
+	LogProcMap::iterator iter = itsClients.find(&port);
 	if (iter == itsClients.end()) {
 		return;
 	}
@@ -475,7 +475,7 @@ void LoggingClient::_registerFailure(GCFPortInterface&		port)
 //
 // _processMessage(msg)
 //
-void LoggingClient::_processMessage(const string&	message)
+void LogClient::_processMessage(const string&	message)
 {
 	if (itsSurvivalLinenr == 0) {	// not writing to file?
 		LOGSendMsgEvent		LogEvent;
@@ -498,7 +498,7 @@ void LoggingClient::_processMessage(const string&	message)
 //
 // _loadAdmin(filename)
 //
-void LoggingClient::_loadAdmin(const string&	filename)
+void LogClient::_loadAdmin(const string&	filename)
 {
 
 	// Try to open the adminfile.
@@ -536,7 +536,7 @@ void LoggingClient::_loadAdmin(const string&	filename)
 //
 // _saveAdmin(filename)
 //
-void LoggingClient::_saveAdmin(const string&	filename)
+void LogClient::_saveAdmin(const string&	filename)
 {
 	// Try to create the administration file.
 	ofstream	admFile(filename.c_str(), ofstream::out | ofstream::trunc);

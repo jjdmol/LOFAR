@@ -3,7 +3,7 @@ libcudaemons_la_SOURCES = Package__Version.cc
 
 pkginclude_HEADERS = Package__Version.h
 
-SUBDIRS = CTStartDaemon LoggingClient ServiceBroker
+SUBDIRS = CTStartDaemon LogClient ServiceBroker
 
 bin_PROGRAMS = versioncudaemons
 
