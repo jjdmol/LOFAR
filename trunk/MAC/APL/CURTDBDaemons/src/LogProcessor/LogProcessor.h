@@ -1,4 +1,4 @@
-//#  LoggingProcessor.h: 
+//#  LogProcessor.h: 
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #ifndef LOGGINGPROCESSOR_H
 #define LOGGINGPROCESSOR_H
 
-// \file LoggingProcessor.h
+// \file LogProcessor.h
 // one_line_description
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
@@ -43,11 +43,11 @@ namespace LOFAR {
   namespace GCF {  
     namespace RTDBDaemons {
 
-class LoggingProcessor : public TM::GCFTask
+class LogProcessor : public TM::GCFTask
 {
 public:
-	explicit LoggingProcessor (const string&	name);
-	~LoggingProcessor ();
+	explicit LogProcessor (const string&	name);
+	~LogProcessor ();
 
 private: 
 	// state methods

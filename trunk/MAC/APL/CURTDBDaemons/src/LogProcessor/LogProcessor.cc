@@ -1,4 +1,4 @@
-//#  LoggingProcessor.cc: Filters and stores logmessages in PVSS
+//#  LogProcessor.cc: Filters and stores logmessages in PVSS
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,7 +31,7 @@
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <log4cplus/socketappender.h>
-#include "LoggingProcessor.h"
+#include "LogProcessor.h"
 #include "../Package__Version.h"
 
 using namespace log4cplus;
@@ -47,15 +47,15 @@ namespace LOFAR {
 //
 // CodeloggingProcessor()
 //
-LoggingProcessor::LoggingProcessor(const string&	myName) :
-	GCFTask((State)&LoggingProcessor::initial, myName),
+LogProcessor::LogProcessor(const string&	myName) :
+	GCFTask((State)&LogProcessor::initial, myName),
 	itsListener (0),
 	itsBackDoor (0),
 	itsDPservice(0),
 	itsTimerPort(0)
 {
-	LOG_DEBUG_STR("LoggingProcessor(" << myName << ")");
-	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("LoggingProcessor"));
+	LOG_DEBUG_STR("LogProcessor(" << myName << ")");
+	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("LogProcessor"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);
@@ -81,9 +81,9 @@ LoggingProcessor::LoggingProcessor(const string&	myName) :
 //
 // ~CodeloggingProcessor()
 //
-LoggingProcessor::~LoggingProcessor()
+LogProcessor::~LogProcessor()
 {
-	LOG_DEBUG_STR("~LoggingProcessor()");
+	LOG_DEBUG_STR("~LogProcessor()");
 	
 	if (itsTimerPort) {	
 		delete itsTimerPort;
@@ -104,7 +104,7 @@ LoggingProcessor::~LoggingProcessor()
 //
 // Try to open our listener socket
 //
-GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult LogProcessor::initial(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
@@ -130,7 +130,7 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 			itsBackDoor->open();		// also open listener for LogClients
 		}
 		// Backdoor is also open, go to operational state.
-		TRAN(LoggingProcessor::operational);
+		TRAN(LogProcessor::operational);
 	break;
 
 	case F_DISCONNECTED:
@@ -149,7 +149,7 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 //
 // operational(event, port)
 //
-GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event, 
+GCFEvent::TResult LogProcessor::operational(GCFEvent&			event, 
 												GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
@@ -340,7 +340,7 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 //
 // _readFromPortData(port, buf)
 //
-bool LoggingProcessor::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
+bool LogProcessor::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 {
 	size_t res, read = 0;  
 	do { 
@@ -366,7 +366,7 @@ bool LoggingProcessor::_readFromPortData(GCFPortInterface& port, SocketBuffer& b
 // The 'valid' flag is also used when the DP does not exist in the database
 // or when database report more than 10 errors on that DP.
 //
-string LoggingProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
+string LogProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 									 	 GCFPortInterface&			port)
 {
 	// Known client ?
@@ -429,7 +429,7 @@ string LoggingProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 //
 // _registerFailure(port)
 //
-void LoggingProcessor::_registerFailure(GCFPortInterface&		port)
+void LogProcessor::_registerFailure(GCFPortInterface&		port)
 {
 	LogClientMap::iterator iter = itsClients.find(&port);
 	if (iter == itsClients.end()) {
