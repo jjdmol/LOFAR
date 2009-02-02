@@ -50,21 +50,27 @@ global string station_obsBaseDP              = "";
 // ***************************************
 bool Station_Processes_initList() {
   station_selectedObservation=selectedObservation;
-  if (strtok(station_selectedStation,":") < 0) {
-    station_selectedStation=selectedStation+":";
+  if (selectedStation != "") {
+    if (strtok(station_selectedStation,":") < 0) {
+      station_selectedStation=selectedStation+":";
+    } else {
+      station_selectedStation=selectedStation;
+    }
   } else {
-    station_selectedStation=selectedStation;
+    if (syst != "" ) {
+      station_selectedStation = syst;
+    } else { 
+      LOG_ERROR("Station_Processes.ctl:initList|No station could be found. Return");
+      return;
+    }
   }
-  
-
-//  station_selectedStation=syst;
   station_obsBaseDP="";
   
   
   dynClear(station_result);
   dynClear(station_procList);
   
-  if (!dpReachable(station_selectedStation)) {
+  if (!navFunct_dpReachable(station_selectedStation)) {
     return;
   }
   int z;

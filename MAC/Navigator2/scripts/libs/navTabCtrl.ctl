@@ -345,14 +345,23 @@ void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
   } else  if (ACTIVE_TAB == "Observations" ) {
     g_lastObservationsDatapoint = g_currentDatapoint;
   }
-  
+
   if (newtab == "Hardware" ) {
-    g_currentDatapoint = g_lastHardwareDatapoint;
+    // if systems have changed in dp, do not set to old datapoint.  
+    if (dpSubStr(g_currentDatapoint,DPSUB_SYS) == dpSubStr(g_lastHardwareDatapoint,DPSUB_SYS)) {
+      g_currentDatapoint = g_lastHardwareDatapoint;
+    }
   } else  if (newtab == "Processes" ) {
-    g_currentDatapoint = g_lastProcessesDatapoint;
+    // if systems have changed in dp, do not set to old datapoint.  
+    if (dpSubStr(g_currentDatapoint,DPSUB_SYS) == dpSubStr(g_lastProcessesDatapoint,DPSUB_SYS)) {
+      g_currentDatapoint = g_lastProcessesDatapoint;
+    }
   } else  if (newtab == "Observations" ) {
-    g_currentDatapoint = g_lastObservationsDatapoint;
+    // if systems have changed in dp, do not set to old datapoint.  
+    if (dpSubStr(g_currentDatapoint,DPSUB_SYS) == dpSubStr(g_lastObservationsDatapoint,DPSUB_SYS)) {
+      g_currentDatapoint = g_lastObservationsDatapoint;
+    }
   } else {
-    g_currentDatapoint = "LOFAR";
+    g_currentDatapoint = MainDBName+"LOFAR";
   }     
 }
