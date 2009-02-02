@@ -89,7 +89,7 @@ do
   if test "$masterhost" = ""; then
     masterhost=$host
   fi
-  echo "ssh $host $program socket $masterhost $port $np $rank $part $fsys $partvds" "$@"
+  echo "ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys $partvds " "$@" " &"
   if test $dry = 0; then
     if test "$logfile" = ""; then
       ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys $partvds "$@" &
