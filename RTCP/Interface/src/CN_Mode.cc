@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include <Interface/CN_Mode.h>
 
 namespace LOFAR {
@@ -14,7 +16,7 @@ const struct CN_Mode::modeList CN_Mode::modeList[] = {
   { INCOHERENT_ALLSTOKES,      "IncoherentAllStokes",     STOKESDATA,     false, 4 }
 };
 
-int CN_Mode::nrModes()
+unsigned CN_Mode::nrModes()
 {
   return sizeof modeList / sizeof modeList[0];
 }
@@ -24,19 +26,25 @@ CN_Mode::CN_Mode()
   itsMarshalledData.mode = INVALID;
 }
 
-CN_Mode::CN_Mode( std::string name )
+CN_Mode::CN_Mode( const Parset &ps )
 {
+  string name = ps.getModeName();
+
   itsMarshalledData.mode = INVALID;
 
   for( unsigned i = 0; i < nrModes(); i++ ) {
     if( name == modeList[i].name ) {
       itsMarshalledData.mode = modeList[i].mode;
-      itsMarshalledData.outputDataType = modeList[i].outputDataType;
+      itsMarshalledData.finalOutputDataType = modeList[i].finalOutputDataType;
       itsMarshalledData.isCoherent = modeList[i].isCoherent;
       itsMarshalledData.nrStokes = modeList[i].nrStokes;
       break;
     }
   }
+
+  itsMarshalledData.outputIncoherentStokesI = ps.outputIncoherentStokesI();
+
+  itsMarshalledData.nrOutputs = 1 + (itsMarshalledData.outputIncoherentStokesI? 1 : 0);
 }
 
 std::string CN_Mode::getModeName()

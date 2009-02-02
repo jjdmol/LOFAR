@@ -14,7 +14,7 @@ namespace RTCP {
 class Stokes
 {
   public:
-    Stokes(CN_Mode &mode, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration);
+    Stokes(bool coherent, int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration);
 
     void calculateCoherent( PencilBeamData *filteredData, StokesData *stokesData, unsigned nrBeams );
     void calculateIncoherent( FilteredData *filteredData, StokesData *stokesData, unsigned nrStations );

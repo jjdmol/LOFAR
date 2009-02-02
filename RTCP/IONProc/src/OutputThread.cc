@@ -38,10 +38,22 @@ namespace RTCP {
 
 OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
-  itsStreamToStorage(streamToStorage)
+  itsStreamToStorage(streamToStorage),
+  itsMode(CN_Mode(ps))
 {
-  for (unsigned i = 0; i < maxSendQueueSize; i ++)
-    itsFreeQueue.append(newDataHolder( ps, hugeMemoryAllocator ));
+  itsFreeQueue.resize( itsMode.nrOutputs() );
+  itsSendQueue.resize( itsMode.nrOutputs() );
+
+  // transpose the data holders: create queues streams for the output streams
+  for (unsigned i = 0; i < maxSendQueueSize; i ++) {
+    std::vector<StreamableData*> *v = newDataHolders( ps, hugeMemoryAllocator );
+
+    for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
+      itsFreeQueue[output].append((*v)[output]);
+    }
+
+    delete v;
+  }
 
   pthread_attr_t attr;
 
@@ -64,17 +76,26 @@ OutputThread::~OutputThread()
   if (pthread_join(thread, 0) != 0)
     throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
 
-  while (!itsFreeQueue.empty())
-    delete itsFreeQueue.remove();
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+    while (!itsFreeQueue[output].empty())
+      delete itsFreeQueue[output].remove();
 
-  while (!itsSendQueue.empty())
-    delete itsSendQueue.remove();
+    while (!itsSendQueue[output].empty())
+      delete itsSendQueue[output].remove();
+
+    while (!itsSendQueueActivity.empty())
+      itsSendQueueActivity.remove();
+  }
+
+  itsFreeQueue.clear();
+  itsSendQueue.clear();
 }
 
 
 void OutputThread::mainLoop()
 {
   StreamableData *data;
+  int output;
 
 #if defined HAVE_BGP_ION
   runOnCore0();
@@ -82,14 +103,22 @@ void OutputThread::mainLoop()
 
   static Semaphore semaphore(1);
 
-  while ((data = itsSendQueue.remove()) != 0) {
+  while ((output = itsSendQueueActivity.remove()) >= 0) {
+    data = itsSendQueue[output].remove();
+
     try {
       semaphore.down();
+
+      // write header: nr of output
+      itsStreamToStorage->write( &output, sizeof output );
+
+      // write data, including serial nr
       data->write(itsStreamToStorage, true);
+
       semaphore.up();
-      itsFreeQueue.append(data);
+      itsFreeQueue[output].append(data);
     } catch (...) {
-      itsFreeQueue.append(data);
+      itsFreeQueue[output].append(data);
       throw;
     }
   }

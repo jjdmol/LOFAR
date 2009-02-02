@@ -103,34 +103,43 @@ void OutputSection::connectToStorage()
   }
 }
 
+
 void OutputSection::preprocess(const Parset *ps)
 {
   itsParset                 = ps;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
-  itsNrIntegrationSteps     = ps->IONintegrationSteps();
-  itsCurrentIntegrationStep = 0;
-  itsSequenceNumber	    = 0;
   itsRealTime               = ps->realTime();
+  itsMode                   = CN_Mode(*ps);
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
+  itsCurrentIntegrationSteps.resize(itsMode.nrOutputs());
+  itsSequenceNumbers.resize(itsMode.nrOutputs());
 
   connectToStorage();
 
-  itsTmpSum = newDataHolder( *ps, hugeMemoryAllocator );
+  itsTmpSum = newDataHolders( *ps, hugeMemoryAllocator );
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsSums.push_back(newDataHolder( *ps, hugeMemoryAllocator ));
+    itsSums.push_back(newDataHolders( *ps, hugeMemoryAllocator ));
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
 
-  if( itsNrIntegrationSteps > 1 && !itsTmpSum->isIntegratable() )
-  {
-    // not integratable, so don't try
-    clog_logger("Warning: not integrating received data because data type is not integratable");
-    itsNrIntegrationSteps = 1;
+  // only the last data set is integrated
+  itsNrIntegrationSteps.resize(itsMode.nrOutputs());
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+    unsigned steps = (output == itsMode.nrOutputs()-1) ? ps->IONintegrationSteps() : 1;
+
+    if( steps > 1 && !(*itsTmpSum)[output]->isIntegratable() )
+    {
+      // not integratable, so don't try
+      clog_logger("Warning: not integrating received data for output " << output << " because data type is not integratable");
+      steps = 1;
+    }
+
+    itsNrIntegrationSteps[output] = steps;
   }
 }
 
@@ -156,44 +165,52 @@ void OutputSection::notDroppingData(unsigned subband)
 
 void OutputSection::process()
 {
-  bool firstTime = itsCurrentIntegrationStep == 0;
-  bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
-
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
     unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
-    if (lastTime) {
-      if (itsRealTime && itsOutputThreads[subband]->itsFreeQueue.empty()) {
-	droppingData(subband);
-	itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
-      } else {
-	notDroppingData(subband);
-	StreamableData *data = itsOutputThreads[subband]->itsFreeQueue.remove();
+    for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+      bool firstTime = itsCurrentIntegrationSteps[output] == 0;
+      bool lastTime  = itsCurrentIntegrationSteps[output] == itsNrIntegrationSteps[output] - 1;
+      std::clog << "reading subband " << subband << " and output " << output << "(first,last)=" << firstTime << "," << lastTime << std::endl;
+
+      if (lastTime) {
+        if (itsRealTime && itsOutputThreads[subband]->itsFreeQueue[output].empty()) {
+	  droppingData(subband);
+          (*itsTmpSum)[output]->read(itsStreamsFromCNs[inputChannel], false);
+        } else {
+	  notDroppingData(subband);
+	  StreamableData *data = itsOutputThreads[subband]->itsFreeQueue[output].remove();
       
-	data->read(itsStreamsFromCNs[inputChannel], false);
+	  data->read(itsStreamsFromCNs[inputChannel], false);
 
-	if (!firstTime)
-	  *data += *itsSums[subband];
+	  if (!firstTime)
+	    *data += *(*itsSums[subband])[output];
 
-	data->sequenceNumber = itsSequenceNumber;
-	itsOutputThreads[subband]->itsSendQueue.append(data);
+	  data->sequenceNumber = itsSequenceNumbers[output];
+	  itsOutputThreads[subband]->itsSendQueue[output].append(data);
+
+          // report that data has been added to a send queue
+	  itsOutputThreads[subband]->itsSendQueueActivity.append(output);
+        }
+      } else if (firstTime) {
+        (*itsSums[subband])[output]->read(itsStreamsFromCNs[inputChannel], false);
+      } else {
+        (*itsTmpSum)[output]->read(itsStreamsFromCNs[inputChannel], false);
+        *(*itsSums[subband])[output] += *(*itsTmpSum)[output];
       }
-    } else if (firstTime) {
-      itsSums[subband]->read(itsStreamsFromCNs[inputChannel], false);
-    } else {
-      itsTmpSum->read(itsStreamsFromCNs[inputChannel], false);
-      *itsSums[subband] += *itsTmpSum;
     }
 
     if (++ itsCurrentComputeCore == itsNrComputeCores)
       itsCurrentComputeCore = 0;
   }
 
-  if (++ itsCurrentIntegrationStep == itsNrIntegrationSteps) {
-    itsCurrentIntegrationStep = 0;
-    ++ itsSequenceNumber;
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+    if (++ itsCurrentIntegrationSteps[output] == itsNrIntegrationSteps[output] ) {
+      itsCurrentIntegrationSteps[output] = 0;
+      itsSequenceNumbers[output]++;
+    }
   }
 }
 
@@ -202,17 +219,29 @@ void OutputSection::postprocess()
 {
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     notDroppingData(subband); // for final warning message
-    itsOutputThreads[subband]->itsSendQueue.append(0); // 0 indicates that no more messages will be sent
-    delete itsOutputThreads[subband];
+    itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
+
+    for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+      delete (*itsSums[subband])[output];
+    }
     delete itsSums[subband];
+
+    delete itsOutputThreads[subband];
     delete itsStreamsToStorage[subband];
   }
+
 
   itsOutputThreads.clear();
   itsSums.clear();
   itsStreamsToStorage.clear();
   itsDroppedCount.clear();
+  itsNrIntegrationSteps.clear();
+  itsCurrentIntegrationSteps.clear();
+  itsSequenceNumbers.clear();
 
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
+    delete (*itsTmpSum)[output];
+  }
   delete itsTmpSum;
   itsTmpSum = 0;
 }

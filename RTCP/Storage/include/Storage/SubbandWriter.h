@@ -35,6 +35,7 @@
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
+#include <Interface/CN_Mode.h>
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Storage/InputThread.h>
@@ -60,11 +61,12 @@ class SubbandWriter
     void		    clearAllSums();
     void		    createInputStreams();
     void		    writeLogMessage();
-    void		    checkForDroppedData(StreamableData *, unsigned sb);
+    void		    checkForDroppedData(StreamableData *, unsigned sb, unsigned output);
     bool		    processSubband(unsigned sb);
 
     const Parset	    *itsPS;
     unsigned		    itsRank;
+    CN_Mode		    itsMode;
 
     std::vector<Stream *>   itsInputStreams;
     std::vector<bool>	    itsIsNullStream;
@@ -76,13 +78,13 @@ class SubbandWriter
     unsigned		    itsNBeams;
     unsigned		    itsNPolSquared;
 
-    vector<MSWriter *>	    itsWriters;
+    Matrix<MSWriter *>      itsWriters;
 
     unsigned		    itsNrSubbandsPerPset;
     unsigned		    itsNrSubbandsPerStorage;
-    std::vector<int>	    itsPreviousSequenceNumbers;
+    Matrix<int>		    itsPreviousSequenceNumbers;
 
-    vector<unsigned>	    itsBandIDs;
+    Matrix<unsigned>	    itsBandIDs;
     unsigned		    itsTimeCounter;
     fcomplex		    *itsVisibilities;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 

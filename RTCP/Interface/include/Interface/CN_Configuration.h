@@ -56,6 +56,7 @@ class CN_Configuration
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
     CN_Mode               &mode();
+    bool                  &outputIncoherentStokesI();
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -96,6 +97,7 @@ class CN_Configuration
       double              itsPhaseCentres[MAX_STATIONS * 3];
       unsigned            itsNrManualPencilBeams;
       double              itsManualPencilBeams[MAX_PENCILBEAMS * 2];
+      bool                itsOutputIncoherentStokesI;
     } itsMarshalledData;
 };
 
@@ -209,6 +211,12 @@ inline CN_Mode &CN_Configuration::mode()
 {
   return itsMode;
 }
+
+inline bool &CN_Configuration::outputIncoherentStokesI()
+{
+  return itsMarshalledData.itsOutputIncoherentStokesI;
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

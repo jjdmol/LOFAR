@@ -19,22 +19,22 @@ class StokesData: public SampleData<float,4>
   public:
     typedef SampleData<float,4> SuperType;
 
-    StokesData(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator = heapAllocator);
+    StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator = heapAllocator);
 
-    static size_t requiredSize(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
+    static size_t requiredSize(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration);
 };
 
-inline size_t StokesData::requiredSize(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
+inline size_t StokesData::requiredSize(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration)
 {
-  return align(sizeof(fcomplex) * (mode.isCoherent() ? nrPencilBeams : 1) * mode.nrStokes() * nrChannels * ((nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2), 32);
+  return align(sizeof(fcomplex) * (coherent ? nrPencilBeams : 1) * nrStokes * nrChannels * ((nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2), 32);
 }
 
-inline StokesData::StokesData(CN_Mode &mode, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator)
+inline StokesData::StokesData(bool coherent, unsigned nrStokes, unsigned nrPencilBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration, Allocator &allocator)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false, boost::extents[nrChannels][mode.isCoherent() ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][mode.nrStokes()], mode.isCoherent() ? nrPencilBeams : 1, allocator)
+  SuperType::SampleData(false, boost::extents[nrChannels][coherent ? nrPencilBeams : 1][(nrSamplesPerIntegration/nrSamplesPerStokesIntegration) | 2][nrStokes], coherent ? nrPencilBeams : 1, allocator)
 {
 }
 

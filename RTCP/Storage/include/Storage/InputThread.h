@@ -27,6 +27,7 @@
 
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
+#include <Interface/CN_Mode.h>
 #include <Stream/Stream.h>
 
 #include <pthread.h>
@@ -41,7 +42,8 @@ class InputThread
 			    ~InputThread();
 
     static const unsigned   maxReceiveQueueSize = 3;
-    Queue<StreamableData *> itsFreeQueue, itsReceiveQueue;
+    std::vector<Queue<StreamableData *> > itsFreeQueue, itsReceiveQueue;
+    Queue<unsigned>         itsReceiveQueueActivity;
 
   private:
     static void		    *mainLoopStub(void *inputThread);
@@ -50,6 +52,7 @@ class InputThread
     const Parset            *itsPS;
     Stream		    *itsStreamFromION; 
     pthread_t		    thread;
+    CN_Mode                 itsMode;
 };
 
 } // namespace RTCP
