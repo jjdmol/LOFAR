@@ -6,11 +6,12 @@
 #include <Interface/Allocator.h>
 #include <Interface/CN_Configuration.h>
 #include <string>
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
 
-StreamableData *newDataHolder( const Parset &ps, Allocator &allocator = heapAllocator );
+std::vector<StreamableData*> *newDataHolders( const Parset &ps, Allocator &allocator = heapAllocator );
 
 } // namespace RTCP
 } // namespace LOFAR

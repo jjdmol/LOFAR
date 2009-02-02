@@ -28,6 +28,7 @@
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
+#include <Interface/CN_Mode.h>
 #include <Stream/Stream.h>
 
 #include <pthread.h>
@@ -42,13 +43,18 @@ class OutputThread
 			    ~OutputThread();
 
     static const unsigned   maxSendQueueSize = 3;
-    Queue<StreamableData *> itsFreeQueue, itsSendQueue;
+
+    // each output stream has its own queues. the itsSendQueueActivity contains
+    // the output stream numbers of the queues to which data has been added 
+    std::vector<Queue<StreamableData *> > itsFreeQueue, itsSendQueue;
+    Queue<int>              itsSendQueueActivity; 
 
   private:
     static void		    *mainLoopStub(void *outputThread);
     void		    mainLoop();
 
     Stream		    *itsStreamToStorage; 
+    CN_Mode                 itsMode;
     pthread_t		    thread;
 };
 

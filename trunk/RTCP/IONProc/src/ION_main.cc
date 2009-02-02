@@ -191,7 +191,8 @@ static void configureCNs(const Parset &parset)
   configuration.pencilRingSize()          = parset.pencilRingSize();
   configuration.nrManualPencilBeams()     = parset.nrManualPencilBeams();
   configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
-  configuration.mode()                    = parset.mode();
+  configuration.mode()                    = CN_Mode(parset);
+  configuration.outputIncoherentStokesI() = parset.outputIncoherentStokesI();
 
   phaseCentres.resize( inputs.size(), 3 );
   for( unsigned stat = 0; stat < inputs.size(); stat++ ) {

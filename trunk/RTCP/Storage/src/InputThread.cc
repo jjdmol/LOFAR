@@ -27,6 +27,7 @@
 #include <Interface/DataHolder.h>
 #include <Interface/StreamableData.h>
 #include <Stream/NullStream.h>
+#include <Common/DataConvert.h>
 
 
 namespace LOFAR {
@@ -35,11 +36,23 @@ namespace RTCP {
 
 InputThread::InputThread(Stream *streamFromION, const Parset *ps)
 :
+  itsPS(ps),
   itsStreamFromION(streamFromION),
-  itsPS(ps)
+  itsMode(CN_Mode(*ps))
 {
-  for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-    itsFreeQueue.append(newDataHolder(*itsPS));
+  itsFreeQueue.resize( itsMode.nrOutputs() );
+  itsReceiveQueue.resize( itsMode.nrOutputs() );
+
+  // transpose output stream holders
+  for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
+    std::vector<StreamableData*> *v = newDataHolders(*itsPS);
+
+    for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
+      itsFreeQueue[output].append( (*v)[output] );
+    }
+
+    delete v;
+  }
 
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
     std::cerr << "could not create input thread" << std::endl;
@@ -55,8 +68,10 @@ InputThread::~InputThread()
     exit(1);
   }
 
-  for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-    delete itsFreeQueue.remove();
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
+    for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
+      delete itsFreeQueue[output].remove();
+  }
 }
 
 
@@ -69,15 +84,29 @@ void InputThread::mainLoop()
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {
-      data = itsFreeQueue.remove();
+      unsigned output;
+
+      // read header: output number
+      itsStreamFromION->read( &output, sizeof output );
+#if !defined WORDS_BIGENDIAN
+      dataConvert( LittleEndian, &output, 1 );
+#endif
+
+      // read data
+      data = itsFreeQueue[output].remove();
       data->read(itsStreamFromION, true);
-      itsReceiveQueue.append(data);
+      itsReceiveQueue[output].append(data);
+
+      // signal to the subbandwriter that we obtained data
+      itsReceiveQueueActivity.append(output);
     }
   } catch (Stream::EndOfStreamException &) {
-    itsFreeQueue.append(data);
+    itsFreeQueue[0].append(data); // to include data when freeing, so actual queue number does not matter
   }
 
-  itsReceiveQueue.append(0); // no more data
+  for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
+    itsReceiveQueue[output].append(0); // no more data
+  }
 }
 
 

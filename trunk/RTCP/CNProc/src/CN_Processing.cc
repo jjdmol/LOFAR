@@ -85,7 +85,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsStream(str),
   itsLocationInfo(locationInfo),
   itsArenas(3),
-  itsAllocators(6),
+  itsAllocators(7),
   itsInputData(0),
   itsTransposedData(0),
   itsFilteredData(0),
@@ -270,6 +270,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsNrStations	                   = configuration.nrStations();
   itsMode                          = configuration.mode();
+  itsOutputIncoherentStokesI       = configuration.outputIncoherentStokesI();
   itsOutputPsetSize                = outputPsets.size();
   unsigned nrChannels		   = configuration.nrChannelsPerSubband();
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
@@ -300,22 +301,24 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
   size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
   size_t pencilBeamDataSize = itsIsTransposeOutput ? PencilBeamData::requiredSize(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration) : 0;
-  size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
+  size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
+  size_t incoherentStokesIDataSize = itsIsTransposeOutput ? StokesData::requiredSize(false, 1, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
 
   // define the mapping between arenas and datasets
   const unsigned nrArenas = 3;
-  const unsigned nrDatasets = 6;
+  const unsigned nrDatasets = 7;
 
   struct {
     size_t size;
     unsigned arena;
   } mapping[nrDatasets] = {
-    { inputDataSize,      0 },
-    { transposedDataSize, 1 },
-    { filteredDataSize,   2 },
-    { correlatedDataSize, 1 },
-    { pencilBeamDataSize, 1 },
-    { stokesDataSize,     2 }
+    { inputDataSize,            0 },
+    { transposedDataSize,       1 },
+    { filteredDataSize,         2 },
+    { correlatedDataSize,       1 },
+    { pencilBeamDataSize,       1 },
+    { stokesDataSize,           2 },
+    { incoherentStokesIDataSize, 1 }
   };
 
   if( !itsMode.isCoherent() ) {
@@ -341,7 +344,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   std::clog << "Allocated " << totalSize*1.0/1024/1024 << " MByte for the arenas." << std::endl;
-
 
   // create the allocators
   for( unsigned dataset = 0; dataset < nrDatasets; dataset++ ) {
@@ -371,12 +373,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, *itsAllocators[2]);
     itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels, *itsAllocators[3]);
     itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, *itsAllocators[4]);
-    itsStokesData     = new StokesData(itsMode, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *itsAllocators[5]);
+    itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *itsAllocators[5]);
+    itsIncoherentStokesIData     = new StokesData(false, 1, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *itsAllocators[6]);
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
     itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres());
-    itsStokes           = new Stokes(itsMode, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
+    itsStokes            = new Stokes(itsMode.isCoherent(), itsMode.nrStokes(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
+    itsIncoherentStokesI = new Stokes(false, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
 
     itsCorrelator     = new Correlator(nrBeamFormedStations, itsBeamFormer->getStationMapping(),
 				       nrChannels, nrSamplesPerIntegration, configuration.correctBandPass());
@@ -516,6 +520,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams
   computeTimer.stop();
 }
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokesI()
+{
+  computeTimer.start();
+  itsIncoherentStokesI->calculateIncoherent(itsFilteredData,itsIncoherentStokesIData,itsNrStations);
+  computeTimer.stop();
+}
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokes()
 {
   computeTimer.start();
@@ -574,6 +585,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 
   if (itsIsTransposeOutput) {
     filter();
+
+    if( itsOutputIncoherentStokesI ) {
+      calculateIncoherentStokesI();
+      sendOutput( itsIncoherentStokesIData );
+    }
 
     switch( itsMode.mode() ) {
       case CN_Mode::FILTER:
@@ -661,8 +677,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
     delete itsFilteredData;
     delete itsBeamFormer;
     delete itsPencilBeamFormer;
+    delete itsPencilBeamData;
     delete itsCorrelator;
     delete itsCorrelatedData;
+    delete itsStokes;
+    delete itsStokesData;
+    delete itsIncoherentStokesI;
+    delete itsIncoherentStokesIData;
   }
 
   for (unsigned i = 0; i < itsAllocators.size(); i ++)

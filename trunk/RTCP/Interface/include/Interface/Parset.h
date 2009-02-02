@@ -34,7 +34,6 @@
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
-#include <Interface/CN_Mode.h>
 #include <ApplCommon/Observation.h>
 #include <Stream/Stream.h>
 
@@ -101,7 +100,8 @@ public:
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
 	string         getTransportType(const string& prefix) const;
-	CN_Mode        mode() const;
+	string         getModeName() const;
+	bool           outputIncoherentStokesI() const;
 
 	uint32         nrManualPencilBeams() const;
 	vector<double> getManualPencilBeam( const unsigned pencil ) const;
@@ -390,9 +390,9 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline CN_Mode Parset::mode() const
+inline string Parset::getModeName() const
 {
-  return CN_Mode(getString("Observation.mode"));
+  return getString("Observation.mode");
 }
 
 inline uint32 Parset::nrPencilRings() const
@@ -415,6 +415,10 @@ inline double Parset::pencilRingSize() const
   return getDouble("Observation.pencilRingSize");
 }
 
+inline bool Parset::outputIncoherentStokesI() const
+{
+  return getBool("Observation.outputIncoherentStokesI");
+}
 
 } // namespace RTCP
 } // namespace LOFAR

@@ -7,12 +7,12 @@
 namespace LOFAR {
 namespace RTCP {
 
-Stokes::Stokes( CN_Mode &mode, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration ):
+Stokes::Stokes( bool coherent, int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
-  itsNrStokes(mode.nrStokes()),
-  itsIsCoherent(mode.isCoherent())
+  itsNrStokes(nrStokes),
+  itsIsCoherent(coherent)
 {
 }
 

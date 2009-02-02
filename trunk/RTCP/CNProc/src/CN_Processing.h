@@ -92,6 +92,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void                filter();
     void                formBeams();
     void                formPencilBeams();
+    void                calculateIncoherentStokesI();
     void                calculateCoherentStokes();
     void                calculateIncoherentStokes();
     void                correlate();
@@ -132,7 +133,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     CorrelatedData		*itsCorrelatedData;
     PencilBeamData              *itsPencilBeamData;
     StokesData                  *itsStokesData;
+    StokesData                  *itsIncoherentStokesIData;
     CN_Mode                     itsMode;
+    bool			itsOutputIncoherentStokesI;
 
 #if defined HAVE_MPI
     bool                itsDoAsyncCommunication;
@@ -142,7 +145,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     PPF<SAMPLE_TYPE>	*itsPPF;
     BeamFormer          *itsBeamFormer;
     PencilBeams         *itsPencilBeamFormer;
-    Stokes              *itsStokes;
+    Stokes              *itsStokes, *itsIncoherentStokesI;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

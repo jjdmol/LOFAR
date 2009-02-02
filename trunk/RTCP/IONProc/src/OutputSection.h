@@ -48,15 +48,16 @@ class OutputSection
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
 
-    std::vector<StreamableData *> itsSums;
-    StreamableData		*itsTmpSum;
+    std::vector<std::vector<StreamableData *> *> itsSums;
+    std::vector<StreamableData *> *itsTmpSum;
     std::vector<OutputThread *> itsOutputThreads;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset;
-    unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
-    unsigned			itsSequenceNumber;
+    std::vector<unsigned>	itsNrIntegrationSteps, itsCurrentIntegrationSteps;
+    std::vector<unsigned>	itsSequenceNumbers;
     const Parset                *itsParset;
+    CN_Mode                     itsMode;
     bool                        itsRealTime;
 
     const std::vector<Stream *> &itsStreamsFromCNs;

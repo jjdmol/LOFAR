@@ -37,8 +37,8 @@ class StreamableData {
     // suppress warning by defining a virtual destructor
     virtual ~StreamableData() {}
 
-    void read(Stream*, bool withSequenceNumber);
-    void write(Stream*, bool withSequenceNumber);
+    virtual void read(Stream*, bool withSequenceNumber);
+    virtual void write(Stream*, bool withSequenceNumber);
 
     bool isIntegratable()
     { return integratable; }

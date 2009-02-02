@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <Stream/Stream.h>
+#include <Interface/Parset.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -15,7 +16,9 @@ class CN_Mode
       CORRELATEDDATA = 0,
       FILTEREDDATA,
       PENCILBEAMDATA,
-      STOKESDATA
+      STOKESDATA,
+
+      RAWDATA = -1
     };
 
     enum Mode {
@@ -31,15 +34,18 @@ class CN_Mode
     };
 
     CN_Mode();
-    CN_Mode( std::string modeName );
+    CN_Mode( const Parset &ps );
 
-    Mode &mode();
-    OutputDataType &outputDataType();
+    Mode mode() const;
+    unsigned nrOutputs() const;
+    OutputDataType outputDataType( unsigned output ) const;
+    OutputDataType finalOutputDataType() const;
 
     bool isCoherent() const;
     unsigned nrStokes() const;
 
     std::string getModeName();
+    std::string getOutputName( unsigned output ) const;
 
     void read(Stream *);
     void write(Stream *) const;
@@ -48,29 +54,54 @@ class CN_Mode
     struct modeList {
       Mode mode;
       std::string name;
-      OutputDataType outputDataType;
+      OutputDataType finalOutputDataType;
       bool isCoherent;
       unsigned nrStokes;
     } const static modeList[];
 
-    static int nrModes();
+    static unsigned nrModes();
 
     struct {
       Mode mode;
-      OutputDataType outputDataType;
+      OutputDataType finalOutputDataType;
       bool isCoherent;
       unsigned nrStokes;
+
+      unsigned outputIncoherentStokesI;
+      unsigned nrOutputs;
     } itsMarshalledData;
 };
 
-inline CN_Mode::Mode &CN_Mode::mode()
+inline CN_Mode::Mode CN_Mode::mode() const
 {
   return itsMarshalledData.mode;
 }
 
-inline CN_Mode::OutputDataType &CN_Mode::outputDataType()
+inline unsigned CN_Mode::nrOutputs() const
 {
-  return itsMarshalledData.outputDataType;
+  return itsMarshalledData.nrOutputs;
+}
+
+inline CN_Mode::OutputDataType CN_Mode::outputDataType( unsigned output ) const
+{
+  if( itsMarshalledData.outputIncoherentStokesI ) {
+    if( output == 0 ) {
+      return CN_Mode::STOKESDATA;
+    } else {
+      output--;
+    }
+  }
+
+  if( output == 0 ) {
+    return finalOutputDataType();
+  }
+
+  return RAWDATA;
+}
+
+inline CN_Mode::OutputDataType CN_Mode::finalOutputDataType() const
+{
+  return itsMarshalledData.finalOutputDataType;
 }
 
 inline bool CN_Mode::isCoherent() const

@@ -11,27 +11,41 @@
 namespace LOFAR {
 namespace RTCP {
 
-StreamableData *newDataHolder( const Parset &ps, Allocator &allocator )
+std::vector<StreamableData*> *newDataHolders( const Parset &ps, Allocator &allocator )
 {
-  CN_Mode mode = ps.mode();
+  CN_Mode mode = CN_Mode(ps);
+  std::vector<StreamableData*> *outputs;
 
-  switch( mode.outputDataType() ) {
+  outputs = new std::vector<StreamableData*>::vector();
+
+  if( ps.outputIncoherentStokesI() ) {
+    outputs->push_back( new StokesData( false, 1, ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator ) );
+  }
+
+  switch( mode.finalOutputDataType() ) {
     case CN_Mode::CORRELATEDDATA:
-      return new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator );
+      outputs->push_back( new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator ) );
+      break;
 
     case CN_Mode::FILTEREDDATA:
-      return new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+      outputs->push_back( new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator )  );
+      break;
 
     case CN_Mode::PENCILBEAMDATA:
-      return new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+      outputs->push_back( new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator ) );
+      break;
 
     case CN_Mode::STOKESDATA:
-      return new StokesData( mode, ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator );
+      outputs->push_back( new StokesData( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator ) );
+      break;
 
     default:
       std::cerr << "newDataHolder: Cannot create data object for mode " << mode << std::endl;
-      return 0;
+      outputs->push_back( 0 );
+      break;
   }
+
+  return outputs;
 }
 
 } // namespace RTCP
