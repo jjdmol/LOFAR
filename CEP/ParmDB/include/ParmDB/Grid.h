@@ -62,6 +62,7 @@ namespace BBS {
     // The grids in the vector must span a rectangular grid, otherwise an
     // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
+    // The vector can be empty. In that case a default Grid is created.
     GridRep(const vector<Grid>& domains, bool sort);
 
     // Create a grid from a series of domains.
@@ -69,6 +70,7 @@ namespace BBS {
     // The domains in the vector must span a rectangular grid, otherwise an
     // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
+    // The vector can be empty. In that case a default Grid is created.
     GridRep(const vector<Box>& domains, bool sort);
 
     // Is it the default grid?
@@ -131,6 +133,7 @@ namespace BBS {
     // The grids in the vector must span a rectangular grid, otherwise an
     // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
+    // The vector can be empty. In that case a default Grid is created.
     Grid(const vector<Grid>& grids, bool sort=false);
 
     // Create a grid from a series of domains.
@@ -138,6 +141,7 @@ namespace BBS {
     // The domains in the vector must span a rectangular grid, otherwise an
     // exception is thrown.
     // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
+    // The vector can be empty. In that case a default Grid is created.
     Grid(const vector<Box>& domains, bool sort=false)
       : itsRep (new GridRep(domains, sort))
     {}

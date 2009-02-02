@@ -36,25 +36,9 @@ using namespace std;
 // tParmFacade.run creates the pdb with parmdb.
 // So it must match the output expected here.
 
-void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
+void showRec (const Record& rec)
 {
-  // Now get the values of all parameters.
-  vector<string> names = acc.getNames(pattern);
-  cout << "Names: " << names << endl;
-  vector<double> rng = acc.getRange("*");
-  cout << "Range: " << rng << endl;
-  map<string,vector<double> > values = acc.getValuesMap (pattern,
-                                                         rng[0], rng[2], nf,
-                                                         rng[1], rng[3], nt,
-                                                         true);
-  for (map<string,vector<double> >::const_iterator iter=values.begin();
-       iter != values.end();
-       iter++) {
-    cout <<iter->first << ' ' << iter->second << endl;
-  }
-  cout << endl;
-  // Get values without giving a grid.
-  Record rec = acc.getValuesGrid (pattern, rng[0], rng[2], rng[1], rng[3]);
+  cout << ">start<" << endl;
   for (uint i=0; i<rec.nfields(); ++i) {
     if (rec.name(i) != "_grid") {
       cout << rec.name(i) << ' ' << rec.asArrayDouble(i) << endl;
@@ -64,6 +48,39 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   for (uint i=0; i<ginfo.nfields(); ++i) {
     cout << ginfo.name(i) << ' ' << ginfo.asArrayDouble(i) << endl;
   }
+  cout << ">end<" << endl;
+}
+
+void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
+{
+  // Now get the values of all parameters.
+  vector<string> names = acc.getNames(pattern);
+  cout << ">start<" << endl;
+  cout << "Names: " << names << endl;
+  vector<double> rng = acc.getRange("*");
+  cout << "Range: " << rng << endl;
+  cout << ">end<" << endl;
+  map<string,vector<double> > values = acc.getValuesMap (pattern,
+                                                         rng[0], rng[1], nf,
+                                                         rng[2], rng[3], nt,
+                                                         true);
+  ////cout << ">start<" << endl;   not yet for tParmFacadeDistr
+  for (map<string,vector<double> >::const_iterator iter=values.begin();
+       iter != values.end();
+       iter++) {
+    cout <<iter->first << ' ' << iter->second << endl;
+  }
+  cout << endl;
+  ////cout << ">end<" << endl;
+  // Get values without giving a grid.
+  // Exactly matching domain.
+  showRec (acc.getValuesGrid (pattern, rng[0], rng[1], rng[2], rng[3]));
+  // Much bigger domain.
+  showRec (acc.getValuesGrid (pattern, 0,20,0,20));
+  // No matches.
+  showRec (acc.getValuesGrid (pattern, 20,40,20,40));
+  // A smaller domain (so using only 2nd part for tParmFacadeDistr).
+  showRec (acc.getValuesGrid (pattern, 10,16,6,20));
 }
 
 int main (int argc, const char* argv[])

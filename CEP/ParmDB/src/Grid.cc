@@ -46,12 +46,18 @@ namespace BBS {
   GridRep::GridRep (const vector<Box>& domains, bool unsorted)
     : itsIsDefault (false)
   {
-    if (unsorted) {
-      vector<Box> sortDomains(domains);
-      sort (sortDomains.begin(), sortDomains.end());
-      setup (sortDomains);
+    if (domains.empty()) {
+      itsIsDefault = true;
+      itsAxes[0] = Axis::ShPtr(new RegularAxis());
+      itsAxes[1] = Axis::ShPtr(new RegularAxis());
     } else {
-      setup (domains);
+      if (unsorted) {
+        vector<Box> sortDomains(domains);
+        sort (sortDomains.begin(), sortDomains.end());
+        setup (sortDomains);
+      } else {
+        setup (domains);
+      }
     }
     init();
   }
@@ -59,12 +65,18 @@ namespace BBS {
   GridRep::GridRep (const vector<Grid>& grids, bool unsorted)
     : itsIsDefault (false)
   {
-    if (unsorted) {
-      vector<Grid> sortGrids(grids);
-      sort (sortGrids.begin(), sortGrids.end());
-      setup (sortGrids);
+    if (grids.empty()) {
+      itsIsDefault = true;
+      itsAxes[0] = Axis::ShPtr(new RegularAxis());
+      itsAxes[1] = Axis::ShPtr(new RegularAxis());
     } else {
-      setup (grids);
+      if (unsorted) {
+        vector<Grid> sortGrids(grids);
+        sort (sortGrids.begin(), sortGrids.end());
+        setup (sortGrids);
+      } else {
+        setup (grids);
+      }
     }
     init();
   }

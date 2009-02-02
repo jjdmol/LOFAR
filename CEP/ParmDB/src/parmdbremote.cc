@@ -22,13 +22,16 @@
 
 #include <lofar_config.h>
 #include <ParmDB/ParmFacadeLocal.h>
+#include <ParmDB/ParmFacadeDistr.h>
 #include <MWCommon/SocketConnection.h>
 #include <MWCommon/MWBlobIO.h>
 #include <MWCommon/VdsPartDesc.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
 #include <casa/IO/AipsIO.h>
+#include <casa/Containers/Record.h>
 #include <iostream>
 #include <unistd.h>     //# for basename
 #include <libgen.h>
@@ -43,13 +46,6 @@ void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   string pattern;
   bis >> pattern;
   bos << pdb.getRange (pattern);
-}
-
-void getNames (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
-{
-  string pattern;
-  bis >> pattern;
-  bos << pdb.getNames (pattern);
 }
 
 void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
@@ -74,7 +70,8 @@ void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
   BlobAipsIO baio(bos);
   casa::AipsIO aio(&baio);
-  aio << pdb.getValues (pattern, freqv1, freqv2, timev1, timev2, asStartEnd);
+  casa::Record rec = pdb.getValues (pattern, freqv1, freqv2, timev1, timev2, asStartEnd);
+  aio << rec;
 }
 
 void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
@@ -99,27 +96,22 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
     MWBlobIn bbi(bufin);
     MWBlobOut bbo(bufout, 1, 0);
     switch (bbi.getOperation()) {
-    case 0:
-      // Exit
+    case ParmFacadeDistr::Quit:
       bbi.finish();
       return;
-    case 1:
+    case ParmFacadeDistr::GetRange:
       // Handle getRange;
       getRange (pdb, bbi.blobStream(), bbo.blobStream());
       break;
-    case 2:
-      // Handle getNames;
-      getNames (pdb, bbi.blobStream(), bbo.blobStream());
-      break;
-    case 3:
+    case ParmFacadeDistr::GetValues:
       // Handle getValues with nfreq/ntime.
       getValues (pdb, bbi.blobStream(), bbo.blobStream());
       break;
-    case 4:
+    case ParmFacadeDistr::GetValuesVec:
       // Handle getValues with vector of freq/time.
       getValuesVec (pdb, bbi.blobStream(), bbo.blobStream());
       break;
-    case 5:
+    case ParmFacadeDistr::GetValuesGrid:
       // Handle getValuesGrid
       getValuesGrid (pdb, bbi.blobStream(), bbo.blobStream());
       break;
@@ -149,10 +141,11 @@ int main (int argc, char* argv[])
     // Open the ParmDB.
     ParmFacadeLocal parmdb(fname);
     {
-      // Tell master the MS-part to process.
+      // Tell the master the part name and the parm names it contains.
       BlobString bufout;
       MWBlobOut bbo(bufout, 1, 0);
       bbo.blobStream() << fname;
+      bbo.blobStream() << parmdb.getNames();
       bbo.finish();
       conn->write (bufout);
     }
@@ -165,6 +158,7 @@ int main (int argc, char* argv[])
     MWBlobOut bbo(bufout, 0, 0);
     bbo.blobStream() << x.what();
     bbo.finish();
+    cerr << "Unexpected parmdbremote exception: " << x.what() << endl;
     conn->write (bufout);
     return 1;
   }

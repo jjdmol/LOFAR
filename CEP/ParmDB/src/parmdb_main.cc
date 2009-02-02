@@ -407,7 +407,7 @@ Box getDomain (const KeyValueMap& kvmap, int size=2)
       end.push_back (0);
     }
   }
-  return Box(make_pair(st[0], end[0]), make_pair(st[1], end[1]));
+  return Box(make_pair(st[0], st[1]), make_pair(end[0], end[1]));
 }
 
 void showDomain (const Box& domain, ostream& ostr)
@@ -784,6 +784,8 @@ int main (int argc, char *argv[])
     } else {
       doIt (true, cout);
     }
+    // Print an extra line to be sure the shell prompt is at a new line.
+    cout << endl;
   } catch (std::exception& x) {
     cerr << "Caught exception: " << x.what() << endl;
     return 1;
