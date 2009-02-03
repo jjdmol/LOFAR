@@ -46,6 +46,16 @@ namespace BBS {
   vector<ParmDBRep*> ParmDB::theirParmDBs;
 
 
+  ParmDBRep::ParmDBRep()
+    : itsCount     (0),
+      itsSeqNr     (-1),
+      itsDefFilled (false),
+      itsDefSteps  (2)
+    {
+      itsDefSteps[0] = 1000;       // 1 KHz
+      itsDefSteps[1] = 5;          // 5 sec
+    }
+
   ParmDBRep::~ParmDBRep()
   {}
 

@@ -60,18 +60,20 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   vector<double> rng = acc.getRange("*");
   cout << "Range: " << rng << endl;
   cout << ">end<" << endl;
+  double fs = (rng[1] - rng[0]) / nf;
+  double ts = (rng[3] - rng[2]) / nt;
   map<string,vector<double> > values = acc.getValuesMap (pattern,
-                                                         rng[0], rng[1], nf,
-                                                         rng[2], rng[3], nt,
+                                                         rng[0], rng[1], fs,
+                                                         rng[2], rng[3], ts,
                                                          true);
-  ////cout << ">start<" << endl;   not yet for tParmFacadeDistr
+  cout << ">start<" << endl;
   for (map<string,vector<double> >::const_iterator iter=values.begin();
        iter != values.end();
        iter++) {
     cout <<iter->first << ' ' << iter->second << endl;
   }
   cout << endl;
-  ////cout << ">end<" << endl;
+  cout << ">end<" << endl;
   // Get values without giving a grid.
   // Exactly matching domain.
   showRec (acc.getValuesGrid (pattern, rng[0], rng[1], rng[2], rng[3]));

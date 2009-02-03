@@ -90,8 +90,10 @@ namespace LOFAR { namespace BBS {
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
     virtual casa::Record getValues (const string& parmNamePattern,
-                                    double freqv1, double freqv2, int nfreq,
-                                    double timev1, double timev2, int ntime,
+                                    double freqv1, double freqv2,
+                                    double freqStep,
+                                    double timev1, double timev2,
+                                    double timeStep,
                                     bool asStartEnd=false);
 
     // Get the values of the given parameters on the given grid where v1/v2
@@ -129,6 +131,9 @@ namespace LOFAR { namespace BBS {
 
     // Check if the names of remote client inx are equal to the first one.
     void checkNames (const vector<string>& names, uint inx) const;
+
+    // Combine the result records from the remote sites.
+    casa::Record combineRemote (const vector<casa::Record>& recs) const;
 
     // Find all parm names in the records and add them to the set.
     void findParmNames (const vector<casa::Record>& recs,

@@ -35,8 +35,8 @@ using namespace casa;
 
 // Create tParmFacade.in_mep with parmdb using:
 //   create tablename='tParmFacade.in_mep'
-//   add parm1 domain=[1,5,4,10],values=2
-//   add parm2 domain=[1,5,4,10],values=[2,0.1],nx=2
+//   add parm1 domain=[1,4,5,10],values=2
+//   add parm2 domain=[1,4,5,10],values=[2,0.1],nx=2
 //   add parm3 type='expression',expression='parm1*parm2'
 
 namespace LOFAR {
@@ -75,10 +75,27 @@ namespace LOFAR {
     }
 
     Record ParmFacadeLocal::getValues (const string& parmNamePattern,
-                                       double freqv1, double freqv2, int nfreq,
-                                       double timev1, double timev2, int ntime,
+                                       double freqv1, double freqv2,
+                                       double freqStep,
+                                       double timev1, double timev2,
+                                       double timeStep,
                                        bool asStartEnd)
     {
+      // Use default step values if needed.
+      if (freqStep <= 0) {
+        freqStep = itsPDB.getDefaultSteps()[0];
+      }
+      if (timeStep <= 0) {
+        timeStep = itsPDB.getDefaultSteps()[1];
+      }
+      int nfreq, ntime;
+      if (asStartEnd) {
+        nfreq = int((freqv2-freqv1) / freqStep + 0.5);
+        ntime = int((timev2-timev1) / timeStep + 0.5);
+      } else {
+        nfreq = int(freqv2 / freqStep + 0.5);
+        ntime = int(timev2 / timeStep + 0.5);
+      }
       // Create the predict grid.
       Axis::ShPtr axisx (new RegularAxis(freqv1, freqv2, nfreq, asStartEnd));
       Axis::ShPtr axisy (new RegularAxis(timev1, timev2, ntime, asStartEnd));
@@ -105,6 +122,7 @@ namespace LOFAR {
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.
       Record out;
+      Record gridInfo;
       // Form the names to get.
       // The returned parmId should be the index.
       ParmSet parmSet;
@@ -123,16 +141,28 @@ namespace LOFAR {
       Array<double> result;
       for (uint i=0; i<names.size(); ++i) {
         Parm parm(parmCache, i);
-        parm.getResult (result, predictGrid);
-        // If the value is constant, the array has only one element.
-        // In that case resize it to the full grid.
-        if (result.nelements() == 1) {
-          double dval = *result.data();
-          result.resize (IPosition(2, axisx.size(), axisy.size()));
-          result = dval;
+        parm.getResult (result, predictGrid, true);
+        if (result.size() > 0) {
+          // There is data in this domain.
+          // If the value is constant, the array has only one element.
+          // In that case resize it to the full grid.
+          if (result.nelements() == 1) {
+            double dval = *result.data();
+            result.resize (IPosition(2, axisx.size(), axisy.size()));
+            result = dval;
+          }
+          out.define (names[i], result);
+          gridInfo.define (names[i] + ";freqs",
+                           Vector<double>(axisx.centers()));
+          gridInfo.define (names[i] + ";times",
+                           Vector<double>(axisy.centers()));
+          gridInfo.define (names[i] + ";freqwidths",
+                           Vector<double>(axisx.widths()));
+          gridInfo.define (names[i] + ";timewidths",
+                           Vector<double>(axisy.widths()));
         }
-        out.define (names[i], result);
       }
+      out.defineRecord ("_grid", gridInfo);
       return out;
     }
 
@@ -144,7 +174,7 @@ namespace LOFAR {
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.
       Record out;
-      Record ginfo;
+      Record gridInfo;
       // Form the names to get.
       // The returned parmId should be the index.
       ParmSet parmSet;
@@ -161,22 +191,22 @@ namespace LOFAR {
         if (!grid.isDefault()) {
           // There should be data in this domain. 
           Parm parm(parmCache, i);
-          parm.getResult (result, grid);
+          parm.getResult (result, grid, true);
           if (result.size() > 0) {
             // There is data in this domain.
             out.define (names[i], result);
-            ginfo.define (names[i] + ";freqs",
-                          Vector<double>(grid[0]->centers()));
-            ginfo.define (names[i] + ";times",
-                          Vector<double>(grid[1]->centers()));
-            ginfo.define (names[i] + ";freqwidths",
-                          Vector<double>(grid[0]->widths()));
-            ginfo.define (names[i] + ";timewidths",
-                          Vector<double>(grid[1]->widths()));
+            gridInfo.define (names[i] + ";freqs",
+                             Vector<double>(grid[0]->centers()));
+            gridInfo.define (names[i] + ";times",
+                             Vector<double>(grid[1]->centers()));
+            gridInfo.define (names[i] + ";freqwidths",
+                             Vector<double>(grid[0]->widths()));
+            gridInfo.define (names[i] + ";timewidths",
+                             Vector<double>(grid[1]->widths()));
           }
         }
       }
-      out.defineRecord ("_grid", ginfo);
+      out.defineRecord ("_grid", gridInfo);
       return out;
     }
 

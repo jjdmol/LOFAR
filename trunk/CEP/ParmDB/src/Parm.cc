@@ -161,6 +161,7 @@ namespace BBS {
   {
     ASSERT (! itsSolveGrid.isDefault());
     // Moet ik nog over nadenken.
+    ASSERTSTR (false, "revertCoeff is not implemented yet");
     // Coefficients have changed, so recalculate the perturbations.
     calcPerturbations();
   }
@@ -218,11 +219,12 @@ namespace BBS {
     }
   }
 
-  void Parm::getResult (Array<double>& result, const Grid& predictGrid)
+  void Parm::getResult (Array<double>& result, const Grid& predictGrid,
+                        bool emptyResult)
   {
     // Get the values.
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
-    if (pvset.empty()) {
+    if (emptyResult  &&  pvset.empty()) {
       result.resize();
       return;
     }

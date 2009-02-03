@@ -70,6 +70,9 @@ namespace BBS {
     virtual Box getRange (const std::vector<std::string>& parmNames) const;
     // </group>
 
+    // Set the default step values.
+    virtual void setDefaultSteps (const vector<double>&);
+
     // Get the parameter values for the given parameters and domain.
     // The parmids form the indices in the result vector.
     virtual void getValues (vector<ParmValueSet>& values,

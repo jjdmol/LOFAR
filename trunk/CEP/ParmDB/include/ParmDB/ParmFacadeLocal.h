@@ -83,8 +83,10 @@ namespace LOFAR { namespace BBS {
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
     virtual casa::Record getValues (const string& parmNamePattern,
-                                    double freqv1, double freqv2, int nfreq,
-                                    double timev1, double timev2, int ntime,
+                                    double freqv1, double freqv2,
+                                    double freqStep,
+                                    double timev1, double timev2,
+                                    double timeStep,
                                     bool asStartEnd=false);
 
     // Get the values of the given parameters on the given grid where v1/v2

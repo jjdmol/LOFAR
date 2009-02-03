@@ -34,6 +34,7 @@ fi
 
 # Get possible options.
 overwrite=0
+setsteps=1
 help=0
 while [ $# != 0 ]
 do
@@ -46,6 +47,12 @@ do
   elif [ "$1" = "-nooverwrite" ]; then
     overwrite=0
     shift
+  elif [ "$1" = "-setsteps" ]; then
+    setsteps=1
+    shift
+  elif [ "$1" = "-nosetsteps" ]; then
+    setsteps=0
+    shift
   else
     break
   fi
@@ -56,9 +63,11 @@ if test $# = 0; then
   help=1
 fi
 if test $help = 1; then
-  echo "run as:  setupsourcedb [-overwrite] ms-gds srccat [sourcedb-name]"
+  echo "run as:  setupsourcedb [-overwrite] [-setsteps]"
+  echo "                       ms-gds srccat [sourcedb-name]"
   echo "                       [clusterdesc] [logfile] [dry] [hfn]"
   echo "       -overwrite    overwrite sourcedb if already existing"
+  echo "       -setsteps     set default steps in the parmdb from the MS"
   echo "       ms-gds        name of global VDS file of the MS"
   echo "       srccat        name of ASCII file containing sources in the"
   echo "                     standard makesourcedb format"
@@ -135,12 +144,25 @@ if test -e $vdsname; then
   fi
 fi
 
+# By default do not set steps.
+stepfreq=.
+steptime=.
+
 # It is possible to give an MS instead of a VDS file.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
-  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry'"
-  $pgmpath/setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
+  echo "setupsourcedb-part '' '' '' '' 0 '$msvds' '' '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
+  $pgmpath/setupsourcedb-part "" "" "" "" 0 "$msvds" "" "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"
   exit
+fi
+
+# Get step in freq and time from the VDS file.
+# They represent the steps in the MS.
+if test $setsteps = 1; then
+  steptime=`getparsetvalue $msvds StepTime`
+  stfreq=`getparsetvalue $msvds StartFreqs 0`
+  endfreq=`getparsetvalue $msvds EndFreqs 0`
+  stepfreq=`python -c "print $endfreq - $stfreq"`
 fi
 
 # Get clusterdesc name from the VDS file if not given.
@@ -160,8 +182,8 @@ if test "$hfn" != ""; then
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry'"
-startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry"
+echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupsourcedb-part '$LOFARROOT' '$wd' '$srccat' '$pdb' '$overwrite' '$dry' '$stepfreq' '$steptime'"
+startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupsourcedb-part "$LOFARROOT" "$wd" "$srccat" "$pdb" "$overwrite" "$dry" "$stepfreq" "$steptime"
 
 # Create a VDS file for the sourcedb-s by copying it.
 # This is the file that has to be used in pyparmdb.
