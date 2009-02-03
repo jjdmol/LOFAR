@@ -97,6 +97,8 @@ NavPanelConfig.NavPanelConfig	1#1
 	BeamServer_Processes	9#42
 	MACInfoServer_Processes	9#43
 	Observation_Observations	9#44
+	Ring_Hardware	9#45
+	LOFAR_Alerts	9#46
 ClaimManager.ClaimManager	1#1
 	request	1#2
 		typeName	25#3
@@ -178,40 +180,42 @@ lofarSpeedTest.result.writeTime	""	lt:1 LANG:1 "@%50s@"
 lofarSpeedTest.result.readTime	""	lt:1 LANG:1 "@%50s@"
 
 # DpValue
-ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-__navigator.TabViews	Navigator	"Hardware", "Observations", "Processes", "Reports", "Alerts"	0x101	18.04.2008 09:51:14.004
-root.LOFAR_Hardware	NavPanelConfig	"Hardware/LOFAR_Netherlands.pnl"	0x101	04.10.2007 12:27:39.531
-root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"	0x101	28.03.2008 21:27:24.948
-root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"	0x101	20.05.2008 09:08:53.890
-root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"	0x101	01.02.2008 11:00:03.609
-root.StnPIC_Hardware	NavPanelConfig	"Hardware/Station_Cabinet.pnl"	0x101	10.01.2008 13:46:50.691
-root.Cabinet_Hardware	NavPanelConfig	"Hardware/Station_Cabinet_detailed.pnl"	0x101	13.01.2008 15:18:03.015
-root.SubRack_Hardware	NavPanelConfig	"Hardware\\Station_Subrack.pnl"	0x101	14.01.2008 15:32:35.843
-root.TBBoard_Hardware	NavPanelConfig	"Hardware/Station_TBBoard.pnl"	0x101	25.01.2008 08:47:29.884
-root.RSPBoard_Hardware	NavPanelConfig	"Hardware/Station_RSPBoard.pnl"	0x101	06.02.2008 11:14:45.932
-root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101	07.02.2008 08:04:26.263
-root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101	21.04.2008 14:11:00.093
-root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101	28.04.2008 10:16:38.921
-root.KVLogger_Processes	NavPanelConfig	"Processes/KVLogger.pnl"	0x101	29.04.2008 08:53:06.578
-root.LogProcessor_Processes	NavPanelConfig	"Processes/LogProcessor.pnl"	0x101	29.04.2008 08:57:56.718
-root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101	29.04.2008 08:54:11.921
-root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101	29.04.2008 09:19:14.578
-root.SoftwareMonitor_Processes	NavPanelConfig	"Processes/SoftwareMonitor.pnl"	0x101	13.05.2008 12:07:19.984
-root.HardwareMonitor_Processes	NavPanelConfig	"Processes/HardwareMonitor.pnl"	0x101	13.05.2008 12:20:35.640
-root.DigBoardCtrl_Processes	NavPanelConfig	"Processes/DigBoardCtrl.pnl"	0x101	13.05.2008 13:01:32.937
-root.StationCtrl_Processes	NavPanelConfig	"Processes/StationCtrl.pnl"	0x101	13.05.2008 14:22:08.609
-root.TemperatureMonitor_Processes	NavPanelConfig	"Processes/TemperatureMonitor.pnl"	0x101	19.06.2008 09:13:40.906
-root.BeamCtrl_Processes	NavPanelConfig	"Processes/BeamCtrl.pnl"	0x101	14.05.2008 07:54:45.899
-root.CalCtrl_Processes	NavPanelConfig	"Processes/CalCtrl.pnl"	0x101	15.05.2008 07:23:53.867
-root.TBBCtrl_Processes	NavPanelConfig	"Processes/TBBCtrl.pnl"	0x101	15.05.2008 09:06:58.774
-root.AMCServer_Processes	NavPanelConfig	"Processes/AMCServer.pnl"	0x101	19.05.2008 09:22:52.453
-root.ObsCtrl_Processes	NavPanelConfig	"Processes/ObsCtrl.pnl"	0x101	23.05.2008 08:20:08.501
-root.SASGateway_Processes	NavPanelConfig	"Processes/SASGateway.pnl"	0x101	19.06.2008 06:58:58.671
-root.Correlator_Processes	NavPanelConfig	"Processes/Correlator.pnl"	0x101	19.06.2008 08:27:45.453
-root.StorageAppl_Processes	NavPanelConfig	"Processes/StorageAppl.pnl"	0x101	19.06.2008 08:27:58.796
-root.RSPDriver_Processes	NavPanelConfig	"Processes/RSPDriver.pnl"	0x101	19.06.2008 08:48:13.890
-root.TBBDriver_Processes	NavPanelConfig	"Processes/TBBDriver.pnl"	0x101	19.06.2008 08:48:26.640
-root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101	19.06.2008 08:58:56.843
-root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101	19.06.2008 09:00:59.265
-root.MACInfoServer_Processes	NavPanelConfig	"Processes/MACInfoServer.pnl"	0x101	19.06.2008 09:15:04.546
-root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101	20.06.2008 12:15:08.909
+ElementName	TypeName	_original.._value	_original.._status
+__navigator.TabViews	Navigator	"Hardware", "Observations", "Processes", "Reports", "Alerts"	0x101
+root.LOFAR_Hardware	NavPanelConfig	"Hardware/LOFAR_Netherlands.pnl"	0x101
+root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"	0x101
+root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"	0x101
+root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"	0x101
+root.StnPIC_Hardware	NavPanelConfig	"Hardware/Station_Cabinet.pnl"	0x101
+root.Cabinet_Hardware	NavPanelConfig	"Hardware/Station_Cabinet_detailed.pnl"	0x101
+root.SubRack_Hardware	NavPanelConfig	"Hardware\\Station_Subrack.pnl"	0x101
+root.TBBoard_Hardware	NavPanelConfig	"Hardware/Station_TBBoard.pnl"	0x101
+root.RSPBoard_Hardware	NavPanelConfig	"Hardware/Station_RSPBoard.pnl"	0x101
+root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101
+root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101
+root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101
+root.KVLogger_Processes	NavPanelConfig	"Processes/KVLogger.pnl"	0x101
+root.LogProcessor_Processes	NavPanelConfig	"Processes/LogProcessor.pnl"	0x101
+root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101
+root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101
+root.SoftwareMonitor_Processes	NavPanelConfig	"Processes/SoftwareMonitor.pnl"	0x101
+root.HardwareMonitor_Processes	NavPanelConfig	"Processes/HardwareMonitor.pnl"	0x101
+root.DigBoardCtrl_Processes	NavPanelConfig	"Processes/DigBoardCtrl.pnl"	0x101
+root.StationCtrl_Processes	NavPanelConfig	"Processes/StationCtrl.pnl"	0x101
+root.TemperatureMonitor_Processes	NavPanelConfig	"Processes/TemperatureMonitor.pnl"	0x101
+root.BeamCtrl_Processes	NavPanelConfig	"Processes/BeamCtrl.pnl"	0x101
+root.CalCtrl_Processes	NavPanelConfig	"Processes/CalCtrl.pnl"	0x101
+root.TBBCtrl_Processes	NavPanelConfig	"Processes/TBBCtrl.pnl"	0x101
+root.AMCServer_Processes	NavPanelConfig	"Processes/AMCServer.pnl"	0x101
+root.ObsCtrl_Processes	NavPanelConfig	"Processes/ObsCtrl.pnl"	0x101
+root.SASGateway_Processes	NavPanelConfig	"Processes/SASGateway.pnl"	0x101
+root.Correlator_Processes	NavPanelConfig	"Processes/Correlator.pnl"	0x101
+root.StorageAppl_Processes	NavPanelConfig	"Processes/StorageAppl.pnl"	0x101
+root.RSPDriver_Processes	NavPanelConfig	"Processes/RSPDriver.pnl"	0x101
+root.TBBDriver_Processes	NavPanelConfig	"Processes/TBBDriver.pnl"	0x101
+root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101
+root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101
+root.MACInfoServer_Processes	NavPanelConfig	"Processes/MACInfoServer.pnl"	0x101
+root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101
+root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe","Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote","Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101
+root.LOFAR_Alerts	NavPanelConfig	"objects/lofar_alarms.pnl"	0x101
