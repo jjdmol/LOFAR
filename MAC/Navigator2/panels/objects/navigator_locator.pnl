@@ -133,7 +133,7 @@ void dblClick(string id,int column) {
   bDoubleClicked = true; 
    
   // double click indicates that we want to go to the selected level.
-  // to do this we need to determine a new g_currentDatapoint derived from the durrent one and the level that
+  // to do this we need to determine a new g_currentDatapoint derived from the current one and the level that
   // we clicked (backwards) in the typeList.
   string dp=navFunct_getDPFromTypePath(typeList,id);
   LOG_DEBUG(\"navigator_locator.pnl:doubleClicked|dp:\"+dp);

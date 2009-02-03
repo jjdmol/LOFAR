@@ -322,6 +322,6 @@ LANG:1 0
 "objects\\Observations\\lofar_Obs_state.pnl" 125 5 T 16 1 0 1 -8 1
 0
 3 2 "PANEL_REF3"
-"objects/Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 -19 1
+"objects\\Processes\\lofar_Proc_state.pnl" 225 5 T 16 1 0 1 -19 1
 0
 0
