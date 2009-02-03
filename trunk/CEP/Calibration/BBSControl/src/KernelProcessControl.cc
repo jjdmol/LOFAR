@@ -240,7 +240,8 @@ namespace LOFAR
               }
             }
             else {
-              LOG_DEBUG("Command not addressed to this process. Skipped.");
+              LOG_DEBUG("No queued commands found for this process; will"
+                " continue waiting.");
               setState(WAIT);
             }
             break;

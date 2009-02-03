@@ -55,7 +55,8 @@ usage()
     echo "                    (default: localhost:5432)"
     echo "  --db-name name    name of the control db (default: ${USER})"
     echo "  --db-user user    name of the control db user (default: ${USER})"
-    echo "  --solver-port     global solver port (default: 5665)."
+    echo "  --port-range      range of ports to try when starting global solver"
+    echo "      low:high      (default: 6500 through 6599)"
     echo "  --instrument-db   path to a non-default instrument model parmdb"
     echo "  --instrument-name basename for the instrument model pparmdb"
     echo "                    (default: instrument)"
@@ -105,7 +106,8 @@ fi
 help=0
 verbose=0
 solver=0
-solver_port=5665
+port_low=6500
+port_high=6599
 db_host="localhost"
 db_port=5432
 db_name=${USER}
@@ -205,13 +207,19 @@ do
 
     sky_name=$1
     shift
-  elif test "$1" = "--solver-port"; then
+  elif test "$1" = "--port-range"; then
     if test $# -le 1; then
         error "$1 needs an additional argument"
     fi
     shift
 
-    solver_port=$1
+    # Parse low:high string.
+    tmp=${1%%:*}
+    port_low=${tmp:-$port_low}
+    if test "${1##*:}" != "$1"; then
+        tmp=${1##*:}
+        port_high=${tmp:-$port_high}
+    fi
     shift
   elif test "$1" = "--cluster-desc"; then
     if test $# -le 1; then
@@ -264,7 +272,7 @@ if test ${verbose} -eq 1; then
     echo "    db name: ${db_name}"
     echo "    db user: ${db_user}"
     echo "    solver: ${solver}"
-    echo "    solver port: ${solver_port}"
+    echo "    port range: ${port_low}:${port_high}"
     echo "    instrument db: ${instrument_db}"
     echo "    instrument name: ${instrument_name}"
     echo "    sky name: ${sky_name}"
@@ -387,7 +395,7 @@ if test ${solver} -eq 1; then
     event "create parset ${key}_solver_$$.parset"
     if test ${dry} -eq 0; then
         cat > "${key}_solver_$$.parset" << EOF
-Port = ${solver_port}
+PortRange = [${port_low}, ${port_high}]
 BBDB.Key = "${key}"
 BBDB.Name = "${db_name}"
 BBDB.User = "${db_user}"
@@ -444,11 +452,11 @@ fi
 
 event "execute remote KernelControl processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${solver_port}\" \"${instrument_name}\" \"${sky_name}\" nodry"
+    echo "startdistproc -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_name}\" \"${sky_name}\" nodry"
 fi    
 
 if test ${dry} -eq 0; then
-    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${solver_port}" "${instrument_name}" "${sky_name}" nodry
+    startdistproc -mode 0 -nomasterhost -dsn "${observation}" -cdn "${cluster_desc}" -logfile "${key}_calibrate-part_$$.log" "${pgmpath}/calibrate-part" "${LOFARROOT}" "${wd}" "${key}" "${db_host}" "${db_port}" "${db_name}" "${db_user}" "${instrument_name}" "${sky_name}" nodry
 
     if test $? -ne 0; then
         kill_all "${pidlist}"
