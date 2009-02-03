@@ -75,5 +75,5 @@ if test "$dry" != dry; then
   if test $overwrite = 1; then
     rm -rf $msn/$pdb
   fi
-  ${pgmpath}makesourcedb in=$srccat out=$msn/$pdb
+  ${pgmpath}/makesourcedb in=$srccat out=$msn/$pdb
 fi
