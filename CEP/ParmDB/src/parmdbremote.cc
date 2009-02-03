@@ -41,6 +41,13 @@ using namespace LOFAR::CEP;
 using namespace LOFAR;
 using namespace std;
 
+void putRecord (BlobOStream& bos, const casa::Record& rec)
+{
+  BlobAipsIO baio(bos);
+  casa::AipsIO aio(&baio);
+  aio << rec;
+}
+
 void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
@@ -48,18 +55,29 @@ void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   bos << pdb.getRange (pattern);
 }
 
-void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
+void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos,
+                const vector<double>& range)
 {
   string pattern;
-  double freqv1, freqv2, timev1, timev2;
-  int nfreq, ntime;
-  bool asStartEnd;
-  bis >> pattern >> freqv1 >> freqv2 >> nfreq
-      >> timev1 >> timev2 >> ntime >> asStartEnd;
-  BlobAipsIO baio(bos);
-  casa::AipsIO aio(&baio);
-  aio << pdb.getValues (pattern, freqv1, freqv2, nfreq,
-                        timev1, timev2, ntime, asStartEnd);
+  double sfreq, efreq, stime, etime, freqStep, timeStep;
+  bis >> pattern >> sfreq >> efreq >> freqStep
+      >> stime >> etime >> timeStep;
+  if (sfreq < range[0]) sfreq = range[0];
+  if (efreq > range[1]) efreq = range[1];
+  if (stime < range[2]) stime = range[2];
+  if (etime > range[3]) etime = range[3];
+  casa::Record rec;
+  string msg;
+  if (sfreq <= efreq  &&  stime <= etime) {
+    try {
+      rec = pdb.getValues (pattern, sfreq, efreq, freqStep,
+                           stime, etime, timeStep, true);
+    } catch (std::exception& x) {
+      msg = x.what();
+    }
+  }
+  putRecord (bos, rec);
+  bos << msg;
 }
 
 void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
@@ -68,10 +86,16 @@ void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   vector<double> freqv1, freqv2, timev1, timev2;
   bool asStartEnd;
   bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
-  BlobAipsIO baio(bos);
-  casa::AipsIO aio(&baio);
-  casa::Record rec = pdb.getValues (pattern, freqv1, freqv2, timev1, timev2, asStartEnd);
-  aio << rec;
+  casa::Record rec;
+  string msg;
+  try {
+    rec = pdb.getValues (pattern, freqv1, freqv2,
+                         timev1, timev2, asStartEnd);
+  } catch (std::exception& x) {
+    msg = x.what();
+  }
+  putRecord (bos, rec);
+  bos << msg;
 }
 
 void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
@@ -79,13 +103,22 @@ void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   string pattern;
   double sfreq, efreq, stime, etime;
   bis >> pattern >> sfreq >> efreq >> stime >> etime;
-  BlobAipsIO baio(bos);
-  casa::AipsIO aio(&baio);
-  aio << pdb.getValuesGrid (pattern, sfreq, efreq, stime, etime);
+  casa::Record rec;
+  string msg;
+  if (sfreq <= efreq  &&  stime <= etime) {
+    try {
+      rec = pdb.getValuesGrid (pattern, sfreq, efreq, stime, etime);
+    } catch (std::exception& x) {
+      msg = x.what();
+    }
+  }
+  putRecord (bos, rec);
+  bos << msg;
 }
 
 void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
 {
+  vector<double> range = pdb.getRange("*");
   // Allocate buffers here, so they are kept alive and not resized all the time.
   BlobString bufin;
   BlobString bufout;
@@ -104,8 +137,8 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
       getRange (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetValues:
-      // Handle getValues with nfreq/ntime.
-      getValues (pdb, bbi.blobStream(), bbo.blobStream());
+      // Handle getValues with freqStep/timeStep.
+      getValues (pdb, bbi.blobStream(), bbo.blobStream(), range);
       break;
     case ParmFacadeDistr::GetValuesVec:
       // Handle getValues with vector of freq/time.

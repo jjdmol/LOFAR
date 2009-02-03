@@ -61,6 +61,17 @@ namespace BBS {
     itsTables[1] = itsTables[0].keywordSet().asTable ("NAMES");
     // Open the default values table.
     itsTables[2] = itsTables[0].keywordSet().asTable ("DEFAULTVALUES");
+    const TableRecord& keys = itsTables[0].keywordSet();
+    if (keys.isDefined ("DefaultFreqStep")) {
+      setDefStep (0, keys.asDouble ("DefaultFreqStep"));
+    } else {
+      setDefStep (0, 1000.);
+    }
+    if (keys.isDefined ("DefaultTimeStep")) {
+      setDefStep (1, keys.asDouble ("DefaultTimeStep"));
+    } else {
+      setDefStep (1, 1.);
+    }
   }
 
   ParmDBCasa::~ParmDBCasa()
@@ -124,6 +135,10 @@ namespace BBS {
     tab.rwKeywordSet().defineTable("DEFAULTVALUES", deftab);  
     tab.rwKeywordSet().defineTable("NAMES", namtab);  
     namtab.rwKeywordSet().define("UNIQUE_ID", 0u);  
+    tab.rwKeywordSet().define ("DefaultFreqStep", double(1000.));
+    tab.rwKeywordSet().define ("DefaultTimeStep", double(1.));
+    setDefStep (0, 1000.);
+    setDefStep (1, 1.);
 
     tab.tableInfo().setType ("MEP");
     tab.tableInfo().readmeAddLine ("ME Parameter values");
@@ -140,6 +155,18 @@ namespace BBS {
       Vector<uint> rows = itsTables[i].rowNumbers();
       itsTables[i].removeRow(rows);
     }
+  }
+
+  void ParmDBCasa::setDefaultSteps (const vector<double>& steps)
+  {
+    ASSERT (steps.size() == 2);
+    Table& tab = itsTables[0];
+    tab.reopenRW();
+    TableLocker locker(itsTables[0], FileLocker::Write);
+    tab.rwKeywordSet().define ("DefaultFreqStep", steps[0]);
+    tab.rwKeywordSet().define ("DefaultTimeStep", steps[1]);
+    setDefStep (0, steps[0]);
+    setDefStep (1, steps[1]);
   }
 
   Table ParmDBCasa::getNameSel (const string& parmNamePattern) const

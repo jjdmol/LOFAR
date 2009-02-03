@@ -45,9 +45,7 @@ namespace BBS {
   class ParmDBRep
   {
   public:
-    ParmDBRep()
-      : itsCount(0), itsSeqNr(-1), itsDefFilled (false)
-    {}
+    ParmDBRep();
 
     virtual ~ParmDBRep();
 
@@ -68,13 +66,20 @@ namespace BBS {
     virtual void unlock();
     // </group>
 
-    // Get the domain range (time,freq) of the given parameters in the table.
+    // Get the domain range (freq,time) of the given parameters in the table.
     // This is the minimum and maximum value of these axes for all parameters.
     // An empty name pattern is the same as * (all parms).
     // <group>
     virtual Box getRange (const std::string& parmNamePattern) const = 0;
     virtual Box getRange (const std::vector<std::string>& parmNames) const = 0;
     // </group>
+
+    // Get the default step values for the axes.
+    const vector<double>& getDefaultSteps() const
+      { return itsDefSteps; }
+
+    // Set the default step values.
+    virtual void setDefaultSteps (const vector<double>&) = 0;
 
     // Get the parameter values for the given parameter and domain.
     // Note that the requested domain may contain multiple values.
@@ -166,6 +171,11 @@ namespace BBS {
     void clearDefFilled()
       { itsDefFilled = false; }
 
+  protected:
+    // Set the i-th default step value (i<2) in order x,y.
+    void setDefStep (uint i, double value)
+      { itsDefSteps[i] = value; }
+
   private:
     // Fill the map with default values.
     virtual void fillDefMap (ParmMap& defMap) = 0;
@@ -175,6 +185,7 @@ namespace BBS {
     int        itsSeqNr;
     bool       itsDefFilled;
     ParmMap    itsDefValues;
+    vector<double> itsDefSteps;
   };
 
 
@@ -205,7 +216,7 @@ namespace BBS {
     void unlock()
       { itsRep->unlock(); }
 
-    // Get the domain range (time,freq) of the given parameters in the table.
+    // Get the domain range (freq,time) of the given parameters in the table.
     // This is the minimum and maximum value of these axes for all parameters.
     // An empty name pattern is the same as * (all parms).
     // <group>
@@ -214,6 +225,14 @@ namespace BBS {
     Box getRange (const std::vector<std::string>& parmNames) const
       { return itsRep->getRange (parmNames); }
     // </group>
+
+    // Get the default step values for the axes.
+    const vector<double>& getDefaultSteps() const
+      { return itsRep->getDefaultSteps(); }
+
+    // Set the default step values.
+    void setDefaultSteps (const vector<double>& steps)
+      { itsRep->setDefaultSteps (steps); }
 
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).

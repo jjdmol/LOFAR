@@ -37,12 +37,6 @@
 using namespace LOFAR::CEP;
 using namespace casa;
 
-// Create tParmFacade.in_mep with parmdb using:
-//   create tablename='tParmFacade.in_mep'
-//   add parm1 domain=[1,5,4,10],values=2
-//   add parm2 domain=[1,5,4,10],values=[2,0.1],nx=2
-//   add parm3 type='expression',expression='parm1*parm2'
-
 
 namespace LOFAR {
   namespace BBS {
@@ -182,30 +176,38 @@ namespace LOFAR {
     }
 
     Record ParmFacadeDistr::getValues (const string& parmNamePattern,
-                                       double freqv1, double freqv2, int nfreq,
-                                       double timev1, double timev2, int ntime,
+                                       double freqv1, double freqv2,
+                                       double freqStep,
+                                       double timev1, double timev2,
+                                       double timeStep,
                                        bool asStartEnd)
     {
       BlobString buf;
       MWBlobOut bbo(buf, GetValues, 0);
+      if (!asStartEnd) {
+        double width = freqv2;
+        freqv1 -= width/2;
+        freqv2 = freqv1 + width;
+        width = timev2;
+        timev1 -= width/2;
+        timev2 = timev1 + width;
+      }
       bbo.blobStream() << parmNamePattern
-                       << freqv1 << freqv2 << nfreq
-                       << timev1 << timev2 << ntime << asStartEnd;
+                       << freqv1 << freqv2 << freqStep
+                       << timev1 << timev2 << timeStep;
       bbo.finish();
       itsConn.writeAll (buf);
-      Record values, result;
+      vector<Record> recs(itsConn.size());
+      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
         ASSERT (bbi.getOperation() == 1);    // ensure success
-        if (i == 0) {
-          getRecord (bbi.blobStream(), result);
-        } else {
-          getRecord (bbi.blobStream(), values);
-        }
+        getRecord (bbi.blobStream(), recs[i]);
+        bbi.blobStream() >> msg;
         bbi.finish();
       }
-      return result;
+      return combineRemote (recs);
     }
 
     Record ParmFacadeDistr::getValues (const string& parmNamePattern,
@@ -221,19 +223,17 @@ namespace LOFAR {
                        << freqv1 << freqv2 << timev1 << timev2 << asStartEnd;
       bbo.finish();
       itsConn.writeAll (buf);
-      Record values, result;
+      vector<Record> recs(itsConn.size());
+      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
         ASSERT (bbi.getOperation() == 1);    // ensure success
-        if (i == 0) {
-          getRecord (bbi.blobStream(), result);
-        } else {
-          getRecord (bbi.blobStream(), values);
-        }
+        getRecord (bbi.blobStream(), recs[i]);
+        bbi.blobStream() >> msg;
         bbi.finish();
       }
-      return result;
+      return combineRemote (recs);
     }
 
     Record ParmFacadeDistr::getValuesGrid (const string& parmNamePattern,
@@ -247,13 +247,20 @@ namespace LOFAR {
       bbo.finish();
       itsConn.writeAll (buf);
       vector<Record> recs(itsConn.size());
+      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
         ASSERT (bbi.getOperation() == 1);    // ensure success
         getRecord (bbi.blobStream(), recs[i]);
+        bbi.blobStream() >> msg;
         bbi.finish();
       }
+      return combineRemote (recs);
+    }
+
+    Record ParmFacadeDistr::combineRemote (const vector<Record>& recs) const
+    {
       // Find all possible parm names.
       set<String> names;
       findParmNames (recs, names);

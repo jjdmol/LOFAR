@@ -55,13 +55,13 @@ namespace LOFAR {
     // Get the parameter values for the given parameters and domain.
     map<string, vector<double> >
     ParmFacade::getValuesMap (const string& parmNamePattern,
-                              double freqv1, double freqv2, int nfreq,
-                              double timev1, double timev2, int ntime,
+                              double freqv1, double freqv2, double freqStep,
+                              double timev1, double timev2, double timeStep,
                               bool asStartEnd)
     {
       return record2Map (getValues (parmNamePattern,
-                                    freqv1, freqv2, nfreq,
-                                    timev1, timev2, ntime,
+                                    freqv1, freqv2, freqStep,
+                                    timev1, timev2, timeStep,
                                     asStartEnd));
     }
 
@@ -69,17 +69,20 @@ namespace LOFAR {
     ParmFacade::record2Map (const Record& rec) const
     {
       map<string, vector<double> > out;
-      // Copy all values from the record to the map.
+      // Copy all values (except the grid) from the record to the map.
       for (uint i=0; i<rec.nfields(); ++i) {
-	// First make empty vector; thereafter copy values to it.
-	vector<double>& vec = out[rec.name(i)];
-	ASSERT (vec.size() == 0);
-	// Get result and put in map.
-	const Array<double>& arr = rec.asArrayDouble(i);
-	bool deleteIt;
-	const double* ptr = arr.getStorage (deleteIt);
-	// Store the result in the vector.
-	vec.assign (ptr, ptr+arr.nelements());
+        const String& name = rec.name(i);
+        if (name != "_grid") {
+          // First make empty vector; thereafter copy values to it.
+          vector<double>& vec = out[rec.name(i)];
+          ASSERT (vec.size() == 0);
+          // Get result and put in map.
+          const Array<double>& arr = rec.asArrayDouble(i);
+          bool deleteIt;
+          const double* ptr = arr.getStorage (deleteIt);
+          // Store the result in the vector.
+          vec.assign (ptr, ptr+arr.nelements());
+        }
       }
       return out;
     }

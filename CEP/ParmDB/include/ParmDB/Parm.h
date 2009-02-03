@@ -113,7 +113,12 @@ namespace BBS {
     // Note that it is possible to first create a correctly sized MeqMatrix
     // and create the Array from its raw storage. In that way the Array
     // data does not need to be copied to the MeqMatrix.
-    void getResult (casa::Array<double>& result, const Grid& predictGrid);
+    // <br>
+    // The argument <src>emptyResult</src> tells if an empty result can be
+    // returned. Normally this is not the case (otherwise a default would
+    // not be picked up), but in case of ParmFacade it is used.
+    void getResult (casa::Array<double>& result, const Grid& predictGrid,
+                    bool emptyResult=false);
 
     // Get the values for the given predict grid.
     // The parm value is taken that contains the middle of a

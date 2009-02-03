@@ -37,7 +37,9 @@ using namespace std;
 void testCreate()
 {
   {
-    ParmDBCasa ("tParmDBCasa_tmp.tab", true);
+    ParmDBCasa pdb("tParmDBCasa_tmp.tab", true);
+    ASSERT (pdb.getDefaultSteps()[0] == 1000.);
+    ASSERT (pdb.getDefaultSteps()[1] == 1.);
   }
   // Test if the created tables exist and are empty.
   Table t1("tParmDBCasa_tmp.tab");
@@ -48,6 +50,22 @@ void testCreate()
   ASSERT (t2.nrow() == 0);
   Table t3("tParmDBCasa_tmp.tab/NAMES");
   ASSERT (t3.nrow() == 0);
+  {
+    ParmDBCasa pdb("tParmDBCasa_tmp.tab");
+    ASSERT (pdb.getDefaultSteps()[0] == 1000.);
+    ASSERT (pdb.getDefaultSteps()[1] == 1.);
+    vector<double> defSteps(2);
+    defSteps[0] = 2000;
+    defSteps[1] = 5;
+    pdb.setDefaultSteps (defSteps);
+    ASSERT (pdb.getDefaultSteps()[0] == 2000.);
+    ASSERT (pdb.getDefaultSteps()[1] == 5.);
+  }
+  {
+    ParmDBCasa pdb("tParmDBCasa_tmp.tab");
+    ASSERT (pdb.getDefaultSteps()[0] == 2000.);
+    ASSERT (pdb.getDefaultSteps()[1] == 5.);
+  }
 }
 
 void checkDef (const ParmValueSet& pset, double value,

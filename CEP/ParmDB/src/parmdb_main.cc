@@ -59,6 +59,7 @@ enum PTCommand {
   CREATE,
   CLOSE,
   CLEAR,
+  SET,
   RANGE,
   SHOW,
   NAMES,
@@ -135,6 +136,7 @@ void showHelp()
   cerr << "ME parameters and their defaults." << endl;
   cerr << " create db='username' dbtype='casa' tablename='meqparm'" << endl;
   cerr << " open   db='username' dbtype='casa' tablename='meqparm'" << endl;
+  cerr << " set    stepx=defaultstepsize stepy=defaultstepsize" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
   cerr << " showdef [parmname_pattern]" << endl;
@@ -205,6 +207,8 @@ PTCommand getCommand (string& line)
     cmd = CLEAR;
   } else if (sc == "create") {
     cmd = CREATE;
+  } else if (sc == "set") {
+    cmd = SET;
   } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
     cmd = QUIT;
   } 
@@ -698,6 +702,12 @@ void doIt (bool noPrompt, ostream& ostr)
           } else if (cmd == CLEAR)  {
             // clear database tables
             parmtab->clearTables();
+          } else if (cmd == SET) {
+            KeyValueMap kvmap = KeyParser::parse (line);
+            vector<double> defSteps = parmtab->getDefaultSteps();
+            defSteps[0] = kvmap.getDouble ("stepx", defSteps[0]);
+            defSteps[0] = kvmap.getDouble ("stepy", defSteps[1]);
+            parmtab->setDefaultSteps (defSteps);
           } else {
             // Other commands expect a possible parmname and keywords
             parmName = getParmName (line);

@@ -59,9 +59,12 @@ namespace LOFAR { namespace BBS {
   {
   public:
     // Make a connection to the given ParmTable.
+    // The ParmTable can be a single one, but it can also be a distributed
+    // ParmTable. The latter should be given by means of the VDS-file as
+    // created by the scripts setupparmdb and setupsourcedb.
     ParmFacade (const string& tableName);
 
-    // The destructor disconnects.
+    // The destructor closes the parm table.
     ~ParmFacade();
 
     // Get the version info (tree, top, full or other)
@@ -81,28 +84,51 @@ namespace LOFAR { namespace BBS {
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
-    // The vector values in the map are in fact 2-dim arrays with axes nfreq
-    // and ntime.
+    // The vector values in the map are in fact 2-dim arrays with axes freq
+    // and time. If freqStep and timeStep are not given (or given as <=0), the
+    // default freq and time step from the ParmDB will be used.
+    // <group>
     map<string, vector<double> > getValuesMap (const string& parmNamePattern,
                                                double freqv1, double freqv2,
-                                               int nfreq,
+                                               double freqStep,
                                                double timev1, double timev2,
-                                               int ntime,
+                                               double timeStep,
                                                bool asStartEnd=false);
+    map<string, vector<double> > getValuesMap (const string& parmNamePattern,
+                                               double freqv1, double freqv2,
+                                               double timev1, double timev2,
+                                               bool asStartEnd=false)
+      { return getValuesMap (parmNamePattern, freqv1, freqv2, 0,
+                             timev1, timev2, asStartEnd); }
+    // </group>
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
+    // If freqStep and timeStep are not given (or given as <=0), the
+    // default freq and time step from the ParmDB will be used.
+    // Similar to getValuesGrid the resulting record also contains a subrecord
+    // "_grid" containing the grid of the parameter values.
+    // <group>
     casa::Record getValues (const string& parmNamePattern,
-                            double freqv1, double freqv2, int nfreq,
-                            double timev1, double timev2, int ntime,
+                            double freqv1, double freqv2, double freqStep,
+                            double timev1, double timev2, double timeStep,
                             bool asStartEnd=false)
-      { return itsRep->getValues (parmNamePattern, freqv1, freqv2, nfreq,
-                                  timev1, timev2, ntime, asStartEnd); }
+      { return itsRep->getValues (parmNamePattern, freqv1, freqv2, freqStep,
+                                  timev1, timev2, timeStep, asStartEnd); }
+    casa::Record getValues (const string& parmNamePattern,
+                            double freqv1, double freqv2,
+                            double timev1, double timev2,
+                            bool asStartEnd=false)
+      { return itsRep->getValues (parmNamePattern, freqv1, freqv2, 0,
+                                  timev1, timev2, 0, asStartEnd); }
+    // </group>
 
     // Get the values of the given parameters on the given grid where v1/v2
     // represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
+    // Similar to getValuesGrid the resulting record also contains a subrecord
+    // "_grid" containing the grid of the parameter values.
     casa::Record getValues (const string& parmNamePattern,
                             const vector<double>& freqv1,
                             const vector<double>& freqv2,
@@ -115,7 +141,7 @@ namespace LOFAR { namespace BBS {
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to Array<value>.
     // Furthermore it contains a subrecord "_grid" containing the grid axes
-    // used for each parameters. Their names have the form <parmname>/xx
+    // used for each parameters. Their names have the form parmname;xx
     // where xx is freqs, freqwidths, times, and timewidths. Their values
     // are the center and width of each cell.
     casa::Record getValuesGrid (const string& parmNamePattern,
