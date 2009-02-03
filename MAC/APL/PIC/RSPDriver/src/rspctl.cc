@@ -108,30 +108,20 @@ bool   g_getclock		  = false;
 BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
 inline complex<double> convert_to_amplphase(complex<double> val)
 {
-  double phase = 0.0;
-  double amplitude = real(val)*real(val) + imag(val)*imag(val);
+	double phase     = 0.0;
+	double amplitude = real(val)*real(val) + imag(val)*imag(val);
 
-  if (amplitude > 0.0) {
-    amplitude = 12 + 5*log10(amplitude); // adjust scaling to allow comparison to subband statistics
-  }
+	if (amplitude > 0.0) {
+		amplitude = 12 + 5*log10(amplitude); // adjust scaling to allow comparison to subband statistics
+	}
 
-  if (0.0 == real(val)) {
-    if (imag(val) > 0)
-      phase = 90.0;
-    else if (imag(val) < 0)
-      phase = 270;
-  }
-  else {
-    phase = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
-    if (real(val) > 0.0) {
-      if (imag(val) < 0)
-        phase += 360.0;
-    }
-    else
-      phase += 180.0;
-  }
+	phase = atan2(imag(val), real(val)) * 180 / M_PI;
 
-  return complex<double>(amplitude, phase);
+	if (phase< 0) {
+		phase += 360;
+	}
+
+	return complex<double>(amplitude, phase);
 }
 
 BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
@@ -1953,112 +1943,101 @@ void XCStatisticsCommand::stop()
 
 void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp){
 
-  if (0 == m_nseconds) {
-    // initialize values array
-    m_stats.resize(stats.shape());
-    m_stats = 0.0;
-  }
-  else {
-    if ( sum(stats.shape()) != sum(m_stats.shape()) ) {
-      logMessage(cerr, "Error: xcstatistics shape mismatch");
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  if (m_integration > 0) {
-    m_stats += stats;
-  } else {
-    m_stats = stats;
-  }
-  m_nseconds++; // advance to next second
-
-  if (0 == (int32)m_nseconds % m_integration) {
-    if (m_integration > 0) {
-      m_stats /= m_integration;
-    }
-
-    LOG_DEBUG_STR("xcstatistics update at " << timestamp);
-    
-    if(m_duration == 0) {
-      blitz::Array<complex<double>, 4> pastats;
-      pastats.resize(m_stats.shape());
-      pastats = convert_to_amplphase(m_stats);
-
-#if 0
-      for (int i = 0; i < pastats.extent(firstDim) * pastats.extent(thirdDim); i++) {
-
-	string logString;
-	for (int j = 0; j < pastats.extent(secondDim) * pastats.extent(fourthDim); j++) {
-	  logString += string(formatString("%3.0f:%03.0f ", real(pastats(i%2,j%2,i/2,j/2)), imag(pastats(i%2,j%2,i/2,j/2))));
+	if (0 == m_nseconds) {
+		// initialize values array
+		m_stats.resize(stats.shape());
+		m_stats = 0.0;
 	}
-	logMessage(cout,logString);
-      }
-#endif
+	else {
+		if ( sum(stats.shape()) != sum(m_stats.shape()) ) {
+			logMessage(cerr, "Error: xcstatistics shape mismatch");
+			exit(EXIT_FAILURE);
+		}
+	}
 
-      plot_xcstatistics(m_stats, timestamp);
-    }
-    else {
-      dump_xcstatistics(m_stats, timestamp);
-      
-      Timestamp timeNow;
-      timeNow.setNow();
-      if(timeNow >= m_endTime) {
-        logMessage(cout,"XCStatistics capturing successfully ended.");
-        stop();
-        GCFTask::stop();
-      }
-    }
-    
-    m_stats = 0.0; //reset statistics
-  }
+	if (m_integration > 0) {
+		m_stats += stats;
+	} else {
+		m_stats = stats;
+	}
+	m_nseconds++; // advance to next second
+
+	if (0 == (int32)m_nseconds % m_integration) {
+		if (m_integration > 0) {
+			m_stats /= m_integration;
+		}
+
+		LOG_DEBUG_STR("xcstatistics update at " << timestamp);
+
+		if(m_duration == 0) {
+			plot_xcstatistics(m_stats, timestamp);
+		}
+		else {
+			dump_xcstatistics(m_stats, timestamp);
+
+			Timestamp timeNow;
+			timeNow.setNow();
+			if(timeNow >= m_endTime) {
+				logMessage(cout,"XCStatistics capturing successfully ended.");
+				stop();
+				GCFTask::stop();
+			}
+		}
+
+		m_stats = 0.0; //reset statistics
+	}
 }
   
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
-  static gnuplot_ctrl* handle = 0;
+	static gnuplot_ctrl* handle = 0;
 
-  Array<double, 2> thestats;
+	Array<double, 2> thestats;
+	thestats.resize(xcstats.extent(firstDim) * xcstats.extent(thirdDim), xcstats.extent(secondDim) * xcstats.extent(fourthDim));
 
-  thestats.resize(xcstats.extent(firstDim) * xcstats.extent(thirdDim),
-		  xcstats.extent(secondDim) * xcstats.extent(fourthDim));
+	blitz::Array<complex<double>, 4> apstats;
+	apstats.resize(m_stats.shape());
+	apstats = convert_to_amplphase(m_stats);
 
-  if (!m_xcangle) {
-    for (int i = 0; i < thestats.extent(firstDim); i++)
-      for (int j = 0; j < thestats.extent(secondDim); j++)
-	thestats(i,j) = sqrt(xcstats(i % 2, j % 2, i/2, j/2).real()*
-			     xcstats(i % 2, j % 2, i/2, j/2).real()+
-			     xcstats(i % 2, j % 2, i/2, j/2).imag()*
-			     xcstats(i % 2, j % 2, i/2, j/2).imag());
-  } else {
-    for (int i = 0; i < thestats.extent(firstDim); i++)
-      for (int j = 0; j < thestats.extent(secondDim); j++)
-	thestats(i,j) = atan(xcstats(i % 2, j % 2, i/2, j/2).imag()/
-			     xcstats(i % 2, j % 2, i/2, j/2).real()) * 180.0 / M_PI;
-  }
 
-  int n_ant = thestats.extent(firstDim);
+	if (!m_xcangle) {
+		for (int i = 0; i < thestats.extent(firstDim); i++) {
+			for (int j = 0; j < thestats.extent(secondDim); j++) {
+				thestats(i,j) = apstats(i % 2, j % 2, i/2, j/2).real();
+			}
+		}
+	} 
+	else {
+		for (int i = 0; i < thestats.extent(firstDim); i++) {
+			for (int j = 0; j < thestats.extent(secondDim); j++) {
+				thestats(i,j) = apstats(i % 2, j % 2, i/2, j/2).imag();
+			}
+		}
+	}
 
-  if (!handle) {
-    handle = gnuplot_init();
-    if (!handle)
-      return;
-  }
+	int n_ant = thestats.extent(firstDim);
 
-  char plotcmd[256];
-  time_t seconds = timestamp.sec();
-  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
+	if (!handle) {
+		handle = gnuplot_init();
+		if (!handle)
+			return;
+	}
 
-  gnuplot_cmd(handle, plotcmd);
+	char plotcmd[256];
+	time_t seconds = timestamp.sec();
+	strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 
-  gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
+	gnuplot_cmd(handle, plotcmd);
 
-  if (!m_xcangle) {
-    thestats = 10.0*log(thestats)/log(10.0);
-  }
+	gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
 
-  if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
-    logMessage(cerr, "Failed to write to gnuplot.");
-  }
+	if (!m_xcangle) {
+		thestats = 10.0*log(thestats)/log(10.0);
+	}
+
+	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
+		logMessage(cerr, "Failed to write to gnuplot.");
+	}
 }
 
 void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
@@ -2068,9 +2047,11 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
   thestats.resize(stats.extent(firstDim) * stats.extent(thirdDim),
       stats.extent(secondDim) * stats.extent(fourthDim));
 
-  for (int i = 0; i < thestats.extent(firstDim); i++)
-    for (int j = 0; j < thestats.extent(secondDim); j++)
+  for (int i = 0; i < thestats.extent(firstDim); i++) {
+    for (int j = 0; j < thestats.extent(secondDim); j++) {
       thestats(i,j) = stats(i % 2, j % 2, i/2, j/2);
+    }
+  }
 
   char timestring[256];
   time_t seconds = timestamp.sec();
