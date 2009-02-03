@@ -62,6 +62,7 @@
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
 // navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
+// navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -1377,4 +1378,24 @@ bool navFunct_dpReachable(string aDP) {
 
   // return state of the connection
   return g_connections[ "UP" ][iPos];
+}
+
+// ****************************************
+// Name: navFunct_dpHasPanels 
+// ****************************************
+//  Tries to determine if the g_currentDatapoint
+//  has viewable panels.
+//     Returns true if it does
+// ****************************************
+bool navFunct_dpHasPanels(string dp) {
+  string panelConfigDP="";
+  if (dpExists(dp)) {
+    panelConfigDP=ACTIVE_USER+"."+dpTypeName(dp)+"_"+ACTIVE_TAB;
+  }
+  
+  if (dpExists(panelConfigDP)) {
+    return true;
+  } else {
+    return false;   
+  }
 }

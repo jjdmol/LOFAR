@@ -673,6 +673,8 @@ void navCtrl_handleLocatorEvent(string dp,string value){
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
+      // inform headLines Object
+      dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
     }
   }
   
@@ -798,12 +800,15 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       ACTIVE_TAB = aSelection;
     }
     if (navTabCtrl_showView()) {
-        
-      // change fastJumper
-      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-
+      
+      //clear old highlights
+      dynClear(strHighlight);        
+      
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+      
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
