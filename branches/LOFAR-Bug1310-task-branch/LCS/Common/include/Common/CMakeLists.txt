@@ -1,5 +1,3 @@
-include_directories(${CMAKE_BINARY_DIR})
-
 if (HAVE_SHMEM)
   add_subdirectory(shmem)
 endif (HAVE_SHMEM)
@@ -78,7 +76,7 @@ endif (USE_BACKTRACE)
 
 ########### install files ###############
 
-install(FILES ${inst_HEADERS} DESTINATION include/${PACKAGE_NAME})
+install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
 
 
 

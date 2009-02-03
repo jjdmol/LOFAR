@@ -17,13 +17,23 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-## ---------------------------------------------------------------------------
 
-project(LOFAR)
+include(CMakeSettings)
 
-cmake_minimum_required(VERSION 2.6)
-
-include(CTest)
-
-add_subdirectory(LCS)
-
+## ----------------------------------------------------------------------------
+## Configure the LOFAR test scripts in the current binary directory
+## ----------------------------------------------------------------------------
+#configure_file(
+#  ${lofar_sharedir}/runtest.sh 
+#  ${CMAKE_CURRENT_BINARY_DIR}/runtest.sh)
+#configure_file(
+#  ${lofar_sharedir}/findpkg
+#  ${CMAKE_CURRENT_BINARY_DIR}/findpkg)
+#configure_file(
+#  ${lofar_sharedir}/assay
+#  ${CMAKE_CURRENT_BINARY_DIR}/assay)
+#configure_file(
+#  ${lofar_sharedir}/default.log_prop
+#  ${CMAKE_CURRENT_BINARY_DIR}/default.log_prop)
+configure_file(${LOFAR_ROOT}/autoconf_share/runctest.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)

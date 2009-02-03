@@ -1,6 +1,8 @@
-#  $Id$
+#!/bin/sh
+
+# runctest.sh: CTest wrapper script for runtest.sh
 #
-#  Copyright (C) 2008-2009
+#  Copyright (C) 2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -17,13 +19,10 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-## ---------------------------------------------------------------------------
+#
+#  $Id$
 
-project(LOFAR)
+export lofar_sharedir=${lofar_sharedir}
+export srcdir=${srcdir}
 
-cmake_minimum_required(VERSION 2.6)
-
-include(CTest)
-
-add_subdirectory(LCS)
-
+$lofar_sharedir/runtest.sh "$@"
