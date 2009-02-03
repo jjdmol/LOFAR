@@ -107,18 +107,47 @@ namespace LOFAR
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-            ps->getString("BBDB.Name"),
-            ps->getString("BBDB.User"),
-            ps->getString("BBDB.Password", ""),
-            ps->getString("BBDB.Host", "localhost"),
-            ps->getString("BBDB.Port", "5432")));
+          ps->getString("BBDB.Name"),
+          ps->getString("BBDB.User"),
+          ps->getString("BBDB.Password", ""),
+          ps->getString("BBDB.Host", "localhost"),
+          ps->getString("BBDB.Port", "5432")));
             
         // Initialize a TCP listen socket that will accept incoming kernel
         // connections.
-        itsSocket.setName("Solver");
         int32 backlog = ps->getInt32("ConnectionBacklog", 10);
-        itsSocket.initServer(ps->getString("Port"), Socket::TCP, backlog);
 
+        // Set socket name.
+        itsSocket.setName("Solver");
+        
+        // Get range of ports to test from parset, or default to [6500, 6599].
+        vector<uint> range = ps->getUintVector("PortRange", vector<uint>());
+        uint portLow = range.size() > 0 ? range[0] : 6500;
+        uint portHigh = range.size() > 1 ? range[1] : 6599;
+
+        // Try to bind to a port from the specified range.
+        uint port = 0;
+        int32 sockErrno = Socket::BIND;
+        for(port = portLow; port <= portHigh; ++port) {
+          // Socket::initServer takes port as a string.
+          ostringstream tmp;
+          tmp << port;
+
+          // Try to bind socket.
+          sockErrno = itsSocket.initServer(tmp.str(), Socket::TCP, backlog);
+          if(sockErrno != Socket::BIND) {
+            break;
+          }
+        }
+
+        if(sockErrno != Socket::SK_OK) {
+          LOG_ERROR_STR("Unable to initialize server socket using a port from"
+            " the range [" << portLow << "," << portHigh << "]");
+          return false;
+        }
+        
+        LOG_INFO_STR("Listening on port: " << port);
+        
         // Poll until Control is ready to accept workers.
         LOG_INFO_STR("Waiting for Control...");
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
@@ -126,7 +155,7 @@ namespace LOFAR
         }
 
         // Try to register as solver.
-        if(!itsCalSession->registerAsSolver(ps->getUint("Port"))) {
+        if(!itsCalSession->registerAsSolver(port)) {
           LOG_ERROR("Registration denied.");
           return false;
         }
@@ -196,7 +225,8 @@ namespace LOFAR
               }
             }
             else {
-              LOG_DEBUG("Command not addressed to this process. Skipped.");
+              LOG_DEBUG("No queued commands found for this process; will"
+                " continue waiting.");
               setState(WAIT);
             }
             break;

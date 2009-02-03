@@ -67,6 +67,7 @@ Result ExprParm::getResult(const Request &request)
     
     // Copy the main value.
     storage = buffers[0].getStorage(deleteStorage);
+    ASSERT(storage);
     if(buffers[0].nelements() == 1)
     {
         result.setValue(Matrix(storage[0]));
@@ -87,6 +88,7 @@ Result ExprParm::getResult(const Request &request)
         for(size_t i = 0; i < nCoeff; ++i)
         {
             storage = buffers[i + 1].getStorage(deleteStorage);
+            ASSERT(storage);
             if(buffers[i + 1].nelements() == 1)
             {
                 result.setPerturbedValue(PValueKey(itsParm->getId(), i),
