@@ -5,13 +5,7 @@ PANEL,-1 -1 1018 703 N "_3DFace" 1
 "$choice"
 "main()
 {
-  choice=$choice;
-  
-  // Initialise the Panel
-  navPanel_initPanel(\"fw_viewBox\");
-
-  baseDP = g_currentDatapoint;
-  
+  choice = $choice;
   initialize();
 }
 
@@ -27,12 +21,10 @@ void alarmTrigger(string dp1, bool T) {
   LOG_TRACE(\"alarms.pnl:initialize|alarmTrigger received.\");
   // set selected Row to the last entry that triggered this alarm
   redraw_table();
-}
-
-" 0
+}" 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
-E "#uses \"navigator.ctl\"
+E "#uses \"navPanel.ctl\"
 
 string choice=\"\";
 string baseDP=\"\";
@@ -78,7 +70,7 @@ void dblClick(int row) {
     } else if (strpos(dp,\"LOFAR_PermSW\") >= 0) {
       selection=\"Processes\";
     }         
-    setEvent(selection,\"ChangeTab\");
+    navPanel_setEvent(selection,\"ChangeTab\");
   }
   
   // set delay to avoid click event will be triggered
