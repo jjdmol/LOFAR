@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "OnlineControl");
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
