@@ -167,9 +167,20 @@ namespace LOFAR {
     }
 
     Record ParmFacadeLocal::getValuesGrid (const string& parmNamePattern,
-                                           double sfreq, double efreq,
-                                           double stime, double etime)
+                                           double freqv1, double freqv2,
+                                           double timev1, double timev2,
+                                           bool asStartEnd)
     {
+      double sfreq = freqv1;
+      double efreq = freqv2;
+      double stime = timev1;
+      double etime = timev2;
+      if (!asStartEnd) {
+        sfreq = freqv1 - freqv2/2;
+        efreq = sfreq  + freqv2;
+        stime = timev1 - timev2/2;
+        etime = stime  + timev2;
+      }
       // Get all matching parm names.
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.

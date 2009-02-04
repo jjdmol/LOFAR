@@ -73,11 +73,11 @@ namespace LOFAR { namespace BBS {
     // parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
-    virtual vector<double> getRange (const string& parmNamePattern = "") const;
+    virtual vector<double> getRange (const string& parmNamePattern) const;
 
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    virtual vector<string> getNames (const string& parmNamePattern = "") const;
+    virtual vector<string> getNames (const string& parmNamePattern) const;
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
@@ -87,7 +87,7 @@ namespace LOFAR { namespace BBS {
                                     double freqStep,
                                     double timev1, double timev2,
                                     double timeStep,
-                                    bool asStartEnd=false);
+                                    bool asStartEnd);
 
     // Get the values of the given parameters on the given grid where v1/v2
     // represents center/width or start/end.
@@ -97,7 +97,7 @@ namespace LOFAR { namespace BBS {
                                     const vector<double>& freqv2,
                                     const vector<double>& timev1,
                                     const vector<double>& timev2,
-                                    bool asStartEnd=false);
+                                    bool asStartEnd);
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to Array<value>.
@@ -106,8 +106,9 @@ namespace LOFAR { namespace BBS {
     // where xx is freqs, freqwidths, times, and timewidths. Their values
     // are the center and width of each cell.
     virtual casa::Record getValuesGrid (const string& parmNamePattern,
-                                        double sfreq=-1e30, double efreq=1e30,
-                                        double stime=-1e30, double etime=1e30);
+                                        double freqv1, double freqv2,
+                                        double timev1, double timev2,
+                                        bool asStartEnd);
 
   private:
     // Get the values for the given predict grid

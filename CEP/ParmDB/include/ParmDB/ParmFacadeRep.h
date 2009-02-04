@@ -105,8 +105,9 @@ namespace LOFAR { namespace BBS {
     // where xx is freqs, freqwidths, times, and timewidths. Their values
     // are the center and width of each cell.
     virtual casa::Record getValuesGrid (const string& parmNamePattern,
-                                        double sfreq, double efreq,
-                                        double stime, double etime) = 0;
+                                        double freqv1, double freqv2,
+                                        double timev1, double timev2,
+                                        bool asStartEnd) = 0;
   };
 
   // @}
