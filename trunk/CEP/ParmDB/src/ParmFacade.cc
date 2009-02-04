@@ -52,6 +52,30 @@ namespace LOFAR {
     ParmFacade::~ParmFacade()
     {}
 
+    Record ParmFacade::getValues (const string& parmNamePattern,
+                                  double freqv1, double freqv2,
+                                  double timev1, double timev2,
+                                  bool asStartEnd)
+    {
+      double sfreq = freqv1;
+      double efreq = freqv2;
+      double stime = timev1;
+      double etime = timev2;
+      if (!asStartEnd) {
+        sfreq = freqv1 - freqv2/2;
+        efreq = sfreq  + freqv2;
+        stime = timev1 - timev2/2;
+        etime = stime  + timev2;
+      }
+      vector<double> rng = getRange (parmNamePattern);
+      if (sfreq < rng[0]) sfreq = rng[0];
+      if (efreq > rng[1]) efreq = rng[1];
+      if (stime < rng[2]) stime = rng[2];
+      if (etime > rng[3]) etime = rng[3];
+      return itsRep->getValues (parmNamePattern, sfreq, efreq, 0,
+                                stime, etime, 0, true);
+    }
+
     // Get the parameter values for the given parameters and domain.
     map<string, vector<double> >
     ParmFacade::getValuesMap (const string& parmNamePattern,

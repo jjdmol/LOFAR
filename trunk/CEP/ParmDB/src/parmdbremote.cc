@@ -107,7 +107,7 @@ void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   string msg;
   if (sfreq <= efreq  &&  stime <= etime) {
     try {
-      rec = pdb.getValuesGrid (pattern, sfreq, efreq, stime, etime);
+      rec = pdb.getValuesGrid (pattern, sfreq, efreq, stime, etime, true);
     } catch (std::exception& x) {
       msg = x.what();
     }
@@ -178,7 +178,7 @@ int main (int argc, char* argv[])
       BlobString bufout;
       MWBlobOut bbo(bufout, 1, 0);
       bbo.blobStream() << fname;
-      bbo.blobStream() << parmdb.getNames();
+      bbo.blobStream() << parmdb.getNames("*");
       bbo.finish();
       conn->write (bufout);
     }

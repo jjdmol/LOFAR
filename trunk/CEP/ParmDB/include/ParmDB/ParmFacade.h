@@ -113,15 +113,13 @@ namespace LOFAR { namespace BBS {
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1, double freqv2, double freqStep,
                             double timev1, double timev2, double timeStep,
-                            bool asStartEnd=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2, freqStep,
                                   timev1, timev2, timeStep, asStartEnd); }
     casa::Record getValues (const string& parmNamePattern,
-                            double freqv1, double freqv2,
-                            double timev1, double timev2,
-                            bool asStartEnd=false)
-      { return itsRep->getValues (parmNamePattern, freqv1, freqv2, 0,
-                                  timev1, timev2, 0, asStartEnd); }
+                            double freqv1=-1e30, double freqv2=1e30,
+                            double timev1=-1e30, double timev2=1e30,
+                            bool asStartEnd=true);
     // </group>
 
     // Get the values of the given parameters on the given grid where v1/v2
@@ -134,7 +132,7 @@ namespace LOFAR { namespace BBS {
                             const vector<double>& freqv2,
                             const vector<double>& timev1,
                             const vector<double>& timev2,
-                            bool asStartEnd=false)
+                            bool asStartEnd=true)
       { return itsRep->getValues (parmNamePattern, freqv1, freqv2,
                                   timev1, timev2, asStartEnd); }
 
@@ -145,10 +143,11 @@ namespace LOFAR { namespace BBS {
     // where xx is freqs, freqwidths, times, and timewidths. Their values
     // are the center and width of each cell.
     casa::Record getValuesGrid (const string& parmNamePattern,
-                                double sfreq=-1e30, double efreq=1e30,
-                                double stime=-1e30, double etime=1e30)
-      { return itsRep->getValuesGrid (parmNamePattern, sfreq, efreq,
-                                      stime, etime); }
+                                double freqv1=-1e30, double freqv2=1e30,
+                                double timev1=-1e30, double timev2=1e30,
+                                bool asStartEnd=true)
+      { return itsRep->getValuesGrid (parmNamePattern, freqv1, freqv2,
+                                      timev1, timev2, asStartEnd); }
 
   private:
     // Convert a record to a map.
