@@ -106,6 +106,8 @@ void OutputSection::connectToStorage()
 
 void OutputSection::preprocess(const Parset *ps)
 {
+  std::vector<StreamableData*> *dataHolders;
+
   itsParset                 = ps;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
@@ -114,33 +116,47 @@ void OutputSection::preprocess(const Parset *ps)
   itsMode                   = CN_Mode(*ps);
 
   itsDroppedCount.resize(itsNrSubbandsPerPset);
-  itsCurrentIntegrationSteps.resize(itsMode.nrOutputs());
-  itsSequenceNumbers.resize(itsMode.nrOutputs());
+  itsOutputs.resize(itsMode.nrOutputs());
 
-  connectToStorage();
+  dataHolders = newDataHolders( *ps, hugeMemoryAllocator );
+  for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
+    struct OutputSection::SingleOutput &output = itsOutputs[o];
 
-  itsTmpSum = newDataHolders( *ps, hugeMemoryAllocator );
+    output.tmpSum = dataHolders->at(o);
+  }
+  delete dataHolders;
 
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsSums.push_back(newDataHolders( *ps, hugeMemoryAllocator ));
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    dataHolders = newDataHolders( *ps, hugeMemoryAllocator );
 
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
+    for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
+      struct OutputSection::SingleOutput &output = itsOutputs[o];
+
+      output.sums.push_back( dataHolders->at(o) );
+    }
+
+    delete dataHolders;
+  }
 
   // only the last data set is integrated
-  itsNrIntegrationSteps.resize(itsMode.nrOutputs());
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-    unsigned steps = (output == itsMode.nrOutputs()-1) ? ps->IONintegrationSteps() : 1;
+  for (unsigned o = 0; o < itsOutputs.size(); o++) {
+    struct OutputSection::SingleOutput &output = itsOutputs[o];
+    unsigned steps = (o == itsMode.nrOutputs()-1) ? ps->IONintegrationSteps() : 1;
 
-    if( steps > 1 && !(*itsTmpSum)[output]->isIntegratable() )
+    if( steps > 1 && !output.tmpSum->isIntegratable() )
     {
       // not integratable, so don't try
-      clog_logger("Warning: not integrating received data for output " << output << " because data type is not integratable");
+      clog_logger("Warning: not integrating received data for output " << o << " because data type is not integratable");
       steps = 1;
     }
 
-    itsNrIntegrationSteps[output] = steps;
+    output.nrIntegrationSteps = steps;
   }
+
+  connectToStorage();
+
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
+    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
 }
 
 
@@ -170,34 +186,37 @@ void OutputSection::process()
 
     unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
-    for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-      bool firstTime = itsCurrentIntegrationSteps[output] == 0;
-      bool lastTime  = itsCurrentIntegrationSteps[output] == itsNrIntegrationSteps[output] - 1;
+    for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+      struct OutputSection::SingleOutput &output = itsOutputs[o];
+      struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];
+
+      bool firstTime = output.currentIntegrationStep == 0;
+      bool lastTime  = output.currentIntegrationStep == output.nrIntegrationSteps - 1;
 
       if (lastTime) {
-        if (itsRealTime && itsOutputThreads[subband]->itsFreeQueue[output].empty()) {
+        if (itsRealTime && outputThread.freeQueue.empty()) {
 	  droppingData(subband);
-          (*itsTmpSum)[output]->read(itsStreamsFromCNs[inputChannel], false);
+          output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
         } else {
 	  notDroppingData(subband);
-	  StreamableData *data = itsOutputThreads[subband]->itsFreeQueue[output].remove();
+	  StreamableData *data = outputThread.freeQueue.remove();
       
 	  data->read(itsStreamsFromCNs[inputChannel], false);
 
 	  if (!firstTime)
-	    *data += *(*itsSums[subband])[output];
+	    *data += *output.sums[subband];
 
-	  data->sequenceNumber = itsSequenceNumbers[output];
-	  itsOutputThreads[subband]->itsSendQueue[output].append(data);
+	  data->sequenceNumber = output.sequenceNumber;
+	  outputThread.sendQueue.append(data);
 
           // report that data has been added to a send queue
-	  itsOutputThreads[subband]->itsSendQueueActivity.append(output);
+	  itsOutputThreads[subband]->itsSendQueueActivity.append(o);
         }
       } else if (firstTime) {
-        (*itsSums[subband])[output]->read(itsStreamsFromCNs[inputChannel], false);
+        output.sums[subband]->read(itsStreamsFromCNs[inputChannel], false);
       } else {
-        (*itsTmpSum)[output]->read(itsStreamsFromCNs[inputChannel], false);
-        *(*itsSums[subband])[output] += *(*itsTmpSum)[output];
+        output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
+        *output.sums[subband] += *output.tmpSum;
       }
     }
 
@@ -205,10 +224,12 @@ void OutputSection::process()
       itsCurrentComputeCore = 0;
   }
 
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-    if (++ itsCurrentIntegrationSteps[output] == itsNrIntegrationSteps[output] ) {
-      itsCurrentIntegrationSteps[output] = 0;
-      itsSequenceNumbers[output]++;
+  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+    struct OutputSection::SingleOutput &output = itsOutputs[o];
+
+    if (++ output.currentIntegrationStep == output.nrIntegrationSteps ) {
+      output.currentIntegrationStep = 0;
+      output.sequenceNumber++;
     }
   }
 }
@@ -216,33 +237,28 @@ void OutputSection::process()
 
 void OutputSection::postprocess()
 {
+  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+    struct OutputSection::SingleOutput &output = itsOutputs[o];
+    delete output.tmpSum;
+  }
+
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     notDroppingData(subband); // for final warning message
     itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
 
-    for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-      delete (*itsSums[subband])[output];
+    for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+      struct OutputSection::SingleOutput &output = itsOutputs[o];
+      delete output.sums[subband];
     }
-    delete itsSums[subband];
 
     delete itsOutputThreads[subband];
     delete itsStreamsToStorage[subband];
   }
 
-
   itsOutputThreads.clear();
-  itsSums.clear();
+  itsOutputs.clear();
   itsStreamsToStorage.clear();
   itsDroppedCount.clear();
-  itsNrIntegrationSteps.clear();
-  itsCurrentIntegrationSteps.clear();
-  itsSequenceNumbers.clear();
-
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-    delete (*itsTmpSum)[output];
-  }
-  delete itsTmpSum;
-  itsTmpSum = 0;
 }
 
 }

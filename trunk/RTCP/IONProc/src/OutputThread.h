@@ -46,7 +46,11 @@ class OutputThread
 
     // each output stream has its own queues. the itsSendQueueActivity contains
     // the output stream numbers of the queues to which data has been added 
-    std::vector<Queue<StreamableData *> > itsFreeQueue, itsSendQueue;
+    struct SingleOutput {
+      Queue<StreamableData *> freeQueue, sendQueue;
+    };
+    std::vector<struct SingleOutput> itsOutputs;
+
     Queue<int>              itsSendQueueActivity; 
 
   private:

@@ -47,15 +47,22 @@ class OutputSection
     void			notDroppingData(unsigned subband);
 
     std::vector<unsigned>	itsDroppedCount; // [subband]
+    std::vector<OutputThread *> itsOutputThreads; // [subband]
 
-    std::vector<std::vector<StreamableData *> *> itsSums;
-    std::vector<StreamableData *> *itsTmpSum;
-    std::vector<OutputThread *> itsOutputThreads;
+    struct SingleOutput {
+      std::vector<StreamableData *> sums;
+      StreamableData *tmpSum;
+
+      unsigned nrIntegrationSteps;
+      unsigned currentIntegrationStep;
+
+      unsigned sequenceNumber;
+    };
+
+    std::vector<struct SingleOutput> itsOutputs; // [outputs]
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset;
-    std::vector<unsigned>	itsNrIntegrationSteps, itsCurrentIntegrationSteps;
-    std::vector<unsigned>	itsSequenceNumbers;
     const Parset                *itsParset;
     CN_Mode                     itsMode;
     bool                        itsRealTime;
