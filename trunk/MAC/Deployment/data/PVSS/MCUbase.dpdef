@@ -92,14 +92,14 @@ NavPanelConfig.NavPanelConfig	1#1
 	MACScheduler_Processes	9#17
 	SoftwareMonitor_Processes	9#18
 	HardwareMonitor_Processes	9#19
-	DigBoardCtrl_Processes	9#20
-	StationCtrl_Processes	9#21
+	ClockControl_Processes	9#20
+	StationControl_Processes	9#21
 	TemperatureMonitor_Processes	9#22
-	BeamCtrl_Processes	9#23
-	CalCtrl_Processes	9#24
-	TBBCtrl_Processes	9#25
+	BeamControl_Processes	9#23
+	CalibrationControl_Processes	9#24
+	TBBControl_Processes	9#25
 	AMCServer_Processes	9#26
-	ObsCtrl_Processes	9#27
+	ObservationControl_Processes	9#27
 	SASGateway_Processes	9#28
 	Correlator_Processes	9#29
 	StorageAppl_Processes	9#30
@@ -107,7 +107,7 @@ NavPanelConfig.NavPanelConfig	1#1
 	TBBDriver_Processes	9#32
 	CalServer_Processes	9#33
 	BeamServer_Processes	9#34
-	MACInfoServer_Processes	9#35
+	SHMInfoServer_Processes	9#35
 	Observation_Observations	9#36
 
 TypeName
@@ -160,14 +160,14 @@ root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101
 root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101
 root.SoftwareMonitor_Processes	NavPanelConfig	"Processes/SoftwareMonitor.pnl"	0x101
 root.HardwareMonitor_Processes	NavPanelConfig	"Processes/HardwareMonitor.pnl"	0x101
-root.DigBoardCtrl_Processes	NavPanelConfig	"Processes/DigBoardCtrl.pnl"	0x101
-root.StationCtrl_Processes	NavPanelConfig	"Processes/StationCtrl.pnl"	0x101
+root.ClockControl_Processes	NavPanelConfig	"Processes/ClockControl.pnl"	0x101
+root.StationControl_Processes	NavPanelConfig	"Processes/StationControl.pnl"	0x101
 root.TemperatureMonitor_Processes	NavPanelConfig	"Processes/TemperatureMonitor.pnl"	0x101
-root.BeamCtrl_Processes	NavPanelConfig	"Processes/BeamCtrl.pnl"	0x101
-root.CalCtrl_Processes	NavPanelConfig	"Processes/CalCtrl.pnl"	0x101
-root.TBBCtrl_Processes	NavPanelConfig	"Processes/TBBCtrl.pnl"	0x101
+root.BeamControl_Processes	NavPanelConfig	"Processes/BeamControl.pnl"	0x101
+root.CalibrationControl_Processes	NavPanelConfig	"Processes/CalibrationControl.pnl"	0x101
+root.TBBControl_Processes	NavPanelConfig	"Processes/TBBControl.pnl"	0x101
 root.AMCServer_Processes	NavPanelConfig	"Processes/AMCServer.pnl"	0x101
-root.ObsCtrl_Processes	NavPanelConfig	"Processes/ObsCtrl.pnl"	0x101
+root.ObservationControl_Processes	NavPanelConfig	"Processes/ObservationControl.pnl"	0x101
 root.SASGateway_Processes	NavPanelConfig	"Processes/SASGateway.pnl"	0x101
 root.Correlator_Processes	NavPanelConfig	"Processes/Correlator.pnl"	0x101
 root.StorageAppl_Processes	NavPanelConfig	"Processes/StorageAppl.pnl"	0x101
@@ -175,5 +175,5 @@ root.RSPDriver_Processes	NavPanelConfig	"Processes/RSPDriver.pnl"	0x101
 root.TBBDriver_Processes	NavPanelConfig	"Processes/TBBDriver.pnl"	0x101
 root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101
 root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101
-root.MACInfoServer_Processes	NavPanelConfig	"Processes/MACInfoServer.pnl"	0x101
+root.SHMInfoServer_Processes	NavPanelConfig	"Processes/SHMInfoServer.pnl"	0x101
 root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101
