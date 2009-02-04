@@ -41,15 +41,14 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
   itsStreamToStorage(streamToStorage),
   itsMode(CN_Mode(ps))
 {
-  itsFreeQueue.resize( itsMode.nrOutputs() );
-  itsSendQueue.resize( itsMode.nrOutputs() );
+  itsOutputs.resize( itsMode.nrOutputs() );
 
   // transpose the data holders: create queues streams for the output streams
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
     std::vector<StreamableData*> *v = newDataHolders( ps, hugeMemoryAllocator );
 
-    for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
-      itsFreeQueue[output].append((*v)[output]);
+    for (unsigned o = 0; o < itsOutputs.size(); o++ ) {
+      itsOutputs[o].freeQueue.append(v->at(o));
     }
 
     delete v;
@@ -76,26 +75,28 @@ OutputThread::~OutputThread()
   if (pthread_join(thread, 0) != 0)
     throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
 
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output ++) {
-    while (!itsFreeQueue[output].empty())
-      delete itsFreeQueue[output].remove();
+  while (!itsSendQueueActivity.empty())
+    itsSendQueueActivity.remove();
 
-    while (!itsSendQueue[output].empty())
-      delete itsSendQueue[output].remove();
+  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+    struct OutputThread::SingleOutput &output = itsOutputs[o];
 
-    while (!itsSendQueueActivity.empty())
-      itsSendQueueActivity.remove();
+    while (!output.freeQueue.empty())
+      delete output.freeQueue.remove();
+
+    while (!output.sendQueue.empty())
+      delete output.sendQueue.remove();
+
   }
 
-  itsFreeQueue.clear();
-  itsSendQueue.clear();
+  itsOutputs.clear();
 }
 
 
 void OutputThread::mainLoop()
 {
   StreamableData *data;
-  int output;
+  int o;
 
 #if defined HAVE_BGP_ION
   runOnCore0();
@@ -103,22 +104,24 @@ void OutputThread::mainLoop()
 
   static Semaphore semaphore(1);
 
-  while ((output = itsSendQueueActivity.remove()) >= 0) {
-    data = itsSendQueue[output].remove();
+  while ((o = itsSendQueueActivity.remove()) >= 0) {
+    struct OutputThread::SingleOutput &output = itsOutputs[o];
+
+    data = output.sendQueue.remove();
 
     try {
       semaphore.down();
 
       // write header: nr of output
-      itsStreamToStorage->write( &output, sizeof output );
+      itsStreamToStorage->write( &o, sizeof o );
 
       // write data, including serial nr
       data->write(itsStreamToStorage, true);
 
       semaphore.up();
-      itsFreeQueue[output].append(data);
+      output.freeQueue.append(data);
     } catch (...) {
-      itsFreeQueue[output].append(data);
+      output.freeQueue.append(data);
       throw;
     }
   }
