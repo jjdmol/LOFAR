@@ -92,6 +92,29 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   
  
   // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
+    // Check for top tab and change when needed, also set the new active DP panel if available 
+  if (anEvent == "ChangeTab") {
+    if (ACTIVE_TAB != aSelection) {
+      navTabCtrl_setSelectedTab(aSelection);
+      ACTIVE_TAB = aSelection;
+    }
+    if (navTabCtrl_showView()) {
+      
+      //clear old highlights
+      dynClear(strHighlight);        
+      
+      // change locator
+      dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+      
+      // change fastJumper
+      dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
+
+      // inform headLines Object
+      dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
+    }
+  }
+  
+  // Panel needs to be changed
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
         

@@ -143,7 +143,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   int iPos;
   
   if (bDebug) DebugTN( "monitorAlarms.ctl:objectStateCallback| Number of states in callback = " + dynlen( aResult ) );
-  if (bDebug) DebugTN("Result: "+ aResult);
+  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Result: "+ aResult);
   
   if (dynlen(aResult) <= 0) {
     occupied = false;
@@ -164,7 +164,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   int aStatus    = CAME;
   
   if (aDP==""){
-    if (bDebug) DebugN("Return on empty dp");
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Return on empty dp");
     occupied = false;
     return;
   }
@@ -173,16 +173,16 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
   
-  if (bDebug) DebugN("iPos:" + iPos);
-  if (bDebug) DebugN("dpnames in global:"+g_alarms[ "DPNAME"         ]);
-  if(iPos>0 && bDebug)  DebugN("floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
-  if (bDebug) DebugN("floor state: "+floor(state/10));
-  if (bDebug) DebugN("force: "+force);
+  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|iPos:" + iPos);
+  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|dpnames in global:"+g_alarms[ "DPNAME"         ]);
+  if(iPos>0 && bDebug)  DebugN("monitorAlarms.ctl:objectStateCallback|floor g_alarms: "+floor(g_alarms["STATE"][iPos]/10));
+  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|floor state: "+floor(state/10));
+  if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|force: "+force);
   
   // check if existing dp.
   // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
   if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
-    if (bDebug) DebugN("return on condition mismatch");
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
     occupied = false;
     return;
   }
@@ -217,7 +217,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
         DebugTN("monitorAlarms.ctl:objectStateCallback|Couldn't write alarms to navigator");
       }
     }
-    if (bDebug) DebugN("return on state < 40");   
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on state < 40");   
     occupied = false;
     return;
   }
@@ -225,7 +225,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   
   // in the remainder of the cases, the state was 
   if( iPos < 1 ){
-    if (bDebug) DebugN("Need to append new alarm");
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to append new alarm");
     dynAppend( g_alarms[ "DPNAME"          ], aDP );
     iPos = dynlen( g_alarms[ "DPNAME" ] );
     if (state == BROKEN) aStatus=ACK;
@@ -236,7 +236,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     if (state == SUSPICIOUS_CAME) aStatus=CAME;
     
   } else {
-    if (bDebug) DebugN("Need to examine if alarm update is needed");
+    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|Need to examine if alarm update is needed");
     // it was an existing DP, so we have to compare the status.
      
     int oldState=g_alarms["STATE"][iPos];

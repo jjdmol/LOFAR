@@ -218,4 +218,4 @@ root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101
 root.MACInfoServer_Processes	NavPanelConfig	"Processes/MACInfoServer.pnl"	0x101
 root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101
 root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe","Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote","Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101
-root.LOFAR_Alerts	NavPanelConfig	"objects/lofar_alarms.pnl"	0x101
+root.LOFAR_Alerts	NavPanelConfig	"Alerts/lofar_alarms.pnl"	0x101
