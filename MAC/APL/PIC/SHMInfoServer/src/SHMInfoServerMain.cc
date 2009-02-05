@@ -1,4 +1,4 @@
-//#  MISMain.cc: 
+//#  SHMInfoServerMain.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,18 +24,18 @@
 #include <Common/LofarLogger.h>
 
 #include <GCF/TM/GCF_Control.h>
-#include "MISDaemon.h"
+#include "SHMInfoServer.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::AMI;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "MACInfoServer");
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_MACInfoServer");
+	GCFTask::init(argc, argv, "SHMInfoServer");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_SHMInfoServer");
 
-	MISDaemon misd; 
-	misd.start(); // make initial transition
+	SHMInfoServer 	sis;
+	sis.start(); // make initial transition
 
 	//
 	try {

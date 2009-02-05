@@ -30,7 +30,7 @@ using namespace std;
 using namespace blitz;
 
 namespace LOFAR {
-  namespace MIS_Protocol {
+  namespace SHM_Protocol {
 
     unsigned int XCStatistics::getSize()
     {

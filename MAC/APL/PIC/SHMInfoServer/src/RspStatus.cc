@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 
 namespace LOFAR {
-  namespace MIS_Protocol {
+  namespace SHM_Protocol {
     unsigned int RspStatus::getSize()
     {
       return MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus);

@@ -1,4 +1,4 @@
-//#  MISDefines.h: preprocessor definitions of various constants
+//#  SHMDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,16 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef MISDEFINES_H
-#define MISDEFINES_H
+#ifndef SHMDEFINES_H
+#define SHMDEFINES_H
 
 //#include <GCF/GCF_Defines.h>
 
 namespace LOFAR {
  namespace AMI {
-const uint8 MIS_MAJOR_VER = 1; 
-const uint8 MIS_MIDOR_VER = 1;
-const uint8 MIS_MINOR_VER = 0;
+const uint8 SHM_MAJOR_VER = 1; 
+const uint8 SHM_MIDOR_VER = 1;
+const uint8 SHM_MINOR_VER = 0;
 
  } // namespace AMI
 } // namespace LOFAR

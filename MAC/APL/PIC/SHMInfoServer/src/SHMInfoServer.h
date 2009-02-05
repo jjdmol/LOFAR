@@ -1,4 +1,4 @@
-//#  MISDaemon.h: 
+//#  SHMInfoServer.h: 
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef MISDAEMON_H
-#define MISDAEMON_H
+#ifndef SHMINFOSERVER_H
+#define SHMINFOSERVER_H
 
 #include <Common/lofar_list.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
-//#include <MISPolicyHandler.h>
+//#include <SHMPolicyHandler.h>
 
 //MAXMOD add for antenna coords
 #include <APL/CAL_Protocol/SubArray.h>
@@ -34,21 +34,21 @@
 namespace LOFAR {
 	namespace AMI {  
 
-class MISSession;
+class SHMSession;
 
 /**
 */
 
-class MISDaemon : public GCF::TM::GCFTask
+class SHMInfoServer : public GCF::TM::GCFTask
 {
 public:
-    MISDaemon ();
-    ~MISDaemon();
+    SHMInfoServer ();
+    ~SHMInfoServer();
     
 	// member functions
     GCF::TM::GCFTCPPort& 	getPortProvider();
-//    MISPolicyHandler& 		getPolicyHandler();
-    void clientClosed(MISSession& client);
+//    SHMPolicyHandler& 		getPolicyHandler();
+    void clientClosed(SHMSession& client);
   
     //MAXMOD
     CAL::AntennaArrays               m_arrays;       // antenna arrays (read from file)
@@ -61,20 +61,20 @@ private:
 	// data members        
     GCF::TM::GCFTCPPort*	itsListener;
 //	RTDB::DPservice*		itsDPservice;
-//    MISPolicyHandler		_policyHandler;
+//    SHMPolicyHandler		_policyHandler;
 
 	// admin members
-    typedef list<MISSession*> TSessions;
+    typedef list<SHMSession*> TSessions;
     TSessions				_sessionsGarbage;    
 
 };
 
-inline GCF::TM::GCFTCPPort& MISDaemon::getPortProvider()
+inline GCF::TM::GCFTCPPort& SHMInfoServer::getPortProvider()
 {
 	return (*itsListener);
 }
 
-//inline MISPolicyHandler& MISDaemon::getPolicyHandler()
+//inline SHMPolicyHandler& SHMInfoServer::getPolicyHandler()
 //{
 //	return (_policyHandler);
 //}
