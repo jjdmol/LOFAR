@@ -7,6 +7,7 @@
 #endif
 
 #include <map>
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
@@ -22,7 +23,7 @@ public:
   int tag;
 };
 
-class AsyncCommunication {
+class AsyncCommunication: boost::noncopyable {
   public:
     AsyncCommunication(MPI_Comm communicator = MPI_COMM_WORLD);
     ~AsyncCommunication();
