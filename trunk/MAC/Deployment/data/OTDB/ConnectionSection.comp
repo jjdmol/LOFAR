@@ -8,4 +8,4 @@ node   Connection         1.0.1  development 'node constraint'  "Connections bet
 
 #      name             	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses   Storage-Imaging 		1.0.1  development -                  "Connection between storage and imaging node"
+#uses   Storage-Imaging 		1.0.1  development -                  "Connection between storage and imaging node"

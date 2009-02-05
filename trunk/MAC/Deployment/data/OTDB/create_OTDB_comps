@@ -126,7 +126,7 @@ expand_marker()
 substitute_station()
 {
 	# expand the nodes
-	cleanlist ../StaticMetaData/StationInfo | while read nodename ID stnType rest
+	cleanlist ../StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue
@@ -146,7 +146,7 @@ substitute_station()
 	done
 
 	> /tmp/foo.list
-	cleanlist ../StaticMetaData/StationInfo | while read nodename ID stnType rest
+	cleanlist ../StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue

@@ -184,10 +184,10 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	myPropSetName(createPropertySetName(PSN_STATION_CTRL, getName()));
+		string	myPropSetName(createPropertySetName(PSN_STATION_CONTROL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
 		itsOwnPropSet = new RTDBPropertySet(myPropSetName,
-											PST_STATION_CTRL,
+											PST_STATION_CONTROL,
 											PSAT_RW,
 											this);
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
@@ -226,10 +226,10 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
 
 			// enable clock propertyset.
-			string	clkPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
+			string	clkPropSetName(createPropertySetName(PSN_CLOCK_CONTROL, getName()));
 			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
 			itsClockPropSet = new RTDBPropertySet(clkPropSetName,
-												  PST_STATION_CLOCK,
+												  PST_CLOCK_CONTROL,
 												  PSAT_RW,
 												  this);
 		}
@@ -238,7 +238,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			LOG_DEBUG ("Attached to external propertySets");
 
 			GCFPVInteger	clockVal;
-			itsClockPropSet->getValue(PN_SCK_CLOCK, clockVal);
+			itsClockPropSet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			itsClock = clockVal.getValue();
 			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
 
@@ -536,7 +536,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 								itsClock != theObs->second->obsPar()->sampleClock) {
 			itsClock = theObs->second->obsPar()->sampleClock;
 			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			itsClockPropSet->setValue(PN_SCK_CLOCK,GCFPVInteger(itsClock));
+			itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
 			// TODO: give clock 5 seconds to stabelize
 		}
 
@@ -669,7 +669,7 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 	switch(event.signal) {
 	case DP_CHANGED:  {
 		DPChangedEvent		dpEvent(event);
-		if (strstr(dpEvent.DPname.c_str(), PN_SCK_CLOCK) != 0) {
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
 			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 			break;

@@ -80,7 +80,7 @@ AC_OUTPUT(
 src/Makefile
 src/BeamControl/Makefile
 src/CalibrationControl/Makefile
-src/DigitalBoardControl/Makefile
+src/ClockControl/Makefile
 src/HardwareMonitor/Makefile
 src/StationControl/Makefile
 src/TBBControl/Makefile

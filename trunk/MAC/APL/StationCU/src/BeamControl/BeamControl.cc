@@ -175,11 +175,11 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName(), 
+		string	propSetName(createPropertySetName(PSN_BEAM_CONTROL, getName(), 
 												  globalParameterSet()->getString("_DPname")));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
-											 PST_BEAM_CTRL,
+											 PST_BEAM_CONTROL,
 											 PSAT_RW,
 											 this);
 		// Wait for timer that is set on DP_CREATED event

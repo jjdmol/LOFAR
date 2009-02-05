@@ -58,6 +58,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
     // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
     // a file created by the API
     // We don't want this, so we have to repair this    
+    // cmdline += " -log +stderr -snd 2 -dbg query,23";
     cmdline += " -log +stderr";
     unsigned int offset(0);
     int nrOfWords(0);
