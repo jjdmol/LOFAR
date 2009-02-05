@@ -27,6 +27,51 @@
 namespace LOFAR {
 namespace RTCP {
 
+CN_Configuration::CN_Configuration( const Parset &parset, unsigned myPsetNumber )
+{
+  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
+  
+  nrStations()              = parset.nrStations();
+  nrBitsPerSample()	    = parset.nrBitsPerSample();
+  nrChannelsPerSubband()    = parset.nrChannelsPerSubband();
+  nrSamplesPerIntegration() = parset.CNintegrationSteps();
+  nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
+  nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
+  nrUsedCoresPerPset()      = parset.nrCoresPerPset();
+  nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
+  delayCompensation()       = parset.delayCompensation();
+  correctBandPass()  	    = parset.correctBandPass();
+  sampleRate()              = parset.sampleRate();
+  inputPsets()              = parset.getUint32Vector("OLAP.CNProc.inputPsets");
+  outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
+  tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
+  refFreqs()                = parset.subbandToFrequencyMapping();
+  nrPencilRings()           = parset.nrPencilRings();
+  pencilRingSize()          = parset.pencilRingSize();
+  nrManualPencilBeams()     = parset.nrManualPencilBeams();
+  refPhaseCentre()          = parset.getRefPhaseCentres();
+  mode()                    = CN_Mode(parset);
+  outputIncoherentStokesI() = parset.outputIncoherentStokesI();
+
+  itsPhaseCentres.resize( inputs.size(), 3 );
+  for( unsigned stat = 0; stat < inputs.size(); stat++ ) {
+    std::vector<double> phaseCentre = parset.getPhaseCentresOf( inputs[stat].station );
+
+    for( unsigned dim = 0; dim < 3; dim++ ) {
+      itsPhaseCentres[stat][dim] = phaseCentre[dim];
+    }
+  }
+
+  itsManualPencilBeams.resize( parset.nrManualPencilBeams(), 2 );
+  for( unsigned beam = 0; beam < parset.nrManualPencilBeams(); beam++ ) {
+    std::vector<double> coordinates = parset.getManualPencilBeam( beam );
+
+    for( unsigned dim = 0; dim < 2; dim++ ) {
+      itsManualPencilBeams[beam][dim] = coordinates[dim];
+    }
+  }
+}
+ 
 
 void CN_Configuration::read(Stream *str)
 {

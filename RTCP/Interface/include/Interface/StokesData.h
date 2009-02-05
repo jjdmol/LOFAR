@@ -8,7 +8,6 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/SparseSet.h>
 #include <Interface/StreamableData.h>
-#include <Interface/CN_Mode.h>
 #include <Interface/SubbandMetaData.h>
 
 namespace LOFAR {

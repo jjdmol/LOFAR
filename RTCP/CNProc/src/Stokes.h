@@ -5,7 +5,6 @@
 #include <Interface/PencilBeamData.h>
 #include <Interface/StokesData.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/CN_Mode.h>
 
 namespace LOFAR {
 namespace RTCP {

@@ -22,7 +22,7 @@
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
 #include <Interface/Parset.h>
-#include <Interface/CN_Mode.h>
+#include <Interface/PipelineOutput.h>
 #include <Stream/Stream.h>
 #include <IONProc/OutputThread.h>
 
@@ -60,11 +60,11 @@ class OutputSection
     };
 
     std::vector<struct SingleOutput> itsOutputs; // [outputs]
+    PipelineOutputSet           *itsPipelineOutputSet;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset;
     const Parset                *itsParset;
-    CN_Mode                     itsMode;
     bool                        itsRealTime;
 
     const std::vector<Stream *> &itsStreamsFromCNs;
