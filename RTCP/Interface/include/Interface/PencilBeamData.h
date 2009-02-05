@@ -1,5 +1,5 @@
-#ifndef LOFAR_CNPROC_BEAMFORMED_DATA_H
-#define LOFAR_CNPROC_BEAMFORMED_DATA_H
+#ifndef LOFAR_INTERFACE_BEAMFORMED_DATA_H
+#define LOFAR_INTERFACE_BEAMFORMED_DATA_H
 
 #include <Common/lofar_complex.h>
 #include <Stream/Stream.h>
