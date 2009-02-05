@@ -6,14 +6,14 @@ namespace LOFAR {
 namespace RTCP {
 
 const struct CN_Mode::modeList CN_Mode::modeList[] = {
-  // mode id, parset identifier, output datatype, coherent?, nrStokes
-  { CORRELATE,                 "Correlate",               CORRELATEDDATA, true,  0 },
-  { FILTER,                    "Filter",                  FILTEREDDATA,   false, 0 },
-  { COHERENT_COMPLEX_VOLTAGES, "CoherentComplexVoltages", PENCILBEAMDATA, true,  0 },
-  { COHERENT_STOKES_I,         "CoherentStokesI",         STOKESDATA,     true,  1 },
-  { COHERENT_ALLSTOKES,        "CoherentAllStokes",       STOKESDATA,     true,  4 },
-  { INCOHERENT_STOKES_I,       "IncoherentStokesI",       STOKESDATA,     false, 1 },
-  { INCOHERENT_ALLSTOKES,      "IncoherentAllStokes",     STOKESDATA,     false, 4 }
+  // mode id, parset identifier, coherent?, nrStokes
+  { CORRELATE,                 "Correlate",               true,  0 },
+  { FILTER,                    "Filter",                  false, 0 },
+  { COHERENT_COMPLEX_VOLTAGES, "CoherentComplexVoltages", true,  0 },
+  { COHERENT_STOKES_I,         "CoherentStokesI",         true,  1 },
+  { COHERENT_ALLSTOKES,        "CoherentAllStokes",       true,  4 },
+  { INCOHERENT_STOKES_I,       "IncoherentStokesI",       false, 1 },
+  { INCOHERENT_ALLSTOKES,      "IncoherentAllStokes",     false, 4 }
 };
 
 unsigned CN_Mode::nrModes()
@@ -35,16 +35,11 @@ CN_Mode::CN_Mode( const Parset &ps )
   for( unsigned i = 0; i < nrModes(); i++ ) {
     if( name == modeList[i].name ) {
       itsMarshalledData.mode = modeList[i].mode;
-      itsMarshalledData.finalOutputDataType = modeList[i].finalOutputDataType;
       itsMarshalledData.isCoherent = modeList[i].isCoherent;
       itsMarshalledData.nrStokes = modeList[i].nrStokes;
       break;
     }
   }
-
-  itsMarshalledData.outputIncoherentStokesI = ps.outputIncoherentStokesI();
-
-  itsMarshalledData.nrOutputs = 1 + (itsMarshalledData.outputIncoherentStokesI? 1 : 0);
 }
 
 std::string CN_Mode::getModeName()
