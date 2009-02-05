@@ -26,8 +26,9 @@
 #if 1 || defined HAVE_THREADS // broken in build environment
 
 #include <pthread.h>
+#include <boost/noncopyable.hpp>
  
-class Semaphore
+class Semaphore: boost::noncopyable
 {
   public:
     Semaphore(unsigned level = 0);
