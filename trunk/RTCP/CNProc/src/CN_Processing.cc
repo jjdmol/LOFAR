@@ -29,7 +29,6 @@
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
 #include <Interface/CN_Mapping.h>
-#include <Interface/DataHolder.h>
 #include <cassert>
 #include <complex>
 #include <cmath>

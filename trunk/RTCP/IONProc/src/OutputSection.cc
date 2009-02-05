@@ -26,7 +26,6 @@
 #include <Interface/Exceptions.h>
 #include <Interface/StreamableData.h>
 #include <Interface/CorrelatedData.h>
-#include <Interface/DataHolder.h>
 
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -55,6 +54,7 @@ namespace RTCP {
 
 OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &streamsFromCNs)
 :
+  itsPipelineOutputSet(0),
   itsPsetNumber(psetNumber),
   itsParset(0),
   itsStreamsFromCNs(streamsFromCNs)
@@ -106,42 +106,39 @@ void OutputSection::connectToStorage()
 
 void OutputSection::preprocess(const Parset *ps)
 {
-  std::vector<StreamableData*> *dataHolders;
-
   itsParset                 = ps;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsRealTime               = ps->realTime();
-  itsMode                   = CN_Mode(*ps);
+   
+  itsPipelineOutputSet = new PipelineOutputSet( *ps, hugeMemoryAllocator );
+  itsOutputs.resize(itsPipelineOutputSet->size());
 
-  itsDroppedCount.resize(itsNrSubbandsPerPset);
-  itsOutputs.resize(itsMode.nrOutputs());
-
-  dataHolders = newDataHolders( *ps, hugeMemoryAllocator );
+  // since we need itsPipelineOutputSet just for settings, we can extract its data
+  // for the tmpSum array
+  PipelineOutputSet &pipeline = *itsPipelineOutputSet;
   for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
 
-    output.tmpSum = dataHolders->at(o);
+    output.tmpSum = pipeline[o].extractData();
   }
-  delete dataHolders;
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    dataHolders = newDataHolders( *ps, hugeMemoryAllocator );
+    PipelineOutputSet pipeline( *ps, hugeMemoryAllocator );
 
     for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
       struct OutputSection::SingleOutput &output = itsOutputs[o];
 
-      output.sums.push_back( dataHolders->at(o) );
+      output.sums.push_back( pipeline[o].extractData() );
     }
-
-    delete dataHolders;
   }
 
-  // only the last data set is integrated
+  itsDroppedCount.resize(itsNrSubbandsPerPset);
+
   for (unsigned o = 0; o < itsOutputs.size(); o++) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
-    unsigned steps = (o == itsMode.nrOutputs()-1) ? ps->IONintegrationSteps() : 1;
+    unsigned steps = (*itsPipelineOutputSet)[o].IONintegrationSteps();
 
     if( steps > 1 && !output.tmpSum->isIntegratable() )
     {
@@ -254,6 +251,8 @@ void OutputSection::postprocess()
     delete itsOutputThreads[subband];
     delete itsStreamsToStorage[subband];
   }
+
+  delete itsPipelineOutputSet;
 
   itsOutputThreads.clear();
   itsOutputs.clear();

@@ -28,7 +28,6 @@
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Interface/Parset.h>
-#include <Interface/CN_Mode.h>
 #include <Stream/Stream.h>
 
 #include <pthread.h>
@@ -58,7 +57,6 @@ class OutputThread
     void		    mainLoop();
 
     Stream		    *itsStreamToStorage; 
-    CN_Mode                 itsMode;
     pthread_t		    thread;
 };
 

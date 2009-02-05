@@ -26,6 +26,7 @@
 #include <Stream/Stream.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_Mode.h>
+#include <Interface/Parset.h>
 
 #include <vector>
 #include <string>
@@ -36,6 +37,9 @@ namespace RTCP {
 class CN_Configuration
 {
   public:
+    CN_Configuration() {}
+    CN_Configuration( const Parset &parset, const unsigned myPsetNumber );
+
     unsigned		  &nrStations();
     unsigned		  &nrBitsPerSample();
     unsigned		  &nrChannelsPerSubband();
@@ -57,6 +61,8 @@ class CN_Configuration
     Matrix<double>        &phaseCentres();
     CN_Mode               &mode();
     bool                  &outputIncoherentStokesI();
+
+    unsigned              nrPencilBeams() { return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams(); }
     
     void		  read(Stream *);
     void		  write(Stream *);

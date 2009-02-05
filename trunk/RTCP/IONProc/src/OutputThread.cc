@@ -28,8 +28,7 @@
 #include <IONProc/ION_Allocator.h>
 #include <Stream/SystemCallException.h>
 #include <Scheduling.h>
-#include <Interface/DataHolder.h>
-#include <Interface/CN_Mode.h>
+#include <Interface/PipelineOutput.h>
 #include <IONProc/Lock.h>
 
 namespace LOFAR {
@@ -38,20 +37,18 @@ namespace RTCP {
 
 OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
-  itsStreamToStorage(streamToStorage),
-  itsMode(CN_Mode(ps))
+  itsStreamToStorage(streamToStorage)
 {
-  itsOutputs.resize( itsMode.nrOutputs() );
-
   // transpose the data holders: create queues streams for the output streams
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
-    std::vector<StreamableData*> *v = newDataHolders( ps, hugeMemoryAllocator );
+    PipelineOutputSet pipeline( ps, hugeMemoryAllocator );
+
+    // only the first call will actually resize the array -- the rest is superfluous and ought to be optimised out
+    itsOutputs.resize( pipeline.size() );
 
     for (unsigned o = 0; o < itsOutputs.size(); o++ ) {
-      itsOutputs[o].freeQueue.append(v->at(o));
+      itsOutputs[o].freeQueue.append(pipeline[o].extractData());
     }
-
-    delete v;
   }
 
   pthread_attr_t attr;

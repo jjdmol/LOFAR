@@ -167,50 +167,7 @@ static void deleteClientStreams()
 static void configureCNs(const Parset &parset)
 {
   CN_Command	    command(CN_Command::PREPROCESS);
-  CN_Configuration configuration;
-  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
-  Matrix<double>    &phaseCentres      = configuration.phaseCentres();
-  Matrix<double>    &manualPencilBeams = configuration.manualPencilBeams();
-  
-  configuration.nrStations()              = parset.nrStations();
-  configuration.nrBitsPerSample()	  = parset.nrBitsPerSample();
-  configuration.nrChannelsPerSubband()	  = parset.nrChannelsPerSubband();
-  configuration.nrSamplesPerIntegration() = parset.CNintegrationSteps();
-  configuration.nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();
-  configuration.nrSamplesToCNProc()       = parset.nrSamplesToCNProc();
-  configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
-  configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
-  configuration.delayCompensation()       = parset.delayCompensation();
-  configuration.correctBandPass()	  = parset.correctBandPass();
-  configuration.sampleRate()              = parset.sampleRate();
-  configuration.inputPsets()              = parset.getUint32Vector("OLAP.CNProc.inputPsets");
-  configuration.outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
-  configuration.tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
-  configuration.refFreqs()                = parset.subbandToFrequencyMapping();
-  configuration.nrPencilRings()           = parset.nrPencilRings();
-  configuration.pencilRingSize()          = parset.pencilRingSize();
-  configuration.nrManualPencilBeams()     = parset.nrManualPencilBeams();
-  configuration.refPhaseCentre()          = parset.getRefPhaseCentres();
-  configuration.mode()                    = CN_Mode(parset);
-  configuration.outputIncoherentStokesI() = parset.outputIncoherentStokesI();
-
-  phaseCentres.resize( inputs.size(), 3 );
-  for( unsigned stat = 0; stat < inputs.size(); stat++ ) {
-    std::vector<double> phaseCentre = parset.getPhaseCentresOf( inputs[stat].station );
-
-    for( unsigned dim = 0; dim < 3; dim++ ) {
-      phaseCentres[stat][dim] = phaseCentre[dim];
-    }
-  }
-
-  manualPencilBeams.resize( parset.nrManualPencilBeams(), 2 );
-  for( unsigned beam = 0; beam < parset.nrManualPencilBeams(); beam++ ) {
-    std::vector<double> coordinates = parset.getManualPencilBeam( beam );
-
-    for( unsigned dim = 0; dim < 2; dim++ ) {
-      manualPencilBeams[beam][dim] = coordinates[dim];
-    }
-  }
+  CN_Configuration configuration( parset, myPsetNumber );
  
   std::stringstream logStr;
   
