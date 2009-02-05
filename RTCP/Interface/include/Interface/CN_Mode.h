@@ -12,15 +12,6 @@ namespace RTCP {
 class CN_Mode
 {
   public:
-    enum OutputDataType {
-      CORRELATEDDATA = 0,
-      FILTEREDDATA,
-      PENCILBEAMDATA,
-      STOKESDATA,
-
-      RAWDATA = -1
-    };
-
     enum Mode {
       CORRELATE = 0,
       FILTER,
@@ -37,15 +28,11 @@ class CN_Mode
     CN_Mode( const Parset &ps );
 
     Mode mode() const;
-    unsigned nrOutputs() const;
-    OutputDataType outputDataType( unsigned output ) const;
-    OutputDataType finalOutputDataType() const;
 
     bool isCoherent() const;
     unsigned nrStokes() const;
 
     std::string getModeName();
-    std::string getOutputName( unsigned output ) const;
 
     void read(Stream *);
     void write(Stream *) const;
@@ -54,7 +41,6 @@ class CN_Mode
     struct modeList {
       Mode mode;
       std::string name;
-      OutputDataType finalOutputDataType;
       bool isCoherent;
       unsigned nrStokes;
     } const static modeList[];
@@ -63,45 +49,14 @@ class CN_Mode
 
     struct {
       Mode mode;
-      OutputDataType finalOutputDataType;
       bool isCoherent;
       unsigned nrStokes;
-
-      unsigned outputIncoherentStokesI;
-      unsigned nrOutputs;
     } itsMarshalledData;
 };
 
 inline CN_Mode::Mode CN_Mode::mode() const
 {
   return itsMarshalledData.mode;
-}
-
-inline unsigned CN_Mode::nrOutputs() const
-{
-  return itsMarshalledData.nrOutputs;
-}
-
-inline CN_Mode::OutputDataType CN_Mode::outputDataType( unsigned output ) const
-{
-  if( itsMarshalledData.outputIncoherentStokesI ) {
-    if( output == 0 ) {
-      return CN_Mode::STOKESDATA;
-    } else {
-      output--;
-    }
-  }
-
-  if( output == 0 ) {
-    return finalOutputDataType();
-  }
-
-  return RAWDATA;
-}
-
-inline CN_Mode::OutputDataType CN_Mode::finalOutputDataType() const
-{
-  return itsMarshalledData.finalOutputDataType;
 }
 
 inline bool CN_Mode::isCoherent() const
