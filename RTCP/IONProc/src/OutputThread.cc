@@ -37,16 +37,21 @@ namespace RTCP {
 
 OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 :
+  itsOutputs(0),
+  itsNrOutputs(0),
   itsStreamToStorage(streamToStorage)
 {
   // transpose the data holders: create queues streams for the output streams
   for (unsigned i = 0; i < maxSendQueueSize; i ++) {
     PipelineOutputSet pipeline( ps, hugeMemoryAllocator );
 
-    // only the first call will actually resize the array -- the rest is superfluous and ought to be optimised out
-    itsOutputs.resize( pipeline.size() );
+    // only the first call will actually resize the array
+    if( !itsOutputs ) {
+      itsNrOutputs = pipeline.size();
+      itsOutputs = new struct OutputThread::SingleOutput[itsNrOutputs];
+    }
 
-    for (unsigned o = 0; o < itsOutputs.size(); o++ ) {
+    for (unsigned o = 0; o < itsNrOutputs; o++ ) {
       itsOutputs[o].freeQueue.append(pipeline[o].extractData());
     }
   }
@@ -75,7 +80,7 @@ OutputThread::~OutputThread()
   while (!itsSendQueueActivity.empty())
     itsSendQueueActivity.remove();
 
-  for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+  for (unsigned o = 0; o < itsNrOutputs; o ++) {
     struct OutputThread::SingleOutput &output = itsOutputs[o];
 
     while (!output.freeQueue.empty())
@@ -86,7 +91,7 @@ OutputThread::~OutputThread()
 
   }
 
-  itsOutputs.clear();
+  delete [] itsOutputs;
 }
 
 

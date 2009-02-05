@@ -25,12 +25,13 @@
 
 #include <pthread.h>
 #include <list>
+#include <boost/noncopyable.hpp>
 
 
 namespace LOFAR {
 namespace RTCP {
 
-template <typename T> class Queue
+template <typename T> class Queue: boost::noncopyable
 {
   public:
 	     Queue();

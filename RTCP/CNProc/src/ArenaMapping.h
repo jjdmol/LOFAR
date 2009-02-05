@@ -26,11 +26,12 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/Allocator.h>
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
 
-class ArenaMapping {
+class ArenaMapping: boost::noncopyable {
   public:
     virtual ~ArenaMapping();
 

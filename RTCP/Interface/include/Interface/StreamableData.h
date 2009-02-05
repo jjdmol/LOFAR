@@ -9,6 +9,8 @@
 #include <Interface/Allocator.h>
 #include <Common/DataConvert.h>
 
+#include <boost/noncopyable.hpp>
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -57,7 +59,7 @@ class StreamableData {
 };
 
 // A typical data set contains a MultiDimArray of tuples and a set of flags.
-template <typename T, unsigned DIM> class SampleData: public StreamableData {
+template <typename T, unsigned DIM> class SampleData: public StreamableData, boost::noncopyable {
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
 

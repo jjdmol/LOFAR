@@ -4,6 +4,7 @@
 #include <Interface/SparseSet.h>
 
 #include <map>
+#include <boost/noncopyable.hpp>
 
 
 namespace LOFAR {
@@ -26,7 +27,7 @@ class Arena
 };
 
 
-class MallocedArena : public Arena
+class MallocedArena : public Arena, boost::noncopyable
 {
   public:
 		MallocedArena(size_t size, size_t alignment);
@@ -63,7 +64,7 @@ class HeapAllocator : public Allocator
 extern HeapAllocator heapAllocator;
 
 
-class SparseSetAllocator : public Allocator
+class SparseSetAllocator : public Allocator, boost::noncopyable
 {
   public:
 				SparseSetAllocator(const Arena &);

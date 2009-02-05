@@ -24,11 +24,10 @@
 #include <lofar_config.h>
 
 #include <Storage/InputThread.h>
-#include <Interface/DataHolder.h>
+#include <Interface/PipelineOutput.h>
 #include <Interface/StreamableData.h>
 #include <Stream/NullStream.h>
 #include <Common/DataConvert.h>
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -36,22 +35,24 @@ namespace RTCP {
 
 InputThread::InputThread(Stream *streamFromION, const Parset *ps)
 :
+  itsInputs(0),
+  itsNrInputs(0),
   itsPS(ps),
-  itsStreamFromION(streamFromION),
-  itsMode(CN_Mode(*ps))
+  itsStreamFromION(streamFromION)
 {
-  itsFreeQueue.resize( itsMode.nrOutputs() );
-  itsReceiveQueue.resize( itsMode.nrOutputs() );
-
   // transpose output stream holders
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++) {
-    std::vector<StreamableData*> *v = newDataHolders(*itsPS);
+    PipelineOutputSet pipeline( *ps );
 
-    for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
-      itsFreeQueue[output].append( (*v)[output] );
+    // only the first call will resize the array
+    if( !itsInputs ) {
+      itsNrInputs = pipeline.size();
+      itsInputs = new struct InputThread::SingleInput[itsNrInputs];
     }
 
-    delete v;
+    for (unsigned o = 0; o < itsNrInputs; o ++ ) {
+      itsInputs[o].freeQueue.append( pipeline[o].extractData() );
+    }
   }
 
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
@@ -68,10 +69,14 @@ InputThread::~InputThread()
     exit(1);
   }
 
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
+  for (unsigned o = 0; o < itsNrInputs; o++ ) {
+    struct InputThread::SingleInput &input = itsInputs[o];
+
     for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-      delete itsFreeQueue[output].remove();
+      delete input.freeQueue.remove();
   }
+
+  delete [] itsInputs;
 }
 
 
@@ -84,28 +89,31 @@ void InputThread::mainLoop()
 
   try {
     for (unsigned count = 0; count < 10; count += increment) {
-      unsigned output;
+      unsigned o;
 
       // read header: output number
-      itsStreamFromION->read( &output, sizeof output );
+      itsStreamFromION->read( &o, sizeof o );
 #if !defined WORDS_BIGENDIAN
-      dataConvert( LittleEndian, &output, 1 );
+      dataConvert( LittleEndian, &o, 1 );
 #endif
 
+      struct InputThread::SingleInput &input = itsInputs[o];
+
       // read data
-      data = itsFreeQueue[output].remove();
+      data = input.freeQueue.remove();
       data->read(itsStreamFromION, true);
-      itsReceiveQueue[output].append(data);
+      input.receiveQueue.append(data);
 
       // signal to the subbandwriter that we obtained data
-      itsReceiveQueueActivity.append(output);
+      itsReceiveQueueActivity.append(o);
     }
   } catch (Stream::EndOfStreamException &) {
-    itsFreeQueue[0].append(data); // to include data when freeing, so actual queue number does not matter
+    itsInputs[0].freeQueue.append(data); // to include data when freeing, so actual queue number does not matter
   }
 
-  for (unsigned output = 0; output < itsMode.nrOutputs(); output++ ) {
-    itsReceiveQueue[output].append(0); // no more data
+  for (unsigned o = 0; o < itsNrInputs; o++ ) {
+    itsInputs[o].receiveQueue.append(0); // no more data
+    itsReceiveQueueActivity.append(o);
   }
 }
 

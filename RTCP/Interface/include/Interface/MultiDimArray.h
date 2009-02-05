@@ -3,6 +3,7 @@
 
 #include <Interface/Allocator.h>
 #include <boost/multi_array.hpp>
+#include <boost/noncopyable.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -18,7 +19,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_array_ref<T, DIM>
+template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_array_ref<T, DIM>, boost::noncopyable
 {
   public:
     typedef boost::multi_array_ref<T, DIM> SuperType;
@@ -63,12 +64,6 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
   private:
     Allocator &allocator;
-
-    // don't allow copy constructors -- they are not yet implemented
-    // the default boost implementation just copies the pointers
-    // to the data area, resulting in a double free when deallocating
-    // both copies.
-    MultiDimArray( const MultiDimArray<T,DIM> &other );
 
     static size_t nrElements(const ExtentList &extents)
     {

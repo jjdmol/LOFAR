@@ -3,6 +3,7 @@
 
 #include <PencilBeams.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/PrintVector.h>
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -261,16 +262,6 @@ void PencilBeams::computeComplexVoltages( FilteredData *in, PencilBeamData *out,
       }
     }
   }
-}
-
-std::ostream& operator<<(std::ostream &str, std::vector<unsigned> &v)
-{
-  for(unsigned i = 0; i < v.size(); i++ ) {
-    if( i > 0 ) str << ", ";
-    str << v[i];
-  }
-
-  return str;
 }
 
 void PencilBeams::calculateAllDelays( FilteredData *filteredData )

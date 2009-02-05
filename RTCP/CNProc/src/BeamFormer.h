@@ -4,6 +4,7 @@
 #include <Interface/FilteredData.h>
 
 #include <cassert>
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
@@ -35,7 +36,7 @@ in the FilteredData.
 
 */
 
-class BeamFormer
+class BeamFormer: boost::noncopyable
 {
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
