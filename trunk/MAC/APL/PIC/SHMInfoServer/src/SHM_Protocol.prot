@@ -4,7 +4,7 @@
 autogen definitions protocol;
 
 description = "Protocol for MAC Information Exchange";
-prefix = "MIS"; // for the signal names
+prefix = "SHM"; // for the signal names
 id = "(LOFAR::MACIO::F_APL_PROTOCOL+5)"; 
 include = '<Common/LofarTypes.h>';
 
@@ -13,7 +13,7 @@ include = '<XCStatistics.h>';
 include = '<RspStatus.h>';
 //include = '<XCSubbandSelection.h>';  MAXMOD-TEST removal
 
-// The "MIS" (MAC Information Server) protocol describes all possible
+// The "SHM" (MAC Information Server) protocol describes all possible
 // interactions between the MAC (Monitoring-And-Control) and SHM
 // (System Health Management) subsystems of LOFAR.
 //
@@ -25,7 +25,7 @@ include = '<RspStatus.h>';
 // In MAC/SHM communication, MAC will always act as the server and SHM
 // will always act as the client. Persistent TCP connections between
 // different MAC nodes (LCUs and CCUs, see below) and the single SHM
-// "master" node shall be used. MIS protocol servers on the MAC side
+// "master" node shall be used. SHM protocol servers on the MAC side
 // shall be capable of accepting and handling multiple connections.
 //
 // The "MIC" protocol really consists of 7 protocols rolled into one.

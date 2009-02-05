@@ -1,4 +1,4 @@
-//#  MISSubscription.h: 
+//#  SHMSubscription.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef MISSUBSCRIPTION_H
-#define MISSUBSCRIPTION_H
+#ifndef SHMSUBSCRIPTION_H
+#define SHMSUBSCRIPTION_H
 
 //#include <GCF/PAL/GCF_PropertyProxy.h>
 
@@ -29,13 +29,13 @@ namespace LOFAR
 {
   namespace AMI
   {
-class MISSession;
+class SHMSession;
 
-class MISSubscription : public GCF::PAL::GCFPropertyProxy
+class SHMSubscription : public GCF::PAL::GCFPropertyProxy
 {
   public:
-    MISSubscription (MISSession& session, const string& propName, uint64 replyNr, bool onlyOnce);
-    virtual ~MISSubscription ();
+    SHMSubscription (SHMSession& session, const string& propName, uint64 replyNr, bool onlyOnce);
+    virtual ~SHMSubscription ();
 
     void subscribe();
     void unsubscribe(uint64 seqnr);
@@ -51,16 +51,16 @@ class MISSubscription : public GCF::PAL::GCFPropertyProxy
     void propValueSet (const string& /*propName*/) {}
     
   private:
-    MISSubscription();
+    SHMSubscription();
 
     // Don't allow copying this object.
     // <group>
-    MISSubscription (const MISSubscription&);
-    MISSubscription& operator= (const MISSubscription&);  
+    SHMSubscription (const SHMSubscription&);
+    SHMSubscription& operator= (const SHMSubscription&);  
     // </group>
 
   private: // data members
-    MISSession&   _session;
+    SHMSession&   _session;
     const string  _propName;
     uint64        _curReplySeqNr;
     bool          _onlyOnce;    

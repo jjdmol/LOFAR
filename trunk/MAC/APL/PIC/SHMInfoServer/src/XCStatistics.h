@@ -22,15 +22,15 @@
 //#
 //#  $Id$
 
-#ifndef MIS_XCSTATISTICS_H_
-#define MIS_XCSTATISTICS_H_
+#ifndef SHM_XCSTATISTICS_H_
+#define SHM_XCSTATISTICS_H_
 
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 #include <complex>
 
 namespace LOFAR {
-  namespace MIS_Protocol {
+  namespace SHM_Protocol {
 
     class XCStatistics
     {
@@ -75,4 +75,4 @@ namespace LOFAR {
   };
 }; // namespace LOFAR     
 
-#endif /* MIS_XCSTATISTICS_H_ */
+#endif /* SHM_XCSTATISTICS_H_ */

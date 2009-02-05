@@ -1,4 +1,4 @@
-//#  MISSubscription.cc: Implementation of the Virtual MISSubscription task
+//#  SHMSubscription.cc: Implementation of the Virtual SHMSubscription task
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 
-#include "MISSubscription.h"
-#include "MISSession.h"
-#include <MIS_Protocol.ph>
+#include "SHMSubscription.h"
+#include "SHMSession.h"
+#include <SHM_Protocol.ph>
 #include <GCF/PVSS/PVSSInfo.h>
 #include <GCF/PVSS/GCF_PValue.h>
 
@@ -37,10 +37,10 @@ using namespace GCF::PAL;
   namespace AMI
   {
     
-INIT_TRACER_CONTEXT(MISSubscription, LOFARLOGGER_PACKAGE);
+INIT_TRACER_CONTEXT(SHMSubscription, LOFARLOGGER_PACKAGE);
 
      
-MISSubscription::MISSubscription (MISSession& session, const string& propName, uint64 replyNr, bool onlyOnce) :
+SHMSubscription::SHMSubscription (SHMSession& session, const string& propName, uint64 replyNr, bool onlyOnce) :
   GCFPropertyProxy(),
   _session(session),
   _propName(propName),
@@ -51,7 +51,7 @@ MISSubscription::MISSubscription (MISSession& session, const string& propName, u
 {
 }
 
-MISSubscription::~MISSubscription ()
+SHMSubscription::~SHMSubscription ()
 {
   if (_isSubscribed && GCFPVSSInfo::propExists(_propName))
   {
@@ -60,7 +60,7 @@ MISSubscription::~MISSubscription ()
   if (_pFirstValue) delete _pFirstValue;
 }
 
-void MISSubscription::subscribe()
+void SHMSubscription::subscribe()
 {
   string response("ACK");
   if (GCFPVSSInfo::propExists(_propName))
@@ -77,16 +77,16 @@ void MISSubscription::subscribe()
   
   if (response != "ACK")
   {   
-    MISPvssDpSubscriptionResponseEvent nak;
+    SHMPvssDpSubscriptionResponseEvent nak;
     nak.replynr = _curReplySeqNr;
-    MISSession::setCurrentTime(nak.timestamp_sec, nak.timestamp_nsec);
+    SHMSession::setCurrentTime(nak.timestamp_sec, nak.timestamp_nsec);
     nak.response = response;
     _session.subscribed(nak);    
     _session.mayDelete(_propName);
   }
 }
 
-void MISSubscription::unsubscribe(uint64 seqnr)
+void SHMSubscription::unsubscribe(uint64 seqnr)
 {
   string response("ACK");
   if (GCFPVSSInfo::propExists(_propName))
@@ -101,20 +101,20 @@ void MISSubscription::unsubscribe(uint64 seqnr)
     response = "NAK (DPE does not exist)";
   }  
   _isSubscribed = false;
-  MISPvssDpSubscriptionResponseEvent resp;
+  SHMPvssDpSubscriptionResponseEvent resp;
   resp.replynr = seqnr;
-  MISSession::setCurrentTime(resp.timestamp_sec, resp.timestamp_nsec);
+  SHMSession::setCurrentTime(resp.timestamp_sec, resp.timestamp_nsec);
   resp.response = response;
   _session.subscribed(resp);    
   _session.mayDelete(_propName);
 }
 
-void MISSubscription::propSubscribed (const string& propName)
+void SHMSubscription::propSubscribed (const string& propName)
 {
   ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
-  MISPvssDpSubscriptionResponseEvent ack;
+  SHMPvssDpSubscriptionResponseEvent ack;
   ack.replynr = _curReplySeqNr;
-  MISSession::setCurrentTime(ack.timestamp_sec, ack.timestamp_nsec);
+  SHMSession::setCurrentTime(ack.timestamp_sec, ack.timestamp_nsec);
   ack.response = "ACK";
   ASSERTSTR(_pFirstValue, "Value was not requested from PVSS");
   ack.dptype = _pFirstValue->getTypeName();
@@ -123,12 +123,12 @@ void MISSubscription::propSubscribed (const string& propName)
   propValueChanged(_propName, *_pFirstValue);  
 }
 
-void MISSubscription::propValueChanged (const string& propName, const GCFPValue& newValue)
+void SHMSubscription::propValueChanged (const string& propName, const GCFPValue& newValue)
 {
   ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
-  MISPvssDpSubscriptionValueChangedAsyncEvent vce;
+  SHMPvssDpSubscriptionValueChangedAsyncEvent vce;
   vce.replynr = _curReplySeqNr;
-  MISSession::setCurrentTime(vce.timestamp_sec, vce.timestamp_nsec);
+  SHMSession::setCurrentTime(vce.timestamp_sec, vce.timestamp_nsec);
   timeval ts = GCFPVSSInfo::getLastEventTimestamp();
   vce.payload_timestamp_sec = ts.tv_sec;
   vce.payload_timestamp_nsec = ts.tv_usec * 1000;
@@ -136,7 +136,7 @@ void MISSubscription::propValueChanged (const string& propName, const GCFPValue&
   _session.valueChanged(vce);
 }
 
-void MISSubscription::propValueGet (const string& propName, const GCFPValue& newValue)
+void SHMSubscription::propValueGet (const string& propName, const GCFPValue& newValue)
 {
   ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   _pFirstValue = newValue.clone();
@@ -150,9 +150,9 @@ void MISSubscription::propValueGet (const string& propName, const GCFPValue& new
   {
     if (subscribeProp(_propName) != GCF_NO_ERROR)
     {
-      MISPvssDpSubscriptionResponseEvent nak;
+      SHMPvssDpSubscriptionResponseEvent nak;
       nak.replynr = _curReplySeqNr;
-      MISSession::setCurrentTime(nak.timestamp_sec, nak.timestamp_nsec);
+      SHMSession::setCurrentTime(nak.timestamp_sec, nak.timestamp_nsec);
       nak.response = "NAK (could not subscribe)";
       _session.subscribed(nak);    
       _session.mayDelete(_propName);
@@ -160,7 +160,7 @@ void MISSubscription::propValueGet (const string& propName, const GCFPValue& new
   }
 }
 
-void MISSubscription::propSubscriptionLost(const string& propName)
+void SHMSubscription::propSubscriptionLost(const string& propName)
 {
   ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   LOG_DEBUG(formatString (
