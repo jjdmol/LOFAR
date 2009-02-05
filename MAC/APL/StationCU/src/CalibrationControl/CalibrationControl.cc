@@ -176,11 +176,11 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName(),
+		string	propSetName(createPropertySetName(PSN_CALIBRATION_CONTROL, getName(),
 												  globalParameterSet()->getString("_DPname")));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
-											 PST_CAL_CTRL,
+											 PST_CALIBRATION_CONTROL,
 											 PSAT_RW | PSAT_TMP,
 											 this);
 		// Wait for timer that is set on DP_CREATED event

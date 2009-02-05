@@ -66,7 +66,7 @@ namespace LOFAR {
 #define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"
 #define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
 #define	MAC_SVCMASK_MACINFOSERVER		"MACInfoServer%s:v1.0"
-#define	MAC_SVCMASK_MISSESSION			"MISSession%s:v1.0"
+#define	MAC_SVCMASK_SHMSESSION			"MISSession%s:v1.0"
 
 
 // Define names for GCF test applications

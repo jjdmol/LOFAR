@@ -124,4 +124,4 @@ awk '{
 rm ${COMPORDERFILE} ${FILERELFILE} 
 
 ../../build/gnunew_debug/data/bin/load_OTDB_comps $1 ${RESULTFILE}
-rm ${RESULTFILE}
+#rm ${RESULTFILE}

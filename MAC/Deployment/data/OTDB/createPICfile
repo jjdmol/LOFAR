@@ -67,8 +67,8 @@ def expandCabinetMarker(dataPoint, nrRSP):
 # MAIN
 # all the files we are uisng
 PVSSbasefile= "../PVSS/PVSSDataPoints.base"
-StationFile = "../StaticMetaData/StationInfo"
-ControlFile = "../StaticMetaData/ControlInfo"
+StationFile = "../StaticMetaData/StationInfo.dat"
+ControlFile = "../StaticMetaData/ControlInfo.dat"
 RingFile    = "../PVSS/Rings.list"
 ClusterFile = "../PVSS/Clusters.list"
 filledLine  = re.compile("^[^#].*", re.MULTILINE)

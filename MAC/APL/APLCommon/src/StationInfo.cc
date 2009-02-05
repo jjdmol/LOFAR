@@ -95,7 +95,7 @@ string	PVSSDatabaseName(const string&	someName)
 	// strip off CUtype is any to get the PVSS database name
 	rtrim(hostname, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-	return (hostname);
+	return (toUpper(hostname));
 }
 
 //

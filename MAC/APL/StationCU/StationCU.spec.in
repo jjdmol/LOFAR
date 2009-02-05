@@ -46,7 +46,9 @@ AutoReqProv: no
 The StationCU contains all controllers for the stations.
 BeamControl to control the BeamServer.
 CalibartionControl to control the CalibrationServer.
-DigitalBaordControl to control the RSPdriver.
+ClockControl to control the station clock.
+StationControl is the master controlller of the station.
+TBBControl to control the TBB boards.
 
 ##############################################################################
 #
