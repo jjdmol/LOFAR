@@ -35,7 +35,7 @@
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
 #include <Interface/Parset.h>
-#include <Interface/CN_Mode.h>
+#include <Interface/PipelineOutput.h>
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
 #include <Storage/InputThread.h>
@@ -66,7 +66,8 @@ class SubbandWriter
 
     const Parset	    *itsPS;
     unsigned		    itsRank;
-    CN_Mode		    itsMode;
+    PipelineOutputSet       itsPipelineOutputSet;
+    unsigned                itsNrOutputs;
 
     std::vector<Stream *>   itsInputStreams;
     std::vector<bool>	    itsIsNullStream;

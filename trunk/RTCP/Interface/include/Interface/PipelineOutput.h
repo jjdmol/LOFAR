@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <boost/noncopyable.hpp>
 #include <Stream/Stream.h>
 #include <Interface/Parset.h>
 #include <Interface/CN_Mode.h>
@@ -20,7 +21,7 @@ namespace RTCP {
 // forward declaration
 class PipelineOutputSet;
 
-class PipelineOutput
+class PipelineOutput: boost::noncopyable
 {
   public:
     enum OutputDataType {

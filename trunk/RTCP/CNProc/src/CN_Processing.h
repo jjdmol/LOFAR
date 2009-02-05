@@ -61,6 +61,7 @@
 #endif
 
 #include <string>
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace RTCP {
@@ -77,7 +78,7 @@ class CN_Processing_Base // untemplated helper class
 };
 
 
-template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
+template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base, boost::noncopyable	
 {
   public:
 			CN_Processing(Stream *, const LocationInfo &);

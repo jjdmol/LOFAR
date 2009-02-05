@@ -87,6 +87,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsFilteredData(0),
   itsCorrelatedData(0),
   itsPencilBeamData(0),
+  itsStokesData(0),
+  itsIncoherentStokesIData(0),
   itsMode(),
 #if defined HAVE_BGL || defined HAVE_BGP
   itsDoAsyncCommunication(true),
@@ -96,6 +98,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsPPF(0),
   itsBeamFormer(0),
   itsPencilBeamFormer(0),
+  itsStokes(0),
+  itsIncoherentStokesI(0),
   itsCorrelator(0)
 {
 

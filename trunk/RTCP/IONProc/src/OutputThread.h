@@ -48,7 +48,8 @@ class OutputThread
     struct SingleOutput {
       Queue<StreamableData *> freeQueue, sendQueue;
     };
-    std::vector<struct SingleOutput> itsOutputs;
+    struct SingleOutput     *itsOutputs; // [itsNrOutputs]
+    unsigned                itsNrOutputs;
 
     Queue<int>              itsSendQueueActivity; 
 

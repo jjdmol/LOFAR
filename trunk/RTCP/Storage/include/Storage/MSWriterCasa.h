@@ -22,8 +22,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_STORAGE_MSWRITERIMPL_H
-#define LOFAR_STORAGE_MSWRITERIMPL_H
+#ifndef LOFAR_STORAGE_MSWRITERCASA_H
+#define LOFAR_STORAGE_MSWRITERCASA_H
 
 //# Includes
 #include <Common/LofarTypes.h>
