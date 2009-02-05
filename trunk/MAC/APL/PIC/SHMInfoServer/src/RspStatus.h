@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef SHM_RSPSTATUS_H_
-#define SHM_RSPSTATUS_H_
+#ifndef MIS_RSPSTATUS_H_
+#define MIS_RSPSTATUS_H_
 
 #include <iostream>
 #include <complex>
@@ -33,7 +33,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 namespace LOFAR {
-  namespace SHM_Protocol {
+  namespace MIS_Protocol {
 
     class RspStatus
     {
@@ -81,6 +81,6 @@ namespace LOFAR {
     }
 
   };
-}; // namespace SHM_Protocol
+}; // namespace MIS_Protocol
 
 #endif /* RSPSTATUS_H_ */

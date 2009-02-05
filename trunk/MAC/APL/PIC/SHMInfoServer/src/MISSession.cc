@@ -1,4 +1,4 @@
-//#  SHMSession.cc: 
+//#  MISSession.cc: 
 //#
 //#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,10 +28,10 @@
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RTCCommon/PSAccess.h>
 
-#include "SHMInfoServer.h"
-#include "SHMSession.h"
-#include "SHMDefines.h"
-//#include "SHMSubscription.h"
+#include "MISSession.h"
+#include "MISDaemon.h"
+#include "MISDefines.h"
+//#include "MISSubscription.h"
 #include "XCStatistics.h"         //MAXMOD
 #include "RspStatus.h"            //MAXMOD
 
@@ -55,7 +55,7 @@ namespace LOFAR {
 
 #define RETURN_NOACK_MSG(_eventin_, _eventout_, _response_) \
   { \
-    SHM##_eventin_##Event in(e); \
+    MIS##_eventin_##Event in(e); \
     LOGMSGHDR(in) \
     SEND_RESP_MSG(in, _eventout_, _response_) \
   }
@@ -65,7 +65,7 @@ namespace LOFAR {
     LOG_INFO(formatString( \
         "Response value is: %s.", \
         string(_response_).c_str()));  \
-    SHM##_eventout_##Event out; \
+    MIS##_eventout_##Event out; \
     out.seqnr = _curSeqNr++; \
     out.replynr = _eventin_.seqnr; \
     out.response = _response_; \
@@ -89,25 +89,25 @@ namespace LOFAR {
    unsigned int i, j;
    
 //
-// SHMSession(SHMInfoServer)
+// MISSession(MISDaemon)
 //
-SHMSession::SHMSession(SHMInfoServer& daemon) :
-	GCFTask((State)&SHMSession::initial_state, "SHMSession"),
+MISSession::MISSession(MISDaemon& daemon) :
+	GCFTask((State)&MISSession::initial_state, "MISSession"),
 	_daemon			 	 (daemon),
 	_curSeqNr			 (1),
 	_curReplyNr			 (0),
 	_pRememberedEvent	 (0),
 	_nrOfRCUs			 (0)
 {
-	_missPort.init(*this, MAC_SVCMASK_SHMSESSION, GCFPortInterface::SPP, SHM_PROTOCOL);
+	_missPort.init(*this, MAC_SVCMASK_MISSESSION, GCFPortInterface::SPP, MIS_PROTOCOL);
 	_rspDriverPort.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 	_daemon.getPortProvider().accept(_missPort);
 }
 
 //
-// ~SHMSession()
+// ~MISSession()
 //
-SHMSession::~SHMSession () 
+MISSession::~MISSession () 
 {
 #if 0
   for (TSubscriptions::iterator iter = _subscriptions.begin();
@@ -120,7 +120,7 @@ SHMSession::~SHMSession ()
 //
 // initial_state(event, port)
 //
-GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -132,11 +132,11 @@ GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
       break;
 
     case F_CONNECTED:
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
 
     case F_DISCONNECTED:
-      TRAN(SHMSession::closing_state);
+      TRAN(MISSession::closing_state);
       break;
       
     default:
@@ -150,7 +150,7 @@ GCFEvent::TResult SHMSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
 //
 // waiting_state(event, port)
 //
-GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
@@ -175,8 +175,8 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
       
       if (timerEvent.id == garbageTimerID) {
         // cleanup the garbage of obsolete subscriptions
-        SHMSubscription* pSubs;
-        for (list<SHMSubscription*>::iterator iter = _subscriptionsGarbage.begin();
+        MISSubscription* pSubs;
+        for (list<MISSubscription*>::iterator iter = _subscriptionsGarbage.begin();
              iter != _subscriptionsGarbage.end(); ++iter) {
           pSubs = *iter;
           delete pSubs;
@@ -189,52 +189,52 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
 
     case F_DISCONNECTED:
       if (&_missPort == &p) {
-        LOG_INFO("Connection lost to a SHM client.");
-        TRAN(SHMSession::closing_state);
+        LOG_INFO("Connection lost to a MIS client.");
+        TRAN(MISSession::closing_state);
       }
       break;
       
-    case SHM_GENERIC_PINGPONG:
+    case MIS_GENERIC_PINGPONG:
       genericPingpong(e);
       break;
       
-    case SHM_GENERIC_IDENTIFY_REQUEST:
+    case MIS_GENERIC_IDENTIFY_REQUEST:
       getGenericIdentity(e);
       break;
     
-    case SHM_DIAGNOSIS_NOTIFICATION:
+    case MIS_DIAGNOSIS_NOTIFICATION:
       setDiagnosis(e);
       break;
     
-    case SHM_RECONFIGURATION_REQUEST:
-      TRAN(SHMSession::reconfigure_state);
+    case MIS_RECONFIGURATION_REQUEST:
+      TRAN(MISSession::reconfigure_state);
       dispatch(e, p);
       break;
     
-    case SHM_LOFAR_STRUCTURE_REQUEST:
-      TRAN(SHMSession::getPICStructure_state);
+    case MIS_LOFAR_STRUCTURE_REQUEST:
+      TRAN(MISSession::getPICStructure_state);
       dispatch(e, p);
       break;
     
-//    case SHM_PVSS_DP_SUBSCRIPTION_REQUEST:
+//    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
 //      subscribe(e);
 //      break;
     
-    case SHM_SUBBAND_STATISTICS_REQUEST:
+    case MIS_SUBBAND_STATISTICS_REQUEST:
       getSubbandStatistics(e);
       break;
     
-    case SHM_ANTENNA_CORRELATION_MATRIX_REQUEST:
+    case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
       //MAXMOD
       getAntennaCorrelation(e);
-      //      TRAN(SHMSession::getAntennaCorrelation_state);
+      //      TRAN(MISSession::getAntennaCorrelation_state);
       //dispatch(e, p);
       break;
 
-    case SHM_RSP_STATUS_REQUEST:
+    case MIS_RSP_STATUS_REQUEST:
       //MAXMOD
       getRspStatus(e);
-      //      TRAN(SHMSession::getAntennaCorrelation_state);
+      //      TRAN(MISSession::getAntennaCorrelation_state);
       //dispatch(e, p);
       break;
     
@@ -249,13 +249,13 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
 //
 // genericPingPong(event)
 //
-void SHMSession::genericPingpong(GCFEvent& e)
+void MISSession::genericPingpong(GCFEvent& e)
 {
-  SHMGenericPingpongEvent in(e);
+  MISGenericPingpongEvent in(e);
   LOGMSGHDR(in);
        
   //cout << "MAXMOD: in genericPingping, e.signal = " << e.signal << endl;
-  SHMGenericPingpongEvent out;
+  MISGenericPingpongEvent out;
   out.seqnr = _curSeqNr++;
   out.replynr = in.seqnr;
   setCurrentTime(out.timestamp_sec, out.timestamp_nsec);
@@ -266,11 +266,11 @@ void SHMSession::genericPingpong(GCFEvent& e)
 //
 // getGenericIdentity(event)
 //
-void SHMSession::getGenericIdentity(GCFEvent& e)
+void MISSession::getGenericIdentity(GCFEvent& e)
 {    
-  SHMGenericIdentifyRequestEvent in(e);
+  MISGenericIdentifyRequestEvent in(e);
   LOGMSGHDR(in);
-  SHMGenericIdentifyResponseEvent out;
+  MISGenericIdentifyResponseEvent out;
   out.seqnr = _curSeqNr++;
   out.replynr = in.seqnr;
   out.response = (_busy ? "BUSY" : "ACK");
@@ -278,9 +278,9 @@ void SHMSession::getGenericIdentity(GCFEvent& e)
   gethostname(hostName, 200);
   out.node_id = hostName;
   out.sw_version = formatString("%d.%d.%d (%s, %s)", 
-                                SHM_MAJOR_VER, 
-                                SHM_MIDOR_VER, 
-                                SHM_MINOR_VER, 
+                                MIS_MAJOR_VER, 
+                                MIS_MIDOR_VER, 
+                                MIS_MINOR_VER, 
                                 __DATE__, 
                                 __TIME__);
   setCurrentTime(out.timestamp_sec, out.timestamp_nsec);
@@ -290,10 +290,10 @@ void SHMSession::getGenericIdentity(GCFEvent& e)
 //
 // setDiagnosis(event)
 //
-void SHMSession::setDiagnosis(GCFEvent& e)
+void MISSession::setDiagnosis(GCFEvent& e)
 {
-	SHMDiagnosisNotificationEvent	diagnose(e);
-	SHMDiagnosisResponseEvent       ackout(e);
+	MISDiagnosisNotificationEvent	diagnose(e);
+	MISDiagnosisResponseEvent       ackout(e);
 	
 	ssize_t maxsend;
 
@@ -321,20 +321,20 @@ void SHMSession::setDiagnosis(GCFEvent& e)
 			       ackout.timestamp_sec,
 			       ackout.timestamp_nsec));
 	LOG_INFO(formatString("MAXMOD: setDiagnosis %d response of _missPort.send(ackout).size",maxsend));
-	//TRAN(SHMSession::waiting_state);
+	//TRAN(MISSession::waiting_state);
 }
 
 
-GCFEvent::TResult SHMSession::reconfigure_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::reconfigure_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case SHM_RECONFIGURATION_REQUEST:
+    case MIS_RECONFIGURATION_REQUEST:
     {
       RETURN_NOACK_MSG(ReconfigurationRequest, ReconfigurationResponse, "NAK (not supported yet)");
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
     }       
     default:
@@ -345,17 +345,17 @@ GCFEvent::TResult SHMSession::reconfigure_state(GCFEvent& e, GCFPortInterface& p
   return status;
 }
 
-GCFEvent::TResult SHMSession::getPICStructure_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getPICStructure_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
       
-    case SHM_LOFAR_STRUCTURE_REQUEST:
+    case MIS_LOFAR_STRUCTURE_REQUEST:
     {
       RETURN_NOACK_MSG(LofarStructureRequest, LofarStructureResponse, "NAK (not supported yet)");
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
     }       
     default:
@@ -366,10 +366,10 @@ GCFEvent::TResult SHMSession::getPICStructure_state(GCFEvent& e, GCFPortInterfac
   return status;
 }
 
-void SHMSession::subscribe(GCFEvent& e)
+void MISSession::subscribe(GCFEvent& e)
 {
 #if 0
-  SHMPvssDpSubscriptionRequestEvent in(e);
+  MISPvssDpSubscriptionRequestEvent in(e);
   LOGMSGHDR(in);
   string response = "ACK";
   
@@ -392,12 +392,12 @@ void SHMSession::subscribe(GCFEvent& e)
       response = "NAK (subscription already made; ignored)";
     }
     else {
-      SHMSubscription* pNewSubscription = new SHMSubscription(*this, 
+      MISSubscription* pNewSubscription = new MISSubscription(*this, 
                                                             in.dpname, 
                                                             in.seqnr, 
                                                             (in.request == "SINGLE-SHOT"));
       _subscriptions[in.dpname] = pNewSubscription;
-      TRAN(SHMSession::subscribe_state);
+      TRAN(MISSession::subscribe_state);
       pNewSubscription->subscribe();
     }        
   }
@@ -408,7 +408,7 @@ void SHMSession::subscribe(GCFEvent& e)
 #endif
 }
 
-GCFEvent::TResult SHMSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -425,10 +425,10 @@ GCFEvent::TResult SHMSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
 //
 // getRspStatus(event)
 //
-void SHMSession::getRspStatus(GCFEvent& e)
+void MISSession::getRspStatus(GCFEvent& e)
 {
 	assert(_pRememberedEvent == 0);
-	SHMRspStatusRequestEvent* pIn = new SHMRspStatusRequestEvent(e);
+	MISRspStatusRequestEvent* pIn = new MISRspStatusRequestEvent(e);
 	LOGMSGHDR((*pIn));
 
 	if (_nrOfRCUs == 0) {
@@ -470,14 +470,14 @@ void SHMSession::getRspStatus(GCFEvent& e)
 	}
 
 	_pRememberedEvent = pIn;
-	TRAN(SHMSession::getRspStatus_state);
+	TRAN(MISSession::getRspStatus_state);
 }
 
-GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static SHMRspStatusResponseEvent ackout;
-  static SHMRspStatusRequestEvent* pIn(0);
+  static MISRspStatusResponseEvent ackout;
+  static MISRspStatusRequestEvent* pIn(0);
   //MAXMOD
   ssize_t maxsend;
 
@@ -493,7 +493,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
 	}
       */
       assert(_pRememberedEvent);
-      pIn = (SHMRspStatusRequestEvent*) _pRememberedEvent;
+      pIn = (MISRspStatusRequestEvent*) _pRememberedEvent;
       break;
 
     case F_CONNECTED:
@@ -510,7 +510,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
 	    {
 	      p.close();
 	    }
-          TRAN(SHMSession::waiting_state);
+          TRAN(MISSession::waiting_state);
         }
       }
       else {
@@ -523,7 +523,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
       
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
       
@@ -547,7 +547,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
       maxsend = _missPort.send(ackout);
       LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
     }
 
@@ -563,10 +563,10 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
 //
 // getSubbandStatistics(event)
 //
-void SHMSession::getSubbandStatistics(GCFEvent& e)
+void MISSession::getSubbandStatistics(GCFEvent& e)
 {
 	assert(_pRememberedEvent == 0);
-	SHMSubbandStatisticsRequestEvent* pIn = new SHMSubbandStatisticsRequestEvent(e);
+	MISSubbandStatisticsRequestEvent* pIn = new MISSubbandStatisticsRequestEvent(e);
 	LOGMSGHDR((*pIn));
 
 	if (_nrOfRCUs == 0) {
@@ -612,15 +612,15 @@ void SHMSession::getSubbandStatistics(GCFEvent& e)
 	}
 
 	_pRememberedEvent = pIn;
-	TRAN(SHMSession::getSubbandStatistics_state);
+	TRAN(MISSession::getSubbandStatistics_state);
 }
 
 
-GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static SHMSubbandStatisticsResponseEvent ackout;
-  static SHMSubbandStatisticsRequestEvent* pIn(0);
+  static MISSubbandStatisticsResponseEvent ackout;
+  static MISSubbandStatisticsRequestEvent* pIn(0);
   //MAXMOD
   ssize_t maxsend;
 
@@ -638,7 +638,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
         ackout.data = new double[_nrOfRCUs * 512];
       }
       assert(_pRememberedEvent);
-      pIn = (SHMSubbandStatisticsRequestEvent*) _pRememberedEvent;
+      pIn = (MISSubbandStatisticsRequestEvent*) _pRememberedEvent;
       break;
          
     case F_CONNECTED:
@@ -655,7 +655,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
           {
             p.close();
           }
-          TRAN(SHMSession::waiting_state);
+          TRAN(MISSession::waiting_state);
         }
       }
       else {
@@ -668,7 +668,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
 
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
@@ -690,7 +690,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       getrcu.cache = true;
       if (!_rspDriverPort.send(getrcu)) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
       }
       break;
     }
@@ -701,7 +701,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       if (SUCCESS != ack.status) {
         LOG_DEBUG(formatString("RSP_GETRCUACK: ack.status = %d",ack.status));
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
@@ -724,7 +724,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       
       if (!_rspDriverPort.send(getstats)) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
       }
       break;
     }  
@@ -738,7 +738,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
 
 
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
@@ -756,7 +756,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
       maxsend = _missPort.send(ackout);
       LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
     }
     default:
@@ -769,14 +769,14 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
 
 // code copied from getSubbandStatistics
 // types defined in:
-///home/avruch/LOFAR/MAC/APL/PIC/SHM/build/gnu_debug/src/SHM_Protocol.ph
+///home/avruch/LOFAR/MAC/APL/PIC/MIS/build/gnu_debug/src/MIS_Protocol.ph
 
 
-void SHMSession::getAntennaCorrelation(GCFEvent& e)
+void MISSession::getAntennaCorrelation(GCFEvent& e)
 {
 	assert(_pRememberedEvent == 0);
-	//MAXMOD see SHM_Protocol.cc for typedefs
-	SHMAntennaCorrelationMatrixRequestEvent* pIn = new SHMAntennaCorrelationMatrixRequestEvent(e);
+	//MAXMOD see MIS_Protocol.cc for typedefs
+	MISAntennaCorrelationMatrixRequestEvent* pIn = new MISAntennaCorrelationMatrixRequestEvent(e);
 	LOGMSGHDR((*pIn));
 
 	// MAXMOD select the subband for XLETs 
@@ -789,7 +789,7 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 	  {
 	    LOG_DEBUG(formatString("MAXMOD: Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MAX_SUBBANDS));
 	    //exit(EXIT_FAILURE);
-	    TRAN(SHMSession::waiting_state);
+	    TRAN(MISSession::waiting_state);
 	  }
 
 	//MAXMOD I'm not sure the following is really nec.
@@ -834,18 +834,18 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 	}
 
 	_pRememberedEvent = pIn;
-	TRAN(SHMSession::getAntennaCorrelation_state);
+	TRAN(MISSession::getAntennaCorrelation_state);
 }
 
-GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortInterface& p)
 {
   //MAXMOD copied from getSubbandStatistics
 
   ////MAXMOD here you need to add code to handle it.
-  //case SHM_ANTENNA_CORRELATION_MATRIX_REQUEST:
+  //case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
   //{
   //  RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "NAK (not supported yet)");
-  //  TRAN(SHMSession::waiting_state);
+  //  TRAN(MISSession::waiting_state);
   //  break;
   //}       
   //default:
@@ -854,8 +854,8 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
   //}
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static SHMAntennaCorrelationMatrixResponseEvent ackout;
-  static SHMAntennaCorrelationMatrixRequestEvent* pIn(0);
+  static MISAntennaCorrelationMatrixResponseEvent ackout;
+  static MISAntennaCorrelationMatrixRequestEvent* pIn(0);
   //MAXMOD
   ssize_t maxsend;
   static int N_HBA = 0;
@@ -879,7 +879,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         //ackout.data = new double[_nrOfRCUs * 512];  // PROBLEM why doesn't this give an error? I see no 'data' element
       }
       assert(_pRememberedEvent);
-      pIn = (SHMAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
+      pIn = (MISAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
       break;
 
     //MAXMOD cases CONNECTED & DISCONNECTED copied from SubbandStatistics example
@@ -897,7 +897,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
           {
             p.close();
           }
-          TRAN(SHMSession::waiting_state);
+          TRAN(MISSession::waiting_state);
         }
       }
       else {
@@ -911,7 +911,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
@@ -927,7 +927,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       getrcu.cache = true;
       if (!_rspDriverPort.send(getrcu)) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
       }
       break;
     }
@@ -937,7 +937,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
       
@@ -991,7 +991,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       
       if (!_rspDriverPort.send(setsubbands)) {
 	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
-	TRAN(SHMSession::waiting_state);      
+	TRAN(MISSession::waiting_state);      
       }
       break;
     }
@@ -1002,14 +1002,14 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       RSPSetsubbandsackEvent ack(e);
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
       getxcstats.timestamp = Timestamp(0, 0);
       getxcstats.cache 	= true;
       if (!_rspDriverPort.send(getxcstats)) {
 	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
-	TRAN(SHMSession::waiting_state);      
+	TRAN(MISSession::waiting_state);      
       }
       break;
     }
@@ -1019,12 +1019,12 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
-        TRAN(SHMSession::waiting_state);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
       
       //MAXMOD declare it here or above?
-      //SHMAntennaCorrelationMatrixResponseEvent ackout;
+      //MISAntennaCorrelationMatrixResponseEvent ackout;
       ackout.seqnr = _curSeqNr++;
       ackout.replynr = pIn->seqnr;
 
@@ -1163,8 +1163,8 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 	//cout << "spectralwindow:" << iter->second->getSPW().getName() << endl;
 	//cout << "RCUmask       :" << iter->second->getRCUMask() << endl;
 	//const CAL::AntennaArray * somearray = _daemon.m_arrays.getByName(*iter);
-	//cout << "SHMSESSION: iter  :" << *iter << endl;
-	//cout << "SHMSESSION: somearray.getName() :" << somearray->getName() << endl;
+	//cout << "MISSESSION: iter  :" << *iter << endl;
+	//cout << "MISSESSION: somearray.getName() :" << somearray->getName() << endl;
 	//LOG_DEBUG(formatString("MAXMOD Array %s",(*iter).c_str()));
 	//LOG_DEBUG(formatString("MAXMOD somearray %s",somearray->getName().c_str()));
 	//LOG_DEBUG_STR("MAXMOD getGeoLoc: :" << somearray->getGeoLoc());
@@ -1174,7 +1174,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
       maxsend = _missPort.send(ackout);
       LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
-      TRAN(SHMSession::waiting_state);
+      TRAN(MISSession::waiting_state);
       break;
       
     }
@@ -1188,7 +1188,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
 }
 
-GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult MISSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   switch (e.signal)
@@ -1215,7 +1215,7 @@ GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/
   return status;
 }
 
-GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -1223,45 +1223,45 @@ GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
   {
     case F_DISCONNECTED:
       if (&p == &_missPort) {
-        LOG_INFO("Connection lost to a SHM client.");
-        TRAN(SHMSession::closing_state);
+        LOG_INFO("Connection lost to a MIS client.");
+        TRAN(MISSession::closing_state);
       }
       break;
       
-    case SHM_GENERIC_PINGPONG:
+    case MIS_GENERIC_PINGPONG:
       genericPingpong(e);
       break;
       
-    case SHM_GENERIC_IDENTIFY_REQUEST:
+    case MIS_GENERIC_IDENTIFY_REQUEST:
       getGenericIdentity(e);
       break;
     
-    case SHM_DIAGNOSIS_NOTIFICATION:
+    case MIS_DIAGNOSIS_NOTIFICATION:
 //      RETURN_NOACK_MSG(DiagnosisNotification, DiagnosisResponse, "BUSY");     
       setDiagnosis(e);
       break;
 
-    case SHM_RECONFIGURATION_REQUEST:
+    case MIS_RECONFIGURATION_REQUEST:
       RETURN_NOACK_MSG(ReconfigurationRequest, ReconfigurationResponse, "BUSY");
       break;
 
-    case SHM_LOFAR_STRUCTURE_REQUEST:
+    case MIS_LOFAR_STRUCTURE_REQUEST:
       RETURN_NOACK_MSG(LofarStructureRequest, LofarStructureResponse, "BUSY");
       break;
 
-//    case SHM_PVSS_DP_SUBSCRIPTION_REQUEST:
+//    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
 //      RETURN_NOACK_MSG(PvssDpSubscriptionRequest, PvssDpSubscriptionResponse, "BUSY");
 //      break;
 
-    case SHM_SUBBAND_STATISTICS_REQUEST:
+    case MIS_SUBBAND_STATISTICS_REQUEST:
       RETURN_NOACK_MSG(SubbandStatisticsRequest, SubbandStatisticsResponse, "BUSY");
       break;
     
-    case SHM_ANTENNA_CORRELATION_MATRIX_REQUEST:
+    case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
       RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "BUSY");
       break;
     
-    case SHM_RSP_STATUS_REQUEST:
+    case MIS_RSP_STATUS_REQUEST:
       RETURN_NOACK_MSG(RspStatusRequest, RspStatusResponse, "BUSY");
       break;
 
@@ -1274,32 +1274,32 @@ GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
 }
 
 #if 0
-void SHMSession::subscribed(SHMPvssDpSubscriptionResponseEvent& e)
+void MISSession::subscribed(MISPvssDpSubscriptionResponseEvent& e)
 {
   e.seqnr = _curSeqNr++;
   _missPort.send(e);
-  TRAN(SHMSession::waiting_state);
+  TRAN(MISSession::waiting_state);
 }
 
-void SHMSession::valueChanged(SHMPvssDpSubscriptionValueChangedAsyncEvent& e)
+void MISSession::valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e)
 {
   e.seqnr = _curSeqNr++;
   _missPort.send(e);
 }
 #endif 
 
-void SHMSession::mayDelete(const string& propName)
+void MISSession::mayDelete(const string& propName)
 {
 #if 0
   TSubscriptions::iterator iter = _subscriptions.find(propName);
   ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exist here!");
-  SHMSubscription* pSubs = iter->second;
+  MISSubscription* pSubs = iter->second;
   _subscriptions.erase(propName);
   _subscriptionsGarbage.push_back(pSubs);
 #endif
 }
 
-void SHMSession::setCurrentTime(int64& sec, uint32& nsec)
+void MISSession::setCurrentTime(int64& sec, uint32& nsec)
 {
   struct timeval tv;
   (void)gettimeofday(&tv, 0);

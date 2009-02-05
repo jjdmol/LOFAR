@@ -1,5 +1,5 @@
 //
-//  mis.btsw: Testscript for SHM.
+//  mis.btsw: Testscript for MIS.
 //
 //  Copyright (C) 2005
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -14,7 +14,7 @@
 
 [statemachines]
 
-Statemachine_SHMClient (ready, updateValue) =
+Statemachine_MISClient (ready, updateValue) =
 {
   s000 : CONNECTION_ESTABLISHED ; s001.
   s001 : TIMER(5) 							; s010.  
@@ -22,33 +22,33 @@ Statemachine_SHMClient (ready, updateValue) =
 // ------------------------------------------------------------------------------
 // GENERIC
 
-	s010 : F_SHM_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
+	s010 : F_MIS_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
 															  0x0000000000000003,  // replynr not set
 															  0x0000000000006666,  // ts.sec
 															  0x00000457, 				 // ts.nsec
 															  0x00000000)					 // tti
 																										 ; s011.
 																										 
-	s011 : E_SHM_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
+	s011 : E_MIS_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
 															  0x0000000000000001,  // replynr 1
 															  ,  // ts.sec
 															  ,  // ts.nsec
 															  )	// tti
 																										 ; s012.
-	s011 : E_SHM_GENERIC_PINGPONG(,  // seqnr 1
+	s011 : E_MIS_GENERIC_PINGPONG(,  // seqnr 1
 															  ,  // replynr 1
 															  ,  // ts.sec
 															  ,  // ts.nsec
 															  )	// tti
 																										 ; error.
 	
-	s012 : F_SHM_GENERIC_IDENTIFY_REQUEST( 0x0000000000000002, // seqnr : uint64,
+	s012 : F_MIS_GENERIC_IDENTIFY_REQUEST( 0x0000000000000002, // seqnr : uint64,
 																				 0x0000000000000000, // replynr not use
 															  				 0x0000000000000000,  // ts.sec
 															  				 0x00000000	// ts.nsec
 																				)	; s013.
 
-  s013 : E_SHM_GENERIC_IDENTIFY_RESPONSE(, 									 // msgLength : t_B4,
+  s013 : E_MIS_GENERIC_IDENTIFY_RESPONSE(, 									 // msgLength : t_B4,
 																				 0x0000000000000002, // seqnr : uint64,
 																				 0x0000000000000002, //	replynr : uint64,
 																				 , //	timestamp_sec : int64,
@@ -61,7 +61,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																				   // sw_version : t_String[sw_versionNOC]
 																				) ; s020.
   																				
-  s013 : E_SHM_GENERIC_IDENTIFY_RESPONSE(, // msgLength : t_B4,
+  s013 : E_MIS_GENERIC_IDENTIFY_RESPONSE(, // msgLength : t_B4,
 																				 , // seqnr : uint64,
 																				 , //	replynr : uint64,
 																				 , //	timestamp_sec : int64,
@@ -77,7 +77,7 @@ Statemachine_SHMClient (ready, updateValue) =
 // ------------------------------------------------------------------------------
 // DIAGNOSIS
 
-	s020 : F_SHM_DIAGNOSIS_NOTIFICATION(0x00000050,	  				// msgLength : t_B4,
+	s020 : F_MIS_DIAGNOSIS_NOTIFICATION(0x00000050,	  				// msgLength : t_B4,
 																			0x0000000000000003,		// seqnr : uint64,
 																			0x0000000000000000,		// replynr : uint64,
 																			0x0000000000000000,		// timestamp_sec : int64,
@@ -93,7 +93,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
 																		 ) ; s021.
 
-  s021 : E_SHM_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+  s021 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
 																	0x0000000000000003,	// seqnr : uint64,
 																	0x0000000000000003,	// replynr : uint64,
 																	,										// timestamp_sec : int64,
@@ -102,7 +102,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																	"NAK (ignored by policy)"	// response : t_String[responseNOC]
 																	) ; s022.
 																		 																				
-  s022 : E_SHM_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+  s022 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
 																	,	// seqnr : uint64,
 																	,	// replynr : uint64,
 																	,	// timestamp_sec : int64,
@@ -111,7 +111,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																		// response : t_String[responseNOC]
 																	) ; error.
 
-	s022 : F_SHM_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
+	s022 : F_MIS_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
 																			0x0000000000000004,		// seqnr : uint64,
 																			0x0000000000000000,		// replynr : uint64,
 																			0x0000000000000000,		// timestamp_sec : int64,
@@ -127,7 +127,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
 																		 ) ; s023.
 
-  s023 : E_SHM_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+  s023 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
 																	0x0000000000000004,	// seqnr : uint64,
 																	0x0000000000000004,	// replynr : uint64,
 																	,										// timestamp_sec : int64,
@@ -136,7 +136,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																	"ACK"	// response : t_String[responseNOC]
 																	) ; s024.
 																		 																				
-  s023 : E_SHM_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+  s023 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
 																	,	// seqnr : uint64,
 																	,	// replynr : uint64,
 																	,	// timestamp_sec : int64,
@@ -145,7 +145,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																		// response : t_String[responseNOC]
 																	) ; error.
 
-	s024 : F_SHM_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
+	s024 : F_MIS_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
 																			0x0000000000000005,		// seqnr : uint64,
 																			0x0000000000000000,		// replynr : uint64,
 																			0x0000000000000000,		// timestamp_sec : int64,
@@ -161,7 +161,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
 																		 ) ; s025.
 
-  s025 : E_SHM_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+  s025 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
 																	0x0000000000000005,	// seqnr : uint64,
 																	0x0000000000000005,	// replynr : uint64,
 																	,										// timestamp_sec : int64,
@@ -170,7 +170,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																	"ACK"	// response : t_String[responseNOC]
 																	) ; s030.
 																		 																				
-  s025 : E_SHM_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+  s025 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
 																	,	// seqnr : uint64,
 																	,	// replynr : uint64,
 																	,	// timestamp_sec : int64,
@@ -182,7 +182,7 @@ Statemachine_SHMClient (ready, updateValue) =
 // ------------------------------------------------------------------------------
 // SUBSCRIPTION
 
-	s030 : F_SHM_PVSS_DP_SUBSCRIPTION_REQUEST(0x0000002F	  		, // msgLength : t_B4,
+	s030 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x0000002F	  		, // msgLength : t_B4,
 																						0x0000000000000006, // seqnr : uint64,
 																						0x0000000000000000, // replynr : uint64,
 																						0x0000000000000000, // timestamp_sec : int64,
@@ -193,7 +193,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						"SUBSCRIBE"  // request : t_String[requestNOC]
 																						) ; s031.
 
-	s031 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s031 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 0x0000000000000006, // seqnr : uint64,
 																						 0x0000000000000006, // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -204,7 +204,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						 "integer"  // dptype : t_String[dptypeNOC]
 																						) ; s032.
 
-	s031 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s031 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 , // seqnr : uint64,
 																						 , // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -215,7 +215,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						   // dptype : t_String[dptypeNOC]
 																						) ; error.
 	s032 : S_SIG(updateValue)	; s033.
-	s033 : E_SHM_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
 																												0x0000000000000007, // seqnr : uint64,
 																						 						0x0000000000000006, // replynr : uint64,
 																												, // timestamp_sec : int64,
@@ -227,7 +227,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																											 ) ; s033.
 	
 
-	s033 : E_SHM_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
 																												0x0000000000000008, // seqnr : uint64,
 																						 						0x0000000000000006, // replynr : uint64,
 																												, // timestamp_sec : int64,
@@ -238,7 +238,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																												"5"  // value : t_String[valueNOC]
 																											 ) ; s033.
 
-	s033 : E_SHM_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
 																												0x0000000000000009, // seqnr : uint64,
 																						 						0x0000000000000006, // replynr : uint64,
 																												, // timestamp_sec : int64,
@@ -249,7 +249,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																												"0"  // value : t_String[valueNOC]
 																											 ) ; s034.
 
-	s034 : F_SHM_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
+	s034 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
 																						0x0000000000000007, // seqnr : uint64,
 																						0x0000000000000000, // replynr : uint64,
 																						0x0000000000000000, // timestamp_sec : int64,
@@ -260,7 +260,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						"UNSUBSCRIBE"  // request : t_String[requestNOC]
 																						) ; s035.
 
-	s035 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s035 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 0x000000000000000A, // seqnr : uint64,
 																						 0x0000000000000007, // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -271,7 +271,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						 ""  // dptype : t_String[dptypeNOC]
 																						) ; s036.
 
-	s035 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s035 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 , // seqnr : uint64,
 																						 , // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -282,7 +282,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						   // dptype : t_String[dptypeNOC]
 																						) ; error.
 
-	s036 : F_SHM_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
+	s036 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
 																						0x0000000000000008, // seqnr : uint64,
 																						0x0000000000000000, // replynr : uint64,
 																						0x0000000000000000, // timestamp_sec : int64,
@@ -293,7 +293,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						"SINGLE-SHOT"  // request : t_String[requestNOC]
 																						) ; s037.
 
-	s037 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s037 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 0x000000000000000B, // seqnr : uint64,
 																						 0x0000000000000008, // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -304,7 +304,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						 "integer"  // dptype : t_String[dptypeNOC]
 																						) ; s038.
 
-	s037 : E_SHM_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+	s037 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
 																						 , // seqnr : uint64,
 																						 , // replynr : uint64,
 																					   , // timestamp_sec : int64,
@@ -315,7 +315,7 @@ Statemachine_SHMClient (ready, updateValue) =
 																						   // dptype : t_String[dptypeNOC]
 																						) ; error.
 
-  s038 : E_SHM_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+  s038 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
 																												0x000000000000000C, // seqnr : uint64,
 																						 						0x0000000000000008, // replynr : uint64,
 																												, // timestamp_sec : int64,
@@ -329,13 +329,13 @@ Statemachine_SHMClient (ready, updateValue) =
 // ------------------------------------------------------------------------------
 // getStatistics
 
-	s040 : F_SHM_SUBBAND_STATISTICS_REQUEST(0x0000000000000009, //	seqnr : uint64,
+	s040 : F_MIS_SUBBAND_STATISTICS_REQUEST(0x0000000000000009, //	seqnr : uint64,
 																					0x0000000000000000, // replynr : uint64,
 																					0x0000000000000000, // timestamp_sec : int64,
 																					0x00000000 				// timestamp_nsec : uint32
 																					) ; s041.
 
-	s041 : E_SHM_SUBBAND_STATISTICS_RESPONSE(, // msgLength : t_B4,
+	s041 : E_MIS_SUBBAND_STATISTICS_RESPONSE(, // msgLength : t_B4,
     																			 0x000000000000000D, // seqnr : uint64,
 																					 0x0000000000000009, // replynr : uint64,
 																					 , //	timestamp_sec : int64,
@@ -406,7 +406,7 @@ Statemachine_THPVSSBridge  ( stop, ready, updateValue ) =
 [testscript]
 VAR     SM1_done, SM1_updateValue, SM5_stop.
 
-COM1 :  Statemachine_SHMClient (SM1_done, SM1_updateValue)
+COM1 :  Statemachine_MISClient (SM1_done, SM1_updateValue)
         WaitUntilTestEnd (SM5_stop).
 
 COM3 :  Statemachine_THPVSSBridge (SM1_done, SM5_stop, SM1_updateValue).

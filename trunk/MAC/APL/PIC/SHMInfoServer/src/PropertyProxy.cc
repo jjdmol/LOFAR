@@ -1,4 +1,4 @@
-//#  SHMDefines.h: preprocessor definitions of various constants
+//#  PropertyProxy.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,28 @@
 //#
 //#  $Id$
 
-#ifndef SHMDEFINES_H
-#define SHMDEFINES_H
+#include "PropertyProxy.h"
+#include "MISSession.h"
+#include <GCF/PAL/GCF_Answer.h>
 
-//#include <GCF/GCF_Defines.h>
+namespace LOFAR
+{
+using namespace GCF::Common;
+using namespace GCF::TM;
+using namespace GCF::PAL;
+ namespace AMI
+ {
 
-namespace LOFAR {
- namespace AMI {
-const uint8 SHM_MAJOR_VER = 1; 
-const uint8 SHM_MIDOR_VER = 1;
-const uint8 SHM_MINOR_VER = 0;
+GCFDummyPort PropertyProxy::_dummyPort(0, "AMI", F_PML_PROTOCOL);
+
+void PropertyProxy::propValueGet(const string& propName, const GCFPValue& value)
+{
+  GCFPropValueEvent e(F_VGETRESP);
+  e.pValue = &value;
+  e.pPropName = propName.c_str();
+  e.internal = false;
+  _session.dispatch(e, _dummyPort);
+}
 
  } // namespace AMI
 } // namespace LOFAR
-
-#endif
