@@ -1,5 +1,5 @@
-#ifndef LOFAR_BGLPROC_PPF_H
-#define LOFAR_BGLPROC_PPF_H
+#ifndef LOFAR_CNPROC_PPF_H
+#define LOFAR_CNPROC_PPF_H
 
 #if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define PPF_C_IMPLEMENTATION
