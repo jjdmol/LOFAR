@@ -31,6 +31,7 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/DPservice.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <APL/RTDBCommon/ClaimMgrTask.h>
 
 // forward declaration
 
@@ -42,6 +43,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;
 	using	GCF::RTDB::DPservice;
+	using	APL::RTDBCommon::ClaimMgrTask;
 	namespace RTDBDaemons {
 
 class SoftwareMonitor : public GCFTask
@@ -56,46 +58,72 @@ private:
    	GCFEvent::TResult readSWlevels		(GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult checkPrograms		(GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult waitForNextCycle	(GCFEvent& e, GCFPortInterface& p);
-
    	GCFEvent::TResult finish_state		(GCFEvent& e, GCFPortInterface& p);
+
+	// helper functions
+	void _updateObservationMap(const string&	orgName, const string& DPname);
+	void _constructPermProcsList();
+	void _buildProcessMap();
+	int	 _solveObservationID(int	pid);
 
 	// avoid defaultconstruction and copying
 	SoftwareMonitor();
 	SoftwareMonitor(const SoftwareMonitor&);
    	SoftwareMonitor& operator=(const SoftwareMonitor&);
 
-	// helper functions
-	void _buildProcessMap();
+	// ----- Data members -----
+	RTDBPropertySet*		itsOwnPropertySet;	// own admin in PVSS
+	GCFTimerPort*			itsTimerPort;		// main heartbeat
+	DPservice*				itsDPservice;		// for setting values without propertySets
+	ClaimMgrTask*			itsClaimMgrTask;	// task for comm with ClaimManager
+	GCFITCPort*				itsITCPort;			// answer back from CMtask
 
-	// Data members
-	RTDBPropertySet*		itsOwnPropertySet;
-	GCFTimerPort*			itsTimerPort;
-	DPservice*				itsDPservice;
-
-	struct Process {
+	// list the represent all processes known by swlevel
+	typedef struct ProcessDef {
 		// static information
 		string		name;
 		int			level;
 		bool		mustBroot;
 		bool		runsUnderMPI;
 		bool		permSW;
-		// actual info
+	} ProcessDef_t;
+	vector<ProcessDef_t>		itsLevelList;		// list that represents swlevel.conf
+
+	struct Process {
+		string		name;
+		string		DPname;
+		int			obsID;
+		int			level;
 		int			pid;			// TODO: make is suitable for multiple instances
 		time_t		startTime;
 		time_t		stopTime;
 		int			errorCnt;
+		Process(const string& aName, const string& aDPname, int anID, int aLevel): 
+			name(aName), DPname(aDPname), obsID(anID), level(aLevel),pid(0), startTime(0), stopTime(0), errorCnt(0) {};
 	};
-	vector<Process>			itsLevelList;		// list that represents swlevel.conf
+	vector<Process>				itsPermProcs;
+	vector<Process>				itsObsProcs;
+	vector<Process>::iterator	_searchObsProcess(int	pid);
+	void						_updateProcess(vector<Process>::iterator iter, int pid, int curLevel);
 
+	// list with all the running processes.
 	typedef multimap<string, int>	processMap_t;
-	multimap<string, int>	itsProcessMap;		// list that represents 'ps -ef'
+	processMap_t				itsProcessMap;	// list that represents 'ps -ef'
+
+	// mapping from observationNumber to DP(sub)name
+	struct ObsInfo {
+		string		DPname;
+		bool		used;
+		ObsInfo(const string aDPname, bool isUsed) : DPname(aDPname), used(isUsed) {};
+	};
+	typedef map<int, ObsInfo>	obsMap_t;
+	obsMap_t					itsObsMap;
 
 	// read from configfile
-	int						itsPollInterval;
-	int						itsSuspThreshold;
-	int						itsBrokenThreshold;
-	int						itsMaxRestartRetries;
-
+	int			itsPollInterval;
+	int			itsSuspThreshold;
+	int			itsBrokenThreshold;
+	int			itsMaxRestartRetries;
 };
 
  }; // RTDBDaemons
