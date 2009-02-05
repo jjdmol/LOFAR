@@ -1,6 +1,6 @@
-//#  XCStatistics.h: implementation of the XCStatistics class
+//#  MISMain.cc: 
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -23,36 +23,27 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "XCStatistics.h"
-#include <APL/RTCCommon/MarshallBlitz.h>
+#include <GCF/TM/GCF_Control.h>
+#include "MISDaemon.h"
 
-using namespace std;
-using namespace blitz;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::AMI;
 
-namespace LOFAR {
-  namespace MIS_Protocol {
+int main(int argc, char *argv[])
+{
+	GCFTask::init(argc, argv, "MACInfoServer");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_MACInfoServer");
 
-    unsigned int XCStatistics::getSize()
-    {
-      return MSH_ARRAY_SIZE(m_xstatistics, complex<double>);
-    }
-    
-    unsigned int XCStatistics::pack  (void* buffer)
-    {
-      unsigned int offset = 0;
-      
-      MSH_PACK_ARRAY(buffer, offset, m_xstatistics, complex<double>);
+	MISDaemon misd; 
+	misd.start(); // make initial transition
 
-      return offset;
-    }
-    
-    unsigned int XCStatistics::unpack(void *buffer)
-    {
-      unsigned int offset = 0;
-      
-      MSH_UNPACK_ARRAY(buffer, offset, m_xstatistics, complex<double>, 4);
-      
-      return offset;
-    }
-  }
+	//
+	try {
+	  GCFTask::run();
+	}
+	catch (std::exception& x) {
+	  LOG_INFO_STR("Unexpected exception: " << x.what());
+	  return 1;
+	}
+	return (0);
 }

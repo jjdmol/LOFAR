@@ -8,29 +8,36 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
 DOCHDRS	=	 $(BUILT_SOURCES) \
-	SHMInfoServer.h \
-	SHMDefines.h \
-	SHMSession.h \
+	MISDaemon.h \
+	MISDefines.h \
+	MISSession.h \
 	XCStatistics.h \
 	RspStatus.h
 
-noinst_LTLIBRARIES 	= libshminfoserver.la
+#	MISSubscription.h 
+#	PropertyProxy.h 
 
-libshminfoserver_la_SOURCES	= Package__Version.cc \
+noinst_LTLIBRARIES 	= libmis.la
+
+libmis_la_SOURCES	= Package__Version.cc \
 	$(DOCHDRS) \
-	SHMInfoServer.cc \
-	SHMSession.cc \
-	SHM_Protocol.cc \
+	MISDaemon.cc \
+	MISSession.cc \
+	MIS_Protocol.cc \
 	XCStatistics.cc \
 	RspStatus.cc
 
-bin_PROGRAMS   		= versionshminfoserver SHMInfoServer
-  
-SHMInfoServer_SOURCES		  = SHMInfoServerMain.cc
-SHMInfoServer_LDADD		    = libshminfoserver.la $(LOFAR_DEPEND)
-SHMInfoServer_DEPENDENCIES	= libshminfoserver.la $(LOFAR_DEPEND)
+#	MISSubscription.cc 
+#	PropertyProxy.cc 
 
-BUILT_SOURCES = SHM_Protocol.ph
+bin_PROGRAMS   		= versionmis MACInformationServer
+  
+MACInformationServer_SOURCES		  = MISMain.cc
+MACInformationServer_LDADD		    = libmis.la $(LOFAR_DEPEND)
+MACInformationServer_DEPENDENCIES	= libmis.la $(LOFAR_DEPEND)
+
+BUILT_SOURCES = \
+	MIS_Protocol.ph
 
 EXTRA_DIST = $(sysconf_DATA)
 	
@@ -42,9 +49,9 @@ sysconf_DATA=
 clean-local:
 	rm -f *.ph
 	
-versionshminfoserver_SOURCES      = versionshminfoserver.cc
-versionshminfoserver_LDADD        = libshminfoserver.la
-versionshminfoserver_DEPENDENCIES = libshminfoserver.la $(LOFAR_DEPEND)
+versionmis_SOURCES      = versionmis.cc
+versionmis_LDADD        = libmis.la
+versionmis_DEPENDENCIES = libmis.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 

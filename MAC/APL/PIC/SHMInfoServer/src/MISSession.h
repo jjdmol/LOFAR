@@ -1,4 +1,4 @@
-//#  SHMSession.h: 
+//#  MISSession.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,9 +29,9 @@
 #include <MACIO/MACServiceInfo.h>
 
 //#include <PropertyProxy.h>
-//#include <SHMSubscription.h>
+//#include <MISSubscription.h>
 
-#include <SHM_Protocol.ph>
+#include <MIS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 namespace blitz {
@@ -42,20 +42,20 @@ namespace LOFAR {
 	using MACIO::GCFEvent;
 	namespace AMI {  
 
-class SHMInfoServer;
-//class SHMSubsciption;
+class MISDaemon;
+//class MISSubsciption;
 /**
 */
 
-class SHMSession : public GCF::TM::GCFTask
+class MISSession : public GCF::TM::GCFTask
 {
 public:
-    SHMSession (SHMInfoServer& daemon);
-    virtual ~SHMSession ();
+    MISSession (MISDaemon& daemon);
+    virtual ~MISSession ();
     
 	// member functions
-//    void subscribed(SHMPvssDpSubscriptionResponseEvent& e);
-//    void valueChanged(SHMPvssDpSubscriptionValueChangedAsyncEvent& e);
+//    void subscribed(MISPvssDpSubscriptionResponseEvent& e);
+//    void valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e);
     void mayDelete(const string& propName);
     static void setCurrentTime(int64& sec, uint32& nsec);
   
@@ -85,11 +85,11 @@ private:
     void getRspStatus         (GCFEvent& e);
 
 	// data members      
-//    typedef map<string /*resource name*/, SHMSubscription*> TSubscriptions;
+//    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
     GCF::TM::GCFTCPPort _missPort;
     GCF::TM::GCFTCPPort _rspDriverPort;
     GCF::TM::GCFTCPPort _acmPort;
-    SHMInfoServer&        _daemon;
+    MISDaemon&          _daemon;
 //    TSubscriptions      _subscriptions;
 //    PropertyProxy       _propertyProxy;
 
@@ -97,7 +97,7 @@ private:
     uint64                  _curSeqNr;
     uint64                  _curReplyNr;
     bool                    _busy;
-//    list<SHMSubscription*>  _subscriptionsGarbage;
+//    list<MISSubscription*>  _subscriptionsGarbage;
     GCFEvent*      _pRememberedEvent;
     uint16                  _nrOfRCUs;
     bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    

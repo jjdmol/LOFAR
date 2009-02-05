@@ -1,4 +1,4 @@
-//#  SHMPolicyHandler.cc: 
+//#  MISPolicyHandler.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,9 +28,9 @@
 //#include <GCF/LogSys/GCF_KeyValueLogger.h>
 //#include <GCF/GCF_PVInteger.h>
 //#include <APL/APLCommon/APL_Defines.h>
-#include "SHMInfoServer.h"
-#include "SHM_Protocol.ph"
-#include "SHMDefines.h"
+#include "MISDaemon.h"
+#include "MIS_Protocol.ph"
+#include "MISDefines.h"
 #include "fnmatch.h"
 
 using std::ifstream;
@@ -58,7 +58,7 @@ string trim(string source)
   return source;
 }
 
-void SHMPolicyHandler::rereadPolicyFile()
+void MISPolicyHandler::rereadPolicyFile()
 {
 	ifstream    policyRulesFile;
 
@@ -147,7 +147,7 @@ void SHMPolicyHandler::rereadPolicyFile()
 }
 
 #if 0
-string SHMPolicyHandler::checkDiagnose(const SHMDiagnosisNotificationEvent& diag, 
+string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag, 
                                        GCFPVInteger& curResStateValue)
 {
   LOG_INFO(formatString(

@@ -1,4 +1,4 @@
-//#  SHMInfoServerMain.cc: 
+//#  MISDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,30 +20,18 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
+#ifndef MISDEFINES_H
+#define MISDEFINES_H
 
-#include <GCF/TM/GCF_Control.h>
-#include "SHMInfoServer.h"
+//#include <GCF/GCF_Defines.h>
 
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::AMI;
+namespace LOFAR {
+ namespace AMI {
+const uint8 MIS_MAJOR_VER = 1; 
+const uint8 MIS_MIDOR_VER = 1;
+const uint8 MIS_MINOR_VER = 0;
 
-int main(int argc, char *argv[])
-{
-	GCFTask::init(argc, argv, "SHMInfoServer");
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_SHMInfoServer");
+ } // namespace AMI
+} // namespace LOFAR
 
-	SHMInfoServer 	sis;
-	sis.start(); // make initial transition
-
-	//
-	try {
-	  GCFTask::run();
-	}
-	catch (std::exception& x) {
-	  LOG_INFO_STR("Unexpected exception: " << x.what());
-	  return 1;
-	}
-	return (0);
-}
+#endif

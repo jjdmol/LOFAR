@@ -1,4 +1,4 @@
-//#  SHMPolicyHandler.h: 
+//#  MISPolicyHandler.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef SHMPOLICYHANDLER_H
-#define SHMPOLICYHANDLER_H
+#ifndef MISPOLICYHANDLER_H
+#define MISPOLICYHANDLER_H
 
 #include <Common/lofar_list.h>
-#include <SHM_Protocol.ph>
+#include <MIS_Protocol.ph>
 
 namespace LOFAR {
  namespace GCF {
@@ -34,20 +34,20 @@ namespace LOFAR {
  }
  namespace AMI {  
 
-class SHMInfoServer;
+class MISDaemon;
 
 /**
 */
 
-class SHMPolicyHandler
+class MISPolicyHandler
 {
   public:
-    SHMPolicyHandler ();
-    virtual ~SHMPolicyHandler () {}
+    MISPolicyHandler ();
+    virtual ~MISPolicyHandler () {}
     
   public: // member functions
     void rereadPolicyFile();
-    string checkDiagnose(const SHMDiagnosisNotificationEvent& diag, 
+    string checkDiagnose(const MISDiagnosisNotificationEvent& diag, 
                          GCF::Common::GCFPVInteger& curResStateValue);
      
   private: // helper methods
@@ -75,7 +75,7 @@ class SHMPolicyHandler
   private: // admin members
 };
 
-inline SHMPolicyHandler::SHMPolicyHandler()
+inline MISPolicyHandler::MISPolicyHandler()
 {
   rereadPolicyFile();
 }
