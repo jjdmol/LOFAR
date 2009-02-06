@@ -107,7 +107,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	LOG_DEBUG_STR ("Timer for forcing quit is set to " << itsForcedQuitDelay);
 
 	// Inform Logging manager who we are
-//	LOG_INFO(formatString("MACProcessScope: LOFAR.ObsSW.Observation%d.ObsCtrl", itsTreeID));
+//	LOG_INFO(formatString("MACProcessScope: LOFAR.ObsSW.Observation%d.ObservationControl", itsTreeID));
 	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBS_CTRL, getName(), itsObsDPname));
 	// NOTE: SAS gateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 

@@ -49,7 +49,7 @@ int main (int	argc, char*		argv[])
 
 	KVTSendMsgEvent		msgEvent;
 	msgEvent.seqnr = 1;
-	msgEvent.key   = "LOFAR.ObsSW.ObsCtrl.OnlineCtrl.OLAP.InputAppl.packageLoss{1198368555}";
+	msgEvent.key   = "LOFAR.ObsSW.ObservationControl.OnlineControl.OLAP.InputAppl.packageLoss{1198368555}";
 	msgEvent.value = toString(25);
 	thePort.send(&msgEvent);
 	KVTSendMsgAckEvent		msgAck(thePort.receive());
@@ -71,7 +71,7 @@ int main (int	argc, char*		argv[])
 	poolEvent.seqnr = 1;
 	poolEvent.msgCount = 20;
 	for (int i = 0; i < 20; i++) {
-		poolEvent.keys.theVector.push_back("LOFAR.ObsSW.ObsCtrl.OnlineCtrl.OLAP.InputAppl.packageLoss{1198368555}");
+		poolEvent.keys.theVector.push_back("LOFAR.ObsSW.ObservationControl.OnlineControl.OLAP.InputAppl.packageLoss{1198368555}");
 		poolEvent.values.theVector.push_back(toString(50+i));
 	}
 	thePort.send(&poolEvent);

@@ -60,7 +60,7 @@ namespace LOFAR {
 #define	MAC_SVCMASK_BEAMDIRECTIONCTRL	"BeamDirection%s:v1.0"
 #define	MAC_SVCMASK_GROUPCTRL			"RingControl%s:v1.0"
 #define	MAC_SVCMASK_STATIONCTRL			"StationControl%s:v1.0"
-#define	MAC_SVCMASK_DIGITALBOARDCTRL	"DigitalBoardCtrl%s:v1.0"
+#define	MAC_SVCMASK_CLOCKCTRL			"ClockCtrl%s:v1.0"
 #define	MAC_SVCMASK_BEAMCTRL			"BeamCtrl%s:v1.0"
 #define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v1.0"
 #define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"

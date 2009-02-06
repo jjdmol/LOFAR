@@ -58,7 +58,7 @@ enum	{
 	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl
 	CNTLRTYPE_GROUPCTRL,				// RingControl
 	CNTLRTYPE_STATIONCTRL,				// StationControl
-	CNTLRTYPE_DIGITALBOARDCTRL,			// DigitalBoardControl
+	CNTLRTYPE_CLOCKCTRL,				// ClockControl
 	CNTLRTYPE_BEAMCTRL,					// BeamControl
 	CNTLRTYPE_CALIBRATIONCTRL,			// CalibrationControl
 	CNTLRTYPE_TBBCTRL,					// TBBControl

@@ -212,7 +212,7 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 	
 				// Instruct codeloggingProcessor
 				// TODO: get this from a .h file
-				LOG_INFO_STR("MACProcessScope: LOFAR.PermSW.TBBCtrl");
+				LOG_INFO_STR("MACProcessScope: LOFAR.PermSW.TBBControl");
 	
 				// first redirect signalHandler to our quiting state to leave PVSS
 				// in the right state when we are going down

@@ -27,10 +27,10 @@
 namespace LOFAR {
   namespace StationCU {
 
-#define BC_TASKNAME					"TBBCtrl"
+#define BC_TASKNAME					"TBBControl"
 
-#define PSN_TBB_CTRL   					"LOFAR_PermSW_TBBCtrl"
-#define PST_TBB_CTRL   					"TBBCtrl"
+#define PSN_TBB_CTRL   					"LOFAR_PermSW_TBBControl"
+#define PST_TBB_CTRL   					"TBBControl"
 
 #define PN_TBB_CONNECTED				"connected"
 #define PN_TBB_SEQUENCE_NR			"sequence_nr"

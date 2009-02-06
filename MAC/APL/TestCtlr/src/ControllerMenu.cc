@@ -507,7 +507,7 @@ int16 ControllerMenu::_chooseController()
 //	cout << " 4. BeamDirectionControl" << endl;
 //	cout << " 5. RingControl" << endl;
 	cout << " 6. StationControl" << endl;
-	cout << " 7. DigitalBoardControl" << endl;
+	cout << " 7. ClockControl" << endl;
 	cout << " 8. BeamControl" << endl;
 	cout << " 9. CalibrationControl" << endl;
 	cout << "10. TBBControl" << endl;

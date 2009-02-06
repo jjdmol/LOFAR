@@ -134,6 +134,7 @@ PVSSresult RTDBPropertySet::setValue (const string& 	propName,
 
 	// if ConditionWrite=true and value not changed then we are ready.
 	if ((itsAccessType & PSAT_CW) && (*(propPtr->value) == value)) {
+		LOG_TRACE_COND_STR("CW: value not changed: " << value.getValueAsString());
 		return (SA_NO_ERROR);
 	}
 	// adopt value
@@ -142,6 +143,7 @@ PVSSresult RTDBPropertySet::setValue (const string& 	propName,
 	// update admin
 	propPtr->dirty = !immediately;
 	if (!immediately) {
+		LOG_TRACE_COND("Not immediately, postponing update");
 		return (SA_NO_ERROR);
 	}
 
@@ -205,6 +207,7 @@ PVSSresult	RTDBPropertySet::getValue(const string&			propName,
 	}
 
 	returnVar.copy(*(propPtr->value));
+	LOG_TRACE_COND_STR("getValue(" << propName << ")=" << returnVar.getValueAsString());
 
 	return (SA_NO_ERROR);
 }
