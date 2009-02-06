@@ -92,7 +92,7 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("hostname of CS010  = " << realHostname("CS010"));
 	LOG_INFO_STR("hostname of CS010C = " << realHostname("CS010C"));
 	LOG_INFO_STR("hostname of CS010T = " << realHostname("CS010T"));
-	LOG_INFO_STR("PropSetName(LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@) = " << createPropertySetName("LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@", "DigitalBoardControl"));
+	LOG_INFO_STR("PropSetName(LOFAR_PermSW_@ring@_@station@_ClockControl@instance@) = " << createPropertySetName("LOFAR_PermSW_@ring@_@station@_ClockControl@instance@", "ClockControl"));
 
 
 

@@ -56,7 +56,7 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"BeamDirectionControl",	"BeamDirCtrl",	true	},
 	{	"RingControl", 			"RingCtrl",		true	},
 	{	"StationControl", 		"StationCtrl",	true	},
-	{	"DigitalBoardControl", 	"DigBoardCtrl",	true	},
+	{	"ClockControl",			"ClockCtrl",	true	},
 	{	"BeamControl", 			"BeamCtrl",		false	},
 	{	"CalibrationControl", 	"CalCtrl",		false	},
 	{	"TBBControl",		 	"TBBCtrl",		false	},

@@ -59,19 +59,14 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsOwnPSinitialized (false),
 	itsParentPort		(0),
 	itsTimerPort		(0),
-	itsRSPDriver		(0)
+	itsRSPDriver		(0),
+	itsClock			(160)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
 
-	// Readin some parameters from the ParameterSet.
-	itsTreePrefix = globalParameterSet()->getString("prefix");
-	itsInstanceNr = globalParameterSet()->getUint32(itsTreePrefix + "instanceNr");
-// for now
-itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
-
 	// TODO
-	LOG_INFO("MACProcessScope: LOFAR.PermSW.DigBoardCtrl");
+	LOG_INFO("MACProcessScope: LOFAR.PermSW.ClockControl");
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -80,7 +75,6 @@ itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 	itsRSPDriver = new GCFTCPPort (*this, MAC_SVCMASK_RSPDRIVER,
 											GCFPortInterface::SAP, RSP_PROTOCOL);
 	ASSERTSTR(itsRSPDriver, "Cannot allocate TCPport to RSPDriver");
-	itsRSPDriver->setInstanceNr(itsInstanceNr);
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -240,7 +234,6 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 		DPSubscribedEvent	dpEvent(event);
 		string	propSetName(createPropertySetName(PSN_CLOCK_CONTROL, getName()));
 		propSetName += "." PN_CLC_REQUESTED_CLOCK;
-		LOG_DEBUG_STR("Subscribed to: " << propSetName);
 		if (dpEvent.DPname.find(propSetName) != string::npos) {
 			GCFPVInteger	clockVal;
 			itsOwnPropertySet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
@@ -420,6 +413,16 @@ GCFEvent::TResult ClockControl::retrieve_state(GCFEvent& event,
 		}
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 
+		// my clock still uninitialized?
+		if (itsClock == 0) {
+			LOG_INFO_STR("My clock is still not initialized. StationClock is " << ack.clock << " adopting this value");
+			itsClock=ack.clock;
+			LOG_DEBUG ("Going to operational state");
+			TRAN(ClockControl::active_state);				// go to next state.
+			break;
+		}
+
+		// is station clock different from my setting?
 		if ((int32)ack.clock != itsClock) {
 			LOG_INFO_STR ("StationClock is " << ack.clock << ", required clock is " << itsClock << ", changing StationClock");
 			LOG_DEBUG ("Going to setClock state");

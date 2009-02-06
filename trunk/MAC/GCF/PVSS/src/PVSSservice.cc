@@ -858,7 +858,7 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 
 	convPropToDpConfig(dpeName, pvssDpName, false);	// add .:_original.._value
 
-	LOG_TRACE_FLOW (formatString("Set value of property '%s'", dpeName.c_str()));
+	LOG_TRACE_FLOW_STR ("Set value of property '" << dpeName << "' to " << value.getValueAsString());
 
 	ASSERT(itsSCADAHandler);
 	// DB must be active

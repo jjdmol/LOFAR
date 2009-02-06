@@ -19,7 +19,7 @@
 //	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //	One of the main task of the station controller is the synchronisation between
-//	the DigitalBoardController, the CalibrationController and the BeamController.
+//	the ClockController, the CalibrationController and the BeamController.
 //
 //	$Id$
 //
@@ -87,7 +87,7 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsUseHWinfo  = globalParameterSet()->getBool("useHardwareStates", true);
 
 	// TODO
-	LOG_INFO("MACProcessScope: LOFAR.PermSW.StationCtrl");
+	LOG_INFO("MACProcessScope: LOFAR.PermSW.StationControl");
 	LOG_INFO_STR((itsUseHWinfo ? "Using" : "Ignoring") << " the hardware states in PVSS");
 
 	// attach to child control task
@@ -230,7 +230,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
 			itsClockPropSet = new RTDBPropertySet(clkPropSetName,
 												  PST_CLOCK_CONTROL,
-												  PSAT_RW,
+												  PSAT_WO,
 												  this);
 		}
 		else {
@@ -239,10 +239,27 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 			GCFPVInteger	clockVal;
 			itsClockPropSet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
-			itsClock = clockVal.getValue();
-			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
-
-			LOG_DEBUG ("Going to connect state to attach to DigitalBoardController");
+			if (clockVal.getValue() != 0) {
+				itsClock = clockVal.getValue();
+				LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
+			}
+			else {
+				// try actual clock
+				itsClockPropSet->getValue(PN_CLC_ACTUAL_CLOCK, clockVal);
+				if (clockVal.getValue() == 0) {
+					// both DB values are 0, fall back to 160
+					LOG_DEBUG("Clock settings in the database are all 0, setting 160 as default");
+					itsClock = 160;
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, GCFPVInteger(itsClock));
+				}
+				else {
+					itsClock = clockVal.getValue();
+					LOG_DEBUG_STR("Actual clock in PVSS has value: " << itsClock << " applying that value");
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, clockVal);
+				}
+			}
+			
+			LOG_DEBUG ("Going to connect state to attach to ClockController");
 			TRAN(StationControl::connect_state);			// go to next state.
 		}
 		break;
@@ -268,7 +285,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 //
 // connect_state(event, port)
 //
-// Setup connection with DigitalBoardControl
+// Setup connection with ClockController
 //
 GCFEvent::TResult StationControl::connect_state(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -284,9 +301,9 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 	case F_ENTRY: {
 		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Connected"));
 
-		// start DigitalBoardController
-		LOG_DEBUG_STR("Starting DigitalBoardController");
-		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
+		// start ClockController
+		LOG_DEBUG_STR("Starting ClockController");
+		itsChildControl->startChild(CNTLRTYPE_CLOCKCTRL,
 							   		0,			// treeID, force 'shared' by using 0
 							   		0,			// instanceNr,
 							   		myHostname(false));
@@ -296,7 +313,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 
 	case CONTROL_STARTED: {
 		CONTROLStartedEvent		msg(event);
-//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
+//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_CLOCKCTRL, 0 ,0),
 //							"Started event of unknown controller: " << msg.cntlrName);
 // note: need more complex test because the hostname is now in controllername.
 			if (msg.successful) {
@@ -316,7 +333,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 
 	case CONTROL_CONNECTED: {
 		CONTROLConnectedEvent		msg(event);
-//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_DIGITALBOARDCTRL, 0 ,0),
+//		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_CLOCKCTRL, 0 ,0),
 //							"Connect event of unknown controller: " << msg.cntlrName);
 // note: need more complex test because the hostname is now in controllername.
 
@@ -326,7 +343,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		answer.result    = CT_RESULT_NO_ERROR;
 		itsParentPort->send(answer);
 
-		LOG_DEBUG ("Attached to DigitalBoardControl, taking a subscription on the hardware states");
+		LOG_DEBUG ("Attached to ClockController, taking a subscription on the hardware states");
 		TRAN(StationControl::subscribe2HWstates);
 		}
 		break;
@@ -496,8 +513,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	// ------------ EVENTS RECEIVED FROM CHILD AND PARENT CONTROL --------------
 
-	// The events from the child-task may be of the DigBoardCtlr or one of the
-	// BeamCtlrs or CalCtrls of the active observations.
+	// The events from the child-task may be of the ClockController or one of the
+	// BeamCtlrs or CalCtlrs of the active observations.
 	case CONTROL_CONNECTED:		// from ChildITCport
 	case CONTROL_SCHEDULED:
 	case CONTROL_CLAIMED:

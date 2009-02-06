@@ -185,7 +185,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		// Wait for timer that is set on DP_CREATED event
 
 		// Instruct loggingProcessor
-//		LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamCtrl");
+//		LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamControl");
 		LOG_INFO_STR("MACProcessScope: " << propSetName);
 		// NOTE: the SASgateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 	}

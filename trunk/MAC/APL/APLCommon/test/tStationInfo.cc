@@ -52,12 +52,12 @@ int main (int	argc, char* argv[])
 				PVSS2SASname("RS002:LOFAR_PermSW.status.state"));
 	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_PermSW_MACScheduler.status.state)         = " << 
 				PVSS2SASname("MCU001:LOFAR_PermSW_MACScheduler.status.state"));
-	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_ObsSW_Observation5_ObsCtrl.status.state)  = " << 
-				PVSS2SASname("MCU001:LOFAR_ObsSW_Observation5_ObsCtrl.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_ObsSW_Observation5_ObservationControl.status.state)  = " << 
+				PVSS2SASname("MCU001:LOFAR_ObsSW_Observation5_ObservationControl.status.state"));
 	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5.antennaArray)    = " << 
 				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5.antennaArray"));
-	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5_BeamCtrl.status.state)  = " << 
-				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5_BeamCtrl.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5_BeamControl.status.state)  = " << 
+				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5_BeamControl.status.state"));
 
 	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state)        = " << 
 				SAS2PVSSname("LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state"));
