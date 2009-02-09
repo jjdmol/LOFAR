@@ -39,12 +39,12 @@ void click(string originator) {
     if (originator == \"stationTree\") {
       navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
     } else if (originator == \"activeObs\") {
-      station_obsBaseDP=activeStationObs.selectedItem();
-      station_selectedObservation=activeStationObs.getText(activeStationObs.selectedItem(),0);
+      station_obsBaseDP=activeObs.selectedItem();
+      station_selectedObservation=activeObs.getText(activeObs.selectedItem(),0);
       stationObservationName.text(station_selectedObservation);
       setValue(\"stationObservationName\",\"text\",station_selectedObservation);
       Station_Processes_UpdateStationTree();      
-      navPanel_setEvent(activeStationObs.getText(activeStationObs.selectedItem(),0),\"EventClick\");
+      navPanel_setEvent(activeObs.getText(activeObs.selectedItem(),0),\"EventClick\");
     }
   }
 }
@@ -72,7 +72,7 @@ void dblClick(string originator) {
     } else if (originator == \"activeObs\") {
 //      LOG_DEBUG(\"ObsSW_Station.pnl.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
 //      g_currentDatapoint=baseDP;
-//      navPanel_setEvent(\"ObsSW_Station|\"+activeStationObs.getText(activeStationObs.selectedItem(),0),\"ChangePanel\");  
+//      navPanel_setEvent(\"ObsSW_Station|\"+activeObs.getText(activeObs.selectedItem(),0),\"ChangePanel\");  
     }
   }
   
@@ -86,7 +86,7 @@ void rClick(string originator) {
   if (originator == \"stationTree\") {
     navPanel_setEvent(\"ObsSw_Station|\"+stationTree.getText(stationTree.selectedItem(),0),\"EventRightClick\");
   } else if (originator == \"activeObs\") {
-    navPanel_setEvent(\"ObsSw_Station|\"+activeStationObs.getText(activeStationObs.selectedItem(),0),\"EventRightClick\");
+    navPanel_setEvent(\"ObsSw_Station|\"+activeObs.getText(activeObs.selectedItem(),0),\"EventRightClick\");
   }
 }
 
@@ -161,14 +161,11 @@ LANG:1 19 Active Observations
   stationTree.addColumn(\"Involved Stations\");
   stationTree.setColumnWidth(0,201);
 
-  //take over the old selection from main (if any)
-  station_selectedStation=selectedStation;
-
 }    
     
 " 0
 29 5
-"activeStationObs"
+"activeObs"
 ""
 1 361 -52.9509850063874 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -198,8 +195,8 @@ LANG:1 19 Active Observations
 ""
 "main()
 {
-  activeStationObs.addColumn(\"Active Observations\");
-  activeStationObs.setColumnWidth(0,201);
+  activeObs.addColumn(\"Active Observations\");
+  activeObs.setColumnWidth(0,201);
   
   //take over the old selection from main (if any)
   station_selectedObservation=selectedObservation;
@@ -368,15 +365,15 @@ LANG:1 0
 "objects\\Processes\\station_interactive_controller_small.pnl" 170 40 T 35 1 0 1 0 -4
 2
 "$databaselevel""station"
-"$name""BeamCtrl"
+"$name""BeamControl"
 3 21 "PANEL_REF22"
 "objects\\Processes\\station_interactive_controller_small.pnl" 170 90 T 36 1 0 1 0 -4
 2
 "$databaselevel""station"
-"$name""CalCtrl"
+"$name""CalibrationControl"
 3 22 "PANEL_REF23"
 "objects\\Processes\\station_interactive_controller_small.pnl" 170 140 T 37 1 0 1 0 -4
 2
 "$databaselevel""station"
-"$name""TBBCtrl"
+"$name""TBBControl"
 0

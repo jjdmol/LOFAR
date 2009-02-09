@@ -49,9 +49,9 @@ global string station_obsBaseDP              = "";
 //  
 // ***************************************
 bool Station_Processes_initList() {
-  station_selectedObservation=selectedObservation;
-  if (selectedStation != "") {
-    if (strtok(station_selectedStation,":") < 0) {
+  station_selectedStation=dpSubStr(g_currentDatapoint,DPSUB_SYS);
+/*  station_selectedObservation=selectedObservation;
+    if (strtok(selectedStation,":") < 0) {
       station_selectedStation=selectedStation+":";
     } else {
       station_selectedStation=selectedStation;
@@ -64,6 +64,7 @@ bool Station_Processes_initList() {
       return;
     }
   }
+  */
   station_obsBaseDP="";
   
   
@@ -77,7 +78,7 @@ bool Station_Processes_initList() {
   dyn_dyn_anytype tab;
   //PermSW + PermSW_Daemons
   string query="SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE '" +station_selectedStation + "'";
-  LOG_TRACE("Station_Processes.ctl:initList|Query: "+ query);
+//   LOG_TRACE("Station_Processes.ctl:initList|Query: "+ query);
   
   dpQuery(query, tab);
   LOG_TRACE("Station_Processes.ctl:initList|Found: "+ tab);
@@ -112,13 +113,13 @@ bool Station_Processes_initList() {
   LOG_TRACE("Station_Processes.ctl:initList|station_result composed: "+ station_result);
   
   if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
-    setValue("activeStationObs","backCol","Lofar_dpdoesnotexist");
+    setValue("activeObs","backCol","Lofar_dpdoesnotexist");
   } else {
-    if (dpConnect("Station_Processes_ActiveStationObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations") == -1) {
+    if (dpConnect("Station_Processes_activeObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations") == -1) {
       LOG_ERROR("Station_Processes.ctl:initList|couldn't connect to activeObservations "+getLastError());
     } else {
       if (!navFunct_dpReachable("LOFAR_PermSW_MACScheduler.activeObservations")) { 
-        setValue("activeStationObs","backCol","Lofar_dpOffline");
+        setValue("activeObs","backCol","Lofar_dpOffline");
       }
     }
       
@@ -149,15 +150,17 @@ bool Station_Processes_UpdateStationControllers() {
     } else {
       station_selectedStation=newSelectedStation;
     }
-    stationDBName.text(station_selectedStation);
-    
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","TBBCtrlPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
   }
+  
+  stationDBName.text(station_selectedStation);
+    
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamControlPanel",
+        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalibrationControlPanel",
+        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","TBBControlPanel",
+        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(station_obsBaseDP,station_selectedStation));
+  
     
   LOG_TRACE("Station_Processes.ctl:UpdateStationControllers|call UpdateProcessesList");
   if (!Station_Processes_UpdateProcessesList()) {
@@ -185,17 +188,18 @@ bool Station_Processes_UpdateProcessesList() {
   
   int z;
   dyn_dyn_anytype tab;
-
   // if an observation is chosen
   if(station_selectedObservation != "") {
     // get the real name from the selected Observation
     string obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+station_selectedObservation);
     
-    if (strtok(station_selectedStation,":") < 0) {      
-      obsDP=station_selectedStation+":"+dpSubStr(obsDP,DPSUB_DP);
-    } else { 
+    if (strtok(station_selectedStation,":") < 0) { 
+      station_selectedStation+=":";
+    }
+    if (strpos(obsDP,station_selectedStation) < 0) {     
       obsDP=station_selectedStation+dpSubStr(obsDP,DPSUB_DP);
     }    
+
     // add Observation 
     dynAppend(list,","+station_selectedObservation+","+obsDP);
 
@@ -227,7 +231,7 @@ bool Station_Processes_UpdateProcessesList() {
         dynAppend(g_processesList,path);
       } else {   // Ctrl
         dynAppend(list,obsDP+","+spl[1]+","+path);
-        if (spl[1] != "OnlineCtrl") {
+        if (spl[1] != "OnlineControl") {
           dynAppend(g_processesList,path);
         }
       }
@@ -268,15 +272,6 @@ Station_Processes_UpdateStationTree() {
           stationTree.ensureItemVisible(stations[k]);
           stationTree.setIcon(stations[k],0,"16_empty.gif");
 
-          if (stations[k] == selectedStation) {
-            stationTree.setSelectedItem(stations[k],true);
-            station_selectedStation=stations[k];
-            if (strtok(stations[k],":") < 0) {
-              station_selectedStation=stations[k]+":";
-            } else {
-              station_selectedStation=stations[k];
-            }
-          }
         }
       }
       LOG_TRACE("Station_Processes.ctl:updateStationTree|calling UpdateStationControllers. selected ststion: "+station_selectedStation);
@@ -284,20 +279,23 @@ Station_Processes_UpdateStationTree() {
         LOG_ERROR("Station_Processes.ctl:UpdateStationTree|UpdateStationControllers returned false");
         return false;
       }
+      if (station_selectedStation != "" && stationTree.itemExists(navFunct_bareDBName(station_selectedStation))) {
+        stationTree.setSelectedItem(navFunct_bareDBName(station_selectedStation),true);
+      }
     }
   }
 }
 
 
 
-Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservations) {
+Station_Processes_activeObsCallback(string dp1, dyn_string activeObservations) {
   LOG_TRACE("Station_Processes.ctl:activeObsCallback|Found: "+ activeObservations);
   
   // wait a few milisecs to give the g_observationlist time to refill
   delay(0,500);  // empty the table
   
     // empty the table
-  activeStationObs.clear();
+  activeObs.clear();
   station_obsBaseDP="";  
   
   // if the active observations list changes the list here should be changed also.
@@ -309,9 +307,9 @@ Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservat
   // check if this station is involved in an active observation, if so it will be added to the list
 
   string newSelection="";
-  string oldSelection =activeStationObs.selectedItem();
+  string oldSelection =activeObs.selectedItem();
   if (oldSelection != "") {
-    station_selectedObservation=activeStationObs.getText(activeStationObs.selectedItem(),0); 
+    station_selectedObservation=activeObs.getText(activeObs.selectedItem(),0); 
   }
   LOG_DEBUG("Station_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection+ " station_selectedObservation: "+station_selectedObservation);
    
@@ -331,9 +329,9 @@ Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservat
           if (station_obsBaseDP == "") {
             station_obsBaseDP=realName;
           }
-          activeStationObs.appendItem("",realName,activeObservations[i]);
-          activeStationObs.ensureItemVisible(realName);
-          activeStationObs.setIcon(realName,0,"16_empty.gif");
+          activeObs.appendItem("",realName,activeObservations[i]);
+          activeObs.ensureItemVisible(realName);
+          activeObs.setIcon(realName,0,"16_empty.gif");
           if (station_selectedObservation == activeObservations[i]) {
             newSelection=realName;
             station_obsBaseDP=realName;
@@ -352,13 +350,13 @@ Station_Processes_ActiveStationObsCallback(string dp1, dyn_string activeObservat
   LOG_DEBUG("Station_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection+" newSelection: "+newSelection);
   
   if ((oldSelection == newSelection) ||
-      (oldSelection != "" && activeStationObs.itemExists(oldSelection))) {
-    activeStationObs.setSelectedItem(oldSelection,true);    
-    station_selectedObservation=activeStationObs.getText(activeStationObs.selectedItem(),0); 
+      (oldSelection != "" && activeObs.itemExists(oldSelection))) {
+    activeObs.setSelectedItem(oldSelection,true);    
+    station_selectedObservation=activeObs.getText(activeObs.selectedItem(),0); 
     LOG_DEBUG("Station_Processes.ctl:activeObsCallback|Selection: "+station_selectedObservation);
   } else {
-    activeStationObs.setSelectedItem(newSelection,true);    
-    station_selectedObservation=activeStationObs.getText(activeStationObs.selectedItem(),0); 
+    activeObs.setSelectedItem(newSelection,true);    
+    station_selectedObservation=activeObs.getText(activeObs.selectedItem(),0); 
   }
   
   LOG_DEBUG("Station_Processes.ctl:activeObsCallback|Selection: "+station_selectedObservation);

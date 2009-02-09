@@ -112,7 +112,7 @@ E
 1
 LANG:1 16 Software Version
 
-50 "writeDate" 13 1 0 "s" 1
+59 "writeDate" 13 1 0 "s" 1
 LANG:1 10 Write Time
 E
 1
@@ -124,13 +124,13 @@ E
 1
 LANG:1 11 TP filename
 
-155 "MPFile" 13 1 0 "s" 1
+165 "MPFile" 13 1 0 "s" 1
 LANG:1 11 MP FileName
 E
 1
 LANG:1 11 MP filename
 
-155 
+165 
 25 25 "" 1 1
 LANG:1 2 #1
 "" 1 1

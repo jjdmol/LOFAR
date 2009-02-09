@@ -18,7 +18,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".antennaArray\")) {
-    if (dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
+    if (dpConnect(\"updateObservationControl\", baseDP + \".claimPeriod\",
 	 	                   baseDP + \".preparePeriod\",
                                    baseDP + \".startTime\",
                                    baseDP + \".stopTime\",
@@ -38,14 +38,14 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
                                    baseDP + \".Beams.subbandList\",
                                    baseDP + \".Beams.beamletList\",
                                    baseDP + \".stationList:_online.._invalid\") == -1) {
-      LOG_ERROR(\"ObsCtrl.pnl:main|Couldn't connect to : \"+baseDP);
+      LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObsCtrl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
                     \"\",makeDynFloat(),\"\",makeDynString(),\"\",makeDynString(),\"\",true);
     }
   } else {
-    LOG_ERROR(\"ObsCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"ObservationControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"claimPeriodText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"preparePeriodText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"startTimeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
@@ -65,7 +65,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
   reload();
 }
 
-updateObsCtrl(string dp1, int claimPeriod,
+updateObservationControl(string dp1, int claimPeriod,
               string dp2, int preparePeriod,
               string dp3, string startTime,
               string dp4, string stopTime,
@@ -86,7 +86,7 @@ updateObsCtrl(string dp1, int claimPeriod,
               string dp19,dyn_string beamletList, 
               string dp20, bool invalid)
 {
-  LOG_TRACE(\"Observation_overview.pnl:updateObsCtrl|entered\");
+  LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
   beamTable.deleteAllLines();
   string SymbolCol=\"_Window\";
   if (!invalid) {

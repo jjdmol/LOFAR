@@ -16,14 +16,14 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 void prepareProcesses() {
   dyn_string result;
   
-  dynAppend(result,\",StationCtrl,\"+baseDP);    
+  dynAppend(result,\",MACInfoServer,\"+ baseDP);    
   dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"StationCtrl.pnl:prepareProcesses|processList found: \"+ result);    
+  LOG_DEBUG(\"MACInfoServer.pnl:prepareProcesses|processList found: \"+ result);    
   
 }
 
@@ -32,18 +32,17 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"StationCtrl.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"MACInfoServer.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"StationCtrl.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"MACInfoServer.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
-    
     reload();
   }
 }
@@ -53,11 +52,12 @@ void reload() {
   navFunct_clearGlobalLists();
   
   // set the observation selectable items
-  Station_Processes_initList();
+  prepareProcesses();
 
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"StationCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"MACInfoServer.pnl\",\"Update\");
 }
+
 " 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
@@ -159,5 +159,5 @@ LANG:1 0
 3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
-"$ctrlName""StationCtrl"
+"$ctrlName""SHMInfoServer"
 0
