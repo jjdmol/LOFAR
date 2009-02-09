@@ -1,6 +1,9 @@
 pkginclude_HEADERS = Package__Version.h
 
-SUBDIRS = ApplController OnlineControl # OfflineControl 
+SUBDIRS = ApplController CEPlogProcessor
+if HAVE_PVSS
+  SUBDIRS += OnlineControl # OfflineControl 
+endif
 
 bin_PROGRAMS = versioncepcu
 
