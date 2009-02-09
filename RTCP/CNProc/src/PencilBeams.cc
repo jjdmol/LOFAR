@@ -33,7 +33,7 @@ PencilCoordinates::PencilCoordinates( const Matrix<double> &coordinates )
   }
 }
 
-PencilRings::PencilRings(unsigned nrRings, double ringWidth):
+PencilRings::PencilRings(const unsigned nrRings, const double ringWidth):
   itsNrRings(nrRings),
   itsRingWidth(ringWidth)
 {
@@ -158,7 +158,7 @@ void PencilRings::computeBeamCoordinates()
   }
 }
 
-PencilBeams::PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres )
+PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres )
 :
   itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
@@ -213,7 +213,7 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
   }
 }
 
-fcomplex PencilBeams::phaseShift( double frequency, double delay )
+fcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
 {
   double phaseShift = delay * frequency;
   double phi = -2 * M_PI * phaseShift;
@@ -221,7 +221,7 @@ fcomplex PencilBeams::phaseShift( double frequency, double delay )
   return makefcomplex( std::cos(phi), std::sin(phi) );
 }
 
-void PencilBeams::computeComplexVoltages( FilteredData *in, PencilBeamData *out, std::vector<unsigned> stations )
+void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out, const std::vector<unsigned> stations )
 {
   float factor = 1.0 / stations.size();
 
@@ -264,7 +264,7 @@ void PencilBeams::computeComplexVoltages( FilteredData *in, PencilBeamData *out,
   }
 }
 
-void PencilBeams::calculateAllDelays( FilteredData *filteredData )
+void PencilBeams::calculateAllDelays( const FilteredData *filteredData )
 {
   // calculate the delays for each station for this integration period
   for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
@@ -277,7 +277,7 @@ void PencilBeams::calculateAllDelays( FilteredData *filteredData )
   }
 }
 
-void PencilBeams::formPencilBeams( FilteredData *filteredData, PencilBeamData *pencilBeamData )
+void PencilBeams::formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData )
 {
   // TODO: fetch a list of stations to beam form. for now, we assume
   // we use all stations

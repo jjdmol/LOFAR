@@ -13,10 +13,10 @@ namespace RTCP {
 class Stokes
 {
   public:
-    Stokes(bool coherent, int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration);
+    Stokes(const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerOutputIntegration);
 
-    void calculateCoherent( PencilBeamData *filteredData, StokesData *stokesData, unsigned nrBeams );
-    void calculateIncoherent( FilteredData *filteredData, StokesData *stokesData, unsigned nrStations );
+    void calculateCoherent( const PencilBeamData *filteredData, StokesData *stokesData, const unsigned nrBeams );
+    void calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations );
 
   private:
     unsigned                itsNrChannels;
@@ -25,7 +25,7 @@ class Stokes
     unsigned                itsNrStokes;
     bool                    itsIsCoherent;
 
-    void computeStokes( MultiDimArray<fcomplex,4> &in, SparseSet<unsigned> *inflags, StokesData *out, unsigned nrBeams );
+    void computeStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams );
 };
 
 } // namespace RTCP
