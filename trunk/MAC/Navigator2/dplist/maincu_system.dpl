@@ -74,20 +74,20 @@ NavPanelConfig.NavPanelConfig	1#1
 	RCU_Hardware	9#13
 	StnLOFAR_Processes	9#14
 	CTStartDaemon_Processes	9#15
-	KVLogger_Processes	9#19
+	KeyValueLogger_Processes	9#19
 	LogProcessor_Processes	9#20
 	ServiceBroker_Processes	9#21
 	MACScheduler_Processes	9#22
 	SoftwareMonitor_Processes	9#23
 	HardwareMonitor_Processes	9#24
-	DigBoardCtrl_Processes	9#25
-	StationCtrl_Processes	9#26
+	ClockControl_Processes	9#25
+	StationControl_Processes	9#26
 	TemperatureMonitor_Processes	9#27
-	BeamCtrl_Processes	9#28
-	CalCtrl_Processes	9#29
-	TBBCtrl_Processes	9#30
+	BeamControl_Processes	9#28
+	CalibrationControl_Processes	9#29
+	TBBControl_Processes	9#30
 	AMCServer_Processes	9#31
-	ObsCtrl_Processes	9#35
+	ObservationControl_Processes	9#35
 	SASGateway_Processes	9#36
 	Correlator_Processes	9#37
 	StorageAppl_Processes	9#38
@@ -95,7 +95,7 @@ NavPanelConfig.NavPanelConfig	1#1
 	TBBDriver_Processes	9#40
 	CalServer_Processes	9#41
 	BeamServer_Processes	9#42
-	MACInfoServer_Processes	9#43
+	SHMInfoServer_Processes	9#43
 	Observation_Observations	9#44
 	Ring_Hardware	9#45
 	LOFAR_Alerts	9#46
@@ -194,20 +194,20 @@ root.RSPBoard_Hardware	NavPanelConfig	"Hardware/Station_RSPBoard.pnl"	0x101
 root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101
 root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101
 root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101
-root.KVLogger_Processes	NavPanelConfig	"Processes/KVLogger.pnl"	0x101
+root.KeyValueLogger_Processes	NavPanelConfig	"Processes/KeyValueLogger.pnl"	0x101
 root.LogProcessor_Processes	NavPanelConfig	"Processes/LogProcessor.pnl"	0x101
 root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101
 root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101
 root.SoftwareMonitor_Processes	NavPanelConfig	"Processes/SoftwareMonitor.pnl"	0x101
 root.HardwareMonitor_Processes	NavPanelConfig	"Processes/HardwareMonitor.pnl"	0x101
-root.DigBoardCtrl_Processes	NavPanelConfig	"Processes/DigBoardCtrl.pnl"	0x101
-root.StationCtrl_Processes	NavPanelConfig	"Processes/StationCtrl.pnl"	0x101
+root.ClockControl_Processes	NavPanelConfig	"Processes/ClockControl.pnl"	0x101
+root.StationControl_Processes	NavPanelConfig	"Processes/StationControl.pnl"	0x101
 root.TemperatureMonitor_Processes	NavPanelConfig	"Processes/TemperatureMonitor.pnl"	0x101
-root.BeamCtrl_Processes	NavPanelConfig	"Processes/BeamCtrl.pnl"	0x101
-root.CalCtrl_Processes	NavPanelConfig	"Processes/CalCtrl.pnl"	0x101
-root.TBBCtrl_Processes	NavPanelConfig	"Processes/TBBCtrl.pnl"	0x101
+root.BeamControl_Processes	NavPanelConfig	"Processes/BeamControl.pnl"	0x101
+root.CalibrationControl_Processes	NavPanelConfig	"Processes/CalibrationControl.pnl"	0x101
+root.TBBControl_Processes	NavPanelConfig	"Processes/TBBControl.pnl"	0x101
 root.AMCServer_Processes	NavPanelConfig	"Processes/AMCServer.pnl"	0x101
-root.ObsCtrl_Processes	NavPanelConfig	"Processes/ObsCtrl.pnl"	0x101
+root.ObservationControl_Processes	NavPanelConfig	"Processes/ObservationControl.pnl"	0x101
 root.SASGateway_Processes	NavPanelConfig	"Processes/SASGateway.pnl"	0x101
 root.Correlator_Processes	NavPanelConfig	"Processes/Correlator.pnl"	0x101
 root.StorageAppl_Processes	NavPanelConfig	"Processes/StorageAppl.pnl"	0x101
@@ -215,7 +215,7 @@ root.RSPDriver_Processes	NavPanelConfig	"Processes/RSPDriver.pnl"	0x101
 root.TBBDriver_Processes	NavPanelConfig	"Processes/TBBDriver.pnl"	0x101
 root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101
 root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101
-root.MACInfoServer_Processes	NavPanelConfig	"Processes/MACInfoServer.pnl"	0x101
+root.SHMInfoServer_Processes	NavPanelConfig	"Processes/SHMInfoServer.pnl"	0x101
 root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101
 root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe","Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote","Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101
 root.LOFAR_Alerts	NavPanelConfig	"Alerts/lofar_alarms.pnl"	0x101

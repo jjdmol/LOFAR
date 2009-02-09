@@ -12,7 +12,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    if ( dpConnect(\"updateCalCtrl\", baseDP + \".connected\",
+    if ( dpConnect(\"updateCalibrationControl\", baseDP + \".connected\",
 		                   baseDP + \".antennaArray\",
                                    baseDP + \".rcus\",
                                    baseDP + \".filter\",
@@ -21,10 +21,10 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
                                    baseDP + \".connected:_online.._invalid\") == -1) {
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateCalCtrl(\"\",false,\"\",\"\",\"\",\"\",\"\",\"\",\"\",0,\"\".makeDynString(),\"\",true);
+      updateCalibrationControl(\"\",false,\"\",\"\",\"\",\"\",\"\",\"\",\"\",0,\"\".makeDynString(),\"\",true);
     }
   } else {
-    LOG_ERROR(\"CalCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"CalibrationControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"connectedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"antennaArrayText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"rcusText\", \"backCol\", \"Lofar_dpdoesnotexist\");
@@ -35,7 +35,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   reload();
 }
 
-updateCalCtrl(string dp1, bool connected,
+updateCalibrationControl(string dp1, bool connected,
               string dp2, string antennaArray,
               string dp3, string rcus,
               string dp4, string filter,
@@ -43,7 +43,7 @@ updateCalCtrl(string dp1, bool connected,
               string dp6, dyn_string beamNames,
               string dp7, bool invalid)
 {
-  LOG_TRACE(\"CalCtrl.pnl:updateCalCtrl|entered\");
+  LOG_TRACE(\"CalibrationControl.pnl:updateCalibrationControl|entered\");
   beamTable.deleteAllLines();
   
   if (!invalid) {
@@ -67,7 +67,7 @@ updateCalCtrl(string dp1, bool connected,
       SymbolCol = \"Lofar_dpOffline\";
     }
     setValue(\"connectedText\", \"backCol\", SymbolCol );
-    setValue(\"antennaText\", \"backCol\", SymbolCol);
+    setValue(\"antennaArrayText\", \"backCol\", SymbolCol);
     setValue(\"rcusText\", \"backCol\", SymbolCol);
     setValue(\"filterText\", \"backCol\", SymbolCol);
     setValue(\"nyquistzoneText\", \"backCol\", SymbolCol);
@@ -78,14 +78,14 @@ updateCalCtrl(string dp1, bool connected,
 void prepareProcesses() {
   dyn_string result;
   
-  dynAppend(result,\",CalCtrl,\"+baseDP);    
+  dynAppend(result,\",CalibrationControl,\"+baseDP);    
   dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"CalCtrl.pnl:prepareProcesses|processList found: \"+ result);    
+  LOG_DEBUG(\"CalibrationControl.pnl:prepareProcesses|processList found: \"+ result);    
   
 }
 
@@ -94,14 +94,14 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"CalCtrl.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"CalibrationControl.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"CalCtrl.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"CalibrationControl.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
@@ -117,13 +117,14 @@ void reload() {
   prepareProcesses();
 
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"CalCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"CalibrationControl.pnl\",\"Update\");
 }
 
 " 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
 E "#uses \"navPanel.ctl\"
+#uses \"Station_Processes.ctl\"
 
 string baseDP=\"\";
 string database=\"\";
@@ -449,5 +450,5 @@ LANG:1 0
 3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
-"$ctrlName""BeamCtrl"
+"$ctrlName""CalibrationControl"
 0

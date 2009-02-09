@@ -12,7 +12,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    if (dpConnect(\"updateTBBCtrl\", baseDP + \".connected\",
+    if (dpConnect(\"updateTBBControl\", baseDP + \".connected\",
 		                   baseDP + \".trigger.rcuNr\",
 		                   baseDP + \".trigger.sequenceNr\",
 		                   baseDP + \".trigger.time\",
@@ -23,13 +23,13 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 		                   baseDP + \".trigger.flags\",
 		                   baseDP + \".trigger.table\",
                                	   baseDP + \".connected:_online.._invalid\") == -1) {
-      LOG_ERROR(\"TBBCtrl.pnl:main|Couldn't  connect to: \"+baseDP);
+      LOG_ERROR(\"TBBControl.pnl:main|Couldn't  connect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateTBBCtrl(\"\", false, \"\",0,\"\",0,\"\",\"\",\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",\"\",\"\",true);
+      updateTBBControl(\"\", false, \"\",0,\"\",0,\"\",\"\",\"\",0,\"\",0,\"\",0,\"\",0,\"\",0,\"\",\"\",\"\",true);
     }
   } else {
-    LOG_ERROR(\"TBBCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"TBBControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"connectedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"rcuNrText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"sequenceNrText\", \"backCol\", \"Lofar_dpdoesnotexist\");
@@ -45,7 +45,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   reload(); 
 }
 
-updateTBBCtrl(string dp1, bool connected,
+updateTBBControl(string dp1, bool connected,
               string dp2, unsigned rcuNr,
               string dp3, unsigned sequenceNr,
               string dp4, string timeStr,
@@ -57,7 +57,7 @@ updateTBBCtrl(string dp1, bool connected,
               string dp10, string table,
               string dp11, bool invalid)
 {
-  LOG_TRACE(\"TBBCtrl.pnl:updateTBBCtrl|entered\");
+  LOG_TRACE(\"TBBControl.pnl:updateTBBControl|entered\");
   string SymbolCol= \"_Window\";
   if (!invalid) {
     if (connected) {
@@ -96,14 +96,14 @@ updateTBBCtrl(string dp1, bool connected,
 void prepareProcesses() {
   dyn_string result;
   
-  dynAppend(result,\",TBBCtrl,\"+baseDP);    
+  dynAppend(result,\",TBBControl,\"+baseDP);    
   dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"TBBCtrl.pnl:prepareProcesses|processList found: \"+ result);    
+  LOG_DEBUG(\"TBBControl.pnl:prepareProcesses|processList found: \"+ result);    
   
 }
 
@@ -112,14 +112,14 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"TBBCtrl.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"TBBControl.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"TBBCtrl.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"TBBControl.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
@@ -133,16 +133,17 @@ void reload() {
   navFunct_clearGlobalLists();
   
   // set the observation selectable items
-  Station_Processes_initList();
+  prepareProcesses();
 
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"TBBCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"TBBControl.pnl\",\"Update\");
 }
 
 " 0
  E E E E 1 -1 -1 0  49 92
 ""0  1
 E "#uses \"navPanel.ctl\"
+#uses \"Station_Processes.ctl\"
 
 string baseDP=\"\";
 string database=\"\";
@@ -608,5 +609,5 @@ LANG:1 0
 3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
-"$ctrlName""TBBCtrl"
+"$ctrlName""TBBControl"
 0

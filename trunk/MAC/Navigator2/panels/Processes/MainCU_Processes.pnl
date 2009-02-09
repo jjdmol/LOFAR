@@ -433,5 +433,5 @@ LANG:1 0
 3 21 "PANEL_REF22"
 "objects\\Processes\\daemon_small.pnl" 0 140 T 35 1 0 1 0 12
 1
-"$name""KVLogger"
+"$name""KeyValueLogger"
 0

@@ -6,11 +6,11 @@ PANEL,-1 -1 242 64 N "_3DFace" 0
 {
   baseDP=g_currentDatapoint;
 	
-  baseDP = sysName + \"LOFAR_PIC_StationClock\";
+  baseDP = sysName + \"LOFAR_PermSW_ClockControl\";
 
-  if(dpExists(baseDP +\".clock:_online.._value\")) {
-    dpConnect(\"setClock\", baseDP +\".clock:_online.._value\",
-                          baseDP +\".clock:_online.._invalid\");
+  if(dpExists(baseDP +\".actualClock:_online.._value\")) {
+    dpConnect(\"setClock\", baseDP +\".actualClock:_online.._value\",
+                          baseDP +\".actualClock:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
       setClock(\"\",0,\"\",true);
     }

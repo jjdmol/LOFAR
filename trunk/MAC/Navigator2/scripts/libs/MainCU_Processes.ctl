@@ -127,11 +127,11 @@ void MainCU_Processes_UpdateMainControllers() {
     // get the real name from the selected Observation
     obsBaseDP=claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation);   
     LOG_TRACE("MainCU_Processes.ctl:updateMainControllers|connecting to  Main Observation Ctrls");    
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObsCtrlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineCtrl_StorageApplPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineCtrl_CorrelatorPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_CorrelatorPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }
 }
@@ -161,11 +161,11 @@ void MainCU_Processes_UpdateStationControllers() {
 
     MainCU_Processes_UpdateProcessesList();
 
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamCtrlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","BeamControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalCtrlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","CalibrationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","TBBCtrlPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","TBBControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(stationObsDP,selectedStation));
     
   }
@@ -224,7 +224,7 @@ void MainCU_Processes_UpdateProcessesList() {
         dynAppend(g_processesList,path);
       } else {   // Ctrl
         dynAppend(list,obsDP+","+spl[1]+","+path);
-        if (spl[1] != "OnlineCtrl") {
+        if (spl[1] != "OnlineControl") {
           dynAppend(g_processesList,path);
         }
       }

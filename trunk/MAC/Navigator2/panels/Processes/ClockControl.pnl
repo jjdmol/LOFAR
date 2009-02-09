@@ -12,29 +12,33 @@ PANEL,-1 -1 1013 754 N "_3DFace" 0
   
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".connected\")) {
-    if (dpConnect(\"updateDigBoardCtrl\", baseDP + \".connected\",
-		                        baseDP + \".clock\",
+    if (dpConnect(\"updateClockControl\", baseDP + \".connected\",
+		                        baseDP + \".actualClock\",
+                                        baseDP + \".requestedClock\",
                                         baseDP + \".connected:_online.._invalid\") == -1) {
-      LOG_ERROR(\"DigBoardCtrl.pnl:main|Couldn't connect to: \"+baseDP);
+      LOG_ERROR(\"ClockControl.pnl:main|Couldn't connect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateDigBoardCtrl(\"\",false,\"\",0,\"\",true);
+      updateClockControl(\"\",false,\"\",0,\"\",true);
     }
   } else {
-    LOG_ERROR(\"DigBoardCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    LOG_ERROR(\"ClockControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"enabledText\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"clockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"actualClockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"reuqestedClockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
   reload();
 }
 
-updateDigBoardCtrl(string dp1, bool connected,
-                 string dp2, int clock, 
-                 string dp3, bool invalid)
+updateClockControl(string dp1, bool connected,
+                 string dp2, int actualClock, 
+                 string dp3, int requestedClock, 
+                 string dp4, bool invalid)
 {
-  LOG_DEBUG(\"DigBoardCtrl.pnl:updateDigBrdCtrl|entered with connected: \"+ connected + \" clock: \" + clock);  
+  LOG_DEBUG(\"ClockControl.pnl:updateClockControl|entered with connected: \"+ connected + \" actualClock: \" + actualClock+ \" requested Clock: \"+ requestedClock);  
   if (!invalid) {
-    setValue(\"clockText\", \"text\", clock);
+    setValue(\"actualClockText\", \"text\", actualClock);
+    setValue(\"requestedClockText\", \"text\", requestedClock);
     if (enabled) {
       setValue(\"connectedText\", \"backCol\", \"green\");
     } else {
@@ -46,21 +50,22 @@ updateDigBoardCtrl(string dp1, bool connected,
       SymboLCol = \"Lofar_dpOffline\";
     }
     setValue(\"connectedText\", \"backCol\", SymbolCol);
-    setValue(\"clockText\", \"backCol\", SymbolCol);
+    setValue(\"actualClockText\", \"backCol\", SymbolCol);
+    setValue(\"requestedClockText\", \"backCol\", SymbolCol);
   }  
 }
 
 void prepareProcesses() {
   dyn_string result;
   
-  dynAppend(result,\",DigBoardCtrl,\"+baseDP);    
+  dynAppend(result,\",ClockControl,\"+baseDP);    
   dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"DigBoardCtrl.pnl:prepareProcesses|processList found: \"+ result);    
+  LOG_DEBUG(\"ClockControl.pnl:prepareProcesses|processList found: \"+ result);    
   
 }
 
@@ -69,14 +74,14 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"DigBoardCtrl.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"ClockControl.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"DigBoardCtrl.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"ClockControl.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
@@ -92,7 +97,7 @@ void reload() {
   prepareProcesses();
 
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"DigBoardCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"ClockControl.pnl\",\"Update\");
 }
 
 " 0
@@ -110,39 +115,39 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-1 54 0 "" 0
+1 73 0 "" 0
 0
-1 55 0 "0" 1
+1 74 0 "0" 1
 0
-1 56 0 "" 2
+1 75 0 "" 2
 0
-1 57 0 "" 3
+1 76 0 "" 3
 0
-1 58 0 "" 7
+1 77 0 "" 7
 0
-1 59 0 "" 8
+1 78 0 "" 8
 0
-1 60 0 "" 9
+1 79 0 "" 9
 0
-1 61 0 "" 10
+1 80 0 "" 10
 0
-1 62 0 "" 11
+1 81 0 "" 11
 0
-1 63 0 "" 12
+1 82 0 "" 12
 0
-1 64 0 "" 13
+1 83 0 "" 13
 0
-1 65 0 "" 15
+1 84 0 "" 15
 0
-1 66 0 "" 16
+1 85 0 "" 16
 0
-1 67 0 "" 17
+1 86 0 "" 17
 0
-1 68 0 "" 18
+1 87 0 "" 18
 0
-1 69 0 "" 19
+1 88 0 "" 19
 0
-1 70 0 "" 20
+1 89 0 "" 20
 0
 2 50
 "PRIMITIVE_TEXT8"
@@ -191,15 +196,15 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 374 66 388
+E E 0 1 1 2 1 E U  1 E 30 374 106 388
 0 2 2 "0s" 0 0 0 192 0 0  30 374 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 Clock:
+LANG:1 13 Actual Clock:
 14 53
-"clockText"
+"actualClockText"
 ""
 1 160 370 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -214,6 +219,43 @@ LANG:1 0
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  158 368 282 389
+2 "0s" 0 0 0 0 0 -1  E E E
+2 71
+"PRIMITIVE_TEXT10"
+""
+1 30 404 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 30 404 131 418
+0 2 2 "0s" 0 0 0 192 0 0  30 404 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 16 Requested Clock:
+14 72
+"requestedClockText"
+""
+1 160 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 158 398 282 419
 2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
@@ -247,5 +289,5 @@ LANG:1 0
 3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
-"$ctrlName""DigBoardCtrl"
+"$ctrlName""ClockControl"
 0
