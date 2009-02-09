@@ -86,7 +86,7 @@ NavPanelConfig.NavPanelConfig	1#1
 	Ring_Hardware	9#11
 	StnLOFAR_Processes	9#12
 	CTStartDaemon_Processes	9#13
-	KVLogger_Processes	9#14
+	KeyValueLogger_Processes	9#14
 	LogProcessor_Processes	9#15
 	ServiceBroker_Processes	9#16
 	MACScheduler_Processes	9#17
@@ -109,6 +109,7 @@ NavPanelConfig.NavPanelConfig	1#1
 	BeamServer_Processes	9#34
 	SHMInfoServer_Processes	9#35
 	Observation_Observations	9#36
+	LOFAR_Alerts	9#37
 
 TypeName
 GCFWatchDog.GCFWatchDog	1#1
@@ -154,7 +155,7 @@ root.RCU_Hardware	NavPanelConfig	"Hardware/Station_RCU.pnl"	0x101
 root.Ring_Hardware	NavPanelConfig	"Hardware/LOFAR_Europe.pnl:LOFAR_PIC_Europe","Hardware/LOFAR_Remote.pnl:LOFAR_PIC_Remote","Hardware/LOFAR_Core.pnl:LOFAR_PIC_Core"	0x101
 root.StnLOFAR_Processes	NavPanelConfig	"Processes/Station_Processes.pnl"	0x101
 root.CTStartDaemon_Processes	NavPanelConfig	"Processes/CTStartDaemon.pnl"	0x101
-root.KVLogger_Processes	NavPanelConfig	"Processes/KVLogger.pnl"	0x101
+root.KeyValueLogger_Processes	NavPanelConfig	"Processes/KeyValueLogger.pnl"	0x101
 root.LogProcessor_Processes	NavPanelConfig	"Processes/LogProcessor.pnl"	0x101
 root.ServiceBroker_Processes	NavPanelConfig	"Processes/ServiceBroker.pnl"	0x101
 root.MACScheduler_Processes	NavPanelConfig	"Processes/MACScheduler.pnl"	0x101
@@ -177,3 +178,4 @@ root.CalServer_Processes	NavPanelConfig	"Processes/CalServer.pnl"	0x101
 root.BeamServer_Processes	NavPanelConfig	"Processes/BeamServer.pnl"	0x101
 root.SHMInfoServer_Processes	NavPanelConfig	"Processes/SHMInfoServer.pnl"	0x101
 root.Observation_Observations	NavPanelConfig	"Observations/Observation_overview.pnl"	0x101
+root.LOFAR_Alerts	NavPanelConfig	"Alerts/lofar_alarms.pnl"	0x101
