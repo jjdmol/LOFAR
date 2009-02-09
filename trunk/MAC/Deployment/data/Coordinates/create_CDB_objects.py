@@ -9,9 +9,9 @@ def findStationInfo(stationName):
     Return all basic station info (eg. nr RSPboards) from a station.
     """
     pattern=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
-    match = pattern.search(open("../StaticMetaData/StationInfo").read())
+    match = pattern.search(open("../StaticMetaData/StationInfo.dat").read())
     if not match:
-        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
+        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo.dat'"
     return match.group().split()
 
 #
@@ -22,7 +22,7 @@ def getStationList():
     Returns a list containing all stationnames
     """
     pattern=re.compile("^[A-Z]{2}[0-9]{3}[ \t].*", re.IGNORECASE | re.MULTILINE)
-    return [ station.split()[0] for station in pattern.findall(open("../StaticMetaData/StationInfo").read())]
+    return [ station.split()[0] for station in pattern.findall(open("../StaticMetaData/StationInfo.dat").read())]
 
 #
 # MAIN
@@ -38,3 +38,4 @@ if __name__ == '__main__':
         for hba in xrange(0, int(nrHBA)):
             db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA", hba ))
 
+# ... to be continued

@@ -31,3 +31,4 @@ if __name__ == '__main__':
     Ry         = getInputWithDefault("Ry (0.001'')",0.0)
     Rz         = getInputWithDefault("Rz (0.001'')",0.0)
 
+# ... to be continued
