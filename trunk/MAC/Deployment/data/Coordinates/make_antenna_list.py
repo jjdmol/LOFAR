@@ -36,7 +36,7 @@ if __name__ == '__main__':
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(sys.argv[1])
     db = pgdb.connect(user="postgres", host="dop50", database="coordtest")
     print "#Stn	ID	Type	RSP	RCU	Pol	Position					Orientation"
-    print "%s	%s	%s	%d	%d	x	[%s,%s,%s]	[0,0,0]" % (name, stationID, "center", -1, -1, long, lat, height)
+    print "%s	%s	%s	%d	%d	-1	[%s,%s,%s]	[0,0,0]" % (name, stationID, "center", -1, -1, long, lat, height)
     for infoType in [ 'marker', 'lba', 'hba' ]:
         cursor = db.cursor()
         cursor.execute("select * from get_ref_objects(%s, %s)", (sys.argv[1], infoType))
@@ -46,8 +46,8 @@ if __name__ == '__main__':
             if record == None:
                 break
             RSPnr = int(record[2]%100/4)
-            print "%s	%s	%s	%d	%d	x	[%s,%s,%s]	[0,0,0]" % (name, stationID, infoType, RSPnr, counter, record[3], record[4], record[5])
-            print "%s	%s	%s	%d	%d	y	[%s,%s,%s]	[0,0,0]" % (name, stationID, infoType, RSPnr, counter+1, record[3], record[4], record[5])
+            print "%s	%s	%s%d	%d	%d	x	[%s,%s,%s]	[0,0,0]" % (name, stationID, infoType, int(record[2])%100, RSPnr, counter, record[3], record[4], record[5])
+            print "%s	%s	%s%d	%d	%d	y	[%s,%s,%s]	[0,0,0]" % (name, stationID, infoType, int(record[2])%100, RSPnr, counter+1, record[3], record[4], record[5])
             counter = counter + 2
     db.close()
     sys.exit(1)
