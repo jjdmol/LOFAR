@@ -5,6 +5,7 @@
 #include <iostream>
 #include <boost/noncopyable.hpp>
 #include <Stream/Stream.h>
+#include <Common/Exceptions.h>
 #include <Interface/Parset.h>
 #include <Interface/CN_Mode.h>
 #include <Interface/Allocator.h>
@@ -42,11 +43,11 @@ class PipelineOutput: boost::noncopyable
     PipelineOutput( const unsigned id, const OutputDataType type = RAWDATA );
     virtual ~PipelineOutput();
 
-    OutputDataType      dataType()   { return itsType; }
-    StorageWriterType   writerType() { return itsWriterType; }
-    const string        &filenameSuffix() { return itsFilenameSuffix; }
-    StreamableData      *data()      { return itsData; }
-    unsigned            IONintegrationSteps() { return itsIONintegrationSteps; }
+    OutputDataType      dataType() const            { return itsType; }
+    StorageWriterType   writerType() const          { return itsWriterType; }
+    const string        &filenameSuffix()           { return itsFilenameSuffix; }
+    StreamableData      *data() const               { return itsData; }
+    unsigned            IONintegrationSteps() const { return itsIONintegrationSteps; }
 
     StreamableData      *extractData();
 
@@ -60,8 +61,6 @@ class PipelineOutput: boost::noncopyable
     StreamableData	*itsData;
     string              itsFilenameSuffix;
     unsigned            itsIONintegrationSteps;
-
-    PipelineOutput( const PipelineOutput & );
 };
 
 class PipelineOutputSet
@@ -149,6 +148,9 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
         o = new PipelineOutput( id++, PipelineOutput::STOKESDATA );
         o->itsData = new StokesData( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator );
         break;
+
+    default:
+    	throw InterfaceException("Invalid pipeline mode. Cannot determine output data type.");
   }
   o->itsIONintegrationSteps = ps.IONintegrationSteps();
   itsOutputs.push_back( o );

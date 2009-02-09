@@ -14,19 +14,19 @@ const double speedOfLight = 299792458;
 
 class PencilCoord3D {
   public:
-    PencilCoord3D(double x, double y) {
+    PencilCoord3D(const double x, const double y) {
       itsXYZ[0] = x;
       itsXYZ[1] = y;
       itsXYZ[2] = sqrt( 1.0 - x*x - y*y );
     }
 
-    PencilCoord3D(double x, double y, double z) {
+    PencilCoord3D(const double x, const double y, const double z) {
       itsXYZ[0] = x;
       itsXYZ[1] = y;
       itsXYZ[2] = z;
     }
 
-    PencilCoord3D(double xyz[3]) {
+    PencilCoord3D(const double xyz[3]) {
       itsXYZ[0] = xyz[0];
       itsXYZ[1] = xyz[1];
       itsXYZ[2] = xyz[2];
@@ -113,7 +113,7 @@ class PencilCoordinates
 class PencilRings: public PencilCoordinates
 {
   public:
-    PencilRings(unsigned nrRings, double ringWidth);
+    PencilRings(const unsigned nrRings, const double ringWidth);
 
     unsigned nrPencils() const;
 
@@ -142,19 +142,19 @@ class PencilRings: public PencilCoordinates
 class PencilBeams
 {
   public:
-    PencilBeams(PencilCoordinates &coordinates, unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double centerFrequency, double channelBandwidth, std::vector<double> &refPhaseCentre, Matrix<double> &phaseCentres );
+    PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres );
 
-    void formPencilBeams( FilteredData *filteredData, PencilBeamData *pencilBeamData );
+    void formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
 
     size_t nrCoordinates() const { return itsCoordinates.size(); }
 
   private:
-    fcomplex phaseShift( double frequency, double delay );
-    void computeBeams( MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, std::vector<unsigned> stations );
-    void calculateDelays( unsigned stat, const PencilCoord3D &beamDir );
-    void calculateAllDelays( FilteredData *filteredData );
+    fcomplex phaseShift( const double frequency, const double delay ) const;
+    void computeBeams( const MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, const std::vector<unsigned> stations );
+    void calculateDelays( const unsigned stat, const PencilCoord3D &beamDir );
+    void calculateAllDelays( const FilteredData *filteredData );
 
-    void computeComplexVoltages( FilteredData *filteredData, PencilBeamData *pencilBeamData, std::vector<unsigned> stations );
+    void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData, const std::vector<unsigned> stations );
 
     std::vector<PencilCoord3D> itsCoordinates;
     unsigned                itsNrStations;

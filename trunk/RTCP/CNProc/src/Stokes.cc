@@ -7,33 +7,33 @@
 namespace LOFAR {
 namespace RTCP {
 
-Stokes::Stokes( bool coherent, int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerStokesIntegration ):
+Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsNrSamplesPerStokesIntegration(nrSamplesPerStokesIntegration),
   itsNrStokes(nrStokes),
   itsIsCoherent(coherent)
 {
-}
+} 
 
-void Stokes::calculateCoherent( PencilBeamData *pencilBeamData, StokesData *stokesData, unsigned nrBeams )
+void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
 {
   computeStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
 }
 
-void Stokes::calculateIncoherent( FilteredData *filteredData, StokesData *stokesData, unsigned nrStations )
+void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
 {
   computeStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
 }
 
-static float sqr( float x ) { return x * x; }
+static inline float sqr( const float x ) { return x * x; }
 
-void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, SparseSet<unsigned> *inflags, StokesData *out, unsigned nrBeams )
+void Stokes::computeStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams )
 {
-  unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
-  bool allStokes = itsNrStokes == 4;
-  bool coherent = itsIsCoherent;
-  unsigned nrOutputs = coherent ? nrBeams : 1;
+  const unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
+  const bool allStokes = itsNrStokes == 4;
+  const bool coherent = itsIsCoherent;
+  const unsigned nrOutputs = coherent ? nrBeams : 1;
 
   for(unsigned beam = 0; beam < nrOutputs; beam++) {
     out->flags[beam].reset();
@@ -69,9 +69,9 @@ void Stokes::computeStokes( MultiDimArray<fcomplex,4> &in, SparseSet<unsigned> *
 
             // assert: two polarizations
 
-            fcomplex &polX = in[ch][beam][time+fractime][0];
+            const fcomplex &polX = in[ch][beam][time+fractime][0];
             float powerX = sqr( real(polX) ) + sqr( imag(polX) );
-            fcomplex &polY = in[ch][beam][time+fractime][1];
+            const fcomplex &polY = in[ch][beam][time+fractime][1];
             float powerY = sqr( real(polY) ) + sqr( imag(polY) );
 
             stokesI += powerX + powerY;
