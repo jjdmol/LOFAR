@@ -7,7 +7,9 @@ staticmetadir = $(sysconfdir)/StaticMetaData
 sysconf_DATA = DipoleModel.conf \
                HBADelays.conf \
                HBADeltas.conf \
-               SourceCatalog.conf 
+               SourceCatalog.conf \
+               Attenuation.conf \
+               CableDelays.conf
 
 staticmeta_DATA = RemoteStation.conf.tmpl \
                   RSPDriver.conf.tmpl \
