@@ -28,7 +28,7 @@ Station				STS			C	P	Y	LOFAR_PermSW_@ring@_@station@
 Cluster				-			C	P	N	LOFAR_PermSW_@cluster@
 Node				-			C	P	Y	LOFAR_PermSW_@cluster@_@node@
 Daemons				-			C	P	N	LOFAR_PermSW_Daemons
-PVSS00pmon			-			C	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon	
+PVSS00pmon			-			C	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor		-			C	P	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker		- 			C	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
 CTStartDaemon		-			C	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon
@@ -59,7 +59,7 @@ StnPermSW			-			S	P	N	LOFAR_PermSW
 Cluster				-			S	P	N	LOFAR_PermSW_@cluster@
 Node				-			S	P	Y	LOFAR_PermSW_@cluster@_@node@
 Daemons				-			S	P	N	LOFAR_PermSW_Daemons
-PVSS00pmon			-			S	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon	
+PVSS00pmon			-			S	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor		LGP			S	P	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker		- 			S	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
 CTStartDaemon		-			S	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon

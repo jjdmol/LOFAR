@@ -110,7 +110,7 @@ print "21 LOFAR_PIC.status.state"
 print "21 LOFAR_PermSW.status.state"
 
 # construct the rings with stations and the clusters with their nodes
-# ???	???  	C	P	???_PIC_@???@
+# ???	???  	C	P	???	???_PIC_@???@
 ringStationMask=""
 central=re.compile("^\w+[ \t]+[^ \t]+[ \t]+C[ \t]+P[ \t]+[YN][ \t]+([A-Za-z_]+_(?:PIC|PermSW)_@.*)", \
                         re.IGNORECASE | re.MULTILINE)
@@ -145,7 +145,7 @@ for line in central.findall(open(PVSSbasefile).read()):
         # and the control-section
         print "21 "+line.replace("@cluster@", "Control")+".status.state"
     # ---
-    else:
+    elif line.find("@") < 0:
         print "21 "+line+".status.state"
         
 # for all expandable lines
@@ -162,7 +162,7 @@ for line in filledLine.findall(open(StationFile).read()):
         nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
 
     # Find all expandable hardware elements on a station. The line syntax is:
-    # ???	???  	S	P	???_PIC_@...@
+    # ???	???  	S	P	???	???_PIC_@...@
     # we are only interested in the @...@ part.
     station=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t]+[YN][ \t]+[A-Za-z_]+_PIC_(@.*)", \
                         re.IGNORECASE | re.MULTILINE)
@@ -184,7 +184,8 @@ for line in filledLine.findall(open(StationFile).read()):
     software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t]+[YN][ \t]+([A-Za-z_]+_PermSW_.*)", \
                         re.IGNORECASE | re.MULTILINE)
     for line in software.findall(open(PVSSbasefile).read()):
-        print "21 %s:%s.status.state" % (name, line)
+        if line.find("@") < 0:
+            print "21 %s:%s.status.state" % (name, line)
     
 #for all stations
 
