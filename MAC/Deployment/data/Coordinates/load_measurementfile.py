@@ -3,19 +3,6 @@
 import re,sys,pgdb,pg
 
 #
-# findStationInfo(stationName)
-#
-def findStationInfo(stationName):
-    """
-    Return all basic station info (eg. nr RSPboards) from a station.
-    """
-    pattern=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
-    match = pattern.search(open("../StaticMetaData/StationInfo").read())
-    if not match:
-        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
-    return match.group().split()
-
-#
 # getHeaderLines
 #
 def getHeaderLines(filename):
