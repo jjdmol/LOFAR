@@ -148,7 +148,11 @@ class Parset(LOFAR_Parset.Parset):
 	return self.stationList
     
     def setPartition(self, partition):
-        self.partition = partition
+	if partition not in IONodes:
+		print 'Partition',partition,'not defined in IONodes (Host_Names.py)'
+		sys.exit(0)
+
+	self.partition = partition
 	self['OLAP.CNProc.partition'] = partition	
 	
     def getPartition(self):
