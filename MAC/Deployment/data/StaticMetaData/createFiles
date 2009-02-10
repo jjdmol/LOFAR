@@ -154,7 +154,10 @@ def findStationInfo(stationName, dataDir):
     match = pattern.search(open(dataDir+"/StationInfo.dat").read())
     if not match:
         raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
-    return match.group().split()
+    info = match.group().split()
+    if (len(info) != 12):
+        raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
+    return info
 
 def createRSPDriverFile(resultDir, stationName, dataDir):
     """
