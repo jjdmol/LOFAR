@@ -351,7 +351,7 @@ bool setStates(string DP,int state, int originatorState,string message) {
 }
 
 bool setChildStates(string DP,int state, int originatorState, string message) {
-  string query = "SELECT '_online.._value' FROM '" + DP + "*.**.status.childState' WHERE '.status.leaf:_online.._value' == 0 AND '.status.childState:_online.._value' < " + state + " OR  '.status.childState:_online.._value' == "+OPERATIONAL+ " OR  '.status.childState:_online.._value' == "+originatorState;
+  string query = "SELECT '_online.._value' FROM '" + DP + "*.**.status.childState' WHERE '.status.leaf:_online.._value' == 0 AND ('.status.childState:_online.._value' < " + state + " OR  '.status.childState:_online.._value' == "+OPERATIONAL+ " OR  '.status.childState:_online.._value' == "+originatorState+")";
   if (bDebug) DebugN("monitorStateResets.ctl:setChildStates|composed statequery: "+query);
     
   dyn_dyn_anytype tab;
