@@ -4,8 +4,8 @@ frontFanOuter		bool
 frontAirflow		bool
 
 backDoorOpen		bool
-backtFanInner		bool
-backtFanOuter		bool
+backFanInner		bool
+backFanOuter		bool
 backAirflow			bool
 
 tempAlarm			int
