@@ -371,7 +371,7 @@ void startLocalClaim() {
 //    A claim must be made via:
 //
 //    dpSet( 
-//      "ClaimManager.request.typeName", "ObsCtrl",
+//      "ClaimManager.request.typeName", "Observation",
 //      "ClaimManager.request.newObjectName", "MYOBSERVATION" );
 //
 // Returns:
@@ -696,20 +696,20 @@ void checkAndCreateDPs() {
     // will create it on the fly
     //For Master the temppoints are:
     //
-    //    DPType          DP's
-    //    Observation:    LOFAR_ObsSW_TempObs0001-0100
-    //    ObsCtrl:        LOFAR_ObsSW_TempObs0001-0100_ObservationControl
-    //    OnlineCtrl:     LOFAR_ObsSW_TempObs0001-0100_OnlineControl
-    //    Correlator:     LOFAR_ObsSW_TempObs0001-0100_OnlineControl_Correlator
-    //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
+    //    DPType              DP's
+    //    Observation:        LOFAR_ObsSW_TempObs0001-0100
+    //    ObservationControl: LOFAR_ObsSW_TempObs0001-0100_ObservationControl
+    //    OnlineControl:      LOFAR_ObsSW_TempObs0001-0100_OnlineControl
+    //    Correlator:         LOFAR_ObsSW_TempObs0001-0100_OnlineControl_Correlator
+    //    StorageAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
     // 
     // And for the Stations:   
     //
     //    DPType          DP's
     //    StnObservation: LOFAR_ObsSW_TempObs0001-0100
-    //    BeamCtrl:       LOFAR_ObsSW_TempObs0001-0100_BeamControl
-    //    CalCtrl:        LOFAR_ObsSW_TempObs0001-0100_CalibrationControl
-    //    TBBCtrl:       LOFAR_ObsSW_TempObs0001-0100_TBBControl
+    //    BeamControl:    LOFAR_ObsSW_TempObs0001-0100_BeamControl
+    //    CalControl:     LOFAR_ObsSW_TempObs0001-0100_CalibrationControl
+    //    TBBControl:     LOFAR_ObsSW_TempObs0001-0100_TBBControl
 
     
     if (claimableTypes[i] == "Observation") {
@@ -729,15 +729,15 @@ void checkAndCreateDPs() {
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre,"StnObservation");
           }
-          //BeamCtrl
+          //BeamControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_BeamControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_BeamControl","BeamControl");
           }
-          //CalCtrl
+          //CalControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl","CalibrationControl");
           }
-          //TBBCtrl
+          //TBBControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_TBBControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_TBBControl","TBBControl");
           }
@@ -746,11 +746,11 @@ void checkAndCreateDPs() {
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre,"Observation");
           }
-          //ObsCtrl
+          //ObservationControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl","ObservationControl");
           }
-          //OnlineCtrl
+          //OnlineControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl","OnlineControl");
           }
