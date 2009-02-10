@@ -126,6 +126,7 @@ void CEPlogProcessor::handleDataStream(int		sid)
 {
 	// read in the new bytes
 	streamBuffer_t	stream		= itsLogStreams[sid];
+	LOG_DEBUG_STR("handleDataStream[" << sid << "]:in=" << stream.inPtr << ", out=" << stream.outPtr);
 	int	newBytes = stream.socket->read(stream.buffer + stream.inPtr, itsBufferSize - stream.inPtr);
 	if (newBytes < 0) {
 		LOG_ERROR_STR("read on socket " << sid << " returned " << newBytes << ". Closing connection");
