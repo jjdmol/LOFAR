@@ -12,7 +12,7 @@
 # If a position (LONG, LAT, HT) is specified in mode 2 or 4, then this is used as
 # the initial position, which may speed up the site survey.
 #
-MODE 1
+MODE 4
 
 #
 # Geographical position, found by performing a 3D site survey
@@ -21,9 +21,10 @@ MODE 1
 # in a site survey can be found in the logfile "/var/log/ntpstats/clockstats".
 #
 
-LAT 52 48.7708
-LON  6 23.72420
-HT  71.05 m
+#LAT 52 48.7708; LON  6 23.72420; HT  71.05 m
+LAT 0
+LON 0
+HT  0
 
 #
 # The DELAY value can be used to compensate for the length of cable between
