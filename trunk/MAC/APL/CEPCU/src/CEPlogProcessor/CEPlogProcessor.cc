@@ -149,6 +149,7 @@ void CEPlogProcessor::handleDataStream(int		sid)
 		LOG_INFO(formatString("SID %d:>%s<", sid, &(stream.buffer[stream.outPtr])));
 		stream.outPtr = i+1;
 		if (stream.outPtr >= stream.inPtr) {	// All received bytes handled?
+			LOG_DEBUG("Reset of read/write pointers");
 			stream.inPtr = 0;
 			stream.outPtr = 0;
 			return;
@@ -157,6 +158,7 @@ void CEPlogProcessor::handleDataStream(int		sid)
 
 	if (stream.outPtr > (int)(0.5*itsBufferSize)) {
 		// When buffer becomes full shift leftovers to the left.
+		LOG_DEBUG_STR("move with: " << stream.inPtr << ", " << stream.outPtr);
 		memmove (stream.buffer, stream.buffer + stream.outPtr, (stream.inPtr - stream.outPtr + 1));
 		stream.inPtr -= stream.outPtr;
 		stream.outPtr = 0;
