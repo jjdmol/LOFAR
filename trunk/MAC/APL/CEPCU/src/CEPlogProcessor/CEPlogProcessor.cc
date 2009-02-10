@@ -153,6 +153,7 @@ void CEPlogProcessor::handleDataStream(int		sid)
 			LOG_DEBUG("Reset of read/write pointers");
 			stream.inPtr = 0;
 			stream.outPtr = 0;
+			itsLogStreams[sid] = stream;	// copy changes back to admin
 			return;
 		} 
 	}
@@ -164,6 +165,8 @@ void CEPlogProcessor::handleDataStream(int		sid)
 		stream.inPtr -= stream.outPtr;
 		stream.outPtr = 0;
 	}
+
+	itsLogStreams[sid] = stream; // copy changes back to admin
 }
 
   } // namespace APL
