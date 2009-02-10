@@ -2,6 +2,7 @@
 #define LOFAR_LCS_STREAM_STREAM_H
 
 #include <cstddef>
+#include <Common/Exception.h>
 
 
 namespace LOFAR {
@@ -9,8 +10,7 @@ namespace LOFAR {
 class Stream
 {
   public:
-    class EndOfStreamException {
-    };
+    EXCEPTION_CLASS( EndOfStreamException, LOFAR::Exception );
 
     virtual	 ~Stream();
 
