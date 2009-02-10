@@ -1,8 +1,10 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# Includes
 #include <FIR.h>
+
+#include <cstring>
+
 
 namespace LOFAR {
 namespace RTCP {
