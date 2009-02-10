@@ -109,11 +109,11 @@ template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(voi
   try {
     static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->mainLoop();
   } catch (Exception &ex) {
-    cerr_logger("caught Exception: " << ex.what());
+    cerr_logger("input thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("caught std::exception: " << ex.what());
+    cerr_logger("input thread caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("caught non-std:exception");
+    cerr_logger("input thread caught non-std::exception");
   }
 
   static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->stopped = true;

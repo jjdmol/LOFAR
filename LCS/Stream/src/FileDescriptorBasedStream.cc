@@ -26,7 +26,7 @@ void FileDescriptorBasedStream::read(void *ptr, size_t size)
       throw SystemCallException("read", errno, THROW_ARGS);
 
     if (bytes == 0) 
-      throw EndOfStreamException();
+      throw EndOfStreamException("read", THROW_ARGS);
 
     size -= bytes;
     ptr   = static_cast<char *>(ptr) + bytes;
