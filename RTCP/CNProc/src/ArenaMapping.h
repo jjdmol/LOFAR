@@ -94,9 +94,9 @@ inline void ArenaMapping::moveDataset( const unsigned dataset, const unsigned ar
   }
 }
 
-inline size_t ArenaMapping::nrArenas() const
+inline unsigned ArenaMapping::nrArenas() const
 {
-  size_t maxArena = 0;
+  unsigned maxArena = 0;
 
   if( itsMapping.size() == 0 ) {
     return 0;
@@ -113,7 +113,7 @@ inline size_t ArenaMapping::nrArenas() const
   return maxArena + 1;
 }
 
-inline size_t ArenaMapping::nrDatasets() const
+inline unsigned ArenaMapping::nrDatasets() const
 {
   return itsMapping.size();
 }
