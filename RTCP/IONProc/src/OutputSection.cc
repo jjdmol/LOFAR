@@ -79,6 +79,11 @@ void OutputSection::connectToStorage()
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
+#if 0
+    if (itsPsetNumber != 31)
+      connectionType = string("NULL");
+#endif
+
     if (connectionType == "NULL") {
       clog_logger("subband " << subbandNumber << " written to null:");
       itsStreamsToStorage.push_back(new NullStream);
@@ -170,7 +175,7 @@ void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
     unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
-    clog_logger("Warning: dropped " << itsDroppedCount[subband] << " integration times for subband " << subbandNumber);
+    clog_logger("Warning: dropped " << itsDroppedCount[subband] << (itsDroppedCount[subband] == 1 ? " integration time for subband " : " integration times for subband ") << subbandNumber);
     itsDroppedCount[subband] = 0;
   }
 }
