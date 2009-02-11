@@ -64,14 +64,10 @@ selectImage1()
 		boardHex=`echo 16 o $board p q | dc`
 		let version=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 		# if board has reset itself to image 0, load image 1 again
-		if [ $version -le 1 ]; then
+		if [ $version -le 4 ]; then
 			echo "Loading image 1 on RSPboard $board ..."
-			sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
-			sleep 3
+			sudo ${BINDIR}/../sbin/rsuctl3-reset -m 10:fa:00:00:0$boardHex:00 -q -x -p 1 1>/dev/null 2>&1
 		fi
-		# show version of the firmware that is loaded.
-		version=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:0$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g'`
-		echo $board" : "$version
 		let board=$board+1
 	done
 }
