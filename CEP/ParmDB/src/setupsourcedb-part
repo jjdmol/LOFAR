@@ -28,7 +28,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 if test $# != 16; then
   echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
-  "                                 ms-part filesys ms-part-vds"
+  echo "                            ms-part filesys ms-part-vds"
   echo "                            lofarroot wd pdbfile pdbname overwrite dry"
   echo "                            stepfreq steptime"
   exit 1
