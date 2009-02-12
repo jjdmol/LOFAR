@@ -83,7 +83,11 @@ bool setObjectState(const string&	who,
 
 	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
 
-	return (aDPservice.setValue("__navObjectState", fields, values, 0.0, false) == SA_NO_ERROR);
+	PVSSresult	result = aDPservice.setValue("__navObjectState", fields, values, 0.0, false);
+	if (result != SA_NO_ERROR) {
+		LOG_WARN_STR("Call to PVSS for setObjectState returned: " << result);
+	}
+	return (result == SA_NO_ERROR);
 }
 
 //

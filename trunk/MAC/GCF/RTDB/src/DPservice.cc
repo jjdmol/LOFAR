@@ -93,7 +93,9 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	// write value to it.
 	if (valueObj->setValue(value) != GCF_NO_ERROR) {
 		LOG_WARN_STR("Could not set value for DP " << DPname);
-		itsExtResponse->dpeValueSet(DPname, SA_SETPROP_FAILED);
+		if (wantAnswer) {
+			itsExtResponse->dpeValueSet(DPname, SA_SETPROP_FAILED);
+		}
 		return (SA_SETPROP_FAILED);
 	}
 

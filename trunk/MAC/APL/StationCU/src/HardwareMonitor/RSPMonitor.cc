@@ -346,30 +346,31 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			if (rcu % (NR_RCUS_PER_CABINET) == 0) {
 				cabinet++;
 				string	PSname(formatString(cabinetNameMask.c_str(), cabinet));
-//				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
-				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
+				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
+//				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
 			}
 
 			// new subrack?
 			if (rcu % (NR_RCUS_PER_SUBRACK) == 0) {
 				subrack++;
 				string	PSname(formatString(subrackNameMask.c_str(), cabinet, subrack));
-//				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
+				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
 				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO, this);
+//
 			}
 
 			// new RSPboard?
 			if (rcu % (NR_RCUS_PER_RSPBOARD) == 0) {
 				RSP++;
 				string	PSname(formatString(rspboardNameMask.c_str(), cabinet, subrack, RSP));
-//				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
-				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
+				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
+//				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
 			}
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-//			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
+			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
+//			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
 			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
@@ -1104,6 +1105,7 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 	break;
 
 	case F_TIMER: {
+		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 		TRAN(RSPMonitor::askRSPinfo);
 	}
 	break;

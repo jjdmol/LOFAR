@@ -101,22 +101,6 @@ RTDBPropertySet::~RTDBPropertySet()
 	delete itsService;
 }
 
-#if 0
-//
-// operator[](propName)
-//
-RTDBProperty& RTDBPropertySet::operator[] (const string& propName)
-{ 
-	RTDBProperty* 	propPtr = _getProperty(propName);
-// TODO
-//	if (propPtr == 0) {
-//		propPtr = &dummyPropInfo;
-//	}
-
-	return (*propPtr);
-}
-#endif
-
 //
 // setValue(propName, value, timestamp, immediately)
 //
@@ -133,12 +117,13 @@ PVSSresult RTDBPropertySet::setValue (const string& 	propName,
 	}
 
 	// if ConditionWrite=true and value not changed then we are ready.
-	if ((itsAccessType & PSAT_CW) && (*(propPtr->value) == value)) {
-		LOG_TRACE_COND_STR("CW: value not changed: " << value.getValueAsString());
+	if ((itsAccessType & PSAT_CW) && propPtr->initialized && (*(propPtr->value) == value)) {
+		LOG_TRACE_COND_STR("CW: value of " << propName << " not changed: " << value.getValueAsString());
 		return (SA_NO_ERROR);
 	}
 	// adopt value
 	propPtr->value->copy(value);
+	propPtr->initialized = true;
 
 	// update admin
 	propPtr->dirty = !immediately;
@@ -171,15 +156,17 @@ PVSSresult RTDBPropertySet::setValue (const string&		propName,
 	}
 
 	// if ConditionWrite=true and value not changed then we are ready.
-//	if ((itsAccessType & PSAT_CW) && propPtr->value->getValue() == value) {
-//		return (SA_NO_ERROR);
-//	}
+	if ((itsAccessType & PSAT_CW) && propPtr->initialized && propPtr->value->getValueAsString() == value) {
+		LOG_TRACE_COND_STR("CW: value of " << propName << " not changed: " << value);
+		return (SA_NO_ERROR);
+	}
 
 	// adopt value
 	if ((propPtr->value->setValue(value)) != GCF_NO_ERROR) {
 		dpeValueSet(propName, SA_SETPROP_FAILED);
 		return (SA_SETPROP_FAILED);
 	}
+	propPtr->initialized = true;
 
 	// update admin
 	propPtr->dirty = !immediately;
@@ -292,7 +279,7 @@ void RTDBPropertySet::_createAllProperties()
 		sysNr = PVSSinfo::getLocalSystemId();
 	}
 
-	// allocate a list that can be fille with the PropInfo of all elements
+	// allocate a list that can be filled with the PropInfo of all elements
     typedef list<TPropertyInfo> PropInfoList_t;
     PropInfoList_t 		itsPropInfoList;
 
