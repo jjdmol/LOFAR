@@ -1,5 +1,5 @@
-# !/bin/bash
-# version 1.3, date 08-01-2009,  M.J.Norden
+#!/bin/bash
+# version 1.4, date 12-02-2009,  M.J.Norden
 
 
 #export PYTHONPATH=/home/lofartest/subracktest/modules
@@ -66,11 +66,11 @@ page=1
 station=`hostname -s`
 let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
 let tbboards=`sed -n  's/^\s*RS\.N_TBBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
-bphexfile=/localhome/firmware/images/firmware/bp3b_v5_3.hex
-aphexfile=/localhome/firmware/images/firmware/ap3b_v5_3.hex
-tphexfile=/localhome/firmware/images/firmware/tp10_12.hex
-mphexfile=/localhome/firmware/images/firmware/mp2_9.hex
-mplphexfile=/localhome/firmware/images/firmware/mp_lp.hex
+bphexfile=/localhome/firmware/images/bp3b_v5_5.hex
+aphexfile=/localhome/firmware/images/ap3b_v5_3.hex
+tphexfile=/localhome/firmware/images/tp10_12.hex
+mphexfile=/localhome/firmware/images/mp2_9.hex
+mplphexfile=/localhome/firmware/images/mp_lp.hex
 
 echo "This station is "$station
 echo "The number of rspboards is "$rspboards
@@ -89,8 +89,8 @@ echo "The offset 3 is "$offset3
 eval "swlevel 1"
 for ((ind=$subracknr*4; ind < ($subracknr+1)*4; ind++)) do
   MACadr=$(printf "10:FA:00:00:%02x:00" $ind)
-  sudo rsuctl3b -w -q -p $page -b $bphexfile -a $aphexfile -m $MACadr -F
-  #echo " rsp board = "$ind
+  #sudo rsuctl3 -w -q -p $page -b $bphexfile -a $aphexfile -m $MACadr -F
+  echo " rsp board = "$ind
 done
 
 if [ $page != 0 ] ; then
@@ -128,6 +128,7 @@ sed -i "s/MAC_ADDR_$bn1=10:FA:00:00:..:02/MAC_ADDR_$bn1=10:FA:00:00:02:02/g" /op
 ######## het opstarten van de TBBDriver ###########################
 
 sed -i "s/2:u:d:r::RSPDriver/#2:u:d:r::RSPDriver/g" /opt/lofar/etc/swlevel.conf
+
 eval "swlevel 2"
 
 echo "wacht even 50 seconden voor het opstarten van de TBB borden"
@@ -143,7 +144,10 @@ tbbctl --writeimage=1,0,3.0,$tphexfile,$mplphexfile
 
 ######## het opstarten van de RSPDriver en TBBDriver ###############
 
+
 sed -i "s/#2:u:d:r::RSPDriver/2:u:d:r::RSPDriver/g" /opt/lofar/etc/swlevel.conf
+sed -i "s/##2:u:d:r::RSPDriver/2:u:d:r::RSPDriver/g" /opt/lofar/etc/swlevel.conf
+
 eval "swlevel 2"
 
 ######## het terugzetten van TBBDriver.conf  #########################
@@ -166,7 +170,7 @@ sed -i "s/1.......V/1   $bn3   V/g" /opt/stationtest/gold/tbb_version.gold
 ####### terwijl RSPDriver opstart, start image 1 op in de TBB borden ###
 
 if [ $page != 0 ] ; then
-	tbbctl --config=$page --sel=0,1
+	tbbctl --config=$page 
 	#tbbctl --config=9 --sel=0,1
     else 
        echo "When the TBB flash action was sucessful please"
@@ -180,15 +184,7 @@ fi
 
 echo "wacht hier 50 seconden voor opstarten TBB en RSP borden"
 sleep 50
-echo "wacht hier 40 seconden voor het resetten van TBB borden"
-tbbctl --reset
-sleep 40
 
 ######## het starten van de subrack test ####################
-cd /opt/stationtest
 python subrack_production.py -b $batchnr -s $serienr
-
-
-
-
 

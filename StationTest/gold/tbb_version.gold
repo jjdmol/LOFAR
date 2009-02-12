@@ -1,11 +1,10 @@
 
 == TBB ====================================== ID and version information ====
 
-TBBDriver software version 2.00
+TBBDriver software version 2.05
 
-TBB  ID  Software   Board    TP0      MP0      MP1      MP2      MP3
----  --  --------  -------  -------  -------  -------  -------  -------
-  0   0   V  2.0    V 0.2    V 1.6    V 1.6    V 1.6    V 1.6    V 1.6
-  1   2   V  2.0    V 0.2    V 1.6    V 1.6    V 1.6    V 1.6    V 1.6
+TBB  ID  Software   Board    TP     MP      
+---  --  --------  -------  ------  ------- 
+  0   0   V  3.2    V 0.3    V 1.6    V 2.0
+  1   2   V  3.2    V 0.3    V 1.6    V 2.0
 
-== normal termination of tbbctl ==============================================

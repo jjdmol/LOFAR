@@ -17,6 +17,7 @@ test_SCRIPTS = 	README.txt \
 				tbb_prbs_tester.sh \
 				tbb_version.sh \
 				verify.py \
+				wgtest.sh \
 				xc_160_setup.sh \
 				xc_160_verify.sh \
 				xc_200_setup.sh \
