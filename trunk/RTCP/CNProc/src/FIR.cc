@@ -1085,12 +1085,43 @@ fcomplex FIR::processNextSample(fcomplex sample, unsigned channel)
 #endif
 
 
+// hamming window function
 void FIR::hamming(unsigned n, double* d)
 {
+  if(n == 1) {
+    d[0] = 1.0;
+    return;
+  }
+
   unsigned m = n-1;
 
   for(unsigned i=0; i<n; i++) {
     d[i] = 0.54 - 0.46 * cos((2.0*M_PI*i) / m);
+  }
+}
+
+// blackman window function
+void FIR::blackman(unsigned n, double* d)
+{
+  if(n == 1) {
+    d[0] = 1.0;
+    return;
+  }
+
+  unsigned m = n-1;
+
+  for(unsigned i=0; i<n; i++) {
+    double k = i / m;
+    d[i] = 0.42 - 0.5 * cos (2.0 * M_PI * k) + 0.08 * cos (4.0 * M_PI * k); 
+  }
+}
+
+// Guassian window function
+void FIR::gaussian(int n, double a, double* d)
+{
+  int index = 0;
+  for (int i=-(n-1); i<=n-1; i+=2) {
+    d[index++] = exp( -0.5 * pow(( a/n * i), 2) );
   }
 }
 
@@ -1278,11 +1309,17 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     THROW(CNProcException, "cannot allocate buffer");
   }
 
-  // use a n-point hamming window
-  hamming(n, d);
+  // use a n-point Hamming window
+//  hamming(n, d);
+
+  // use a n-point Blackman window
+//  blackman(n, d);
+
+  // use a n-point Gaussian window
+  gaussian(n, 3.5, d);
 /*
   for(int i=0; i<n; i++) {
-    std::cout << "hamming[" << i << "] = " << d[i] << std::endl;
+    std::cout << "windowFunction[" << i << "] = " << d[i] << std::endl;
   }
 */
   double* result = (double*) malloc(n * sizeof(double));
@@ -1319,7 +1356,9 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
 */
   free(result);
 }
-#else
+
+#else // USE_ORIGINAL_FILTER
+
 // This method initializes the weights array.
 void FIR::generate_filter(unsigned taps, unsigned channels)
 {
@@ -1329,6 +1368,7 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
   weights.resize(boost::extents[channels][taps]);
   memcpy(weights.origin(), origWeights, (channels * taps) * sizeof(float));
 }
+
 #endif // USE_ORIGINAL_FILTER
 
 } // namespace RTCP
