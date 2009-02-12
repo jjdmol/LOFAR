@@ -246,7 +246,7 @@ void objectStateTriggered(string dp1, string trigger,
     if (start >= 0) {
    	  element = "status.childState";
     } else {
-      if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|ERROR: No state nor childState found in DPName");
+      DebugTN("monitorStateChanges.ctl:objectStateTriggered|ERROR: No state nor childState found in DPName");
       return;
     }
   }
@@ -263,7 +263,7 @@ void objectStateTriggered(string dp1, string trigger,
 
     setStates(datapoint,element,state,message,force,false);
   } else {
-    DebugN("monitorStateChanges.ctl:objectStateTriggered|result: not complete command, or database could not be found."+ getLastError());
+    DebugTN("monitorStateChanges.ctl:objectStateTriggered|result: Wrong datapoint or state. DP: " + datapoint +"."+element+ " State: "+state );
   }
 }
 
