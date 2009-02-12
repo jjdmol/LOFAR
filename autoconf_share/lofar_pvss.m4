@@ -96,6 +96,8 @@ if test "$with_pvss" != "no"; then
     CXXFLAGS="$CXXFLAGS $PVSS_CXXFLAGS"
     LDFLAGS="$LDFLAGS $PVSS_LDFLAGS"
     LIBS="$LIBS $PVSS_LIBS"
+
+    enable_pvss=yes
 ]
 dnl
     AC_SUBST(CPPFLAGS)dnl
