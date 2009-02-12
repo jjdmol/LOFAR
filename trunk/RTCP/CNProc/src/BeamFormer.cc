@@ -116,7 +116,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   // Also, we have to set the resulting values to zero, the correlator requires this.
 
   bool validStation[nrStationsInBeam];
-  unsigned upperBound = (unsigned) (itsNrSamplesPerIntegration * MAX_FLAGGED_PERCENTAGE);
+  unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * MAX_FLAGGED_PERCENTAGE);
   unsigned nrValidStations = 0;
 
   for(unsigned i=0; i<nrStationsInBeam; i++) {
