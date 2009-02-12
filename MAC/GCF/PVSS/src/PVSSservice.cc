@@ -959,14 +959,18 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 	// DB must be active
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL_STR("Database Down, unable to set value of property: " << dpName);
-		itsResponse->dpeValueSet(dpName, result);
+		if (wantAnswer) {
+			itsResponse->dpeValueSet(dpName, result);
+		}
 		return (result);
 	}
 
 	// Property must exist
 	if (!PVSSinfo::propExists(dpName)) {
 		LOG_WARN(formatString("Property: '%s' does not exists", dpName.c_str()));
-		itsResponse->dpeValueSet(dpName, (result = SA_PROP_DOES_NOT_EXIST));
+		if (wantAnswer) {
+			itsResponse->dpeValueSet(dpName, (result = SA_PROP_DOES_NOT_EXIST));
+		}
 		return (result);
 	}
 
@@ -979,18 +983,24 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 		convPropToDpConfig(dpName+"."+*nameIter, pvssDpName, false);	// add .:_original.._value
 		if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
 			LOG_ERROR(formatString("Property: '%s' is unknown", pvssDpName.c_str()));
-			itsResponse->dpeValueSet(dpName, result);
+			if (wantAnswer) {
+				itsResponse->dpeValueSet(dpName, result);
+			}
 			return (result);
 		}
 	
 		if ((result = convertMACToPVSS(**valIter, &pVar, dpId)) != SA_NO_ERROR) {
 			LOG_ERROR(formatString("Property: '%s' can not be converted to PVSS type", pvssDpName.c_str()));
-			itsResponse->dpeValueSet(dpName, result);
+			if (wantAnswer) {
+				itsResponse->dpeValueSet(dpName, result);
+			}
 			return (result);
 		}
 		if (!dpIdList.appendItem(dpId, *pVar)) {
 			LOG_ERROR_STR("Adding " << *nameIter << " to the argument list failed");
-			itsResponse->dpeValueSet(dpName, (result = SA_SETPROP_FAILED));
+			if (wantAnswer) {
+				itsResponse->dpeValueSet(dpName, (result = SA_SETPROP_FAILED));
+			}
 			return (result);
 		}
 		if (pVar) {
@@ -1056,7 +1066,9 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 	}
 
 	if (result != SA_NO_ERROR) {
-		itsResponse->dpeValueSet(dpName, result);
+		if (wantAnswer) {
+			itsResponse->dpeValueSet(dpName, result);
+		}
 	}
 
 	return (result);
