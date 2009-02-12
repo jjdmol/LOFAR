@@ -32,7 +32,15 @@ class FIR {
 #endif
 
 private:
+  // Hamming window function
   static void hamming(unsigned n, double* d);
+
+  // Blackman window function
+  static void blackman(unsigned n, double* d);
+
+  // Gaussian window function
+  static void gaussian(int n, double a, double* d);
+
   static unsigned next_power_of_2(unsigned n);
   static void interpolate(double* x, double* y, unsigned xlen, unsigned n, double* result);
   static void generate_fir_filter(unsigned n, double w, double* window, double* result);
