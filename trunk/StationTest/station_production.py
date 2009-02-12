@@ -133,7 +133,7 @@ sr.appendLog(21,'### Verify the RCU -> RSP LVDS interfaces by capturing pseudo r
 sr.appendLog(21,'')
 
 
-res = cli.command('python verify.py --brd rsp0,rsp1,rsp2,rsp3 --fpga blp0,blp1,blp2,blp3 --pol x,y --rep 1 -v 11 --te tc/prsg.py')
+res = cli.command('python verify.py --brd rsp0,rsp1 --fpga blp0,blp1,blp2,blp3 --pol x,y --rep 1 -v 11 --te tc/prsg.py')
 
 if res.find('FAILED')==-1:
   sr.appendLog(11,'>>> RCU-RSP interface test went OK')
@@ -151,7 +151,7 @@ sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the Serdes ring connection between the RSP boards')
 sr.appendLog(21,'')
 
-res = cli.command('python verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --rep 1 -v 21 --te tc/serdes.py')
+res = cli.command('python verify.py --brd rsp0,rsp1 --rep 1 -v 21 --te tc/serdes.py')
 
 if res.find('FAILED')==-1:
   sr.appendLog(11,'>>> Serdes ring test went OK')
@@ -163,7 +163,23 @@ else:
   sr.appendLog(11,'tc/serdes.log')
   sr.appendLog('FAILED')
 
-  
+################################################################################
+sr.setId('Build In Self Test -')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Build In Self Test (BIST)')
+sr.appendLog(21,'')
+
+res = cli.command('python verify.py --brd rsp0,rsp1 tc/bist.py')
+
+if res.find('FAILED')==-1:
+  sr.appendLog(11,'>>> BIST went OK')
+  sr.appendLog(21,'tc/bist.log')
+else:
+  sr.appendLog(11,'>>> BIST went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.appendLog(11,'tc/bist.log')
+  sr.appendLog('FAILED')  
 
 ################################################################################
 sr.setId('RCU-RSP-TBB - ')
