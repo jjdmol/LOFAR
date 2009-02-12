@@ -32,6 +32,7 @@ namespace RTCP {
 // implentation more efficient.
 boost::multi_array<float, 2, AlignedStdAllocator<float, 32> > FIR::weights; // [nrChannels][NR_TAPS];
 
+#if USE_ORIGINAL_FILTER
 const float FIR::origWeights[256][NR_TAPS] __attribute__ ((aligned(32))) = {
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
@@ -1058,7 +1059,7 @@ const float FIR::origWeights[256][NR_TAPS] __attribute__ ((aligned(32))) = {
     -1.000000000,  0.015420900, -0.011598600,  0.006891530,
     -0.001219900, -0.005131880,  0.011535200, -0.011659500 },
 };
-
+#endif // USE_ORIGINAL_FILTER
 
 
 #if defined FIR_C_IMPLEMENTATION
@@ -1328,7 +1329,7 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
   weights.resize(boost::extents[channels][taps]);
   memcpy(weights.origin(), origWeights, (channels * taps) * sizeof(float));
 }
-#endif
+#endif // USE_ORIGINAL_FILTER
 
 } // namespace RTCP
 } // namespace LOFAR
