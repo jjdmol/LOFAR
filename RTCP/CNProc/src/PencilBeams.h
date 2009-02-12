@@ -142,6 +142,8 @@ class PencilRings: public PencilCoordinates
 class PencilBeams
 {
   public:
+    static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
+
     PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres );
 
     void formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
@@ -204,6 +206,14 @@ inline PencilCoord3D& operator*( const PencilCoord3D &lhs, const double a )
 inline ostream& operator<<(ostream& os, const PencilCoord3D &c)
 {
   return os << "(" << c.itsXYZ[0] << "," << c.itsXYZ[1] << "," << c.itsXYZ[2] << ")";
+}
+
+inline fcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
+{
+  double phaseShift = delay * frequency;
+  double phi = -2 * M_PI * phaseShift;
+
+  return makefcomplex( std::cos(phi), std::sin(phi) );
 }
 
 } // namespace RTCP

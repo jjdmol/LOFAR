@@ -4,6 +4,7 @@
 #include <PencilBeams.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/PrintVector.h>
+#include <Common/Timer.h>
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -213,52 +214,60 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
   }
 }
 
-fcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
-{
-  double phaseShift = delay * frequency;
-  double phi = -2 * M_PI * phaseShift;
-
-  return makefcomplex( std::cos(phi), std::sin(phi) );
-}
-
 void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out, const std::vector<unsigned> stations )
 {
-  float factor = 1.0 / stations.size();
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
+  std::vector<unsigned> validStations;
+  float factor;
 
-  /* TODO: filter out stations with too much flagged data */
+  validStations.reserve( stations.size() );
 
-  /* conservative flagging: flag output if any input was flagged */
-  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
-    out->flags[beam].reset();
-
-    for (unsigned stat = 0; stat < stations.size(); stat++ ) {
-      out->flags[beam] |= in->flags[stations[stat]]; 
+  // determine which stations have too much flagged data
+  for(unsigned stat = 0; stat < stations.size(); stat++) {
+    if( in->flags[stations[stat]].count() > upperBound ) {
+      // too much flagged data -- drop station
+    } else {
+      // keep station
+      validStations.push_back( stations[stat] );
     }
   }
 
-  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-    double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-        for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
-          fcomplex &dest  = out->samples[ch][beam][time][pol];
+  factor = 1.0 / validStations.size();
 
-          if( !out->flags[beam].test(time) ) {
-            /* combine the stations for this beam */
+  // conservative flagging: flag output if any input was flagged 
+  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+    out->flags[beam].reset();
+
+    for (unsigned stat = 0; stat < validStations.size(); stat++ ) {
+      out->flags[beam] |= in->flags[validStations[stat]]; 
+    }
+  }
+
+  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+    for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+      double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
+
+      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+        if( !out->flags[beam].test(time) ) {
+          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+            fcomplex &dest  = out->samples[ch][beam][time][pol];
+
+            // combine the stations for this beam
             fcomplex sample = makefcomplex( 0, 0 );
 
-            for( unsigned stat = 0; stat < stations.size(); stat++ ) {
+            for( unsigned stat = 0; stat < validStations.size(); stat++ ) {
               // note: for beam #0 (central beam), the shift is 1
-              fcomplex shift = phaseShift( frequency, itsDelays[stations[stat]][beam] );
-              sample += in->samples[ch][stations[stat]][time][pol] * shift;
+              fcomplex shift = phaseShift( frequency, itsDelays[validStations[stat]][beam] );
+              sample += in->samples[ch][validStations[stat]][time][pol] * shift;
             }
-
             dest = sample * factor;
-          } else {
-            /* data is flagged */
-            dest = makefcomplex( 0, 0 );
           }
-        }
+        } else {
+          // data is flagged
+          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+            out->samples[ch][beam][time][pol] = makefcomplex( 0, 0 );
+  	  }
+	}
       }
     }
   }
