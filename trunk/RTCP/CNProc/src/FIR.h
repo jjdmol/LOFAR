@@ -47,7 +47,10 @@ public:
 // Also, the constants for a channel are in reverse order. This makes the 
 // implentation more efficient.
   static boost::multi_array<float, 2, AlignedStdAllocator<float, 32> > weights; // [nrChannels][NR_TAPS];
+
+#if USE_ORIGINAL_FILTER
   static const float origWeights[256][NR_TAPS];
+#endif
 };
 
 } // namespace RTCP
