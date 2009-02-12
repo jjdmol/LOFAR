@@ -172,8 +172,11 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 
 //  std::clog << "max = " << max << std::endl;
 
-  for (unsigned ch = 1; ch < nrChannels; ch ++)
-    std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
+  for (unsigned ch = nrChannels/2; ch < nrChannels; ch ++)
+    std::cout << ch-(nrChannels/2) << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
+
+  for (unsigned ch = 1; ch < nrChannels/2; ch ++)
+    std::cout << ch + (nrChannels/2) << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
 }
 
 
@@ -201,7 +204,7 @@ template <typename SAMPLE_TYPE> void doWork()
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
     std::vector<unsigned> station2SuperStation;
-# if 1
+# if 0
     station2SuperStation.resize(nrStations);
     for(unsigned i=0; i<nrStations; i++) {
       station2SuperStation[i] = (i / 7);

@@ -69,8 +69,10 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
   if (!powerOfTwo(nrChannels))
     THROW(CNProcException, "nrChannels must be a power of 2");
 
+#if USE_ORIGINAL_FILTER
   if (nrChannels != 256)
-    THROW(CNProcException, "nrChannels != 256 not yet implemented");
+    THROW(CNProcException, "nrChannels != 256 not implemented, turn USE_ORIGINAL_FILTER off in FIR.h");
+#endif
 
   for (itsLogNrChannels = 0; 1U << itsLogNrChannels != itsNrChannels; itsLogNrChannels ++)
     ;
@@ -80,6 +82,9 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
 #if !defined PPF_C_IMPLEMENTATION
   initConstantTable();
 #endif
+
+  // Generate the filter constants.
+  FIR::generate_filter(NR_TAPS, nrChannels);
 }
 
 
@@ -271,7 +276,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 	  dataConvert(LittleEndian, &tmp, 1);
 #endif
 	  fcomplex sample = makefcomplex(real(tmp), imag(tmp));
-	  itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, FIR::weights[chan]);
+	  itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, chan);
 	}
       }
     }
@@ -318,7 +323,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 	  FIRtimer.start();
 	  _filter(itsNrChannels,
-		  FIR::weights[chan + ch],
+		  FIR::weights[chan + ch].origin(),
 		  &transposedData->samples[stat][chan + ch + alignmentShift][pol],
 		  itsTmp[ch].origin(),
 		  itsNrSamplesPerIntegration / NR_TAPS);
