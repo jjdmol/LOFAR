@@ -827,6 +827,18 @@ uint16 StationControl::_addObservation(const string&	name)
 	Observation		theObs(&theObsPS);
 LOG_DEBUG_STR("theOBS=" << theObs);
 
+	// check if there will be a conflict.
+	ObsIter		iter = itsObsMap.begin();
+	ObsIter		end  = itsObsMap.end();
+	while (iter != end) {
+		if (iter->second->obsPar()->conflicts(theObs)) {
+			return (CT_RESULT_OBS_CONFLICT);
+		}
+		++iter;
+	}
+	LOG_INFO_STR("Observation " << theObs.obsID << 
+				 " has no conflicts with other running observations");
+
 	// Create a bitset containing the available receivers for this oberservation.
 	Observation::RCUset_t	realReceivers = Observation(&theObsPS).RCUset;
 	// apply the current state of the hardware to the desired selection when user likes that.
