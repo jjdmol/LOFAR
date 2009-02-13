@@ -20,7 +20,7 @@ FileDescriptorBasedStream::~FileDescriptorBasedStream()
 void FileDescriptorBasedStream::read(void *ptr, size_t size)
 {
   while (size > 0) {
-    ssize_t bytes = ::read(fd, ptr, size);
+    const ssize_t bytes = ::read(fd, ptr, size);
     
     if (bytes < 0)
       throw SystemCallException("read", errno, THROW_ARGS);
@@ -37,7 +37,7 @@ void FileDescriptorBasedStream::read(void *ptr, size_t size)
 void FileDescriptorBasedStream::write(const void *ptr, size_t size)
 {
   while (size > 0) {
-    ssize_t bytes = ::write(fd, ptr, size);
+    const ssize_t bytes = ::write(fd, ptr, size);
 
     if (bytes < 0)
       throw SystemCallException("write", errno, THROW_ARGS);

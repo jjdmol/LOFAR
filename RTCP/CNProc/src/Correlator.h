@@ -23,28 +23,28 @@ class Correlator
 {
   public:
     // TODO make stationMapping a vector? --Rob
-    Correlator(unsigned nrStations, unsigned* stationMapping, unsigned nrChannels, unsigned nrSamplesPerIntegration, bool correctBandPass);
+    Correlator(const unsigned nrStations, const unsigned* stationMapping, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const bool correctBandPass);
     ~Correlator();
 
     void	    correlate(const FilteredData *, CorrelatedData *);
     void	    computeFlagsAndCentroids(const FilteredData *, CorrelatedData *);
 
-    static unsigned baseline(unsigned station1, unsigned station2);
+    static unsigned baseline(const unsigned station1, const unsigned station2);
 
   private:
-    unsigned	    itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
+    const unsigned  itsNrStations, itsNrBaselines, itsNrChannels, itsNrSamplesPerIntegration;
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
-    BandPass	    itsBandPass;
+    const BandPass  itsBandPass;
 
     // A list indexed by station number, result is the station position in the Filtered data.
     // This is needed in case of tied array beam forming.
-    unsigned*       itsStationMapping; //[itsNrStations]
+    const unsigned* itsStationMapping; //[itsNrStations]
 
     double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
 };
 
 
-inline unsigned Correlator::baseline(unsigned station1, unsigned station2)
+inline unsigned Correlator::baseline(const unsigned station1, const unsigned station2)
 {
   assert(station1 <= station2);
   return station2 * (station2 + 1) / 2 + station1;

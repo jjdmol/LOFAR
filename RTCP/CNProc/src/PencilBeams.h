@@ -6,6 +6,7 @@
 
 #include <Interface/FilteredData.h>
 #include <Interface/PencilBeamData.h>
+#include <BandPass.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -135,8 +136,8 @@ class PencilRings: public PencilCoordinates
   private:
     void computeBeamCoordinates();
 
-    unsigned		    itsNrRings;
-    double		    itsRingWidth;
+    const unsigned	    itsNrRings;
+    const double	    itsRingWidth;
 };
 
 class PencilBeams
@@ -144,14 +145,14 @@ class PencilBeams
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres );
+    PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres, const bool correctBandPass );
 
     void formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
 
     size_t nrCoordinates() const { return itsCoordinates.size(); }
 
   private:
-    fcomplex phaseShift( const double frequency, const double delay ) const;
+    fcomplex phaseShift( const float frequency, const float delay ) const;
     void computeBeams( const MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, const std::vector<unsigned> stations );
     void calculateDelays( const unsigned stat, const PencilCoord3D &beamDir );
     void calculateAllDelays( const FilteredData *filteredData );
@@ -159,18 +160,19 @@ class PencilBeams
     void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData, const std::vector<unsigned> stations );
 
     std::vector<PencilCoord3D> itsCoordinates;
-    unsigned                itsNrStations;
-    unsigned                itsNrChannels;
-    unsigned                itsNrSamplesPerIntegration;
-    double                  itsCenterFrequency;
-    double                  itsChannelBandwidth;
-    double                  itsBaseFrequency;
+    const unsigned          itsNrStations;
+    const unsigned          itsNrChannels;
+    const unsigned          itsNrSamplesPerIntegration;
+    const double            itsCenterFrequency;
+    const double            itsChannelBandwidth;
+    const double            itsBaseFrequency;
     Matrix<double>          itsDelays; // [itsNrStations][itsCoordinates.size()]
     Matrix<double>          itsDelayOffsets; // [itsNrStations][itsCoordinates.size()]
     PencilCoord3D           itsRefPhaseCentre;
     std::vector<PencilCoord3D> itsPhaseCentres;
     std::vector<PencilCoord3D> itsBaselines;
     std::vector<PencilCoord3D> itsBaselinesSeconds;
+    BandPass                itsBandPass;
 };
 
 inline double operator*( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
@@ -208,10 +210,10 @@ inline ostream& operator<<(ostream& os, const PencilCoord3D &c)
   return os << "(" << c.itsXYZ[0] << "," << c.itsXYZ[1] << "," << c.itsXYZ[2] << ")";
 }
 
-inline fcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
+inline fcomplex PencilBeams::phaseShift( const float frequency, const float delay ) const
 {
-  double phaseShift = delay * frequency;
-  double phi = -2 * M_PI * phaseShift;
+  float phaseShift = delay * frequency;
+  float phi = -2 * M_PI * phaseShift;
 
   return makefcomplex( std::cos(phi), std::sin(phi) );
 }

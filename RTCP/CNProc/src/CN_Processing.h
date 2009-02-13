@@ -119,7 +119,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 
     unsigned            itsNrStations;
     unsigned            itsOutputPsetSize;
-    Stream		*itsStream;
+    Stream	        *itsStream;
     const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
@@ -138,7 +138,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     bool			itsOutputIncoherentStokesI;
 
 #if defined HAVE_MPI
-    bool                itsDoAsyncCommunication;
+    const bool          itsDoAsyncCommunication;
     Transpose<SAMPLE_TYPE> *itsTranspose;
     AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
 #endif

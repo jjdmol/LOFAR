@@ -23,7 +23,7 @@ static NSTimer transposeTimer("transpose()", true);
 template <typename SAMPLE_TYPE> std::vector<MPI_Comm> Transpose<SAMPLE_TYPE>::allTransposeGroups;
 
 
-template <typename SAMPLE_TYPE> Transpose<SAMPLE_TYPE>::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore)
+template <typename SAMPLE_TYPE> Transpose<SAMPLE_TYPE>::Transpose(const bool isTransposeInput, const bool isTransposeOutput, const unsigned myCore)
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
@@ -39,7 +39,7 @@ template <typename SAMPLE_TYPE> Transpose<SAMPLE_TYPE>::~Transpose()
 
 #if defined HAVE_BGL || defined HAVE_BGP
 
-template <typename SAMPLE_TYPE> unsigned Transpose<SAMPLE_TYPE>::remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers)
+template <typename SAMPLE_TYPE> unsigned Transpose<SAMPLE_TYPE>::remapOnTree(const unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers)
 {
   core = CN_Mapping::mapCoreOnPset(core, pset);
 
@@ -49,7 +49,7 @@ template <typename SAMPLE_TYPE> unsigned Transpose<SAMPLE_TYPE>::remapOnTree(uns
 }
 
 
-template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
+template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::getMPIgroups(const unsigned nrCoresPerPset, const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
 {
   allTransposeGroups.resize(nrCoresPerPset);
 
@@ -103,7 +103,7 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParam
 		 outputPsets.begin(), outputPsets.end(),
 		 std::insert_iterator<std::set<unsigned> >(psets, psets.begin()));
 
-  unsigned		       nrPsetsUsed = psets.size();
+  const unsigned               nrPsetsUsed = psets.size();
   std::map<unsigned, unsigned> psetToGroupIndex;
   unsigned		       groupIndex  = 0;
   for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++, groupIndex ++)
@@ -126,8 +126,8 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParam
 
   if (itsIsTransposeInput)
     for (unsigned psetIndex = 0; psetIndex < outputPsets.size(); psetIndex ++) {
-      unsigned pset  = outputPsets[psetIndex];
-      unsigned index = psetToGroupIndex[pset];
+      const unsigned pset  = outputPsets[psetIndex];
+      const unsigned index = psetToGroupIndex[pset];
 
       const boost::detail::multi_array::sub_array<SAMPLE_TYPE, 2> &slice = inputData->samples[psetIndex];
 
@@ -140,8 +140,8 @@ template <typename SAMPLE_TYPE> void Transpose<SAMPLE_TYPE>::setupTransposeParam
 
   if (itsIsTransposeOutput)
     for (unsigned psetIndex = 0; psetIndex < inputPsets.size(); psetIndex ++) {
-      unsigned pset  = inputPsets[psetIndex];
-      unsigned index = psetToGroupIndex[pset];
+      const unsigned pset  = inputPsets[psetIndex];
+      const unsigned index = psetToGroupIndex[pset];
       const boost::detail::multi_array::sub_array<SAMPLE_TYPE, 2> &slice = transposedData->samples[psetIndex];
 
       itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(SAMPLE_TYPE);

@@ -40,7 +40,7 @@ FIR::FIR()
 #endif
 
 #if defined FIR_C_IMPLEMENTATION
-fcomplex FIR::processNextSample(fcomplex sample, unsigned channel)
+fcomplex FIR::processNextSample(const fcomplex sample, const unsigned channel)
 {
   fcomplex sum = sample * weights[channel][0];
   itsDelayLine[0] = sample;

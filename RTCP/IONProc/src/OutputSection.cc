@@ -143,16 +143,7 @@ void OutputSection::preprocess(const Parset *ps)
 
   for (unsigned o = 0; o < itsOutputs.size(); o++) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
-    unsigned steps = (*itsPipelineOutputSet)[o].IONintegrationSteps();
-
-    if( steps > 1 && !output.tmpSum->isIntegratable() )
-    {
-      // not integratable, so don't try
-      clog_logger("Warning: not integrating received data for output " << o << " because data type is not integratable");
-      steps = 1;
-    }
-
-    output.nrIntegrationSteps = steps;
+    output.nrIntegrationSteps = (*itsPipelineOutputSet)[o].IONintegrationSteps();
   }
 
   connectToStorage();
@@ -188,6 +179,7 @@ void OutputSection::process()
 
     unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
+    // read all outputs of one node at once, so that it becomes free to process the next set of samples
     for (unsigned o = 0; o < itsOutputs.size(); o ++) {
       struct OutputSection::SingleOutput &output = itsOutputs[o];
       struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];

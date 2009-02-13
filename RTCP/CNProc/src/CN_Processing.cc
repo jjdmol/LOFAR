@@ -60,7 +60,7 @@ namespace RTCP {
 
 #if !defined HAVE_MASS
 
-inline static dcomplex cosisin(double x)
+inline static dcomplex cosisin(const double x) 
 {
   return makedcomplex(cos(x), sin(x));
 }
@@ -271,18 +271,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsMode                          = configuration.mode();
   itsOutputIncoherentStokesI       = configuration.outputIncoherentStokesI();
   itsOutputPsetSize                = outputPsets.size();
-  unsigned nrChannels		   = configuration.nrChannelsPerSubband();
-  unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
-  unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
-  unsigned nrSamplesToCNProc	   = configuration.nrSamplesToCNProc();
-  std::vector<unsigned> station2BeamFormedStation = configuration.tabList();
+  const unsigned nrChannels		       = configuration.nrChannelsPerSubband();
+  const unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
+  const unsigned nrSamplesPerStokesIntegration = configuration.nrSamplesPerStokesIntegration();
+  const unsigned nrSamplesToCNProc	       = configuration.nrSamplesToCNProc();
+  const std::vector<unsigned> station2BeamFormedStation = configuration.tabList();
   
   // We have to create the Beam Former first, it knows the number of beam-formed stations.
   // The number of baselines depends on this.
   // If beam forming is disabled, nrBeamFormedStations will be equal to nrStations.
   itsBeamFormer = new BeamFormer(itsNrStations, nrSamplesPerIntegration, station2BeamFormedStation, nrChannels);
-  unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
-  unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
+  const unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
+  const unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
   // include both the pencil rings and the manually defined pencil beam coordinates
   PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
@@ -295,13 +295,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // Since some buffers (arenas) are used multiple times, we use multiple
   // Allocators for a single arena.
 
-  size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToCNProc) : 0;
-  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToCNProc) : 0;
-  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
-  size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
-  size_t pencilBeamDataSize = itsIsTransposeOutput ? PencilBeamData::requiredSize(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration) : 0;
-  size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
-  size_t incoherentStokesIDataSize = itsIsTransposeOutput ? StokesData::requiredSize(false, 1, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
+  const size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToCNProc) : 0;
+  const size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToCNProc) : 0;
+  const size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
+  const size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
+  const size_t pencilBeamDataSize = itsIsTransposeOutput ? PencilBeamData::requiredSize(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration) : 0;
+  const size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
+  const size_t incoherentStokesIDataSize = itsIsTransposeOutput ? StokesData::requiredSize(false, 1, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
 
   itsMapping.addDataset( 0, inputDataSize,             0 );
   itsMapping.addDataset( 1, transposedDataSize,        1 );
@@ -324,8 +324,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   if (itsIsTransposeOutput) {
-    unsigned nrSubbandsPerPset	= configuration.nrSubbandsPerPset();
-    unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
+    const unsigned nrSubbandsPerPset = configuration.nrSubbandsPerPset();
+    const unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
     // TODO: logicalNode assumes output psets are consecutively numbered
 
     itsCenterFrequencies = configuration.refFreqs();
@@ -347,7 +347,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
 
-    itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres());
+    itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres(), configuration.correctBandPass() );
     itsStokes            = new Stokes(itsMode.isCoherent(), itsMode.nrStokes(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
     itsIncoherentStokesI = new Stokes(false, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
 
@@ -449,7 +449,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 
     for (unsigned i = 0; i < itsNrStations; i ++) {
       asyncReceiveTimer.start();
-      unsigned stat = itsAsyncTranspose->waitForAnyReceive();
+      const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
       asyncReceiveTimer.stop();
 
       computeTimer.start();
@@ -565,6 +565,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
   transpose();
 
   if (itsIsTransposeOutput) {
+    // the order and types of sendOutput have to match
+    // what the IONProc and Storage expect to receive
+    // (defined in Interface/PipelineOutput.h)
     filter();
 
     if( itsOutputIncoherentStokesI ) {

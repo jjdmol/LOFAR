@@ -16,34 +16,39 @@ Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChanne
 {
 } 
 
+// Calculate coherent stokes values from pencil beams.
 void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
 {
   computeCoherentStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
 }
 
+// Calculate incoherent stokes values from (filtered) station data.
 void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
 {
   computeIncoherentStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
 }
 
-static inline float sqr( const float x ) { return x * x; }
+static inline double sqr( const double x ) { return x * x; }
 
 struct stokes {
-  float I, Q, U, V;
-  float nrValidSamples;
+  // the sums of stokes values over a number of stations or beams
+  double I, Q, U, V;
+  
+  // the number of samples contained in the sums
+  unsigned nrValidSamples;
 };
 
 static inline void addStokes( struct stokes stokes, const fcomplex &polX, const fcomplex &polY, bool allStokes )
 {
   // assert: two polarizations
-  const float powerX = sqr( real(polX) ) + sqr( imag(polX) );
-  const float powerY = sqr( real(polY) ) + sqr( imag(polY) );
+  const double powerX = sqr( real(polX) ) + sqr( imag(polX) );
+  const double powerY = sqr( real(polY) ) + sqr( imag(polY) );
 
   stokes.I += powerX + powerY;
   if( allStokes ) {
     stokes.Q += powerX - powerY;
-    stokes.U += real(polX * conj(polY));
-    stokes.V += imag(polX * conj(polY));
+    stokes.U += real(polX * conj(polY)); // proper stokes.U is twice this
+    stokes.V += imag(polX * conj(polY)); // proper stokes.V is twice this
   }
   stokes.nrValidSamples++;
 }
@@ -53,11 +58,12 @@ void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const S
   const unsigned &integrationSteps = itsNrSamplesPerStokesIntegration;
   const bool allStokes = itsNrStokes == 4;
 
-  // conservative flagging; flag output if any of the inputs are flagged
+  // copy flags from beams
   for(unsigned beam = 0; beam < nrBeams; beam++) {
     out->flags[beam] = inflags[beam];
   }
 
+  // shorten the flags over the integration length
   for(unsigned beam = 0; beam < nrBeams; beam++) {
     out->flags[beam] /= integrationSteps;
   }
@@ -107,10 +113,12 @@ void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const
     } else {
       validStation[stat] = true;
 
+      // conservative flagging: flag anything that is flagged in one of the stations
       out->flags[0] |= inflags[stat];
     }
   }
 
+  // shorten the flags over the integration length
   out->flags[0] /= integrationSteps;
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
