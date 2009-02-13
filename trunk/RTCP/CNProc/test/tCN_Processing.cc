@@ -193,11 +193,11 @@ template <typename SAMPLE_TYPE> void doWork()
 #endif
   {
     unsigned   nrStations	= 14;
-    unsigned   nrChannels	= 512;
+    unsigned   nrChannels	= 1024;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
-    unsigned   testSignalChannel = 73;
+    unsigned   testSignalChannel = 321; // TODO giver error if out of range
     double     signalFrequency	= refFreq + (testSignalChannel + (nrChannels/2)) * sampleRate / nrChannels;
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
@@ -208,6 +208,16 @@ template <typename SAMPLE_TYPE> void doWork()
       station2SuperStation[i] = (i / 7);
 //      cerr << station2SuperStation[i] << endl;
     }
+#endif
+
+#if 0
+    // just to get the factors!
+    LOFAR::RTCP::BandPass bandpass(true, nrChannels);
+    const float *f = bandpass.correctionFactors();
+    
+    std::clog << "bandpass correction:" << std::endl;
+    for (unsigned i = 0; i < nrChannels; i ++)
+      std::clog << i << ' ' << f[i] << std::endl;
 #endif
 
     BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, station2SuperStation, nrChannels);
@@ -242,7 +252,7 @@ template <typename SAMPLE_TYPE> void doWork()
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
     Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
-			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, false /* use bandpass correction */);
+			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true /* use bandpass correction */);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
 
