@@ -172,11 +172,8 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
 
 //  std::clog << "max = " << max << std::endl;
 
-  for (unsigned ch = nrChannels/2; ch < nrChannels; ch ++)
-    std::cout << ch-(nrChannels/2) << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
-
-  for (unsigned ch = 1; ch < nrChannels/2; ch ++)
-    std::cout << ch + (nrChannels/2) << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
+  for (unsigned ch = 1; ch < nrChannels; ch ++)
+    std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
 }
 
 
@@ -196,11 +193,12 @@ template <typename SAMPLE_TYPE> void doWork()
 #endif
   {
     unsigned   nrStations	= 14;
-    unsigned   nrChannels	= 256;
+    unsigned   nrChannels	= 512;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
-    double     signalFrequency	= refFreq + 73 * sampleRate / nrChannels; // channel 73
+    unsigned   testSignalChannel = 73;
+    double     signalFrequency	= refFreq + (testSignalChannel + (nrChannels/2)) * sampleRate / nrChannels;
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
     std::vector<unsigned> station2SuperStation;
@@ -244,7 +242,7 @@ template <typename SAMPLE_TYPE> void doWork()
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
     Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
-			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true);
+			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, false /* use bandpass correction */);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
 
