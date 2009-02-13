@@ -2102,18 +2102,20 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
   // l=f(131073-128-256:131073+127-256)
   // plot(2^50./(abs(m).^2+abs(l).^2+abs(r).^2))
 
-  // it is not worth to use the more complex R2C FFTW method
-  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 16> > in(262144, 0.0), out(262144);
+  unsigned fftSize = STATION_FFT_SIZE * nrChannels;
 
-  for (unsigned i = 0; i < 16384; i ++)
+  // it is not worth to use the more complex R2C FFTW method
+  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 16> > in(fftSize, 0.0), out(fftSize);
+
+  for (unsigned i = 0; i < STATION_FILTER_LENGTH; i ++)
     in[i] = stationFilterConstants[i];
 
 #if defined HAVE_FFTW3
-  fftwf_plan plan = fftwf_plan_dft_1d(262144, reinterpret_cast<fftwf_complex *>(&in[0]), reinterpret_cast<fftwf_complex *>(&out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
+  fftwf_plan plan = fftwf_plan_dft_1d(fftSize, reinterpret_cast<fftwf_complex *>(&in[0]), reinterpret_cast<fftwf_complex *>(&out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
   fftwf_execute(plan);
   fftwf_destroy_plan(plan);
 #elif defined HAVE_FFTW2
-  fftw_plan plan = fftw_create_plan(262144, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftw_plan plan = fftw_create_plan(fftSize, FFTW_FORWARD, FFTW_ESTIMATE);
   fftw_one(plan, reinterpret_cast<fftw_complex *>(&in[0]), reinterpret_cast<fftw_complex *>(&out[0]));
   fftw_destroy_plan(plan);
 #else
@@ -2121,8 +2123,8 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
 #endif
 
   for (unsigned i = 0; i < nrChannels; i ++) {
-    fcomplex m = out[(i - nrChannels / 2) % 262144U];
-    fcomplex l = out[(i - 3 * nrChannels / 2) % 262144U];
+    fcomplex m = out[(i - nrChannels / 2) % fftSize];
+    fcomplex l = out[(i - 3 * nrChannels / 2) % fftSize];
     fcomplex r = out[i + nrChannels / 2];
 
     squaredFactors[i] = pow(2, 50) / abs(m * m + l * l + r * r);

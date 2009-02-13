@@ -32,7 +32,318 @@ namespace RTCP {
 // implentation more efficient.
 boost::multi_array<float, 2, AlignedStdAllocator<float, 32> > FIR::weights; // [nrChannels][NR_TAPS];
 
-#if USE_ORIGINAL_FILTER
+#if defined FIR_C_IMPLEMENTATION
+FIR::FIR()
+{
+  memset(itsDelayLine, 0, sizeof itsDelayLine);
+}
+#endif
+
+#if defined FIR_C_IMPLEMENTATION
+fcomplex FIR::processNextSample(fcomplex sample, unsigned channel)
+{
+  fcomplex sum = sample * weights[channel][0];
+  itsDelayLine[0] = sample;
+
+  for (int tap = NR_TAPS; -- tap > 0;) {
+    sum += weights[channel][tap] * itsDelayLine[tap];
+    itsDelayLine[tap] = itsDelayLine[tap - 1];
+  }
+
+  return sum;
+}
+#endif
+
+
+// hamming window function
+void FIR::hamming(unsigned n, double* d)
+{
+  if(n == 1) {
+    d[0] = 1.0;
+    return;
+  }
+
+  unsigned m = n-1;
+
+  for(unsigned i=0; i<n; i++) {
+    d[i] = 0.54 - 0.46 * cos((2.0*M_PI*i) / m);
+  }
+}
+
+// blackman window function
+void FIR::blackman(unsigned n, double* d)
+{
+  if(n == 1) {
+    d[0] = 1.0;
+    return;
+  }
+
+  unsigned m = n-1;
+
+  for(unsigned i=0; i<n; i++) {
+    double k = i / m;
+    d[i] = 0.42 - 0.5 * cos (2.0 * M_PI * k) + 0.08 * cos (4.0 * M_PI * k); 
+  }
+}
+
+// Guassian window function
+void FIR::gaussian(int n, double a, double* d)
+{
+  int index = 0;
+  for (int i=-(n-1); i<=n-1; i+=2) {
+    d[index++] = exp( -0.5 * pow(( a/n * i), 2) );
+  }
+}
+
+
+unsigned FIR::next_power_of_2(unsigned n)
+{
+  unsigned res = 1;
+
+  while(true) {
+    if(res >= n) return res;
+    res *= 2;
+  }
+}
+
+
+// One-dimensional interpolation. Interpolate Y, defined at the points X, 
+// at N evenly spaced points between 0 and 1. The sample points X must be strictly monotonic
+void FIR::interpolate(double* x, double* y, unsigned xlen, unsigned n, double* result)
+{
+  unsigned nextX = 0;
+  unsigned index = 0;
+
+  for(double interpolatedX = 0; interpolatedX <= 1.0; interpolatedX += 1.0/(n-1), index++) {
+    while(x[nextX] <= interpolatedX && nextX < xlen-1) nextX++;
+    
+    if(nextX == 0) {
+      std::cout << "ERROR in FIR::interpolate" << std::endl;
+    }
+
+    //  std::cout << "nextX = " << nextX << ", index = " << index << std::endl;
+
+    double prevXVal = x[nextX-1];
+    double nextXVal = x[nextX];
+    double prevYVal = y[nextX-1];
+    double nextYVal = y[nextX];
+
+    double rc = (nextYVal - prevYVal) / (nextXVal - prevXVal);
+
+    double newVal = prevYVal + (interpolatedX - prevXVal) * rc;
+    result[index] = newVal;
+  }
+}
+
+
+// Compute the filter, similar to Octave's fir2(n, f, m, grid_n, ramp_n, window);
+// Window and result must be of size n+1.
+// grid_n: length of ideal frequency response function
+// ramp_n: transition width for jumps in filter response
+// defaults to grid_n/20; a wider ramp gives wider transitions
+// but has better stopband characteristics.
+void FIR::generate_fir_filter(unsigned n, double w, double* window, double* result)
+{
+  // make sure grid is big enough for the window
+  // the grid must be at least (n+1)/2
+  // for all filters where the order is a power of two minus 1, grid_n = n+1;
+  unsigned grid_n = next_power_of_2(n+1);
+
+  unsigned ramp_n = 2; // grid_n/20;
+
+  // Apply ramps to discontinuities
+  // this is a low pass filter
+  // maybe we can omit the "w, 0" point?
+  // I did observe a small difference
+  double f[] = {0.0, w-ramp_n/grid_n/2.0, w,   w+ramp_n/grid_n/2.0, 1.0};
+  double m[] = {1.0, 1.0,                 0.0, 0.0,                 0.0};
+
+  // grid is a 1-D array with grid_n+1 points. Values are 1 in filter passband, 0 otherwise
+  double grid[grid_n + 1];
+
+  // interpolate between grid points
+  interpolate(f, m, 5 /* length of f and m arrays */ , grid_n+1, grid);
+
+  // the grid we do an ifft on is:
+  // grid appended with grid_n*2 zeros
+  // appended with original grid values from indices grid_n..2, i.e., the values in reverse order (note, arrays start at 1 in octave!)
+  // the input for the ifft is of size 4*grid_n
+  // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
+
+#if defined HAVE_FFTW3
+  fftwf_complex* cinput  = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
+  fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
+#elif defined HAVE_FFTW2
+  fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
+  fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
+#endif
+
+  if(cinput == NULL || coutput == NULL) {
+    THROW(CNProcException, "cannot allocate buffers");
+  }
+
+  // wipe imaginary part
+  for(unsigned i=0; i<grid_n*4; i++) {
+    fftw_imag(cinput[i]) = 0.0;
+  }
+
+  // copy first part of grid
+  for(unsigned i=0; i<grid_n+1; i++) {
+    fftw_real(cinput[i]) = grid[i];
+  }
+
+  // append zeros
+  for(unsigned i=grid_n+1; i<grid_n*2; i++) {
+    fftw_real(cinput[i]) = 0.0;
+  }
+
+  // now append the grid in reverse order
+  for(unsigned i=grid_n-1, index=0; i >=1; i--, index++) {
+    fftw_real(cinput[grid_n*3+1 + index]) = grid[i];
+  }
+/*
+  std::cout << "the input is: " << std::endl;
+  for(unsigned i=0; i<grid_n*4; i++) {
+    std::cout << fftw_real(cinput[i]) << std::endl;
+  }
+*/
+#if defined HAVE_FFTW3
+  fftwf_plan plan = fftwf_plan_dft_1d(grid_n*4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftwf_execute(plan);
+#elif defined HAVE_FFTW2
+  fftw_plan plan = fftw_create_plan(grid_n*4, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftw_one(plan, cinput, coutput);
+#endif
+/*
+  for(unsigned i=0; i<grid_n*4; i++) {
+    std::cout << "ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]) << std::endl;
+  }
+*/
+  //                        half                   end
+  // 1 2       n+1          2(n+1)      3(n+1)     4(n+1)
+  //                                    x x x x x x x x x     # last quarter
+  //   x x x x x x                                            # first quarter
+
+  // last_quarter  = b([end-n+1:2:end]); # the size is only 1/8, since we skip half of the elements
+  // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
+
+  int index = 0;
+  for(unsigned i=4*grid_n-n; i<4*grid_n; i+=2) {
+    result[index] = fftw_real(coutput[i]);
+    index++;
+  }
+
+  for(unsigned i=1; i<=n; i+=2) {
+    result[index] = fftw_real(coutput[i]);
+    index++;
+  }
+
+#if defined HAVE_FFTW3
+  fftwf_destroy_plan(plan);
+  fftwf_free(cinput);
+  fftwf_free(coutput);
+#elif defined HAVE_FFTW2
+  fftw_destroy_plan(plan);
+  fftw_free(cinput);
+  fftw_free(coutput);
+#endif
+
+  // multiply with window
+  for(unsigned i=0; i<=n; i++) {
+    result[i] *= window[i];
+  }
+
+  // normalize
+  double factor = result[n/2]; 
+  for(unsigned i=0; i<=n; i++) {
+    result[i] /= factor;
+  }
+/*
+  std::cout << "result = [";
+  for(unsigned i=0; i<=n; i++) {
+    std::cout << result[i];
+    if(i != n) std::cout << ", ";
+  }
+  std::cout << "];" << std::endl;
+*/
+}
+
+#if ! USE_ORIGINAL_FILTER
+// This method initializes the weights array.
+void FIR::generate_filter(unsigned taps, unsigned channels)
+{
+  int n = channels * taps;
+
+  std::cout << "generating filter with " << channels << " channels and " << taps << " taps (" << n << " total)" << std::endl;
+ 
+  double* d = (double*) malloc(n * sizeof(double));
+  if(d == NULL) {
+    THROW(CNProcException, "cannot allocate buffer");
+  }
+
+  // use a n-point Hamming window
+//  hamming(n, d);
+
+  // use a n-point Blackman window
+//  blackman(n, d);
+
+  // use a n-point Gaussian window
+  gaussian(n, 3.5, d);
+
+/*
+  for(int i=0; i<n; i++) {
+    std::cout << "windowFunction[" << i << "] = " << d[i] << std::endl;
+  }
+*/
+
+  double* result = (double*) malloc(n * sizeof(double));
+  if(result == NULL) {
+    THROW(CNProcException, "cannot allocate buffer");
+  }
+
+  generate_fir_filter(n-1, 1.0/channels, d, result);
+
+  free(d);
+
+  weights.resize(boost::extents[channels][taps]);
+
+  unsigned index = 0;
+  for(int tap=taps-1; tap>=0; tap--) { // store the taps in reverse!
+    for(unsigned channel=0; channel<channels; channel++) {
+      if(channel % 2 == 0) {
+	weights[channel][tap] = result[index];
+      } else {
+	weights[channel][tap] = -result[index];
+      }
+      index++;
+    }
+  }
+/*
+  cout << "final taps: " << std::endl;
+  for(unsigned channel=0; channel<channels; channel++) {
+    cout << "channel: " << channel << "| ";
+    for(unsigned tap=0; tap<taps; tap++) {
+      cout << " " << weights[channel][tap];
+    }
+    std::cout << std::endl;
+  }
+*/
+  free(result);
+}
+
+#else // USE_ORIGINAL_FILTER
+
+// This method initializes the weights array.
+void FIR::generate_filter(unsigned taps, unsigned channels)
+{
+  if(taps != 16 || channels != 256) {
+    THROW(CNProcException, "not supported!");
+  }
+  weights.resize(boost::extents[channels][taps]);
+  memcpy(weights.origin(), origWeights, (channels * taps) * sizeof(float));
+}
+
+
 const float FIR::origWeights[256][NR_TAPS] __attribute__ ((aligned(32))) = {
   {  0.011659500, -0.011535200,  0.005131880,  0.001219900,
     -0.006891530,  0.011598600, -0.015420900,  1.000000000,
@@ -1059,315 +1370,6 @@ const float FIR::origWeights[256][NR_TAPS] __attribute__ ((aligned(32))) = {
     -1.000000000,  0.015420900, -0.011598600,  0.006891530,
     -0.001219900, -0.005131880,  0.011535200, -0.011659500 },
 };
-#endif // USE_ORIGINAL_FILTER
-
-
-#if defined FIR_C_IMPLEMENTATION
-FIR::FIR()
-{
-  memset(itsDelayLine, 0, sizeof itsDelayLine);
-}
-#endif
-
-#if defined FIR_C_IMPLEMENTATION
-fcomplex FIR::processNextSample(fcomplex sample, unsigned channel)
-{
-  fcomplex sum = sample * weights[channel][0];
-  itsDelayLine[0] = sample;
-
-  for (int tap = NR_TAPS; -- tap > 0;) {
-    sum += weights[channel][tap] * itsDelayLine[tap];
-    itsDelayLine[tap] = itsDelayLine[tap - 1];
-  }
-
-  return sum;
-}
-#endif
-
-
-// hamming window function
-void FIR::hamming(unsigned n, double* d)
-{
-  if(n == 1) {
-    d[0] = 1.0;
-    return;
-  }
-
-  unsigned m = n-1;
-
-  for(unsigned i=0; i<n; i++) {
-    d[i] = 0.54 - 0.46 * cos((2.0*M_PI*i) / m);
-  }
-}
-
-// blackman window function
-void FIR::blackman(unsigned n, double* d)
-{
-  if(n == 1) {
-    d[0] = 1.0;
-    return;
-  }
-
-  unsigned m = n-1;
-
-  for(unsigned i=0; i<n; i++) {
-    double k = i / m;
-    d[i] = 0.42 - 0.5 * cos (2.0 * M_PI * k) + 0.08 * cos (4.0 * M_PI * k); 
-  }
-}
-
-// Guassian window function
-void FIR::gaussian(int n, double a, double* d)
-{
-  int index = 0;
-  for (int i=-(n-1); i<=n-1; i+=2) {
-    d[index++] = exp( -0.5 * pow(( a/n * i), 2) );
-  }
-}
-
-
-unsigned FIR::next_power_of_2(unsigned n)
-{
-  unsigned res = 1;
-
-  while(true) {
-    if(res >= n) return res;
-    res *= 2;
-  }
-}
-
-
-// One-dimensional interpolation. Interpolate Y, defined at the points X, 
-// at N evenly spaced points between 0 and 1. The sample points X must be strictly monotonic
-void FIR::interpolate(double* x, double* y, unsigned xlen, unsigned n, double* result)
-{
-  unsigned nextX = 0;
-  unsigned index = 0;
-
-  for(double interpolatedX = 0; interpolatedX <= 1.0; interpolatedX += 1.0/(n-1), index++) {
-    while(x[nextX] <= interpolatedX && nextX < xlen-1) nextX++;
-    
-    if(nextX == 0) {
-      std::cout << "ERROR in FIR::interpolate" << std::endl;
-    }
-
-    //  std::cout << "nextX = " << nextX << ", index = " << index << std::endl;
-
-    double prevXVal = x[nextX-1];
-    double nextXVal = x[nextX];
-    double prevYVal = y[nextX-1];
-    double nextYVal = y[nextX];
-
-    double rc = (nextYVal - prevYVal) / (nextXVal - prevXVal);
-
-    double newVal = prevYVal + (interpolatedX - prevXVal) * rc;
-    result[index] = newVal;
-  }
-}
-
-
-// Compute the filter, similar to Octave's fir2(n, f, m, grid_n, ramp_n, window);
-// Window and result must be of size n+1.
-// grid_n: length of ideal frequency response function
-// ramp_n: transition width for jumps in filter response
-// defaults to grid_n/20; a wider ramp gives wider transitions
-// but has better stopband characteristics.
-void FIR::generate_fir_filter(unsigned n, double w, double* window, double* result)
-{
-  // make sure grid is big enough for the window
-  // the grid must be at least (n+1)/2
-  // for all filters where the order is a power of two minus 1, grid_n = n+1;
-  unsigned grid_n = next_power_of_2(n+1);
-
-  unsigned ramp_n = 2; // grid_n/20;
-
-  // Apply ramps to discontinuities
-  // this is a low pass filter
-  // maybe we can omit the "w, 0" point?
-  // I did observe a small difference
-  double f[] = {0.0, w-ramp_n/grid_n/2.0, w,   w+ramp_n/grid_n/2.0, 1.0};
-  double m[] = {1.0, 1.0,                 0.0, 0.0,                 0.0};
-
-  // grid is a 1-D array with grid_n+1 points. Values are 1 in filter passband, 0 otherwise
-  double grid[grid_n + 1];
-
-  // interpolate between grid points
-  interpolate(f, m, 5 /* length of f and m arrays */ , grid_n+1, grid);
-
-  // the grid we do an ifft on is:
-  // grid appended with grid_n*2 zeros
-  // appended with original grid values from indices grid_n..2, i.e., the values in reverse order (note, arrays start at 1 in octave!)
-  // the input for the ifft is of size 4*grid_n
-  // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
-
-#if defined HAVE_FFTW3
-  fftwf_complex* cinput  = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
-  fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
-#elif defined HAVE_FFTW2
-  fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
-  fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
-#endif
-
-  if(cinput == NULL || coutput == NULL) {
-    THROW(CNProcException, "cannot allocate buffers");
-  }
-
-  // wipe imaginary part
-  for(unsigned i=0; i<grid_n*4; i++) {
-    fftw_imag(cinput[i]) = 0.0;
-  }
-
-  // copy first part of grid
-  for(unsigned i=0; i<grid_n+1; i++) {
-    fftw_real(cinput[i]) = grid[i];
-  }
-
-  // append zeros
-  for(unsigned i=grid_n+1; i<grid_n*2; i++) {
-    fftw_real(cinput[i]) = 0.0;
-  }
-
-  // now append the grid in reverse order
-  for(unsigned i=grid_n-1, index=0; i >=1; i--, index++) {
-    fftw_real(cinput[grid_n*3+1 + index]) = grid[i];
-  }
-/*
-  std::cout << "the input is: " << std::endl;
-  for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << fftw_real(cinput[i]) << std::endl;
-  }
-*/
-#if defined HAVE_FFTW3
-  fftwf_plan plan = fftwf_plan_dft_1d(grid_n*4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
-  fftwf_execute(plan);
-#elif defined HAVE_FFTW2
-  fftw_plan plan = fftw_create_plan(grid_n*4, FFTW_BACKWARD, FFTW_ESTIMATE);
-  fftw_one(plan, cinput, coutput);
-#endif
-/*
-  for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << "ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]) << std::endl;
-  }
-*/
-  //                        half                   end
-  // 1 2       n+1          2(n+1)      3(n+1)     4(n+1)
-  //                                    x x x x x x x x x     # last quarter
-  //   x x x x x x                                            # first quarter
-
-  // last_quarter  = b([end-n+1:2:end]); # the size is only 1/8, since we skip half of the elements
-  // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
-
-  int index = 0;
-  for(unsigned i=4*grid_n-n; i<4*grid_n; i+=2) {
-    result[index] = fftw_real(coutput[i]);
-    index++;
-  }
-
-  for(unsigned i=1; i<=n; i+=2) {
-    result[index] = fftw_real(coutput[i]);
-    index++;
-  }
-
-#if defined HAVE_FFTW3
-  fftwf_destroy_plan(plan);
-  fftwf_free(cinput);
-  fftwf_free(coutput);
-#elif defined HAVE_FFTW2
-  fftw_destroy_plan(plan);
-  fftw_free(cinput);
-  fftw_free(coutput);
-#endif
-
-  // multiply with window
-  for(unsigned i=0; i<=n; i++) {
-    result[i] *= window[i];
-  }
-
-  // normalize
-  double factor = result[n/2]; 
-  for(unsigned i=0; i<=n; i++) {
-    result[i] /= factor;
-  }
-/*
-  std::cout << "result = [";
-  for(unsigned i=0; i<=n; i++) {
-    std::cout << result[i];
-    if(i != n) std::cout << ", ";
-  }
-  std::cout << "];" << std::endl;
-*/
-}
-
-#if ! USE_ORIGINAL_FILTER
-// This method initializes the weights array.
-void FIR::generate_filter(unsigned taps, unsigned channels)
-{
-  int n = channels * taps;
- 
-  double* d = (double*) malloc(n * sizeof(double));
-  if(d == NULL) {
-    THROW(CNProcException, "cannot allocate buffer");
-  }
-
-  // use a n-point Hamming window
-//  hamming(n, d);
-
-  // use a n-point Blackman window
-//  blackman(n, d);
-
-  // use a n-point Gaussian window
-  gaussian(n, 3.5, d);
-/*
-  for(int i=0; i<n; i++) {
-    std::cout << "windowFunction[" << i << "] = " << d[i] << std::endl;
-  }
-*/
-  double* result = (double*) malloc(n * sizeof(double));
-  if(result == NULL) {
-    THROW(CNProcException, "cannot allocate buffer");
-  }
-
-  generate_fir_filter(n-1, 1.0/channels, d, result);
-
-  free(d);
-
-  weights.resize(boost::extents[channels][taps]);
-
-  unsigned index = 0;
-  for(int tap=taps-1; tap>=0; tap--) { // store the taps in reverse!
-    for(unsigned channel=0; channel<channels; channel++) {
-      if(channel % 2 == 0) {
-	weights[channel][tap] = result[index];
-      } else {
-	weights[channel][tap] = -result[index];
-      }
-      index++;
-    }
-  }
-/*
-  cout << "final taps: " << std::endl;
-  for(unsigned channel=0; channel<channels; channel++) {
-    cout << "channel: " << channel << "| ";
-    for(unsigned tap=0; tap<taps; tap++) {
-      cout << " " << weights[channel][tap];
-    }
-    std::cout << std::endl;
-  }
-*/
-  free(result);
-}
-
-#else // USE_ORIGINAL_FILTER
-
-// This method initializes the weights array.
-void FIR::generate_filter(unsigned taps, unsigned channels)
-{
-  if(taps != 16 || channels != 256) {
-    THROW(CNProcException, "not supported!");
-  }
-  weights.resize(boost::extents[channels][taps]);
-  memcpy(weights.origin(), origWeights, (channels * taps) * sizeof(float));
-}
 
 #endif // USE_ORIGINAL_FILTER
 

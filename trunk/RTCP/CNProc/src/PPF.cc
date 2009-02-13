@@ -126,7 +126,7 @@ template <> void PPF<i16complex>::initConstantTable()
 #endif
 }
 
-#endif
+#endif // PPF_C_IMPLEMENTATION
 
 
 template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::~PPF()
@@ -241,7 +241,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct
   }
 }
 
-#endif
+#endif // PPF_C_IMPLEMENTATION
 
 
 template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)

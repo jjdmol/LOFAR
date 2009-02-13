@@ -5,6 +5,9 @@
 namespace LOFAR {
 namespace RTCP {
 
+#define STATION_FILTER_LENGTH 16384 // Number of filter taps of the station filters.
+#define STATION_FFT_SIZE 1024 // The size of the FFT that the station filter does.
+
 class BandPass {
   public:
 			BandPass(bool correct, unsigned nrChannels);
