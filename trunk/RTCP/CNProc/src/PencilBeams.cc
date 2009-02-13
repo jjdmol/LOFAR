@@ -159,7 +159,7 @@ void PencilRings::computeBeamCoordinates()
   }
 }
 
-PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres )
+PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres, const bool correctBandPass )
 :
   itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
@@ -167,11 +167,10 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsCenterFrequency(centerFrequency),
   itsChannelBandwidth(channelBandwidth),
-  itsRefPhaseCentre(refPhaseCentre)
+  itsBaseFrequency(centerFrequency - (nrChannels/2) * channelBandwidth),
+  itsRefPhaseCentre(refPhaseCentre),
+  itsBandPass(BandPass(correctBandPass,nrChannels))
 {
-  // derived constants
-  itsBaseFrequency = centerFrequency - (itsNrChannels/2) * channelBandwidth;
-
   // copy all phase centres and their derived constants
   itsPhaseCentres.reserve( nrStations );
   itsBaselines.reserve( nrStations );
@@ -179,9 +178,9 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
   itsDelays.resize( nrStations, itsCoordinates.size() );
   itsDelayOffsets.resize( nrStations, itsCoordinates.size() );
   for( unsigned stat = 0; stat < nrStations; stat++ ) {
-     double x = phaseCentres[stat][0];
-     double y = phaseCentres[stat][1];
-     double z = phaseCentres[stat][2];
+     const double x = phaseCentres[stat][0];
+     const double y = phaseCentres[stat][1];
+     const double z = phaseCentres[stat][2];
 
      PencilCoord3D phaseCentre( x, y, z );
      PencilCoord3D baseLine = phaseCentre - refPhaseCentre;
@@ -199,7 +198,7 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
 
 void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
 {
-  double compensatedDelay = itsDelayOffsets[stat][0] - itsBaselinesSeconds[stat] * beamDir;
+  const double compensatedDelay = itsDelayOffsets[stat][0] - itsBaselinesSeconds[stat] * beamDir;
 
   // centre beam does not need compensation
   itsDelays[stat][0] = 0.0;
@@ -218,7 +217,6 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 {
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
   std::vector<unsigned> validStations;
-  float factor;
 
   validStations.reserve( stations.size() );
 
@@ -232,8 +230,6 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     }
   }
 
-  factor = 1.0 / validStations.size();
-
   // conservative flagging: flag output if any input was flagged 
   for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
     out->flags[beam].reset();
@@ -243,9 +239,13 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     }
   }
 
+  const double averagingFactor = 1.0 / validStations.size();
+
   for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-      double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
+      const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
+      const double bandPassFactor = itsBandPass.correctionFactors()[ch];
+      const float factor = averagingFactor * bandPassFactor;
 
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
         if( !out->flags[beam].test(time) ) {
@@ -256,8 +256,8 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
             fcomplex sample = makefcomplex( 0, 0 );
 
             for( unsigned stat = 0; stat < validStations.size(); stat++ ) {
-              // note: for beam #0 (central beam), the shift is 1
-              fcomplex shift = phaseShift( frequency, itsDelays[validStations[stat]][beam] );
+              // note: for beam #0 (central beam), the phaseShift is 1
+              const fcomplex shift = phaseShift( frequency, itsDelays[validStations[stat]][beam] );
               sample += in->samples[ch][validStations[stat]][time][pol] * shift;
             }
             dest = sample * factor;

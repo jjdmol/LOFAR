@@ -26,7 +26,7 @@ class FIR {
 #if defined FIR_C_IMPLEMENTATION
     FIR();
 
-    fcomplex processNextSample(fcomplex sample, unsigned channel);
+    fcomplex processNextSample(const fcomplex sample, const unsigned channel);
 
     fcomplex itsDelayLine[NR_TAPS];
 #endif

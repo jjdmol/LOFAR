@@ -21,11 +21,11 @@ class Stokes
     void calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations );
 
   private:
-    unsigned                itsNrChannels;
-    unsigned                itsNrSamplesPerIntegration;
-    unsigned                itsNrSamplesPerStokesIntegration;
-    unsigned                itsNrStokes;
-    bool                    itsIsCoherent;
+    const unsigned          itsNrChannels;
+    const unsigned          itsNrSamplesPerIntegration;
+    const unsigned          itsNrSamplesPerStokesIntegration;
+    const unsigned          itsNrStokes;
+    const bool              itsIsCoherent;
 
     void computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams );
     void computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams );

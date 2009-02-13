@@ -14,8 +14,8 @@ namespace RTCP {
 
 static NSTimer beamFormTimer("BeamFormer::formBeams()", true);
 
-BeamFormer::BeamFormer(unsigned nrStations, unsigned nrSamplesPerIntegration, 
-		       std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels)
+BeamFormer::BeamFormer(const unsigned nrStations, const unsigned nrSamplesPerIntegration, 
+		       const std::vector<unsigned> &station2BeamFormedStation, const unsigned nrChannels)
 :
   itsNrStations(nrStations), 
   itsNrChannels(nrChannels),
@@ -96,11 +96,11 @@ void BeamFormer::calcMapping()
   }
 }
 
-void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormedStation)
+void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beamFormedStation)
 {
-  std::vector<unsigned> &stationList = itsBeamFormedStations[beamFormedStation];
-  unsigned destStation = stationList[0];
-  unsigned nrStationsInBeam = stationList.size();
+  const std::vector<unsigned> &stationList = itsBeamFormedStations[beamFormedStation];
+  const unsigned destStation = stationList[0];
+  const unsigned nrStationsInBeam = stationList.size();
   
 #if VERBOSE
   std::cerr << "Beam forming station " << beamFormedStation << ", size is " << nrStationsInBeam << " (";
@@ -116,7 +116,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
   // Also, we have to set the resulting values to zero, the correlator requires this.
 
   bool validStation[nrStationsInBeam];
-  unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * MAX_FLAGGED_PERCENTAGE);
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * MAX_FLAGGED_PERCENTAGE);
   unsigned nrValidStations = 0;
 
   for(unsigned i=0; i<nrStationsInBeam; i++) {
@@ -136,7 +136,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, unsigned beamFormed
 
 //  std::cerr << "total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations << std::endl; 
 
-  float factor = 1.0 / nrValidStations;
+  const float factor = 1.0 / nrValidStations;
 
   // Now, we just flag everything that is flagged in one of the stations away.
   // We only do this for valid stations. Station 0 (the destination) is a special case.

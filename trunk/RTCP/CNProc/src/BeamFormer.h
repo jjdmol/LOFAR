@@ -41,8 +41,8 @@ class BeamFormer: boost::noncopyable
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    BeamFormer(unsigned nrStations, unsigned nrSamplesPerIntegration, 
-	       std::vector<unsigned> &station2BeamFormedStation, unsigned nrChannels);
+    BeamFormer(const unsigned nrStations, const unsigned nrSamplesPerIntegration, 
+	       const std::vector<unsigned> &station2BeamFormedStation, const unsigned nrChannels);
 
     ~BeamFormer();
 
@@ -57,17 +57,17 @@ class BeamFormer: boost::noncopyable
     unsigned*       getStationMapping();
 
   private:
-    unsigned	    itsNrStations;
-    unsigned	    itsNrChannels;
-    unsigned        itsNrSamplesPerIntegration;
+    const unsigned  itsNrStations;
+    const unsigned  itsNrChannels;
+    const unsigned  itsNrSamplesPerIntegration;
     unsigned        itsNrBeamFormedStations;
-    std::vector<unsigned> &itsStation2BeamFormedStation;
+    const std::vector<unsigned> &itsStation2BeamFormedStation;
     std::vector<std::vector<unsigned> > itsBeamFormedStations;
     unsigned*       itsStationMapping; // same as itsBeamFormedStations, but only contains the first (=destination) station
 
     unsigned calcNrBeamFormedStations();
     void calcMapping();
-    void beamFormStation(FilteredData *filteredData, unsigned beamFormedStation);
+    void beamFormStation(FilteredData *filteredData, const unsigned beamFormedStation);
 };
 
 

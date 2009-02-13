@@ -31,7 +31,7 @@ extern "C"
 
 #else
 
-inline static dcomplex cosisin(double x)
+inline static dcomplex cosisin(const double x)
 {
   return makedcomplex(cos(x), sin(x));
 }
@@ -45,7 +45,7 @@ static NSTimer FFTtimer("PPF::FFT", true);
 static NSTimer PPFtimer("PPF::filter()", true);
 
 
-template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
@@ -190,7 +190,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::destroy_fft()
 }
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   computeFlagsTimer.start();
 
@@ -200,8 +200,8 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
     const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
     for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-      unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
-      unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
+      const unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
+      const unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
       filteredData->flags[stat].include(begin, end);
     }
@@ -213,27 +213,27 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 
 #if defined PPF_C_IMPLEMENTATION
 
-template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
+template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(const unsigned time, const unsigned chan, const double baseFrequency, const double delayAtBegin, const double delayAfterEnd) const
 {
-  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
-  double frequency	       = baseFrequency + chan * itsChannelBandwidth;
-  double phaseShift	       = timeInterpolatedDelay * frequency;
-  double phi		       = -2 * M_PI * phaseShift;
+  const double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
+  const double frequency	       = baseFrequency + chan * itsChannelBandwidth;
+  const double phaseShift	       = timeInterpolatedDelay * frequency;
+  const double phi		       = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
 
 #else
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const double delayAtBegin, const double delayAfterEnd, const double baseFrequency) const
 {
-  double   phiBegin = -2 * M_PI * delayAtBegin;
-  double   phiEnd   = -2 * M_PI * delayAfterEnd;
-  double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
-  dcomplex v	    = cosisin(phiBegin * baseFrequency);
-  dcomplex dv       = cosisin(phiBegin * itsChannelBandwidth);
-  dcomplex vf       = cosisin(deltaPhi * baseFrequency);
-  dcomplex dvf      = cosisin(deltaPhi * itsChannelBandwidth);
+  const double   phiBegin = -2 * M_PI * delayAtBegin;
+  const double   phiEnd   = -2 * M_PI * delayAfterEnd;
+  const double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
+  dcomplex v	          = cosisin(phiBegin * baseFrequency);
+  dcomplex dv             = cosisin(phiBegin * itsChannelBandwidth);
+  const dcomplex vf       = cosisin(deltaPhi * baseFrequency);
+  const dcomplex dvf      = cosisin(deltaPhi * itsChannelBandwidth);
 
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
     phaseShifts[time].v0 =  v;  v *=  vf;
@@ -244,11 +244,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct
 #endif // PPF_C_IMPLEMENTATION
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned stat, const double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   PPFtimer.start();
 
-  double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
+  const double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   // PPF puts a lot of pressure on the memory bus.  Avoid that both cores
@@ -257,7 +257,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 //  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-    unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
+    const unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
 
 #if 0
     std::clog << setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
@@ -313,8 +313,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
     FFTtimer.stop();
 
 #else // assembly implementation
-
-    int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
+    const int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
 
     for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
@@ -356,7 +355,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
     SparseSet<unsigned>::const_iterator it = ranges.begin();
 
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-      bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));
+      const bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));
 
       if (good) {
 	FFTtimer.start();
@@ -367,7 +366,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	  if(nrChannels == 256) {
+	  if(itsNrChannels == 256) {
 	    _fft256(itsFFTinData[time][pol].origin(),
 		    itsFFToutData[time & 1][pol].origin());
 	  } else {

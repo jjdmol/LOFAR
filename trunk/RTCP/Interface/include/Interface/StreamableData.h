@@ -34,15 +34,15 @@ class StreamableData {
   public:
     // A stream is integratable if it supports the += operator to combine
     // several objects into one.
-    StreamableData( bool isIntegratable ): integratable(isIntegratable) {}
+    StreamableData( const bool isIntegratable ): integratable(isIntegratable) {}
 
     // suppress warning by defining a virtual destructor
     virtual ~StreamableData() {}
 
-    virtual void read(Stream*, bool withSequenceNumber);
-    virtual void write(Stream*, bool withSequenceNumber);
+    virtual void read(Stream*, const bool withSequenceNumber);
+    virtual void write(Stream*, const bool withSequenceNumber);
 
-    bool isIntegratable()
+    bool isIntegratable() const
     { return integratable; }
 
     virtual StreamableData &operator+=( const StreamableData & ) 
@@ -51,7 +51,7 @@ class StreamableData {
     uint32_t sequenceNumber;
 
   protected:
-    bool integratable;
+    const bool integratable;
 
     // a subclass should override these to marshall its data
     virtual void readData(Stream*) = 0;
@@ -63,7 +63,7 @@ template <typename T, unsigned DIM> class SampleData: public StreamableData, boo
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
 
-    SampleData( bool isIntegratable, const ExtentList &extents, unsigned nrFlags, Allocator &allocator = heapAllocator );
+    SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags, Allocator &allocator = heapAllocator );
     virtual ~SampleData();
 
     MultiDimArray<T,DIM> samples;
@@ -79,7 +79,7 @@ template <typename T, unsigned DIM> class SampleData: public StreamableData, boo
     bool                 itsHaveWarnedLittleEndian;
 };
 
-inline void StreamableData::read( Stream *str, bool withSequenceNumber )
+inline void StreamableData::read( Stream *str, const bool withSequenceNumber )
 {
   if( withSequenceNumber ) {
     str->read( &sequenceNumber, sizeof sequenceNumber );
@@ -92,7 +92,7 @@ inline void StreamableData::read( Stream *str, bool withSequenceNumber )
   readData( str );
 }
 
-inline void StreamableData::write( Stream *str, bool withSequenceNumber )
+inline void StreamableData::write( Stream *str, const bool withSequenceNumber )
 {
   if( withSequenceNumber ) {
 #if !defined WORDS_BIGENDIAN
@@ -108,7 +108,7 @@ inline void StreamableData::write( Stream *str, bool withSequenceNumber )
   writeData( str );
 }
 
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData( bool isIntegratable, const ExtentList &extents, unsigned nrFlags, Allocator &allocator ):
+template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags, Allocator &allocator ):
   StreamableData( isIntegratable ),
   samples( extents, 32, allocator ),
   flags( new SparseSet<unsigned>[nrFlags] ),

@@ -12,6 +12,7 @@
 #include <Interface/AlignedStdAllocator.h>
 
 #include <boost/multi_array.hpp>
+#include <boost/noncopyable.hpp>
 
 #if defined HAVE_BGL
 #include <rts.h>
@@ -29,14 +30,14 @@
 namespace LOFAR {
 namespace RTCP {
 
-template <typename SAMPLE_TYPE> class PPF
+template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
 {
   public:
-    PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation);
+    PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation);
     ~PPF();
 
-    void computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
-    void filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void computeFlags(const unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void filter(const unsigned stat, const double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
   private:
     void init_fft(), destroy_fft();
@@ -46,15 +47,16 @@ template <typename SAMPLE_TYPE> class PPF
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
+    fcomplex phaseShift(const unsigned time, const unsigned chan, const double baseFrequency, const double delayAtBegin, const double delayAfterEnd) const;
 #else
-    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const;
+    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const double delayAtBegin, const double delayAfterEnd, const double baseFrequency) const;
 #endif
 
-    unsigned itsNrStations, itsNrSamplesPerIntegration;
-    unsigned itsNrChannels, itsLogNrChannels;
-    double   itsChannelBandwidth;
-    bool     itsDelayCompensation;
+    const unsigned itsNrStations, itsNrSamplesPerIntegration;
+    const unsigned itsNrChannels;
+    unsigned       itsLogNrChannels;
+    const double   itsChannelBandwidth;
+    const bool     itsDelayCompensation;
 
 #if defined PPF_C_IMPLEMENTATION
     boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]

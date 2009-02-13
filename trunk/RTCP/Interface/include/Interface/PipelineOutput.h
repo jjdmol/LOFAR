@@ -152,7 +152,13 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
     default:
     	throw InterfaceException("Invalid pipeline mode. Cannot determine output data type.");
   }
-  o->itsIONintegrationSteps = ps.IONintegrationSteps();
+
+  if( ps.IONintegrationSteps() > 1 && !o->itsData->isIntegratable() ) {
+    std::cerr << "WARNING: Not integrating output because the output data type does not support integration." << std::endl;
+  } else {
+    o->itsIONintegrationSteps = ps.IONintegrationSteps();
+  }
+
   itsOutputs.push_back( o );
 }
 
