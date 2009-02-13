@@ -311,7 +311,9 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
       }
     }
     FFTtimer.stop();
+
 #else // assembly implementation
+
     int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
 
     for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
@@ -365,14 +367,14 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-#if 0
-	  fftw_one(itsFFTWPlan,
-		   (fftw_complex *) itsFFTinData[time][pol].origin(),
-		   (fftw_complex *) itsFFToutData[time & 1][pol].origin());
-#else
-	  _fft256(itsFFTinData[time][pol].origin(),
-		  itsFFToutData[time & 1][pol].origin());
-#endif
+	  if(nrChannels == 256) {
+	    _fft256(itsFFTinData[time][pol].origin(),
+		    itsFFToutData[time & 1][pol].origin());
+	  } else {
+	    fftw_one(itsFFTWPlan,
+		     (fftw_complex *) itsFFTinData[time][pol].origin(),
+		     (fftw_complex *) itsFFToutData[time & 1][pol].origin());
+	  }
 	}
 	FFTtimer.stop();
       } else {
