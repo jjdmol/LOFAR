@@ -38,7 +38,7 @@ SET(common_LIB_SRCS
 )
 
 add_library(common STATIC ${common_LIB_SRCS})
-target_link_libraries(common)
+target_link_libraries(common log4cplus)
 install(TARGETS common DESTINATION lib)
 
 if (HAVE_SHMEM)

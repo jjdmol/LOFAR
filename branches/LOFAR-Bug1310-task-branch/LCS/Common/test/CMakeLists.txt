@@ -1,4 +1,4 @@
-include(LOFARTest)
+include(LofarTest)
 
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
@@ -52,5 +52,5 @@ add_executable(tParameterSetPerf tParameterSetPerf.cc)
 
 foreach (prog ${CHECKTOOLPROGS})
   add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}.sh)
-  target_link_libraries(${prog} common)
+  target_link_libraries(${prog} common log4cplus)
 endforeach (prog CHECKTOOLPROGS)

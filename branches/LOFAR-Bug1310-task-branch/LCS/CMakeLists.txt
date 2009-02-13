@@ -28,32 +28,26 @@ cmake_minimum_required (VERSION 2.6)
 ##  CMake configuration settings
 ## ---------------------------------------------------------------------------
 
-# Include our local settings file
 include(CMakeSettings)
+include(CTest)
 
 ## ---------------------------------------------------------------------------
 
-include(CTest)
-
-#set(lofar_sharedir "aap/noot/mies")
-#set(ENV{lofar_sharedir} ${lofar_sharedir})
-
-#set(CTEST_ENVIRONMENT
-#  "lofar_sharedir=${lofar_sharedir}")
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
                ${CMAKE_BINARY_DIR}/config.h)
 configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
                ${CMAKE_BINARY_DIR}/lofar_config.h)
 
-#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/runtest.sh.cmake
-#               ${CMAKE_CURRENT_BINARY_DIR}/runtest.sh)
-
 include(FindBoost)
 if(Boost_FOUND)
   add_definitions(-DHAVE_BOOST)
 endif(Boost_FOUND)
 
+
+## ---------------------------------------------------------------------------
+## Additional subdirectories
+## ---------------------------------------------------------------------------
 
 add_subdirectory(Tools)
 add_subdirectory(Common)

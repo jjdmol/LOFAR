@@ -2,6 +2,8 @@ project(Common)
 
 cmake_minimum_required(VERSION 2.6)
 
+include(CMakeSettings)
+
 include(CheckTypeSize)
 check_type_size("ushort" HAVE_USHORT)
 check_type_size("uint" HAVE_UINT)
@@ -15,6 +17,9 @@ message(STATUS "HAVE_LONG_LONG=${HAVE_LONG_LONG}")
 
 add_definitions(-DHAVE_CONFIG_H)
 add_definitions(-DHAVE_BOOST)
+add_definitions(-DHAVE_LOG4CPLUS)
+add_definitions(-I/opt/lofar/external/log4cplus/include)
+link_directories(/opt/lofar/external/log4cplus/lib64)
 
 add_subdirectory(include/Common)
 add_subdirectory(src)
@@ -27,11 +32,4 @@ message(STATUS "CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 message(STATUS "CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
-
-#set(CTEST_ENVIRONMENT
-#  "lofar_sharedir=aap/noot/mies")
-
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
-               ${CMAKE_BINARY_DIR}/config.h)
-configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
-               ${CMAKE_BINARY_DIR}/lofar_config.h)
+message(STATUS "BUILD_TESTING=${BUILD_TESTING}")
