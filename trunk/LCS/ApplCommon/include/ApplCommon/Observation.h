@@ -55,18 +55,21 @@ public:
 	explicit	Observation (ParameterSet*		aParSet);
 
 	// global function for converting filtername to nyquist zone
-	static uint32 nyquistzoneFromFilter(const string&	filterName);
+	static uint nyquistzoneFromFilter(const string&	filterName);
 
 	// get name of a beam (idx starts at 0)
-	string getBeamName(uint32	beamIdx) const;
+	string getBeamName(uint	beamIdx) const;
 
-        // OLAP: get the subbandList
+	// check if the given Observation conflicts with this one
+	bool	conflicts(const	Observation&	other) const;
+
+	// OLAP: get the subbandList
 	vector<uint32> getSubbandList() const;
-        // OLAP: get the beamList
+	// OLAP: get the beamList
 	vector<uint32> getBeamList() const;
-        // OLAP: get the rspBoardList
+	// OLAP: get the rspBoardList
 	vector<uint32> getRspBoardList() const;
-        // OLAP: get the rspSlotList
+	// OLAP: get the rspSlotList
 	vector<uint32> getRspSlotList() const;
  
 	// for operator <<
@@ -86,18 +89,19 @@ public:
 		double			angle2;
 		string			directionType;
 //		string			angleTimes;
-		vector<int32>	subbands;
-		vector<int32>	beamlets;
+		vector<int>		subbands;
+		vector<int>		beamlets;
 	};
 
 	//# Datamembers
 	string			name;
-	int32			obsID;
+	int				obsID;
 	time_t			startTime;
 	time_t			stopTime;
-	uint32			nyquistZone;
+	uint			nyquistZone;
 	vector<string>	stations;
-	int32			sampleClock;
+	int				nrSlotsInFrame;
+	int				sampleClock;
 	string			filter;
 	string			MSNameMask;
 	string			realPVSSdatapoint;
@@ -111,20 +115,20 @@ public:
 	bool			useLongBaselines;
 
 	vector<Beam>	beams;
-	vector<int32>	beamlet2beams;		// to which beam each beamlet belongs
-	vector<int32>	beamlet2subbands;	// which subband each beamlet uses.
-	uint32	        nrRSPboards;	        // the number of RSPboads.
-	vector<uint32>	subbandList;	        // OLAP: subband list.
-	vector<uint32>	beamList;	        // OLAP: beam list.
-	vector<uint32>	rspBoardList;           // OLAP: RSP board list.
-	vector<uint32>	rspSlotList;            // OLAP: RSP Slot list
-	bool            uStation;               // use uStation mode?
+	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
+	vector<int>		beamlet2subbands;	// which subband each beamlet uses.
+	uint			nrRSPboards;		// the number of RSPboads.
+	vector<uint>	subbandList;		// OLAP: subband list.
+	vector<uint>	beamList;	        // OLAP: beam list.
+	vector<uint>	rspBoardList;		// OLAP: RSP board list.
+	vector<uint>	rspSlotList;		// OLAP: RSP Slot list
+	bool			uStation;			// use uStation mode?
 
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
 	string			stationList;
-	string                  BGLNodeList; 	 
-	string                  storageNodeList;
+	string			BGLNodeList; 	 
+	string			storageNodeList;
 };
 
 //#

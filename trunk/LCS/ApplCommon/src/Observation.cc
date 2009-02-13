@@ -32,6 +32,9 @@
 
 namespace LOFAR {
 
+//
+// Observation()
+//
 Observation::Observation() :
 	name(),
 	obsID(0),
@@ -42,6 +45,9 @@ Observation::Observation() :
 {
 }
 
+//
+// Observation(ParameterSet*)
+//
 Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	obsID(0),
@@ -101,7 +107,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
 	// allocate beamlet 2 beam mapping and reset to 0
-	int		nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
 	beamlet2beams.resize   (4*nrSlotsInFrame, -1);
 	beamlet2subbands.resize(4*nrSlotsInFrame, -1);
 	
@@ -117,9 +123,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
-                newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
-                // beamletList
-                newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
+		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
+		// beamletList
+		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
@@ -201,6 +207,64 @@ Observation::Observation(ParameterSet*		aParSet) :
 Observation::~Observation()
 {
 }
+
+//
+// conflicts (Observation& other)
+//
+// check if the given Observation conflicts with this one
+bool	Observation::conflicts(const	Observation&	other) const
+{
+#if defined HAVE_BGL
+	LOG_WARN("BG/P code cannot check for conflicts between observations!!!");
+	return (false);
+#endif
+
+	// if observations don't overlap they don't conflict per definition.
+	if ((other.stopTime <= startTime) || (other.startTime >= stopTime)) {
+		return (false);
+	}
+
+	// Observation overlap, check clock
+	if (other.sampleClock != sampleClock) {
+		LOG_INFO_STR("Clock of observation " << obsID << " and " << other.obsID << " conflict");
+		return (true);
+	}
+
+	// if rcumode differs there may be no overlap in receivers.
+	if (other.filter != filter) {
+		RCUset_t	resultSet(RCUset & other.RCUset);
+		if (resultSet.any()) {
+			LOG_INFO_STR("Conflicting use of receivers between observation " << obsID << 
+						 " and " << other.obsID);
+			LOG_DEBUG_STR("receiverConflict: " << resultSet);
+			return (true);
+		}
+	}
+
+	// check beamlets overlap
+	int		maxBeamlets = beamlet2beams.size();
+	for (int bl = 0; bl < maxBeamlets; bl++) {
+		if (beamlet2beams[bl] != -1 && other.beamlet2beams[bl] != -1) {
+			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
+						 " and " << other.obsID);
+			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
+			return (true);
+		}
+	}
+
+	// for now also check nr of slots in frame. In the future we might allow
+	// different slotsinFrame for each RSPboard but for now we treat it as a conflict.
+	if (nrSlotsInFrame != other.nrSlotsInFrame) {
+		LOG_INFO_STR("Conflict in nrSlotsInFrame: " << nrSlotsInFrame << "<->"  <<
+					other.nrSlotsInFrame << " for resp. observation " << obsID << 
+					" and " << other.obsID);
+		return (true);
+	}
+
+	return (false);	// no conflicts
+}
+
+
 
 //
 // getBeamName(beamidx): string
