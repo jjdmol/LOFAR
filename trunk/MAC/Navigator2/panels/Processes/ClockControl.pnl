@@ -23,7 +23,7 @@ PANEL,-1 -1 1013 754 N "_3DFace" 0
     }
   } else {
     LOG_ERROR(\"ClockControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"enabledText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"connectedText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"actualClockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"reuqestedClockText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
@@ -39,7 +39,7 @@ updateClockControl(string dp1, bool connected,
   if (!invalid) {
     setValue(\"actualClockText\", \"text\", actualClock);
     setValue(\"requestedClockText\", \"text\", requestedClock);
-    if (enabled) {
+    if (connected) {
       setValue(\"connectedText\", \"backCol\", \"green\");
     } else {
       setValue(\"connectedText\", \"backCol\", \"red\");

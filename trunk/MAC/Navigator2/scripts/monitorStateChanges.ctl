@@ -104,11 +104,11 @@ void connectMainPoints() {
 ///////////////////////////////////////////////////////////////////////////
 //Function distSystemTriggered
 // 
-// Callback function that is triggered by the (dis)appearance of e Distributed system.
+// Callback function that is triggered by the (dis)appearance of a Distributed system.
 //
 ///////////////////////////////////////////////////////////////////////////
 void distSystemTriggered(string dp1, dyn_int systemList) {
-
+  
   if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|entered");
 
   // Check all states from LOFAR_PermSW.state in all remote stations.
@@ -122,7 +122,6 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   // Check all states from LOFAR_ObsSW_Observation*.state in all remote stations.
   // if one of them changes, and the state is not equal to old state, update the MCU one
   string queryObservation = "SELECT '_original.._value' FROM '{LOFAR_ObsSW_Observation*.status.state,LOFAR_ObsSW_Observation*.status.childState}' REMOTE ALL WHERE _DPT = \"StnObservation\" SORT BY 1 DESC";
-
 
   if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|isConnected: "+isConnected);
   if (isConnected) {
@@ -231,13 +230,15 @@ void objectStateTriggered(string dp1, string trigger,
 
   string datapoint = "";
   string element   = "";
+
   
   // the datapointname can hold _ and . seperated path elements.  however, after the last point there should be
   // an element state, or an element childState
   //
   // strip the system name
   datapoint = dpSubStr(trigger,DPSUB_DP_EL);
-  
+
+    
   int start=strpos(trigger,".status.state");
   if (start >= 0) {
   	element = "status.state";
@@ -253,10 +254,8 @@ void objectStateTriggered(string dp1, string trigger,
 
   // strip the last status.state or status.childState from the datapoint name.
   // the remainder is used as path
-  datapoint = (substr(trigger,0,start));
+  //  datapoint = substr(trigger,0,start);
 
-  
-  
   if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.
   if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
