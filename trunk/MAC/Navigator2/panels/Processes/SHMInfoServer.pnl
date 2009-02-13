@@ -16,14 +16,14 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 void prepareProcesses() {
   dyn_string result;
   
-  dynAppend(result,\",MACInfoServer,\"+ baseDP);    
+  dynAppend(result,\",SHMInfoServer,\"+ baseDP);    
   dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"MACInfoServer.pnl:prepareProcesses|processList found: \"+ result);    
+  LOG_DEBUG(\"SHMInfoServer.pnl:prepareProcesses|processList found: \"+ result);    
   
 }
 
@@ -32,14 +32,14 @@ void prepareProcesses() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"MACInfoServer.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"SHMInfoServer.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"MACInfoServer.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"SHMInfoServer.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
@@ -55,7 +55,7 @@ void reload() {
   prepareProcesses();
 
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"MACInfoServer.pnl\",\"Update\");
+  navPanel_setEvent(\"SHMInfoServer.pnl\",\"Update\");
 }
 
 " 0
