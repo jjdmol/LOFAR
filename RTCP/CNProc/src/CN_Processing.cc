@@ -477,8 +477,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start beam forming at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsBeamFormer->formBeams(itsFilteredData);
   computeTimer.stop();
@@ -486,8 +488,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start pencil-beam forming at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsPencilBeamFormer->formPencilBeams(itsFilteredData,itsPencilBeamData);
   computeTimer.stop();
@@ -495,8 +499,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokesI()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes I at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsIncoherentStokesI->calculateIncoherent(itsFilteredData,itsIncoherentStokesIData,itsNrStations);
   computeTimer.stop();
@@ -504,8 +510,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokes()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsStokes->calculateIncoherent(itsFilteredData,itsStokesData,itsNrStations);
   computeTimer.stop();
@@ -513,8 +521,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
   computeTimer.stop();
@@ -522,8 +532,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 {
+#if defined HAVE_MPI
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start correlating at " << MPI_Wtime() << '\n';
+#endif // HAVE_MPI
   computeTimer.start();
   itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
   itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
