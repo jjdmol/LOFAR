@@ -7,7 +7,7 @@ PANEL,-1 -1 235 131 N "_3DFace" 1
 {
 
 
-  //delay while navigator instance is being prepared
+  //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
   int retry=0;
   while (navigator_initializing() & retry < 60) {
     delay(0,100);

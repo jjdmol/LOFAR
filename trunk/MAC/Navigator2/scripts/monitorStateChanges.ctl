@@ -209,7 +209,7 @@ void objectStateTriggered(string dp1, string trigger,
   // __navObjectState change.
   // This point should have points like:
   //
-  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state
+  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.status.state
   // 1 (= good)
   // a msg indicating extra comments on the state
   // true/false
@@ -254,7 +254,7 @@ void objectStateTriggered(string dp1, string trigger,
 
   // strip the last status.state or status.childState from the datapoint name.
   // the remainder is used as path
-  //  datapoint = substr(trigger,0,start);
+  datapoint = substr(trigger,0,start);
 
   if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.

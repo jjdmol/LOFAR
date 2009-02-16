@@ -7,7 +7,7 @@ PANEL,-1 -1 260 496 N "_3DFace" 2
 "main()
 {
 
-  //delay while navigator instance is being prepared
+    //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
   int retry=0;
   while (navigator_initializing() & retry < 60) {
     delay(0,100);
@@ -398,8 +398,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"selectionMode" "enum 0"
 "allColumnsShowFocus" "bool TRUE"
+"selectionMode" "enum 0"
  10 30 212 378
 10 TreeWidget
 7
