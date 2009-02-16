@@ -151,6 +151,8 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 
   unsigned ramp_n = 2; // grid_n/20;
 
+//  cout << "grid_n = " << grid_n << ", ramp_n = " << ramp_n << std::endl;
+
   // Apply ramps to discontinuities
   // this is a low pass filter
   // maybe we can omit the "w, 0" point?
@@ -163,6 +165,14 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 
   // interpolate between grid points
   interpolate(f, m, 5 /* length of f and m arrays */ , grid_n+1, grid);
+/*
+  std::cout << "interpolated = [";
+  for(unsigned i=0; i<grid_n+1; i++) {
+    std::cout << grid[i];
+    if(i != grid_n+1-1) std::cout << ", ";
+  }
+  cout << "];" << std::endl;
+*/
 
   // the grid we do an ifft on is:
   // grid appended with grid_n*2 zeros
@@ -193,7 +203,7 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
   }
 
   // append zeros
-  for(unsigned i=grid_n+1; i<grid_n*2; i++) {
+  for(unsigned i=grid_n+1; i<=grid_n*3; i++) {
     fftw_real(cinput[i]) = 0.0;
   }
 
@@ -202,10 +212,12 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
     fftw_real(cinput[grid_n*3+1 + index]) = grid[i];
   }
 /*
-  std::cout << "the input is: " << std::endl;
+  std::cout << "ifft_in = [";
   for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << fftw_real(cinput[i]) << std::endl;
+    std::cout << fftw_real(cinput[i]);
+    if(i != grid_n*4-1) std::cout << ", ";
   }
+  cout << "];" << std::endl;
 */
 #if defined HAVE_FFTW3
   fftwf_plan plan = fftwf_plan_dft_1d(grid_n*4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
@@ -272,28 +284,31 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 // This method initializes the weights array.
 void FIR::generate_filter(unsigned taps, unsigned channels)
 {
-  int n = channels * taps;
+  unsigned n = channels * taps;
 
   std::cout << "generating filter with " << channels << " channels and " << taps << " taps (" << n << " total)" << std::endl;
  
-  double* d = (double*) malloc(n * sizeof(double));
-  if(d == NULL) {
+  double* window = (double*) malloc(n * sizeof(double));
+  if(window == NULL) {
     THROW(CNProcException, "cannot allocate buffer");
   }
 
   // use a n-point Hamming window
-//  hamming(n, d);
+//  hamming(n, window);
 
   // use a n-point Blackman window
-//  blackman(n, d);
+//  blackman(n, window);
 
   // use a n-point Gaussian window
-  gaussian(n, 3.5, d);
+  gaussian(n, 3.5, window);
 
 /*
-  for(int i=0; i<n; i++) {
-    std::cout << "windowFunction[" << i << "] = " << d[i] << std::endl;
+  std::cout << "window = [";
+  for(unsigned i=0; i<n; i++) {
+    std::cout << window[i];
+    if(i != n-1) std::cout << ", ";
   }
+  std::cout << "];" << std::endl;
 */
 
   double* result = (double*) malloc(n * sizeof(double));
@@ -301,9 +316,9 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     THROW(CNProcException, "cannot allocate buffer");
   }
 
-  generate_fir_filter(n-1, 1.0/channels, d, result);
+  generate_fir_filter(n-1, 1.0/channels, window, result);
 
-  free(d);
+  free(window);
 
   weights.resize(boost::extents[channels][taps]);
 

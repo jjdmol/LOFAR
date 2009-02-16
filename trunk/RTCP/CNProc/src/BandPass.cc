@@ -2103,6 +2103,9 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
   // plot(2^50./(abs(m).^2+abs(l).^2+abs(r).^2))
 
   unsigned fftSize = STATION_FFT_SIZE * nrChannels;
+  
+  // We cannot make the fft smaller than the number of filter constants.
+  if(fftSize < STATION_FILTER_LENGTH) fftSize = STATION_FILTER_LENGTH;
 
   // it is not worth to use the more complex R2C FFTW method
   std::vector<fcomplex, AlignedStdAllocator<fcomplex, 16> > in(fftSize, 0.0), out(fftSize);

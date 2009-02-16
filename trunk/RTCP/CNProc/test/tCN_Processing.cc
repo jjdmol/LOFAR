@@ -193,11 +193,11 @@ template <typename SAMPLE_TYPE> void doWork()
 #endif
   {
     unsigned   nrStations	= 14;
-    unsigned   nrChannels	= 1024;
+    unsigned   nrChannels	= 16;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
-    unsigned   testSignalChannel = 321; // TODO giver error if out of range
+    unsigned   testSignalChannel = 5; // TODO giver error if out of range
     double     signalFrequency	= refFreq + (testSignalChannel + (nrChannels/2)) * sampleRate / nrChannels;
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
@@ -219,6 +219,11 @@ template <typename SAMPLE_TYPE> void doWork()
     for (unsigned i = 0; i < nrChannels; i ++)
       std::clog << i << ' ' << f[i] << std::endl;
 #endif
+
+    if(testSignalChannel >= nrChannels) {
+      std::cerr << " signal lies outside the range." << std::endl;
+      exit(1);
+    }
 
     BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, station2SuperStation, nrChannels);
 
