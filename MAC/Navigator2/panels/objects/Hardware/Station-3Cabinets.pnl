@@ -15,14 +15,7 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
   } else {
     setValue(\"power48On\",\"backCol\",\"Lofar_dpdoesnotexist\");
   }
-  
-  if (dpExists(mainStationDP+\".power220On\") ) {
-    dpConnect(\"updatePower220\",mainStationDP+\".power220On\",
-                               mainStationDP+\".power220On:_online.._invalid\");
-  } else {
-    setValue(\"power220On\",\"backCol\",\"Lofar_dpdoesnotexist\");
-  }
-  
+
 }
 
 void updatePower48(string dp1, bool on,
@@ -40,20 +33,7 @@ void updatePower48(string dp1, bool on,
   }  
 }
 
-void updatePower220(string dp1, bool on,
-                    string dp2, bool invalid) {
-  
-  if (!invalid) {
-    string color=\"Lofar_broken\";
-    if (on) {
-      color=\"Lofar_operational\";
-    } 
-    setValue(\"power220On\",\"backCol\",color);
-    
-  } else {
-    setValue(\"power220On\",\"backCol\",\"Lofar_invalid\");
-  }  
-}" 0
+" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
 E E 2
@@ -78,7 +58,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1 0 -10 2  0 3  "pictures/station-sized.bmp" 13434828 E 0 10 933 543
+E E 0 1 1 0 1 E 1 0 1 0 -10 2  0 3  "pictures/station-sized.PNG" 13434828 E 0 10 933 543
 1 2209 98 "" 2190
 0
 1 2210 98 "" 2188
@@ -403,74 +383,6 @@ E E 0 1 1 0 1 E 1 0 1 0 -10 2  0 3  "pictures/station-sized.bmp" 13434828 E 0 10
 0
 1 2362 109 "" 39
 0
-6 2195
-"power48"
-""
-1 580 367 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
- E E
-872 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 -1 1 E 580 367 700 389
-6 2196
-"RECTANGLE2"
-""
-1 580 370 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
- E E
-874 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 0 1 E 580 390 700 421
-2 2197
-"PRIMITIVE_TEXT10"
-""
-1 697 371 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-876 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 697 371 752 385
-0 2 2 "0s" 0 0 0 192 0 0  697 371 1
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 10 Power 48 V
-2 2198
-"PRIMITIVE_TEXT11"
-""
-1 697 399 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
-878 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 697 399 758 413
-0 2 2 "0s" 0 0 0 192 0 0  697 399 1
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 11 Power 220 V
 7 2199
 "power48On"
 ""
@@ -484,21 +396,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 700.7438016528926 -307.2975206611569 1 E 75 575 5 5
-7 2200
-"power220On"
-""
-1 75 575 E E E 1 E 1 E N {0,0,0} E N "Lofar_off" E E
- E E
-882 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 700.7438016528926 -278.2975206611569 1 E 75 575 5 5
+E E 0 1 1 2 1 E 1.190082644628099 0 1.190082644628099 584.7438016528926 -374.2975206611569 1 E 75 575 5 5
 1 2363 110 "" 0
 0
 1 2364 110 "" 13

@@ -32,8 +32,9 @@
 // navigator_initializing               : returns false if init ready, else true
 // navigator_clearWorkDPs               : clear the work Datapoints
 
-#uses "GCFCWD.ctl"
+
 #uses "GCFLogging.ctl"
+#uses "GCFCWD.ctl"
 #uses "claimManager.ctl"
 #uses "GCFCommon.ctl"
 #uses "GCFAlarm.ctl"
@@ -42,7 +43,9 @@
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
 
-global bool       g_initializing          = true;
+global bool       g_initializing          = true;     // to show if initialise is ready
+global bool       g_objectReady           = true;     // Can be used for timing by objects
+
 global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastHardwareDatapoint = MainDBName+"LOFAR_PIC_Europe";
 global string     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
@@ -81,20 +84,22 @@ void navigator_handleEventInitialize()
   // Set the global statecolors/colornames.
   initLofarColors();
   
-  // fille global stations lists
-  navFunct_fillStationLists();
- 
-  // Init the connection Watchdog
-  GCFCWD_Init();
-
   // first thing to do: get a new navigator ID
   // check the commandline parameter:
   int navID = 0;
   if (isDollarDefined("$ID")) {
     navID = $ID;
   }
+  
   // make sure there is a __navigator<id> datapoint of the type GCFNavigatorInstance.
   navConfig_setNavigatorID(navID); 
+
+  // fill global stations lists
+  navFunct_fillStationLists();
+ 
+  // Init the connection Watchdog
+  GCFCWD_Init();
+
 
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
