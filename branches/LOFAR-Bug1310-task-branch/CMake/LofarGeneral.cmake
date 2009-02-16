@@ -1,4 +1,4 @@
-#  $Id$
+#  LofarGeneral.cmake: 
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,23 +17,23 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-include(CMakeSettings)
+#
+#  $Id$
 
 ## ----------------------------------------------------------------------------
-## Configure the LOFAR test scripts in the current binary directory
+## Check for typedefs of primitive types
 ## ----------------------------------------------------------------------------
-#configure_file(
-#  ${lofar_sharedir}/runtest.sh 
-#  ${CMAKE_CURRENT_BINARY_DIR}/runtest.sh)
-#configure_file(
-#  ${lofar_sharedir}/findpkg
-#  ${CMAKE_CURRENT_BINARY_DIR}/findpkg)
-#configure_file(
-#  ${lofar_sharedir}/assay
-#  ${CMAKE_CURRENT_BINARY_DIR}/assay)
-#configure_file(
-#  ${lofar_sharedir}/default.log_prop
-#  ${CMAKE_CURRENT_BINARY_DIR}/default.log_prop)
-configure_file(${LOFAR_ROOT}/autoconf_share/runctest.sh
-               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)
+include(CheckTypeSize)
+check_type_size("ushort" HAVE_USHORT)
+check_type_size("uint" HAVE_UINT)
+check_type_size("ulong" HAVE_ULONG)
+check_type_size("long long" HAVE_LONG_LONG)
+
+
+#lofar_DEBUG_OPTIMIZE([])
+#lofar_FUNCTION_NAME([])
+#lofar_BACKTRACE([])
+#lofar_CHECK_INSTALL_IF_MODIFIED([])
+#lofar_QATOOLS([])
+#lofar_DOCXX([])
+#lofar_LOGGER([])

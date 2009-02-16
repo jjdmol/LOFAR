@@ -23,10 +23,10 @@
 ##
 ## ----------------------------------------------------------------------------
 
+
 #if(NOT LOFAR_CMAKE_CONFIG)
 
   set(LOFAR_CMAKE_CONFIG TRUE CACHE INTERNAL "LOFAR CMake config flag")
-#  mark_as_advanced(LOFAR_CMAKE_CONFIG)
 
   ## Root directory of the LOFAR source code tree
   string(REGEX REPLACE 
@@ -36,8 +36,12 @@
   ## Here's where we keep our own CMake modules.
   set(CMAKE_MODULE_PATH "${LOFAR_ROOT}/CMake")
 
-  message(STATUS "[CMakeSettings.cmake] LOFAR_ROOT        : ${LOFAR_ROOT}")
-  message(STATUS "[CMakeSettings.cmake] CMAKE_MODULE_PATH : ${CMAKE_MODULE_PATH}")
+  ## Default search path used for locating external packages
+  set(LOFAR_SEARCH_PATH
+    ${CMAKE_INSTALL_PREFIX}
+    "/opt/lofar/external/+pkg")
+
+  message(STATUS "LOFAR_SEARCH_PATH = ${LOFAR_SEARCH_PATH}")
 
   ## --------------------------------------------------------------------------
   ## Several "Auto-tools variables" needed for backward compatibility
@@ -46,6 +50,7 @@
   set(lofar_sharedir "${lofar_top_srcdir}/autoconf_share" CACHE INTERNAL "lofar_sharedir")
   set(prefix "${CMAKE_INSTALL_PREFIX}" CACHE INTERNAL "prefix")
   set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
-#  set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  include(LofarConf)
 
 #endif(NOT LOFAR_CMAKE_CONFIG)

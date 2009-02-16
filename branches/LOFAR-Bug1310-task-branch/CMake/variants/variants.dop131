@@ -1,0 +1,3 @@
+set(GNU_COMPILERS GNU_C GNU_CXX)
+set(GNU_C         /usr/bin/gcc)
+set(GNU_CXX       /usr/bin/g++)
