@@ -917,117 +917,119 @@ TBBCommand::TBBCommand(GCFPortInterface& port) : Command(port), m_type(0)
 
 void TBBCommand::send()
 {
-  if (getMode()) {
-    // GET
-    RSPGettbbEvent gettbb;
+	if (getMode()) {
+		// GET
+		RSPGettbbEvent gettbb;
 
-    gettbb.timestamp = Timestamp(0,0);
-    gettbb.rcumask = getRCUMask();
-    gettbb.cache = true;
+		gettbb.timestamp = Timestamp(0,0);
+		gettbb.rcumask = getRCUMask();
+		gettbb.cache = true;
 
-    m_rspport.send(gettbb);
-  }
-  else {
-    // SET
-    RSPSettbbEvent settbb;
-
-    settbb.timestamp = Timestamp(0,0);
-    settbb.rcumask = getRCUMask();
-
-    logMessage(cout,formatString("rcumask.count()=%d", settbb.rcumask.count()));
-
-    // if only 1 subband selected, apply selection to all
-    switch (m_type) {
-
-    case TRANSIENT: {
-	settbb.settings().resize(1);
-	settbb.settings()(0).reset();
-      }
-      break;
-
-    case SUBBANDS: {
-	settbb.settings().resize(1);
-	settbb.settings()(0).reset();
-
-	std::list<int>::iterator it;
-	for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++) {
-	  if ((*it) >= MEPHeader::N_SUBBANDS) continue;
-	  settbb.settings()(0).set(*it);
+		m_rspport.send(gettbb);
 	}
-	logMessage(cout, formatString("tbbbandsel.count()=%d ", settbb.settings()(0).count()));
-      }
-      break;
+	else {
+		// SET
+		RSPSettbbEvent settbb;
 
-    default:
-      logMessage(cerr, "Error: invalid tbbmode type");
-      exit(EXIT_FAILURE);
-      break;
-    }
+		settbb.timestamp = Timestamp(0,0);
+		settbb.rcumask = getRCUMask();
 
-    m_rspport.send(settbb);
-  }
+		logMessage(cout,formatString("rcumask.count()=%d", settbb.rcumask.count()));
+
+		// if only 1 subband selected, apply selection to all
+		switch (m_type) {
+			case TRANSIENT: {
+				settbb.settings().resize(1);
+				settbb.settings()(0).reset();
+			}
+			break;
+
+			case SUBBANDS: {
+				settbb.settings().resize(1);
+				settbb.settings()(0).reset();
+
+				std::list<int>::iterator it;
+				for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++) {
+					if ((*it) >= MEPHeader::N_SUBBANDS) {
+						continue;
+					}
+					settbb.settings()(0).set(*it);
+				}
+				logMessage(cout, formatString("tbbbandsel.count()=%d ", settbb.settings()(0).count()));
+			}
+			break;
+
+			default:
+				logMessage(cerr, "Error: invalid tbbmode type");
+				exit(EXIT_FAILURE);
+			break;
+		} // switch
+
+	m_rspport.send(settbb);
+	}
 }
 
 GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal) {
-    case RSP_GETTBBACK: {
-      RSPGettbbackEvent ack(e);
+	switch (e.signal) {
+		case RSP_GETTBBACK: {
+			RSPGettbbackEvent ack(e);
 
-      std::ostringstream msg;
-      msg << "settbback.timestamp=" << ack.timestamp;
-      logMessage(cout, msg.str());
-      msg.seekp(0);
+			std::ostringstream msg;
+			msg << "settbback.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+			msg.seekp(0);
 
-      if (SUCCESS != ack.status) {
-	logMessage(cerr, "Error: RSP_GETTBB command failed.");
-	break;
-      }
+			if (SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_GETTBB command failed.");
+				break;
+			}
 
-      // print settings
-      int rcuin = 0;
-      for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-	if (getRCUMask()[rcuout]) {
-	  cout << formatString("RCU[%02u].tbbsettings= ", rcuout);
-//	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(unsigned long) * BITSOFBYTE); ilong++) {
+			// print settings
+			int rcuin = 0;
+			for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+				if (getRCUMask()[rcuout]) {
+					cout << formatString("RCU[%02u].tbbsettings= ", rcuout);
+					if (ack.settings()(rcuin).count() == 0) {
+						cout << "transient";
+					}
+					else {
+						for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(uint32) * BITSOFBYTE); ilong++) {
+							cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
+							ack.settings()(rcuin) >>= sizeof(uint32)*BITSOFBYTE;
+						}
+					}
+					cout << endl;
 
-//	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_ulong()));
-//	    ack.settings()(rcuin) >>= sizeof(unsigned long)*BITSOFBYTE;
-	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(uint32) * BITSOFBYTE); ilong++) {
-	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
-	    ack.settings()(rcuin) >>= sizeof(uint32)*BITSOFBYTE;
-	  }
-	  cout << endl;
+					rcuin++;
+				}
+			}
+		}
+		break;
 
-	  rcuin++;
+		case RSP_SETTBBACK: {
+			RSPSettbbackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "settbback.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+
+			if (SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_SETTBB command failed.");
+			}
+		}
+		break;
+
+		default:
+			status = GCFEvent::NOT_HANDLED;
+		break;
 	}
-      }
-    }
-    break;
 
-    case RSP_SETTBBACK: {
-      RSPSettbbackEvent ack(e);
+	GCFTask::stop();
 
-      std::ostringstream msg;
-      msg << "settbback.timestamp=" << ack.timestamp;
-      logMessage(cout, msg.str());
-
-      if (SUCCESS != ack.status) {
-        logMessage(cerr, "Error: RSP_SETTBB command failed.");
-      }
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  GCFTask::stop();
-
-  return status;
+	return status;
 }
 
 //
