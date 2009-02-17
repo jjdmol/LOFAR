@@ -123,11 +123,11 @@ void *InputThread::mainLoopStub(void *inputThread)
   try {
     static_cast<InputThread *>(inputThread)->mainLoop();
   } catch (Exception &ex) {
-    std::cerr << "caught Exception: " << ex.what() << std::endl;
+    std::cerr << "input thread caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
-    std::cerr << "caught std::exception: " << ex.what() << std::endl;
+    std::cerr << "input thread caught std::exception: " << ex.what() << std::endl;
   } catch (...) {
-    std::cerr << "caught non-std:exception" << std::endl;
+    std::cerr << "input thread caught non-std::exception" << std::endl;
   }
 
   //static_cast<InputThread *>(inputThread)->stopped = true;
