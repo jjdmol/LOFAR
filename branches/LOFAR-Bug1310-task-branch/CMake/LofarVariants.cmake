@@ -20,23 +20,32 @@
 #
 #  $Id$
 
-#include(CMakeSettings)
+if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
+  set(LOFAR_VARIANTS_INCLUDED TRUE CACHE BOOL "LOFAR_VARIANTS_INCLUDED" FORCE)
+  
+  message(STATUS "**** ENTER: LofarVariants.cmake ****")
 
-## ----------------------------------------------------------------------------
-## Include global variants file.
-## ----------------------------------------------------------------------------
-message(STATUS "Loading global variants file")
-include(${LOFAR_ROOT}/CMake/variants/variants)
+  include(CMakeSettings)
 
-## ----------------------------------------------------------------------------
-## Include machine specific variants file, if present
-## ----------------------------------------------------------------------------
-execute_process(COMMAND hostname -s
-  OUTPUT_VARIABLE hostname
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(lofar_variants_file ${LOFAR_ROOT}/CMake/variants/variants.${hostname})
+  ## --------------------------------------------------------------------------
+  ## Include global variants file.
+  ## --------------------------------------------------------------------------
+  message(STATUS "Loading global variants file")
+  include(${LOFAR_ROOT}/CMake/variants/variants)
+  
+  ## --------------------------------------------------------------------------
+  ## Include machine specific variants file, if present
+  ## --------------------------------------------------------------------------
+  execute_process(COMMAND hostname -s
+    OUTPUT_VARIABLE hostname
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(variants_file ${LOFAR_ROOT}/CMake/variants/variants.${hostname})
+  
+  if (EXISTS ${variants_file})
+    message(STATUS "Loading host-specific variants file: ${variants_file}")
+    include(${variants_file})
+  endif (EXISTS ${variants_file})
+  
+  message(STATUS "**** LEAVE: LofarVariants.cmake ****")
 
-if (EXISTS ${lofar_variants_file})
-  message(STATUS "Loading host-specific variants file: ${lofar_variants_file}")
-  include(${lofar_variants_file})
-endif (EXISTS ${lofar_variants_file})
+endif(NOT DEFINED LOFAR_VARIANTS_INCLUDED)

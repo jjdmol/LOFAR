@@ -20,42 +20,16 @@
 #
 #  $Id$
 
+message(STATUS "**** ENTER: LofarConf.cmake ****")
+
 ## ----------------------------------------------------------------------------
 ## Includes
 ## ----------------------------------------------------------------------------
 
-include(LofarVariants)
+include(LofarInit)
+include(LofarGeneral)
+include(LofarOptions)
 
-
-## ----------------------------------------------------------------------------
-## Find compiler and variant.
-## ----------------------------------------------------------------------------
-
-get_filename_component(cmpvar ${CMAKE_CURRENT_BINARY_DIR} NAME)
-string(TOUPPER ${cmpvar} cmpvar)
-string(REGEX REPLACE "\(.*)_.*" "\\1" compiler_suite ${cmpvar})
-string(REGEX REPLACE ".*_\(.*)" "\\1" var ${cmpvar})
-
-# Search for a list of compilers in `compiler_suite'.
-set(compilers "${compiler_suite}_COMPILERS")
-set(lofar_variant "${var}_VARIANT")
-
-if(NOT DEFINED ${compilers})
-  message(FATAL_ERROR 
-    "${compilers} is not defined. Check your variants file!")
-endif(NOT DEFINED ${compilers})
-
-foreach(cmp ${${compilers}})
-  string(REGEX REPLACE "${compiler_suite}_" "" lang ${cmp})
-  message(STATUS "${lang} compiler: ${${cmp}}")
-  set(CMAKE_${lang}_COMPILER ${${cmp}} CACHE FILEPATH "${lang} compiler" FORCE)
-endforeach(cmp ${compilers})
-
-
-message(STATUS ">>${lofar_compiler}<<")
-message(STATUS ">>${lofar_variant}<<")
-
-#set(CMAKE_CXX_COMPILER ${${cmp}_COMPILER} CACHE FILEPATH "C++ compiler" FORCE)
 
 message(STATUS "[LofarConf] CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")
 message(STATUS "[LofarConf] CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")
@@ -63,3 +37,4 @@ message(STATUS "[LofarConf] CMAKE_FORTRAN_COMPILER = ${CMAKE_FORTRAN_COMPILER}")
 message(STATUS "[LofarConf] CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "[LofarConf] CMAKE_CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}")
 
+message(STATUS "**** LEAVE: LofarConf.cmake ****")

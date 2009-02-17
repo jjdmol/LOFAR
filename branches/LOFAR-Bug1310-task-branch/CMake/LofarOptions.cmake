@@ -1,4 +1,4 @@
-#  LofarGeneral.cmake: 
+#  LofarOptions.cmake: Parse CMake options and set associated variables
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,26 +20,28 @@
 #
 #  $Id$
 
-message(STATUS "**** ENTER: LofarGeneral.cmake ****")
-
-include(LofarInit)
+message(STATUS "**** ENTER: LofarOptions.cmake ****")
 
 ## ----------------------------------------------------------------------------
-## Check for typedefs of primitive types
+## For each option that is set, try to find the associated package. It is
+## considered a fatal error, if the package cannot be found.
 ## ----------------------------------------------------------------------------
-include(CheckTypeSize)
-check_type_size("ushort" HAVE_USHORT)
-check_type_size("uint" HAVE_UINT)
-check_type_size("ulong" HAVE_ULONG)
-check_type_size("long long" HAVE_LONG_LONG)
 
+foreach(opt ${LOFAR_OPTIONS})
+  message(STATUS "${opt} is ${${opt}}")
+#  if(${opt})
+#  endif(${opt})
+endforeach(opt ${LOFAR_OPTIONS})
 
-#lofar_DEBUG_OPTIMIZE([])
-#lofar_FUNCTION_NAME([])
-#lofar_BACKTRACE([])
-#lofar_CHECK_INSTALL_IF_MODIFIED([])
-#lofar_QATOOLS([])
-#lofar_DOCXX([])
-#lofar_LOGGER([])
+#set(OPTION        USE_LOG4CXX   OFF)
+#set(OPTION        USE_AIPSPP    OFF)
+#set(OPTION        USE_SOCKETS   OFF)
+#set(OPTION        USE_ZOID      OFF)
+#set(OPTION        USE_THREADS   ON)
+#set(OPTION        USE_SSE       OFF)
+#set(OPTION        USE_SHMEM     ON)
+#set(OPTION        USE_PYTHON    OFF)
+#set(OPTION        USE_BOOST     OFF)
+#set(OPTION        USE_BACKTRACE OFF)
 
-message(STATUS "**** LEAVE: LofarGeneral.cmake ****")
+message(STATUS "**** LEAVE: LofarOptions.cmake ****")

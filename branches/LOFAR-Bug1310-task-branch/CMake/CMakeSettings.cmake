@@ -23,8 +23,9 @@
 ##
 ## ----------------------------------------------------------------------------
 
-
 #if(NOT LOFAR_CMAKE_CONFIG)
+
+  message(STATUS "**** ENTER: CMakeSettings.cmake ****")
 
   set(LOFAR_CMAKE_CONFIG TRUE CACHE INTERNAL "LOFAR CMake config flag")
 
@@ -51,6 +52,6 @@
   set(prefix "${CMAKE_INSTALL_PREFIX}" CACHE INTERNAL "prefix")
   set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
 
-  include(LofarConf)
+  message(STATUS "**** LEAVE: CMakeSettings.cmake ****")
 
 #endif(NOT LOFAR_CMAKE_CONFIG)

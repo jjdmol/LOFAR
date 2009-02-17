@@ -1,3 +1,54 @@
-set(GNU_COMPILERS GNU_C GNU_CXX)
-set(GNU_C         /usr/bin/GCC)
-set(GNU_CXX       /usr/bin/g++)
+## -*- CMake -*-
+##
+## Global variants file.
+##
+## Defines compiler suites (e.g., GCC),
+## build variants (e.g., debug or optimized),
+## defaults for several options.
+##
+## $Id$
+
+set(GNU_COMPILERS GNU_C GNU_CXX CACHE INTERNAL "GNU Compilers")
+set(GNU_C         /usr/bin/gcc  CACHE INTERNAL "GNU C compiler")
+set(GNU_CXX       /usr/bin/g++  CACHE INTERNAL "GNU C++ compiler")
+
+set(LOFAR_OPTIONS 
+  USE_LOG4CXX
+  USE_LOG4CPLUS
+  USE_AIPSPP
+  USE_SOCKETS
+  USE_ZOID
+  USE_THREADS
+  USE_SSE
+  USE_SHMEM
+  USE_PYTHON
+  USE_BOOST
+  USE_BACKTRACE
+  CACHE INTERNAL "Lofar CMake options")
+
+option(USE_LOG4CXX   "Use Log4Cxx"   OFF)
+option(USE_LOG4CPLUS "Use Log4Cplus" ON)
+option(USE_AIPSPP    "Use AIPS++"    OFF)
+option(USE_SOCKETS   "Use Sockets"   OFF)
+option(USE_ZOID      "Use ZOID"      OFF)
+option(USE_THREADS   "Use threads"   ON)
+option(USE_SSE       "Use SSE"       OFF)
+option(USE_SHMEM     "Use shmem"     ON)
+option(USE_PYTHON    "Use Python"    OFF)
+option(USE_BOOST     "Use Boost"     OFF)
+option(USE_BACKTRACE "Use backtrace" OFF)
+
+set(DEBUG_VARIANT               "${standard} ${debug}")
+set(DEBUGOPT_VARIANT            "${standard} ${debugopt}")
+set(BGL_VARIANT)
+set(BGP_VARIANT)
+set(FAKEBGL_VARIANT)
+set(MPICH_VARIANT)
+set(MPICH-OPT_VARIANT)
+set(MPICH-PROF_VARIANT)
+set(NOLOG4CPLUS_VARIANT)
+set(OPT_VARIANT)
+set(PROFOPT_VARIANT)
+
+set(standard "dummy")
+
