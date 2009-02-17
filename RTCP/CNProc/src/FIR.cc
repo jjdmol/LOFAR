@@ -96,6 +96,51 @@ void FIR::gaussian(int n, double a, double* d)
 }
 
 
+// Compute the modified Bessel function I_0(x) for any real x.
+// This method was taken from the ROOT package, See http://root.cern.ch/root.
+// It was released undet the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
+double besselI0(double x)
+{
+   // Parameters of the polynomial approximation
+   const double   p1=1.0,          p2=3.5156229,    p3=3.0899424,
+                  p4=1.2067492,    p5=0.2659732,    p6=3.60768e-2,  p7=4.5813e-3;
+
+   const double   q1= 0.39894228,  q2= 1.328592e-2, q3= 2.25319e-3,
+                  q4=-1.57565e-3,  q5= 9.16281e-3,  q6=-2.057706e-2,
+                  q7= 2.635537e-2, q8=-1.647633e-2, q9= 3.92377e-3;
+
+   const double   k1 = 3.75;
+   double ax = abs(x);
+
+   double y=0, result=0;
+
+   if (ax < k1) {
+      double xx = x/k1;
+      y = xx*xx;
+      result = p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7)))));
+   } else {
+      y = k1/ax;
+      result = (exp(ax)/sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
+   }
+   return result;
+}
+
+// Kaiser window function
+void FIR::kaiser(int n, double beta, double* d)
+{
+  if(n == 1) {
+    d[0] = 1.0;
+    return;
+  }
+
+  int m = n - 1;
+
+  for (int i=0; i<n; i++) {
+    double k = 2.0 * beta / m * sqrt (i * (m - i));
+    d[i] = besselI0(k) / besselI0(beta);
+  }
+}
+
 unsigned FIR::next_power_of_2(unsigned n)
 {
   unsigned res = 1;
@@ -120,8 +165,6 @@ void FIR::interpolate(double* x, double* y, unsigned xlen, unsigned n, double* r
     if(nextX == 0) {
       std::cout << "ERROR in FIR::interpolate" << std::endl;
     }
-
-    //  std::cout << "nextX = " << nextX << ", index = " << index << std::endl;
 
     double prevXVal = x[nextX-1];
     double nextXVal = x[nextX];
@@ -151,8 +194,6 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 
   unsigned ramp_n = 2; // grid_n/20;
 
-//  cout << "grid_n = " << grid_n << ", ramp_n = " << ramp_n << std::endl;
-
   // Apply ramps to discontinuities
   // this is a low pass filter
   // maybe we can omit the "w, 0" point?
@@ -165,18 +206,20 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 
   // interpolate between grid points
   interpolate(f, m, 5 /* length of f and m arrays */ , grid_n+1, grid);
-/*
+
+#if 0
   std::cout << "interpolated = [";
   for(unsigned i=0; i<grid_n+1; i++) {
     std::cout << grid[i];
     if(i != grid_n+1-1) std::cout << ", ";
   }
   cout << "];" << std::endl;
-*/
+#endif
 
   // the grid we do an ifft on is:
   // grid appended with grid_n*2 zeros
-  // appended with original grid values from indices grid_n..2, i.e., the values in reverse order (note, arrays start at 1 in octave!)
+  // appended with original grid values from indices grid_n..2, i.e., the values in reverse order 
+  // (note, arrays start at 1 in octave!)
   // the input for the ifft is of size 4*grid_n
   // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
 
@@ -211,14 +254,16 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
   for(unsigned i=grid_n-1, index=0; i >=1; i--, index++) {
     fftw_real(cinput[grid_n*3+1 + index]) = grid[i];
   }
-/*
+
+#if 0
   std::cout << "ifft_in = [";
   for(unsigned i=0; i<grid_n*4; i++) {
     std::cout << fftw_real(cinput[i]);
     if(i != grid_n*4-1) std::cout << ", ";
   }
   cout << "];" << std::endl;
-*/
+#endif
+
 #if defined HAVE_FFTW3
   fftwf_plan plan = fftwf_plan_dft_1d(grid_n*4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
   fftwf_execute(plan);
@@ -226,11 +271,13 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
   fftw_plan plan = fftw_create_plan(grid_n*4, FFTW_BACKWARD, FFTW_ESTIMATE);
   fftw_one(plan, cinput, coutput);
 #endif
-/*
+
+#if 0
   for(unsigned i=0; i<grid_n*4; i++) {
     std::cout << "ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]) << std::endl;
   }
-*/
+#endif
+
   //                        half                   end
   // 1 2       n+1          2(n+1)      3(n+1)     4(n+1)
   //                                    x x x x x x x x x     # last quarter
@@ -270,14 +317,15 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
   for(unsigned i=0; i<=n; i++) {
     result[i] /= factor;
   }
-/*
+
+#if 0
   std::cout << "result = [";
   for(unsigned i=0; i<=n; i++) {
     std::cout << result[i];
     if(i != n) std::cout << ", ";
   }
   std::cout << "];" << std::endl;
-*/
+#endif
 }
 
 #if ! USE_ORIGINAL_FILTER
@@ -293,23 +341,29 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     THROW(CNProcException, "cannot allocate buffer");
   }
 
-  // use a n-point Hamming window
+  // Use a n-point Hamming window.
 //  hamming(n, window);
 
-  // use a n-point Blackman window
+  // Use a n-point Blackman window.
 //  blackman(n, window);
 
-  // use a n-point Gaussian window
-  gaussian(n, 3.5, window);
+  // Use a n-point Gaussian window.
+//  gaussian(n, 3.5, window);
 
-/*
+  // Use a n-point Kaiser window.
+  // The beta parameter is found in matlab / octave with"
+  // where fsin is the sample freq
+  // [n,Wn,bta,filtype]=kaiserord([fsin/channels 1.4*fsin/channels],[1 0],[10^(0.5/20) 10^(-91/20)],fsin);
+  kaiser(n, 9.0695, window);
+
+#if 0
   std::cout << "window = [";
   for(unsigned i=0; i<n; i++) {
     std::cout << window[i];
     if(i != n-1) std::cout << ", ";
   }
   std::cout << "];" << std::endl;
-*/
+#endif
 
   double* result = (double*) malloc(n * sizeof(double));
   if(result == NULL) {
@@ -333,7 +387,8 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
       index++;
     }
   }
-/*
+
+#if 0
   cout << "final taps: " << std::endl;
   for(unsigned channel=0; channel<channels; channel++) {
     cout << "channel: " << channel << "| ";
@@ -342,7 +397,8 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     }
     std::cout << std::endl;
   }
-*/
+#endif
+
   free(result);
 }
 
