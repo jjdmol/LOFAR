@@ -1,9 +1,6 @@
 // this function is called after the user correctly logged in 
 // this should start whatever this project wants 
 
-// ******** For LOFAR, include all libraries.
-#uses "navigator.ctl"
-
 afterLogin(string user, string password, string newLocale, int closeModules = 1) 
 {
   // WARNING string variable 'panel' below must be set 
@@ -19,10 +16,6 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
   dyn_string     panels;
   dyn_uint       xs=makeDynInt(1600,1280,1024),
                  ys=makeDynInt(1200,1024, 768);
-  
-  
-  // ****** For LOFAR, initialise basesystem b4 loading panels ****** //
-  navigator_handleEventInitialize();
   
   
 
@@ -141,12 +134,8 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
   }
   else
   {
-    RootPanelOnModule(panel,"",module,makeDynString("$baseDP:LOFAR")); 
-    
-    if ( module != myModuleName()) 
-      ModuleOff(myModuleName());
-
-    playDemoStartUpSound();
+    string ID="$ID:"+myManId();
+    RootPanelOnModule(panel,"",module,makeDynString("$baseDP:LOFAR_PIC",ID));
   }
   // last action ... close login-Module 
 } 
