@@ -336,10 +336,7 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
 
   std::cout << "generating filter with " << channels << " channels and " << taps << " taps (" << n << " total)" << std::endl;
  
-  double* window = (double*) malloc(n * sizeof(double));
-  if(window == NULL) {
-    THROW(CNProcException, "cannot allocate buffer");
-  }
+  double* window = new double[n];
 
   // Use a n-point Hamming window.
 //  hamming(n, window);
@@ -365,14 +362,11 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
   std::cout << "];" << std::endl;
 #endif
 
-  double* result = (double*) malloc(n * sizeof(double));
-  if(result == NULL) {
-    THROW(CNProcException, "cannot allocate buffer");
-  }
+  double* result = new double[n];
 
   generate_fir_filter(n-1, 1.0/channels, window, result);
 
-  free(window);
+  delete[] window;
 
   weights.resize(boost::extents[channels][taps]);
 
@@ -388,6 +382,8 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     }
   }
 
+  delete[] result;
+
 #if 0
   cout << "final taps: " << std::endl;
   for(unsigned channel=0; channel<channels; channel++) {
@@ -398,8 +394,6 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
     std::cout << std::endl;
   }
 #endif
-
-  free(result);
 }
 
 #else // USE_ORIGINAL_FILTER
