@@ -1,24 +1,27 @@
 // this function is called after the user correctly logged in 
 // this should start whatever this project wants 
-
+ 
 afterLogin(string user, string password, string newLocale, int closeModules = 1) 
 {
   // WARNING string variable 'panel' below must be set 
   // - if the user would like to have a special beginning panel
   // - or isMotif will be started
-  string panel    = "navigator.pnl", s;         // default panelName  to be opened after login
+  string panel    = "navigator.pnl", s;           // default panelName  to be opened after login
   string module   = "PVSS-II";                  // default moduleName to be used
   string locale   = getLocale(getActiveLang()); // current locale 
 
+  string myModule ;
+
+  if (closeModules > 0)
+     myModule = myModuleName();
+  
   bool           usePT=true;
   unsigned       xResolution, yResolution, templateNumber,
                  x=1000, y=600, i;
   dyn_string     panels;
   dyn_uint       xs=makeDynInt(1600,1280,1024),
                  ys=makeDynInt(1200,1024, 768);
-  
-  
-
+    switchToSplitWithActiveDrivers();
   //**** mhalper: only if demo application ******************************************************
   if (dpExists("ApplicationProperties"))
   { 
@@ -86,10 +89,10 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
   }
   if ((closeModules == 1 || closeModules == 3) &&
        isModuleOpen(module) &&
-       myModuleName() != "mainModule" &&
-       myModuleName() != "naviModule" &&
-       myModuleName() != "infoModule" &&
-       myModuleName() != module)
+       myModule != "mainModule" &&
+       myModule != "naviModule" &&
+       myModule != "infoModule" &&
+       myModule != module)
   {
        ModuleOff(module);
        while ( isModuleOpen(module) ) // ... von Milos 
@@ -97,28 +100,19 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
 //       delay(0,500);
   }
 
-  if (!isModuleOpen(module))
+  if (closeModules==0 || !isModuleOpen(module))
+  {
      ModuleOn(module,0,0,x,y,-1,-1,"Scale");
+
+     while (!isModuleOpen(module))
+        delay(0, 100);
+  }
+
   playDemoStartUpSound();
 
   if (usePT)
   {
-    if ((closeModules == 1 || closeModules == 3) &&
-         myModuleName() != "mainModule" &&
-         myModuleName() != "naviModule" &&
-         myModuleName() != "infoModule" &&
-         myModuleName() != module)
-    /*
-    if ( myModuleName() != "mainModule" &&
-         myModuleName() != "naviModule" &&
-         myModuleName() != "infoModule" &&
-         myModuleName() != module)
-    */
-      ModuleOff(myModuleName());
-    else
-      if (myModuleName() != module )
-        PanelOff();
-      
+     
     if (isModuleOpen("naviModule"))  //redraw navi panel
     {
       if (dpExists("ApplicationProperties") && panel == "basePanel_user.pnl" )  //mhalper: only for the demo application
@@ -131,11 +125,26 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
       RootPanelOnModule(panel,"",module,"");
       playDemoStartUpSound();
     }
-  }
+
+    if ((closeModules == 1 || closeModules == 3) &&
+         myModule != "mainModule" &&
+         myModule != "naviModule" &&
+         myModule != "infoModule" &&
+         myModule != module)
+      ModuleOff(myModule);
+    else 
+      if (myModule != module && closeModules != 0 )
+        PanelOff();
+   }
   else
   {
     string ID="$ID:"+myManId();
-    RootPanelOnModule(panel,"",module,makeDynString("$baseDP:LOFAR_PIC",ID));
+    RootPanelOnModule(panel,"",module,makeDynString(ID)); 
+    
+    if ( module != myModule && closeModules != 0) 
+      ModuleOff(myModule);
+
+    playDemoStartUpSound();
   }
   // last action ... close login-Module 
 } 

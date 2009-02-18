@@ -328,7 +328,7 @@ LANG:1 6 Layer8
 "$name""fw_progressBar"
 "$progressBarDPE""Test"
 3 12 "fw_viewSelection"
-"objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.976377952755904 7
+"objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.976377952755904 6
 1
 "$name""fw_viewSelection"
 3 13 "fw_alerts"
