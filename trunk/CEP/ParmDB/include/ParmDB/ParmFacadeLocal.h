@@ -110,6 +110,12 @@ namespace LOFAR { namespace BBS {
                                         double timev1, double timev2,
                                         bool asStartEnd);
 
+    // Get coefficients, errors, and domains they belong to.
+    virtual casa::Record getCoeff (const string& parmNamePattern,
+                                   double freqv1, double freqv2,
+                                   double timev1, double timev2,
+                                   bool asStartEnd);
+
   private:
     // Get the values for the given predict grid
     casa::Record doGetValues (const string& parmNamePattern,

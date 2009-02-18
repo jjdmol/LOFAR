@@ -86,6 +86,8 @@ namespace BBS {
     void setScalars (const Grid&, const casa::Array<double>&);
 
     // Set the errors.
+    // They must have the same shape as the values, so the values must have
+    // been set before.
     void setErrors (const casa::Array<double>&);
 
     // Get the value shape.
@@ -113,8 +115,12 @@ namespace BBS {
       { return itsErrors != 0; }
 
     // Get the arrays with errors. Undefined if <src>getErrors()==false</src>.
+    // <group>
     const casa::Array<double>& getErrors() const
       { return *itsErrors; }
+    casa::Array<double>& getErrors()
+      { return *itsErrors; }
+    // </group>
 
     // Get/set the rowid to remember where the value is stored in the ParmDB.
     // <group>

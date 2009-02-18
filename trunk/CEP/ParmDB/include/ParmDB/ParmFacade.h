@@ -149,6 +149,22 @@ namespace LOFAR { namespace BBS {
       { return itsRep->getValuesGrid (parmNamePattern, freqv1, freqv2,
                                       timev1, timev2, asStartEnd); }
 
+    // Get the coefficients and possible errors for the given parameters
+    // and domains.
+    // The Record contains a map of parameter name to a subrecord.
+    // The subrecord contains a map of 'v_i' to a subrecord where v_i
+    // represents the i-th domain. Each subrecord contains the fields
+    // coeff, error, and domain. Each of these fields contain an array of
+    // doubles containing the values. The error array is empty if no errors
+    // are stored.
+    casa::Record getCoeff (const string& parmNamePattern,
+                           double freqv1=-1e30, double freqv2=1e30,
+                           double timev1=-1e30, double timev2=1e30,
+                           bool asStartEnd=true)
+      { return itsRep->getCoeff (parmNamePattern, freqv1, freqv2,
+                                 timev1, timev2, asStartEnd); }
+
+
   private:
     // Convert a record to a map.
     map<string,vector<double> > record2Map (const casa::Record& rec) const;

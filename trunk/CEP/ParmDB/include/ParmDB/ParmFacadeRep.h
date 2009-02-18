@@ -108,7 +108,13 @@ namespace LOFAR { namespace BBS {
                                         double freqv1, double freqv2,
                                         double timev1, double timev2,
                                         bool asStartEnd) = 0;
-  };
+
+    // Get coefficients, errors, and domains they belong to.
+    virtual casa::Record getCoeff (const string& parmNamePattern,
+                                   double freqv1, double freqv2,
+                                   double timev1, double timev2,
+                                   bool asStartEnd) = 0;
+   };
 
   // @}
 

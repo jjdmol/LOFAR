@@ -26,6 +26,18 @@
 namespace LOFAR {
 namespace BBS {
 
+  Box::Box (double x1, double x2, double y1, double y2, bool asStartEnd)
+  {
+    if (!asStartEnd) {
+      x1 -= x2 * 0.5;
+      x2 += x1;
+      y1 -= y2 * 0.5;
+      y2 += y1;
+    }
+    itsStart = Point(x1,y1);
+    itsEnd   = Point(x2,y2);
+  }
+
   Box unite (const Box& lhs, const Box& rhs)
   {
     Point start(min(lhs.lowerX(), rhs.lowerX()),

@@ -241,20 +241,12 @@ namespace LOFAR {
                                            double timev1, double timev2,
                                            bool asStartEnd)
     {
-      double sfreq = freqv1;
-      double efreq = freqv2;
-      double stime = timev1;
-      double etime = timev2;
-      if (!asStartEnd) {
-        sfreq = freqv1 - freqv2/2;
-        efreq = sfreq  + freqv2;
-        stime = timev1 - timev2/2;
-        etime = stime  + timev2;
-      }
+      Box box(freqv1, freqv2, timev1, timev2, asStartEnd);
       BlobString buf;
       MWBlobOut bbo(buf, GetValuesGrid, 0);
       bbo.blobStream() << parmNamePattern
-                       << sfreq << efreq << stime << etime;
+                       << box.lowerX() << box.upperX()
+                       << box.lowerY() << box.upperY();
       bbo.finish();
       itsConn.writeAll (buf);
       vector<Record> recs(itsConn.size());
@@ -268,6 +260,33 @@ namespace LOFAR {
         bbi.finish();
       }
       return combineRemote (recs);
+    }
+
+    Record ParmFacadeDistr::getCoeff (const string& parmNamePattern,
+                                      double freqv1, double freqv2,
+                                      double timev1, double timev2,
+                                      bool asStartEnd)
+    {
+      Box box(freqv1, freqv2, timev1, timev2, asStartEnd);
+      BlobString buf;
+      MWBlobOut bbo(buf, GetCoeff, 0);
+      bbo.blobStream() << parmNamePattern
+                       << box.lowerX() << box.upperX()
+                       << box.lowerY() << box.upperY();
+      bbo.finish();
+      itsConn.writeAll (buf);
+      vector<Record> recs(itsConn.size());
+      string msg;
+      for (int i=0; i<itsConn.size(); ++i) {
+        itsConn.read (i, buf);
+        MWBlobIn bbi(buf);
+        ASSERT (bbi.getOperation() == 1);    // ensure success
+        getRecord (bbi.blobStream(), recs[i]);
+        bbi.blobStream() >> msg;
+        bbi.finish();
+      }
+      ///      return combineRemote (recs);
+      return Record();
     }
 
     Record ParmFacadeDistr::combineRemote (const vector<Record>& recs) const

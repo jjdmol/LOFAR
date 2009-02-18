@@ -166,7 +166,7 @@ namespace BBS {
     casa::Table find (const std::string& parmName, 
                       const Box& domain);
 
-    // Create a select expression node on domain and parent id.
+    // Create a select expression node on domain.
     casa::TableExprNode makeExpr (const casa::Table& table,
                                   const Box& domain) const;
 

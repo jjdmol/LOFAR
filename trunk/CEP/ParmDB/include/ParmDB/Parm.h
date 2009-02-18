@@ -82,12 +82,17 @@ namespace BBS {
     // The solve grid must have been set before.
     vector<double> getCoeff (const Location&, bool useMask=true);
 
+    // Get the errors for the given location in the solve grid.
+    // The solve grid must have been set before.
+    vector<double> getErrors (const Location&, bool useMask=true);
+
     // Set the coefficients for the given location in the solve grid.
+    // If given, the errors are set too.
     // The solve grid must have been set before.
     // It sets the dirty flag, so the data are written when the ParmCache
     // is flushed.
     void setCoeff (const Location&, const double* values, uint nvalues,
-                   bool useMask=true);
+                   const double* errors=0, bool useMask=true);
 
     // Revert to the original coefficients (as on disk).
     // (not implemented yet).
@@ -130,10 +135,10 @@ namespace BBS {
     void getResult (vector<casa::Array<double> >& result,
                     const Grid& predictGrid, bool perturb);
 
-    // Form the coefficients vector from values and mask.
-    static vector<double> makeCoeff (const casa::Array<double>& values,
-                                     const casa::Array<bool>& mask,
-                                     bool useMask);
+    // Form the vector from values and mask.
+    static vector<double> copyValues (const casa::Array<double>& values,
+                                      const casa::Array<bool>& mask,
+                                      bool useMask);
 
     // Evaluate the result for funklet coefficients.
     static void getResultCoeff (casa::Array<double>* resultVec,
@@ -149,15 +154,17 @@ namespace BBS {
                                  AxisMappingCache& axisMappingCache);
 
     // Get the result for multiple ParmValues containing scalars.
+    // If the <src>errors</src> argument is non-zero, the errors are filled too.
     static void getResultScalar (casa::Array<double>& result,
+                                 casa::Array<double>* errors,
                                  const Grid& predictGrid,
                                  const ParmValueSet& pvset,
                                  AxisMappingCache& axisMappingCache);
 
-    // Get the result for a single ParmValue.
-    static void getResultPV (double* resData, int nrx, int stx, int sty,
-                             int endx, int endy, const ParmValue& pval,
-                             const Grid& predictGrid);
+    // Fill the result array partially for a single ParmValue.
+    static void fillArrayPV (double* resData, int nrx, int stx, int sty,
+                             int endx, int endy, const double* data,
+                             const ParmValue& pval, const Grid& predictGrid);
 
     // Calculate the perturbations.
     void calcPerturbations();

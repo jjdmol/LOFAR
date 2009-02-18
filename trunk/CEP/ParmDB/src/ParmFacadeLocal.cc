@@ -171,16 +171,7 @@ namespace LOFAR {
                                            double timev1, double timev2,
                                            bool asStartEnd)
     {
-      double sfreq = freqv1;
-      double efreq = freqv2;
-      double stime = timev1;
-      double etime = timev2;
-      if (!asStartEnd) {
-        sfreq = freqv1 - freqv2/2;
-        efreq = sfreq  + freqv2;
-        stime = timev1 - timev2/2;
-        etime = stime  + timev2;
-      }
+      Box domain (freqv1, freqv2, timev1, timev2, asStartEnd);
       // Get all matching parm names.
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.
@@ -193,7 +184,6 @@ namespace LOFAR {
         ASSERT (parmSet.addParm (itsPDB, names[i]) == i);
       }
       // Create and fill the cache for the given domain.
-      Box domain (Point(sfreq, stime), Point(efreq, etime));
       ParmCache parmCache(parmSet, domain);
       // Now create the Parm object for each parm and get the values.
       Array<double> result;
@@ -235,6 +225,41 @@ namespace LOFAR {
         grid = Grid(grids, true);
       }
       return grid.subset (domain);
+    }
+
+    // Get coefficients, errors, and domains they belong to.
+    casa::Record ParmFacadeLocal::getCoeff (const string& parmNamePattern,
+                                            double freqv1, double freqv2,
+                                            double timev1, double timev2,
+                                            bool asStartEnd)
+    {
+      Box domain (freqv1, freqv2, timev1, timev2, asStartEnd);
+      ParmMap result;
+      itsPDB.getValues (result, parmNamePattern, domain);
+      AxisMappingCache axesCache;
+      Record rec;
+      for (ParmMap::const_iterator iter=result.begin();
+           iter!=result.end(); ++iter) {
+        const ParmValueSet& pvset = iter->second;
+        Grid grid (getGrid (pvset, domain));
+        if (!grid.isDefault()) {
+          if (pvset.getType() == ParmValue::Scalar) {
+            Array<double> result, errors;
+            Parm::getResultScalar (result, &errors, grid, pvset, axesCache);
+            const Axis& axisx = *grid[0];
+            const Axis& axisy = *grid[1];
+            Record vals;
+            vals.define ("coeff", result);
+            vals.define ("errors", errors);
+            vals.define ("freqs", Vector<double>(axisx.centers()));
+            vals.define ("times", Vector<double>(axisy.centers()));
+            vals.define ("freqwidths", Vector<double>(axisx.widths()));
+            vals.define ("timewidths", Vector<double>(axisy.widths()));
+            rec.defineRecord (iter->first, vals);
+          }
+        }
+      }
+      return rec;
     }
 
   } // namespace ParmDB

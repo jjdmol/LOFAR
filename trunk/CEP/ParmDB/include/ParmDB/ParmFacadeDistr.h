@@ -66,7 +66,12 @@ namespace LOFAR { namespace BBS {
   {
   public:
     // Define the possible commands.
-    enum Command {Quit, GetRange, GetValues, GetValuesVec, GetValuesGrid};
+    enum Command {Quit,
+                  GetRange,
+                  GetValues,
+                  GetValuesVec,
+                  GetValuesGrid,
+                  GetCoeff};
 
     // Make a connection to the given distributed ParmTable.
     // It starts the remote processes which connect to this object.
@@ -116,6 +121,12 @@ namespace LOFAR { namespace BBS {
                                         double freqv1, double freqv2,
                                         double timev1, double timev2,
                                         bool asStartEnd=false);
+
+    // Get coefficients, errors, and domains they belong to.
+    virtual casa::Record getCoeff (const string& parmNamePattern,
+                                   double freqv1, double freqv2,
+                                   double timev1, double timev2,
+                                   bool asStartEnd);
 
   private:
     // Send all workers a quit message.

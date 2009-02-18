@@ -116,6 +116,24 @@ void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   bos << msg;
 }
 
+void getCoeff (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
+{
+  string pattern;
+  double sfreq, efreq, stime, etime;
+  bis >> pattern >> sfreq >> efreq >> stime >> etime;
+  casa::Record rec;
+  string msg;
+  if (sfreq <= efreq  &&  stime <= etime) {
+    try {
+      rec = pdb.getCoeff (pattern, sfreq, efreq, stime, etime, true);
+    } catch (std::exception& x) {
+      msg = x.what();
+    }
+  }
+  putRecord (bos, rec);
+  bos << msg;
+}
+
 void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
 {
   vector<double> range = pdb.getRange("*");
@@ -133,20 +151,19 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
       bbi.finish();
       return;
     case ParmFacadeDistr::GetRange:
-      // Handle getRange;
       getRange (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetValues:
-      // Handle getValues with freqStep/timeStep.
       getValues (pdb, bbi.blobStream(), bbo.blobStream(), range);
       break;
     case ParmFacadeDistr::GetValuesVec:
-      // Handle getValues with vector of freq/time.
       getValuesVec (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetValuesGrid:
-      // Handle getValuesGrid
       getValuesGrid (pdb, bbi.blobStream(), bbo.blobStream());
+      break;
+    case ParmFacadeDistr::GetCoeff:
+      getCoeff (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     default:
       ASSERTSTR(false, "parmdbremote: unknown command-id "
