@@ -140,7 +140,7 @@ string getAlarmStatus(int status){
 //    None
 // *******************************************
 void getAlarms(string dp,dyn_time &times,dyn_string &names, dyn_string &messages, dyn_int &state, dyn_int &status) {
-  if (dpGet(dp+".time",times,dp+".datapoint",names,dp+".message",messages,dp+".state",state,dp+".status",status)) {
+  if (dpGet(dp+".time",times,dp+".datapoint",names,dp+".message",messages,dp+".state",state,dp+".status",status) < 0) {
     LOG_DEBUG("GCFAlarm.ctl:getAlarms|Error getting alarms from database: ", getLastError());  
   }
 }
@@ -157,7 +157,7 @@ void getAlarms(string dp,dyn_time &times,dyn_string &names, dyn_string &messages
 // *******************************************
 void setAlarms(string dp,dyn_time times,dyn_string names, dyn_string messages, dyn_int state, dyn_int status) {
   
-  if (dpSet(dp+".time",times,dp+".datapoint",names,dp+".message",messages,dp+".state",state,dp+".status",status)) {
+  if (dpSet(dp+".time",times,dp+".datapoint",names,dp+".message",messages,dp+".state",state,dp+".status",status) < 0) {
     LOG_DEBUG("GCFAlarm.ctl:setAlarms|Error setting alarms in database: ", getLastError());  
   }
 }

@@ -30,7 +30,7 @@
 // it monitors the state changes in the database, and will update the alarms accordingly
 // 
 
-bool bDebug=false;
+bool bDebug=true;
 bool occupied=false;
 
 main () {
@@ -209,13 +209,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     }   
     
     if (changed) {
-      // rewrite database  
-      if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
-        setAlarms(DPNAME_NAVIGATOR + ".alarms",
-                  g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
-      } else {
-        DebugTN("monitorAlarms.ctl:objectStateCallback|Couldn't write alarms to navigator");
-      }
+      storeAlarms();
     }
     if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on state < 40");   
     occupied = false;
@@ -301,11 +295,12 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     }
   }
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Datapoint - "+aDP);
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Time      - "+aTime);
+  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Time      - ",aTime);
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: State     - "+state);
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Message   - "+message);
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Status    - "+aStatus);
   if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Found: Force     - "+force);
+  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|iPos:            - "+iPos);
   // Now store the values 
   g_alarms[ "TIME"    ][iPos] = aTime;
   g_alarms[ "STATE"   ][iPos] = state;
@@ -394,7 +389,7 @@ void rereadTriggered(string dp1, bool aB) {
 void storeAlarms() {
   // store alarms in database.
   if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
-    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Storing the alarms in db");
+    if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Storing the alarms in db: "+g_alarms);
     setAlarms(DPNAME_NAVIGATOR + ".alarms",
               g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
   } else {
