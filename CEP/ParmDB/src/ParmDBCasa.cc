@@ -314,6 +314,7 @@ namespace BBS {
     ROArrayColumn<double>  ivxCol(table, "INTERVALSX");
     ROArrayColumn<double>  ivyCol(table, "INTERVALSY");
     ROArrayColumn<double>  valCol(table, "VALUES");
+    ROArrayColumn<double>  errCol(table, "ERRORS");
     // Form an index for the nameids.
     ColumnsIndex colInx(table, "NAMEID");
     // Create an accessor for the key in the index,
@@ -349,6 +350,9 @@ namespace BBS {
             pval->setScalars (Grid(getInterval(ivxCol, row, sx, ex, nx),
                                    getInterval(ivyCol, row, sy, ey, ny)),
                               values);
+          }
+          if (errCol.isDefined(row)) {
+            pval->setErrors (errCol(row));
           }
           pval->setRowId (origRownrs[row]);
           values.push_back (pval);

@@ -74,6 +74,9 @@ namespace BBS {
     // Trailing values may be omitted and default to -1e30 or 1e30.
     Box (const vector<double>&);
 
+    // Create from start/end or center/width.
+    Box (double x1, double x2, double y1, double y2, bool asStartEnd=false);
+
     // Test if boxes are exactly the same.
     // <group>
     bool operator== (const Box& that) const

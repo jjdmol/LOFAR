@@ -91,6 +91,8 @@ namespace BBS {
 
   void ParmValue::setErrors (const casa::Array<double>& errors)
   {
+    // Check that the errors have the same shape as the values.
+    ASSERT (errors.shape().isEqual (itsValues.shape()));
     // Make sure a copy is made of the errors.
     if (!itsErrors) {
       itsErrors = new Array<double>();

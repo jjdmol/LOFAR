@@ -52,6 +52,8 @@ void check (const Box& box, double sx, double sy, double ex, double ey)
 void testBox()
 {
   check (Box(), 0, 0, 0, 0);
+  check (Box(1,2,3,4,true), 1,3,2,4);
+  check (Box(1,2,3,4), 0,1,2,5);
   Box box(Point(1,2), Point(3,4));
   check (box, 1, 2, 3, 4);
   Box box2;

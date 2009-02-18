@@ -78,7 +78,7 @@ namespace BBS {
                                            pvset.getGrid());
     const ParmValue& pv = pvset.getParmValue(cellId);
     if (pvset.getType() != ParmValue::Scalar) {
-        return makeCoeff (pv.getValues(), pvset.getSolvableMask(), useMask);
+        return copyValues (pv.getValues(), pvset.getSolvableMask(), useMask);
     }
     // An array of scalar values; get the right one.
     cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
@@ -87,9 +87,32 @@ namespace BBS {
     return vector<double> (1, pv.getValues().data()[cellId]);
   }
 
-  vector<double> Parm::makeCoeff (const Array<double>& values,
-                                  const Array<Bool>& mask,
-                                  bool useMask)
+  vector<double> Parm::getErrors (const Location& where, bool useMask)
+  {
+    ASSERT (! itsSolveGrid.isDefault());
+    const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
+    // Find the location in the ParmValueSet grid given the location in
+    // the solve grid.
+    uint cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+                                           where, itsSolveGrid,
+                                           pvset.getGrid());
+    const ParmValue& pv = pvset.getParmValue(cellId);
+    if (!pv.hasErrors()) {
+      return vector<double>();
+    }
+    if (pvset.getType() != ParmValue::Scalar) {
+        return copyValues (pv.getErrors(), pvset.getSolvableMask(), useMask);
+    }
+    // An array of scalar values; get the right one.
+    cellId = GridMapping::findCellId (itsCache->getAxisMappingCache(),
+                                      where, itsSolveGrid,
+                                      pv.getGrid());
+    return vector<double> (1, pv.getErrors().data()[cellId]);
+  }
+
+  vector<double> Parm::copyValues (const Array<double>& values,
+                                   const Array<Bool>& mask,
+                                   bool useMask)
   {
     ASSERT (values.contiguousStorage());
     if (!useMask  ||  mask.size() == 0) {
@@ -110,7 +133,7 @@ namespace BBS {
 
   void Parm::setCoeff (const Location& where,
                        const double* newValues, uint nvalues,
-                       bool useMask)
+                       const double* newErrors, bool useMask)
   {
     ASSERT (! itsSolveGrid.isDefault());
     ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
@@ -122,25 +145,43 @@ namespace BBS {
     bool cell0changed = (cellId==0);
     ParmValue& pv = pvset.getParmValue(cellId);
     Array<double>& values (pv.getValues());
+    if (newErrors  &&  !pv.hasErrors()) {
+      Array<double> err(values.shape());
+      err = 0;
+      pv.setErrors (err);
+    }
+    Array<double>& errors (pv.getErrors());
     ASSERT (values.contiguousStorage());
     if (pvset.getType() != ParmValue::Scalar) {
       if (!useMask  ||  mask.size() == 0) {
         // Coefficients without a mask; copy all.
         ASSERT (nvalues == values.size());
         std::copy (newValues, newValues+nvalues, values.cbegin());
+        if (newErrors) {
+          ASSERT (nvalues == errors.size());
+          std::copy (newErrors, newErrors+nvalues, errors.cbegin());
+        }
       } else {
         // Only copy values where mask is true.
         ASSERT (values.shape().isEqual(mask.shape()) &&
                 mask.contiguousStorage());
         double* valp = values.data();
+        double* errp = 0;
+        if (newErrors) {
+          errp = errors.data();
+        }
         const bool* maskp  = mask.data();
+        uint inx=0;
         for (uint i=0; i<values.size(); ++i) {
           if (maskp[i]) {
-            valp[i] = newValues[i];
-            nvalues--;
+            valp[i] = newValues[inx];
+            if (newErrors) {
+              errp[i] = newErrors[inx];
+            }
+            ++inx;
           }
         }
-        ASSERT (nvalues == 0);  // make sure everything is copied
+        ASSERT (inx == nvalues);  // make sure everything is copied
       }
     } else {
       // A scalar array; copy to the correct cell.
@@ -171,8 +212,8 @@ namespace BBS {
     const ParmValueSet& pvset = itsCache->getValueSet(itsParmId);
     const ParmValue& pv = pvset.getFirstParmValue();
     if (pvset.getType() != ParmValue::Scalar) {
-      itsPerturbations = makeCoeff (pv.getValues(), pvset.getSolvableMask(),
-                                    true);
+      itsPerturbations = copyValues (pv.getValues(), pvset.getSolvableMask(),
+                                     true);
     } else {
       itsPerturbations.resize (1);
       itsPerturbations[0] = pv.getValues().data()[0];
@@ -246,7 +287,7 @@ namespace BBS {
       }
     } else {
       // The hardest case; multiple ParmValues, possibly each with its own grid.
-      getResultScalar (result, predictGrid, pvset,
+      getResultScalar (result, 0, predictGrid, pvset,
                        itsCache->getAxisMappingCache());
     }
   }
@@ -385,7 +426,8 @@ namespace BBS {
     }
   }
 
-  void Parm::getResultScalar (Array<double>& result, const Grid& predictGrid,
+  void Parm::getResultScalar (Array<double>& result, Array<double>* errors,
+                              const Grid& predictGrid,
                               const ParmValueSet& pvset,
                               AxisMappingCache& axisMappingCache)
   {
@@ -399,8 +441,15 @@ namespace BBS {
     int nrsx = saxisx.size();
     // Size the array as needed and get a raw pointer to the result data.
     result.resize (IPosition(2, paxisx.size(), paxisy.size()));
-    bool deleteIt;
-    double* resData = result.getStorage (deleteIt);
+    bool deleteRes;
+    double* resData = result.getStorage (deleteRes);
+    bool deleteErr;
+    double* errData = 0;
+    if (errors) {
+      errors->resize (result.shape());
+      *errors = -1;
+      errData = errors->getStorage (deleteErr);
+    }
     int nrx = result.shape()[0];
     // Loop through the cells of pvset's grid.
     // Each cell is a ParmValue with its own grid.
@@ -412,21 +461,27 @@ namespace BBS {
       int inxy = nrsx * mapy[sty];
       int stx = 0;
       for (uint ix=0; ix<bordersx.size(); ++ix) {
-        getResultPV (resData, nrx, stx, sty, bordersx[ix], bordersy[iy],
-                     pvset.getParmValue (mapx[stx] + inxy), predictGrid);
+        const ParmValue& pval = pvset.getParmValue (mapx[stx] + inxy);
+        fillArrayPV (resData, nrx, stx, sty, bordersx[ix], bordersy[iy],
+                     pval.getValues().data(), pval, predictGrid);
+        if (errors  &&  pval.hasErrors()) {
+          fillArrayPV (errData, nrx, stx, sty, bordersx[ix], bordersy[iy],
+                       pval.getErrors().data(), pval, predictGrid);
+        }
         stx = bordersx[ix];
       }
       sty = bordersy[iy];
     }
-    result.putStorage(resData, deleteIt);
+    result.putStorage(resData, deleteRes);
+    if (errors) {
+      errors->putStorage (errData, deleteErr);
+    }
   }
 
-  void Parm::getResultPV (double* resData, int nrx, int stx, int sty,
-                          int endx, int endy, const ParmValue& pval,
-                          const Grid& predictGrid)
+  void Parm::fillArrayPV (double* resData, int nrx, int stx, int sty,
+                          int endx, int endy, const double* data,
+                          const ParmValue& pval, const Grid& predictGrid)
   {
-    // Get pointer to the scalar values.
-    const double* data = pval.getValues().data();
     // Get the axis of predict grid and domain grid.
     const Axis& paxisx = *predictGrid.getAxis(0);
     const Axis& paxisy = *predictGrid.getAxis(1);

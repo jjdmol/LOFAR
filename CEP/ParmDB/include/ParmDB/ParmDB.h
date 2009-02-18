@@ -81,17 +81,6 @@ namespace BBS {
     // Set the default step values.
     virtual void setDefaultSteps (const vector<double>&) = 0;
 
-    // Get the parameter values for the given parameter and domain.
-    // Note that the requested domain may contain multiple values.
-    //    virtual ParmValueSet getValues (const std::string& parmName,
-    //                              const Box& domain) = 0;
-
-    // Get all values for a given domain and set of parm names.
-    // If the parm name vector is empty, all parm names are taken.
-    //    virtual void getValues (ParmMap& result,
-    //                      const std::vector<std::string>& parmNames,
-    //                      const Box& domain) = 0;
-
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
     // The default implementation uses the following getValues function.
@@ -236,7 +225,6 @@ namespace BBS {
 
     // Get the parameter values for the given parameters and domain.
     // Only * and ? should be used in the pattern (no [] and {}).
-    // A selection on parentId is done if >= 0.
     void getValues (ParmMap& result,
                     const std::string& parmNamePattern,
                     const Box& domain) const
@@ -249,11 +237,6 @@ namespace BBS {
                     const vector<ParmId>& parmIds,
                     const Box& domain)
       { itsRep->getValues (values, nameIds, parmIds, domain); }
-
-//     // Put the value for the given parameters and domain.
-//     // If it is a new value, the new rowid will be stored in the ParmValueSet.
-//     void putValues (ParmMap& values)
-//       { itsRep->putValues (values); }
 
     // Put the values of a parameter.
     // If it is a new value, the new rowid will be stored in the ParmValueSet.

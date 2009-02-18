@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -56,13 +57,13 @@ void testMakeCoeff()
   Matrix<double> coeff(2,3);
   indgen (coeff, 1.);     // initialize with 1,2,3,...
   // Make the coefficients with an empty mask without applying the mask.
-  vector<double> c1 = Parm::makeCoeff (coeff, Array<Bool>(), false);
+  vector<double> c1 = Parm::copyValues (coeff, Array<Bool>(), false);
   ASSERT (c1.size() == 6);
   for(uint i=0; i<c1.size(); ++i) {
     ASSERT (c1[i] = i+1);
   }
   // Make the coefficients with an empty mask without applying the mask.
-  vector<double> c2 = Parm::makeCoeff (coeff, Array<Bool>(), true);
+  vector<double> c2 = Parm::copyValues (coeff, Array<Bool>(), true);
   ASSERT (c2.size() == 6);
   for(uint i=0; i<c2.size(); ++i) {
     ASSERT (c2[i] = i+1);
@@ -71,13 +72,13 @@ void testMakeCoeff()
   mask = true;
   mask(1,1) = false;
   // Make the coefficients with a filled mask without applying the mask.
-  vector<double> c3 = Parm::makeCoeff (coeff, mask, false);
+  vector<double> c3 = Parm::copyValues (coeff, mask, false);
   ASSERT (c3.size() == 6);
   for(uint i=0; i<c3.size(); ++i) {
     ASSERT (c3[i] = i+1);
   }
   // Make the coefficients with a filled mask with applying the mask.
-  vector<double> c4 = Parm::makeCoeff (coeff, mask, true);
+  vector<double> c4 = Parm::copyValues (coeff, mask, true);
   ASSERT (c4.size() == 5);
   ASSERT (c4[0] == 1);
   ASSERT (c4[1] == 2);
@@ -280,11 +281,11 @@ void testResultOneScalar()
   }
 }
 
-// Test a multiple ParmValues containing scalar arrays.
-void testResultMultiScalar()
+// Test multiple ParmValues containing scalar arrays.
+void testResultMultiScalar (bool setErrors)
 {
   AxisMappingCache axisCache;
-  // Creaste a few ParmValues with an array of scalars.
+  // Create a few ParmValues with an array of scalars.
   vector<ParmValue::ShPtr> parmValues;
   for (uint j=0; j<4; ++j) {
     for (uint i=0; i<4; ++i) {
@@ -295,6 +296,9 @@ void testResultMultiScalar()
                       Axis::ShPtr(new RegularAxis(12*j+5, 4, 3)));
       ParmValue pval;
       pval.setScalars (domainGrid, scalars);
+      if (setErrors) {
+        pval.setErrors (scalars);
+      }
       parmValues.push_back (ParmValue::ShPtr(new ParmValue(pval)));
     }
   }
@@ -312,8 +316,15 @@ void testResultMultiScalar()
     Grid grid(axis1, axis2);
     // Get the result for this predict grid.
     Matrix<double> result;
-    Parm::getResultScalar (result, grid, pvset, axisCache);
+    Matrix<double> errors;
+    Parm::getResultScalar (result, &errors, grid, pvset, axisCache);
     ASSERT (result.shape() == IPosition(2,12,18));
+    ASSERT (errors.shape() == result.shape());
+    if (setErrors) {
+      ASSERT (allEQ (errors, result));
+    } else {
+      ASSERT (allEQ (errors, -1.));
+    }
     // Now check the result.
     for (int iy=0; iy<18; ++iy) {
       int pvy = (3+iy)/6;             // 6 y-values per ParmValue
@@ -334,7 +345,7 @@ void testResultMultiScalar()
     Grid grid(axis1, axis2);
     // Get the result for this predict grid.
     Matrix<double> result;
-    Parm::getResultScalar (result, grid, pvset, axisCache);
+    Parm::getResultScalar (result, 0, grid, pvset, axisCache);
     ASSERT (result.shape() == IPosition(2,24,48));
     // Now check the result.
     for (int iy=0; iy<48; ++iy) {
@@ -405,15 +416,22 @@ void testSetGetCoeff1()
     }
   }
   // Set coefficients 
-  vector<double> newCoeff(5);
+  vector<double> newCoeff(5), newError(5);
   for (uint i=0; i<newCoeff.size(); ++i) {
     newCoeff[i] = (i+1)*0.1;
+    newError[i] = (i+2)*0.001;
   }
-  parmdc.setCoeff (Location(0,0), &(newCoeff[0]), newCoeff.size());
+  parmdc.setCoeff (Location(0,0), &(newCoeff[0]), newCoeff.size(),
+                   &(newError[0]));
   vector<double> coeffdc = parmdc.getCoeff (Location(0,0));
   ASSERT (coeffdc.size() == newCoeff.size());
   for (uint i=0; i<coeffdc.size(); ++i) {
     ASSERT (coeffdc[i] == (i+1)*0.1);
+  }
+  vector<double> errordc = parmdc.getErrors (Location(0,0));
+  ASSERT (errordc.size() == newError.size());
+  for (uint i=0; i<errordc.size(); ++i) {
+    ASSERT (errordc[i] == (i+2)*0.001);
   }
   parmCache.flush();
 }
@@ -443,11 +461,18 @@ void testSetGetCoeff2()
     for (uint i=0; i<coeffdc.size(); ++i) {
       ASSERT (coeffdc[i] == i+10);
     }
+    vector<double> errordc = parmdc.getErrors (Location(1,1));
+    ASSERT (errordc.size() == 0);
     // Check the coeff of the first solve grid cell.
     coeffdc = parmdc.getCoeff (Location(0,0));
     ASSERT (coeffdc.size() == 5);
     for (uint i=0; i<coeffdc.size(); ++i) {
       ASSERT (coeffdc[i] == (i+1)*0.1);
+    }
+    errordc = parmdc.getErrors (Location(0,0));
+    ASSERT (errordc.size() == 5);
+    for (uint i=0; i<errordc.size(); ++i) {
+      ASSERT (errordc[i] == (i+2)*0.001);
     }
   }
 }
@@ -549,7 +574,8 @@ int main()
     testMakeCoeff();
     testResultCoeff();
     testResultOneScalar();
-    testResultMultiScalar();
+    testResultMultiScalar(false);
+    testResultMultiScalar(true);
     testSetGetCoeff1();
     testSetGetCoeff2();
     testScalarPert();
