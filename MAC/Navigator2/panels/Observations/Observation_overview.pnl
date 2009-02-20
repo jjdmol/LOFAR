@@ -165,6 +165,9 @@ void reload() {
   // set the observation selectable items
   prepareObservationsList();
 
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Observation_overview.pnl\",\"Update\");
 }

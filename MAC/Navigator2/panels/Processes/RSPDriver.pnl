@@ -48,6 +48,7 @@ void doAction(string aDP, string anAction) {
   }
 }
 
+  
 void reload() {
   
   navFunct_clearGlobalLists();
@@ -55,6 +56,9 @@ void reload() {
   // set the observation selectable items
   prepareProcesses();
 
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"RSPDriver.pnl\",\"Update\");
 }

@@ -55,6 +55,9 @@ void reload() {
   
   prepareProcesses();
 
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"TBBDriver.pnl\",\"Update\");
 }

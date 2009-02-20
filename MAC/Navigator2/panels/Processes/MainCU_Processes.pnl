@@ -43,6 +43,9 @@ void reload() {
   // set the observation selectable items
   MainCU_Processes_initList();
 
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"MainCU_Processes.pnl\",\"Update\");
 }

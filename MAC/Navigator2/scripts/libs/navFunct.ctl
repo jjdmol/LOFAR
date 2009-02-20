@@ -63,6 +63,7 @@
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
 // navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
 // navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
+// navFunct_waitObjectReady                   : Loops till object Read or breaks out with error. 
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -1399,3 +1400,26 @@ bool navFunct_dpHasPanels(string dp) {
     return false;   
   }
 }
+
+// ****************************************
+// Name: navFunct_waitObjectReady
+// ****************************************
+//  Waits a given time in ms to see if g_objectReady is true
+//  if not true within a given time, it will issue an error
+//  sets it true and returns.
+//
+// 
+// ****************************************
+void navFunct_waitObjectReady(int timer) {
+  int retry=0;
+  while (!g_objectReady) {
+    delay(0,50);
+    retry+=50;
+    if (retry >= timer) {
+      LOG_ERROR("navFunct.ctl:navFunct_waitObjectReady|retry longer then timer, we will try to continue");
+      g_objectReady=true;
+      return;
+    }
+  }
+  return;
+} 

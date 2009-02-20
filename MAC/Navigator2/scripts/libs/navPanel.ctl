@@ -66,6 +66,10 @@ global bool VddVccEnable=FALSE;
 //
 // ***************************************
 void navPanel_initPanel(string objectName) {
+  
+  // sets global to busy
+  g_objectReady=false;
+  
   itsNavigatorObject = objectName;
   itsActionDp    = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".action";  
   itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".event";
