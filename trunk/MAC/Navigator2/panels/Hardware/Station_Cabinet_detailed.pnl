@@ -87,6 +87,9 @@ void reload() {
   // set the hardware selectable items for this screen
   prepareHardwareList();
   
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Cabinet_detailed.pnl\",\"Update\");
 

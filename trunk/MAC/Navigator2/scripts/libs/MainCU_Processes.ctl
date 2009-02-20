@@ -270,6 +270,9 @@ void MainCU_Processes_UpdateProcessesList() {
     }
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",list);
     
+    // set panel to ready
+    g_objectReady=true;
+  
     // trigger that the panel values are calculated and ready
     navPanel_setEvent("MainCU_Processes.ctl:updateProcessesList","Update");
   }

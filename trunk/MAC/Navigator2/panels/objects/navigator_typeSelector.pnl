@@ -152,7 +152,6 @@ void doHighlight(string dp1,bool aTrigger) {
  */
 void selectTreeItems(shape tree,string parent) {
 
-  delay(0,350);
   LOG_DEBUG(\"navigator_typeSelector.pnl:selectTreeItems|Entered select: \"+highlight+\" parent: \"+parent);
   
   // check if parent exists.
@@ -398,8 +397,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
+"allColumnsShowFocus" "bool TRUE"
  10 30 212 378
 10 TreeWidget
 7

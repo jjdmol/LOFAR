@@ -42,6 +42,9 @@ void reload() {
   // set the observation selectable items
   Station_Processes_initList();
 
+  // set panel to ready
+  g_objectReady=true;
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Processes.pnl\",\"Update\");
 }
