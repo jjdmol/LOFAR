@@ -465,7 +465,7 @@ public abstract class LofarUtils {
                             result+=","+i;
                         }
                     }
-                } else {
+                } else if (!aS.isEmpty()){
                   int anI = Integer.valueOf(aS).intValue();
                   if (first) {
                       result+= anI;
