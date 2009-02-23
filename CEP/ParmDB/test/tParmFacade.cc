@@ -83,6 +83,8 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   showRec (acc.getValuesGrid (pattern, 20,40,20,40));
   // A smaller domain (so using only 2nd part for tParmFacadeDistr).
   showRec (acc.getValuesGrid (pattern, 10,16,6,20));
+  // Get the coeff and errors.
+  cout << acc.getCoeff (pattern) << endl;
 }
 
 int main (int argc, const char* argv[])

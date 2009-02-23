@@ -125,6 +125,9 @@ namespace LOFAR { namespace BBS {
     // Limit it to the given domain.
     Grid getGrid (const ParmValueSet& valueSet, const Box& domain);
 
+    // Collect funklet coeff and errors in the record.
+    casa::Record getFunkletCoeff (const ParmValueSet& pvset);
+
 
     //# Data members
     ParmDB itsPDB;
