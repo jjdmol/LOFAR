@@ -34,15 +34,15 @@ namespace LOFAR {
 
 namespace LFDebug 
 {
-#if defined HAVE_BGL
-  static class BlueGeneL_FixClog {
+#if defined HAVE_BGL || defined HAVE_BGP
+  static class BlueGene_FixClog {
     public:
-      BlueGeneL_FixClog() {
+      BlueGene_FixClog() {
 	// make std::clog line buffered
 	static char buffer[4096];
 	setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
        }
-  } BlueGeneL_FixClog;
+  } BlueGene_FixClog;
 #endif
 
   // -----------------------------------------------------------------------
