@@ -103,6 +103,13 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
 	     boost::python::arg("asStartEnd")=true))
+      .def ("getCoeff", &ParmFacade::getCoeff,
+ 	    (boost::python::arg("parmnamepattern"),
+	     boost::python::arg("sfreq")=-1e30,
+	     boost::python::arg("efreq")= 1e30,
+	     boost::python::arg("stime")=-1e30,
+	     boost::python::arg("etime")= 1e30,
+	     boost::python::arg("asStartEnd")=true))
       ;
   }
     
