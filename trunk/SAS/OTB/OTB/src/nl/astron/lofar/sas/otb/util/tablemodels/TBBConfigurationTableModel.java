@@ -61,28 +61,31 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         this.addColumn("C2");
         this.addColumn("C3");
         this.addColumn("RCUs");
+        this.addColumn("Subbands");
         
     }
     
     /** fills the table with the initial settings
      *
-     * @param  aMode   Vector<String> of all OperatingModes
-     * @param  aBase   Vector<String> of all Baselevels
-     * @param  aStart  Vector<String> of all Startlevels
-     * @param  aStop   Vector<String> of all Stoplevels
-     * @param  aFilter Vector<String> of all Filters
-     * @param  aWindow Vector<String> of all Windows
-     * @param  aC0     Vector<String> of all Coeff0s
-     * @param  aC1     Vector<String> of all Coeff1s
-     * @param  aC2     Vector<String> of all Coeff2s
-     * @param  aC3     Vector<String> of all Coeff3s
-     * @param  aRCUs   Vector<String> of all RCUs involved
+     * @param  aMode          Vector<String> of all OperatingModes
+     * @param  aBase          Vector<String> of all Baselevels
+     * @param  aStart         Vector<String> of all Startlevels
+     * @param  aStop          Vector<String> of all Stoplevels
+     * @param  aFilter        Vector<String> of all Filters
+     * @param  aWindow        Vector<String> of all Windows
+     * @param  aC0            Vector<String> of all Coeff0s
+     * @param  aC1            Vector<String> of all Coeff1s
+     * @param  aC2            Vector<String> of all Coeff2s
+     * @param  aC3            Vector<String> of all Coeff3s
+     * @param  aRCUs          Vector<String> of all RCUs involved
+     * @param  aSubbandList   Vector<String> of all subbands involved
      *
      * @return True if succes else False
      */
      public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
                              Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
-                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs) {
+                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
+                             Vector<String> aSubbandList) {
          
         itsTreeType=treeType;
         // "clear" the table
@@ -110,7 +113,8 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                  aC1.elementAt(i+offset),
                                  aC2.elementAt(i+offset),
                                  aC3.elementAt(i+offset),
-                                 aRCUs.elementAt(i+offset)};
+                                 aRCUs.elementAt(i+offset),
+                                 aSubbandList.elementAt(i+offset)};
             this.addRow(newRow);
         }
         fireTableDataChanged();
@@ -119,23 +123,25 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
  
     /** fills the table with the initial settings
      *
-     * @param  aMode   Vector<String> of all OperatingModes
-     * @param  aBase   Vector<String> of all Baselevels
-     * @param  aStart  Vector<String> of all Startlevels
-     * @param  aStop   Vector<String> of all Stoplevels
-     * @param  aFilter Vector<String> of all Filters
-     * @param  aWindow Vector<String> of all Windows
-     * @param  aC0     Vector<String> of all Coeff0s
-     * @param  aC1     Vector<String> of all Coeff1s
-     * @param  aC2     Vector<String> of all Coeff2s
-     * @param  aC3     Vector<String> of all Coeff3s
-     * @param  aRCUs   Vector<String> of all RCUs involved
+     * @param  aMode          Vector<String> of all OperatingModes
+     * @param  aBase          Vector<String> of all Baselevels
+     * @param  aStart         Vector<String> of all Startlevels
+     * @param  aStop          Vector<String> of all Stoplevels
+     * @param  aFilter        Vector<String> of all Filters
+     * @param  aWindow        Vector<String> of all Windows
+     * @param  aC0            Vector<String> of all Coeff0s
+     * @param  aC1            Vector<String> of all Coeff1s
+     * @param  aC2            Vector<String> of all Coeff2s
+     * @param  aC3            Vector<String> of all Coeff3s
+     * @param  aRCUs          Vector<String> of all RCUs involved
+     * @param  aSubbandList   Vector<String> of all subbands involved
      *
      * @return True if succes else False
      */
      public boolean getTable(Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
                              Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
-                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs) {
+                             Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs,
+                             Vector<String> aSubbandList) {
          
         int length = aMode.size();
         
@@ -152,6 +158,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         aC2.setSize(1);
         aC3.setSize(1);
         aRCUs.setSize(1);
+        aSubbandList.setSize(1);
         
         
         for (int i=0; i<getRowCount(); i++) {
@@ -166,6 +173,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             aC2.addElement((String)getValueAt(i,8));
             aC3.addElement((String)getValueAt(i,9));
             aRCUs.addElement((String)getValueAt(i,10));
+            aSubbandList.addElement((String)getValueAt(i,11));            
         }
         return true;    
     }
@@ -173,17 +181,18 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      
     /**  Add an entry to the tableModel
      *
-     * @param  aMode   String OperatingMode
-     * @param  aBase   String Baselevel
-     * @param  aStart  String Startlevel
-     * @param  aStop   String Stoplevel
-     * @param  aFilter String Filter
-     * @param  aWindow String Window
-     * @param  aC0     String Coeff0
-     * @param  aC1     String Coeff1
-     * @param  aC2     String Coeff2
-     * @param  aC3     String Coeff3
-     * @param  aRCUs   String RCUs involved
+     * @param  aMode        String OperatingMode
+     * @param  aBase        String Baselevel
+     * @param  aStart       String Startlevel
+     * @param  aStop        String Stoplevel
+     * @param  aFilter      String Filter
+     * @param  aWindow      String Window
+     * @param  aC0          String Coeff0
+     * @param  aC1          String Coeff1
+     * @param  aC2          String Coeff2
+     * @param  aC3          String Coeff3
+     * @param  aRCUs        String RCUs involved
+     * @param  aSubbandList String subbands involved
      *
      * @return True if succes else False
      */
@@ -219,6 +228,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             this.setValueAt(newRow[8],row,8);
             this.setValueAt(newRow[9],row,9);
             this.setValueAt(newRow[10],row,10);
+            this.setValueAt(newRow[11],row,11);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
@@ -245,7 +255,8 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
                                    (String)this.getValueAt(row,7),
                                    (String)this.getValueAt(row,8),
                                    (String)this.getValueAt(row,9),
-                                   (String)this.getValueAt(row,10)};
+                                   (String)this.getValueAt(row,10),
+                                   (String)this.getValueAt(row,11)};
             return selection;
         } else {
             return null;

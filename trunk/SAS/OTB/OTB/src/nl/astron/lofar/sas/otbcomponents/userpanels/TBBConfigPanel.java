@@ -279,6 +279,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         inputC2.setEnabled(enabled);
         inputC3.setEnabled(enabled);
         inputRCUs.setEnabled(enabled);
+        inputSubbandList.setEnabled(enabled);
     }
     
     private void initialize() {
@@ -333,7 +334,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBConfigurationPanel.setColumnSize("C1",15);
         TBBConfigurationPanel.setColumnSize("C2",15);
         TBBConfigurationPanel.setColumnSize("C3",15);
-        TBBConfigurationPanel.setColumnSize("RCUs",100);
+        TBBConfigurationPanel.setColumnSize("RCUs",75);
+        TBBConfigurationPanel.setColumnSize("Subbands",75);
         
         // set defaults
         // create initial RCUBitset
@@ -517,6 +519,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsRCUs.add(aNode.limits);
             }
+        } else if (aKeyName.equals("subbandList")) {
+            // SubbandList
+            if (!isInitialized) {
+               inputSubbandList.setToolTipText(aParam.description);
+            }
+            if (isRef && aParam != null) {
+                itsSubbandList.add(aNode.limits + " : " + aParam.limits);
+            } else {
+                itsSubbandList.add(aNode.limits);
+            }
         }
     }
     
@@ -532,7 +544,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
         // set table back to initial values
-        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
+        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs,itsSubbandList);
         
         buttonPanel1.setButtonEnabled("Restore",false);
         buttonPanel1.setButtonEnabled("Apply",false);
@@ -585,6 +597,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
          // RCUs
          inputRCUs.setText(itsRCUs.elementAt(index));
         
+         // subbandList
+         inputSubbandList.setText(itsSubbandList.elementAt(index));
     }
     
     /** fill the RCU bitset to see what RCU's have been set. To be able to determine later if a given RCU is indeed free.
@@ -698,6 +712,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             errorMsg += "(some) RCUs allready used earlier or invalid RCU inputString\n";
         }
         
+        // subbandList
+        if (inputSubbandList.getText().length() <=2) {
+            error=true;
+            errorMsg += "subbandList \n";
+        }
+
         if (error) {
             JOptionPane.showMessageDialog(this,errorMsg,"InputError",JOptionPane.ERROR_MESSAGE);
             return false;
@@ -764,7 +784,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                            inputC1.getText(),
                            inputC2.getText(),
                            inputC3.getText(),
-                           inputRCUs.getText()
+                           inputRCUs.getText(),
+                           inputSubbandList.getText()
         };
         
         if (editting) {
@@ -817,7 +838,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         // now that all Nodes are deleted we should collect the tables input and create new TBBsettings to save to the database.
         
-        itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
+        itsTBBConfigurationTableModel.getTable(itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs,itsSubbandList);
         itsTBBsettings.clear();
         
         try {
@@ -865,6 +886,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                             aHWNode.limits=itsC3s.elementAt(i);
                         } else if (aKeyName.equals("RCUs")) {
                             aHWNode.limits=itsRCUs.elementAt(i);
+                        } else if (aKeyName.equals("subbandList")) {
+                            aHWNode.limits=itsSubbandList.elementAt(i);
                         }
                         saveNode(aHWNode);
                     }
@@ -929,6 +952,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
          // RCUs
          inputRCUs.setText(selection[10]);        
+
+         // subbandList
+         inputSubbandList.setText(selection[11]);
     }
         
     /** Edit chosen configuration.
@@ -1040,6 +1066,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         cancelEditButton = new javax.swing.JButton();
         cancelEditButton.setVisible(false);
         TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        labelSubbandList = new javax.swing.JLabel();
+        inputSubbandList = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setMinimumSize(new java.awt.Dimension(800, 400));
@@ -1215,6 +1243,14 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
+        labelSubbandList.setText("subband List:");
+
+        inputSubbandList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1271,9 +1307,13 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
                             .addComponent(inputRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 949, Short.MAX_VALUE)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(labelSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(inputSubbandList, javax.swing.GroupLayout.DEFAULT_SIZE, 949, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(cancelEditButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGap(9, 9, 9)
                         .addComponent(addConfigButton)))
                 .addContainerGap())
         );
@@ -1341,11 +1381,15 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(labelRCUs)
                     .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addGap(15, 15, 15)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cancelEditButton)
-                    .addComponent(addConfigButton))
-                .addContainerGap(33, Short.MAX_VALUE))
+                    .addComponent(inputSubbandList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelSubbandList))
+                .addGap(35, 35, 35)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(addConfigButton)
+                    .addComponent(cancelEditButton))
+                .addContainerGap())
         );
 
         labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
@@ -1440,6 +1484,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private Vector<String>    itsC2s= new Vector<String>();
     private Vector<String>    itsC3s= new Vector<String>();
     private Vector<String>    itsRCUs= new Vector<String>();
+    private Vector<String>    itsSubbandList= new Vector<String>();
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1459,6 +1504,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JTextField inputRCUs;
     private javax.swing.JTextField inputStartlevel;
     private javax.swing.JTextField inputStoplevel;
+    private javax.swing.JTextField inputSubbandList;
     private javax.swing.JComboBox inputWindow;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -1474,6 +1520,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JLabel labelRCUs;
     private javax.swing.JLabel labelStartlevel;
     private javax.swing.JLabel labelStoplevel;
+    private javax.swing.JLabel labelSubbandList;
     private javax.swing.JLabel labelWindow;
     private javax.swing.JLabel limitsBaselevel;
     private javax.swing.JLabel limitsC0;
