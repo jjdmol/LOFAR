@@ -7,8 +7,8 @@ gnubgp.compiler.conf:   CC=/usr/bin/gcc CXX=/usr/bin/g++ CCAS=/bgsys/drivers/ppc
 gnu.compiler.aipspp.var: --with-casacore=/cephome/romein/packages/casacore-0.3.0/stage --without-wcs
 
 #bgp.variant.conf:       $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(bgp_cpp) $(bgp_ldd) --enable-backtrace --without-log4cplus --with-bglmpich='/bgsys/drivers/ppcfloor/comm' --with-fftw2='/cephome/romein/packages/fftw-2.1.5-single-precision' --with-cppflags='-DHAVE_BGP -I/bgsys/drivers/ppcfloor/comm/include -I/bgsys/drivers/ppcfloor/arch/include'
-cn.variant.conf:        $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(cn_cpp) $(cn_ldd) --enable-backtrace --without-log4cplus --with-bglmpich='/bgsys/drivers/ppcfloor/comm' --with-fftw2='/cephome/romein/packages/fftw-2.1.5-single-precision' 
-ion.variant.conf:       $(lofar_root) $(debugopt) $(threads) $(noshmem) $(ion_cpp) $(ion_ldd) --enable-backtrace --without-log4cplus --with-casacore=/cephome/romein/packages/casacore-0.3.0/stage --without-wcs
+cn.variant.conf:        $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(cn_cpp) $(cn_ldd) --enable-backtrace --without-log4cplus --without-readline --with-bglmpich='/bgsys/drivers/ppcfloor/comm' --with-fftw2='/cephome/romein/packages/fftw-2.1.5-single-precision' 
+ion.variant.conf:       $(lofar_root) $(debugopt) $(threads) $(noshmem) $(ion_cpp) $(ion_ldd) --enable-backtrace --without-log4cplus --without-readline --with-casacore=/cephome/romein/packages/casacore-0.3.0/stage --without-wcs
 
 #bgp_cpp.var:            --with-cppflags='-DHAVE_BGP'
 #bgp_ldd.var:            --with-ldflags='-L/bgsys/drivers/ppcfloor/comm/lib -L/bgsys/drivers/ppcfloor/runtime/SPI' --with-libs='-lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -lSPI.cna -lm'
