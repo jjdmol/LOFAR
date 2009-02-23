@@ -67,5 +67,6 @@ Makefile
 data/Makefile
 data/bin/Makefile
 data/StaticMetaData/Makefile
+data/PVSS/Makefile
 Deployment.spec
 )
