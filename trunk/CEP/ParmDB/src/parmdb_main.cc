@@ -109,7 +109,7 @@ int getType (const string& str)
 }
 
 void showValues (ostream& ostr, const Array<double>& values,
-                 const Array<bool>& mask)
+                 const Array<double>& errors, const Array<bool>& mask)
 {
   int n = values.size();
   if (n > 0) {
@@ -120,6 +120,13 @@ void showValues (ostream& ostr, const Array<double>& values,
     }
   }
   ostr << "  shape=" << values.shape();
+  if (errors.size() > 0) {
+    const double* v = errors.data();
+    ostr << "  errors=" << v[0];
+    for (int i=1; i<n; i++) {
+      ostr << ',' << v[i];
+    }
+  }
   if (mask.size() > 0) {
     const bool* v = mask.data();
     ostr << "  mask=" << v[0];
@@ -162,6 +169,7 @@ void showHelp()
   cerr << "    For example:   values=[1,2,3,4], shape=[1,1,2,2]" << endl;
   cerr << "   mask=                 (mask telling which coefficients are solvable" << endl;
   cerr << "    default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
+  cerr << "   errors=               (optional error for each coefficient)" << endl;
   cerr << "    For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
   cerr << "   pert=1e-6             (perturbation for numerical differentation)" << endl;
   cerr << "   pertrel=T             (perturbation is relative? Use F for angles)" << endl;
@@ -308,12 +316,21 @@ vector<double> getArray (const KeyValueMap& kvmap, const string& arrName,
 
 // Return as Block instead of vector, because vector<bool> uses bits.
 Block<bool> getMask (const KeyValueMap& kvmap, const string& arrName,
-                     uint size)
+                     const IPosition& shape)
 {
+  uint size = shape.product();
   Block<bool> res(size, false);
   KeyValueMap::const_iterator value = kvmap.find(arrName);
   if (value == kvmap.end()) {
-    if (size > 0) res[0] = true;
+    // If not given, set higher coefficients to False.
+    int ndim = std::max(shape[0], shape[1]);
+    uint i=0;
+    for (int iy=0; iy<shape[1]; ++iy) {
+      for (int ix=0; ix<shape[0]; ++ix) {
+        res[i] = (ix+iy < ndim);
+        ++i;
+      }
+    }
     return res;
   }
   vector<bool> vec;
@@ -453,7 +470,11 @@ void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
     ostr << endl;
   }
   ostr << "    values:  ";
-  showValues (ostr, parm.getValues(), pvset.getSolvableMask());
+  Array<double> errors;
+  if (parm.hasErrors()) {
+    errors.reference (parm.getErrors());
+  }
+  showValues (ostr, parm.getValues(), errors, pvset.getSolvableMask());
   ostr << endl;
   ostr << "    pert=" << pvset.getPerturbation()
        << " pert_rel=" << bool2char(pvset.getPertRel()) << endl;
@@ -532,8 +553,8 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
       shape = shp;
       size = nsize;
     }
-    if (kvmap.isDefined("mask")) {
-      Block<Bool> bmask = getMask (kvmap, "mask", size);
+    if (kvmap.isDefined("mask")  ||  size > 1) {
+      Block<Bool> bmask = getMask (kvmap, "mask", shape);
       mask.assign (Array<bool>(shape, bmask.storage(), SHARE));
     }
   } else {
@@ -558,6 +579,13 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
                              Axis::ShPtr(new RegularAxis(yaxis))),
                         vals);
   }
+  // Set the errors if given.
+  if (kvmap.isDefined ("errors")) {
+    vector<double> errors = getArray (kvmap, "errors", size);
+    Array<double> errs(shape, &(errors[0]), SHARE);
+    pval->setErrors (errs);
+  }
+  // Create the ParmValueSet.
   vector<ParmValue::ShPtr> valvec (1, pval);
   vector<Box> domains(1, domain);
   pvset = ParmValueSet (Grid(domains), valvec, defval,
@@ -578,8 +606,8 @@ void newDefParm (const string& parmName, KeyValueMap& kvmap, ostream& ostr)
   // Get values and possible mask.
   vector<double> values = getArray (kvmap, "values", size);
   Block<bool> mask;
-  if (kvmap.isDefined("mask")) {
-    mask = getMask (kvmap, "mask", size);
+  if (kvmap.isDefined("mask")  ||  size > 1) {
+    mask = getMask (kvmap, "mask", shape);
   }
   ParmValue pval(values[0]);
   if (type > 0  ||  values.size() > 1) {
@@ -610,6 +638,7 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
     type = getType (kvmap.getString("type", ""));
   }
   Array<double> values = pval.getValues().copy();
+  IPosition oldShape = values.shape();
   if (kvmap.isDefined("values")) {
     IPosition shape;
     // Get the coefficients shape and the data.
@@ -618,8 +647,8 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
     values.assign (Array<double> (shape, &(coeff[0]), SHARE));
   }
   Array<bool> mask = pvset.getSolvableMask().copy();
-  if (kvmap.isDefined("mask")) {
-    Block<bool> bmask = getMask (kvmap, "mask", values.size());
+  if (kvmap.isDefined("mask")  ||  !oldShape.isEqual(values.shape())) {
+    Block<bool> bmask = getMask (kvmap, "mask", values.shape());
     mask.assign (Array<bool> (values.shape(), bmask.storage(), SHARE));
   }
   // Set perturbation for numerical derivatives.

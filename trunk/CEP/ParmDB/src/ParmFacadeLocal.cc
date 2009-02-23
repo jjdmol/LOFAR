@@ -243,7 +243,9 @@ namespace LOFAR {
         const ParmValueSet& pvset = iter->second;
         Grid grid (getGrid (pvset, domain));
         if (!grid.isDefault()) {
+          // Values found, so add them to the Record.
           if (pvset.getType() == ParmValue::Scalar) {
+            // Scalars are put in 2D arrays.
             Array<double> result, errors;
             Parm::getResultScalar (result, &errors, grid, pvset, axesCache);
             const Axis& axisx = *grid[0];
@@ -256,10 +258,49 @@ namespace LOFAR {
             vals.define ("freqwidths", Vector<double>(axisx.widths()));
             vals.define ("timewidths", Vector<double>(axisy.widths()));
             rec.defineRecord (iter->first, vals);
+          } else {
+            // Funklets are put in 4D arrays.
+            rec.defineRecord (iter->first, getFunkletCoeff(pvset));
           }
         }
       }
       return rec;
+    }
+
+    Record ParmFacadeLocal::getFunkletCoeff (const ParmValueSet& pvset)
+    {
+      // Get the grid of the funklets.
+      const Grid& grid = pvset.getGrid();
+      const Axis& axisx = *grid[0];
+      const Axis& axisy = *grid[1];
+      // Create a 4D array to hold the 2D coeff per funklet.
+      // Its shape is formed by funklet shape and grid shape.
+      IPosition shp = pvset.getParmValue(0).getValues().shape();
+      shp.append (IPosition(2, axisx.size(), axisy.size()));
+      Array<double> coeff(shp);
+      Array<double> errors(shp);
+      errors = -1;
+      // Fill the arrays by iterating over them and each funklet.
+      ArrayIterator<double> coeffIter(coeff, 2);
+      ArrayIterator<double> errorIter(errors, 2);
+      for (uint i=0; i<pvset.size(); ++i) {
+        const ParmValue& pval = pvset.getParmValue(i);
+        coeffIter.array() = pval.getValues();
+        if (pval.hasErrors()) {
+          errorIter.array() = pval.getErrors();
+        }
+        coeffIter.next();
+        errorIter.next();
+      }
+      // Return the info in a Record.
+      Record vals;
+      vals.define ("coeff", coeff);
+      vals.define ("errors", errors);
+      vals.define ("freqs", Vector<double>(axisx.centers()));
+      vals.define ("times", Vector<double>(axisy.centers()));
+      vals.define ("freqwidths", Vector<double>(axisx.widths()));
+      vals.define ("timewidths", Vector<double>(axisy.widths()));
+      return vals;
     }
 
   } // namespace ParmDB
