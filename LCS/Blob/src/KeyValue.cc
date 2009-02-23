@@ -315,6 +315,8 @@ bool KeyValue::getBool() const
   switch (itsDataType) {
   case DTBool:
     return *(bool*)itsValuePtr;
+  case DTInt:
+    return (*(int32*)itsValuePtr != 0);
   default:
     throw std::runtime_error("KeyValue::getBool - invalid data type");
   }
@@ -417,6 +419,15 @@ vector<bool> KeyValue::getVecBool() const
   switch (itsDataType) {
   case DTVecBool:
     return *(vector<bool>*)itsValuePtr;
+  case DTVecInt:
+  {
+    const vector<int32>& kvvec = *(const vector<int32>*)itsValuePtr;
+    vector<bool> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = (kvvec[i] != 0);
+    }
+    return vec;
+  }
   case DTValueVector:
   {
     const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
