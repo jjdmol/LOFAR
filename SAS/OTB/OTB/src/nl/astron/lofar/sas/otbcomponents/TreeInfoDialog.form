@@ -393,11 +393,10 @@
     <Component class="com.toedter.components.JSpinField" name="durationValue">
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new JSpinField(1,60);"/>
-        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="durationValue.adjustWidthToMaximumValue();&#xd;&#xa;durationValue.setValue(durationValue.getMinimum());&#xd;&#xa;durationValue.loopEnabled(true);"/>
       </AuxValues>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="100" y="350" width="40" height="-1"/>
+          <AbsoluteConstraints x="100" y="350" width="40" height="20"/>
         </Constraint>
       </Constraints>
     </Component>
