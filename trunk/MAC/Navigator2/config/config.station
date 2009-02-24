@@ -9,4 +9,4 @@ distributed = 1
 ctrlMaxPendings = 4000 
 
 [dist]
-distPeer = "mcu001.lofar.nl" 61
+distPeer = "mcu001.lofar" 61
