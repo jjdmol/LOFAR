@@ -241,6 +241,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             campaignInput.setVisible(false);
             startTimeLabel.setVisible(false);
             startTimeInput.setVisible(false);
+            durationLabel.setVisible(false);
+            durationValue.setVisible(false);
+            inputDurationType.setVisible(false);
+            setDurationButton.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
             setStartDateButton.setVisible(false);
@@ -254,6 +258,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
             startTimeLabel.setVisible(false);
             startTimeInput.setVisible(false);
+            durationLabel.setVisible(false);
+            durationValue.setVisible(false);
+            inputDurationType.setVisible(false);
+            setDurationButton.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
             setStartDateButton.setVisible(false);
@@ -269,6 +277,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }            
             startTimeLabel.setVisible(true);
             startTimeInput.setVisible(true);
+            durationLabel.setVisible(true);
+            durationValue.setVisible(true);
+            inputDurationType.setVisible(true);
+            setDurationButton.setVisible(true);
             stopTimeLabel.setVisible(true);
             stopTimeInput.setVisible(true);
             setStartDateButton.setVisible(true);
@@ -699,7 +711,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             String errorMsg = "When changing to scheduled, description needs to be filled";
             JOptionPane.showMessageDialog(this,errorMsg,"description error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );
-        } else if (itsStartDate.after(itsStopDate)) {
+        } else if (itsStartDate.after(itsStopDate) && itsTreeType.equals("VHtree")) {
             String errorMsg = "StartDate after stopdate!!!!";
             JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );  
