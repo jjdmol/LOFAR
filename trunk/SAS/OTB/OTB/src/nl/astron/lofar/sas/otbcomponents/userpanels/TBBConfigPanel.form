@@ -78,24 +78,29 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                                  <Component id="labelC2" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelC1" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelC0" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelWindow" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelFilter" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelStoplevel" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelBaselevel" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelOperatingMode" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelStartlevel" alignment="0" max="32767" attributes="1"/>
-                              </Group>
-                              <Component id="labelC3" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="labelRCUs" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
+                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Component id="labelC2" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelC1" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelC0" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelWindow" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelFilter" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelStoplevel" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelBaselevel" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelOperatingMode" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelStartlevel" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelC3" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelRCUs" alignment="0" max="32767" attributes="1"/>
+                              <Component id="labelSubbandList" alignment="0" max="32767" attributes="1"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                       <Component id="inputC3" max="32767" attributes="1"/>
@@ -120,7 +125,7 @@
                                       <Component id="limitsFilter" alignment="0" max="32767" attributes="1"/>
                                       <Component id="limitsC0" alignment="0" max="32767" attributes="1"/>
                                   </Group>
-                                  <EmptySpace pref="43" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Group type="102" attributes="0">
                                           <EmptySpace min="-2" pref="246" max="-2" attributes="0"/>
@@ -129,23 +134,14 @@
                                           <Component id="deleteConfigButton" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <Component id="jLabel2" alignment="0" min="-2" pref="156" max="-2" attributes="0"/>
-                                      <Component id="TBBConfigurationPanel" alignment="0" min="-2" pref="787" max="-2" attributes="0"/>
+                                      <Component id="TBBConfigurationPanel" alignment="0" min="-2" pref="806" max="-2" attributes="0"/>
                                   </Group>
-                                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace pref="18" max="32767" attributes="0"/>
                               </Group>
                               <Component id="inputRCUs" pref="949" max="32767" attributes="0"/>
+                              <Component id="inputSubbandList" pref="949" max="32767" attributes="0"/>
                           </Group>
-                      </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <Component id="labelSubbandList" min="-2" pref="79" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="inputSubbandList" pref="949" max="32767" attributes="0"/>
-                      </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
-                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
@@ -212,9 +208,9 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="labelC3" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="inputC3" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="limitsC3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelC3" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <Group type="102" attributes="0">
@@ -228,8 +224,8 @@
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="labelRCUs" min="-2" max="-2" attributes="0"/>
                       <Component id="inputRCUs" min="-2" max="-2" attributes="0"/>
+                      <Component id="labelRCUs" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
@@ -471,7 +467,7 @@
         </Component>
         <Component class="javax.swing.JLabel" name="labelSubbandList">
           <Properties>
-            <Property name="text" type="java.lang.String" value="subband List:"/>
+            <Property name="text" type="java.lang.String" value="subbands:"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JTextField" name="inputSubbandList">
