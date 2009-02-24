@@ -51,8 +51,8 @@ import javax.swing.event.ChangeListener;
  * spin buttons.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision: 85 $
- * @version $LastChangedDate: 2006-04-28 13:50:52 +0200 (Fr, 28 Apr 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  */
 public class JSpinField extends JPanel implements ChangeListener, CaretListener, ActionListener,
 		FocusListener {
@@ -66,6 +66,7 @@ public class JSpinField extends JPanel implements ChangeListener, CaretListener,
 	protected int max;
 	protected int value;
 	protected Color darkGreen;
+        protected boolean loopEnabled=false;
 
 	/**
 	 * Default JSpinField constructor. The valid value range is between
@@ -84,7 +85,7 @@ public class JSpinField extends JPanel implements ChangeListener, CaretListener,
 		setName("JSpinField");
 		this.min = min;
 		if (max < min)
-			max = min;
+ 		        max = min;
 		this.max = max;
 		value = 0;
 		if (value < min)
@@ -123,6 +124,17 @@ public class JSpinField extends JPanel implements ChangeListener, CaretListener,
 		textField.setPreferredSize(new Dimension(width, height));
 		textField.revalidate();
 	}
+        
+	/**
+	 * if true the spinvalues will loop around from max to min when increased and 
+         * from min to max when decreased.
+	 * 
+	 * @param flag
+	 *            boolean to en/dis able
+	 */
+        public void loopEnabled(boolean flag) {
+            loopEnabled=flag;
+        }
 
 	/**
 	 * Is invoked when the spinner model changes
@@ -147,9 +159,17 @@ public class JSpinField extends JPanel implements ChangeListener, CaretListener,
 	protected void setValue(int newValue, boolean updateTextField, boolean firePropertyChange) {
 		int oldValue = value;
 		if (newValue < min) {
+                    if (loopEnabled) {
+                        value = max;
+                    } else {
 			value = min;
+                    }
 		} else if (newValue > max) {
+                    if (loopEnabled) {
+                        value = min;
+                    } else {
 			value = max;
+                    }
 		} else {
 			value = newValue;
 		}
