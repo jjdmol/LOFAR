@@ -90,8 +90,6 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsIncoherentStokesIData(0),
   itsMode(),
 #if defined HAVE_BGL || defined HAVE_BGP
-  itsDoAsyncCommunication(true),
-  itsTranspose(0),
   itsAsyncTranspose(0),
 #endif
   itsPPF(0),
@@ -255,12 +253,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
   
-#if defined HAVE_BGP || defined HAVE_BGL
-  if(!itsDoAsyncCommunication) {
-    Transpose<SAMPLE_TYPE>::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
-  }
-#endif
-
   std::vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
   std::vector<unsigned>::const_iterator outputPsetIndex = std::find(outputPsets.begin(), outputPsets.end(), myPset);
 
@@ -357,13 +349,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
-    if(itsDoAsyncCommunication) {
-      itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
-							  usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, nrSamplesToCNProc);
-    } else {
-      itsTranspose = new Transpose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, myCore);
-      itsTranspose->setupTransposeParams(itsLocationInfo, inputPsets, outputPsets, itsInputData, itsTransposedData);
-    }
+    itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
+							usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, nrSamplesToCNProc);
   }
 #endif // HAVE_MPI
 }
@@ -371,7 +358,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
 #if defined HAVE_MPI
-  if(itsDoAsyncCommunication) {
     if (itsIsTransposeInput) {
       itsInputData->readMetaData(itsStream); // sync read the meta data
     }
@@ -382,7 +368,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
       itsAsyncTranspose->postAllReceives(itsTransposedData);
       postAsyncReceives.stop();
     }
-  }
 #endif // HAVE_MPI
 
   if (itsIsTransposeInput) {
@@ -393,21 +378,15 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
     }
 
-    if(itsDoAsyncCommunication) {
-      NSTimer asyncSendTimer("async send", LOG_CONDITION);
+    NSTimer asyncSendTimer("async send", LOG_CONDITION);
 
-      for(unsigned i=0; i<itsOutputPsetSize; i++) {
-	readTimer.start();
-	itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
-	readTimer.stop();
-	asyncSendTimer.start();
-	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
-	asyncSendTimer.stop();
-      }
-    } else { // Synchronous
-	readTimer.start();
-	itsInputData->read(itsStream);
-	readTimer.stop();
+    for(unsigned i=0; i<itsOutputPsetSize; i++) {
+      readTimer.start();
+      itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
+      readTimer.stop();
+      asyncSendTimer.start();
+      itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
+      asyncSendTimer.stop();
     }
 #else // NO MPI
     readTimer.start();
@@ -415,27 +394,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
     readTimer.stop();
 #endif
   } // itsIsTransposeInput
-
-
-#if defined HAVE_MPI
-  if(!itsDoAsyncCommunication) {
-    if (itsIsTransposeInput || itsIsTransposeOutput) {
-      if (LOG_CONDITION) {
-	std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start transpose at " << MPI_Wtime() << '\n';
-      }
-#if 0
-      MPI_Barrier(itsTransposeGroup);
-      MPI_Barrier(itsTransposeGroup);
-#endif
-
-      NSTimer transposeTimer("one transpose", LOG_CONDITION);
-      transposeTimer.start();
-      itsTranspose->transpose(itsInputData, itsTransposedData);
-      itsTranspose->transposeMetaData(itsInputData, itsTransposedData);
-      transposeTimer.stop();
-    }
-  }
-#endif // HAVE_MPI
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
@@ -444,26 +402,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   if (LOG_CONDITION)
     std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
 
-  if(itsDoAsyncCommunication) {
-    NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
+  NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
 
-    for (unsigned i = 0; i < itsNrStations; i ++) {
-      asyncReceiveTimer.start();
-      const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
-      asyncReceiveTimer.stop();
-
-      computeTimer.start();
-      itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-      itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
-      computeTimer.stop();
-    }
-  } else {
-    for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-      computeTimer.start();
-      itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
-      itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
-      computeTimer.stop();
-    }
+  for (unsigned i = 0; i < itsNrStations; i ++) {
+    asyncReceiveTimer.start();
+    const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
+    asyncReceiveTimer.stop();
+    
+    computeTimer.start();
+    itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
+    itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
+    computeTimer.stop();
   }
 #else // NO MPI
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
@@ -558,12 +507,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingInput()
 {
 #if defined HAVE_MPI
-  if(itsDoAsyncCommunication) {
-    NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
-    waitAsyncSendTimer.start();
-    itsAsyncTranspose->waitForAllSends();
-    waitAsyncSendTimer.stop();
-  }
+  NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
+  waitAsyncSendTimer.start();
+  itsAsyncTranspose->waitForAllSends();
+  waitAsyncSendTimer.stop();
 #endif
 }
 
@@ -659,11 +606,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postprocess()
 
   if (itsIsTransposeInput || itsIsTransposeOutput) {
 #if defined HAVE_MPI
-    if(itsDoAsyncCommunication) {
       delete itsAsyncTranspose;
-    } else {
-      delete itsTranspose;
-    }
 #endif // HAVE_MPI
   }
 

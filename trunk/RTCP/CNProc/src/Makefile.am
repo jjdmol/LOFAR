@@ -9,7 +9,6 @@ InputData.h		\
 TransposedData.h	\
 FIR.h			\
 PPF.h			\
-Transpose.h		\
 AsyncTranspose.h	\
 BeamFormer.h            \
 Correlator.h		\
@@ -43,7 +42,6 @@ CorrelatorAsm.S			\
 FIR_Asm.S			\
 FFT_Asm.S			\
 FIR.cc				\
-Transpose.cc			\
 AsyncTranspose.cc		\
 BeamFormer.cc                   \
 PPF.cc				\

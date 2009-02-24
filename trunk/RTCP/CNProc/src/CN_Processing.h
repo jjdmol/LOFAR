@@ -45,7 +45,6 @@
 #include <Interface/StokesData.h>
 #include <Interface/StreamableData.h>
 
-#include <Transpose.h>
 #include <AsyncTranspose.h>
 #include <PPF.h>
 #include <Correlator.h>
@@ -138,10 +137,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     bool			itsOutputIncoherentStokesI;
 
 #if defined HAVE_MPI
-    const bool          itsDoAsyncCommunication;
-    Transpose<SAMPLE_TYPE> *itsTranspose;
     AsyncTranspose<SAMPLE_TYPE> *itsAsyncTranspose;
 #endif
+
     PPF<SAMPLE_TYPE>	*itsPPF;
     BeamFormer          *itsBeamFormer;
     PencilBeams         *itsPencilBeamFormer;
