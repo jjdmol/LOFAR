@@ -72,6 +72,8 @@ public class DateTimeChooser
         hours.addPropertyChangeListener(this);
         mins.addPropertyChangeListener(this);
         
+        hours.loopEnabled(true);
+        mins.loopEnabled(true);
         calendar.setWeekOfYearVisible(false);
         calendar.addPropertyChangeListener(this);
         calendar.getYearChooser().addPropertyChangeListener(this);
