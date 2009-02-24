@@ -92,6 +92,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void init() {
+        this.durationValue.setValue(durationValue.getMinimum());
+        this.durationValue.loopEnabled(true);
+        this.durationValue.adjustWidthToMaximumValue();
+
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         if (itsMultiple) {
             topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
@@ -488,9 +492,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         durationLabel = new javax.swing.JLabel();
         setDurationButton = new javax.swing.JButton();
         durationValue = new JSpinField(1,60);
-        durationValue.adjustWidthToMaximumValue();
-        durationValue.setValue(durationValue.getMinimum());
-        durationValue.loopEnabled(true);
         inputDurationType = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -643,7 +644,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             }
         });
         getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 350, 60, 20));
-        getContentPane().add(durationValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 40, -1));
+        getContentPane().add(durationValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 40, 20));
 
         inputDurationType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Minute(s)", "Hour(s)", "Day(s)" }));
         inputDurationType.addActionListener(new java.awt.event.ActionListener() {
@@ -711,10 +712,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             String errorMsg = "When changing to scheduled, description needs to be filled";
             JOptionPane.showMessageDialog(this,errorMsg,"description error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );
-        } else if (itsStartDate.after(itsStopDate) && itsTreeType.equals("VHtree")) {
-            String errorMsg = "StartDate after stopdate!!!!";
-            JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
-            logger.error(errorMsg );  
+        } else if (itsTreeType.equals("VHtree") ){
+            if (itsStartDate.after(itsStopDate)) {
+                String errorMsg = "StartDate after stopdate!!!!";
+                JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
+                logger.error(errorMsg );  
+            }
         } else {
            if (saveNewTree()) {
                 setVisible(false);
