@@ -12,8 +12,7 @@ sbin_PROGRAMS = \
 	RSPTest
 
 sbin_SCRIPTS = \
-	beamtest \
-	wgtest
+	beamtest 
 
 #check_PROGRAMS = \
 #	RSPTest
