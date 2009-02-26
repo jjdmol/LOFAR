@@ -26,5 +26,49 @@ class parmdb(ParmDB):
     The Python interface to ParmDB (calibration parameter tables)
     """
 
-    def __init__(self, tablename):
-        ParmDB.__init__ (self, tablename);
+    def __init__ (self, dbname):
+        ParmDB.__init__ (self, dbname);
+
+    def version (self, type='other'):
+        return self._version (type)
+
+    def getRange (self, parmnamepattern=''):
+        return self._getRange (parmnamepattern)
+
+    def getNames (self, parmnamepattern=''):
+        return self._getNames (parmnamepattern)
+
+    def getValues (self, parmnamepattern, 
+                   sfreq=-1e30, efreq=1e30,
+                   stime=-1e30, etime=1e30,
+                   asStartEnd=True):
+        try:
+            a = len(sfreq)
+            # Domain given as vectors.
+            return self._getValuesVec (parmnamepattern, sfreq, efreq,
+                                       stime, etime, asStartEnd)
+        except:
+            # Domain given as scalars.
+            return self._getValues (parmnamepattern, sfreq, efreq,
+                                    stime, etime, asStartEnd)
+
+    def getValues (self, parmnamepattern,
+                   sfreq, efreq, freqstep,
+                   stime, etime, timestep,
+                   asStartEnd=True):
+        return self._getValues (parmnamepattern, sfreq, efreq, freqstep,
+                                stime, etime, timestep, asStartEnd)
+        
+    def getValuesGrid (self, parmnamepattern,
+                       sfreq=-1e30, efreq=1e30,
+                       stime=-1e30, etime=1e30,
+                       asStartEnd=True):
+        return self._getValuesGrid (parmnamepattern, sfreq, efreq,
+                                    stime, etime, asStartEnd)
+
+    def getCoeff (self, parmnamepattern,
+                  sfreq=-1e30, efreq=1e30,
+                  stime=-1e30, etime=1e30,
+                  asStartEnd=True):
+        return self._getCoeff (parmnamepattern, sfreq, efreq,
+                               stime, etime, asStartEnd)
