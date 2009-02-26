@@ -255,7 +255,7 @@ template <typename SAMPLE_TYPE> void doWork()
     FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration, allocator1);
     CorrelatedData correlatedData(nrBaselines, nrChannels, allocator2);
 
-    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true);
+    PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true);
     Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
 			      beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration, true /* use bandpass correction */);
 

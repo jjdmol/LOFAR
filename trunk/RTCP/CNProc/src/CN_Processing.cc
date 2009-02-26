@@ -260,6 +260,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
   itsNrStations	                   = configuration.nrStations();
+  itsNrSubbands                    = configuration.nrSubbands();
   itsMode                          = configuration.mode();
   itsOutputIncoherentStokesI       = configuration.outputIncoherentStokesI();
   itsOutputPsetSize                = outputPsets.size();
@@ -337,7 +338,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *(itsMapping.allocatorOf(5)));
     itsIncoherentStokesIData     = new StokesData(false, 1, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *(itsMapping.allocatorOf(6)));
 
-    itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation());
+    itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), itsLocationInfo.rank() == 0);
 
     itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres(), configuration.correctBandPass() );
     itsStokes            = new Stokes(itsMode.isCoherent(), itsMode.nrStokes(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
@@ -358,11 +359,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
 #if defined HAVE_MPI
-    if (itsIsTransposeInput) {
+    if (itsIsTransposeInput && itsCurrentSubband < itsNrSubbands) {
       itsInputData->readMetaData(itsStream); // sync read the meta data
     }
 
-    if(itsIsTransposeOutput) {
+    if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
       NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
       postAsyncReceives.start();
       itsAsyncTranspose->postAllReceives(itsTransposedData);

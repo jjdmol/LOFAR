@@ -17,11 +17,13 @@
 namespace LOFAR {
 namespace RTCP {
 
+enum WindowType { HAMMING, BLACKMAN, GAUSSIAN, KAISER };
+
 class FIR {
   public:
 
   // This method initializes the weights array.
-  static void generate_filter(unsigned taps, unsigned channels);
+  static void generate_filter(const unsigned taps, const unsigned channels, const bool verbose);
 
 #if defined FIR_C_IMPLEMENTATION
     FIR();
@@ -33,20 +35,25 @@ class FIR {
 
 private:
   // Hamming window function
-  static void hamming(unsigned n, double* d);
+  static void hamming(const unsigned n, double* d);
 
   // Blackman window function
-  static void blackman(unsigned n, double* d);
+  static void blackman(const unsigned n, double* d);
 
   // Gaussian window function
-  static void gaussian(int n, double a, double* d);
+  static void gaussian(const int n, const double a, double* d);
 
   // Kaiser window function
-  static void kaiser(int n, double beta, double* d);
+  static void kaiser(const int n, const double beta, double* d);
 
-  static unsigned next_power_of_2(unsigned n);
-  static void interpolate(double* x, double* y, unsigned xlen, unsigned n, double* result);
-  static void generate_fir_filter(unsigned n, double w, double* window, double* result);
+  // helper functions
+  static double besselI0(const double x);
+  static unsigned next_power_of_2(const unsigned n);
+  static void interpolate(const double* x, const double* y, const unsigned xlen, const unsigned n, double* result);
+  static void generate_fir_filter(const unsigned n, const double w, const double* window, double* result);
+
+  // The window used for generating the filter
+  static const WindowType itsWindowType = KAISER;
 
 public:
 

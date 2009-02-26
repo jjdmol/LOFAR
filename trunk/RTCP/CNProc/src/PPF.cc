@@ -45,7 +45,7 @@ static NSTimer FFTtimer("PPF::FFT", true);
 static NSTimer PPFtimer("PPF::filter()", true);
 
 
-template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation, const bool verbose)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
@@ -84,7 +84,7 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations,
 #endif
 
   // Generate the filter constants.
-  FIR::generate_filter(NR_TAPS, nrChannels);
+  FIR::generate_filter(NR_TAPS, nrChannels, verbose);
 }
 
 
