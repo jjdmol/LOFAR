@@ -33,6 +33,7 @@ CN_Configuration::CN_Configuration( const Parset &parset, unsigned myPsetNumber 
   
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
+  nrSubbands()              = parset.nrSubbands();
   nrChannelsPerSubband()    = parset.nrChannelsPerSubband();
   nrSamplesPerIntegration() = parset.CNintegrationSteps();
   nrSamplesPerStokesIntegration() = parset.stokesIntegrationSteps();

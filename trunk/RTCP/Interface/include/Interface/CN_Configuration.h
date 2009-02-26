@@ -42,6 +42,7 @@ class CN_Configuration
 
     unsigned		  &nrStations();
     unsigned		  &nrBitsPerSample();
+    unsigned		  &nrSubbands();
     unsigned		  &nrChannelsPerSubband();
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesPerStokesIntegration();
@@ -84,6 +85,7 @@ class CN_Configuration
     {
       unsigned		  itsNrStations;
       unsigned		  itsNrBitsPerSample;
+      unsigned            itsNrSubbands;
       unsigned		  itsNrChannelsPerSubband;
       unsigned		  itsNrSamplesPerIntegration;
       unsigned		  itsNrSamplesPerStokesIntegration;
@@ -116,6 +118,11 @@ inline unsigned &CN_Configuration::nrStations()
 inline unsigned &CN_Configuration::nrBitsPerSample()
 {
   return itsMarshalledData.itsNrBitsPerSample;
+}
+
+inline unsigned &CN_Configuration::nrSubbands()
+{
+  return itsMarshalledData.itsNrSubbands;
 }
 
 inline unsigned &CN_Configuration::nrChannelsPerSubband()
