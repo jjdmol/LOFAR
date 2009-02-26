@@ -56,7 +56,7 @@ fcomplex FIR::processNextSample(const fcomplex sample, const unsigned channel)
 
 
 // hamming window function
-void FIR::hamming(unsigned n, double* d)
+void FIR::hamming(const unsigned n, double* d)
 {
   if(n == 1) {
     d[0] = 1.0;
@@ -71,7 +71,7 @@ void FIR::hamming(unsigned n, double* d)
 }
 
 // blackman window function
-void FIR::blackman(unsigned n, double* d)
+void FIR::blackman(const unsigned n, double* d)
 {
   if(n == 1) {
     d[0] = 1.0;
@@ -87,7 +87,7 @@ void FIR::blackman(unsigned n, double* d)
 }
 
 // Guassian window function
-void FIR::gaussian(int n, double a, double* d)
+void FIR::gaussian(const int n, const double a, double* d)
 {
   int index = 0;
   for (int i=-(n-1); i<=n-1; i+=2) {
@@ -99,7 +99,7 @@ void FIR::gaussian(int n, double a, double* d)
 // Compute the modified Bessel function I_0(x) for any real x.
 // This method was taken from the ROOT package, See http://root.cern.ch/root.
 // It was released undet the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
-double besselI0(double x)
+double FIR::besselI0(const double x)
 {
    // Parameters of the polynomial approximation
    const double   p1=1.0,          p2=3.5156229,    p3=3.0899424,
@@ -126,7 +126,7 @@ double besselI0(double x)
 }
 
 // Kaiser window function
-void FIR::kaiser(int n, double beta, double* d)
+void FIR::kaiser(const int n, const double beta, double* d)
 {
   if(n == 1) {
     d[0] = 1.0;
@@ -141,7 +141,7 @@ void FIR::kaiser(int n, double beta, double* d)
   }
 }
 
-unsigned FIR::next_power_of_2(unsigned n)
+unsigned FIR::next_power_of_2(const unsigned n)
 {
   unsigned res = 1;
 
@@ -154,7 +154,7 @@ unsigned FIR::next_power_of_2(unsigned n)
 
 // One-dimensional interpolation. Interpolate Y, defined at the points X, 
 // at N evenly spaced points between 0 and 1. The sample points X must be strictly monotonic
-void FIR::interpolate(double* x, double* y, unsigned xlen, unsigned n, double* result)
+void FIR::interpolate(const double* x, const double* y, const unsigned xlen, const unsigned n, double* result)
 {
   unsigned nextX = 0;
   unsigned index = 0;
@@ -185,7 +185,7 @@ void FIR::interpolate(double* x, double* y, unsigned xlen, unsigned n, double* r
 // ramp_n: transition width for jumps in filter response
 // defaults to grid_n/20; a wider ramp gives wider transitions
 // but has better stopband characteristics.
-void FIR::generate_fir_filter(unsigned n, double w, double* window, double* result)
+void FIR::generate_fir_filter(const unsigned n, const double w, const double* window, double* result)
 {
   // make sure grid is big enough for the window
   // the grid must be at least (n+1)/2
@@ -330,28 +330,53 @@ void FIR::generate_fir_filter(unsigned n, double w, double* window, double* resu
 
 #if ! USE_ORIGINAL_FILTER
 // This method initializes the weights array.
-void FIR::generate_filter(unsigned taps, unsigned channels)
+void FIR::generate_filter(const unsigned taps, const unsigned channels, const bool verbose)
 {
   unsigned n = channels * taps;
 
-  std::cout << "generating filter with " << channels << " channels and " << taps << " taps (" << n << " total)" << std::endl;
+  if(verbose) {
+    std::cout << "generating FIR filter bank with " << channels << " channels and " << taps << " taps (" << n << " total), using a ";
+  }
  
   double* window = new double[n];
 
-  // Use a n-point Hamming window.
-//  hamming(n, window);
-
-  // Use a n-point Blackman window.
-//  blackman(n, window);
-
-  // Use a n-point Gaussian window.
-//  gaussian(n, 3.5, window);
-
-  // Use a n-point Kaiser window.
-  // The beta parameter is found in matlab / octave with"
-  // where fsin is the sample freq
-  // [n,Wn,bta,filtype]=kaiserord([fsin/channels 1.4*fsin/channels],[1 0],[10^(0.5/20) 10^(-91/20)],fsin);
-  kaiser(n, 9.0695, window);
+  switch(itsWindowType) {
+  case HAMMING:
+  {
+    // Use a n-point Hamming window.
+    if (verbose ) std::cout << "Hamming window" << std::endl;
+    hamming(n, window);
+    break;
+  }
+  case BLACKMAN:
+  {
+    // Use a n-point Blackman window.
+    if (verbose ) std::cout << "Blackman window" << std::endl;
+    blackman(n, window);
+    break;
+  }
+  case GAUSSIAN:
+  {
+    // Use a n-point Gaussian window.
+    double alpha = 3.5;
+    if (verbose ) std::cout << "Gaussian window with alpha = " << alpha << std::endl;
+    gaussian(n, alpha, window);
+    break;
+  }
+  case KAISER:
+  {
+    // Use a n-point Kaiser window.
+    // The beta parameter is found in matlab / octave with
+    // [n,Wn,bta,filtype]=kaiserord([fsin/channels 1.4*fsin/channels],[1 0],[10^(0.5/20) 10^(-91/20)],fsin);
+    // where fsin is the sample freq
+    double beta = 9.0695;
+    if (verbose ) std::cout << "Kaiser window with beta = " << beta << std::endl;
+    kaiser(n, beta, window);
+    break;
+  }
+  default:
+    THROW(CNProcException, "unknown window type");
+  }
 
 #if 0
   std::cout << "window = [";
@@ -399,8 +424,12 @@ void FIR::generate_filter(unsigned taps, unsigned channels)
 #else // USE_ORIGINAL_FILTER
 
 // This method initializes the weights array.
-void FIR::generate_filter(unsigned taps, unsigned channels)
+void FIR::generate_filter(const unsigned taps, const unsigned channels, const bool verbose)
 {
+  if(verbose) {
+    std::cout << "using original static 256 channel FIR filter bank" << std::endl;
+  }
+
   if(taps != 16 || channels != 256) {
     THROW(CNProcException, "not supported!");
   }

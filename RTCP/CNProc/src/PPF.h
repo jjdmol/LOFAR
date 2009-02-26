@@ -33,7 +33,7 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
 {
   public:
-    PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation);
+    PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation, const bool verbose);
     ~PPF();
 
     void computeFlags(const unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
