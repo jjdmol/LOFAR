@@ -67,20 +67,20 @@ namespace LOFAR { namespace BBS  {
     class_<PyParmDB> ("ParmDB",
                       init<std::string>())
 
-      .def ("version", &PyParmDB::version,
+      .def ("_version", &PyParmDB::version,
             (boost::python::arg("type")="other"))
-      .def ("getRange", &ParmFacade::getRange,
+      .def ("_getRange", &ParmFacade::getRange,
  	    (boost::python::arg("parmnamepattern")=""))
-      .def ("getNames", &ParmFacade::getNames,
+      .def ("_getNames", &ParmFacade::getNames,
  	    (boost::python::arg("parmnamepattern")=""))
-      .def ("getValues", fgetvalues0,
+      .def ("_getValues", fgetvalues0,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq")=-1e30,
 	     boost::python::arg("efreq")= 1e30,
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
 	     boost::python::arg("asStartEnd")=true))
-      .def ("getValues", fgetvalues1,
+      .def ("_getValues", fgetvalues1,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
 	     boost::python::arg("efreq"),
@@ -89,21 +89,21 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("etime"),
 	     boost::python::arg("timestep"),
 	     boost::python::arg("asStartEnd")=true))
-      .def ("getValues", fgetvalues2,
+      .def ("_getValuesVec", fgetvalues2,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
 	     boost::python::arg("efreq"),
 	     boost::python::arg("stime"),
 	     boost::python::arg("etime"),
 	     boost::python::arg("asStartEnd")=true))
-      .def ("getValuesGrid", &ParmFacade::getValuesGrid,
+      .def ("_getValuesGrid", &ParmFacade::getValuesGrid,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq")=-1e30,
 	     boost::python::arg("efreq")= 1e30,
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
 	     boost::python::arg("asStartEnd")=true))
-      .def ("getCoeff", &ParmFacade::getCoeff,
+      .def ("_getCoeff", &ParmFacade::getCoeff,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq")=-1e30,
 	     boost::python::arg("efreq")= 1e30,
