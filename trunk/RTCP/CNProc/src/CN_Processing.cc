@@ -359,11 +359,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
 #if defined HAVE_MPI
-    if (itsIsTransposeInput && itsCurrentSubband < itsNrSubbands) {
+  if (itsIsTransposeInput /* && itsCurrentSubband < itsNrSubbands */) {
       itsInputData->readMetaData(itsStream); // sync read the meta data
     }
 
-    if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
+  if(itsIsTransposeOutput /* && itsCurrentSubband < itsNrSubbands */) {
       NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
       postAsyncReceives.start();
       itsAsyncTranspose->postAllReceives(itsTransposedData);
