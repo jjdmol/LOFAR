@@ -285,8 +285,7 @@ namespace LOFAR {
         bbi.blobStream() >> msg;
         bbi.finish();
       }
-      ///      return combineRemote (recs);
-      return Record();
+      return combineRemote (recs);
     }
 
     Record ParmFacadeDistr::combineRemote (const vector<Record>& recs) const
@@ -295,13 +294,12 @@ namespace LOFAR {
       set<String> names;
       findParmNames (recs, names);
       // Combine the data for each parameter.
-      Record result, gridInfo;
+      Record result;
       // Step through all parameters.
       for (set<String>::const_iterator iter=names.begin();
            iter!=names.end(); ++iter) {
-        combineInfo (*iter, recs, result, gridInfo);
+        combineInfo (*iter, recs, result);
       }
-      result.defineRecord ("_grid", gridInfo);
       return result;
     }
 
@@ -311,48 +309,52 @@ namespace LOFAR {
       for (vector<Record>::const_iterator iter=recs.begin();
            iter!=recs.end(); ++iter) {
         for (uint i=0; i<iter->nfields(); ++i) {
-          const String& parmName = iter->name(i);
-          if (parmName != "_grid") {
-            names.insert (parmName);
-          }
+          names.insert (iter->name(i));
         }
       }
     }
 
     void ParmFacadeDistr::combineInfo (const String& name,
                                        const vector<Record>& recs,
-                                       Record& result, Record& gridRec) const
+                                       Record& result) const
     {
       // Get references to all data arrays.
-      vector<const Array<double>*> values;
-      vector<const Array<double>*> fcenters;
-      vector<const Array<double>*> fwidths;
-      const Array<double>* tcenters;
-      const Array<double>* twidths;
+      vector<Array<double> > values;
+      vector<Array<double> > errors;
+      vector<Array<double> > fcenters;
+      vector<Array<double> > fwidths;
+      Array<double> tcenters;
+      Array<double> twidths;
       vector<double> freqs;
       values.reserve (recs.size());
+      errors.reserve (recs.size());
       fcenters.reserve (recs.size());
       fwidths.reserve (recs.size());
       uint ntime=0;
+      bool haveErrors = false;
       for (vector<Record>::const_iterator iter=recs.begin();
            iter!=recs.end(); ++iter) {
         if (iter->isDefined (name)) {
-          const Record& grid = iter->subRecord ("_grid");
+          Record rec = iter->subRecord(name);
           if (values.empty()) {
             // First time.
-            tcenters = &grid.asArrayDouble(name + ";times");
-            twidths  = &grid.asArrayDouble(name + ";timewidths");
-            ntime = tcenters->size();
+            tcenters.reference (rec.asArrayDouble("times"));
+            twidths.reference  (rec.asArrayDouble("timewidths"));
+            ntime = tcenters.size();
+            haveErrors = rec.isDefined ("errors");
           } else {
             // Check if the time axis is the same.
             // That should always be the case.
-            ASSERT (allNear (*tcenters,
-                             grid.asArrayDouble(name + ";times"), 1e-10));
+            ASSERT (allNear (tcenters,
+                             rec.asArrayDouble("times"), 1e-10));
           }
-          values.push_back   (&iter->asArrayDouble (name));
-          fcenters.push_back (&grid.asArrayDouble (name + ";freqs"));
-          fwidths.push_back  (&grid.asArrayDouble (name + ";freqwidths"));
-          freqs.push_back (fcenters[freqs.size()]->data()[0]);
+          values.push_back   (rec.asArrayDouble ("values"));
+          if (haveErrors) {
+            errors.push_back (rec.asArrayDouble ("errors"));
+          }
+          fcenters.push_back (rec.asArrayDouble ("freqs"));
+          fwidths.push_back  (rec.asArrayDouble ("freqwidths"));
+          freqs.push_back (fcenters[freqs.size()].data()[0]);
         }
       }
       // Exit if no matching values found.
@@ -368,33 +370,51 @@ namespace LOFAR {
       index.reserve (indexf.size());
       // The first one always has to be used.
       index.push_back (indexf[0]);
-      const Array<double>* lastUsed = fcenters[indexf[0]];
+      const Array<double>* lastUsed = &fcenters[indexf[0]];
       uint nfreq = lastUsed->size();
       for (uint i=1; i<indexf.size(); ++i) {
         uint inx = indexf[i];
-        const Array<double>* arr = fcenters[inx];
-        if (arr->size() != lastUsed->size()  ||
-            !allNear (*arr, *lastUsed, 1e-10)) {
+        const Array<double>& arr = fcenters[inx];
+        if (arr.size() != lastUsed->size()  ||
+            !allNear (arr, *lastUsed, 1e-10)) {
           index.push_back (inx);
-          lastUsed = fcenters[inx];
+          lastUsed = &fcenters[inx];
           nfreq += lastUsed->size();
         }
       }
+      Record rec;
       // Times are the same for all parts, so define them.
-      gridRec.define (name+";times", *tcenters);
-      gridRec.define (name+";timeWidhts", *twidths);
+      rec.define ("times", tcenters);
+      rec.define ("timewidths", twidths);
       // If only one part left, take that one (which is the first one).
       if (index.size() == 1) {
-        result.define (name, *values[0]);
-        gridRec.define (name+";freqs", *fcenters[0]);
-        gridRec.define (name+";freqwidths", *fwidths[0]);
+        rec.define ("values", values[0]);
+        if (haveErrors) {
+          rec.define ("errors", errors[0]);
+        }
+        rec.define ("freqs", fcenters[0]);
+        rec.define ("freqwidths", fwidths[0]);
+        result.defineRecord (name, rec);
         return;
       }
       // Combine the values and freq grid.
-      Array<double> data(IPosition(2, nfreq, ntime));
+      // Usually values forms a 2D array, but for funklet coefficients
+      // it can be 4D. In that case the first 2 dims are the funklet shape.
+      // Get shape from first array.
+      IPosition shape = values[index[0]].shape();
+      uint ndim = shape.size();
+      uint nelem = (ndim <= 2  ?  1 : shape[0]*shape[1]);
+      shape[ndim-2] = nfreq;
+      shape[ndim-1] = ntime;
+      Array<double> data(shape);
+      Array<double> errdata;
+      if (haveErrors) {
+        errdata.resize (shape);
+      }
       Array<double> fcenter(IPosition(1, nfreq));
       Array<double> fwidth(IPosition(1, nfreq));
       double* dtp = data.data();
+      double* etp = errdata.data();
       double* fcp = fcenter.data();
       double* fwp = fwidth.data();
       // We do the copying ourselves instead of using Array sectioning.
@@ -402,23 +422,39 @@ namespace LOFAR {
       // are contiguous.
       for (uint i=0; i<index.size(); ++i) {
         uint inx = index[i];
-        uint nf = fcenters[inx]->size();
-        memcpy (fcp, fcenters[inx]->data(), nf*sizeof(double));
-        memcpy (fwp, fwidths[inx]->data(),  nf*sizeof(double));
-        double* to = dtp;
-        const double* from = values[inx]->data();
-        for (uint j=0; j<ntime; ++j) {
-          memcpy (to, from, nf*sizeof(double));
-          to += nfreq;
-          from += nf;
-        }
-        dtp += nf;
+        uint nf = fcenters[inx].size();
+        memcpy (fcp, fcenters[inx].data(), nf*sizeof(double));
+        memcpy (fwp, fwidths[inx].data(),  nf*sizeof(double));
         fcp += nf;
         fwp += nf;
+        // Copy values.
+        double* to = dtp;
+        const double* from = values[inx].data();
+        for (uint j=0; j<ntime; ++j) {
+          memcpy (to, from, nf*nelem*sizeof(double));
+          to += nfreq*nelem;
+          from += nf*nelem;
+        }
+        dtp += nf*nelem;
+        if (haveErrors) {
+          // Copy errors.
+          double* to = etp;
+          const double* from = errors[inx].data();
+          for (uint j=0; j<ntime; ++j) {
+            memcpy (to, from, nf*nelem*sizeof(double));
+            to += nfreq*nelem;
+            from += nf*nelem;
+          }
+          etp += nf*nelem;
+        }
       }
-      result.define (name, data);
-      gridRec.define (name+";freqs", fcenter);
-      gridRec.define (name+";freqwidths", fwidth);
+      rec.define ("values", data);
+      if (haveErrors) {
+        rec.define ("errors", errdata);
+      }
+      rec.define ("freqs", fcenter);
+      rec.define ("freqwidths", fwidth);
+      result.defineRecord (name, rec);
     }
 
     void ParmFacadeDistr::getRecord (BlobIStream& bis, Record& rec)

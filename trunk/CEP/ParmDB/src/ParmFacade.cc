@@ -93,20 +93,16 @@ namespace LOFAR {
     ParmFacade::record2Map (const Record& rec) const
     {
       map<string, vector<double> > out;
-      // Copy all values (except the grid) from the record to the map.
+      // Copy all values from the record to the map.
       for (uint i=0; i<rec.nfields(); ++i) {
         const String& name = rec.name(i);
-        if (name != "_grid") {
-          // First make empty vector; thereafter copy values to it.
-          vector<double>& vec = out[rec.name(i)];
-          ASSERT (vec.size() == 0);
-          // Get result and put in map.
-          const Array<double>& arr = rec.asArrayDouble(i);
-          bool deleteIt;
-          const double* ptr = arr.getStorage (deleteIt);
-          // Store the result in the vector.
-          vec.assign (ptr, ptr+arr.nelements());
-        }
+        Record subrec = rec.subRecord(i);
+        // First make empty vector; thereafter copy values to it.
+        vector<double>& vec = out[name];
+        ASSERT (vec.size() == 0);
+        // Get result and put in vector.
+        const Array<double>& arr = subrec.asArrayDouble("values");
+        vec.assign (arr.begin(), arr.end());
       }
       return out;
     }

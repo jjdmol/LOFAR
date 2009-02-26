@@ -206,7 +206,7 @@ namespace BBS {
       { return itsRep->sourceExists (sourceName); }
 
     // Add a patch and return its patchId.
-    // Nomally ra and dec should be filled in, but for moving patches
+    // Normally ra and dec should be filled in, but for moving patches
     // (e.g. sun) this is not needed.
     // <br>Optionally it is checked if the patch already exists.
     uint addPatch (const string& patchName, int catType,

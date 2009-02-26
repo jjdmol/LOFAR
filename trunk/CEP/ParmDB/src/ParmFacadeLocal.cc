@@ -122,7 +122,6 @@ namespace LOFAR {
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.
       Record out;
-      Record gridInfo;
       // Form the names to get.
       // The returned parmId should be the index.
       ParmSet parmSet;
@@ -144,6 +143,7 @@ namespace LOFAR {
         parm.getResult (result, predictGrid, true);
         if (result.size() > 0) {
           // There is data in this domain.
+          Record rec;
           // If the value is constant, the array has only one element.
           // In that case resize it to the full grid.
           if (result.nelements() == 1) {
@@ -151,18 +151,14 @@ namespace LOFAR {
             result.resize (IPosition(2, axisx.size(), axisy.size()));
             result = dval;
           }
-          out.define (names[i], result);
-          gridInfo.define (names[i] + ";freqs",
-                           Vector<double>(axisx.centers()));
-          gridInfo.define (names[i] + ";times",
-                           Vector<double>(axisy.centers()));
-          gridInfo.define (names[i] + ";freqwidths",
-                           Vector<double>(axisx.widths()));
-          gridInfo.define (names[i] + ";timewidths",
-                           Vector<double>(axisy.widths()));
+          rec.define ("values", result);
+          rec.define ("freqs", Vector<double>(axisx.centers()));
+          rec.define ("times", Vector<double>(axisy.centers()));
+          rec.define ("freqwidths", Vector<double>(axisx.widths()));
+          rec.define ("timewidths", Vector<double>(axisy.widths()));
+          out.defineRecord (names[i], rec);
         }
       }
-      out.defineRecord ("_grid", gridInfo);
       return out;
     }
 
@@ -176,7 +172,6 @@ namespace LOFAR {
       vector<string> names = getNames (parmNamePattern);
       // The output is returned in a record.
       Record out;
-      Record gridInfo;
       // Form the names to get.
       // The returned parmId should be the index.
       ParmSet parmSet;
@@ -195,19 +190,16 @@ namespace LOFAR {
           parm.getResult (result, grid, true);
           if (result.size() > 0) {
             // There is data in this domain.
-            out.define (names[i], result);
-            gridInfo.define (names[i] + ";freqs",
-                             Vector<double>(grid[0]->centers()));
-            gridInfo.define (names[i] + ";times",
-                             Vector<double>(grid[1]->centers()));
-            gridInfo.define (names[i] + ";freqwidths",
-                             Vector<double>(grid[0]->widths()));
-            gridInfo.define (names[i] + ";timewidths",
-                             Vector<double>(grid[1]->widths()));
+            Record rec;
+            rec.define ("values", result);
+            rec.define ("freqs", Vector<double>(grid[0]->centers()));
+            rec.define ("times", Vector<double>(grid[1]->centers()));
+            rec.define ("freqwidths", Vector<double>(grid[0]->widths()));
+            rec.define ("timewidths", Vector<double>(grid[1]->widths()));
+            out.defineRecord (names[i], rec);
           }
         }
       }
-      out.defineRecord ("_grid", gridInfo);
       return out;
     }
 
@@ -251,7 +243,7 @@ namespace LOFAR {
             const Axis& axisx = *grid[0];
             const Axis& axisy = *grid[1];
             Record vals;
-            vals.define ("coeff", result);
+            vals.define ("values", result);
             vals.define ("errors", errors);
             vals.define ("freqs", Vector<double>(axisx.centers()));
             vals.define ("times", Vector<double>(axisy.centers()));
@@ -294,7 +286,7 @@ namespace LOFAR {
       }
       // Return the info in a Record.
       Record vals;
-      vals.define ("coeff", coeff);
+      vals.define ("values", coeff);
       vals.define ("errors", errors);
       vals.define ("freqs", Vector<double>(axisx.centers()));
       vals.define ("times", Vector<double>(axisy.centers()));

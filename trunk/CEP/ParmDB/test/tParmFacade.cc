@@ -40,13 +40,13 @@ void showRec (const Record& rec)
 {
   cout << ">start<" << endl;
   for (uint i=0; i<rec.nfields(); ++i) {
-    if (rec.name(i) != "_grid") {
-      cout << rec.name(i) << ' ' << rec.asArrayDouble(i) << endl;
-    }
-  }
-  Record ginfo = rec.subRecord ("_grid");
-  for (uint i=0; i<ginfo.nfields(); ++i) {
-    cout << ginfo.name(i) << ' ' << ginfo.asArrayDouble(i) << endl;
+    Record rc = rec.subRecord (i);
+    cout << rec.name(i) << ' ' << rc.asArrayDouble("values") << endl;
+    cout << " freqs: " << rc.asArrayDouble("freqs") << endl;
+    cout << " times: " << rc.asArrayDouble("times") << endl;
+    cout << " freqwidths: " << rc.asArrayDouble("freqwidths") << endl;
+    cout << " timewidths: " << rc.asArrayDouble("timewidths") << endl;
+    cout << endl;
   }
   cout << ">end<" << endl;
 }
@@ -84,7 +84,9 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   // A smaller domain (so using only 2nd part for tParmFacadeDistr).
   showRec (acc.getValuesGrid (pattern, 10,16,6,20));
   // Get the coeff and errors.
+  cout << ">start<" << endl;
   cout << acc.getCoeff (pattern) << endl;
+  cout << ">end<" << endl;
 }
 
 int main (int argc, const char* argv[])
