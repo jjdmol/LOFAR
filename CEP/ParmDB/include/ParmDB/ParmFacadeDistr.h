@@ -156,7 +156,7 @@ namespace LOFAR { namespace BBS {
     // global solve is done and distributed to all parmdbs.
     void combineInfo (const casa::String& name,
                       const vector<casa::Record>& recs,
-                      casa::Record& result, casa::Record& gridRec) const;
+                      casa::Record& result) const;
 
     //# Data members
     string                itsPort;      //# declare this before itsConn!!
