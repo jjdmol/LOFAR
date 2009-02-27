@@ -177,7 +177,6 @@ void MSCreate::createMS (const String& msName,
   // Create the MS and its subtables.
   // Get access to its columns.
   itsMS = new MeasurementSet(newTab);
-  cout << "MS-endian=" << itsMS->endianFormat() << endl;
   itsMSCol = new MSMainColumns(*itsMS);
   // Create all subtables.
   // Do this after the creation of optional subtables,

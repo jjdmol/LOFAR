@@ -1,16 +1,13 @@
 lib_LTLIBRARIES		= libbbms.la
 
-libbbms_la_SOURCES	= Package__Version.cc  DH_MSMake.cc \
+libbbms_la_SOURCES	= Package__Version.cc  \
 			  MSCreate.cc \
-			  MSDesc.cc \
 			  VdsMaker.cc
 
 bin_PROGRAMS 		= versionms MSSplit \
 			  makevds \
 			  combinevds \
-			  makemsdesc \
-			  readmsdesc \
-			  makems\
+			  makems \
 			  msplay
 
 MSSplit_SOURCES		= MSSplit.cc
@@ -24,14 +21,6 @@ combinevds_SOURCES	= combinevds.cc
 combinevds_LDADD	= libbbms.la
 combinevds_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
 
-makemsdesc_SOURCES	= makemsdesc.cc
-makemsdesc_LDADD	= libbbms.la
-makemsdesc_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
-
-readmsdesc_SOURCES	= readmsdesc.cc
-readmsdesc_LDADD	= libbbms.la
-readmsdesc_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
-
 makems_SOURCES		= makems.cc
 makems_LDADD		= libbbms.la
 makems_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
@@ -44,11 +33,10 @@ glishdir		= $(libexecdir)/glish
 dist_glish_SCRIPTS	= mssplit.g statconv.g
 
 scriptdir		= $(bindir)
-dist_script_SCRIPTS	= mssplit
+dist_script_SCRIPTS	= mssplit makemsdistr makemsdistr-part
 
 versionms_SOURCES      = versionms.cc
 versionms_LDADD        = libbbms.la
 versionms_DEPENDENCIES = libbbms.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
-
