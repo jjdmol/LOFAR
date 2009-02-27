@@ -68,6 +68,10 @@ namespace LOFAR {
 			const string& hostName = string(),
                         bool fillTimes = true);
 
+    // Combine the given VDS file into a global VDS file.
+    static void combine (const string& gdsName,
+                         const vector<string>& vdsNames);
+
   private:
     // Get the frequency info for each spectral window in the MS.
     // The vectors get the start and end frequency of each channel.

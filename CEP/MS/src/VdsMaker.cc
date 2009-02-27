@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
-#include <MWCommon/VdsPartDesc.h>
+#include <MWCommon/VdsDesc.h>
 #include <MWCommon/ClusterDesc.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
@@ -296,4 +296,75 @@ void VdsMaker::create (const string& msName, const string& outName,
   ofstream ostr(outName.c_str());
   ASSERTSTR (ostr, "File " + outName + " could not be created");
   msd.write (ostr, "");
+}
+
+void VdsMaker::combine (const string& gdsName,
+                        const vector<string>& vdsNames)
+{
+  // Form the global desc.
+  VdsPartDesc globalvpd;
+  globalvpd.setName (gdsName, string());
+  vector<double> sfreq(1);
+  vector<double> efreq(1);
+
+  // Read all parts.
+  // Add a band, but with only its start and end freq (not all freqs).
+  vector<VdsPartDesc*> vpds;
+  vpds.reserve (vdsNames.size());
+  for (uint i=0; i<vdsNames.size(); ++i) {
+    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[i]));
+    casa::Path path(vdsNames[i]);
+    // File name gets the original MS name.
+    // Name gets the name of the VDS file.
+    vpd->setFileName (vpd->getName());
+    vpd->setName (path.absoluteName(), vpd->getFileSys());
+    vpds.push_back (vpd);
+    vpd->clearParms();
+    const vector<int>& chans = vpd->getNChan();
+    const vector<double>& sf = vpd->getStartFreqs();
+    const vector<double>& ef = vpd->getEndFreqs();
+    int inxf=0;
+    for (uint i=0; i<chans.size(); ++i) {
+      int nchan = chans[i];
+      sfreq[0] = sf[inxf];
+      // A band can be given with individual freqs or a single freq range.
+      if (chans.size() == sf.size()) {
+        ++inxf;
+      } else {
+        inxf += nchan;
+      }
+      efreq[0] = ef[inxf-1];
+      globalvpd.addBand (nchan, sfreq, efreq);
+    }
+  }
+
+  // Set the times in the global desc (using the first part).
+  // Set the clusterdesc name.
+  // Form the global desc.
+  globalvpd.setTimes (vpds[0]->getStartTime(),
+                      vpds[0]->getEndTime(),
+                      vpds[0]->getStepTime(),
+                      vpds[0]->getStartTimes(),
+                      vpds[0]->getEndTimes());
+  globalvpd.setClusterDescName (vpds[0]->getClusterDescName());
+  VdsDesc gdesc(globalvpd);
+
+  // Now add all parts to the global desc and write it.
+  // Print a warning if times differ.
+  // Also cleanup the objects.
+  for (uint i=0; i<vpds.size(); ++i) {
+    gdesc.addPart (*vpds[i]);
+    if (vpds[i]->getStartTime() != globalvpd.getStartTime()  ||
+        vpds[i]->getEndTime()   != globalvpd.getEndTime()    ||
+        vpds[i]->getStepTime( ) != globalvpd.getStepTime()) {
+      cerr << "The times of part " << i << " (" << vpds[i]->getName()
+           << " are different" << endl;
+    }
+    delete vpds[i];
+    vpds[i] = 0;
+
+  }
+  ofstream ostr(gdsName.c_str());
+  ASSERTSTR (ostr, "File " << gdsName << " could not be created");
+  gdesc.write (ostr);
 }
