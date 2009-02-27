@@ -143,7 +143,9 @@ void OutputSection::preprocess(const Parset *ps)
 
   for (unsigned o = 0; o < itsOutputs.size(); o++) {
     struct OutputSection::SingleOutput &output = itsOutputs[o];
-    output.nrIntegrationSteps = (*itsPipelineOutputSet)[o].IONintegrationSteps();
+    output.nrIntegrationSteps	  = (*itsPipelineOutputSet)[o].IONintegrationSteps();
+    output.currentIntegrationStep = 0;
+    output.sequenceNumber	  = 0;
   }
 
   connectToStorage();
