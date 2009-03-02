@@ -1,4 +1,4 @@
-SUBDIRS=Clock
+SUBDIRS=Clock NTP
 
 ACLOCAL_AMFLAGS = -I autoconf_share
 
