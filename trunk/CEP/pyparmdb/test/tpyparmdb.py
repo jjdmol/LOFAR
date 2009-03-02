@@ -7,7 +7,7 @@ def showValues (pdb, pattern='*', nf=4, nt=2):
     rng = pdb.getRange()
     print rng
     # Get the values.
-    print pdb.getValues(pattern, rng[0], rng[2], nf, rng[1], rng[3], nt, True)
+    print pdb.getValuesStep(pattern, rng[0], rng[2], nf, rng[1], rng[3], nt, True)
     # Get values and grid.
     print pdb.getValuesGrid(pattern, rng[0], rng[2], rng[1], rng[3])
 
