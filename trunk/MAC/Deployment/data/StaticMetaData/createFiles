@@ -174,7 +174,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     RSPconfig = RSPfile.read()
     RSPfile.close()
     nrNodes = len(rspDestNode)
-    print "NrNodes: ",nrNodes
     if (nrNodes == 1 or nrNodes == 2):
         if str(0) in rspDestNode.keys():
             (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
@@ -188,10 +187,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
                 RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
 
     if (nrNodes == 4):
-        print rspDestNode.keys()
         for rspNr in range(0,4):
             if str(rspNr) in rspDestNode.keys():
-                print "Replace: ",str(rspNr)
                 (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)],dataDir)
                 RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac+"   # "+rspDestNode[str(rspNr)])
                 RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
@@ -224,10 +221,10 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     """
     # Find connections of the TBBBoards of the station
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
-    print stationName,"matches:",tbbDestNode
+    #print stationName,"matches:",tbbDestNode
 
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
-    print stationName," has ",nrTBB," TBBoards"
+    #print stationName," has ",nrTBB," TBBoards"
     
     # Substitute MAC and IP address of destination nodes
     TBBfile = open(dataDir+"/TBBDriver.conf.tmpl")
@@ -338,7 +335,6 @@ else:
     resultRoot = sys.argv[1]
     dataDir = sys.argv[2]
     stationList = []
-    print resultRoot, dataDir, stationList
     
     if sys.argv[3] == "all":
         stationList = findAllStations(dataDir)
@@ -353,7 +349,6 @@ else:
         else:
             os.makedirs(resultDir)
 
-        print resultDir, stationName, dataDir
         createRSPDriverFile    (resultDir, stationName, dataDir) 
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
