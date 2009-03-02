@@ -2,6 +2,7 @@
 
 #include <Interface/Align.h>
 #include <Interface/Allocator.h>
+#include <Interface/Exceptions.h>
 
 #include <malloc.h>
 
@@ -20,8 +21,7 @@ MallocedArena::MallocedArena(size_t size, size_t alignment)
   itsSize = size;
 
   if (posix_memalign(&itsBegin, alignment, size) != 0) {
-    std::cerr << "could not allocate data" << std::endl;
-    exit(1);
+    THROW(InterfaceException,"could not allocate data");
   }
 }
 
