@@ -189,7 +189,7 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 			// Get access to my own propertyset.
 			string	propSetName(createPropertySetName(PSN_TBB_CONTROL, getName(),
 												  globalParameterSet()->getString("_DPname")));
-			LOG_INFO_STR ("Activating PropertySet" << propSetName);
+			LOG_INFO_STR ("Activating PropertySet " << propSetName);
 			itsPropertySet = new RTDBPropertySet(propSetName,
 												 PST_TBB_CONTROL,
 												 PSAT_RW,
@@ -422,24 +422,24 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 		case F_ENTRY: {
 			RSPSettbbEvent settbb;
 
-    	settbb.timestamp = Timestamp(0,0);
-    	settbb.rcumask = itsObs->allRCUset;
+		settbb.timestamp = Timestamp(0,0);
+		settbb.rcumask = itsObs->allRCUset;
 						
 			if (itsObs->operatingMode == TBB_MODE_TRANSIENT) {
 				settbb.settings().resize(1);
 				settbb.settings()(0).reset();
-      }
+			}
 
-    	if (itsObs->operatingMode == TBB_MODE_SUBBANDS) {
+			if (itsObs->operatingMode == TBB_MODE_SUBBANDS) {
 				settbb.settings().resize(1);
 				settbb.settings()(0).reset();
 				
 				std::vector<int32>::iterator it;
 				for (it = itsObs->subbandList.begin(); it != itsObs->subbandList.end(); it++) {
-	  			   if ((*it) >= MEPHeader::N_SUBBANDS) continue;
-	  			   settbb.settings()(0).set(*it);
-	  		   }
-	  	}
+					if ((*it) >= MEPHeader::N_SUBBANDS) continue;
+					settbb.settings()(0).set(*it);
+				}
+		}
 			// info to pvss
 			LOG_DEBUG_STR("send RSP_SET_TBB cmd");		
 			itsRSPDriver->send(settbb);
@@ -1004,10 +1004,10 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			TBBStopEvent cmd;
 			
 			vector<TBBReadCmd>::iterator it;
-  		for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
-  			// look if new read cmd
-  			cmd.rcu_mask.set((*it).itsRcuNr);
-  		}
+		for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
+			// look if new read cmd
+			cmd.rcu_mask.set((*it).itsRcuNr);
+		}
 						
 			// info to pvss
 			LOG_DEBUG_STR("send TBB_STOP cmd");		
@@ -1032,11 +1032,11 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			} else {
 				vector<TBBReadCmd>::iterator it;
 				for ( it=itsStopCommandVector.begin() ; it < itsStopCommandVector.end(); it++ ) {
-  				// add stopped rcus to ReadVector
-  				itsReadCommandVector.push_back(*it);
-  			}
-  			itsStopCommandVector.clear();
-  			
+				// add stopped rcus to ReadVector
+				itsReadCommandVector.push_back(*it);
+			}
+			itsStopCommandVector.clear();
+			
 				// send read cmd to TBBDriver
 				TBBReadCmd read;
 				TBBReadEvent cmd;

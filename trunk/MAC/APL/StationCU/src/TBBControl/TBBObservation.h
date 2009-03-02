@@ -72,7 +72,7 @@ public:
 	//# Datamembers
 	vector<sTBBsetting>	TBBsetting;
 	RCUset_t	allRCUset;			// set with all participating receivers
-	uint16  operatingMode;
+	uint32  operatingMode;
 	vector<int32>	subbandList;
 	
 	//# print function for operator<<
