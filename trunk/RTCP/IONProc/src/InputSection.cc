@@ -66,10 +66,6 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
   itsLogThread(0),
   itsDelayTimer("delay")
 {
-#if defined HAVE_BGP_ION
-  doNotRunOnCore0();
-  raisePriority();
-#endif
 }
 
 
@@ -221,6 +217,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
 #endif
 
   startThreads();
+
+#if defined HAVE_BGP_ION // FIXME: not in preprocess
+  doNotRunOnCore0();
+  setPriority(3);
+#endif
 }
 
 

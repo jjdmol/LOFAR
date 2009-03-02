@@ -123,8 +123,11 @@ template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(voi
 
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-#if defined HAVE_BGP_ION
-  doNotRunOnCore0();
+#if 0 && defined HAVE_BGP_ION
+  if (itsArgs.threadID == 0)
+    runOnCore0();
+  else
+    doNotRunOnCore0();
 #endif
 
   const unsigned maxNrPackets = 128;
@@ -214,6 +217,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
     if (++ currentPacket == maxNrPackets) {
       itsArgs.BBuffer->writeMultiplePackets(packets.origin(), timeStamps);
+      // pthread_yield();
       currentPacket    = 0;
       currentPacketPtr = packets.origin();
     }
