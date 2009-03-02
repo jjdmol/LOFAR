@@ -120,7 +120,7 @@ static void createClientStreams(unsigned nrClients, const std::string &streamTyp
 {
 #if defined HAVE_FCNP && defined __PPC__
   if (streamType == "FCNP") {
-    FCNP_ION::init(false);
+    FCNP_ION::init(true);
     fcnp_inited = true;
   }
 #endif
