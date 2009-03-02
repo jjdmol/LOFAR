@@ -48,14 +48,14 @@ CS031	31    C    0.0          0.0             0       12     6    96    48    Ye
 CS032	32    C    0.0          0.0             0       12     6    96    48    Yes      No
 
 # Remote stations with core station layout (i.e., with HBASplit set to 'yes')
-CS101	101   C    0.0          0.0                     12     6    96    48    Yes      No
-CS102	102   C    0.0          0.0                     12     6    96    48    Yes      No
-CS103	103   C    0.0          0.0                     12     6    96    48    Yes      No
-CS201	121   C    0.0          0.0                     12     6    96    48    Yes      No
-CS301	141   C    0.0          0.0                     12     6    96    48    Yes      No
-CS302	142   C    0.0          0.0                     12     6    96    48    Yes      No
-CS401	161   R    0.0          0.0                     12     6    96    48    Yes      No
-CS501	181   R    0.0          0.0                     12     6    96    48    Yes      No
+CS101	101   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS102	102   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS103	103   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS201	121   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS301	141   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS302	142   C    0.0          0.0             0       12     6    96    48    Yes      No
+CS401	161   R    0.0          0.0             0       12     6    96    48    Yes      No
+CS501	181   R    0.0          0.0             0       12     6    96    48    Yes      No
 
 ## 33 .. 59
 ##
