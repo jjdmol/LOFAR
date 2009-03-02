@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 	tc.start(); 	// make initial transition
 
 	VHECRTask*		vt(VHECRTask::instance());
-	vt->start();
+	//vt->start();
 
 	GCFTask::run();
 
