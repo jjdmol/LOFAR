@@ -467,8 +467,8 @@ void PQPostCommand::on_commit()
 }
 
 
-PQPostResult::PQPostResult(int32 id, const ProcessId &pid, const CommandId &cmdId,
-    const CommandResult &cmdResult, int32 &status)
+PQPostResult::PQPostResult(int32 id, const ProcessId &pid,
+    const CommandId &cmdId, const CommandResult &cmdResult, int32 &status)
     :   pqxx::transactor<>("PQPostResult"),
         itsId(id),
         itsProcessId(pid),
