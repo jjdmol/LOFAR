@@ -63,7 +63,7 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		
 		// operatingMode from first observation set is used for all boards
 		if (setNr == 0) {
-			operatingMode = aParSet->getInt16(setname+".operatingMode");
+			operatingMode = aParSet->getUint32(setname+".operatingMode");
 		}
 						
 		tbbsetting.RCUset.reset();							// clear RCUset by default.
@@ -119,7 +119,14 @@ uint16 TBBObservation::_windowNr(const string&		wdwName)
 ostream& TBBObservation::print(ostream&	os) const
 {
 	int setNr = 0;
-	os << "operatingMode  : " << operatingMode << endl << endl;
+	os << "operatingMode  : " << operatingMode << endl;
+	os << "RCUset         : " << allRCUset << endl;
+	os << "subbandList    : ";
+	std::vector<int32>::const_iterator sb_it;
+	for (sb_it = subbandList.begin(); sb_it != subbandList.end(); sb_it++) {
+		os << (*sb_it) << " ";
+	}
+	os << endl << endl;
 	vector<sTBBsetting>::const_iterator it;
 	for (it = TBBsetting.begin(); it != TBBsetting.end(); it++ ) {
 		os << "Observation set: " << setNr << endl; 

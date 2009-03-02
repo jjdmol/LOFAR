@@ -32,7 +32,7 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, argv[1]);
+	GCFTask::init(argc, argv, argv[0]);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
