@@ -5,6 +5,8 @@ AM_INIT_AUTOMAKE(MACTools, 1.0, no-define)
 AC_PROG_LIBTOOL
 
 AC_OUTPUT(
+        NTP/Makefile
+	NTP/src/Makefile
 	Clock/Makefile
 	Makefile
 )
