@@ -14,38 +14,49 @@
 # name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
 ## core (1-59)
-CS001   1     C    6.8673859    52.91092509     50.621  4     2     6     16    No       No
-CS002	2
-CS003	3
-CS004	4
-CS005	5
-CS006	6
-CS007	7
-CS008	8
-CS009	9
-CS010   10    C    6.8690294    52.9129392      54.10   12    6     48    48    No       No
-CS011	11
-CS012	12
-CS013	13
-CS014	14
-CS015	15
-CS016   16    C    6.8735352    52.91250243     50.316  4     2     16    16    No       No
-CS017	17
-CS018	18
-CS019	19
-CS020	20
-CS021	21
-CS022	22
-CS023	23
-CS024	24
-CS025	25
-CS026	26
-CS027	27
-CS028	28
-CS029	29
-CS030	30
-CS031	31
-CS032	32
+CS001   1     C    6.8673859    52.91092509     50.621   4     2     6    16    No       No
+CS002	2     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS003	3     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS004	4     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS005	5     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS006	6     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS007	7     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS008	8     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS009	9     C    0.0          0.0             0       12     6    96    48    Yes      No
+CS010   10    C    6.8690294    52.9129392      54.10   12     6    48    48    No       No
+CS011	11    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS012	12    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS013	13    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS014	14    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS015	15    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS016   16    C    6.8735352    52.91250243     50.316   4     2    16    16    No       No
+CS017	17    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS018	18    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS019	19    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS020	20    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS021	21    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS022	22    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS023	23    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS024	24    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS025	25    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS026	26    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS027	27    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS028	28    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS029	29    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS030	30    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS031	31    C    0.0          0.0             0       12     6    96    48    Yes      No
+CS032	32    C    0.0          0.0             0       12     6    96    48    Yes      No
+
+# Remote stations with core station layout (i.e., with HBASplit set to 'yes')
+CS101	101   C    0.0          0.0                     12     6    96    48    Yes      No
+CS102	102   C    0.0          0.0                     12     6    96    48    Yes      No
+CS103	103   C    0.0          0.0                     12     6    96    48    Yes      No
+CS201	121   C    0.0          0.0                     12     6    96    48    Yes      No
+CS301	141   C    0.0          0.0                     12     6    96    48    Yes      No
+CS302	142   C    0.0          0.0                     12     6    96    48    Yes      No
+CS401	161   R    0.0          0.0                     12     6    96    48    Yes      No
+CS501	181   R    0.0          0.0                     12     6    96    48    Yes      No
+
 ## 33 .. 59
 ##
 
@@ -71,103 +82,95 @@ CS099	99
 
 ## arm 1 (100-119)
 ## 100
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-RS101	101
-RS102	102
-RS103	103
-RS104	104
-RS105	105
-RS106	106
-RS107	107
-RS108	108
-RS109	109
+RS104	104    R    0.0          0.0             0       12     6    96    48    No       No
+RS105	105    R    0.0          0.0             0       12     6    96    48    No       No
+RS106	106    R    0.0          0.0             0       12     6    96    48    No       No
+RS107	107    R    0.0          0.0             0       12     6    96    48    No       No
+RS108	108    R    0.0          0.0             0       12     6    96    48    No       No
+RS109	109    R    0.0          0.0             0       12     6    96    48    No       No
 # 110 .. 119
 #
 
 # arm 2 (120-139)
 # 120
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-RS201	121
-RS202	122
-RS203	123
-RS204	124
-RS205	125
-RS206	126
-RS207	127
-RS208	128
-RS209	129
+RS202	122    R    0.0          0.0             0       12     6    96    48    No       No
+RS203	123    R    0.0          0.0             0       12     6    96    48    No       No
+RS204	124    R    0.0          0.0             0       12     6    96    48    No       No
+RS205	125    R    0.0          0.0             0       12     6    96    48    No       No
+RS206	126    R    0.0          0.0             0       12     6    96    48    No       No
+RS207	127    R    0.0          0.0             0       12     6    96    48    No       No
+RS208	128    R    0.0          0.0             0       12     6    96    48    No       No
+RS209	129    R    0.0          0.0             0       12     6    96    48    No       No
 ## 130 .. 139
 ##
 
 ## arm 3 (140-159)
 ## 140
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-RS301	141
-RS302	142
-RS303	143
-RS304	144
-RS305	145
-RS306	146
-RS307	147
-RS308	148
-RS309	149
+RS303	143    R    0.0          0.0             0       12     6    96    48    No       No
+RS304	144    R    0.0          0.0             0       12     6    96    48    No       No
+RS305	145    R    0.0          0.0             0       12     6    96    48    No       No
+RS306	146    R    0.0          0.0             0       12     6    96    48    No       No
+RS307	147    R    0.0          0.0             0       12     6    96    48    No       No
+RS308	148    R    0.0          0.0             0       12     6    96    48    No       No
+RS309	149    R    0.0          0.0             0       12     6    96    48    No       No
 ## 150 .. 159
 ##
 
 ## arm 4 (160-179)
 ## 160
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-RS401	161
-RS402	162
-RS403	163
-RS404	164
-RS405	165
-RS406	166
-RS407	167
-RS408	168
-RS409	169
+RS402	162    R    0.0          0.0             0       12     6    96    48    No       No
+RS403	163    R    0.0          0.0             0       12     6    96    48    No       No
+RS404	164    R    0.0          0.0             0       12     6    96    48    No       No
+RS405	165    R    0.0          0.0             0       12     6    96    48    No       No
+RS406	166    R    0.0          0.0             0       12     6    96    48    No       No
+RS407	167    R    0.0          0.0             0       12     6    96    48    No       No
+RS408	168    R    0.0          0.0             0       12     6    96    48    No       No
+RS409	169    R    0.0          0.0             0       12     6    96    48    No       No
 ## 170 .. 179
 ##
 
 ## arm 5 (180-199)
 ## 180
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
-RS501	181
-RS502	182
-RS503	183
-RS504	184
-RS505	185
-RS506	186
-RS507	187
-RS508	188
-RS509	189
+RS502	182    R    0.0          0.0             0       12     6    96    48    No       No
+RS503	183    R    0.0          0.0             0       12     6    96    48    No       No
+RS504	184    R    0.0          0.0             0       12     6    96    48    No       No
+RS505	185    R    0.0          0.0             0       12     6    96    48    No       No
+RS506	186    R    0.0          0.0             0       12     6    96    48    No       No
+RS507	187    R    0.0          0.0             0       12     6    96    48    No       No
+RS508	188    R    0.0          0.0             0       12     6    96    48    No       No
+RS509	189    R    0.0          0.0             0       12     6    96    48    No       No
 # 190 .. 199
 #
 
 ## international (200-255)
 ## 200
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID    ring  long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
 ## effelsberg
-DE601   201   E    6.883956633  50.5233189277   358.449 24    12    96    0     No       No
+DE601   201    E    6.883956633  50.5233189277   358.449 24    12    96    0     No       No
 ## garching
-DE602   202   E    11.2875855   48,5014681222   500     24    12    96    96    No       No
-DE603	203
-DE604	204
-DE605	205
-FR606	206
-SE607	207
-UK608	208
+DE602   202    E    11.2875855   48,5014681222   500     24    12    96    96    No       No
+DE603	203    E    0.0          0.0             0       24    12    96    96    No       No
+DE604	204    E    0.0          0.0             0       24    12    96    96    No       No
+DE605	205    E    0.0          0.0             0       24    12    96    96    No       No
+FR606	206    E    0.0          0.0             0       24    12    96    96    No       No
+SE607	207    E    0.0          0.0             0       24    12    96    96    No       No
+UK608	208    E    0.0          0.0             0       24    12    96    96    No       No
 ## 209 - 255
 ##
 
 ## Test systems
-# name  ID    ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
+# name  ID     ring long         lat             height  nrRSP nrTBB nrLBA nrHBA HBAsplit LBAcal
 #--------------------------------------------------------------------------------------------------------------
 #CS001T  23    C    6.3952067    52.8121013      53.012  3     0     16    4     No       No
 #RS002   102   R    6.0000000    52.00000000     50.000  4     0     16    16    Yes      No

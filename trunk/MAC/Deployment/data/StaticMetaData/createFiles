@@ -104,8 +104,8 @@ def findTBBDestNodes(stationName, dataDir):
     """
     Collects the destination nodes from each tbbboard of the given station.
     Expected format of the TBBConnection file is:
-    station		board	destinationnode
-    CS001		TBB_0	BGL001, LIST004
+    station  Boeard  node
+    CS001    TBB-0   LIST004
     """
     # NOTE: for now we always take the first nodename
     pattern=re.compile(stationName+"[ \t]*TBB_([0-9]+)[ \t]*([a-zA-Z0-9]*)[, ]?.*", re.IGNORECASE)
@@ -113,7 +113,7 @@ def findTBBDestNodes(stationName, dataDir):
     for match in pattern.finditer(open(dataDir+"/TBBConnections.dat").read()):
         tbbDestNode[match.group(1)] = match.group(2)
     if len(tbbDestNode) == 0:
-        setWarning(stationName+" not found in file 'TBBConnections'")
+        setWarning(stationName+" not found in file 'TBBConnections.dat'")
     return tbbDestNode
 
 #
@@ -167,18 +167,37 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     rspDestNode = findRSPDestNodes(stationName, dataDir)
     #print stationName,"matches:",rspDestNode
 
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
     RSPconfig = RSPfile.read()
     RSPfile.close()
-    for rspNr in range(0,4):
-        if str(rspNr) in rspDestNode.keys():
-            (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)],dataDir)
-            RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac+"   # "+rspDestNode[str(rspNr)])
-            RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
+    nrNodes = len(rspDestNode)
+    print "NrNodes: ",nrNodes
+    if (nrNodes == 1 or nrNodes == 2):
+        if str(0) in rspDestNode.keys():
+            (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
+            for rspNr in range(0,4):
+                RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
+        if str(1) in rspDestNode.keys():
+            (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
+            for rspNr in range(0,4):
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+
+    if (nrNodes == 4):
+        print rspDestNode.keys()
+        for rspNr in range(0,4):
+            if str(rspNr) in rspDestNode.keys():
+                print "Replace: ",str(rspNr)
+                (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)],dataDir)
+                RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac+"   # "+rspDestNode[str(rspNr)])
+                RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
+
 
     # substitute StationInfo
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
     if (ip_parts[1] == "151"):
@@ -205,20 +224,28 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     """
     # Find connections of the TBBBoards of the station
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
-    #print stationName,"matches:",tbbDestNode
+    print stationName,"matches:",tbbDestNode
 
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    print stationName," has ",nrTBB," TBBoards"
+    
     # Substitute MAC and IP address of destination nodes
     TBBfile = open(dataDir+"/TBBDriver.conf.tmpl")
     TBBconfig = TBBfile.read()
     TBBfile.close()
-    for tbbNr in range(0,12):
-        if str(tbbNr) in tbbDestNode.keys():
-            (ip, mac) = findIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
-            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac+"   # "+tbbDestNode[str(tbbNr)])
-            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip +"   # "+tbbDestNode[str(tbbNr)])
+    for tbbNr in range(0,int(nrTBB)):
+        if (len(tbbDestNode) == 1):
+            (ip, mac) = findIPandMAC(tbbDestNode["0"], dataDir)
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
+        else:
+            if str(tbbNr) in tbbDestNode.keys():
+                (ip, mac) = findIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
+        
 
     # substitute StationInfo
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     # Find IP number of data sending side of TBB board; use LCU's IP as basis
     # for the ip prefix and subnet 
     ipnumber = findIPNumber(stationName)
