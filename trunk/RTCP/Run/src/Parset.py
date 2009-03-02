@@ -40,11 +40,11 @@ class Parset(LOFAR_Parset.Parset):
         
         if self.clock == '160MHz':
 	    self['Observation.sampleClock'] = 160
-	    self['OLAP.CNProc.integrationSteps'] = 608
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
-	    self['OLAP.CNProc.integrationSteps'] = 768
        
+	self['OLAP.CNProc.integrationSteps'] = int(round(self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband']) / 16)) * 16
+
     def getClockString(self):
         return self.clock
 
