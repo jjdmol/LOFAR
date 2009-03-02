@@ -37,13 +37,13 @@
 
 namespace LOFAR {
   namespace StationCU {
-    
+   
     class VHECRTask
     {
     public:
-      VHECRTask();
-      ~VHECRTask();
-      
+      static VHECRTask*	instance();
+	   ~VHECRTask();
+            
       // define responsefunctionType
       void VHECRTask::readTBBdata(vector<TBBReadCmd>	cmdVector);
       void addTrigger(const TBBTrigger&	trigger);
@@ -56,6 +56,7 @@ namespace LOFAR {
       double itsCoincidenceTime;
 
       // avoid defaultconstruction and copying
+      VHECRTask();
       VHECRTask(const VHECRTask&);
       VHECRTask& operator=(const VHECRTask&);
       

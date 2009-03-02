@@ -54,7 +54,7 @@ public:
 	
 	explicit	TBBObservation (ParameterSet*		aParSet);
 	
-	typedef bitset<256> RCUset_t;
+	typedef bitset<192> RCUset_t;
 	
 	typedef struct {
 		uint16 c0;
@@ -73,6 +73,7 @@ public:
 	vector<sTBBsetting>	TBBsetting;
 	RCUset_t	allRCUset;			// set with all participating receivers
 	uint16  operatingMode;
+	vector<int32>	subbandList;
 	
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;

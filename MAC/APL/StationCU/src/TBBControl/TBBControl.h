@@ -36,7 +36,7 @@
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
@@ -52,10 +52,10 @@
 namespace LOFAR {
 	namespace StationCU {
 
+using	MACIO::GCFEvent;
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
@@ -123,32 +123,32 @@ private:
 	TBBControl(const TBBControl&);
   TBBControl& operator=(const TBBControl&);
    
-	void	setState				(CTState::CTstateNr     newState);
+	void	setState	(CTState::CTstateNr     newState);
 	
-	GCFEvent::TResult _triggerEventHandler(GCFEvent& event);
-	GCFEvent::TResult _triggerReleaseAckEventHandler(GCFEvent& event);
+	GCFEvent::TResult	_triggerEventHandler(GCFEvent& event);
+	GCFEvent::TResult	_triggerReleaseAckEventHandler(GCFEvent& event);
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
-   	RTDBPropertySet*		itsPropertySet;
-	bool					itsPropertySetInitialized;
+   	RTDBPropertySet*	itsPropertySet;
+	bool				itsPropertySetInitialized;
 
 	// pointer to parent control task
 	ParentControl*		itsParentControl;
-	GCFITCPort*				itsParentPort;
+	GCFITCPort*			itsParentPort;
 	
-	GCFTimerPort*			itsTimerPort;
+	GCFTimerPort*		itsTimerPort;
 
-	GCFTCPPort*				itsTBBDriver;
-	GCFTCPPort*				itsRSPDriver;
+	GCFTCPPort*			itsTBBDriver;
+	GCFTCPPort*			itsRSPDriver;
 
-	CTState::CTstateNr		itsState;
-	VHECRTask*		itsVHECRTask;				
+	CTState::CTstateNr	itsState;
+	VHECRTask*			itsVHECRTask;				
 	// ParameterSet variables
-	string					itsTreePrefix;
-	uint32					itsInstanceNr;
-	TBBObservation*	itsObs;
-	vector<TBBReadCmd>		itsStopCommandVector;
-	vector<TBBReadCmd>		itsReadCommandVector;
+	string				itsTreePrefix;
+	//uint32				itsInstanceNr;
+	TBBObservation*		itsObs;
+	vector<TBBReadCmd>	itsStopCommandVector;
+	vector<TBBReadCmd>	itsReadCommandVector;
 };
 
   };//StationCU

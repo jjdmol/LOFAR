@@ -26,13 +26,12 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
-#include <APL/APLCommon/APLUtilities.h>
+#include <Common/StringUtil.h>
 
 #include "TBBObservation.h"
 
 using namespace LOFAR;
 using namespace StationCU;
-using namespace APLCommon;
 
 TBBObservation::TBBObservation() :
 	TBBsetting()
@@ -47,8 +46,9 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 
 	sTBBsetting tbbsetting;
 	
-	int setNr = 1;
+	int setNr = 0;
 	string setname(formatString("%sTBBsetting[%d]", prefix.c_str(),setNr));
+	// look if the TBB settings are defined
 	while (aParSet->isDefined(setname+".C0")) {
 		LOG_DEBUG_STR("Reading parameterSet " << setNr);
 		tbbsetting.c0           = aParSet->getInt16(setname+".C0");
@@ -62,12 +62,12 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		tbbsetting.detectWindow = _windowNr(aParSet->getString(setname+".window"));
 		
 		// operatingMode from first observation set is used for all boards
-		if (setNr == 1) {
+		if (setNr == 0) {
 			operatingMode = aParSet->getInt16(setname+".operatingMode");
 		}
 						
 		tbbsetting.RCUset.reset();							// clear RCUset by default.
-		string	rcuString("x=" + APLUtilities::expandedArrayString(
+		string	rcuString("x=" + expandArrayString(
 											aParSet->getString(setname+".RCUs")));
 		ParameterSet	rcuParset;
 		rcuParset.adoptBuffer(rcuString);
@@ -86,6 +86,10 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		setNr++;
 		setname = formatString("%sTBBsetting[%d]", prefix.c_str(),setNr);
 	}
+	prefix = aParSet->locateModule("Observation") + "Observation.";
+	int beam = 0;
+	string	beamPrefix(prefix+formatString("Beam[%d].", beam));
+	subbandList = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
 }
 
 //
@@ -114,7 +118,7 @@ uint16 TBBObservation::_windowNr(const string&		wdwName)
 //#
 ostream& TBBObservation::print(ostream&	os) const
 {
-	int setNr = 1;
+	int setNr = 0;
 	os << "operatingMode  : " << operatingMode << endl << endl;
 	vector<sTBBsetting>::const_iterator it;
 	for (it = TBBsetting.begin(); it != TBBsetting.end(); it++ ) {

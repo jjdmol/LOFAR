@@ -28,22 +28,36 @@
 namespace LOFAR {
   namespace StationCU {
     
+   //
+   // [global] VHECRTask::instance()
+   //
+   VHECRTask* VHECRTask::instance()
+   {
+   	static	VHECRTask*		theirVHECRTask;
+   
+   	if (theirVHECRTask == 0) {
+   		theirVHECRTask = new VHECRTask();
+   	}
+   	return (theirVHECRTask);
+   }
+    
     //
     // VHECRTask()
     //
     VHECRTask::VHECRTask() :
       itsNrTriggers (0),
-      itsInitialized (false) {
+      itsInitialized (false)
+    {
       // set default parameters for coincidence
       itsNoCoincidenceChannels = 8;
       itsCoincidenceTime = 10.3e-6;
       // Initialize the trigger messages buffer
       for (uint32 i=0; i<VHECR_TASK_BUFFER_LENGTH; i++){
-	trigBuffer[i].next = i+1;
-	trigBuffer[i].prev = i-1;
-	trigBuffer[i].Time = 0;
-	trigBuffer[i].SampleNr = 0;
-	trigBuffer[i].date = 0.;
+      	trigBuffer[i].next = i+1;
+      	trigBuffer[i].prev = i-1;
+      	trigBuffer[i].Time = 0;
+      	trigBuffer[i].SampleNr = 0;
+      	trigBuffer[i].date = 0.;
       };
       first = 0;
       last = VHECR_TASK_BUFFER_LENGTH-1;
@@ -70,8 +84,8 @@ namespace LOFAR {
       vector<TBBReadCmd>::iterator	iter = cmdVector.begin();
       vector<TBBReadCmd>::iterator	end  = cmdVector.end();
       while (iter != end) {
-	LOG_INFO_STR(*iter);
-	iter++;
+      	LOG_INFO_STR(*iter);
+      	iter++;
       }
     }
     
@@ -80,7 +94,8 @@ namespace LOFAR {
     //
     // THIS IS WERE THE DEVELOPMENT SHOULD TAKE PLACE.
     //
-    void VHECRTask::addTrigger(const TBBTrigger& trigger) {
+    void VHECRTask::addTrigger(const TBBTrigger& trigger)
+    {
       int newindex, coincidenceIndex;
       //      cout << "Received trigger: " << trigger.itsRcuNr << ", " << trigger.itsTime <<endl;
       
@@ -93,61 +108,62 @@ namespace LOFAR {
 
       coincidenceIndex = coincidenceCheck(newindex, itsNoCoincidenceChannels, itsCoincidenceTime);
       if ( coincidenceIndex >= 0){
-	
-	cout << "Detected coincidence: " << trigBuffer[coincidenceIndex].RcuNr << ", " 
-	     << (uint)trigBuffer[coincidenceIndex].date%(60*60*24)/(60*60) << ":"
-	     <<	(uint)trigBuffer[coincidenceIndex].date%(60*60)/60 << ":"
-	     << fmod(trigBuffer[coincidenceIndex].date,60) 
-	     << endl;
+      	cout << "Detected coincidence: " << trigBuffer[coincidenceIndex].RcuNr << ", " 
+      	     << (uint)trigBuffer[coincidenceIndex].date%(60*60*24)/(60*60) << ":"
+      	     <<	(uint)trigBuffer[coincidenceIndex].date%(60*60)/60 << ":"
+      	     << fmod(trigBuffer[coincidenceIndex].date,60) 
+      	     << endl;
 
-	// This adds the trigger to the command queue.
-	uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
-	uint32 Time       = trigBuffer[coincidenceIndex].Time;
-	uint32 sampleTime = trigBuffer[coincidenceIndex].SampleNr;
-	uint32 prePages   = 1;
-	uint32 postPages  = 2;
-	itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
-	itsNrTriggers++;
+      	// This adds the trigger to the command queue.
+      	uint32 RcuNr      = trigBuffer[coincidenceIndex].RcuNr;
+      	uint32 Time       = trigBuffer[coincidenceIndex].Time;
+      	uint32 sampleTime = trigBuffer[coincidenceIndex].SampleNr;
+      	uint32 prePages   = 1;
+      	uint32 postPages  = 2;
+      	itsCommandVector.push_back(TBBReadCmd(RcuNr, Time, sampleTime, prePages, postPages));	
+      	itsNrTriggers++;
       };
       
       // All code for this event is [TEST] code
       if (!itsCommandVector.empty()) {
-	readTBBdata(itsCommandVector);			// report that we want everything
-	itsCommandVector.clear();					// clear buffer
+      	readTBBdata(itsCommandVector);			// report that we want everything
+      	itsCommandVector.clear();					// clear buffer
       }
     }
     
     // Check the contents of the buffer if a coincidence is found
-    int VHECRTask::coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow){
+    int VHECRTask::coincidenceCheck(uint32 latestindex, uint32 nChannles, double timeWindow)
+    {
       uint32 i,foundRCUs[nChannles],nfound;
       uint32 startindex,runindex;
       double refdate;
       
       startindex = first;
       while ((startindex!=trigBuffer[latestindex].next) && (startindex < VHECR_TASK_BUFFER_LENGTH)) {
-	runindex = trigBuffer[startindex].next;
-	refdate=trigBuffer[startindex].date-timeWindow;
-	nfound=0;
-	while ((runindex < VHECR_TASK_BUFFER_LENGTH) && (trigBuffer[runindex].date >= refdate)){
-	  for (i=0; i<nfound; i++){
-	    if (foundRCUs[i] == trigBuffer[runindex].RcuNr) { 
-	      break; //break the for-loop;
-	    };
-	  };
-	  if (i == nfound) { 
-	    if (nfound+2 >= nChannles) { return startindex; };
-	    foundRCUs[nfound] = trigBuffer[runindex].RcuNr;
-	    nfound++;
-	  };
-	  runindex = trigBuffer[runindex].next;
-	};
-	startindex = trigBuffer[startindex].next;
+      	runindex = trigBuffer[startindex].next;
+      	refdate=trigBuffer[startindex].date-timeWindow;
+      	nfound=0;
+      	while ((runindex < VHECR_TASK_BUFFER_LENGTH) && (trigBuffer[runindex].date >= refdate)) {
+      	  for (i=0; i<nfound; i++){
+      	    if (foundRCUs[i] == trigBuffer[runindex].RcuNr) { 
+      	      break; //break the for-loop;
+      	    };
+      	  };
+      	  if (i == nfound) { 
+      	    if (nfound+2 >= nChannles) { return startindex; }
+      	    foundRCUs[nfound] = trigBuffer[runindex].RcuNr;
+      	    nfound++;
+      	  };
+      	  runindex = trigBuffer[runindex].next;
+      	};
+      	startindex = trigBuffer[startindex].next;
       };
       return -1;
     };
 
     // Add a trigger message to the buffer. 
-    uint32 VHECRTask::add2buffer(const TBBTrigger& trigger){
+    uint32 VHECRTask::add2buffer(const TBBTrigger& trigger)
+    {
       double date;
       uint32 newindex,runindex;
 
@@ -166,31 +182,29 @@ namespace LOFAR {
       trigBuffer[newindex].date      = date;
       
       runindex = first;
-      while (runindex < VHECR_TASK_BUFFER_LENGTH){
-	if (trigBuffer[runindex].date <= date) { 
-	  break; 
-	};
-	runindex = trigBuffer[runindex].next;
+      while (runindex < VHECR_TASK_BUFFER_LENGTH) {
+      	if (trigBuffer[runindex].date <= date) { 
+      	  break; 
+      	};
+      	runindex = trigBuffer[runindex].next;
       };
       trigBuffer[newindex].next = runindex;
-      if (runindex == first){
-	first = newindex;
-	trigBuffer[newindex].prev = VHECR_TASK_BUFFER_LENGTH;
-	trigBuffer[runindex].prev = newindex;
+      if (runindex == first) {
+      	first = newindex;
+      	trigBuffer[newindex].prev = VHECR_TASK_BUFFER_LENGTH;
+      	trigBuffer[runindex].prev = newindex;
       } else {
-	if (runindex >= VHECR_TASK_BUFFER_LENGTH){
-	  trigBuffer[last].next = newindex;
-	  trigBuffer[newindex].prev = last;
-	  last = newindex;
-	} else {
-	  trigBuffer[(trigBuffer[runindex].prev)].next = newindex;
-	  trigBuffer[newindex].prev = trigBuffer[runindex].prev;
-	  trigBuffer[runindex].prev = newindex;
-	};
+      	if (runindex >= VHECR_TASK_BUFFER_LENGTH){
+      	  trigBuffer[last].next = newindex;
+      	  trigBuffer[newindex].prev = last;
+      	  last = newindex;
+      	} else {
+      	  trigBuffer[(trigBuffer[runindex].prev)].next = newindex;
+      	  trigBuffer[newindex].prev = trigBuffer[runindex].prev;
+      	  trigBuffer[runindex].prev = newindex;
+      	};
       };
       return newindex;
     };
-   
-    
   }; // StationCU
 }; // LOFAR
