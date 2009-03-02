@@ -220,7 +220,7 @@ private:
 class PQPostResult: public pqxx::transactor<>
 {
 public:
-    PQPostResult(int32 id, const ProcessId &pid, const CommandId &id,
+    PQPostResult(int32 id, const ProcessId &pid, const CommandId &cmdId,
         const CommandResult &result, int32 &status);
     void operator()(argument_type &transaction);
     void on_commit();
