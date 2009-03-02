@@ -59,10 +59,6 @@ OutputSection::OutputSection(unsigned psetNumber, const std::vector<Stream *> &s
   itsParset(0),
   itsStreamsFromCNs(streamsFromCNs)
 {
-#if defined HAVE_BGP_ION
-  doNotRunOnCore0();
-  raisePriority();
-#endif
 }
 
 
@@ -152,6 +148,11 @@ void OutputSection::preprocess(const Parset *ps)
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
     itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
+
+#if defined HAVE_BGP_ION // FIXME: not in preprocess
+  doNotRunOnCore0();
+  setPriority(2);
+#endif
 }
 
 

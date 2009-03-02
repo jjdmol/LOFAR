@@ -67,11 +67,12 @@ void runOnCore0()
 }
 
 
-void raisePriority()
+void setPriority(unsigned priority)
 {
   struct sched_param sched_param;
 
-  sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
+  //sched_param.sched_priority = sched_get_priority_max(SCHED_RR) - belowMax;
+  sched_param.sched_priority = priority;
 
   if (pthread_setschedparam(pthread_self(), SCHED_RR, &sched_param) < 0)
     perror("pthread_setschedparam");

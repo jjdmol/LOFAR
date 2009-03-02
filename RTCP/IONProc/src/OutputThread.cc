@@ -101,7 +101,7 @@ void OutputThread::mainLoop()
   int o;
 
 #if defined HAVE_BGP_ION
-  runOnCore0();
+  doNotRunOnCore0();
 #endif
 
   static Semaphore semaphore(1);
