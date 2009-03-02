@@ -15,12 +15,13 @@
 #define	PN_OBJ_MESSAGE	"object.message"
 #define	PN_OBJ_LEAF	"object.leaf"
 
+/*
 // Station
 #define PSN_STATION	"LOFAR_PIC_@ring@_@station@"
 #define PST_STATION	"Station"
 #define PN_STS_POWER48_ON	"power48On"
 #define PN_STS_POWER220_ON	"power220On"
-
+*/
 // Station
 #define PSN_STATION	"LOFAR_PermSW_@ring@_@station@"
 #define PST_STATION	"Station"
@@ -260,6 +261,7 @@
 #define PST_HARDWARE_MONITOR	"HardwareMonitor"
 #define PN_HWM_RSP_CONNECTED	"RSP.connected"
 #define PN_HWM_TBB_CONNECTED	"TBB.connected"
+#define PN_HWM_EC_CONNECTED	"EC.connected"
 
 // SoftwareMonitor
 #define PSN_SOFTWARE_MONITOR	"LOFAR_PermSW_SoftwareMonitor"
