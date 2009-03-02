@@ -29,6 +29,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "RSPMonitor.h"
 #include "TBBMonitor.h"
+#include "ECMonitor.h"
 #include "../Package__Version.h"
 
 using namespace LOFAR;
@@ -52,6 +53,8 @@ int main(int argc, char* argv[])
 	// Create tasks and call initial routines
 	RSPMonitor*		rsp(0);
 	TBBMonitor*		tbb(0);
+	ECMonitor*     ec(0);
+	
 	// monitor RSP?
 	if (globalParameterSet()->getUint32("WatchRSPboards",0)) {
 		rsp = new RSPMonitor("RSPMonitor");
@@ -66,10 +69,17 @@ int main(int argc, char* argv[])
 		LOG_INFO("Monitoring the TB boards");
 	}
 
+	// monitor EC?
+	if (globalParameterSet()->getUint32("WatchEnvCntrl",0)) {
+		ec = new ECMonitor("ECMonitor");
+		ec->start();
+		LOG_INFO("Monitoring the Environment Controller");
+	}
+
 	// sanity check
-	if (!tbb && !rsp) {
-		LOG_FATAL_STR("Non of the monitortask (WatchRSPboards, WatchTBboards) was switched on "
-						"in the configfile, terminating program");
+	if (!tbb && !rsp && !ec) {
+		LOG_FATAL_STR("Non of the monitortask (WatchRSPboards, WatchTBboards, WatchEnvCntrl) "
+						"was switched on in the configfile, terminating program");
 		return (0);
 	}
 
@@ -83,7 +93,9 @@ int main(int argc, char* argv[])
 	if (tbb) {
 		tbb->quit();		// let task quit nicely
 	}
-
+   if (ec) {
+		ec->quit();		   // let task quit nicely
+	}
 	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
 	GCFTask::run(postRunTime);	// let processes die.
 
