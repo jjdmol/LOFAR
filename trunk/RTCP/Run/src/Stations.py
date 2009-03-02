@@ -89,30 +89,51 @@ CS016 = [Station('CS016', '10.170.0.49', ['10.170.0.49:4346', '10.170.0.49:4347'
 # Experimental part, not edited by Michiel Brentjens:
 #
 
-for RSP in range(1, 5):
-  for IP in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62]:
-    inputs = ['10.170.0.' + str(IP) + ':' + str(port) for port in range(4346, 4346 + RSP)]
+# S17_8: 8 full stations (4 RSP boards), starting from 10.170.0.17
+# s9_2 : 2 microstations (1 RSP board ), starting from 10.170.0.9
 
-    #if IP != 62:
-      #inputs = RSP * ['null:']
+for ip in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62]:
+  inputs = ['10.170.0.4346']
+  exec 's' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
+  inputs = ['10.170.0.' + str(ip) + ':' + str(port) for port in range(4346, 4350)]
+  exec 'S' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
 
-    exec 'S' + str(IP) + '_' + str(RSP) + '=[Station(\'S' + str(IP) + '\',\'10.170.0.' + str(IP) + '\',' + str(inputs) + ')]'
+for ip in range(1,65,4):
+  exec 's' + str(ip) + '_2 = s' + str(ip) + '_1 + s' + str(ip + 1) + '_1'
+  exec 'S' + str(ip) + '_2 = S' + str(ip) + '_1 + S' + str(ip + 1) + '_1'
 
-  for block in range(0, 16):
-    exec 'B%02u_%u=S%u_%u+S%u_%u' % (block, RSP, 4*block+1, RSP, 4*block+2, RSP)
+for ip in range(1,65,8):
+  exec 's' + str(ip) + '_4 = s' + str(ip) + '_2 + s' + str(ip + 4) + '_2'
+  exec 'S' + str(ip) + '_4 = S' + str(ip) + '_2 + S' + str(ip + 4) + '_2'
 
-  for block in range(0, 8):
-    exec 'R000_64_%u_%u=B%02u_%u+B%02u_%u' % (block, RSP, 2*block, RSP, 2*block+1, RSP)
+for ip in range(1,65,16):
+  exec 's' + str(ip) + '_8 = s' + str(ip) + '_4 + s' + str(ip + 8) + '_4'
+  exec 'S' + str(ip) + '_8 = S' + str(ip) + '_4 + S' + str(ip + 8) + '_4'
 
-  for block in range(0, 4):
-    exec 'R000_128_%u_%u=R000_64_%u_%u+R000_64_%u_%u' % (block, RSP, 2*block, RSP, 2*block+1, RSP)
+for ip in range(1,65,32):
+  exec 's' + str(ip) + '_16 = s' + str(ip) + '_8 + s' + str(ip + 16) + '_8'
+  exec 'S' + str(ip) + '_16 = S' + str(ip) + '_8 + S' + str(ip + 16) + '_8'
 
-  for block in range(0, 2):
-    exec 'R000_256_%u_%u=R000_128_%u_%u+R000_128_%u_%u' % (block, RSP, 2*block, RSP, 2*block+1, RSP)
+for ip in range(1,65,64):
+  exec 's' + str(ip) + '_32 = s' + str(ip) + '_16 + s' + str(ip + 32) + '_16'
+  exec 'S' + str(ip) + '_32 = S' + str(ip) + '_16 + S' + str(ip + 32) + '_16'
 
-  exec 'R00_M0_ION_%u=R000_256_0_%u+R000_256_1_%u' % (RSP, RSP, RSP)
 
 Pulsar = [Station('Pulsar', '10.170.0.62', ['tcp:10.170.0.62:4346'])]
+
+# full rack tests
+
+R01=[]
+
+for IP in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62,129,130,133,134,137,138,141,142,145,146,149,150,153,154,157,158,161,162,165,166,169,170,173,174,177,178,181,182,185,186,189,190]:
+  inputs = ['10.170.1.' + str(IP) + ':' + str(port) for port in range(4346, 4350)]
+
+  #if IP != 1:
+    #inputs = 4 * ['null:']
+
+  exec 'T' + str(IP) + '=[Station(\'S' + str(IP) + '\',\'10.170.1.' + str(IP) + '\',' + str(inputs) + ')]'
+  exec 'R01=R01+T' + str(IP)
+  
 
 #
 #   End of experimental part
