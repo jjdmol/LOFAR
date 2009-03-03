@@ -543,6 +543,12 @@ dyn_string navFunct_dpGetFullPathAsTypes(string aDp){
   // stnLOFAR_stnPermSW                LOFAR_PermSW
   // stnLOFAR_stnObsSW                 LOFAR_ObsSW
   // stnLOFAR_stnObsSW_stnObservation  LOFAR_ObsSW_Observation
+  // CEPLOFAR                          LOFAR
+  // CEPLOFAR_CEPPIC                   LOFAR_PIC_Core_LOFAR_
+  // CEPLOFAR_CEPPermSW                LOFAR_PermSW
+  // CEPLOFAR_CEPObsSW                 LOFAR_ObsSW
+  // CEPLOFAR_CEPObsSW_CEPObservation  LOFAR_ObsSW_Observation
+  // 
   int index=0;
   if (systemName != MainDBName) {
     typePath[++index] = dpTypeName("LOFAR");

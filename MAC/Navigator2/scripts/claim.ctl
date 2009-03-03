@@ -699,9 +699,6 @@ void checkAndCreateDPs() {
     //    DPType              DP's
     //    Observation:        LOFAR_ObsSW_TempObs0001-0100
     //    ObservationControl: LOFAR_ObsSW_TempObs0001-0100_ObservationControl
-    //    OnlineControl:      LOFAR_ObsSW_TempObs0001-0100_OnlineControl
-    //    Correlator:         LOFAR_ObsSW_TempObs0001-0100_OnlineControl_Correlator
-    //    StorageAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
     // 
     // And for the Stations:   
     //
@@ -710,6 +707,14 @@ void checkAndCreateDPs() {
     //    BeamControl:    LOFAR_ObsSW_TempObs0001-0100_BeamControl
     //    CalControl:     LOFAR_ObsSW_TempObs0001-0100_CalibrationControl
     //    TBBControl:     LOFAR_ObsSW_TempObs0001-0100_TBBControl
+    //
+    //And for CEP:
+    //    DPType          DP's
+    //    CEPObservation: LOFAR_ObsSW_TempObs0001-0100
+    //    OnlineControl:  LOFAR_ObsSW_TempObs0001-0100_OnlineControl
+    //    Correlator:     LOFAR_ObsSW_TempObs0001-0100_OnlineControl_Correlator
+    //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
+    
 
     
     if (claimableTypes[i] == "Observation") {
@@ -725,42 +730,49 @@ void checkAndCreateDPs() {
         }
         
         if (isClient) {
-          //StnObservation
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre,"StnObservation");
-          }
-          //BeamControl
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_BeamControl")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_BeamControl","BeamControl");
-          }
-          //CalControl
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl","CalibrationControl");
-          }
-          //TBBControl
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_TBBControl")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_TBBControl","TBBControl");
+          if (substr(getSystemName(),0,3) == "CEP") {
+            //CEPObservation
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre,"CEPObservation");
+            }
+            //OnlineControl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl","OnlineControl");
+            }
+            //Correlator
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator","Correlator");
+            }
+            //StorageAppl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl","StorageAppl");
+            }
+          } else {
+            //StnObservation
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre,"StnObservation");
+            }
+            //BeamControl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_BeamControl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_BeamControl","BeamControl");
+            }
+            //CalControl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl","CalibrationControl");
+            }
+            //TBBControl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_TBBControl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_TBBControl","TBBControl");
+            }
           }
         } else {
           //Observation
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre,"Observation");
-          }
+          } 
           //ObservationControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl","ObservationControl");
-          }
-          //OnlineControl
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl","OnlineControl");
-          }
-          //Correlator
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator","Correlator");
-          }
-          //StorageAppl
-          if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineCtrl_StorageAppl")) {
-            dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl","StorageAppl");
           }
         } // end iscClient
       } // end Observation counter loop
