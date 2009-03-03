@@ -47,7 +47,9 @@ void updateTrigger( string dp1, string objectName,
         }
       }     
       reload(observation,station);
-    }
+    } else if ( $databaselevel==\"cep\") {
+      reload(observation,\"CEP001:\");
+    } 
   }
 }" 0
  E "main(int x, int y)

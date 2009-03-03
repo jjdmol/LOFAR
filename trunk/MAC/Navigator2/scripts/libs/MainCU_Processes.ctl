@@ -91,7 +91,7 @@ void MainCU_Processes_initList() {
       }
     }
   }
-  
+    
   if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
     setValue("activeObs","backCol","Lofar_dpdoesnotexist");
   } else {
@@ -228,6 +228,47 @@ void MainCU_Processes_UpdateProcessesList() {
           dynAppend(g_processesList,path);
         }
       }
+    }
+    //same for CEP
+    // strip system and add CEP001
+    string CEPObsDP="CEP001:"+dpSubStr(obsDP,DPSUB_DP);
+    
+    if (dpExists(CEPObsDP) ){
+    
+      // add CEP to selected Observation
+      dynAppend(list,obsDP+",CEP001:,"+CEPObsDP);
+      dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CEP001:'", tab);
+      LOG_TRACE("MainCU_Processes:updateProcessesList|CEP001 controllers Found: "+ tab);
+    
+      dyn_string aDS=navFunct_getDynString(tab, 2,1);
+      dynSortAsc(aDS);
+
+      for(z=1;z<=dynlen(aDS);z++){
+    
+        // strip .status.state from result
+        string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+        // keep Path to work with
+        string path=aS;
+    
+      
+        // strip all including Observation out of the string
+        strreplace(aS,CEPObsDP+"_","");
+
+
+        // Remainder should be Ctrl Programs, split on _ 
+        dyn_string spl=strsplit(aS,"_");
+        if (dynlen(spl) > 1) { // low level Ctrl
+          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+          dynAppend(g_processesList,path);
+        } else {   // Ctrl
+          dynAppend(list,CEPObsDP+","+spl[1]+","+path);
+          if (spl[1] != "OnlineControl") {
+           dynAppend(g_processesList,path);
+          }
+        }
+      }
+    
     }
     
     //same for station controllers (check if a station exists)
