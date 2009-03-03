@@ -39,7 +39,8 @@ namespace LOFAR {
 // The two only well-known ports of whole MAC.
 #define	SHM_INFOSERVER_PORT				23990
 #define	MAC_CODELOGGING_PORT			23999
-#define	MAC_SERVICEBROKER_PORT			24000
+#define	MAC_SERVICEBROKER_PORT		24000
+#define	MAC_EC_PORT			          10000
 
 // Define names for the services
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.1"
