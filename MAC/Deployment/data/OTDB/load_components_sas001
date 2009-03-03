@@ -123,5 +123,5 @@ awk '{
 }' >${RESULTFILE}
 rm ${COMPORDERFILE} ${FILERELFILE} 
 
-load_OTDB_comps $1 sas001 {RESULTFILE}
+load_OTDB_comps $1 sas001 ${RESULTFILE}
 rm ${RESULTFILE}
