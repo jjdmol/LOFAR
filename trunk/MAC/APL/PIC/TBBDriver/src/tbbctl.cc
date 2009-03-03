@@ -89,7 +89,7 @@ GCFEvent::TResult AllocCmd::ack(GCFEvent& e)
       bnr = static_cast<int32>(cnr / 16);
       
       if (bnr != oldbnr) {
-         if ((ack.status_mask[bnr] & TBB_SUCCESS) || (ack.status_mask[bnr] & TBB_RCU_COMM_ERROR)) {
+         if ((ack.status_mask[bnr] == TBB_SUCCESS) || (ack.status_mask[bnr] & TBB_RCU_COMM_ERROR)) {
             cout << formatString(" %2d memory allocated for selected rcu's", bnr) << endl;
          }  else {
             cout << formatString(" %2d %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -98,7 +98,7 @@ GCFEvent::TResult AllocCmd::ack(GCFEvent& e)
       
       if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
          if (ack.rcu_mask.test(cnr)) {
-            if (ack.status_mask[bnr] & TBB_SUCCESS) {
+            if (ack.status_mask[bnr] == TBB_SUCCESS) {
                cout << formatString("     ERROR, Rcu-%d NOT in correct state",cnr) << endl;
             } else {
                cout << formatString("     ERROR, Rcu-%d  %s",cnr,getDriverErrorStr(ack.status_mask[bnr] & 0xFFFF0000).c_str()) << endl;
@@ -192,7 +192,7 @@ GCFEvent::TResult FreeCmd::ack(GCFEvent& e)
       bnr = static_cast<int32>(cnr / 16);
       
       if (bnr != oldbnr) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  buffer dischard and channel disabled for selected rcu's", bnr) << endl;
          } else {
             cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -200,7 +200,7 @@ GCFEvent::TResult FreeCmd::ack(GCFEvent& e)
       }
       if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
          if (ack.rcu_mask.test(cnr)) {
-            if (ack.status_mask[bnr] & TBB_SUCCESS) {
+            if (ack.status_mask[bnr] == TBB_SUCCESS) {
                cout << formatString("     ERROR, Rcu-%d NOT in correct state",cnr) << endl;
             } else {
                cout << formatString("     ERROR, Rcu-%d  %s",cnr,getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -246,7 +246,7 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
       bnr = static_cast<int32>(cnr / 16);
       
       if (bnr != oldbnr) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  recording started for selected rcu's", bnr) << endl;
          } else {
             cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -255,7 +255,7 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
       
       if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
          if (ack.rcu_mask.test(cnr)) {
-            if (ack.status_mask[bnr] & TBB_SUCCESS) {
+            if (ack.status_mask[bnr] == TBB_SUCCESS) {
                //cout << formatString("      ERROR, Rcu-%d NOT in correct state",cnr) << endl;
                //cout  << endl;
             } else {
@@ -302,7 +302,7 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
       bnr = static_cast<int32>(cnr / 16);
       
       if (bnr != oldbnr) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  recording stopped for selected rcu's", bnr) << endl;
          } else {
             cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -311,7 +311,7 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
       
       if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
          if (ack.rcu_mask.test(cnr)) {
-            if (!(ack.status_mask[bnr] & TBB_SUCCESS)) {
+            if (!(ack.status_mask[bnr] == TBB_SUCCESS)) {
                cout << formatString("      ERROR, Rcu-%d  %s",cnr,getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
             }
          }
@@ -401,7 +401,7 @@ GCFEvent::TResult TrigReleaseCmd::ack(GCFEvent& e)
       
       if (bnr != oldbnr) {
          //cout << formatString("status[%d]%08x",bnr, ack.status_mask[bnr]);
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  trigger detection released for selected rcu's",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -508,7 +508,7 @@ GCFEvent::TResult TrigSetupCmd::ack(GCFEvent& e)
          bnr = static_cast<int32>(cnr / 16);
          
          if (bnr != oldbnr) {
-            if (ack.status_mask[bnr] & TBB_SUCCESS) {
+            if (ack.status_mask[bnr] == TBB_SUCCESS) {
                cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
             }  else {   
                cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -558,7 +558,7 @@ GCFEvent::TResult TrigCoefficientCmd::ack(GCFEvent& e)
       bnr = static_cast<int32>(cnr / 16);
       
       if (bnr != oldbnr) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -595,7 +595,7 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
    TBBTrigInfoAckEvent ack(e);
    cout << "RCU  Info" << endl;
    cout << "---  -------------------------------------------------------" << endl;  
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       cout << formatString(" %2d  sequence   : %lu",getRcu(),ack.sequence_nr) << endl;
       cout << formatString("      time       : %lu",ack.time) << endl;
       cout << formatString("      sample     : %lu",ack.sample_nr) << endl;
@@ -759,7 +759,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;  
    for (int cnr=0; cnr < getMaxSelections(); cnr++) {
       if (isSelected(cnr) ) {
-         if (ack.status_mask & TBB_SUCCESS) {
+         if (ack.status_mask == TBB_SUCCESS) {
             cout << formatString(" %2d  tranfering data to CEP",cnr ) << endl;
          }  else {         
             cout << formatString(" %2d  %s",cnr, getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -797,7 +797,7 @@ GCFEvent::TResult ModeCmd::ack(GCFEvent& e)
    cout << "TBB  Info" << endl;
    cout << "---  -------------------------------------------------------" << endl;  
    for (int i = 0; i < itsMaxBoards; i++) {
-      if (ack.status_mask[i] & TBB_SUCCESS) {
+      if (ack.status_mask[i] == TBB_SUCCESS) {
          cout << formatString(" %2d  mode set and UDP/IP configured", i) << endl;
       }  else {         
          cout << formatString(" %2d  %s",i, getDriverErrorStr(ack.status_mask[i]).c_str()) << endl;
@@ -837,7 +837,7 @@ GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
    cout << "---  --  --------  -------  ------  ------- " << endl;
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2u  %2u   V%5.1f    V%4.1f    V%4.1f    V%4.1f",
              bnr,
              ack.boardid[bnr],
@@ -882,7 +882,7 @@ GCFEvent::TResult SizeCmd::ack(GCFEvent& e)
    cout << "---  --------  ------------" << endl; 
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             double gbyte = ((double)ack.npages[bnr] * 2048.) / (1024. * 1024. * 1024.); 
             cout << formatString(" %2d  %8d  %6.3f GByte",bnr,ack.npages[bnr],gbyte) << endl;
          }  else {   
@@ -924,7 +924,7 @@ GCFEvent::TResult StatusCmd::ack(GCFEvent& e)
    cout << "---  -----------  -----------  -----------  --------  --------  --------  --------  --------  --------" << endl;
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             
             cout << formatString(" %2d     %4.2f V       %4.2f V       %4.2f V    %3u 'C    %3u 'C    %3u 'C    %3u 'C    %3u 'C    %3u 'C",
                   bnr,
@@ -974,7 +974,7 @@ GCFEvent::TResult ClearCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  board is cleared",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1013,7 +1013,7 @@ GCFEvent::TResult ResetCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  board is reset to image-0",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1054,7 +1054,7 @@ GCFEvent::TResult ConfigCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  reconfigured TP and MP's",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1092,7 +1092,7 @@ GCFEvent::TResult ArpCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  send 1 arp message",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1132,7 +1132,7 @@ GCFEvent::TResult ArpModeCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  arp mode set to %d",bnr, itsMode ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1170,7 +1170,7 @@ GCFEvent::TResult StopCepCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  CEP messages stopped",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1211,7 +1211,7 @@ GCFEvent::TResult TempLimitCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask[bnr] & TBB_SUCCESS) {
+         if (ack.status_mask[bnr] == TBB_SUCCESS) {
             cout << formatString(" %2d  Temp limit set %d .. %d ",bnr, itsLimitLow, itsLimitHigh ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1254,7 +1254,7 @@ GCFEvent::TResult ErasefCmd::ack(GCFEvent& e)
 {
    TBBEraseImageAckEvent ack(e);
      
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       cout << formatString(" %2d  image is erased",getBoard()) << endl;
    }  else {   
       cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -1296,7 +1296,7 @@ GCFEvent::TResult ReadfCmd::ack(GCFEvent& e)
 {
    TBBReadImageAckEvent ack(e);
 
-      if (ack.status_mask & TBB_SUCCESS) {
+      if (ack.status_mask == TBB_SUCCESS) {
          cout << formatString(" %2d  image is read",getBoard()) << endl;
       }  else {   
          cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -1342,7 +1342,7 @@ void WritefCmd::send()
 GCFEvent::TResult WritefCmd::ack(GCFEvent& e)
 {
    TBBWriteImageAckEvent ack(e);
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       cout << formatString(" %2d  image is written",getBoard()) << endl;
    }  else {   
       cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -1378,7 +1378,7 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
    cout << endl;
    cout << "IMAGE    SW       Flash date_time        TP file name       MP file name" << endl;
    cout << "------   ------   --------------------   ----------------   ----------------" << endl;  
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       for (int image = 0; image < 16; image++) {   
          if (ack.write_date[image] == 0xFFFFFFFF) {
             //cout << formatString("  %2d   no information",image) << endl;
@@ -1440,7 +1440,7 @@ GCFEvent::TResult ReadwCmd::ack(GCFEvent& e)
    TBBReadwAckEvent ack(e);
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask & TBB_SUCCESS) {
+         if (ack.status_mask == TBB_SUCCESS) {
             cout << formatString(" %2d  MP[%u] Addr[0x%08X]  [0x%08X] [0x%08X]"
                   ,bnr, itsMp, itsAddr, ack.wordlo, ack.wordhi ) << endl;
          }  else {   
@@ -1490,7 +1490,7 @@ GCFEvent::TResult WritewCmd::ack(GCFEvent& e)
    cout << "---  -------------------------------------------------------" << endl;    
    for (int bnr=0; bnr < getMaxSelections(); bnr++) {
       if (isSelected(bnr) ) {
-         if (ack.status_mask & TBB_SUCCESS) {
+         if (ack.status_mask == TBB_SUCCESS) {
             cout << formatString(" %2d  DDR2 write TBB_SUCCESS",bnr ) << endl;
          }  else {   
             cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -1583,7 +1583,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
    switch (itsCmdStage) {
       case 0: {
          TBBWritewAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
          }
          itsAddr = (1 << itsAddrLine);
@@ -1597,7 +1597,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
       
       case 1: {
          TBBReadwAckEvent ack(e);
-         if (ack.status_mask & TBB_SUCCESS) {
+         if (ack.status_mask == TBB_SUCCESS) {
             if (ack.wordlo == itsAddrLine) {
                cout << formatString("%2d  %5d  %5d  %5d   SAME",
                   itsMp, itsAddrLine, itsAddrLine, ack.wordlo) << endl;
@@ -1627,7 +1627,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
       
       case 2: {
          TBBWritewAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
          }
          itsAddr++;
@@ -1643,7 +1643,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
       
       case 3: {
          TBBReadwAckEvent ack(e);
-         if (ack.status_mask & TBB_SUCCESS) {
+         if (ack.status_mask == TBB_SUCCESS) {
             if ((ack.wordlo == itsTestPatern)&&(ack.wordhi == ~itsTestPatern)) {
                cout << formatString("%2d  %08X  %08X  %08X  %08X   SAME",
                   itsMp, itsTestPatern, ack.wordlo, ~itsTestPatern, ack.wordhi) << endl;
@@ -1714,7 +1714,7 @@ GCFEvent::TResult ReadrCmd::ack(GCFEvent& e)
    TBBReadrAckEvent ack(e);
    
    cout <<   "Board : " <<  getBoard() << endl;
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       cout << "MP    : " << itsMp << endl;
       cout << "PID   : " << itsPid << endl;
       cout << "REGID : " << itsRegId << endl;
@@ -1769,7 +1769,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
    TBBWriterAckEvent ack(e);
    
    cout <<   "Board : " <<  getBoard() << endl;
-   if (ack.status_mask & TBB_SUCCESS) {
+   if (ack.status_mask == TBB_SUCCESS) {
       cout << "MP    : " << itsMp << endl;
       cout << "PID   : " << itsPid << endl;
       cout << "REGID : " << itsRegId << endl;
@@ -1924,7 +1924,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
             
       case 1: {
       TBBSizeAckEvent ack(e);
-      if (!(ack.status_mask[itsBoard] & TBB_SUCCESS)) {
+      if (!(ack.status_mask[itsBoard] == TBB_SUCCESS)) {
             cout << formatString("%s",getDriverErrorStr(ack.status_mask[itsBoard]).c_str()) << endl;
             itsCmdStage = 10;
          } else {
@@ -1940,7 +1940,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
       
       case 2: {
          TBBWriterAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString("%s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
             itsCmdStage = 10;
          }
@@ -1948,7 +1948,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
       
       case 3: {
          TBBWriterAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString("%s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
             itsCmdStage = 10;
          }
@@ -1956,7 +1956,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
       
       case 4: {
          TBBReadxAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString("%s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
             itsCmdStage = 10;
         }
@@ -1969,7 +1969,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
       
       case 5: {
          TBBReadxAckEvent ack(e);
-         if (!(ack.status_mask & TBB_SUCCESS)) {
+         if (!(ack.status_mask == TBB_SUCCESS)) {
             cout << formatString("%s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
             itsCmdStage = 10;
         }
