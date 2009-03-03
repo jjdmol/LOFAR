@@ -29,10 +29,21 @@ class parametervalue(ParameterValue):
     """
 
     def __init__(self, value, trim=True):
+        """ Create the parametervalue object.
+
+        value
+          The parameter value as a string.
+        trim
+          True = remove leading/trailing whitespace from value.
+
+          """
         ParameterValue.__init__ (self, value, trim);
 
     def __str__(self):
+        """Get the full parameter value."""
         return self.get()
+
+
 
 
 class parameterset(PyParameterSet):
@@ -41,6 +52,15 @@ class parameterset(PyParameterSet):
     """
 
     def __init__(self, filename=None, caseInsensitive=False):
+        """Create a parameterset object.
+
+        filename
+          If a filename is given, the object is filled from that parset file.
+          If a bool is given, it is treated as argument caseInsensitive.
+        caseInsensitive
+          True = parameter names are case insensitive
+
+        """
         if filename==None:
             PyParameterSet.__init__ (self, caseInsensitive);
         elif isinstance(filename, bool):
@@ -48,10 +68,30 @@ class parameterset(PyParameterSet):
         else:
             PyParameterSet.__init__ (self, filename, caseInsensitive);
 
+    def __len__(self):
+        """Get the number of parameters."""
+        return self.size()
+
     def __getitem__(self, key):
-        return self.get (key)
+        """Get the parametervalue object of a parameter."""
+        return self._get (key)
+
+    def get(self, key):
+        """Get the parametervalue object of a parameter."""
+        return self._get (key)
 
     def getBoolVector(self, key, default=None, expandable=False):
+        """Get the value as a list of boolean values.
+
+        key
+          Parameter name
+        default
+          Default value to be used if parameter is undefined.
+          If None is given, an exception is raised if undefined.
+        expandable
+          True = ranges and repeats (.. and *) are expanded first.
+
+        """
         if default==None:
             return self._getBoolVector1 (key, expandable)
         if isinstance(default, bool):
@@ -59,6 +99,17 @@ class parameterset(PyParameterSet):
         return self._getBoolVector2 (key, default, expandable)
 
     def getIntVector(self, key, default=None, expandable=False):
+        """Get the value as a list of integer values.
+
+        key
+          Parameter name
+        default
+          Default value to be used if parameter is undefined.
+          If None is given, an exception is raised if undefined.
+        expandable
+          True = ranges and repeats (.. and *) are expanded first.
+
+        """
         if default==None:
             return self._getIntVector1 (key, expandable)
         if isinstance(default, bool):
@@ -66,6 +117,17 @@ class parameterset(PyParameterSet):
         return self._getIntVector2 (key, default, expandable)
 
     def getFloatVector(self, key, default=None, expandable=False):
+        """Get the value as a list of floating point values.
+
+        key
+          Parameter name
+        default
+          Default value to be used if parameter is undefined.
+          If None is given, an exception is raised if undefined.
+        expandable
+          True = ranges and repeats (.. and *) are expanded first.
+
+        """
         if default==None:
             return self._getFloatVector1 (key, expandable)
         if isinstance(default, bool):
@@ -73,6 +135,17 @@ class parameterset(PyParameterSet):
         return self._getFloatVector2 (key, default, expandable)
 
     def getDoubleVector(self, key, default=None, expandable=False):
+        """Get the value as a list of floating point values.
+
+        key
+          Parameter name
+        default
+          Default value to be used if parameter is undefined.
+          If None is given, an exception is raised if undefined.
+        expandable
+          True = ranges and repeats (.. and *) are expanded first.
+
+        """
         if default==None:
             return self._getDoubleVector1 (key, expandable)
         if isinstance(default, bool):
@@ -80,8 +153,20 @@ class parameterset(PyParameterSet):
         return self._getDoubleVector2 (key, default, expandable)
 
     def getStringVector(self, key, default=None, expandable=False):
+        """Get the value as a list of string values.
+
+        key
+          Parameter name
+        default
+          Default value to be used if parameter is undefined.
+          If None is given, an exception is raised if undefined.
+        expandable
+          True = ranges and repeats (.. and *) are expanded first.
+
+        """
         if default==None:
             return self._getStringVector1 (key, expandable)
         if isinstance(default, bool):
             return self._getStringVector1 (key, default)
         return self._getStringVector2 (key, default, expandable)
+

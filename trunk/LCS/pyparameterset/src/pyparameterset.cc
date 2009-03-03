@@ -112,20 +112,34 @@ namespace LOFAR {
                             init<std::string, bool>())
 
       .def ("get",      &ParameterValue::get,
-            return_value_policy < copy_const_reference> ())
-      .def ("expand",   &ParameterValue::expand)
-      .def ("isVector", &ParameterValue::isVector)
-      .def ("getVector", &ParameterValue::getVector)
-      .def ("getBool",   &ParameterValue::getBool)
-      .def ("getInt",    &ParameterValue::getInt)
-      .def ("getFloat",  &ParameterValue::getFloat)
-      .def ("getDouble", &ParameterValue::getDouble)
-      .def ("getString", &ParameterValue::getString)
-      .def ("getBoolVector",   &ParameterValue::getBoolVector)
-      .def ("getIntVector",    &ParameterValue::getIntVector)
-      .def ("getFloatVector",  &ParameterValue::getFloatVector)
-      .def ("getDoubleVector", &ParameterValue::getDoubleVector)
-      .def ("getStringVector", &ParameterValue::getStringVector)
+            return_value_policy < copy_const_reference> (),
+            "Get the original value.")
+      .def ("expand",   &ParameterValue::expand,
+            "Expand possible range and repeat values (using .. and *)")
+      .def ("isVector", &ParameterValue::isVector,
+            "Test if the value contains a vector (if enclosed in [])")
+      .def ("getVector", &ParameterValue::getVector,
+            "Split the vector into its part and return as a list.")
+      .def ("getBool",   &ParameterValue::getBool,
+            "Get the value as a boolean value.")
+      .def ("getInt",    &ParameterValue::getInt,
+            "Get the value as an integer value.")
+      .def ("getFloat",  &ParameterValue::getFloat,
+            "Get the value as a floating point value.")
+      .def ("getDouble",  &ParameterValue::getDouble,
+            "Get the value as a floating point value.")
+      .def ("getString", &ParameterValue::getString,
+            "Get the value as a string value (quotes are removed).")
+      .def ("getBoolVector",   &ParameterValue::getBoolVector,
+            "Get the value vector as a list of boolean values.")
+      .def ("getIntVector",    &ParameterValue::getIntVector,
+            "Get the value vector as a list of integer values.")
+      .def ("getFloatVector",  &ParameterValue::getFloatVector,
+            "Get the value vector as a list of floating point values.")
+      .def ("getDoubleVector",  &ParameterValue::getDoubleVector,
+            "Get the value vector as a list of floating point values.")
+      .def ("getStringVector", &ParameterValue::getStringVector,
+            "Get the value vector as a list of strings (quotes are removed).")
       ;
   }
 
@@ -136,62 +150,96 @@ namespace LOFAR {
     class_<PyParameterSet> ("PyParameterSet")
       .def (init<bool>())
       .def (init<std::string, bool>())
-
       .def ("version", &PyParameterSet::version,
-            (boost::python::arg("type")="other"))
-      .def ("size", &ParameterSet::size)
-      .def ("__len__", &ParameterSet::size)
+            (boost::python::arg("type")="other"),
+            "Get the software version.")
+      .def ("size", &ParameterSet::size,
+            "Get the number of parameters.")
+      .def ("__len__", &ParameterSet::size,
+            "Get the number of parameters.")
       .def ("makeSubset", &ParameterSet::makeSubset,
  	    (boost::python::arg("baseKey"),
-             boost::python::arg("prefix")=""))
+             boost::python::arg("prefix")=""),
+            "Return a subset as a new parameterset object.\n"
+            "\n"
+            "baseKey\n"
+            "  The leading part of the parameter name denoting the subset.\n"
+            "  A trailing period has to be given.\n"
+            "prefix\n"
+            "  The baseKey parameter name part is replaced by the prefix.\n"
+            "\n"
+            "For example::\n"
+            "\n"
+            "  newps = ps.makeSubset ('p1,p2,', 'pr.')\n"
+            "\n"
+            "creates a subset of all keys starting with `p`1.p2.` and replaces\n"
+            "that prefix by `pr.`.\n"
+            )
       .def ("subtractSubset", &ParameterSet::subtractSubset,
- 	    (boost::python::arg("baseKey")))
+ 	    (boost::python::arg("baseKey")),
+            "Remove all parameters starting with the baseKey.")
       .def ("adoptFile", &ParameterSet::adoptFile,
  	    (boost::python::arg("filename"),
- 	     boost::python::arg("prefix")=""))
+ 	     boost::python::arg("prefix")=""),
+            "Add the parameters in the parset file with the given prefix.")
       .def ("writeFile", &ParameterSet::writeFile,
  	    (boost::python::arg("filename"),
-             boost::python::arg("append")=false))
+             boost::python::arg("append")=false),
+            "Write the parameterset into a parset file with the given name.")
       .def ("add", fadd,
  	    (boost::python::arg("key"),
-             boost::python::arg("value")))
+             boost::python::arg("value")),
+            "Add a parameter key/value pair.")
       .def ("replace", freplace,
  	    (boost::python::arg("key"),
-             boost::python::arg("value")))
+             boost::python::arg("value")),
+            "Replace the value of a parameter.")
       .def ("remove", &ParameterSet::remove,
  	    (boost::python::arg("key")))
-      .def ("clear", &ParameterSet::clear)
+      .def ("clear", &ParameterSet::clear,
+            "Clear this parameterset object.")
       .def ("isDefined", &ParameterSet::isDefined,
- 	    (boost::python::arg("key")))
-      .def ("get", &ParameterSet::get,
+ 	    (boost::python::arg("key")),
+            "Does a parameter with the given name exist? ")
+      .def ("_get", &ParameterSet::get,
             return_value_policy < copy_const_reference> (),
  	    (boost::python::arg("key")))
 
       .def ("getBool", fgetbool1,
-            (boost::python::arg("key")))
+            (boost::python::arg("key")),
+            "Get a boolean parameter value. Exception if undefined.")
       .def ("getBool", fgetbool2,
             (boost::python::arg("key"),
-             boost::python::arg("default")))
+             boost::python::arg("default")),
+            "Get a boolean parameter value. Use default if undefined.")
       .def ("getInt", fgetint1,
-            (boost::python::arg("key")))
+            (boost::python::arg("key")),
+            "Get an integer parameter value. Exception if undefined.")
       .def ("getInt", fgetint2,
             (boost::python::arg("key"),
-             boost::python::arg("default")))
+             boost::python::arg("default")),
+            "Get an integer parameter value. Use default if undefined.")
       .def ("getFloat", fgetfloat1,
-            (boost::python::arg("key")))
+            (boost::python::arg("key")),
+            "Get a floating point parameter value. Exception if undefined.")
       .def ("getFloat", fgetfloat2,
             (boost::python::arg("key"),
-             boost::python::arg("default")))
+             boost::python::arg("default")),
+            "Get a floating point parameter value. Use default if undefined.")
       .def ("getDouble", fgetdouble1,
-            (boost::python::arg("key")))
+            (boost::python::arg("key")),
+            "Get a floating point parameter value. Exception if undefined.")
       .def ("getDouble", fgetdouble2,
             (boost::python::arg("key"),
-             boost::python::arg("default")))
+             boost::python::arg("default")),
+            "Get a floating point parameter value. Use default if undefined.")
       .def ("getString", fgetstring1,
-            (boost::python::arg("key")))
+            (boost::python::arg("key")),
+            "Get a string parameter value. Exception if undefined.")
       .def ("getString", fgetstring2,
             (boost::python::arg("key"),
-             boost::python::arg("default")))
+             boost::python::arg("default")),
+            "Get a string parameter value. Use default if undefined.")
 
       .def ("_getBoolVector1", fgetvecbool1,
             (boost::python::arg("key"),
