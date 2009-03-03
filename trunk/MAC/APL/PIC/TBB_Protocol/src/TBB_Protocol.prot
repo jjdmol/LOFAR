@@ -26,7 +26,7 @@ static const uint32 TBB_MODE_TRANSIENT       = 0x00000001;
 static const uint32 TBB_MODE_SUBBANDS        = 0x00000002;
 
 // bit asignment for the status_mask word
-static const uint32 TBB_SUCCESS              = 0x00000001;
+static const uint32 TBB_SUCCESS              = 0;
 static const uint32 TBB_NO_BOARD             = 0x00000002;
 static const uint32 TBB_SELECT_ERROR         = 0x00000004;
 static const uint32 TBB_COMM_ERROR           = 0x00000008;
