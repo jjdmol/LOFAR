@@ -227,7 +227,7 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
   fftwf_complex* cinput  = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
   fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n*4*sizeof(fftwf_complex));
 #elif defined HAVE_FFTW2
-  fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
+  fftw_complex* cinput  = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
   fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
 #endif
 
@@ -258,7 +258,7 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
 #if 0
   std::cout << "ifft_in = [";
   for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << fftw_real(cinput[i]);
+    std::cout << fftw_real(cinput[i]) << " " << fftw_imag(cinput[i]);
     if(i != grid_n*4-1) std::cout << ", ";
   }
   cout << "];" << std::endl;
@@ -286,7 +286,7 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
   // last_quarter  = b([end-n+1:2:end]); # the size is only 1/8, since we skip half of the elements
   // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
 
-  int index = 0;
+  unsigned index = 0;
   for(unsigned i=4*grid_n-n; i<4*grid_n; i+=2) {
     result[index] = fftw_real(coutput[i]);
     index++;
@@ -398,10 +398,14 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
   unsigned index = 0;
   for(int tap=taps-1; tap>=0; tap--) { // store the taps in reverse!
     for(unsigned channel=0; channel<channels; channel++) {
+      // Negate all odd channels (see comment at the top of this file)
+      // Correct total power.
+      // we use the 256 channel case as a reference, so we
+      // multiply by 256, and divide by the number of channels
       if(channel % 2 == 0) {
-	weights[channel][tap] = result[index];
+	weights[channel][tap] = result[index] * 256.0 / channels;
       } else {
-	weights[channel][tap] = -result[index];
+	weights[channel][tap] = -result[index] * 256.0 / channels;
       }
       index++;
     }
