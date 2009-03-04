@@ -1,7 +1,7 @@
 #ifndef LOFAR_CNPROC_FIR_H
 #define LOFAR_CNPROC_FIR_H
 
-#define USE_ORIGINAL_FILTER 1
+#define USE_ORIGINAL_FILTER 0
 
 #if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define FIR_C_IMPLEMENTATION
