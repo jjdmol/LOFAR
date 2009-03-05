@@ -140,12 +140,16 @@ void PQInitWorkerRegister::operator()(argument_type &transaction)
     const vector<CEP::VdsPartDesc> &parts = itsVdsDesc.getParts();
     for(size_t i = 0; i < parts.size(); ++i)
     {
+        // Work-around for socketrun.
+        string filesys = parts[i].getFileSys().empty() ? "." :
+            parts[i].getFileSys();
+
         query.str("");
         query << "SELECT blackboard.create_kernel_slot("
             << itsId << ",'"
             << transaction.esc(itsProcessId.hostname) << "',"
             << itsProcessId.pid << ",'"
-            << transaction.esc(parts[i].getFileSys()) << "','"
+            << transaction.esc(filesys) << "','"
             << transaction.esc(parts[i].getFileName()) << "')";
         LOG_DEBUG_STR("Query: " << query.str());
         transaction.exec(query.str());
