@@ -11,7 +11,7 @@ gnu34.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 gnu34.compiler.aipspp.var: --with-casacore=/usr/local/casacore/gnunew --with-wcs=/usr/local/wcs
 gnu34.compiler.sse.var:    --with-sse
 
-gnunew.compiler.conf: CXX="$CCACHE /usr/bin/g++" 
+gnunew.compiler.conf: CXX="$CCACHE /usr/bin/g++" --with-cppflags='-I/usr/java/default/include -I/usr/java/default/include/linux'
 #gnunew.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnunew
 gnunew.compiler.aipspp.var: --with-casacore=/usr/local/casacore/gnunew --with-wcs=/usr/local/wcs
 gnunew.compiler.sse.var:    --with-sse
