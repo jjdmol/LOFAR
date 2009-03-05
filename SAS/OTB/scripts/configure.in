@@ -3,8 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT
 
-dnl Not really necessary (we have no C sources), but autoconf requires 
-it
+dnl Not really necessary (we have no C sources), but autoconf requires it
 AC_CONFIG_HEADERS(config.h)
 
 dnl Needed by automake (e.g. for make dist)
