@@ -65,7 +65,7 @@ public:
 
     void setCoeff(const Location &loc, const double* values, uint nvalues,
         bool useMask = true)
-    { itsParm.setCoeff(loc, values, nvalues, useMask); }
+    { itsParm.setCoeff(loc, values, nvalues, 0, useMask); }
 
     void revertCoeff()
     { itsParm.revertCoeff(); }
