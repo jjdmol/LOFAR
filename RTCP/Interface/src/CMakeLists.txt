@@ -1,21 +1,20 @@
-
 ## ------------------------------------------------------------------------------
 ## Build the library
 
-if (HAVE_APS)	
-  add_definitions (-DHAVE_APS)
-endif (HAVE_APS)
+file (GLOB libinterface_SOURCES Allocator.cc
+				CN_Configuration.cc
+				CN_Mapping.cc
+				Parset.cc
+				RSPTimeStamp.cc
+				CN_Mode.cc)
 
-file (GLOB libcs1_interface_SOURCES *.cc)
-
-add_library (cs1_interface ${libcs1_interface_SOURCES})
+add_library (interface ${libinterface_SOURCES})
 
 ## ------------------------------------------------------------------------------
 ## Installation
 
 install (
-  TARGETS cs1_interface
+  TARGETS interface
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   )
-
