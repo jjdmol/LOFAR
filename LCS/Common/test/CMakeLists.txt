@@ -1,5 +1,28 @@
+## ------------------------------------------------------------------------------
+## Build the tests
 
-foreach (LCS_Common_test
+## --- tObjectFactory -------------------------------
+
+file (GLOB tObjectFactory_SRCS tObjectFactory.cc
+                               Shapes.h
+			       Shapes.cc
+			       Coordinates.h
+			       Coordinates.cc )
+
+## compiler instructions
+add_executable (tObjectFactory ${tObjectFactory_SRCS})
+## linker instructions
+target_link_libraries (tObjectFactory 
+                       common 
+	               ${LOG4CPLUS_LIBRARIES}
+		       ${BACKTRACE_LIBRARIES} )
+			 
+## testing instructions
+add_test (tObjectFactory tObjectFactory)
+
+## --- Test -----------------------------------------
+
+foreach (Common_test
     testLogger
     tAllocator
     tDataConvert
@@ -14,15 +37,23 @@ foreach (LCS_Common_test
     tTimer
     tNumeric
     tSingleton
-#    tObjectFactory
     tSystemUtil
     tSaxpy
     tPrettyUnits
+    tBacktrace
+    tParameterValue
+    tParameterSet
+    tParameterSetPerf
     )
+
   ## compiler instructions
-  add_executable (${LCS_Common_test} ${LCS_Common_test}.cc)
+  add_executable (${Common_test} ${Common_test}.cc)
   ## linker instructions
-  target_link_libraries (${LCS_Common_test} common)
+  target_link_libraries (${Common_test} 
+                         common 
+			 ${LOG4CPLUS_LIBRARIES}
+			 ${BACKTRACE_LIBRARIES} )
+
   ## testing instructions
-  add_test (${LCS_Common_test} ${LCS_Common_test})
-endforeach (LCS_Common_test)
+  add_test (${Common_test} ${Common_test})
+endforeach (Common_test)
