@@ -3,7 +3,7 @@ SET(GNUM32_COMPILER "CXX=/usr/bin/g++ -m32 CC=/usr/bin/gcc -m32 --disable-lib64"
 SET(KCC_COMPILER )
 SET(ICC_COMPILER )
 
-SET(STANDARD_MODULES "FindSHMEM")
+SET(STANDARD_MODULES "")
 
 
 SET(NOTHREADS        "--with-threads=no")
