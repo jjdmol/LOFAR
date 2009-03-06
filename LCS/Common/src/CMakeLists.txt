@@ -9,6 +9,19 @@ if (Backtrace_FOUND)
 			    SymbolTable.cc )
 endif (Backtrace_FOUND)
 
+if (HAVE_SHEM)
+  file (GLOB shmem_SRCS     shmem/dlmalloc.c
+                            shmem/segbasemap.cc
+                            shmem/shmem_alloc.cc )
+  add_library (shmem ${shmem_SRCS})
+  
+  set_target_properties( shmem PROPERTIES
+                         COMPILE_FLAGS "-DUSE_PUBLIC_MALLOC_WRAPPERS -DUSE_DL_PREFIX -DHAVE_MMAP=0 -DMORECORE=shmbrk -DMORECORE_CONTIGUOUS=0 -DMORECORE_CANNOT_TRIM=1 -DSHMEM_ALLOC -DHAVE_USR_INCLUDE_MALLOC_H -DUSE_THREADS -pthread"
+  )
+  
+  
+endif (HAVE_SHEM)
+
 file (GLOB libcommon_SOURCES Allocator.cc
 			     DataConvert.cc
 			     Exception.cc
@@ -39,12 +52,26 @@ file (GLOB libcommon_SOURCES Allocator.cc
 
 add_library (common ${libcommon_SOURCES})
 
+if (HAVE_SHEM)
+target_link_libraries (common
+                       shmem
+                      )
+endif (HAVE_SHEM)
+
+
 ## ------------------------------------------------------------------------------
 ## Installation
+if (HAVE_SHEM)
+install (
+  TARGETS common shmem
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  )
 
+else (HAVE_SHEM)
 install (
   TARGETS common
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   )
-
+endif (HAVE_SHEM)
