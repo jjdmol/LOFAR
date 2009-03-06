@@ -6,6 +6,7 @@ SET(openmpi-opt "${opt}" CACHE STRING "openmpi-opt: flag(s) settings" FORCE)
 
 add_definitions (-DHAVE_PKVERSION)
 
+SET (HAVE_SHEM TRUE)
 SET ( Boost_FIND_COMPONENTS "date_time" "filesystem" "iostreams" "program_options" "regex" "serialization" "thread" "wave") 
 
 ## Modules: Storage
