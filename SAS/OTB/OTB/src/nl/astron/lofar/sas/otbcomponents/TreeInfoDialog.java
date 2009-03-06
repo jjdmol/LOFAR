@@ -712,12 +712,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             String errorMsg = "When changing to scheduled, description needs to be filled";
             JOptionPane.showMessageDialog(this,errorMsg,"description error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );
-        } else if (itsTreeType.equals("VHtree") ){
-            if (itsStartDate.after(itsStopDate)) {
-                String errorMsg = "StartDate after stopdate!!!!";
-                JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
-                logger.error(errorMsg );  
-            }
+        } else if (itsTreeType.equals("VHtree") && itsStartDate.after(itsStopDate)) {
+            String errorMsg = "StartDate after stopdate!!!!";
+            JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
+            logger.error(errorMsg );  
         } else {
            if (saveNewTree()) {
                 setVisible(false);
