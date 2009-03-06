@@ -8,7 +8,7 @@ cmake_minimum_required (VERSION 2.6)
 ## ------------------------------------------------------------------------------
 ## Enable test?
 
-option (CNPROC_ENABLE_TESTING "Enable building and executing test programs?" YES  )
+option (CNPROC_ENABLE_TESTING "Enable building and executing test programs?" NO  )
 
 ## ------------------------------------------------------------------------------
 ## Directories to be included in the build
