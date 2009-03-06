@@ -1,15 +1,93 @@
+execute_process (COMMAND pwd
+    OUTPUT_VARIABLE path
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+## ----------------------------------------------------------------------------
+##  Host-specific overrides
+
+function(check_package_name _NAME result_var)
+  if ("${_NAME}" MATCHES "^$")
+    set(${result_var} 0 PARENT_SCOPE)
+    break()
+  elseif (${_NAME} STREQUAL "IONProc")
+    set(${result_var} 1 PARENT_SCOPE)
+    break()
+  elseif (${_NAME} STREQUAL "CNProc") 
+    set(${result_var} 1 PARENT_SCOPE)
+    break()
+  elseif (${_NAME} STREQUAL "Storage") 
+    set(${result_var} 1 PARENT_SCOPE)
+    break()
+  else ("${_NAME}" MATCHES "^$")
+    set(${result_var} 0 PARENT_SCOPE)
+  endif ("${_NAME}" MATCHES "^$") 
+endfunction(check_package_name)  
+
+set (PACKAGE_NAME "${PACKAGE_NAME}")
+
+check_package_name("${PACKAGE_NAME}" valid_package_name)
+if (NOT ${valid_package_name})
+  message (FATAL_ERROR "Illegal package name: (${PACKAGE_NAME})")
+endif(NOT ${valid_package_name})
+
+execute_process (COMMAND hostname -s
+  OUTPUT_VARIABLE hostname
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set (LOFAR_VARIANTS_FILE ${path}/../../cmake/variants/variants.${hostname})
+
+message (STATUS "Loading settings variants ${path}/../../cmake/variants/variants")
+include (${path}/../../cmake/variants/variants)
+
+if (EXISTS ${LOFAR_VARIANTS_FILE})
+  message (STATUS "Loading settings variants " ${LOFAR_VARIANTS_FILE})
+  include (${LOFAR_VARIANTS_FILE})
+endif (EXISTS ${LOFAR_VARIANTS_FILE})
+  
+## Get compiler: e.g. ~/projects/LOFAR/build/gnu_openmpi-opt
+get_filename_component (BUILD_VARIANT ${path} NAME)
+
+
+#set ( BUILD_VARIANT gnubgp_cn )
+STRING (REGEX MATCH ".*_" compiler ${BUILD_VARIANT})
+STRING (REGEX REPLACE "_" "" compiler ${compiler})
+
+## Get variant
+STRING (REGEX MATCH "_.*" variant ${BUILD_VARIANT})
+STRING (REGEX REPLACE "_" "" variant ${variant})
+
+foreach (comp ${${compiler}_compiler})
+  STRING (REGEX MATCH "^C[CX].*=" result ${comp})
+  if (${result} STREQUAL "CC=")
+    STRING (REGEX MATCH "/.*" cc ${comp})
+    set( CMAKE_C_COMPILER ${cc} CACHE INTERNAL "gcc Compiler" FORCE )
+  elseif (${result} STREQUAL "CXX=")
+    STRING (REGEX MATCH "/.*" cc ${comp})
+    set( CMAKE_CXX_COMPILER ${cc} CACHE INTERNAL "g++ Compiler" FORCE )
+    if (${variant} STREQUAL "ion") 
+      set( CXX_COMPILE_FLAGS "${CXX_COMPILE_FLAGS} ${${variant}}" CACHE STRING "g++ Compiler flags" FORCE )
+    else (${variant} STREQUAL "ion") 
+      set( CXX_COMPILE_FLAGS "${${variant}}" CACHE STRING "g++ Compiler flags" FORCE )
+    endif (${variant} STREQUAL "ion")
+  elseif (${result} STREQUAL "CCAS=")
+    STRING (REGEX MATCH "/.*" asm ${comp})
+    set( CCAS "${asm}" CACHE STRING "Assembler" FORCE )
+  else (${result} STREQUAL "CC=")
+    message(SEND_ERROR "Invalid compiler: ${comp}")
+  endif (${result} STREQUAL "CC=")
+endforeach (comp ${${compiler}_compiler})
 
 ## ------------------------------------------------------------------------------
 ## Project characteristics
 
 project (LOFAR)
 
-cmake_minimum_required (VERSION 2.5)
+cmake_minimum_required (VERSION 2.6)
 
 ## ------------------------------------------------------------------------------
 ## Set CMAKE_MODULE_PATH to load custom CMake modules
 
-find_path (USG_ROOT cmake/CMakeSettings.cmake
+find_path (LOFAR_ROOT cmake/modules/CMakeSettings.cmake
   PATHS 
   ${LOFAR_SOURCE_DIR}
   ${LOFAR_SOURCE_DIR}/..
@@ -18,108 +96,82 @@ find_path (USG_ROOT cmake/CMakeSettings.cmake
   $ENV{LOFARSOFT}
   )
 
-if (USG_ROOT)
-  include (${USG_ROOT}/cmake/CMakeSettings.cmake)
-else (USG_ROOT)
+if (LOFAR_ROOT)
+  include (${LOFAR_ROOT}/cmake/modules/CMakeSettings.cmake)
+else (LOFAR_ROOT)
   message (FATAL_ERROR "Unable to locate additional CMake scripts!")
-endif (USG_ROOT)
+endif (LOFAR_ROOT)
+
+## -----------------------------------------------------------------------------
+## Include Lofar general
+
+include (LofarGeneral)
 
 ## ------------------------------------------------------------------------------
+## Set debug options
 
-option (LOFAR_VERBOSE_CONFIGURE "Verbose output during configuration?" 0)
+option (LOFAR_VERBOSE_CONFIGURE "Verbose output during configuration?" 1)
 option (LOFAR_BUILD_TESTS       "Build the test programs?"             1)
-option (LOFAR_WITH_TINYCEP      "Use tinyCEP?"                         0)
 
 ## ------------------------------------------------------------------------------
 ## Additional CMake modules
 
 include (CheckIncludeFiles)
 include (CheckLibraryExists)
-#include (CheckFunctionExists)
+include (CheckCXXSourceCompiles)
 include (CheckTypeSize)
 include (CTest)
 enable_testing()
 
 ## ------------------------------------------------------------------------------
-## Check system libraries
+## Configure file
 
-check_include_files (sys/socket.h  HAVE_SYS_SOCKET_H )
-check_include_files (sys/types.h   HAVE_SYS_TYPES_H  )
-check_include_files (unistd.h      HAVE_UNISTD_H     )
-check_include_files (stdarg.h      HAVE_STDARG_H     )
-check_include_files (time.h        HAVE_TIME_H       )
-check_include_files (stdio.h       HAVE_STDIO_H      )
-check_include_files (netinet/in.h  HAVE_NETINET_IN_H )
-
-if (HAVE_SYS_TYPES_H)
-  check_type_size ("uint" HAVE_UINT)
-  if (HAVE_UINT)
-    add_definitions (-DHAVE_UINT)
-  endif (HAVE_UINT)
-  ##
-  check_type_size ("long" HAVE_LONG)
-  if (HAVE_LONG)
-    add_definitions (-DHAVE_LONG)
-  endif (HAVE_LONG)
-  ##
-  check_type_size ("long long" HAVE_LONGLONG)
-  if (HAVE_LONGLONG)
-    add_definitions (-DHAVE_LONGLONG)
-  endif (HAVE_LONGLONG)
-  ##
-  check_type_size ("ushort" HAVE_USHORT)
-  if (HAVE_USHORT)
-    add_definitions (-DHAVE_USHORT)
-  endif (HAVE_USHORT)
-else (HAVE_SYS_TYPES_H)
-  message (STATUS "Unable to find sys/types.h")
-endif (HAVE_SYS_TYPES_H)
-
-## ------------------------------------------------------------------------------
-## Check for required tools
-
-find_program ( bison_bin bison )
-find_program ( flex_bin  flex  )
-find_program ( lex_bin   lex   )
-find_program ( yacc_bin  yacc  )
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
+               ${CMAKE_BINARY_DIR}/config.h)
+configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
+               ${CMAKE_BINARY_DIR}/lofar_config.h)
 
 ## ------------------------------------------------------------------------------
 ## Search for external libraries
 
 if (NOT LOFAR_VERBOSE_CONFIGURE)
   set (BOOST_FIND_QUIETLY TRUE)
-  set (CASACORE_FIND_QUIETLY TRUE)
+  set (CASACORE_FIND_QUIETLY FALSE)
 endif (NOT LOFAR_VERBOSE_CONFIGURE)
 
-## Boost++
+## Load module(s)
+foreach (mod ${${PACKAGE_NAME}_modules})
+  include(${CMAKE_MODULE_PATH}/${mod}.cmake)
+  STRING (REGEX REPLACE "Find" "" mod ${mod})
+  if (${mod}_FOUND)
+    string(TOUPPER ${mod} mod)
+    if (${mod} STREQUAL "BOOST")
+      include_directories (${${mod}_INCLUDE_DIR})
+    elseif (${mod} STREQUAL "MPI")
+      include_directories (${${mod}_INCLUDE_PATH})
+    else (${mod} STREQUAL "BOOST")
+      include_directories (${${mod}_INCLUDES})
+    endif (${mod} STREQUAL "BOOST")
+    if (${mod} STREQUAL "CASACORE")
+      add_definitions (-DHAVE_AIPSPP)
+    else (${mod} STREQUAL "CASACORE")
+      add_definitions (-DHAVE_${mod})
+    endif (${mod} STREQUAL "CASACORE")
+    if (${mod} STREQUAL "MPI")
+      set( CMAKE_CXX_COMPILER ${MPI_COMPILER} CACHE INTERNAL "MPI Compiler" FORCE )
+    endif (${mod} STREQUAL "MPI")
+  endif (${mod}_FOUND)
+endforeach (mod ${${PACKAGE_NAME}_modules})
 
-include (FindBoost)
-
-if (BOOST_INCLUDES)
-  include_directories (${BOOST_INCLUDES})
-  add_definitions (-DHAVE_BOOST)
-endif (BOOST_INCLUDES)
-
-## casacore
-
-include (FindCASACORE)
-
-if (CASACORE_INCLUDES)
-  include_directories (${CASACORE_INCLUDES})
-  add_definitions (-DHAVE_AIPSPP)
-endif (CASACORE_INCLUDES)
-
+## ------------------------------------------------------------------------------
 ## Commonly used configuration files
 
-set (LOFAR_config ${LOFAR_BINARY_DIR}/lofar_config.h)
-
-file (WRITE ${LOFAR_config} "/* lofar_config.h --  Generated by CMake. */\n\n")
-
-include_directories (${LOFAR_BINARY_DIR})
+if (${compiler} STREQUAL "gnu" OR ${compiler} STREQUAL "gnubgp")
+  set( CXX_COMPILE_FLAGS "${CXX_COMPILE_FLAGS} -W -Wall -Woverloaded-virtual -Wno-unknown-pragmas" CACHE STRING "CXX Compiler flags" FORCE )
+  add_definitions (${CXX_COMPILE_FLAGS})
+endif (${compiler} STREQUAL "gnu" OR ${compiler} STREQUAL "gnubgp")
 
 ## Common compiler flags
-
-add_definitions (-fPIC)
 
 ## ------------------------------------------------------------------------------
 ## Module header files
@@ -128,80 +180,50 @@ include_directories (
   ## LCS
   ${LOFAR_SOURCE_DIR}/LCS/Blob/include
   ${LOFAR_SOURCE_DIR}/LCS/Common/include
-  ${LOFAR_SOURCE_DIR}/LCS/ACC/ALC/include
   ${LOFAR_SOURCE_DIR}/LCS/ACC/APS/include
   ${LOFAR_SOURCE_DIR}/LCS/ACC/PLC/include
   ${LOFAR_SOURCE_DIR}/LCS/AMC/AMCBase/include
   ${LOFAR_SOURCE_DIR}/LCS/AMC/AMCImpl/include
   ${LOFAR_SOURCE_DIR}/LCS/Transport/include
-  ## CEP
-  ${LOFAR_SOURCE_DIR}/CEP/CEPFrame/include
-  ${LOFAR_SOURCE_DIR}/CEP/tinyCEP/include
-  ## Appl
-  ${LOFAR_SOURCE_DIR}/Appl/ApplCommon/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_BandpassCorrector/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_BBS/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_BinningFlagger/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_DataSquasher/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_DFTImager/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Flagger/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Flagger2/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_FrequencyFlagger/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Generator/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Imager/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Interface/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_pp_lib/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_SPWCombine/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Storage/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_Tools/include
-  ${LOFAR_SOURCE_DIR}/Appl/CEP/CS1/CS1_IONProc/src
+  ${LOFAR_SOURCE_DIR}/LCS/Stream/include
+  ${LOFAR_SOURCE_DIR}/LCS/ApplCommon/include
+  ## RTCP
+  ${LOFAR_SOURCE_DIR}/RTCP/Interface/include
+  ${LOFAR_SOURCE_DIR}/RTCP/Storage/include
+  ${LOFAR_SOURCE_DIR}/RTCP/IONProc/src
+  ${LOFAR_SOURCE_DIR}/RTCP/CNProc/src
   )
 
 ## ------------------------------------------------------------------------------
 ## Check for the presence of various packages in the code tree
 
-## --- Appl --------------------------------------
-
-find_path (HAVE_APPLCOMMON CMakeLists.txt ${LOFAR_SOURCE_DIR}/Appl/ApplCommon)
-
-if (HAVE_APPLCOMMON)
-   set (HAVE_APPLCOMMON TRUE CACHE BOOL "Have package ApplCommon?" FORCE)
-endif (HAVE_APPLCOMMON)
-
-## --- CEP ---------------------------------------
-
-find_path (HAVE_CEPFRAME CMakeLists.txt ${LOFAR_SOURCE_DIR}/CEP/CEPFrame)
-
-if (HAVE_CEPFRAME)
-   set (HAVE_CEPFRAME TRUE CACHE BOOL "Have package CEPFrame?" FORCE)
-endif (HAVE_CEPFRAME)
-
-find_path (HAVE_TINYCEP CMakeLists.txt ${LOFAR_SOURCE_DIR}/CEP/tinyCEP)
-
-if (HAVE_TINYCEP)
-   set (HAVE_TINYCEP TRUE CACHE BOOL "Have package TINYCEP?" FORCE)
-endif (HAVE_TINYCEP)
-
-## --- LCS ---------------------------------------
-
-find_path (HAVE_APS CMakeLists.txt ${LOFAR_SOURCE_DIR}/LCS/ACC/APS)
-
-if (HAVE_APS)
-   set (HAVE_APS TRUE CACHE BOOL "Have package APS?" FORCE)
-endif (HAVE_APS)
 
 ## ------------------------------------------------------------------------------
 ## Directories to be included in the build
 
-add_subdirectory (Appl)
+## --- LCS ---------------------------------------
 
-if (HAVE_CEPFRAME AND HAVE_TINYCEP)
-  add_subdirectory (CEP)
-endif (HAVE_CEPFRAME AND HAVE_TINYCEP)
-
-if (HAVE_APS)
+find_path (HAVE_LCS CMakeLists.txt ${LOFAR_SOURCE_DIR}/LCS)
+if (HAVE_LCS)
+  set (HAVE_LCS TRUE CACHE BOOL "Have package LCS?" FORCE)
   add_subdirectory (LCS)
-endif (HAVE_APS)
+endif (HAVE_LCS)  
+
+### --- RTCP ---------------------------------------
+
+find_path (HAVE_RTCP CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP)
+if (HAVE_RTCP)
+  set (HAVE_RTCP TRUE CACHE BOOL "Have package RTCP?" FORCE)
+  add_subdirectory (RTCP)
+endif (HAVE_RTCP)  
+
+# ------------------------------------------------------------------------------
+## Additional target dependencies 
+message (STATUS "TEST_PROGRAMS      = ${TEST_PROGRAMS}")
+add_custom_target (check
+  ctest
+  DEPENDS ${TEST_PROGRAMS}
+)
 
 ## ==============================================================================
 ##
@@ -212,15 +234,20 @@ endif (HAVE_APS)
 if (LOFAR_VERBOSE_CONFIGURE)
   message (STATUS "-----------------------------------------------------------------")
   message (STATUS "[LOFAR] Configuration summary")
+  message (STATUS "PACKAGE_NAME            = ${PACKAGE_NAME}")
   message (STATUS "LOFAR_SOURCE_DIR        = ${LOFAR_SOURCE_DIR}")
+  message (STATUS "CMAKE_C_COMPILER        = ${CMAKE_C_COMPILER}")
+  message (STATUS "CMAKE_CXX_COMPILER      = ${CMAKE_CXX_COMPILER}")
+  message (STATUS "CCAS                    = ${CCAS}")
+  message (STATUS "CXX_COMPILE_FLAGS       = ${CXX_COMPILE_FLAGS}")
   message (STATUS "CMAKE_MODULE_PATH       = ${CMAKE_MODULE_PATH}")
-  message (STATUS "Have package ApplCommon = ${HAVE_APPLCOMMON}")
-  message (STATUS "Have package APS        = ${HAVE_APS}")
-  message (STATUS "Have package CEPFrame   = ${HAVE_CEPFRAME}")
-  message (STATUS "Have package tinyCEP    = ${HAVE_TINYCEP}")
-  message (STATUS "Boost++ includes        = ${BOOST_INCLUDES}")
-  message (STATUS "Boost++ libraries       = ${BOOST_LIBRARIES}")
-  message (STATUS "Have Boost++            = ${HAVE_BOOST}")
-  message (STATUS "Have casacore           = ${HAVE_CASACORE}")
+  message (STATUS "Have package MPI        = ${MPI_FOUND}")
+  message (STATUS "Boost++                 = ${Boost_FOUND}")
+  message (STATUS "Boost++ includes        = ${Boost_INCLUDE_DIR}")
+  message (STATUS "Boost++ libraries       = ${Boost_LIBRARIES}")
+  message (STATUS "CasaCore                = ${CASACORE_FOUND}")
+  message (STATUS "Log4CPlus               = ${Log4CPlus_FOUND}")
+  message (STATUS "SHMEM                   = ${SHMEM_FOUND}")
+  message (STATUS "Backtrace               = ${Backtrace_FOUND}")
   message (STATUS "-----------------------------------------------------------------")
 endif (LOFAR_VERBOSE_CONFIGURE)
