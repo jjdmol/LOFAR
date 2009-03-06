@@ -1,8 +1,7 @@
-
 ## ------------------------------------------------------------------------------
 ## Build the library
 
-file (GLOB libapplcommon_SOURCES *.cc)
+file (GLOB libapplcommon_SOURCES Observation.cc )
 
 add_library (applcommon ${libapplcommon_SOURCES})
 
