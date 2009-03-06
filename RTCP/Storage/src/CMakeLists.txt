@@ -1,31 +1,34 @@
-
 ## ------------------------------------------------------------------------------
 ## Build the library
 
-file (GLOB libstorage_SOURCES *.cc)
+file (GLOB libstorage_SOURCES InputThread.cc
+			      SubbandWriter.cc
+			      MSWriter.cc
+			      MSWriterCasa.cc
+			      MSWriterNull.cc
+			      MSWriterFile.cc)
+
 
 add_library (storage ${libstorage_SOURCES})
 
 ## linker instructions
 target_link_libraries (  storage 
-                         amcbase
-                         cepframe
-                         cs1_interface
-                         tinycep
-                         plc
-                         transport
-                         applcommon
-                         blob
-                         aps
-                         common                          
+                         interface
+                         stream
+			 amcbase
+			 applcommon
+                         common
+			 ${Boost_LIBRARIES}
+			 ${CASA_LIBRARIES}
 			 ${LOG4CPLUS_LIBRARIES}
-			 ${CASACORE_LIBRARIES}
-			 ${BOOST_LIBRARIES}
+			 ${BACKTRACE_LIBRARIES}
+			 ${SHMEM_LIBRARIES}
 			 )
 
-add_executable(CS1_Storage CS1_Storage_main.cc)
 
-target_link_libraries (CS1_Storage
+add_executable(Storage Storage_main.cc)
+
+target_link_libraries (Storage
                        storage
 		      )
 
@@ -33,8 +36,8 @@ target_link_libraries (CS1_Storage
 ## Installation
 
 install (
-  TARGETS storage CS1_Storage
+  TARGETS storage
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  )  
+  )
