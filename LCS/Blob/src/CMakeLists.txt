@@ -6,10 +6,14 @@
 if (bison_bin)
   execute_process (
     WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
-    COMMAND bison -d -p KeyParse -o KeyParse.cc KeyParse.yy
+    COMMAND bison -y -d -p KeyParse KeyParse.yy -o KeyParse
     TIMEOUT 20
     ERROR_VARIABLE yacc_error
     OUTPUT_QUIET
+    )
+  execute_process (
+    WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
+    COMMAND mv KeyParse KeyParse.cc
     )
 else (bison_bin)
   message (SEND_ERROR "Unable to run YACC; missing application!")
