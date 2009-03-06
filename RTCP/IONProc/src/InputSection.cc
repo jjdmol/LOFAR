@@ -144,6 +144,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsSampleDuration     = ps->sampleDuration();
 
   clog_logger("nrSubbands = " << ps->nrSubbands());
+  clog_logger("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
   clog_logger("nrStations = " << ps->nrStations());
   clog_logger("nrBitsPerSample = " << ps->nrBitsPerSample());
 
