@@ -76,26 +76,19 @@ HeapAllocator heapAllocator;
 SparseSetAllocator::SparseSetAllocator(const Arena &arena)
 {
   freeList.include(arena.begin(), (void *) ((char *) arena.begin() + arena.size()));
-
-#if defined HAVE_THREADS
   pthread_mutex_init(&mutex, 0);
-#endif
 }
 
 
 SparseSetAllocator::~SparseSetAllocator()
 {
-#if defined HAVE_THREADS
   pthread_mutex_destroy(&mutex);
-#endif
 }
 
 
 void *SparseSetAllocator::allocate(size_t size, size_t alignment)
 {
-#if defined HAVE_THREADS
-  pthreads_mutex_lock(&mutex);
-#endif
+  pthread_mutex_lock(&mutex);
 
   for (SparseSet<void *>::const_iterator it = freeList.getRanges().begin(); it != freeList.getRanges().end(); it ++) {
     void *begin = align(it->begin, alignment);
@@ -104,15 +97,12 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
       freeList.exclude(begin, (void *) ((char *) begin + size));
       sizes[begin] = size;
 
-#if defined HAVE_THREADS
-      pthreads_mutex_unlock(&mutex);
-#endif
+      pthread_mutex_unlock(&mutex);
 
       return begin;
     }
   }
 
-  std::cerr << "could not allocate memory from arena" << std::endl;
   std::exit(1);
 }
 
@@ -120,17 +110,13 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
 void SparseSetAllocator::deallocate(void *ptr)
 {
   if (ptr != 0) {
-#if defined HAVE_THREADS
-    pthreads_mutex_lock(&mutex);
-#endif
+    pthread_mutex_lock(&mutex);
 
     std::map<void *, size_t>::iterator index = sizes.find(ptr);
     freeList.include(ptr, (void *) ((char *) ptr + index->second));
     sizes.erase(index);
 
-#if defined HAVE_THREADS
-    pthreads_mutex_unlock(&mutex);
-#endif
+    pthread_mutex_unlock(&mutex);
   }
 }
 

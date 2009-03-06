@@ -6,6 +6,8 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 
+#include <pthread.h>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -74,9 +76,7 @@ class SparseSetAllocator : public Allocator, boost::noncopyable
     virtual void		deallocate(void *);
 
   private:
-#if defined HAVE_THREADS
     pthread_mutex_t		mutex;
-#endif
 
     SparseSet<void *>		freeList;
     std::map<void *, size_t>	sizes;
