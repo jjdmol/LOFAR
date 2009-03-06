@@ -115,9 +115,6 @@
 /* Define to the address where bug reports for this package should be sent. */
 #cmakedefine PACKAGE_BUGREPORT 1
 
-/* Define to the full name of this package. */
-#cmakedefine PACKAGE_NAME 1
-
 /* Define to the full name and version of this package. */
 #cmakedefine PACKAGE_STRING 1
 
