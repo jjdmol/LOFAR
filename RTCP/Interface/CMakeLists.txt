@@ -1,32 +1,28 @@
-
 ## ------------------------------------------------------------------------------
 ## Project characteristics
 
-project (CS1_Interface)
+project (Interface)
 
-cmake_minimum_required (VERSION 2.5)
+cmake_minimum_required (VERSION 2.6)
 
 ## ------------------------------------------------------------------------------
-## Dependency on other packages
+## Enable test?
 
-if (HAVE_APS)	
-  add_definitions (-DHAVE_APS)
-endif (HAVE_APS)
-
-if (HAVE_TINYCEP)	
-  add_definitions (-DHAVE_TINYCEP)
-endif (HAVE_TINYCEP)
+option (INTERFACE_ENABLE_TESTING "Enable building and executing test programs?" NO  )
 
 ## ------------------------------------------------------------------------------
 ## Directories to be included in the build
 
+include_directories (${Interface_BINARY_DIR}/include)
+
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
+               ${Interface_BINARY_DIR}/include/config.h)
+configure_file(${Interface_SOURCE_DIR}/lofar_config.h.cmake
+               ${Interface_BINARY_DIR}/include/lofar_config.h)
+	       
 add_subdirectory (include)
 add_subdirectory (src)
-#add_subdirectory (test)
 
-## ------------------------------------------------------------------------------
-## Summary
-
-message (STATUS "[CS1_Interface] Configuration summary")
-message (STATUS "HAVE_APS = ${HAVE_APS}")
-message (STATUS "HAVE_TINYCEP = ${HAVE_TINYCEP}")
+if (INTERFACE_ENABLE_TESTING)
+  add_subdirectory (test)
+endif (INTERFACE_ENABLE_TESTING)  
