@@ -1,0 +1,1 @@
+#cmakedefine AUTO_FUNCTION_NAME __PRETTY_FUNCTION__
