@@ -93,7 +93,7 @@ CS016 = [Station('CS016', '10.170.0.49', ['10.170.0.49:4346', '10.170.0.49:4347'
 # s9_2 : 2 microstations (1 RSP board ), starting from 10.170.0.9
 
 for ip in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62]:
-  inputs = ['10.170.0.4346']
+  inputs = ['10.170.0.' + str(ip) + ':4346']
   exec 's' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
   inputs = ['10.170.0.' + str(ip) + ':' + str(port) for port in range(4346, 4350)]
   exec 'S' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
