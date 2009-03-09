@@ -31,6 +31,7 @@
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR {
   namespace RSP_Protocol {
