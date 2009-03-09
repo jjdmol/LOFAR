@@ -28,10 +28,10 @@ pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 echo $*
-if test $# != 12; then
+if test $# != 13; then
   echo "run as:   makemsdistr-part dummy dummy dummy dummy rank"
   echo "                           msname dummy dummy"
-  echo "                           lofarroot parset-file vdspath vdsout"
+  echo "                           lofarroot parset-file vdspath vdsout cdn"
   exit 1
 fi
 
@@ -45,14 +45,12 @@ lroot=$5
 psn=$6
 vdspath=$7
 vdsout=$8
-
-
-psnbase=`basename $psn`
+cdn=$9
 
 # Initialize lofar environment.
 . $lroot/lofarinit.sh
 
 # Create the MS.
 # Grep the VDSname from the result.
-echo "makems $psn $seqnr $msn $vdspath > ${vdsout}_$seqnr"
-$pgmpath/makems $psn $seqnr $msn $vdspath | grep "vds=" | sed -e 's/vds=//' > ${vdsout}_$seqnr 
+echo "$pgmpath/makems $psn $seqnr $msn $vdspath $cdn > ${vdsout}_$seqnr"
+$pgmpath/makems $psn $seqnr $msn $vdspath $cdn | grep "vds=" | sed -e 's/vds=//' > ${vdsout}_$seqnr 

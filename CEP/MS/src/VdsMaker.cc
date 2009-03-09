@@ -170,13 +170,21 @@ string VdsMaker::findFileSys (const string& fileName,
   // First find the NodeDesc for this node.
   string nodeName(hostName);
   if (nodeName.empty()) {
-    nodeName = HostInfo::hostName();
+    nodeName = "localhost";
   }
   uint i=0;
-  for (; i<nodes.size(); ++i) {
-    if (nodes[i].getName() == nodeName) {
+  // If no hostname is given, try localhost and the real hostname.
+  for (int j=0; j<2; ++j) {
+    i=0;
+    for (; i<nodes.size(); ++i) {
+      if (nodes[i].getName() == nodeName) {
+        break;
+      }
+    }
+    if (i < nodes.size()  ||  !hostName.empty()) {
       break;
     }
+    nodeName = HostInfo::hostName();
   }
   ASSERTSTR (i < nodes.size(), "Hostname '" << nodeName << "' not found in "
 	     "ClusterDesc file ");

@@ -52,17 +52,20 @@ vector<double> itsRa;
 vector<double> itsDec;
 Array<double>  itsAntPos;
 bool   itsWriteAutoCorr;
+bool   itsWriteImagerCol;
 int    itsNPart;
 int    itsNBand;
 int    itsNFreq;
 int    itsNTime;
 int    itsTileSizeFreq;
 int    itsTileSizeRest;
-double itsStartFreq;
-double itsStepFreq;
+int    itsNFlags;
+vector<double> itsStartFreq;
+vector<double> itsStepFreq;
 double itsStartTime;
 double itsStepTime;
 string itsMsName;
+string itsFlagColumn;
 string itsVdsPath;
 string itsClusterDescName;
 
@@ -71,8 +74,8 @@ void readParms (const string& parset)
 {
   ParameterSet params (parset);
   // Get the various parameters.
-  itsStepFreq  = params.getDouble ("StepFreq");
-  itsStartFreq = params.getDouble ("StartFreq");
+  itsStepFreq  = params.getDoubleVector ("StepFreq");
+  itsStartFreq = params.getDoubleVector ("StartFreq");
   itsStepTime  = params.getDouble ("StepTime");
   string startTimeStr = params.getString ("StartTime");
   Quantity qn;
@@ -80,7 +83,7 @@ void readParms (const string& parset)
   itsStartTime = qn.getValue ("s");
   vector<string> raStr  = params.getStringVector ("RightAscension");
   vector<string> decStr = params.getStringVector ("Declination");
-  ASSERT (raStr.size() == decStr.size());
+  ASSERT (raStr.size() > 0  &&  raStr.size() == decStr.size());
   for (uint i=0; i<raStr.size(); ++i) {
     ASSERT (MVAngle::read (qn, raStr[i], true));
     itsRa.push_back  (qn.getValue ("rad"));
@@ -107,12 +110,42 @@ void readParms (const string& parset)
   }
   ASSERT (itsNFreq >= itsNBand);
   ASSERT (itsNFreq%itsNBand == 0);
-  ASSERT (itsStepFreq > 0);
   ASSERT (itsStepTime > 0);
+  // Determine start and step frequency per band.
+  int nfpb = itsNFreq/itsNBand;
+  ASSERT (itsStepFreq.size() > 0);
+  if (itsStepFreq.size() == 1) {
+    itsStepFreq = vector<double>(itsNBand, itsStepFreq[0]);
+  }
+  ASSERT (itsStepFreq.size() == uint(itsNBand));
+  ASSERT (itsStartFreq.size() > 0);
+  if (itsStartFreq.size() == 1) {
+    itsStartFreq.resize (itsNBand);
+    for (int i=1; i<itsNBand; ++i) {
+      itsStartFreq[i]  = itsStartFreq[i-1] + nfpb*itsStepFreq[i-1];
+    }
+  }
+  ASSERT (itsStartFreq.size() == uint(itsNBand));
+  for (int i=0; i<itsNBand; ++i) {
+    ASSERT (itsStepFreq[i] > 0);
+    ASSERT (itsStartFreq[i] > 0);
+  }
   // Get remaining parameters.
-  itsWriteAutoCorr = params.getBool ("WriteAutoCorr");
-  itsMsName = params.getString ("MSName");
-  itsVdsPath = params.getString ("MSDesPath", ".");
+  itsWriteAutoCorr  = params.getBool   ("WriteAutoCorr", False);
+  itsWriteImagerCol = params.getBool   ("WriteImagerColumns", False);
+  itsMsName         = params.getString ("MSName");
+  itsFlagColumn     = params.getString ("FlagColumn", "");
+  itsNFlags         = params.getInt    ("NFlagBits", 8);
+  // Get directory part of MSName.
+  string defaultVdsPath;
+  string::size_type pos = itsMsName.rfind ('/');
+  if (pos != string::npos) {
+    defaultVdsPath = itsMsName.substr (pos+1);
+  }
+  if (defaultVdsPath.empty()) {
+    defaultVdsPath = ".";
+  }
+  itsVdsPath = params.getString ("VDSPath", defaultVdsPath);
   itsClusterDescName = params.getString ("ClusterDescName", "");
   // Get the station info from the given antenna table.
   string tabName = params.getString ("AntennaTableName");
@@ -122,17 +155,18 @@ void readParms (const string& parset)
 }
 
 
-void createMS (int nband, double startFreq, const string& msName)
+void createMS (int nband, int bandnr, const string& msName)
 {
   int nfpb = itsNFreq/itsNBand;
-  double freqRef  = startFreq + nfpb*itsStepFreq/2;  // middle of 1st band
   MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
                    itsAntPos.shape()[1],
 		   Matrix<double>(itsAntPos), itsWriteAutoCorr,
-		   itsTileSizeFreq, itsTileSizeRest);
+		   itsTileSizeFreq, itsTileSizeRest, itsFlagColumn, itsNFlags);
   for (int i=0; i<nband; ++i) {
-    msmaker.addBand (4, nfpb, freqRef, itsStepFreq);
-    freqRef += nfpb*itsStepFreq;
+    // Determine middle of band.
+    double freqRef = itsStartFreq[bandnr] + nfpb*itsStepFreq[bandnr]/2;
+    msmaker.addBand (4, nfpb, freqRef, itsStepFreq[bandnr]);
+    ++bandnr;
   }
   for (uint i=0; i<itsRa.size(); ++i) {
     msmaker.addField (itsRa[i], itsDec[i]);
@@ -140,13 +174,15 @@ void createMS (int nband, double startFreq, const string& msName)
   for (int i=0; i<itsNTime; ++i) {
     msmaker.writeTimeStep();
   }
+  if (itsWriteImagerCol) {
+    msmaker.addImagerColumns();
+  }
 }
 
-string doOne (int seqnr, const string& msName, const string& vdsPath)
+string doOne (int seqnr, const string& msName, const string& vdsPath,
+              const string& clusterDescName)
 {
   int nbpp = itsNBand / itsNPart;
-  int nfpp = itsNFreq / itsNPart;
-  double startFreq = itsStartFreq + seqnr*nfpp*itsStepFreq;
   // Form the MS name.
   // If it contains %d, use that to fill in the seqnr.
   // Otherwise append _seqnr to the name.
@@ -157,7 +193,7 @@ string doOne (int seqnr, const string& msName, const string& vdsPath)
     name = msName + toString (seqnr, "_p%d");
   }
   // Create the MS.
-  createMS (nbpp, startFreq, name);
+  createMS (nbpp, seqnr*nbpp, name);
   // Create the VDS file.
   string vdsName;
   if (vdsPath.empty()) {
@@ -165,7 +201,7 @@ string doOne (int seqnr, const string& msName, const string& vdsPath)
   } else {
     vdsName = vdsPath + '/' + string(Path(name).baseName()) + ".vds";
   }
-  VdsMaker::create (name, vdsName, itsClusterDescName, string(), false);
+  VdsMaker::create (name, vdsName, clusterDescName, string(), false);
   return vdsName;
 }
 
@@ -173,7 +209,7 @@ void doAll()
 {
   vector<string> vdsNames;
   for (int i=0; i<itsNPart; ++i) {
-    vdsNames.push_back (doOne (i, itsMsName, itsVdsPath));
+    vdsNames.push_back (doOne (i, itsMsName, itsVdsPath, itsClusterDescName));
   }
   // Combine the description files.
   VdsMaker::combine (itsMsName+".gds", vdsNames);
@@ -199,13 +235,15 @@ int main (int argc, char** argv)
       // Invoked directly. Create all parts here.
       doAll();
     } else {
-      ASSERT (argc == 5);
+      ASSERT (argc == 6);
       // Invoked through socketrun for a distributed run.
+      // Arguments: seqnr msdir vdspath clusterdescname
       // Create the given part.
       int seqnr;
       istringstream istr(argv[2]);
       istr >> seqnr;
-      string vdsName = doOne (seqnr, argv[3] + ('/' + itsMsName), argv[4]);
+      string vdsName = doOne (seqnr, argv[3] + ('/' + itsMsName), argv[4],
+                              argv[5]);
       // Print vdsName, so script can capture it.
       cout << "vds=" << vdsName << endl;
     }

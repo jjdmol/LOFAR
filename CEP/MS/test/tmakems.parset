@@ -13,4 +13,4 @@ TileSizeFreq=8
 TileSizeRest=10
 WriteAutoCorr=T
 MSName=tmakems_tmp.ms
-VdsPath=tmakems_tmp/vds
+VDSPath=tmakems_tmp/vds

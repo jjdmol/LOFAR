@@ -41,11 +41,11 @@ echo "AntennaTableName=$wd/tmakems_tmp/WSRT_ANTENNA" >> tmakems.parset
 echo "<<<"
 
 # Print global VDS file without system-dependent names.
-grep -v 'Name *=' tmakems_tmp/vds/tmakems_tmp.ms.gds
+grep -v 'Name *=' tmakems_tmp/vds/tmakems_tmp.ms.gds | grep -v "ClusterDesc *="
 echo
 
 ./makems tmakems.parset
-grep -v 'Name *=' tmakems_tmp.ms.gds
+grep -v 'Name *=' tmakems_tmp.ms.gds | grep -v "ClusterDesc *="
 
 # Clean up.
 rm makemsdistr makemsdistr-part combinevds makems
