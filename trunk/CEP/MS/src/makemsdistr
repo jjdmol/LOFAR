@@ -67,7 +67,14 @@ psn=$1
 shift
 cdn=$1
 shift
-dirs="$*"
+dirs=$*
+test "$psn" = ""  &&  psn="makems.cfg"
+parsetcdn=`getparsetvalue $psn ClusterDescName` ||  parsetcdn=
+test "$cdn" = ""  &&  cdn=$parsetcdn
+if test "$cdn" = ""; then
+  echo "No ClusterDescName given on command line nor parset file"
+  exit 1
+fi
 
 # Find out the number of parts and the nodes to use.
 nparts=`getparsetvalue $psn NParts`  ||  exit 1
@@ -77,17 +84,17 @@ fi
 
 # Get name of MS and path of VDS file.
 msname=`getparsetvalue $psn MSName` ||  exit 1
-# Use ms-path if no VdsPath given.
+# Use ms-path if no VDSPath given.
 mspath=`dirname $msname`
 # Create ms basename without a possible _.%d representing the seqnr.
 msbase=`basename $msname | sed -e 's/_[^_]*%d//'`
-msvdsp=`getparsetvalue $psn VdsPath` ||  msvdsp=$mspath
-# Make Vds-path absolute.
+msvdsp=`getparsetvalue $psn VDSPath` ||  msvdsp=$mspath
+# Make VDS-path absolute.
 msvdsp=`cd $msvdsp > /dev/null  &&  pwd`  ||  exit 1
 
 # Find all directories and turn it into a list separated by commas.
 # Possible whitespace and [] are removed.
-dirs=`echo $dirs | sed -e 's/\[//g' -e 's/]//g' -e 's/,/ /g' -e 's/"//g' -e "s/'//g"`
+dirs=`echo "$dirs" | sed -e 's/\[//g' -e 's/]//g' -e 's/,/ /g' -e 's/"//g' -e "s/'//g"`
 if test "$dirs" = ""; then
   dirs=.
 fi
@@ -111,18 +118,23 @@ do
   done
 done
 
-# Make parset name absolute.
-dn=`dirname $psn`
-psn=`cd $dn > /dev/null; pwd`/`basename $psn`
+# Copy parset to the VDS-path that is certainly globally accessible.
+psname=$msvdsp/$msbase.$USER.$$.parset
+cp $psn $psname
+# Make clusterdescname absolute.
+dn=`dirname $cdn`
+cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
 
 # Start the distributed processes.
+# They write the name of the created VDS-file into $msvdsp/$msbase.gds_*.
 rm -f $msvdsp/$msbase.gds_*
-echo "startdistproc -mode 0 -nomasterhost -dirs $msdirs -cdn $cdn -hfn '$hfn' $pgmpath/makemsdistr-part $LOFARROOT $psn $msvdsp $msvdsp/$msbase.gds"
-startdistproc -mode 0 -nomasterhost -dirs "$msdirs" -cdn $cdn -hfn "$hfn" $pgmpath/makemsdistr-part $LOFARROOT $psn $msvdsp $msvdsp/$msbase.gds
+echo "startdistproc -mode 0 -nomasterhost -dirs $msdirs -cdn $cdn -hfn '$hfn' $pgmpath/makemsdistr-part $LOFARROOT $psname $msvdsp $msvdsp/$msbase.gds $cdn"
+startdistproc -mode 0 -nomasterhost -dirs "$msdirs" -cdn $cdn -hfn "$hfn" $pgmpath/makemsdistr-part $LOFARROOT $psname $msvdsp $msvdsp/$msbase.gds $cdn
 
 # Combine all VDS files.
 vdsnames=`cat $msvdsp/$msbase.gds_*`
 rm -f $msvdsp/$msbase.gds_*
+rm -f $psname
 
 combinevds $msvdsp/$msbase.gds $vdsnames
 echo "Created $nparts distributed MS parts and their VDS files"

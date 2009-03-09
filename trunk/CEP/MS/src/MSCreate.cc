@@ -29,9 +29,11 @@
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledColumnStMan.h>
+////#include <tables/Tables/BitFlagsEngine.h>
 #include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
+#include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Cube.h>
@@ -65,7 +67,8 @@ MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
 		    int nantennas, const Matrix<double>& antPos,
 		    bool writeAutoCorr,
-		    int tileSizeFreq, int tileSizeRest)
+		    int tileSizeFreq, int tileSizeRest,
+                    const std::string& flagColumn, int nflagBits)
 : itsWriteAutoCorr (writeAutoCorr),
   itsNrBand        (0),
   itsNrField       (0),
@@ -97,7 +100,7 @@ MSCreate::MSCreate (const std::string& msName,
   itsArrayPos = new MPosition(antMPos[nantennas/2]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
-  createMS (msName, antMPos, tileSizeFreq, tileSizeRest);
+  createMS (msName, antMPos, tileSizeFreq, tileSizeRest, flagColumn, nflagBits);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
   itsPolnr  = new Block<Int>;
@@ -129,8 +132,14 @@ int MSCreate::nrPolarizations() const
 
 void MSCreate::createMS (const String& msName,
 			 const Block<MPosition>& antPos,
-			 int tileSizeFreq, int tileSizeRest)
+			 int tileSizeFreq, int tileSizeRest,
+                         const String& flagColumn, int nflagBits)
 {
+  // Create an integer flag column?
+  if (flagColumn.empty()) {
+    nflagBits = 0;
+  }
+  IPosition dataShape(2,itsNrCorr,itsNrFreq);
   // Get the MS main default table description.
   TableDesc td = MS::requiredTableDesc();
   // Add the data column and its unit.
@@ -141,18 +150,36 @@ void MSCreate::createMS (const String& msName,
   // Also store UVW with TiledColumnStMan.
   Vector<String> tsmNames(1);
   tsmNames[0] = MS::columnName(MS::DATA);
-  td.rwColumnDesc(tsmNames[0]).setShape (IPosition(2,itsNrCorr,itsNrFreq));
+  td.rwColumnDesc(tsmNames[0]).setShape (dataShape);
   td.defineHypercolumn("TiledData", 3, tsmNames);
   tsmNames[0] = MS::columnName(MS::FLAG);
-  td.rwColumnDesc(tsmNames[0]).setShape (IPosition(2,itsNrCorr,itsNrFreq));
-  td.defineHypercolumn("TiledFlag", 3, tsmNames);
+  td.rwColumnDesc(tsmNames[0]).setShape (dataShape);
+  td.defineHypercolumn("TiledFlag", 3, tsmNames);////
+  if (nflagBits <= 0) {
+    td.defineHypercolumn("TiledFlag", 3, tsmNames);////
+  } else {
+    if (nflagBits == 8) {
+      td.addColumn(ArrayColumnDesc<uChar>(flagColumn, 2));
+    } else if (nflagBits == 16) {
+      td.addColumn(ArrayColumnDesc<Short>(flagColumn, 2));
+    } else {
+      td.addColumn(ArrayColumnDesc<Int>(flagColumn, 2));
+    }
+    tsmNames[0] = flagColumn;
+    td.rwColumnDesc(flagColumn).setShape (dataShape);
+    td.defineHypercolumn("TiledIntFlag", 3, tsmNames);////
+  }
+  ////td.defineHypercolumn("TiledFlag", 3, tsmNames);
   tsmNames[0] = MS::columnName(MS::UVW);
   td.defineHypercolumn("TiledUVW", 2, tsmNames);
   // Setup the new table.
   // Most columns use the IncrStMan; some use others.
   SetupNewTable newTab(msName, td, Table::New);
   IncrementalStMan incrStMan("ISMData");
+  newTab.bindAll (incrStMan);
   StandardStMan    stanStMan;
+  newTab.bindColumn(MS::columnName(MS::ANTENNA1), stanStMan);
+  newTab.bindColumn(MS::columnName(MS::ANTENNA2), stanStMan);
   // Use a TiledColumnStMan for the data, flags and UVW.
   // Store all pol and freq in a single tile.
   // In this way the data appear in separate files that can be mmapped.
@@ -165,15 +192,27 @@ void MSCreate::createMS (const String& msName,
   if (tsr <= 0) {
     tsr = std::max (1, 4096/tsf);
   }
-  TiledColumnStMan tiledData("TiledData", IPosition(3,4,tsf,tsr));
-  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,4,tsf,8*tsr));
+  IPosition dataTileShape(3,4,tsf,tsr);
+  TiledColumnStMan tiledData("TiledData", dataTileShape);
+  newTab.bindColumn(MS::columnName(MS::DATA), tiledData);
   TiledColumnStMan tiledUVW("TiledUVW", IPosition(3,128));
-  newTab.bindAll (incrStMan);
-  newTab.bindColumn(MS::columnName(MS::ANTENNA1),stanStMan);
-  newTab.bindColumn(MS::columnName(MS::ANTENNA2),stanStMan);
-  newTab.bindColumn(MS::columnName(MS::DATA),tiledData);
-  newTab.bindColumn(MS::columnName(MS::FLAG),tiledFlag);
-  newTab.bindColumn(MS::columnName(MS::UVW),tiledUVW);
+  newTab.bindColumn(MS::columnName(MS::UVW), tiledUVW);
+  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,4,tsf,8*tsr));
+  newTab.bindColumn(MS::columnName(MS::FLAG), tiledFlag);
+  if (nflagBits > 0) {
+    TiledColumnStMan tiledIntFlag("TiledIntFlag", IPosition(3,4,tsf,8*tsr));////
+    newTab.bindColumn(flagColumn, tiledIntFlag);////
+    ////if (nflagBits == 8) {
+    ////  BitFlagsEngine<uChar> fbe(MS::columnName(MS::FLAG), flagColumn);
+    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+    ////} else if (nflagBits == 16) {
+    ////  BitFlagsEngine<Short> fbe(MS::columnName(MS::FLAG), flagColumn);
+    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+    ////} else {
+    ////  BitFlagsEngine<Int> fbe(MS::columnName(MS::FLAG), flagColumn);
+    ////  newTab.bindColumn(MS::columnName(MS::FLAG), fbe);
+    ////}
+  }
   // Create the MS and its subtables.
   // Get access to its columns.
   itsMS = new MeasurementSet(newTab);
@@ -715,4 +754,46 @@ void MSCreate::fillBaseLines()
     MVPosition blpos(antpos(0), antpos(1), antpos(2));
     (*itsAntBL)[j] = MBaseline (MVBaseline(blpos), MBaseline::ITRF);
   }
+}
+
+void MSCreate::addImagerColumns()
+{
+  // Find data shape and tile shape.
+  IPosition shape(2,itsNrCorr,itsNrFreq);
+  ROTiledStManAccessor tsm(*itsMS, "TiledData");
+  IPosition dataTileShape(tsm.getTileShape(0));
+  {
+    TableDesc td;
+    String colName = MS::columnName(MS::CORRECTED_DATA);
+    td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
+                                           ColumnDesc::FixedShape));
+    TiledColumnStMan stMan("TiledCorrectedData", dataTileShape);
+    itsMS->addColumn (td, stMan);
+  }
+  {
+    TableDesc td;
+    String colName = MS::columnName(MS::MODEL_DATA);
+    td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
+                                           ColumnDesc::FixedShape));
+    TiledColumnStMan stMan("TiledModelData", dataTileShape);
+    itsMS->addColumn (td, stMan);
+  }
+  {
+    TableDesc td;
+    String colName = MS::columnName(MS::IMAGING_WEIGHT);
+    td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
+                                         IPosition(1, shape[1]),
+                                         ColumnDesc::FixedShape));
+    TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
+    itsMS->addColumn (td, stMan);
+  }
+  // Set keyword for casa::VisSet.
+  // Sort out the channel selection.
+  MSSpWindowColumns msSpW(itsMS->spectralWindow());
+  Matrix<Int> selection(2, msSpW.nrow());
+  // Fill in default selection (all bands and channels).
+  selection.row(0) = 0;    //start
+  selection.row(1) = msSpW.numChan().getColumn(); 
+  ArrayColumn<Complex> mcd(*itsMS,  MS::columnName(MS::MODEL_DATA));
+  mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
 }

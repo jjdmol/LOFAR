@@ -68,14 +68,22 @@ public:
   // to calculate the time from the starting time and the timeCounter.
   // The antenna positions have to be given in ITRF coordinates as XYZ.
   // So antPos must have shape [3,nantennas].
+  // If flagColumn is given and nFlagBits>0, an integer flag column is
+  // created and column FLAG is mapped to it.
   MSCreate (const std::string& msName,
 	    double startTime, double timeStep, int nfreq, int ncorr,
 	    int nantennas, const casa::Matrix<double>& antPos,
 	    bool writeAutoCorr,
-	    int tileSizeFreq, int tileSizeRest);
+	    int tileSizeFreq, int tileSizeRest,
+            const std::string& flagColumn=std::string(), int nflagBits=0);
 
   // Destructor
   ~MSCreate();
+
+  // Add the extra columns needed for lwimager.
+  // These are CORRECTED_DATA, MODEL_DATA, and IMAGING_WEIGHT.
+  // Furthermore it sets the CHANNEL_SELECTION keyword for casa::VisSet.
+  void addImagerColumns();
 
   // Add the definition of the next frequency band.
   // 1, 2 or 4 polarizations can be given.
@@ -132,7 +140,8 @@ private:
   // Create the MS and fill its subtables as much as possible.
   void createMS (const casa::String& msName, 
 		 const casa::Block<casa::MPosition>& antPos,
-		 int tileSizeFreq, int tileSizeRest);
+		 int tileSizeFreq, int tileSizeRest,
+                 const casa::String& flagColumn, int nflagBits);
 
   // Set the band.
   int addBand (int npolarizations, int nchannels,
