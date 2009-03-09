@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include "testprotocol.ph"
 #include "Echo_Protocol.ph"
 
