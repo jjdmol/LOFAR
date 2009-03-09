@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
+#include <Common/lofar_vector.h>
 
 //# local includes
 #include "TBBTrigger.h"
