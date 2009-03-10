@@ -2126,9 +2126,9 @@ void BandPass::computeCorrectionFactors(unsigned nrChannels)
 #endif
 
   for (unsigned i = 0; i < nrChannels; i ++) {
-    fcomplex m = out[(i - nrChannels / 2) % fftSize];
-    fcomplex l = out[(i - 3 * nrChannels / 2) % fftSize];
-    fcomplex r = out[i + nrChannels / 2];
+    const fcomplex m = out[(i - nrChannels / 2) % fftSize];
+    const fcomplex l = out[(i - 3 * nrChannels / 2) % fftSize];
+    const fcomplex r = out[i + nrChannels / 2];
 
     squaredFactors[i] = pow(2, 50) / abs(m * m + l * l + r * r);
     factors[i] = sqrt(squaredFactors[i]);
