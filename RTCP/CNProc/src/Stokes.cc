@@ -56,7 +56,8 @@ void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *
 }
 
 // Compress Stokes values by summing over all channels
-void Stokes::compressStokes( const StokesData *in, StokesCompressedData *out, const unsigned nrBeams )
+/*
+void Stokes::compressStokes( const StokesData *in, StokesDataIntegratedChannels *out, const unsigned nrBeams )
 {
   const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
 
@@ -79,6 +80,7 @@ void Stokes::compressStokes( const StokesData *in, StokesCompressedData *out, co
     }
   }
 }
+*/
 
 void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams )
 {
