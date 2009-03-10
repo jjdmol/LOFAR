@@ -167,7 +167,7 @@ static void deleteClientStreams()
 static void configureCNs(const Parset &parset)
 {
   CN_Command	    command(CN_Command::PREPROCESS);
-  CN_Configuration configuration( parset, myPsetNumber );
+  CN_Configuration configuration( parset );
  
   std::stringstream logStr;
   

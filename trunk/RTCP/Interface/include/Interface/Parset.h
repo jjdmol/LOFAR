@@ -102,6 +102,7 @@ public:
 	string         getTransportType(const string& prefix) const;
 	string         getModeName() const;
 	bool           outputIncoherentStokesI() const;
+	bool           stokesIntegrateChannels() const;
 
 	uint32         nrManualPencilBeams() const;
 	vector<double> getManualPencilBeam( const unsigned pencil ) const;
@@ -418,6 +419,11 @@ inline double Parset::pencilRingSize() const
 inline bool Parset::outputIncoherentStokesI() const
 {
   return getBool("Observation.outputIncoherentStokesI");
+}
+
+inline bool Parset::stokesIntegrateChannels() const
+{
+  return getBool("Observation.stokesIntegrateChannels");
 }
 
 } // namespace RTCP

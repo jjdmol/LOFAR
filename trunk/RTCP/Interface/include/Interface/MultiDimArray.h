@@ -28,23 +28,23 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     MultiDimArray(Allocator &allocator = heapAllocator)
     :
       SuperType(0, boost::detail::multi_array::extent_gen<DIM>()),
-      allocator(allocator)
+      allocator(&allocator)
     {
     }
 
     MultiDimArray(const ExtentList &extents, size_t alignment = defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(static_cast<T *>(allocator.allocate(nrElements(extents) * sizeof(T), alignment)), extents),
-      allocator(allocator)
+      allocator(&allocator)
     {
     }
 
     ~MultiDimArray()
     {
-      allocator.deallocate(this->origin());
+      allocator->deallocate(this->origin());
     }
 
-    void resize(const ExtentList &extents, size_t alignment = defaultAlignment())
+    void resize(const ExtentList &extents, const size_t alignment, Allocator &allocator)
     {
       MultiDimArray newArray(extents, alignment, allocator);
       std::swap(this->base_, newArray.base_);
@@ -55,6 +55,12 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       std::swap(this->origin_offset_, newArray.origin_offset_);
       std::swap(this->directional_offset_, newArray.directional_offset_);
       std::swap(this->num_elements_, newArray.num_elements_);
+      std::swap(this->allocator, newArray.allocator);
+    }
+
+    void resize(const ExtentList &extents, const size_t alignment = defaultAlignment())
+    {
+      resize( extents, alignment, *allocator );
     }
 
     static size_t defaultAlignment()
@@ -62,8 +68,6 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       return sizeof(T) < 16 ? 8 : sizeof(T) < 32 ? 16 : 32;
     }
 
-  private:
-    Allocator &allocator;
 
     static size_t nrElements(const ExtentList &extents)
     {
@@ -74,6 +78,10 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
       return size;
     }
+
+  private:
+    // needs to be a pointer to be swappable in resize()
+    Allocator *allocator;
 };
 
 
@@ -89,13 +97,13 @@ template <typename T> class Vector : public MultiDimArray<T, 1>
     {
     }
 
-    Vector(size_t x, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Vector(const size_t x, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x], alignment, allocator)
     {
     }
 
-    Vector(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Vector(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -103,9 +111,9 @@ template <typename T> class Vector : public MultiDimArray<T, 1>
 
     using SuperType::resize;
 
-    void resize(size_t x, size_t alignment = SuperType::defaultAlignment())
+    void resize(const size_t x, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator )
     {
-      SuperType::resize(boost::extents[x], alignment);
+      SuperType::resize(boost::extents[x], alignment, allocator);
     }
 };
 
@@ -122,13 +130,13 @@ template <typename T> class Matrix : public MultiDimArray<T, 2>
     {
     }
 
-    Matrix(size_t x, size_t y, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Matrix(const size_t x, const size_t y, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x][y], alignment, allocator)
     {
     }
 
-    Matrix(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Matrix(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -136,9 +144,9 @@ template <typename T> class Matrix : public MultiDimArray<T, 2>
 
     using SuperType::resize;
 
-    void resize(size_t x, size_t y, size_t alignment = SuperType::defaultAlignment())
+    void resize(const size_t x, const size_t y, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     {
-      SuperType::resize(boost::extents[x][y], alignment);
+      SuperType::resize(boost::extents[x][y], alignment, allocator);
     }
 };
 
@@ -155,13 +163,13 @@ template <typename T> class Cube : public MultiDimArray<T, 3>
     {
     }
 
-    Cube(size_t x, size_t y, size_t z, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Cube(const size_t x, const size_t y, const size_t z, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(boost::extents[x][y][z], alignment, allocator)
     {
     }
 
-    Cube(const ExtentList &extents, size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
+    Cube(const ExtentList &extents, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator)
     :
       SuperType(extents, alignment, allocator)
     {
@@ -169,9 +177,9 @@ template <typename T> class Cube : public MultiDimArray<T, 3>
 
     using SuperType::resize;
 
-    void resize(size_t x, size_t y, size_t z, size_t alignment = SuperType::defaultAlignment())
+    void resize(const size_t x, const size_t y, const size_t z, const size_t alignment = SuperType::defaultAlignment(), Allocator &allocator = heapAllocator )
     {
-      SuperType::resize(boost::extents[x][y][z], alignment);
+      SuperType::resize(boost::extents[x][y][z], alignment, allocator);
     }
 };
 

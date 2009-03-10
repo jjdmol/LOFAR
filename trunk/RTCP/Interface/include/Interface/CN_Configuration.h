@@ -38,7 +38,7 @@ class CN_Configuration
 {
   public:
     CN_Configuration() {}
-    CN_Configuration( const Parset &parset, const unsigned myPsetNumber );
+    CN_Configuration( const Parset &parset );
 
     unsigned		  &nrStations();
     unsigned		  &nrBitsPerSample();
@@ -62,6 +62,7 @@ class CN_Configuration
     Matrix<double>        &phaseCentres();
     CN_Mode               &mode();
     bool                  &outputIncoherentStokesI();
+    bool                  &stokesIntegrateChannels();
 
     unsigned              nrPencilBeams() { return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams(); }
     
@@ -106,6 +107,7 @@ class CN_Configuration
       unsigned            itsNrManualPencilBeams;
       double              itsManualPencilBeams[MAX_PENCILBEAMS * 2];
       bool                itsOutputIncoherentStokesI;
+      bool                itsStokesIntegrateChannels;
     } itsMarshalledData;
 };
 
@@ -228,6 +230,11 @@ inline CN_Mode &CN_Configuration::mode()
 inline bool &CN_Configuration::outputIncoherentStokesI()
 {
   return itsMarshalledData.itsOutputIncoherentStokesI;
+}
+
+inline bool &CN_Configuration::stokesIntegrateChannels()
+{
+  return itsMarshalledData.itsStokesIntegrateChannels;
 }
 
 

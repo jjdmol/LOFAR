@@ -7,6 +7,7 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/Config.h>
 #include <Interface/SubbandMetaData.h>
+#include <Interface/StreamableData.h>
 #include <Stream/Stream.h>
 
 #include <Interface/Allocator.h>
@@ -17,42 +18,43 @@
 namespace LOFAR {
 namespace RTCP {
 
-template <typename SAMPLE_TYPE> class InputData
+template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3>
 {
   public:
-    InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator = heapAllocator);
+    typedef SampleData<SAMPLE_TYPE,3> SuperType;
 
-    void read(Stream *);
+    InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc);
+
+    virtual void allocate( Allocator &allocator = heapAllocator );
 
     // used for asynchronous transpose
     void readMetaData(Stream *str);
     void readOne(Stream *str);
 
-    static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToCNProc);
+    // used for synchronous transfer
+    void readAll(Stream *str);
 
   private:
-    unsigned		    itsNrSubbands;
+    const unsigned	    itsNrSubbands;
     unsigned		    itsSubbandIndex;
 
   public:
-    Cube<SAMPLE_TYPE>	    samples; //[outputPsets.size()][itsPS->nrSamplesToCNProc()][NR_POLARIZATIONS]
     Vector<SubbandMetaData> metaData; //[outputPsets.size()]
 };
 
 
-template <typename SAMPLE_TYPE> inline size_t InputData<SAMPLE_TYPE>::requiredSize(unsigned nrSubbands, unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc)
+:
+  SuperType( false, boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0 ),
+  itsNrSubbands(nrSubbands),
+  itsSubbandIndex(0)
 {
-  return align(sizeof(SAMPLE_TYPE) * nrSubbands * nrSamplesToCNProc * NR_POLARIZATIONS, 32);
 }
 
-
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator)
-:
-  itsNrSubbands(nrSubbands),
-  itsSubbandIndex(0),
-  samples(boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 32, allocator),
-  metaData(nrSubbands)
+template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::allocate( Allocator &allocator )
 {
+  SuperType::allocate( allocator );
+  metaData.resize( itsNrSubbands );
 }
 
 
@@ -66,24 +68,24 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readMetaData
 // used for asynchronous transpose
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readOne(Stream *str)
 {
-  str->read(samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements() * sizeof(SAMPLE_TYPE));
+  str->read(SuperType::samples[itsSubbandIndex].origin(), SuperType::samples[itsSubbandIndex].num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
+  dataConvert(LittleEndian, SuperType::samples[itsSubbandIndex].origin(), SuperType::samples[itsSubbandIndex].num_elements());
 #endif
 
   if (++ itsSubbandIndex == itsNrSubbands) // we have read all data
     itsSubbandIndex = 0;
 }
 
-template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::read(Stream *str)
+template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readAll(Stream *str)
 {
   // read all metadata
   str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time
-  str->read(samples.origin(), samples.num_elements() * sizeof(SAMPLE_TYPE));
+  str->read(SuperType::samples.origin(), SuperType::samples.num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
   dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());

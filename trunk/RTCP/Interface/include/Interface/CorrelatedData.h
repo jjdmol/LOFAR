@@ -22,9 +22,10 @@ namespace RTCP {
 class CorrelatedData: public StreamableData
 {
   public:
-    CorrelatedData(unsigned nrBaselines, unsigned nrChannels, Allocator &allocator = heapAllocator);
+    CorrelatedData(const unsigned nrBaselines, const unsigned nrChannels);
 
-    static size_t requiredSize(unsigned nrBaselines, unsigned nrChannels);
+    virtual size_t requiredSize() const;
+    virtual void allocate( Allocator &allocator = heapAllocator );
 
     virtual StreamableData &operator += (const StreamableData &);
 
@@ -37,45 +38,54 @@ class CorrelatedData: public StreamableData
     virtual void writeData(Stream *);
 
   private:
+    const unsigned              itsNrBaselines;
+    const unsigned              itsNrChannels;
+
     void			checkEndianness();
 
-    static size_t visibilitiesSize(unsigned nrBaselines, unsigned nrChannels);
-    static size_t nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels);
-    static size_t centroidSize(unsigned nrBaselines);
+    size_t visibilitiesSize() const;
+    size_t nrValidSamplesSize() const;
+    size_t centroidSize() const;
 };
 
 
-inline size_t CorrelatedData::visibilitiesSize(unsigned nrBaselines, unsigned nrChannels)
+inline size_t CorrelatedData::visibilitiesSize() const
 {
-  return align(sizeof(fcomplex) * nrBaselines * nrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, 32);
+  return align(sizeof(fcomplex) * itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS, 32);
 }
 
 
-inline size_t CorrelatedData::nrValidSamplesSize(unsigned nrBaselines, unsigned nrChannels)
+inline size_t CorrelatedData::nrValidSamplesSize() const
 {
-  return align(sizeof(unsigned short) * nrBaselines * nrChannels, 32);
+  return align(sizeof(unsigned short) * itsNrBaselines * itsNrChannels, 32);
 }
 
 
-inline size_t CorrelatedData::centroidSize(unsigned nrBaselines)
+inline size_t CorrelatedData::centroidSize() const
 {
-  return align(sizeof(float) * nrBaselines, 32);
+  return align(sizeof(float) * itsNrBaselines, 32);
 }
 
 
-inline size_t CorrelatedData::requiredSize(unsigned nrBaselines, unsigned nrChannels)
+inline size_t CorrelatedData::requiredSize() const
 {
-  return visibilitiesSize(nrBaselines, nrChannels) + nrValidSamplesSize(nrBaselines, nrChannels) + centroidSize(nrBaselines);
+  return visibilitiesSize() + nrValidSamplesSize() + centroidSize();
 }
 
 
-inline CorrelatedData::CorrelatedData(unsigned nrBaselines, unsigned nrChannels, Allocator &allocator)
+inline CorrelatedData::CorrelatedData(const unsigned nrBaselines, const unsigned nrChannels)
 :
   StreamableData(true),
-  visibilities(boost::extents[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], 32, allocator),
-  nrValidSamples(boost::extents[nrBaselines][nrChannels], 32, allocator),
-  centroids(nrBaselines, 32, allocator)
+  itsNrBaselines(nrBaselines),
+  itsNrChannels(nrChannels)
 {
+}
+
+inline void CorrelatedData::allocate( Allocator &allocator )
+{
+  visibilities.resize(boost::extents[itsNrBaselines][itsNrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], 32, allocator);
+  nrValidSamples.resize(boost::extents[itsNrBaselines][itsNrChannels], 32, allocator);
+  centroids.resize(itsNrBaselines, 32, allocator);
 }
 
 

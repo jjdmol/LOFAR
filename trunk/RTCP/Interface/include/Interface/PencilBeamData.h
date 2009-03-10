@@ -18,21 +18,15 @@ class PencilBeamData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    PencilBeamData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
-    static size_t requiredSize(unsigned nrCoordinates, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    PencilBeamData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration);
 };
 
-inline size_t PencilBeamData::requiredSize(unsigned nrCoordinates, unsigned nrChannels, unsigned nrSamplesPerIntegration)
-{
-  return align(sizeof(fcomplex) * nrChannels * nrCoordinates * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS, 32);
-}
-
-inline PencilBeamData::PencilBeamData(unsigned nrCoordinates, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
+inline PencilBeamData::PencilBeamData(const unsigned nrCoordinates, const unsigned nrChannels, const unsigned nrSamplesPerIntegration)
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(false, boost::extents[nrChannels][nrCoordinates][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrCoordinates, allocator )
+  SuperType::SampleData(false, boost::extents[nrChannels][nrCoordinates][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrCoordinates )
 {
 }
 

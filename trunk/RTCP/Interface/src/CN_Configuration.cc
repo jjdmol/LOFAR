@@ -27,10 +27,8 @@
 namespace LOFAR {
 namespace RTCP {
 
-CN_Configuration::CN_Configuration( const Parset &parset, unsigned myPsetNumber )
+CN_Configuration::CN_Configuration( const Parset &parset )
 {
-  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(myPsetNumber);
-  
   nrStations()              = parset.nrStations();
   nrBitsPerSample()	    = parset.nrBitsPerSample();
   nrSubbands()              = parset.nrSubbands();
@@ -43,7 +41,7 @@ CN_Configuration::CN_Configuration( const Parset &parset, unsigned myPsetNumber 
   delayCompensation()       = parset.delayCompensation();
   correctBandPass()  	    = parset.correctBandPass();
   sampleRate()              = parset.sampleRate();
-  inputPsets()              = parset.getUint32Vector("OLAP.CNProc.inputPsets");
+  inputPsets()              = parset.inputPsets();
   outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
   tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
   refFreqs()                = parset.subbandToFrequencyMapping();
@@ -53,13 +51,19 @@ CN_Configuration::CN_Configuration( const Parset &parset, unsigned myPsetNumber 
   refPhaseCentre()          = parset.getRefPhaseCentres();
   mode()                    = CN_Mode(parset);
   outputIncoherentStokesI() = parset.outputIncoherentStokesI();
+  stokesIntegrateChannels() = parset.stokesIntegrateChannels();
 
-  itsPhaseCentres.resize( inputs.size(), 3 );
-  for( unsigned stat = 0; stat < inputs.size(); stat++ ) {
-    std::vector<double> phaseCentre = parset.getPhaseCentresOf( inputs[stat].station );
+  // Get the phase centres of all station, not just the one we receive input from. The compute nodes
+  // need the phase centres for beam forming, which is after the transpose so all stations are present.
 
+  // The order of the stations is the order in which they are defined in inputPsets and parset.getStationNamesAndRSPboardNumbers.
+  // The CNProc/src/AsyncTranspose module should honor the same order.
+  itsPhaseCentres.resize( parset.nrStations(), 3 );
+  std::vector<double> positions = parset.positions();
+
+  for( unsigned stat = 0; stat < parset.nrStations(); stat++ ) {
     for( unsigned dim = 0; dim < 3; dim++ ) {
-      itsPhaseCentres[stat][dim] = phaseCentre[dim];
+      itsPhaseCentres[stat][dim] = positions[stat*3+dim];
     }
   }
 
@@ -129,7 +133,6 @@ void CN_Configuration::write(Stream *str)
     memcpy(&itsMarshalledData.itsPhaseCentres[stat*3], &itsPhaseCentres[stat][0], 3 * sizeof(double));
   }
 
-  itsManualPencilBeams.resize(nrManualPencilBeams(),2);
   for( unsigned beam = 0; beam < nrManualPencilBeams(); beam++ ) {
     memcpy(&itsMarshalledData.itsManualPencilBeams[beam*2], &itsManualPencilBeams[beam][0], 2 * sizeof(double));
   }

@@ -38,7 +38,8 @@ OLAP.correctBandPass = T
 
 Observation.mode = Correlate
 Observation.nrSlotsInFrame = 36
-Observation.stokesIntegrationSteps = 16
+Observation.stokesIntegrationSteps = 1
+Observation.stokesIntegrateChannels = F
 Observation.outputIncoherentStokesI = F
 
 #Observation.bandFilter = LBL_10_80

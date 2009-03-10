@@ -15,10 +15,32 @@ const double speedOfLight = 299792458;
 
 class PencilCoord3D {
   public:
-    PencilCoord3D(const double x, const double y) {
+    PencilCoord3D(const double ra, const double dec) {
+    /*
       itsXYZ[0] = x;
       itsXYZ[1] = y;
       itsXYZ[2] = sqrt( 1.0 - x*x - y*y );
+    */
+      // (ra,dec) is a spherical direction, but the station positions
+      // and phase centers are cartesian (x,y,z with origin close to the geocenter).
+      // Spherical coordinates are converted to cartesian as follows:
+      //
+      // 	phi = .5pi - DEC, theta = RA (in parset: angle1=RA, angle2=DEC)
+      //        rho = 1 (distance), since we need to construct a unit vector
+      //
+      //        then: x = rho*sin(phi)*cos(theta), y = rho*sin(phi)*sin(theta), z = rho*cos(theta) */
+      //
+      // NOTE: The use of the letters phi and theta differ or are swapped between sources.
+
+      // in this case, phi is relative to the original beam, so .5pi is already compensated for. The
+      // direction of DEC is still important, so we have to use phi = -dec to get the proper relative change
+      // in angle.
+      const double phi = -dec;
+      const double theta = ra;
+
+      itsXYZ[0] = sin(phi)*cos(theta);
+      itsXYZ[1] = sin(phi)*sin(theta);
+      itsXYZ[2] = cos(theta);
     }
 
     PencilCoord3D(const double x, const double y, const double z) {
@@ -212,8 +234,8 @@ inline ostream& operator<<(ostream& os, const PencilCoord3D &c)
 
 inline fcomplex PencilBeams::phaseShift( const float frequency, const float delay ) const
 {
-  float phaseShift = delay * frequency;
-  float phi = -2 * M_PI * phaseShift;
+  const float phaseShift = delay * frequency;
+  const float phi = -2 * M_PI * phaseShift;
 
   return makefcomplex( std::cos(phi), std::sin(phi) );
 }
