@@ -19,6 +19,7 @@ class Stokes
 
     void calculateCoherent( const PencilBeamData *filteredData, StokesData *stokesData, const unsigned nrBeams );
     void calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations );
+    void compressStokes( const StokesData *in, StokesCompressedData *out, const unsigned nrBeams );
 
   private:
     const unsigned          itsNrChannels;
