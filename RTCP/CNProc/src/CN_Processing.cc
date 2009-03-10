@@ -88,6 +88,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(Stream
   itsPencilBeamData(0),
   itsStokesData(0),
   itsIncoherentStokesIData(0),
+  itsStokesDataIntegratedChannels(0),
   itsMode(),
 #if defined HAVE_BGL || defined HAVE_BGP
   itsAsyncTranspose(0),
@@ -263,6 +264,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsNrSubbands                    = configuration.nrSubbands();
   itsMode                          = configuration.mode();
   itsOutputIncoherentStokesI       = configuration.outputIncoherentStokesI();
+  itsStokesIntegrateChannels       = configuration.stokesIntegrateChannels();
   itsOutputPsetSize                = outputPsets.size();
   const unsigned nrChannels		       = configuration.nrChannelsPerSubband();
   const unsigned nrSamplesPerIntegration       = configuration.nrSamplesPerIntegration();
@@ -288,33 +290,70 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // Since some buffers (arenas) are used multiple times, we use multiple
   // Allocators for a single arena.
 
-  const size_t inputDataSize      = itsIsTransposeInput  ? InputData<SAMPLE_TYPE>::requiredSize(outputPsets.size(), nrSamplesToCNProc) : 0;
-  const size_t transposedDataSize = itsIsTransposeOutput ? TransposedData<SAMPLE_TYPE>::requiredSize(itsNrStations, nrSamplesToCNProc) : 0;
-  const size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(itsNrStations, nrChannels, nrSamplesPerIntegration) : 0;
-  const size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines, nrChannels) : 0;
-  const size_t pencilBeamDataSize = itsIsTransposeOutput ? PencilBeamData::requiredSize(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration) : 0;
-  const size_t stokesDataSize     = itsIsTransposeOutput ? StokesData::requiredSize(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
-  const size_t incoherentStokesIDataSize = itsIsTransposeOutput ? StokesData::requiredSize(false, 1, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration) : 0;
+  if (itsIsTransposeInput) {
+    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc);
+  }
 
-  itsMapping.addDataset( 0, inputDataSize,             0 );
-  itsMapping.addDataset( 1, transposedDataSize,        1 );
-  itsMapping.addDataset( 2, filteredDataSize,          2 );
-  itsMapping.addDataset( 3, correlatedDataSize,        1 );
-  itsMapping.addDataset( 4, pencilBeamDataSize,        1 );
-  itsMapping.addDataset( 5, stokesDataSize,            2 );
-  itsMapping.addDataset( 6, incoherentStokesIDataSize, 1 );
+  if (itsIsTransposeOutput) {
+    // create only the data structures that are used by the pipeline
+
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc);
+    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration);
+
+    switch( itsMode.mode() ) {
+      case CN_Mode::FILTER:
+        // we have everything already
+        break;
+
+      case CN_Mode::CORRELATE:
+        itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels);
+        break;
+
+      case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
+        itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration);
+        break;
+
+      case CN_Mode::COHERENT_STOKES_I:
+      case CN_Mode::COHERENT_ALLSTOKES:
+        itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration);
+        // fallthrough
+
+      case CN_Mode::INCOHERENT_STOKES_I:
+      case CN_Mode::INCOHERENT_ALLSTOKES:
+        itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+        break;
+
+      default:
+        std::clog << "Invalid mode: " << itsMode << endl;
+        break;
+    }
+
+    if( itsOutputIncoherentStokesI ) {
+      itsIncoherentStokesIData = new StokesData(false, 1, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+    }
+
+    if( itsStokesIntegrateChannels ) {
+      itsStokesDataIntegratedChannels = new StokesDataIntegratedChannels(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+    }
+  }
+
+  itsMapping.addDataset( itsInputData,             0 );
+  itsMapping.addDataset( itsTransposedData,        1 );
+  itsMapping.addDataset( itsFilteredData,          2 );
+  itsMapping.addDataset( itsCorrelatedData,        1 );
+  itsMapping.addDataset( itsPencilBeamData,        1 );
+  itsMapping.addDataset( itsStokesData,            2 );
+  itsMapping.addDataset( itsIncoherentStokesIData, 1 );
+  itsMapping.addDataset( itsStokesDataIntegratedChannels,  1 );
 
   if( !itsMode.isCoherent() ) {
     // for incoherent modes, the filtered data is used for stokes, so they cannot overlap.
-    itsMapping.moveDataset( 5, 1 ); // stokesData
+    itsMapping.moveDataset( itsStokesData, 1 );
+    itsMapping.moveDataset( itsStokesDataIntegratedChannels, 2 );
   }
 
-  // create the arenas
-  itsMapping.createAllocators();
-
-  if (itsIsTransposeInput) {
-    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc, *(itsMapping.allocatorOf(0)));
-  }
+  // create the arenas and allocate the data sets
+  itsMapping.allocate();
 
   if (itsIsTransposeOutput) {
     const unsigned nrSubbandsPerPset = configuration.nrSubbandsPerPset();
@@ -330,13 +369,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #if defined HAVE_MPI
     printSubbandList();
 #endif // HAVE_MPI
-
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, *(itsMapping.allocatorOf(1)));
-    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, *(itsMapping.allocatorOf(2)));
-    itsCorrelatedData = new CorrelatedData(nrBaselines, nrChannels, *(itsMapping.allocatorOf(3)));
-    itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, *(itsMapping.allocatorOf(4)));
-    itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *(itsMapping.allocatorOf(5)));
-    itsIncoherentStokesIData     = new StokesData(false, 1, pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration, *(itsMapping.allocatorOf(6)));
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), itsLocationInfo.rank() == 0);
 
@@ -391,7 +423,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
     }
 #else // NO MPI
     readTimer.start();
-    itsInputData->read(itsStream);
+    itsInputData->readAll(itsStream);
     readTimer.stop();
 #endif
   } // itsIsTransposeInput
@@ -555,13 +587,23 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
       case CN_Mode::COHERENT_ALLSTOKES:
         formPencilBeams();
         calculateCoherentStokes();
-        sendOutput( itsStokesData );
+	if( itsStokesIntegrateChannels ) {
+	  itsStokes->compressStokes( itsStokesData, itsStokesDataIntegratedChannels, itsPencilBeamFormer->nrCoordinates() );
+          sendOutput( itsStokesDataIntegratedChannels );
+	} else {
+          sendOutput( itsStokesData );
+	}
         break;
 
       case CN_Mode::INCOHERENT_STOKES_I:
       case CN_Mode::INCOHERENT_ALLSTOKES:
         calculateIncoherentStokes();
-        sendOutput( itsStokesData );
+	if( itsStokesIntegrateChannels ) {
+	  itsStokes->compressStokes( itsStokesData, itsStokesDataIntegratedChannels, 1 );
+          sendOutput( itsStokesDataIntegratedChannels );
+	} else {
+          sendOutput( itsStokesData );
+	}
         break;
 
       default:

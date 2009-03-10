@@ -26,6 +26,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Interface/Allocator.h>
+#include <Interface/StreamableData.h>
 #include <boost/noncopyable.hpp>
 
 namespace LOFAR {
@@ -35,18 +36,19 @@ class ArenaMapping: boost::noncopyable {
   public:
     virtual ~ArenaMapping();
 
-    void addDataset( const unsigned dataset, const size_t size, const unsigned arena );
-    void moveDataset( const unsigned dataset, const unsigned arena );
+    void addDataset( StreamableData *dataset, const unsigned arena );
+    void moveDataset( const StreamableData *dataset, const unsigned arena );
 
     unsigned nrArenas() const;
     unsigned nrDatasets() const;
 
-    void createAllocators();
-    Allocator *allocatorOf( const unsigned dataset ) const;
+    void allocate();
+
+    Allocator *allocatorOf( const StreamableData *dataset ) const;
 
   private:
     struct mapping {
-      unsigned dataset;
+      StreamableData *dataset;
       size_t size;
       unsigned arena;
 
@@ -72,20 +74,25 @@ inline ArenaMapping::~ArenaMapping()
   itsArenas.clear();
 }
 
-inline void ArenaMapping::addDataset( const unsigned dataset, const size_t size, const unsigned arena )
+inline void ArenaMapping::addDataset( StreamableData *dataset, const unsigned arena )
 {
   struct mapping m;
 
+  if( !dataset ) {
+    return;
+  };
+
   m.dataset = dataset;
-  m.size = size;
+  m.size = dataset->requiredSize();
   m.arena = arena;
   m.allocator = 0;
 
   itsMapping.push_back( m );
 }
 
-inline void ArenaMapping::moveDataset( const unsigned dataset, const unsigned arena )
+inline void ArenaMapping::moveDataset( const StreamableData *dataset, const unsigned arena )
 {
+  // if dataset==0, nothing happens
   for( unsigned i = 0; i < itsMapping.size(); i++ ) {
     if( dataset == itsMapping[i].dataset ) {
       itsMapping[i].arena = arena;
@@ -138,7 +145,7 @@ inline size_t ArenaMapping::arenaSize( const unsigned arena ) const
   return neededSize;
 }
 
-inline void ArenaMapping::createAllocators()
+inline void ArenaMapping::allocate()
 {
   const size_t arenas = nrArenas();
   const size_t datasets = nrDatasets();
@@ -153,10 +160,16 @@ inline void ArenaMapping::createAllocators()
   for( unsigned dataset = 0; dataset < datasets; dataset++ ) {
     itsMapping[dataset].allocator = new SparseSetAllocator( *itsArenas[itsMapping[dataset].arena] );
   }
+
+  // allocate data sets
+  for( unsigned dataset = 0; dataset < datasets; dataset++ ) {
+    itsMapping[dataset].dataset->allocate( *itsMapping[dataset].allocator );
+  }
 }
 
-inline Allocator *ArenaMapping::allocatorOf( const unsigned dataset ) const
+inline Allocator *ArenaMapping::allocatorOf( const StreamableData *dataset ) const
 {
+  // if dataset==0, nothing happens
   for( unsigned i = 0; i < itsMapping.size(); i++ ) {
     if( itsMapping[i].dataset == dataset ) {
       return itsMapping[i].allocator;

@@ -39,6 +39,9 @@ class StreamableData {
     // suppress warning by defining a virtual destructor
     virtual ~StreamableData() {}
 
+    virtual size_t requiredSize() const = 0;
+    virtual void allocate( Allocator &allocator = heapAllocator ) = 0;
+
     virtual void read(Stream*, const bool withSequenceNumber);
     virtual void write(Stream*, const bool withSequenceNumber);
 
@@ -63,8 +66,11 @@ template <typename T, unsigned DIM> class SampleData: public StreamableData, boo
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
 
-    SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags, Allocator &allocator = heapAllocator );
+    SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags );
     virtual ~SampleData();
+
+    virtual size_t requiredSize() const;
+    virtual void allocate( Allocator &allocator = heapAllocator );
 
     MultiDimArray<T,DIM> samples;
     SparseSet<unsigned>  *flags;
@@ -76,6 +82,10 @@ template <typename T, unsigned DIM> class SampleData: public StreamableData, boo
     virtual void writeData(Stream*);
 
   private:
+    // copy the ExtentList instead of using a reference, as boost by default uses a global one (boost::extents)
+    const ExtentList     extents;
+    const unsigned       nrFlags;
+
     bool                 itsHaveWarnedLittleEndian;
 };
 
@@ -108,19 +118,33 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber )
   writeData( str );
 }
 
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags, Allocator &allocator ):
+template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData( const bool isIntegratable, const ExtentList &extents, const unsigned nrFlags ):
   StreamableData( isIntegratable ),
-  samples( extents, 32, allocator ),
-  flags( new SparseSet<unsigned>[nrFlags] ),
+  flags( 0 ),
+  extents( extents ),
+  nrFlags( nrFlags ),
   itsHaveWarnedLittleEndian( false )
 {
 }
 
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::~SampleData()
+template <typename T, unsigned DIM> inline size_t SampleData<T,DIM>::requiredSize() const
 {
-  delete [] flags;
+  return align(MultiDimArray<T,DIM>::nrElements( extents ) * sizeof(T),32);
 }
 
+template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate( Allocator &allocator )
+{
+  samples.resize( extents, 32, allocator );
+  flags = new SparseSet<unsigned>[nrFlags];
+}
+
+template <typename T, unsigned DIM> inline SampleData<T,DIM>::~SampleData()
+{
+  if( flags ) {
+    delete [] flags;
+    flags = 0;
+  }
+}
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
 {

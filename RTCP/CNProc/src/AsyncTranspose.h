@@ -35,8 +35,8 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class AsyncTranspose
 {
   public:
-  AsyncTranspose(bool isTransposeInput, bool isTransposeOutput, unsigned nrCoresPerPset, const LocationInfo &, 
-		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, unsigned nrSamplesToCNProc);
+  AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, const unsigned nrCoresPerPset, const LocationInfo &, 
+		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const unsigned nrSamplesToCNProc);
 
   ~AsyncTranspose();
   
@@ -47,14 +47,14 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  void asyncSend(unsigned outputPsetNr, const InputData<SAMPLE_TYPE> *inputData);
+  void asyncSend(const unsigned outputPsetNr, const InputData<SAMPLE_TYPE> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();
   
  private:
   
-  bool itsIsTransposeInput, itsIsTransposeOutput;
+  const bool itsIsTransposeInput, itsIsTransposeOutput;
 
   // the size of a data message
   unsigned itsMessageSize; 

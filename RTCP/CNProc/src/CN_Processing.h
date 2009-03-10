@@ -124,6 +124,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
+    bool		itsStokesIntegrateChannels;
     
     ArenaMapping        itsMapping;
 
@@ -134,6 +135,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
     PencilBeamData              *itsPencilBeamData;
     StokesData                  *itsStokesData;
     StokesData                  *itsIncoherentStokesIData;
+    StokesDataIntegratedChannels *itsStokesDataIntegratedChannels;
     CN_Mode                     itsMode;
     bool			itsOutputIncoherentStokesI;
 

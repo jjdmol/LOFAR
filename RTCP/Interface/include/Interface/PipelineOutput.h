@@ -30,6 +30,7 @@ class PipelineOutput: boost::noncopyable
       FILTEREDDATA,
       PENCILBEAMDATA,
       STOKESDATA,
+      STOKESDATAINTEGRATEDCHANNELS,
 
       RAWDATA = -1
     };
@@ -112,13 +113,13 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
   // !!! This section should match the actual pipeline as used by CNProcs !!!
 
   unsigned id = 0;
-  CN_Mode mode = CN_Mode(ps);
+  const CN_Mode mode = CN_Mode(ps);
   PipelineOutput *o;
 
   // add optional incoherentStokesI output
   if( ps.outputIncoherentStokesI() ) {
     o = new PipelineOutput( id++, PipelineOutput::STOKESDATA );
-    o->itsData = new StokesData( false, 1, ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator );
+    o->itsData = new StokesData( false, 1, ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps() );
     o->itsFilenameSuffix = ".incoherentStokesI";
     itsOutputs.push_back( o );
   }
@@ -127,26 +128,31 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
   switch( mode.mode() ) {
     case CN_Mode::FILTER:
 	o = new PipelineOutput( id++, PipelineOutput::FILTEREDDATA );
-        o->itsData = new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+        o->itsData = new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps() );
         break;
 
     case CN_Mode::CORRELATE:
 	o = new PipelineOutput( id++, PipelineOutput::CORRELATEDDATA );
         o->itsWriterType = PipelineOutput::CASAWRITER;
-        o->itsData = new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband(), allocator );
+        o->itsData = new CorrelatedData( ps.nrBaselines(), ps.nrChannelsPerSubband() );
         break;
 
     case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
 	o = new PipelineOutput( id++, PipelineOutput::PENCILBEAMDATA );
-        o->itsData = new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), allocator );
+        o->itsData = new PencilBeamData( ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps() );
         break;
 
     case CN_Mode::COHERENT_STOKES_I:
     case CN_Mode::COHERENT_ALLSTOKES:
     case CN_Mode::INCOHERENT_STOKES_I:
     case CN_Mode::INCOHERENT_ALLSTOKES:
-        o = new PipelineOutput( id++, PipelineOutput::STOKESDATA );
-        o->itsData = new StokesData( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps(), allocator );
+        if( ps.stokesIntegrateChannels() ) {
+          o = new PipelineOutput( id++, PipelineOutput::STOKESDATAINTEGRATEDCHANNELS );
+          o->itsData = new StokesDataIntegratedChannels( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps() );
+	} else {
+          o = new PipelineOutput( id++, PipelineOutput::STOKESDATA );
+          o->itsData = new StokesData( mode.isCoherent(), mode.nrStokes(), ps.nrPencilBeams(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.stokesIntegrationSteps() );
+        }
         break;
 
     default:
@@ -160,6 +166,10 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
   }
 
   itsOutputs.push_back( o );
+
+  for( unsigned i = 0; i < itsOutputs.size(); i++ ) {
+    itsOutputs[i]->data()->allocate( allocator );
+  }
 }
 
 } // namespace RTCP

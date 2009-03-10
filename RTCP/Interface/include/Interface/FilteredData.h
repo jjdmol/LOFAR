@@ -18,34 +18,47 @@ class FilteredData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
+    FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration);
 
-    static size_t requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    virtual size_t requiredSize() const;
+    virtual void allocate( Allocator &allocator = heapAllocator );
 
     Vector<SubbandMetaData>     metaData; //[itsNrStations]
 
   protected:
+    const unsigned              itsNrStations;
+    const unsigned              itsNrChannels;
+    const unsigned              itsNrSamplesPerIntegration;
     virtual void readData( Stream* );
     virtual void writeData( Stream* );
 };
 
 
-inline size_t FilteredData::requiredSize(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration)
-{
-  return align(sizeof(fcomplex) * nrChannels * nrStations * (nrSamplesPerIntegration | 2) * NR_POLARIZATIONS, 32) +
-         align(sizeof(SubbandMetaData) * nrStations, 32);
-}
 
-
-inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
+inline FilteredData::FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration)
 :
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(false,boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations, allocator),
-  metaData(nrStations, 32, allocator)
+  SuperType::SampleData(false,boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations),
+  itsNrStations(nrStations),
+  itsNrChannels(nrChannels),
+  itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
 }
+
+inline size_t FilteredData::requiredSize() const
+{
+  return SuperType::requiredSize() +
+         align(sizeof(SubbandMetaData) * itsNrStations, 32);
+}
+
+inline void FilteredData::allocate( Allocator &allocator )
+{
+  SuperType::allocate( allocator );
+  metaData.resize( itsNrStations, 32, allocator );
+}
+
 
 inline void FilteredData::readData(Stream *str)
 {
