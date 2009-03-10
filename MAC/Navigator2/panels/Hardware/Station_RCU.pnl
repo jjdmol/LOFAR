@@ -145,6 +145,8 @@ void reload() {
   // set the hardware selectable items for this screen
   prepareHardwareList();
   
+  defineXYpolarization();
+  
   // set panel to ready
   g_objectReady=true;
   
@@ -244,14 +246,17 @@ defineXYpolarization()
   } else {
     isOdd = false; 
   }
-
   // Set the textvalue in the panel
   // If the rcuNr is odd it is an X-polarization
   // If the rcuNr is even it is an Y-polarization
   if (!isOdd) {
-    setValue(\"\", \"text\", \"X\");
+    setValue(\"txt_polarization_LBL\", \"text\", \"X\");
+    setValue(\"txt_polarization_LBH\", \"text\", \"X\");
+    setValue(\"txt_polarization_HBA\", \"text\", \"X\");
   } else {
-    setValue(\"\", \"text\", \"Y\");
+    setValue(\"txt_polarization_LBL\", \"text\", \"Y\");
+    setValue(\"txt_polarization_LBH\", \"text\", \"Y\");
+    setValue(\"txt_polarization_HBA\", \"text\", \"Y\");
   }
 }
 
@@ -366,11 +371,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  defineXYpolarization(); 
-}" 0
- E 0 1 1 0 1 E U  0 E 528 108 536 125
+E E 0 1 1 0 1 E U  0 E 528 108 536 125
 0 2 0 "0s" 0 0 0 192 0 0  528 108 1
 1
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
@@ -442,11 +443,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  defineXYpolarization(); 
-}" 0
- E 0 1 1 0 1 E U  0 E 168 109 176 126
+E E 0 1 1 0 1 E U  0 E 168 109 176 126
 0 2 0 "0s" 0 0 0 192 0 0  168 109 1
 1
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
@@ -530,11 +527,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  defineXYpolarization(); 
-}" 0
- E 0 1 1 0 1 E U  0 E 350 108 358 125
+E E 0 1 1 0 1 E U  0 E 350 108 358 125
 0 2 0 "0s" 0 0 0 192 0 0  350 108 1
 1
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
