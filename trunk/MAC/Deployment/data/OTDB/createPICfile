@@ -83,10 +83,10 @@ for line in filledLine.findall(open(RingFile).read()):
 ringStations = []
 stations = []
 for line in filledLine.findall(open(StationFile).read()):
-    (name, stationID, stnType, long, lat, height, \
-        nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
-    ringStations.append(ringDict[stnType]+"_"+name)
-    stations.append(name)
+    if (len(line.split()) > 10):
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+        ringStations.append(ringDict[stnType]+"_"+name)
+        stations.append(name)
 #print "ringStations =", ringStations
 #print "stations =", stations
     
@@ -158,8 +158,10 @@ for line in software.findall(open(PVSSbasefile).read()):
 
 # generate the hardware on each station
 for line in filledLine.findall(open(StationFile).read()):
-    (name, stationID, stnType, long, lat, height, \
-        nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+    if (len(line.split()) < 10):
+        continue
+
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
 
     # Find all expandable hardware elements on a station. The line syntax is:
     # ???	???  	S	P	???	???_PIC_@...@
