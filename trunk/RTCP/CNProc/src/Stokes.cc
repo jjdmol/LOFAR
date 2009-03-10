@@ -16,18 +16,6 @@ Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChanne
 {
 } 
 
-// Calculate coherent stokes values from pencil beams.
-void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
-{
-  computeCoherentStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
-}
-
-// Calculate incoherent stokes values from (filtered) station data.
-void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
-{
-  computeIncoherentStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
-}
-
 static inline double sqr( const double x ) { return x * x; }
 
 struct stokes {
@@ -38,7 +26,8 @@ struct stokes {
   unsigned nrValidSamples;
 };
 
-static inline void addStokes( struct stokes stokes, const fcomplex &polX, const fcomplex &polY, bool allStokes )
+// compute Stokes values, and add them to an existing stokes array
+static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const fcomplex &polY, bool allStokes )
 {
   // assert: two polarizations
   const double powerX = sqr( real(polX) ) + sqr( imag(polX) );
@@ -51,6 +40,44 @@ static inline void addStokes( struct stokes stokes, const fcomplex &polX, const 
     stokes.V += imag(polX * conj(polY)); // proper stokes.V is twice this
   }
   stokes.nrValidSamples++;
+}
+
+
+// Calculate coherent stokes values from pencil beams.
+void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
+{
+  computeCoherentStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
+}
+
+// Calculate incoherent stokes values from (filtered) station data.
+void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
+{
+  computeIncoherentStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
+}
+
+// Compress Stokes values by summing over all channels
+void Stokes::compressStokes( const StokesData *in, StokesCompressedData *out, const unsigned nrBeams )
+{
+  const unsigned timeSteps = itsNrSamplesPerIntegration / itsNrSamplesPerStokesIntegration;
+
+  // copy flags
+  for(unsigned beam = 0; beam < nrBeams; beam++) {
+    out->flags[beam] = in->flags[beam];
+  }
+
+  for (unsigned beam = 0; beam < nrBeams; beam++ ) {
+    for (unsigned time = 0; time < timeSteps; time++ ) {
+      for (unsigned stokes = 0; stokes < itsNrStokes; stokes++ ) {
+        float channelSum = 0.0f;
+
+        for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+          channelSum += in->samples[ch][beam][time][stokes];
+        }
+
+	out->samples[beam][time][stokes] = channelSum;
+      }	
+    }
+  }
 }
 
 void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const SparseSet<unsigned> *inflags, StokesData *out, const unsigned nrBeams )
