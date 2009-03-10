@@ -104,10 +104,7 @@ void updatePositions(string dp1, float cOL,
     H[idx+1]=unsortH[i];         
   }
   
-  LOG_DEBUG(\"OL: \"+ OL);
-  LOG_DEBUG(\"NB: \"+ NB);
-  LOG_DEBUG(\"H: \"+ H);
-           
+        
   // found match, save found strings and redraw screen
   
   centerOL = cOL;
@@ -117,9 +114,7 @@ void updatePositions(string dp1, float cOL,
   dpGet(NB,antennaOffsetsNB);
   dpGet(H,antennaOffsetsH);
   
-  LOG_DEBUG(\"offsetsOL: \" + antennaOffsetsOL);
-  LOG_DEBUG(\"offsetsNB: \" + antennaOffsetsNB);
-  LOG_DEBUG(\"offsetsH : \" + antennaOffsetsH);
+
   
   redraw(txt);
 }
@@ -259,10 +254,26 @@ void updateField() {
   // Check if the update concerns the current view
   string txt= arrayList.text(arrayList.number());
 
-  dyn_string OL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string NB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string H= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
-
+  dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
+  dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
+  dyn_string unsortH= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
+  dyn_string OL=unsortOL;
+  dyn_string NB=unsortNB;
+  dyn_string H=unsortH;
+               
+  
+  // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
+  // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
+  //
+  
+  for (int i=1; i<= dynlen(unsortOL);i++) {
+    string ant = strsplit(unsortOL[i],\":.\" )[2];
+    int idx = substr(ant,3);
+    OL[idx+1]=unsortOL[i];
+    NB[idx+1]=unsortNB[i];
+    H[idx+1]=unsortH[i];         
+  }
+  
   string field=sysName+\"remoteStation.\"+txt;
   if (dpExists(field+\".centerOL:_online.._value\")) {
     // found match, save found strings and redraw screen
