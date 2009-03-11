@@ -35,23 +35,6 @@ if ( ${PACKAGE_NAME} STREQUAL "CNProc" )
 
   add_definitions (-DHAVE_FFTW2)
   add_definitions (-DHAVE_MPI)
-
-  # Initialize CXX link type selection flags.  These flags are used when
-  # building a shared library, shared module, or executable that links
-  # to other libraries to select whether to use the static or shared
-  # versions of the libraries.
-  # Tempory solution! More info see:
-  # 0005087: Can't build static binary on Linux - Mantis
-  # http://www.vtk.org/Bug/view.php?id=5087 
-  SET(CMAKE_SHARED_LIBRARY_LINK_DYNAMIC_CXX_FLAGS "-Wl,-Bstatic")
-  SET(CMAKE_SHARED_MODULE_LINK_DYNAMIC_CXX_FLAGS "-Wl,-Bstatic")
-  SET(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS "-Wl,-Bstatic")
-
-  SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "") 
-
-  #SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static" CACHE STRING "EXE" FORCE)
-  #SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static" CACHE STRING "SHARED" FORCE)
-  #SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static" CACHE STRING "MODULE" FORCE)
 endif ( ${PACKAGE_NAME} STREQUAL "CNProc" )
 
 SET( CXX_COMPILE_FLAGS "-B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin -pthread" CACHE STRING "g++ Compiler flags" FORCE )
