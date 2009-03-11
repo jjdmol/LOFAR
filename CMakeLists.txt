@@ -192,6 +192,7 @@ include_directories (
   ${LOFAR_SOURCE_DIR}/RTCP/Storage/include
   ${LOFAR_SOURCE_DIR}/RTCP/IONProc/src
   ${LOFAR_SOURCE_DIR}/RTCP/CNProc/src
+  ${LOFAR_SOURCE_DIR}/RTCP/FCNP/src
   )
 
 ## ------------------------------------------------------------------------------
