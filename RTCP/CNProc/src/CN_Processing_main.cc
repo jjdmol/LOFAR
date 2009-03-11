@@ -30,8 +30,9 @@
 #include <Stream/SocketStream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
+#if !defined HAVE_PKVERSION
 #include <CNProc/Package__Version.h>
-
+#endif
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
 
@@ -90,12 +91,13 @@ int main(int argc, char **argv)
 #endif
 
     LocationInfo locationInfo;
-    
+
+#if !defined HAVE_PKVERSION    
     if (locationInfo.rank() == 0) {
       std::string type = "brief";
       Version::show<CNProcVersion> (std::cout, "CNProc", type);
     }
-
+#endif
     std::clog << "creating connection to ION ..." << std::endl;
     
     Stream *ionStream;
