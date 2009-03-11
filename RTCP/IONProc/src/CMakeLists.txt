@@ -26,6 +26,7 @@ file (GLOB libinterface_HEADERS BeamletBuffer.h
 				SlidingPointer.h
 				WallClockTime.h
 				WH_DelayCompensation.h
+				Lock.h
 				FCNP_ServerStream.h)
  
 enable_language(ASM-BGP)
@@ -49,6 +50,7 @@ file (GLOB libionproc_SOURCES BeamletBuffer.cc
 			      Scheduling.cc
 			      WH_DelayCompensation.cc
 			      FCNP_ServerStream.cc
+			      Lock.cc
 			      ${amsSrcs})
 
 add_library (ionproc ${libionproc_SOURCES})
