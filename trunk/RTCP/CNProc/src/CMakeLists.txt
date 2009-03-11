@@ -33,8 +33,8 @@ enable_language(ASM-BGP)
 
 if (CMAKE_ASM-BGP_COMPILER_WORKS)
   file(GLOB amsSrcs CorrelatorAsm.S
-                    FIR_Asm
-		    FFT_Asm)
+                    FIR_Asm.S
+		    FFT_Asm.S)
 endif (CMAKE_ASM-BGP_COMPILER_WORKS)  
 
 ## ------------------------------------------------------------------------------
@@ -77,9 +77,11 @@ target_link_libraries (CN_Processing
                        cnproc
                       )
 
+SET (CMAKE_ASM-BGP_LINK_EXECUTABLE "${ASM-BGP} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 set_target_properties(CN_Processing
-                      PROPERTIES LINK_FLAGS "-static"
+                      PROPERTIES LINK_FLAGS "-static -g -O2 -W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin"
+                                 LINKER_LANGUAGE ASM-BGP
 )
 
 #set_target_properties(CN_Processing
