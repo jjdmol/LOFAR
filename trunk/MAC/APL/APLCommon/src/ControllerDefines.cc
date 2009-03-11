@@ -252,7 +252,7 @@ string	createPropertySetName(const string&		propSetMask,
 	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
 	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
 		psName.erase(pos, 17);
-		psName = myHostname(false) + ":" + psName;
+		psName = PVSSDatabaseName(myHostname(false)) + ":" + psName;
 	}
 
 	if ((pos = psName.find("@ring@")) != string::npos) {
@@ -260,7 +260,7 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 
 	if ((pos = psName.find("@station@")) != string::npos) {
-		psName.replace(pos, 9, myHostname(false));
+		psName.replace(pos, 9, PVSSDatabaseName(myHostname(false)));
 	}
 
 	if ((pos = psName.find("@instance@")) != string::npos) {
