@@ -34,8 +34,9 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 //#include <TH_ZoidServer.h>
+#if !defined HAVE_PKVERSION
 #include <Package__Version.h>
-
+#endif
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -364,9 +365,10 @@ static void unmapFlatMemory()
 
 void *master_thread(void *)
 {
+#if !defined HAVE_PKVERSION
   std::string type = "brief";
   Version::show<IONProcVersion> (std::clog, "IONProc", type);
-  
+#endif  
   clog_logger("starting master_thread");
 
   enableCoreDumps();
