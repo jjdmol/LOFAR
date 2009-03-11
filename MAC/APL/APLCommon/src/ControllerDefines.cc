@@ -250,7 +250,7 @@ string	createPropertySetName(const string&		propSetMask,
 	uint	pos;
 	// when name contains @ring@_@station@ cut out this marker and prepend hostname
 	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
-	if ((pos = psName.find("_@ring@_@station@")) != string::npos) {
+	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
 		psName.erase(pos, 17);
 		psName = myHostname(false) + ":" + psName;
 	}
@@ -258,6 +258,11 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@ring@")) != string::npos) {
 		psName.replace(pos, 6, stationRingName());
 	}
+
+	if ((pos = psName.find("@station@")) != string::npos) {
+		psName.replace(pos, 9, myHostname(false));
+	}
+
 	if ((pos = psName.find("@instance@")) != string::npos) {
 		uint16	instanceNr = getInstanceNr(controllerName);
 		if (instanceNr) {
@@ -267,6 +272,7 @@ string	createPropertySetName(const string&		propSetMask,
 			psName.replace(pos, 10, "");	
 		}
 	}
+
 	if ((pos = psName.find("LOFAR_ObsSW_@observation@")) != string::npos) {
 		psName.replace(pos, 25, realDPname);
 	}
