@@ -19,7 +19,6 @@ file (GLOB libinterface_HEADERS BandPass.h
 				TransposedData.h
 				FIR.h
 				PPF.h
-				Transpose.h
 				AsyncTranspose.h
 				BeamFormer.h
 				Correlator.h
@@ -43,7 +42,6 @@ endif (CMAKE_ASM-BGP_COMPILER_WORKS)
 file (GLOB libcnproc_SOURCES BandPass.cc
 			     LocationInfo.cc
 			     FIR.cc
-			     Transpose.cc
 			     AsyncTranspose.cc
 			     BeamFormer.cc
 			     PPF.cc
