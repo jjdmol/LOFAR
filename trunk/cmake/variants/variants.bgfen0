@@ -1,5 +1,7 @@
 ## GNU-Compiler setting
-SET(gnubgp_compiler "CC=/usr/bin/gcc;CXX=/usr/bin/g++;CCAS=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc")
+SET (ASM-BGP "/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc")
+
+SET(gnubgp_compiler "CC=/usr/bin/gcc;CXX=/usr/bin/g++;CCAS=${ASM-BGP}")
 SET(CCASFLAGS "-DHAVE_BGP")
 
 ## Set compiler-flags
@@ -12,8 +14,11 @@ SET ( Boost_FIND_COMPONENTS "date_time" "thread")
 
 add_definitions (-DHAVE_BGP)
 add_definitions (-DHAVE_BGP_ION)
+add_definitions (-DHAVE_BGP_CN)
+add_definitions (-DHAVE_FCNP)
 add_definitions (-DUSE_THREADS)
 add_definitions (-DHAVE_PKVERSION)
+add_definitions (-DWORDS_BIGENDIAN)
 
 include_directories (/bgsys/drivers/ppcfloor/comm/include)
 include_directories (/bgsys/drivers/ppcfloor/arch/include)
@@ -25,7 +30,8 @@ if ( ${PACKAGE_NAME} STREQUAL "CNProc" )
   link_directories(/cephome/romein/packages/fftw-2.1.5-single-precision/lib)
   link_directories(/opt/mass/lib)
 
-  SET ( WITH-LIBS "-lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -lSPI.cna -lm -lrfftw -lfftw -lmass" CACHE STRING "With libs" FORCE)
+  SET ( WITH-LIBS "-lcxxmpich.cnk /bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/lib/libstdc++.a -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -lSPI.cna -lm -lrfftw -lfftw -lmass" CACHE STRING "With libs" FORCE)
+  SET ( Boost_USE_STATIC_LIBS TRUE )
 
   add_definitions (-DHAVE_FFTW2)
   add_definitions (-DHAVE_MPI)
