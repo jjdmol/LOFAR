@@ -15,8 +15,9 @@
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Storage/SubbandWriter.h>
+#if !defined HAVE_PKVERSION
 #include <Storage/Package__Version.h>
-
+#endif
 #if defined HAVE_MPI
 #include <mpi.h>
 #endif
@@ -39,10 +40,10 @@ static void child(int argc, char *argv[], int rank)
       std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
     else if (argc != 2)
       THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
-
+#if !defined HAVE_PKVERSION
     std::string type = "brief";
     Version::show<StorageVersion> (std::cout, "Storage", type);  
-    
+#endif    
     ConfigLocator aCL;
     string        progName = basename(argv[0]);
     string        logPropFile(progName + ".log_prop");
