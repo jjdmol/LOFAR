@@ -78,7 +78,8 @@ if (HAVE_EXECINFO_H)
     list (APPEND CMAKE_REQUIRED_LIBRARIES ${HAVE_LIBIBERTY})
   endif (HAVE_LIBIBERTY)
   
-  find_library (HAVE_LIBZ z
+  SET (Bactrace_LIB_PREFIX "lib")
+  find_library (HAVE_LIBZ ${Bactrace_LIB_PREFIX}z.a
     PATHS ${lib_locations}
     NO_DEFAULT_PATH
   )
@@ -93,7 +94,7 @@ if (HAVE_EXECINFO_H)
   if (HAVE_LIBBFD)
     list (APPEND CMAKE_REQUIRED_LIBRARIES ${HAVE_LIBBFD})
   endif (HAVE_LIBBFD)
-
+   
   if (HAVE_BFD_H)
     ## append location of header file
     list (APPEND BACKTRACE_INCLUDES ${HAVE_BFD_H})
