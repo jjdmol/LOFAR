@@ -30,6 +30,7 @@
 #include <PPF.h>
 #include <BeamFormer.h>
 #include <Correlator.h>
+#include <ArenaMapping.h>
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -239,21 +240,18 @@ template <typename SAMPLE_TYPE> void doWork()
     std::clog << "base frequency = " << refFreq << std::endl;
     std::clog << "signal frequency = " << signalFrequency << std::endl;
 
-    size_t transposedDataSize = TransposedData<SAMPLE_TYPE>::requiredSize(nrStations, nrSamplesToCNProc);
-    size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrChannels, nrSamplesPerIntegration);
-    size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines, nrChannels);
+    ArenaMapping mapping;
 
-    std::clog << transposedDataSize << " " << filteredDataSize << " " << correlatedDataSize << std::endl;
-    MallocedArena arena0(filteredDataSize, 32);
-    MallocedArena arena1(std::max(transposedDataSize, correlatedDataSize), 32);
+    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc);
+    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration);
+    CorrelatedData correlatedData(nrBaselines, nrChannels);
 
-    SparseSetAllocator allocator0(arena1);
-    SparseSetAllocator allocator1(arena0);
-    SparseSetAllocator allocator2(arena1);
+    mapping.addDataset( &transposedData, 1 );
+    mapping.addDataset( &filteredData, 0 );
+    mapping.addDataset( &correlatedData, 1 );
+    mapping.allocate();
 
-    TransposedData<SAMPLE_TYPE> transposedData(nrStations, nrSamplesToCNProc, allocator0);
-    FilteredData   filteredData(nrStations, nrChannels, nrSamplesPerIntegration, allocator1);
-    CorrelatedData correlatedData(nrBaselines, nrChannels, allocator2);
+    std::clog << transposedData.requiredSize() << " " << filteredData.requiredSize() << " " << correlatedData.requiredSize() << std::endl;
 
     PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true, true);
     Correlator     correlator(beamFormer.getNrBeamFormedStations(), 
