@@ -170,8 +170,11 @@ namespace LOFAR {
 
       void rsp_getspustatus(GCFEvent& event, GCFPortInterface &port);
 
-      void rsp_getRawBlock(GCFEvent& event, GCFPortInterface &port);
       void rsp_setRawBlock(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getRawBlock(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_setSplitter(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getSplitter(GCFEvent& event, GCFPortInterface &port);
       /*@}*/
 
     private:

@@ -55,7 +55,7 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 	RSPSetsubbandsackEvent ack;
 
 	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+	ack.status = RSP_SUCCESS;
 
 	getPort()->send(ack);
 }

@@ -57,7 +57,7 @@ LOG_INFO("READHBACMD::ack");
 	RSPReadhbaackEvent ack;
 
 	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+	ack.status = RSP_SUCCESS;
 
 	ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
 

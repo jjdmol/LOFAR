@@ -1,7 +1,8 @@
 //#  -*- mode: c++ -*-
-//#  SubArraySubscription.cc: class implementation
 //#
-//#  Copyright (C) 2002-2004
+//#  SerdesRead.h: Write to the serdes registers
+//#
+//#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,33 +22,41 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-#include <APL/CAL_Protocol/SubArray.h>
-#include "SubArraySubscription.h"
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#ifndef SERDESREAD_H_
+#define SERDESREAD_H_
 
-using namespace LOFAR;
-using namespace CAL;
-using namespace RTC;
+#include <Common/LofarTypes.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
-void SubArraySubscription::update(Subject* subject)
+#include "SyncAction.h"
+
+namespace LOFAR {
+  namespace RSP {
+
+class SerdesRead : public SyncAction
 {
-  ASSERT(subject == static_cast<Subject*>(m_subarray));
+public:
+	// Constructors for a SerdesRead object.
+	SerdesRead(GCFPortInterface& board_port, int board_id, int	nrCycles);
 
-  AntennaGains* calibratedGains = 0;
+	// Destructor for SerdesRead. */
+	virtual ~SerdesRead();
 
-  // get gains from the FRONT buffer
-  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+	// Write subband selection info.
+	virtual void sendrequest();
 
-    CALUpdateEvent update;
-    update.timestamp.setNow(0);
-    update.status = CAL_SUCCESS;
-    update.handle = (memptr_t)this;
+	// Read the board status.
+	virtual void sendrequest_status();
 
-    update.gains = *calibratedGains;
+	// Handle the READRES message.
+	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-    if (m_port.isConnected()) m_port.send(update);
-  }
-}
+private:
+	EPA_Protocol::MEPHeader itsHeader;
+	int						itsSeqNr;
+};
 
+  }; // namespace RSP
+}; // namespace LOFAR
+
+#endif /* SERDESREAD_H_ */

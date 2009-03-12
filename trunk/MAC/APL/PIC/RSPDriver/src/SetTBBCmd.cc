@@ -55,7 +55,7 @@ void SetTBBCmd::ack(CacheBuffer& /*cache*/)
   RSPSettbbackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   
   getPort()->send(ack);
 }

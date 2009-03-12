@@ -668,6 +668,22 @@ private:
 };
 
 //
+// class SplitterCommand
+//
+class SplitterCommand : public Command
+{
+public:
+	SplitterCommand(GCFPortInterface& port);
+	virtual ~SplitterCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void state(bool switch_on) { itsState=switch_on; }
+	bool state() const { return(itsState); }
+private:
+	bool		itsState;
+};
+
+//
 // class VersionCommand
 //
 class VersionCommand : public Command

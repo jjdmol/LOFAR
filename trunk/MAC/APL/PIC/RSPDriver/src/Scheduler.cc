@@ -44,10 +44,11 @@ Scheduler::Scheduler()
 Scheduler::~Scheduler()
 {
 	/* clear the various queues */
-	while (!m_later_queue.empty())    m_later_queue.pop();
-	while (!m_now_queue.empty())      m_now_queue.pop();
-	while (!m_periodic_queue.empty()) m_periodic_queue.pop();
-	while (!m_done_queue.empty())     m_done_queue.pop();
+	while (!m_later_queue.empty())				m_later_queue.pop();
+	while (!m_now_queue.empty())				m_now_queue.pop();
+	while (!m_periodic_queue.empty())			m_periodic_queue.pop();
+	while (!m_done_queue.empty())				m_done_queue.pop();
+	while (!itsDelayedResponseQueue.empty())    itsDelayedResponseQueue.pop();
 
 	for (map< GCFPortInterface*, vector<SyncAction*> >::iterator port = m_syncactions.begin();
 			port != m_syncactions.end(); port++) {
@@ -117,6 +118,8 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 //
 // dispatch (event, port)
 //
+// Dispatch the(ack) message to the right SyncAction and wake up the next SyncAction in the queue 
+// when the current SyncAction is complete.
 GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -134,12 +137,15 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 			sync_completed = false;
 			status = (*sa)->dispatch(*current_event, (*sa)->getBoardPort());
 
-			// if the syncaction has not yet been completed, break the loop
-			// it will receive another event to continue
+			// When the SyncAction finished its work it set the completed-flag and went to the idle state.
+			// If the Syncaction was not finished is has sent a new msg to the board and we can wait for
+			// that ack-msg to come in.
 			if (!(*sa)->hasCompleted()) {
+				// a new msg was sent, we will be called again when the ack comes in.
 				break;
 			}
 			else {
+				// this SyncAction was ready, pass a timer event to the next action.
 				sync_completed = true;
 				current_event = &timer; 
 			}
@@ -364,7 +370,7 @@ void Scheduler::scheduleCommands()
 		/* detect late commands, but just execute them */
 		if (command->getTimestamp() <= m_current_time + (long)(scheduling_offset - SYNC_INTERVAL_INT)) {
 			LOG_WARN_STR("periodic command is late, timestamp=" << command->getTimestamp()
-			<< ", current_time=" << m_current_time);
+						<< ", current_time=" << m_current_time);
 		}
 
 		if (command->getTimestamp() <= m_current_time + (long)scheduling_offset) {
@@ -396,7 +402,13 @@ void Scheduler::processCommands()
 
 		// move from the now queue to the done queue
 		m_now_queue.pop();
-		m_done_queue.push(command);
+		if (command->delayedResponse()) {
+			LOG_INFO("Placing command on the delayed response queue");
+			itsDelayedResponseQueue.push(command);
+		}
+		else {
+			m_done_queue.push(command);
+		}
 	}
 }
 
@@ -424,7 +436,7 @@ void Scheduler::initiateSync(GCFEvent& event)
 		if (!(*port).second.empty()) {
 			for (unsigned int i = 0; i < (*port).second.size(); i++) {
 				(*port).second[i]->dispatch(event, (*port).second[i]->getBoardPort());
-				if (!(*port).second[i]->doContinue()) {
+				if (!(*port).second[i]->doContinue()) {	// !doContinue() == msg was send, waiting for answer
 					break;
 				}
 			}
@@ -465,10 +477,10 @@ void Scheduler::completeSync()
 	// complete any outstanding commands
 	completeCommands();
 
-	// clear from DONE to IDLE state
+	// clear all registers from DONE to IDLE state
 	Cache::getInstance().getState().clear();
 
-	// schedule next update
+	// schedule next update for all registers
 	Cache::getInstance().getState().schedule(); // if IDLE transition to READ or CHECK
 }
 
@@ -505,6 +517,15 @@ void Scheduler::completeCommands()
 		}
 
 		m_done_queue.pop();
+	}
+
+	// move the delayed response queue now to the done queue. They will be called in the next second
+	if (!itsDelayedResponseQueue.empty()) {
+		LOG_INFO_STR("Move delayed queue to the now queue");
+		while (!itsDelayedResponseQueue.empty()) {
+			m_done_queue.push(itsDelayedResponseQueue.top());
+			itsDelayedResponseQueue.pop();
+		}
 	}
 }
 

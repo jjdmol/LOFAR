@@ -348,7 +348,7 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent	ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_WARN ("Could not get subscribtion on clock, retry in 2 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
 			itsTimerPort->setTimer(2.0);
@@ -405,7 +405,7 @@ GCFEvent::TResult ClockControl::retrieve_state(GCFEvent& event,
 
 	case RSP_GETCLOCKACK: {
 		RSPGetclockackEvent	ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_WARN ("Could not retrieve clocksetting of RSPDriver, retry in 2 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getclock failed"));
 			itsTimerPort->setTimer(2.0);
@@ -479,7 +479,7 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 
 	case RSP_SETCLOCKACK: {
 		RSPSetclockackEvent		ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("Clock could not be set to " << itsClock << 
 															", retry in 5 seconds.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("clockset error"));
@@ -544,7 +544,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent	updateEvent(event);
-		if (updateEvent.status != SUCCESS || updateEvent.clock == 0) {
+		if (updateEvent.status != RSP_SUCCESS || updateEvent.clock == 0) {
 			LOG_ERROR_STR ("StationClock has stopped! Going to setClock state to try to solve the problem");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Clock stopped"));
 			TRAN(ClockControl::setClock_state);

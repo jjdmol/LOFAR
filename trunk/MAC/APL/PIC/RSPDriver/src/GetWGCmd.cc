@@ -55,7 +55,7 @@ void GetWGCmd::ack(CacheBuffer& cache)
   RSPGetwgackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.settings().resize(m_event->rcumask.count());
   

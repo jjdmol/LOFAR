@@ -67,7 +67,7 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   RSPUpdxcstatsEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
   ack.stats().resize(cache.getXCStats()().shape());
   ack.stats() = cache.getXCStats()();

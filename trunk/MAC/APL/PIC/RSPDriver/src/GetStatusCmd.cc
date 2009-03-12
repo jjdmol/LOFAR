@@ -58,7 +58,7 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   RSPGetstatusackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.sysstatus.board().resize(m_event->rspmask.count());
 
@@ -130,7 +130,7 @@ void GetStatusCmd::ack_fail()
   RSPGetstatusackEvent ack;
 
   ack.timestamp = Timestamp(0,0);
-  ack.status = FAILURE;
+  ack.status = RSP_FAILURE;
 
   // send back dummy status array
   ack.sysstatus.board().resize(1);

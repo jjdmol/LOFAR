@@ -599,9 +599,23 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     },
   },
 
-  /* pid = 0x0D (RESERVED) */
+  /* pid = 0x0D (SERDES) */
   {
-    /* RESERVED */
+    /* reg = 0x00 (MDIO_HEADER) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_READACK,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
+    
+    /* reg = 0x01 (MDIO_DATA) */
+    { 0,
+      EPA_READ,     /* READ */
+      EPA_WRITE,    /* WRITE */
+      EPA_MDIO_DATA,/* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
   },
 
   /* pid = 0x0E (TDS) */
@@ -710,6 +724,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK, /* WRITEACK */
     },
   },
+
 
 };
 

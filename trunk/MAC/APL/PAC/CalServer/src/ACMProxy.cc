@@ -265,8 +265,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETSUBBANDSACK: {
 		RSPSetsubbandsackEvent ack(e);
 
-		if (SUCCESS == ack.status) {
-
+		if (ack.status == RSP_SUCCESS) {
 		  if (m_request_subband < START_DELAY) {
 			// request next subband
 			RSPSetsubbandsEvent ss;
@@ -325,8 +324,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 
     case RSP_SUBXCSTATSACK: {
 		RSPSubxcstatsackEvent ack(e);
-
-		if (SUCCESS != ack.status) {
+		if (ack.status != RSP_SUCCESS) {
 		  LOG_FATAL("SUBCXSTATSACK returned error status");
 		  exit(EXIT_FAILURE);
 		}
@@ -340,7 +338,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 
 		if (m_update_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
 		  if (m_handle == upd.handle) {
-			if (SUCCESS == upd.status) {
+			if (upd.status == RSP_SUCCESS) {
 
 			  LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 			  LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
@@ -386,7 +384,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 
     case RSP_SETSUBBANDSACK: {
 		RSPSetsubbandsackEvent ack(e);
-		if (SUCCESS != ack.status) {
+		if (ack.status != RSP_SUCCESS) {
 		  LOG_FATAL("SETSUBBANDSACK returned error status");
 		  exit(EXIT_FAILURE);
 		}
@@ -425,8 +423,7 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 
     case RSP_UNSUBXCSTATSACK: {
 		RSPUnsubxcstatsackEvent ack(e);
-
-		if (SUCCESS != ack.status) {
+		if (ack.status != RSP_SUCCESS) {
 		  LOG_FATAL("UNSUBXCSTATSACK returned error status");
 		  exit(EXIT_FAILURE);
 		}

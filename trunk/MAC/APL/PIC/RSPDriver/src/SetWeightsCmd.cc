@@ -69,7 +69,7 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
   RSPSetweightsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   
   getPort()->send(ack);
 }
@@ -97,7 +97,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetWeightsCmd completed at time=" << getTimestamp());
+//	LOG_INFO_STR("SetWeightsCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetWeightsCmd::getTimestamp() const

@@ -82,6 +82,8 @@ public:
 		bypasssettings_state.resize(nrBlps);
 		rawdatawrite_state.resize(nrRspBoards);
 		rawdataread_state.resize(nrRspBoards);
+		itsSerdesWriteState.resize(nrRspBoards);
+		itsSerdesReadState.resize(nrRspBoards);
 	}
 
 	// Force update of some (not all) register.
@@ -116,6 +118,8 @@ public:
 		bypasssettings_state.reset();
 		rawdatawrite_state.reset();
 		rawdataread_state.reset();
+		itsSerdesWriteState.reset();
+		itsSerdesReadState.reset();
 
 		sys_state.read();
 		bf_state.write();
@@ -142,6 +146,8 @@ public:
 		bypasssettings_state.write(); // REO: When is this function called???
 		rawdatawrite_state.check();
 		rawdataread_state.check();
+		itsSerdesWriteState.check();
+		itsSerdesReadState.check();
 	}
 
 	//
@@ -173,6 +179,8 @@ public:
 		bypasssettings_state.check(); // REO ?
 		rawdatawrite_state.check();
 		rawdataread_state.check();
+		itsSerdesWriteState.check();
+		itsSerdesReadState.check();
 	}
 
 	//
@@ -204,6 +212,8 @@ public:
 		bypasssettings_state.clear();
 		rawdatawrite_state.clear();
 		rawdataread_state.clear();
+		itsSerdesWriteState.clear();
+		itsSerdesReadState.clear();
 	}
 
 	//
@@ -240,6 +250,8 @@ public:
 		out << "DIAGBypassSettings  "; bypasssettings_state.print(out);
 		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
 		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
+		out << "SerdesWrite         "; itsSerdesWriteState.print(out);
+		out << "SerdesRead          "; itsSerdesReadState.print(out);
 		out << endl;
 	}
 
@@ -278,6 +290,8 @@ public:
 	RTC::RegisterState& bypasssettings() { return bypasssettings_state; }
 	RTC::RegisterState& rawdatawrite()   { return rawdatawrite_state; }
 	RTC::RegisterState& rawdataread()    { return rawdataread_state; }
+	RTC::RegisterState& sbwState()    	 { return itsSerdesWriteState; }
+	RTC::RegisterState& sbrState()    	 { return itsSerdesReadState; }
 
 	/*@}*/
 
@@ -308,6 +322,8 @@ private:
 	RTC::RegisterState bypasssettings_state; // Bypass (specinv) state
 	RTC::RegisterState rawdatawrite_state;	 // Write userdefined datablock
 	RTC::RegisterState rawdataread_state;	 // Read userdefined datablock
+	RTC::RegisterState itsSerdesWriteState;	 // Writing Serdes registers
+	RTC::RegisterState itsSerdesReadState;	 // Reading Serdes registers
 
 	int m_nrcus;
 };

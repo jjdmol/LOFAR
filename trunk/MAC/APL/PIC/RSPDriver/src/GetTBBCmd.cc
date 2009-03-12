@@ -55,7 +55,7 @@ void GetTBBCmd::ack(CacheBuffer& cache)
   RSPGettbbackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.settings().resize(m_event->rcumask.count());
 

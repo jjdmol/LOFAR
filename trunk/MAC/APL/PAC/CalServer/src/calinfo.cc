@@ -89,7 +89,7 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 
 	case CAL_GETSUBARRAYACK: {
 		CALGetsubarrayackEvent		answer(event);
-		if (answer.status != CAL_Protocol::SUCCESS) {
+		if (answer.status != CAL_Protocol::CAL_SUCCESS) {
 			cout << "CalServer returned error " << answer.status << endl;
 			TRAN(calinfo::finish);
 			break;

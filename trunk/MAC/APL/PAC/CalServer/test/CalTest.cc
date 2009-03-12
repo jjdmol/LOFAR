@@ -172,7 +172,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	CALStartackEvent ack(e);
 
 	TESTC_ABORT(ack.name == m_arrayname, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+	TESTC_ABORT(ack.status == CAL_SUCCESS, CalTest::final);
 
 	// send subscribe
 	CALSubscribeEvent subscribe;
@@ -189,7 +189,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	CALSubscribeackEvent ack(e);
 
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+	TESTC_ABORT(ack.status == CAL_SUCCESS, CalTest::final);
 	m_handle = ack.handle;
       }
       break;
@@ -199,7 +199,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	CALUpdateEvent update(e);
 
 	LOG_INFO_STR("CAL_UPDATE @ " << update.timestamp);
-	TESTC_ABORT(update.status == SUCCESS, CalTest::final);
+	TESTC_ABORT(update.status == CAL_SUCCESS, CalTest::final);
 	TESTC_ABORT(update.handle == m_handle, CalTest::final);
 	
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
@@ -222,7 +222,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	CALUnsubscribeackEvent ack(e);
 
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+	TESTC_ABORT(ack.status == CAL_SUCCESS, CalTest::final);
 	TESTC_ABORT(ack.handle == m_handle, CalTest::final);
 
 	m_handle = 0; // clear handle
@@ -237,7 +237,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStopackEvent ack(e);
 	TESTC_ABORT(ack.name == m_arrayname, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+	TESTC_ABORT(ack.status == CAL_SUCCESS, CalTest::final);
 
 	TRAN(CalTest::final); // next test
       }

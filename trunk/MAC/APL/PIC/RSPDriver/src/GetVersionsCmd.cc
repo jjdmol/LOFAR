@@ -54,7 +54,7 @@ void GetVersionsCmd::ack(CacheBuffer& cache)
   RSPGetversionackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.versions.bp().resize(cache.getVersions().bp().extent(firstDim));
   ack.versions.bp() = cache.getVersions().bp();

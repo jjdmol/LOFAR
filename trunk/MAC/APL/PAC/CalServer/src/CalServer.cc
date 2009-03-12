@@ -291,7 +291,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETCLOCKACK: {
 		RSPGetclockackEvent getclockack(e);
 
-		if (getclockack.status != RSP_Protocol::SUCCESS) {
+		if (getclockack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to get sampling frequency setting");
 			exit(EXIT_FAILURE);
 		}
@@ -313,7 +313,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent ack(e);
 
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to subscribe to clock status updates.");
 			exit(EXIT_FAILURE);
 		}
@@ -388,7 +388,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SETRCUACK: {
 		RSPSetrcuackEvent ack(e);
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to set RCU control register");
 			exit (EXIT_FAILURE);
 		}
@@ -397,7 +397,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_SETBYPASSACK: {
 		RSPSetbypassackEvent ack(e);
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_FATAL("Failed to set Spectral Inversion control register");
 			exit (EXIT_FAILURE);
 		}
@@ -517,7 +517,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	CALStartEvent 	 start(e);
 	CALStartackEvent ack;
 
-	ack.status = CAL_Protocol::SUCCESS; // assume succes, until otherwise
+	ack.status = CAL_Protocol::CAL_SUCCESS; // assume succes, until otherwise
 	ack.name   = start.name;
 
 	// find parent AntennaArray
@@ -658,7 +658,7 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 	CALStopEvent stop(e);
 	CALStopackEvent ack;
 	ack.name = stop.name;
-	ack.status = CAL_Protocol::SUCCESS;		// return success: don't bother client with our admin
+	ack.status = CAL_Protocol::CAL_SUCCESS;		// return success: don't bother client with our admin
 	port.send(ack);
 
 	m_subarrays.schedule_remove(stop.name);	// stop calibration
@@ -686,7 +686,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 
 	CALSubscribeEvent subscribe(e);
 	CALSubscribeackEvent ack;
-	ack.status = CAL_Protocol::SUCCESS;
+	ack.status = CAL_Protocol::CAL_SUCCESS;
 
 	// get subarray by name
 	SubArray* subarray = m_subarrays.getByName(subscribe.name);
@@ -733,7 +733,7 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
 	CALUnsubscribeackEvent ack;
 	ack.name = unsubscribe.name;
 	ack.handle = unsubscribe.handle;
-	ack.status = CAL_Protocol::SUCCESS;
+	ack.status = CAL_Protocol::CAL_SUCCESS;
 
 	// find associated subarray
 	SubArray* subarray = m_subarrays.getByName(unsubscribe.name);
@@ -763,7 +763,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 
 	CALGetsubarrayEvent	 	request(e);
 	CALGetsubarrayackEvent	ack;
-	ack.status = CAL_Protocol::SUCCESS;
+	ack.status = CAL_Protocol::CAL_SUCCESS;
 	ack.subarraymap = m_subarrays.getSubArrays(request.subarrayname);	// let SubArrays do the job
 
 	// correct status is name was given but nothing was found.
@@ -785,7 +785,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 
   // create ack
   CALGetsubarrayackEvent ack;
-  ack.status = CAL_Protocol::SUCCESS;
+  ack.status = CAL_Protocol::CAL_SUCCESS;
 
   // find associated subarray
   SubArray* subarray = m_subarrays.getByName(getsubarray.name);

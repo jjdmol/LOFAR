@@ -326,7 +326,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case RSP_SETHBAACK: {
 		RSPSethbaackEvent ack(event);
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_ERROR_STR("RSP_SETHBAACK: FAILURE(" << ack.status << ")");
 		}
 	}
@@ -334,7 +334,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case RSP_SETWEIGHTSACK: {
 		RSPSetweightsackEvent ack(event);
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_ERROR_STR("RSP_SETWEIGHTSACK: FAILURE(" << ack.status << ")");
 		}
 	}
@@ -342,7 +342,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case RSP_SETSUBBANDSACK: {
 		RSPSetsubbandsackEvent ack(event);
-		if (ack.status != RSP_Protocol::SUCCESS) {
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
 			LOG_ERROR_STR("RSP_SETSUBBANDSACK: FAILURE(" << ack.status << ")");
 		}
 	}
@@ -350,7 +350,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case CAL_UPDATE: {
 		CALUpdateEvent calupd(event);
-		if (calupd.status != CAL_Protocol::SUCCESS) {
+		if (calupd.status != CAL_Protocol::CAL_SUCCESS) {
 			LOG_INFO_STR("Received valid CAL_UPDATE event(" << calupd.status << ").");
 			m_beams.updateCalibration(calupd.handle, calupd.gains);
 		}
@@ -480,7 +480,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		CALSubscribeackEvent ack(event);
 		BSBeamallocackEvent beamallocack;
 
-		if (ack.status == CAL_Protocol::SUCCESS && 
+		if (ack.status == CAL_Protocol::CAL_SUCCESS && 
 				(ack.subarray.getSPW().getNumSubbands() >= 
 				(int)m_bt.getBeam()->getAllocation()().size()) ) {
 
@@ -494,7 +494,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			m_beams.setCalibrationHandle(m_bt.getBeam(), ack.handle);
 
 			// send succesful ack
-			beamallocack.status 	  = BS_Protocol::SUCCESS;
+			beamallocack.status 	  = BS_Protocol::BS_SUCCESS;
 			beamallocack.subarrayname = ack.subarray.getName();
 			beamallocack.handle 	  = (BS_Protocol::memptr_t)m_bt.getBeam();
 			m_bt.getPort()->send(beamallocack);
@@ -571,12 +571,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// if the subarray disappeared because
 		// it was stopped (CAL_STOP by SRG) then
 		// issue a warning but continue
-		if (ack.status != CAL_Protocol::SUCCESS) {
+		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
 			LOG_WARN("CAL_UNSUBSCRIBE failed");
 		}
 
 		// send succesful ack
-		beamfreeack.status = BS_Protocol::SUCCESS;
+		beamfreeack.status = BS_Protocol::BS_SUCCESS;
 		beamfreeack.handle = (BS_Protocol::memptr_t)m_bt.getBeam();
 
 		m_bt.getPort()->send(beamfreeack);

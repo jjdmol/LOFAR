@@ -55,7 +55,7 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   RSPGetsubbandsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   Range src_range;
   switch (m_event->type) {

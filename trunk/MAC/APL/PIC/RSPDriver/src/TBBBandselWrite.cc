@@ -86,8 +86,7 @@ void TBBBandselWrite::sendrequest_status()
 
 GCFEvent::TResult TBBBandselWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
+  if (EPA_WRITEACK != event.signal) {
     LOG_WARN("TBBBandselWrite::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -96,8 +95,7 @@ GCFEvent::TResult TBBBandselWrite::handleack(GCFEvent& event, GCFPortInterface& 
 
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
+  if (!ack.hdr.isValidAck(m_hdr)) {
     Cache::getInstance().getState().tbbbandsel().write_error(global_rcu);
 
     LOG_ERROR("TBBBandselWrite::handleack: invalid ack");
