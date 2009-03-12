@@ -4,6 +4,7 @@
 #include <Stream/SystemCallException.h>
 
 #include <cstring>
+#include <cstdio>
 
 #include <errno.h>
 #include <netdb.h>
@@ -67,4 +68,9 @@ SocketStream::~SocketStream()
 {
 }
 
+
+void SocketStream::setReadBufferSize(size_t size)
+{
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
+    perror("setsockopt failed");}
 } // namespace LOFAR

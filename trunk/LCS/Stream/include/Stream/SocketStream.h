@@ -19,6 +19,8 @@ class SocketStream : public FileDescriptorBasedStream
 
   	    SocketStream(const char *hostname, short port, Protocol, Mode);
     virtual ~SocketStream();
+
+    void setReadBufferSize(size_t size);
 };
 
 } // namespace LOFAR
