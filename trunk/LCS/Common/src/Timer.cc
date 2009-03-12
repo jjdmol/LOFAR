@@ -97,7 +97,9 @@ ostream &NSTimer::print(ostream &str) const
         str << left << setw(25) << itsName << ": " << right;
     }
     if (count == 0) {
-	str << "not used" << endl;
+	str << "not used"; 
+	if (!log_on_destruction)
+	  str << endl;
     } else {
         double total = static_cast<double>(total_time);
 	if (CPU_speed_in_MHz == 0) {
@@ -108,7 +110,9 @@ ostream &NSTimer::print(ostream &str) const
 	    str << "avg = " << PrettyTime(total / static_cast<double>(count))
 		<< ", total = " << PrettyTime(total);
 	}
-	str << ", count = " << setw(9) << count << endl;
+	str << ", count = " << setw(9) << count;
+	if (!log_on_destruction)
+	  str << endl;
     }
     return str;
 }

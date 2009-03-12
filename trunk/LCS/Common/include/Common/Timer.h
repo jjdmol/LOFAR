@@ -30,6 +30,8 @@
 #include <cstring>
 #include <iostream>
 
+#include <Common/LofarLogger.h>
+
 #if defined __ia64__ && defined __INTEL_COMPILER
 #include <ia64regs.h>
 #endif
@@ -52,7 +54,8 @@ namespace LOFAR {
     // Construct.
     // The given name will be used when the timer is printed.
     NSTimer (const std::string& name = std::string(),
-	     bool print_on_destruction = false);
+	     bool print_on_destruction = false,
+	     bool log_on_destruction = false);
 
     // Destruct.
     // The time is printed on stderr if print_on_destruction is true.
@@ -105,6 +108,7 @@ namespace LOFAR {
 
     std::string itsName;
     bool print_on_destruction;
+    bool log_on_destruction;
 
     static double CPU_speed_in_MHz;
 
@@ -124,10 +128,11 @@ namespace LOFAR {
     return count;
   }
 
-  inline NSTimer::NSTimer(const std::string& name, bool print_on_destruction)
+  inline NSTimer::NSTimer(const std::string& name, bool print_on_destruction, bool log_on_destruction)
     :
     itsName(name),
-    print_on_destruction(print_on_destruction)
+    print_on_destruction(print_on_destruction),
+    log_on_destruction(log_on_destruction)
   {
     reset();
   }
@@ -135,7 +140,11 @@ namespace LOFAR {
   inline NSTimer::~NSTimer()
   {
     if (print_on_destruction) {
-      print(std::clog);
+      if (log_on_destruction) {
+        std::stringstream logStr;
+        LOG_DEBUG_STR(print(logStr).rdbuf());
+      } else
+        print(std::clog);
     }
   }
 
