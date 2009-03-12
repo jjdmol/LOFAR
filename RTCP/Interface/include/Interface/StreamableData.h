@@ -49,7 +49,7 @@ class StreamableData {
     { return integratable; }
 
     virtual StreamableData &operator+=( const StreamableData & ) 
-    { std::clog << "WARNING: Integration not implemented" << std::endl; return *this; }
+    { LOG_WARN("Integration not implemented."); return *this; }
 
     uint32_t sequenceNumber;
 
@@ -166,7 +166,7 @@ template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData( St
   if( !itsHaveWarnedLittleEndian ) {
     itsHaveWarnedLittleEndian = true;
 
-    std::clog << "Warning: writing data in little endian." << std::endl;
+     LOG_WARN("writing data in little endian.");
   }
   //THROW(AssertError, "not implemented: think about endianness");
 #endif

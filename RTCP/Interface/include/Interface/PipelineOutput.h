@@ -160,7 +160,7 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
   }
 
   if( ps.IONintegrationSteps() > 1 && !o->itsData->isIntegratable() ) {
-    std::cerr << "WARNING: Not integrating output because the output data type does not support integration." << std::endl;
+    LOG_WARN("Not integrating output because the output data type does not support integration.");
   } else {
     o->itsIONintegrationSteps = ps.IONintegrationSteps();
   }
