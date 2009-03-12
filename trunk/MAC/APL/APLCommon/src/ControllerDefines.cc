@@ -46,23 +46,23 @@ typedef struct cntlrDefinition {
 } cntlrDefinition_t;
 
 static cntlrDefinition_t controllerTable[] = {
-//		executable				parsetNode		shared
-//----------------------------------------------------------
-	{	"",						"",				false	},
-	{	"MACScheduler", 		"MACScheduler",	false	},
-	{	"ObservationControl", 	"ObsCtrl",		false	},
-	{	"OnlineControl", 		"OnlineCtrl",	false	},
-	{	"OfflineControl", 		"OfflineCtrl",	false	},
-	{	"BeamDirectionControl",	"BeamDirCtrl",	true	},
-	{	"RingControl", 			"RingCtrl",		true	},
-	{	"StationControl", 		"StationCtrl",	true	},
-	{	"ClockControl",			"ClockCtrl",	true	},
-	{	"BeamControl", 			"BeamCtrl",		false	},
-	{	"CalibrationControl", 	"CalCtrl",		false	},
-	{	"TBBControl",		 	"TBBCtrl",		false	},
-	{	"StationInfraControl", 	"StsInfraCtrl",	true	},
-	{	"TestController", 		"TestCtrl",		false	},
-	{	"",						"",				false	}
+//		executable				parsetNode				shared
+//--------------------------------------------------------------------
+	{	"",						"",						false	},
+	{	"MACScheduler", 		"MACScheduler",			false	},
+	{	"ObservationControl", 	"ObservationControl",	false	},
+	{	"OnlineControl", 		"OnlineControl",		false	},
+	{	"OfflineControl", 		"OfflineControl",		false	},
+	{	"BeamDirectionControl",	"BeamDirControl",		true	},
+	{	"RingControl", 			"RingControl",			true	},
+	{	"StationControl", 		"StationControl",		true	},
+	{	"ClockControl",			"ClockControl",			true	},
+	{	"BeamControl", 			"BeamControl",			false	},
+	{	"CalibrationControl", 	"CalControl",			false	},
+	{	"TBBControl",		 	"TBBControl",			false	},
+	{	"StationInfraControl", 	"StsInfraControl",		true	},
+	{	"TestController", 		"TestControl",			false	},
+	{	"",						"",						false	}
 };
 
 static char*	modeNameTable[] = {
