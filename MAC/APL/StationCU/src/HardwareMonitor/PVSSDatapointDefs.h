@@ -15,19 +15,18 @@
 #define	PN_OBJ_MESSAGE	"object.message"
 #define	PN_OBJ_LEAF	"object.leaf"
 
-/*
 // Station
 #define PSN_STATION	"LOFAR_PIC_@ring@_@station@"
 #define PST_STATION	"Station"
 #define PN_STS_POWER48_ON	"power48On"
 #define PN_STS_POWER220_ON	"power220On"
-*/
+/*
 // Station
 #define PSN_STATION	"LOFAR_PermSW_@ring@_@station@"
 #define PST_STATION	"Station"
 #define PN_STS_POWER48_ON	"power48On"
 #define PN_STS_POWER220_ON	"power220On"
-
+*/
 // MACScheduler
 #define PSN_MAC_SCHEDULER	"LOFAR_PermSW_MACScheduler"
 #define PST_MAC_SCHEDULER	"MACScheduler"
@@ -89,8 +88,8 @@
 #define PN_CAB_FRONT_FAN_OUTER	"frontFanOuter"
 #define PN_CAB_FRONT_AIRFLOW	"frontAirflow"
 #define PN_CAB_BACK_DOOR_OPEN	"backDoorOpen"
-#define PN_CAB_BACKT_FAN_INNER	"backtFanInner"
-#define PN_CAB_BACKT_FAN_OUTER	"backtFanOuter"
+#define PN_CAB_BACK_FAN_INNER	"backFanInner"
+#define PN_CAB_BACK_FAN_OUTER	"backFanOuter"
 #define PN_CAB_BACK_AIRFLOW	"backAirflow"
 #define PN_CAB_TEMP_ALARM	"tempAlarm"
 #define PN_CAB_HUMIDITY_ALARM	"humidityAlarm"

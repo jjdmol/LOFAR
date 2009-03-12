@@ -4,7 +4,7 @@ libstationcu_la_SOURCES = Package__Version.cc
 
 pkginclude_HEADERS = Package__Version.h
 
-SUBDIRS = BeamControl CalibrationControl ClockControl StationControl TBBControl
+SUBDIRS = BeamControl CalibrationControl ClockControl StationControl TBBControl HardwareMonitor
 
 bin_PROGRAMS = versionstationcu
 

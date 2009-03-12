@@ -25,6 +25,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
+#include <Common/hexdump.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
@@ -43,42 +44,45 @@
 
 // haal uit conf file hostname
 // nog toevoegen aan PVVSDatapointDefs.h
-// #define PN_HWM_EC_CONNECTED	"EC.connected"
+// #define PN_HWM_EC_CONNECTED  "EC.connected"
 
 
 namespace LOFAR {
-	using namespace GCF::TM;
-	using namespace GCF::PVSS;
-	using namespace GCF::RTDB;
-	using namespace APLCommon;
-	using namespace APL::RTDBCommon;
-	namespace StationCU {
+	 using namespace GCF::TM;
+	 using namespace GCF::PVSS;
+	 using namespace GCF::RTDB;
+	 using namespace APLCommon;
+	 using namespace APL::RTDBCommon;
+	 namespace StationCU {
 
 //
 // ECMonitor()
 //
-ECMonitor::ECMonitor(const string&	cntlrName) :
-	GCFTask 			((State)&ECMonitor::initial_state,cntlrName),
-	itsOwnPropertySet	(0),
-	itsTimerPort		(0),
-	itsECPort   		(0),
-	itsPollInterval	(10),
-	itsNrCabs         (4)
+ECMonitor::ECMonitor(const string&  cntlrName) :
+	 GCFTask             ((State)&ECMonitor::initial_state,cntlrName),
+	 itsOwnPropertySet   (0),
+	 itsTimerPort        (0),
+	 itsECPort           (0),
+	 itsPollInterval (10),
+	 itsNrCabs         (4)
 {
-	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	 LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
-	// need port for timers.
-	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	 // need port for timers.
+	 itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	// prepare TCP port to EC controller.
-	itsECPort = new GCFTCPPort (*this, toString(MAC_EC_PORT),
-											GCFPortInterface::SAP, EC_PROTOCOL, true /*raw*/);
-	
-	itsECPort->setHostName("10.151.19.2");
-	itsECPort->setPortNumber(10000);
-		
-	ASSERTSTR(itsECPort, "Cannot allocate TCPport to EnvironmentController");
-	itsECPort->setInstanceNr(0);
+	 // prepare TCP port to EC controller.
+	 itsECPort = new GCFTCPPort (*this, toString(MAC_EC_PORT),
+														  GCFPortInterface::SAP, EC_PROTOCOL, true /*raw*/);
+	 // IP adres
+	 itsECPort->setHostName("10.87.6.68");
+	 itsECPort->setPortNumber(10000);
+		  
+	 ASSERTSTR(itsECPort, "Cannot allocate TCPport to EnvironmentController");
+	 itsECPort->setInstanceNr(0);
+	 
+	 // for debugging purposes
+	 registerProtocol (EC_PROTOCOL, EC_PROTOCOL_STRINGS);
 }
 
 
@@ -87,18 +91,18 @@ ECMonitor::ECMonitor(const string&	cntlrName) :
 //
 ECMonitor::~ECMonitor()
 {
-	LOG_TRACE_OBJ_STR (getName() << " destruction");
+	 LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsECPort) {
-		itsECPort->close();
-		delete itsECPort;
-	}
+	 if (itsECPort) {
+		  itsECPort->close();
+		  delete itsECPort;
+	 }
 
-	if (itsTimerPort) {
-		delete itsTimerPort;
-	}
+	 if (itsTimerPort) {
+		  delete itsTimerPort;
+	 }
 
-	// ...
+	 // ...
 }
 
 
@@ -109,60 +113,60 @@ ECMonitor::~ECMonitor()
 //
 GCFEvent::TResult ECMonitor::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
-    case F_INIT:
-   		break;
+	 switch (event.signal) {
+	 case F_INIT:
+		  break;
 
-	case F_ENTRY: {
-		// Get access to my own propertyset.
-		LOG_DEBUG_STR ("Activating PropertySet " << PSN_HARDWARE_MONITOR);
-		itsTimerPort->setTimer(2.0);
-		itsOwnPropertySet = new RTDBPropertySet(PSN_HARDWARE_MONITOR,
-												PST_HARDWARE_MONITOR,
-												PSAT_WO,
-												this);
+	 case F_ENTRY: {
+		  // Get access to my own propertyset.
+		  LOG_DEBUG_STR ("Activating PropertySet " << PSN_HARDWARE_MONITOR);
+		  itsTimerPort->setTimer(2.0);
+		  itsOwnPropertySet = new RTDBPropertySet(PSN_HARDWARE_MONITOR,
+																PST_HARDWARE_MONITOR,
+																PSAT_WO,
+																this);
 
-		}
-		break;
+		  }
+		  break;
 
-	case DP_CREATED: {
-		// NOTE: this function may be called DURING the construction of the PropertySet.
-		// Always exit this event in a way that GCF can end the construction.
-		DPCreatedEvent		dpEvent(event);
-		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.0);
-		}
-	break;
+	 case DP_CREATED: {
+		  // NOTE: this function may be called DURING the construction of the PropertySet.
+		  // Always exit this event in a way that GCF can end the construction.
+		  DPCreatedEvent      dpEvent(event);
+		  LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		  itsTimerPort->cancelAllTimers();
+		  itsTimerPort->setTimer(0.0);
+		  }
+	 break;
 
-	case F_TIMER: {
-		// update PVSS.
-		LOG_TRACE_FLOW ("Updating state to PVSS");
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("EC:initial"));
-		itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(false));
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
-		
-		LOG_DEBUG_STR("Going to connect to the ECPort.");
-		TRAN (ECMonitor::connect2EC);
-	}
-	
-	case DP_SET:
-		break;
+	 case F_TIMER: {
+		  // update PVSS.
+		  LOG_TRACE_FLOW ("Updating state to PVSS");
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("EC:initial"));
+		  itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(false));
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
+		  
+		  LOG_DEBUG_STR("Going to connect to the ECPort.");
+		  TRAN (ECMonitor::connect2EC);
+	 }
+	 
+	 case DP_SET:
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	default:
-		LOG_DEBUG_STR ("initial, DEFAULT");
-		break;
-	}    
+	 default:
+		  LOG_DEBUG_STR ("initial, DEFAULT");
+		  break;
+	 }    
 
-	return (status);
+	 return (status);
 }
 
 
@@ -173,52 +177,52 @@ GCFEvent::TResult ECMonitor::initial_state(GCFEvent& event, GCFPortInterface& po
 //
 GCFEvent::TResult ECMonitor::connect2EC(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("connect2EC:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("connect2EC:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
-	case F_ENTRY:
-		// update PVSS
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("EC:connecting"));
-		itsTimerPort->setTimer(2.0);	// give database some time
-		break;
+	 switch (event.signal) {
+	 case F_ENTRY:
+		  // update PVSS
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("EC:connecting"));
+		  itsTimerPort->setTimer(2.0);    // give database some time
+		  break;
 
-	case F_CONNECTED:
-		if (&port == itsECPort) {
-			LOG_DEBUG ("Connected with ECPort, going to get the status");
-//			itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
-			itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(true));
-			TRAN(ECMonitor::createPropertySets);		// go to next state.
-		}
-		break;
+	 case F_CONNECTED:
+		  if (&port == itsECPort) {
+				LOG_DEBUG ("Connected with ECPort, going to get the status");
+//          itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
+				itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(true));
+				TRAN(ECMonitor::createPropertySets);        // go to next state.
+		  }
+		  break;
 
-	case F_DISCONNECTED:
-		port.close();
-		ASSERTSTR (&port == itsECPort, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with ECPort failed, retry in 10 seconds");
-		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("EC:connection timeout"));
-		itsTimerPort->setTimer(10.0);
-		break;
+	 case F_DISCONNECTED:
+		  port.close();
+		  ASSERTSTR (&port == itsECPort, 
+										  "F_DISCONNECTED event from port " << port.getName());
+		  LOG_WARN("Connection with ECPort failed, retry in 10 seconds");
+		  itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("EC:connection timeout"));
+		  itsTimerPort->setTimer(10.0);
+		  break;
 
-	case F_TIMER:
-		itsECPort->open();		// results in F_CONN or F_DISCON
-		break;
+	 case F_TIMER:
+		  itsECPort->open();      // results in F_CONN or F_DISCON
+		  break;
 
-	case DP_SET:
-		break;
+	 case DP_SET:
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	default:
-		LOG_DEBUG_STR ("connect2EC, DEFAULT");
-		break;
-	}    
+	 default:
+		  LOG_DEBUG_STR ("connect2EC, DEFAULT");
+		  break;
+	 }    
 
-	return (status);
+	 return (status);
 }
 
 
@@ -229,62 +233,62 @@ GCFEvent::TResult ECMonitor::connect2EC(GCFEvent& event, GCFPortInterface& port)
 //
 GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("createPropertySets:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("createPropertySets:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
+	 switch (event.signal) {
 
-	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:create PropertySets"));
-		// resize vectors.
-		itsCabs.resize (itsNrCabs, 0);
+	 case F_ENTRY: {
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:create PropertySets"));
+		  // resize vectors.
+		  itsCabs.resize (itsNrCabs, 0);
+		  	
+		  string  stationNameMask("MCU001:"+createPropertySetName(PSN_STATION, getName()));
+	     string  PSname(formatString(stationNameMask.c_str(), 0));
+//		 itsStation = new RTDBPropertySet(PSname, PST_STATION, PSAT_WO | PSAT_CW, this);
+//		  itsStation->setConfirmation(false);
 
-		string	stationNameMask(createPropertySetName(PSN_STATION, getName()));
-   	string	PSname(formatString(stationNameMask.c_str(), 0));
-	   itsStation = new RTDBPropertySet(PSname, PST_STATION, PSAT_WO | PSAT_CW, this);
-		itsStation->setConfirmation(false);
+		  string  cabNameMask(createPropertySetName(PSN_CABINET, getName()));
+		  for (uint32 cab = 0; cab < itsNrCabs; cab++) {
+				// allocate RCU PS
+				string  PSname(formatString(cabNameMask.c_str(), cab));
+				itsCabs[cab] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
+				itsCabs[cab]->setConfirmation(false);
+		  }
+		  itsTimerPort->setTimer(5.0);    // give database some time to finish the job
+	 }
+	 break;
 
-		string	cabNameMask(createPropertySetName(PSN_CABINET, getName()));
-		for (uint32	cab = 0; cab < itsNrCabs; cab++) {
-			// allocate RCU PS
-			string	PSname(formatString(cabNameMask.c_str(), cab));
-			itsCabs[cab] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
-			itsCabs[cab]->setConfirmation(false);
-		}
-		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
-	}
-	break;
+	 case F_TIMER: {
+		  // database should be ready by now, check if allocation was succesfull
+		  ASSERTSTR(itsStation, "Allocation of PS for station " << 0 << " failed.");
+		  for (uint32 cab = 0; cab < itsNrCabs; cab++) {
+				ASSERTSTR(itsCabs[cab], "Allocation of PS for ec " << cab << " failed.");
+		  }
+		  LOG_INFO_STR("Allocation of all propertySets successfull, going to operational mode");
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  TRAN(ECMonitor::askStatus);
+	 }
+	 break;
 
-	case F_TIMER: {
-		// database should be ready by now, check if allocation was succesfull
-		ASSERTSTR(itsStation, "Allocation of PS for station " << 0 << " failed.");
-		for (uint32	cab = 0; cab < itsNrCabs; cab++) {
-			ASSERTSTR(itsCabs[cab], "Allocation of PS for ec " << cab << " failed.");
-		}
-		LOG_INFO_STR("Allocation of all propertySets successfull, going to operational mode");
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ECMonitor::askStatus);
-	}
-	break;
+	 case F_DISCONNECTED:
+		  _disconnectedHandler(port);     // might result in transition to connect2EC
+	 break;
 
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect2EC
-	break;
+	 case DP_SET:
+		  break;
 
-	case DP_SET:
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 default:
+		  LOG_DEBUG_STR ("createPropertySets, DEFAULT");
+		  break;
+	 }    
 
-	default:
-		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
-		break;
-	}    
-
-	return (status);
+	 return (status);
 }
 
 //
@@ -294,85 +298,90 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ECMonitor::askSettings(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("askSettings:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("askSettings:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
+	 switch (event.signal) {
 
-	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:getting settings info"));
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		itsTimerPort->setTimer(0.1);
-	}
-	break;
+	 case F_ENTRY: {
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:getting settings info"));
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  itsTimerPort->setTimer(0.1);
+	 }
+	 break;
 
-	case F_TIMER: {
-		ECCmdEvent	cmd;
-		cmd.cmdId = EC_SETTINGS;
-		itsECPort->send(cmd);
-	}
-	break;
-	
-	case F_DATAIN: {
-	   status = RawEvent::dispatch(*this, port);
-	}
-	break;
-		
-	case EC_CMD_ACK: {
-		itsTimerPort->cancelAllTimers();
-		ECCmdAckEvent	ack(event);
-		sts_settings settings;
-		memcpy(&settings, &ack.payload, ack.payloadSize);
+	 case F_TIMER: {
+		  ECCmdEvent  cmd;
+		  cmd.cmdId = EC_SETTINGS;
+		  cmd.cabNr = 0;
+		  cmd.value = 0;
+		  string hd;
+		  hexdump(hd,&cmd,6);
+		  LOG_DEBUG_STR(hd);
+		  itsECPort->send(cmd);
+	 }
+	 break;
+	 
+	 case F_DATAIN: {
+		 status = RawEvent::dispatch(*this, port);
+	 }
+	 break;
+		  
+	 case EC_CMD_ACK: {
+		  itsTimerPort->cancelAllTimers();
+		  ECCmdAckEvent   ack(event);
+		  sts_settings settings;
+		  memcpy(&settings, &ack.payload, ack.payloadSize);
 
-		// move the information to the database.
-		string	infoStr;
-		double   value;
-		for (uint32	cab = 0; cab < itsNrCabs; cab++) {
-			value = static_cast<double>(settings.cab[cab].temp_min) / 10.0;
-			itsCabs[cab]->setValue(PN_CAB_TEMP_MIN, GCFPVDouble(value), 0.0, false);
-			
-			//value = static_cast<double>(settings.cab[cab].temp_min_min) / 10.0;
-			//itsCabs[cab]->setValue(PN_CAB_TEMP_MIN_MIN, GCFPVDouble(value), 0.0, false);
-			
-			value = static_cast<double>(settings.cab[cab].temp_max) / 10.0;
-			itsCabs[cab]->setValue(PN_CAB_TEMP_MAX, GCFPVDouble(value), 0.0, false);
-			
-         value = static_cast<double>(settings.cab[cab].temp_max_max) / 10.0;
-			itsCabs[cab]->setValue(PN_CAB_TEMP_MAX_MAX, GCFPVDouble(value), 0.0, false);
-			
-			value = static_cast<double>(settings.cab[cab].humidity_max) / 10.0;
-			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX, GCFPVDouble(value), 0.0, false);
-			
-			value = static_cast<double>(settings.cab[cab].humidity_max_max) / 10.0;
-			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX_MAX, GCFPVDouble(value), 0.0, false);
-			
-			itsCabs[cab]->flush();
-		}
+		  // move the information to the database.
+		  string  infoStr;
+		  double   value;
+		  for (uint32 cab = 0; cab < itsNrCabs; cab++) {
+				value = static_cast<double>(settings.cab[cab].temp_min) / 10.0;
+				itsCabs[cab]->setValue(PN_CAB_TEMP_MIN, GCFPVDouble(value), 0.0, false);
+				
+				//value = static_cast<double>(settings.cab[cab].temp_min_min) / 10.0;
+				//itsCabs[cab]->setValue(PN_CAB_TEMP_MIN_MIN, GCFPVDouble(value), 0.0, false);
+				
+				value = static_cast<double>(settings.cab[cab].temp_max) / 10.0;
+				itsCabs[cab]->setValue(PN_CAB_TEMP_MAX, GCFPVDouble(value), 0.0, false);
+				
+			value = static_cast<double>(settings.cab[cab].temp_max_max) / 10.0;
+				itsCabs[cab]->setValue(PN_CAB_TEMP_MAX_MAX, GCFPVDouble(value), 0.0, false);
+				
+				value = static_cast<double>(settings.cab[cab].humidity_max) / 10.0;
+				itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX, GCFPVDouble(value), 0.0, false);
+				
+				value = static_cast<double>(settings.cab[cab].humidity_max_max) / 10.0;
+				itsCabs[cab]->setValue(PN_CAB_HUMIDITY_MAX_MAX, GCFPVDouble(value), 0.0, false);
+				
+				itsCabs[cab]->flush();
+		  }
 
-		LOG_DEBUG_STR ("Settings information updated, going to status information");
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ECMonitor::askStatus);				// go to next state.
-		break;
-	}
+		  LOG_DEBUG_STR ("Settings information updated, going to status information");
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  TRAN(ECMonitor::askStatus);             // go to next state.
+		  break;
+	 }
 
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect2EC
-		break;
+	 case F_DISCONNECTED:
+		  _disconnectedHandler(port);     // might result in transition to connect2EC
+		  break;
 
-	case DP_SET:
-		break;
+	 case DP_SET:
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	default:
-		LOG_DEBUG_STR ("askVersion, DEFAULT");
-		break;
-	}    
+	 default:
+		  LOG_DEBUG_STR ("askVersion, DEFAULT");
+		  break;
+	 }    
 
-	return (status);
+	 return (status);
 }
 
 
@@ -385,141 +394,146 @@ GCFEvent::TResult ECMonitor::askSettings(GCFEvent& event, GCFPortInterface& port
 //
 GCFEvent::TResult ECMonitor::askStatus(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("askStatus:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("askStatus:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
+	 switch (event.signal) {
 
-	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:getting status info"));
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		itsTimerPort->setTimer(0.1);
-	}
-	break;
+	 case F_ENTRY: {
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:getting status info"));
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  itsTimerPort->setTimer(0.1);
+	 }
+	 break;
 
-	case F_TIMER: {
-		ECCmdEvent	cmd;
-		cmd.cmdId = EC_STATUS;
-		itsECPort->send(cmd);
-	}
-	break;
-	
-	case F_DATAIN: {
-	   status = RawEvent::dispatch(*this, port);
-	}
-	break;
-		
-	case EC_CMD_ACK: {
-		itsTimerPort->cancelAllTimers();
-		ECCmdAckEvent	ack(event);
-		sts_status sts_stat;
-		memcpy(&sts_stat, &ack.payload, ack.payloadSize);
+	 case F_TIMER: {
+		  ECCmdEvent  cmd;
+		  cmd.cmdId = EC_STATUS;
+		  cmd.cabNr = 0;
+		  cmd.value = 0;
+		  string hd;
+		  hexdump(hd,&cmd.cmdId,6);
+		  LOG_DEBUG_STR(hd);
+		  itsECPort->send(cmd);
+	 }
+	 break;
+	 
+	 case F_DATAIN: {
+		 status = RawEvent::dispatch(*this, port);
+	 }
+	 break;
+		  
+	 case EC_CMD_ACK: {
+		  itsTimerPort->cancelAllTimers();
+		  ECCmdAckEvent   ack(event);
+		  sts_status sts_stat;
+		  memcpy(&sts_stat, &ack.payload, ack.payloadSize);
 
 // Cabinet
-#define PN_CAB_TEMP_ALARM	"tempAlarm"
-#define PN_CAB_HUMIDITY_ALARM	"humidityAlarm"
+#define PN_CAB_TEMP_ALARM   "tempAlarm"
+#define PN_CAB_HUMIDITY_ALARM   "humidityAlarm"
 
-		// move the information to the database.
-		string	infoStr;
-		bool     bState;
-		int      iState;
-		double   value;
-		for (uint32	cab = 0; cab < itsNrCabs; cab++) {
-			itsCabs[cab]->setValue(PN_CAB_CONTROL_MODE, GCFPVString(ctrlMode(sts_stat.cab[cab].mode)), 0.0, false);
-			
-			if (sts_stat.cab[cab].state & CAB_TEMP_MIN_MIN) { iState = -2; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX_MAX) { iState = 2; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MIN) { iState = -1; }
-			else if (sts_stat.cab[cab].state & CAB_TEMP_MAX) { iState = 1; }
-			else { iState = 0; }       
-			itsCabs[cab]->setValue(PN_CAB_TEMP_ALARM, GCFPVBool(iState), 0.0, false);
+		  // move the information to the database.
+		  string  infoStr;
+		  bool     bState;
+		  int      iState;
+		  double   value;
+		  for (uint32 cab = 0; cab < itsNrCabs; cab++) {
+				itsCabs[cab]->setValue(PN_CAB_CONTROL_MODE, GCFPVString(ctrlMode(sts_stat.cab[cab].mode)), 0.0, false);
+				
+				if (sts_stat.cab[cab].state & CAB_TEMP_MIN_MIN) { iState = -2; }
+				else if (sts_stat.cab[cab].state & CAB_TEMP_MAX_MAX) { iState = 2; }
+				else if (sts_stat.cab[cab].state & CAB_TEMP_MIN) { iState = -1; }
+				else if (sts_stat.cab[cab].state & CAB_TEMP_MAX) { iState = 1; }
+				else { iState = 0; }       
+				itsCabs[cab]->setValue(PN_CAB_TEMP_ALARM, GCFPVBool(iState), 0.0, false);
 
-			if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX_MAX) { iState = 2; }
-			else if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX) { iState = 1; }
-			else { iState = 0; }       
-			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_ALARM, GCFPVBool(iState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].state & CAB_TEMPERATURE_SENSOR)?false:true;
-			itsCabs[cab]->setValue(PN_CAB_TEMPERATURE_SENSOR, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].state & CAB_HUMIDITY_CONTROL)?false:true;
-			itsCabs[cab]->setValue(PN_CAB_HUMIDITY_CONTROL, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].state & CAB_DOOR_CONTROL)?false:true;
-			itsCabs[cab]->setValue(PN_CAB_DOOR_CONTROL, GCFPVBool(bState), 0.0, false);
-			
-			value = static_cast<double>(sts_stat.cab[cab].temperature / 100.); 
-			itsCabs[cab]->setValue(PN_CAB_TEMPERATURE, GCFPVDouble(value), 0.0, false);
+				if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX_MAX) { iState = 2; }
+				else if (sts_stat.cab[cab].state & CAB_HUMIDITY_MAX) { iState = 1; }
+				else { iState = 0; }       
+				itsCabs[cab]->setValue(PN_CAB_HUMIDITY_ALARM, GCFPVBool(iState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].state & CAB_TEMPERATURE_SENSOR)?false:true;
+				itsCabs[cab]->setValue(PN_CAB_TEMPERATURE_SENSOR, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].state & CAB_HUMIDITY_CONTROL)?false:true;
+				itsCabs[cab]->setValue(PN_CAB_HUMIDITY_CONTROL, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].state & CAB_DOOR_CONTROL)?false:true;
+				itsCabs[cab]->setValue(PN_CAB_DOOR_CONTROL, GCFPVBool(bState), 0.0, false);
+				
+				value = static_cast<double>(sts_stat.cab[cab].temperature / 100.); 
+				itsCabs[cab]->setValue(PN_CAB_TEMPERATURE, GCFPVDouble(value), 0.0, false);
 
-         value = static_cast<double>(sts_stat.cab[cab].humidity / 100.); 
-			itsCabs[cab]->setValue(PN_CAB_HUMIDITY, GCFPVDouble(value), 0.0, false);
+			value = static_cast<double>(sts_stat.cab[cab].humidity / 100.); 
+				itsCabs[cab]->setValue(PN_CAB_HUMIDITY, GCFPVDouble(value), 0.0, false);
 
-         bState = (sts_stat.cab[cab].control & CAB_FRONT_FAN_INNER);
-			itsCabs[cab]->setValue(PN_CAB_FRONT_FAN_INNER, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].control & CAB_FRONT_FAN_OUTER);
-			itsCabs[cab]->setValue(PN_CAB_FRONT_FAN_OUTER, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].control & CAB_BACK_FAN_INNER);
-			itsCabs[cab]->setValue(PN_CAB_BACKT_FAN_INNER, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].control & CAB_BACK_FAN_OUTER);
-			itsCabs[cab]->setValue(PN_CAB_BACKT_FAN_OUTER, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].control & CAB_FRONT_AIRFLOW);
-			itsCabs[cab]->setValue(PN_CAB_FRONT_AIRFLOW, GCFPVBool(bState), 0.0, false);
-			
-			bState = (sts_stat.cab[cab].control & CAB_BACK_AIRFLOW);
-			itsCabs[cab]->setValue(PN_CAB_BACK_AIRFLOW, GCFPVBool(bState), 0.0, false);
+			bState = (sts_stat.cab[cab].control & CAB_FRONT_FAN_INNER);
+				itsCabs[cab]->setValue(PN_CAB_FRONT_FAN_INNER, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].control & CAB_FRONT_FAN_OUTER);
+				itsCabs[cab]->setValue(PN_CAB_FRONT_FAN_OUTER, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].control & CAB_BACK_FAN_INNER);
+				itsCabs[cab]->setValue(PN_CAB_BACK_FAN_INNER, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].control & CAB_BACK_FAN_OUTER);
+				itsCabs[cab]->setValue(PN_CAB_BACK_FAN_OUTER, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].control & CAB_FRONT_AIRFLOW);
+				itsCabs[cab]->setValue(PN_CAB_FRONT_AIRFLOW, GCFPVBool(bState), 0.0, false);
+				
+				bState = (sts_stat.cab[cab].control & CAB_BACK_AIRFLOW);
+				itsCabs[cab]->setValue(PN_CAB_BACK_AIRFLOW, GCFPVBool(bState), 0.0, false);
 
-         //bState = (sts_stat.cab[cab].control & CAB_HEATER);
-			//itsCabs[cab]->setValue(PN_CAB_HEATER, GCFPVBool(bState), 0.0, false);
+			//bState = (sts_stat.cab[cab].control & CAB_HEATER);
+				//itsCabs[cab]->setValue(PN_CAB_HEATER, GCFPVBool(bState), 0.0, false);
 
-         bState = (sts_stat.cab[cab].doors & CAB_FRONT_DOOR_OPEN);
-			itsCabs[cab]->setValue(PN_CAB_FRONT_DOOR_OPEN, GCFPVBool(bState), 0.0, false);
+			bState = (sts_stat.cab[cab].doors & CAB_FRONT_DOOR_OPEN);
+				itsCabs[cab]->setValue(PN_CAB_FRONT_DOOR_OPEN, GCFPVBool(bState), 0.0, false);
 
-         bState = (sts_stat.cab[cab].doors & CAB_BACK_DOOR_OPEN);
-			itsCabs[cab]->setValue(PN_CAB_BACK_DOOR_OPEN, GCFPVBool(bState), 0.0, false);
-			
-			itsCabs[cab]->flush();
-		}
-		
-		bState = (sts_stat.power & STS_POWER48_ON);
-		itsStation->setValue(PN_STS_POWER48_ON, GCFPVBool(bState), 0.0, false);
+			bState = (sts_stat.cab[cab].doors & CAB_BACK_DOOR_OPEN);
+				itsCabs[cab]->setValue(PN_CAB_BACK_DOOR_OPEN, GCFPVBool(bState), 0.0, false);
+				
+				itsCabs[cab]->flush();
+		  }
+		  
+		  //bState = (sts_stat.power & STS_POWER48_ON);
+		  //itsStation->setValue(PN_STS_POWER48_ON, GCFPVBool(bState), 0.0, false);
 
-      bState = (sts_stat.power & STS_POWER220_ON);
-		itsStation->setValue(PN_STS_POWER220_ON, GCFPVBool(bState), 0.0, false);
+		  //bState = (sts_stat.power & STS_POWER220_ON);
+		  //itsStation->setValue(PN_STS_POWER220_ON, GCFPVBool(bState), 0.0, false);
 
-      //state = (sts_stat.;ightning & STS_LIGHTNING);
-		//itsStation->setValue(PN_STS_LIGHTNING, GCFPVBool(state), 0.0, false);
-		
-		itsStation->flush();
+		  //state = (sts_stat.;ightning & STS_LIGHTNING);
+		  //itsStation->setValue(PN_STS_LIGHTNING, GCFPVBool(state), 0.0, false);
+		  
+		  //itsStation->flush();
 
 
-		LOG_DEBUG_STR ("Status information updated, going to waitForNextCycle");
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ECMonitor::waitForNextCycle);				// go to next state.
-		break;
-	}
+		  LOG_DEBUG_STR ("Status information updated, going to waitForNextCycle");
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  TRAN(ECMonitor::waitForNextCycle);              // go to next state.
+		  break;
+	 }
 
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect2EC
-		break;
+	 case F_DISCONNECTED:
+		  _disconnectedHandler(port);     // might result in transition to connect2EC
+		  break;
 
-	case DP_SET:
-		break;
+	 case DP_SET:
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	default:
-		LOG_DEBUG_STR ("askVersion, DEFAULT");
-		break;
-	}    
+	 default:
+		  LOG_DEBUG_STR ("askVersion, DEFAULT");
+		  break;
+	 }    
 
-	return (status);
+	 return (status);
 }
 
 
@@ -529,48 +543,48 @@ GCFEvent::TResult ECMonitor::askStatus(GCFEvent& event, GCFPortInterface& port)
 // Take subscription on clock modifications
 //
 GCFEvent::TResult ECMonitor::waitForNextCycle(GCFEvent& event, 
-													GCFPortInterface& port)
+																	 GCFPortInterface& port)
 {
-	if (eventName(event) != "DP_SET") {
-		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	}
+	 if (eventName(event) != "DP_SET") {
+		  LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());   }
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
   
-	switch (event.signal) {
-	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:wait for next cycle"));
-		int		waitTime = itsPollInterval - (time(0) % itsPollInterval);
-		if (waitTime == 0) {
-			waitTime = itsPollInterval;
-		}
-		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(double(waitTime));
-		LOG_INFO_STR("Waiting " << waitTime << " seconds for next cycle");
-	}
-	break;
+	 switch (event.signal) {
+	 case F_ENTRY: {
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:wait for next cycle"));
+		  int     waitTime = itsPollInterval - (time(0) % itsPollInterval);
+		  if (waitTime == 0) {
+				waitTime = itsPollInterval;
+		  }
+		  itsTimerPort->cancelAllTimers();
+		  itsTimerPort->setTimer(double(waitTime));
+		  LOG_INFO_STR("Waiting " << waitTime << " seconds for next cycle");
+	 }
+	 break;
 
-	case F_DISCONNECTED:
-		_disconnectedHandler(port);		// might result in transition to connect2EC
-	break;
+	 case F_DISCONNECTED:
+		  _disconnectedHandler(port);     // might result in transition to connect2EC
+	 break;
 
-	case F_TIMER: {
-		TRAN(ECMonitor::askStatus);
-	}
-	break;
+	 case F_TIMER: {
+		  TRAN(ECMonitor::askStatus);
+	 }
+	 break;
 
-	case DP_SET:
-		break;
+	 case DP_SET:
+		  break;
 
-	case F_QUIT:
-		TRAN (ECMonitor::finish_state);
-		break;
+	 case F_QUIT:
+		  TRAN (ECMonitor::finish_state);
+		  break;
 
-	default:
-		LOG_DEBUG_STR ("waitForNextCycle, DEFAULT");
-		break;
-	}    
+	 default:
+		  LOG_DEBUG_STR ("waitForNextCycle, DEFAULT");
+		  break;
+	 }    
 
-	return (status);
+	 return (status);
 }
 
 
@@ -579,12 +593,12 @@ GCFEvent::TResult ECMonitor::waitForNextCycle(GCFEvent& event,
 //
 void ECMonitor::_disconnectedHandler(GCFPortInterface& port)
 {
-	port.close();
-	if (&port == itsECPort) {
-		LOG_ERROR("Connection with ECPort failed, going to reconnect state");
-		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("EC:connection lost"));
-		TRAN (ECMonitor::connect2EC);
-	}
+	 port.close();
+	 if (&port == itsECPort) {
+		  LOG_ERROR("Connection with ECPort failed, going to reconnect state");
+		  itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("EC:connection lost"));
+		  TRAN (ECMonitor::connect2EC);
+	 }
 }
 
 //
@@ -594,69 +608,82 @@ void ECMonitor::_disconnectedHandler(GCFPortInterface& port)
 //
 GCFEvent::TResult ECMonitor::finish_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finish_state:" << eventName(event) << "@" << port.getName());
+	 LOG_DEBUG_STR ("finish_state:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
+	 GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	switch (event.signal) {
-	case F_INIT:
-		break;
+	 switch (event.signal) {
+	 case F_INIT:
+		  break;
 
-	case F_ENTRY: {
-		// update PVSS
-		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:finished"));
-		itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(false));
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		break;
-	}
+	 case F_ENTRY: {
+		  // update PVSS
+		  itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:finished"));
+		  itsOwnPropertySet->setValue(PN_HWM_EC_CONNECTED,GCFPVBool(false));
+//      itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		  break;
+	 }
   
-	case DP_SET:
-		break;
+	 case DP_SET:
+		  break;
 
-	default:
-		LOG_DEBUG("finishing_state, DEFAULT");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
+	 default:
+		  LOG_DEBUG("finishing_state, DEFAULT");
+		  status = GCFEvent::NOT_HANDLED;
+		  break;
+	 }    
+	 return (status);
 }
 
 string ECMonitor::ctrlMode(int16 mode)
 {
-   switch (mode) {
-      case 0: return ("Off");
-      case 1: return ("On");
-      case 2: return ("Auto");
-      case 3: return ("Manual");
-      case 4: return ("StartUp");
-      case 5: return ("Absent");    
-      default: return ("Unknown");
-   }
+	switch (mode) {
+		case 0: return ("Off");
+		case 1: return ("On");
+		case 2: return ("Auto");
+		case 3: return ("Manual");
+		case 4: return ("StartUp");
+		case 5: return ("Absent");    
+		default: return ("Unknown");
+	}
 }
 
 // next code for raw event handling
 typedef struct {
-   GCFEvent event;
-   int16    cmdId;
-   int16    status;
-   int16    payloadLen; // number of bytes in payload
-   int16    payload[31];
+	GCFEvent event;
+	int16    cmdId;
+	int16    status;
+	int16    payloadLen; // number of bytes in payload
+	int16    payload[31];
 } ECFrame;
-static ECFrame buf;
-   
+
+	
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
+  static ECFrame buf;
+  string hd;
+  ssize_t size;
+  LOG_DEBUG_STR("received raw event");
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
   // Receive a raw packet
-  ssize_t size = port.recv(&buf.cmdId, (34 * sizeof(int16)));
-  
-   // at least 4 bytes
+  size = port.recv(&buf.cmdId, (3 * sizeof(int16)));
+  hexdump(hd,&buf.cmdId,(3*sizeof(int16)));
+  LOG_DEBUG_STR("raw buf header=" << hd);
+
+  // at least 6 bytes
   if (size < 6) return(GCFEvent::NOT_HANDLED);
-   
+  
+  if (buf.payloadLen > 0) {	
+  	  size = port.recv(buf.payload, buf.payloadLen);
+  	  hexdump(hd,&buf.payload[0], buf.payloadLen);
+  	  LOG_DEBUG_STR("raw buf payload=" << hd);
+  }
+	
   buf.event.signal = EC_CMD_ACK;
   buf.event.length = (3*sizeof(int16)) + buf.payloadLen;
-             
+  hexdump(hd,&buf,sizeof(buf));
+  LOG_DEBUG_STR("raw buf all=" << hd);
   // dispatch the EC message as a GCFEvent (which it now is)
   status = task.dispatch(buf.event, port);
   
