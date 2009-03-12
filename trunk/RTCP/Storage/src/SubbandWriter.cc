@@ -55,7 +55,7 @@ SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank)
   itsNrOutputs(itsPipelineOutputSet.size()),
   itsTimeCounter(0),
   itsVisibilities(0),
-  itsWriteTimer ("writing-MS")
+  itsWriteTimer ("writing-MS", false, true)
 #ifdef USE_MAC_PI
 ,itsPropertySet(0)
 #endif
@@ -110,20 +110,20 @@ void SubbandWriter::createInputStreams()
     unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + subband;
 
     if (connectionType == "NULL") {
-      std::cout << "subband " << subbandNumber << " read from null stream" << std::endl;
+      LOG_DEBUG_STR("subband " << subbandNumber << " read from null stream");
       itsInputStreams.push_back(new NullStream);
     } else if (connectionType == "TCP") {
       std::string    server = itsPS->storageHostName(prefix + "_ServerHosts", subbandNumber);
       unsigned short port   = boost::lexical_cast<unsigned short>(itsPS->getPortsOf(prefix)[subbandNumber]);
 
-      std::cout << "subband " << subbandNumber << " read from tcp:" << server << ':' << port << std::endl;
+      LOG_DEBUG_STR("subband " << subbandNumber << " read from tcp:" << server << ':' << port);
       itsInputStreams.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Server));
     } else if (connectionType == "FILE") {
       std::string filename = itsPS->getString(prefix + "_BaseFileName") + '.' +
 			      boost::lexical_cast<std::string>(itsRank) + '.' +
 			      boost::lexical_cast<std::string>(subbandNumber);
 
-      std::cout << "subband " << subbandNumber << " read from file:" << filename << std::endl;
+      LOG_DEBUG_STR("subband " << subbandNumber << " read from file:" << filename);
       itsInputStreams.push_back(new FileStream(filename.c_str()));
     } else {
       THROW(StorageException, "unsupported ION->Storage stream type");
@@ -251,11 +251,11 @@ void SubbandWriter::writeLogMessage()
   ctime_r(&now, buf);
   buf[24] = '\0';
 
-  cout << "time = " << buf <<
+  LOG_INFO_STR("time = " << buf <<
 #if defined HAVE_MPI
 	  ", rank = " << itsRank <<
 #endif
-	  ", count = " << counter ++ << endl;
+	  ", count = " << counter ++);
 }
 
 
@@ -271,7 +271,7 @@ void SubbandWriter::checkForDroppedData(StreamableData *data, unsigned sb, unsig
 
     if (droppedBlocks > 0) {
       unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + sb;
-      std::clog << "Warning: dropped " << droppedBlocks << " block" << (droppedBlocks == 1 ? "" : "s") << " for subband " << subbandNumber << " and output " << output << std::endl;
+      LOG_WARN_STR("dropped " << droppedBlocks << " block" << (droppedBlocks == 1 ? "" : "s") << " for subband " << subbandNumber << " and output " << output);
     }
 
     itsPreviousSequenceNumbers[sb][output] = data->sequenceNumber;
@@ -349,7 +349,7 @@ void SubbandWriter::postprocess()
 
   delete itsVisibilities;	itsVisibilities   = 0;
 
-  cout << itsWriteTimer << endl;
+  LOG_DEBUG_STR(itsWriteTimer);
 }
 
 } // namespace RTCP

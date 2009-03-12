@@ -80,8 +80,8 @@ namespace LOFAR
   {
 
 
-    static NSTimer MSsetupTimer("MSWriterCasa::write (setup)", true);
-    static NSTimer MSwriteTimer("MSWriterCasa::write (write)", true);
+    static NSTimer MSsetupTimer("MSWriterCasa::write (setup)", true, true);
+    static NSTimer MSwriteTimer("MSWriterCasa::write (write)", true, true);
 
 
     using namespace casa;
@@ -128,13 +128,14 @@ namespace LOFAR
       MPosition *obsLofar   = new MPosition;
 
       //Get list of all observatories in LOFAR network. 
-//    cout << "List of all observatories in LOFAR network:" << MeasTable::Observatories() << endl;
+//    LOG_DEBUG_STR("List of all observatories in LOFAR network:" << MeasTable::Observatories());
 
       //Todo: get the Observatory for LOFAR!!
       AlwaysAssert (MeasTable::Observatory(*itsArrayPos, "WSRT"), AipsError);
-//       cout << "Position observatory WSRT: " << *itsArrayPos << endl;
+//       LOG_DEBUG_STR("Position observatory WSRT: " << *itsArrayPos);
       AlwaysAssert (MeasTable::Observatory(*obsLofar, "LOFAR"), AipsError);
-//       cout << "Position observatory LOFAR: " << *obsLofar << endl;
+//       LOG_DEBUG_STR("Position observatory LOFAR: " << *obsLofar);
+
       delete obsLofar;
       
       Block<MPosition> antMPos(nantennas);
@@ -149,17 +150,17 @@ namespace LOFAR
 	                                    MPosition::ITRF);
         }
       } catch (AipsError& e) {
-        cout << "AipsError: " << e.what() << endl;
+	LOG_FATAL_STR("AipsError: " << e.what());
       }
 
       // Create the MS.
       try {
 	createMS (msName, antMPos, storageStationNames);
       } catch (AipsError x) {
-	std::cerr << "AIPS/Casa error in createMS(): " << x.getMesg() << std::endl;
+	LOG_FATAL_STR("AIPS/Casa error in createMS(): " << x.getMesg());
 	exit(0);
       } catch (...) {
-	std::cerr << "Unknown error in createMS()" << std::endl;
+	LOG_FATAL("Unknown error in createMS()");
       }
 
       itsNrPol  = new Block<Int>;
@@ -300,10 +301,10 @@ namespace LOFAR
       try {
 	return addBand (npolarizations, nchannels, refFreq, chanFreqs, chanWidths);
       } catch (AipsError x) {
-	std::cerr << "AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg() << std::endl;
+	LOG_FATAL_STR("AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg());
 	exit(0);
       } catch (...) {
-	std::cerr << "Unexpected error in MSWriterCasa::addBand() " << std::endl;
+	LOG_FATAL("Unexpected error in MSWriterCasa::addBand() ");
 	exit(0);
       }
     }
@@ -319,10 +320,10 @@ namespace LOFAR
       try {
 	return addBand (npolarizations, nchannels, refFreq, freqs, widths);
       } catch (AipsError x) {
-	std::cerr << "AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg() << std::endl;
+	LOG_FATAL_STR("AIPS/Casa error in MSWriterCasa::addBand(): " << x.getMesg());
 	exit(0);
       } catch (...) {
-	std::cerr << "Unexpected error in MSWriterCasa::addBand() " << std::endl;
+        LOG_FATAL("Unexpected error in MSWriterCasa::addBand() ");
 	exit(0);
       }
     }
@@ -638,7 +639,7 @@ namespace LOFAR
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
       ASSERT(visibilityData != 0);
 
-      //std::cout << "write" << std::endl;
+      //LOG_DEBUG("write");
 
       MSsetupTimer.start();
 
@@ -757,7 +758,7 @@ namespace LOFAR
 	    }
           catch (AipsError& e)
 	    {
-	      cout << "AipsError in writing data: " <<  e.what() << endl;
+	      LOG_FATAL_STR("AipsError in writing data: " <<  e.what());
 	    }
           // Write flags
           if (flags == 0) {
@@ -788,13 +789,13 @@ namespace LOFAR
 	MSwriteTimer.stop();
 
       } catch (AipsError x) {
-	std::cerr << "AIPS/Casa error in MSWriterCasa::write(): " << x.getMesg() << std::endl;
+	LOG_FATAL_STR("AIPS/Casa error in MSWriterCasa::write(): " << x.getMesg());
 	exit(0);
       } catch (std::exception &ex){ 
-	std::cerr << "std::exception error in MSWriterCasa::write(): " << ex.what() << std::endl;
+	LOG_FATAL_STR("std::exception error in MSWriterCasa::write(): " << ex.what());
 	exit(0);
       } catch (...) {
-	std::cerr << "Unknown error in MSWriterCasa::write(): " << std::endl;
+        LOG_FATAL("Unknown error in MSWriterCasa::write(): ");
 	exit(0);
       } /// try
     }

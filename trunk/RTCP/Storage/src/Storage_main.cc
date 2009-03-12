@@ -37,20 +37,16 @@ static void child(int argc, char *argv[], int rank)
 {
   try {
     if (argc == 3)
-      std::cerr << "WARNING: specifying nrRuns is deprecated --- ignored" << std::endl;
+      LOG_WARN("specifying nrRuns is deprecated --- ignored");
     else if (argc != 2)
       THROW(StorageException, std::string("usage: ") << argv[0] << " parset");
 #if !defined HAVE_PKVERSION
     std::string type = "brief";
     Version::show<StorageVersion> (std::cout, "Storage", type);  
 #endif    
-    ConfigLocator aCL;
-    string        progName = basename(argv[0]);
-    string        logPropFile(progName + ".log_prop");
-    INIT_LOGGER (aCL.locate(logPropFile).c_str());
-    LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
-
-    std::clog << "trying to use parset \"" << argv[1] << '"' << std::endl;
+    
+    LOG_INFO_STR("trying to use parset \"" << argv[1] << '"');
+    
     ParameterSet parameterSet(argv[1]);
     Parset parset(&parameterSet);
     parset.adoptFile("OLAP.parset");
@@ -61,20 +57,44 @@ static void child(int argc, char *argv[], int rank)
     subbandWriter.process();
     subbandWriter.postprocess();
   } catch (Exception &ex) {
-    std::cerr << "caught Exception: " << ex << std::endl;
+    LOG_FATAL_STR("caught Exception: " << ex);
     exit(1);
   } catch (std::exception &ex) {
-    std::cerr << "caught std::exception: " << ex.what() << std::endl;
+    LOG_FATAL_STR("caught std::exception: " << ex.what());
     exit(1);
   } catch (...) {
-    std::cerr << "caught unknown exception" << std::endl;
+    LOG_FATAL("caught unknown exception");
     exit(1);
   }
 }
 
 
+using namespace log4cplus;
+using namespace log4cplus::helpers;
+
 int main(int argc, char *argv[])
 {
+
+#ifdef HAVE_LOG4CPLUS
+  helpers::Properties traceProp;
+  traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
+  traceProp.setProperty("log4cplus.appender.STDOUT", "log4cplus::ConsoleAppender");
+  traceProp.setProperty("log4cplus.appender.STDOUT.layout", "log4cplus::PatternLayout");
+  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%c{3}|%m|%F:%L%n");
+  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1", "log4cplus::spi::StringMatchFilter");
+  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.AcceptOnMatch", "false");
+  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.StringToMatch", "data");
+  traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
+  PropertyConfigurator(traceProp).configure();
+#else
+  // LOGCOUT (input: RTCP.log_prop.debug)
+  ConfigLocator aCL;
+  string        logPropName = basename("RTCP");
+  string        logPropFile(logPropName + ".log_prop");
+  INIT_LOGGER (aCL.locate(logPropFile).c_str());
+  LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
+#endif // HAVE_LOG4CPLUS   
+
 #if defined HAVE_MPI
   int rank;
 
@@ -85,7 +105,7 @@ int main(int argc, char *argv[])
 #endif
 
   int status;
-
+  
   switch (fork()) {
     case -1 : perror("fork");
 	      break;
@@ -96,9 +116,10 @@ int main(int argc, char *argv[])
     default : if (wait(&status) < 0)
 		perror("wait");
 	      else if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-		std::cerr << "child returned exit status " << WEXITSTATUS(status) << std::endl;
+		LOG_ERROR_STR("child returned exit status " << WEXITSTATUS(status));
+		
 	      else if (WIFSIGNALED(status))
-		std::cerr << "child killed by signal " << WTERMSIG(status) << std::endl;
+	        LOG_ERROR_STR("child killed by signal " << WTERMSIG(status));
 
 	      break;
   }
