@@ -451,6 +451,7 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 			if (ack.status == RSP_SUCCESS) {
 				TRAN(TBBControl::doTBBmode);				// go to next state.
 			} else {
+				LOG_DEBUG_STR ("returned status" << ack.status);
 				LOG_ERROR_STR ("Failed to set the operating mode for all the rcus");
 				itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("operatingMode error"));
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_MODESETUP_FAILED);
