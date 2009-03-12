@@ -39,6 +39,7 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/SubbandMetaData.h>
 #include <Interface/Exceptions.h>
+#include <Stream/SocketStream.h>
 
 #include <pthread.h>
 #include <sys/time.h>
@@ -46,9 +47,6 @@
 #include <cstdio>
 #include <stdexcept>
 
-#if defined DUMP_RAW_DATA
-#include <Stream/SocketStream.h>
-#endif
 
 namespace LOFAR {
 namespace RTCP {
@@ -126,6 +124,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
 
     itsInputStreams[i] = Parset::createStream(streamName, true);
+
+    SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i]);
+
+    if (sstr != 0)
+      sstr->setReadBufferSize(16 * 1024 * 1024); // stupid kernel multiplies this by 2
   }
 
   itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
