@@ -12,7 +12,7 @@ ObservationControl_LDADD		= $(LOFAR_DEPEND)
 ObservationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= ObservationControl.h \
-							  ObservationControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 

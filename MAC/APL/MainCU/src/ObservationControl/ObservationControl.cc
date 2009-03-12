@@ -39,7 +39,7 @@
 #include <signal.h>
 
 #include "ObservationControl.h"
-#include "ObservationControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "../Package__Version.h"
 
 
@@ -109,7 +109,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	LOG_DEBUG_STR ("Timer for forcing quit is set to " << itsForcedQuitDelay);
 
 	// Inform Logging manager who we are
-	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBS_CTRL, getName(), itsObsDPname));
+	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBSERVATION_CONTROL, getName(), itsObsDPname));
 	// NOTE: SAS gateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 
 	// attach to child control task
@@ -270,10 +270,10 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName(), itsObsDPname));
+		string	propSetName(createPropertySetName(PSN_OBSERVATION_CONTROL, getName(), itsObsDPname));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName.c_str(),
-											 PST_OBS_CTRL,
+											 PST_OBSERVATION_CONTROL,
 											 PSAT_RW,
 											 this);
 		}
