@@ -56,7 +56,7 @@ InputThread::InputThread(Stream *streamFromION, const Parset *ps)
   }
 
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-    std::cerr << "could not create input thread" << std::endl;
+    LOG_ERROR("could not create input thread");
     exit(1);
   }
 }
@@ -65,7 +65,7 @@ InputThread::InputThread(Stream *streamFromION, const Parset *ps)
 InputThread::~InputThread()
 {
   if (pthread_join(thread, 0) != 0) {
-    std::cerr << "could not join input thread" << std::endl;
+    LOG_ERROR("could not join input thread");
     exit(1);
   }
 
@@ -123,11 +123,11 @@ void *InputThread::mainLoopStub(void *inputThread)
   try {
     static_cast<InputThread *>(inputThread)->mainLoop();
   } catch (Exception &ex) {
-    std::cerr << "input thread caught Exception: " << ex << std::endl;
+    LOG_FATAL_STR("caught Exception: " << ex.what());
   } catch (std::exception &ex) {
-    std::cerr << "input thread caught std::exception: " << ex.what() << std::endl;
+    LOG_FATAL_STR("caught std::exception: " << ex.what());
   } catch (...) {
-    std::cerr << "input thread caught non-std::exception" << std::endl;
+    LOG_FATAL("caught non-std:exception");
   }
 
   //static_cast<InputThread *>(inputThread)->stopped = true;
