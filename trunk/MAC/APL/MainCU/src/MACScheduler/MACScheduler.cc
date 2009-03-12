@@ -38,8 +38,8 @@
 #include <OTDB/TreeStateConv.h>
 #include <signal.h>
 
-#include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
+#include "PVSSDatapointDefs.h"
 #include "../Package__Version.h"
 
 using namespace LOFAR::GCF::PVSS;

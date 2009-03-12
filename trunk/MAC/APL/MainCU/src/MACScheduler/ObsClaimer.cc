@@ -38,8 +38,8 @@
 #include <APL/RTDBCommon/ClaimMgrTask.h>
 #include <signal.h>
 
-#include "MACSchedulerDefines.h"
 #include "ObsClaimer.h"
+#include "PVSSDatapointDefs.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR::GCF::PVSS;

@@ -15,7 +15,7 @@ MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= MACScheduler.h \
 							  ObsClaimer.h \
-							  MACSchedulerDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 
