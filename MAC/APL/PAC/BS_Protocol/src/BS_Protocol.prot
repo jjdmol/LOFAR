@@ -19,7 +19,7 @@ prelude = << PRELUDE_END
 typedef		void*		memptr_t;
 
 	enum {
-	     SUCCESS = 0,
+	     BS_SUCCESS = 0,
 	     ERR_RANGE,     // range error in message parameters
 	     ERR_BEAMALLOC, // could not allocate beam
 	     ERR_BEAMFREE,  // could not free beam

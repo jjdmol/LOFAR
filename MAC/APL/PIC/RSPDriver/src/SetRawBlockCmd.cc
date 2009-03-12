@@ -65,7 +65,7 @@ void SetRawBlockCmd::ack(CacheBuffer& cache)
 	RSPSetblockackEvent ack;
 	ack.timestamp = getTimestamp();
 	ack.boardID	  = itsEvent->boardID;
-	ack.status 	  = SUCCESS;
+	ack.status 	  = RSP_SUCCESS;
 
 	getPort()->send(ack);
 }
@@ -148,7 +148,7 @@ void SetRawBlockCmd::ack_fail()
 {
 	RSPSetblockackEvent ack;
 	ack.timestamp = getTimestamp();
-	ack.status 	  = FAILURE;
+	ack.status 	  = RSP_FAILURE;
 	LOG_INFO ("SetRawBlockCmd::ack_fail");
 
 	getPort()->send(ack);

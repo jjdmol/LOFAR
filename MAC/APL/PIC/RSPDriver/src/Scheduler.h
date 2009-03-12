@@ -2,7 +2,7 @@
 //#
 //#  Scheduler.h: RSP Driver scheduler
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -34,121 +34,87 @@
 namespace LOFAR {
   namespace RSP {
 
-    class Scheduler
-    {
-    public:
-      /**
-       * Types of queue.
-       */
-      enum QueueID
-	{
-	  LATER = 1,
-	  PERIODIC
+class Scheduler
+{
+public:
+	// Types of queue.
+	enum QueueID {
+		LATER = 1,
+		PERIODIC
 	};
-      
-      /**
-       * Constructors for a Scheduler object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
-       */
-      Scheduler();
-	  
-      /* Destructor for Scheduler. */
-      virtual ~Scheduler();
 
-      /**
-       * Run the scheduler in response to a timer event.
-       */
-      GCFEvent::TResult run(GCFEvent& event, GCFPortInterface& port);
-      /**
-       * Dispatch an event from the RSP board to the appropriate
-       * synchronization action.
-       */
-      GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
+	// Constructors for a Scheduler object.
+	// Currently the tv_usec part is always set to 0 irrespective
+	// of the value passed in.
+	Scheduler();
 
-      /**
-       * Indicate whether synchronization of all data has completed.
-       */
-      bool syncHasCompleted();
+	/* Destructor for Scheduler. */
+	virtual ~Scheduler();
 
-      /**
-       * Cancel all commands in any queue for this port.
-       */
-      int cancel(GCFPortInterface& port);
+	// Run the scheduler in response to a timer event.
+	GCFEvent::TResult run(GCFEvent& event, GCFPortInterface& port);
+	// Dispatch an event from the RSP board to the appropriate
+	// synchronization action.
+	GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
 
-      /**
-       * Remove commands matching the specified port and handle.
-       */
-      int remove_subscription(GCFPortInterface& port, memptr_t handle);
-      
-      /**
-       * Add a synchronization action to be carried out
-       * periodically on the specified board.
-       */
-      void addSyncAction(SyncAction* action);
+	// Indicate whether synchronization of all data has completed.
+	bool syncHasCompleted();
 
-      /**
-       * Enter a new command into the scheduler in response
-       * to receiving a command event from on of the RSPDriver
-       * client processes.
-       */
-      RTC::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
+	// Cancel all commands in any queue for this port.
+	int cancel(GCFPortInterface& port);
 
-      /*@{*/
-      /**
-       * Set/get the current time (from the update triggering timeout event).
-       */
-      void setCurrentTime(long sec, long usec);
-      RTC::Timestamp getCurrentTime() const;
-      /*@}*/
+	// Remove commands matching the specified port and handle.
+	int remove_subscription(GCFPortInterface& port, memptr_t handle);
 
-    private:
-      /**
-       * Private types.
-       */
-      typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_greater> pqueue;
-      //typedef std::priority_queue<Ptr<Command> > pqueue;
+	// Add a synchronization action to be carried out
+	// periodically on the specified board.
+	void addSyncAction(SyncAction* action);
 
-      /**
-       * Private helper methods.
-       */
-      int pqueue_remove_commands(pqueue& p,
-				 GCFPortInterface& port,
-				 memptr_t handle = 0);
+	// Enter a new command into the scheduler in response
+	// to receiving a command event from on of the RSPDriver
+	// client processes.
+	RTC::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
 
-      /**
-       * Constants from the config file converted to the correct type.
-       */
+	/*@{*/
+	// Set/get the current time (from the update triggering timeout event).
+	void setCurrentTime(long sec, long usec);
+	RTC::Timestamp getCurrentTime() const;
+	/*@}*/
 
-      static int SYNC_INTERVAL_INT;
-      /*@{*/
-      /**
-       * Helper methods for the Scheduler::run method.
-       */
-      void              scheduleCommands();
-      void              processCommands();
-      void              resetSyncActions();
-      void              initiateSync(GCFEvent& event);
-      //GCFEvent::TswitchResult syncCache(GCFEvent& event, GCFPortInterface& port);
-      void              resetSync(GCFPortInterface& port);
-      void              completeSync();
-      void              completeCommands();
-      /*@}*/
+private:
+	// Private types.
+	typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_greater> pqueue;
 
-      pqueue m_later_queue;
-      pqueue m_now_queue;
-      pqueue m_periodic_queue;
-      pqueue m_done_queue;
+	// Private helper methods.
+	int pqueue_remove_commands(pqueue& p, GCFPortInterface& port, memptr_t handle = 0);
 
-      std::map< GCFPortInterface*,
-				std::vector<SyncAction*> > m_syncactions;
-      std::map< GCFPortInterface*, bool >  m_sync_completed;
+	// Constants from the config file converted to the correct type.
+	static int SYNC_INTERVAL_INT;
 
-      RTC::Timestamp m_current_time;
+	/*@{*/
+	// Helper methods for the Scheduler::run method.
+	void	scheduleCommands();
+	void	processCommands();
+	void	resetSyncActions();
+	void	initiateSync(GCFEvent& event);
+	void	resetSync(GCFPortInterface& port);
+	void	completeSync();
+	void	completeCommands();
+	/*@}*/
 
-      int m_current_priority;
-    };
-  };
+	pqueue	m_later_queue;				// commands to be exec later
+	pqueue	m_periodic_queue;			// commands to be executed peiodically
+	pqueue	m_now_queue;				// filled every second from later and periodic queue
+	pqueue	m_done_queue;				// commands that wait for cache switching
+	pqueue	itsDelayedResponseQueue;	// commands taht wait for two cache switchings
+
+	std::map< GCFPortInterface*, std::vector<SyncAction*> > m_syncactions;
+	std::map< GCFPortInterface*, bool >  					m_sync_completed;
+
+	RTC::Timestamp 			m_current_time;
 };
-     
+
+  }; // namespace RSP
+}; // namespace LOFAR
+
 #endif /* SCHEDULER_H_ */

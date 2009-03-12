@@ -56,7 +56,7 @@ void GetBypassCmd::ack(CacheBuffer& cache)
 	RSPGetbypassackEvent ack;
 
 	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+	ack.status = RSP_SUCCESS;
 
 	ack.settings().resize(m_event->rcumask.count());
 

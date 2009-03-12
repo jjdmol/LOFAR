@@ -950,3 +950,35 @@ event = {
     type = "uint16[9]";
   };
 };
+
+// MDIO messages used by SERDES, CEP and LCU
+event = {
+  noheader;
+  signal = MDIO_HEADER;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "header";
+    type = "uint8[MEPHeader::MDIO_HEADER_SIZE]";
+  };
+};
+
+event = {
+  noheader;
+  signal = MDIO_DATA;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "data";
+    type = "uint8[MEPHeader::MDIO_DATA_SIZE]";
+  };
+};
+

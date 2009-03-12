@@ -69,7 +69,7 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
   RSPUpdstatsEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
 
   if (m_event->type <= Statistics::SUBBAND_POWER)

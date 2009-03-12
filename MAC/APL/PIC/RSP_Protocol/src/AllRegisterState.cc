@@ -58,7 +58,9 @@ unsigned int AllRegisterState::getSize()
     + tbbbandsel_state.getSize()
     + bypasssettings_state.getSize()
 	+ rawdatawrite_state.getSize()
-	+ rawdataread_state.getSize();
+	+ rawdataread_state.getSize()
+	+ itsSerdesWriteState.getSize()
+	+ itsSerdesReadState.getSize();
 }
 
 unsigned int AllRegisterState::pack  (void* buffer)
@@ -90,6 +92,8 @@ unsigned int AllRegisterState::pack  (void* buffer)
 	offset += bypasssettings_state.pack((char*)buffer + offset);
 	offset += rawdatawrite_state.pack((char*)buffer + offset);
 	offset += rawdataread_state.pack((char*)buffer + offset);
+	offset += itsSerdesWriteState.pack((char*)buffer + offset);
+	offset += itsSerdesReadState.pack((char*)buffer + offset);
 
 	return (offset);
 }
@@ -123,6 +127,8 @@ unsigned int AllRegisterState::unpack(void *buffer)
 	offset += bypasssettings_state.unpack((char*)buffer + offset);
 	offset += rawdatawrite_state.unpack((char*)buffer + offset);
 	offset += rawdataread_state.unpack((char*)buffer + offset);
+	offset += itsSerdesWriteState.unpack((char*)buffer + offset);
+	offset += itsSerdesReadState.unpack((char*)buffer + offset);
 
 	return (offset);
 }

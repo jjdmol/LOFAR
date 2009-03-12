@@ -79,6 +79,7 @@ namespace LOFAR {
        */
       void setCompleted(bool completed);
       bool hasCompleted() const;
+	  void setFinished() { m_completed = true; m_current_index = m_n_indices; }
       /*@}*/
 
       /**

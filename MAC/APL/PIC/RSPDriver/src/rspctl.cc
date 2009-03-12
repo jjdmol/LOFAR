@@ -227,7 +227,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights(); 
 			
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
 				GCFTask::stop();
 				return status;
@@ -273,7 +273,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
     {
       RSPSetweightsackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETWEIGHTS command failed.");
       }
       GCFTask::stop();
@@ -374,7 +374,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
       msg << "getsubbandsack.timestamp=" << ack.timestamp;
       logMessage(cout, msg.str());
 
-      if (SUCCESS == ack.status) {
+      if (RSP_SUCCESS == ack.status) {
         int rcuin = 0;
         for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 
@@ -402,7 +402,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
       msg << "setsubbandsack.timestamp=" << ack.timestamp;
       logMessage(cout, msg.str());
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETSUBBANDS command failed.");
       }
     }
@@ -459,7 +459,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
       RSPGetrcuackEvent ack(e);
       bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
-      if (SUCCESS == ack.status) {
+      if (RSP_SUCCESS == ack.status) {
         int rcuin = 0;
         for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 
@@ -483,7 +483,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
     case RSP_SETRCUACK: {
       RSPSetrcuackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETRCU command failed.");
       }
     }
@@ -563,7 +563,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 
 		cout << "settings().shape()=" << ack.settings().shape() << endl;
 
-		if (SUCCESS == ack.status) {
+		if (RSP_SUCCESS == ack.status) {
 			int hbain = 0;
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
@@ -588,7 +588,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 
 		cout << "settings().shape()=" << ack.settings().shape() << endl;
 
-		if (SUCCESS == ack.status) {
+		if (RSP_SUCCESS == ack.status) {
 			int hbain = 0;
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
@@ -614,7 +614,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 
 	case RSP_SETHBAACK: {
 		RSPSethbaackEvent ack(e);
-		if (SUCCESS != ack.status) {
+		if (RSP_SUCCESS != ack.status) {
 			logMessage(cerr,"Error: RSP_SETHBA command failed.");
 		}
 	}
@@ -665,7 +665,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
       RSPGetrsuackEvent ack(e);
       bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
-      if (SUCCESS == ack.status) {
+      if (RSP_SUCCESS == ack.status) {
         int boardin = 0;
         for (int boardout = 0; boardout < get_ndevices(); boardout++) {
 
@@ -683,7 +683,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
     case RSP_SETRSUACK: {
       RSPSetrsuackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETRSU command failed.");
       }
     }
@@ -743,7 +743,7 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
     case RSP_SETCLOCKACK: {
       RSPSetclockackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETCLOCK command failed.");
       }
     }
@@ -784,7 +784,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
   switch (e.signal) {
     case RSP_GETCLOCKACK: {
       RSPGetclockackEvent ack(e);
-      if (SUCCESS == ack.status) {
+      if (RSP_SUCCESS == ack.status) {
 	g_sample_frequency = 1.0e6 * ack.clock;
 
 	if (g_getclock) {
@@ -813,7 +813,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 
     case RSP_SUBCLOCKACK: {
       RSPSubclockackEvent ack(e);
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
 	logMessage(cerr,"Error: RSP_UPDCLOCK command failed.");
 	exit(EXIT_FAILURE);
       }
@@ -823,7 +823,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
     case RSP_UPDCLOCK: {
       RSPUpdclockEvent upd(e);
 
-      if (SUCCESS == upd.status) {
+      if (RSP_SUCCESS == upd.status) {
 	logMessage(cout,formatString("Received new sample frequency: clock=%dMHz", upd.clock));
 	g_sample_frequency = 1.0e6 * upd.clock;
       }
@@ -872,7 +872,7 @@ GCFEvent::TResult TDStatusCommand::ack(GCFEvent& event)
 		RSPGettdstatusackEvent ack(event);
 		bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
 
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
 		} 
 		else {
@@ -982,7 +982,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 			logMessage(cout, msg.str());
 			msg.seekp(0);
 
-			if (SUCCESS != ack.status) {
+			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_GETTBB command failed.");
 				break;
 			}
@@ -1016,7 +1016,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 			msg << "settbback.timestamp=" << ack.timestamp;
 			logMessage(cout, msg.str());
 
-			if (SUCCESS != ack.status) {
+			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETTBB command failed.");
 			}
 		}
@@ -1080,7 +1080,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 		logMessage(cout, msg.str());
 		msg.seekp(0);
 
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_GETSI command failed.");
 			break;
 		}
@@ -1128,7 +1128,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 		msg << "setSIack.timestamp=" << ack.timestamp;
 		logMessage(cout, msg.str());
 
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_SETSI command failed.");
 		}
 	}
@@ -1174,7 +1174,7 @@ GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
 {
   if (RSP_SUBREGISTERSTATEACK == e.signal) {
     RSPSubregisterstateackEvent ack(e);
-    if (SUCCESS != ack.status) {
+    if (RSP_SUCCESS != ack.status) {
       logMessage(cerr,"Error: RSP_UPDREGISTERSTATE command failed.");
       exit(EXIT_FAILURE);
     }
@@ -1184,7 +1184,7 @@ GCFEvent::TResult RegisterStateCommand::ack(GCFEvent& e)
 
   RSPUpdregisterstateEvent upd(e);
 
-  if (SUCCESS == upd.status) {
+  if (RSP_SUCCESS == upd.status) {
     std::ostringstream logStream;
     logStream << "registerstate update at " << upd.timestamp << endl;
     upd.state.print(logStream);
@@ -1240,7 +1240,7 @@ GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
 	if (event.signal == RSP_GETSPUSTATUSACK) {
 		RSPGetspustatusackEvent ack(event);
 
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr,"Error: RSP_GETSPUSTATUS command failed.");
 		} 
 		else {
@@ -1312,7 +1312,7 @@ GCFEvent::TResult RawBlockCommand::ack(GCFEvent&	event)
 	case RSP_GETBLOCKACK: {
 		RSPGetblockackEvent ack(event);
 		LOG_DEBUG(formatString("RAWBLOCKREAD:board=%d, status=%d, dataLen=%d", ack.boardID, ack.status, ack.dataLen));
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			cerr << "Error: readBlock command failed, code = " << ack.status << endl;
 		}
 		else {
@@ -1326,7 +1326,7 @@ GCFEvent::TResult RawBlockCommand::ack(GCFEvent&	event)
 	case RSP_SETBLOCKACK: {
 		RSPSetblockackEvent ack(event);
 		LOG_DEBUG(formatString("RAWBLOCKWRITE:board:%d, status=%d", ack.boardID, ack.status));
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			cerr << "Error: writeBlock command failed, code = " << ack.status << endl;
 		}
 	}
@@ -1380,6 +1380,71 @@ void RawBlockCommand::getDataInfo(const string& filename, uint16* datalen, uint8
 		return;
 	}
 	// TODO: add code for using a file
+}
+
+//
+// Splitter
+//
+SplitterCommand::SplitterCommand(GCFPortInterface& port) : 
+	Command(port)
+{
+}
+
+// send()
+void SplitterCommand::send()
+{
+	// check mode
+	if (getMode()) { 
+		RSPGetsplitterEvent 	rspEvent;
+		rspEvent.timestamp = Timestamp(0,0);
+		rspEvent.rspmask   = getRSPMask();
+		m_rspport.send(rspEvent);
+		return;
+	}
+
+	// construct message
+	RSPSetsplitterEvent 	rspEvent;
+	rspEvent.timestamp = Timestamp(0,0);
+	rspEvent.switch_on = state();
+	rspEvent.rspmask   = getRSPMask();
+
+	// and send it.
+	m_rspport.send(rspEvent);
+}
+
+// ack()
+GCFEvent::TResult SplitterCommand::ack(GCFEvent& event)
+{
+	switch (event.signal) {
+	case RSP_SETSPLITTERACK: {
+			RSPSetsplitterackEvent ack(event);
+			if (ack.status != RSP_SUCCESS) {
+				logMessage(cerr,"Error: RSP_SETSPLITTER command failed.");
+			} 
+			else {
+				logMessage(cerr, "Set splitter successful");
+			}
+		}
+		break;
+
+	case RSP_GETSPLITTERACK: {
+			RSPGetsplitterackEvent ack(event);
+			if (ack.status != RSP_SUCCESS) {
+				logMessage(cerr,"Error: RSP_GETSPLITTER command failed.");
+			} 
+			else {
+				for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
+					if (ack.rspmask.test(rsp)) {
+						logMessage(cerr, formatString("RSP[%2d]: %s", rsp, ack.splitter.test(rsp) ? "ON" : "OFF"));
+					}
+				}
+			}
+		}
+		break;
+	}
+
+	GCFTask::stop();
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -1448,7 +1513,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
     case RSP_GETWGACK: {
       RSPGetwgackEvent ack(e);
 
-      if (SUCCESS == ack.status) {
+      if (RSP_SUCCESS == ack.status) {
 
         // print settings
         bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
@@ -1477,7 +1542,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
     case RSP_SETWGACK: {
       RSPSetwgackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETWG command failed.");
       }
     }
@@ -1525,7 +1590,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
     RSPGetstatusackEvent ack(event);
     bitset<MAX_N_RSPBOARDS> mask = getRSPMask();
 
-    if (ack.status != SUCCESS) {
+    if (ack.status != RSP_SUCCESS) {
       logMessage(cerr,"Error: RSP_GETSTATUS command failed.");
       break;
     }
@@ -1876,7 +1941,7 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
   if (e.signal == RSP_SUBSTATSACK) {
     RSPSubstatsackEvent ack(e);
 
-    if (SUCCESS != ack.status) {
+    if (RSP_SUCCESS != ack.status) {
       logMessage(cerr,"Error: failed to subscribe to statistics");
       exit(EXIT_FAILURE);
     }
@@ -1889,7 +1954,7 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
   RSPUpdstatsEvent upd(e);
 
-  if (SUCCESS == upd.status) {
+  if (RSP_SUCCESS == upd.status) {
     capture_statistics(upd.stats(),upd.timestamp);
   }
   else {
@@ -2075,7 +2140,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
   if (e.signal == RSP_SUBXCSTATSACK) {
     RSPSubxcstatsackEvent ack(e);
 
-    if (SUCCESS != ack.status) {
+    if (RSP_SUCCESS != ack.status) {
       logMessage(cerr,"Error: failed to subscribe to xcstatistics");
       exit(EXIT_FAILURE);
     }
@@ -2091,7 +2156,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
   RSPUpdxcstatsEvent upd(e);
 
-  if (SUCCESS == upd.status) {
+  if (RSP_SUCCESS == upd.status) {
 #if 0
     Range r1, r2;
     if (!getRSPRange2(r1, r2)) {
@@ -2126,7 +2191,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 {
   RSPGetversionackEvent ack(e);
 
-  if (SUCCESS == ack.status) {
+  if (RSP_SUCCESS == ack.status) {
     for (int rsp=0; rsp < get_ndevices(); rsp++) {
       logMessage(cout,formatString("RSP[%2d] RSP version = %d, BP version = %d.%d, AP version = %d.%d",
                                    rsp,
@@ -2307,6 +2372,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETSPUSTATUSACK:
 	case RSP_GETBLOCKACK:
 	case RSP_SETBLOCKACK:
+	case RSP_SETSPLITTERACK:
+	case RSP_GETSPLITTERACK:
 		status = m_command->ack(e); // handle the acknowledgement
 	break;
 
@@ -2426,7 +2493,7 @@ static void usage(bool exportMode)
   cout << "       --rcuprsg[=0]             # turn psrg on (or off)" << endl;
   cout << "       --rcureset[=0]            # hold rcu in reset (or take out of reset)" << endl;
   cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
-  cout << "       --rcudelay=[0..127]       # set the delay for rcu's" << endl;
+  cout << "       --rcudelay=[0..127]       # set the delay for rcu's (steps of 0.25ns)" << endl;
   cout << "       --rcuenable[=0]           # enable (or disable) input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --specinv[=0] [--select=<set>] # enable (or disable) spectral inversion" << endl;
@@ -2475,6 +2542,7 @@ static void usage(bool exportMode)
   cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
   cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
   cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
+  cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
   if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;
@@ -2555,6 +2623,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "tbbmode",        optional_argument, 0, 'T' },
 		{ "spustatus",      no_argument, 	   0, 'V' },
 		{ "expert",         no_argument, 	   0, 'X' },
+		{ "splitter",		optional_argument, 0, 'Z' },
 		{ "readblock",      required_argument, 0, '1' },
 		{ "writeblock",     required_argument, 0, '2' },
 
@@ -2886,6 +2955,21 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			SPUStatusCommand* spustatuscommand = new SPUStatusCommand(m_server);
 			command = spustatuscommand;
 			command->set_ndevices(m_nrspboards);
+		}
+		break;
+
+		case 'Z': // --splitter
+		{
+			if (command) 
+				delete command;
+			SplitterCommand* splitterCommand = new SplitterCommand(m_server);
+			command = splitterCommand;
+			command->set_ndevices(m_nrspboards);
+			if (optarg) {
+				splitterCommand->setMode(false);	// true=get,false=set
+				splitterCommand->state(atoi(optarg));
+			}
+
 		}
 		break;
 

@@ -182,6 +182,10 @@ public:
 	static const uint8 TBB_BANDSELX  = 0x02;
 	static const uint8 TBB_BANDSELY  = 0x03;
 
+	// SERDES, CEP and LCU registers
+	static const uint8 MDIO_HEADER = 0x00;
+	static const uint8 MDIO_DATA   = 0x01;
+
 	// RAD_BP register controls how local and remove crosslet and
 	// beamlet data from the SERDES lanes is combined on an RSP 
 	// board. This can be used to define logical start and end-points
@@ -278,6 +282,9 @@ public:
 	static const uint16 CDO_HEADER_SIZE       = 32;
 
 	static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE = 4;
+
+	static const uint16	MDIO_HEADER_SIZE	  = 2;
+	static const uint16	MDIO_DATA_SIZE		  = 2;
 
 	static const uint16 TDS_PROTOCOL_SIZE     = 4096;
 	static const uint16 TDS_RESULT_SIZE       = 1024;
@@ -397,6 +404,9 @@ public:
 
 	static const FieldsType BS_NOF_SAMPLES_PER_SYNC_HDR;
 
+	static const FieldsType SERDES_HEADER_HDR;
+	static const FieldsType SERDES_DATA_HDR;
+
 	static const FieldsType TDS_PROTOCOL_HDR;
 	static const FieldsType TDS_RESULT_HDR;
 
@@ -409,6 +419,7 @@ public:
 
 	static const FieldsType RSP_RAWDATA_WRITE;
 	static const FieldsType RSP_RAWDATA_READ;
+
 	/*@}*/
 };
 

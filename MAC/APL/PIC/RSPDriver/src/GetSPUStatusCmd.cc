@@ -63,7 +63,7 @@ void GetSPUStatusCmd::ack(CacheBuffer& cache)
 {
 	RSPGetspustatusackEvent ack;
 	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+	ack.status = RSP_SUCCESS;
 	ack.spustatus.subrack().resize(cache.getSPUStatus().subrack().size());
 	ack.spustatus = cache.getSPUStatus();
 
@@ -126,7 +126,7 @@ void GetSPUStatusCmd::ack_fail()
 	RSPGetspustatusackEvent ack;
 
 	ack.timestamp = Timestamp(0,0);
-	ack.status = FAILURE;
+	ack.status = RSP_FAILURE;
 
 	// send back dummy status array
 	ack.spustatus.subrack().resize(1);

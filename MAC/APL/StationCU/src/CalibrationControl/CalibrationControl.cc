@@ -403,7 +403,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 	case CAL_STARTACK: {
 		CALStartackEvent		ack(event);
 		gResult |= ack.status;		// update overall result
-		if (ack.status == SUCCESS || ack.status == ERR_ALREADY_REGISTERED) {
+		if (ack.status == CAL_SUCCESS || ack.status == ERR_ALREADY_REGISTERED) {
 			LOG_INFO_STR ("Start of the calibration of beam " << ack.name << " was succesful");
 			itsBeams[ack.name] = true;					// add to beammap
 		}
@@ -414,7 +414,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 		}
 
 		if (itsObsPar.beams.size() == itsBeams.size()) {	// answer for all beams received? report state
-			if (gResult == SUCCESS || gResult == ERR_ALREADY_REGISTERED) {
+			if (gResult == CAL_SUCCESS || gResult == ERR_ALREADY_REGISTERED) {
 				LOG_INFO("Calibration of all beams started sucesfully, going to active-mode");
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
 				setState(CTState::PREPARED);
@@ -510,7 +510,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CAL_STOPACK: {
 		CALStopackEvent			ack(event);
 		gResult |= ack.status;
-		if (ack.status == SUCCESS) {
+		if (ack.status == CAL_SUCCESS) {
 			LOG_INFO_STR ("Calibration of beam " << ack.name << " successfully stopped");
 		}
 		else {
@@ -529,7 +529,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		}
 
 		if (itsBeams.empty()) {		// all beams stopped?
-			if (gResult == SUCCESS) {
+			if (gResult == CAL_SUCCESS) {
 				LOG_INFO("All calibrations stopped, going to RELEASED state");
 				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
 				setState(CTState::RELEASED);

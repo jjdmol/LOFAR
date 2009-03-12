@@ -1,6 +1,6 @@
 //#  Command.cc: implementation of the Command class
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -28,7 +28,11 @@
 using namespace LOFAR;
 using namespace RSP;
 
-Command::Command() : m_period(0), m_port(0), m_operation(READ)
+Command::Command() : 
+	m_period(0), 
+	m_port(0), 
+	m_operation(READ),
+	itsIsDelayed(false)
 {
 }
 

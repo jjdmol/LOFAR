@@ -59,7 +59,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   RSPGetstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status    = SUCCESS;
+  ack.status    = RSP_SUCCESS;
   
   if (m_event->type <= Statistics::SUBBAND_POWER)
   {
@@ -137,7 +137,7 @@ void GetStatsCmd::ack_fail()
   RSPGetstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = FAILURE;
+  ack.status = RSP_FAILURE;
   ack.stats().resize(0, 0, 0);
 
   getPort()->send(ack);

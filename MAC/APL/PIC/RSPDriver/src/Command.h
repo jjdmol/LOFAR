@@ -35,105 +35,89 @@
 namespace LOFAR {
   namespace RSP {
 
-    class Command : public RefCount
-    {
-    public:
-
-      /** types */
-      enum Operation
-	{
-	  READ = 1,
-	  WRITE,
+class Command : public RefCount
+{
+public:
+	/** types */
+	enum Operation {
+		READ = 1,
+		WRITE,
 	};
 
-      /**
-       * Constructors for a Command object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
-       */
-      Command();
-	  
-      /* Destructor for Command. */
-      virtual ~Command();
+	// Constructors for a Command object.
+	// Currently the tv_usec part is always set to 0 irrespective
+	// of the value passed in.
+	Command();
 
-      /*@{*/
-      /**
-       * Accessor methods for the period field.
-       * The period (in seconds) with which this command should
-       * be executed. The command will be executed every 'period' seconds.
-       */
-      void  setPeriod(uint16 period);
-      int16 getPeriod();
-      /*@}*/
+	// Destructor for Command.
+	virtual ~Command();
 
-      /*@{*/
-      /**
-       * Set/get the type of operation READ/WRITE.
-       */
-      void setOperation(Operation oper);
-      Operation getOperation() const;
-      /*@}*/
+	/*@{*/
+	// Accessor methods for the period field.
+	// The period (in seconds) with which this command should
+	// be executed. The command will be executed every 'period' seconds.
+	void  setPeriod(uint16 period);
+	int16 getPeriod();
+	/*@}*/
 
-      /*@{*/
-      /**
-       * Accessor methods for the port member.
-       */
-      void setPort(GCFPortInterface& port);
-      GCFPortInterface* getPort();
-      /*@}*/
+	/*@{*/
+	// Set/get the type of operation READ/WRITE.
+	void setOperation(Operation oper);
+	Operation getOperation() const;
+	/*@}*/
 
-      /**
-       * Acknowledge the command by sending the appropriate
-       * response on m_port.
-       */
-      virtual void ack(CacheBuffer& cache) = 0;
+	/*@{*/
+	// Accessor methods for the port member.
+	void setPort(GCFPortInterface& port);
+	GCFPortInterface* getPort();
+	/*@}*/
 
-      /**
-       * Make necessary changes to the cache for the next synchronization.
-       * Any changes will be sent to the RSP boards.
-       */
-      virtual void apply(CacheBuffer& cache, bool setModFlag = true) = 0;
+	/*@{*/
+	// Accessor methods for the port member.
+	void delayedResponse(bool		delayIt) { itsIsDelayed = delayIt; }
+	bool delayedResponse() const			 { return (itsIsDelayed);   }
+	/*@}*/
 
-      /**
-       * Complete the command by sending the appropriate response on
-       * the m_port;
-       */
-      virtual void complete(CacheBuffer& cache) = 0 ;
+	// Acknowledge the command by sending the appropriate
+	// response on m_port.
+	virtual void ack(CacheBuffer& cache) = 0;
 
-      /**
-       * Get or set the timestamp of the underlying event
-       * for a command.
-       */
-      virtual const RTC::Timestamp& getTimestamp() const = 0;
-      virtual void setTimestamp(const RTC::Timestamp& timestamp) = 0;
+	// Make necessary changes to the cache for the next synchronization.
+	// Any changes will be sent to the RSP boards.
+	virtual void apply(CacheBuffer& cache, bool setModFlag = true) = 0;
 
-      /**
-       * Validate the parameters of the event.
-       * @return true if they are ok.
-       */
-      virtual bool validate() const = 0;
+	// Complete the command by sending the appropriate response on
+	// the m_port;
+	virtual void complete(CacheBuffer& cache) = 0 ;
 
-      /**
-       * Compare operator to order commands in the queue
-       */
-      bool operator<(const Command& other);
+	// Get or set the timestamp of the underlying event
+	// for a command.
+	virtual const RTC::Timestamp& getTimestamp() const = 0;
+	virtual void setTimestamp(const RTC::Timestamp& timestamp) = 0;
 
-    private:
-      uint16             m_period;
-      GCFEvent*          m_event;
-      GCFPortInterface*  m_port;
-      Operation          m_operation;
-    };
+	// Validate the parameters of the event.
+	// @return true if they are ok.
+	virtual bool validate() const = 0;
 
-    /**
-     * Comparison function to order a priority_queue of Ptr<Command>* pointers
-     * as it is used in the Scheduler class.
-     */
-    struct Command_greater { 
-      bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
-      { return x->getTimestamp() > y->getTimestamp(); }
-    };
-  };
+	// Compare operator to order commands in the queue
+	bool operator<(const Command& other);
+
+private:
+	uint16             m_period;
+	GCFEvent*          m_event;
+	GCFPortInterface*  m_port;
+	Operation          m_operation;
+	bool			   itsIsDelayed;
 };
-     
+
+// Comparison function to order a priority_queue of Ptr<Command>* pointers
+// as it is used in the Scheduler class.
+struct Command_greater { 
+	bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
+	{ return x->getTimestamp() > y->getTimestamp(); }
+};
+
+  }; // namespace RSP
+}; // namespace LOFAR
+
 #endif /* COMMAND_H_ */

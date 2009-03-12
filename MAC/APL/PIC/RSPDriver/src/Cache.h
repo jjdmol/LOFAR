@@ -25,10 +25,11 @@
 #ifndef CACHE_H_
 #define CACHE_H_
 
+#include <Common/LofarTypes.h>
+#include <blitz/array.h>
 #include <APL/RSP_Protocol/AllRegisterState.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
-#include <blitz/array.h>
-#include <Common/LofarTypes.h>
+#include "SerdesBuffer.h"
 
 namespace LOFAR {
   namespace RSP {
@@ -76,6 +77,8 @@ public:
 	RSP_Protocol::TBBSettings&       getTBBSettings();
 	RSP_Protocol::BypassSettings&    getBypassSettings();
 	RawDataBlock_t&					 getRawDataBlock();
+	SerdesBuffer&					 getSdsWriteBuffer();
+	SerdesBuffer&					 getSdsReadBuffer(int rspBoardNr);
 	/*@}*/
 
 	// update timestamp
@@ -118,6 +121,8 @@ private:
 	RSP_Protocol::TBBSettings      m_tbbsettings;
 	RSP_Protocol::BypassSettings   m_bypasssettings;
 	RawDataBlock_t				   itsRawDataBlock;
+	SerdesBuffer				   itsSdsWriteBuffer;
+	SerdesBuffer				   itsSdsReadBuffer[MAX_N_RSPBOARDS];
 
 	Cache* m_cache;		// pointer to container
 };

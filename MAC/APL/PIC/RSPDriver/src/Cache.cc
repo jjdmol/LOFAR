@@ -78,6 +78,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
   LOG_DEBUG_STR("m_bypasssettings().size()     =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
   LOG_DEBUG_STR("m_rawDataBlock.size()         =" << ETH_DATA_LEN + sizeof (uint16));
+  LOG_DEBUG_STR("m_SdsWriteBuffer.size()       =" << sizeof(itsSdsWriteBuffer));
+  LOG_DEBUG_STR("m_SdsReadBuffer.size()        =" << sizeof(itsSdsReadBuffer));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
@@ -97,7 +99,9 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_spustatus.subrack().size()    
 	       + m_tbbsettings().size()
 	       + m_bypasssettings().size()
-		   + ETH_DATA_LEN + sizeof(uint16)));
+		   + ETH_DATA_LEN + sizeof(uint16)
+		   + sizeof(itsSdsWriteBuffer)
+		   + sizeof(itsSdsReadBuffer)));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -202,49 +206,55 @@ void CacheBuffer::reset(void)
 
   m_xcstats() = complex<double>(0,0);
 
-  // BoardStatus
-  m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
-  BoardStatus boardinit;
-  memset(&boardinit, 0, sizeof(BoardStatus));
-  m_systemstatus.board() = boardinit;
+	// BoardStatus
+	m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());
+	BoardStatus boardinit;
+	memset(&boardinit, 0, sizeof(BoardStatus));
+	m_systemstatus.board() = boardinit;
 
-  EPA_Protocol::RSRVersion versioninit = { { 0 }, 0, 0 };
-  m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
-  m_versions.bp() = versioninit;
-  m_versions.ap().resize(StationSettings::instance()->nrBlps());
-  m_versions.ap() = versioninit;
+	EPA_Protocol::RSRVersion versioninit = { { 0 }, 0, 0 };
+	m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
+	m_versions.bp() = versioninit;
+	m_versions.ap().resize(StationSettings::instance()->nrBlps());
+	m_versions.ap() = versioninit;
 
-  // TDBoardStatus
-  m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
-  TDBoardStatus tdstatusinit;
-  memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
-  tdstatusinit.unknown = 1;
-  m_tdstatus.board() = tdstatusinit;
+	// TDBoardStatus
+	m_tdstatus.board().resize(StationSettings::instance()->nrRspBoards());
+	TDBoardStatus tdstatusinit;
+	memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
+	tdstatusinit.unknown = 1;
+	m_tdstatus.board() = tdstatusinit;
 
-  // SPUBoardStatus
-  m_spustatus.subrack().resize(1 + StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK);
-  LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
-  SPUBoardStatus spustatusinit;
-  memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
-  m_spustatus.subrack() = spustatusinit;
+	// SPUBoardStatus
+	m_spustatus.subrack().resize(1 + StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK);
+	LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
+	SPUBoardStatus spustatusinit;
+	memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
+	m_spustatus.subrack() = spustatusinit;
 
-  // TBBSettings
-  m_tbbsettings().resize(StationSettings::instance()->nrRcus());
-  bitset<MEPHeader::N_SUBBANDS> bandsel;
-  bandsel = 0;
-  m_tbbsettings() = bandsel;
+	// TBBSettings
+	m_tbbsettings().resize(StationSettings::instance()->nrRcus());
+	bitset<MEPHeader::N_SUBBANDS> bandsel;
+	bandsel = 0;
+	m_tbbsettings() = bandsel;
 
-  // BypassSettings (per BP)
-  LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
-  m_bypasssettings().resize(StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
-  BypassSettings::Control	control;
-  m_bypasssettings() = control;
+	// BypassSettings (per BP)
+	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
+	m_bypasssettings().resize(StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
+	BypassSettings::Control	control;
+	m_bypasssettings() = control;
 
 	// clear rawdatablock
 	itsRawDataBlock.address = 0;
 	itsRawDataBlock.offset  = 0;
 	itsRawDataBlock.dataLen = 0;
 	memset(itsRawDataBlock.data, 0, RSP_RAW_BLOCK_SIZE);
+
+	// clear SerdesBuffer
+	itsSdsWriteBuffer.clear();
+	for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
+		itsSdsReadBuffer[rsp].clear();
+	}
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
@@ -340,6 +350,18 @@ BypassSettings& CacheBuffer::getBypassSettings()
 RawDataBlock_t&	CacheBuffer::getRawDataBlock()
 {
 	return (itsRawDataBlock);
+}
+
+SerdesBuffer&	CacheBuffer::getSdsWriteBuffer()
+{
+	return (itsSdsWriteBuffer);
+}
+
+SerdesBuffer&	CacheBuffer::getSdsReadBuffer(int	rspBoardNr)
+{
+	ASSERTSTR(rspBoardNr >= 0 && rspBoardNr < MAX_N_RSPBOARDS, 
+				"RSPboard index out of range in getting serdesReadBuffer: " << rspBoardNr);
+	return (itsSdsReadBuffer[rspBoardNr]);
 }
 
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)

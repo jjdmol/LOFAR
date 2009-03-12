@@ -55,7 +55,7 @@ void SetBypassCmd::ack(CacheBuffer& /*cache*/)
 	RSPSetbypassackEvent ack;
 
 	ack.timestamp = getTimestamp();
-	ack.status = SUCCESS;
+	ack.status = RSP_SUCCESS;
 
 	getPort()->send(ack);
 }

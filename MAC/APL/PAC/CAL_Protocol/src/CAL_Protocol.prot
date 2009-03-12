@@ -27,7 +27,7 @@ prelude = << PRELUDE_END
 typedef	void*	memptr_t;
 
 enum {
-	SUCCESS = 0,
+	CAL_SUCCESS = 0,
 	ERR_RANGE,       		// range error in message parameters
 	ERR_NO_PARENT,   		// no parent antenna array by that name found
 	ERR_NO_SUBARRAY, 		// no subarray by that name found

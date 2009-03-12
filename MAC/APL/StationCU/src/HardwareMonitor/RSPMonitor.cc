@@ -512,7 +512,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 
 	case RSP_GETVERSIONACK: {
 		RSPGetversionackEvent		ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get the version information, retry in 5 seconds");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getVersion error"));
 			itsTimerPort->setTimer(5.0);
@@ -606,7 +606,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 
 	case RSP_GETSTATUSACK: {
 		RSPGetstatusackEvent		ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get the status information, trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getStatus error"));
 			TRAN(RSPMonitor::askRCUinfo);				// go to next state.
@@ -745,7 +745,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 
 	case RSP_GETTDSTATUSACK: {
 		RSPGettdstatusackEvent		ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get information of the TD board, trying again in next run");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getClockboard error"));
 			// mark the boards as offline
@@ -852,7 +852,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 
 	case RSP_GETSPUSTATUSACK: {
 		RSPGetspustatusackEvent		ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get information of the power board, trying again in next run");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:get powerboard error"));
 			// mark the boards as off-line
@@ -946,7 +946,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 	case RSP_GETRCUACK: {
 		RSPGetrcuackEvent	ack(event);
-		if (ack.status != SUCCESS) {
+		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get the RCU information, trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU error"));
 			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.

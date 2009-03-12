@@ -57,7 +57,7 @@ void GetRegisterStateCmd::ack(CacheBuffer& cache)
   RSPGetregisterstateackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.state = cache.getCache().getState();
 

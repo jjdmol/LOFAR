@@ -55,7 +55,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   RSPGetweightsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
 		       m_event->rcumask.count(),

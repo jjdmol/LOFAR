@@ -37,8 +37,8 @@ prelude = << PRELUDE_END
 typedef	void*	memptr_t;
 
 static const int MAX_N_RSPBOARDS 	= 24;
-static const int SUCCESS         	= 1;
-static const int FAILURE         	= 0;
+static const int RSP_SUCCESS       	= 1;
+static const int RSP_FAILURE       	= 0;
 static const int RSP_RAW_BLOCK_SIZE = 1480;
 
 // The protocol implements the following messages.
@@ -160,6 +160,13 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // SETBLOCKACK			(timestamp, boardID, status);
 // GETBLOCK				(timestamp, boardID, address, offset, datalen)
 // GETBLOCKACK			(timestamp, boardID, status, datalen, data);
+
+// SETSPLITTER			(timestamp, rspmask, on/off);
+// SETSPLITTERACK		(timestamp, status);
+// GETSPLITTER			(timestamp, rspmask);
+// GETSPLITTERACK		(timestamp, status, rspmask, splitters);
+
+// 105 commands
 
 PRELUDE_END;
 
@@ -1963,3 +1970,80 @@ event = {
 		type = "uint8[RSP_RAW_BLOCK_SIZE]";
 	};
 };
+
+// SETSPLITTER (timestamp, rspmask, on/off);
+event = {
+	signal = SETSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "rspmask";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+	param = {
+		name = "switch_on";
+		type = "bool";
+	};
+};
+
+// SETSPLITTERACK(timestamp, status);
+event = {
+	signal = SETSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+// GETSPLITTER(timestamp, rspmask, cache);
+event = {
+	signal = GETSPLITTER;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "rspmask";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+// GETSPLITTERACK(timestamp, status, splitters)
+event = {
+	signal = GETSPLITTERACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "rspmask";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+	param = {
+		name = "splitter";
+		type = "bitset<MAX_N_RSPBOARDS>";
+	};
+};
+

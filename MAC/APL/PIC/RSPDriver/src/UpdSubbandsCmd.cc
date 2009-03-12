@@ -83,7 +83,7 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 	RSPUpdsubbandsEvent ack;
 
 	ack.timestamp = getTimestamp();
-	ack.status 	  = SUCCESS;
+	ack.status 	  = RSP_SUCCESS;
 	ack.handle 	  = (memptr_t)this; // opaque ptr used to refer to the subscr.
 
 	// Allocate room in subbands array

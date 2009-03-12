@@ -66,7 +66,7 @@ void GetRawBlockCmd::ack(CacheBuffer& cache)
 	RawDataBlock_t&		rdb = cache.getRawDataBlock();
 	ack.timestamp = getTimestamp();
 	ack.boardID	  = itsEvent->boardID;
-	ack.status 	  = SUCCESS;
+	ack.status 	  = RSP_SUCCESS;
 	ack.dataLen   = rdb.dataLen;
 	memcpy(ack.data, rdb.data, ack.dataLen);
 
@@ -146,7 +146,7 @@ void GetRawBlockCmd::ack_fail()
 {
 	RSPGetblockackEvent ack;
 	ack.timestamp = getTimestamp();
-	ack.status 	  = FAILURE;
+	ack.status 	  = RSP_FAILURE;
 	ack.dataLen   = 0;
 	LOG_INFO ("GetRawBlockCmd::ack_fail");
 

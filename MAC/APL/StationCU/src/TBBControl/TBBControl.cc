@@ -448,7 +448,7 @@ GCFEvent::TResult TBBControl::doRSPtbbMode(GCFEvent& event, GCFPortInterface& po
 		case RSP_SETTBBACK: {
 			RSPSettbbackEvent ack(event);
 			
-			if (ack.status == SUCCESS) {
+			if (ack.status == RSP_SUCCESS) {
 				TRAN(TBBControl::doTBBmode);				// go to next state.
 			} else {
 				LOG_ERROR_STR ("Failed to set the operating mode for all the rcus");

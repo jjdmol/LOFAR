@@ -172,7 +172,8 @@ namespace LOFAR {
       // Table 33
       // Wait to allow for the broadcast to finish (5 bytes)
       18, // PROTOCOL_C_WAIT
-      0x80, 0x96, 0x98, 0x00, // 0x00989680 = 10e6 * 5ns = 50ms
+      0x00, 0x24, 0xF4, 0x00, // 0x00F42400 = 16e6 * 5ns = 80ms
+//    0x80, 0x96, 0x98, 0x00, // 0x00989680 = 10e6 * 5ns = 50ms
 
       // Table 34
       // Instruct the client to do a unicast read request to server 0 (8 bytes)
@@ -188,7 +189,8 @@ namespace LOFAR {
       // Table 35
       // Wait to allow for the multicast to finish
       18, // PROTOCOL_C_WAIT (5 bytes)
-      0x00, 0x09, 0x3D, 0x00, // 0x003D0900 = 4e6 * 5ns = 20ms pause between write request register and read response register
+      0x00, 0xA8, 0x61, 0x00, // 0x0061A800 = 6.4e6 * 5ns = 32ms pause between write request register and read response register
+//    0x00, 0x09, 0x3D, 0x00, // 0x003D0900 = 4e6 * 5ns = 20ms pause between write request register and read response register
 
       // Table 36
       // Read back the response results from the client (4 bytes)

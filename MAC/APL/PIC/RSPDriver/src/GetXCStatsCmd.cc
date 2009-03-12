@@ -55,7 +55,7 @@ void GetXCStatsCmd::ack(CacheBuffer& cache)
   RSPGetxcstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
 
   ack.stats().resize(cache.getXCStats()().shape());
   ack.stats() = cache.getXCStats()();
@@ -98,7 +98,7 @@ void GetXCStatsCmd::ack_fail()
   RSPGetxcstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = FAILURE;
+  ack.status = RSP_FAILURE;
   ack.stats().resize(0, 0, 0, 0);
 
   getPort()->send(ack);

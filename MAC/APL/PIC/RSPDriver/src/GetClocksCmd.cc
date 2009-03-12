@@ -56,7 +56,7 @@ void GetClocksCmd::ack(CacheBuffer& cache)
   RSPGetclockackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   ack.clock = cache.getClock();
 
   getPort()->send(ack);

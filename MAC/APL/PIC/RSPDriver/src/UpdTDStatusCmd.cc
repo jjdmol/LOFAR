@@ -65,7 +65,7 @@ void UpdTDStatusCmd::complete(CacheBuffer& cache)
   RSPUpdtdstatusEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status = SUCCESS;
+  ack.status = RSP_SUCCESS;
   ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
 
   ack.tdstatus.board().resize(m_event->rspmask.count());
