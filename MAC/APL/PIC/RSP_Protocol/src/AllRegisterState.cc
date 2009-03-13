@@ -39,6 +39,7 @@ unsigned int AllRegisterState::getSize()
     + ss_state.getSize()
     + rcusettings_state.getSize()
     + rcuprotocol_state.getSize()
+    + itsRcuReadState.getSize()
     + hbaprotocol_state.getSize()
     + rsuclear_state.getSize()
     + diagwgsettings_state.getSize()
@@ -72,6 +73,7 @@ unsigned int AllRegisterState::pack  (void* buffer)
 	offset += ss_state.pack((char*)buffer + offset);
 	offset += rcusettings_state.pack((char*)buffer + offset);
 	offset += rcuprotocol_state.pack((char*)buffer + offset);
+	offset += itsRcuReadState.pack((char*)buffer + offset);
 	offset += hbaprotocol_state.pack((char*)buffer + offset);
 	offset += rsuclear_state.pack((char*)buffer + offset);
 	offset += diagwgsettings_state.pack((char*)buffer + offset);
@@ -107,6 +109,7 @@ unsigned int AllRegisterState::unpack(void *buffer)
 	offset += ss_state.unpack((char*)buffer + offset);
 	offset += rcusettings_state.unpack((char*)buffer + offset);
 	offset += rcuprotocol_state.unpack((char*)buffer + offset);
+	offset += itsRcuReadState.unpack((char*)buffer + offset);
 	offset += hbaprotocol_state.unpack((char*)buffer + offset);
 	offset += rsuclear_state.unpack((char*)buffer + offset);
 	offset += diagwgsettings_state.unpack((char*)buffer + offset);

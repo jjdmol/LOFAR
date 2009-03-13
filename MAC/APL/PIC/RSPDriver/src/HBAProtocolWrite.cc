@@ -300,18 +300,19 @@ HBAProtocolWrite::~HBAProtocolWrite()
 void HBAProtocolWrite::sendrequest()
 {
 	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
+	AllRegisterState&	regStates = Cache::getInstance().getState();
 
 	// only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
-	if (RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL)
-	 || RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
+	if ((regStates.rcuprotocol().get(global_blp * MEPHeader::N_POL) != RTC::RegisterState::IDLE) ||
+	 	(regStates.rcuprotocol().get(global_blp * MEPHeader::N_POL + 1) != RTC::RegisterState::IDLE)) {
 		setContinue(true);
 		return;
 	}
    
-	if (RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
-	 && RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
-		Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL);
-		Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL + 1);
+	if ((regStates.hbaprotocol().get(global_blp * MEPHeader::N_POL) != RTC::RegisterState::WRITE) &&
+		(regStates.hbaprotocol().get(global_blp * MEPHeader::N_POL + 1) != RTC::RegisterState::WRITE)) {
+		regStates.hbaprotocol().unmodified(global_blp * MEPHeader::N_POL);
+		regStates.hbaprotocol().unmodified(global_blp * MEPHeader::N_POL + 1);
 		setContinue(true);
 		return;
 	}
@@ -407,8 +408,8 @@ LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
   if (1 == (getCurrentIndex() % N_WRITES)) {
 
     // Mark modification as applied when write of RCU result register has completed
-    Cache::getInstance().getState().hbaprotocol().read_schedule(global_blp * MEPHeader::N_POL);
-    Cache::getInstance().getState().hbaprotocol().read_schedule(global_blp * MEPHeader::N_POL + 1);
+    Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL + 1);
 
   }
   

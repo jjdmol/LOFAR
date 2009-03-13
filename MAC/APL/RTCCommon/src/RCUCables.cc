@@ -123,8 +123,6 @@ float	RCUCables::getAtt  (int	rcuNr, int	rcuMode) const
 	ASSERTSTR(rcuMode >= 0 && rcuMode <= MAX_RCU_MODE, "RCUMode "   << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 
 	switch (rcuMode) {
-		case 0:	return (0.0);
-
 		case 1:
 		case 2: return (itsCableAtts->getAttenuation(itsCableLengths(rcuNr, 0), rcuMode));
 
@@ -135,6 +133,7 @@ float	RCUCables::getAtt  (int	rcuNr, int	rcuMode) const
 		case 6:
 		case 7: return (itsCableAtts->getAttenuation(itsCableLengths(rcuNr, 2), rcuMode));
 	}
+	return (0.0);
 }
 
 // Returns the delay in ns for the given rcu when operation in the given rcumode.
@@ -144,8 +143,6 @@ float	RCUCables::getDelay(int	rcuNr, int	rcuMode) const
 	ASSERTSTR(rcuMode >= 0 && rcuMode <= MAX_RCU_MODE, "RCUMode "   << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 
 	switch (rcuMode) {
-		case 0:	return (0.0);
-
 		case 1:
 		case 2: return (itsCableDelays(rcuNr, 0));
 
@@ -156,6 +153,7 @@ float	RCUCables::getDelay(int	rcuNr, int	rcuMode) const
 		case 6:
 		case 7: return (itsCableDelays(rcuNr, 2));
 	}
+	return (0.0);
 }
 
 // Returns the largest attenuation in dB when operation in the given rcumode.

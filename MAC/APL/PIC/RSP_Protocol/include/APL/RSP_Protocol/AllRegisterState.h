@@ -62,6 +62,7 @@ public:
 		ss_state.resize(nrBlps);
 		rcusettings_state.resize(nrRcus);
 		rcuprotocol_state.resize(nrRcus);
+		itsRcuReadState.resize(nrRcus);
 		hbaprotocol_state.resize(nrRcus);
 		rsuclear_state.resize(nrRspBoards);
 		diagwgsettings_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_DIAG_WG_REGISTERS);
@@ -98,6 +99,7 @@ public:
 		ss_state.reset();
 		rcusettings_state.reset();
 		rcuprotocol_state.reset();
+		itsRcuReadState.reset();
 		hbaprotocol_state.reset();
 		rsuclear_state.reset();
 		diagwgsettings_state.reset();
@@ -126,6 +128,7 @@ public:
 		ss_state.write();
 		rcusettings_state.write();
 		rcuprotocol_state.write();
+		itsRcuReadState.write();
 		hbaprotocol_state.write();
 		rsuclear_state.check();
 		diagwgsettings_state.write();
@@ -159,6 +162,7 @@ public:
 		ss_state.write(); // always write ss
 		rcusettings_state.check();
 		rcuprotocol_state.check();
+		itsRcuReadState.check();
 		hbaprotocol_state.check();
 		rsuclear_state.check();
 		diagwgsettings_state.check();
@@ -192,6 +196,7 @@ public:
 		ss_state.clear();
 		rcusettings_state.clear();
 		rcuprotocol_state.clear();
+		itsRcuReadState.clear();
 		hbaprotocol_state.clear();
 		rsuclear_state.clear();
 		diagwgsettings_state.clear();
@@ -230,6 +235,7 @@ public:
 		out << "Subband Selection   "; ss_state.print(out);
 		out << "RCUSettings         "; rcusettings_state.print(out);
 		out << "RCUProtocol         "; rcuprotocol_state.print(out);
+		out << "RCU Read            "; itsRcuReadState.print(out);
 		out << "HBAProtocol         "; hbaprotocol_state.print(out);
 		out << "RSUClear            "; rsuclear_state.print(out);
 		out << "DIAGWGSettings      "; diagwgsettings_state.print(out);
@@ -270,6 +276,7 @@ public:
 	RTC::RegisterState& ss()             { return ss_state; }
 	RTC::RegisterState& rcusettings()    { return rcusettings_state; }
 	RTC::RegisterState& rcuprotocol()    { return rcuprotocol_state; }
+	RTC::RegisterState& rcuread()        { return itsRcuReadState; }
 	RTC::RegisterState& hbaprotocol()    { return hbaprotocol_state; }
 	RTC::RegisterState& rsuclear()       { return rsuclear_state; }
 	RTC::RegisterState& diagwgsettings() { return diagwgsettings_state; }
@@ -302,6 +309,7 @@ private:
 	RTC::RegisterState ss_state;             // SS state
 	RTC::RegisterState rcusettings_state;    // RCU settings state
 	RTC::RegisterState rcuprotocol_state;    // RCU protocol state
+	RTC::RegisterState itsRcuReadState;      // RCU read state
 	RTC::RegisterState hbaprotocol_state;    // HBA protocol state
 	RTC::RegisterState rsuclear_state;       // RSU clear state
 	RTC::RegisterState diagwgsettings_state; // DIAG WG settings state

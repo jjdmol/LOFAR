@@ -102,7 +102,7 @@ namespace LOFAR {
 	void read         (int i = -1) { tran(IDLE,          READ,          i); }
 	void check        (int i = -1) { tran(IDLE,          CHECK,         i); }
 	void unmodified   (int i = -1) { tran(CHECK,         IDLE,          i); }
-	void read_schedule(int i = -1) { tran(WRITE,         READ,          i); }
+	void schedule_read(int i = -1) { tran(WRITE,         READ,          i); }
 	void read_ack     (int i = -1) { tran(READ,          DONE,          i); }
 	void write_ack    (int i = -1) { tran(WRITE,         DONE,          i); }
 	void read_error   (int i = -1) { tran(READ,          READ_ERROR,    i); }
