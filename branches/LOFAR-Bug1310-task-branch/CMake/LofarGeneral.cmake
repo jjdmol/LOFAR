@@ -34,6 +34,36 @@ check_type_size("ulong" HAVE_ULONG)
 check_type_size("long long" HAVE_LONG_LONG)
 
 
+## ----------------------------------------------------------------------------
+## Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
+## or "<unknown>", depending on compiler support for function name macro.
+## ----------------------------------------------------------------------------
+include(CheckCSourceCompiles)
+foreach(func_name __PRETTY_FUNCTION__ __FUNCTION__ "\"<unkown>\"")
+  check_c_source_compiles("
+    #include <stdio.h> 
+    int main() { puts(${func_name}); }
+    " HAVE_${func_name})
+  if(HAVE_${func_name})
+    set(AUTO_FUNCTION_NAME ${func_name} CACHE INTERNAL 
+      "Define as __PRETTY_FUNCTION__, __FUNCTION__, or \"<unknown>\"")
+    break()
+  endif(HAVE_${func_name})
+endforeach(func_name)
+
+## ----------------------------------------------------------------------------
+## Locate the Doxygen documentation tool
+## ----------------------------------------------------------------------------
+find_package(Doxygen)
+
+## ----------------------------------------------------------------------------
+## Initialize the LOFAR logger
+## ----------------------------------------------------------------------------
+include(LofarLogger)
+lofar_logger()
+message(STATUS "HAVE_LOG4CPLUS = ${HAVE_LOG4CPLUS}")
+
+lofar_find_package(pqxx 1 pqxx/pqxx)
 #lofar_DEBUG_OPTIMIZE([])
 #lofar_FUNCTION_NAME([])
 #lofar_BACKTRACE([])

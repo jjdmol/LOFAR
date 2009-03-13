@@ -17,11 +17,34 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 
-include(CMakeSettings)
+## ---------------------------------------------------------------------------
+## Define a new LOFAR project for CMake.
+## ---------------------------------------------------------------------------
+macro(lofar_project name)
 
-## ----------------------------------------------------------------------------
-## Configure the LOFAR CTest wrapper script in the current binary directory
-## ----------------------------------------------------------------------------
-configure_file(${LOFAR_ROOT}/autoconf_share/runctest.sh
-               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)
+  # Preamble: set compilers
+  include(LofarInit)
+
+  # Project characteristics
+  project(${name})
+  cmake_minimum_required(VERSION 2.6)
+
+  # Load/execute general macro's
+  include(LofarGeneral)
+
+  # Handle LOFAR options
+  include(LofarOptions)
+
+#  # Generate configuration header file
+#  configure_file(
+#    ${CMAKE_SOURCE_DIR}/lofar_config.h.cmake 
+#    ${CMAKE_BINARY_DIR}/lofar_config.h)
+
+  # Build tests?
+  if(ENABLE_TESTING)
+    include(CTest)
+  endif(ENABLE_TESTING)
+
+endmacro(lofar_project name)

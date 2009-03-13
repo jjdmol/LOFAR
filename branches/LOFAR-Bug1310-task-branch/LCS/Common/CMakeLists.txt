@@ -21,33 +21,30 @@
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Common)
-cmake_minimum_required(VERSION 2.6)
+include(LofarProject)
+lofar_project(Common)
 
 ## ---------------------------------------------------------------------------
-##  CMake configuration settings
+## External packages
 ## ---------------------------------------------------------------------------
-
-include(CMakeSettings)
-include(CTest)
-
-include(CheckTypeSize)
-check_type_size("ushort" HAVE_USHORT)
-check_type_size("uint" HAVE_UINT)
-check_type_size("ulong" HAVE_ULONG)
-check_type_size("long long" HAVE_LONG_LONG)
-
-add_definitions(-DHAVE_CONFIG_H)
-add_definitions(-DHAVE_BOOST)
-add_definitions(-DHAVE_LOG4CPLUS)
-add_definitions(-I/opt/lofar/external/log4cplus/include)
-link_directories(/opt/lofar/external/log4cplus/lib64)
+include(LofarFindPackage)
+lofar_find_package(Boost 1)
 
 ## ---------------------------------------------------------------------------
-## Subdirectories to add
+## Generate configuration header file
+## ---------------------------------------------------------------------------
+include(LofarConfig)
+
+set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "${LOFAR_INCLUDE_DIRS}")
+#set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "${LOFAR_DEFINITIONS}")
+
+## ---------------------------------------------------------------------------
+## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/Common)
 add_subdirectory(src)
-if(BUILD_TESTING)
+
+
+#if(ENABLE_TESTING)
   add_subdirectory(test)
-endif(BUILD_TESTING)
+#endif(ENABLE_TESTING)

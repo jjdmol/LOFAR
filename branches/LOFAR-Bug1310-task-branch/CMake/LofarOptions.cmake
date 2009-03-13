@@ -29,9 +29,24 @@ message(STATUS "**** ENTER: LofarOptions.cmake ****")
 
 foreach(opt ${LOFAR_OPTIONS})
   message(STATUS "${opt} is ${${opt}}")
-#  if(${opt})
-#  endif(${opt})
+  if(${opt})
+    string(REPLACE "USE_" "" pkg ${opt})
+    message(STATUS "  pkg = ${pkg}")
+  endif(${opt})
 endforeach(opt ${LOFAR_OPTIONS})
+
+#if(ENABLE_TESTING)
+#  enable_testing()
+#endif(ENABLE_TESTING)
+
+if(USE_SHMEM)
+  set(HAVE_SHMEM 1)
+endif(USE_SHMEM)
+
+if(USE_LOG4CXX AND USE_LOG4CPLUS)
+  message(FATAL_ERROR "You cannot use more than one logger implementation. "
+    "Please check your variants file!")
+endif(USE_LOG4CXX AND USE_LOG4CPLUS)
 
 #set(OPTION        USE_LOG4CXX   OFF)
 #set(OPTION        USE_AIPSPP    OFF)

@@ -1,4 +1,4 @@
-#  LofarVariants.cmake: include global and host-specific variants files.
+#  $Id$
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,24 +17,16 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#  $Id$
+
+#  Include a host-specific 'variants.<hostname>' file, if present; and a
+#  global 'variants' file. These files must be located in the directory
+#  ${LOFAR_ROOT}/CMake/variants.
 
 if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
-  set(LOFAR_VARIANTS_INCLUDED TRUE CACHE BOOL "LOFAR_VARIANTS_INCLUDED" FORCE)
-  
-  message(STATUS "**** ENTER: LofarVariants.cmake ****")
-
-  include(CMakeSettings)
-
-  ## --------------------------------------------------------------------------
-  ## Include global variants file.
-  ## --------------------------------------------------------------------------
-  message(STATUS "Loading global variants file")
-  include(${LOFAR_ROOT}/CMake/variants/variants)
+  set(LOFAR_VARIANTS_INCLUDED TRUE)
   
   ## --------------------------------------------------------------------------
-  ## Include machine specific variants file, if present
+  ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
   execute_process(COMMAND hostname -s
     OUTPUT_VARIABLE hostname
@@ -46,6 +38,10 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
     include(${variants_file})
   endif (EXISTS ${variants_file})
   
-  message(STATUS "**** LEAVE: LofarVariants.cmake ****")
-
+  ## --------------------------------------------------------------------------
+  ## Next, include global variants file.
+  ## --------------------------------------------------------------------------
+  message(STATUS "Loading global variants file")
+  include(${LOFAR_ROOT}/CMake/variants/variants)
+  
 endif(NOT DEFINED LOFAR_VARIANTS_INCLUDED)

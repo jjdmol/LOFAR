@@ -1,4 +1,4 @@
-#  $Id$
+#  LofarLogger.cmake: Check for logger (log4cplus, log4cxx or none)
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,23 +17,25 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
 
-## ----------------------------------------------------------------------------
-## Variables set by the global CMake settings module:
-##
-## ----------------------------------------------------------------------------
+include(LofarFindPackage)
 
-#if(NOT LOFAR_CMAKE_CONFIG)
+macro(lofar_logger)
 
-  message(STATUS "**** ENTER: CMakeSettings.cmake ****")
+  if(USE_LOG4CPLUS AND USE_LOG4CXX)
+    message(FATAL_ERROR "Cannot use Log4Cplus and Log4Cxx at the same time")
+  endif(USE_LOG4CPLUS AND USE_LOG4CXX)
 
-  set(LOFAR_CMAKE_CONFIG TRUE CACHE INTERNAL "LOFAR CMake config flag")
+  if(USE_LOG4CPLUS)
+    MESSAGE(STATUS "Checking for Log4Cplus ...")
+    lofar_find_package(Log4Cplus 1)# log4cplus/logger.h)
+  endif(USE_LOG4CPLUS)
 
-  ## --------------------------------------------------------------------------
-  ## Several "Auto-tools variables" needed for backward compatibility
-  ## --------------------------------------------------------------------------
-  set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
+  if(USE_LOG4CXX)
+    MESSAGE(STATUS "Checking for Log4Cxx ...")
+    lofar_find_package(Log4Cxx 1 log4cxx/logger.h)
+  endif(USE_LOG4CXX)
 
-  message(STATUS "**** LEAVE: CMakeSettings.cmake ****")
-
-#endif(NOT LOFAR_CMAKE_CONFIG)
+endmacro(lofar_logger)

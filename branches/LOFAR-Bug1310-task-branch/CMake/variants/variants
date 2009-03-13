@@ -2,17 +2,56 @@
 ##
 ## Global variants file.
 ##
-## Defines compiler suites (e.g., GCC),
+## Defines compiler suites (e.g., GNU),
 ## build variants (e.g., debug or optimized),
 ## defaults for several options.
 ##
 ## $Id$
 
-set(GNU_COMPILERS GNU_C GNU_CXX CACHE INTERNAL "GNU Compilers")
-set(GNU_C         /usr/bin/gcc  CACHE INTERNAL "GNU C compiler")
-set(GNU_CXX       /usr/bin/g++  CACHE INTERNAL "GNU C++ compiler")
+# Define compiler suites.
+set(LOFAR_COMPILER_SUITES
+  GNU
+)
 
-set(LOFAR_OPTIONS 
+# Define build variants.
+set(LOFAR_BUILD_VARIANTS
+  DEBUG
+  OPT
+)
+
+# Default search path to use when searching for an external package.
+set(GNU_COMPILERS GNU_C GNU_CXX)  # GNU Compiler Suite
+set(GNU_C         /usr/bin/gcc )  # GNU C compiler
+set(GNU_CXX       /usr/bin/g++ )  # GNU C++ compiler
+
+set(GNU_C_FLAGS)
+set(GNU_C_FLAGS_DEBUG    "-g")
+set(GNU_C_FLAGS_OPT      "-g -O2")
+set(GNU_CXX_FLAGS        "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
+set(GNU_CXX_FLAGS_DEBUG  "-g")
+set(GNU_CXX_FLAGS_OPT    "-g -O2")
+set(GNU_COMPILE_DEFINITIONS)
+set(GNU_COMPILE_DEFINITIONS_DEBUG "LOFAR_DEBUG ENABLE_TRACER")
+set(GNU_COMPILE_DEFINITIONS_OPT)
+set(GNU_EXE_LINKER_FLAGS)
+set(GNU_EXE_LINKER_FLAGS_DEBUG)
+set(GNU_EXE_LINKER_FLAGS_OPT)
+
+set(LOFAR_SEARCH_PATH 
+  "+prefix"
+  "+root"
+  "/opt/lofar/external/+pkg+vers/+comp"
+  "/opt/lofar/external/+pkg+vers"
+  "/usr/local/+pkg+vers/+comp"
+  "/usr/local/+pkg+vers"
+  "/usr/local"
+  "/usr"
+  #CACHE INTERNAL "Search path for external packages"
+)
+
+# List of options that may be set for the LOFAR build.
+set(LOFAR_OPTIONS
+  ENABLE_TESTING
   USE_LOG4CXX
   USE_LOG4CPLUS
   USE_AIPSPP
@@ -22,33 +61,39 @@ set(LOFAR_OPTIONS
   USE_SSE
   USE_SHMEM
   USE_PYTHON
-  USE_BOOST
+#  USE_BOOST
   USE_BACKTRACE
-  CACHE INTERNAL "Lofar CMake options")
+  #CACHE INTERNAL "Lofar CMake options"
+)
 
-option(USE_LOG4CXX   "Use Log4Cxx"   OFF)
-option(USE_LOG4CPLUS "Use Log4Cplus" ON)
-option(USE_AIPSPP    "Use AIPS++"    OFF)
-option(USE_SOCKETS   "Use Sockets"   OFF)
-option(USE_ZOID      "Use ZOID"      OFF)
-option(USE_THREADS   "Use threads"   ON)
-option(USE_SSE       "Use SSE"       OFF)
-option(USE_SHMEM     "Use shmem"     ON)
-option(USE_PYTHON    "Use Python"    OFF)
-option(USE_BOOST     "Use Boost"     OFF)
-option(USE_BACKTRACE "Use backtrace" OFF)
+# Define default values for all LOFAR build options. These options may
+# be overridden for a given compiler suite. For example:
+# option(USE_BOOST_GNU "Use Boost for GNU" OFF)
 
-set(DEBUG_VARIANT               "${standard} ${debug}")
-set(DEBUGOPT_VARIANT            "${standard} ${debugopt}")
-set(BGL_VARIANT)
-set(BGP_VARIANT)
-set(FAKEBGL_VARIANT)
-set(MPICH_VARIANT)
-set(MPICH-OPT_VARIANT)
-set(MPICH-PROF_VARIANT)
-set(NOLOG4CPLUS_VARIANT)
-set(OPT_VARIANT)
-set(PROFOPT_VARIANT)
+option(ENABLE_TESTING "Enable testing" ON)
+option(USE_LOG4CXX    "Use Log4Cxx"   OFF)
+option(USE_LOG4CPLUS  "Use Log4Cplus" ON)
+option(USE_AIPSPP     "Use AIPS++"    OFF)
+option(USE_SOCKETS    "Use Sockets"   OFF)
+option(USE_ZOID       "Use ZOID"      OFF)
+option(USE_THREADS    "Use threads"   ON)
+option(USE_SSE        "Use SSE"       OFF)
+option(USE_SHMEM      "Use shmem"     ON)
+option(USE_PYTHON     "Use Python"    OFF)
+#option(USE_BOOST      "Use Boost"     ON)
+option(USE_BACKTRACE  "Use backtrace" OFF)
 
-set(standard "dummy")
-
+if(0)
+  set(DEBUG_VARIANT               "${standard} ${debug}")
+  set(DEBUGOPT_VARIANT            "${standard} ${debugopt}")
+  set(BGL_VARIANT)
+  set(BGP_VARIANT)
+  set(FAKEBGL_VARIANT)
+  set(MPICH_VARIANT)
+  set(MPICH-OPT_VARIANT)
+  set(MPICH-PROF_VARIANT)
+  set(NOLOG4CPLUS_VARIANT)
+  set(OPT_VARIANT)
+  set(PROFOPT_VARIANT)
+  set(standard "dummy")
+endif(0)

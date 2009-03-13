@@ -1,4 +1,4 @@
-include(LofarTest)
+include(LofarCTest)
 
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
@@ -27,6 +27,8 @@ set (CHECKTOOLPROGS
 #  tBacktrace
 )
 
+message(STATUS "[LCS/Common/test] LOFAR_LIBRARIES = ${LOFAR_LIBRARIES}")
+
 add_executable(testLogger testLogger.cc)
 add_executable(tAllocator tAllocator.cc)
 add_executable(tDataConvert tDataConvert.cc)
@@ -52,5 +54,5 @@ add_executable(tParameterSetPerf tParameterSetPerf.cc)
 
 foreach (prog ${CHECKTOOLPROGS})
   add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}.sh)
-  target_link_libraries(${prog} common log4cplus)
+  target_link_libraries(${prog} common ${LOFAR_LIBRARIES})
 endforeach (prog CHECKTOOLPROGS)

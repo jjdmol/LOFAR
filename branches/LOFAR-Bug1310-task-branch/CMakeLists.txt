@@ -18,35 +18,28 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+if(0)
+## ---------------------------------------------------------------------------
+## Preamble: set compilers
+## ---------------------------------------------------------------------------
+include(LofarInit)
+
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(LOFAR)
 cmake_minimum_required(VERSION 2.6)
 
+if(ENABLE_TESTING)
+  include(CTest)
+endif(ENABLE_TESTING)
+
+endif(0)
+
+include(LofarProject)
+lofar_project(LOFAR)
+
 ## ---------------------------------------------------------------------------
-##  CMake configuration settings
+## Subdirectories
 ## ---------------------------------------------------------------------------
-
-#include(CMakePrintSystemInformation)
-
-include(LofarConf)
-include(CTest)
-
-message(STATUS "LOFAR_ROOT = ${LOFAR_ROOT}")
-message(STATUS "CMAKE_BINARY_DIR = ${CMAKE_BINARY_DIR}")
-message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
-
-message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG          = ${CMAKE_CXX_FLAGS_DEBUG}")
-message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL     = ${CMAKE_CXX_FLAGS_MINSIZEREL}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE        = ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO = ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-
-
-message(STATUS "DEBUG_VARIANT = ${DEBUG_VARIANT}")
-message(STATUS "DEBUGOPT_VARIANT = ${DEBUGOPT_VARIANT}")
-
 add_subdirectory(LCS)
-

@@ -1,16 +1,12 @@
+include(JoinArguments)
+
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-
-if (HAVE_SHMEM)
-  add_subdirectory(shmem)
-endif (HAVE_SHMEM)
-
-#add_definitions (-DHAVE_BOOST)
-
-#try_compile (HAVE_PRETTY_FUNCTION ${CMAKE_BINARY_DIR} 
 
 ########### next target ###############
 
-SET(common_LIB_SRCS
+message(STATUS "[LCS/Common/src] LOFAR_LIBRARIES = ${LOFAR_LIBRARIES}")
+
+set(common_LIB_SRCS
    Allocator.cc
    DataConvert.cc
    Exception.cc
@@ -37,14 +33,29 @@ SET(common_LIB_SRCS
    Net/Socket.cc
 )
 
-add_library(common STATIC ${common_LIB_SRCS})
-target_link_libraries(common log4cplus)
-install(TARGETS common DESTINATION lib)
+if(HAVE_SHMEM)
+  set(shmem_LIB_SRCS
+    shmem/segbasemap.cc
+    shmem/dlmalloc.c
+    shmem/shmem_alloc.cc)
+  set(shmem_COMPILE_FLAGS
+    -DUSE_PUBLIC_MALLOC_WRAPPERS
+    -DUSE_DL_PREFIX
+    -DHAVE_MMAP=0
+    -DMORECORE=shmbrk
+    -DMORECORE_CONTIGUOUS=0
+    -DMORECORE_CANNOT_TRIM=1
+    -DSHMEM_ALLOC
+    -DHAVE_USR_INCLUDE_MALLOC_H)
+  join_arguments(shmem_COMPILE_FLAGS)
+  set_source_files_properties(${shmem_LIB_SRCS} 
+    PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})
+  list(APPEND common_LIB_SRCS ${shmem_LIB_SRCS})
+endif(HAVE_SHMEM)
 
-if (HAVE_SHMEM)
-  target_link_libraries(shmem)
-  install(TARGETS shmem DESTINATION lib)
-endif (HAVE_SHMEM)
+add_library(common STATIC ${common_LIB_SRCS})
+target_link_libraries(common ${LOFAR_LIBRARIES})
+install(TARGETS common DESTINATION lib)
 
 
 #add_executable(versioncommon versioncommon.cc)
@@ -53,7 +64,7 @@ endif (HAVE_SHMEM)
 
 
 add_executable(getparsetvalue getparsetvalue.cc)
-target_link_libraries(getparsetvalue common)
+target_link_libraries(getparsetvalue common ${LOFAR_LIBRARIES})
 install(TARGETS getparsetvalue DESTINATION bin)
 
 

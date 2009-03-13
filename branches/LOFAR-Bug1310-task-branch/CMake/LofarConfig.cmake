@@ -20,12 +20,11 @@
 #
 #  $Id$
 
-include(CMakeSettings)
-
 #------------------------------------------------------------------------------
 # Configure header files 
 #------------------------------------------------------------------------------
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
-               ${CMAKE_BINARY_DIR}/config.h)
+#configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
+#               ${CMAKE_BINARY_DIR}/config.h)
+
 configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
                ${CMAKE_BINARY_DIR}/lofar_config.h)

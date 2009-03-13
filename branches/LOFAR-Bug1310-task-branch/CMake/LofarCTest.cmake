@@ -18,22 +18,13 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+## --------------------------------------------------------------------------
+## "Auto-tools variable" needed for backward compatibility
+## --------------------------------------------------------------------------
+set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
+
 ## ----------------------------------------------------------------------------
-## Variables set by the global CMake settings module:
-##
+## Configure the LOFAR CTest wrapper script in the current binary directory
 ## ----------------------------------------------------------------------------
-
-#if(NOT LOFAR_CMAKE_CONFIG)
-
-  message(STATUS "**** ENTER: CMakeSettings.cmake ****")
-
-  set(LOFAR_CMAKE_CONFIG TRUE CACHE INTERNAL "LOFAR CMake config flag")
-
-  ## --------------------------------------------------------------------------
-  ## Several "Auto-tools variables" needed for backward compatibility
-  ## --------------------------------------------------------------------------
-  set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
-
-  message(STATUS "**** LEAVE: CMakeSettings.cmake ****")
-
-#endif(NOT LOFAR_CMAKE_CONFIG)
+configure_file(${LOFAR_ROOT}/autoconf_share/runctest.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/runctest.sh)
