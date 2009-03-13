@@ -430,7 +430,7 @@ void RCUCommand::send()
 
     getrcu.timestamp = Timestamp(0,0);
     getrcu.rcumask = getRCUMask();
-    getrcu.cache = true;
+    getrcu.cache = false;
 
     m_rspport.send(getrcu);
   }
@@ -459,10 +459,9 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
       RSPGetrcuackEvent ack(e);
       bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
 
-      if (RSP_SUCCESS == ack.status) {
+      if (ack.status == RSP_SUCCESS) {
         int rcuin = 0;
         for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-
           if (mask[rcuout]) {
             logMessage(cout,formatString("RCU[%2d].control=0x%08x => mode:%d, delay=%02d, att=%02d",
 					rcuout, 
@@ -482,12 +481,12 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
     case RSP_SETRCUACK: {
       RSPSetrcuackEvent ack(e);
-
       if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETRCU command failed.");
       }
     }
-  }
+	break;
+  } // switch
 
   GCFTask::stop();
 

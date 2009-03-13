@@ -39,28 +39,28 @@ using namespace RTC;
 
 SetRCUCmd::SetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSetrcuEvent(event);
+	m_event = new RSPSetrcuEvent(event);
 
-  LOG_INFO(formatString("control=0x%08x", m_event->settings()(0).getRaw()));
+	LOG_INFO(formatString("control=0x%08x", m_event->settings()(0).getRaw()));
 
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
+	setOperation(oper);
+	setPeriod(0);
+	setPort(port);
 }
 
 SetRCUCmd::~SetRCUCmd()
 {
-  delete m_event;
+	delete m_event;
 }
 
 void SetRCUCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetrcuackEvent ack;
+	RSPSetrcuackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
-  
-  getPort()->send(ack);
+	ack.timestamp = getTimestamp();
+	ack.status = RSP_SUCCESS;
+
+	getPort()->send(ack);
 }
 
 void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)

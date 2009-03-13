@@ -39,11 +39,12 @@ using namespace RTC;
 
 GetRCUCmd::GetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetrcuEvent(event);
+	m_event = new RSPGetrcuEvent(event);
 
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
+	setOperation(oper);
+	setPeriod(0);
+	setPort(port);
+	delayedResponse(true);	// it will take some time
 }
 
 GetRCUCmd::~GetRCUCmd()
@@ -57,7 +58,6 @@ GetRCUCmd::~GetRCUCmd()
 void GetRCUCmd::ack(CacheBuffer& cache)
 {
 	RSPGetrcuackEvent ack;
-
 	ack.timestamp = getTimestamp();
 	ack.status    = RSP_SUCCESS;
 	ack.settings().resize(m_event->rcumask.count());
@@ -66,7 +66,7 @@ void GetRCUCmd::ack(CacheBuffer& cache)
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			if (cache_rcu < StationSettings::instance()->nrRcus()) {
-				ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
+				ack.settings()(result_rcu).setRaw(cache.getRCUSettings()()(cache_rcu).getRaw());
 			}
 			else {
 				LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
@@ -81,8 +81,15 @@ void GetRCUCmd::ack(CacheBuffer& cache)
 	getPort()->send(ack);
 }
 
-void GetRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
+void GetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
+	// Mark the rcuread state-registers of the rcus we want to read. RCUProtocolWrite will do the rest.
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (setModFlag && m_event->rcumask.test(cache_rcu)) {
+			cache.getCache().getState().rcuread().write(cache_rcu);
+		} 
+	} // for
+
   /* intentionally left empty */
 }
 

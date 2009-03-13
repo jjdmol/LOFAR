@@ -36,6 +36,16 @@
 namespace LOFAR {
   namespace RSP_Protocol {
 
+// Note: The rcucontrol value is presented in the user interface as an uint32 value.
+//	This is the m_value byte that is stored in the Control (sub)class. Unfortunately
+//	this value can be written to one register on the RSPboards. The lowest byte 
+//	(value & RCU_HANDLER_MASK) must be written to one register and the highest part
+//	(value & RCU_PROTOCOL_MASK) must be written to an i2c register.
+//	To know which write-actions must be performed the Control class keeps track of a
+//	m_modified mask that knows which bits where modified.
+//	The Commands that apply the RCUsetting to the cache use this mask to determine
+//	which write-actions must be triggered.
+
 class RCUSettings
 {
 public:
@@ -63,9 +73,7 @@ public:
 		} RCUMode;
 		static const int N_MODES = 8;
 
-		/**
-		* Set the mode of the receiver.
-		*/
+		// Set the mode of the receiver.
 		void setMode(RCUMode mode) {
 			m_value &= ~MODE_MASK;                 // clear mode bits
 			m_value |= (m_mode[mode % N_MODES] & MODE_MASK); // set new mode bits
@@ -91,63 +99,62 @@ public:
 			return (m_modified & MODE_MASK);
 		}
 
-		/**
-		* Return the number of the Nyquist zone for the
-		* current receiver setting.
-		* 0 = indeterminate
-		* 1 = Nyquist zone I
-		* 2 = Nyquist zone II
-		* 3 = Nyquist zone III
-		*/
+		// Return the number of the Nyquist zone for the
+		// current receiver setting.
+		// 0 = indeterminate
+		// 1 = Nyquist zone I
+		// 2 = Nyquist zone II
+		// 3 = Nyquist zone III
 		int getNyquistZone() const;
 
-		/**
-		* Set the raw control bytes of a RCU
-		* Each RCU has 4 bytes:
-		*    mask      meaning    explanation
-		* 0x0000007F INPUT_DELAY  Sample delay for the data from the RCU.
-		* 0x00000080 INPUT_ENABLE Enable RCU input
-		*
-		* 0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)
-		* 0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)
-		* 0x00000400 HB-EN       supply HB on (1) or off (0)
-		* 0x00000800 BANDSEL     low band (1) or high band (0)
-		* 0x00001000 HB-SEL-0    HBA filter selection
-		* 0x00002000 HB-SEL-1    HBA filter selection
-		*             Options : HBA-SEL-0 HBA-SEL-1 Function
-		*                           0          0      210-270 MHz
-		*                           0          1      170-230 MHz
-		*                           1          0      110-190 MHz
-		*                           1          1      all off
-		* 0x00004000 VL-EN       low band supply on (1) or off (0)
-		* 0x00008000 VH-EN       high band supply on (1) or off (0)
-		*
-		* 0x00010000 VDIG-EN     ADC supply on (1) or off (0)
-		* 0x00020000 LB-SEL-0    LBA input selection
-		* 0x00040000 LB-SEL-1    HP filter selection
-		*             Options : LB-SEL-0 LB-SEL-1 Function
-		*                           0        0    10-90 MHz + 10 MHz HPF
-		*                           0        1    30-80 MHz + 10 MHz HPF
-		*                           1        0    10-90 MHz + 30 MHz HPF
-		*                           1        1    30-80 MHz + 30 MHz HPF
-		* 0x00080000 ATT-CNT-4   on (1) is  1dB attenuation
-		* 0x00100000 ATT-CNT-3   on (1) is  2dB attenuation
-		* 0x00200000 ATT-CNT-2   on (1) is  4dB attenuation
-		* 0x00300000 ATT-CNT-1   on (1) is  8dB attenuation
-		* 0x00800000 ATT-CNT-0   on (1) is 16dB attenuation
-		*
-		* 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
-		* 0x02000000 RESET       on (1) hold board in reset
-		* 0x04000000 free				used to be SPEC_INV, SI now in DIAG/Bypass
-		* 0x08000000 TBD         reserved
-		* 0xF0000000 VERSION     RCU version  //PD
-		*/
+		// Set the raw control bytes of a RCU
+		// Each RCU has 4 bytes:
+		//    mask      meaning    explanation
+		// 0x0000007F INPUT_DELAY  Sample delay for the data from the RCU.
+		// 0x00000080 INPUT_ENABLE Enable RCU input
+		//
+		// 0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)
+		// 0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)
+		// 0x00000400 HB-EN       supply HB on (1) or off (0)
+		// 0x00000800 BANDSEL     low band (1) or high band (0)
+		// 0x00001000 HB-SEL-0    HBA filter selection
+		// 0x00002000 HB-SEL-1    HBA filter selection
+		//             Options : HBA-SEL-0 HBA-SEL-1 Function
+		//                           0          0      210-270 MHz
+		//                           0          1      170-230 MHz
+		//                           1          0      110-190 MHz
+		//                           1          1      all off
+		// 0x00004000 VL-EN       low band supply on (1) or off (0)
+		// 0x00008000 VH-EN       high band supply on (1) or off (0)
+		//
+		// 0x00010000 VDIG-EN     ADC supply on (1) or off (0)
+		// 0x00020000 LB-SEL-0    LBA input selection
+		// 0x00040000 LB-SEL-1    HP filter selection
+		//             Options : LB-SEL-0 LB-SEL-1 Function
+		//                           0        0    10-90 MHz + 10 MHz HPF
+		//                           0        1    30-80 MHz + 10 MHz HPF
+		//                           1        0    10-90 MHz + 30 MHz HPF
+		//                           1        1    30-80 MHz + 30 MHz HPF
+		// 0x00080000 ATT-CNT-4   on (1) is  1dB attenuation
+		// 0x00100000 ATT-CNT-3   on (1) is  2dB attenuation
+		// 0x00200000 ATT-CNT-2   on (1) is  4dB attenuation
+		// 0x00300000 ATT-CNT-1   on (1) is  8dB attenuation
+		// 0x00800000 ATT-CNT-0   on (1) is 16dB attenuation
+		//
+		// 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
+		// 0x02000000 RESET       on (1) hold board in reset
+		// 0x04000000 free				used to be SPEC_INV, SI now in DIAG/Bypass
+		// 0x08000000 TBD         reserved
+		// 0xF0000000 VERSION     RCU version  //PD
 		void   setRaw(uint32 raw) { m_value = raw; m_modified = 0xFFFFFFFF; }
 		uint32 getRaw() const { return m_value; }
+		// set protocol part of the raw byte
+		void   setProtocolRaw(uint32 raw) { 
+			m_value = (m_value & RCU_HANDLER_MASK) | (raw & RCU_PROTOCOL_MASK); 
+			m_modified = RCU_PROTOCOL_MASK; 
+		}
 
-		/**
-		* Enable (true) or disable (false) pseudo random sequence generator.
-		*/
+		// Enable (true) or disable (false) pseudo random sequence generator.
 		void setPRSG(bool value) {
 			if (value) m_value |= PRSG_MASK;  // set PRSG bit
 			else       m_value &= ~PRSG_MASK; // clear PRSG bit
@@ -155,9 +162,7 @@ public:
 		}
 		bool getPRSG() const { return (m_value & PRSG_MASK) >> (16 + 8); }
 
-		/**
-		* Enable (true) or disable (false) reset on RCU.
-		*/
+		// Enable (true) or disable (false) reset on RCU.
 		void setReset(bool value) {
 			if (value) m_value |= RESET_MASK;  // set RESET bit
 			else       m_value &= ~RESET_MASK; // clear RESET bit
@@ -165,9 +170,7 @@ public:
 		}
 		bool getReset() const { return (m_value & RESET_MASK) >> (17 + 8); }
 
-		/**
-		* Set attenuation. Valid values are 0..31 (5 bits).
-		*/
+		// Set attenuation. Valid values are 0..31 (5 bits).
 		void setAttenuation(uint8 value) {
 			// useful bits should be is in lower 5 bits
 			value &= 0x1F;
@@ -178,9 +181,7 @@ public:
 		}
 		uint8 getAttenuation() const { return (m_value & ATT_MASK) >> (11 + 8); }
 
-		/**
-		* Set sample delay (true time delay). Valid values are 0..127 (7 bits)
-		*/
+		// Set sample delay (true time delay). Valid values are 0..127 (7 bits)
 		void setDelay(uint8 value) {
 			m_value &= ~DELAY_MASK;
 			m_value |= (value  & DELAY_MASK);
@@ -188,9 +189,7 @@ public:
 		}
 		uint8 getDelay() const { return m_value & DELAY_MASK; }
 
-		/**
-		* Set rcu enable (0 = disable, 1 = enable)
-		*/
+		// Set rcu enable (0 = disable, 1 = enable)
 		void setEnable(uint8 value) {
 			if (value) m_value |= ENABLE_MASK;  // set ENABLE bit
 			else       m_value &= ~ENABLE_MASK; // clear ENABLE bit
@@ -198,9 +197,7 @@ public:
 		}
 		bool getEnable() const { return m_value & ENABLE_MASK; }
 
-		/**
-		* Set rcu version //PD
-		*/
+		// Set rcu version //PD
 		void setVersion(uint8 value) {
 			m_value &= ~VERSION_MASK; // clear VERSION bit
 			if (value) m_value |= ((value & 0x0F) << (20 + 8));  // set VERSION bits
@@ -208,28 +205,20 @@ public:
 		}
 		uint8 getVersion() const { return (m_value & VERSION_MASK) >> (20 + 8); }
 
-		/*
-		* Get RCU handler and RCU protocol settings separately
-		*/
+		// Get RCU handler and RCU protocol settings separately
 		bool isHandlerModified()  { return (0 != (m_modified & RCU_HANDLER_MASK));  }
 		bool isProtocolModified() { return (0 != (m_modified & RCU_PROTOCOL_MASK)); }
 
-		/*
-		* Reset value and modified mask.
-		*/
+		// Reset value and modified mask.
 		void reset() {
 			m_value    = 0x00000000;
 			m_modified = 0x00000000;
 		}
 
-		/*
-		* Return modification mask
-		*/
+		// Return modification mask
 		uint32 getModified() const { return m_modified; }
 
-		/*
-		* Assignment
-		*/
+		// Assignment
 		Control& operator=(const Control& rhs) {
 			if (this != &rhs) { // prevent self-assignment
 				m_value    &= ~rhs.m_modified;                // clear the modified bits
@@ -239,9 +228,7 @@ public:
 			return *this;
 		}
 
-		/*
-		* Copy constructor
-		*/
+		// Copy constructor
 		Control(const Control& rhs) {
 			this->reset(); // reset m_value and m_modified
 			*this = rhs;
@@ -268,6 +255,7 @@ public:
 		static const uint32 RCU_HANDLER_MASK  = 0x000000FF;
 		static const uint32 RCU_PROTOCOL_MASK = 0xFFFFFF00;
 
+		// ----- datamembers -----
 		uint32 m_value;
 		uint32 m_modified; // mask of modified bits
 	};	// class Control
@@ -277,9 +265,7 @@ public:
 
 public:
 	/*@{*/
-	/**
-	* marshalling methods
-	*/
+	// marshalling methods
 	unsigned int getSize();
 	unsigned int pack  (void* buffer);
 	unsigned int unpack(void *buffer);
@@ -302,4 +288,4 @@ inline ostream& operator<< (ostream& os, const RCUSettings::Control& aControl)
   }; // namespace
 }; // namespace LOFAR
 
-	#endif /* RCUSETTINGS_H_ */
+#endif /* RCUSETTINGS_H_ */

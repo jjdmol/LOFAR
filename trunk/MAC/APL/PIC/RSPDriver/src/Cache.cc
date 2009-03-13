@@ -128,83 +128,82 @@ CacheBuffer::~CacheBuffer()
 
 void CacheBuffer::reset(void)
 {
-  //
-  // Initialize cache, allocating memory and setting default values
-  //
-  struct timeval tv;
-  tv.tv_sec = 0; tv.tv_usec = 0;
-  m_timestamp.set(tv);
+	//
+	// Initialize cache, allocating memory and setting default values
+	//
+	struct timeval tv;
+	tv.tv_sec = 0; tv.tv_usec = 0;
+	m_timestamp.set(tv);
 
-  m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
-  m_beamletweights() = complex<int16>(0,0);
+	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
+	m_beamletweights() = complex<int16>(0,0);
 
-  m_subbandselection().resize(StationSettings::instance()->nrRcus(),
-			      MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-  m_subbandselection() = 0;
+	m_subbandselection().resize(StationSettings::instance()->nrRcus(),
+	MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+	m_subbandselection() = 0;
 
-  if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
-    // these weights ensure that the beamlet statistics
-    // exactly match the subband statistics
-    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
-      complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
+		// these weights ensure that the beamlet statistics
+		// exactly match the subband statistics
+		m_beamletweights()(Range::all(), Range::all(), Range::all()) =
+		complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
-    //
-    // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
-    //
-    for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
-      for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
-	m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % MEPHeader::N_POL) +
-								   (sb * MEPHeader::N_POL) +
-								   (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
-      }
-    }
-  }
+		//
+		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND
+		//
+		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
+			for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
+				m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % MEPHeader::N_POL) +
+										(sb * MEPHeader::N_POL) + (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
+			}
+		}
+	}
 
-  // initialize RCU settings
-  m_rcusettings().resize(StationSettings::instance()->nrRcus());
+	// initialize RCU settings
+	m_rcusettings().resize(StationSettings::instance()->nrRcus());
 
-  RCUSettings::Control rcumode;
-  rcumode.setMode(RCUSettings::Control::MODE_OFF);
-  m_rcusettings() = rcumode;
+	RCUSettings::Control rcumode;
+	rcumode.setMode(RCUSettings::Control::MODE_OFF);
+	m_rcusettings() = rcumode;
 
-  // initialize HBA settings
-  m_hbasettings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
-  m_hbasettings() = 0; // initialize to 0
-  m_hbareadings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
-  m_hbareadings() = 0; // initialize to 0
+	// initialize HBA settings
+	m_hbasettings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
+	m_hbasettings() = 0; // initialize to 0
+	m_hbareadings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
+	m_hbareadings() = 0; // initialize to 0
 
-  // RSU settings
-  m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
-  RSUSettings::ResetControl 	rsumode;
-  rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
-  m_rsusettings() = rsumode;
+	// RSU settings
+	m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
+	RSUSettings::ResetControl 	rsumode;
+	rsumode.setRaw(RSUSettings::ResetControl::CTRL_OFF);
+	m_rsusettings() = rsumode;
 
-  m_wgsettings().resize(StationSettings::instance()->nrRcus());
-  WGSettings::WGRegisterType init;
-  init.freq        = 0;
-  init.phase       = 0;
-  init.ampl        = 0;
-  init.nof_samples = 0;
-  init.mode = WGSettings::MODE_OFF;
-  init.preset = WGSettings::PRESET_SINE;
-  m_wgsettings() = init;
+	m_wgsettings().resize(StationSettings::instance()->nrRcus());
+	WGSettings::WGRegisterType init;
+	init.freq        = 0;
+	init.phase       = 0;
+	init.ampl        = 0;
+	init.nof_samples = 0;
+	init.mode = WGSettings::MODE_OFF;
+	init.preset = WGSettings::PRESET_SINE;
+	m_wgsettings() = init;
 
-  m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_WAVE_SAMPLES);
-  m_wgsettings.waveforms() = 0;
+	m_wgsettings.waveforms().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_WAVE_SAMPLES);
+	m_wgsettings.waveforms() = 0;
 
-  m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
-  m_subbandstats() = 0;
+	m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
+	m_subbandstats() = 0;
 
-  m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL,
-			  MEPHeader::N_BEAMLETS);
-  m_beamletstats() = 0;
+	m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL,
+	MEPHeader::N_BEAMLETS);
+	m_beamletstats() = 0;
 
-  m_xcstats().resize(MEPHeader::N_POL,
-		     MEPHeader::N_POL,
-		     StationSettings::instance()->nrBlps(),
-		     StationSettings::instance()->nrBlps());
+	m_xcstats().resize(MEPHeader::N_POL,
+	MEPHeader::N_POL,
+	StationSettings::instance()->nrBlps(),
+	StationSettings::instance()->nrBlps());
 
-  m_xcstats() = complex<double>(0,0);
+	m_xcstats() = complex<double>(0,0);
 
 	// BoardStatus
 	m_systemstatus.board().resize(StationSettings::instance()->nrRspBoards());

@@ -32,47 +32,44 @@
 namespace LOFAR {
   namespace RSP {
 
-    class RCUProtocolWrite : public SyncAction
-    {
-    public:
-      /**
-       * Constructors for a RCUProtocolWrite object.
-       */
-      RCUProtocolWrite(GCFPortInterface& board_port, int board_id);
+class RCUProtocolWrite : public SyncAction
+{
+public:
+	// Constructors for a RCUProtocolWrite object.
+	RCUProtocolWrite(GCFPortInterface& board_port, int board_id);
 
-      /* Destructor for RCUProtocolWrite. */
-      virtual ~RCUProtocolWrite();
+	// Destructor for RCUProtocolWrite.
+	virtual ~RCUProtocolWrite();
 
-      /**
-       * Send the write message.
-       */
-      virtual void sendrequest();
+	// Send the write message.
+	virtual void sendrequest();
 
-      /**
-       * Send the read request.
-       */
-      virtual void sendrequest_status();
+	// Send the read request.
+	virtual void sendrequest_status();
 
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+	// Handle the read result.
+	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-    private:
-      EPA_Protocol::MEPHeader m_hdr;
+private:
+	EPA_Protocol::MEPHeader m_hdr;
 
-      friend class RCUResultRead;
+	friend class RCUResultRead;
 
-      static const int PROTOCOL_SIZE = 10;
-      static const int RESULT_SIZE   = 6; 
+	static const int PROTOCOL_WRITE_SIZE = 10;
+	static const int PROTOCOL_READ_SIZE  = 4;
+	static const int RESULT_WRITE_SIZE	 = 6; 
+	static const int RESULT_READ_SIZE  	 = 5; 
 
-      // construct i2c sequence
-      static uint8 i2c_protocol[PROTOCOL_SIZE];
+	// construct i2c sequence
+	static uint8 i2c_protocol_write[PROTOCOL_WRITE_SIZE];
+	static uint8 i2c_protocol_read [PROTOCOL_READ_SIZE];
 
-      // construct expected i2c result
-      static uint8 i2c_result[RESULT_SIZE];
-    };
-  };
+	// construct expected i2c result
+	static uint8 i2c_result_write[RESULT_WRITE_SIZE];
+	static uint8 i2c_result_read [RESULT_READ_SIZE];
 };
+
+  }; // namespace RSP
+}; // namespace LOFAR
      
 #endif /* RCUPROTOCOLWRITE_H_ */
