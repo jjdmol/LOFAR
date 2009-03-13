@@ -155,8 +155,7 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_ENTRY:
       _busy = false;
       garbageTimerID = _missPort.setTimer(5.0, 5.0);
@@ -329,8 +328,7 @@ GCFEvent::TResult SHMSession::reconfigure_state(GCFEvent& e, GCFPortInterface& p
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case SHM_RECONFIGURATION_REQUEST:
     {
       RETURN_NOACK_MSG(ReconfigurationRequest, ReconfigurationResponse, "NAK (not supported yet)");
@@ -349,8 +347,7 @@ GCFEvent::TResult SHMSession::getPICStructure_state(GCFEvent& e, GCFPortInterfac
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
       
     case SHM_LOFAR_STRUCTURE_REQUEST:
     {
@@ -410,16 +407,7 @@ void SHMSession::subscribe(GCFEvent& e)
 
 GCFEvent::TResult SHMSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    default:
-      status = defaultHandling(e, p);
-      break;
-  }
-
-  return status;
+  return(defaultHandling(e, p));
 }
 
 //
@@ -481,8 +469,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
   //MAXMOD
   ssize_t maxsend;
 
-  switch (e.signal)
-    {
+  switch (e.signal) {
     case F_ENTRY:
       /*
 	if (ackout.rcu_settings == 0) {
@@ -506,8 +493,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
         
         if (!_rspDriverPort.send(getstatus)) {
           SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (connection to rsp driver could not be established or is lost)");
-          if (e.signal == F_DISCONNECTED)
-	    {
+          if (e.signal == F_DISCONNECTED) {
 	      p.close();
 	    }
           TRAN(SHMSession::waiting_state);
@@ -521,7 +507,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
     case RSP_GETSTATUSACK: {
       RSPGetstatusackEvent ack(e);
       
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
@@ -538,10 +524,7 @@ GCFEvent::TResult SHMSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& 
       ackout.replynr = pIn->seqnr;
 
       ackout.response = "ACK";
-      LOG_DEBUG(formatString(
-          "RSP Timestamp: %lu.%06lu",
-          ack.timestamp.sec(),
-          ack.timestamp.usec()));
+      LOG_DEBUG(formatString("RSP Timestamp: %lu.%06lu", ack.timestamp.sec(), ack.timestamp.usec()));
       ackout.payload_timestamp_sec = ack.timestamp.sec();
       ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
@@ -651,8 +634,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
         
         if (!_rspDriverPort.send(getstatus)) {
           SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (connection to rsp driver could not be established or is lost)");
-          if (e.signal == F_DISCONNECTED)
-          {
+          if (e.signal == F_DISCONNECTED) {
             p.close();
           }
           TRAN(SHMSession::waiting_state);
@@ -666,7 +648,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
     case RSP_GETSTATUSACK: {
       RSPGetstatusackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
@@ -698,7 +680,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
     case RSP_GETRCUACK: {
       RSPGetrcuackEvent ack(e);
       
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         LOG_DEBUG(formatString("RSP_GETRCUACK: ack.status = %d",ack.status));
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
@@ -707,8 +689,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
 
       //memcpy(ackout.rcu_settings, ack.settings().data(), _nrOfRCUs * sizeof(ackout.rcu_settings[0]));
       //MAXMOD do as rspctl does
-      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
-        {
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++) {
 	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
 	}
 
@@ -732,7 +713,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
     case RSP_GETSTATSACK: {
       RSPGetstatsackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
 	//MAXMOD debug
 	cout << "RSP ack.status: " <<   ack.status << endl;
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
@@ -747,10 +728,7 @@ GCFEvent::TResult SHMSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       memcpy(ackout.data, ack.stats().data(), _nrOfRCUs * 512 * sizeof(double));
 
       ackout.response = "ACK";
-      LOG_DEBUG(formatString(
-          "RSP Timestamp: %lu.%06lu",
-          ack.timestamp.sec(),
-          ack.timestamp.usec()));
+      LOG_DEBUG(formatString("RSP Timestamp: %lu.%06lu", ack.timestamp.sec(), ack.timestamp.usec()));
       ackout.payload_timestamp_sec = ack.timestamp.sec();
       ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
@@ -785,8 +763,7 @@ void SHMSession::getAntennaCorrelation(GCFEvent& e)
 
 	int subband = pIn->subband_selector;
 
-	if (subband < 0 || subband >= MAX_SUBBANDS)
-	  {
+	if (subband < 0 || subband >= MAX_SUBBANDS) {
 	    LOG_DEBUG(formatString("MAXMOD: Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MAX_SUBBANDS));
 	    //exit(EXIT_FAILURE);
 	    TRAN(SHMSession::waiting_state);
@@ -893,8 +870,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
         
         if (!_rspDriverPort.send(getstatus)) {
           SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (connection to rsp driver could not be established or is lost)");
-          if (e.signal == F_DISCONNECTED)
-          {
+          if (e.signal == F_DISCONNECTED) {
             p.close();
           }
           TRAN(SHMSession::waiting_state);
@@ -909,14 +885,13 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       // BTW RSPGetstatusEvent is what I want to add for getting voltages and temps
       RSPGetstatusackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
       }
 
-      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
-        {
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++) {
 	  ackout.invalid[rcuout] = 0;
 	}
       
@@ -935,7 +910,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
     case RSP_GETRCUACK: {  //MAXMOD save the rcu settings, then set xcsubband choice
       RSPGetrcuackEvent ack(e);
       
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
@@ -943,8 +918,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       
       //MAXMOD guess observing freq (Low or High)
       N_HBA = 0; N_LBA = 0;
-      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
-        {
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++) {
 	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
 	  //determine RCU mode and hence array 'LBA' or 'HBA' 
 	  //Ignore possibility of subarrays, for now.
@@ -1000,7 +974,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       RSPGetxcstatsEvent 	getxcstats;
 
       RSPSetsubbandsackEvent ack(e);
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
@@ -1017,7 +991,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
     case RSP_GETXCSTATSACK: {
       RSPGetxcstatsackEvent ack(e);
 
-      if (SUCCESS != ack.status) {
+      if (RSP_SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
         TRAN(SHMSession::waiting_state);      
         break;
@@ -1085,15 +1059,6 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       LOG_DEBUG(formatString("MAXMOD gethostname = %s",hostName));
 
       const CAL::AntennaArray * targetarray;
-      if (strncmp(hostName,"CS001T",6) == 0){
-	//test station
-	if (targetarrayname == "LBA") { 
-	  targetarrayname = "FTS-1-LBA";
-	}
-	else {
-	  targetarrayname = "FTS-1-HBA";
-	}
-      }
       targetarray = _daemon.m_arrays.getByName(targetarrayname);
       if (targetarray != NULL){
 	LOG_DEBUG(formatString("MAXMOD N_LBA=%d, N_HBA=%d, targetarray %s",N_LBA,N_HBA,targetarray->getName().c_str()));
@@ -1191,8 +1156,7 @@ GCFEvent::TResult SHMSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 GCFEvent::TResult SHMSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_ENTRY:
       if (!_missPort.isConnected()) {
         LOG_INFO("Client gone. Stop all subsessions.");
@@ -1219,8 +1183,7 @@ GCFEvent::TResult SHMSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_DISCONNECTED:
       if (&p == &_missPort) {
         LOG_INFO("Connection lost to a SHM client.");
