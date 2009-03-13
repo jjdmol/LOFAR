@@ -188,7 +188,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	if (ack.status != CAL_Protocol::SUCCESS) {
+	if (ack.status != CAL_Protocol::CAL_SUCCESS) {
 
 	  cerr << "Error: failed to start calibration" << endl;
 	  TRAN(beamctl::final);
@@ -254,7 +254,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
       {
 	BSBeamallocackEvent ack(e);
 
-	if (BS_Protocol::SUCCESS != ack.status) {
+	if (BS_Protocol::BS_SUCCESS != ack.status) {
 	  cerr << "Error: failed to allocate beam" << endl;
 	  TRAN(beamctl::final);
 	} else {
