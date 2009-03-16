@@ -29,6 +29,8 @@
 #include <IONProc/Lock.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <sstream>
 
 #include <unistd.h>
 
@@ -71,10 +73,70 @@ void *LogThread::logThreadStub(void *arg)
 }
 
 
+#if defined HAVE_BGP_ION
+
+bool LogThread::readCPUstats(struct CPUload &load)
+{
+  FILE *file = fopen("/proc/stat", "r");
+  int  retval;
+
+  if (file == 0)
+    return false;
+
+  do
+    retval = fscanf(file, "cpu %llu %*u %llu %llu %*u %*u %llu %*u\n", &load.user, &load.system, &load.idle, &load.interrupt);
+  while (retval != 4 && retval != EOF);
+
+  do
+    retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
+  while (retval != 1 && retval != EOF);
+
+#if 0
+  for (unsigned cpu = 0; cpu < 4 && retval != EOF;)
+    if ((retval = fscanf(file, "cpu%*d %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idlePerCore[cpu])) == 1)
+      ++ cpu;
+#endif
+
+  fclose(file);
+  return retval != EOF;
+}
+
+
+void LogThread::writeCPUstats(std::stringstream &str)
+{
+  struct CPUload load;
+
+  if (readCPUstats(load)) {
+    //str << ", us/sy/in/id: ["
+    str << ", us/sy/in/id(0): ["
+	<< (unsigned(load.user	    - previousLoad.user)      + 2) / 4 << '/'
+	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 << '/'
+	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 << '/'
+	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 << '('
+	<< (unsigned(load.idle0	    - previousLoad.idle0)) << ")]";
+#if 0
+	<< "], id: ["
+	<< (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
+
+    for (unsigned cpu = 0; cpu < 4; cpu ++)
+      str << unsigned(load.idle[cpu] - previousLoad.idle[cpu])
+	  << (cpu == 3 ? ']' : ',');
+#endif
+
+    previousLoad = load;
+  } else {
+    str << ", no CPU load info";
+  }
+}
+
+#endif
+
+
 void LogThread::logThread()
 {
 #if defined HAVE_BGP_ION
   runOnCore0();
+  readCPUstats(previousLoad);
 #endif
 
   clog_logger("LogThread running");
@@ -100,6 +162,11 @@ void LogThread::logThread()
       }
 
     logStr << "] packets";
+
+#if defined HAVE_BGP_ION
+    writeCPUstats(logStr);
+#endif
+
     clog_logger(logStr.str());
     sleep(1);
   }
