@@ -54,6 +54,16 @@ class LogThread
     volatile bool itsShouldStop;
 
     pthread_t	 thread;
+
+#if defined HAVE_BGP_ION
+    struct CPUload {
+      //unsigned long long user, system, interrupt, idle, idlePerCore[4];
+      unsigned long long user, system, interrupt, idle, idle0;
+    } previousLoad;
+
+    bool readCPUstats(struct CPUload &load);
+    void writeCPUstats(std::stringstream &str);
+#endif
   };
 
   // @}
