@@ -194,11 +194,11 @@ template <typename SAMPLE_TYPE> void doWork()
 #endif
   {
     unsigned   nrStations	= 14;
-    unsigned   nrChannels	= 1024;
+    unsigned   nrChannels	= 16;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
-    unsigned   testSignalChannel = 200;
+    unsigned   testSignalChannel = 5;
     double     signalFrequency	= refFreq + (testSignalChannel + (nrChannels/2)) * sampleRate / nrChannels;
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 

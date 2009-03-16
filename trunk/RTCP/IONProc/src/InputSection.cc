@@ -131,6 +131,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
       sstr->setReadBufferSize(16 * 1024 * 1024); // stupid kernel multiplies this by 2
   }
 
+  itsNSubbands          = ps->nrSubbands();
   itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
   itsNSamplesPerSec	= ps->nrSubbandSamples();
   itsNrBeams		= ps->nrBeams();
@@ -146,7 +147,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNrCoresPerPset	= ps->nrCoresPerPset();
   itsSampleDuration     = ps->sampleDuration();
 
-  clog_logger("nrSubbands = " << ps->nrSubbands());
+  clog_logger("nrSubbands = " << itsNSubbands);
   clog_logger("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
   clog_logger("nrStations = " << ps->nrStations());
   clog_logger("nrBitsPerSample = " << ps->nrBitsPerSample());
@@ -340,8 +341,11 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage()
 }
 
 
-template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNode()
+template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 {
+  // If the total number of subbands is not dividable by the nrSubbandsPerPset,
+  // we may have to send dummy process commands, without sending subband data.
+
   CN_Command command(CN_Command::PROCESS);
   
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
@@ -357,22 +361,23 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNode()
     if( itsNeedDelays ) {
       for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
         unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
-        unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-        unsigned beam     = itsSubbandToBeamMapping[subband];
-        const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam].coord().get();
-        const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam].coord().get();
+	if(subband < itsNSubbands) {
+	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+	  unsigned beam     = itsSubbandToBeamMapping[subband];
+	  const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam].coord().get();
+	  const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam].coord().get();
 
-        metaData[pset].delayAtBegin   = itsFineDelaysAtBegin[beam];
-        metaData[pset].delayAfterEnd  = itsFineDelaysAfterEnd[beam];
+	  metaData[pset].delayAtBegin   = itsFineDelaysAtBegin[beam];
+	  metaData[pset].delayAfterEnd  = itsFineDelaysAfterEnd[beam];
 
-        for( unsigned i = 0; i < 3; i++ ) {
-          metaData[pset].beamDirectionAtBegin[i]  = beamDirBegin[i];
-          metaData[pset].beamDirectionAfterEnd[i] = beamDirEnd[i];
+	  for( unsigned i = 0; i < 3; i++ ) {
+	    metaData[pset].beamDirectionAtBegin[i]  = beamDirBegin[i];
+	    metaData[pset].beamDirectionAfterEnd[i] = beamDirEnd[i];
+	  }
 
-        }
-
-        metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
-        metaData[pset].setFlags(itsFlags[rspBoard][beam]);
+	  metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
+	  metaData[pset].setFlags(itsFlags[rspBoard][beam]);
+	}
       }
     }
 
@@ -381,11 +386,13 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNode()
     // now send all subband data
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
       unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
-      unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-      unsigned rspSlot	= itsSubbandToRSPslotMapping[subband];
-      unsigned beam     = itsSubbandToBeamMapping[subband];
+      if(subband < itsNSubbands) {
+	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
+	unsigned beam     = itsSubbandToBeamMapping[subband];
 
-      itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+	itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+      }
     }
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
@@ -505,7 +512,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
 #if defined DUMP_RAW_DATA
   dumpRawData();
 #else
-  toComputeNode();
+  toComputeNodes();
 #endif
 
   stopTransaction();

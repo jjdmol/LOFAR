@@ -110,6 +110,7 @@ void OutputSection::preprocess(const Parset *ps)
   itsParset                 = ps;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
+  itsNrSubbands             = ps->nrSubbands();
   itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
   itsRealTime               = ps->realTime();
    
@@ -180,43 +181,47 @@ void OutputSection::process()
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     // TODO: make sure that there are more free buffers than subbandsPerPset
 
-    unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
+    unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
 
-    // read all outputs of one node at once, so that it becomes free to process the next set of samples
-    for (unsigned o = 0; o < itsOutputs.size(); o ++) {
-      struct OutputSection::SingleOutput &output = itsOutputs[o];
-      struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];
+    if(subbandNumber < itsNrSubbands) {
+      unsigned inputChannel = CN_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
 
-      bool firstTime = output.currentIntegrationStep == 0;
-      bool lastTime  = output.currentIntegrationStep == output.nrIntegrationSteps - 1;
-
-      if (lastTime) {
-        if (itsRealTime && outputThread.freeQueue.empty()) {
-	  droppingData(subband);
-          output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
-        } else {
-	  notDroppingData(subband);
-	  StreamableData *data = outputThread.freeQueue.remove();
-      
-	  data->read(itsStreamsFromCNs[inputChannel], false);
-
-	  if (!firstTime)
-	    *data += *output.sums[subband];
-
-	  data->sequenceNumber = output.sequenceNumber;
-	  outputThread.sendQueue.append(data);
-
-          // report that data has been added to a send queue
-	  itsOutputThreads[subband]->itsSendQueueActivity.append(o);
-        }
-      } else if (firstTime) {
-        output.sums[subband]->read(itsStreamsFromCNs[inputChannel], false);
-      } else {
-        output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
-        *output.sums[subband] += *output.tmpSum;
+      // read all outputs of one node at once, so that it becomes free to process the next set of samples
+      for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+	struct OutputSection::SingleOutput &output = itsOutputs[o];
+	struct OutputThread::SingleOutput &outputThread = itsOutputThreads[subband]->itsOutputs[o];
+	
+	bool firstTime = output.currentIntegrationStep == 0;
+	bool lastTime  = output.currentIntegrationStep == output.nrIntegrationSteps - 1;
+	
+	if (lastTime) {
+	  if (itsRealTime && outputThread.freeQueue.empty()) {
+	    droppingData(subband);
+	    output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
+	  } else {
+	    notDroppingData(subband);
+	    StreamableData *data = outputThread.freeQueue.remove();
+	    
+	    data->read(itsStreamsFromCNs[inputChannel], false);
+	    
+	    if (!firstTime)
+	      *data += *output.sums[subband];
+	    
+	    data->sequenceNumber = output.sequenceNumber;
+	    outputThread.sendQueue.append(data);
+	    
+	    // report that data has been added to a send queue
+	    itsOutputThreads[subband]->itsSendQueueActivity.append(o);
+	  }
+	} else if (firstTime) {
+	  output.sums[subband]->read(itsStreamsFromCNs[inputChannel], false);
+	} else {
+	  output.tmpSum->read(itsStreamsFromCNs[inputChannel], false);
+	  *output.sums[subband] += *output.tmpSum;
+	}
       }
     }
-
+    
     if (++ itsCurrentComputeCore == itsNrComputeCores)
       itsCurrentComputeCore = 0;
   }

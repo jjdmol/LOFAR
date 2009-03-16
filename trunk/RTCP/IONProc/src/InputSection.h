@@ -62,7 +62,7 @@ template <typename SAMPLE_TYPE> class InputSection {
     void			 computeDelays();
     void			 startTransaction();
     void			 writeLogMessage() const;
-    void			 toComputeNode();
+    void			 toComputeNodes();
     void			 stopTransaction();
 
 #if defined DUMP_RAW_DATA
@@ -95,6 +95,7 @@ template <typename SAMPLE_TYPE> class InputSection {
     unsigned			 itsNrPsets;
     
     unsigned			 itsMaxNetworkDelay; // in samples
+    unsigned                     itsNSubbands;
     unsigned			 itsNSubbandsPerPset;
     unsigned			 itsNSamplesPerSec;
     unsigned			 itsNHistorySamples;

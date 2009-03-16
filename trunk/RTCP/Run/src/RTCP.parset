@@ -82,6 +82,12 @@ Observation.beamList     = [36*0]
 Observation.rspBoardList = [36*0]
 Observation.rspSlotList  = [0..35]
 
+#rob, 5 subbands, 2 psets
+#Observation.subbandList  = [300..304]
+#Observation.beamList     = [5*0]
+#Observation.rspBoardList = [5*0]
+#Observation.rspSlotList  = [0..4]
+
 #Observation.subbandList  = [300]
 #Observation.beamList     = [0]
 #Observation.rspBoardList = [0]

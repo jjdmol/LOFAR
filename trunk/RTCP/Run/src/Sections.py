@@ -71,10 +71,11 @@ class Section(object):
         nSubbands = parset.getNrSubbands()
         nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
 
-        if not nSubbands % nSubbandsPerPset == 0:
-            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
+        if nSubbands % nSubbandsPerPset == 0:
+	    nPsets = nSubbands / nSubbandsPerPset
+	else:
+	    nPsets = (nSubbands / nSubbandsPerPset) + 1
 
-        nPsets = nSubbands / nSubbandsPerPset
         self.noProcesses = int(nPsets) * parset.getInt32('OLAP.CNProc.coresPerPset')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
 
