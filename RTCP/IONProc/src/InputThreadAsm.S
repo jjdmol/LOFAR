@@ -22,108 +22,79 @@
 .global	_copy_pkt_to_bbuffer_32_bytes
 _copy_pkt_to_bbuffer_32_bytes:
 
-	srwi	7,6,1
-	andi.	0,6,1
+	srwi	7,6,2
+	andi.	10,6,3
 	cmpwi	1,7,1
 	subi	7,7,1
 
 	sub	3,3,4
-	addi	4,4,-1*16
+	subi	4,4,1*16
 	subi	5,5,16
 	li	8,16
 
-	blt	1,2f	# branch if nrSubbands < 2
+	blt	1,2f	# branch if nrSubbands < 4
 
 	lfpdux	0,5,8	# prologue
 	lfpdux	1,5,8
 	lfpdux	2,5,8
 	lfpdux	3,5,8
+	lfpdux	4,5,8
+	lfpdux	5,5,8
+	lfpdux	6,5,8
+	lfpdux	7,5,8
 
-	beq	1,1f	# skip loop if nrSubbands < 4
+	beq	1,1f	# skip loop if nrSubbands < 8
 	mtctr	7
 
-0:	stfpdux	0,3,4	# unroll twice
-	stfpdux	1,3,8
+0:	stfpdux	0,3,4	# unroll four times
 	lfpdux	0,5,8
+	stfpdux	1,3,8
 	lfpdux	1,5,8
 	stfpdux	2,3,4
-	stfpdux	3,3,8
 	lfpdux	2,5,8
+	stfpdux	3,3,8
 	lfpdux	3,5,8
+	stfpdux	4,3,4
+	lfpdux	4,5,8
+	stfpdux	5,3,8
+	lfpdux	5,5,8
+	stfpdux	6,3,4
+	lfpdux	6,5,8
+	stfpdux	7,3,8
+	lfpdux	7,5,8
 	bdnz	0b
 
 1:	stfpdux	0,3,4	# epilogue
 	stfpdux	1,3,8
 	stfpdux	2,3,4
 	stfpdux	3,3,8
+	stfpdux	4,3,4
+	stfpdux	5,3,8
+	stfpdux	6,3,4
+	stfpdux	7,3,8
 
 2:	beqlr	0
 
-	lfpdux	0,5,8	# last subband, in case nrSubbands is uneven
+	mtctr	10
+
+3:	lfpdux	0,5,8	# last subbands, in case nrSubbands not divisible by 4
 	lfpdux	1,5,8
 	stfpdux	0,3,4
 	stfpdux	1,3,8
+	bdnz	3b
 
 	blr
-
 
 .global	_copy_pkt_to_bbuffer_64_bytes
 _copy_pkt_to_bbuffer_64_bytes:
 
-	srwi	7,6,1
-	andi.	0,6,1
-	cmpwi	1,7,1
-	subi	7,7,1
-
-	sub	3,3,4
 	addi	4,4,-3*16
-	subi	5,5,16
+	mtctr	6
 	li	8,16
+	addi	5,5,-16
+	sub	3,3,4
 
-	blt	1,2f
-
-	lfpdux	0,5,8
-	lfpdux	1,5,8
-	lfpdux	2,5,8
-	lfpdux	3,5,8
-	lfpdux	4,5,8
-	lfpdux	5,5,8
-	lfpdux	6,5,8
-	lfpdux	7,5,8
-	stfpdux	0,3,4
-
-	beq	1,1f
-	mtctr	7
-
-0:	lfpdux	0,5,8
-	stfpdux	1,3,8
-	stfpdux	2,3,8
-	stfpdux	3,3,8
-	stfpdux	4,3,4
-	lfpdux	1,5,8
-	lfpdux	2,5,8
-	lfpdux	3,5,8
-	lfpdux	4,5,8
-	stfpdux	5,3,8
-	stfpdux	6,3,8
-	stfpdux	7,3,8
-	stfpdux	0,3,4
-	lfpdux	5,5,8
-	lfpdux	6,5,8
-	lfpdux	7,5,8
-	bdnz	0b
-
-1:	stfpdux	1,3,8
-	stfpdux	2,3,8
-	stfpdux	3,3,8
-	stfpdux	4,3,4
-	stfpdux	5,3,8
-	stfpdux	6,3,8
-	stfpdux	7,3,8
-
-2:	beqlr	0
-
-	lfpdux	0,5,8
+1:	lfpdux	0,5,8
 	lfpdux	1,5,8
 	lfpdux	2,5,8
 	lfpdux	3,5,8
@@ -131,107 +102,19 @@ _copy_pkt_to_bbuffer_64_bytes:
 	stfpdux	1,3,8
 	stfpdux	2,3,8
 	stfpdux	3,3,8
-
+	bdnz	1b
 	blr
-
 
 .global	_copy_pkt_to_bbuffer_128_bytes
 _copy_pkt_to_bbuffer_128_bytes:
 
-	srwi	7,6,1
-	andi.	0,6,1
-	cmpwi	1,7,1
-	subi	7,7,1
-
-	sub	3,3,4
 	addi	4,4,-7*16
-	subi	5,5,16
+	mtctr	6
 	li	8,16
+	addi	5,5,-16
+	sub	3,3,4
 
-	blt	1,2f
-
-	lfpdux	0,5,8
-	lfpdux	1,5,8
-	lfpdux	2,5,8
-	lfpdux	3,5,8
-	lfpdux	4,5,8
-	lfpdux	5,5,8
-	lfpdux	6,5,8
-	lfpdux	7,5,8
-	stfpdux	0,3,4
-	lfpdux	8,5,8
-	lfpdux	9,5,8
-	lfpdux	10,5,8
-	lfpdux	11,5,8
-	lfpdux	12,5,8
-	lfpdux	13,5,8
-	lfpdux	14,5,8
-	lfpdux	15,5,8
-
-	beq	1,1f
-	mtctr	7
-
-	li	9,-16
-	stfpdux	14,1,9
-	stfpdux	15,1,9
-
-0:	lfpdux	0,5,8
-	stfpdux	1,3,8
-	stfpdux	2,3,8
-	stfpdux	3,3,8
-	stfpdux	4,3,8
-	stfpdux	5,3,8
-	stfpdux	6,3,8
-	stfpdux	7,3,8
-	stfpdux	8,3,4
-	lfpdux	1,5,8
-	lfpdux	2,5,8
-	lfpdux	3,5,8
-	lfpdux	4,5,8
-	lfpdux	5,5,8
-	lfpdux	6,5,8
-	lfpdux	7,5,8
-	lfpdux	8,5,8
-	stfpdux	9,3,8
-	stfpdux	10,3,8
-	stfpdux	11,3,8
-	stfpdux	12,3,8
-	stfpdux	13,3,8
-	stfpdux	14,3,8
-	stfpdux	15,3,8
-	stfpdux	0,3,4
-	lfpdux	9,5,8
-	lfpdux	10,5,8
-	lfpdux	11,5,8
-	lfpdux	12,5,8
-	lfpdux	13,5,8
-	lfpdux	14,5,8
-	lfpdux	15,5,8
-	bdnz	0b
-
-1:	stfpdux	1,3,8
-	stfpdux	2,3,8
-	stfpdux	3,3,8
-	stfpdux	4,3,8
-	stfpdux	5,3,8
-	stfpdux	6,3,8
-	stfpdux	7,3,8
-	stfpdux	8,3,4
-	stfpdux	9,3,8
-	stfpdux	10,3,8
-	stfpdux	11,3,8
-	stfpdux	12,3,8
-	stfpdux	13,3,8
-	stfpdux	14,3,8
-	stfpdux	15,3,8
-
-	lfpdx	15,0,1
-	lfpdux	14,1,8
-	addi	1,1,16
-
-2:	beqlr	0
-
-	lfpdux	0,5,8
+1:	lfpdux	0,5,8
 	lfpdux	1,5,8
 	lfpdux	2,5,8
 	lfpdux	3,5,8
@@ -247,6 +130,7 @@ _copy_pkt_to_bbuffer_128_bytes:
 	stfpdux	5,3,8
 	stfpdux	6,3,8
 	stfpdux	7,3,8
-
+	bdnz	1b
 	blr
+
 #endif
