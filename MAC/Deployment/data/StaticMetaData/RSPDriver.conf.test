@@ -42,6 +42,11 @@ RSPDriver.PPS_DELAY=1000
 RSPDriver.PPS_TRIGGER=1
 
 #
+# Parameter for control of the ring splitter
+#
+RSPDriver.SPLITTER=1
+
+#
 # Specify the MAC addresses of the control port (MAC) of RSP boards
 #
 # NOTE: not used yet!
