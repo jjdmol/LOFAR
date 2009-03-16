@@ -49,8 +49,8 @@ extern "C" {
 
 #if (defined HAVE_BGP || defined HAVE_BGL)
 #define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
-//#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
-//#define LOG_CONDITION	1
+ //#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+ //#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
@@ -262,6 +262,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
   itsNrStations	                   = configuration.nrStations();
   itsNrSubbands                    = configuration.nrSubbands();
+  itsNrSubbandsPerPset             = configuration.nrSubbandsPerPset();
   itsMode                          = configuration.mode();
   itsOutputIncoherentStokesI       = configuration.outputIncoherentStokesI();
   itsStokesIntegrateChannels       = configuration.stokesIntegrateChannels();
@@ -355,16 +356,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // create the arenas and allocate the data sets
   itsMapping.allocate();
 
+  
   if (itsIsTransposeOutput) {
-    const unsigned nrSubbandsPerPset = configuration.nrSubbandsPerPset();
     const unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
     // TODO: logicalNode assumes output psets are consecutively numbered
 
     itsCenterFrequencies = configuration.refFreqs();
-    itsFirstSubband	 = (logicalNode / usedCoresPerPset) * nrSubbandsPerPset;
-    itsLastSubband	 = itsFirstSubband + nrSubbandsPerPset;
-    itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % nrSubbandsPerPset;
-    itsSubbandIncrement	 = usedCoresPerPset % nrSubbandsPerPset;
+    itsFirstSubband	 = (logicalNode / usedCoresPerPset) * itsNrSubbandsPerPset;
+    itsLastSubband	 = itsFirstSubband + itsNrSubbandsPerPset;
+    itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % itsNrSubbandsPerPset;
+    itsSubbandIncrement	 = usedCoresPerPset % itsNrSubbandsPerPset;
 
 #if defined HAVE_MPI
     printSubbandList();
@@ -383,7 +384,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
-							usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, nrSamplesToCNProc);
+							usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, 
+							nrSamplesToCNProc, itsNrSubbands, itsNrSubbandsPerPset);
   }
 #endif // HAVE_MPI
 }
@@ -391,42 +393,53 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 {
 #if defined HAVE_MPI
-  if (itsIsTransposeInput /* && itsCurrentSubband < itsNrSubbands */) {
-      itsInputData->readMetaData(itsStream); // sync read the meta data
-    }
-
-  if(itsIsTransposeOutput /* && itsCurrentSubband < itsNrSubbands */) {
-      NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
-      postAsyncReceives.start();
-      itsAsyncTranspose->postAllReceives(itsTransposedData);
-      postAsyncReceives.stop();
-    }
-#endif // HAVE_MPI
 
   if (itsIsTransposeInput) {
+    itsInputData->readMetaData(itsStream); // sync read the meta data
+  }
+
+  if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
+    NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
+    postAsyncReceives.start();
+    itsAsyncTranspose->postAllReceives(itsTransposedData);
+    postAsyncReceives.stop();
+  }
+
+  // We must not try to read data from I/O node if our subband does not exist.
+  // Also, we cannot do the async sends in that case.
+  if (itsIsTransposeInput) { 
     static NSTimer readTimer("receive timer", true);
 
-#if defined HAVE_MPI
     if (LOG_CONDITION) {
       std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
     }
-
+    
     NSTimer asyncSendTimer("async send", LOG_CONDITION);
 
     for(unsigned i=0; i<itsOutputPsetSize; i++) {
-      readTimer.start();
-      itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
-      readTimer.stop();
-      asyncSendTimer.start();
-      itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
-      asyncSendTimer.stop();
+      unsigned subband = (itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
+
+      if(subband < itsNrSubbands) {
+	readTimer.start();
+	itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
+	readTimer.stop();
+	asyncSendTimer.start();
+	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
+	asyncSendTimer.stop();
+      }
     }
-#else // NO MPI
+  } // itsIsTransposeInput
+
+#else // ! HAVE_MPI
+
+  if (itsIsTransposeInput) {
+    static NSTimer readTimer("receive timer", true);
     readTimer.start();
     itsInputData->readAll(itsStream);
     readTimer.stop();
-#endif
-  } // itsIsTransposeInput
+  }
+
+#endif // HAVE_MPI
 }
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
@@ -441,7 +454,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     asyncReceiveTimer.start();
     const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
     asyncReceiveTimer.stop();
-    
+
     computeTimer.start();
     itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);
     itsPPF->filter(stat, itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
@@ -556,7 +569,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
   // transpose/obtain input data
   transpose();
 
-  if (itsIsTransposeOutput) {
+  if (itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
     // the order and types of sendOutput have to match
     // what the IONProc and Storage expect to receive
     // (defined in Interface/PipelineOutput.h)
@@ -612,7 +625,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
     }
   } // itsIsTransposeOutput
 
-  if( itsIsTransposeInput ) {
+  // Just always wait, if we didn't do any sends, this is a no-op.
+  if( itsIsTransposeInput) {
     finishSendingInput();
   }
 

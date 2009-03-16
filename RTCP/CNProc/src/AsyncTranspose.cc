@@ -17,13 +17,15 @@ namespace RTCP {
 #define MAX_TAG 100000 // The maximum tag we use to represent a data message. 
                        // Higher tags are metadata.
 
-template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrCoresPerPset,
-									    const LocationInfo &locationInfo, 
-									    const std::vector<unsigned> &inputPsets, 
-									    const std::vector<unsigned> &outputPsets, const unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
+  const bool isTransposeInput, const bool isTransposeOutput, const unsigned nrCoresPerPset,
+  const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, 
+  const unsigned nrSamplesToCNProc, const unsigned nrSubbands, const unsigned nrSubbandsPerPset)
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
+  itsNrSubbands(nrSubbands),
+  itsNrSubbandsPerPset(nrSubbandsPerPset),
   itsInputPsets(inputPsets),
   itsOutputPsets(outputPsets),
   itsLocationInfo(locationInfo)
@@ -44,6 +46,7 @@ template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(cons
     itsRankToPsetIndex[rank] = i;
   }
 
+
   itsMessageSize = oneSample.requiredSize();
   dataHandles.resize(inputPsets.size());
   metaDataHandles.resize(inputPsets.size());
@@ -59,13 +62,14 @@ template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::~AsyncTranspose()
 
 template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::postAllReceives(TransposedData<SAMPLE_TYPE> *transposedData)
 {
-  for(unsigned i=0; i<itsInputPsets.size(); i++) {
-    void* buf = (void*) transposedData->samples[i].origin();
-    const unsigned pset = itsInputPsets[i];
-    const unsigned rank = itsLocationInfo.remapOnTree(pset, itsGroupNumber); // TODO cache this? maybe in locationInfo itself?
-    dataHandles[i] = itsAsyncComm->asyncRead(buf, itsMessageSize, rank, rank);
-    metaDataHandles[i] = itsAsyncComm->asyncRead(&transposedData->metaData[i], sizeof(SubbandMetaData), rank, rank + MAX_TAG);
-  }
+    for(unsigned i=0; i<itsInputPsets.size(); i++) {
+      void* buf = (void*) transposedData->samples[i].origin();
+      unsigned pset = itsInputPsets[i];
+      unsigned rank = itsLocationInfo.remapOnTree(pset, itsGroupNumber); // TODO cache this? maybe in locationInfo itself?
+
+      dataHandles[i] = itsAsyncComm->asyncRead(buf, itsMessageSize, rank, rank);
+      metaDataHandles[i] = itsAsyncComm->asyncRead(&transposedData->metaData[i], sizeof(SubbandMetaData), rank, rank + MAX_TAG);
+    }
 }
 
 
@@ -98,7 +102,8 @@ template <typename SAMPLE_TYPE> unsigned AsyncTranspose<SAMPLE_TYPE>::waitForAny
 }
 
 
-template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(const unsigned outputPsetNr, const InputData<SAMPLE_TYPE> *inputData)
+template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(const unsigned outputPsetNr, 
+									    const InputData<SAMPLE_TYPE> *inputData)
 {
   const unsigned pset = itsOutputPsets[outputPsetNr];
   const unsigned rank = itsLocationInfo.remapOnTree(pset, itsGroupNumber);
@@ -115,11 +120,12 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::waitForAllSend
   itsAsyncComm->waitForAllWrites();
 }
 
+  
 template class AsyncTranspose<i4complex>;
 template class AsyncTranspose<i8complex>;
 template class AsyncTranspose<i16complex>;
 
-#endif // MPI
+#endif // HAVE_MPI
 
 } // namespace RTCP
 } // namespace LOFAR

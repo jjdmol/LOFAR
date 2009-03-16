@@ -63,6 +63,7 @@ class OutputSection
     PipelineOutputSet           *itsPipelineOutputSet;
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
+    unsigned                    itsNrSubbands;
     unsigned			itsNrSubbandsPerPset;
     const Parset                *itsParset;
     bool                        itsRealTime;

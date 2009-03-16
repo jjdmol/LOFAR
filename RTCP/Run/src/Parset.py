@@ -51,20 +51,19 @@ class Parset(LOFAR_Parset.Parset):
     def subbandsPerPset(self):
 	if not self.isDefined('OLAP.subbandsPerPset'):
 	    if self.getNrSubbands() == 1 : self['OLAP.subbandsPerPset'] = 1
-	    elif self.getNrSubbands() % 2 != 0:
-	        print 'Number of subbands(%d) is not even.' %(nrSubbands)
-		sys.exit(0)
 	    else:
-		for pSets in range(len(IONodes.get(self.getPartition())), 0 , -1):
-		    if self.getNrSubbands() % pSets == 0:
-			self['OLAP.subbandsPerPset'] = self.getNrSubbands() / pSets
-			break
+		nrPsets = len(IONodes.get(self.getPartition()))
+		if self.getNrSubbands() % nrPsets == 0:
+		    self['OLAP.subbandsPerPset'] = self.getNrSubbands() / nrPsets
+		else:
+		    self['OLAP.subbandsPerPset'] = (self.getNrSubbands() / nrPsets) + 1
+
 	return self.getInt32('OLAP.subbandsPerPset')		
     
     def nrUsedStorageNodes(self):
         nrStorageNodes = len(listfen.getSlaves())
-	nrPSets = self.getNrSubbands()/self.subbandsPerPset()
-	
+	nrPSets = self.getNPsets()
+
 	for nrNodes in range(nrStorageNodes, 0, -1):
 	    if nrPSets % nrNodes == 0:
 	        return nrNodes
@@ -73,7 +72,7 @@ class Parset(LOFAR_Parset.Parset):
         if not self.isDefined('OLAP.psetsPerStorage'):
 	    if self.getNrSubbands() == 1 : self['OLAP.psetsPerStorage'] = 1
 	    else:
-	        nrPSets = self.getNrSubbands()/self.subbandsPerPset()
+	        nrPSets = self.getNPsets()
 		nrStorageNodes = self.nrUsedStorageNodes()
 		self['OLAP.psetsPerStorage'] = nrPSets/nrStorageNodes
 
@@ -181,7 +180,11 @@ class Parset(LOFAR_Parset.Parset):
     def getNPsets(self):
         subbands = self.getNrSubbands()
         subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
-        return subbands / subbandsperpset
+
+        if subbands % subbandsperpset == 0:
+	    return subbands / subbandsperpset
+	else:
+	    return (subbands / subbandsperpset) + 1
     
     def nrSlotsInFrame(self):
         return self.getInt32('Observation.nrSlotsInFrame')
@@ -272,11 +275,3 @@ class Parset(LOFAR_Parset.Parset):
 		    if boards[subband] >= nrRSPboards:
 		        print 'Observation.rspBoardList contains rsp board numbers that do not exist'
 		        sys.exit(0)
-		
-	
-	
-	
-	
-	
-    
-    

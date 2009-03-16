@@ -289,7 +289,11 @@ inline uint32 Parset::nrChannelsPerSubband() const
 
 inline uint32 Parset::nrPsets() const
 {
-  return nrSubbands() / nrSubbandsPerPset();
+  if (nrSubbands() % nrSubbandsPerPset() == 0) { 
+    return nrSubbands() / nrSubbandsPerPset();
+  } else {
+    return (nrSubbands() / nrSubbandsPerPset()) + 1;
+  }
 }
 
 inline uint32 Parset::nrCoresPerPset() const
