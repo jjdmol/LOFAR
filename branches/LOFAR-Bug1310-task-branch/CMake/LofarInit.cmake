@@ -25,6 +25,7 @@
 #
 #  Variable               Type      Cached  Description
 #  ========               ====      ======  ===========
+#  CMAKE_INSTALL_PREFIX   path      yes     Installation prefix
 #  CMAKE_MODULE_PATH      path      yes     Path to LOFAR CMake module files
 #  CMAKE_<LANG>_COMPILER  filepath  yes     Compiler to use for <LANG>, where
 #                                           <LANG> is usually C and C++
@@ -49,6 +50,8 @@
 
 if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
+  message(STATUS "**** ENTER: LofarInit.cmake ****")
+
   set(LOFAR_INIT_INCLUDED TRUE)
 
   # Root directory of the LOFAR source code tree
@@ -64,6 +67,11 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
   # Get compiler suite and build variant from binary directory name.
   get_filename_component(cmpvar ${CMAKE_BINARY_DIR} NAME)
+
+  # Set the default install path prefix.
+  set(CMAKE_INSTALL_PREFIX "${LOFAR_ROOT}/installed/${cmpvar}" CACHE PATH "Instal path prefix")
+
+  # Split directory name in compiler suite part and build variant part.
   string(TOUPPER ${cmpvar} cmpvar)
   string(REGEX REPLACE "\(.*)_.*" "\\1" cmp ${cmpvar})
   string(REGEX REPLACE ".*_\(.*)" "\\1" var ${cmpvar})
@@ -106,26 +114,35 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
   # Determine if lib64 has to be used. This is somewhat tricky for the default
   # case, because: Debian puts 64-bit libs in /lib and 32-bit libs in /lib32,
-  # but SuSE and RedHat put 64-bit libs in /lib64 and 32-bit libs in /lib. 
+  # but SuSE and RedHat put 64-bit libs in /lib64 and 32-bit libs in /lib.
   # We cannot use `uname -s`, since all distros return "Linux", hence we must
-  # test for the presence of these lib directories instead. To further 
+  # test for the presence of these lib directories instead. To further
   # complicate matters, Debian distros may create a symlink /lib64; therefore
   # we should make sure that /lib64 is a "real" directory, not a symlink.
+  set(LOFAR_LIBDIR lib)
   if(DEFINED ENABLE_LIB64)
     if(ENABLE_LIB64)
-      set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
+      set(LOFAR_LIBDIR lib64)
     else(ENABLE_LIB64)
-      set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
+      execute_process(COMMAND test -d /lib32 -a ! -L /lib32 RESULT_VARIABLE result)
+      if(NOT result)
+        set(LOFAR_LIBDIR lib32)
+      endif(NOT result)
     endif(ENABLE_LIB64)
   else(DEFINED ENABLE_LIB64)
     execute_process(COMMAND test -d /lib64 -a ! -L /lib64 RESULT_VARIABLE result)
     if(NOT result)
-      set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
-    else(NOT result)
-      set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
+      set(LOFAR_LIBDIR lib64)
     endif(NOT result)
   endif(DEFINED ENABLE_LIB64)
 
+  if(LOFAR_LIBDIR STREQUAL lib64)
+    set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
+  else(LOFAR_LIBDIR STREQUAL lib64)
+    set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS FALSE)
+  endif(LOFAR_LIBDIR STREQUAL lib64)
+
+  message(STATUS "LOFAR_LIBDIR = ${LOFAR_LIBDIR}")
 
   # Initialize some globally used variables for include path, library names,
   # and compiler definitions.
