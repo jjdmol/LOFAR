@@ -225,7 +225,9 @@ void CacheBuffer::reset(void)
 	m_tdstatus.board() = tdstatusinit;
 
 	// SPUBoardStatus
-	m_spustatus.subrack().resize(1 + StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK);
+	int	nrSubRacks = StationSettings::instance()->maxRspBoards()/NR_RSPBOARDS_PER_SUBRACK;
+	nrSubRacks += (StationSettings::instance()->maxRspBoards() % NR_RSPBOARDS_PER_SUBRACK == 0) ? 0 : 1;
+	m_spustatus.subrack().resize(nrSubRacks);
 	LOG_INFO_STR("Resizing SPU array to " << m_spustatus.subrack().size());
 	SPUBoardStatus spustatusinit;
 	memset(&spustatusinit, 0, sizeof(SPUBoardStatus));
