@@ -1247,13 +1247,18 @@ GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
 			int		nrSubracks = ack.spustatus.subrack().size();
 			for (int sr = 0; sr < nrSubracks; sr++) {
 				SPUBoardStatus&		SPUstat = ack.spustatus.subrack()(sr);
-				logMessage(cout,formatString("   %2d   |    %4.1f  |    %4.1f  |   %4.1f  |    %4.1f  | %2d",
+				if (SPUstat.temperature == 255) {
+					logMessage(cout,formatString("    ?   |      ?   |      ?   |     ?   |      ?   |  ?"));
+				}
+				else {
+					logMessage(cout,formatString("   %2d   |    %4.1f  |    %4.1f  |   %4.1f  |    %4.1f  | %2d",
 						sr,
 						(SPUstat.v2_5 * 1.0) * 2.5  / 192.0 * 2.0,
 						(SPUstat.v3_3 * 1.0) * 3.3  / 192.0 * 3.0,
 						(SPUstat.v12  * 1.0) * 12.0 / 192.0 * 4.01,
 						(SPUstat.vcc  * 1.0) * 5.0  / 192.0,
 						SPUstat.temperature));
+				}
 			}
 		}
 	}

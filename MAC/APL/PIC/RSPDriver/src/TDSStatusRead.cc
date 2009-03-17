@@ -164,13 +164,11 @@ GCFEvent::TResult TDSStatusRead::handleack(GCFEvent& event, GCFPortInterface& /*
 		TD->v3_3		 = ack.result[TDS_V3_3_INDEX];
 		TD->temperature	 = ack.result[TDS_TEMP_INDEX];
 		// copy SPU info to cache
-		if (ack.result[SPU_READOK_INDEX] == 0x00) {
-			SPU->v2_5 		 = ack.result[SPU_V2_5_INDEX];
-			SPU->v3_3 		 = ack.result[SPU_V3_3_INDEX];
-			SPU->v12  		 = ack.result[SPU_V12_INDEX];
-			SPU->vcc  		 = ack.result[SPU_VCC_INDEX];
-			SPU->temperature = ack.result[SPU_TEMP_INDEX];
-		}
+		SPU->v2_5 		 = ack.result[SPU_V2_5_INDEX];
+		SPU->v3_3 		 = ack.result[SPU_V3_3_INDEX];
+		SPU->v12  		 = ack.result[SPU_V12_INDEX];
+		SPU->vcc  		 = ack.result[SPU_VCC_INDEX];
+		SPU->temperature = ack.result[SPU_TEMP_INDEX];
 		Cache::getInstance().getState().tdstatusread().read_ack(getBoardId());
 	}
 
