@@ -1248,7 +1248,7 @@ GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
 			for (int sr = 0; sr < nrSubracks; sr++) {
 				SPUBoardStatus&		SPUstat = ack.spustatus.subrack()(sr);
 				if (SPUstat.temperature == 255) {
-					logMessage(cout,formatString("    ?   |      ?   |      ?   |     ?   |      ?   |  ?"));
+					logMessage(cout,formatString("   %2d   |      ?   |      ?   |     ?   |      ?   |  ?", sr));
 				}
 				else {
 					logMessage(cout,formatString("   %2d   |    %4.1f  |    %4.1f  |   %4.1f  |    %4.1f  | %2d",
