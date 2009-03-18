@@ -46,7 +46,7 @@ nothreads.var:            --with-threads=no
 noshmem.var:              --with-shmem=no
 
 profile.var:              --with-optimize='-pg -O2' --with-compiletools --with-ldflags='-lc_p'
-cov.var:                  --with-optimize='-g -fprofile-arcs -ftest-coverage'
+cov.var:                  --with-optimize='-g3 -fno-inline -fprofile-arcs -ftest-coverage'
 mpe.var:                  --with-mpich=/usr/local/mpich-1.2.5/ch_p4 --enable-mpi-profiler
 debug.var:                --with-debug='-g'
 debugopt.var:             --with-optimize='-g -O2'
