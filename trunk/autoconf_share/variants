@@ -4,6 +4,7 @@ kcc.compiler.conf:
 icc.compiler.conf:
 
 profile.variant.conf:     $(standard) $(profile) $(mpe)
+cov.variant.conf:         $(standard) $(cov)
 debug.variant.conf:       $(standard) $(debug)
 profopt.variant.conf:     $(standard) $(profopt)
 opt.variant.conf:         $(standard) $(optimize)
@@ -45,6 +46,7 @@ nothreads.var:            --with-threads=no
 noshmem.var:              --with-shmem=no
 
 profile.var:              --with-optimize='-pg -O2' --with-compiletools --with-ldflags='-lc_p'
+cov.var:                  --with-optimize='-g -fprofile-arcs -ftest-coverage'
 mpe.var:                  --with-mpich=/usr/local/mpich-1.2.5/ch_p4 --enable-mpi-profiler
 debug.var:                --with-debug='-g'
 debugopt.var:             --with-optimize='-g -O2'
