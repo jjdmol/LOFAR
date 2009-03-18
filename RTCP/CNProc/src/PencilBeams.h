@@ -8,6 +8,10 @@
 #include <Interface/PencilBeamData.h>
 #include <BandPass.h>
 
+#if 1 || !defined HAVE_BGP
+#define PENCILBEAMS_C_IMPLEMENTATION
+#endif
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -179,7 +183,7 @@ class PencilBeams
     void calculateDelays( const unsigned stat, const PencilCoord3D &beamDir );
     void calculateAllDelays( const FilteredData *filteredData );
 
-    void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData, const std::vector<unsigned> stations );
+    void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData, const std::vector<unsigned> &stations );
 
     std::vector<PencilCoord3D> itsCoordinates;
     const unsigned          itsNrStations;
