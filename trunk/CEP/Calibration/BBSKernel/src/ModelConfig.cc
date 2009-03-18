@@ -31,6 +31,23 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
+IonoConfig::IonoConfig():rank(0)
+{
+}
+
+
+IonoConfig::~IonoConfig()
+{
+}
+
+void IonoConfig::print(ostream &out) const
+{
+    out << "Iono:" << endl;
+    Indent id;
+    out << indent << "Rank: " << rank ;
+}
+
+
 BeamConfig::BeamConfig()
 {
 }
@@ -120,6 +137,11 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     {
         out << endl << indent;
         obj.beamConfig->print(out);
+    }
+    if(obj.ionoConfig)
+    {
+        out << endl << indent;
+        obj.ionoConfig->print(out);
     }
 
     return out;

@@ -122,7 +122,7 @@ private:
         const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
 
     void makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
-        const boost::multi_array<Expr, 2> &azel);
+        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
 
     BeamCoeff readBeamCoeffFile(const string &filename) const;
 

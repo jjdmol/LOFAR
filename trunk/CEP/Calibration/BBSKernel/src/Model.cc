@@ -200,7 +200,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     boost::multi_array<JonesExpr, 2> ionosphere;
     if(mask[IONOSPHERE])
     {
-        makeIonosphereNodes(ionosphere, azel);
+      makeIonosphereNodes(ionosphere, config, azel);
     }
 
     // Create a single JonesExpr per station-source combination that is the
@@ -399,7 +399,7 @@ bool Model::makeInvExpressions(const ModelConfig &config,
         boost::multi_array<JonesExpr, 2> ionosphere;
         if(mask[IONOSPHERE])
         {
-            makeIonosphereNodes(ionosphere, azel);
+	  makeIonosphereNodes(ionosphere, config, azel);
         }
 
         // Accumulate the image-plane effects.
@@ -1003,7 +1003,7 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
 }
 
 void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
-    const boost::multi_array<Expr, 2> &azel)
+    const ModelConfig &config, const boost::multi_array<Expr, 2> &azel)
 {
     ASSERT(azel.shape()[0] == itsInstrument.stations.size());
     
@@ -1013,14 +1013,24 @@ void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
     // Create reference direction.
     Expr reference(new PiercePoint(itsInstrument.stations[0], azel[0][0]));
 
+    IonoConfig::ConstPointer ionoConfig =
+      dynamic_pointer_cast<const IonoConfig>(config.ionoConfig);
+    ASSERT(ionoConfig);
     // Get parameters.
-    vector<Expr> MIMParms(MIM::NPARMS);
-    for(size_t i = 0; i < MIMParms.size(); ++i)
-    {
-        ostringstream oss;
-        oss << "MIM:" << i;
-        MIMParms[i] = makeExprParm(INSTRUMENT, oss.str());
-    }
+    uint rank = ionoConfig->rank+1;
+    //make sure rank is at least 1, which means a linear gradient over the field of view.
+    ASSERTSTR(rank>1,"Ionosphere rank should be at least 1 (linear gradient)");
+    // for the moment we do not include MIM:0:0 (i.e. absolute TEC)
+    uint NParms=(rank)*(rank)-1;
+    vector<Expr> MIMParms(NParms);
+    for(uint i = 0; i < rank; ++i)
+      for(uint j = 0; j < rank; ++j)
+	{
+	  if (i==0 && j==0) continue;
+	  ostringstream oss;
+	  oss << "MIM:" << j<<":"<<i;
+	  MIMParms[i*rank+j-1] = makeExprParm(INSTRUMENT, oss.str());
+	}
 
     // Create a MIM node per (station, source) combination.
     result.resize(boost::extents[nStations][nSources]);

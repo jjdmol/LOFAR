@@ -42,13 +42,13 @@ class Matrix;
 class MIM: public JonesExprRep
 {
 public:
-    static const uint NPARMS = 5;
-
-    MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp);
-    virtual ~MIM();
-
-    // Calculate the result of its members.
-    virtual JonesResult getJResult (const Request&);
+  uint NPARMS;
+  
+  MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp);
+  virtual ~MIM();
+  
+  // Calculate the result of its members.
+  virtual JonesResult getJResult (const Request&);
 
 private:
     void evaluate(const Request &request, const Matrix &in_x,

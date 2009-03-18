@@ -26,6 +26,8 @@
 // \file
 // Aggregation of all the model configuration options.
 
+#include <BBSControl/Types.h>
+#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
@@ -39,6 +41,22 @@ namespace BBS
 // \ingroup BBSKernel
 // @{
     
+class IonoConfig
+{
+public:
+    typedef shared_ptr<IonoConfig>        Pointer;
+    typedef shared_ptr<const IonoConfig>  ConstPointer;
+
+    IonoConfig();
+    virtual ~IonoConfig();
+
+    // Print the contents of \c *this in human readable form into the output
+    // stream \a out.
+    void print(ostream &out) const;
+
+    uint32 rank;
+};
+
 class BeamConfig
 {
 public:
@@ -102,6 +120,7 @@ public:
     bool                      usePhasors;
     vector<string>            sources;
     vector<string>            components;
+    IonoConfig::ConstPointer  ionoConfig;
     BeamConfig::ConstPointer  beamConfig;
 };
 
