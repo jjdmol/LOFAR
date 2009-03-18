@@ -92,31 +92,35 @@ CS016 = [Station('CS016', '10.170.0.49', ['10.170.0.49:4346', '10.170.0.49:4347'
 # S17_8: 8 full stations (4 RSP boards), starting from 10.170.0.17
 # s9_2 : 2 microstations (1 RSP board ), starting from 10.170.0.9
 
-for ip in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62]:
+for ip in [1,2,5,6,9,10,13,14,17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46,49,50,53,54,57,58,61,62,129,130,133,134,137,138,141,142,145,146,149,150,153,154,157,158,161,162,165,166,169,170,173,174,177,178,181,182,185,186,189,190]:
   inputs = ['10.170.0.' + str(ip) + ':4346']
   exec 's' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
   inputs = ['10.170.0.' + str(ip) + ':' + str(port) for port in range(4346, 4350)]
   exec 'S' + str(ip) + '_1=[Station(\'S' + str(ip) + '\', \'10.170.0.' + str(ip) + '\', ' + str(inputs) + ')]'
 
-for ip in range(1,65,4):
+for ip in range(1,65,4) + range(129,193,4):
   exec 's' + str(ip) + '_2 = s' + str(ip) + '_1 + s' + str(ip + 1) + '_1'
   exec 'S' + str(ip) + '_2 = S' + str(ip) + '_1 + S' + str(ip + 1) + '_1'
 
-for ip in range(1,65,8):
+for ip in range(1,65,8) + range(129,193,8):
   exec 's' + str(ip) + '_4 = s' + str(ip) + '_2 + s' + str(ip + 4) + '_2'
   exec 'S' + str(ip) + '_4 = S' + str(ip) + '_2 + S' + str(ip + 4) + '_2'
 
-for ip in range(1,65,16):
+for ip in range(1,65,16) + range(129,193,16):
   exec 's' + str(ip) + '_8 = s' + str(ip) + '_4 + s' + str(ip + 8) + '_4'
   exec 'S' + str(ip) + '_8 = S' + str(ip) + '_4 + S' + str(ip + 8) + '_4'
 
-for ip in range(1,65,32):
+for ip in range(1,65,32) + range(129,193,32):
   exec 's' + str(ip) + '_16 = s' + str(ip) + '_8 + s' + str(ip + 16) + '_8'
   exec 'S' + str(ip) + '_16 = S' + str(ip) + '_8 + S' + str(ip + 16) + '_8'
 
-for ip in range(1,65,64):
+for ip in range(1,65,64) + range(129,193,64):
   exec 's' + str(ip) + '_32 = s' + str(ip) + '_16 + s' + str(ip + 32) + '_16'
   exec 'S' + str(ip) + '_32 = S' + str(ip) + '_16 + S' + str(ip + 32) + '_16'
+
+for ip in [1]:
+  exec 's' + str(ip) + '_64 = s' + str(ip) + '_32 + s' + str(ip + 128) + '_32'
+  exec 'S' + str(ip) + '_64 = S' + str(ip) + '_32 + S' + str(ip + 128) + '_32'
 
 
 Pulsar = [Station('Pulsar', '10.170.0.62', ['tcp:10.170.0.62:4346'])]
