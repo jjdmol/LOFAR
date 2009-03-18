@@ -2,12 +2,18 @@
 #include <lofar_config.h>
 
 #include <PencilBeams.h>
+
 #include <Interface/MultiDimArray.h>
 #include <Interface/PrintVector.h>
 #include <Common/Timer.h>
 #include <iostream>
 #include <cmath>
+#include <cassert>
 #include <vector>
+
+#ifndef PENCILBEAMS_C_IMPLEMENTATION
+  #include <BeamFormerAsm.h>
+#endif
 
 #ifndef M_SQRT3
   #define M_SQRT3     1.73205080756887719000
@@ -15,6 +21,8 @@
 
 namespace LOFAR {
 namespace RTCP {
+
+static NSTimer pencilBeamFormTimer("PencilBeamFormer::formBeams()", true);
 
 PencilCoordinates& PencilCoordinates::operator+=( const PencilCoordinates &rhs )
 {
@@ -221,7 +229,8 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
   }
 }
 
-void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out, const std::vector<unsigned> stations )
+#ifdef PENCILBEAMS_C_IMPLEMENTATION
+void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out, const std::vector<unsigned> &stations )
 {
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
   std::vector<unsigned> validStations;
@@ -281,6 +290,135 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
   }
 }
 
+#else // ASM implementation
+
+void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out, const std::vector<unsigned> &stations )
+{
+  // ASSERTs enforce supported modes
+
+  // Maximum number of flagged samples. If a station has more, we discard it entirely
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
+
+  // Whether each station is valid or discarded
+  std::vector<bool> validStation;
+
+  // Number of valid stations
+  unsigned nrValidStations = 0;
+
+  validStations.resize( stations.size() );
+
+  // determine which stations have too much flagged data
+  for(unsigned stat = 0; stat < stations.size(); stat++) {
+    ASSERT( stations[stat] == stat );
+
+    if( in->flags[stations[stat]].count() > upperBound ) {
+      // too much flagged data -- drop station
+      validStation[stat] = false;
+    } else {
+      // keep station
+      validStation[stat] = true;
+      nrValidStations++;
+    }
+  }
+
+  // conservative flagging: flag output if any input was flagged 
+  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+    out->flags[beam].reset();
+
+    for (unsigned stat = 0; stat < stations.size(); stat++ ) {
+      if( validStation[stat] ) {
+        out->flags[beam] |= in->flags[stations[stat]]; 
+      }
+    }
+  }
+
+  const double averagingFactor = 1.0 / nrValidStations;
+
+  // we only support this mode for now
+  #define NRSTATIONS 3
+  #define NRBEAMS 6
+
+  #define FUNC_(s,b) _beamform_ ## s ## stations_ ## b ## beams
+  #define FUNC(s,b) FUNC_(s,b)
+
+  ASSERT( stations.size() % NRSTATIONS == 0 );
+  ASSERT( itsCoordinates.size() % NRBEAMS == 0 );
+
+  for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
+    const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
+    const double bandPassFactor = itsBandPass.correctionFactors()[ch];
+    const float factor = averagingFactor * bandPassFactor;
+
+    for( unsigned beam = 0; beam < itsCoordinates.size(); beam += NRBEAMS ) {
+      for( unsigned stat = 0; stat < stations.size(); stat += NRSTATIONS ) {
+        fcomplex weights[NRSTATIONS][NRBEAMS] __attribute__ ((aligned(32)));
+
+        // construct the weights, with zeroes for unused data
+        for( unsigned s = 0; s < NRSTATIONS; s++ ) {
+	  if( validStation[stat+s] ) {
+            for( unsigned b = 0; b < NRBEAMS; b++ ) {
+	      weights[s][b] = phaseShift( frequency, itsDelays[stat+s][beam+b] ) * factor;
+	    }
+	  } else {
+	    // a dropped station has a weight of 0
+            for( unsigned b = 0; b < NRBEAMS; b++ ) {
+	      weights[s][b] = makefcomplex( 0, 0 );
+	    }
+	  }
+	}
+
+	// beam form
+        FUNC(NRSTATIONS,NRBEAMS)(
+          out->samples[ch][beam].origin(),
+	  out->samples[ch][beam].strides()[0] * sizeof out->samples[0][0][0][0],
+
+	  in->samples[ch][stat].origin(),
+	  in->samples[ch][stat].strides()[0] * sizeof in->samples[0][0][0][0],
+
+          &weights[0][0],
+	  (&weights[1][0] - &weights[0][0]) * sizeof weights[0][0],
+
+	  itsNrSamplesPerIntegration,
+	  stat == 0
+        );
+      }
+    }
+  }
+
+  #undef FUNC
+  #undef FUNC_
+  #undef NRBEAMS
+  #undef NRSTATIONS
+
+/*
+        if( !out->flags[beam].test(time) ) {
+          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+            fcomplex &dest  = out->samples[ch][beam][time][pol];
+
+            // combine the stations for this beam
+            fcomplex sample = makefcomplex( 0, 0 );
+
+            for( unsigned stat = 0; stat < validStations.size(); stat++ ) {
+              // note: for beam #0 (central beam), the phaseShift is 1
+              const fcomplex shift = phaseShift( frequency, itsDelays[validStations[stat]][beam] );
+              sample += in->samples[ch][validStations[stat]][time][pol] * shift;
+            }
+            dest = sample * factor;
+          }
+        } else {
+          // data is flagged
+          for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+            out->samples[ch][beam][time][pol] = makefcomplex( 0, 0 );
+  	  }
+	}
+      }
+    }
+  }
+*/
+}
+
+#endif
+
 void PencilBeams::calculateAllDelays( const FilteredData *filteredData )
 {
   // calculate the delays for each station for this integration period
@@ -299,6 +437,8 @@ void PencilBeams::formPencilBeams( const FilteredData *filteredData, PencilBeamD
   // TODO: fetch a list of stations to beam form. for now, we assume
   // we use all stations
 
+  pencilBeamFormTimer.start();
+
   calculateAllDelays( filteredData );
 
   // select stations
@@ -309,6 +449,8 @@ void PencilBeams::formPencilBeams( const FilteredData *filteredData, PencilBeamD
   }
 
   computeComplexVoltages( filteredData, pencilBeamData, stations );
+
+  pencilBeamFormTimer.stop();
 }
 
 } // namespace RTCP
