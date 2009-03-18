@@ -80,22 +80,27 @@ def writeGcov(name):
     outFile = open(name+'.gcov.html', 'w')
     writeHeaders (outFile, '<A HREF="'+name+'.html">'+name+'</A>')
     outFile.write ('<PRE>\n')
+    # Regexes for special character substitution.
+    reamp = re.compile('&')
+    relt = re.compile('<')
+    regt = re.compile('>')
     state = 0    # no ##### seen
     while True:
         line = file.readline()
         leng = len(line)
         if leng == 0:
             break
-        # Remove leading blanks
-        line = line[4:]
+        # Remove leading blanks and trailing \n; substitute special html chars
+        line = line[4:-1]
+        line = reamp.sub ('&amp;', line)   # must be done first
+        line = relt.sub ('&lt;', line)
+        line = regt.sub ('&gt;', line)
         if line[:5] == '#####':
-            if state == 0:
-                state = 1
-                outFile.write ('<FONT color=red>\n')
-        elif state == 1:
+            state = 1
+            outFile.write ('<FONT color=red>'+line+'</FONT>\n')
+        else:
             state = 0
-            outFile.write ('</FONT>\n')
-        outFile.write (line)
+            outFile.write (line+'\n')
     outFile.write ('</PRE>\n')
     writeFooters (outFile)
     outFile.close()
