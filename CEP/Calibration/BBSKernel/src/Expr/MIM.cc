@@ -34,12 +34,11 @@ namespace BBS
 
 MIM::MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp)
 {
-    ASSERTSTR(MIMParms.size() == NPARMS, "Wrong number of MIMparms defined!");
     for(uint i = 0; i != MIMParms.size(); ++i)
     {
         addChild(MIMParms[i]);
     }
-    
+    NPARMS=MIMParms.size();
     addChild(pp);
     addChild(ref_pp);
 }
@@ -191,8 +190,22 @@ double MIM::calculate_mim_function(const vector<double> &parms, double x,
     double rot_y = -1*std::sin(lat)*std::cos(lon)*x-std::sin(lat)*std::sin(lon)
       *y+std::cos(lat)*z;
 
-    return (parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)
-        /std::cos(alpha);
+    uint rank=uint(std::sqrt(parms.size()+1));
+    double res=0;;
+    for(int ilon=rank-1;ilon>=0;ilon--){
+      res*=rot_x/1000.;
+      double resy=0;
+      for(int ilat=rank-1;ilat>=0;ilat--)
+	{
+	  resy*=rot_y/1000.;
+	  if(ilon==0 && ilat==0) continue;
+	  resy+=parms[ilon*rank+ilat-1];
+	}
+      res+=resy;
+    }
+    //    return (parms[0]*rot_x/1000.+parms[1]*rot_y/1000.)        /std::cos(alpha);
+    return res/std::cos(alpha);
+
 }
 
 #ifdef EXPR_GRAPH
