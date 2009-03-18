@@ -4,7 +4,9 @@ LimitExec_SOURCES = LimitExec.cc
 pkgdep_SOURCES    = pkgdep.cc
 
 scriptdir = $(sbindir)
-dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedep.sh finddep makedoc checkrun
+dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedep.sh finddep makedoc checkrun \
+		      fillreview makecov \
+		      countalllines countlines countpurecode countpurecodecomm
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
@@ -12,7 +14,8 @@ dist_glish_SCRIPTS =
 pythondir = $(sbindir)
 dist_python_SCRIPTS = makePackage.py \
 		      makeClass.py \
-                      makeTest.py
+                      makeTest.py \
+		      processgcov
 
 templatedir = $(datadir)/templates
 dist_template_DATA  = templates/header.cc_template \
