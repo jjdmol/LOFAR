@@ -128,7 +128,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i]);
 
     if (sstr != 0)
-      sstr->setReadBufferSize(16 * 1024 * 1024); // stupid kernel multiplies this by 2
+      sstr->setReadBufferSize(24 * 1024 * 1024); // stupid kernel multiplies this by 2
   }
 
   itsNSubbands          = ps->nrSubbands();
