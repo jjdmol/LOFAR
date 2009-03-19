@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Creator: fig2dev Version 3.2 Patchlevel 5 -->
+<!-- CreationDate: Thu Mar 19 13:43:52 2009 -->
+<!-- Magnification: 4.000 -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="26.8in"
+   height="10.9in"
+   viewBox="3240 7112 32188 13072"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.46"
+   sodipodi:docname="round-robin.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <metadata
+     id="metadata207">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs205">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 490.49997 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="2412 : 490.49997 : 1"
+       inkscape:persp3d-origin="1206 : 326.99998 : 1"
+       id="perspective209" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-height="1125"
+     inkscape:window-width="1600"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showgrid="false"
+     inkscape:zoom="0.48383085"
+     inkscape:cx="1206"
+     inkscape:cy="490.49997"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:current-layer="svg2"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <path
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:43.3647995;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:43.36480143, 86.72960282;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 32637.218,7236.9295 L 32638.026,18773.304"
+     id="path3917"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:43.3647995;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:43.36480143, 86.72960282;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 26289.554,7097.2422 L 26290.362,18633.619"
+     id="path3915"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:43.3647995;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:43.36480143, 86.72960282;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 13585.492,7174.8177 L 13586.3,18711.192"
+     id="path3893"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:43.36479978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:43.36479978,346.9183985;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 7178.4729,7278.5532 L 7179.2809,18814.932"
+     id="path3841"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:43.3647995;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:43.36480143, 86.72960282;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 19941.43,7209.0897 L 19942.238,18745.466"
+     id="path3843"
+     sodipodi:nodetypes="cc" />
+  <polyline
+     id="polyline6"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="21600,19500 23040,19500 "
+     transform="translate(-1334.4943,747.3167)" />
+  <polygon
+     id="polygon8"
+     style="fill:#000000;stroke:#000000;stroke-width:60"
+     points="22984,19680 23436,19500 22984,19320 23076,19500 22984,19680 "
+     transform="translate(-1334.4943,747.3167)" />
+  <rect
+     id="rect10"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7269.6357"
+     x="12896.717" />
+  <rect
+     id="rect48"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7269.6357"
+     x="7196.7451" />
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text50"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="20547.305"
+     x="17954.062"
+     xml:space="preserve">time</text>
+  <rect
+     id="rect54"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="7242.9458"
+     x="7772.7852" />
+  <polyline
+     id="polyline76"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,-3134.3847,69.635848)" />
+  <polyline
+     id="polyline78"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,-3128.2529,69.635848)" />
+  <polyline
+     id="polyline124"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 35100,16800 "
+     transform="translate(0,1948.362)" />
+  <polyline
+     id="polyline126"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 7200,17400 "
+     transform="translate(0,1948.362)" />
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text150"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="8148"
+     x="3300"
+     xml:space="preserve">core 0</text>
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text152"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="9948"
+     x="3300"
+     xml:space="preserve">core 1</text>
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text154"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="11748"
+     x="3300"
+     xml:space="preserve">core 2</text>
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text156"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="13548"
+     x="3300"
+     xml:space="preserve">core 3</text>
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text158"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="15348"
+     x="3300"
+     xml:space="preserve">core 4</text>
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text160"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="8116.2559"
+     x="12962.928"
+     xml:space="preserve">second 0, subband 0</text>
+  <text
+     style="font-size:768px;font-style:normal;font-weight:bold;text-anchor:start;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2681"
+     font-size="768"
+     font-weight="bold"
+     font-style="normal"
+     y="17267.004"
+     x="3295.8647"
+     xml:space="preserve">core 5</text>
+  <rect
+     id="rect2793"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9080.5488"
+     x="13505.02" />
+  <rect
+     id="rect2795"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9080.5488"
+     x="7805.1133" />
+  <rect
+     id="rect2797"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="9053.8584"
+     x="8381.1465" />
+  <polyline
+     id="polyline2799"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,-2526.0222,1880.5551)" />
+  <polyline
+     id="polyline2801"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,-2519.8905,1880.5551)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2803"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="9927.1689"
+     x="13571.23"
+     xml:space="preserve">second 0, subband 1</text>
+  <rect
+     id="rect2805"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10919.221"
+     x="14064.17" />
+  <rect
+     id="rect2807"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10919.221"
+     x="8364.2422" />
+  <rect
+     id="rect2809"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="10892.53"
+     x="8940.2715" />
+  <polyline
+     id="polyline2811"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,-1966.8885,3719.2189)" />
+  <polyline
+     id="polyline2813"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,-1960.7568,3719.2189)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2815"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="11765.841"
+     x="14130.38"
+     xml:space="preserve">second 0, subband 2</text>
+  <rect
+     id="rect2891"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="12812.289"
+     x="19300.07" />
+  <rect
+     id="rect2893"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="12812.289"
+     x="13600.102" />
+  <rect
+     id="rect2895"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="12785.6"
+     x="14176.141" />
+  <polyline
+     id="polyline2897"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,3269.0645,5612.2798)" />
+  <polyline
+     id="polyline2899"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,3275.1962,5612.2798)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2901"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="13658.909"
+     x="19366.281"
+     xml:space="preserve">second 1, subband 0</text>
+  <rect
+     id="rect2903"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="14623.203"
+     x="19908.375" />
+  <rect
+     id="rect2905"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="14623.203"
+     x="14208.469" />
+  <rect
+     id="rect2907"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="14596.512"
+     x="14784.504" />
+  <polyline
+     id="polyline2909"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,3877.4271,7423.1991)" />
+  <polyline
+     id="polyline2911"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,3883.5588,7423.1991)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2913"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="15469.822"
+     x="19974.588"
+     xml:space="preserve">second 1, subband 1</text>
+  <rect
+     id="rect2915"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="16461.875"
+     x="20547.594" />
+  <rect
+     id="rect2917"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="16461.875"
+     x="14847.667" />
+  <rect
+     id="rect2919"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="16435.186"
+     x="15423.697" />
+  <polyline
+     id="polyline2921"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,4516.6309,9261.8629)" />
+  <polyline
+     id="polyline2923"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,4522.7626,9261.8629)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2925"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="17308.496"
+     x="20613.805"
+     xml:space="preserve">second 1, subband 2</text>
+  <polyline
+     id="polyline2977"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 7200,17400 "
+     transform="translate(12726.769,1961.6488)" />
+  <rect
+     id="rect2985"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="12722.756"
+     x="31985.445" />
+  <rect
+     id="rect2987"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="12722.756"
+     x="26285.578" />
+  <rect
+     id="rect2989"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="12696.066"
+     x="26861.617" />
+  <polyline
+     id="polyline2991"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,15954.404,5522.7561)" />
+  <polyline
+     id="polyline2993"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,15960.536,5522.7561)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text2995"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="13569.377"
+     x="32051.656"
+     xml:space="preserve">second 3, subband 0</text>
+  <rect
+     id="rect2997"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="14533.669"
+     x="32593.75" />
+  <rect
+     id="rect2999"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="14533.669"
+     x="26893.945" />
+  <rect
+     id="rect3001"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="14506.979"
+     x="27469.979" />
+  <polyline
+     id="polyline3003"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,16562.766,7333.6753)" />
+  <polyline
+     id="polyline3005"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,16568.898,7333.6753)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3007"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="15380.289"
+     x="32659.961"
+     xml:space="preserve">second 3, subband 1</text>
+  <rect
+     id="rect3009"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="16372.341"
+     x="33232.969" />
+  <rect
+     id="rect3011"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="16372.341"
+     x="27533.143" />
+  <rect
+     id="rect3013"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="16345.65"
+     x="28109.172" />
+  <polyline
+     id="polyline3015"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,17201.97,9172.339)" />
+  <polyline
+     id="polyline3017"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,17208.102,9172.339)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3019"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="17218.961"
+     x="33299.18"
+     xml:space="preserve">second 3, subband 2</text>
+  <rect
+     id="rect3033"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7308.8394"
+     x="37066.949" />
+  <rect
+     id="rect3035"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7308.8394"
+     x="31366.982" />
+  <rect
+     id="rect3037"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="7282.1494"
+     x="31943.021" />
+  <polyline
+     id="polyline3039"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,21035.807,108.83793)" />
+  <polyline
+     id="polyline3041"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,21041.938,108.83793)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3043"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="8155.46"
+     x="37133.16"
+     xml:space="preserve">second 4, subband 0</text>
+  <rect
+     id="rect3045"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9119.75"
+     x="37675.25" />
+  <rect
+     id="rect3047"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9119.75"
+     x="31975.35" />
+  <rect
+     id="rect3049"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="9093.0596"
+     x="32551.385" />
+  <polyline
+     id="polyline3051"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,21644.166,1919.7573)" />
+  <polyline
+     id="polyline3053"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,21650.298,1919.7573)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3055"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="9966.3682"
+     x="37741.461"
+     xml:space="preserve">second 4, subband 1</text>
+  <rect
+     id="rect3057"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10958.418"
+     x="38314.469" />
+  <rect
+     id="rect3059"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10958.418"
+     x="32614.549" />
+  <rect
+     id="rect3061"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="10931.728"
+     x="33190.57" />
+  <polyline
+     id="polyline3063"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,22283.369,3758.4208)" />
+  <polyline
+     id="polyline3065"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,22289.501,3758.4208)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3067"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="11805.038"
+     x="38380.68"
+     xml:space="preserve">second 4, subband 2</text>
+  <path
+     style="fill:#008000;fill-opacity:1;fill-rule:evenodd;stroke:#008000;stroke-width:40.06090546;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:80.12181218, 40.06090616;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 7781.956,8439.0454 L 7786.0678,12413.991"
+     id="path3849"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:#008000;fill-opacity:1;fill-rule:evenodd;stroke:#008000;stroke-width:40.19602966;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:80.39205793, 40.19602903;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 8340.7061,10258.097 L 8344.6829,12417.306"
+     id="path3851"
+     sodipodi:nodetypes="cc" />
+  <rect
+     id="rect3853"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7244.7085"
+     x="25648.604" />
+  <rect
+     id="rect3855"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="7244.7085"
+     x="19948.633" />
+  <rect
+     id="rect3857"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="7218.0186"
+     x="20524.674" />
+  <polyline
+     id="polyline3859"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,9617.5076,44.708453)" />
+  <polyline
+     id="polyline3861"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,9623.6394,44.708453)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3863"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="8091.3281"
+     x="25714.814"
+     xml:space="preserve">second 0, subband 0</text>
+  <rect
+     id="rect3865"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9055.6211"
+     x="26256.906" />
+  <rect
+     id="rect3867"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="9055.6211"
+     x="20557.002" />
+  <rect
+     id="rect3869"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="9028.9307"
+     x="21133.035" />
+  <polyline
+     id="polyline3871"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,10225.87,1855.6278)" />
+  <polyline
+     id="polyline3873"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,10232.002,1855.6278)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3875"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="9902.2412"
+     x="26323.117"
+     xml:space="preserve">second 0, subband 1</text>
+  <rect
+     id="rect3877"
+     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10894.293"
+     x="26816.057" />
+  <rect
+     id="rect3879"
+     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="420"
+     height="1200"
+     width="5100"
+     y="10894.293"
+     x="21116.131" />
+  <rect
+     id="rect3881"
+     style="fill:#ffffde;stroke:#ffd600;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter"
+     rx="0"
+     height="1200"
+     width="9817.8389"
+     y="10867.603"
+     x="21692.158" />
+  <polyline
+     id="polyline3883"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,7200 17100,7200 "
+     transform="matrix(1.2121954,0,0,1,10785.004,3694.2916)" />
+  <polyline
+     id="polyline3885"
+     style="stroke:#ffd600;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="9000,8400 17100,8400 "
+     transform="matrix(1.2115092,0,0,1,10791.136,3694.2916)" />
+  <text
+     style="font-size:768px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#000000;stroke:#000000;stroke-width:0.025in;font-family:Helvetica"
+     id="text3887"
+     font-size="768"
+     font-weight="bold"
+     font-style="italic"
+     y="11740.913"
+     x="26882.268"
+     xml:space="preserve">second 0, subband 2</text>
+  <polyline
+     id="polyline3895"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 7200,17400 "
+     transform="translate(6385.6664,1930.139)" />
+  <polyline
+     id="polyline3899"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 7200,17400 "
+     transform="translate(25435.813,1967.7578)" />
+  <polyline
+     id="polyline3901"
+     style="stroke:#000000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     points="7200,16800 7200,17400 "
+     transform="translate(19094.711,1936.248)" />
+  <path
+     style="fill:#008000;fill-opacity:1;fill-rule:evenodd;stroke:#008000;stroke-width:40.19602966;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:80.39205793, 40.19602903;stroke-dashoffset:0;stroke-opacity:1"
+     d="M 8921.8757,12099.571 L 8925.8525,12458.711"
+     id="path3919"
+     sodipodi:nodetypes="cc" />
+</svg>
