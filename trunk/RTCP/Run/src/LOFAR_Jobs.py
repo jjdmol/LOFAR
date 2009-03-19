@@ -38,6 +38,7 @@ class Job(object):
                           address = IONode)
 	    runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1])
 	    self.runCommand = ionode.executeAsync(runCmd + ' ' + parsetfile.split('/')[-1] + ') &> ' + self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ), timeout = timeOut)
+	    time.sleep(.1)
   
     def isDone(self):
         ret = self.runCommand.isDone()
