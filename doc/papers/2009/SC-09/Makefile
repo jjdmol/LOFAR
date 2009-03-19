@@ -6,7 +6,7 @@ FIG_SOURCES =	processing.fig round-robin.fig
 
 JGR_SOURCES =	
 
-JPG_SOURCES =	
+JPG_SOURCES =	fringe.jpg
 
 PNG_SOURCES =	
 
@@ -14,7 +14,7 @@ STY_SOURCES =
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
 GEN_EPS_FILES =	$(FIG_SOURCES:%.fig=%.eps) $(JGR_SOURCES:%.jgr=%.eps) $(JPG_SOURCES:%.jpg=%.eps) $(PNG_SOURCES:%.png=%.eps)
-EPS_FILES =	$(GEN_EPS_FILES) ionode-load.eps
+EPS_FILES =	$(GEN_EPS_FILES)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
 GEN_FILES =	$(AUX_FILES) $(GEN_EPS_FILES) $(GEN_EXT:%=lofar.%) mfput.log\
