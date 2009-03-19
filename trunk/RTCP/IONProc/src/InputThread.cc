@@ -123,7 +123,7 @@ template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(voi
 
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-#if 0 && defined HAVE_BGP_ION
+#if 1 && defined HAVE_BGP_ION
   if (itsArgs.threadID == 0)
     runOnCore0();
   else
