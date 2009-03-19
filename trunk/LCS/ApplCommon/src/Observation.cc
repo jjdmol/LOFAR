@@ -41,7 +41,8 @@ Observation::Observation() :
 	startTime(0),
 	stopTime(0),
 	nyquistZone(0),
-	sampleClock(0)
+	sampleClock(0),
+	splitter(false)
 {
 }
 
@@ -54,7 +55,8 @@ Observation::Observation(ParameterSet*		aParSet) :
 	startTime(0),
 	stopTime(0),
 	nyquistZone(0),
-	sampleClock(0)
+	sampleClock(0),
+	splitter(false)
 {
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.";
@@ -85,6 +87,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 	// new way of specifying the receivers and choosing the antenna array.
 	antennaSet  	 = aParSet->getString(prefix+"antennaSet", "");
 	useLongBaselines = aParSet->getBool  (prefix+"longBaselines", false);
+	if (antennaSet == "HBA_BOTH") {
+		splitter = true;
+	}
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {

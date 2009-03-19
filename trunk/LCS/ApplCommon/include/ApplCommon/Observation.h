@@ -113,6 +113,7 @@ public:
 	// new way of selecting antennas
 	string			antennaSet;
 	bool			useLongBaselines;
+	bool			splitter;
 
 	vector<Beam>	beams;
 	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
