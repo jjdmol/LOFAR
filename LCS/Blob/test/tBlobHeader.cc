@@ -25,25 +25,23 @@
 
 #include <Blob/BlobHeader.h>
 #include <Common/DataFormat.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 
 
 int main()
 {
-  INIT_LOGGER("tBlobHeader");
   // Define a blob header.
-  BlobHeader<12> bl("abc",1);
+  BlobHeader bl(0, 1);
   // Check if all data in it are correct.
-  cout << sizeof(bl) << endl;
-  ASSERT (sizeof(bl) % 8 == 0);
-  ASSERT (bl.plainSize() == 14);
+  ASSERT (sizeof(bl) == 12);
+  ASSERT (bl.getVersion() == 0);
   ASSERT (bl.lengthOffset() == 4);
+  ASSERT (bl.getNameLength() == 0);
+  ASSERT (bl.getHeaderLength() == 12);
   ASSERT (!bl.mustConvert());
   ASSERT (bl.checkMagicValue());
-  ASSERT (bl.checkType("abc"));
-  ASSERT (!bl.checkType("ab"));
-  ASSERT (!bl.checkType("abcd"));
   ASSERT (bl.getLength() == 0);
   bl.setLength (100);
   ASSERT (bl.getLength() == 100);
