@@ -3,7 +3,7 @@
 
 %\usepackage{a4wide,setspace}
 %\doublespacing
-\usepackage{cite, epsf, graphicx, subfigure, amsmath, xspace, txfonts}
+\usepackage{cite, graphicx, subfigure, amsmath, xspace, txfonts}
 %\usepackage{eurosym} 
 
 \newcommand{\us}{\,$\muup$s\xspace}
@@ -164,8 +164,7 @@ efficiently.
 \section{LOFAR Processing}
 
 \begin{figure*}
-\epsfxsize=\textwidth
-\epsffile{processing.eps}
+\includegraphics[width=\textwidth]{processing.pdf}
 \caption{Simplified data flow diagram.}
 \label{fig:processing}
 \end{figure*}
@@ -372,8 +371,7 @@ In practice, under normal circumstances, this happens close to never.
 \section{Compute-node processing}
 
 \begin{figure}
-\epsfxsize=\columnwidth
-\epsffile{round-robin.eps}
+\includegraphics[width=\columnwidth]{round-robin.pdf}
 \caption{Round robin processing of work over compute-node cores.}
 \label{fig:round-robin}
 \end{figure}
@@ -615,8 +613,7 @@ operations per cycle.
 \section{Results}
 
 \begin{figure}
-\epsfxsize=\columnwidth
-\epsffile{fringe.eps}
+\includegraphics[width=\columnwidth]{fringe.jpg}
 \caption{``Fringes'' from a 9-hour observation.  The phase of the correlated
 signal (represented by color) changes due to the earth rotation that alters
 the relative position of the observed source.
@@ -643,8 +640,7 @@ With one rack, we can process up to 64~stations, one per I/O~node.
 \subsection{Computational performance on the I/O Nodes}
 
 \begin{figure}
-\epsfxsize=\columnwidth
-%\epsffile{ionode-load.eps}
+\includegraphics[width=\columnwidth]{speed.pdf}
 \caption{I/O Node performance breakdown (248~subbands).}
 \label{fig:ionode-load}
 \end{figure}
