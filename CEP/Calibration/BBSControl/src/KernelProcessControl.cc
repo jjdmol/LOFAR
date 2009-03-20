@@ -120,6 +120,12 @@ namespace LOFAR
         ASSERT(ps);
 
         string filesys = ps->getString("ObservationPart.Filesystem");
+        if(filesys == ".")
+        {
+            // Work-around for the socketrun script.
+            filesys.clear();
+        }
+
         string path = ps->getString("ObservationPart.Path");
         string skyDb = ps->getString("ParmDB.Sky");
         string instrumentDb = ps->getString("ParmDB.Instrument");
