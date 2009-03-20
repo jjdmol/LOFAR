@@ -103,7 +103,9 @@ void *SparseSetAllocator::allocate(size_t size, size_t alignment)
     }
   }
 
-  std::exit(1);
+  pthread_mutex_unlock(&mutex);
+
+  THROW(InterfaceException,"could not allocate data");
 }
 
 
