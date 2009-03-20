@@ -26,7 +26,6 @@
 // \file
 // Aggregation of all the model configuration options.
 
-#include <BBSControl/Types.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
