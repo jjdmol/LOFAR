@@ -99,7 +99,7 @@ def doObservation(obsID, parset):
 	    timeOut = ((sz+63)&~63) + 64
 
             if isinstance(sectionTable.get(section), StorageSection):
-	        noProcesses = parset.getNrSubbands() / (parset.subbandsPerPset() * parset.getInt32('OLAP.psetsPerStorage'))
+		noProcesses = sectionTable.get(section).getNoProcesses()
 		scanMask = "list%03d"
 		subStr = ':'
 		for i in range(0,noProcesses):
@@ -109,6 +109,7 @@ def doObservation(obsID, parset):
 		    else:
 		        subStr = subStr + '%d' % int(machineNr)	
 		commandStr ='cexec ' + subStr + ' mkdir /data/' + obsID
+		print 'EXECUTING: ' + commandStr
 		listfen.executeAsync(commandStr).waitForDone()
 		timeOut = (sz+63)&~63
  	    
@@ -143,25 +144,6 @@ if __name__ == '__main__':
     
     workingDir = os.getcwd()[:-len('LOFAR/RTCP/Run/src')]
     
-    # create the parset
-    parset = Parset() 
-
-    parset.readFromFile(options.parset)
-    parset.setClock(options.clock)
-    parset.setIntegrationTime(options.integrationtime) 
-    parset.setPartition(options.partition)
-    parset.subbandsPerPset()    
-    parset.psetsPerStorage()
-    parset.storageNodeList()
-    
-    parset.check()
-    
-    if options.msname:
-        parset.setMSName(options.msname)
-
-    # read the runtime (optional start in utc and the length of the measurement)
-    parset.setInterval(options.starttime, options.runtime)
-
     # read the stations from Stations.py
     # todo: WARNING this is very dangerous, because there could be any code in the station string
     # the exec should probably be replaced by something safer, but this is only a temporary script
@@ -171,16 +153,9 @@ if __name__ == '__main__':
     except:
         print 'Cannot parse station configuration: ' + str(options.stationlist)
         sys.exit(1)
-    
-    parset.setStations(stationList)
-    parset.checkBeamformList()
-    parset.setTiedArrayStations()
-    parset.tabMapping()
-    
-    # see if we are using fake input
-    if options.fakeinput > 0:
-        parset.setInterval(1, options.runtime+10)
-        parset.setInputToMem()
+
+    # create the parset
+    parset = Parset(options.parset, options.clock, options.integrationtime, options.partition, options.msname, options.starttime, options.runtime, stationList, options.fakeinput)
 
     # if the msname wasn't given, read the next number from the file
     if hostname != listfen.name:
