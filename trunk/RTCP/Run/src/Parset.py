@@ -27,13 +27,38 @@ class StationRSPpair(object):
     def setRsp(self, rsp):
 	self.rsp = rsp
 	
+
 class Parset(LOFAR_Parset.Parset):
 
-    def __init__(self):
+    def __init__(self, fileName, clock, integrationTime, partition, msname, starttime, runtime, stationList, fakeInput):
         LOFAR_Parset.Parset.__init__(self)
         self.inputFromMemory = False
         self.inputFromRaw = False
-        self.stationList = list()
+	self.readFromFile(fileName)
+	self.setClock(clock)
+	self.setIntegrationTime(integrationTime) 
+	self.setPartition(partition)
+	self.setNrPsets()
+	self.setSubbandsPerPset()
+	self.setPsetsPerStorage()
+	self.setStorageNodeList()
+    	self.check()
+
+	if msname: self.setMSName(msname)
+
+	# read the runtime (optional start in utc and the length of the measurement)
+	self.setInterval(starttime, runtime)
+
+	self.setStations(stationList)
+	self.checkBeamformList()
+	self.setTiedArrayStations()
+	self.tabMapping()
+
+	# see if we are using fake input
+	if fakeInput > 0:
+            self.setInterval(1, options.runtime+10)
+	    self.setInputToMem()
+
 
     def setClock(self, clock):
         self.clock = clock
@@ -45,48 +70,24 @@ class Parset(LOFAR_Parset.Parset):
        
 	self['OLAP.CNProc.integrationSteps'] = int(round(self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband']) / 16)) * 16
 
+
     def getClockString(self):
         return self.clock
 
-    def subbandsPerPset(self):
-	if not self.isDefined('OLAP.subbandsPerPset'):
-	    if self.getNrSubbands() == 1 : self['OLAP.subbandsPerPset'] = 1
-	    else:
-		nrPsets = len(IONodes.get(self.getPartition()))
-		if self.getNrSubbands() % nrPsets == 0:
-		    self['OLAP.subbandsPerPset'] = self.getNrSubbands() / nrPsets
-		else:
-		    self['OLAP.subbandsPerPset'] = (self.getNrSubbands() / nrPsets) + 1
 
-	return self.getInt32('OLAP.subbandsPerPset')		
-    
-    def nrUsedStorageNodes(self):
-        nrStorageNodes = len(listfen.getSlaves())
-	nrPSets = self.getNPsets()
-
-	for nrNodes in range(nrStorageNodes, 0, -1):
-	    if nrPSets % nrNodes == 0:
-	        return nrNodes
-	
-    def psetsPerStorage(self):
-        if not self.isDefined('OLAP.psetsPerStorage'):
-	    if self.getNrSubbands() == 1 : self['OLAP.psetsPerStorage'] = 1
-	    else:
-	        nrPSets = self.getNPsets()
-		nrStorageNodes = self.nrUsedStorageNodes()
-		self['OLAP.psetsPerStorage'] = nrPSets/nrStorageNodes
-
-    def storageNodeList(self):
+    def setStorageNodeList(self):
 	nrSubbands = self.getNrSubbands()
-	nrStorageNodes = self.nrUsedStorageNodes()
+	nrStorageNodes = self.getNrUsedStorageNodes()
 	storageNodes = list()
 	
 	if nrSubbands == 1 : self['OLAP.storageNodeList'] = '[0]'
 	else:
 	    for i in range(0,nrSubbands):
- 		storageNodes.append(i/(nrSubbands/nrStorageNodes))
+ 		storageNodes.append(i/self.getSubbandsPerPset())
 	
 	    self['OLAP.storageNodeList'] = [s for s in storageNodes]
+	    print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
+
 
     def setStations(self, stationList):
         self.stationList = stationList
@@ -97,6 +98,7 @@ class Parset(LOFAR_Parset.Parset):
 	  self['PIC.Core.Station.' + station.name + '.RSP.ports'] = station.inputs
 	for pset in range(len(IONodes.get(self.partition))):
 	  self['PIC.Core.IONProc.' + self.partition + '[' + str(pset) + '].inputs'] = [station.name + '/RSP' + str(rsp) for station in stationList if station.getPset(self.partition) == pset for rsp in range(len(station.inputs))]
+
 
     def setTiedArrayStations(self):
         tiedArrayStationList = list()
@@ -121,6 +123,7 @@ class Parset(LOFAR_Parset.Parset):
 	
 	self['OLAP.tiedArrayStationNames'] = [sp for sp in tiedArrayStationList]
 
+
     def tabMapping(self):
 	tabList = list()
 	
@@ -143,9 +146,11 @@ class Parset(LOFAR_Parset.Parset):
 		
 	self['OLAP.CNProc.tabList'] = [tab for tab in tabList]
 	
+
     def getStations(self):
 	return self.stationList
     
+
     def setPartition(self, partition):
 	if partition not in IONodes:
 		print 'Partition',partition,'not defined in IONodes (Host_Names.py)'
@@ -154,63 +159,116 @@ class Parset(LOFAR_Parset.Parset):
 	self.partition = partition
 	self['OLAP.CNProc.partition'] = partition	
 	
+
     def getPartition(self):
         return self.partition
 	
+
     def setInputToMem(self):
         self.inputFromMemory = True
 	self['OLAP.OLAP_Conn.station_Input_Transport'] = 'NULL'
 
+
     def getNStations(self):
         return int(len(self.stationList))
         
+
     def setInterval(self, start, duration):
         self['Observation.startTime'] = datetime.datetime.fromtimestamp(start)
         self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)
 
+
     def setIntegrationTime(self, integrationTime):
 	self['OLAP.IONProc.integrationSteps']     = integrationTime
+
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName
 
+
     def getMSName(self):
         return self['Observation.MSNameMask']
 
-    def getNPsets(self):
-        subbands = self.getNrSubbands()
-        subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
 
-        if subbands % subbandsperpset == 0:
-	    return subbands / subbandsperpset
-	else:
-	    return (subbands / subbandsperpset) + 1
+    def setNrPsets(self):
+	if self.isDefined('OLAP.nrPsets'): return
+	self['OLAP.nrPsets'] = len(IONodes.get(self.getPartition()))
+
+
+    def getNrPsets(self):
+        return self['OLAP.nrPsets']
     
-    def nrSlotsInFrame(self):
+
+    def getSubbandsPerPset(self):
+	return self['OLAP.subbandsPerPset']
+
+
+    def setSubbandsPerPset(self):
+	if self.isDefined('OLAP.subbandsPerPset'): return
+
+	if self.getNrSubbands() == 1 : self['OLAP.subbandsPerPset'] = 1
+	else:
+		nrPsets = self.getNrPsets()
+		if self.getNrSubbands() % nrPsets == 0:
+		    self['OLAP.subbandsPerPset'] = self.getNrSubbands() / nrPsets
+		else:
+		    self['OLAP.subbandsPerPset'] = (self.getNrSubbands() / nrPsets) + 1
+
+
+    def getNrUsedStorageNodes(self):
+        nrStorageNodes = len(listfen.getSlaves())
+	nrPsets = self.getNrPsets()
+	if nrPsets > nrStorageNodes:
+		return nrStorageNodes
+	else:
+		return nrPsets
+
+
+    def getPsetsPerStorage(self):
+        return self['OLAP.psetsPerStorage']
+
+
+    def setPsetsPerStorage(self):
+        if self.isDefined('OLAP.psetsPerStorage'): return self['OLAP.psetsPerStorage']
+
+	if self.getNrSubbands() == 1 : self['OLAP.psetsPerStorage'] = 1
+	else:
+		nrPSets = self.getNrPsets()
+		nrStorageNodes = self.getNrUsedStorageNodes()
+		if nrPSets % nrStorageNodes == 0:
+			self['OLAP.psetsPerStorage'] = nrPSets/nrStorageNodes
+		else:
+			self['OLAP.psetsPerStorage'] = (nrPSets/nrStorageNodes) + 1
+
+
+    def getNrSlotsInFrame(self):
         return self.getInt32('Observation.nrSlotsInFrame')
     
-    def subbandToRSPboardMapping(self):
+
+    def getSubbandToRSPboardMapping(self):
         return self.getExpandedInt32Vector('Observation.rspBoardList')
     
-    def subbandToRSPslotMapping(self):
+
+    def getSubbandToRSPslotMapping(self):
         return self.getExpandedInt32Vector('Observation.rspSlotList')
-    
+
+
     def getNrSubbands(self):
         if self.isDefined('Observation.subbandList'):
 	    return len(self.getExpandedInt32Vector('Observation.subbandList'))
-	else:
-	    index=0
-	    subbands = Set() 
-	    while self.isDefined('Observation.Beam[' + str(index) + '].subbandList'):
-	        subbandList = self.getExpandedInt32Vector('Observation.Beam[' + str(index) + '].subbandList')
-		for s in subbandList:
-		    subbands.add(s)
-		index +=1
+
+	index=0
+	subbands = Set() 
+	while self.isDefined('Observation.Beam[' + str(index) + '].subbandList'):
+	    subbandList = self.getExpandedInt32Vector('Observation.Beam[' + str(index) + '].subbandList')
+            for s in subbandList: subbands.add(s)
+	    index +=1
 		
-	    if not self.isDefined('Observation.nrBeams'):
-	      	self['Observation.nrBeams'] = index
+        if not self.isDefined('Observation.nrBeams'):
+	    self['Observation.nrBeams'] = index
 	
-	    return len(subbands)
+	return len(subbands)
+
 
     def getStationNamesAndRSPboardNumbers(self, psetNumber):
 	inputs = self.getStringVector('PIC.Core.IONProc.' + self.getPartition() + '[' + str(psetNumber) + '].inputs')
@@ -225,6 +283,11 @@ class Parset(LOFAR_Parset.Parset):
 	
 	return stationsAndRSPs
     
+
+    def inputPsets(self):
+        return self.getInt32Vector('OLAP.CNProc.inputPsets')
+	    
+
     def checkBeamformList(self):
 	index = 0
 
@@ -241,33 +304,33 @@ class Parset(LOFAR_Parset.Parset):
 		    sys.exit(0)
 	    index +=1
 	    
+
     def checkSubbandCount(self, key):
         if len(self.getExpandedInt32Vector(key)) != self.getNrSubbands():
 	    print key + ' contains wrong number (' + str(len(self.getExpandedInt32Vector(key))) + ') of subbands (expected ' + str(self.getNrSubbands()) + ')'
 	    sys.exit(0)
 	    
+
     def check(self):
         if self.isDefined('Observation.subbandList'):
             self.checkSubbandCount('Observation.beamList');
             self.checkSubbandCount('Observation.rspBoardList');
             self.checkSubbandCount('Observation.rspSlotList');
 	
-	    slotsPerFrame        = self.nrSlotsInFrame()
-	    boards		 = self.subbandToRSPboardMapping()
-	    slots		 = self.subbandToRSPslotMapping()
+	    slotsPerFrame        = self.getNrSlotsInFrame()
+	    boards		 = self.getSubbandToRSPboardMapping()
+	    slots		 = self.getSubbandToRSPslotMapping()
 	
 	    for subband in range(0, len(slots)):
 	        if slots[subband] >= slotsPerFrame:
 	            print 'Observation.rspSlotList contains slot numbers >= Observation.nrSlotsInFrame'
 		    sys.exit(0)
 
-    def inputPsets(self):
-        return self.getInt32Vector('OLAP.CNProc.inputPsets')
-	    
+
     def checkRspBoardList(self):
         if self.isDefined('Observation.subbandList'):
 	    inputs		 = self.inputPsets()
-	    boards		 = self.subbandToRSPboardMapping()
+	    boards		 = self.getSubbandToRSPboardMapping()
 	
 	    for pset in inputs:
 	        nrRSPboards = len(self.getStationNamesAndRSPboardNumbers(pset))

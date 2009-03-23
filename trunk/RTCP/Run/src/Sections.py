@@ -67,14 +67,11 @@ class Section(object):
     def isRunSuccess(self):
         return self.runJob.isSuccess()
 	
+    # move to Parset??? @@@@
     def inOutPsets(self, parset):
         nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-
-        if nSubbands % nSubbandsPerPset == 0:
-	    nPsets = nSubbands / nSubbandsPerPset
-	else:
-	    nPsets = (nSubbands / nSubbandsPerPset) + 1
+        nSubbandsPerPset = parset.getSubbandsPerPset()
+	nPsets = parset.getNrPsets()
 
         self.noProcesses = int(nPsets) * parset.getInt32('OLAP.CNProc.coresPerPset')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
@@ -99,16 +96,20 @@ class Section(object):
 	parset['OLAP.CNProc.outputPsets'] = outputPsets
 	parset.checkRspBoardList()
 	
+    def getNoProcesses(self):
+	return self.noProcesses
+
+
 class StorageSection(Section):
     def __init__(self, parset, host, workingDir, parsetfile):
 
         nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-        nPsetsPerStorage = parset.getInt32('OLAP.psetsPerStorage');
-        if not nSubbands % (nSubbandsPerPset * nPsetsPerStorage) == 0:
-            raise Exception('Not a integer number of subbands per storage node!')
+        nSubbandsPerPset = parset.getSubbandsPerPset()
+        nPsetsPerStorage = parset.getPsetsPerStorage()
+	nPsets = parset.getNrPsets()
+	self.noProcesses = parset.getNrUsedStorageNodes()
 
-        self.noProcesses = nSubbands / (nSubbandsPerPset * nPsetsPerStorage)
+	print 'subbands = ' + str(nSubbands) + ' subbandsPerPset = ' + str(nSubbandsPerPset) + ' psetsPerStorage = ' + str(nPsetsPerStorage) + ' nrProcesses = ' + str(self.noProcesses)
 
         Section.__init__(self, parset, \
                          'RTCP/Storage', \
@@ -122,6 +123,7 @@ class StorageSection(Section):
 
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)
+
 
 class IONProcSection(Section):
     def __init__(self, parset, host, partition, workingDir, parsetfile):
@@ -139,6 +141,7 @@ class IONProcSection(Section):
     def run(self, runlog, timeOut, runCmd = None):
         Section.run(self, runlog, timeOut, runCmd)        
         
+
 class CNProcSection(Section):
     def __init__(self, parset, host, partition, workingDir, parsetfile):
         self.partition = partition
