@@ -74,31 +74,34 @@ void OutputSection::connectToStorage()
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
     unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
+    if(subbandNumber < itsNrSubbands) {
 #if 0
-    if (itsPsetNumber != 31)
-      connectionType = string("NULL");
+      if (itsPsetNumber != 31)
+	connectionType = string("NULL");
 #endif
 
-    if (connectionType == "NULL") {
-      LOG_DEBUG_STR("subband " << subbandNumber << " written to null:");
-      itsStreamsToStorage.push_back(new NullStream);
-    } else if (connectionType == "TCP") {
-      std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
-      //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
-      unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
-
-      LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
-      itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
-    } else if (connectionType == "FILE") {
-      std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
-		      boost::lexical_cast<std::string>(storageHostIndex) + '.' +
-		      boost::lexical_cast<std::string>(subbandNumber);
-		      //boost::lexical_cast<std::string>(storagePortIndex);
-
-      LOG_DEBUG_STR("subband " << subbandNumber << " written to file:" << filename);
-      itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
-    } else {
-      THROW(IONProcException, "unsupported ION->Storage stream type");
+      if (connectionType == "NULL") {
+	clog_logger("subband " << subbandNumber << " written to null:");
+	itsStreamsToStorage.push_back(new NullStream);
+      } else if (connectionType == "TCP") {
+	std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
+	//unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
+	unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
+	
+	clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
+	itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
+	clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port << " connect DONE");
+      } else if (connectionType == "FILE") {
+	std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
+	  boost::lexical_cast<std::string>(storageHostIndex) + '.' +
+	  boost::lexical_cast<std::string>(subbandNumber);
+	//boost::lexical_cast<std::string>(storagePortIndex);
+	
+	clog_logger("subband " << subbandNumber << " written to file:" << filename);
+	itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
+      } else {
+	THROW(IONProcException, "unsupported ION->Storage stream type");
+      }
     }
   }
 }
@@ -116,6 +119,8 @@ void OutputSection::preprocess(const Parset *ps)
   itsPipelineOutputSet = new PipelineOutputSet( *ps, hugeMemoryAllocator );
   itsOutputs.resize(itsPipelineOutputSet->size());
 
+  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
+
   // since we need itsPipelineOutputSet just for settings, we can extract its data
   // for the tmpSum array
   PipelineOutputSet &pipeline = *itsPipelineOutputSet;
@@ -126,15 +131,19 @@ void OutputSection::preprocess(const Parset *ps)
   }
 
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    PipelineOutputSet pipeline( *ps, hugeMemoryAllocator );
+    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
-    for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
-      struct OutputSection::SingleOutput &output = itsOutputs[o];
+    if(subbandNumber < itsNrSubbands) {
+      PipelineOutputSet pipeline( *ps, hugeMemoryAllocator );
 
-      output.sums.push_back( pipeline[o].extractData() );
+      for( unsigned o = 0; o < itsOutputs.size(); o++ ) {
+	struct OutputSection::SingleOutput &output = itsOutputs[o];
+	
+	output.sums.push_back( pipeline[o].extractData() );
+      }
     }
   }
-
+  
   itsDroppedCount.resize(itsNrSubbandsPerPset);
 
   for (unsigned o = 0; o < itsOutputs.size(); o++) {
@@ -146,8 +155,13 @@ void OutputSection::preprocess(const Parset *ps)
 
   connectToStorage();
 
-  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++)
-    itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
+  for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
+    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
+
+    if(subbandNumber < itsNrSubbands) {
+      itsOutputThreads.push_back(new OutputThread(itsStreamsToStorage[subband], *ps));
+    }
+  }
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
   doNotRunOnCore0();
@@ -243,17 +257,22 @@ void OutputSection::postprocess()
     delete output.tmpSum;
   }
 
+  unsigned myPsetIndex       = itsParset->outputPsetIndex(itsPsetNumber);
   for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-    notDroppingData(subband); // for final warning message
-    itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
+    unsigned subbandNumber = myPsetIndex * itsNrSubbandsPerPset + subband;
 
-    for (unsigned o = 0; o < itsOutputs.size(); o ++) {
-      struct OutputSection::SingleOutput &output = itsOutputs[o];
-      delete output.sums[subband];
+    if(subbandNumber < itsNrSubbands) {
+      notDroppingData(subband); // for final warning message
+      itsOutputThreads[subband]->itsSendQueueActivity.append(-1); // -1 indicates that no more messages will be sent
+
+      for (unsigned o = 0; o < itsOutputs.size(); o ++) {
+	struct OutputSection::SingleOutput &output = itsOutputs[o];
+	delete output.sums[subband];
+      }
+      
+      delete itsOutputThreads[subband];
+      delete itsStreamsToStorage[subband];
     }
-
-    delete itsOutputThreads[subband];
-    delete itsStreamsToStorage[subband];
   }
 
   delete itsPipelineOutputSet;
