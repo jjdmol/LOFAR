@@ -67,7 +67,6 @@ class Section(object):
     def isRunSuccess(self):
         return self.runJob.isSuccess()
 	
-    # move to Parset??? @@@@
     def inOutPsets(self, parset):
         nSubbands = parset.getNrSubbands()
         nSubbandsPerPset = parset.getSubbandsPerPset()
