@@ -15,6 +15,7 @@
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Storage/SubbandWriter.h>
+
 #if !defined HAVE_PKVERSION
 #include <Storage/Package__Version.h>
 #endif
@@ -32,6 +33,8 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
+using namespace log4cplus;
+using namespace log4cplus::helpers;
 
 static void child(int argc, char *argv[], int rank)
 {
@@ -74,26 +77,21 @@ using namespace log4cplus::helpers;
 
 int main(int argc, char *argv[])
 {
-
 #ifdef HAVE_LOG4CPLUS
   helpers::Properties traceProp;
   traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
   traceProp.setProperty("log4cplus.appender.STDOUT", "log4cplus::ConsoleAppender");
   traceProp.setProperty("log4cplus.appender.STDOUT.layout", "log4cplus::PatternLayout");
-  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%c{3}|%m|%F:%L%n");
+  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%c{3}|%m%n");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1", "log4cplus::spi::StringMatchFilter");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.AcceptOnMatch", "false");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.StringToMatch", "data");
   traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
   PropertyConfigurator(traceProp).configure();
 #else
-  // LOGCOUT (input: RTCP.log_prop.debug)
-  ConfigLocator aCL;
-  string        logPropName = basename("RTCP");
-  string        logPropFile(logPropName + ".log_prop");
-  INIT_LOGGER (aCL.locate(logPropFile).c_str());
-  LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
-#endif // HAVE_LOG4CPLUS   
+  Context::initialize();
+  setLevel("Global",8);
+#endif
 
 #if defined HAVE_MPI
   int rank;
