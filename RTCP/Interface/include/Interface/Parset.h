@@ -289,11 +289,7 @@ inline uint32 Parset::nrChannelsPerSubband() const
 
 inline uint32 Parset::nrPsets() const
 {
-  if (nrSubbands() % nrSubbandsPerPset() == 0) { 
-    return nrSubbands() / nrSubbandsPerPset();
-  } else {
-    return (nrSubbands() / nrSubbandsPerPset()) + 1;
-  }
+  return getUint32("OLAP.nrPsets");
 }
 
 inline uint32 Parset::nrCoresPerPset() const
