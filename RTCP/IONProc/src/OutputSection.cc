@@ -81,23 +81,23 @@ void OutputSection::connectToStorage()
 #endif
 
       if (connectionType == "NULL") {
-	clog_logger("subband " << subbandNumber << " written to null:");
+	LOG_DEBUG_STR("subband " << subbandNumber << " written to null:");
 	itsStreamsToStorage.push_back(new NullStream);
       } else if (connectionType == "TCP") {
 	std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
 	//unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
 	unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
 	
-	clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
+	LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
 	itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
-	clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port << " connect DONE");
+	LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port << " connect DONE");
       } else if (connectionType == "FILE") {
 	std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
 	  boost::lexical_cast<std::string>(storageHostIndex) + '.' +
 	  boost::lexical_cast<std::string>(subbandNumber);
 	//boost::lexical_cast<std::string>(storagePortIndex);
 	
-	clog_logger("subband " << subbandNumber << " written to file:" << filename);
+	LOG_DEBUG_STR("subband " << subbandNumber << " written to file:" << filename);
 	itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
       } else {
 	THROW(IONProcException, "unsupported ION->Storage stream type");
