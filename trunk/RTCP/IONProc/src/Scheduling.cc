@@ -26,7 +26,7 @@
 #if defined HAVE_BGP_ION
 
 #include <IONProc/Scheduling.h>
-#include <IONProc/Lock.h>
+#include <Common/LofarLogger.h>
 
 #include <iostream>
 #include <cstdio>
@@ -47,7 +47,7 @@ void doNotRunOnCore0()
     CPU_SET(cpu, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    clog_logger("WARNING: sched_setaffinity failed");
+    LOG_WARN("sched_setaffinity failed");
     perror("sched_setaffinity");
   }
 }
@@ -61,7 +61,7 @@ void runOnCore0()
   CPU_SET(0, &cpu_set);
 
   if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    clog_logger("WARNING: sched_setaffinity failed");
+    LOG_WARN("sched_setaffinity failed");
     perror("sched_setaffinity");
   }
 }

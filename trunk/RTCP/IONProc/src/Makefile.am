@@ -17,7 +17,6 @@ Scheduling.h			\
 SlidingPointer.h		\
 WallClockTime.h			\
 WH_DelayCompensation.h		\
-Lock.h                          \
 FCNP_ServerStream.h
 
 liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
@@ -35,7 +34,6 @@ ReaderWriterSynchronization.cc	\
 Scheduling.cc			\
 WH_DelayCompensation.cc		\
 FCNP_ServerStream.cc		\
-Lock.cc                         \
 Package__Version.cc
 
 #if HAVE_ZOID

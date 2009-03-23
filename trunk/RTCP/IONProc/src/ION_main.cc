@@ -29,10 +29,11 @@
 #include <ION_Allocator.h>
 #include <InputSection.h>
 #include <OutputSection.h>
-#include <IONProc/Lock.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Common/LofarLogger.h>
+#include <Common/Lock.h>
 //#include <TH_ZoidServer.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
@@ -69,20 +70,21 @@ extern "C" {
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+using namespace  LOFAR::LFDebug;
 
 
 #if !defined CATCH_EXCEPTIONS
 
 void terminate_with_backtrace()
 {
-  cerr_logger("terminate_with_backtrace()");
+  LOG_FATAL("terminate_with_backtrace()");
 
   void *buffer[100];
   int  nptrs     = backtrace(buffer, 100);
   char **strings = backtrace_symbols(buffer, nptrs);
 
   for (int i = 0; i < nptrs; i ++)
-    cerr_logger(i << ": " << strings[i]);
+    LOG_FATAL_STR(i << ": " << strings[i]);
 
   free(strings);
   abort();
@@ -104,13 +106,13 @@ static bool	   fcnp_inited;
 static void checkParset(const Parset &parset)
 {
   if (parset.nrPsets() > nrPsets) {
-    cerr_logger("needs " << parset.nrPsets() << " psets; only " << nrPsets << " available");
+    LOG_ERROR_STR("needs " << parset.nrPsets() << " psets; only " << nrPsets << " available");
     exit(1);
   }
 
 #if 0
   if (parset.sizeBeamletAndSubbandList);
-    cerr_logger("size of the beamletlist must be equal to the size of subbandlist.");
+    LOG_ERROR("size of the beamletlist must be equal to the size of subbandlist.");
 
   parset.parseBeamletList();
 #endif 
@@ -182,7 +184,7 @@ static void configureCNs(const Parset &parset)
 
   logStr << " done";
   
-  clog_logger(logStr.str());
+  LOG_DEBUG(logStr.str());
 }
 
 
@@ -199,7 +201,7 @@ static void unconfigureCNs()
   }
 
   logStr << " done";
-  clog_logger(logStr.str());
+  LOG_DEBUG(logStr.str());
 }
 
 
@@ -214,7 +216,7 @@ static void stopCNs()
     command.write(clientStreams[core]);
 
   logStr << " done";
-  clog_logger(logStr.str());
+  LOG_DEBUG(logStr.str());
 }
 
 
@@ -233,7 +235,7 @@ template<typename SAMPLE_TYPE> static void inputTask(Parset *parset)
 
 static void *inputSection(void *parset)
 {
-  clog_logger("starting input section");
+  LOG_DEBUG("starting input section");
 
 #if defined CATCH_EXCEPTIONS
   try {
@@ -256,22 +258,22 @@ static void *inputSection(void *parset)
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    cerr_logger("input section caught Exception: " << ex);
+    LOG_FATAL_STR("input section caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("input section caught std::exception: " << ex.what());
+    LOG_FATAL_STR("input section caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("input section caught non-std::exception: ");
+    LOG_FATAL("input section caught non-std::exception: ");
   }
 #endif
 
-  clog_logger("input section finished");
+  LOG_DEBUG("input section finished");
   return 0;
 }
 
 
 static void *outputSection(void *parset)
 {
-  clog_logger("starting output section");
+  LOG_DEBUG("starting output section");
 
 #if defined CATCH_EXCEPTIONS
   try {
@@ -288,15 +290,15 @@ static void *outputSection(void *parset)
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    cerr_logger("output section caught Exception: " << ex);
+    LOG_FATAL_STR("output section caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("output section caught std::exception: " << ex.what());
+    LOG_FATAL_STR("output section caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("output section caught non-std::exception: ");
+    LOG_FATAL("output section caught non-std::exception: ");
   }
 #endif
 
-  clog_logger("output section finished");
+  LOG_DEBUG("output section finished");
   return 0;
 }
 
@@ -312,9 +314,9 @@ static void enableCoreDumps()
     perror("warning: setrlimit on unlimited core size failed");
 
   if (system("echo /tmp/%e.core >/proc/sys/kernel/core_pattern") < 0)
-    cerr_logger("warning: could not change /proc/sys/kernel/core_pattern");
+    LOG_WARN("could not change /proc/sys/kernel/core_pattern");
 
-  clog_logger("coredumps enabled");
+  LOG_DEBUG("coredumps enabled");
 }
 
 
@@ -352,7 +354,7 @@ static void mmapFlatMemory()
   } 
 
   close(fd);
-  clog_logger("mapped " << flatMemorySize << " bytes of fast memory at " << flatMemoryAddress);
+  LOG_DEBUG_STR("mapped " << flatMemorySize << " bytes of fast memory at " << flatMemoryAddress);
 }
 
 static void unmapFlatMemory()
@@ -369,7 +371,8 @@ void *master_thread(void *)
   std::string type = "brief";
   Version::show<IONProcVersion> (std::clog, "IONProc", type);
 #endif  
-  clog_logger("starting master_thread");
+  
+  LOG_DEBUG("starting master_thread");
 
   enableCoreDumps();
   ignoreSigPipe();
@@ -385,7 +388,7 @@ void *master_thread(void *)
     setenv("AIPSPATH", "/cephome/romein/packages/casacore-0.3.0/stage/", 0); // FIXME
 
     pthread_t input_thread_id, output_thread_id;
-    clog_logger("trying to use " << global_argv[1] << " as ParameterSet");
+    LOG_DEBUG_STR("trying to use " << global_argv[1] << " as ParameterSet");
     ParameterSet parameterSet(global_argv[1]);
     Parset parset(&parameterSet);
 
@@ -393,7 +396,7 @@ void *master_thread(void *)
     checkParset(parset);
 
     nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
-    clog_logger("nrRuns = " << nrRuns);
+    LOG_DEBUG_STR("nrRuns = " << nrRuns);
 
     bool hasInputSection  = parset.inputPsetIndex(myPsetNumber) >= 0;
     bool hasOutputSection = parset.outputPsetIndex(myPsetNumber) >= 0;
@@ -436,7 +439,7 @@ void *master_thread(void *)
 	exit(1);
       }
 
-      clog_logger("lofar__fini: input section joined");
+      LOG_DEBUG("lofar__fini: input section joined");
     }
 
     unconfigureCNs();
@@ -448,7 +451,7 @@ void *master_thread(void *)
 	exit(1);
       }
 
-      clog_logger("lofar__fini: output thread joined");
+      LOG_DEBUG("lofar__fini: output thread joined");
     }
 
 #if defined FLAT_MEMORY
@@ -457,16 +460,16 @@ void *master_thread(void *)
 
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    cerr_logger("main thread caught Exception: " << ex);
+    LOG_FATAL_STR("main thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("main thread caught std::exception: " << ex.what());
+    LOG_FATAL_STR("main thread caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("main thread caught non-std::exception: ");
+    LOG_FATAL("main thread caught non-std::exception: ");
   }
 #endif
 
   if (pthread_detach(pthread_self()) != 0) {
-    cerr_logger("could not detach master thread");
+    LOG_ERROR("could not detach master thread");
   }
 
 #if defined HAVE_ZOID
@@ -477,8 +480,7 @@ void *master_thread(void *)
     delete [] global_argv;
   }
 #endif
-
-  clog_logger("master thread finishes");
+  LOG_DEBUG("master thread finishes");
   return 0;
 }
 
@@ -518,14 +520,14 @@ static void tryToGetPersonality()
       nrPsets	   = personality.getUint32("BGL_NUMPSETS");
       blockID	   = personality.getString("BGL_BLOCKID");
 
-      clog_logger(" myPsetNumber : " << myPsetNumber
+      LOG_DEBUG_STR(" myPsetNumber : " << myPsetNumber
                     << " nrPsets : " << nrPsets
 		    << " blockID : " << blockID);
     } catch (std::exception& ex) {
-      cerr_logger(ex.what());
+      LOG_FATAL(ex.what());
 
     } catch (...) {
-      cerr_logger("Caught unknown exception");
+      LOG_FATAL("Caught unknown exception");
       
     }
 #else
@@ -548,7 +550,7 @@ void lofar__init(int nrComputeCores)
   nrCoresPerPset = nrComputeCores;
   tryToGetPersonality();
   redirect_output();
-  clog_logger("begin of lofar__init");
+  LOG_DEBUG("begin of lofar__init");
 
   createClientStreams(nrComputeCores, "ZOID");
 
@@ -562,11 +564,11 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 		int    argc /* in:obj */)
 
 {
-  clog_logger("ok, begin of lofar_init(..., ..., " << argc << ")");
+  LOG_DEBUG_STR("ok, begin of lofar_init(..., ..., " << argc << ")");
   
 
   for (int i = 0; i < argc; i ++)
-    clog_logger("lofar_init(): arg = " << argv[i]);
+     LOG_DEBUG_STR("lofar_init(): arg = " << argv[i]);
 
   // copy argv
   global_argv = new char * [argc + 1];
@@ -577,9 +579,10 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
   global_argv[argc] = 0; // terminating zero pointer
 
   if (argc == 3) {
-    cerr_logger("WARNING: specifying nrRuns is deprecated --- ignored");
+    LOG_WARN("specifying nrRuns is deprecated --- ignored");
   } else if (argc != 2) {
-    cerr_logger("unexpected number of arguments");
+    LOG_ERROR("unexpected number of arguments");
+    
     exit(1);
   }
 
@@ -594,9 +597,9 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 
 void lofar__fini(void)
 {
-  clog_logger("begin of lofar__fini");
+  LOG_DEBUG("begin of lofar__fini");
   deleteClientStreams();
-  clog_logger("end of lofar__fini");
+  LOG_DEBUG("end of lofar__fini");
 }
 
 #else
@@ -606,17 +609,18 @@ int main(int argc, char **argv)
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
-
-  global_argv = argv;
-  
   pthread_mutex_t mutex  = PTHREAD_MUTEX_INITIALIZER;
   Lock::setMutex(mutex);
   
+  Context::initialize();
+  setLevel("Global",8);
+  
+  global_argv = argv;
   
   if (argc == 3) {
-    cerr_logger("WARNING: specifying nrRuns is deprecated --- ignored");
+    LOG_WARN("specifying nrRuns is deprecated --- ignored");
   } else if (argc != 2) {
-    cerr_logger("unexpected number of arguments");
+    LOG_ERROR("unexpected number of arguments");
     exit(1);
   }
 

@@ -29,7 +29,6 @@
 #include <Stream/SystemCallException.h>
 #include <Scheduling.h>
 #include <Interface/PipelineOutput.h>
-#include <IONProc/Lock.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -135,11 +134,11 @@ void *OutputThread::mainLoopStub(void *outputThread)
   try {
     static_cast<OutputThread *>(outputThread)->mainLoop();
   } catch (Exception &ex) {
-    cerr_logger("output thread caught Exception: " << ex);
+    LOG_FATAL_STR("output thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("output thread caught std::exception: " << ex.what());
+    LOG_FATAL_STR("output thread caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("output thread caught non-std::exception");
+    LOG_FATAL("output thread caught non-std::exception");
   }
 
   //static_cast<OutputThread *>(outputThread)->stopped = true;

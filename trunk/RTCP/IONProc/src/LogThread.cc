@@ -26,7 +26,7 @@
 #include <LogThread.h>
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
-#include <IONProc/Lock.h>
+#include <Common/LofarLogger.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -45,7 +45,7 @@ LogThread::LogThread(unsigned nrRspBoards)
   itsShouldStop(false)
 {
   if (pthread_create(&thread, 0, logThreadStub, this) != 0) {
-    cerr_logger("could not create input thread");
+    LOG_ERROR("could not create input thread");
     exit(1);
   }
 }
@@ -56,11 +56,11 @@ LogThread::~LogThread()
   itsShouldStop = true;
 
   if (pthread_join(thread, 0) != 0) {
-    cerr_logger("could not join input thread");
+    LOG_ERROR("could not join input thread");
     exit(1);
   }
 
-  clog_logger("LogThread stopped");
+  LOG_DEBUG("LogThread stopped");
 }
 
 
@@ -139,7 +139,7 @@ void LogThread::logThread()
   readCPUstats(previousLoad);
 #endif
 
-  clog_logger("LogThread running");
+  LOG_DEBUG("LogThread running");
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
@@ -167,7 +167,7 @@ void LogThread::logThread()
     writeCPUstats(logStr);
 #endif
 
-    clog_logger(logStr.str());
+    LOG_INFO_STR(logStr.str());
     sleep(1);
   }
 }

@@ -33,7 +33,6 @@
 #include <Interface/Exceptions.h>
 #include <Stream/NullStream.h>
 #include <Stream/SystemCallException.h>
-#include <IONProc/Lock.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 #include <RSP.h>
@@ -55,7 +54,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 :
   itsArgs(args)
 {
-  clog_logger("InputThread::InputThread(...)");
+  LOG_DEBUG("InputThread::InputThread(...)");
 
   struct sigaction sa;
 
@@ -71,7 +70,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
   stop = stopped = false;
 
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
-    cerr_logger("could not create input thread");
+    LOG_ERROR("could not create input thread");
     exit(1);
   }
 }
@@ -79,7 +78,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
-  clog_logger("InputThread::~InputThread()");
+  LOG_DEBUG("InputThread::~InputThread()");
 
   stop = true;
 
@@ -93,7 +92,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
   }
 
   if (pthread_join(thread, 0) != 0) {
-    cerr_logger("could not join input thread");
+    LOG_ERROR("could not join input thread");
     exit(1);
   }
 }
@@ -109,11 +108,11 @@ template <typename SAMPLE_TYPE> void *InputThread<SAMPLE_TYPE>::mainLoopStub(voi
   try {
     static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->mainLoop();
   } catch (Exception &ex) {
-    cerr_logger("input thread caught Exception: " << ex);
+    LOG_FATAL_STR("input thread caught Exception: " << ex);
   } catch (std::exception &ex) {
-    cerr_logger("input thread caught std::exception: " << ex.what());
+    LOG_FATAL_STR("input thread caught std::exception: " << ex.what());
   } catch (...) {
-    cerr_logger("input thread caught non-std::exception");
+    LOG_FATAL("input thread caught non-std::exception");
   }
 
   static_cast<InputThread<SAMPLE_TYPE> *>(inputThread)->stopped = true;
@@ -147,7 +146,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   bool		dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
   WallClockTime wallClockTime;
 
-  clog_logger("input thread " << itsArgs.threadID << " entering loop");
+  LOG_DEBUG_STR("input thread " << itsArgs.threadID << " entering loop");
 
   while (!stop) {
     try {
@@ -223,7 +222,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  clog_logger("InputThread::mainLoop() exiting loop");
+  LOG_DEBUG("InputThread::mainLoop() exiting loop");
 }
 
 
