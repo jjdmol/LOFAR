@@ -30,7 +30,6 @@
 #include <Interface/AlignedStdAllocator.h>
 #include <FCNP/fcnp_ion.h>
 #include <FCNP_ServerStream.h>
-#include <IONProc/Lock.h>
 
 #include <algorithm>
 #include <cstring>
@@ -83,7 +82,7 @@ void FCNP_ServerStream::deleteAllFCNP_ServerStreams()
 
 void FCNP_ServerStream::write(const void *buf, size_t size)
 {
-  //clog_logger("FCNP_ServerStream::write(" << std::hex << buf << ", " << std::dec << size << ") to " << itsCore);
+  //LOG_DEBUG_STR("FCNP_ServerStream::write(" << std::hex << buf << ", " << std::dec << size << ") to " << itsCore);
 
   if (!aligned(buf, 16) || !aligned(size, 16)) {
     size_t alignedSize = align(size, 16);
@@ -99,7 +98,7 @@ void FCNP_ServerStream::write(const void *buf, size_t size)
 
 void FCNP_ServerStream::read(void *buf, size_t size)
 {
-  //clog_logger(std::dec << "FCNP_ServerStream::read(" << std::hex << buf << ", " << std::dec << size << ") from " << itsCore);
+  //LOG_DEBUG_STR(std::dec << "FCNP_ServerStream::read(" << std::hex << buf << ", " << std::dec << size << ") from " << itsCore);
 
   if (!aligned(buf, 16) || !aligned(size, 16)) {
     size_t alignedSize = align(size, 16);

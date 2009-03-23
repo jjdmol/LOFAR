@@ -25,7 +25,6 @@
 
 #include <Interface/Align.h>
 #include <Interface/Exceptions.h>
-#include <IONProc/Lock.h>
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <InputThreadAsm.h>
@@ -58,8 +57,8 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigne
 #else
   itsStride(reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[1].origin()) - reinterpret_cast<SAMPLE_TYPE *>(itsSBBuffers[0].origin())),
 #endif
-  itsReadTimer("buffer read", true),
-  itsWriteTimer("buffer write", true)
+  itsReadTimer("buffer read", true,true),
+  itsWriteTimer("buffer write", true,true)
 {
   if (nrTimesPerPacket != itsNrTimesPerPacket)
     THROW(IONProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
@@ -75,7 +74,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(unsigne
   itsStartI.resize(nrBeams);
   itsEndI.resize(nrBeams);
 
-  clog_logger("Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
+  LOG_DEBUG_STR("Circular buffer at " << itsSBBuffers.origin() << "; contains " << itsSize << " samples");
 }
 
 
@@ -191,7 +190,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize, itsSize);
 
-    clog_logger("reset BeamletBuffer");
+    LOG_DEBUG("reset BeamletBuffer");
   }
 }
 
@@ -241,7 +240,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
       pthread_mutex_unlock(&itsValidDataMutex);
     }
 
-    //clog_logger(""timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset");
+    //LOG_DEBUG_STR(""timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset");
   }
 
   unsigned endI = startI + itsNrTimesPerPacket;

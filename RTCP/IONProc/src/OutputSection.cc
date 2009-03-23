@@ -31,7 +31,6 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 
-#include <IONProc/Lock.h>
 #include <ION_Allocator.h>
 #include <OutputSection.h>
 #include <Scheduling.h>
@@ -81,14 +80,14 @@ void OutputSection::connectToStorage()
 #endif
 
     if (connectionType == "NULL") {
-      clog_logger("subband " << subbandNumber << " written to null:");
+      LOG_DEBUG_STR("subband " << subbandNumber << " written to null:");
       itsStreamsToStorage.push_back(new NullStream);
     } else if (connectionType == "TCP") {
       std::string    server = itsParset->storageHostName(prefix + "_ServerHosts", subbandNumber);
       //unsigned short port   = boost::lexical_cast<unsigned short>(ps->getPortsOf(prefix)[storagePortIndex]);
       unsigned short port   = boost::lexical_cast<unsigned short>(itsParset->getPortsOf(prefix)[subbandNumber]);
 
-      clog_logger("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
+      LOG_DEBUG_STR("subband " << subbandNumber << " written to tcp:" << server << ':' << port);
       itsStreamsToStorage.push_back(new SocketStream(server.c_str(), port, SocketStream::TCP, SocketStream::Client));
     } else if (connectionType == "FILE") {
       std::string filename = itsParset->getString(prefix + "_BaseFileName") + '.' +
@@ -96,7 +95,7 @@ void OutputSection::connectToStorage()
 		      boost::lexical_cast<std::string>(subbandNumber);
 		      //boost::lexical_cast<std::string>(storagePortIndex);
 
-      clog_logger("subband " << subbandNumber << " written to file:" << filename);
+      LOG_DEBUG_STR("subband " << subbandNumber << " written to file:" << filename);
       itsStreamsToStorage.push_back(new FileStream(filename.c_str(), 0666));
     } else {
       THROW(IONProcException, "unsupported ION->Storage stream type");
@@ -161,7 +160,7 @@ void OutputSection::droppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] ++ == 0) {
     unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
-    clog_logger("Warning: dropping data for subband " << subbandNumber);
+    LOG_WARN_STR("dropping data for subband " << subbandNumber);
   }
 }
 
@@ -170,7 +169,7 @@ void OutputSection::notDroppingData(unsigned subband)
 {
   if (itsDroppedCount[subband] > 0) {
     unsigned subbandNumber = itsPsetNumber * itsNrSubbandsPerPset + subband;
-    clog_logger("Warning: dropped " << itsDroppedCount[subband] << (itsDroppedCount[subband] == 1 ? " integration time for subband " : " integration times for subband ") << subbandNumber);
+    LOG_WARN_STR("dropped " << itsDroppedCount[subband] << (itsDroppedCount[subband] == 1 ? " integration time for subband " : " integration times for subband ") << subbandNumber);
     itsDroppedCount[subband] = 0;
   }
 }

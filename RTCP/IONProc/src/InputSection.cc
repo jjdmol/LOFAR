@@ -33,7 +33,6 @@
 #include <ION_Allocator.h>
 #include <Scheduling.h>
 //#include <TH_ZoidServer.h>
-#include <IONProc/Lock.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
@@ -62,14 +61,14 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
   itsPsetNumber(psetNumber),
   itsDelayComp(0),
   itsLogThread(0),
-  itsDelayTimer("delay")
+  itsDelayTimer("delay",false,false)
 {
 }
 
 
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::~InputSection() 
 {
-  clog_logger("InputSection::~InputSection");
+  LOG_DEBUG("InputSection::~InputSection");
 }
 
 
@@ -110,7 +109,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
 
   itsInputStreams.resize(itsNrInputs);
 
-  clog_logger("input list:");
+  LOG_DEBUG("input list:");
   
 
   for (unsigned i = 0; i < itsNrInputs; i ++) {
@@ -118,7 +117,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     unsigned  rsp	 = inputs[i].rsp;
     string    streamName = ps->getInputStreamName(station, rsp);
 
-    clog_logger("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
+    LOG_DEBUG_STR("  " << i << ": station \"" << station << "\", RSP board " << rsp << ", reads from \"" << streamName << '"');
 
     if (station != inputs[0].station)
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
@@ -147,10 +146,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNrCoresPerPset	= ps->nrCoresPerPset();
   itsSampleDuration     = ps->sampleDuration();
 
-  clog_logger("nrSubbands = " << itsNSubbands);
-  clog_logger("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
-  clog_logger("nrStations = " << ps->nrStations());
-  clog_logger("nrBitsPerSample = " << ps->nrBitsPerSample());
+  LOG_DEBUG_STR("nrSubbands = " << ps->nrSubbands());
+  LOG_DEBUG_STR("nrChannelsPerSubband = " << ps->nrChannelsPerSubband());
+  LOG_DEBUG_STR("nrStations = " << ps->nrStations());
+  LOG_DEBUG_STR("nrBitsPerSample = " << ps->nrBitsPerSample());
 
   itsDelayCompensation	      = ps->delayCompensation();
   itsNeedDelays               = ps->delayCompensation() || ps->nrPencilBeams() > 0;
@@ -197,7 +196,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
    
   itsIsRealTime       = ps->realTime();
   itsMaxNetworkDelay  = ps->maxNetworkDelay();
-  clog_logger("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
+  LOG_DEBUG_STR("maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
   itsBBuffers.resize(itsNrInputs);
   itsDelayedStamps.resize(itsNrBeams);
@@ -217,7 +216,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     THROW(IONProcException, "there are more input section nodes than entries in OLAP.OLAP_Conn.rawDataOutputs");
 
   string rawDataOutput = rawDataOutputs[psetIndex];
-  clog_logger("writing raw data to " << rawDataOutput);
+  LOG_DEBUG_STR("writing raw data to " << rawDataOutput);
   rawDataStream = Parset::createStream(rawDataOutput, false);
 #endif
 
@@ -336,8 +335,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage()
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
     logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
   
-  logStr << "";
-  clog_logger(logStr.str());
+  LOG_INFO(logStr.str());
 }
 
 
@@ -519,13 +517,13 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::process()
   itsSyncedStamp += itsNSamplesPerSec;
 
   timer.stop();
-  clog_logger("ION->CN: " << PrettyTime(timer.getElapsed()));
+  LOG_INFO_STR("ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
 {
-  clog_logger("InputSection::postprocess");
+  LOG_DEBUG("InputSection::postprocess");
 
   for (unsigned i = 0; i < itsInputThreads.size(); i ++)
     delete itsInputThreads[i];

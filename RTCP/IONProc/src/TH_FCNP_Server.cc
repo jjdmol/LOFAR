@@ -27,7 +27,6 @@
 
 #include <Common/Timer.h>
 #include <Transport/DataHolder.h>
-#include <IONProc/Lock.h>
 #include <TH_FCNP_Server.h>
 
 #include <fcnp_ion.h>
@@ -87,7 +86,7 @@ bool TH_FCNP_Server::init()
 
 bool TH_FCNP_Server::sendBlocking(void *buf, int size, int unaligned, DataHolder *)
 {
-  //clog_logger(std::dec << "TH_FCNP_Server::sendBlocking(" << buf << ", " << size << ", ...) to " << itsCore);
+  //LOG_DEBUG_STR(std::dec << "TH_FCNP_Server::sendBlocking(" << buf << ", " << size << ", ...) to " << itsCore);
   if (unaligned) {
     size_t alignedSize = (size + 15) & ~ (size_t) 15;
     char   tmp[alignedSize] __attribute__ ((aligned(16)));
@@ -104,7 +103,7 @@ bool TH_FCNP_Server::sendBlocking(void *buf, int size, int unaligned, DataHolder
 
 bool TH_FCNP_Server::recvBlocking(void *buf, int size, int unaligned, int, DataHolder *)
 {
-  //clog_logger(std::dec << "TH_FCNP_Server::recvBlocking(" << buf << ", " << size << ", ...)from " << itsCore);
+  //LOG_DEBUG_STR(std::dec << "TH_FCNP_Server::recvBlocking(" << buf << ", " << size << ", ...)from " << itsCore);
 
   if (unaligned) {
     size_t alignedSize = (size + 15) & ~ (size_t) 15;

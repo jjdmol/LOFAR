@@ -28,7 +28,6 @@
 #include <Common/Timer.h>
 #include <Transport/DataHolder.h>
 #include <TH_ZoidServer.h>
-#include <IONProc/Lock.h>
 
 #include <algorithm>
 
@@ -61,7 +60,7 @@ ssize_t lofar_ion_to_cn_zerocopy(void   * /*buf*/ /* out:arr:size=+1:zerocopy:us
 				 size_t *count /* inout:ptr */)
 {
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
-  //clog_logger("lofar_ion_to_cn_zerocopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id());
+  //LOG_DEBUG_STR("lofar_ion_to_cn_zerocopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id());
 
   pthread_mutex_lock(&th->sendMutex);
 
@@ -83,7 +82,7 @@ ssize_t lofar_ion_to_cn_onecopy(void   *buf /* out:arr:size=+1 */,
 				size_t *count /* inout:ptr */)
 {
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
-  //clog_logger("lofar_ion_to_cn_onecopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id());
+  //LOG_DEBUG_STR("lofar_ion_to_cn_onecopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id());
 
   pthread_mutex_lock(&th->sendMutex);
 
@@ -226,7 +225,7 @@ bool TH_ZoidServer::init()
 
 bool TH_ZoidServer::sendBlocking(void *buf, int nbytes, int, DataHolder *)
 {
-  //clog_logger("TH_ZoidServer::sendBlocking(" << buf << ", " << nbytes << ", ...)");
+  //LOG_DEBUG_STR("TH_ZoidServer::sendBlocking(" << buf << ", " << nbytes << ", ...)");
   pthread_mutex_lock(&sendMutex);
 
   sendBufferPtr = static_cast<char *volatile>(buf);
@@ -244,7 +243,7 @@ bool TH_ZoidServer::sendBlocking(void *buf, int nbytes, int, DataHolder *)
 
 bool TH_ZoidServer::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
 {
-  //clog_logger("TH_ZoidServer::recvBlocking(" << buf << ", " << nbytes << ", ...)");
+  //LOG_DEBUG_STR("TH_ZoidServer::recvBlocking(" << buf << ", " << nbytes << ", ...)");
   pthread_mutex_lock(&receiveMutex);
   receiveBufferPtr = static_cast<char *volatile>(buf);
   pthread_cond_signal(&newReceiveBufferAvailable);
