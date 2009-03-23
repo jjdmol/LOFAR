@@ -2,9 +2,9 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	processing.fig round-robin.fig
+FIG_SOURCES =	processing.fig
 
-JGR_SOURCES =	speed.jgr
+JGR_SOURCES =	cn-perf-8bit-station.jgr
 
 JPG_SOURCES =	fringe.jpg
 
@@ -21,9 +21,6 @@ GEN_FILES =	$(AUX_FILES) $(GEN_PDF_FILES) $(GEN_EXT:%=lofar.%) mfput.log\
 
 TEXINPUTS =	inputs:.:
 TEXFONTS =	:
-
-%.eps:		%.jgr
-		jgraph $< > $@
 
 %.pdf:		%.jgr
 		jgraph $< | epstopdf --filter > $@

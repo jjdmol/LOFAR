@@ -38,13 +38,13 @@ Measurements show that we reach exceptionally high computational performance:
 up to 96\% of the theoretical floating-point peak performance.
 We also show that a major redesign of the network system software was
 required to obtain enough internal I/O bandwidth to sustain the station data
-streams and to greatly enhance flexibility that saves us on costs.
+streams and to greatly enhance flexibility, at significantly lower costs.
 \end{abstract}
 
 
 \section{Introduction}
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency \textbf{AR}ray},
-an aperture array radio telescope operating over the 10 to 250~MHz frequency
+an aperture array radio telescope operating at the 10 to 250~MHz frequency
 range.
 It is the first of a new generation of radio telescopes, that breaks with
 the concepts of traditional telescopes in several ways.
@@ -83,22 +83,26 @@ We describe several pulsar pipelines as well, that either search large sky
 regions to find unknown pulsars or, once found, sensitively observe their
 characteristics.
 The pipelines share common components.
-The software supports multiple concurrent observations. %, even of different types.
+The software also supports multiple concurrent observations. %, even of different types.
 
-The telescopes produce hundreds of gigabits of data per second.
+The receivers produce hundreds of gigabits of data per second.
 To handle the high data rate,
-we use the Blue Gene in an unconventional way: we run \emph{application\/}
+we use the Blue Gene/P in an unconventional way: we run \emph{application\/}
 software on the so-called I/O~nodes to preprocess and postprocess data that are
-further processed on the compute nodes.
+further handled on the compute nodes.
 This yields a very efficient system and, as we will show later, substantially
-saved us on costs.
-Since we were not able to achieve the required internal input and output data
+saved us on costs. % TODO bedrag hier noemen?
+Additionally, since we were not able to achieve the required internal input and output data
 rates with the standard network system software, we developed an extremely
 low-overhead network protocol~\cite{Romein:09a}.
 
 The remainder of this paper is structured as follows.
 \emph{TODO}.
 
+
+\section{LOFAR overview}
+Describe remote and central stations, FPGA, LBA, HBA, WAN, CEP, storage, offline processing.
+(All these terms are used later on) --Rob
 
 \section{LOFAR real-time central signal processing}
 \label{sec:signal-processing}
@@ -176,21 +180,21 @@ the Blue Gene/P \emph{I/O nodes}, the Blue Gene/P \emph{compute nodes}, and on
 external (PC-like) \emph{storage nodes}.
 Figure~\ref{fig:processing} shows how the data flows through the entire
 processing chain.
-One application runs on the Blue Gene/P I/O nodes.
-Its main tasks are to receive the station UDP data and to buffer the data
-for up to 2.5~seconds.
-The second application runs on the Blue Gene/P compute nodes, where the
+The first application, \emph{IONProc}, runs on the Blue Gene/P I/O nodes.
+Its main tasks are to receive the station UDP data, to buffer the data
+for up to 2.5~seconds, and to forward it to the compute nodes.
+The second application called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
 compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
 internal torus network, to filter the data, and to correlate or beamform
 the filtered data.
 The resulting data are then sent back to the I/O-node application, that
-(in different threads) collects the data from the compute nodes and
+collects the data from the compute nodes and
 sends the data to the storage nodes.
-This is where the third application runs.
+This is where the third application (StorageProc) runs.
 The storage nodes are PC-like systems with large disks.
 The storage application collects the data from the I/O~nodes and writes the
-data in some astronomical data format (AIPS++ Measurement Sets) to disk.
+data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 
 After an observation, bad data (due to interference) are removed, and the
 resulting data are calibrated~\cite{Nijboer:07} and imaged.
@@ -205,8 +209,10 @@ real-time processing system described in this paper.
 Throughout the entire processing chain, we maintain which data is marked as
 invalid (e.g, due to radio interference or due to lost UDP packets), so that
 eventual images are not blurred by bad data.
-Since invalid data is typically clustered, we use a \emph{SparseSet\/}
-data structure that keeps a list of bad intervals.
+
+% Veel te veel detail op deze plaats  --Rob
+%Since invalid data is typically clustered, we use a \emph{SparseSet\/}
+%data structure that keeps a list of bad intervals.
 
 
 
@@ -222,9 +228,9 @@ On the Blue Gene/L, this required rewriting major parts of the system
 software~\cite{Iskra:08}, but this idea is much better supported on the
 Blue Gene/P.
 
-We run one, multi-threaded process on each I/O~node that care of two tasks:
-receipt and handling of the incoming station data, and handling of outgoing
-output data.
+We run one multi-threaded process on each I/O~node that takes care of two main tasks.
+The input section deals with UDP receipt of station data, and buffering and forwarding to the compute nodes.
+The output section handles outgoing result data from the compute nodes, and forwards it to storage.
 Both tasks are described below.
 
 
@@ -242,12 +248,11 @@ The application receives the UDP packets, taking care of out-of-order,
 duplicated, and lost packets.
 Each station uses four FPGAs to send data to its associated I/O~node,
 each FPGA to a different UDP port.
-The I/O~node runs four ``input'' threads to receive a total of 48,828~packets
-per second; one thread per socket.
-Multiple threads are necessary, since a single core is insufficiently fast
-to receive the data.
+The I/O~node runs four ``input'' threads, one thread per socket.
+Multiple threads are necessary, since a single core is too slow
+to receive the data. Together, the threads receive a total of 48,828~packets per second.
 
-The received samples are copied into a cicular buffer that holds the most recent
+The received UDP packets containing the samples are copied into a cicular buffer that holds the most recent
 2.5~seconds of data.
 The buffer serves three purposes.
 First, it is used to synchronize the stations, since the travel times over
@@ -257,34 +262,34 @@ of the processing pipeline.
 Third, the buffer is used to artificially delay the stream of samples,
 as we will explain in Section~\ref{sec:delay-compensation}.
 The buffer is limited by the small memory size, but due to good real-time
-behavior of the application, 2.5~seconds is more than sufficient.
+behavior of the application, 2.5~seconds is sufficient.
 
 Another thread reads data from the circular buffer and sends the data to
 the compute nodes for further processing.
 It sends data in large bursts that contain approximately one second of samples.
-We use \emph{FCNP (Fast Collective-Network Protocol)}, a newly developed
-network library to efficiently communicate data between the I/O~nodes and the
+We use \emph{FCNP (Fast Collective-Network Protocol)}, a 
+network library we developed to efficiently communicate data between the I/O~nodes and the
 compute nodes~\cite{Romein:09a}.
-Existing network software did not provide sufficient bandwidths and consumed
+Existing network software did not provide sufficient bandwidth and consumed
 too much CPU time.
 FCNP, in contrast, achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
 
-Normally, when processing in real time, the NTP-synchronized wall-clock time
+When processing in real time, the NTP-synchronized wall-clock time
 is used to trigger the sending of a new block of data.
-A block of data containing samples from $t_1$ to $t_2$ are sent some hundreds
-of milliseconds after $t_2$ (the WAN delay plus a safe margin), whether or
+A block of data containing samples from time $t_1$ to $t_2$ are sent some hundreds
+of milliseconds (the WAN delay plus a safe margin) after $t_2$, whether or
 not all data were factually received from the station.
 This ruthless method assures real-time continuation of the correlator and
 provides fault-tolerance against a failing station or WAN link.
 In practice, this method does not cause any data loss.
 An alternative mode processes pre-recorded data off-line and is frequently used
-for debugging and experimental observations.
-In this case, the input is (reliably) read from file or TCP socket rather than
+for experimental observations.
+In this case, the input is \emph{reliably} read from file or TCP socket rather than
 UDP.
-Obviously, in off-line mode it is a bad idea to use the wall-clock time as
-trigger, thus we synchronize the threads that read and write the circular
+In off-line mode we do not use the wall-clock time as
+trigger, but we synchronize the threads that read and write the circular
 buffer differently to prevent them from overruning each other.
 
 
@@ -318,15 +323,16 @@ In practice, under normal circumstances no data are lost.
 
 Processing power on the I/O~nodes is a scarce resource, since most observation
 modes are I/O bound.
-Quite some optimizations were made to improve processing speed.
-For example, the function that copies data from a received UDP packet to the
-circular buffer is implemented in assembly, so that efficient 16-byte load and
-store instructions (unknown to the C++ compiler) are used.
+We performed many optimizations to improve processing speed.
+An important improvement was to implement
+the function that copies data from a received UDP packet to the
+circular buffer in assembly. This way, we can exploit the efficient 16-byte load and
+store instructions, which are unknown to the C++ compiler.
 Unfortunately, the copy itself cannot be avoided, since a UDP packet contains
 data of many frequency subbands that must be stored to different memory
 locations.
 
-Nevertheless, we first found that copying was very slow.
+Despite this optimization, we initially found that copying was very slow.
 This was caused by the fact that the PowerPC~450 cannot handle
 TLB\footnote{Translation Look-aside Buffer: a cache that caches
 virtual-to-physical address mappings --- indispensable for efficient virtual
@@ -358,11 +364,12 @@ compute nodes runs at the highest priority, and is scheduled as soon as the
 wall-clock time triggers.
 The thread that reads results from the compute nodes is almost equally
 important, since compute nodes will not accept new work before the previous
-results were read by the I/O~node.
-Other threads, such as the threads that read UDP data and the threads that
+results were read by the I/O~node. % TODO Moet hier dan niet ook gewoon een circulaire buffer tussen? --Rob
+Other threads, such as the threads that read UDP data, and the threads that
 send data from the output queues are also important, but if they would ever
 fail to meet a real-time deadline, only a small amount of data is lost.
-In practice, under normal circumstances, this happens close to never.
+In practice, under normal circumstances, this happens close to never. We will
+demonstrate this in Section~\ref{TODO}.
 
 
 
@@ -377,8 +384,8 @@ In practice, under normal circumstances, this happens close to never.
 \end{figure}
 
 The I/O~node chops the stream with station data into chunks of one frequency
-subband and approximately one second time.
-Since processing such a chunk typically takes much more than one second,
+subband and approximately one second of time.
+Since processing such a chunk typically takes much longer than one second,
 the chunks are round-robin distributed over a group of processor cores,
 as illustrated by Figure~\ref{fig:round-robin}.
 Subsequent chunks of data are processed by different processor cores.
@@ -387,33 +394,33 @@ A core first receives data from the I/O~node (green in the figure),
 processes them (yellow), sends back the results (red), and idles until the
 I/O~node sends new data.
 
-In reality, the scheduling is more complicated than shown in
-Figure~\ref{fig:round-robin}, because the 64~cores in a pset are typically
-resposible for processing four to sixteen subbands, rather than one.
-For example, if a pset needs to process six subbands, every second, the next
-six cores are scheduled and each of them will process one subband.
+For simplicity, Figure~\ref{fig:round-robin} shows the processing of
+three subbands on six cores.  In reality, there are 64~cores in a
+pset, which are typically resposible for processing four to sixteen
+subbands together.  For example, if a pset needs to process six
+subbands, every second, the next six cores are scheduled and each of
+them will process one subband.
 
-The compute node performs quite some operations on the data, as shown in
+The compute nodes perform a large number of operations on the data, as shown in
 Figure~\ref{fig:processing}.
-The very first step is to exchange data with other groups of processor cores.
+The very first step is to exchange data with another group of processor cores.
 This is necessary, because an I/O~node receives all frequency subbands from one
-station, but the correlator (see below) requires one frequency subband from all
-stations.
+station, but the correlator requires one frequency subband from all
+stations (we explain this in more detail below).
 The data exchange is challenging, since it involves hundreds of gigabits per
 second.
-We use the 3-D~torus because of its high bandwidth and switching capabilities.
-
 Unfortunately, an I/O node cannot send the data directly from the circular
 buffer to the compute core that will process the data, since the I/O~node is
 only connected to the compute nodes in its own pset.
 The data are thus first sent over the collective network from the I/O~node to
-a compute node and then over the 3-D~torus.
+a compute node and then over the 3-D~torus network.
+We use the 3-D~torus because of its high bandwidth and switching capabilities.
 
 The torus bandwidth between colinear and coplanar nodes is lower than between
 non-coplanar nodes, since non-coplanar nodes communicate over more links
 (in three dimensions) simultaneously.
-Therefore, we schedule work that needs exchange of data as much as possible
-on non-coplanar cores.
+Therefore, we schedule work that needs exchange of data 
+on non-coplanar cores as much as possible.
 We also avoid situations where multiple cores of the same processor need to
 access the torus or collective network simultaneously, since these resources
 are shared and simultaneous access decreases performance.
@@ -422,12 +429,15 @@ of many stations, many subbands, time slicing, round-robin core allocation,
 and avoidance of resource conflicts, \emph{extremely\/} complicated, but
 highly efficient.
 
+% TODO alw we het hier over de BG/L gaan hebben, dan moeten we ergens (in de into?)
+% de geschiedenis van LOFAR tot nu toe uitleggen. --Rob
 On the BG/L, the data exchange was implemented synchronously, using
 \texttt{MPI\_Alltoallv()}.
 The BG/P, in contrast, uses DMA for the torus, allowing asynchronous
 communication.
 We re-implemented the data exchange using asynchronous point-to-point
-communication, that overlaps communication with the next four processing steps.
+communication, that overlaps the communication over the torus network with 
+the next four processing steps, and with the transfer from the I/O nodes to the compute nodes.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
 are required.
@@ -440,17 +450,17 @@ The data are processed through a number of filters, as briefly described below.
 More details on most filters (except bandpass correction and beam forming)
 can be found elsewhere~\cite{Romein:06}.
 
-The subband data are first filtered by a \emph{Poly-Phase Filter\/} (PPF) that
+The subband data are first filtered by a \emph{Poly-Phase Filter bank\/} (PPF) that
 splits a frequency subband into narrow frequency channels, trading time
 resolution for frequency resolution.
 The high frequency resolution allows for removal of narrow-band
 \emph{Radio Frequency Interference\/} (RFI, e.g., caused by TV transmitters)
 later in the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
-filter supports any (reasonable) power-of-two number of channels.
+filter supports any power-of-two number of channels.
 
-As a side effect, the PPF implicitly converts 16-bit, little-endian, integer
-samples to 32-bit, big-endian floating point numbers, since the Blue Gene is
+As a side effect, the PPF implicitly converts 16-bit little-endian integer
+samples to 32-bit big-endian floating point numbers, since the Blue Gene is
 much better at floating-point processing than integer processing.
 Since this doubles the data size, the PPF runs \emph{after\/} the data
 exchange.
@@ -461,16 +471,16 @@ performance.
 For other FFT sizes, we use the Blue Gene ``Vienna'' version of
 FFTW~\cite{Lorenz:05}.
 
-The next step is to artificially ``delay'' the stream of station samples,
-to compensate for the fact that a celestial wave hits stations at different
-times~\cite[Sec.~2.1]{Romein:06}.
+%The next step is to artificially ``delay'' the stream of station samples,
+%to compensate for the fact that a celestial wave hits stations at different
+%times~\cite[Sec.~2.1]{Romein:06}.
 
-The next step is to artificially ``delay'' the stream of station samples.
+The next step is \emph{delay compensation}, which artificially ``delays'' the stream of station samples.
 Due to the finite speed of light, the wave from a celestial source hits
 stations at different times, depending on the observation direction, the
 station positions, and the rotation of the earth~\cite[Sec.~2.1]{Romein:06}.
 Before the signals can be correlated, all station streams are aligned.
-XXX
+TODO XXX
 For example, a delay of 22\us can be achieved by shifting four 5.12\us
 samples and a frequency-dependent phase rotation that compensates the
 remaining 1.52\us.
@@ -478,8 +488,8 @@ The phase rotation itself costs a complex multiplication per sample.
 The delays are computed exactly once per second and interpolated in frequency
 and time for each individual sample.
 
-The next step is a bandpass correction that compensates for an artefact
-introduced by a station filter (the PPF that creates subbands).
+The \emph{bandpass correction} step compensates for an artefact
+introduced by a station filter bank (the PPF that creates the subbands).
 Without correction, some channels contain more power than others.
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
@@ -627,26 +637,25 @@ remainer of the processing pipeline.}
 
 Since only a small number of LOFAR stations has already been constructed
 (the majority will become operational later this year), we will provide 
-realistic performance measurements with externally generated dummy data.
-We use one rack to generate UDP data, another rack for the correlator, and
-the remaining half rack to receive (and dump) the correlated data.
-The simulation is very realistic, since the correlator runs exactly
+realistic performance measurements with externally generated artificial data.
+We use one Blue Gene/P rack to generate UDP data, another rack for the correlator, and
+the remaining half rack to receive and dump the correlated data.
+The simulation is realistic, since the correlator runs exactly
 the way it would run with real station data.
-
 With one rack, we can process up to 64~stations, one per I/O~node.
 
 
 
 \subsection{Computational performance on the I/O Nodes}
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{speed.pdf}
-\caption{I/O Node performance breakdown (248~subbands).}
-\label{fig:ionode-load}
-\end{figure}
+%\begin{figure}
+%\includegraphics[width=\columnwidth]{cn-perf-8bit-station.pdf}
+%\caption{I/O Node performance breakdown (248~subbands).}
+%\label{fig:ionode-load}
+%\end{figure}
 
 The I/O node application is optimized so thoroughly that it can receive a
-station input of 3.1~Gb/s --- 51\% above the LOFAR requirements; the
+station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
 absolute maximum that a station can generate.
 Additionally, an I/O node sends up to 580~Mb/s to storage.
 Figure~\ref{fig:ionode-load} shows where an I/O~node spends its time.
@@ -681,6 +690,11 @@ The load on the compute nodes depends heavily on the observation parameters.
 Most of the observations can be done using only one rack of Blue Gene/P.
 This small amount of resources 
 
+\begin{figure}
+\includegraphics[width=\columnwidth]{cn-perf-8bit-station.pdf}
+\caption{Compute Node performance breakdown (248~subbands).}
+\label{fig:ionode-load}
+\end{figure}
 
 \section{Conclusions and future work}
 
@@ -691,6 +705,7 @@ This small amount of resources
 
 \section*{Acknowledgments}
 
+TODO: AstroStream ack?
 We thank Ger van Diepen, Martin Gels, Marcel Loose and Ruud Overeem
 for their contributions to the LOFAR software.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
