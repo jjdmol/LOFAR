@@ -25,6 +25,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	hexdump.h \
 	i4complex.h \
 	KVpair.h \
+	Lock.h \
 	lofar_algorithm.h \
 	lofar_bitset.h \
 	LofarConstants.h \

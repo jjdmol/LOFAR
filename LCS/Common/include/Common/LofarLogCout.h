@@ -31,6 +31,9 @@
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
+#include <Common/Lock.h>
+
+#include <libgen.h>
 
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
@@ -128,7 +131,7 @@ public: \
 #define TRACE_LEVEL_LOOP			18
 #define TRACE_LEVEL_VAR				17
 #define TRACE_LEVEL_CALC			16
-#define TRACE_LEVEL_COND			15
+#define TRACE_LEVEL_COND	g		15
 #define TRACE_LEVEL_STAT			14
 #define TRACE_LEVEL_OBJ				13
 #define TRACE_LEVEL_RTTI			12
@@ -145,7 +148,7 @@ public: \
 	if( LFDebugCheck(level) ) { \
 		::LOFAR::LFDebug::Tracer objname; \
 		constructStream(stream); \
-		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
+		objname.startMsg (LOG4CPLUS_LEVEL(level), basename(__FILE__), __LINE__, \
                         AUTO_FUNCTION_NAME, lfr_log_oss.str().c_str(), 0); \
 	}
 
@@ -222,42 +225,73 @@ public: \
 	std::ostringstream	lfr_log_oss; \
 	lfr_log_oss << stream
 
+#ifdef USE_THREADS
 #define	cLog(level,levelname,message) do { \
+	::LOFAR::Locker l; \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
+		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
 		<< std::endl; \
 	} while(0)
+#else
+#define	cLog(level,levelname,message) do { \
+	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
+		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
+		<< std::endl; \
+	} while(0)
+#endif
 
 #define cLogstr(level,levelname,stream) do { \
 		constructStream(stream); \
 		cLog(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
+#ifdef USE_THREADS
 #define	cDebug(level,levelname,message) do { \
+        ::LOFAR::Locker l; \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ \
+                << "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
 		<< std::endl; \
 	} while(0)
+#else
+#define	cDebug(level,levelname,message) do { \
+	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
+		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
+		<< std::endl; \
+	} while(0)
+#endif
 
 #define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream); \
 		cDebug(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
+#ifdef USE_THREADS
+#define cTrace(level,message) do { \
+        ::LOFAR::Locker l; \
+	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
+		<< " TRC." << getLFDebugContext().name() \
+		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
+		<< std::endl; \
+	} while(0)
+#else
 #define cTrace(level,message) do { \
 	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
 		<< " TRC." << getLFDebugContext().name() \
-		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
-		<< ", File:" << __FILE__ << ", Line:" << __LINE__ \
+		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+		<< "|" << basename(__FILE__) << ":" << __LINE__ \
 		<< std::endl; \
 	} while(0)
+#endif
 
 #define cTracestr(level,stream) do { \
 		constructStream(stream); \
 		cTrace(level,lfr_log_oss.str()); \
 	} while(0)
-
 
 //#-------------------- END OF MACRO DEFINITIONS --------------------#//
 
