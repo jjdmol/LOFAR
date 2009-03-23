@@ -78,15 +78,17 @@ using namespace log4cplus::helpers;
 int main(int argc, char *argv[])
 {
 #ifdef HAVE_LOG4CPLUS
+  lofarLoggerInitNode();
   helpers::Properties traceProp;
   traceProp.setProperty("log4cplus.rootLogger", "DEBUG, STDOUT");
+  traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
   traceProp.setProperty("log4cplus.appender.STDOUT", "log4cplus::ConsoleAppender");
   traceProp.setProperty("log4cplus.appender.STDOUT.layout", "log4cplus::PatternLayout");
-  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%c{3}|%m%n");
+  traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%x|%m%n");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1", "log4cplus::spi::StringMatchFilter");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.AcceptOnMatch", "false");
   traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.StringToMatch", "data");
-  traceProp.setProperty("log4cplus.logger.TRC", "DEBUG");
+  
   PropertyConfigurator(traceProp).configure();
 #else
   Context::initialize();
