@@ -81,6 +81,8 @@ class SubbandWriter
 
     Matrix<MSWriter *>      itsWriters;
 
+    unsigned                itsNrSubbands;
+    unsigned                itsMyNrSubbands;
     unsigned		    itsNrSubbandsPerPset;
     unsigned		    itsNrSubbandsPerStorage;
     Matrix<int>		    itsPreviousSequenceNumbers;
