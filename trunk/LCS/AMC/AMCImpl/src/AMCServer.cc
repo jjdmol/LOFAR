@@ -32,7 +32,7 @@
 using namespace LOFAR;
 using namespace LOFAR::AMC;
 
-int main(int argc, const char* const argv[])
+int main(int argc, char* argv[])
 {
   // Init logsystem
   ConfigLocator	aCL;
