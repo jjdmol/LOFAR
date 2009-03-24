@@ -2,6 +2,8 @@
 
 #if defined HAVE_BGP_CN
 
+#include <Common/LofarLogger.h>
+
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -30,7 +32,7 @@ class Semaphore
     Semaphore(unsigned value = 0)
     {
       if (LockBox_AllocateCounter(-- nextMutex, &level, 0, 4, 0) < 0) {
-	std::cerr << "Could not allocate lockbox" << std::endl;
+	LOG_FATAL("Could not allocate lockbox");
 	exit(1);
       }
 
