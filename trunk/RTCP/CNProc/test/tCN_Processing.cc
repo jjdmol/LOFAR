@@ -193,8 +193,8 @@ template <typename SAMPLE_TYPE> void doWork()
   if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
   {
-    unsigned   nrStations	= 14;
-    unsigned   nrChannels	= 16;
+    unsigned   nrStations	= 64;
+    unsigned   nrChannels	= 256;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
