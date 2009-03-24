@@ -29,7 +29,9 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-
+#if HAVE_BGP
+char * gBGPSysinfo;
+#endif
 namespace LOFAR {
 
 namespace LFDebug 
@@ -286,7 +288,7 @@ namespace LFDebug
   }
 
 
-#ifdef ENABLE_TRACER
+#if defined ENABLE_TRACER
   // -----------------------------------------------------------------------
   // Tracer
   // Tracer class implementation
