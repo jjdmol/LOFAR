@@ -1010,8 +1010,8 @@ void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
     const size_t nStations = azel.shape()[0];
     const size_t nSources = azel.shape()[1];
 
-    // Create reference direction.
-    Expr reference(new PiercePoint(itsInstrument.stations[0], azel[0][0]));
+    // Create reference Station.
+    Station reference = itsInstrument.stations[0];
 
     IonoConfig::ConstPointer ionoConfig =
       dynamic_pointer_cast<const IonoConfig>(config.ionoConfig);
