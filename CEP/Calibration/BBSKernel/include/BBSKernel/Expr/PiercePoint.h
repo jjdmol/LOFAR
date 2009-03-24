@@ -57,6 +57,10 @@ private:
 #endif
 
     Station                 itsStation;
+    double itsLong; //longitude of station
+    double itsLat; //latitude of station
+    double itsHeight; // height above earth-surface of station
+    double itsEarthRadius; // earth radius at long lat of station
 };
 
 // @}

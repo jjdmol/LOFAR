@@ -42,6 +42,26 @@ PiercePoint::PiercePoint(const Station &station, const Expr &direction)
 {
     // TODO: Get height as parameter?
     addChild(direction); 
+    // get antenna position (ITRF).
+    const casa::MVPosition &ant_pos = itsStation.position.getValue();
+    const double x_ant = ant_pos(0);
+    const double y_ant = ant_pos(1);
+    const double z_ant = ant_pos(2);
+    
+    // get lon, lat, h
+    casa::Vector<casa::Double> ang;
+    casa::MPosition::Convert loc2(itsStation.position, casa::MPosition::WGS84);
+    casa::MPosition locwgs84(loc2());
+    ang= locwgs84.getAngle().getValue();
+    itsLong = ang(0);
+    itsLat = ang(1);
+    itsHeight = locwgs84.getValue().getLength().getValue();
+    // height above surface, use it to calculate earth_radius at position of itsStation
+    double inproduct_xyz=std::sqrt(x_ant*x_ant
+				   +y_ant*y_ant
+				   +z_ant*z_ant);
+    itsEarthRadius = inproduct_xyz - itsHeight;
+
 }
 
 ResultVec PiercePoint::getResultVec(const Request &request)
@@ -91,25 +111,20 @@ void PiercePoint::evaluate(const Request &request, const Matrix &in_az,
 {
     const size_t nTimeslots = request.getTimeslotCount();
     
-    // get antenna position (ITRF).
+    //get long lat needed for rotation
+    double sinlon = std::sin(itsLong);
+    double coslon = std::cos(itsLong);
+    double sinlat = std::sin(itsLat);
+    double coslat = std::cos(itsLat);
+
+    
+
+    
     const casa::MVPosition &ant_pos = itsStation.position.getValue();
     const double x_ant = ant_pos(0);
     const double y_ant = ant_pos(1);
     const double z_ant = ant_pos(2);
-    
-    // get lon, lat, h
-    casa::Vector<casa::Double> ang;
-    casa::Double height;
-    casa::MPosition::Convert loc2(itsStation.position, casa::MPosition::WGS84);
-    casa::MPosition locwgs84(loc2());
-    ang= locwgs84.getAngle().getValue();
-    height = locwgs84.getValue().getLength().getValue();
-
-    // height above surface, use it to calculate earth_radius
-    double inproduct_xyz=std::sqrt(x_ant*x_ant
-				   +y_ant*y_ant
-				   +z_ant*z_ant);
-    double earth_radius = inproduct_xyz - height;
+     
 
     // Result is only time variable.
     double *x = out_x.setDoubleFormat(1, nTimeslots);
@@ -118,17 +133,32 @@ void PiercePoint::evaluate(const Request &request, const Matrix &in_az,
 
     //use lon,lat,height instead?? or convert at MeqMIM??
     double *alpha = out_alpha.setDoubleFormat(1, nTimeslots);
+
+
+
+
     for(size_t i = 0; i < nTimeslots; ++i)
     {
-        *alpha = std::asin(std::cos(in_el.getDouble(0,i))*inproduct_xyz
-            /(earth_radius+iono_height));
-        *x=x_ant+(earth_radius+iono_height)*std::sin(in_az.getDouble(0,i))
-            *std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha);
-        *y=y_ant+(earth_radius+iono_height)*std::cos(in_az.getDouble(0,i))
-            *std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha);
-        *z=z_ant+(earth_radius+iono_height)*std::tan(in_el.getDouble(0,i))
-            *std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha);
-        ++x;++y;++z;++alpha;
+
+      //calculate alpha, thi sis de angle of the line of sight with the phase screen (i.e. alpha' in the document)
+      *alpha = std::asin(std::cos(in_el.getDouble(0,i))*(itsEarthRadius+itsHeight)
+            /(itsEarthRadius+iono_height));
+      double sinaz=std::sin(in_az.getDouble(0,i));
+      double cosaz=std::cos(in_az.getDouble(0,i));
+      double sinel=std::sin(in_el.getDouble(0,i));
+      double cosel=std::cos(in_el.getDouble(0,i));
+      //direction in local coordinates
+      double dir_vector[3]={sinaz*cosel,cosaz*cosel,sinel};
+      //now convert
+      double xdir = -1*sinlon*dir_vector[0]-sinlat*coslon*dir_vector[1]+coslat*coslon*dir_vector[2];
+      double ydir = coslon*dir_vector[0]-sinlat*sinlon*dir_vector[1]+coslat*sinlon*dir_vector[2];
+      double zdir = coslat*dir_vector[1]+sinlat*dir_vector[2];
+	    
+
+      *x=x_ant+xdir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
+      *y=y_ant+ydir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
+      *z=z_ant+zdir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
+      ++x;++y;++z;++alpha;
     }
 }
 

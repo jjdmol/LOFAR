@@ -32,7 +32,8 @@ namespace LOFAR
 namespace BBS
 {
 
-MIM::MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp)
+  MIM::MIM(const Expr &pp, const vector<Expr> &MIMParms, const Station &ref_station)
+    : itsRefStation(ref_station)
 {
     for(uint i = 0; i != MIMParms.size(); ++i)
     {
@@ -40,7 +41,6 @@ MIM::MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp)
     }
     NPARMS=MIMParms.size();
     addChild(pp);
-    addChild(ref_pp);
 }
 
 MIM::~MIM()
@@ -62,10 +62,9 @@ JonesResult MIM::getJResult(const Request &request)
     ResultVec pp_res;
     const ResultVec &pp = getChild(NPARMS).getResultVecSynced(request,pp_res);
 
-    ResultVec ref_pp_res;
-    const ResultVec &ref_pp =
-        getChild(NPARMS+1).getResultVecSynced(request,ref_pp_res);
+    const casa::MVPosition &ref_pos = itsRefStation.position.getValue();
 
+    
     // Allocate result.
     JonesResult res;
     res.init();
@@ -76,12 +75,12 @@ JonesResult MIM::getJResult(const Request &request)
 
     // Compute main value.
     evaluate(request,
-         pp[0].getValue(), pp[1].getValue(),
-         pp[2].getValue(), pp[3].getValue(),
-         parmvalues,
-         ref_pp[0].getValue(),ref_pp[1].getValue(),ref_pp[2].getValue(),
-         res.result11().getValueRW(),
-         res.result22().getValueRW());
+	     pp[0].getValue(), pp[1].getValue(),
+	     pp[2].getValue(), pp[3].getValue(),
+	     parmvalues,
+	     ref_pos(0),ref_pos(1),ref_pos(2),
+	     res.result11().getValueRW(),
+	     res.result22().getValueRW());
 
     // Compute perturbed values.  
     vector<const Result*> pvSet(parms);
@@ -89,9 +88,6 @@ JonesResult MIM::getJResult(const Request &request)
     pvSet.push_back(&(pp[1]));
     pvSet.push_back(&(pp[2]));
     pvSet.push_back(&(pp[3]));
-    pvSet.push_back(&(ref_pp[0]));
-    pvSet.push_back(&(ref_pp[1]));
-    pvSet.push_back(&(ref_pp[2]));
 
     PValueSetIteratorDynamic pvIter(pvSet);    
     while(!pvIter.atEnd())
@@ -101,13 +97,12 @@ JonesResult MIM::getJResult(const Request &request)
         }
 
         evaluate(request,
-            pvIter.value(NPARMS), pvIter.value(NPARMS + 1),
-            pvIter.value(NPARMS + 2), pvIter.value(NPARMS + 3),
-            parmvalues,
-            pvIter.value(NPARMS + 4), pvIter.value(NPARMS + 5),
-            pvIter.value(NPARMS + 6),
-            res.result11().getPerturbedValueRW(pvIter.key()),
-            res.result22().getPerturbedValueRW(pvIter.key()));
+		 pvIter.value(NPARMS), pvIter.value(NPARMS + 1),
+		 pvIter.value(NPARMS + 2), pvIter.value(NPARMS + 3),
+		 parmvalues,
+		 ref_pos(0),ref_pos(1),ref_pos(2),
+		 res.result11().getPerturbedValueRW(pvIter.key()),
+		 res.result22().getPerturbedValueRW(pvIter.key()));
 
         pvIter.next();
     }
@@ -118,8 +113,8 @@ JonesResult MIM::getJResult(const Request &request)
 
 void MIM::evaluate(const Request &request, const Matrix &in_x,
     const Matrix &in_y, const Matrix &in_z, const Matrix &in_alpha,
-    const vector<const Matrix*> &MIMParms, const Matrix &in_refx,
-    const Matrix &in_refy,const Matrix &in_refz, Matrix &out_11, Matrix &out_22)
+    const vector<const Matrix*> &MIMParms, const double refx,
+    const double refy,const double refz, Matrix &out_11, Matrix &out_22)
 {
     const size_t nChannels = request.getChannelCount();
     const size_t nTimeslots = request.getTimeslotCount();
@@ -129,9 +124,6 @@ void MIM::evaluate(const Request &request, const Matrix &in_x,
     ASSERT(static_cast<size_t>(in_x.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_y.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_z.nelements()) == nTimeslots);
-    ASSERT(static_cast<size_t>(in_refx.nelements()) == nTimeslots);
-    ASSERT(static_cast<size_t>(in_refy.nelements()) == nTimeslots);
-    ASSERT(static_cast<size_t>(in_refz.nelements()) == nTimeslots);
     ASSERT(static_cast<size_t>(in_alpha.nelements()) == nTimeslots);
 
     double *E11_re, *E11_im;
@@ -156,9 +148,6 @@ void MIM::evaluate(const Request &request, const Matrix &in_x,
         double x=in_x.getDouble(0,t);
         double y=in_y.getDouble(0,t);
         double z=in_z.getDouble(0,t);
-        double refx=in_refx.getDouble(0,t);
-        double refy=in_refy.getDouble(0,t);
-        double refz=in_refz.getDouble(0,t);
         double alpha=in_alpha.getDouble(0,t);
 	double tec = calculate_mim_function(parms, x, y, z, alpha, refx,
 					    refy, refz);
@@ -183,7 +172,8 @@ double MIM::calculate_mim_function(const vector<double> &parms, double x,
     double ref_z)
 {
     //dummy
-    //calculate rotation matrix
+    //calculate rotation matrix, actually we only need to do this once for all MIM nodes, 
+    // some optimization could be done here
     double lon = std::atan2(ref_y,ref_x);
     double lat = std::atan2(ref_z, std::sqrt(ref_x*ref_x + ref_y*ref_y));
     double rot_x = -1*std::sin(lon)*x+std::cos(lon)*y;

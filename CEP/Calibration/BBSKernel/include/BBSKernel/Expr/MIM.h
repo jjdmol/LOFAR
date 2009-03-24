@@ -24,6 +24,7 @@
 #define EXPR_MIM_H
 
 #include <BBSKernel/Expr/JonesNode.h>
+#include <BBSKernel/Instrument.h>
 
 #ifdef EXPR_GRAPH
 #include <Common/lofar_string.h>
@@ -44,7 +45,7 @@ class MIM: public JonesExprRep
 public:
   uint NPARMS;
   
-  MIM(const Expr &pp, const vector<Expr> &MIMParms, const Expr &ref_pp);
+  MIM(const Expr &pp, const vector<Expr> &MIMParms, const Station &ref_station);
   virtual ~MIM();
   
   // Calculate the result of its members.
@@ -53,8 +54,8 @@ public:
 private:
     void evaluate(const Request &request, const Matrix &in_x,
         const Matrix &in_y, const Matrix &in_z, const Matrix &in_alpha,
-        const vector<const Matrix*> &MIMParms, const Matrix &in_refx,
-        const Matrix &in_refy, const Matrix &in_refz, Matrix &out_11,
+        const vector<const Matrix*> &MIMParms, const double refx,
+        const double refy, const double refz, Matrix &out_11,
         Matrix &out_22);
 
     double calculate_mim_function(const vector<double> &parms, double x,
@@ -64,6 +65,8 @@ private:
 #ifdef EXPR_GRAPH
     virtual std::string getLabel();
 #endif
+    Station                 itsRefStation;
+
 };
 
 // @}
