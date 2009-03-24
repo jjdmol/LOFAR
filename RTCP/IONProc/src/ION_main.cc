@@ -612,8 +612,12 @@ int main(int argc, char **argv)
   pthread_mutex_t mutex  = PTHREAD_MUTEX_INITIALIZER;
   Lock::setMutex(mutex);
   
-  Context::initialize();
-  setLevel("Global",8);
+  tryToGetPersonality();
+  
+  std::stringstream sysInfo;
+  sysInfo << basename(argv[0]) << "@" << myPsetNumber;
+ 
+  INIT_BGP_LOGGER(sysInfo.str());
   
   global_argv = argv;
   
@@ -624,7 +628,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  tryToGetPersonality();
+  
   master_thread(0);
   deleteClientStreams();
   return 0;
