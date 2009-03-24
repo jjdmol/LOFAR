@@ -4,7 +4,7 @@ BIB_SOURCES =	lofar.bib
 
 FIG_SOURCES =	processing.fig
 
-JGR_SOURCES =	cn-perf-8bit-station.jgr
+JGR_SOURCES =	cn-performance.jgr ion-performance.jgr
 
 JPG_SOURCES =	fringe.jpg
 
