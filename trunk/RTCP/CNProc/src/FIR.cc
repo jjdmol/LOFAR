@@ -7,6 +7,8 @@
 #include <iostream>
 #include <cstring>
 
+#include <Common/LofarLogger.h>
+
 #if defined HAVE_FFTW3
 #include <fftw3.h>
 #define fftw_real(x)     ((x)[0])
@@ -163,7 +165,7 @@ void FIR::interpolate(const double* x, const double* y, const unsigned xlen, con
     while(x[nextX] <= interpolatedX && nextX < xlen-1) nextX++;
     
     if(nextX == 0) {
-      std::cout << "ERROR in FIR::interpolate" << std::endl;
+      LOG_ERROR("ERROR in FIR::interpolate");
     }
 
     double prevXVal = x[nextX-1];
@@ -208,12 +210,14 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
   interpolate(f, m, 5 /* length of f and m arrays */ , grid_n+1, grid);
 
 #if 0
-  std::cout << "interpolated = [";
+  std::stringstream logStr;
+  logStr << "interpolated = [";
   for(unsigned i=0; i<grid_n+1; i++) {
-    std::cout << grid[i];
-    if(i != grid_n+1-1) std::cout << ", ";
+    logStr << grid[i];
+    if(i != grid_n+1-1) logStr << ", ";
   }
-  cout << "];" << std::endl;
+  logStr << "];";
+  LOG_DEBUG(logStr.str());
 #endif
 
   // the grid we do an ifft on is:
@@ -256,12 +260,14 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
   }
 
 #if 0
-  std::cout << "ifft_in = [";
+  std::stringstream logStr;
+  logStr << "ifft_in = [";
   for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << fftw_real(cinput[i]) << " " << fftw_imag(cinput[i]);
-    if(i != grid_n*4-1) std::cout << ", ";
+    logStr << fftw_real(cinput[i]) << " " << fftw_imag(cinput[i]);
+    if(i != grid_n*4-1) logStr << ", ";
   }
-  cout << "];" << std::endl;
+  logStr << "];";
+  LOG_DEBUG(logStr.str());
 #endif
 
 #if defined HAVE_FFTW3
@@ -274,7 +280,7 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
 
 #if 0
   for(unsigned i=0; i<grid_n*4; i++) {
-    std::cout << "ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]) << std::endl;
+    LOG_DEBUG_STR("ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]));
   }
 #endif
 
@@ -319,12 +325,14 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
   }
 
 #if 0
-  std::cout << "result = [";
+  std::stringstream logStr;
+  logStr << "result = [";
   for(unsigned i=0; i<=n; i++) {
-    std::cout << result[i];
-    if(i != n) std::cout << ", ";
+    logStr << result[i];
+    if(i != n) logStr << ", ";
   }
-  std::cout << "];" << std::endl;
+  logStr << "];";
+  LOG_DEBUG(logStr.str());
 #endif
 }
 
@@ -333,9 +341,11 @@ void FIR::generate_fir_filter(const unsigned n, const double w, const double* wi
 void FIR::generate_filter(const unsigned taps, const unsigned channels, const bool verbose)
 {
   unsigned n = channels * taps;
-
+  
+  std::stringstream logStr;
+  
   if(verbose) {
-    std::cout << "generating FIR filter bank with " << channels << " channels and " << taps << " taps (" << n << " total), using a ";
+    logStr << "generating FIR filter bank with " << channels << " channels and " << taps << " taps (" << n << " total), using a ";
   }
  
   double* window = new double[n];
@@ -344,14 +354,20 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
   case HAMMING:
   {
     // Use a n-point Hamming window.
-    if (verbose ) std::cout << "Hamming window" << std::endl;
+    if (verbose ) {
+      logStr << "Hamming window";
+      LOG_DEBUG(logStr.str());
+    }  
     hamming(n, window);
     break;
   }
   case BLACKMAN:
   {
     // Use a n-point Blackman window.
-    if (verbose ) std::cout << "Blackman window" << std::endl;
+    if (verbose ) {
+      logStr << "Blackman window";
+      LOG_DEBUG(logStr.str());
+    }
     blackman(n, window);
     break;
   }
@@ -359,7 +375,10 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
   {
     // Use a n-point Gaussian window.
     double alpha = 3.5;
-    if (verbose ) std::cout << "Gaussian window with alpha = " << alpha << std::endl;
+    if (verbose ) {
+      logStr << "Gaussian window with alpha = " << alpha;
+      LOG_DEBUG(logStr.str());
+    }  
     gaussian(n, alpha, window);
     break;
   }
@@ -370,7 +389,10 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
     // [n,Wn,bta,filtype]=kaiserord([fsin/channels 1.4*fsin/channels],[1 0],[10^(0.5/20) 10^(-91/20)],fsin);
     // where fsin is the sample freq
     double beta = 9.0695;
-    if (verbose ) std::cout << "Kaiser window with beta = " << beta << std::endl;
+    if (verbose ) {
+      logStr << "Kaiser window with beta = " << beta;
+      LOG_DEBUG(logStr.str());
+    }  
     kaiser(n, beta, window);
     break;
   }
@@ -379,12 +401,14 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
   }
 
 #if 0
-  std::cout << "window = [";
+  std::stringstream logStr;
+  logStr << "window = [";
   for(unsigned i=0; i<n; i++) {
-    std::cout << window[i];
-    if(i != n-1) std::cout << ", ";
+    logStr << window[i];
+    if(i != n-1) logStr << ", ";
   }
-  std::cout << "];" << std::endl;
+  logStr << "];";
+  LOG_DEBUG(logStr.str());
 #endif
 
   double* result = new double[n];
@@ -414,13 +438,14 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
   delete[] result;
 
 #if 0
-  cout << "final taps: " << std::endl;
+  LOG_DEBUG("final taps: ");
+  std::stringstream logStr;
   for(unsigned channel=0; channel<channels; channel++) {
-    cout << "channel: " << channel << "| ";
+    logStr << "channel: " << channel << "| ";
     for(unsigned tap=0; tap<taps; tap++) {
-      cout << " " << weights[channel][tap];
+      logStr << " " << weights[channel][tap];
     }
-    std::cout << std::endl;
+    LOG_DEBUG(logStr.str());
   }
 #endif
 }
@@ -431,7 +456,7 @@ void FIR::generate_filter(const unsigned taps, const unsigned channels, const bo
 void FIR::generate_filter(const unsigned taps, const unsigned channels, const bool verbose)
 {
   if(verbose) {
-    std::cout << "using original static 256 channel FIR filter bank" << std::endl;
+    LOG_DEBUG("using original static 256 channel FIR filter bank");
   }
 
   if(taps != 16 || channels != 256) {

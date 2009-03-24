@@ -39,10 +39,10 @@ inline static dcomplex cosisin(const double x)
 #endif
 
 
-static NSTimer computeFlagsTimer("PPF::computeFlags()", true);
-static NSTimer FIRtimer("PPF::FIRtimer", true);
-static NSTimer FFTtimer("PPF::FFT", true);
-static NSTimer PPFtimer("PPF::filter()", true);
+static NSTimer computeFlagsTimer("PPF::computeFlags()", true, true);
+static NSTimer FIRtimer("PPF::FIRtimer", true, true);
+static NSTimer FFTtimer("PPF::FFT", true, true);
+static NSTimer PPFtimer("PPF::filter()", true, true);
 
 
 template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation, const bool verbose)
@@ -152,7 +152,7 @@ static void FFTtest()
 
   for (unsigned i = 0; i < 256; i ++) {
     fcomplex diff = fout[i] / sout[i];
-    std::cout << i << " (" << real(fout[i]) << ',' << imag(fout[i]) << ") / (" << real(sout[i]) << ',' << imag(sout[i]) << ") = (" << real(diff) << ',' << imag(diff) << ")\n";
+    LOG_DEBUG_STR(i << " (" << real(fout[i]) << ',' << imag(fout[i]) << ") / (" << real(sout[i]) << ',' << imag(sout[i]) << ") = (" << real(diff) << ',' << imag(diff) << ")");
   }
 
   //std::exit(0);
@@ -260,7 +260,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned sta
     const unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
 
 #if 0
-    std::clog << setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
+    LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
 #endif
 
 #if defined PPF_C_IMPLEMENTATION

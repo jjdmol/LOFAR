@@ -69,8 +69,8 @@ inline static dcomplex cosisin(const double x)
 
 
 //static NSTimer transposeTimer("transpose()", true); // Unused --Rob
-static NSTimer computeTimer("computing", true);
-static NSTimer totalProcessingTimer("global total processing", true);
+static NSTimer computeTimer("computing", true, true);
+static NSTimer totalProcessingTimer("global total processing", true, true);
 
 
 CN_Processing_Base::~CN_Processing_Base()
@@ -130,14 +130,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::getPersonality(
   assert(retval == 0);
 
   if (itsLocationInfo.rank() == 0)
-    std::clog << "topology = ("
-	      << itsPersonality.getXsize() << ','
-	      << itsPersonality.getYsize() << ','
-	      << itsPersonality.getZsize() << "), torus wraparound = ("
-	      << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
-	      << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
-	      << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')'
-	      << std::endl;
+    LOG_DEBUG_STR( "topology = ("
+		 << itsPersonality.getXsize() << ','
+		 << itsPersonality.getYsize() << ','
+		 << itsPersonality.getZsize() << "), torus wraparound = ("
+		 << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
+		 << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
+		 << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')');
 
   itsRankInPset = itsPersonality.rankInPset() + itsPersonality.numNodesInPset() * (itsLocationInfo.rank() / itsPersonality.numComputeNodes());
 
@@ -157,7 +156,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::getPersonality(
       cores[allLocations[rank].pset][allLocations[rank].rankInPset] = rank;
 
 //     for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
-//       std::clog << "pset " << pset << " contains cores " << cores[pset] << std::endl;
+//       LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
   }
 }
 
@@ -174,11 +173,11 @@ void CN_Processing<SAMPLE_TYPE>::initIONode() const
     std::vector<size_t> lengths;
 
     for (int arg = 0; original_argv[arg] != 0; arg ++) {
-      std::clog << "adding arg " << original_argv[arg] << std::endl;
+      LOG_DEBUG_STR("adding arg " << original_argv[arg]);
       lengths.push_back(strlen(original_argv[arg]) + 1);
     }
 
-    std::clog << "calling lofar_init(..., ..., " << lengths.size() << ")" << std::endl;
+    LOG_DEBUG_STR("calling lofar_init(..., ..., " << lengths.size() << ")");
     lofar_init(original_argv, &lengths[0], lengths.size());
   }
 }
@@ -216,19 +215,21 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkConsistenc
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::printSubbandList() const
 {
-  std::clog << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
+  std::stringstream logStr;
+  logStr << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
 
   unsigned sb = itsCurrentSubband; 
 
   do {
-    std::clog << (sb == itsCurrentSubband ? '[' : ',') << sb;
+    logStr << (sb == itsCurrentSubband ? '[' : ',') << sb;
 
     if ((sb += itsSubbandIncrement) >= itsLastSubband)
       sb -= itsLastSubband - itsFirstSubband;
 
   } while (sb != itsCurrentSubband);
   
-  std::clog << ']' << std::endl;
+  logStr << ']';
+  LOG_DEBUG(logStr.str());
 }
 
 #endif // HAVE_MPI
@@ -325,7 +326,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
         break;
 
       default:
-        std::clog << "Invalid mode: " << itsMode << endl;
+	LOG_DEBUG("Invalid mode: " << itsMode);
         break;
     }
 
@@ -399,7 +400,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
   }
 
   if(itsIsTransposeOutput && itsCurrentSubband < itsNrSubbands) {
-    NSTimer postAsyncReceives("post async receives", LOG_CONDITION);
+    NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
     postAsyncReceives.start();
     itsAsyncTranspose->postAllReceives(itsTransposedData);
     postAsyncReceives.stop();
@@ -408,13 +409,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
   // We must not try to read data from I/O node if our subband does not exist.
   // Also, we cannot do the async sends in that case.
   if (itsIsTransposeInput) { 
-    static NSTimer readTimer("receive timer", true);
+    static NSTimer readTimer("receive timer", true, true);
 
     if (LOG_CONDITION) {
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime() << '\n';
+      LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start reading at " << MPI_Wtime());
     }
     
-    NSTimer asyncSendTimer("async send", LOG_CONDITION);
+    NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
     for(unsigned i=0; i<itsOutputPsetSize; i++) {
       unsigned subband = (itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
@@ -433,7 +434,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
 #else // ! HAVE_MPI
 
   if (itsIsTransposeInput) {
-    static NSTimer readTimer("receive timer", true);
+    static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
     itsInputData->readAll(itsStream);
     readTimer.stop();
@@ -446,9 +447,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start processing at " << MPI_Wtime());
 
-  NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION);
+  NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION, true);
 
   for (unsigned i = 0; i < itsNrStations; i ++) {
     asyncReceiveTimer.start();
@@ -474,7 +475,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start beam forming at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start beam forming at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsBeamFormer->formBeams(itsFilteredData);
@@ -485,7 +486,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formPencilBeams
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start pencil-beam forming at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start pencil-beam forming at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsPencilBeamFormer->formPencilBeams(itsFilteredData,itsPencilBeamData);
@@ -496,7 +497,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes I at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes I at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsIncoherentStokesI->calculateIncoherent(itsFilteredData,itsIncoherentStokesIData,itsNrStations);
@@ -507,7 +508,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncohe
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating incoherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsStokes->calculateIncoherent(itsFilteredData,itsStokesData,itsNrStations);
@@ -518,7 +519,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
@@ -529,7 +530,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start correlating at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start correlating at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
   itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
@@ -541,10 +542,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime() << '\n';
+    LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start writing at " << MPI_Wtime());
 #endif // HAVE_MPI
 
-  static NSTimer writeTimer("send timer", true);
+  static NSTimer writeTimer("send timer", true, true);
   writeTimer.start();
   outputData->write(itsStream, false);
   writeTimer.stop();
@@ -553,7 +554,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput( Str
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingInput()
 {
 #if defined HAVE_MPI
-  NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION);
+  NSTimer waitAsyncSendTimer("wait for all async sends", LOG_CONDITION, true);
   waitAsyncSendTimer.start();
   itsAsyncTranspose->waitForAllSends();
   waitAsyncSendTimer.stop();
@@ -563,7 +564,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 {
   totalProcessingTimer.start();
-  NSTimer totalTimer("total processing", LOG_CONDITION);
+  NSTimer totalTimer("total processing", LOG_CONDITION, true);
   totalTimer.start();
 
   // transpose/obtain input data
@@ -620,7 +621,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         break;
 
       default:
-        std::clog << "Invalid mode: " << itsMode << endl;
+	LOG_DEBUG_STR("Invalid mode: " << itsMode);
         break;
     }
   } // itsIsTransposeOutput
@@ -633,7 +634,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     if (LOG_CONDITION) {
-      std::clog << std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime() << '\n';
+      LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start idling at " << MPI_Wtime());
     }
   }
 #endif // HAVE_MPI

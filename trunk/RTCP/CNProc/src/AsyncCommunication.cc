@@ -35,7 +35,7 @@ int AsyncCommunication::asyncRead(void* buf, unsigned size, unsigned source, int
 
     int res = MPI_Irecv(buf, size, MPI_BYTE, source, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Irecv() failed" << std::endl;
+	LOG_FATAL("MPI_Irecv() failed");
 	exit(1);
     }
 
@@ -57,7 +57,7 @@ int AsyncCommunication::asyncWrite(const void* buf, unsigned size, unsigned dest
 
     int res = MPI_Isend((void*)buf, size, MPI_BYTE, dest, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Isend() failed" << std::endl;
+	LOG_FATAL("MPI_Isend() failed");
 	exit(1);
     }
 
@@ -80,7 +80,7 @@ void AsyncCommunication::waitForRead(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Wait() failed" << std::endl;
+	LOG_FATAL("MPI_Wait() failed");
 	exit(1);
     }
 
@@ -96,7 +96,7 @@ void AsyncCommunication::waitForWrite(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Wait() failed" << std::endl;
+	LOG_FATAL("MPI_Wait() failed");
 	exit(1);
     }
 
@@ -122,14 +122,14 @@ int AsyncCommunication::waitForAnyRead(void*& buf, unsigned& size, unsigned& sou
 	i++;
     }
 
-    NSTimer waitAnyTimer("MPI_Waitany", USE_TIMING);
+    NSTimer waitAnyTimer("MPI_Waitany", USE_TIMING, true);
     waitAnyTimer.start();
     int index = -1;
     int res = MPI_Waitany(count, reqs, &index, &status);
     waitAnyTimer.stop();
 
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Waitany() failed" << std::endl;
+	LOG_FATAL("MPI_Waitany() failed");
 	exit(1);
     }
 
@@ -162,7 +162,7 @@ void AsyncCommunication::waitForAllReads()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Waitall() failed" << std::endl;
+	LOG_FATAL("MPI_Waitall() failed");
 	exit(1);
     }
 
@@ -190,7 +190,7 @@ void AsyncCommunication::waitForAllWrites()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	std::cerr << "MPI_Waitall() failed" << std::endl;
+	LOG_FATAL("MPI_Waitall() failed");
 	exit(1);
     }
 

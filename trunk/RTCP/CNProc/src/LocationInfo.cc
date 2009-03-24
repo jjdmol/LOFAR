@@ -5,6 +5,8 @@
 #include <Interface/CN_Mapping.h>
 #include <Interface/PrintVector.h>
 
+#include <Common/LofarLogger.h>
+
 #if defined HAVE_BGP
 #include <common/bgp_personality_inlines.h>
 #include <spi/kernel_interface.h>
@@ -38,19 +40,18 @@ LocationInfo::LocationInfo()
 void LocationInfo::getPersonality()
 {
   if (Kernel_GetPersonality(&itsPersonality, sizeof itsPersonality) != 0) {
-    std::cerr << "could not get personality" << std::endl;
+    LOG_FATAL("could not get personality");
     exit(1);
   }
 
   if (itsRank == 0)
-    std::clog << "topology = ("
-	      << BGP_Personality_xSize(&itsPersonality) << ','
-	      << BGP_Personality_ySize(&itsPersonality) << ','
-	      << BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
-	      << (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
-	      << (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
-	      << (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')'
-	      << std::endl;
+    LOG_DEBUG_STR(   "topology = ("
+		  << BGP_Personality_xSize(&itsPersonality) << ','
+		  << BGP_Personality_ySize(&itsPersonality) << ','
+		  << BGP_Personality_zSize(&itsPersonality) << "), torus wraparound = ("
+		  << (BGP_Personality_isTorusX(&itsPersonality) ? 'T' : 'F') << ','
+		  << (BGP_Personality_isTorusY(&itsPersonality) ? 'T' : 'F') << ','
+		  << (BGP_Personality_isTorusZ(&itsPersonality) ? 'T' : 'F') << ')');
 
   itsPsetNumbers.resize(itsNrNodes);
   itsPsetNumber = BGP_Personality_psetNum(&itsPersonality);
@@ -74,7 +75,7 @@ void LocationInfo::getPersonality()
       cores[itsPsetNumbers[rank]].push_back(rank);
 
     for (unsigned pset = 0; pset < BGP_Personality_numIONodes(&itsPersonality); pset ++)
-      std::clog << "pset " << pset << " contains cores " << cores[pset] << std::endl;
+      LOG_DEBUG_STR("pset " << pset << " contains cores " << cores[pset]);
   }
 }
 
@@ -85,19 +86,18 @@ void LocationInfo::getPersonality()
 void LocationInfo::getPersonality()
 {
   if (rts_get_personality(&itsPersonality, sizeof(itsPersonality)) != 0) {
-    std::cerr << "could not get personality" << std::endl;
+    LOG_FATAL("could not get personality");
     exit(1);
   }
   
   if (itsRank= 0)
-    std::clog << "topology = ("
-	      << itsPersonality.getXsize() << ','
-	      << itsPersonality.getYsize() << ','
-	      << itsPersonality.getZsize() << "), torus wraparound = ("
-	      << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
-	      << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
-	      << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')'
-	      << std::endl;
+    LOG_DEBUG_STR( "topology = ("
+		 << itsPersonality.getXsize() << ','
+		 << itsPersonality.getYsize() << ','
+		 << itsPersonality.getZsize() << "), torus wraparound = ("
+		 << (itsPersonality.isTorusX() ? 'T' : 'F') << ','
+		 << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
+		 << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')');
   
   itsPsetNumbers.resize(itsNrNodes);
   itsPsetNumber = itsPersonality.getPsetNum();
@@ -121,7 +121,7 @@ void LocationInfo::getPersonality()
       cores[itsPsetNumbers[rank]].push_back(rank);
 
     for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
-      std::clog << "LocationInfo :: pset " << pset << " contains cores " << cores[pset] << std::endl;
+      LOG_DEBUG_STR("LocationInfo :: pset " << pset << " contains cores " << cores[pset]); 
   }
 }
 

@@ -12,9 +12,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-static NSTimer computeFlagsTimer("Correlator::computeFlags()", true);
-static NSTimer correlateTimer("Correlator::correlate()", true);
-static NSTimer weightTimer("Correlator::weight()", true);
+static NSTimer computeFlagsTimer("Correlator::computeFlags()", true, true);
+static NSTimer correlateTimer("Correlator::correlate()", true, true);
+static NSTimer weightTimer("Correlator::weight()", true, true);
 
 
 // nrStations is the number of superstations in case we use TAB.
@@ -108,9 +108,9 @@ void Correlator::computeFlags(const FilteredData *filteredData, CorrelatedData *
 void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *correlatedData)
 {
 #if 0
-  std::cout << "correlating " << itsNrStations << " stations" << std::endl;
+  LOG_DEBUG_STR("correlating " << itsNrStations << " stations");
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-    std::cout << "   station " << stat << " -> " << itsStationMapping[stat] << std::endl;
+    LOG_DEBUG_STR("   station " << stat << " -> " << itsStationMapping[stat]);
   }
 #endif
   correlateTimer.start();

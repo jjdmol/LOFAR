@@ -12,7 +12,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer beamFormTimer("BeamFormer::formBeams()", true);
+static NSTimer beamFormTimer("BeamFormer::formBeams()", true, true);
 
 BeamFormer::BeamFormer(const unsigned nrStations, const unsigned nrSamplesPerIntegration, 
 		       const std::vector<unsigned> &station2BeamFormedStation, const unsigned nrChannels)
@@ -25,12 +25,12 @@ BeamFormer::BeamFormer(const unsigned nrStations, const unsigned nrSamplesPerInt
   itsNrBeamFormedStations = calcNrBeamFormedStations();
   if(itsNrBeamFormedStations == 0) {
 #if VERBOSE
-    std::cerr << "BeamForming disabled" << std::endl;
+    LOG_ERROR("BeamForming disabled");
 #endif
     itsStationMapping = new unsigned[nrStations];
   } else {  
 #if VERBOSE
-    std::cerr << "BeamForming enabled, " << itsNrBeamFormedStations << " station(s)" << std::endl;
+    LOG_ERROR_STR("BeamForming enabled, " << itsNrBeamFormedStations << " station(s)");
 #endif
     itsStationMapping = new unsigned[itsNrBeamFormedStations];
   }
@@ -83,15 +83,16 @@ void BeamFormer::calcMapping()
 
 #if VERBOSE
   // dump the mapping
-  std::cerr << "*** BeamForming mapping START" << std::endl;
+  LOG_ERROR("*** BeamForming mapping START");
+  std::stringstream logStr;
   for(unsigned i=0; i<itsNrBeamFormedStations; i++) {
-    std::cerr << "BeamFormed Station " << i << ": ";
+    logStr << "BeamFormed Station " << i << ": ";
     for (unsigned j=0; j<itsBeamFormedStations[i].size(); j++) {
-      std::cerr << itsBeamFormedStations[i][j] << " ";
+      logStr << itsBeamFormedStations[i][j] << " ";
     }
-    std::cerr << std::endl;
+    LOG_ERROR(logStr.str());
   }
-  std::cerr << "*** BeamForming mapping END" << std::endl;
+  LOG_ERROR("*** BeamForming mapping END");
 #endif
   }
 }
@@ -103,11 +104,13 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
   const unsigned nrStationsInBeam = stationList.size();
   
 #if VERBOSE
-  std::cerr << "Beam forming station " << beamFormedStation << ", size is " << nrStationsInBeam << " (";
+  std::stringstream logStr;
+  logStr << "Beam forming station " << beamFormedStation << ", size is " << nrStationsInBeam << " (";
   for(unsigned statIndex=0; statIndex<nrStationsInBeam; statIndex++) {
-    std::cerr << stationList[statIndex] << " ";
+    logStr << stationList[statIndex] << " ";
   }
-  std::cerr << ")" << std::endl;
+  logStr << ")";
+  LOG_ERROR(logStr.str());
 #endif
 
   // Flagging strategy: if an entire station (or more than x % of a station)
@@ -123,8 +126,8 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
     if(filteredData->flags[stationList[i]].count() > upperBound) {
       // many samples have been flagged away, drop entire station
 #if VERBOSE
-      std::cerr << "dropping station " << stationList[i] << ", " << filteredData->flags[destStation].count() <<
-	" samples were flagged away, upper bound = " << upperBound << std::endl;
+      LOG_ERROR_STR( "dropping station " << stationList[i] << ", " << filteredData->flags[destStation].count() <<
+	" samples were flagged away, upper bound = " << upperBound);
 #endif
       validStation[i] = false;
     } else {
@@ -134,8 +137,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
     }
   }
 
-//  std::cerr << "total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations << std::endl; 
-
+//  LOG_ERROR_STR("total Stations in beam = " << nrStationsInBeam << ", valid = " << nrValidStations);
   const float factor = 1.0 / nrValidStations;
 
   // Now, we just flag everything that is flagged in one of the stations away.
@@ -190,7 +192,7 @@ void BeamFormer::beamFormStation(FilteredData *filteredData, const unsigned beam
 void BeamFormer::formBeams(FilteredData *filteredData)
 {
 #if VERBOSE
-  std::cerr << "beam forming START" << std::endl;
+  LOG_ERROR("beam forming START");
 #endif
 
   beamFormTimer.start();
@@ -204,7 +206,7 @@ void BeamFormer::formBeams(FilteredData *filteredData)
   beamFormTimer.stop();
 
 #if VERBOSE
-  std::cerr << "beam forming DONE" << std::endl;
+  LOG_ERROR("beam forming DONE");
 #endif
 }
 
