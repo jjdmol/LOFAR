@@ -46,7 +46,7 @@ FCNP_ClientStream::~FCNP_ClientStream()
 
 void FCNP_ClientStream::read(void *ptr, size_t size)
 {
-  //std::clog << "FCNP_ClientStream::read(" << std::hex << ptr << ", " << std::dec << size << ", ...)" << std::endl;
+  //LOG_DEBUG_STR("FCNP_ClientStream::read(" << std::hex << ptr << ", " << std::dec << size << ", ...)");
 
   if (!aligned(ptr, 16) || !aligned(size, 16)) {
     size_t alignedSize = align(size, 16);
@@ -62,7 +62,7 @@ void FCNP_ClientStream::read(void *ptr, size_t size)
 
 void FCNP_ClientStream::write(const void *ptr, size_t size)
 {
-  //std::clog << "FCNP_ClientStream::write(" << std::hex << ptr << ", " << std::dec << size << ", ...)" << std::endl;
+  //LOG_DEBUG_STR("FCNP_ClientStream::write(" << std::hex << ptr << ", " << std::dec << size << ", ...)");
 
   if (!aligned(ptr, 16) || !aligned(size, 16)) {
     size_t alignedSize = align(size, 16);

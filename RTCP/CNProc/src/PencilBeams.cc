@@ -22,7 +22,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-static NSTimer pencilBeamFormTimer("PencilBeamFormer::formBeams()", true);
+static NSTimer pencilBeamFormTimer("PencilBeamFormer::formBeams()", true, true);
 
 PencilCoordinates& PencilCoordinates::operator+=( const PencilCoordinates &rhs )
 {
@@ -191,7 +191,7 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
      const double z = phaseCentres[stat][2];
 
      PencilCoord3D phaseCentre( x, y, z );
-     //std::clog << "phase center #" << stat << ": " << phaseCentre;
+     //LOG_DEBUG_STR("phase center #" << stat << ": " << phaseCentre);
      PencilCoord3D baseLine = phaseCentre - refPhaseCentre;
      PencilCoord3D baseLineSeconds = baseLine * (1.0/speedOfLight);
 
@@ -201,7 +201,7 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
 
      for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
        itsDelayOffsets[stat][beam] = baseLine * itsCoordinates[beam] * (1.0/speedOfLight);
-       //std::clog << "delay offset for beam " << beam << " station " << stat << itsDelayOffsets[stat][beam] << " = " << baseLine << " * " << itsCoordinates[beam] << " * " << (1.0/speedOfLight) << std::endl;
+       //LOG_DEBUG_STR("delay offset for beam " << beam << " station " << stat << itsDelayOffsets[stat][beam] << " = " << baseLine << " * " << itsCoordinates[beam] << " * " << (1.0/speedOfLight));
      }
   }
 }
@@ -210,7 +210,7 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
 {
   const double compensatedDelay = itsDelayOffsets[stat][0] - itsBaselinesSeconds[stat] * beamDir;
 
-  //std::clog << "station " << stat << " beam 0 has an absolute delay of  " << compensatedDelay << std::endl;
+  //LOG_DEBUG_STR("station " << stat << " beam 0 has an absolute delay of  " << compensatedDelay);
 
   // centre beam does not need compensation
   itsDelays[stat][0] = 0.0;
@@ -223,9 +223,9 @@ void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
      // further reduced by the delay we already compensate for when doing regular beam forming (the centre of the beam). that compensation is done at the IONode (sample shift) and the PPF (phase shift)
      itsDelays[stat][i] = itsDelayOffsets[stat][i] - itsBaselinesSeconds[stat] * beamDir - compensatedDelay;
 
-     //std::clog << "station " << stat << " beam " << i << "has an additional delay of " << itsDelays[stat][i] << std::endl;
-     //std::clog << itsDelayOffsets[stat][i] << " " << itsBaselinesSeconds[stat] << " " << beamDir << " " << compensatedDelay << std::endl;
-     //std::clog << "example shift: " << phaseShift( itsBaseFrequency + itsNrChannels/2*itsChannelBandwidth, itsDelays[stat][i] ) << std::endl;
+     //LOG_DEBUG_STR("station " << stat << " beam " << i << "has an additional delay of " << itsDelays[stat][i]);
+     //LOG_DEBUG_STR(itsDelayOffsets[stat][i] << " " << itsBaselinesSeconds[stat] << " " << beamDir << " " << compensatedDelay);
+     //LOG_DEBUG_STR("example shift: " << phaseShift( itsBaseFrequency + itsNrChannels/2*itsChannelBandwidth, itsDelays[stat][i] ));
   }
 }
 

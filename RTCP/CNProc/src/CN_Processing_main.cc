@@ -30,6 +30,7 @@
 #include <Stream/SocketStream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
+#include <Common/LofarLogger.h>
 #if !defined HAVE_PKVERSION
 #include <CNProc/Package__Version.h>
 #endif
@@ -58,14 +59,14 @@ using namespace LOFAR::RTCP;
 
 void terminate_with_backtrace()
 {
-  std::cerr << "terminate_with_backtrace()" << std::endl;
+  LOG_FATAL("terminate_with_backtrace()");
 
   void *buffer[100];
   int  nptrs	 = backtrace(buffer, 100);
   char **strings = backtrace_symbols(buffer, nptrs);
 
   for (int i = 0; i < nptrs; i ++)
-    std::cerr << i << ": " << strings[i] << std::endl;
+    LOG_FATAL_STR(i << ": " << strings[i]);
 
   free(strings);
   abort();
@@ -91,14 +92,19 @@ int main(int argc, char **argv)
 #endif
 
     LocationInfo locationInfo;
-
+    
+    std::stringstream sysInfo;
+    sysInfo << basename(argv[0]) << "@" << locationInfo.rank();
+ 
+    INIT_BGP_LOGGER(sysInfo.str());
+  
 #if !defined HAVE_PKVERSION    
     if (locationInfo.rank() == 0) {
       std::string type = "brief";
       Version::show<CNProcVersion> (std::cout, "CNProc", type);
     }
 #endif
-    std::clog << "creating connection to ION ..." << std::endl;
+    LOG_DEBUG("creating connection to ION ...");
     
     Stream *ionStream;
 #if defined HAVE_ZOID && defined HAVE_BGL
@@ -116,7 +122,7 @@ int main(int argc, char **argv)
     THROW(CNProcException, "unknown Stream type between ION and CN");
 #endif    
 
-    std::clog << "connection successful" << std::endl;
+    LOG_DEBUG("connection successful");
 
     CN_Configuration	configuration;
     CN_Processing_Base	*proc = 0;
@@ -152,7 +158,7 @@ int main(int argc, char **argv)
 
 	case CN_Command::STOP :	break;
 
-	default :			std::cerr << "Bad command!" << std::endl;
+	default :			LOG_FATAL("Bad command!");
 					abort();
       }
     } while (command.value() != CN_Command::STOP);
@@ -167,10 +173,10 @@ int main(int argc, char **argv)
     return 0;
 #if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
-    std::cout << "Uncaught Exception: " << ex << std::endl;
+    LOG_FATAL_STR("Uncaught Exception: " << ex);
     return 1;
   } catch (std::exception &ex) {
-    std::cerr << "Uncaught exception: " << ex.what() << std::endl;
+    LOG_FATAL_STR("Uncaught exception: " << ex.what());
     return 1;
   }
 #endif

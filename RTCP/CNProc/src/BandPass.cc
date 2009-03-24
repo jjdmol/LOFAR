@@ -2153,7 +2153,7 @@ int main()
   const float *f = bandpass.correctionFactors(256);
 
   for (unsigned i = 0; i < 256; i ++)
-    std::clog << i << ' ' << f[i] << std::endl;
+    LOG_DEBUG(i << ' ' << f[i]);
 
   return 0;
 }
