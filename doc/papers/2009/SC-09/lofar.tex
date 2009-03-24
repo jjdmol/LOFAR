@@ -324,9 +324,9 @@ In practice, under normal circumstances no data are lost.
 Processing power on the I/O~nodes is a scarce resource, since most observation
 modes are I/O bound.
 We performed many optimizations to improve processing speed.
-An important improvement was to implement
-the function that copies data from a received UDP packet to the
-circular buffer in assembly. This way, we can exploit the efficient 16-byte load and
+An important improvement was to implement the function that copies data from a
+received UDP packet to the circular buffer in assembly.
+This way, we can exploit the efficient 16-byte load and
 store instructions, which are unknown to the C++ compiler.
 Unfortunately, the copy itself cannot be avoided, since a UDP packet contains
 data of many frequency subbands that must be stored to different memory
@@ -371,7 +371,52 @@ fail to meet a real-time deadline, only a small amount of data is lost.
 In practice, under normal circumstances, this happens close to never. We will
 demonstrate this in Section~\ref{TODO}.
 
+\begin{figure}
+\includegraphics[width=\columnwidth]{ion-performance.pdf}
+\caption{Performance breakdown of I/O-node processing.  See text.}
+\label{fig:ion-performance}
+\end{figure}
 
+Figure~\ref{fig:ion-performance} shows where the processor cores of the
+I/O~node spend their time in various situations.
+The five major tasks are each represented by a different color in the bar
+graph; the size of each bar is proportional to the contribution to the total
+work load.
+A load of 100\% means that all four cores are fully occupied.
+A load above 85\% must be avoided to prevent data loss.
+
+The left part of the graph shows the performance breakdown for one of the
+most challenging modes: 64~stations, 8-bit samples, and up to 496~subbands
+(the maximum station data rate).
+The subbands are more or less evenly divided over the 64~psets, thus each
+pset has to process up to 8~subbands.
+In this case, most I/O~nodes receive and forward the samples of one station
+(up to 3.1~Gb/s) and send the correlations of up to 8~subbands to storage
+(up to 1.2~Gb/s).
+The figure shows that most time spent in the receipt of UDP packets.
+This load is partially independent of the number of subbands, since a lower
+number of subbands decreases the packet size (down from 7,998~bytes), but not
+the amount of packets (48,828~packets per second).
+All other work scales linearly with the amount of subbands.
+
+The right part of the graph shows the performance breakdown for two other
+challenging modes as well.
+In the standard 16-bit sample mode, the stations can produce at most
+248~subbands.
+Hence, the output data rate (the lower two bars) is twice as low as in the
+8-bit mode.
+Also, copying 16-bit samples into the circular buffer is somewhat more
+efficient, due to L3-cache effects.
+In the 4-bit mode, the number of stations is limited to about~48 if only one
+rack is used.
+This is no problem, since this mode is only envisioned for particular
+observations where only the core stations are used, of which there will
+likely be 36 to~46.
+Also, this mode was qualified for using two racks, but we are able to do so on
+one rack only.
+In this mode, the maximum number of subbands is~992.
+Yet, the output data rate is only 13\%~higher than in the 64-station/8-bit mode,
+due to the reduced number of stations.
 
 
 
@@ -638,10 +683,14 @@ remainer of the processing pipeline.}
 Since only a small number of LOFAR stations has already been constructed
 (the majority will become operational later this year), we will provide 
 realistic performance measurements with externally generated artificial data.
-We use one Blue Gene/P rack to generate UDP data, another rack for the correlator, and
-the remaining half rack to receive and dump the correlated data.
+We use one Blue Gene/P rack to generate UDP data, another rack for the
+correlator, and the remaining half rack to receive and dump the correlated
+data.
 The simulation is realistic, since the correlator runs exactly
 the way it would run with real station data.
+The storage section, however, does not write the data to disk, since we do
+not have enough storage nodes available yet, but this does not influence the
+performance measurements of the correlator.
 With one rack, we can process up to 64~stations, one per I/O~node.
 
 
@@ -685,16 +734,40 @@ We think this will reduce the system time of I/O operations.
 
 \subsection{Computational performance on the Compute Nodes}
 
-The load on the compute nodes depends heavily on the observation parameters.
-
-Most of the observations can be done using only one rack of Blue Gene/P.
-This small amount of resources 
-
 \begin{figure}
-\includegraphics[width=\columnwidth]{cn-perf-8bit-station.pdf}
-\caption{Compute Node performance breakdown (248~subbands).}
-\label{fig:ionode-load}
+\includegraphics[width=\columnwidth]{cn-performance.pdf}
+\caption{Compute node performance breakdown, as function of number of stations.}
+\label{fig:cn-performance}
 \end{figure}
+
+Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time,
+depending on the number of stations.
+Here, the y-axis shows the absolute run time to process one subband with
+1.007~second of station samples from 64~stations in 8-bit mode.
+
+The $O(n^2)$ complexity of the correlator is clearly visible, while other
+components scale linearly with the number of stations.
+Despite the high data rates, I/O~requires hardly any time.
+Naturally, the time for input or output cannot exceed $1/64^\mathrm{th}$
+of the total time, since the associated I/O~node also needs time to communicate
+with the other 63~cores in the pset.
+
+The \emph{available\/} runtime depends on the number of subbands that must be
+processed: with 496~subbands, most of the 64~psets process 8~subbands, and
+with 64~cores in one pset, there is 8.053~second to process one chunk of data.
+Doubling the number of subbands halves the available processing time, and in
+the 4-bit mode, up to about 50~stations can be supported on a single rack.
+
+The results are shown for the 8-bit sample mode, but the 16-bit and 4-bit mode
+perform nearly the same, since only the performance of the the data receipt
+from the I/O~node and data exchange phase are affected by the sample size, 
+both of which hardly contribute to the total runtime.
+
+The correlator is extremely efficient: it achieves 96\% of the FPU peak
+performance, thanks to the highly-optimized assembly code.
+The FIR filter achieves 86\% and the hand-crafted 256-point FFT achieves 44\%
+XXX
+
 
 \section{Conclusions and future work}
 

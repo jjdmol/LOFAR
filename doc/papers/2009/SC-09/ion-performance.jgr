@@ -1,0 +1,311 @@
+newgraph
+  xaxis
+    size 5
+    min 0.45
+    max 13.5
+    no_draw_hash_marks
+    no_auto_hash_labels
+    (*
+    hash_label at  1 : 1
+    hash_label at  2 : 64
+    hash_label at  3 : 128
+    hash_label at  4 : 192
+    hash_label at  5 : 256
+    hash_label at  6 : 320
+    hash_label at  7 : 384
+    hash_label at  8 : 448
+    hash_label at  9 : 496
+    hash_label at 11 : 
+    hash_label at 12 : 496/64/8
+    hash_label at 13 : 
+    hash_labels
+      font Helvetica
+      fontsize 11
+    *)
+
+    label
+      y -15
+      font Helvetica-Bold
+      fontsize 11
+      : Nr Subbands / Nr Stations / Nr Bits per Input Sample
+
+  yaxis
+    min 0
+    max 81
+    hash_labels
+      font Helvetica
+      fontsize 11
+
+    label
+      font Helvetica-Bold
+      fontsize 11
+      : System Load (%)
+
+  legend
+    defaults
+    font Helvetica
+    fontsize 9
+    hjl
+    vjt
+    x 1.1
+    y 81
+
+newcurve
+  marktype xbar
+  marksize 0.9
+  cfill 0 0.270588219 0.525490165
+  label
+    : UDP packet receipt (kernel)
+  pts
+     1 13.97
+     2 27.43
+     3 35.01
+     4 43.15
+     5 51.17
+     6 58.56
+     7 66.18
+     8 74.77
+     9 80.73
+
+    11 66.50
+    12 80.73
+    13 79.74
+
+newcurve
+  marktype xbar
+  marksize 0.9
+  cfill 1 0.258823514 0.0549019575
+  (* pattern stripe 45 *)
+  label
+    : packet to circular buffer copy
+  pts
+     1  0.84
+     2  4.92
+     3 10.52
+     4 16.03
+     5 22.04
+     6 27.06
+     7 32.32
+     8 39.08
+     9 47.42
+
+    11 30.34
+    12 47.42
+    13 49.24
+
+newcurve
+  marktype xbar
+  marksize 0.9
+  cfill 1 0.827450931 0.125490189
+  label
+    : FCNP send to compute node
+  pts
+     1  0.62
+     2  3.74
+     3  8.39
+     4 12.76
+     5 17.61
+     6 21.53
+     7 25.26
+     8 30.21
+     9 37.31
+
+    11 23.66
+    12 37.31
+    13 39.89
+
+newcurve
+  marktype xbar
+  marksize 0.9
+  cfill 0.34117645 0.615686238 0.109803915
+  label
+    : FCNP receive from compute node
+  pts
+     1  0.57
+     2  2.60
+     3  4.94
+     4  7.56
+     5 10.68
+     6 12.88
+     7 14.81
+     8 17.76
+     9 22.56
+
+    11 10.56
+    12 22.56
+    13 24.71
+
+newcurve
+  marktype xbar
+  marksize 0.9
+  cfill 0.51372546 0.792156816 1
+  (* pattern stripe -45 *)
+  label
+    : TCP/IP send to storage (kernel)
+  pts
+     1  0.00
+     2  2.01
+     3  3.77
+     4  5.77
+     5  8.28
+     6  9.89
+     7 11.21
+     8 13.47
+     9 15.48
+
+    11  8.08
+    12 15.48
+    13 16.03
+
+newstring
+  font Helvetica
+  fontsize 11
+  hjc
+  vjc
+  y -3
+
+copystring
+  x 1
+  : 1
+
+copystring
+  x 2
+  : 64
+
+copystring
+  x 3
+  : 128
+
+copystring
+  x 4
+  : 192
+
+copystring
+  x 5
+  : 256
+
+copystring
+  x 6
+  : 320
+
+copystring
+  x 7
+  : 384
+
+copystring
+  x 8
+  : 448
+
+copystring
+  x 9
+  : 496
+
+copystring
+  x 11
+  : 248
+
+copystring
+  x 12
+  : 496
+
+copystring
+  x 13
+  : 992
+
+copystring
+  x 1
+  y -7
+  : 64
+
+copystring
+  x 2
+  : 64
+
+copystring
+  x 3
+  : 64
+
+copystring
+  x 4
+  : 64
+
+copystring
+  x 5
+  : 64
+
+copystring
+  x 6
+  : 64
+
+copystring
+  x 7
+  : 64
+
+copystring
+  x 8
+  : 64
+
+copystring
+  x 9
+  : 64
+
+copystring
+  x 11
+  : 64
+
+copystring
+  x 12
+  : 64
+
+copystring
+  x 13
+  : 48
+
+copystring
+  x 1
+  y -11
+  : 8
+
+copystring
+  x 2
+  : 8
+
+copystring
+  x 3
+  : 8
+
+copystring
+  x 4
+  : 8
+
+copystring
+  x 5
+  : 8
+
+copystring
+  x 6
+  : 8
+
+copystring
+  x 7
+  : 8
+
+copystring
+  x 8
+  : 8
+
+copystring
+  x 9
+  : 8
+
+copystring
+  x 11
+  : 16
+
+copystring
+  x 12
+  : 8
+
+copystring
+  x 13
+  : 4
