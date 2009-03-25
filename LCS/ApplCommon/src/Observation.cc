@@ -75,7 +75,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
-                stations = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);
+		stations    = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);	// true:expandable
 	}
 
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
@@ -94,14 +94,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
-		vector<uint32> RCUnumbers (aParSet->getUint32Vector(prefix+"receiverList", true));
-		if (RCUnumbers.empty()) {			// No receivers in the list?
-			RCUset.set();					// assume all receivers.
-		}
-		else {
-			for (uint i = 0; i < RCUnumbers.size();i++) {
-				RCUset.set(RCUnumbers[i]);	// set mentioned receivers
-			}
+		vector<uint32> RCUnumbers (aParSet->getUint32Vector(prefix+"receiverList", true));	// true:expandable
+		for (uint i = 0; i < RCUnumbers.size();i++) {
+			RCUset.set(RCUnumbers[i]);	// set mentioned receivers
 		}
 	}
 
@@ -128,9 +123,9 @@ Observation::Observation(ParameterSet*		aParSet) :
 		newBeam.directionType = aParSet->getString(beamPrefix+"directionType", "");
 //		newBeam.angleTimes 	  = aParSet->get(beamPrefix+"angleTimes", "[]");
 		// subbandList
-		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);
+		newBeam.subbands = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
 		// beamletList
-		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);
+		newBeam.beamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
 		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
 			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
 							  ") != number of beamlets(" << newBeam.beamlets.size() << 
@@ -235,6 +230,12 @@ bool	Observation::conflicts(const	Observation&	other) const
 		return (true);
 	}
 
+	// Observation overlap, check splitters
+	if (other.splitter != splitter) {
+		LOG_INFO_STR("Splitters of observation " << obsID << " and " << other.obsID << " conflict");
+		return (true);
+	}
+
 	// if rcumode differs there may be no overlap in receivers.
 	if (other.filter != filter) {
 		RCUset_t	resultSet(RCUset & other.RCUset);
@@ -267,6 +268,37 @@ bool	Observation::conflicts(const	Observation&	other) const
 	}
 
 	return (false);	// no conflicts
+}
+
+//
+// getRCUbitset(nrLBAs, nrHBAs, nrRSPs): bitset
+//
+// Returns a bitset containing the RCU's requested by the observation.
+//
+bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, bool	hasSplitters)
+{
+	#define MAX2(a,b) ((a) > (b) ? (a) : (b))
+
+	if (antennaSet.empty()) {		// old ParameterSet?
+		return (RCUset);			// return old info.
+	}
+
+	// HBA's in Core stations sometimes use half of the rcus.
+	bool	fullStation(MAX2(nrLBAs, nrHBAs) <= (nrRSPs * NR_ANTENNAS_PER_RSPBOARD));
+	int		nrAnts = ((antennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
+	if (!fullStation && (antennaSet.find("LBA") == 0)) {
+		nrAnts /= 2;
+	}
+	else if (hasSplitters && (antennaSet == "HBA_ONE")) {
+		nrAnts /= 2;
+	}
+	
+	// Set up the RCUbits. Remember that we don't care here which of the three inputs is used.
+	RCUset.reset();
+	for (int rcu = 0; rcu < nrAnts; rcu++) {
+			RCUset.set(rcu);
+	}
+	return (RCUset);
 }
 
 

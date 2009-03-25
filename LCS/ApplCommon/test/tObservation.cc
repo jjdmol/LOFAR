@@ -73,6 +73,40 @@ int main (int argc, char* argv[])
 		Observation  conflictObs5(&conflictPS5);
 		ASSERTSTR(!obs2.conflicts(conflictObs5), "File 5 should NOT have had a conflict");
 		LOG_INFO("No conflict found in file 5 which is oke.");
+
+		// test RCUbitset based on receiverList
+		bitset<MAX_RCUS>	expectedRCUs;
+		expectedRCUs.reset();
+		for (int r = 0; r < 12; r++) {
+			expectedRCUs.set(r);
+		}
+		LOG_INFO_STR("getRCUbitset(48,48,12,false) = " << obs1.getRCUbitset(48,48,12,false));
+
+		// basic test on RCU bitsets
+		parSet1.replace("ObsSW.Observation.antennaSet", "LBA_OUTER");
+		Observation		obs3(&parSet1);
+		LOG_INFO_STR(obs3.antennaSet);
+		LOG_INFO_STR("getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true));	// Core
+		LOG_INFO_STR("getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false));	// Remote
+		LOG_INFO_STR("getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false));	// Europe
+		LOG_INFO_STR("getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false));	// Europe
+		
+		// basic test on RCU bitsets
+		obs3.antennaSet = "HBA_BOTH";
+		LOG_INFO_STR(obs3.antennaSet);
+		LOG_INFO_STR("getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true));	// Core
+		LOG_INFO_STR("getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false));	// Remote
+		LOG_INFO_STR("getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false));	// Europe
+		LOG_INFO_STR("getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false));	// Europe
+		
+		// tricky test on RCU bitsets
+		obs3.antennaSet = "HBA_ONE";
+		LOG_INFO_STR(obs3.antennaSet);
+		LOG_INFO_STR("getRCUbitset(96,48,12,true)  = " << obs3.getRCUbitset(96,48,12,true));	// Core
+		LOG_INFO_STR("getRCUbitset(96,48,12,false) = " << obs3.getRCUbitset(96,48,12,false));	// Remote
+		LOG_INFO_STR("getRCUbitset(96,48,24,false) = " << obs3.getRCUbitset(96,48,24,false));	// Europe
+		LOG_INFO_STR("getRCUbitset(96,96,24,false) = " << obs3.getRCUbitset(96,96,24,false));	// Europe
+		
 	
 	}
 	catch (Exception& e) {

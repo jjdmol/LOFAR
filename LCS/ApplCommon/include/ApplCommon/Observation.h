@@ -63,6 +63,10 @@ public:
 	// check if the given Observation conflicts with this one
 	bool	conflicts(const	Observation&	other) const;
 
+	// Returns a bitset containing the RCU's requested by the observation.
+	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, bool hasSplitters);
+
+	// REO: The next functions don't make sense, all info is public!!!!!
 	// OLAP: get the subbandList
 	vector<uint32> getSubbandList() const;
 	// OLAP: get the beamList
@@ -101,19 +105,21 @@ public:
 	uint			nyquistZone;
 	vector<string>	stations;
 	int				nrSlotsInFrame;
-	int				sampleClock;
-	string			filter;
+	int				sampleClock;		// 160 | 200
+	string			filter;				// LBA_30_80, LBA_10_90, HBA_110_190, etc.
 	string			MSNameMask;
 	string			realPVSSdatapoint;
 
 	// old way of specifying antennas
 	string			antennaArray;
-	RCUset_t		RCUset;				// set with participating receivers
+private:
+	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
+public:
 	// new way of selecting antennas
-	string			antennaSet;
+	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
-	bool			splitter;
+	bool			splitter;			// On or Off
 
 	vector<Beam>	beams;
 	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
