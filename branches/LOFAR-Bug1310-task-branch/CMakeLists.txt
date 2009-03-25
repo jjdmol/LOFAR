@@ -18,7 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-if(0)
+cmake_minimum_required(VERSION 2.6)
+
 ## ---------------------------------------------------------------------------
 ## Preamble: set compilers
 ## ---------------------------------------------------------------------------
@@ -28,18 +29,28 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(LOFAR)
-cmake_minimum_required(VERSION 2.6)
 
-if(ENABLE_TESTING)
-  include(CTest)
-endif(ENABLE_TESTING)
-
-endif(0)
-
-include(LofarProject)
-lofar_project(LOFAR)
+include(CTest)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(LCS)
+
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)
+
+if(0)
+  get_cmake_property(cache_vars CACHE_VARIABLES)
+  message(STATUS "vvvvvvvv Cache variables vvvvvvvv")
+  foreach(var ${cache_vars})
+    message(STATUS "${var} = ${${var}}")
+  endforeach(var ${cache_vars})
+  message(STATUS "^^^^^^^^ Cache variables ^^^^^^^^")
+  message(STATUS "vvvvvvvv Variables vvvvvvvv")
+  include(AllVariables)
+  all_variables()
+  message(STATUS "^^^^^^^^ Variables ^^^^^^^^")
+endif(0)

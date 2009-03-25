@@ -20,11 +20,13 @@
 #
 #  $Id$
 
-#------------------------------------------------------------------------------
-# Configure header files 
-#------------------------------------------------------------------------------
-#configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
-#               ${CMAKE_BINARY_DIR}/config.h)
+# Configure header file, but only when we're at the top-level source directory.
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  message(STATUS "Generating lofar_config.h and setting directory property.")
+  configure_file(
+    ${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
+    ${CMAKE_BINARY_DIR}/include/lofar_config.h)
+endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
-configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
-               ${CMAKE_BINARY_DIR}/lofar_config.h)
+# Add directory to the -I path.
+include_directories(${CMAKE_BINARY_DIR}/include)

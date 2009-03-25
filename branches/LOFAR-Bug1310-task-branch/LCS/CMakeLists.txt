@@ -26,11 +26,17 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project (LCS)
-cmake_minimum_required (VERSION 2.6)
+project(LCS)
+cmake_minimum_required(VERSION 2.6)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(Tools)
 add_subdirectory(Common)
+add_subdirectory(Blob)
+
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)

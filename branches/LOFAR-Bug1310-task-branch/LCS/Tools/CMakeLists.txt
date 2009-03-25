@@ -29,10 +29,16 @@ include(LofarInit)
 project(Tools)
 cmake_minimum_required(VERSION 2.6)
 
-configure_file(${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
-               ${CMAKE_BINARY_DIR}/lofar_config.h)
+## ---------------------------------------------------------------------------
+## Generate configuration-specific header file
+## ---------------------------------------------------------------------------
+include(LofarConfig)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(src)
+
+get_directory_property(incdir INCLUDE_DIRECTORIES)
+message(STATUS "[LCS/Tools] INCLUDE_DIRECTORIES = ${incdir}")
+

@@ -1,8 +1,6 @@
 include(LofarCTest)
 
-include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-
-set (CHECKTOOLPROGS
+set (CHECK_PROGRAMS
   testLogger
   tAllocator
   tDataConvert
@@ -10,12 +8,12 @@ set (CHECKTOOLPROGS
   tStringUtil
   tStreamUtil
   tHexdump
-  testSocket
+#  testSocket  (SKIPPED)
   tComplex
-  tProcess
+#  tProcess    (SKIPPED)
   tRunOnNode
   tTimer
-  tNumeric
+#  tNumeric    (SKIPPED)
   tSingleton
   tObjectFactory
 #  tSystemUtil
@@ -36,12 +34,12 @@ add_executable(tFileLocator tFileLocator.cc)
 add_executable(tStringUtil tStringUtil.cc)
 add_executable(tStreamUtil tStreamUtil.cc)
 add_executable(tHexdump tHexdump.cc)
-add_executable(testSocket testSocket.cc)
+#add_executable(testSocket testSocket.cc)
 add_executable(tComplex tComplex.cc)
-add_executable(tProcess tProcess.cc)
+#add_executable(tProcess tProcess.cc)
 add_executable(tRunOnNode tRunOnNode.cc)
 add_executable(tTimer tTimer.cc)
-add_executable(tNumeric tNumeric.cc)
+#add_executable(tNumeric tNumeric.cc)
 add_executable(tSingleton tSingleton.cc)
 add_executable(tObjectFactory tObjectFactory.cc Shapes.cc Coordinates.cc)
 #add_executable(tSystemUtil tSystemUtil.cc)
@@ -52,7 +50,7 @@ add_executable(tParameterSet tParameterSet.cc)
 add_executable(tParameterSetPerf tParameterSetPerf.cc)
 #add_executable(tBacktrace tBacktrace.cc)
 
-foreach (prog ${CHECKTOOLPROGS})
+foreach (prog ${CHECK_PROGRAMS})
   add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}.sh)
   target_link_libraries(${prog} common ${LOFAR_LIBRARIES})
-endforeach (prog CHECKTOOLPROGS)
+endforeach (prog CHECK_PROGRAMS)

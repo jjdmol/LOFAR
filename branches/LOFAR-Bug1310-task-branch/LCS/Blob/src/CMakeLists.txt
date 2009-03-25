@@ -1,49 +1,72 @@
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#make_package_version (${LCS_SOURCE_DIR}/Blob/src TRUE TRUE)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-## ------------------------------------------------------------------------------
+## ----------------------------------------------------------------------------
 ## Process input files for Flex and Bison
+## ----------------------------------------------------------------------------
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
-if (yacc_bin)
-  execute_process (
-    WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
-    COMMAND yacc -d -p KeyParse -o KeyParse.h KeyParse.yy
-    TIMEOUT 20
-    ERROR_VARIABLE yacc_error
-    OUTPUT_QUIET
-    )
-else (yacc_bin)
-  message (SEND_ERROR "Unable to run YACC; missing application!")
-endif (yacc_bin)
+bison_target(KeyParse KeyParse.yy 
+  ${CMAKE_CURRENT_BINARY_DIR}/KeyParse.cc
+  COMPILE_FLAGS "-y -pKeyParse")
 
-if (flex_bin)
-   execute_process (
-    WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
-    COMMAND flex -t -PKeyTokenize KeyTokenize.ll
-    TIMEOUT 20
-    OUTPUT_FILE KeyTokenize.cc
-    ERROR_VARIABLE lex_error
-    OUTPUT_QUIET
-   )
-else (flex_bin)
-  message (SEND_ERROR "Unable to run FLEX; missing application!")
-endif (flex_bin)
+# Create symbolic link from KeyParse.h -> KeyParse.hh, because KeyParser.cc
+# #include's KeyParse.h.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  KeyParse.hh
+  KeyParse.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-## ------------------------------------------------------------------------------
-## Build the library
+flex_target(KeyTokenize KeyTokenize.ll 
+  ${CMAKE_CURRENT_BINARY_DIR}/KeyTokenize.cc
+  COMPILE_FLAGS "-PKeyTokenize")
 
-file (GLOB libblob_SOURCES *.cc Net/*.cc)
+add_flex_bison_dependency(KeyTokenize KeyParse)
 
-add_library (blob ${libblob_SOURCES})
+set(blob_LIB_SRCS
+  BlobAipsIO.cc
+  BlobArray.cc
+  BlobField2.cc
+  BlobFieldSet.cc
+  BlobHeader.cc
+  BlobIBufChar.cc
+  BlobIBufStream.cc
+  BlobIStream.cc
+  BlobOBufChar.cc
+  BlobOBufNull.cc
+  BlobOBufStream.cc
+  BlobOBufString.cc
+  BlobOStream.cc
+  BlobStreamable.cc
+  BlobString.cc
+  BlobStringType.cc
+  ${BISON_KeyParse_OUTPUTS}
+  ${FLEX_KeyTokenize_OUTPUTS}
+  KeyParser.cc
+  KeyValue.cc
+  KeyValueMap.cc)
 
-target_link_libraries (blob ${CASA_LIBRARIES})
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS blob
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
+add_library(blob ${blob_LIB_SRCS})
+target_link_libraries(blob common ${LOFAR_LIBRARIES})
+install(TARGETS blob DESTINATION ${LOFAR_LIBDIR})
 

@@ -45,9 +45,6 @@
 /* Define if LOG4CXX is installed */
 #cmakedefine HAVE_LOG4CXX 1
 
-/* Define if `long long' is supported */
-#cmakedefine HAVE_LONG_LONG 1
-
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H 1
 
@@ -90,17 +87,20 @@
 /* Define if TOOLS is installed */
 #cmakedefine HAVE_TOOLS 1
 
+/* Define if `ushort' is supported */
+#cmakedefine HAVE_USHORT 1
+
 /* Define if `uint' is supported */
 #cmakedefine HAVE_UINT 1
 
 /* Define if `ulong' is supported */
 #cmakedefine HAVE_ULONG 1
 
+/* Define if `long long' is supported */
+#cmakedefine HAVE_LONG_LONG 1
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
-
-/* Define if `ushort' is supported */
-#cmakedefine HAVE_USHORT 1
 
 /* Define to 1 if you have the `vprintf' function. */
 #cmakedefine HAVE_VPRINTF 1

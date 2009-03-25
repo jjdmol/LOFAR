@@ -1,22 +1,23 @@
+include(LofarCTest)
 
-foreach (LCS_Blob_test
+set(CHECK_PROGRAMS
     tBlobString
     tBlobStream
     tBlobArray
     tBlobSTL
-    tBlobCasa
     tBlobField
-    tBlobAipsIO
     tKeyValueMap
-    )
-  ## compiler instructions
-  add_executable (${LCS_Blob_test} ${LCS_Blob_test}.cc)
-  ## linker instructions
-  if (HAVE_CASACORE)
-  target_link_libraries (${LCS_Blob_test} blob common ${CASA_LIBRARIES})
-  else (HAVE_CASACORE)
-  target_link_libraries (${LCS_Blob_test} blob common)
-  endif (HAVE_CASACORE)
-  ## testing instructions
-  add_test (${LCS_Blob_test} ${LCS_Blob_test})
-endforeach (LCS_Blob_test)
+)
+
+if(HAVE_AIPSPP)
+  list(APPEND CHECK_PROGRAMS
+    tBlobCasa
+    tBlobAipsIO)
+endif(HAVE_AIPSPP)
+
+foreach(prog ${CHECK_PROGRAMS})
+  add_executable(${prog} ${prog}.cc)
+  target_link_libraries(${prog} blob ${LOFAR_LIBRARIES})
+#  target_link_libraries(${prog} blob common ${LOFAR_LIBRARIES})
+  add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}_test.sh)
+endforeach(prog ${CHECK_PROGRAMS})

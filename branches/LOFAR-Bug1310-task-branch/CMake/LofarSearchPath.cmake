@@ -1,5 +1,5 @@
-#  LofarSearchPath.cmake: Return search path based on pattern in variants file
-#                         and package plus optional version.
+#  LofarSearchPath.cmake: Return search path based on pattern in variants file,
+#                         package name plus optional package version.
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)

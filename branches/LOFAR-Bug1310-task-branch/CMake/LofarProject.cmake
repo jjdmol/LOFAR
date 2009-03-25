@@ -24,12 +24,8 @@
 ## ---------------------------------------------------------------------------
 macro(lofar_project name)
 
-  # Preamble: set compilers
-  include(LofarInit)
-
   # Project characteristics
   project(${name})
-  cmake_minimum_required(VERSION 2.6)
 
   # Load/execute general macro's
   include(LofarGeneral)

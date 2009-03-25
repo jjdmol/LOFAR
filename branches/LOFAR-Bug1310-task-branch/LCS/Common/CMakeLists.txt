@@ -19,10 +19,22 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ## ---------------------------------------------------------------------------
+## Preamble: set compilers
+## ---------------------------------------------------------------------------
+include(LofarInit)
+
+## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-include(LofarProject)
-lofar_project(Common)
+project(Common)
+cmake_minimum_required(VERSION 2.6)
+
+if(BUILD_TESTING)
+  include(CTest)
+endif(BUILD_TESTING)
+
+include(LofarGeneral)
+include(LofarOptions)
 
 ## ---------------------------------------------------------------------------
 ## External packages
@@ -31,20 +43,15 @@ include(LofarFindPackage)
 lofar_find_package(Boost 1)
 
 ## ---------------------------------------------------------------------------
-## Generate configuration header file
+## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
-
-set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "${LOFAR_INCLUDE_DIRS}")
-#set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "${LOFAR_DEFINITIONS}")
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/Common)
 add_subdirectory(src)
-
-
-#if(ENABLE_TESTING)
+if(BUILD_TESTING)
   add_subdirectory(test)
-#endif(ENABLE_TESTING)
+endif(BUILD_TESTING)

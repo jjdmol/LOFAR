@@ -23,6 +23,11 @@
 ## --------------------------------------------------------------------------
 set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
 
+## --------------------------------------------------------------------------
+## Add directories to compiler's include path
+## --------------------------------------------------------------------------
+#include_directories(${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+
 ## ----------------------------------------------------------------------------
 ## Configure the LOFAR CTest wrapper script in the current binary directory
 ## ----------------------------------------------------------------------------

@@ -28,11 +28,10 @@ include(LofarInit)
 ## Check for typedefs of primitive types
 ## ----------------------------------------------------------------------------
 include(CheckTypeSize)
-check_type_size("ushort" HAVE_USHORT)
-check_type_size("uint" HAVE_UINT)
-check_type_size("ulong" HAVE_ULONG)
+check_type_size("ushort"    HAVE_USHORT   )
+check_type_size("uint"      HAVE_UINT     )
+check_type_size("ulong"     HAVE_ULONG    )
 check_type_size("long long" HAVE_LONG_LONG)
-
 
 ## ----------------------------------------------------------------------------
 ## Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
@@ -59,11 +58,11 @@ find_package(Doxygen)
 ## ----------------------------------------------------------------------------
 ## Initialize the LOFAR logger
 ## ----------------------------------------------------------------------------
+include(LofarFindPackage)
 include(LofarLogger)
 lofar_logger()
 message(STATUS "HAVE_LOG4CPLUS = ${HAVE_LOG4CPLUS}")
-
-lofar_find_package(pqxx 1 pqxx/pqxx)
+#lofar_find_package(pqxx 1 pqxx/pqxx)
 #lofar_DEBUG_OPTIMIZE([])
 #lofar_FUNCTION_NAME([])
 #lofar_BACKTRACE([])
