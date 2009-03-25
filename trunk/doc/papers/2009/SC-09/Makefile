@@ -35,7 +35,8 @@ lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(GEN_PDF_FILES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
 
 lofar.ps:	lofar.pdf
-		pdftops -paper letter lofar.pdf
+		#pdftops -paper letter lofar.pdf
+		pdftops -paper a4 lofar.pdf
 
 evince::	lofar.pdf
 		evince $<
