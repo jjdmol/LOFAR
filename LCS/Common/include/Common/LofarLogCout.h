@@ -141,7 +141,7 @@ public: \
 #define TRACE_LEVEL_LOOP			18
 #define TRACE_LEVEL_VAR				17
 #define TRACE_LEVEL_CALC			16
-#define TRACE_LEVEL_COND	g		15
+#define TRACE_LEVEL_COND			15
 #define TRACE_LEVEL_STAT			14
 #define TRACE_LEVEL_OBJ				13
 #define TRACE_LEVEL_RTTI			12
