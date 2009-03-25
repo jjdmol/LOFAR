@@ -104,6 +104,12 @@ int main(int argc, char *argv[])
   int rank = 0;
 #endif
 
+  // Do the real work in a forked process.  This allows us to catch a crashing
+  // process, and fool mpirun that the process terminated normally.  If mpirun
+  // would have seen a crashing member, it would kill all other storage
+  // writers.  It is better to let the other members continue, to minimize the
+  // amount of data loss during an observation.
+
   int status;
   
   switch (fork()) {
