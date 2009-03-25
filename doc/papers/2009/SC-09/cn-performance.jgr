@@ -1,9 +1,8 @@
 newgraph
-  clip
-
   xaxis
+    size 5
     min 29.8
-    max 66
+    max 82
     no_draw_hash_marks
     no_auto_hash_labels
     hash_label at 32 : 32
@@ -14,16 +13,26 @@ newgraph
     hash_label at 52 : 52
     hash_label at 56 : 56
     hash_label at 60 : 60
-    hash_label at 64 : 64
+    hash_label at 64 :        64(=B)
+
+    hash_label at 72 : A
+    hash_label at 76 : B
+    hash_label at 80 : C
     hash_labels
       font Helvetica
       fontsize 11
 
-    label
-      font Helvetica-Bold
-      fontsize 11
-      : Nr Stations
+  newstring
+    font Helvetica-Bold
+    fontsize 11
+    x 48
+    y -1.1
+    : Nr. Stations
 
+  copystring
+    x 76
+    : Obs. Mode
+    
   yaxis
     min 0
     max 8.07
@@ -52,7 +61,7 @@ newcurve
   color .6 .6 .6
   pts
     30 4.025
-    66 4.025
+    82 4.025
 
 newstring
   font Helvetica-Italic
@@ -75,7 +84,7 @@ newcurve
   color .6 .6 .6
   pts
     30 8.05
-    66 8.05
+    82 8.05
 
 newcurve
 marktype xbar
@@ -94,6 +103,10 @@ marktype xbar
     60 4.95
     64 5.61
 
+    72 5.66
+    76 5.61
+    80 3.40
+
 newcurve
   marktype xbar
   marksize 3.6
@@ -111,12 +124,16 @@ newcurve
     60 4.87
     64 5.54
 
+    72 5.53
+    76 5.54
+    80 3.36
+
 newcurve
   marktype xbar
   marksize 3.6
   cfill 0 0.270588219 0.525490165
   label
-    : FIR filter
+    : FIR filter (incl. int to float conversion)
   pts
     32 1.73
     36 2.05
@@ -126,7 +143,11 @@ newcurve
     52 3.77
     56 4.28
     60 4.81
-    64 5.45
+    64 5.46
+
+    72 5.47
+    76 5.46
+    80 3.34
 
 newcurve
   marktype xbar
@@ -145,12 +166,16 @@ newcurve
     60 4.29
     64 4.89
 
+    72 4.90
+    76 4.89
+    80 2.93
+
 newcurve
   marktype xbar
   marksize 3.6
   cfill 1 0.827450931 0.125490189
   label
-    : phase shift & bandpass
+    : miscellaneous (incl. phase shift & bandpass)
   pts
     32 1.17
     36 1.43
@@ -161,6 +186,10 @@ newcurve
     56 3.31
     60 3.77
     64 4.34
+
+    72 4.34
+    76 4.34
+    80 2.51
 
 newcurve
   marktype xbar
@@ -179,6 +208,10 @@ newcurve
     60 3.5
     64 4
 
+    72 3.99
+    76 4
+    80 2.25
+
 newcurve
   marktype xbar
   marksize 3.6
@@ -195,3 +228,7 @@ newcurve
     56 0.02
     60 0.02
     64 0.04
+
+    72 0.025
+    76 0.035
+    80 0.022

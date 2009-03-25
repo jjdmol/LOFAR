@@ -1,8 +1,8 @@
-%\documentclass[10pt]{article}
-\documentclass[conference]{IEEEtran}
+\documentclass[10pt]{article}
+%\documentclass[conference]{IEEEtran}
 
-%\usepackage{a4wide,setspace}
-%\doublespacing
+\usepackage{a4wide,setspace}
+\doublespacing
 \usepackage{cite, graphicx, subfigure, amsmath, xspace, txfonts}
 %\usepackage{eurosym} 
 
@@ -12,8 +12,10 @@
 
 \title{Processing Real-Time LOFAR Telescope Data \\ on a Blue Gene/P Supercomputer}
 \author{John W. Romein and P. Chris Broekema and Jan David Mol and Rob V. van Nieuwpoort\\
-Stichting ASTRON (Netherlands Institute for Radio Astronomy), Dwingeloo, The Netherlands\\
+ASTRON (Netherlands Institute for Radio Astronomy), Dwingeloo, The Netherlands\\
 \small{\texttt{\{romein,broekema,mol,nieuwpoort\}@astron.nl}}}
+
+\date{}
 
 \maketitle
 
@@ -25,10 +27,10 @@ combines the signals from many thousands of simple antennas.
 Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
-This paper focusses on another novel feature of LOFAR: the approach to
+This paper focuses on another novel feature of LOFAR: the approach to
 process the real-time data in \emph{software}, where traditional telescopes
 use customized hardware.
-The use of software yields a much more flexible intstrument, but the high
+The use of software yields a much more flexible instrument, but the high
 processing and bandwidth requirements compel the use of a supercomputer.
 The signals from the LOFAR stations are centrally combined, filtered, and
 beamformed or correlated by a 10,880-core IBM Blue Gene/P system.
@@ -319,7 +321,7 @@ entire correlator and lose \emph{all\/} data.
 In practice, under normal circumstances no data are lost.
 
 
-\subsection{Performance}
+\subsection{Optimizations}
 
 Processing power on the I/O~nodes is a scarce resource, since most observation
 modes are I/O bound.
@@ -371,52 +373,11 @@ fail to meet a real-time deadline, only a small amount of data is lost.
 In practice, under normal circumstances, this happens close to never. We will
 demonstrate this in Section~\ref{TODO}.
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{ion-performance.pdf}
-\caption{Performance breakdown of I/O-node processing.  See text.}
-\label{fig:ion-performance}
-\end{figure}
-
-Figure~\ref{fig:ion-performance} shows where the processor cores of the
-I/O~node spend their time in various situations.
-The five major tasks are each represented by a different color in the bar
-graph; the size of each bar is proportional to the contribution to the total
-work load.
-A load of 100\% means that all four cores are fully occupied.
-A load above 85\% must be avoided to prevent data loss.
-
-The left part of the graph shows the performance breakdown for one of the
-most challenging modes: 64~stations, 8-bit samples, and up to 496~subbands
-(the maximum station data rate).
-The subbands are more or less evenly divided over the 64~psets, thus each
-pset has to process up to 8~subbands.
-In this case, most I/O~nodes receive and forward the samples of one station
-(up to 3.1~Gb/s) and send the correlations of up to 8~subbands to storage
-(up to 1.2~Gb/s).
-The figure shows that most time spent in the receipt of UDP packets.
-This load is partially independent of the number of subbands, since a lower
-number of subbands decreases the packet size (down from 7,998~bytes), but not
-the amount of packets (48,828~packets per second).
-All other work scales linearly with the amount of subbands.
-
-The right part of the graph shows the performance breakdown for two other
-challenging modes as well.
-In the standard 16-bit sample mode, the stations can produce at most
-248~subbands.
-Hence, the output data rate (the lower two bars) is twice as low as in the
-8-bit mode.
-Also, copying 16-bit samples into the circular buffer is somewhat more
-efficient, due to L3-cache effects.
-In the 4-bit mode, the number of stations is limited to about~48 if only one
-rack is used.
-This is no problem, since this mode is only envisioned for particular
-observations where only the core stations are used, of which there will
-likely be 36 to~46.
-Also, this mode was qualified for using two racks, but we are able to do so on
-one rack only.
-In this mode, the maximum number of subbands is~992.
-Yet, the output data rate is only 13\%~higher than in the 64-station/8-bit mode,
-due to the reduced number of stations.
+%\begin{figure}
+%\includegraphics[width=\columnwidth]{ion-performance.pdf}
+%\caption{Performance breakdown of I/O-node processing.  See text.}
+%\label{fig:ion-performance}
+%\end{figure}
 
 
 
@@ -550,7 +511,7 @@ are the result of a transpose in main memory.
 
 
 
-\subsection{Performance}
+\subsection{Optimizations}
 
 For optimal performance, most time-intensive code is written in assembly,
 because the performance from compiled C++ code was by far not sufficient.
@@ -561,7 +522,7 @@ and uses the L2 prefetch buffers in the most optimal way.
 Most instructions are parallel fused multiply-adds, that sustain four
 operations per cycle.
 
-
+\emph{TODO: integer->FP conversie?}
 
 %Although the correlator (including the other signal-processing steps) is a
 %typical example of a streaming-data application, the perception ``byte goes
@@ -693,55 +654,147 @@ not have enough storage nodes available yet, but this does not influence the
 performance measurements of the correlator.
 With one rack, we can process up to 64~stations, one per I/O~node.
 
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|l|ccc|}
+\hline
+Observation mode	& \textsf{A}	& \textsf{B}	& \textsf{C}	\\
+\hline
+nr.\ bits per sample	& 16		& 8		& 4	\\
+max.\ nr.\ of subbands	& 248		& 496		& 992	\\
+max.\ nr.\ of stations	& 64		& 64		& 48	\\
+\hline
+input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  & 64 * 3.1 & 48 * 3.1 \\
+output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 & 62 * 1.2 & 62 * 1.3 \\
+\hline
+available compute time per subband (s)	 & 16.1	     & 8.05     & 4.03     \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Characteristics of three realistic, challenging observation modes.}
+\label{tab:observation-characteristics}
+\end{table}
+
+We show the performance results of the application by means of three
+challenging observation modes which are likely to be commonly used.
+The characteristics of these modes are listed in
+Table~\ref{tab:observation-characteristics}.
+Mode~\textsf{A} is the standard mode, TODO
+
 
 
 \subsection{Computational performance on the I/O Nodes}
 
-%\begin{figure}
-%\includegraphics[width=\columnwidth]{cn-perf-8bit-station.pdf}
-%\caption{I/O Node performance breakdown (248~subbands).}
-%\label{fig:ionode-load}
-%\end{figure}
+\begin{figure}
+\subfigure[As function of number of subbands.  The input samples are 8~bit,
+  and in total, 64 stations are used.]{
+  %\includegraphics[width=\columnwidth]{ion-performance.pdf}
+  \makebox[11cm][l]{
+  \includegraphics[width=\columnwidth]{ion-performance.pdf}
+  }
+  \label{fig:ion-performance-func-subbands}
+}
+\hfill
+\subfigure[For various observation modes.]{
+  \hspace{3cm}
+  \label{fig:ion-performance-obs-mode}
+}
+\caption{I/O node performance breakdown.}
+\label{fig:ion-performance}
+\end{figure}
 
-The I/O node application is optimized so thoroughly that it can receive a
-station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
-absolute maximum that a station can generate.
-Additionally, an I/O node sends up to 580~Mb/s to storage.
-Figure~\ref{fig:ionode-load} shows where an I/O~node spends its time.
-Even at these data rates, the idle time is 34\%, more than sufficient for
-smooth, real-time handling of data.
+Figure~\ref{fig:ion-performance} shows where the processor cores of the
+I/O~node spend their time in various situations.
+The five major tasks are each represented by a different color in the bar
+graph; the size of each bar is proportional to the contribution to the total
+work load.
+A load of 100\% means that all four cores are fully occupied.
+A load above 85\% must be avoided to prevent data loss.
 
-The most time-consuming operation (36\%) is the receipt of UDP packets by
-the kernel, as each I/O~node receives 48,828~UDP packets of 7,998~bytes
-per second.
-Copying the received data to the circular buffer adds 7\% to the load.
-FCNP efficiently forwards the data directly from the circular buffer to the
-compute nodes~(15\%) and receives the correlated data from the compute
-nodes~(3\%).
-Sending the data to the storage nodes (over TCP) takes~5\%.
-Other tasks have negligible impact on the processor load.
+Figure~\ref{fig:ion-performance-func-subbands} shows the performance breakdown
+for 64~stations, 8-bit samples, and up to 496~subbands (the maximum station
+data rate).
+The subbands are more or less evenly divided over the 64~psets, thus each
+pset has to process up to 8~subbands.
+In this case, most I/O~nodes receive and forward the samples of one station
+(up to 3.1~Gb/s) and send the correlations of up to 8~subbands to storage
+(up to 1.2~Gb/s).
+The figure shows that most time spent in the receipt of UDP packets.
+This load is partially independent of the number of subbands, since a lower
+number of subbands decreases the packet size (down from 7,998~bytes), but not
+the amount of packets (48,828~packets per second).
+All other work scales linearly with the amount of subbands.
+
+Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
+for the two other challenging modes as well.
+In the standard 16-bit sample mode, the stations can produce at most
+248~subbands.
+Hence, the output data rate (the lower two bars) is twice as low as in the
+8-bit mode.
+Also, copying 16-bit samples into the circular buffer is somewhat more
+efficient, due to L3-cache effects.
+In the 4-bit mode, the number of stations is limited to about~48 if only one
+rack is used.
+This is no problem, since this mode is only envisioned for particular
+observations where only the core stations are used, of which there will
+likely be 36 to~46.
+Also, this mode was qualified for using two racks, but we are able to do so on
+one rack only.
+In this mode, the maximum number of subbands is~992.
+Yet, the output data rate is only 13\%~higher than in the 64-station/8-bit mode,
+due to the reduced number of stations.
+
+%The I/O node application is optimized so thoroughly that it can receive a
+%station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
+%absolute maximum that a station can generate.
+%Additionally, an I/O node sends up to 580~Mb/s to storage.
+%Figure~\ref{fig:ionode-load} shows where an I/O~node spends its time.
+%Even at these data rates, the idle time is 34\%, more than sufficient for
+%smooth, real-time handling of data.
+
+%The most time-consuming operation (36\%) is the receipt of UDP packets by
+%the kernel, as each I/O~node receives 48,828~UDP packets of 7,998~bytes
+%per second.
+%Copying the received data to the circular buffer adds 7\% to the load.
+%FCNP efficiently forwards the data directly from the circular buffer to the
+%compute nodes~(15\%) and receives the correlated data from the compute
+%nodes~(3\%).
+%Sending the data to the storage nodes (over TCP) takes~5\%.
+%Other tasks have negligible impact on the processor load.
 
 Both FCNP and the fixed TLB mappings significantly contribute to the low
 resource usage.
 Without either of them, the application cannot handle these data rates in
 real time.
-If future observation modes would require higher output data rates, we may
-optimize the memory copy routines in the Linux kernel by using the
-Blue-Gene-specific 16-byte load/store instructions, rather
-than standard 4-byte PowerPC load/stores.
-We think this will reduce the system time of I/O operations.
+%If future observation modes would require higher output data rates, we may
+%optimize the memory copy routines in the Linux kernel by using the
+%Blue-Gene-specific 16-byte load/store instructions, rather
+%than standard 4-byte PowerPC load/stores.
+%We think this will reduce the system time of I/O operations.
 
 
 \subsection{Computational performance on the Compute Nodes}
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{cn-performance.pdf}
-\caption{Compute node performance breakdown, as function of number of stations.}
+\subfigure[As function of number of stations.  The input samples are 8~bit,
+  and in total, 496 subbands are processed.]{
+  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
+  \makebox[11cm][l]{
+  \includegraphics[width=\columnwidth]{cn-performance.pdf}
+  }
+  \label{fig:cn-performance-func-stations}
+}
+\hfill
+\subfigure[For various observation modes.]{
+  \hspace{3cm}
+  \label{fig:cn-performance-obs-mode}
+}
+\caption{Compute node performance breakdown.}
 \label{fig:cn-performance}
 \end{figure}
 
-Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time,
-depending on the number of stations.
+Figure~\ref{fig:cn-performance-func-stations} shows how the compute nodes spend
+their time, as function of the number of stations.
 Here, the y-axis shows the absolute run time to process one subband with
 1.007~second of station samples from 64~stations in 8-bit mode.
 
@@ -758,15 +811,28 @@ with 64~cores in one pset, there is 8.053~second to process one chunk of data.
 Doubling the number of subbands halves the available processing time, and in
 the 4-bit mode, up to about 50~stations can be supported on a single rack.
 
-The results are shown for the 8-bit sample mode, but the 16-bit and 4-bit mode
-perform nearly the same, since only the performance of the the data receipt
-from the I/O~node and data exchange phase are affected by the sample size, 
+The performance results hardly differ for the 16-bit and 4-bit modes,
+since only the performance of the the data receipt from the I/O~node and data
+exchange phase are affected by the sample size, 
 both of which hardly contribute to the total runtime.
+This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
+where the execution times for observation modes \textsf{A} and \textsf{B}
+hardly differ.
+The run time for observation mode \textsf{C} is lower, since this mode
+processes 48 rather than 64~stations.
+All modes run within their real-time constraints of 16.1, 8.05, and 4.03
+seconds respectively.
 
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
 performance, thanks to the highly-optimized assembly code.
-The FIR filter achieves 86\% and the hand-crafted 256-point FFT achieves 44\%
-XXX
+The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
+44\%
+\footnote{The FFT requires 8390~operations, 18\% less than an unoptimized
+$5n\log n$ implementation.  Although an unoptimized FFT could achieve even
+more than 44\% FPU efficiency, its absolute run time would be higher.}.
+Compared to equivalent C++ code that is written for clarity and not
+specifically tuned for optimal performance, the hand-written assembly code is
+typically an order of magnitude faster.
 
 
 \section{Conclusions and future work}

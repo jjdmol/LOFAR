@@ -5,7 +5,6 @@ newgraph
     max 13.5
     no_draw_hash_marks
     no_auto_hash_labels
-    (*
     hash_label at  1 : 1
     hash_label at  2 : 64
     hash_label at  3 : 128
@@ -14,20 +13,32 @@ newgraph
     hash_label at  6 : 320
     hash_label at  7 : 384
     hash_label at  8 : 448
-    hash_label at  9 : 496
-    hash_label at 11 : 
-    hash_label at 12 : 496/64/8
-    hash_label at 13 : 
+    hash_label at  9 :       496(=B)
+
+    hash_label at 11 : A
+    hash_label at 12 : B
+    hash_label at 13 : C
     hash_labels
       font Helvetica
       fontsize 11
-    *)
 
+    (*
     label
-      y -15
       font Helvetica-Bold
       fontsize 11
       : Nr Subbands / Nr Stations / Nr Bits per Input Sample
+    *)
+
+  newstring
+    font Helvetica-Bold
+    fontsize 11
+    x 5
+    y -12
+    : Nr. Subbands
+   
+  copystring
+    x 12
+    : Obs. Mode
 
   yaxis
     min 0
@@ -157,6 +168,7 @@ newcurve
     12 15.48
     13 16.03
 
+(*
 newstring
   font Helvetica
   fontsize 11
@@ -309,3 +321,4 @@ copystring
 copystring
   x 13
   : 4
+*)
