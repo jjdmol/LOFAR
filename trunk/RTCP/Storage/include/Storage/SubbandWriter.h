@@ -50,7 +50,7 @@ class MSWriter;
 class SubbandWriter
 {
   public:
-			    SubbandWriter(const Parset *, unsigned rank);
+			    SubbandWriter(const Parset *, unsigned rank, unsigned size);
 			    ~SubbandWriter();
 
     void		    preprocess();
@@ -66,6 +66,7 @@ class SubbandWriter
 
     const Parset	    *itsPS;
     unsigned		    itsRank;
+    unsigned		    itsSize;
     PipelineOutputSet       itsPipelineOutputSet;
     unsigned                itsNrOutputs;
 
