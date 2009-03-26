@@ -47,10 +47,11 @@
 namespace LOFAR {
 namespace RTCP {
 
-SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank) 
+SubbandWriter::SubbandWriter(const Parset *ps, unsigned rank, unsigned size) 
 :
   itsPS(ps),
   itsRank(rank),
+  itsSize(size),
   itsPipelineOutputSet(*ps),
   itsNrOutputs(itsPipelineOutputSet.size()),
   itsTimeCounter(0),
@@ -157,7 +158,12 @@ void SubbandWriter::preprocess()
 	    antPos.size() << " == " << 3 * itsNStations);
   itsNrSubbands           = itsPS->nrSubbands();
   itsNrSubbandsPerPset	  = itsPS->nrSubbandsPerPset();
-  itsNrSubbandsPerStorage = itsNrSubbandsPerPset * itsPS->nrPsetsPerStorage();
+  if(itsNrSubbands % itsSize == 0) {
+    itsNrSubbandsPerStorage = itsNrSubbands / itsSize;
+  } else {
+    itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
+  }
+
   LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
 
   itsMyNrSubbands = 0;
@@ -167,6 +173,8 @@ void SubbandWriter::preprocess()
       itsMyNrSubbands++;
     }
   }
+
+  cout << "Subbands per storage = " << itsNrSubbandsPerStorage << ", I will store " << itsMyNrSubbands << " subbands" << std::endl;
 
   vector<string> stationNames;
   if (itsPS->nrTabStations() > 0)
