@@ -4,6 +4,8 @@ OLAP.OLAP_Conn.IONProc_Storage_Ports = [8300..9291]
 # CNProc, since CNProc does not open the parset file!
 OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
 
+OLAP.log2SasMac = F
+OLAP.OLAP_Conn.log2SasMacOutputs = [tcp:0.0.0.0:24500]
 OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.181.0.2:4000]
 
 OLAP.realTime = T

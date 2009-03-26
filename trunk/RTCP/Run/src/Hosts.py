@@ -15,6 +15,9 @@ class Host(object):
 
     def getSSHCommand(self):
         return self.sshCommand
+
+    def executeAsyncRTCPApps(self, commandstr, logfile = '/dev/null', timeout = None):
+        return AsyncThreadCommand(self.sshCommand + ' "' + commandstr, timeout)
 	
     def executeAsync(self, commandstr, logfile = '/dev/null', timeout = None):
         return AsyncThreadCommand(self.sshCommand + ' "' + commandstr + '" >> ' + logfile, timeout)
