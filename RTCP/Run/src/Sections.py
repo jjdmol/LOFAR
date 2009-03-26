@@ -46,6 +46,9 @@ class Section(object):
                               workingDir = self.workingDir, \
 			      partition = self.partition)
 
+        if self.parset.getBool('OLAP.log2SasMac'):  
+	    self.runJob.log2SasMac(self.parset.getString('OLAP.OLAP_Conn.log2SasMacOutputs'))
+ 
         # For now set the timeout on 100 times the number of seconds to process
         if 'IONProc' in self.executable:
 	    self.runJob.runIONProc(runlog, 
