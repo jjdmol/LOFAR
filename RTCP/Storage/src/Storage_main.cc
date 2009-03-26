@@ -36,7 +36,7 @@ using namespace LOFAR::RTCP;
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 
-static void child(int argc, char *argv[], int rank)
+static void child(int argc, char *argv[], int rank, int size)
 {
   try {
     if (argc == 3)
@@ -54,7 +54,7 @@ static void child(int argc, char *argv[], int rank)
     Parset parset(&parameterSet);
     parset.adoptFile("OLAP.parset");
 
-    SubbandWriter subbandWriter(&parset, rank);
+    SubbandWriter subbandWriter(&parset, rank, size);
 
     subbandWriter.preprocess();
     subbandWriter.process();
@@ -97,11 +97,14 @@ int main(int argc, char *argv[])
 
 #if defined HAVE_MPI
   int rank;
+  int size;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 #else
   int rank = 0;
+  int size = 1;
 #endif
 
   // Do the real work in a forked process.  This allows us to catch a crashing
@@ -116,7 +119,7 @@ int main(int argc, char *argv[])
     case -1 : perror("fork");
 	      break;
 
-    case 0  : child(argc, argv, rank);
+    case 0  : child(argc, argv, rank, size);
 	      exit(0);
 
     default : if (wait(&status) < 0)
