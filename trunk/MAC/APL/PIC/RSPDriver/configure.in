@@ -88,6 +88,7 @@ dnl wanted by: src/CaptureStats.cc:874
 AC_STRUCT_TM
 
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/ApplCommon, ApplCommon,, 1, ApplCommon/Observation.h,,)
 lofar_INTERNAL(MAC/Test/Suite, Suite, , 1, Suite/test.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,,)
