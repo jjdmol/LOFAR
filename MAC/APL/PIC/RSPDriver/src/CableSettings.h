@@ -30,7 +30,7 @@
 //# Includes
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
-#include <APL/RTCCommon/RCUCables.h>
+#include <ApplCommon/RCUCables.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -47,7 +47,7 @@ namespace LOFAR {
 class CableSettings
 {
 public:
-	CableSettings (const RTC::RCUCables*	CableObject);
+	CableSettings (const RCUCables*	CableObject);
 	~CableSettings() ;
 
 	static CableSettings* instance();

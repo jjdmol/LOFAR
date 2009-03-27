@@ -46,7 +46,7 @@ CableSettings* CableSettings::instance()
 //
 // CableSettings(cableObject)
 //
-CableSettings::CableSettings(const RTC::RCUCables*	cableObject)
+CableSettings::CableSettings(const RCUCables*	cableObject)
 {
 	int	nrRCUs = StationSettings::instance()->nrRcus();
 	itsAtts.resize(nrRCUs, NR_RCU_MODES);
