@@ -1,5 +1,8 @@
 
-pkginclude_HEADERS = Package__Version.h  Observation.h
+pkginclude_HEADERS = Package__Version.h  \
+					 Observation.h \
+					 CableAttenuation.h \
+					 RCUCables.h
 
 noinst_HEADERS =
 

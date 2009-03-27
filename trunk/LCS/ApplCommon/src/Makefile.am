@@ -1,7 +1,10 @@
 
 lib_LTLIBRARIES 		= libapplcommon.la
 
-libapplcommon_la_SOURCES = Package__Version.cc   Observation.cc
+libapplcommon_la_SOURCES = Package__Version.cc   \
+						   Observation.cc \
+						   CableAttenuation.cc \
+						   RCUCables.cc
 
 BUILT_SOURCES 			= 
 
