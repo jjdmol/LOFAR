@@ -25,12 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <APL/RTCCommon/RCUCables.h>
+#include <ApplCommon/RCUCables.h>
 #include <boost/algorithm/string.hpp>
 
 namespace LOFAR {
-  namespace RTC {
-
   using namespace blitz;
 
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
@@ -168,5 +166,4 @@ float	RCUCables::getSmallestDelay(int	rcuMode) const
 	return (rcuMode < 5 ? (rcuMode == 0) ? 0.0 : itsSmallestLBAdelay : itsSmallestHBAdelay);
 }
 
-  } // namespace RTC
 } // namespace LOFAR

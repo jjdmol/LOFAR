@@ -28,10 +28,9 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/hexdump.h>
-#include <APL/RTCCommon/CableAttenuation.h>
+#include <ApplCommon/CableAttenuation.h>
 
 using namespace LOFAR;
-using namespace LOFAR::RTC;
 
 int main (int	argc, char*	argv[])
 {
