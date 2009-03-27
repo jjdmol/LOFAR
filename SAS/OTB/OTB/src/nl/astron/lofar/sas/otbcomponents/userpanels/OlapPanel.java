@@ -541,7 +541,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       
       //OLAP-DelayComp
       inputPositionType.setText(itsPositionType.limits);
-      inputNrCalcDelays.setText(itsPositionType.limits);
+      inputNrCalcDelays.setText(itsNrCalcDelays.limits);
       
       //OLAP IONProc
       inputIONProcIntegrationSteps.setText(itsIONProcIntegrationSteps.limits);
@@ -631,11 +631,11 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         boolean hasChanged = false;
 
         // Generic OLAP       
-        if (itsEPAHeaderSize != null && !inputEPAHeaderSize.equals(itsEPAHeaderSize.limits)) {  
+        if (itsEPAHeaderSize != null && !inputEPAHeaderSize.getText().equals(itsEPAHeaderSize.limits)) {
             itsEPAHeaderSize.limits = inputEPAHeaderSize.getText();
             saveNode(itsEPAHeaderSize);
         }
-        if (itsIPHeaderSize != null && !inputIPHeaderSize.equals(itsIPHeaderSize.limits)) {  
+        if (itsIPHeaderSize != null && !inputIPHeaderSize.getText().equals(itsIPHeaderSize.limits)) {
             itsIPHeaderSize.limits = inputIPHeaderSize.getText();
             saveNode(itsIPHeaderSize);
         }    
@@ -651,31 +651,31 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsDelayCompensation.limits = delay;
             saveNode(itsDelayCompensation);
         }
-        if (itsIPHeaderSize != null && !inputIPHeaderSize.equals(itsIPHeaderSize.limits)) {  
+        if (itsIPHeaderSize != null && !inputIPHeaderSize.getText().equals(itsIPHeaderSize.limits)) {
             itsIPHeaderSize.limits = inputIPHeaderSize.getText();
             saveNode(itsIPHeaderSize);
         }
-        if (itsMaxNetworkDelay != null && !inputMaxNetworkDelay.equals(itsMaxNetworkDelay.limits)) {  
+        if (itsMaxNetworkDelay != null && !inputMaxNetworkDelay.getText().equals(itsMaxNetworkDelay.limits)) {
             itsMaxNetworkDelay.limits = inputMaxNetworkDelay.getText();
             saveNode(itsMaxNetworkDelay);
         }
-        if (itsNrSubbandsPerFrame != null && !inputNrSubbandsPerFrame.equals(itsNrSubbandsPerFrame.limits)) {  
+        if (itsNrSubbandsPerFrame != null && !inputNrSubbandsPerFrame.getText().equals(itsNrSubbandsPerFrame.limits)) {
             itsNrSubbandsPerFrame.limits = inputNrSubbandsPerFrame.getText();
             saveNode(itsNrSubbandsPerFrame);
         }      
-        if (itsNrBitsPerSample != null && !inputNrBitsPerSample.equals(itsNrBitsPerSample.limits)) {  
+        if (itsNrBitsPerSample != null && !inputNrBitsPerSample.getText().equals(itsNrBitsPerSample.limits)) {
             itsNrBitsPerSample.limits = inputNrBitsPerSample.getText();
             saveNode(itsNrBitsPerSample);
         }
-        if (itsNrSecondsOfBuffer != null && !inputNrSecondsOfBuffer.equals(itsNrSecondsOfBuffer.limits)) {  
+        if (itsNrSecondsOfBuffer != null && !inputNrSecondsOfBuffer.getText().equals(itsNrSecondsOfBuffer.limits)) {
             itsNrSecondsOfBuffer.limits = inputNrSecondsOfBuffer.getText();
             saveNode(itsNrSecondsOfBuffer);
         }
-        if (itsNrTimesInFrame != null && !inputNrTimesInFrame.equals(itsNrTimesInFrame.limits)) {  
+        if (itsNrTimesInFrame != null && !inputNrTimesInFrame.getText().equals(itsNrTimesInFrame.limits)) {
             itsNrTimesInFrame.limits = inputNrTimesInFrame.getText();
             saveNode(itsNrTimesInFrame);
         }
-        if (itsStorageStationNames != null && !inputStorageStationNames.equals(itsStorageStationNames.limits)) {  
+        if (itsStorageStationNames != null && !inputStorageStationNames.getText().equals(itsStorageStationNames.limits)) {
             itsStorageStationNames.limits = inputStorageStationNames.getText();
             saveNode(itsStorageStationNames);
         }
@@ -706,35 +706,35 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         
         // OLAP-CNProc
-        if (itsCNProcIntegrationSteps != null && !inputCNIntegrationSteps.equals(itsCNProcIntegrationSteps.limits)) {  
+        if (itsCNProcIntegrationSteps != null && !inputCNIntegrationSteps.getText().equals(itsCNProcIntegrationSteps.limits)) {
             itsCNProcIntegrationSteps.limits = inputCNIntegrationSteps.getText();
             saveNode(itsCNProcIntegrationSteps);
         }
-        if (itsNrPPFTaps != null && !inputNrPPFTaps.equals(itsNrPPFTaps.limits)) {  
+        if (itsNrPPFTaps != null && !inputNrPPFTaps.getText().equals(itsNrPPFTaps.limits)) {
             itsNrPPFTaps.limits = inputNrPPFTaps.getText();
             saveNode(itsNrPPFTaps);
         }
-        if (itsCoresPerPset != null && !inputCoresPerPset.equals(itsCoresPerPset.limits)) {  
+        if (itsCoresPerPset != null && !inputCoresPerPset.getText().equals(itsCoresPerPset.limits)) {
             itsCoresPerPset.limits = inputCoresPerPset.getText();
             saveNode(itsCoresPerPset);
         }
-        if (itsPartition != null && !inputPartition.equals(itsPartition.limits)) {  
+        if (itsPartition != null && !inputPartition.getText().equals(itsPartition.limits)) {
             itsPartition.limits = inputPartition.getText();
             saveNode(itsPartition);
         }
 
         //Olap-DelayComp
-        if (itsNrCalcDelays!= null && !inputNrCalcDelays.equals(itsNrCalcDelays.limits)) {  
+        if (itsNrCalcDelays!= null && !inputNrCalcDelays.getText().equals(itsNrCalcDelays.limits)) {
             itsNrCalcDelays.limits = inputNrCalcDelays.getText();
             saveNode(itsNrCalcDelays);
         }
-        if (itsPositionType != null && !inputNrCalcDelays.equals(itsPositionType.limits)) {  
-            itsPositionType.limits = inputNrCalcDelays.getText();
+        if (itsPositionType != null && !inputPositionType.getText().equals(itsPositionType.limits)) {
+            itsPositionType.limits = inputPositionType.getText();
             saveNode(itsPositionType);
         }
         
         // OLAP-OLAP_Conn
-        if (itsCNProcStoragePorts != null && !inputIONProcStoragePorts.equals(itsCNProcStoragePorts.limits)) {  
+        if (itsCNProcStoragePorts != null && !inputIONProcStoragePorts.getText().equals(itsCNProcStoragePorts.limits)) {
             itsCNProcStoragePorts.limits = inputIONProcStoragePorts.getText();
             saveNode(itsCNProcStoragePorts);
         }
@@ -742,20 +742,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsIONProcCNProcTransport.limits = inputIONProcCNProcTransport.getSelectedItem().toString();
             saveNode(itsIONProcCNProcTransport);
         }
-        if (itsRawDataOutputs != null && !inputRawDataOutputs.equals(itsRawDataOutputs.limits)) {  
+        if (itsRawDataOutputs != null && !inputRawDataOutputs.getText().equals(itsRawDataOutputs.limits)) {
             itsRawDataOutputs.limits = inputRawDataOutputs.getText();
             saveNode(itsRawDataOutputs);
         }
 
 
         // OLAP-IONProc
-        if (itsIONProcIntegrationSteps != null && !inputIONProcIntegrationSteps.equals(itsIONProcIntegrationSteps.limits)) {  
+        if (itsIONProcIntegrationSteps != null && !inputIONProcIntegrationSteps.getText().equals(itsIONProcIntegrationSteps.limits)) {
             itsIONProcIntegrationSteps.limits = inputIONProcIntegrationSteps.getText();
             saveNode(itsIONProcIntegrationSteps);
         }
 
         //OLAP-StorageProc
-        if (itsSubbandsPerMS != null && !inputSubbandsPerMS.equals(itsSubbandsPerMS.limits)) {  
+        if (itsSubbandsPerMS != null && !inputSubbandsPerMS.getText().equals(itsSubbandsPerMS.limits)) {
             itsSubbandsPerMS.limits = inputSubbandsPerMS.getText();
             saveNode(itsSubbandsPerMS);
         }
@@ -855,7 +855,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
-        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
 
         labelEPAHeaderSize.setText("EPA Header Size:");
 
@@ -900,9 +900,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel8Layout.createSequentialGroup()
-                            .addComponent(labelStorageStationNames)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                        .addComponent(labelStorageStationNames, javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(labelDelayCompensation, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(labelNrBitsPerSample, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(labelNrTimesInFrame, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -927,9 +925,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(labelNrSubbandsPerFrame, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
                             .addComponent(labelMaxNetworkDelay, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
-                            .addGroup(jPanel8Layout.createSequentialGroup()
-                                .addComponent(labelEPAHeaderSize, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addComponent(labelEPAHeaderSize, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
                             .addComponent(labelNrSecondsOfBuffer, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -987,7 +983,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(inputStorageStationNames, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "ION Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "ION Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
 
         labelIONProcIntegrationSteps.setText("Integration Steps:");
 
@@ -1011,7 +1007,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(133, Short.MAX_VALUE))
         );
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap Conn", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap Conn", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
         jPanel6.setToolTipText("Olap Conn");
 
         labelIONProcCNProcTransport.setText("IONProc->CNProc Transport:");
@@ -1055,7 +1051,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGap(36, 36, 36))
         );
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "CN Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "CN Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
         jPanel7.setToolTipText("BGLProc");
 
         labelNrPPFTaps.setText("# PPFTaps:");
@@ -1108,7 +1104,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(inputCoresPerPset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
 
         labelSubbandsPerMs.setText("#subbands per MS:");
 
@@ -1131,18 +1127,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGap(37, 37, 37))
         );
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Delay Compensation", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Delay Compensation", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0))); // NOI18N
         jPanel5.setToolTipText("Delay Compensation");
 
         labelNrCalcDelays.setText("# Calc. Delays");
 
         labelPositionType.setText("PositionType:");
-
-        inputNrCalcDelays.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputNrCalcDelaysActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -1197,10 +1187,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
@@ -1239,10 +1229,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             restore();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
-
-    private void inputNrCalcDelaysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputNrCalcDelaysActionPerformed
-        // TODO add your handling code here:
-}//GEN-LAST:event_inputNrCalcDelaysActionPerformed
     
     private jOTDBnode    itsNode      = null;
     private MainFrame    itsMainFrame = null;
