@@ -137,8 +137,9 @@ if __name__ == '__main__':
     parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 25), type='int', help='start of measurement in UTC seconds [now + 25]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
-    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010      ',type='string', help='name of the station or stationconfiguration (see Stations.py) [%default]')
+    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010     ', type='string', help='name of the station or stationconfiguration (see Stations.py) [%default]')
     parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
+    parser.add_option('--pulsarmode'     , dest='pulsarmode'     , default=int(0)      ,type='int'    , help='observation in pulsar mode [%default]')
     # parse the options
     (options, args) = parser.parse_args()
     
@@ -155,7 +156,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # create the parset
-    parset = Parset(options.parset, options.clock, options.integrationtime, options.partition, options.msname, options.starttime, options.runtime, stationList, options.fakeinput)
+    parset = Parset(options.parset, options.clock, options.integrationtime, options.partition, options.msname, options.starttime, options.runtime, stationList, options.fakeinput, options.pulsarmode)
 
     # if the msname wasn't given, read the next number from the file
     if hostname != listfen.name:
