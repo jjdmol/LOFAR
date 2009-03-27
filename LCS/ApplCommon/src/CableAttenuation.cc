@@ -25,12 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <APL/RTCCommon/CableAttenuation.h>
+#include <ApplCommon/CableAttenuation.h>
 #include <boost/algorithm/string.hpp>
 
 namespace LOFAR {
-  namespace RTC {
-
   using namespace blitz;
 
 CableAttenuation::~CableAttenuation()
@@ -145,5 +143,4 @@ float	CableAttenuation::getAttenuation(int	cableLength, int	rcuMode) const
 	return (itsAtts(rcuMode, cableLen2Index(cableLength)));
 }
 
-  } // namespace RTC
 } // namespace LOFAR

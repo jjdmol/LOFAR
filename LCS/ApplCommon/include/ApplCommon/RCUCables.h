@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_RTCCOMMON_RCUCABLES_H
-#define LOFAR_RTCCOMMON_RCUCABLES_H
+#ifndef LOFAR_APPLCOMMON_RCUCABLES_H
+#define LOFAR_APPLCOMMON_RCUCABLES_H
 
 // \file
 // Interface class for the cable characteristics.
@@ -35,12 +35,11 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
-#include <APL/RTCCommon/CableAttenuation.h>
+#include <ApplCommon/CableAttenuation.h>
 
 namespace LOFAR {
-  namespace RTC{
 
-// \addtogroup RTC
+// \addtogroup ApplCommon
 // @{
 
 //# Forward Declarations
@@ -90,7 +89,6 @@ private:
 
 // @}
 
-  } // namespace RTC
 } // namespace LOFAR
 
 #endif

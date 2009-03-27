@@ -1,4 +1,4 @@
-//#  CableAttenuation.h: Interface class for the Attenuation.conf file
+//#  StationConfig.h: Interface class for accessing RemoteStation.conf
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_APPLCOMMON_CABLEATTENUATION_H
-#define LOFAR_APPLCOMMON_CABLEATTENUATION_H
+#ifndef LOFAR_APPLCOMMON_STATION_CONFIG_H
+#define LOFAR_APPLCOMMON_STATION_CONFIG_H
 
 // \file
-// Interface class for the Attenuation.conf file.
+// Interface class for accessing RemoteStation.conf
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -32,10 +32,7 @@
 #include <blitz/array.h>
 #include <Common/lofar_fstream.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
-#include <Common/StringUtil.h>
-
 
 namespace LOFAR {
 
@@ -45,35 +42,29 @@ namespace LOFAR {
 //# Forward Declarations
 //class forward;
 
-// The CableAttenuation class is an interface for the Attenuation.conf file.
-//It reads in the file and stores the values in its datamembers. Defines some
-//useful functions for accessing the data.
+// The StationConfig class is an interface for the RemoteStation.conf file.
+// It reads in the file and stores the values in its datamembers. All datamembers
+// are public for easy access.
 
-class CableAttenuation
+class StationConfig
 {
 public:
-	CableAttenuation(const string&	filename);
-	~CableAttenuation();
-
-	// Returns the attenuation in dB for the given cable length and rcumode.
-	float	getAttenuation(int	cableLength, int	rcuMode) const;
-
-	// Checks if the given length is a length that is defined in the Attenuation file.
-	bool	isLegalLength (int	cableLength) const;
+	StationConfig();
+	~StationConfig();
 
 private:
 	// Default construction and Copying is not allowed.
-	CableAttenuation();
-	CableAttenuation (const CableAttenuation& that);
-	CableAttenuation& operator= (const CableAttenuation& that);
-
-	//# private functions
-	// Converts a cablelength into an index in the itsAtts array.
-	int cableLen2Index(int	cableLen) const;
+	StationConfig (const StationConfig& that);
+	StationConfig& operator= (const StationConfig& that);
 
 	//# Data members
-	blitz::Array<int, 1>	itsCableLengths;
-	blitz::Array<float,2>	itsAtts;
+	int		stationID;
+	int		nrRSPs;
+	int		nrTBBs;
+	int		nrLBAs;
+	int		nrHBAs;
+	bool	hasSplitters;
+	bool	hasWideLBAs;
 };
 
 // @}
