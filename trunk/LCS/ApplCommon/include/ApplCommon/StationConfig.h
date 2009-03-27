@@ -53,10 +53,11 @@ public:
 	~StationConfig();
 
 private:
-	// Default construction and Copying is not allowed.
+	// Copying is not allowed.
 	StationConfig (const StationConfig& that);
 	StationConfig& operator= (const StationConfig& that);
 
+public:
 	//# Data members
 	int		stationID;
 	int		nrRSPs;

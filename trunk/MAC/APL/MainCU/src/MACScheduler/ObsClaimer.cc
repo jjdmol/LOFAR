@@ -24,8 +24,9 @@
 #include <Common/SystemUtil.h>
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
-
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationConfig.h>
+
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <MACIO/MACServiceInfo.h>
@@ -238,11 +239,12 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
 
 			// the receiver bitmap can be derived from the RCUset.
-			int		nrReceivers(theObs.RCUset.size());
+			StationConfig		config;
+			bitset<MAX_RCUS>	theRCUs(theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters));
 			string	rbm;
-			rbm.resize(nrReceivers, '0');
-			for (int i = 0; i < nrReceivers; i++) {
-				if (theObs.RCUset[i]) {
+			rbm.resize(MAX_RCUS, '0');
+			for (int i = 0; i < MAX_RCUS; i++) {
+				if (theRCUs[i]) {
 					rbm[i] = '1';
 				}
 			}

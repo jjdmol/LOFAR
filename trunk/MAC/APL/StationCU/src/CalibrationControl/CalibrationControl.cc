@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <Common/Version.h>
+#include <ApplCommon/StationConfig.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
@@ -630,9 +631,8 @@ bool	CalibrationControl::startCalibration()
 		calStartEvent.rcumode().resize(1);
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 											convertFilterSelection(itsObsPar.filter));
-	//	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
-	//	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
-		calStartEvent.subset 	   = itsObsPar.RCUset;
+		StationConfig		config;
+		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
 		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
 								beamName.c_str(), calStartEvent.parent.c_str(),
 								calStartEvent.rcumode()(0).getRaw()));
