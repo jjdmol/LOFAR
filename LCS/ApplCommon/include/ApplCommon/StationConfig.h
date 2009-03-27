@@ -29,7 +29,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <blitz/array.h>
 #include <Common/lofar_fstream.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
