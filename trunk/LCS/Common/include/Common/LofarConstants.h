@@ -29,14 +29,15 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 namespace LOFAR {
+	static const int N_POL					  = 2;				// Number of polarizations
 	static const int NR_SUBRACKS_PER_CABINET  = 2;
 	static const int NR_RSPBOARDS_PER_SUBRACK = 4;
 	static const int NR_TBBOARDS_PER_RSPBOARD = 2;
 	static const int NR_RCUS_PER_RSPBOARD     = 8;
+	static const int NR_ANTENNAS_PER_RSPBOARD = (NR_RCUS_PER_RSPBOARD / N_POL);
 	static const int NR_RCUS_PER_TBBOARD      = (NR_TBBOARDS_PER_RSPBOARD * NR_RCUS_PER_RSPBOARD);
 	static const int NR_RCUS_PER_SUBRACK      = (NR_RCUS_PER_RSPBOARD * NR_RSPBOARDS_PER_SUBRACK);
 	static const int NR_RCUS_PER_CABINET      = (NR_RCUS_PER_SUBRACK  * NR_SUBRACKS_PER_CABINET);
-	static const int N_POL					  = 2;				// Number of polarizations
 	static const int N_HBA_ELEM_PER_TILE	  = 16;				// Number of High Band antenna per tile
 
 	static const int MAX_ANTENNAS			  = 96;				// Max number antenna's of each type.
