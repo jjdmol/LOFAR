@@ -30,7 +30,7 @@ class StationRSPpair(object):
 
 class Parset(LOFAR_Parset.Parset):
 
-    def __init__(self, fileName, clock, integrationTime, partition, msname, starttime, runtime, stationList, fakeInput):
+    def __init__(self, fileName, clock, integrationTime, partition, msname, starttime, runtime, stationList, fakeInput, ObsPulsar):
         LOFAR_Parset.Parset.__init__(self)
         self.inputFromMemory = False
         self.inputFromRaw = False
@@ -50,6 +50,7 @@ class Parset(LOFAR_Parset.Parset):
 	self.setInterval(starttime, runtime)
 
 	self.setStations(stationList)
+	self.setObservePulsar(ObsPulsar)
 	self.checkBeamformList()
 	self.setTiedArrayStations()
 	self.tabMapping()
@@ -172,8 +173,13 @@ class Parset(LOFAR_Parset.Parset):
 
     def getNStations(self):
         return int(len(self.stationList))
-        
 
+    def setObservePulsar(self, ObsPulsar):
+	if ObsPulsar > 0:
+            self['Observation.pulsar.mode'] = 1
+	else:
+	    self['Observation.pulsar.mode'] = 0
+        
     def setInterval(self, start, duration):
         self['Observation.startTime'] = datetime.datetime.fromtimestamp(start)
         self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)

@@ -40,9 +40,15 @@ class Section(object):
                                  workingDir = self.workingDir,
 				 partition = self.partition)
         else:   
+	    if 'IONProc' in self.executable:
+	        if self.parset.getInt32('Observation.pulsar.mode'):
+		    execStr = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable + '.pulsar'
+	        else:
+		    execStr = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable
+
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
-                              executable = self.workingDir + 'LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                              executable = execStr, \
                               workingDir = self.workingDir, \
 			      partition = self.partition)
 
