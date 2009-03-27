@@ -29,6 +29,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
+#include <ApplCommon/StationConfig.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -840,7 +841,8 @@ LOG_DEBUG_STR("theOBS=" << theObs);
 				 " has no conflicts with other running observations");
 
 	// Create a bitset containing the available receivers for this oberservation.
-	Observation::RCUset_t	realReceivers = Observation(&theObsPS).RCUset;
+	StationConfig	config;
+	Observation::RCUset_t	realReceivers = Observation(&theObsPS).getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
 		realReceivers &= itsRCUmask;
