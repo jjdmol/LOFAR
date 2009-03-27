@@ -22,8 +22,6 @@ sysconf_DATA =
 lib_LTLIBRARIES = librtccommon.la libgnuplot_i.la
 
 librtccommon_la_SOURCES   = Package__Version.cc  \
-							CableAttenuation.cc \
-							RCUCables.cc \
 							Timestamp.cc \
 							Subject.cc \
 							daemonize.c \

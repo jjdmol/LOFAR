@@ -1,8 +1,8 @@
-CHECKTOOLPROGS				= tMarshallBlitz tBlitz tCableAttenuation tRCUCables
+CHECKTOOLPROGS				= tMarshallBlitz tBlitz 
 
 check_PROGRAMS				= $(CHECKTOOLPROGS)
 
-TESTSCRIPTS					= tCableAttenuation.sh tRCUCables.sh
+TESTSCRIPTS					= 
 
 TESTS						= $(TESTSCRIPTS)
 
@@ -13,14 +13,6 @@ tMarshallBlitz_DEPENCIES	= $(LOFAR_DEPEND)
 tBlitz_SOURCES				= tBlitz.cc
 tBlitz_LDADD				= 
 tBlitz_DEPENCIES			= $(LOFAR_DEPEND)
-
-tCableAttenuation_SOURCES	= tCableAttenuation.cc
-tCableAttenuation_LDADD		= ../src/librtccommon.la $(LOFAR_DEPEND)
-tCableAttenuation_DEPENCIES	= $(LOFAR_DEPEND)
-
-tRCUCables_SOURCES			= tRCUCables.cc
-tRCUCables_LDADD			= ../src/librtccommon.la $(LOFAR_DEPEND)
-tRCUCables_DEPENCIES		= $(LOFAR_DEPEND)
 
 EXTRA_DIST					= 
 
