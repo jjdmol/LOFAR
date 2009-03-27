@@ -323,14 +323,14 @@ In practice, under normal circumstances no data are lost.
 
 \subsection{Optimizations}
 
-Processing power on the I/O~nodes is a scarce resource, since most observation
+Processing power on the I/O~nodes is a scarce resource, and most observation
 modes are I/O bound.
 We performed many optimizations to improve processing speed.
 An important improvement was to implement the function that copies data from a
 received UDP packet to the circular buffer in assembly.
 This way, we can exploit the efficient 16-byte load and
 store instructions, which are unknown to the C++ compiler.
-Unfortunately, the copy itself cannot be avoided, since a UDP packet contains
+Unfortunately, the copy itself cannot be avoided, since an UDP packet contains
 data of many frequency subbands that must be stored to different memory
 locations.
 
@@ -658,11 +658,12 @@ With one rack, we can process up to 64~stations, one per I/O~node.
 \begin{center}
 \begin{tabular}{|l|ccc|}
 \hline
-Observation mode	& \textsf{A}	& \textsf{B}	& \textsf{C}	\\
+Observation mode	 & \textsf{A}	& \textsf{B}	& \textsf{C}	\\
 \hline
-nr.\ bits per sample	& 16		& 8		& 4	\\
-max.\ nr.\ of subbands	& 248		& 496		& 992	\\
-max.\ nr.\ of stations	& 64		& 64		& 48	\\
+nr.\ bits per sample	 & 16		& 8		& 4	\\
+max.\ nr.\ of subbands	 & 248		& 496		& 992	\\
+nr. channels per subband & 256		& 256		& 256	\\
+max.\ nr.\ of stations	 & 64		& 64		& 48	\\
 \hline
 input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  & 64 * 3.1 & 48 * 3.1 \\
 output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 & 62 * 1.2 & 62 * 1.3 \\
@@ -679,8 +680,101 @@ We show the performance results of the application by means of three
 challenging observation modes which are likely to be commonly used.
 The characteristics of these modes are listed in
 Table~\ref{tab:observation-characteristics}.
-Mode~\textsf{A} is the standard mode, TODO
+Mode~\textsf{A} is the standard mode, where the stations send 16-bit samples.
+In this mode, the FPGAs can send at most 248~subbands.
+The 248~subbands are evenly divided over 62~psets, so that each pset processes
+4~subbands (the remaining two psets do not correlate).
+Since there are 64~cores in one pset and an integration time equals 1.007~s,
+the available time to process one chunk of data is 16.1~s.
 
+Mode~\textsf{B} trades accuracy for subbands by reducing the sample size to
+8~bits, doubling the number of subbands that can be sent by the stations.
+For the correlator, this implies that the total input data rate remains the
+same, but that the processing requirements and output data rate double.
+Since each of the 62~psets that actually correlate now has to process
+8~subbands, the available time is reduced to 8.03~s.
+
+Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
+subbands that are free of RFI (otherwise, the bits are used to encode the RFI,
+not the signal of interest).
+This mode is planned for EoR observations, where the high number of subbands
+is used to observe sky in about six directions simulaneously.
+If the same amount of stations were used, the processing requirements and
+output data rate would double again, but EoR observations will only use the
+core stations.
+The exact number of stations that the correlator will have to process is not
+yet known, but is likely to be between 36 and~46.
+We optimistically assume 48~stations for the performance measurements.
+
+
+\subsection{Computational performance on the Compute Nodes}
+
+\begin{figure}
+\subfigure[As function of number of stations.  The input samples are 8~bit,
+  and in total, 496 subbands are processed.]{
+  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
+  \makebox[11cm][l]{
+  \includegraphics[width=\columnwidth]{cn-performance.pdf}
+  }
+  \label{fig:cn-performance-func-stations}
+}
+\hfill
+\subfigure[For various observation modes.]{
+  \hspace{3cm}
+  \label{fig:cn-performance-obs-mode}
+}
+\caption{Compute node performance breakdown.}
+\label{fig:cn-performance}
+\end{figure}
+
+Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time.
+The seven major tasks are each represented by a different color in the bar
+graph; the size of each bar is proportional to the contribution to the total
+work load.
+The y-axis shows the absolute run time to process one subband with
+1.007~second of station samples.
+
+Before comparing the performance of the three observation modes described
+above, we show how the performance scales with the number of stations.
+Figure~\ref{fig:cn-performance-func-stations} shows execution times for up
+64~stations in a setting that is similar to observation mode~\textsf{B}.
+The $O(n^2)$ complexity of the correlator is clearly visible, while other
+components scale linearly with the number of stations.
+Despite the high data rates, I/O~requires hardly any time.
+Naturally, the time for input or output cannot exceed $1/64^\mathrm{th}$
+of the total time, since the associated I/O~node also needs time to communicate
+with the other 63~cores in the pset.
+
+%The \emph{available\/} runtime depends on the number of subbands that must be
+%processed: with 496~subbands, most of the 64~psets process 8~subbands, and
+%with 64~cores in one pset, there is 8.053~second to process one chunk of data.
+%Doubling the number of subbands halves the available processing time, and in
+%the 4-bit mode, up to about 50~stations can be supported on a single rack.
+
+The performance results hardly differ for the 16-bit and 4-bit modes,
+since only the performance of the the data receipt from the I/O~node and data
+exchange phase are affected by the sample size, 
+both of which hardly contribute to the total runtime.
+This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
+where the execution times for observation modes \textsf{A} and \textsf{B}
+are nearly the same.
+The run time for observation mode \textsf{C} is lower, since this mode
+processes 48 rather than 64~stations.
+All modes run within their real-time constraints of 16.1, 8.05, and 4.03
+seconds respectively.
+The load on the compute nodes is 35\%, 70\%, and 84\%.
+
+The correlator is extremely efficient: it achieves 96\% of the FPU peak
+performance, thanks to the highly-optimized assembly code.
+The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
+44\%
+\footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
+$5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
+more than 44\% FPU efficiency, its absolute run time would be higher.}
+(``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
+Compared to equivalent C++ code that is written for clarity and not
+specifically tuned for optimal performance, the hand-written assembly code is
+typically an order of magnitude faster.
 
 
 \subsection{Computational performance on the I/O Nodes}
@@ -703,22 +797,19 @@ Mode~\textsf{A} is the standard mode, TODO
 \label{fig:ion-performance}
 \end{figure}
 
+Although the computational requirements were challenging, meeting the real-time
+I/O~requirements was even harder.
 Figure~\ref{fig:ion-performance} shows where the processor cores of the
 I/O~node spend their time in various situations.
-The five major tasks are each represented by a different color in the bar
-graph; the size of each bar is proportional to the contribution to the total
-work load.
 A load of 100\% means that all four cores are fully occupied.
-A load above 85\% must be avoided to prevent data loss.
+A load above 85\% must be avoided to prevent major data loss.
 
-Figure~\ref{fig:ion-performance-func-subbands} shows the performance breakdown
-for 64~stations, 8-bit samples, and up to 496~subbands (the maximum station
-data rate).
-The subbands are more or less evenly divided over the 64~psets, thus each
-pset has to process up to 8~subbands.
-In this case, most I/O~nodes receive and forward the samples of one station
-(up to 3.1~Gb/s) and send the correlations of up to 8~subbands to storage
-(up to 1.2~Gb/s).
+We first show how the performance scales with the number of subbands.
+We again use a setting similar to observation mode~\textsf{B}, for up to
+496~subbands (see Figure~\ref{fig:ion-performance-func-subbands}).
+The I/O~nodes of the 62~psets that correlate receive and forward the samples
+of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
+to storage (up to 1.2~Gb/s).
 The figure shows that most time spent in the receipt of UDP packets.
 This load is partially independent of the number of subbands, since a lower
 number of subbands decreases the packet size (down from 7,998~bytes), but not
@@ -771,68 +862,6 @@ real time.
 %Blue-Gene-specific 16-byte load/store instructions, rather
 %than standard 4-byte PowerPC load/stores.
 %We think this will reduce the system time of I/O operations.
-
-
-\subsection{Computational performance on the Compute Nodes}
-
-\begin{figure}
-\subfigure[As function of number of stations.  The input samples are 8~bit,
-  and in total, 496 subbands are processed.]{
-  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
-  \makebox[11cm][l]{
-  \includegraphics[width=\columnwidth]{cn-performance.pdf}
-  }
-  \label{fig:cn-performance-func-stations}
-}
-\hfill
-\subfigure[For various observation modes.]{
-  \hspace{3cm}
-  \label{fig:cn-performance-obs-mode}
-}
-\caption{Compute node performance breakdown.}
-\label{fig:cn-performance}
-\end{figure}
-
-Figure~\ref{fig:cn-performance-func-stations} shows how the compute nodes spend
-their time, as function of the number of stations.
-Here, the y-axis shows the absolute run time to process one subband with
-1.007~second of station samples from 64~stations in 8-bit mode.
-
-The $O(n^2)$ complexity of the correlator is clearly visible, while other
-components scale linearly with the number of stations.
-Despite the high data rates, I/O~requires hardly any time.
-Naturally, the time for input or output cannot exceed $1/64^\mathrm{th}$
-of the total time, since the associated I/O~node also needs time to communicate
-with the other 63~cores in the pset.
-
-The \emph{available\/} runtime depends on the number of subbands that must be
-processed: with 496~subbands, most of the 64~psets process 8~subbands, and
-with 64~cores in one pset, there is 8.053~second to process one chunk of data.
-Doubling the number of subbands halves the available processing time, and in
-the 4-bit mode, up to about 50~stations can be supported on a single rack.
-
-The performance results hardly differ for the 16-bit and 4-bit modes,
-since only the performance of the the data receipt from the I/O~node and data
-exchange phase are affected by the sample size, 
-both of which hardly contribute to the total runtime.
-This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
-where the execution times for observation modes \textsf{A} and \textsf{B}
-hardly differ.
-The run time for observation mode \textsf{C} is lower, since this mode
-processes 48 rather than 64~stations.
-All modes run within their real-time constraints of 16.1, 8.05, and 4.03
-seconds respectively.
-
-The correlator is extremely efficient: it achieves 96\% of the FPU peak
-performance, thanks to the highly-optimized assembly code.
-The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
-44\%
-\footnote{The FFT requires 8390~operations, 18\% less than an unoptimized
-$5n\log n$ implementation.  Although an unoptimized FFT could achieve even
-more than 44\% FPU efficiency, its absolute run time would be higher.}.
-Compared to equivalent C++ code that is written for clarity and not
-specifically tuned for optimal performance, the hand-written assembly code is
-typically an order of magnitude faster.
 
 
 \section{Conclusions and future work}
