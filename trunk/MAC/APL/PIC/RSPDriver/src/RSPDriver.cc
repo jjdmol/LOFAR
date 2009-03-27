@@ -24,14 +24,15 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/ParameterSet.h>
 #include <Common/Version.h>
 
-#include <MACIO/MACServiceInfo.h>
+#include <ApplCommon/RCUCables.h>
 
-#include <APL/RTCCommon/RCUCables.h>
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
-#include <Common/ParameterSet.h>
+
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
