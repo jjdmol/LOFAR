@@ -81,8 +81,8 @@ void RADWrite::sendrequest()
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
     uint8 mode = 0x00; // default is to ignore remote data (first board in ring)
 
-    int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_BLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
-    int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%d_XLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+    int blet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
+    int xlet_out = GET_CONFIG(formatString("RSPDriver.LANE_%02d_XLET_OUT", lane).c_str(), i) % StationSettings::instance()->nrRspBoards();
 
     // if there are more than 1 boards and
     // if this board is not the first board in the ring

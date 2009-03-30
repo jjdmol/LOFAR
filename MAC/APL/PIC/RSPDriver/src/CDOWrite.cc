@@ -166,7 +166,7 @@ void CDOWrite::sendrequest()
       int output_lane = -1;
       for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 	char paramname[64];
-	snprintf(paramname, 64, "RSPDriver.LANE_%d_BLET_OUT", lane);
+	snprintf(paramname, 64, "RSPDriver.LANE_%02d_BLET_OUT", lane);
 	if (getBoardId() == GET_CONFIG(paramname, i)) {
 	  output_lane = lane;
 	  break;
@@ -189,11 +189,11 @@ void CDOWrite::sendrequest()
 	char srcmacfmt[64], srcmac[64], dstmac[64], dstip[64], srcip[64];
 	uint32 l_srcip, l_dstip;
 
-	snprintf(srcmacfmt, 64, "RSPDriver.LANE_%d_SRCMAC", output_lane);
+	snprintf(srcmacfmt, 64, "RSPDriver.LANE_%02d_SRCMAC", output_lane);
 	snprintf(srcmac,    64, GET_CONFIG_STRING(srcmacfmt), GET_CONFIG("RS.STATION_ID", i));
-	snprintf(dstmac, 64, "RSPDriver.LANE_%d_DSTMAC", output_lane);
-	snprintf(srcip,  64, "RSPDriver.LANE_%d_SRCIP", output_lane);
-	snprintf(dstip,  64, "RSPDriver.LANE_%d_DSTIP", output_lane);
+	snprintf(dstmac, 64, "RSPDriver.LANE_%02d_DSTMAC", output_lane);
+	snprintf(srcip,  64, "RSPDriver.LANE_%02d_SRCIP", output_lane);
+	snprintf(dstip,  64, "RSPDriver.LANE_%02d_DSTIP", output_lane);
 	l_srcip = string2ip_uint32(GET_CONFIG_STRING(srcip));
 	l_dstip = string2ip_uint32(GET_CONFIG_STRING(dstip));
 
