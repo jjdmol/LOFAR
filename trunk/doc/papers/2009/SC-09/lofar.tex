@@ -101,30 +101,6 @@ low-overhead network protocol~\cite{Romein:09a}.
 The remainder of this paper is structured as follows.
 \emph{TODO}.
 
-\section{Related Work}
-
-%LOFAR is not the only radio telescope of which the data are processed in software. In fact,
-%in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
-%and processed it on IBM 360 mainframes. However, as the volume of the data increased, the mainframes were no longer capable of processing the data in an acceptable amount of time, and custom hardware had to be used instead.
-
-%Due to the massive increase in processing power since the 1960s, software processing of telescope
-%data is once again feasible. Several efforts to do so have been started. However, to the best of our knowledge,
-%LOFAR is the only system capable of processing high data rates from a large number of stations at
-%real time.
-
-LOFAR is not the only radio telescope of which the data are processed in software, However, to
-the best of our knowledge, LOFAR is the only system capable of doing so at real time for both
-high data rates and a large number of inputs.
-
-Deller et al.~\cite{Deller:07} have developed the DiFX distributed software correlator, which
-is deployed on a cluster of PCs. Due to their use of commodity hardware, they are severely limited
-in the data rates they can process at real time.
-The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
-partially in software. However, their correlator, which we will show to be the most computationally
-intensive part of the processing pipeline, is implemented on an FPGA~\cite{Ord:08}.
-Finally, a software correlator is under development at The Joint Institute for VLBI in Europe
-(JIVE), but is not yet capable of processing telescope data in real time.
-
 \section{LOFAR overview}
 Describe remote and central stations, FPGA, LBA, HBA, WAN, CEP, storage, offline processing.
 (All these terms are used later on) --Rob
@@ -944,6 +920,31 @@ Alternatively, the second rack could be used.
 
 
 \section{Conclusions and future work}
+
+\section{Related Work}
+
+%LOFAR is not the only radio telescope of which the data are processed in software. In fact,
+%in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
+%and processed it on IBM 360 mainframes. However, as the volume of the data increased, the mainframes were no longer capable of processing the data in an acceptable amount of time, and custom hardware had to be used instead.
+
+%Due to the massive increase in processing power since the 1960s, software processing of telescope
+%data is once again feasible. Several efforts to do so have been started. However, to the best of our knowledge,
+%LOFAR is the only system capable of processing high data rates from a large number of stations at
+%real time.
+
+LOFAR is not the only radio telescope of which the data are processed in software, However, to
+the best of our knowledge, LOFAR is the only system capable of doing so at real time for both
+high data rates and a large number of inputs.
+
+Deller et al.~\cite{Deller:07} have developed the DiFX distributed software correlator, which is
+to be deployed on a cluster of PCs, but is not operational for real time processing. Due to the use
+of commodity hardware, both their communication and computational capabilities are substantially lower
+than those available in our BlueGene/P.
+The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
+partially in software. However, their correlator, which we will show to be the most computationally
+intensive part of the processing pipeline, is implemented on an FPGA~\cite{Ord:08}.
+Finally, a software correlator is under development at The Joint Institute for VLBI in Europe
+(JIVE), but is not capable of processing telescope data in real time.
 
 
 
