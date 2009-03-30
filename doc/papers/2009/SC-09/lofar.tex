@@ -662,13 +662,29 @@ operations per cycle.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{fringe.jpg}
-\caption{``Fringes'' from a 9-hour observation.  The phase of the correlated
-signal (represented by color) changes due to the earth rotation that alters
-the relative position of the observed source.
-The white spots are caused by interference; these data are ignored in the
-remainder of the processing pipeline.}
+\caption{Correlations from a 9-hour observation.}
 \label{fig:fringe}
 \end{figure}
+
+A graphical representation of the correlator output is depicted in
+Figure~\ref{fig:fringe}.
+The figure shows the cross-correlations from two stations during a 9-hour
+observation.
+The x-axis varies in time;
+the y-axis represents the 256~channels of one frequency subband.
+Each pixel corresponds to a (complex) correlation, where the color represents
+the phase of the signal; the intensity matches the amplitude (power).
+The phase changes over time, due to the earth rotation that alters the
+relative position of the observed sources.
+The white spots are caused by interference; these bad data are detected and
+ignored in the remainder of the processing pipeline.
+
+The correlations are used to create images.
+Even with the limited amount of prototype antennas that have been employed
+during the last few years, impressive (all-sky) images were made.
+Also, the prototype pulsar pipeline software successfully detected several
+known pulsars.
+
 
 
 \section{Performance}
