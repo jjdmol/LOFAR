@@ -89,7 +89,7 @@ class tTreeMaintenance
             System.out.println ("Starting... ");
 	
             // create a jOTDBconnection
-            jOTDBconnection conn = new jOTDBconnection ("paulus","boskabouter","otdbtest");
+            jOTDBconnection conn = new jOTDBconnection ("paulus","boskabouter","otdbtest","dop50.astron.nl");
 	
             System.out.println ("Trying to connect to the database");
             assert conn.connect () : "Connection failed";	

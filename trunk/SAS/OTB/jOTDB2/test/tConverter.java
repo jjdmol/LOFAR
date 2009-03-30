@@ -34,7 +34,7 @@ class tConverter
             System.out.println("Starting... using Database: "+dbName);
 	
             // create a jOTDBconnection
-            jOTDBconnection conn = new jOTDBconnection("paulus","boskabouter",dbName);
+            jOTDBconnection conn = new jOTDBconnection("paulus","boskabouter",dbName,"dop50.astron.nl");
 	
             System.out.println("Trying to connect to the database");
             assert conn.connect() : "Connection failed";	
