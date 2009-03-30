@@ -643,7 +643,7 @@ remainer of the processing pipeline.}
 
 Since only a small number of LOFAR stations has already been constructed
 (the majority will become operational later this year), we will provide 
-realistic performance measurements with externally generated artificial data.
+performance measurements with externally generated artificial data.
 We use one Blue Gene/P rack to generate UDP data, another rack for the
 correlator, and the remaining half rack to receive and dump the correlated
 data.
@@ -687,23 +687,23 @@ The 248~subbands are evenly divided over 62~psets, so that each pset processes
 Since there are 64~cores in one pset and an integration time equals 1.007~s,
 the available time to process one chunk of data is 16.1~s.
 
-Mode~\textsf{B} trades accuracy for subbands by reducing the sample size to
-8~bits, doubling the number of subbands that can be sent by the stations.
-For the correlator, this implies that the total input data rate remains the
-same, but that the processing requirements and output data rate double.
-Since each of the 62~psets that actually correlate now has to process
-8~subbands, the available time is reduced to 8.03~s.
+Mode~\textsf{B} trades accuracy for observation bandwidth, by reducing the
+sample size to 8~bits and doubling the number of subbands.
+This implies that the total input data rate remains the same, but that the
+processing requirements and output data rate double.
+The 62~psets that are used to correlate, have to process 8~subbands each,
+reducing the available time per subband to 8.03~s.
 
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
-subbands that are free of RFI (otherwise, the bits are used to encode the RFI,
-not the signal of interest).
+subbands that are mostly free of RFI (otherwise, the bits are used to encode
+the RFI, not the signal of interest).
 This mode is planned for EoR observations, where the high number of subbands
-is used to observe sky in about six directions simulaneously.
+is used to observe sky in about six directions simultaneously.
 If the same amount of stations were used, the processing requirements and
 output data rate would double again, but EoR observations will only use the
-core stations.
-The exact number of stations that the correlator will have to process is not
-yet known, but is likely to be between 36 and~46.
+stations near the center, not the remote ones.
+The exact number of stations that must be correlated is not yet known, but is
+likely between 36 and~46.
 We optimistically assume 48~stations for the performance measurements.
 
 
@@ -736,9 +736,10 @@ The y-axis shows the absolute run time to process one subband with
 
 Before comparing the performance of the three observation modes described
 above, we show how the performance scales with the number of stations.
-Figure~\ref{fig:cn-performance-func-stations} shows execution times for up
+Figure~\ref{fig:cn-performance-func-stations} shows execution times for up to
 64~stations in a setting that is similar to observation mode~\textsf{B}.
-The $O(n^2)$ complexity of the correlator is clearly visible, while other
+The $O(n^2)$ complexity of the correlator is clearly visible (the correlations
+between all \emph{pairs\/} of stations are computed), while other
 components scale linearly with the number of stations.
 Despite the high data rates, I/O~requires hardly any time.
 Naturally, the time for input or output cannot exceed $1/64^\mathrm{th}$
@@ -767,7 +768,7 @@ The load on the compute nodes is 35\%, 70\%, and 84\%.
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
 performance, thanks to the highly-optimized assembly code.
 The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
-44\%
+44\%%
 \footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
 $5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
 more than 44\% FPU efficiency, its absolute run time would be higher.}
@@ -775,6 +776,13 @@ more than 44\% FPU efficiency, its absolute run time would be higher.}
 Compared to equivalent C++ code that is written for clarity and not
 specifically tuned for optimal performance, the hand-written assembly code is
 typically an order of magnitude faster.
+
+Due to all optimizations, the correlator can process 50\% more data than
+the specifications require, on only half the amount of planned resources.
+Only if the need to correlate more than 64~stations would ever arise, or if
+significant additional real-time signal processing would be needed, the
+second rack must be employed.
+
 
 
 \subsection{Computational performance on the I/O Nodes}
@@ -807,11 +815,11 @@ A load above 85\% must be avoided to prevent major data loss.
 We first show how the performance scales with the number of subbands.
 We again use a setting similar to observation mode~\textsf{B}, for up to
 496~subbands (see Figure~\ref{fig:ion-performance-func-subbands}).
-The I/O~nodes of the 62~psets that correlate receive and forward the samples
+The I/O~nodes of the 62~psets that correlate, receive and forward the samples
 of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
 to storage (up to 1.2~Gb/s).
-The figure shows that most time spent in the receipt of UDP packets.
-This load is partially independent of the number of subbands, since a lower
+The figure shows that most time is spent in the receipt of UDP packets.
+This amount is partially independent of the number of subbands, since a lower
 number of subbands decreases the packet size (down from 7,998~bytes), but not
 the amount of packets (48,828~packets per second).
 All other work scales linearly with the amount of subbands.
@@ -824,16 +832,12 @@ Hence, the output data rate (the lower two bars) is twice as low as in the
 8-bit mode.
 Also, copying 16-bit samples into the circular buffer is somewhat more
 efficient, due to L3-cache effects.
-In the 4-bit mode, the number of stations is limited to about~48 if only one
-rack is used.
-This is no problem, since this mode is only envisioned for particular
-observations where only the core stations are used, of which there will
-likely be 36 to~46.
-Also, this mode was qualified for using two racks, but we are able to do so on
-one rack only.
-In this mode, the maximum number of subbands is~992.
-Yet, the output data rate is only 13\%~higher than in the 64-station/8-bit mode,
-due to the reduced number of stations.
+In the 4-bit mode, the number of stations is computationally limited to
+about~48, because of the high number of 992~subbands.
+Due to the reduced number of stations, the output data rate is only 13\%~higher
+than in the 64-station/8-bit mode.
+We initially thought that this mode would really require two racks, but are
+actually able to do so on a single rack.
 
 %The I/O node application is optimized so thoroughly that it can receive a
 %station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
@@ -857,6 +861,25 @@ Both FCNP and the fixed TLB mappings significantly contribute to the low
 resource usage.
 Without either of them, the application cannot handle these data rates in
 real time.
+
+The data loss due to missed UDP packets is low: between $10^6$ and~$10^4$ under
+full load.
+These numbers include the data loss caused by the (software) generators and by
+the 10~GbE network switches.
+The data loss is totally negligible to other places where data can be lost,
+(e.g., the flagger sometimes rejects tens of percents of the data due to RFI),
+and does not hurt the astronomical signal quality.
+
+With the I/O-related optimizations, we obtain bandwidths that are on a par
+with the achieved processing data rates.
+Unless the requirements change, sufficient bandwidth is obtained to support
+all observation modes on a single rack.
+If the need would arise to achieve even higher bandwidths, UDP packet receipt
+could be optimized by not using the \texttt{read()} system call interface,
+but by using another interface that reads the data directly from kernel buffers
+and does not enforce a (370~MiB/s !) kernel-to-user-space copy.
+Right now, we felt no need to implement the required kernel changes.
+Alternatively, the second rack could be used.
 %If future observation modes would require higher output data rates, we may
 %optimize the memory copy routines in the Linux kernel by using the
 %Blue-Gene-specific 16-byte load/store instructions, rather
