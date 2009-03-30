@@ -101,6 +101,29 @@ low-overhead network protocol~\cite{Romein:09a}.
 The remainder of this paper is structured as follows.
 \emph{TODO}.
 
+\section{Related Work}
+
+%LOFAR is not the only radio telescope of which the data are processed in software. In fact,
+%in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
+%and processed it on IBM 360 mainframes. However, as the volume of the data increased, the mainframes were no longer capable of processing the data in an acceptable amount of time, and custom hardware had to be used instead.
+
+%Due to the massive increase in processing power since the 1960s, software processing of telescope
+%data is once again feasible. Several efforts to do so have been started. However, to the best of our knowledge,
+%LOFAR is the only system capable of processing high data rates from a large number of stations at
+%real time.
+
+LOFAR is not the only radio telescope of which the data are processed in software, However, to
+the best of our knowledge, LOFAR is the only system capable of doing so at real time for both
+high data rates and a large number of inputs.
+
+Deller et al.~\cite{Deller:07} have developed the DiFX distributed software correlator, which
+is deployed on a cluster of PCs. Due to their use of commodity hardware, they are severely limited
+in the data rates they can process at real time.
+The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
+partially in software. However, their correlator, which we will show to be the most computationally
+intensive part of the processing pipeline, is implemented on an FPGA~\cite{Ord:08}.
+Finally, a software correlator is under development at The Joint Institute for VLBI in Europe
+(JIVE), but is not yet capable of processing telescope data in real time.
 
 \section{LOFAR overview}
 Describe remote and central stations, FPGA, LBA, HBA, WAN, CEP, storage, offline processing.
@@ -626,6 +649,39 @@ operations per cycle.
 %
 %
 
+% JD SCRATCHPAD
+% -------------------
+%\section{Flexibility}
+
+%One of the main benefits of processing the telescope data in software rather than hardware is the increased flexibility of our setup.
+
+%The LOFAR frequency range (10 -- 250 MHz) allows the observation of many interesting astronomical phenomena. 
+
+%Apart from the imaging pipeline which we described so far, we have implemented several pulsar pipelines, and plan to implement the Epoch-of-Reionization pipeline.
+
+% silicon vs software / asm vs C
+% multiple pipelines: pulsars, eor (note: maintain order in intro)
+%	- component overlap / synergy
+%	- reuse of expensive asm
+%	- flexible C:
+%		+ fast implementation
+%		+ early feasibility and accuracy testing
+%		- slower => less throughput, but sometimes
+%			+ runtime not significant
+%			+ subsequent processing too expensive anyway,
+%			  so we have the time
+% pulsar pipeline:
+%	- experimental phase, C implementation
+%	- used to detect pulsars
+%	- pulsars useful for clock calibration
+%	- fast implementation due to reuse and C
+%	- lofar is experimental. astronomers need to learn possibilities.
+%	  C allows quick change in functionality
+%
+% eor (future work):
+%	- first detectable objects in the universe (universe was opaque before that)
+%	- due to redshift, wavelength of H is 1.5-3m (115-180MHz)
+%	- 
 \section{Results}
 
 \begin{figure}
@@ -634,7 +690,7 @@ operations per cycle.
 signal (represented by color) changes due to the earth rotation that alters
 the relative position of the observed source.
 The white spots are caused by interference; these data are ignored in the
-remainer of the processing pipeline.}
+remainder of the processing pipeline.}
 \label{fig:fringe}
 \end{figure}
 
