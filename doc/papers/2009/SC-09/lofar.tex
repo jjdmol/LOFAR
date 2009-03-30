@@ -138,6 +138,8 @@ We use a configuration where we split the processor and memory into four
 independent \emph{virtual nodes}.  %TODO: not here
 This simplifies programming, since this allows single-threaded processing
 on the compute nodes.  % TODO: tree is shared resource; mention?
+The compute nodes run a fast, simple, single-process kernel
+\emph{(Compute Node Kernel, CNK)},
 
 The Blue Gene/P contains several networks.
 A fast \emph{3-dimensional torus\/} connects all compute nodes and is used
@@ -147,23 +149,29 @@ but also for external communication.
 A \emph{global interrupt network\/} provides support for fast barriers.
 Additional networks exist for initialization, diagnostics, and debugging.
 
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=9cm]{pset.pdf}
+\end{center}
+\caption{A pset.}
+\label{fig:pset}
+\end{figure}
+
 Each compute node is connected to an I/O~node via the collective network
 (see Figure~\ref{fig:pset}).
 An I/O~node uses the same hardware as a compute node, but has its Ethernet
-interface connected and runs another operating system (Linux).
+interface connected and runs another operating system (a modified Linux kernel).
 Since our application demands high bandwidths, our system is configured with
 the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
 The group of one I/O~node and the compute nodes that are connected to it,
 is called a \emph{pset}.
-Careful node allocation is necessary to schedule work on the right core
-in the right pset.
-The system has 160~psets in total.
+Our system has 160~psets in total, 64 per rack.
 Normally, the I/O~node is only used to provide transparent communication
 from the compute nodes to external systems: all I/O-related system calls
 on the compute nodes are forwarded to a daemon program that runs on the
 I/O~node and performs the real operation.
-In Section~\ref{sec:XXX}, we show how we can use the I/O~nodes much more
-efficiently.
+In Section~\ref{sec:I/O-node-processing}, we show how we can use the I/O~nodes
+much more efficiently.
 
 
 \section{LOFAR Processing}
@@ -220,6 +228,7 @@ eventual images are not blurred by bad data.
 
 
 \section{I/O-node processing}
+\label{sec:I/O-node-processing}
 
 %TODO real-time scheduling
 %TODO best-effort buffers
@@ -229,9 +238,12 @@ On the Blue Gene/L, this required rewriting major parts of the system
 software~\cite{Iskra:08}, but this idea is much better supported on the
 Blue Gene/P.
 
-We run one multi-threaded process on each I/O~node that takes care of two main tasks.
+We run one multi-threaded process on each I/O~node that takes care of two
+tasks: the handling of input and the handling of output.
 The input section deals with UDP receipt of station data, and buffering and forwarding to the compute nodes.
 The output section handles outgoing result data from the compute nodes, and forwards it to storage.
+An I/O node may run both sections, either of them, or none at all, depending
+on the configuration.
 Both tasks are described below.
 
 
@@ -244,8 +256,10 @@ stations and I/O~nodes, so that one I/O~node receives all data from a single
 station.
 However, handling the full 3.1~Gb/s data rate of a station on a relatively
 slow CPU is quite a challenge.
+Note that an I/O~node does not run the input section task if it is not
+connected to a station.
 
-The application receives the UDP packets, taking care of out-of-order,
+The input section receives the UDP packets, taking care of out-of-order,
 duplicated, and lost packets.
 Each station uses four FPGAs to send data to its associated I/O~node,
 each FPGA to a different UDP port.
@@ -382,8 +396,14 @@ demonstrate this in Section~\ref{TODO}.
 
 \section{Compute-node processing}
 
+TODO: intro
+
+\subsection{Scheduling}
+
 \begin{figure}
-\includegraphics[width=\columnwidth]{round-robin.pdf}
+\begin{center}
+\includegraphics[width=9cm]{round-robin.pdf}
+\end{center}
 \caption{Round robin processing of work over compute-node cores.}
 \label{fig:round-robin}
 \end{figure}
@@ -400,11 +420,30 @@ processes them (yellow), sends back the results (red), and idles until the
 I/O~node sends new data.
 
 For simplicity, Figure~\ref{fig:round-robin} shows the processing of
-three subbands on six cores.  In reality, there are 64~cores in a
-pset, which are typically resposible for processing four to sixteen
-subbands together.  For example, if a pset needs to process six
-subbands, every second, the next six cores are scheduled and each of
-them will process one subband.
+three subbands on six cores.
+In reality, scheduling is more complex.
+First, the subbands that must be processed are (more or less) evenly divided
+over the psets.
+Typically, a pset is responsible for a fixed set of four to sixteen subbands.
+Then, the subbands are round-robin scheduled over the 64~cores within the
+pset.
+For example, if a pset processes six subbands, every second, the next six
+cores are scheduled and each of the cores will process one subband.
+In this case, the available time to process one subband is ten seconds.
+Since consecutive chunks of a particular subband are always processed by cores
+within the same pset, the output for the subband is always sent via the same
+I/O~node.
+This greatly simplifies communication to the storage nodes and avoids
+all-to-all communication over the 10~GbE switches.
+If we would have scheduled all subbands over one large pool of compute cores
+rather than psets, additional communication over the torus to reroute the
+output would have been necessary.
+On the Blue Gene/L, this could not be implemented efficiently due to the
+inability to asynchronously communicate data using a DMA engine; on the
+Blue Gene/P, it unnecessarily increases torus communication.
+
+
+\subsection{All-to-All data exchange}
 
 The compute nodes perform a large number of operations on the data, as shown in
 Figure~\ref{fig:processing}.
@@ -414,7 +453,7 @@ station, but the correlator requires one frequency subband from all
 stations (we explain this in more detail below).
 The data exchange is challenging, since it involves hundreds of gigabits per
 second.
-Unfortunately, an I/O node cannot send the data directly from the circular
+Unfortunately, an I/O~node cannot send the data directly from the circular
 buffer to the compute core that will process the data, since the I/O~node is
 only connected to the compute nodes in its own pset.
 The data are thus first sent over the collective network from the I/O~node to
@@ -442,10 +481,12 @@ The BG/P, in contrast, uses DMA for the torus, allowing asynchronous
 communication.
 We re-implemented the data exchange using asynchronous point-to-point
 communication, that overlaps the communication over the torus network with 
-the next four processing steps, and with the transfer from the I/O nodes to the compute nodes.
+the data transfer from the I/O nodes to the compute nodes, and with
+the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
 are required.
+
 
 \subsection{Signal Processing}
 
@@ -758,17 +799,18 @@ We optimistically assume 48~stations for the performance measurements.
 \subsection{Computational performance on the Compute Nodes}
 
 \begin{figure}
+\hspace{9mm}
 \subfigure[As function of number of stations.  The input samples are 8~bit,
   and in total, 496 subbands are processed.]{
   %\includegraphics[width=\columnwidth]{cn-performance.pdf}
-  \makebox[11cm][l]{
-  \includegraphics[width=\columnwidth]{cn-performance.pdf}
+  \makebox[92mm][l]{
+  \includegraphics[width=13cm]{cn-performance.pdf}
   }
   \label{fig:cn-performance-func-stations}
 }
-\hfill
+\hspace{1cm}
 \subfigure[For various observation modes.]{
-  \hspace{3cm}
+  \hspace{25mm}
   \label{fig:cn-performance-obs-mode}
 }
 \caption{Compute node performance breakdown.}
@@ -836,17 +878,18 @@ second rack must be employed.
 \subsection{Computational performance on the I/O Nodes}
 
 \begin{figure}
+\hspace{9mm}
 \subfigure[As function of number of subbands.  The input samples are 8~bit,
   and in total, 64 stations are used.]{
   %\includegraphics[width=\columnwidth]{ion-performance.pdf}
-  \makebox[11cm][l]{
-  \includegraphics[width=\columnwidth]{ion-performance.pdf}
+  \makebox[92mm][l]{
+  \includegraphics[width=13cm]{ion-performance.pdf}
   }
   \label{fig:ion-performance-func-subbands}
 }
-\hfill
+\hspace{1cm}
 \subfigure[For various observation modes.]{
-  \hspace{3cm}
+  \hspace{25mm}
   \label{fig:ion-performance-obs-mode}
 }
 \caption{I/O node performance breakdown.}
