@@ -1,4 +1,9 @@
 newgraph
+  (* slightly increase the bbox, to avoid that a small part of the figure
+     is chopped *)
+  X 5.5
+  Y 3.5
+
   xaxis
     size 5
     min 0.45
