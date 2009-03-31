@@ -175,7 +175,7 @@ In addition, we perform phase shift and bandpass
 corrections.  Finally, the signals from all stations are beamformed,
 correlated and forwarded to a storage cluster, where results can be
 kept for several days.  We will explain the central processing steps
-in more detail in Section~\ref{sec:signal}.
+in more detail in Section~\ref{sec:signal-processing}.
 
 After the correlated data has been stored, further processing is done
 \emph{offline}, on commodity cluster hardware. 
@@ -302,6 +302,7 @@ Both tasks are described below.
 
 
 \subsection{Input handling}
+\label{sec:input-handling}
 
 The FPGAs at a LOFAR station send UDP packets with sampled data over a
 dedicated Wide-Area Network to a BG/P I/O~node.
@@ -329,7 +330,7 @@ the WAN are higher for the remote stations than for the central stations.
 Second, the buffer prevents data loss due to small hiccups in the remainder
 of the processing pipeline.
 Third, the buffer is used to artificially delay the stream of samples,
-as we will explain in Section~\ref{sec:delay-compensation}.
+as we will explain in Section~\ref{sec:signal-processing}.
 The buffer is limited by the small memory size, but due to good real-time
 behavior of the application, 2.5~seconds is sufficient.
 
@@ -437,7 +438,7 @@ results were read by the I/O~node. % TODO Moet hier dan niet ook gewoon een circ
 Other threads, such as the threads that read UDP data, and the threads that
 send data from the output queues are also important, but if they would ever
 fail to meet a real-time deadline, only a small amount of data is lost.
-In practice, under normal circumstances, this happens close to never
+In practice, under normal circumstances, this rarely happens
 (see Section~\ref{sec:ION-performance}).
 
 %\begin{figure}
@@ -461,11 +462,17 @@ optimizations we implemented.
 \subsection{Scheduling}
 
 \begin{figure}
-\begin{center}
+\begin{minipage}[b]{9cm}
 \includegraphics[width=9cm]{round-robin.pdf}
-\end{center}
 \caption{Round robin processing of work over compute-node cores.}
 \label{fig:round-robin}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{5cm}
+\includegraphics[width=5cm]{delay.pdf}
+\caption{The left antenna receives the wave later.}
+\label{fig:delay}
+\end{minipage}
 \end{figure}
 
 The I/O~node chops the stream with station data into chunks of one frequency
@@ -522,9 +529,20 @@ The data are thus first sent over the collective network from the I/O~node to
 a compute node and then over the 3-D~torus network.
 We use the 3-D~torus because of its high bandwidth and switching capabilities.
 
+\begin{figure}
+\begin{center}
+\includegraphics[width=2cm]{colinear.pdf}
+\end{center}
+\caption{The bandwidth between colinear nodes is lower than on non-colinear nodes.}
+\label{fig:colinear}
+\end{figure}
+
 The torus bandwidth between colinear and coplanar nodes is lower than between
 non-coplanar nodes, since non-coplanar nodes communicate over more links
 (in three dimensions) simultaneously.
+Figure~\ref{fig:colinear} illustrates this; the bandwidth between nodes
+\textsf{A} and \textsf{B} is (in theory) three times as high as the bandwidth
+between nodes \textsf{A} and \textsf{C} (in practice, it is somewhat less).
 Therefore, we schedule work that needs exchange of data 
 on non-coplanar cores as much as possible.
 We also avoid situations where multiple cores of the same processor need to
@@ -551,7 +569,7 @@ are required.
 
 
 \subsection{Signal Processing}
-\label{sec:signal}
+\label{sec:signal-processing}
 
 After the data exchange, a core possesses the samples of one subband, from all
 stations.
@@ -584,17 +602,23 @@ FFTW~\cite{Lorenz:05}.
 %to compensate for the fact that a celestial wave hits stations at different
 %times~\cite[Sec.~2.1]{Romein:06}.
 
-The next step is \emph{delay compensation}, which artificially ``delays'' the stream of station samples.
+The next step is \emph{delay compensation}.
 Due to the finite speed of light, the wave from a celestial source hits
-stations at different times, depending on the observation direction, the
-station positions, and the rotation of the earth~\cite[Sec.~2.1]{Romein:06}.
-Before the signals can be correlated, all station streams are aligned.
-TODO XXX
+stations at different times (see Figure~\ref{fig:delay}).
+The time difference depends on the observation direction and the
+station positions, and is continuously altered by the rotation of the earth.
+Before the signals can be correlated, all station streams are aligned,
+by artificially delaying the stream of station samples.
 For example, a delay of 22\us can be achieved by shifting four 5.12\us
-samples and a frequency-dependent phase rotation that compensates the
-remaining 1.52\us.
+samples.
+This shift was already done on the I/O~node, by moving the read pointer
+of the circular buffer (see Section~\ref{sec:input-handling}).
+Here, on the compute nodes, the remaining error (1.52\us) is corrected by
+rotating the phase of the signal.
 The phase rotation itself costs a complex multiplication per sample.
-The delays are computed exactly once per second and interpolated in frequency
+Since the rotation depends on the frequency, the correction is done after 
+the PPF: the correction is more accurate on narrow frequency channels.
+The delays are computed once per second and interpolated in frequency
 and time for each individual sample.
 
 The \emph{bandpass correction} step compensates for an artefact
@@ -605,15 +629,17 @@ channel-dependent value that is computed in advance.
 A station cannot correct for this artefact itself, since it is only visible
 in channels, not in subbands.
 
+
+
+
+\subsection{Optimizations}
+
 Although the FIR filters, FFTs, delay compensation, and bandpass correction
 are conceptually separate, consecutive blocks, their implementations are
 highly interweaved to achieve better performance.
 This avoids that four separate passes over all data are made.
 Also, many of the computations are hidden by the memory access delays that
 are the result of a transpose in main memory.
-
-
-\subsection{Optimizations}
 
 For optimal performance, most time-intensive code is written in assembly,
 because the performance from compiled C++ code was by far not sufficient.
