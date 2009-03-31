@@ -75,30 +75,33 @@ The availability of sufficiently powerful supercomputers allows this.
 
 This paper describes the implementation and performance characteristics of
 the real-time part of some of these pipelines.
-The standard imaging pipeline, used to generate sky images,
+The \emph{standard imaging pipeline}, used to generate sky images,
 filters and correlates the data sent by the stations.
 We present a highly-optimized implementation that achieves very high
 computational performance: the correlator sustains 96\% of the theoretical
 floating-point peak performance during the computational phase.
-The Epoch-of-Reionization pipeline that should detect the faint, very first
-sky objects, is a similar pipeline, but with even higher computational
-demands, due to the increased amount of concurrent observation directions.
-We describe several pulsar pipelines as well, that either search large sky
-regions to find unknown pulsars or, once found, sensitively observe their
-characteristics.
+The \emph{Epoch-of-Reionization (EoR)\/} pipeline should detect the faint,
+very first sky objects.
+It is a similar pipeline, but with even higher computational demands, due to
+the increased amount of concurrent observation directions.
+Several \emph{pulsar pipelines\/} are being developed as well, that either
+search large sky regions to find unknown pulsars or, once found, sensitively
+observe their characteristics.
 The pipelines share common components.
-The software also supports multiple concurrent observations. %, even of different types.
+The software also supports multiple concurrent observations, even of different
+types.
 
 The receivers produce hundreds of gigabits of data per second.
 To handle the high data rate,
-we use the Blue Gene/P (BG/P) in an unconventional way: we run \emph{application\/}
-software on the so-called I/O~nodes to preprocess and postprocess data that are
-further handled on the compute nodes.
-This yields a very efficient system and, as we will show later, substantially
-saved us on costs. % TODO bedrag hier noemen?
-Additionally, since we were not able to achieve the required internal input and output data
-rates with the standard network system software, we developed an extremely
-low-overhead network protocol~\cite{Romein:09a}.
+we use the Blue Gene/P (BG/P) in an unconventional way: we run
+\emph{application\/} software on the so-called I/O~nodes to preprocess and
+postprocess data that are further handled on the compute nodes.
+This yields an efficient system and substantially saved us on
+costs~\cite{Iskra:08}.
+Additionally, we developed a low-overhead network protocol~\cite{Romein:09a}
+for communication between I/O~nodes and compute nodes, since we were not able
+to achieve the required internal input and output data rates with the standard
+network system software.
 
 The remainder of this paper is structured as follows.
 \emph{TODO}.
@@ -206,10 +209,11 @@ Each core has two Floating-Point Units that provide support for
 operations on complex numbers.
 A core can sustain two fused multiply-adds per cycle.
 The four cores share 2~GiB of main memory.
-We use a configuration where we split the processor and memory into four
-independent \emph{virtual nodes}.  %TODO: not here
+Although a node can run in \emph{SMP mode}, we run the application in
+\emph{virtual node mode}, where the processor and memory of a node are split
+into four independent, virtual machines.
 This simplifies programming, since this allows single-threaded processing
-on the compute nodes.  % TODO: tree is shared resource; mention?
+on the compute cores.  % TODO: tree is shared resource; mention?
 The compute nodes run a fast, simple, single-process kernel
 \emph{(Compute Node Kernel, CNK)},
 
@@ -248,7 +252,7 @@ efficient to run part of the application software on the I/O~node.
 
 \section{LOFAR Processing}
 
-\begin{figure*}
+\begin{figure*}[t]
 \includegraphics[width=\textwidth]{processing.pdf}
 \caption{Simplified data flow diagram.}
 \label{fig:processing}
@@ -319,16 +323,17 @@ duplicated, and lost packets.
 Each station uses four FPGAs to send data to its associated I/O~node,
 each FPGA to a different UDP port.
 The I/O~node runs four ``input'' threads, one thread per socket.
-Multiple threads are necessary, since a single core is too slow
-to receive the data. Together, the threads receive a total of 48,828~packets per second.
+Multiple threads are necessary, since a single core is too slow to receive all
+data.
+Together, the threads receive a total of 48,828~packets per second.
 
 The received UDP packets containing the samples are copied into a cicular buffer that holds the most recent
 2.5~seconds of data.
 The buffer serves three purposes.
 First, it is used to synchronize the stations, since the travel times over
 the WAN are higher for the remote stations than for the central stations.
-Second, the buffer prevents data loss due to small hiccups in the remainder
-of the processing pipeline.
+Second, the buffer prevents data loss due to small variations in processing
+times of the remainder of the pipeline.
 Third, the buffer is used to artificially delay the stream of samples,
 as we will explain in Section~\ref{sec:signal-processing}.
 The buffer is limited by the small memory size, but due to good real-time
@@ -337,11 +342,11 @@ behavior of the application, 2.5~seconds is sufficient.
 Another thread reads data from the circular buffer and sends the data to
 the compute nodes for further processing.
 It sends data in large bursts that contain approximately one second of samples.
-We use \emph{FCNP (Fast Collective-Network Protocol)}, a 
-network library we developed to efficiently communicate data between the I/O~nodes and the
+Unfortunately, existing network software did not provide sufficient bandwidth
+and consumed too much CPU time.
+We therefore developed \emph{FCNP (Fast Collective-Network Protocol)}, a 
+network library for high-bandwidth communication between the I/O~nodes and the
 compute nodes~\cite{Romein:09a}.
-Existing network software did not provide sufficient bandwidth and consumed
-too much CPU time.
 FCNP, in contrast, achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
@@ -360,7 +365,7 @@ In this case, the input is \emph{reliably} read from file or TCP socket rather t
 UDP.
 In off-line mode we do not use the wall-clock time as
 trigger, but we synchronize the threads that read and write the circular
-buffer differently to prevent them from overruning each other.
+buffer differently to prevent them from overrunning each other.
 
 
 \subsection{Output handling}
@@ -386,7 +391,7 @@ data are simply discarded until space is available.
 This mechanism is important to keep the correlator running in real
 time: it is much better to lose a small part of the data than to stall the
 entire correlator and lose \emph{all\/} data.
-In practice, under normal circumstances no data are lost.
+In practice, under normal circumstances, no data are lost.
 
 
 \subsection{Optimizations}
@@ -411,7 +416,7 @@ in software.
 This is not a problem on the compute nodes, where the compute-node kernels 
 map all memory using a few large pages, so that TLB misses do not occur.
 However, the I/O~nodes run a Linux kernel that typically uses a page size of
-4~KB, potentially generating huge amounts of TLB-miss interrupts.
+4~KB, potentially generating a huge number of TLB-miss interrupts.
 
 To avoid the interrupts, we use a modified ZeptoOS (Linux-based)
 kernel\cite{Kazutomo:09}.
@@ -475,8 +480,8 @@ optimizations we implemented.
 \end{minipage}
 \end{figure}
 
-The I/O~node chops the stream with station data into chunks of one frequency
-subband and approximately one second of time.
+The I/O~node chops the data stream that comes from the station into chunks of
+one frequency subband and approximately one second of time.
 Such a chunk is the unit of data that is sent to the compute node for further
 processing.
 Since processing a chunk typically takes much longer than one second,
@@ -531,7 +536,7 @@ We use the 3-D~torus because of its high bandwidth and switching capabilities.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=2cm]{colinear.pdf}
+\includegraphics[width=25mm]{colinear.pdf}
 \end{center}
 \caption{The bandwidth between colinear nodes is lower than on non-colinear nodes.}
 \label{fig:colinear}
@@ -548,10 +553,10 @@ on non-coplanar cores as much as possible.
 We also avoid situations where multiple cores of the same processor need to
 access the torus or collective network simultaneously, since these resources
 are shared and simultaneous access decreases performance.
-The code that implements the data exchange and scheduling are, in the presence
-of many stations, many subbands, time slicing, round-robin core allocation,
-and avoidance of resource conflicts, \emph{extremely\/} complicated, but
-highly efficient.
+The program parts that implement the data exchange and scheduling are, in the
+presence of many stations, many subbands, time slicing, round-robin core
+allocation, and avoidance of resource conflicts, \emph{extremely\/}
+complicated, but highly efficient.
 
 % TODO alw we het hier over de BG/L gaan hebben, dan moeten we ergens (in de into?)
 % de geschiedenis van LOFAR tot nu toe uitleggen. --Rob
@@ -574,7 +579,7 @@ are required.
 After the data exchange, a core possesses the samples of one subband, from all
 stations.
 The data are processed through a number of filters, as briefly described below.
-More details on most filters (except bandpass correction and beam forming)
+More details on the filters (except bandpass correction and beam forming)
 can be found elsewhere~\cite{Romein:06}.
 
 The subband data are first filtered by a \emph{Poly-Phase Filter bank\/} (PPF) that
@@ -589,10 +594,10 @@ filter supports any power-of-two number of channels.
 As a side effect, the PPF implicitly converts 16-bit little-endian integer
 samples to 32-bit big-endian floating point numbers, since the Blue Gene is
 much better at floating-point processing than integer processing.
-Since this doubles the data size, the PPF runs \emph{after\/} the data
-exchange.
+Since this conversion doubles the data size, the PPF runs \emph{after\/} the
+data exchange.
 The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
-filters, of which the output are Fourier Transformed.
+filters, of which the outputs are Fourier Transformed.
 The FIR filters and a 256-point FFT are implemented in assembly, for optimal
 performance.
 For other FFT sizes, we use the Blue Gene ``Vienna'' version of
@@ -634,13 +639,6 @@ in channels, not in subbands.
 
 \subsection{Optimizations}
 
-Although the FIR filters, FFTs, delay compensation, and bandpass correction
-are conceptually separate, consecutive blocks, their implementations are
-highly interweaved to achieve better performance.
-This avoids that four separate passes over all data are made.
-Also, many of the computations are hidden by the memory access delays that
-are the result of a transpose in main memory.
-
 For optimal performance, most time-intensive code is written in assembly,
 because the performance from compiled C++ code was by far not sufficient.
 We maintain equivalent C++ reference code for testing and portability.
@@ -649,6 +647,21 @@ floating point, integer, and load/store instructions,
 and uses the L2 prefetch buffers in the most optimal way.
 Most instructions are parallel fused multiply-adds, that sustain four
 operations per cycle.
+
+The assembly code minimizes the amount of memory loads by reusing a loaded
+word as many times as possible.
+The register file can hold 32~complex numbers \emph{TODO: cite many-core paper?}
+
+Although the FIR filters, FFTs, delay compensation, and bandpass correction
+are conceptually separate, consecutive blocks, their implementations are
+highly interweaved to achieve better performance.
+This avoids that four separate passes over all data are made.
+Also, the data are laid out in memory in such a way that they are read
+consecutively as much as possible, allowing burst transfers through the
+cache hierarchy.
+%This is not always possible, and in those cases we try to hide the memory
+%Also, many of the computations are hidden by the memory access delays that
+%are the result of a transpose in main memory.
 
 \emph{TODO: integer->FP conversie?}
 
@@ -787,13 +800,14 @@ operations per cycle.
 %	- first detectable objects in the universe (universe was opaque before that)
 %	- due to redshift, wavelength of H is 1.5-3m (115-180MHz)
 %	- 
-\section{Results}
+\section{The output of the correlator}
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=12cm]{fringe.jpg}
 \end{center}
-\caption{Correlations from a 9-hour observation.}
+\caption{Correlations from a 9-hour observation.  See the main text for
+an explanation.}
 \label{fig:fringe}
 \end{figure}
 
@@ -801,8 +815,8 @@ A graphical representation of the correlator output is depicted in
 Figure~\ref{fig:fringe}.
 The figure shows the cross-correlations from two stations during a 9-hour
 observation.
-The x-axis varies in time;
-the y-axis represents the 256~channels of one frequency subband.
+The horizontal axis varies in time;
+the vertical axis represents the 256~channels of one frequency subband.
 Each pixel corresponds to a (complex) correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
 The phase changes over time, due to the earth rotation that alters the
@@ -876,7 +890,7 @@ reducing the available time per subband to 8.03~s.
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
 subbands that are mostly free of RFI (otherwise, the bits are used to encode
 the RFI, not the signal of interest).
-This mode is planned for \emph{Epoch of Reionization} observations, where the high number of subbands
+This mode is planned for \emph{Epoch-of-Reionization} observations, where the high number of subbands
 is used to observe sky in six directions simultaneously.
 If the same amount of stations were used, the processing requirements and
 output data rate would double again, but EoR observations will only use the
@@ -948,8 +962,8 @@ The load on the compute nodes is 35\%, 70\%, and 84\% repectively.
 @@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
 performance, thanks to the highly-optimized assembly code.
-The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
-44\%%
+The FIR filter runs at 86\% of the peak performance, and the hand-crafted
+256-point FFT run at 44\%%
 \footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
 $5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
 more than 44\% FPU efficiency, its absolute run time would be higher.}
@@ -1024,8 +1038,8 @@ In the 4-bit mode, the number of stations is computationally limited to
 about~48, because of the high number of 992~subbands.
 Due to the reduced number of stations, the output data rate is only 13\%~higher
 than in the 64-station/8-bit mode.
-We initially thought that this mode would really require two racks, but are
-actually able to perform it on a single rack.
+%We initially thought that this mode would really require two racks, but are
+%actually able to perform it on a single rack.
 
 %The I/O node application is optimized so thoroughly that it can receive a
 %station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
@@ -1050,14 +1064,13 @@ resource usage.
 Without either of them, the application cannot handle these data rates in
 real time.
 
-The data loss due to missed UDP packets is low: only between 1 in $10^6$ and 1 in $10^4$ packets are dropped under
-full load.
+The data loss due to missed UDP packets is low: only between $10^-6$ and
+$10^-4$ packets are dropped under full load.
 These numbers include the data loss caused by the (software) generators and by
 the 10~GbE network switches.
-The data loss is totally negligible to other places where data can be lost,
+The data loss is negligible to other places where data can be lost,
 (e.g., the flagger sometimes rejects tens of percents of the data due to RFI),
 and does not hurt the astronomical signal quality.
-Colin
 With the I/O-related optimizations, we obtain bandwidths that are on a par
 with the achieved processing data rates.
 Unless the requirements change, sufficient bandwidth is obtained to support
