@@ -980,6 +980,34 @@ Alternatively, the second rack could be used.
 
 \section{Conclusions and future work}
 
+We have shown that telescope data can be processed in real time using software, even if the
+input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was
+efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our BlueGene/P
+supercomputer in unconventional ways in order to achieve high performance. The I/O nodes were meant
+to be merely a bridge between the computation nodes and the outside world, but we configure them
+with custom software in order to deal with the 3.1 Gb/s input, the output, and to perform both
+pre- and post-processing on the data. Also, we use a custom network protocol called FCNP to be
+obtain the required data rates to and from the compute nodes.
+
+The computations themselves benefit from a mix of C++ and assembly. The C++ code base offers the flexibility
+to implement several pipelines and to easily combine and reuse components. The use of assembly allows
+the performance critical parts to run at high efficiency. For example, our correlator, one of the core
+components we describe in this paper, runs at 96\% of the FPU peak performance.
+
+% Conclusions:
+%	- telescope data can be processed in real time using software
+%	- exceed specs by 50%
+%	- flexibility and speed through the mix of C and assembly
+%	- core component is correlator, running at 96% of FPU peak performance
+%	- unconventional use of I/O node and network stack pays off
+
+The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
+modes of observation. We plan to finish the implementation of several pipelines, for the detection
+and analysis of pulsars, but most notably to obtain images from the End-of-Reionization era. Furthermore,
+we plan to extend our on-line processing, for example by including RFI detection and on-line calibration.
+
+% Future work: RFI, online calibration, other pipelines
+
 \section{Related Work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
@@ -995,20 +1023,16 @@ LOFAR is not the only radio telescope of which the data are processed in softwar
 the best of our knowledge, LOFAR is the only system capable of doing so at real time for both
 high data rates and a large number of inputs.
 
-Deller et al.~\cite{Deller:07} have developed the DiFX distributed software correlator, which is
-to be deployed on a cluster of PCs, but is not operational for real time processing. Due to the use
-of commodity hardware, both their communication and computational capabilities are substantially lower
-than those available in our BlueGene/P.
-The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
+Other systems have been proposed, but are either not operational or are far from being able to perform
+their calculations at real time. Deller et al.~\cite{Deller:07} have developed the DiFX distributed
+software correlator, which is to be deployed on a cluster of PCs. Due to the use of commodity hardware,
+both their communication and computational capabilities are substantially lower than those available in
+our BlueGene/P. As a result, they cannot handle the width and number of input streams that we process
+in LOFAR. The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
 partially in software. However, their correlator, which we will show to be the most computationally
-intensive part of the processing pipeline, is implemented on an FPGA~\cite{Ord:08}.
-Finally, a software correlator is under development at The Joint Institute for VLBI in Europe
+intensive part of the processing pipeline, is not implemented in software, but on an FPGA~\cite{Ord:08}.
+Finally, a software correlator is under development at the Joint Institute for VLBI in Europe
 (JIVE), but is not capable of processing telescope data in real time.
-
-
-
-% Future work: RFI, online calibration, other pipelines
-
 
 \section*{Acknowledgments}
 
