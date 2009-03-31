@@ -8,6 +8,8 @@
 
 \newcommand{\us}{\,$\muup$s\xspace}
 
+\hyphenation{ob-ser-va-tion}
+
 \begin{document}
 
 \title{Processing Real-Time LOFAR Telescope Data \\ on a Blue Gene/P Supercomputer}
@@ -89,7 +91,7 @@ The software also supports multiple concurrent observations. %, even of differen
 
 The receivers produce hundreds of gigabits of data per second.
 To handle the high data rate,
-we use the Blue Gene/P in an unconventional way: we run \emph{application\/}
+we use the Blue Gene/P (BG/P) in an unconventional way: we run \emph{application\/}
 software on the so-called I/O~nodes to preprocess and postprocess data that are
 further handled on the compute nodes.
 This yields a very efficient system and, as we will show later, substantially
@@ -101,19 +103,83 @@ low-overhead network protocol~\cite{Romein:09a}.
 The remainder of this paper is structured as follows.
 \emph{TODO}.
 
+
 \section{LOFAR overview}
-Describe remote and central stations, FPGA, LBA, HBA, WAN, CEP, storage, offline processing.
-(All these terms are used later on) --Rob
 
-\section{LOFAR real-time central signal processing}
-\label{sec:signal-processing}
+A global overview of the LOFAR instrument is given in
+Figure~\ref{lofar-overview}. LOFAR uses two different types of
+antennas, the LBAs (Low-Band Antennas) and HBAs (High-Band Antennas).
+The leftmost picture in Figure~\ref{lofar-overvew} shows the low-band
+antennas in the field.  Each LBA consists of one dipole per polarization,
+while each HBA is organized as a tile, wherein 16 antenna elements are
+combined using analog beamforming. All antennas are designed for two
+polarizations.  
 
-CEP receives data from the stations via a dedicated wide-area network.
-Each station locally combines the signals from its antennas and sends samples
-to CEP.
-A sample is a complex number that represents the amplitude and
-phase of a signal at a particular time.
-LOFAR supports $2\times4$, $2\times8$, and $2\times16$-bit samples.
+LOFAR's antennas are structured in a hierarchical way to limit the
+costs of data transport and processing. Thousands of antennas are
+necessary to obtain sufficient sensitivity. The antennas are
+distributed over a large area to achieve a high angular resolution.
+However, combining the data of all individual antennas centrally would
+require too much network bandwidth and would result in excessive
+computational requirements. Therefore, multiple antennas are grouped
+to form a \emph{station}. Within a station, the information of all
+individual antennas is weighted and summed.
+
+Geographically, LOFAR consists of a compact core area and a number of
+remote stations.  The heart of LOFAR will be installed in the Northern
+part of the Netherlands.  The stations are distributed along 5
+log-spiral arms with a diameter of approximately 360 km. The station
+fields are centrally condensed, following a logarithmic distribution.
+About 50\% of the stations are located in the central core. This inner
+area can be operated for dedicated experiments with more data per
+station.  Since other European institutes also show interest and are
+building LOFAR stations, the maximal distance between LOFAR stations will be
+extended, possibly to 1000 km.  In the past several years we have
+deployed a number of prototype antennas, while the roll-out of
+the real stations currently is in progress.
+
+In total, XXX LBAs and YYY HBAs will be installed in a station. Each
+station also features a cabinet where initial processing is done using
+FPGAs.  Typical operations that are performed here include
+analog-to-digital conversion, filtering and frequency selection. Also,
+the signal is split into a number of different frequency ranges,
+called \emph{subbands}.
+
+All station data is transported to the central processing location in
+Groningen via a wide area network (WAN), which uses owned and leased
+light paths. We use UDP for data transport, since we can tolerate some
+data loss. We do not use a reliable protocol such as TCP, because the
+overhead would be to high for our purposes, and retransmissions in the
+case of data loss would interfere with our real time requirements.
+
+The UDP packets contain samples, where a sample is a complex number
+that represents the amplitude and phase of a signal at a particular
+time.  LOFAR supports $2\times4$, $2\times8$, and $2\times16$-bit
+samples. Sampled data can be invalid for various reasons, such as
+Radio Frequency Interference (RFI) and lost network packets.
+Throughout the entire processing chain, we maintain which
+data is marked as invalid, so that eventual images are not blurred by
+bad data.  
+
+The central processing is the main focus of this paper, and is done in
+real time by an IBM Blue Gene/P supercomputer. We filter the data, and
+split the subbands in narrower frequency bands called \emph{channels}, which allow
+for more accurate RFI removal.
+In addition, we perform phase shift and bandpass
+corrections.  Finally, the signals from all stations are beamformed,
+correlated and forwarded to a storage cluster, where results can be
+kept for several days.  We will explain the central processing steps
+in more detail in Section~\ref{sec:signal}.
+
+After the correlated data has been stored, further processing is done
+\emph{offline}, on commodity cluster hardware. 
+The results are calibrated for instrumental and environmental
+effects, and known sources in the sky are subtracted to
+enhance the dynamic range~\cite{Nijboer:07}. Finally, RFI is removed, 
+and the correlation products are
+transformed into an image.  The offline steps are done on
+off-the-shelf cluster hardware, and are not part of the real-time
+processing system described in this paper.
 
 
 \section{The Blue Gene/P}
@@ -204,24 +270,6 @@ This is where the third application (StorageProc) runs.
 The storage nodes are PC-like systems with large disks.
 The storage application collects the data from the I/O~nodes and writes the
 data in an astronomical data format (AIPS++ Measurement Sets) to disk.
-
-After an observation, bad data (due to interference) are removed, and the
-resulting data are calibrated~\cite{Nijboer:07} and imaged.
-This is done on off-the-shelf cluster hardware, and is not part of the
-real-time processing system described in this paper.
-
-
-
-
-%Sampled data can be invalid, for various reasons (e.g., because of
-%radio interference, but also because of lost network packets).
-Throughout the entire processing chain, we maintain which data is marked as
-invalid (e.g, due to radio interference or due to lost UDP packets), so that
-eventual images are not blurred by bad data.
-
-% Veel te veel detail op deze plaats  --Rob
-%Since invalid data is typically clustered, we use a \emph{SparseSet\/}
-%data structure that keeps a list of bad intervals.
 
 
 
@@ -497,6 +545,7 @@ are required.
 
 
 \subsection{Signal Processing}
+\label{sec:signal}
 
 After the data exchange, a core possesses the samples of one subband, from all
 stations.
@@ -754,7 +803,7 @@ With one rack, we can process up to 64~stations, one per I/O~node.
 
 \begin{table}[ht]
 \begin{center}
-\begin{tabular}{|l|ccc|}
+\begin{tabular}{|l|rrr|}
 \hline
 Observation mode	 & \textsf{A}	& \textsf{B}	& \textsf{C}	\\
 \hline
@@ -763,8 +812,8 @@ max.\ nr.\ of subbands	 & 248		& 496		& 992	\\
 nr. channels per subband & 256		& 256		& 256	\\
 max.\ nr.\ of stations	 & 64		& 64		& 48	\\
 \hline
-input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  & 64 * 3.1 & 48 * 3.1 \\
-output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 & 62 * 1.2 & 62 * 1.3 \\
+input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  = \bf{198} & 64 * 3.1 = \bf{198} & 48 * 3.1 = \bf{149} \\
+output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 = \bf{36}  & 62 * 1.2 = \bf{74}  & 62 * 1.3 = \bf{81} \\
 \hline
 available compute time per subband (s)	 & 16.1	     & 8.05     & 4.03     \\
 \hline
@@ -781,35 +830,35 @@ Table~\ref{tab:observation-characteristics}.
 Mode~\textsf{A} is the standard mode, where the stations send 16-bit samples.
 In this mode, the FPGAs can send at most 248~subbands.
 The 248~subbands are evenly divided over 62~psets, so that each pset processes
-4~subbands (the remaining two psets do not correlate).
-Since there are 64~cores in one pset and an integration time equals 1.007~s,
-the available time to process one chunk of data is 16.1~s.
+4~subbands (the remaining two psets handle input data, but do not correlate).
+Since there are 64~cores in one pset and an integration time equals 1.007~s (768 samples),
+the available time to process one chunk of data (1 subband) is 16.1~s.
 
 Mode~\textsf{B} trades accuracy for observation bandwidth, by reducing the
 sample size to 8~bits and doubling the number of subbands.
 This implies that the total input data rate remains the same, but that the
 processing requirements and output data rate double.
-The 62~psets that are used to correlate, have to process 8~subbands each,
+The 62~psets that are used to correlate have to process 8~subbands each,
 reducing the available time per subband to 8.03~s.
 
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
 subbands that are mostly free of RFI (otherwise, the bits are used to encode
 the RFI, not the signal of interest).
-This mode is planned for EoR observations, where the high number of subbands
-is used to observe sky in about six directions simultaneously.
+This mode is planned for \emph{Epoch of Reionization} observations, where the high number of subbands
+is used to observe sky in six directions simultaneously.
 If the same amount of stations were used, the processing requirements and
 output data rate would double again, but EoR observations will only use the
 stations near the center, not the remote ones.
 The exact number of stations that must be correlated is not yet known, but is
 likely between 36 and~46.
-We optimistically assume 48~stations for the performance measurements.
+For the performance measurements, we assume the most challenging case, and use 48~stations.
 
 
 \subsection{Computational performance on the Compute Nodes}
 
 \begin{figure}
 \hspace{9mm}
-\subfigure[As function of number of stations.  The input samples are 8~bit,
+\subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
   and in total, 496 subbands are processed.]{
   %\includegraphics[width=\columnwidth]{cn-performance.pdf}
   \makebox[92mm][l]{
@@ -817,8 +866,8 @@ We optimistically assume 48~stations for the performance measurements.
   }
   \label{fig:cn-performance-func-stations}
 }
-\hspace{1cm}
-\subfigure[For various observation modes.]{
+\hspace{0.8cm}
+\subfigure[Performance of three challenging observation modes.]{
   \hspace{25mm}
   \label{fig:cn-performance-obs-mode}
 }
@@ -840,8 +889,8 @@ Figure~\ref{fig:cn-performance-func-stations} shows execution times for up to
 The $O(n^2)$ complexity of the correlator is clearly visible (the correlations
 between all \emph{pairs\/} of stations are computed), while other
 components scale linearly with the number of stations.
-Despite the high data rates, I/O~requires hardly any time.
-Naturally, the time for input or output cannot exceed $1/64^\mathrm{th}$
+Despite the high data rates, I/O~requires hardly any time \emph{on the compute nodes}.
+It is important to realize that the time for input or output cannot exceed $1/64^\mathrm{th}$
 of the total time, since the associated I/O~node also needs time to communicate
 with the other 63~cores in the pset.
 
@@ -851,7 +900,7 @@ with the other 63~cores in the pset.
 %Doubling the number of subbands halves the available processing time, and in
 %the 4-bit mode, up to about 50~stations can be supported on a single rack.
 
-The performance results hardly differ for the 16-bit and 4-bit modes,
+The performance results hardly differ for the 16-bit and 4-bit modes (not shown),
 since only the performance of the the data receipt from the I/O~node and data
 exchange phase are affected by the sample size, 
 both of which hardly contribute to the total runtime.
@@ -862,8 +911,9 @@ The run time for observation mode \textsf{C} is lower, since this mode
 processes 48 rather than 64~stations.
 All modes run within their real-time constraints of 16.1, 8.05, and 4.03
 seconds respectively.
-The load on the compute nodes is 35\%, 70\%, and 84\%.
+The load on the compute nodes is 35\%, 70\%, and 84\% repectively.
 
+@@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
 performance, thanks to the highly-optimized assembly code.
 The FIR filter achieves 86\% FPU efficiency, and the hand-crafted 256-point FFT
@@ -876,6 +926,11 @@ Compared to equivalent C++ code that is written for clarity and not
 specifically tuned for optimal performance, the hand-written assembly code is
 typically an order of magnitude faster.
 
+
+\noindent @@@ TODO: verplaats onderstaande tekst.  --Rob
+hier roept dit alleen maar meer vragen op: \\
+ - waarom? \\
+ - I/O? Wordt pas in de volgende sectie uitgelegd. @@@ \\
 Due to all optimizations, the correlator can process 50\% more data than
 the specifications require, on only half the amount of planned resources.
 Only if the need to correlate more than 64~stations would ever arise, or if
@@ -909,28 +964,28 @@ second rack must be employed.
 Although the computational requirements were challenging, meeting the real-time
 I/O~requirements was even harder.
 Figure~\ref{fig:ion-performance} shows where the processor cores of the
-I/O~node spend their time in various situations.
+I/O~nodes spend their time in various situations.
 A load of 100\% means that all four cores are fully occupied.
 A load above 85\% must be avoided to prevent major data loss.
 
 We first show how the performance scales with the number of subbands.
 We again use a setting similar to observation mode~\textsf{B}, for up to
-496~subbands (see Figure~\ref{fig:ion-performance-func-subbands}).
-The I/O~nodes of the 62~psets that correlate, receive and forward the samples
+496~subbands, see Figure~\ref{fig:ion-performance-func-subbands}.
+The I/O~nodes receive and forward the samples
 of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
 to storage (up to 1.2~Gb/s).
 The figure shows that most time is spent in the receipt of UDP packets.
 This amount is partially independent of the number of subbands, since a lower
 number of subbands decreases the packet size (down from 7,998~bytes), but not
-the amount of packets (48,828~packets per second).
+the amount of packets. The I/O nodes have to handle 48,828~packets per second in all cases.
 All other work scales linearly with the amount of subbands.
 
 Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
-for the two other challenging modes as well.
+for the three challenging observation modes.
 In the standard 16-bit sample mode, the stations can produce at most
-248~subbands.
+248~subbands (obs. mode A).
 Hence, the output data rate (the lower two bars) is twice as low as in the
-8-bit mode.
+8-bit mode of scenario B.
 Also, copying 16-bit samples into the circular buffer is somewhat more
 efficient, due to L3-cache effects.
 In the 4-bit mode, the number of stations is computationally limited to
@@ -938,7 +993,7 @@ about~48, because of the high number of 992~subbands.
 Due to the reduced number of stations, the output data rate is only 13\%~higher
 than in the 64-station/8-bit mode.
 We initially thought that this mode would really require two racks, but are
-actually able to do so on a single rack.
+actually able to perform it on a single rack.
 
 %The I/O node application is optimized so thoroughly that it can receive a
 %station input of 3.1~Gb/s --- 51\% above the initial LOFAR requirements; the
@@ -963,7 +1018,7 @@ resource usage.
 Without either of them, the application cannot handle these data rates in
 real time.
 
-The data loss due to missed UDP packets is low: between $10^6$ and~$10^4$ under
+The data loss due to missed UDP packets is low: only between 1 in $10^6$ and 1 in $10^4$ packets are dropped under
 full load.
 These numbers include the data loss caused by the (software) generators and by
 the 10~GbE network switches.
