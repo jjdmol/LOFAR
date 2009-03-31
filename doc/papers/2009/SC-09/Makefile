@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	processing.fig pset.fig
+FIG_SOURCES =	colinear.fig delay.fig processing.fig pset.fig
 
 JGR_SOURCES =	cn-performance.jgr ion-performance.jgr
 
