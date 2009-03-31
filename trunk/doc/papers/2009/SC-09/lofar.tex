@@ -166,12 +166,12 @@ the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
 The group of one I/O~node and the compute nodes that are connected to it,
 is called a \emph{pset}.
 Our system has 160~psets in total, 64 per rack.
-Normally, the I/O~node is only used to provide transparent communication
-from the compute nodes to external systems: all I/O-related system calls
-on the compute nodes are forwarded to a daemon program that runs on the
-I/O~node and performs the real operation.
-In Section~\ref{sec:I/O-node-processing}, we show how we can use the I/O~nodes
-much more efficiently.
+Normally, the I/O~node is used as a black box that provides transparent
+communication from the compute nodes to external systems: all I/O-related
+system calls on the compute nodes are forwarded to a daemon program that runs
+on the I/O~node and performs the real operation.
+In Section~\ref{sec:I/O-node-processing}, we show that it is much more
+efficient to run part of the application software on the I/O~node.
 
 
 \section{LOFAR Processing}
@@ -383,8 +383,8 @@ results were read by the I/O~node. % TODO Moet hier dan niet ook gewoon een circ
 Other threads, such as the threads that read UDP data, and the threads that
 send data from the output queues are also important, but if they would ever
 fail to meet a real-time deadline, only a small amount of data is lost.
-In practice, under normal circumstances, this happens close to never. We will
-demonstrate this in Section~\ref{TODO}.
+In practice, under normal circumstances, this happens close to never
+(see Section~\ref{sec:ION-performance}).
 
 %\begin{figure}
 %\includegraphics[width=\columnwidth]{ion-performance.pdf}
@@ -396,7 +396,13 @@ demonstrate this in Section~\ref{TODO}.
 
 \section{Compute-node processing}
 
-TODO: intro
+The bulk of the signal-processing computations take place at the compute nodes.
+In this section, we continue describing the processing pipeline depicted in
+Figure~\ref{fig:processing}.
+We explain how the data flow to the compute nodes, how the data are exchanged
+between other compute nodes, what signal processing takes place, and which
+optimizations we implemented.
+
 
 \subsection{Scheduling}
 
@@ -410,11 +416,13 @@ TODO: intro
 
 The I/O~node chops the stream with station data into chunks of one frequency
 subband and approximately one second of time.
-Since processing such a chunk typically takes much longer than one second,
+Such a chunk is the unit of data that is sent to the compute node for further
+processing.
+Since processing a chunk typically takes much longer than one second,
 the chunks are round-robin distributed over a group of processor cores,
 as illustrated by Figure~\ref{fig:round-robin}.
-Subsequent chunks of data are processed by different processor cores.
-A core must finish its work before it is time to process the next chunk of data.
+Subsequent chunks are processed by different processor cores.
+A core must finish its work before it is time to process the next chunk.
 A core first receives data from the I/O~node (green in the figure),
 processes them (yellow), sends back the results (red), and idles until the
 I/O~node sends new data.
@@ -548,7 +556,6 @@ highly interweaved to achieve better performance.
 This avoids that four separate passes over all data are made.
 Also, many of the computations are hidden by the memory access delays that
 are the result of a transpose in main memory.
-
 
 
 \subsection{Optimizations}
@@ -702,7 +709,9 @@ operations per cycle.
 \section{Results}
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{fringe.jpg}
+\begin{center}
+\includegraphics[width=12cm]{fringe.jpg}
+\end{center}
 \caption{Correlations from a 9-hour observation.}
 \label{fig:fringe}
 \end{figure}
@@ -717,7 +726,7 @@ Each pixel corresponds to a (complex) correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
 The phase changes over time, due to the earth rotation that alters the
 relative position of the observed sources.
-The white spots are caused by interference; these bad data are detected and
+The white spots are caused by RFI; these bad data are detected and
 ignored in the remainder of the processing pipeline.
 
 The correlations are used to create images.
@@ -876,6 +885,7 @@ second rack must be employed.
 
 
 \subsection{Computational performance on the I/O Nodes}
+\label{sec:ION-performance}
 
 \begin{figure}
 \hspace{9mm}
