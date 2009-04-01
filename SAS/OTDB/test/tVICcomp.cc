@@ -33,6 +33,7 @@
 #include <OTDB/VICnodeDef.h>
 #include <OTDB/OTDBparam.h>
 #include <OTDB/ClassifConv.h>
+#include <libgen.h>             // for basename
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

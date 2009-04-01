@@ -15,9 +15,9 @@ pkginclude_HEADERS 	= Package__Version.h  	Converter.h \
 				misc.h \
 				OTDBconnection.h \
 				TreeMaintenance.h \
-				TreeValue.h
+				TreeValue.h 
 
-NOINSTHDRS 	= 	wSpaceSplit.h\
+noinst_HEADERS	 	= 	wSpaceSplit.h \
 				OTDBaction.h \
 				OTDBactionList.h \
 				OTDBcontrol.h \
