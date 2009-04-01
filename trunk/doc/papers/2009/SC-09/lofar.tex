@@ -112,17 +112,16 @@ The remainder of this paper is structured as follows.
 \begin{figure*}
 \includegraphics[width=\textwidth]{lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
-\label{fig:processing}
+\label{lofar-overview}
 \end{figure*}
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{lofar-overview}. LOFAR uses two different types of
 antennas, the LBAs (Low-Band Antennas) and HBAs (High-Band Antennas).
-The leftmost picture in Figure~\ref{lofar-overvew} shows the low-band
+The leftmost picture in Figure~\ref{lofar-overview} shows the low-band
 antennas in the field.  Each LBA consists of one dipole per polarization,
 while each HBA is organized as a tile, wherein 16 antenna elements are
-combined using analog beamforming. All antennas are designed for two
-polarizations.  
+combined. All antennas are designed for two polarizations.  
 
 LOFAR's antennas are structured in a hierarchical way to limit the
 costs of data transport and processing. Thousands of antennas are
@@ -252,8 +251,16 @@ efficient to run part of the application software on the I/O~node.
 
 \section{LOFAR Processing}
 
+%\begin{figure*}[t]
+%\includegraphics[width=\textwidth]{processing.pdf}
+%\caption{Simplified data flow diagram.}
+%\label{fig:processing}
+%\end{figure*}
+
 \begin{figure*}[t]
-\includegraphics[width=\textwidth]{processing.pdf}
+\center{
+\includegraphics[width=0.8\textwidth]{processing-overview.pdf}
+}
 \caption{Simplified data flow diagram.}
 \label{fig:processing}
 \end{figure*}
