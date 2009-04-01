@@ -196,67 +196,67 @@
        x="214.67603"
        xml:space="preserve">BG/P compute core</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text82"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="88.429649"
+       y="493.70261"
+       x="88.561089"
        xml:space="preserve">exchange</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text84"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="153.74788"
+       y="494.05148"
+       x="154.46243"
        xml:space="preserve">FIR filter</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text86"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="206.50449"
+       y="494.60187"
+       x="207.00996"
        xml:space="preserve">FFT</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text88"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="309.50531"
+       y="494.05148"
+       x="309.90393"
        xml:space="preserve">bandpass</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text90"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="377.3356"
+       y="491.5748"
+       x="377.03308"
        xml:space="preserve">beamform</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text92"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="442.65353"
+       y="493.77631"
+       x="443.06189"
        xml:space="preserve">correlate</text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.74769592px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00100885in;font-family:Helvetica"
        id="text94"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="494.27332"
-       x="251.72458"
+       y="494.05148"
+       x="251.57915"
        xml:space="preserve">phase</text>
     <polyline
        id="polyline100"
@@ -274,13 +274,13 @@
        points="10275,2746 10350,2934 10425,2746 10350,2784 10275,2746 "
        transform="matrix(3.3496385e-2,0,0,3.3496385e-2,-258.25794,384.20226)" />
     <text
-       style="font-size:6.43130589px;font-style:italic;font-weight:bold;text-anchor:start;fill:#ff0000;stroke:#ff0000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:8.60529232px;font-style:italic;font-weight:bold;text-anchor:start;fill:#ff0000;stroke:#ff0000;stroke-width:0.00112052in;font-family:Helvetica"
        id="text112"
        font-size="192"
        font-weight="bold"
        font-style="italic"
-       y="449.50833"
-       x="90.702614"
+       y="445.05893"
+       x="90.98027"
        xml:space="preserve">3D torus</text>
     <text
        xml:space="preserve"
@@ -295,13 +295,13 @@
          x="760.66302"
          y="-84.451988">{</tspan></text>
     <text
-       style="font-size:6.43130589px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00083744in;font-family:Helvetica"
+       style="font-size:7.55034733px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00098315in;font-family:Helvetica"
        id="text3393"
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="466.75577"
-       x="174.26891"
+       y="466.41925"
+       x="175.44446"
        xml:space="preserve">Polyphase filter bank (PPF)</text>
     <text
        style="font-size:9.28655243px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00120915in;font-family:Helvetica"
@@ -328,13 +328,22 @@
        points="10275,2746 10350,2934 10425,2746 10350,2784 10275,2746 "
        transform="matrix(3.3496385e-2,0,0,3.3496385e-2,-258.33906,466.04248)" />
     <text
-       style="font-size:6.43130589px;font-style:italic;font-weight:bold;text-anchor:start;fill:#ff0000;stroke:#ff0000;stroke-width:0.00083744in;font-family:Helvetica"
-       id="text8357"
+       style="font-size:4.98803663px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00064951in;font-family:Helvetica"
+       id="text8539"
+       font-size="192"
+       font-weight="bold"
+       font-style="normal"
+       y="496.58109"
+       x="377.0043"
+       xml:space="preserve">(optional)</text>
+    <text
+       style="font-size:8.60529232px;font-style:italic;font-weight:bold;text-anchor:start;fill:#ff0000;stroke:#ff0000;stroke-width:0.00112052in;font-family:Helvetica"
+       id="text8541"
        font-size="192"
        font-weight="bold"
        font-style="italic"
-       y="537.60559"
-       x="90.621613"
+       y="543.8277"
+       x="90.648972"
        xml:space="preserve">3D torus</text>
   </g>
 </svg>
