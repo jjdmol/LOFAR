@@ -64,6 +64,7 @@ libtbbdriver_la_SOURCES = Package__Version.cc \
 	ArpCmd.cc \
 	ArpModeCmd.cc \
 	StopCepCmd.cc	\
+	WatchDogCmd.cc \
 	TempLimitCmd.cc
 
 libtp_protocol_la_SOURCES = \
@@ -109,6 +110,7 @@ noinst_HEADERS = \
 	ArpCmd.h \
 	ArpModeCmd.h \
 	StopCepCmd.h \
+	WatchDogCmd.h \
 	TempLimitCmd.h	
 
 #NOINSTdir	=

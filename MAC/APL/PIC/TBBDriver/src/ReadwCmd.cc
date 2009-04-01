@@ -95,13 +95,13 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
-	}
-	else {
+	} else {
 		itsTPackE = new TPReadwAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		itsTBBackE->wordlo	= itsTPackE->wordlo;
-		itsTBBackE->wordhi	= itsTPackE->wordhi;
+		for (int i = 0; i < 8; i++) {
+			itsTBBackE->word[i]	= itsTPackE->word[i];
+		}
 		
 		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;

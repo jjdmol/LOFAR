@@ -79,8 +79,9 @@ void WritewCmd::saveTbbEvent(GCFEvent& event)
 	itsTPE->status	= 0;
 	itsTPE->mp			=	static_cast<uint32>(itsTBBE->mp);
 	itsTPE->addr		=	itsTBBE->addr;
-	itsTPE->wordlo	= itsTBBE->wordlo;
-	itsTPE->wordhi	= itsTBBE->wordhi;
+	for (int i = 0; i < 8; i++) {
+		itsTPE->word[i] = itsTBBE->word[i];
+	}
 	
 	delete itsTBBE;	
 }

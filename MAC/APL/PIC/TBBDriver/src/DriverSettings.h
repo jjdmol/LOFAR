@@ -33,9 +33,9 @@
 namespace LOFAR {
   namespace TBB {
 
-static const int DRIVER_VERSION = 205; // 2.00 
+static const int DRIVER_VERSION = 206; // 2.06 
 
-enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, freeBoard, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, WatchdogSet, freeBoard, boardFreed, boardReady, boardError};
 
 // info for all channels
 struct ChannelInfo

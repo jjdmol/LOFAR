@@ -75,10 +75,17 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE = new TBBImageInfoEvent(event);
 	
-	setBoardNr(itsTBBE->board);	
-	itsTBBackE->board = getBoardNr();	
+  itsTBBackE->status_mask = 0;
+  
+  if (TS->isBoardActive(itsTBBE->board)) {
+    setBoardNr(itsTBBE->board);
+  } else {
+    itsTBBackE->status_mask |= TBB_NO_BOARD ;
+    setDone(true);
+  }
 	
-	itsTBBackE->status_mask = 0;
+  itsTBBackE->board = getBoardNr();	
+	
 	itsTBBackE->active_image = TS->getImageNr(getBoardNr());
 	itsImage = 0;
 		

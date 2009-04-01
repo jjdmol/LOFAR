@@ -60,7 +60,7 @@ namespace LOFAR {
 			private:
 				TbbSettings *TS;
 				
-				TPWritewEvent			*itsTPE;
+				TPWritewEvent		*itsTPE;
 				TPWritewAckEvent	*itsTPackE;
 				TBBWritewEvent		*itsTBBE;
 				TBBWritewAckEvent	*itsTBBackE;
