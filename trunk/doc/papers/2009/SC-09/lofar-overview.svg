@@ -61,6 +61,13 @@
        inkscape:vp_y="0 : 1000 : 0"
        inkscape:vp_x="0 : 526.18109 : 1"
        sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2529"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -440,28 +447,28 @@
    style="stroke-width:2.38379359;stroke-miterlimit:10.43299961;stroke-dasharray:none"
    id="path2172" />
 </g>    <image
-       y="278.18802"
-       x="-131.96962"
-       id="image3359"
-       height="58.234581"
-       width="71.817673"
-       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/lofar1.jpg"
-       xlink:href="lofar1.jpg" />
+       y="274.53534"
+       x="-132.77776"
+       id="image2531"
+       height="59.585835"
+       width="75.493324"
+       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/LBA-small.jpg"
+       xlink:href="LBA-small.jpg" />
     <image
-       y="342.01672"
-       x="-131.24535"
-       id="image3367"
-       height="58.234581"
-       width="71.817673"
-       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/lofar1.jpg"
-       xlink:href="lofar1.jpg" />
+       y="342.56271"
+       x="-133.08316"
+       id="image2535"
+       height="59.585835"
+       width="75.493324"
+       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/LBA-small.jpg"
+       xlink:href="LBA-small.jpg" />
     <image
-       y="441.7933"
-       x="-130.40735"
-       id="image3369"
-       height="58.234581"
-       width="71.817673"
-       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/lofar1.jpg"
-       xlink:href="lofar1.jpg" />
+       y="442.58881"
+       x="-133.08316"
+       id="image2537"
+       height="59.585835"
+       width="75.493324"
+       sodipodi:absref="/home/rob/LOFAR/doc/papers/2009/SC-09/LBA-small.jpg"
+       xlink:href="LBA-small.jpg" />
   </g>
 </svg>

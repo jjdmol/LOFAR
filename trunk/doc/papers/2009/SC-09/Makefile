@@ -6,7 +6,7 @@ FIG_SOURCES =	colinear.fig delay.fig processing.fig pset.fig
 
 JGR_SOURCES =	cn-performance.jgr ion-performance.jgr
 
-JPG_SOURCES =	fringe.jpg LBA.jpg LBA-field.jpg map.jpg
+JPG_SOURCES =	fringe.jpg LBA-field.jpg map.jpg
 
 PNG_SOURCES =	
 
