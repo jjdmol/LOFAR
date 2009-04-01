@@ -6,18 +6,18 @@ FIG_SOURCES =	colinear.fig delay.fig processing.fig pset.fig
 
 JGR_SOURCES =	cn-performance.jgr ion-performance.jgr
 
-JPG_SOURCES =	fringe.jpg
+JPG_SOURCES =	fringe.jpg LBA.jpg LBA-field.jpg map.jpg
 
 PNG_SOURCES =	
 
 STY_SOURCES =	
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-GEN_PDF_FILES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) lofar.pdf
+FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
-GEN_FILES =	$(AUX_FILES) $(GEN_PDF_FILES) $(GEN_EXT:%=lofar.%) mfput.log\
-		missfont.log texput.log
+GEN_FILES =	$(AUX_FILES) $(FIGURES) lofar.pdf $(GEN_EXT:%=lofar.%)\
+		mfput.log missfont.log texput.log
 
 TEXINPUTS =	inputs:.:
 TEXFONTS =	:
@@ -28,7 +28,7 @@ TEXFONTS =	:
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
 
-lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(GEN_PDF_FILES)
+lofar.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
 		bibtex lofar
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex lofar
