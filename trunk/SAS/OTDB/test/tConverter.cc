@@ -29,6 +29,7 @@
 #include <Common/lofar_datetime.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/ParamTypeConv.h>
+#include <libgen.h>             // for basename
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

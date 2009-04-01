@@ -32,6 +32,7 @@
 #include <OTDB/TreeState.h>
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/TreeMaintenance.h>
+#include <libgen.h>             // for basename
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
