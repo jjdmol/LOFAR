@@ -641,8 +641,11 @@ channel-dependent value that is computed in advance.
 A station cannot correct for this artefact itself, since it is only visible
 in channels, not in subbands.
 
-
-
+The \emph{beam former} combines the data of all the stations by taking the
+complex sum for each sample. As a result, the noise measured by the individual
+stations level out, while any signals that were measured by multiple stations
+are amplified. The output of the beam former is a single data stream,
+representing a beam focused on a celestial source.
 
 \subsection{Optimizations}
 
@@ -932,7 +935,7 @@ Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time.
 The seven major tasks are each represented by a different color in the bar
 graph; the size of each bar is proportional to the contribution to the total
 work load.
-The y-axis shows the absolute run time to process one subband with
+The vertical axis shows the absolute run time to process one subband with
 1.007~second of station samples.
 
 Before comparing the performance of the three observation modes described
@@ -1095,36 +1098,6 @@ Alternatively, the second rack could be used.
 %We think this will reduce the system time of I/O operations.
 
 
-\section{Conclusions and future work}
-
-We have shown that telescope data can be processed in real time using software, even if the
-input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was
-efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our BlueGene/P
-supercomputer in unconventional ways in order to achieve high performance. The I/O nodes were meant
-to be merely a bridge between the computation nodes and the outside world, but we configure them
-with custom software in order to deal with the 3.1 Gb/s input, the output, and to perform both
-pre- and post-processing on the data. Also, we use a custom network protocol called FCNP to be
-obtain the required data rates to and from the compute nodes.
-
-The computations themselves benefit from a mix of C++ and assembly. The C++ code base offers the flexibility
-to implement several pipelines and to easily combine and reuse components. The use of assembly allows
-the performance critical parts to run at high efficiency. For example, our correlator, one of the core
-components we describe in this paper, runs at 96\% of the FPU peak performance.
-
-% Conclusions:
-%	- telescope data can be processed in real time using software
-%	- exceed specs by 50%
-%	- flexibility and speed through the mix of C and assembly
-%	- core component is correlator, running at 96% of FPU peak performance
-%	- unconventional use of I/O node and network stack pays off
-
-The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
-modes of observation. We plan to finish the implementation of several pipelines, for the detection
-and analysis of pulsars, but most notably to obtain images from the End-of-Reionization era. Furthermore,
-we plan to extend our on-line processing, for example by including RFI detection and on-line calibration.
-
-% Future work: RFI, online calibration, other pipelines
-
 \section{Related Work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
@@ -1150,6 +1123,37 @@ partially in software. However, their correlator, which we will show to be the m
 intensive part of the processing pipeline, is not implemented in software, but on an FPGA~\cite{Ord:08}.
 Finally, a software correlator is under development at the Joint Institute for VLBI in Europe
 (JIVE), but is not capable of processing telescope data in real time.
+
+\section{Conclusions and future work}
+
+We have shown that telescope data can be processed in real time using software, even if the
+input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was
+efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our BlueGene/P
+supercomputer in unconventional ways in order to achieve high performance. The I/O nodes were meant
+to be merely a bridge between the compute nodes and the outside world, but we equip them
+with custom software in order to deal with the 3.1 Gb/s input, the output, and to perform both
+pre- and post-processing. Also, we use a custom network protocol called FCNP to be
+obtain the required data rates to and from the compute nodes.
+
+Our implementation benefits from a mix of C++ and assembly. The C++ code base offers the flexibility
+to implement several pipelines and to easily combine and reuse components. The use of assembly allows
+the performance critical parts to run at high efficiency. For example, our correlator, one of the core
+components we describe in this paper, runs at 96\% of the FPU peak performance.
+
+% Conclusions:
+%	- telescope data can be processed in real time using software
+%	- exceed specs by 50%
+%	- flexibility and speed through the mix of C and assembly
+%	- core component is correlator, running at 96% of FPU peak performance
+%	- unconventional use of I/O node and network stack pays off
+
+The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
+modes of observation. We plan to finish the implementation of several pipelines, for the detection
+and analysis of pulsars, but most notably to obtain images from the End-of-Reionization era. Furthermore,
+we plan to extend our on-line processing, for example by including RFI detection and on-line calibration.
+
+% Future work: RFI, online calibration, other pipelines
+
 
 \section*{Acknowledgments}
 
