@@ -33,7 +33,7 @@ using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using namespace TBB;
 
-static const uint16 BASEUDPPORT = 0x7BB0; // (=61664) start numbering src and dst UDP ports at this number (4346)
+static const uint16 BASEUDPPORT = 0x7BB0; // (=31664) start numbering src and dst UDP ports at this number
 static const uint16 TRANSIENT_FRAME_SIZE = 2140; // bytes, header(88) + payload(2048) + CRC(4)
 static const uint16 SUBBANDS_FRAME_SIZE = 2012;  // bytes, header(88) + payload(1920) + CRC(4)
 

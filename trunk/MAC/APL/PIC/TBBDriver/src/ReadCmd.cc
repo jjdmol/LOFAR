@@ -56,7 +56,9 @@ ReadCmd::~ReadCmd()
 // ----------------------------------------------------------------------------
 bool ReadCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_READ)||(event.signal == TP_READ_ACK)) {
+	if ((event.signal == TBB_READ)
+		||(event.signal == TP_READ_ACK)
+		||(event.signal == TP_WATCHDOG_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -82,8 +84,8 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 				
 	// initialize TP send frame
 	itsTPE->opcode			= TPREAD;
-	itsTPE->status			=	0;
-	itsTPE->channel			= getChannelNr();
+	itsTPE->status			= 0;
+	itsTPE->channel		= getChannelNr();
 	itsTPE->secondstime	= itsTBBE->secondstime;
 	itsTPE->sampletime	= itsTBBE->sampletime;
 	itsTPE->prepages		= itsTBBE->prepages;
@@ -108,16 +110,15 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 	}	else {
 		itsTPackE = new TPReadAckEvent(event);
 		// check if busy
-		if (itsTPackE->status == 2) {
+		if (itsTPackE->status == 0xfd) {
 			LOG_DEBUG_STR(formatString("TBB busy, %d pages left, trying until free", itsTPackE->pages_left));
 			setSleepTime(0.1);		
 		} else {
+			LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
 			setDone(true);
 		}
-		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
-	
 }
 
 // ----------------------------------------------------------------------------

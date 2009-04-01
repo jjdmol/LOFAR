@@ -74,6 +74,17 @@ static const int REG_SIZE[8][8] = {
 static const int TBB_LISTEN_ONE_SHOT = 0;
 static const int TBB_LISTEN_CONTINUES = 1;
 
+// rcu to channel conversion, rcu-8 is on channel-0
+static const int TBB_RCU_TABLE[16] = {
+	8, 9, 0, 1, 10, 11, 2, 3, 12, 13, 4, 5, 14, 15, 6, 7
+};
+
+// rcu to mp conversion, rcu-8 is on mp-0
+static const int TBB_MP_TABLE[16] = {
+	0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3
+};
+
+
 // dimensions of the connected hardware
 uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
 int			itsMemory[MAX_N_TBBOARDS];
@@ -266,6 +277,22 @@ public:
 		}
 		return(rcus);	
 	}	
+	
+	int rcu2ch(int rcunr) const
+	{
+		return(TBB_RCU_TABLE[rcunr % 16]);
+	}
+	
+	int rcu2mp(int rcunr) const
+	{
+		return(TBB_MP_TABLE[rcunr % 16]);
+	}
+	
+	int rcu2board(int rcunr) const
+	{
+		int board = static_cast<int>(rcunr / 16);
+		return(board);
+	}
 	
 protected:
 	explicit Command(GCFPortInterface& port) : 
@@ -470,6 +497,23 @@ class ReadCmd : public Command
 		uint32 itsSampleTime;
 		uint32 itsPrePages;
 		uint32 itsPostPages;
+};
+
+//-----------------------------------------------------------------------------
+class ReadAllCmd : public Command
+{
+	public:
+		ReadAllCmd(GCFPortInterface& port);
+		virtual ~ReadAllCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setPages(uint32 pages) { itsPages = pages; }
+	private:
+		int itsStage;
+		int itsRcu;
+		uint32 itsSecondsTime;
+		uint32 itsSampleTime;
+		uint32 itsPages;
 };
 
 //-----------------------------------------------------------------------------
@@ -687,13 +731,11 @@ class WritewCmd : public Command
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 		void setMp(uint32 mp)		{	itsMp = mp;	}
 		void setAddr(uint32 addr)  {	itsAddr = addr;	}
-		void setWordLo(uint32 lo)  {	itsWordLo = lo;	}
-		void setWordHi(uint32 hi)  {	itsWordHi = hi;	}
+		void setWord(uint32 word, int addr)  {	itsWord[addr] = word;	}
 	private:
 		uint32	itsMp;
 		uint32	itsAddr;
-		uint32	itsWordLo;
-		uint32	itsWordHi;
+		uint32	itsWord[8];
 };
 
 //-----------------------------------------------------------------------------
@@ -706,12 +748,12 @@ class TestDdrCmd : public Command
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
 		int32		itsCmdStage;
+		uint32	itsAddrLines;
 		uint32	itsMp;
 		uint32	itsAddr;
 		uint32	itsAddrLine;
 		uint32	itsTestPatern;
-		uint32	itsWordLo;
-		uint32	itsWordHi;
+		uint32	itsWord[8];
 		int	itsAddrLineErrors;
 		int	itsDataLineErrors;
 };
@@ -780,7 +822,7 @@ class ReadPageCmd : public Command
 		// values used in program
 		int32		itsCmdStage;
 		uint32	itsPage;
-		uint32	itsTotalSize;
+		uint32	itsMpSize;
 		// data from channelInfoCmd
 		char		itsState;		
 		uint32	itsStartAddr;

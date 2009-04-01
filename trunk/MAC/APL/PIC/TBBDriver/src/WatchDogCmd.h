@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  ResetCmd.h: III
+//#  WatchDogCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef RESETCMD_H_
-#define RESETCMD_H_
+#ifndef WATCHDOGCMD_H_
+#define WATCHDOGCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -38,14 +38,14 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class ResetCmd : public Command 
+		class WatchDogCmd : public Command 
 		{
 			public:
-				// Constructors for a ResetCmd object.
-				ResetCmd();
+				// Constructors for a WatchDogCmd object.
+				WatchDogCmd();
 	  
-				// Destructor for ResetCmd.
-				virtual ~ResetCmd();
+				// Destructor for WatchDogCmd.
+				virtual ~WatchDogCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
@@ -63,12 +63,12 @@ namespace LOFAR {
 				
 				TbbSettings *TS;
 				
-				TPResetEvent		*itsTPE;
-				TPResetAckEvent	*itsTPackE;
-				TBBResetEvent		*itsTBBE;
-				TBBResetAckEvent	*itsTBBackE;
+				TPWatchdogEvent		*itsTPE;
+				TPWatchdogAckEvent	*itsTPackE;
+				TBBWatchdogEvent		*itsTBBE;
+				TBBWatchdogAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* RESETCMD_H_ */
+#endif /* WATCHDOGCMD_H_ */

@@ -69,7 +69,7 @@ void Command::setChannelNr(int32 channelnr)
 void Command::reset()
 {
 	itsDone = false;
-  itsWaitAck = true;
+	itsWaitAck = true;
 	itsBoard = -1;
 	itsChannel = -1;	
 }
