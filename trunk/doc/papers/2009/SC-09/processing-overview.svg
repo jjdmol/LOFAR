@@ -8,7 +8,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="773.33087"
+   width="650.74603"
    height="197.73329"
    id="svg4918"
    sodipodi:version="0.32"
@@ -50,7 +50,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.30351"
-     inkscape:cx="62.439494"
+     inkscape:cx="319.67889"
      inkscape:cy="98.866646"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -74,7 +74,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(98.478902,-39.761754)">
+     transform="translate(-24.105949,-39.761754)">
     <rect
        id="rect3326"
        style="fill:#d7e3f4;stroke:#000080;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none"
@@ -230,7 +230,7 @@
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="54.248699"
+       y="176.2487"
        x="93.88237"
        xml:space="preserve">storage cluster node</text>
     <a
@@ -238,7 +238,7 @@
        transform="matrix(7.0776239e-2,0,0,7.0776239e-2,-270.81922,-322.50631)">
       <path
          id="path4839"
-         d="M 3618.3908,5894.7275 L 6773.4018,5894.7275"
+         d="M 5879.0365,5894.7275 L 6773.4018,5894.7275"
          style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:17.21153259;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          sodipodi:nodetypes="cc" />
     </a>
@@ -258,7 +258,7 @@
        font-weight="bold"
        font-style="normal"
        y="99.331894"
-       x="-60.341476"
+       x="93.658524"
        xml:space="preserve"><tspan
          style="font-style:italic;fill:#000000;stroke-width:0.15924659"
          id="tspan4847">from station</tspan></text>
