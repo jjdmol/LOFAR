@@ -251,17 +251,11 @@ efficient to run part of the application software on the I/O~node.
 
 \section{LOFAR Processing}
 
-%\begin{figure*}[t]
-%\includegraphics[width=\textwidth]{processing.pdf}
-%\caption{Simplified data flow diagram.}
-%\label{fig:processing}
-%\end{figure*}
-
-\begin{figure*}[t]
+\begin{figure*}[ht]
 \center{
 \includegraphics[width=0.8\textwidth]{processing-overview.pdf}
 }
-\caption{Simplified data flow diagram.}
+\caption{Simplified data flow diagram for the central processing pipeline.}
 \label{fig:processing}
 \end{figure*}
 
@@ -290,10 +284,16 @@ data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 
 
 
-
-
 \section{I/O-node processing}
 \label{sec:I/O-node-processing}
+
+\begin{figure*}[t]
+\center{
+\includegraphics[width=0.8\textwidth]{ION-processing.pdf}
+}
+\caption{Simplified data flow diagram for the I/O nodes.}
+\label{fig:ion-processing}
+\end{figure*}
 
 %TODO real-time scheduling
 %TODO best-effort buffers
@@ -309,7 +309,7 @@ The input section deals with UDP receipt of station data, and buffering and forw
 The output section handles outgoing result data from the compute nodes, and forwards it to storage.
 An I/O node may run both sections, either of them, or none at all, depending
 on the configuration.
-Both tasks are described below.
+Both tasks are shown in Figure~\ref{fig:ion-processing}, and described in detail below.
 
 
 \subsection{Input handling}
