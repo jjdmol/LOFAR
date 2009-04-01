@@ -41,6 +41,9 @@ lofar.ps:	lofar.pdf
 evince::	lofar.pdf
 		evince $<
 
+xpdf::		lofar.pdf
+		xpdf -g 900x1200 $<
+
 lpr::		lofar.ps
 		lpr $<
 
