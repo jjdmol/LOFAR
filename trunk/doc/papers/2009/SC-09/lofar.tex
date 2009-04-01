@@ -1,8 +1,6 @@
-\documentclass[10pt]{article}
-%\documentclass[conference]{IEEEtran}
+\documentclass{sig-alternate}
+%\documentclass{acm_proc_article-sp}
 
-\usepackage{a4wide,setspace}
-\doublespacing
 \usepackage{cite, graphicx, subfigure, amsmath, xspace, txfonts}
 %\usepackage{eurosym} 
 
@@ -13,9 +11,31 @@
 \begin{document}
 
 \title{Processing Real-Time LOFAR Telescope Data \\ on a Blue Gene/P Supercomputer}
-\author{John W. Romein and P. Chris Broekema and Jan David Mol and Rob V. van Nieuwpoort\\
-ASTRON (Netherlands Institute for Radio Astronomy), Dwingeloo, The Netherlands\\
-\small{\texttt{\{romein,broekema,mol,nieuwpoort\}@astron.nl}}}
+
+\numberofauthors{4}
+
+\def\sharedaffiliation{%
+\end{tabular}
+\begin{tabular}{c}}
+
+\author{
+\alignauthor John W. Romein\titlenote{To whom correspondence should be sent.}\\
+\email{romein@astron.nl}
+\alignauthor P. Chris Broekema\\
+\email{broekema@astron.nl}
+\alignauthor Jan David Mol\\
+\email{mol@astron.nl}
+\and
+\alignauthor \hspace{1cm} \\
+\alignauthor Rob V. van Nieuwpoort\\
+\email{nieuwpoort@astron.nl}
+\alignauthor \hspace{1cm} \\
+\sharedaffiliation
+\affaddr{ASTRON (Netherlands Institute for Radio Astronomy)}\\
+\affaddr{Oude Hoogeveensedijk 4}\\
+\affaddr{7991\ PD\ \ Dwingeloo}\\
+\affaddr{The Netherlands}
+}
 
 \date{}
 
@@ -80,7 +100,7 @@ filters and correlates the data sent by the stations.
 We present a highly-optimized implementation that achieves very high
 computational performance: the correlator sustains 96\% of the theoretical
 floating-point peak performance during the computational phase.
-The \emph{Epoch-of-Reionization (EoR)\/} pipeline should detect the faint,
+The \emph{Epoch of Reionization (EoR)\/} pipeline should detect the faint,
 very first sky objects.
 It is a similar pipeline, but with even higher computational demands, due to
 the increased amount of concurrent observation directions.
@@ -109,11 +129,11 @@ The remainder of this paper is structured as follows.
 
 \section{LOFAR overview}
 
-\begin{figure*}
-\includegraphics[width=\textwidth]{lofar-overview.pdf}
+\begin{figure}
+\includegraphics[width=\columnwidth]{lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
 \label{fig:lofar-overview}
-\end{figure*}
+\end{figure}
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
@@ -199,7 +219,7 @@ We recently replaced the system by an equally powerful 2.5-rack Blue Gene/P.
 Below, we describe the key features of the Blue Gene/P.
 More information can be found elsewhere~\cite{IBM:08}.
 
-Our system contains 10,880 processor cores that provide 37.0~TFLOPS peak
+Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
 processing power.
 The system is built using SoC (System-on-a-Chip) technology that integrates
 all processing and networking functionality on a single die.
@@ -226,9 +246,7 @@ A \emph{global interrupt network\/} provides support for fast barriers.
 Additional networks exist for initialization, diagnostics, and debugging.
 
 \begin{figure}[ht]
-\begin{center}
-\includegraphics[width=9cm]{pset.pdf}
-\end{center}
+\includegraphics[width=\columnwidth]{pset.pdf}
 \caption{A pset.}
 \label{fig:pset}
 \end{figure}
@@ -252,13 +270,11 @@ efficient to run part of the application software on the I/O~node.
 
 \section{LOFAR Processing}
 
-\begin{figure*}[ht]
-\center{
-\includegraphics[width=0.8\textwidth]{processing-overview.pdf}
-}
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{processing-overview.pdf}
 \caption{Simplified data flow diagram for the central processing pipeline.}
 \label{fig:processing}
-\end{figure*}
+\end{figure}
 
 The LOFAR station data are centrally processed in real time by a collection
 of three distributed applications.
@@ -287,13 +303,11 @@ data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 \section{I/O-node processing}
 \label{sec:I/O-node-processing}
 
-\begin{figure*}[t]
-\center{
-\includegraphics[width=0.8\textwidth]{ION-processing.pdf}
-}
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{ION-processing.pdf}
 \caption{Simplified data flow diagram for the I/O nodes.}
 \label{fig:ion-processing}
-\end{figure*}
+\end{figure}
 
 We use the Blue Gene in an innovative way, by running application software
 on the I/O~nodes.
@@ -461,13 +475,11 @@ In practice, under normal circumstances, this rarely happens
 
 \section{Compute-node processing}
 
-\begin{figure*}[t]
-\center{
-\includegraphics[width=0.8\textwidth]{CN-processing.pdf}
-}
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{CN-processing.pdf}
 \caption{Simplified data flow diagram for the compute nodes.}
 \label{fig:cn-processing}
-\end{figure*}
+\end{figure}
 
 The bulk of the signal-processing computations take place at the compute nodes.
 In this section, we continue describing the processing pipeline depicted in
@@ -479,18 +491,10 @@ optimizations we implemented.
 
 \subsection{Scheduling}
 
-\begin{figure}
-\begin{minipage}[b]{9cm}
-\includegraphics[width=9cm]{round-robin.pdf}
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{round-robin.pdf}
 \caption{Round robin processing of work over compute-node cores.}
 \label{fig:round-robin}
-\end{minipage}
-\hfill
-\begin{minipage}[b]{5cm}
-\includegraphics[width=5cm]{delay.pdf}
-\caption{The left antenna receives the wave later.}
-\label{fig:delay}
-\end{minipage}
 \end{figure}
 
 The I/O~node chops the data stream that comes from the station into chunks of
@@ -619,6 +623,14 @@ FFTW~\cite{Lorenz:05}.
 %The next step is to artificially ``delay'' the stream of station samples,
 %to compensate for the fact that a celestial wave hits stations at different
 %times~\cite[Sec.~2.1]{Romein:06}.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=4cm]{delay.pdf}
+\end{center}
+\caption{The left antenna receives the wave later.}
+\label{fig:delay}
+\end{figure}
 
 The next step is \emph{delay compensation}.
 Due to the finite speed of light, the wave from a celestial source hits
@@ -816,10 +828,8 @@ cache hierarchy.
 %	- 
 \section{The output of the correlator}
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=12cm]{fringe.jpg}
-\end{center}
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{fringe.jpg}
 \caption{Correlations from a 9-hour observation.  See the main text for
 an explanation.}
 \label{fig:fringe}
@@ -872,10 +882,15 @@ max.\ nr.\ of subbands	 & 248		& 496		& 992	\\
 nr. channels per subband & 256		& 256		& 256	\\
 max.\ nr.\ of stations	 & 64		& 64		& 48	\\
 \hline
-input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  = \bf{198} & 64 * 3.1 = \bf{198} & 48 * 3.1 = \bf{149} \\
-output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 = \bf{36}  & 62 * 1.2 = \bf{74}  & 62 * 1.3 = \bf{81} \\
+%input bandwidth (nr.\ I/O nodes * Gb/s)  & 64 * 3.1  & 64 * 3.1 & 48 * 3.1 \\
+%output bandwidth (nr.\ I/O nodes * Gb/s) & 62 * 0.58 & 62 * 1.2 & 62 * 1.3 \\
+input bandwidth & 64 * 3.1  & 64 * 3.1 & 48 * 3.1 \\
+\multicolumn{1}{|r|}{(nr.\ I/O nodes * Gb/s)} & = \textbf{198} & = \textbf{198} & = \textbf{149} \\
+output bandwidth & 62 * 0.58 & 62 * 1.2 & 62 * 1.3 \\
+\multicolumn{1}{|r|}{(nr.\ I/O nodes * Gb/s)}  & = \textbf{36} & = \textbf{72} & = \textbf{81} \\
 \hline
-available compute time per subband (s)	 & 16.1	     & 8.05     & 4.03     \\
+available compute time	 & 16.1	     & 8.05     & 4.03     \\
+\multicolumn{1}{|r|}{per subband (s)}	 & & & \\
 \hline
 \end{tabular}
 \end{center}
@@ -914,22 +929,21 @@ likely between 36 and~46.
 For the performance measurements, we assume the most challenging case, and use 48~stations.
 
 
-\subsection{Computational performance on the I/O Nodes}
+\subsection{Computational performance on the \\ I/O Nodes}
 \label{sec:ION-performance}
 
-\begin{figure}
-\hspace{9mm}
+\begin{figure}[ht]
 \subfigure[As function of number of subbands.  The input samples are 8~bit,
   and in total, 64 stations are used.]{
   %\includegraphics[width=\columnwidth]{ion-performance.pdf}
-  \makebox[92mm][l]{
-  \includegraphics[width=13cm]{ion-performance.pdf}
+  \makebox[60mm][l]{
+  \includegraphics[width=\columnwidth]{ion-performance.pdf}
   }
   \label{fig:ion-performance-func-subbands}
 }
-\hspace{1cm}
-\subfigure[For various observation modes.]{
-  \hspace{25mm}
+\hfill
+\subfigure[For three observation modes.]{
+  \hspace{15mm}
   \label{fig:ion-performance-obs-mode}
 }
 \caption{I/O node performance breakdown.}
@@ -1019,19 +1033,18 @@ Alternatively, the second rack could be used.
 
 \subsection{Computational performance on the Compute Nodes}
 
-\begin{figure}
-\hspace{9mm}
+\begin{figure}[ht]
 \subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
   and in total, 496 subbands are processed.]{
-  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
-  \makebox[92mm][l]{
-  \includegraphics[width=13cm]{cn-performance.pdf}
+  \makebox[60mm][l]{
+  \includegraphics[width=\columnwidth]{cn-performance.pdf}
   }
   \label{fig:cn-performance-func-stations}
 }
-\hspace{0.8cm}
-\subfigure[Performance of three challenging observation modes.]{
-  \hspace{25mm}
+\hfill
+%\subfigure[Performance of three challenging observation modes.]{
+\subfigure[For three observation modes.]{
+  \hspace{15mm}
   \label{fig:cn-performance-obs-mode}
 }
 \caption{Compute node performance breakdown.}
