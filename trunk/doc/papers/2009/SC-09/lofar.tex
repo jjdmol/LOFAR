@@ -112,16 +112,16 @@ The remainder of this paper is structured as follows.
 \begin{figure*}
 \includegraphics[width=\textwidth]{lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
-\label{lofar-overview}
+\label{fig:lofar-overview}
 \end{figure*}
 
 A global overview of the LOFAR instrument is given in
-Figure~\ref{lofar-overview}. LOFAR uses two different types of
+Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
 antennas, the LBAs (Low-Band Antennas) and HBAs (High-Band Antennas).
-The leftmost picture in Figure~\ref{lofar-overview} shows the low-band
+The leftmost picture in the figure shows the low-band
 antennas in the field.  Each LBA consists of one dipole per polarization,
 while each HBA is organized as a tile, wherein 16 antenna elements are
-combined. All antennas are designed for two polarizations.  
+combined. All antennas are dual polarized.
 
 LOFAR's antennas are structured in a hierarchical way to limit the
 costs of data transport and processing. Thousands of antennas are
@@ -197,6 +197,7 @@ processing of the station data.
 We recently replaced the system by an equally powerful 2.5-rack Blue Gene/P.
 %The consequences of this upgrade are described in Section~\ref{sec:upgrade}.
 Below, we describe the key features of the Blue Gene/P.
+More information can be found elsewhere~\cite{IBM:08}.
 
 Our system contains 10,880 processor cores that provide 37.0~TFLOPS peak
 processing power.
@@ -283,7 +284,6 @@ The storage application collects the data from the I/O~nodes and writes the
 data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 
 
-
 \section{I/O-node processing}
 \label{sec:I/O-node-processing}
 
@@ -295,8 +295,6 @@ data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 \label{fig:ion-processing}
 \end{figure*}
 
-%TODO real-time scheduling
-%TODO best-effort buffers
 We use the Blue Gene in an innovative way, by running application software
 on the I/O~nodes.
 On the Blue Gene/L, this required rewriting major parts of the system
@@ -446,7 +444,7 @@ compute nodes runs at the highest priority, and is scheduled as soon as the
 wall-clock time triggers.
 The thread that reads results from the compute nodes is almost equally
 important, since compute nodes will not accept new work before the previous
-results were read by the I/O~node. % TODO Moet hier dan niet ook gewoon een circulaire buffer tussen? --Rob
+results were read by the I/O~node.
 Other threads, such as the threads that read UDP data, and the threads that
 send data from the output queues are also important, but if they would ever
 fail to meet a real-time deadline, only a small amount of data is lost.
@@ -681,8 +679,6 @@ cache hierarchy.
 %Also, many of the computations are hidden by the memory access delays that
 %are the result of a transpose in main memory.
 
-\emph{TODO: integer->FP conversie?}
-
 %Although the correlator (including the other signal-processing steps) is a
 %typical example of a streaming-data application, the perception ``byte goes
 %in, byte comes out'' is misleading.
@@ -903,7 +899,7 @@ sample size to 8~bits and doubling the number of subbands.
 This implies that the total input data rate remains the same, but that the
 processing requirements and output data rate double.
 The 62~psets that are used to correlate have to process 8~subbands each,
-reducing the available time per subband to 8.03~s.
+reducing the available time per subband to 8.05~s.
 
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
 subbands that are mostly free of RFI (otherwise, the bits are used to encode
@@ -916,91 +912,6 @@ stations near the center, not the remote ones.
 The exact number of stations that must be correlated is not yet known, but is
 likely between 36 and~46.
 For the performance measurements, we assume the most challenging case, and use 48~stations.
-
-
-\subsection{Computational performance on the Compute Nodes}
-
-\begin{figure}
-\hspace{9mm}
-\subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
-  and in total, 496 subbands are processed.]{
-  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
-  \makebox[92mm][l]{
-  \includegraphics[width=13cm]{cn-performance.pdf}
-  }
-  \label{fig:cn-performance-func-stations}
-}
-\hspace{0.8cm}
-\subfigure[Performance of three challenging observation modes.]{
-  \hspace{25mm}
-  \label{fig:cn-performance-obs-mode}
-}
-\caption{Compute node performance breakdown.}
-\label{fig:cn-performance}
-\end{figure}
-
-Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time.
-The seven major tasks are each represented by a different color in the bar
-graph; the size of each bar is proportional to the contribution to the total
-work load.
-The vertical axis shows the absolute run time to process one subband with
-1.007~second of station samples.
-
-Before comparing the performance of the three observation modes described
-above, we show how the performance scales with the number of stations.
-Figure~\ref{fig:cn-performance-func-stations} shows execution times for up to
-64~stations in a setting that is similar to observation mode~\textsf{B}.
-The $O(n^2)$ complexity of the correlator is clearly visible (the correlations
-between all \emph{pairs\/} of stations are computed), while other
-components scale linearly with the number of stations.
-Despite the high data rates, I/O~requires hardly any time \emph{on the compute nodes}.
-It is important to realize that the time for input or output cannot exceed $1/64^\mathrm{th}$
-of the total time, since the associated I/O~node also needs time to communicate
-with the other 63~cores in the pset.
-
-%The \emph{available\/} runtime depends on the number of subbands that must be
-%processed: with 496~subbands, most of the 64~psets process 8~subbands, and
-%with 64~cores in one pset, there is 8.053~second to process one chunk of data.
-%Doubling the number of subbands halves the available processing time, and in
-%the 4-bit mode, up to about 50~stations can be supported on a single rack.
-
-The performance results hardly differ for the 16-bit and 4-bit modes (not shown),
-since only the performance of the the data receipt from the I/O~node and data
-exchange phase are affected by the sample size, 
-both of which hardly contribute to the total runtime.
-This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
-where the execution times for observation modes \textsf{A} and \textsf{B}
-are nearly the same.
-The run time for observation mode \textsf{C} is lower, since this mode
-processes 48 rather than 64~stations.
-All modes run within their real-time constraints of 16.1, 8.05, and 4.03
-seconds respectively.
-The load on the compute nodes is 35\%, 70\%, and 84\% repectively.
-
-@@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
-The correlator is extremely efficient: it achieves 96\% of the FPU peak
-performance, thanks to the highly-optimized assembly code.
-The FIR filter runs at 86\% of the peak performance, and the hand-crafted
-256-point FFT run at 44\%%
-\footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
-$5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
-more than 44\% FPU efficiency, its absolute run time would be higher.}
-(``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
-Compared to equivalent C++ code that is written for clarity and not
-specifically tuned for optimal performance, the hand-written assembly code is
-typically an order of magnitude faster.
-
-
-\noindent @@@ TODO: verplaats onderstaande tekst.  --Rob
-hier roept dit alleen maar meer vragen op: \\
- - waarom? \\
- - I/O? Wordt pas in de volgende sectie uitgelegd. @@@ \\
-Due to all optimizations, the correlator can process 50\% more data than
-the specifications require, on only half the amount of planned resources.
-Only if the need to correlate more than 64~stations would ever arise, or if
-significant additional real-time signal processing would be needed, the
-second rack must be employed.
-
 
 
 \subsection{Computational performance on the I/O Nodes}
@@ -1025,8 +936,8 @@ second rack must be employed.
 \label{fig:ion-performance}
 \end{figure}
 
-Although the computational requirements were challenging, meeting the real-time
-I/O~requirements was even harder.
+The I/O requirements are challenging, and the processing power on the I/O~nodes
+is limited.
 Figure~\ref{fig:ion-performance} shows where the processor cores of the
 I/O~nodes spend their time in various situations.
 A load of 100\% means that all four cores are fully occupied.
@@ -1082,8 +993,8 @@ resource usage.
 Without either of them, the application cannot handle these data rates in
 real time.
 
-The data loss due to missed UDP packets is low: only between $10^-6$ and
-$10^-4$ packets are dropped under full load.
+The data loss due to missed UDP packets is low: only between 1 per $10^6$ and
+1 per $10^4$ packets are dropped under full load.
 These numbers include the data loss caused by the (software) generators and by
 the 10~GbE network switches.
 The data loss is negligible to other places where data can be lost,
@@ -1106,6 +1017,85 @@ Alternatively, the second rack could be used.
 %We think this will reduce the system time of I/O operations.
 
 
+\subsection{Computational performance on the Compute Nodes}
+
+\begin{figure}
+\hspace{9mm}
+\subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
+  and in total, 496 subbands are processed.]{
+  %\includegraphics[width=\columnwidth]{cn-performance.pdf}
+  \makebox[92mm][l]{
+  \includegraphics[width=13cm]{cn-performance.pdf}
+  }
+  \label{fig:cn-performance-func-stations}
+}
+\hspace{0.8cm}
+\subfigure[Performance of three challenging observation modes.]{
+  \hspace{25mm}
+  \label{fig:cn-performance-obs-mode}
+}
+\caption{Compute node performance breakdown.}
+\label{fig:cn-performance}
+\end{figure}
+
+Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time.
+The seven major tasks are each represented by a different color in the bar
+graph; the size of each bar is proportional to the contribution to the total
+work load.
+The vertical axis shows the execution time to process one subband with
+1.007~second of station samples.
+
+Before comparing the performance of the three observation modes described
+above, we show how the performance scales with the number of stations.
+Figure~\ref{fig:cn-performance-func-stations} shows execution times for up to
+64~stations in a setting that is similar to observation mode~\textsf{B}.
+The $O(n^2)$ complexity of the correlator is clearly visible (the correlations
+between all \emph{pairs\/} of stations are computed), while other
+components scale linearly with the number of stations.
+Despite the high data rates, I/O~requires hardly any time \emph{on the compute nodes}.
+It is important to realize that the time for input or output cannot exceed $1/64^\mathrm{th}$
+of the total time, since the associated I/O~node also needs time to communicate
+with the other 63~cores in the pset.
+
+%The \emph{available\/} runtime depends on the number of subbands that must be
+%processed: with 496~subbands, most of the 64~psets process 8~subbands, and
+%with 64~cores in one pset, there is 8.053~second to process one chunk of data.
+%Doubling the number of subbands halves the available processing time, and in
+%the 4-bit mode, up to about 50~stations can be supported on a single rack.
+
+The performance results hardly differ for the 16-bit and 4-bit modes (not shown),
+since only the performance of the the data receipt from the I/O~node and data
+exchange phase are affected by the sample size, 
+both of which hardly contribute to the total runtime.
+This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
+where the execution times for observation modes \textsf{A} and \textsf{B}
+are nearly the same.
+The run time for observation mode \textsf{C} is lower, since this mode
+processes 48 rather than 64~stations.
+All modes run within their real-time constraints of 16.1, 8.05, and 4.03
+seconds respectively.
+The load on the compute nodes is 35\%, 70\%, and 84\% repectively.
+
+@@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
+The correlator is extremely efficient: it achieves 96\% of the FPU peak
+performance, thanks to the highly-optimized assembly code.
+The FIR filter runs at 86\% of the peak performance, and the hand-crafted
+256-point FFT run at 44\%%
+\footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
+$5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
+more than 44\% FPU efficiency, its absolute run time would be higher.}
+(``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
+Compared to equivalent C++ code that is written for clarity and not
+specifically tuned for optimal performance, the hand-written assembly code is
+typically an order of magnitude faster.
+
+Due to all optimizations, the correlator can process 50\% more data than
+the specifications require, on only half the amount of planned resources.
+Only if the need to correlate more than 64~stations would ever arise, or if
+significant additional real-time signal processing would be needed, the
+second rack must be employed.
+
+
 \section{Related Work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
@@ -1117,20 +1107,33 @@ Alternatively, the second rack could be used.
 %LOFAR is the only system capable of processing high data rates from a large number of stations at
 %real time.
 
-LOFAR is not the only radio telescope of which the data are processed in software, However, to
-the best of our knowledge, LOFAR is the only system capable of doing so at real time for both
-high data rates and a large number of inputs.
+The idea of implementing a correlator in software has been adopted by others as
+well.
+However, the LOFAR correlator is the only system capable of processing a large
+number of inputs at high data rates in real time.
+Other systems handle only a few inputs, handle limited data rates, or do not
+run in real time.
 
-Other systems have been proposed, but are either not operational or are far from being able to perform
-their calculations at real time. Deller et al.~\cite{Deller:07} have developed the DiFX distributed
-software correlator, which is to be deployed on a cluster of PCs. Due to the use of commodity hardware,
-both their communication and computational capabilities are substantially lower than those available in
-our BlueGene/P. As a result, they cannot handle the width and number of input streams that we process
-in LOFAR. The real-time data processing of the Murchison Widefield Array (MWA) telescope is implemented
-partially in software. However, their correlator, which we will show to be the most computationally
-intensive part of the processing pipeline, is not implemented in software, but on an FPGA~\cite{Ord:08}.
-Finally, a software correlator is under development at the Joint Institute for VLBI in Europe
-(JIVE), but is not capable of processing telescope data in real time.
+Deller et al.~\cite{Deller:07} have developed the DiFX distributed
+software correlator, which is to be deployed on a cluster of PCs.
+Due to the use of commodity hardware, both their communication and
+computational capabilities are substantially lower than those available in
+our BlueGene/P.
+%As a result, they cannot handle the width and number of input streams that we
+%process in LOFAR.
+The real-time data processing of the Murchison Widefield Array (MWA) telescope
+is implemented partially in software.
+However, their correlator, computationally the most demanding part of the
+processing pipeline, is not implemented in software, but on an
+FPGA~\cite{Ord:08}.
+Finally, the Joint Institute for VLBI in Europe (JIVE) develops a new software
+correlator for e-VLBI observations, but is not capable of processing telescope
+data in real time \textbf{JD: check}.
+
+In another paper, we compare the efficiency of five different many-core
+architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
+and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
+
 
 \section{Conclusions and future work}
 
@@ -1165,7 +1168,7 @@ we plan to extend our on-line processing, for example by including RFI detection
 
 \section*{Acknowledgments}
 
-TODO: AstroStream ack?
+\textbf{Rob: AstroStream ack}.
 We thank Ger van Diepen, Martin Gels, Marcel Loose and Ruud Overeem
 for their contributions to the LOFAR software.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
