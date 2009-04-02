@@ -475,18 +475,19 @@ In practice, under normal circumstances, this rarely happens
 
 \section{Compute-node processing}
 
-\begin{figure}[ht]
-\includegraphics[width=\columnwidth]{CN-processing.pdf}
+\begin{figure*}[ht]
+\includegraphics[width=\textwidth]{CN-processing.pdf}
 \caption{Simplified data flow diagram for the compute nodes.}
 \label{fig:cn-processing}
-\end{figure}
+\end{figure*}
 
 The bulk of the signal-processing computations take place at the compute nodes.
 In this section, we continue describing the processing pipeline depicted in
-Figure~\ref{fig:processing}.
+Figure~\ref{fig:processing}. 
 We explain how the data flow to the compute nodes, how the data are exchanged
 between other compute nodes, what signal processing takes place, and which
-optimizations we implemented.
+optimizations we implemented. The compute node pipeline is shown in more detail
+in Figure~\ref{fig:cn-processing}.
 
 
 \subsection{Scheduling}
