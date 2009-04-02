@@ -150,8 +150,8 @@ distributed over a large area to achieve a high angular resolution.
 However, combining the data of all individual antennas centrally would
 require too much network bandwidth and would result in excessive
 computational requirements. Therefore, multiple antennas are grouped
-to form a \emph{station}. Within a station, the information of all
-individual antennas is weighted and summed.
+to form a \emph{station}.
+The signals of the receivers are combined locally, within the station.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{map.jpg}
@@ -172,48 +172,61 @@ extended, possibly to 1000 km.  In the past several years we have
 deployed a number of prototype antennas, while the roll-out of
 the real stations currently is in progress.
 
-In total, XXX LBAs and YYY HBAs will be installed in a station. Each
-station also features a cabinet where initial processing is done using
-FPGAs.  Typical operations that are performed here include
-analog-to-digital conversion, filtering and frequency selection. Also,
-the signal is split into a number of different frequency ranges,
-called \emph{subbands}.
+Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
+A station also features a cabinet where initial processing is done, using
+FPGA technology.
+Typical operations that are performed here include analog-to-digital
+conversion, filtering, frequency selection, and combination of the LBA
+receiver and HBA tile signals.
+One of the distinctive properties of LOFAR is that the receivers are
+omni-directional, and that multiple, concurrent observation directions are
+supported.
+Since observing the sky in all frequencies and all directions at the same time
+would result in an unmanageable output data rate, the observer selects a
+limited amount of directions and frequencies, called \emph{subbands}.
 
-All station data is transported to the central processing location in
-Groningen via a wide area network (WAN), which uses owned and leased
-light paths. We use UDP for data transport, since we can tolerate some
-data loss. We do not use a reliable protocol such as TCP, because the
-overhead would be to high for our purposes, and retransmissions in the
-case of data loss would interfere with our real time requirements.
+The station data are transported to the central processing location in
+Groningen via a Wide-Area Network (WAN), using owned and leased light paths.
+We use UDP for data transport, since we can easily tolerate some data loss.
+We do not use a reliable protocol such as TCP, because this significantly
+complicates the programming of the FPGAs, due to buffering, flow control,
+retransmission, and real-time issues.
 
 The UDP packets contain samples, where a sample is a complex number
 that represents the amplitude and phase of a signal at a particular
-time.  LOFAR supports $2\times4$, $2\times8$, and $2\times16$-bit
-samples. Sampled data can be invalid for various reasons, such as
+time.  A sample is encoded by a $2\times4$, $2\times8$, or $2\times16$-bit
+complex integer. Sampled data can be invalid for various reasons, such as
 Radio Frequency Interference (RFI) and lost network packets.
 Throughout the entire processing chain, we maintain which
 data is marked as invalid, so that eventual images are not blurred by
 bad data.  
 
-The central processing is the main focus of this paper, and is done in
-real time by an IBM Blue Gene/P supercomputer. We filter the data, and
-split the subbands in narrower frequency bands called \emph{channels}, which allow
-for more accurate RFI removal.
-In addition, we perform phase shift and bandpass
-corrections.  Finally, the signals from all stations are beamformed,
+This paper focuses on the real-time, central processing of LOFAR data on
+an IBM Blue Gene/P supercomputer, and in particular on the standard-imaging
+mode.
+We filter the data, and split the subbands in narrower frequency bands called
+\emph{channels}, which allow for more accurate RFI removal.
+In addition, we perform phase shift and bandpass corrections.
+Finally, the signals from all stations are beamformed,
 correlated and forwarded to a storage cluster, where results can be
 kept for several days.  We will explain the central processing steps
 in more detail in Section~\ref{sec:signal-processing}.
 
-After the correlated data has been stored, further processing is done
-\emph{offline}, on commodity cluster hardware. 
-The results are calibrated for instrumental and environmental
-effects, and known sources in the sky are subtracted to
-enhance the dynamic range~\cite{Nijboer:07}. Finally, RFI is removed, 
-and the correlation products are
-transformed into an image.  The offline steps are done on
-off-the-shelf cluster hardware, and are not part of the real-time
-processing system described in this paper.
+After an observation has finished, further processing is done off-line, on
+commodity cluster hardware. 
+First, an RFI detection algorithm removes bad data.
+Then, the results are calibrated for instrumental and environmental effects and
+for sky source parameters (e.g., position, flux)~\cite{Nijboer:07}.
+An imaging algorithm creates an image of the observed source(s).
+Despite the computational challenges, the scope of this paper does not cover
+the off-line processing.
+
+A prototype of a set of other observation modes, used to find and observe
+pulsars, is functional, but not optimized for performance yet.
+Hence, we do not discuss the pulsar modes in this paper.
+However, the precense of multiple observation modes demonstrates the
+flexibility of a \emph{software\/} solution.
+More observation modes will be implemented in the future.
 
 
 \section{The Blue Gene/P}
@@ -670,6 +683,29 @@ stations level out, while any signals that were measured by multiple stations
 are amplified. The output of the beam former is a single data stream,
 representing a beam focused on a celestial source.
 
+
+The final step is the \emph{correlator}.
+The received signals from sky sources are so weak, that the antennas mainly
+receive noise.
+To see if there is statistical coherence in the noise, simultaneous samples of
+each pair of stations are correlated, by multiplying the sample of one station
+with the complex conjugate of the sample of the other station.
+To reduce the output size, the products are integrated, by accumulating all
+products.
+We accumulate 768~correlations at 763~Hz, so that the integration time is
+approximately one second.
+Correlation is done for each pair of stations, and for each channel separately.
+Since the correlation of station~A and~B is the complex conjugate of the
+correlation of station~B and~A, only one pair is computed.
+Stations are also autocorrelated, i.e., with themselves.
+Both polarizations of station~A are correlated with both polarizations of
+station~B, yielding correlations in XX, XY, YX, and YY directions.
+The result, a correlation, contains the combined contribution of all visibile
+sky sources.
+These are disambiguated during the imaging step in the off-line processing
+pipeline.
+
+
 \subsection{Optimizations}
 
 For optimal performance, most time-intensive code is written in assembly,
@@ -1125,7 +1161,7 @@ second rack must be employed.
 %LOFAR is the only system capable of processing high data rates from a large number of stations at
 %real time.
 
-The idea of implementing a correlator in software has been adopted by others as
+The idea to implement a correlator in software has been adopted by others as
 well.
 However, the LOFAR correlator is the only system capable of processing a large
 number of inputs at high data rates in real time.
