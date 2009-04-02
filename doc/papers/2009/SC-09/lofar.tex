@@ -1182,13 +1182,18 @@ processing pipeline, is not implemented in software, but on an
 FPGA~\cite{Ord:08}.
 Finally, the Joint Institute for VLBI in Europe (JIVE) develops a new software
 correlator for e-VLBI observations, but is not capable of processing telescope
-data in real time \textbf{JD: check}.
+data in real time~\cite{Kruithof:08}.
 
 In another paper, we compare the efficiency of five different many-core
 architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
 and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
-\section{Discussion}
+%\section{Discussion}
+
+%During the development of our software, we discovered both weak and strong points to using the Blue Gene/P for
+%processing large real-time data streams. The points that hindered our development were the following. First, the C++ compiler produces code an order of magnitude slower than hand-crafted assembly. Most of the data processing thus has to be done in assembly in order to achieve the performance we required. Second, the FPUs perform double-precision arithmetic, which really is overkill when processing samples that can be as small as 4 bits. As a result, the memory required to store intermediate results increases, and the caches become less efficient. Third, the CPUs defer TLB interrupt misses to software, which kills performance. To circumvent the TLB interrupt misses, we had to implement our own memory allocation and management. Fourth, the fact that the I/O nodes are not part of the 3-D torus implies that output from a compute node cannot be sent to I/O nodes of different psets directly. The flexibility with which compute cores can be allocated to tasks. Finally, the power efficiency of the Blue Gene/P is, while decent, far from th
+
+% plus en minpunten van de bluegene, die we ontdekten tijdens development, of waarvan we de impact realiseerden
 
 % - assembly
 % - DP FP overkill
@@ -1202,21 +1207,14 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 % + omgeving t.o.v. BG/L verbeterd
 % + het werkt!
 
-\section{Conclusions and future work}
+\section{Conclusions, discussion, and future work}
 
-We have shown that telescope data can be processed in real time using software, even if the
-input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was
-efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our Blue Gene/P
-supercomputer in unconventional ways in order to achieve high performance. The I/O nodes were meant
-to be merely a bridge between the compute nodes and the outside world, but we equip them
-with custom software in order to deal with the 3.1 Gb/s input, the output, and to perform both
-pre- and postprocessing. Also, we use a custom network protocol called FCNP to be
-obtain the required data rates to and from the compute nodes.
+We have shown that the IBM Blue Gene/P supercomputer is capable of processing telescope data in real time,
+even if the input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was efficient enough to exceed the LOFAR specifications by 50\%. In order to meet the specifications, it was necessary to use several parts of the Blue Gene/P in unconventional ways, as well as work around weak points that we discovered during development.
 
-Our implementation benefits from a mix of C++ and assembly. The C++ code base offers the flexibility
-to implement several pipelines and to easily combine and reuse components. The use of assembly allows
-the performance critical parts to run at high efficiency. For example, our correlator, one of the core
-components we describe in this paper, runs at 96\% of the FPU peak performance.
+The I/O nodes were meant to be a transparent bridge between the compute nodes and the outside world. However, we were forced to equip them with custom software to be able to deal with the up to 3.1 Gb/s input, 1.2 GB/s output, and to perform necessary pre- and postprocessing. Unfortunately, the I/O nodes can only communicate with the compute nodes in their own pset, which limits the flexibility with which the tasks can efficiently be assigned to the total set of compute cores. Within a pset, we use a custom network protocol called FCNP to be able to obtain the required data rates to and from the compute nodes. Between the compute nodes, the fast interconnect (the 3-D torus) turned out to be very beneficial, as it allows expensive operations such as an all-to-all exchange of data.
+
+The compute cores have a high throughput, due to their high memory bandwidth~\cite{Nieuwpoort:09} and their ability to perform four FLOPS per cycle. However, these FLOPS are limited to double-precision floating point operations. Since our data starts as 4-bit to 16-bit integers, the data has to be expanded severalfold before computations can commence. To achieve the throughput necessary to perform our processing at real time, specific FPU instructions have to be used, as well as careful cache timings. The latter is complicated further by the fact that the L1 cache uses a round-robin replacement policy. The L1 cache is thus constantly flushed with the streaming data, even if this is undesirable. For these reasons, most of our data processing routines are written in assembly.
 
 % Conclusions:
 %	- telescope data can be processed in real time using software
@@ -1224,6 +1222,13 @@ components we describe in this paper, runs at 96\% of the FPU peak performance.
 %	- flexibility and speed through the mix of C and assembly
 %	- core component is correlator, running at 96% of FPU peak performance
 %	- unconventional use of I/O node and network stack pays off
+
+Our implementation benefits from a mix of C++ and assembly. The C++ code base offers the flexibility
+to implement several pipelines and to easily combine and reuse components. The use of assembly allows
+the performance critical parts to run at high efficiency. The power of the Blue Gene/P allows this
+flexibility, and makes us able to develop our software at a much higher pace than would be possible
+on different high-performance architectures such as FPGAs and GPUs. We find the development environment
+of the Blue Gene/P to be an improvement over the Blue Gene/L.
 
 The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
 modes of observation. We plan to finish the implementation of several pipelines, for the detection
