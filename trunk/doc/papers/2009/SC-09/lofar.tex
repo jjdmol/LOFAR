@@ -49,19 +49,22 @@ combines signals from many thousands of simple antennas.
 Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
-This paper focuses on another novel feature:
-where traditional telescopes
+This paper focuses on another novel feature: where traditional telescopes
 use customized hardware, we process the data in \emph{software}. 
-This dramatically increases flexibility and significantly reduces costs, but the high
-processing and bandwidth requirements compel the use of a supercomputer.
-The antenna signals are centrally combined, filtered, and
-beamformed or correlated by a 10,880-core Blue Gene/P.
+This dramatically increases flexibility and significantly reduces costs, but
+the high processing and bandwidth requirements compel the use of a
+supercomputer.
+The antenna signals are centrally combined, filtered, and beam-formed or
+correlated by a 10,880-core Blue Gene/P.
 
 To meet the real-time requirements, the application is highly optimized, and
-reaches exceptionally high computational and networking efficiencies.
-The system performs so well that we can operate 50\% beyond the 
-original LOFAR requirements, on less hardware, allowing
-us to use the superfluous capacity for more accurate observations.
+reaches exceptionally high computational and I/O efficiencies.
+This allows us to use only half the amount of planned resources, \emph{and\/}
+process 50\% more telescope data, significantly increasing the performance
+of the entire telescope.
+%The system performs so well that we can operate 50\% beyond the 
+%original LOFAR requirements, on less hardware, allowing
+%us to use the superfluous capacity for more accurate observations.
 \end{abstract}
 
 
@@ -208,7 +211,7 @@ mode.
 We filter the data, and split the subbands in narrower frequency bands called
 \emph{channels}, which allow for more accurate RFI removal.
 In addition, we perform phase shift and bandpass corrections.
-Finally, the signals from all stations are beamformed,
+Finally, the signals from all stations are beam-formed,
 correlated and forwarded to a storage cluster, where results can be
 kept for several days.  We will explain the central processing steps
 in more detail in Section~\ref{sec:signal-processing}.
@@ -309,7 +312,7 @@ for up to 2.5~seconds, and to forward it to the compute nodes.
 The second application called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
 compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
-internal torus network, to filter the data, and to correlate or beamform
+internal torus network, to filter the data, and to correlate or beam-form
 the filtered data.
 The resulting data are then sent back to the I/O-node application, that
 collects the data from the compute nodes and
