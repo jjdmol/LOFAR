@@ -45,24 +45,24 @@
 \begin{abstract}
 LOFAR is the first of a new generation of radio telescopes.
 Rather than using expensive dishes, it forms a distributed sensor network that
-combines the signals from many thousands of simple antennas.
+combines signals from many thousands of simple antennas.
 Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
-This paper focuses on another novel feature of LOFAR: the approach to
-process the real-time data in \emph{software}, where traditional telescopes
-use customized hardware.
-The use of software yields a much more flexible instrument, but the high
+This paper focuses on another novel feature:
+where traditional telescopes
+use customized hardware, we process the real-time data in \emph{software}. 
+This dramatically increases flexibility, but the high
 processing and bandwidth requirements compel the use of a supercomputer.
-The signals from the LOFAR stations are centrally combined, filtered, and
-beamformed or correlated by a 10,880-core IBM Blue Gene/P system.
+The antenna signals are centrally combined, filtered, and
+beamformed or correlated by a 10,880-core IBM Blue Gene/P.
 
 To meet the real-time requirements, the application is highly optimized.
-Measurements show that we reach exceptionally high computational performance:
-up to 96\% of the theoretical floating-point peak performance.
-We also show that a major redesign of the network system software was
-required to obtain enough internal I/O bandwidth to sustain the station data
-streams and to greatly enhance flexibility, at significantly lower costs.
+We reach exceptionally high computational performance:
+up to 96\% of the theoretical floating-point peak.
+Also, a major redesign of the network system software was
+required to obtain enough internal I/O bandwidth.
+Our solutions greatly enhance flexibility, at significantly lower costs.
 \end{abstract}
 
 
@@ -1193,7 +1193,7 @@ components we describe in this paper, runs at 96\% of the FPU peak performance.
 
 The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
 modes of observation. We plan to finish the implementation of several pipelines, for the detection
-and analysis of pulsars, but most notably to obtain images from the End-of-Reionization era. Furthermore,
+and analysis of pulsars, but most notably to obtain images from the Epoch-of-Reionization era. Furthermore,
 we plan to extend our on-line processing, for example by including RFI detection and on-line calibration.
 
 % Future work: RFI, online calibration, other pipelines
