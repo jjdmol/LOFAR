@@ -682,7 +682,7 @@ The register file can hold 32~complex numbers \emph{TODO: cite many-core paper?}
 
 Although the FIR filters, FFTs, delay compensation, and bandpass correction
 are conceptually separate, consecutive blocks, their implementations are
-highly interweaved to achieve better performance.
+highly interwoven to achieve better performance.
 This avoids that four separate passes over all data are made.
 Also, the data are laid out in memory in such a way that they are read
 consecutively as much as possible, allowing burst transfers through the
@@ -1077,7 +1077,7 @@ with the other 63~cores in the pset.
 %the 4-bit mode, up to about 50~stations can be supported on a single rack.
 
 The performance results hardly differ for the 16-bit and 4-bit modes (not shown),
-since only the performance of the the data receipt from the I/O~node and data
+since only the performance of the data receipt from the I/O~node and data
 exchange phase are affected by the sample size, 
 both of which hardly contribute to the total runtime.
 This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
@@ -1087,7 +1087,7 @@ The run time for observation mode \textsf{C} is lower, since this mode
 processes 48 rather than 64~stations.
 All modes run within their real-time constraints of 16.1, 8.05, and 4.03
 seconds respectively.
-The load on the compute nodes is 35\%, 70\%, and 84\% repectively.
+The load on the compute nodes is 35\%, 70\%, and 84\% respectively.
 
 @@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
@@ -1147,16 +1147,29 @@ In another paper, we compare the efficiency of five different many-core
 architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
 and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
+\section{Discussion}
+
+% - assembly
+% - DP FP overkill
+% - ION not in torus
+% - power efficiency = good, not bad [ref]
+% (- 2^n allocation)
+% - TLB interrupt handfler in sw
+% + torus (DMA)
+% + high mem bw [ref]
+% + ondersteuning complex ops & double hummer
+% + omgeving t.o.v. BG/L verbeterd
+% + het werkt!
 
 \section{Conclusions and future work}
 
 We have shown that telescope data can be processed in real time using software, even if the
 input data rate is hundreds of gigabits per second. In fact, our LOFAR processing software was
-efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our BlueGene/P
+efficient enough to exceed the LOFAR specifications by 50\%. We use several parts of our Blue Gene/P
 supercomputer in unconventional ways in order to achieve high performance. The I/O nodes were meant
 to be merely a bridge between the compute nodes and the outside world, but we equip them
 with custom software in order to deal with the 3.1 Gb/s input, the output, and to perform both
-pre- and post-processing. Also, we use a custom network protocol called FCNP to be
+pre- and postprocessing. Also, we use a custom network protocol called FCNP to be
 obtain the required data rates to and from the compute nodes.
 
 Our implementation benefits from a mix of C++ and assembly. The C++ code base offers the flexibility
