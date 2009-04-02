@@ -20,55 +20,67 @@
 #
 #  $Id$
 
-message(STATUS "**** ENTER: LofarGeneral.cmake ****")
+include(LofarFindPackage)
 
-include(LofarInit)
+if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
 
-## ----------------------------------------------------------------------------
-## Check for typedefs of primitive types
-## ----------------------------------------------------------------------------
-include(CheckTypeSize)
-check_type_size("ushort"    HAVE_USHORT   )
-check_type_size("uint"      HAVE_UINT     )
-check_type_size("ulong"     HAVE_ULONG    )
-check_type_size("long long" HAVE_LONG_LONG)
+  message(STATUS "**** ENTER: LofarGeneral.cmake ****")
 
-## ----------------------------------------------------------------------------
-## Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
-## or "<unknown>", depending on compiler support for function name macro.
-## ----------------------------------------------------------------------------
-include(CheckCSourceCompiles)
-foreach(func_name __PRETTY_FUNCTION__ __FUNCTION__ "\"<unkown>\"")
-  check_c_source_compiles("
+  set(LOFAR_GENERAL_INCLUDED TRUE)
+
+  ## --------------------------------------------------------------------------
+  ## Include Lofar build configuration options
+  ## --------------------------------------------------------------------------
+  include(LofarOptions)
+
+  ## --------------------------------------------------------------------------
+  ## Configure for testing with CTest/Dart
+  ## --------------------------------------------------------------------------
+  include(CTest)
+  
+  # Add directory to the -I path.
+  include_directories(${CMAKE_BINARY_DIR}/include)
+
+  ## --------------------------------------------------------------------------
+  ## Locate the Doxygen documentation tool
+  ## --------------------------------------------------------------------------
+  find_package(Doxygen)
+
+  ## --------------------------------------------------------------------------
+  ## Check for typedefs of primitive types
+  ## --------------------------------------------------------------------------
+  include(CheckTypeSize)
+  check_type_size("ushort"    HAVE_USHORT   )
+  check_type_size("uint"      HAVE_UINT     )
+  check_type_size("ulong"     HAVE_ULONG    )
+  check_type_size("long long" HAVE_LONG_LONG)
+
+  ## --------------------------------------------------------------------------
+  ## Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
+  ## or "<unknown>", depending on compiler support for function name macro.
+  ## --------------------------------------------------------------------------
+  include(CheckCSourceCompiles)
+  foreach(func_name __PRETTY_FUNCTION__ __FUNCTION__ "\"<unkown>\"")
+    check_c_source_compiles("
     #include <stdio.h> 
     int main() { puts(${func_name}); }
     " HAVE_${func_name})
-  if(HAVE_${func_name})
-    set(AUTO_FUNCTION_NAME ${func_name} CACHE INTERNAL 
-      "Define as __PRETTY_FUNCTION__, __FUNCTION__, or \"<unknown>\"")
-    break()
-  endif(HAVE_${func_name})
-endforeach(func_name)
+    if(HAVE_${func_name})
+      set(AUTO_FUNCTION_NAME ${func_name} CACHE INTERNAL 
+        "Define as __PRETTY_FUNCTION__, __FUNCTION__, or \"<unknown>\"")
+      break()
+    endif(HAVE_${func_name})
+  endforeach(func_name)
 
-## ----------------------------------------------------------------------------
-## Locate the Doxygen documentation tool
-## ----------------------------------------------------------------------------
-find_package(Doxygen)
+  ## --------------------------------------------------------------------------
+  ## Initialize the LOFAR logger
+  ## --------------------------------------------------------------------------
+  include(LofarFindPackage)
+#  include(LofarLogger)
+#  lofar_logger()
 
-## ----------------------------------------------------------------------------
-## Initialize the LOFAR logger
-## ----------------------------------------------------------------------------
-include(LofarFindPackage)
-include(LofarLogger)
-lofar_logger()
-message(STATUS "HAVE_LOG4CPLUS = ${HAVE_LOG4CPLUS}")
-#lofar_find_package(pqxx 1 pqxx/pqxx)
-#lofar_DEBUG_OPTIMIZE([])
-#lofar_FUNCTION_NAME([])
-#lofar_BACKTRACE([])
-#lofar_CHECK_INSTALL_IF_MODIFIED([])
-#lofar_QATOOLS([])
-#lofar_DOCXX([])
-#lofar_LOGGER([])
+  lofar_find_package(Backtrace)
 
-message(STATUS "**** LEAVE: LofarGeneral.cmake ****")
+  message(STATUS "**** LEAVE: LofarGeneral.cmake ****")
+
+endif(NOT DEFINED LOFAR_GENERAL_INCLUDED)

@@ -1,10 +1,5 @@
-# - Try to find Log4Cplus
-# Once done this will define
-#  
-#  LOG4CPLUS_FOUND - system has Log4Cplus
-#  LOG4CPLUS_INCLUDE_DIR - the Log4Cplus include directory
-#  LOG4CPLUS_LIBRARY - the Log4Cplus library
-
+# $Id$
+#
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -22,9 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-# $Id$
 
+# Try to find Log4Cplus.
+#
+# This will define:
+#  
+#  LOG4CPLUS_FOUND        - system has Log4Cplus
+#  LOG4CPLUS_INCLUDE_DIR  - the Log4Cplus include directory (cached)
+#  LOG4CPLUS_INCLUDE_DIRS - the Log4Cplus include directories
+#                           (identical to LOG4CPLUS_INCLUDE_DIR)
+#  LOG4CPLUS_LIBRARY      - the Log4Cplus library (cached)
+#  LOG4CPLUS_LIBRARIES    - the Log4Cplus libraries
+#                           (identical to LOG4CPLUS_LIBRARY)
 
 if(NOT LOG4CPLUS_FOUND)
 
@@ -35,5 +39,8 @@ if(NOT LOG4CPLUS_FOUND)
   set(custom_msg "Could NOT find Log4cplus in ${CMAKE_PREFIX_PATH}")
   find_package_handle_standard_args(Log4Cplus "${custom_msg}"
     LOG4CPLUS_LIBRARY LOG4CPLUS_INCLUDE_DIR)
+
+  set(LOG4CPLUS_INCLUDE_DIRS ${LOG4CPLUS_INCLUDE_DIR})
+  set(LOG4CPLUS_LIBRARIES ${LOG4CPLUS_LIBRARY})
 
 endif(NOT LOG4CPLUS_FOUND)

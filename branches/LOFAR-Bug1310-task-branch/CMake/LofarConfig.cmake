@@ -22,7 +22,7 @@
 
 # Configure header file, but only when we're at the top-level source directory.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  message(STATUS "Generating lofar_config.h and setting directory property.")
+  message(STATUS "Generating lofar_config.h ...")
   configure_file(
     ${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
     ${CMAKE_BINARY_DIR}/include/lofar_config.h)

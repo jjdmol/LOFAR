@@ -62,10 +62,13 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   # Here's where we keep our own CMake modules.
   set(CMAKE_MODULE_PATH "${LOFAR_ROOT}/CMake" CACHE PATH "LOFAR CMake module path")
 
-  # Include global variants file, and, if present, host-specific variants file.
+  # Include host-specific variants file, if present, and global variants file.
   include(LofarVariants)
 
   # Get compiler suite and build variant from binary directory name.
+  # The directory name should follow the naming convention
+  # <compiler>_<variant>, where <compiler> specifies the compiler suite to
+  # use, and <variant> specifies the build variant (e.g., debug).
   get_filename_component(cmpvar ${CMAKE_BINARY_DIR} NAME)
 
   # Set the default install path prefix.
@@ -76,9 +79,11 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   string(REGEX REPLACE "\(.*)_.*" "\\1" cmp ${cmpvar})
   string(REGEX REPLACE ".*_\(.*)" "\\1" var ${cmpvar})
 
-  # Check if compiler suite is known.
+  # Check if compiler suite is known. Compiler suites should be defined in the
+  # variants file.
   if(LOFAR_COMPILER_SUITES MATCHES ${cmp})
-    set(LOFAR_COMPILER_SUITE ${cmp} CACHE INTERNAL "Compiler suite (e.g., gnu)")
+    set(LOFAR_COMPILER_SUITE ${cmp} CACHE INTERNAL 
+      "Compiler suite (e.g., gnu)")
   else(LOFAR_COMPILER_SUITES MATCHES ${cmp})
     message(FATAL_ERROR
       "Compiler suite ${cmp} is not defined. Check your variants file!")
@@ -91,26 +96,49 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
       "${compilers} is not defined. Check your variants file!")
   endif(NOT DEFINED ${compilers})
 
-  # Set the CMAKE_<LANG>_COMPILER variables to the correct compilers.
-  foreach(cmp ${${compilers}})
-    string(REGEX REPLACE "${LOFAR_COMPILER_SUITE}_" "" lang ${cmp})
-    message(STATUS "${lang} compiler: ${${cmp}}")
-    set(CMAKE_${lang}_COMPILER ${${cmp}} CACHE FILEPATH "${lang} compiler" FORCE)
-  endforeach(cmp ${compilers})
-
-  # Check if build variant is known.
+  # Check if build variant is known. Build variants should be defined in the
+  # variants file.
   message(STATUS "LOFAR_BUILD_VARIANTS = ${LOFAR_BUILD_VARIANTS}")
   if(LOFAR_BUILD_VARIANTS MATCHES ${var})
-    set(LOFAR_BUILD_VARIANT ${var} CACHE INTERNAL "Build variant (e.g., debug)")
+    set(LOFAR_BUILD_VARIANT ${var} CACHE INTERNAL
+      "Build variant, options are ${LOFAR_BUILD_VARIANTS}")
   else(${LOFAR_BUILD_VARIANTS} MATCHES ${var})
     message(FATAL_ERROR
       "Build variant ${var} is not defined. Check your variants file!")
   endif(LOFAR_BUILD_VARIANTS MATCHES ${var})
 
-  # Set the correct build type.
-  set(CMAKE_BUILD_TYPE ${LOFAR_BUILD_VARIANT})
+  # Define all the available build types. 
+  set(CMAKE_CONFIGURATION_TYPES ${LOFAR_BUILD_VARIANTS})
 
-  MESSAGE(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+  # Set the correct build type. The build type influences which compiler flags
+  # will be supplied by CMake (see below).
+  set(CMAKE_BUILD_TYPE "${LOFAR_BUILD_VARIANT}" CACHE STRING 
+    "Set the correct build type, options are ${LOFAR_BUILD_VARIANTS}" FORCE)
+
+  # Set the CMAKE_<LANG>_COMPILER and the CMAKE_<LANG>_FLAGS_<BUILD_TYPE>
+  # variables. These variables are used by CMake in choosing the
+  # appropiate compiler and supplying the correct compiler flags depending on
+  # the build variant (e.g. debug or opt). These are all cache variables whose
+  # values must be forced to the values specified in our variants file.
+  foreach(cmp ${${compilers}})
+    string(REGEX REPLACE "${LOFAR_COMPILER_SUITE}_" "" lang ${cmp})
+    message(STATUS "${lang} compiler: ${${cmp}}")
+    set(CMAKE_${lang}_COMPILER ${${cmp}} CACHE FILEPATH 
+      "${lang} compiler." FORCE)
+    set(CMAKE_${lang}_FLAGS ${${cmp}_FLAGS} CACHE STRING 
+      "Flags used by the compiler during all build types." FORCE)
+    foreach(var ${LOFAR_BUILD_VARIANTS})
+      set(CMAKE_${lang}_FLAGS_${var} ${${cmp}_FLAGS_${var}} CACHE STRING
+        "Flags used by the compiler during ${var} builds." FORCE)
+    endforeach(var ${LOFAR_BUILD_VARIANTS})
+  endforeach(cmp ${compilers})
+
+  # Set compiler definitions (e.g., -D options). There are global options that
+  # apply to each build variant, and there are build variant-specific options.
+  add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS})
+  foreach(var ${LOFAR_BUILD_VARIANTS})
+    add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS_${var}})
+  endforeach(var ${LOFAR_BUILD_VARIANTS})
 
   # Determine if lib64 has to be used. This is somewhat tricky for the default
   # case, because: Debian puts 64-bit libs in /lib and 32-bit libs in /lib32,

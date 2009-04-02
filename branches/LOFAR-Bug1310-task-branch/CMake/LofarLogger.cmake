@@ -30,7 +30,7 @@ macro(lofar_logger)
 
   if(USE_LOG4CPLUS)
     MESSAGE(STATUS "Checking for Log4Cplus ...")
-    lofar_find_package(Log4Cplus 1)# log4cplus/logger.h)
+    lofar_find_package(Log4Cplus 1 log4cplus/logger.h "log4cplus jpeg")
   endif(USE_LOG4CPLUS)
 
   if(USE_LOG4CXX)
