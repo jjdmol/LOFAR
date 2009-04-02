@@ -129,11 +129,19 @@ The remainder of this paper is structured as follows.
 
 \section{LOFAR overview}
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{lofar-overview.pdf}
+\begin{figure*}
+\begin{minipage}[b]{11cm}
+\includegraphics[width=11cm]{lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
 \label{fig:lofar-overview}
-\end{figure}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{6cm}
+\includegraphics[width=\columnwidth]{map.jpg}
+\caption{Possible LOFAR layout.}
+\label{fig:map}
+\end{minipage}
+\end{figure*}
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
@@ -152,12 +160,6 @@ require too much network bandwidth and would result in excessive
 computational requirements. Therefore, multiple antennas are grouped
 to form a \emph{station}.
 The signals of the receivers are combined locally, within the station.
-
-\begin{figure}[ht]
-\includegraphics[width=\columnwidth]{map.jpg}
-\caption{Possible LOFAR layout.}
-\label{fig:map}
-\end{figure}
 
 Geographically, LOFAR consists of a compact core area and a number of
 remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will be installed in the Northern
