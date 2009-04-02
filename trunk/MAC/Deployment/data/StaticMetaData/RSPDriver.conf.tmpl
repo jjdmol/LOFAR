@@ -42,11 +42,6 @@ RSPDriver.PPS_DELAY=1000
 RSPDriver.PPS_TRIGGER=1
 
 #
-# Parameter for control of the ring splitter
-#
-RSPDriver.SPLITTER=1
-
-#
 # Specify the MAC addresses of the control port (MAC) of RSP boards
 #
 # NOTE: not used yet!
@@ -91,8 +86,8 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 # These settings determine which RSP board outputs beamlets (BLET)
 # and crosslets (XLET) of lane x on the CEP output port. Currently
 # (and this probably won't be changed) the BLET and XLET setting must
-# be identical per lane, e.g. if LANE_0_BLET_OUT is X, then
-# LANE_0_XLET_OUT must also be X. This setting controls the setting
+# be identical per lane, e.g. if LANE_00_BLET_OUT is X, then
+# LANE_00_XLET_OUT must also be X. This setting controls the setting
 # of the RAD register. The RSP board immediately following
 # the output board will ignore input data thus creating a route from
 # first to last board the latter being the output board.
@@ -118,35 +113,6 @@ RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 # lanes will produce ethernet packets and use these MAC- and
 # IP-addresses.
 #
-RSPDriver.LANE_0_BLET_OUT= 0
-RSPDriver.LANE_0_XLET_OUT= 0
-RSPDriver.LANE_0_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:00
-RSPDriver.LANE_0_SRCIP   = 10.@IP_PREFIX@.@IP_SUBNET@.1
-RSPDriver.LANE_0_DSTMAC  = @LANE_0_MAC@
-RSPDriver.LANE_0_DSTIP   = @LANE_0_IP@
-
-RSPDriver.LANE_1_BLET_OUT=1
-RSPDriver.LANE_1_XLET_OUT=0
-RSPDriver.LANE_1_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:01
-RSPDriver.LANE_1_SRCIP   = 10.@IP_PREFIX@.@IP_SUBNET@.2
-RSPDriver.LANE_1_DSTMAC  = @LANE_1_MAC@
-RSPDriver.LANE_1_DSTIP   = @LANE_1_IP@
-
-RSPDriver.LANE_2_BLET_OUT=2
-RSPDriver.LANE_2_XLET_OUT=0
-RSPDriver.LANE_2_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:02
-RSPDriver.LANE_2_SRCIP   = 10.@IP_PREFIX@.@IP_SUBNET@.3
-RSPDriver.LANE_2_DSTMAC  = @LANE_2_MAC@
-RSPDriver.LANE_2_DSTIP   = @LANE_2_IP@
-
-RSPDriver.LANE_3_BLET_OUT=3
-RSPDriver.LANE_3_XLET_OUT=0
-RSPDriver.LANE_3_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:03
-RSPDriver.LANE_3_SRCIP   = 10.@IP_PREFIX@.@IP_SUBNET@.4
-RSPDriver.LANE_3_DSTMAC  = @LANE_3_MAC@
-RSPDriver.LANE_3_DSTIP   = @LANE_3_IP@
-
-# New-style parameters
 RSPDriver.LANE_00_BLET_OUT= 0
 RSPDriver.LANE_00_XLET_OUT= 0
 RSPDriver.LANE_00_SRCMAC  = 00:22:86:@RING_ID@:@STATION_HID@:00
@@ -303,6 +269,7 @@ RSPDriver.READWRITE_TDSSTATUS=1
 RSPDriver.WRITE_TBB=1
 RSPDriver.WRITE_SI=1
 RSPDriver.READ_SI=1
+RSPDriver.SPLITTER=1
 
 #
 # TDS_CONTROL
