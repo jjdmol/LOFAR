@@ -795,9 +795,9 @@ void ReadAllCmd::send()
 			
 			event.board = rcu2board(itsRcu);
 			event.mp = rcu2mp(itsRcu);
-			event.pid = rcu2mp(itsRcu) + 2; // Memory writer
+			event.pid = rcu2writer(itsRcu);
 			event.regid = 4; // Last stored time instance
-	
+			cout << "readr board=" << event.board << " mp=" << event.mp << " writer=" << event.pid << endl;
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break; 
@@ -812,7 +812,7 @@ void ReadAllCmd::send()
 			} else {
 				event.prepages = itsPages - 1;
 			}
-			cout << "pages=" << itsPages << endl;
+			cout << "sending " << itsPages << " pages to cep" << endl;
 			event.postpages = 0;
 			itsPort.send(event);
 			itsPort.setTimer(600.0);
@@ -852,7 +852,7 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 			TBBReadrAckEvent ack(e);
 			itsSecondsTime = ack.data[0];
 		 	itsSampleTime = ack.data[1];
-		 	cout << formatString("last frame time of rcu-%d, %d seconds, sample number %d", 
+		 	cout << formatString("time of last frame from rcu-%d, %d seconds, sample number %d", 
 		 								itsRcu, itsSecondsTime, itsSampleTime) << endl; 
 			itsStage = 2;
 		} break; 
@@ -2841,13 +2841,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 							|| level < 1 || level > 255 
 							|| start < 1 || start > 15 
 							|| stop < 1 || stop > 15 
-							|| window > 6
-							|| triggermode > 1)
+							|| window > 8
+							|| triggermode > 3)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;  
 						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(on) or 1(off)" << endl;
-						cout << "       window=0..6, mode=0(single shot) or 1(continues, don't use this mode)" << endl;
+						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
+						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
 					

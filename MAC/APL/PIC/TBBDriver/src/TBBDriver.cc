@@ -353,7 +353,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 						itsBoard[board].send(config);
 						itsBoard[board].setTimer(10.0);  
 						LOG_INFO_STR("CONFIG 1  is send to port '" << itsBoard[board].getName() << "'");
-						waitTimer[board] = 12;
+						waitTimer[board] = 20;
 						setupDone = false;
 						continue;
 					}
@@ -364,7 +364,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 						watchdog.opcode = TPWATCHDOG;
 						watchdog.status = 0;
 						watchdog.mode = 1; // watchdog is set to eth port
-						//watchdog.mode = 0;
+						watchdog.mode = 0;
 						itsBoard[board].send(watchdog);
 						itsBoard[board].setTimer(1.0);  
 						LOG_INFO_STR("WATCHDOG 1  is send to port '" << itsBoard[board].getName() << "'");
@@ -374,7 +374,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					}
 
 					if ((TS->getBoardState(board) == freeBoard) 
-							 || (TS->getBoardState(board) == WatchdogSet)) {
+							//|| (TS->getBoardState(board) == image1Set)) {
+							|| (TS->getBoardState(board) == watchdogSet)) {
 						TPFreeEvent free;
 						free.opcode = TPFREE;
 						free.status = 0;
@@ -450,7 +451,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		case TP_WATCHDOG_ACK: {
 			int board = TS->port2Board(&port); // get board nr
 			itsBoard[board].cancelAllTimers();
-			TS->setBoardState(board,WatchdogSet);
+			TS->setBoardState(board,watchdogSet);
 			waitTimer[board] = 0;
 		} break;
 		

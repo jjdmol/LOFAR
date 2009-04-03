@@ -46,7 +46,6 @@ WatchDogCmd::WatchDogCmd():
 		itsTBBackE->status_mask[boardnr]	= 0;
 	}
 	setWaitAck(true);	
-	setRetry(false);	
 }
 	  
 //--Destructor for WatchDogCmd.---------------------------------------------------
@@ -75,6 +74,7 @@ void WatchDogCmd::saveTbbEvent(GCFEvent& event)
 	itsTPE->opcode	= TPWATCHDOG;
 	itsTPE->status	= 0;
 	itsTPE->mode	= itsTBBE->mode;
+	
 	LOG_DEBUG_STR("boardMask= " << formatString("%08x",itsBoardMask));
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
