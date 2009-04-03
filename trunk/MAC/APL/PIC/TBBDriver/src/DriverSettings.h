@@ -35,7 +35,7 @@ namespace LOFAR {
 
 static const int DRIVER_VERSION = 206; // 2.06 
 
-enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, WatchdogSet, freeBoard, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, watchdogSet, freeBoard, boardFreed, boardReady, boardError};
 
 // info for all channels
 struct ChannelInfo

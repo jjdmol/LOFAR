@@ -74,22 +74,27 @@ static const int REG_SIZE[8][8] = {
 static const int TBB_LISTEN_ONE_SHOT = 0;
 static const int TBB_LISTEN_CONTINUES = 1;
 
-// rcu to channel conversion, rcu-8 is on channel-0
+
+// rcu to channel conversion, rcu-0 is on channel-2
 static const int TBB_RCU_TABLE[16] = {
-	8, 9, 0, 1, 10, 11, 2, 3, 12, 13, 4, 5, 14, 15, 6, 7
+	2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13
 };
 
-// rcu to mp conversion, rcu-8 is on mp-0
+// rcu to mp conversion, rcu-0 is on mp-0
 static const int TBB_MP_TABLE[16] = {
-	0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3
+	0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 1, 1, 2, 2, 3, 3
 };
 
+// rcu to writer conversion, rcu-0 is on writer-2
+static const int TBB_WRITER_TABLE[16] = {
+	4, 5, 4, 5, 4, 5, 4, 5, 2, 3, 2, 3, 2, 3, 2, 3
+};
 
 // dimensions of the connected hardware
 uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....
-int			itsMemory[MAX_N_TBBOARDS];
-int			itsMaxBoards;
-int			itsMaxChannels;
+int		itsMemory[MAX_N_TBBOARDS];
+int		itsMaxBoards;
+int		itsMaxChannels;
 
   	
 //-----------------------------------------------------------------------------
@@ -286,6 +291,11 @@ public:
 	int rcu2mp(int rcunr) const
 	{
 		return(TBB_MP_TABLE[rcunr % 16]);
+	}
+	
+	int rcu2writer(int rcunr) const
+	{
+		return(TBB_WRITER_TABLE[rcunr % 16]);
 	}
 	
 	int rcu2board(int rcunr) const
