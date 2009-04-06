@@ -101,6 +101,20 @@ different processing pipelines for different observation types demands a
 software solution.
 The availability of sufficiently powerful supercomputers allows this.
 
+\begin{figure*}
+\begin{minipage}[b]{11cm}
+\includegraphics[width=11cm]{lofar-overview.pdf}
+\caption{A simplified overview of the LOFAR processing.}
+\label{fig:lofar-overview}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{6cm}
+\includegraphics[width=\columnwidth]{map.jpg}
+\caption{Possible LOFAR layout.}
+\label{fig:map}
+\end{minipage}
+\end{figure*}
+
 This paper describes the implementation and performance characteristics of
 the real-time part of some of these pipelines.
 The \emph{standard imaging pipeline}, used to generate sky images,
@@ -148,20 +162,6 @@ Section~\ref{sec:conclusions}.
 
 \section{The LOFAR Telescope}
 \label{sec:overview}
-
-\begin{figure*}
-\begin{minipage}[b]{11cm}
-\includegraphics[width=11cm]{lofar-overview.pdf}
-\caption{A simplified overview of the LOFAR processing.}
-\label{fig:lofar-overview}
-\end{minipage}
-\hfill
-\begin{minipage}[b]{6cm}
-\includegraphics[width=\columnwidth]{map.jpg}
-\caption{Possible LOFAR layout.}
-\label{fig:map}
-\end{minipage}
-\end{figure*}
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
