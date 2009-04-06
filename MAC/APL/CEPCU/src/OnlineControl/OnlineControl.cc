@@ -311,10 +311,10 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
     case F_INIT: {
 		// Get access to my own propertyset.
 //		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
-		string	propSetName(createPropertySetName(PSN_ONLINE_CTRL, getName()));
+		string	propSetName(createPropertySetName(PSN_ONLINE_CONTROL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
-											 PST_ONLINE_CTRL,
+											 PST_ONLINE_CONTROL,
 											 PSAT_RW,
 											 this);
 		}
