@@ -132,10 +132,22 @@ to achieve the required internal input and output data rates with the standard
 network system software.
 
 The remainder of this paper is structured as follows.
-\emph{TODO}.
+In Section~\ref{sec:overview}, we give an overview of the LOFAR telescope.
+Then, in Section~\ref{sec:BG/P}, we describe the hardware characteristics of
+the Blue Gene/P.
+Next, we explain how we process the telescope data on the Blue Gene/P
+(Section~\ref{sec:processing}), focusing on the processing on the I/O~nodes
+(Section~\ref{sec:IONProc}) and compute nodes (Section~\ref{sec:CNProc}).
+In Section~\ref{sec:results}, we briefly illustrate the astronomical results
+of the correlator output.
+Section~\ref{sec:performance} extensively discusses performance results.
+We mention related work in Section~\ref{sec:related-work}.
+Finally, we discuss, conclude, and describe future work in
+Section~\ref{sec:conclusions}.
 
 
 \section{The LOFAR Telescope}
+\label{sec:overview}
 
 \begin{figure*}
 \begin{minipage}[b]{11cm}
@@ -241,6 +253,7 @@ More observation modes will be implemented in the future.
 
 
 \section{The Blue Gene/P}
+\label{sec:BG/P}
 
 Initially, LOFAR used a 6-rack IBM Blue Gene/L supercomputer for real-time
 processing of the station data.
@@ -294,11 +307,12 @@ Normally, the I/O~node is used as a black box that provides transparent
 communication from the compute nodes to external systems: all I/O-related
 system calls on the compute nodes are forwarded to a daemon program that runs
 on the I/O~node and performs the real operation.
-In Section~\ref{sec:I/O-node-processing}, we show that it is much more
+In Section~\ref{sec:IONProc}, we show that it is much more
 efficient to run part of the application software on the I/O~node.
 
 
 \section{LOFAR Processing}
+\label{sec:processing}
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{processing-overview.pdf}
@@ -331,7 +345,7 @@ data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 
 
 \section{I/O-node processing}
-\label{sec:I/O-node-processing}
+\label{sec:IONProc}
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{ION-processing.pdf}
@@ -504,6 +518,7 @@ In practice, under normal circumstances, this rarely happens
 
 
 \section{Compute-node processing}
+\label{sec:CNProc}
 
 \begin{figure*}[ht]
 \includegraphics[width=\textwidth]{CN-processing.pdf}
@@ -878,10 +893,12 @@ cache hierarchy.
 %	- first detectable objects in the universe (universe was opaque before that)
 %	- due to redshift, wavelength of H is 1.5-3m (115-180MHz)
 %	- 
+\label{sec:results}
 
 
 
 \section{Performance}
+\label{sec:performance}
 
 Since only a small number of LOFAR stations has already been constructed
 (the majority will become operational later this year), we will provide 
@@ -1164,6 +1181,7 @@ known pulsars.
 
 
 \section{Related Work}
+\label{sec:related-work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
 %in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
@@ -1221,6 +1239,7 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 % + het werkt!
 
 \section{Discussion, conclusions, \\ and future work}
+\label{sec:conclusions}
 
 We have shown that the IBM Blue Gene/P supercomputer is capable of
 processing telescope data in real time, even if the input data rate is
