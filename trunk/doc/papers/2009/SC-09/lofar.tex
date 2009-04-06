@@ -7,6 +7,7 @@
 \newcommand{\us}{\,$\muup$s\xspace}
 
 \hyphenation{ob-ser-va-tion}
+\hyphenation{FPGAs}
 
 \begin{document}
 
@@ -165,14 +166,16 @@ Section~\ref{sec:conclusions}.
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
-antennas, the LBAs (Low-Band Antennas) and HBAs (High-Band Antennas).
+antennas: the Low-Band Antennas (LBA) for the 10--80~MHz frequency
+range and High-Band Antennas (HBA) for the 110--250~MHz band.
+FM radio transmissions make the in-between range unsuitable for observations.
 Figure~\ref{fig:lba-field} shows a field with low-band antennas. Each
 LBA consists of one dipole per polarization, while each HBA is
 organized as a tile, wherein 16 antenna elements are combined. All
 antennas are dual polarized.
 
 LOFAR's antennas are structured in a hierarchical way to limit the
-costs of data transport and processing. Thousands of antennas are
+costs of data transport and processing. Tens of thousands of antennas are
 necessary to obtain sufficient sensitivity. The antennas are
 distributed over a large area to achieve a high angular resolution.
 However, combining the data of all individual antennas centrally would
@@ -184,23 +187,25 @@ The signals of the receivers are combined locally, within the station.
 Geographically, LOFAR consists of a compact core area and a number of
 remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will
 be installed in the Northern part of the Netherlands.  The stations
-are distributed along 5 log-spiral arms with a diameter of
-approximately 360 km. The station fields are centrally condensed,
+are roughly distributed along five log-spiral arms with a diameter of
+hundreds of kilometers. 
+The station fields are centrally condensed,
 following a logarithmic distribution.  About 50\% of the stations are
-located in the central core. This inner area can be operated for
-dedicated experiments with more data per station.  Since other
-European institutes also show interest and are building LOFAR
-stations, the maximal distance between LOFAR stations will be
-extended, possibly to 1000 km.  In the past several years we have
-deployed a number of prototype antennas, while the roll-out of the
-real stations currently is in progress.
+located in the 2~km-wide central core.
+Additionally, eight to fifteen European stations will or have been built,
+extending the maximum distance to order 1000~km.
+The longer baselines allows observations with high angular resolution,
+but limits the Field-of-View; therefore the European stations will not be
+used for all observations.
+In the past several years we have deployed a number of prototype antennas,
+while the roll-out of the real stations currently is in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
 A station also features a cabinet where initial processing is done, using
 FPGA technology.
 Typical operations that are performed here include analog-to-digital
-conversion, filtering, frequency selection, and combination of the LBA
-receiver and HBA tile signals.
+conversion, filtering, frequency selection, and combination of the signals
+from the different receivers.
 One of the distinctive properties of LOFAR is that the receivers are
 omni-directional, and that multiple, concurrent observation directions are
 supported.
@@ -230,7 +235,7 @@ mode.
 We filter the data, and split the subbands in narrower frequency bands called
 \emph{channels}, which allow for more accurate RFI removal.
 In addition, we perform phase shift and bandpass corrections.
-Finally, the signals from all stations are beam-formed,
+Finally, the signals from all stations are optionally beam-formed,
 correlated and forwarded to a storage cluster, where results can be
 kept for several days.  We will explain the central processing steps
 in more detail in Section~\ref{sec:signal-processing}.
@@ -283,6 +288,8 @@ The compute nodes run a fast, simple, single-process kernel
 The Blue Gene/P contains several networks.
 A fast \emph{3-dimensional torus\/} connects all compute nodes and is used
 for point-to-point and all-to-all communications.
+Unlike the Blue Gene/L, the torus uses DMA to offload the CPUs and to allow
+asynchronous communication.
 The \emph{collective network\/} is used for MPI collective operations,
 but also for external communication.
 A \emph{global interrupt network\/} provides support for fast barriers.
@@ -329,7 +336,7 @@ Figure~\ref{fig:processing} shows how the data flows through the entire
 processing chain.
 The first application, \emph{IONProc}, runs on the Blue Gene/P I/O nodes.
 Its main tasks are to receive the station UDP data, to buffer the data
-for up to 2.5~seconds, and to forward it to the compute nodes.
+for up to 2.5~seconds, and to forward it to the compute nodes in the pset.
 The second application called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
 compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
@@ -347,7 +354,7 @@ data in an astronomical data format (AIPS++ Measurement Sets) to disk.
 \section{I/O-node processing}
 \label{sec:IONProc}
 
-\begin{figure}[ht]
+\begin{figure}[t]
 \includegraphics[width=\columnwidth]{ION-processing.pdf}
 \caption{Simplified data flow diagram for the I/O nodes.}
 \label{fig:ion-processing}
@@ -360,25 +367,31 @@ software~\cite{Iskra:08}, but this idea is much better supported on the
 Blue Gene/P.
 
 We run one multi-threaded process on each I/O~node that takes care of two
-tasks: the handling of input and the handling of output.
-The input section deals with UDP receipt of station data, and buffering and forwarding to the compute nodes.
-The output section handles outgoing result data from the compute nodes, and forwards it to storage.
+tasks: the handling of input and the handling of output (see
+Figure~\ref{fig:ion-processing}).
+The \emph{input section\/} deals with UDP receipt of station data, buffering,
+and forwarding to the compute nodes.
+The \emph{output section\/} collects outgoing result data from the compute
+nodes, optionally integrates the data over multiple seconds in time, and
+forwards the data to storage.
 An I/O node may run both sections, either of them, or none at all, depending
 on the configuration.
-Both tasks are shown in Figure~\ref{fig:ion-processing}, and described in detail below.
+Both tasks are described in detail below.
 
 
-\subsection{Input handling}
+\subsection{The input section}
 \label{sec:input-handling}
 
 The FPGAs at a LOFAR station send UDP packets with sampled data over a
 dedicated Wide-Area Network to a BG/P I/O~node.
-To simplify the implementation, there is a one-to-one mapping between
-stations and I/O~nodes, so that one I/O~node receives all data from a single
-station.
+The data are received by the \emph{input section}.
+To simplify the implementation of the correlator, there is a one-to-one
+mapping between stations and I/O~nodes, so that one I/O~node receives all
+data from a single station.
 However, handling the full 3.1~Gb/s data rate of a station on a relatively
-slow CPU is quite a challenge.
-Note that an I/O~node does not run the input section task if it is not
+slow CPU is quite a challenge, since sufficient processing time must be left
+for handling output as well.
+Note that an I/O~node does not run the input section if it is not
 connected to a station.
 
 The input section receives the UDP packets, taking care of out-of-order,
@@ -390,8 +403,8 @@ Multiple threads are necessary, since a single core is too slow to receive all
 data.
 Together, the threads receive a total of 48,828~packets per second.
 
-The received UDP packets containing the samples are copied into a cicular buffer that holds the most recent
-2.5~seconds of data.
+The samples from the received UDP packets are copied into a cicular buffer that
+holds the most recent 2.5~seconds of data.
 The buffer serves three purposes.
 First, it is used to synchronize the stations, since the travel times over
 the WAN are higher for the remote stations than for the central stations.
@@ -414,29 +427,30 @@ FCNP, in contrast, achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
 
+The correlator typically processes in real time, but can also correlate
+pre-recorded data off-line, frequently used for experimental observations.
 When processing in real time, the NTP-synchronized wall-clock time
 is used to trigger the sending of a new block of data.
-A block of data containing samples from time $t_1$ to $t_2$ are sent some hundreds
-of milliseconds (the WAN delay plus a safe margin) after $t_2$, whether or
-not all data were factually received from the station.
+A block of data containing samples from time $t_1$ to $t_2$ are sent some 
+undreds of milliseconds (the WAN delay plus a safe margin) after $t_2$,
+whether or not all data were factually received from the station.
 This ruthless method assures real-time continuation of the correlator and
 provides fault-tolerance against a failing station or WAN link.
-In practice, this method does not cause any data loss.
-An alternative mode processes pre-recorded data off-line and is frequently used
-for experimental observations.
-In this case, the input is \emph{reliably} read from file or TCP socket rather than
-UDP.
+In practice, this method causes hardly any data loss.
+When processing off-line, the input is read from file or TCP socket rather
+than a UDP socket.
 In off-line mode we do not use the wall-clock time as
 trigger, but we synchronize the threads that read and write the circular
 buffer differently to prevent them from overrunning each other.
 
 
-\subsection{Output handling}
+\subsection{The output section}
 
 The bulk of the signal processing is done on the compute nodes, on which we
-elaborate in the next section.
+elaborate in Section~\ref{sec:CNProc}.
 The resulting output data are sent back to the I/O~node.
-The second major task of the I/O-node application is to handle the output data.
+The second major task of the I/O-node application is the \emph{output section},
+that handles output data.
 This task performs four operations.
 
 First, the data are received from the compute nodes, also using FCNP.
@@ -444,7 +458,7 @@ Second, the data are optionally added to previously received data from other
 compute nodes in the pset, if integration over multiple seconds is desired.
 Third, the (possibly integrated) output is queued in a buffer.
 Fourth, another thread asynchronously dequeues the data and sends them to
-a storage node, using a (reliable) TCP connection.
+a storage node, using TCP.
 
 The queue improves real-time behavior and increases fault tolerance, since
 it handles data on a best-effort basis.
@@ -456,6 +470,14 @@ time: it is much better to lose a small part of the data than to stall the
 entire correlator and lose \emph{all\/} data.
 In practice, under normal circumstances, no data are lost.
 
+
+\begin{figure*}[ht]
+\begin{center}
+\includegraphics[width=.8\textwidth]{CN-processing.pdf}
+\end{center}
+\caption{Simplified data flow diagram for the compute nodes.}
+\label{fig:cn-processing}
+\end{figure*}
 
 \subsection{Optimizations}
 
@@ -479,10 +501,10 @@ in software.
 This is not a problem on the compute nodes, where the compute-node kernels 
 map all memory using a few large pages, so that TLB misses do not occur.
 However, the I/O~nodes run a Linux kernel that typically uses a page size of
-4~KB, potentially generating a huge number of TLB-miss interrupts.
+4~KB, generating a huge number of TLB-miss interrupts.
 
 To avoid the interrupts, we use a modified ZeptoOS (Linux-based)
-kernel\cite{Kazutomo:09}.
+kernel\cite{Yoshii:09}.
 It allows a process to map 1.5~GiB (out of 2~GiB) of physical memory in its
 virtual memory map, using six fixed mappings of 256~MiB that are never evicted
 from the TLB.
@@ -520,21 +542,15 @@ In practice, under normal circumstances, this rarely happens
 \section{Compute-node processing}
 \label{sec:CNProc}
 
-\begin{figure*}[ht]
-\center{
-\includegraphics[width=.8\textwidth]{CN-processing.pdf}
-\caption{Simplified data flow diagram for the compute nodes.}
-\label{fig:cn-processing}
-}
-\end{figure*}
-
 The bulk of the signal-processing computations take place at the compute nodes.
 In this section, we continue describing the processing pipeline depicted in
 Figure~\ref{fig:processing}. 
-We explain how the data flow to the compute nodes, how the data are exchanged
-between other compute nodes, what signal processing takes place, and which
-optimizations we implemented. The compute node pipeline is shown in more detail
-in Figure~\ref{fig:cn-processing}.
+We explain how the work is scheduled over the compute nodes, how the data are
+receieved from the I/O~nodes, how the data are exchanged between other compute
+nodes, what signal processing takes place, and which optimizations we
+implemented.
+The compute node pipeline is shown in more detail in
+Figure~\ref{fig:cn-processing}.
 
 
 \subsection{Scheduling}
@@ -561,14 +577,15 @@ I/O~node sends new data.
 For simplicity, Figure~\ref{fig:round-robin} shows the processing of
 three subbands on six cores.
 In reality, scheduling is more complex.
-First, the subbands that must be processed are (more or less) evenly divided
+The subbands that must be processed are first (more or less) evenly divided
 over the psets.
 Typically, a pset is responsible for a fixed set of four to sixteen subbands.
-Then, the subbands are round-robin scheduled over the 64~cores within the
-pset.
+Then, the subbands are round-robin scheduled over the 64~cores \emph{within the
+pset}.
 For example, if a pset processes six subbands, every second, the next six
 cores are scheduled and each of the cores will process one subband.
-In this case, the available time to process one subband is ten seconds.
+In this example, the available time to process one subband is ten seconds
+($\lfloor\frac{64}{6}\rfloor$).
 Since consecutive chunks of a particular subband are always processed by cores
 within the same pset, the output for the subband is always sent via the same
 I/O~node.
@@ -585,7 +602,7 @@ Blue Gene/P, it unnecessarily increases torus communication.
 \subsection{All-to-All data exchange}
 
 The compute nodes perform a large number of operations on the data, as shown in
-Figure~\ref{fig:processing}.
+Figure~\ref{fig:cn-processing}.
 The very first step is to exchange data with another group of processor cores.
 This is necessary, because an I/O~node receives all frequency subbands from one
 station, but the correlator requires one frequency subband from all
@@ -599,7 +616,7 @@ The data are thus first sent over the collective network from the I/O~node to
 a compute node and then over the 3-D~torus network.
 We use the 3-D~torus because of its high bandwidth and switching capabilities.
 
-\begin{figure}
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=25mm]{colinear.pdf}
 \end{center}
@@ -704,6 +721,8 @@ The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
 A station cannot correct for this artefact itself, since it is only visible
 in channels, not in subbands.
+Another document describes how the correction factors are
+computed~\cite{Romein:08}.
 
 The \emph{beam former} combines the data of all the stations by taking the
 complex sum for each sample. As a result, the noise measured by the individual
