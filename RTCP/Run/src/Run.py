@@ -7,19 +7,23 @@ import os
 import sys
 import shutil
 import scanf
+
 from optparse import OptionParser
+from LOFAR_Parset import *
 
 #check hostname
-for i in range(0,1):
-    if os.environ.get('HOSTNAME', 'default') == 'listfen':
-        hostname = 'listfen'
-        break
-    elif os.environ.get('HOSTNAME', 'default') == 'bgfen0':
-        hostname = 'bgfen0'
-        break
-    else:    
-        print 'Restart "Run.py" run-script on: listfen/bgfen0'
+for case in switch(os.environ.get('HOSTNAME', 'default')):
+    if case('listfen'):
+	break
+    if case('bgfen0'):
+	break
+    if case('bgfen1'):
+	break
+    if case():
+        print 'Start "Run.py" run-script on: listfen/bgfen[01]'
         sys.exit(1)
+
+hostname = os.environ.get('HOSTNAME', 'default')		
 
 from Host_Names import *
 from Parset import Parset
