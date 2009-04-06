@@ -142,13 +142,21 @@ The remainder of this paper is structured as follows.
 \end{minipage}
 \end{figure*}
 
+\begin{figure}[ht]
+\center{
+\includegraphics[width=0.8\columnwidth]{LBA-field.jpg}
+\caption{A field with low-band antennas (dipoles).}
+\label{fig:lba-field}
+}
+\end{figure}
+
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
 antennas, the LBAs (Low-Band Antennas) and HBAs (High-Band Antennas).
-The leftmost picture in the figure shows the low-band
-antennas in the field.  Each LBA consists of one dipole per polarization,
-while each HBA is organized as a tile, wherein 16 antenna elements are
-combined. All antennas are dual polarized.
+Figure~\ref{fig:lba-field} shows a field with low-band antennas. Each
+LBA consists of one dipole per polarization, while each HBA is
+organized as a tile, wherein 16 antenna elements are combined. All
+antennas are dual polarized.
 
 LOFAR's antennas are structured in a hierarchical way to limit the
 costs of data transport and processing. Thousands of antennas are
@@ -161,17 +169,18 @@ to form a \emph{station}.
 The signals of the receivers are combined locally, within the station.
 
 Geographically, LOFAR consists of a compact core area and a number of
-remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will be installed in the Northern
-part of the Netherlands.  The stations are distributed along 5
-log-spiral arms with a diameter of approximately 360 km. The station
-fields are centrally condensed, following a logarithmic distribution.
-About 50\% of the stations are located in the central core. This inner
-area can be operated for dedicated experiments with more data per
-station.  Since other European institutes also show interest and are
-building LOFAR stations, the maximal distance between LOFAR stations will be
+remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will
+be installed in the Northern part of the Netherlands.  The stations
+are distributed along 5 log-spiral arms with a diameter of
+approximately 360 km. The station fields are centrally condensed,
+following a logarithmic distribution.  About 50\% of the stations are
+located in the central core. This inner area can be operated for
+dedicated experiments with more data per station.  Since other
+European institutes also show interest and are building LOFAR
+stations, the maximal distance between LOFAR stations will be
 extended, possibly to 1000 km.  In the past several years we have
-deployed a number of prototype antennas, while the roll-out of
-the real stations currently is in progress.
+deployed a number of prototype antennas, while the roll-out of the
+real stations currently is in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
 A station also features a cabinet where initial processing is done, using
@@ -868,33 +877,6 @@ cache hierarchy.
 %	- first detectable objects in the universe (universe was opaque before that)
 %	- due to redshift, wavelength of H is 1.5-3m (115-180MHz)
 %	- 
-\section{The output of the correlator}
-
-\begin{figure}[ht]
-\includegraphics[width=\columnwidth]{fringe.jpg}
-\caption{Correlations from a 9-hour observation.  See the main text for
-an explanation.}
-\label{fig:fringe}
-\end{figure}
-
-A graphical representation of the correlator output is depicted in
-Figure~\ref{fig:fringe}.
-The figure shows the cross-correlations from two stations during a 9-hour
-observation.
-The horizontal axis varies in time;
-the vertical axis represents the 256~channels of one frequency subband.
-Each pixel corresponds to a (complex) correlation, where the color represents
-the phase of the signal; the intensity matches the amplitude (power).
-The phase changes over time, due to the earth rotation that alters the
-relative position of the observed sources.
-The white spots are caused by RFI; these bad data are detected and
-ignored in the remainder of the processing pipeline.
-
-The correlations are used to create images.
-Even with the limited amount of prototype antennas that have been employed
-during the last few years, impressive (all-sky) images were made.
-Also, the prototype pulsar pipeline software successfully detected several
-known pulsars.
 
 
 
@@ -1149,6 +1131,35 @@ the specifications require, on only half the amount of planned resources.
 Only if the need to correlate more than 64~stations would ever arise, or if
 significant additional real-time signal processing would be needed, the
 second rack must be employed.
+
+
+\section{Astronomical results}
+
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{fringe.jpg}
+\caption{Correlations from a 9-hour observation.  See the main text for
+an explanation.}
+\label{fig:fringe}
+\end{figure}
+
+A graphical representation of the correlator output is depicted in
+Figure~\ref{fig:fringe}.
+The figure shows the cross-correlations from two stations during a 9-hour
+observation.
+The horizontal axis varies in time;
+the vertical axis represents the 256~channels of one frequency subband.
+Each pixel corresponds to a (complex) correlation, where the color represents
+the phase of the signal; the intensity matches the amplitude (power).
+The phase changes over time, due to the earth rotation that alters the
+relative position of the observed sources.
+The white spots are caused by RFI; these bad data are detected and
+ignored in the remainder of the processing pipeline.
+
+The correlations are used to create images.
+Even with the limited amount of prototype antennas that have been employed
+during the last few years, impressive (all-sky) images were made.
+Also, the prototype pulsar pipeline software successfully detected several
+known pulsars.
 
 
 \section{Related Work}
