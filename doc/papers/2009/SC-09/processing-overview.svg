@@ -8,8 +8,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="650.74603"
-   height="197.73329"
+   width="564.74603"
+   height="191.73329"
    id="svg4918"
    sodipodi:version="0.32"
    inkscape:version="0.46"
@@ -50,8 +50,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.30351"
-     inkscape:cx="319.67889"
-     inkscape:cy="98.866646"
+     inkscape:cx="309.19249"
+     inkscape:cy="92.354844"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -82,7 +82,7 @@
        height="35.972847"
        width="97.368042"
        y="67.467484"
-       x="506.29019" />
+       x="450.29019" />
     <rect
        id="rect3322"
        style="fill:#ffd5d5;stroke:#800000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none"
@@ -140,7 +140,7 @@
        font-weight="bold"
        font-style="normal"
        y="53.97398"
-       x="488.14639"
+       x="430.14639"
        xml:space="preserve">BG/P compute cores</text>
     <text
        style="font-size:13.5890379px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#00b000;stroke:#00b000;stroke-width:0.00176947in;font-family:Helvetica"
@@ -158,7 +158,7 @@
        font-weight="bold"
        font-style="normal"
        y="89.030655"
-       x="550.79321"
+       x="494.79321"
        xml:space="preserve">CNProc</text>
     <text
        style="font-size:13.5890379px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00176947in;font-family:Helvetica"
@@ -185,7 +185,7 @@
        height="35.972847"
        width="97.368042"
        y="156.71297"
-       x="506.43137" />
+       x="452.43137" />
     <text
        style="font-size:13.5890379px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00176947in;font-family:Helvetica"
        id="text3330"
@@ -193,11 +193,11 @@
        font-weight="bold"
        font-style="normal"
        y="178.27769"
-       x="550.93597"
+       x="496.93597"
        xml:space="preserve">CNProc</text>
     <path
        style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:2.3051362;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2.30513597, 6.9154079;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 556.51791,113.10806 L 556.51791,142.997"
+       d="M 498.51791,113.10806 L 498.51791,142.997"
        id="path3390"
        sodipodi:nodetypes="cc" />
     <a
@@ -205,23 +205,23 @@
        id="a4308">
       <path
          id="path4310"
-         d="M 5134.2467,5919.2107 L 6851.8886,5801.6914"
+         d="M 5134.2467,5919.2107 L 6060.6626,5773.4333"
          style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:17.21153259;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          sodipodi:nodetypes="cc" />
     </a>
     <path
        id="path4312"
-       d="M 382.99258,94.518151 L 505.94698,175.61445"
+       d="M 382.99258,94.518151 L 451.94698,173.61445"
        style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 603.54337,85.436931 L 674.24287,85.436931 L 674.24287,236.88596 L 448.28205,236.88596 L 384.86037,146.43235"
+       d="M 547.54337,85.436931 L 588.24287,85.436931 L 588.24287,230.88596 L 448.28205,230.88596 L 384.86037,146.43235"
        id="path4316"
        sodipodi:nodetypes="ccccc" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 603.67157,175.08791 L 635.20937,175.08791 L 635.20937,209.7444 L 459.15387,210.78415 L 384.64236,131.07411"
+       d="M 549.67157,175.08791 L 567.05251,175.08791 L 567.47289,209.7444 L 459.15387,210.78415 L 384.64236,131.07411"
        id="path4833"
        sodipodi:nodetypes="ccccc" />
     <text
