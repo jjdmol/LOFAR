@@ -45,26 +45,23 @@
 \begin{abstract}
 LOFAR is the first of a new generation of radio telescopes.
 Rather than using expensive dishes, it forms a distributed sensor network that
-combines signals from many thousands of simple antennas.
+combines the signals from many thousands of simple antennas.
 Its revolutionary design allows observations in a frequency range that has
 hardly been studied before.
 
 This paper focuses on another novel feature: where traditional telescopes
 use customized hardware, we process the data in \emph{software}. 
-This dramatically increases flexibility and significantly reduces costs, but
+This dramatically increases flexibility and substantially reduces costs, but
 the high processing and bandwidth requirements compel the use of a
 supercomputer.
-The antenna signals are centrally combined, filtered, and beam-formed or
-correlated by a 10,880-core Blue Gene/P.
+The antenna signals are centrally combined, filtered, optionally beam-formed,
+and correlated by an IBM Blue Gene/P.
 
 To meet the real-time requirements, the application is highly optimized, and
 reaches exceptionally high computational and I/O efficiencies.
-This allows us to use only half the amount of planned resources, \emph{and\/}
-process 50\% more telescope data, significantly increasing the performance
+This allows us to use only half the planned amount of resources, \emph{and\/}
+process 50\% more telescope data, significantly improving the effectiveness
 of the entire telescope.
-%The system performs so well that we can operate 50\% beyond the 
-%original LOFAR requirements, on less hardware, allowing
-%us to use the superfluous capacity for more accurate observations.
 \end{abstract}
 
 
