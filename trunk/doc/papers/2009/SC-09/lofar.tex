@@ -89,9 +89,33 @@ This concept requires much more signal processing, but the additional costs
 of silicon are easily offset by cost savings of steel.
 Moreover, LOFAR can observe the sky in many directions concurrently and
 switch directions instantaneously.
-In several ways, LOFAR will be the largest telescope of the world, and will
-enable groundbreaking research in astronomy and particle
-physics~\cite{Bruyn:02}.
+
+%In several ways, LOFAR will be the largest telescope of the world, and will
+%enable groundbreaking research in astronomy and particle
+%physics~\cite{Bruyn:02}.
+
+LOFAR is driven by the astronomical community, that needs a new instrument
+to study an extensive amount of new science cases.
+Five key science projects have been defined.
+First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
+that the first star galaxies and quasars were formed.
+The 1.42~GHz emission line of hydrogen is expected to be
+redshifted into the LOFAR sensitivity range.
+Second, LOFAR offers a unique possibility in particle astrophysics for
+studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
+\emph{cosmic rays}.
+Neither the source, nor the physical process that accelerates such particles
+is known.
+Third, LOFAR's ability to continuously monitor a large fraction of the sky
+makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
+Since LOFAR has no moving parts, it can instantaneously switch focus to
+some galactic event.
+Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
+most distant radio galaxies and study star-forming galaxies.
+Fifth, LOFAR will be capable of observing the so far unexplored radio
+waves emitted by \emph{cosmic magnetic fields}.
+For a more extensive description of the astronomical aspects of the LOFAR
+system, see de Bruyn et.~al.~\cite{Bruyn:02}.
 
 Another novelty is the elaborate use of \emph{software\/} to process
 the telescope data in real time.
@@ -115,29 +139,6 @@ The availability of sufficiently powerful supercomputers allows this.
 \label{fig:map}
 \end{minipage}
 \end{figure*}
-
-LOFAR is driven by the astronomical community, that needs a new instrument
-to study an extensive amount of new science cases~\footnote{See also \texttt{http://en.wikipedia.org/wiki/LOFAR}.}.
-Five key science projects have been defined.
-First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
-that the first star galaxies and quasars were formed.
-The 1.42~GHz emission line of hydrogen is expected to be
-redshifted into the LOFAR sensitivity range.
-Second, LOFAR offers a unique possibility in particle astrophysics for
-studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
-\emph{cosmic rays}.
-Neither the source, nor the physical process that accelerates such particles
-is known.
-Third, LOFAR's ability to continuously monitor a large fraction of the sky
-makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
-Since LOFAR has no moving parts, it can instantaneously switch focus to
-some galactic event.
-Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
-most distant radio galaxies and study star-forming galaxies.
-Fifth, LOFAR will be capable of observing the so far unexplored radio
-waves emitted by \emph{cosmic magnetic fields}.
-For a more extensive description of the astronomical aspects of the LOFAR
-system, see de Bruyn et.~al.~\cite{Bruyn:02}.
 
 This paper describes the implementation and performance characteristics of
 the real-time part of the standard imaging pipeline.
@@ -1262,7 +1263,7 @@ Deller et al.~\cite{Deller:07} have developed the DiFX distributed
 software correlator, which is to be deployed on a cluster of PCs.
 Due to the use of commodity hardware, both their communication and
 computational capabilities are substantially lower than those available in
-our BlueGene/P.
+our Blue Gene/P.
 %As a result, they cannot handle the width and number of input streams that we
 %process in LOFAR.
 The real-time data processing of the Murchison Widefield Array (MWA) telescope
