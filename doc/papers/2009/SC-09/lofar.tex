@@ -267,7 +267,7 @@ in more detail in Section~\ref{sec:signal-processing}.
 
 After an observation has finished, further processing is done off-line, on
 commodity cluster hardware. 
-First, an RFI detection algorithm removes bad data.
+First, the \emph{flagger\/} uses an RFI detection algorithm to remove bad data.
 Then, the results are calibrated for instrumental and environmental effects and
 for sky source parameters (e.g., position, flux)~\cite{Nijboer:07}.
 An imaging algorithm creates an image of the observed source(s).
@@ -737,7 +737,7 @@ The phase rotation itself costs a complex multiplication per sample.
 Since the rotation depends on the frequency, the correction is done after 
 the PPF: the correction is more accurate on narrow frequency channels.
 The delays are computed once per second and interpolated in frequency
-and time for each individual sample.
+and time for each individual sample, costing another complex multiplication.
 
 The \emph{bandpass correction} step compensates for an artefact
 introduced by a station filter bank (the PPF that creates the subbands).
@@ -765,7 +765,7 @@ with the complex conjugate of the sample of the other station.
 To reduce the output size, the products are integrated, by accumulating all
 products.
 We accumulate 768~correlations at 763~Hz, so that the integration time is
-approximately one second.
+approximately one second, the size of a chunk.
 Correlation is done for each pair of stations, and for each channel separately.
 Since the correlation of station~A and~B is the complex conjugate of the
 correlation of station~B and~A, only one pair is computed.
@@ -994,27 +994,32 @@ Mode~\textsf{A} is the standard mode, where the stations send 16-bit samples.
 In this mode, the FPGAs can send at most 248~subbands.
 The 248~subbands are evenly divided over 62~psets, so that each pset processes
 4~subbands (the remaining two psets handle input data, but do not correlate).
-Since there are 64~cores in one pset and an integration time equals 1.007~s (768 samples),
-the available time to process one chunk of data (1 subband) is 16.1~s.
+Since there are 64~cores in one pset and an integration time equals
+1.007~second (768 samples),
+the available time to process one chunk of data (1 subband) is 16.1~second.
 
 Mode~\textsf{B} trades accuracy for observation bandwidth, by reducing the
 sample size to 8~bits and doubling the number of subbands.
-This implies that the total input data rate remains the same, but that the
+This doubles the number of frequencies or beams that are observed
+simultaneously.
+It implies that the total input data rate remains the same, but that the
 processing requirements and output data rate double.
 The 62~psets that are used to correlate have to process 8~subbands each,
-reducing the available time per subband to 8.05~s.
+reducing the available time per subband to 8.05~second.
 
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
 subbands that are mostly free of RFI (otherwise, the bits are used to encode
 the RFI, not the signal of interest).
-This mode is planned for \emph{Epoch-of-Reionization} observations, where the high number of subbands
-is used to observe sky in six directions simultaneously.
+This mode is planned for \emph{Epoch-of-Reionization} observations, where the
+high number of subbands is used to observe the sky at 32~MHz bandwidth in six
+directions simultaneously.
 If the same amount of stations were used, the processing requirements and
 output data rate would double again, but EoR observations will only use the
 stations near the center, not the remote ones.
-The exact number of stations that must be correlated is not yet known, but is
+The exact number of stations that will be correlated is not yet known, but is
 likely between 36 and~46.
-For the performance measurements, we assume the most challenging case, and use 48~stations.
+For the performance measurements, we optimistically assume the most challenging
+case, and use 48~stations.
 
 
 \subsection{Computational performance on the \\ I/O Nodes}
@@ -1046,29 +1051,30 @@ A load of 100\% means that all four cores are fully occupied.
 A load above 85\% must be avoided to prevent major data loss.
 
 We first show how the performance scales with the number of subbands.
-We again use a setting similar to observation mode~\textsf{B}, for up to
-496~subbands, see Figure~\ref{fig:ion-performance-func-subbands}.
+We again use a setting similar or equal to observation mode~\textsf{B}, for up
+to 496~subbands, see Figure~\ref{fig:ion-performance-func-subbands}.
 The I/O~nodes receive and forward the samples
 of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
 to storage (up to 1.2~Gb/s).
 The figure shows that most time is spent in the receipt of UDP packets.
 This amount is partially independent of the number of subbands, since a lower
 number of subbands decreases the packet size (down from 7,998~bytes), but not
-the amount of packets. The I/O nodes have to handle 48,828~packets per second in all cases.
+the amount of packets.
+The I/O nodes have to handle 48,828~packets per second.
 All other work scales linearly with the amount of subbands.
 
 Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
 for the three challenging observation modes.
 In the standard 16-bit sample mode, the stations can produce at most
-248~subbands (obs. mode A).
+248~subbands (observation mode A).
 Hence, the output data rate (the lower two bars) is twice as low as in the
 8-bit mode of scenario B.
 Also, copying 16-bit samples into the circular buffer is somewhat more
 efficient, due to L3-cache effects.
-In the 4-bit mode, the number of stations is computationally limited to
-about~48, because of the high number of 992~subbands.
+In the 4-bit mode, only 48~stations are used.
 Due to the reduced number of stations, the output data rate is only 13\%~higher
-than in the 64-station/8-bit mode.
+than in the 64-station/8-bit mode, rather than twice the bandwidth of
+observation mode \textsf{B}.
 %We initially thought that this mode would really require two racks, but are
 %actually able to perform it on a single rack.
 
@@ -1119,7 +1125,7 @@ Alternatively, the second rack could be used.
 %We think this will reduce the system time of I/O operations.
 
 
-\subsection{Computational performance on the Compute Nodes}
+\subsection{Computational performance on the \\ Compute Nodes}
 
 \begin{figure}[ht]
 \subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
@@ -1154,9 +1160,9 @@ The $O(n^2)$ complexity of the correlator is clearly visible (the correlations
 between all \emph{pairs\/} of stations are computed), while other
 components scale linearly with the number of stations.
 Despite the high data rates, I/O~requires hardly any time \emph{on the compute nodes}.
-It is important to realize that the time for input or output cannot exceed $1/64^\mathrm{th}$
-of the total time, since the associated I/O~node also needs time to communicate
-with the other 63~cores in the pset.
+It is important to realize that the time for input or output cannot exceed
+$1/64^\mathrm{th}$ of the total time, since the associated I/O~node also needs
+time to communicate with the other 63~cores in the pset.
 
 %The \emph{available\/} runtime depends on the number of subbands that must be
 %processed: with 496~subbands, most of the 64~psets process 8~subbands, and
@@ -1164,10 +1170,10 @@ with the other 63~cores in the pset.
 %Doubling the number of subbands halves the available processing time, and in
 %the 4-bit mode, up to about 50~stations can be supported on a single rack.
 
-The performance results hardly differ for the 16-bit and 4-bit modes (not shown),
+The performance results hardly differ for the 16-bit and 4-bit modes,
 since only the performance of the data receipt from the I/O~node and data
 exchange phase are affected by the sample size, 
-both of which hardly contribute to the total runtime.
+both of which hardly contribute to the total run time.
 This is clearly illustrated by Figure~\ref{fig:cn-performance-obs-mode},
 where the execution times for observation modes \textsf{A} and \textsf{B}
 are nearly the same.
@@ -1177,9 +1183,10 @@ All modes run within their real-time constraints of 16.1, 8.05, and 4.03
 seconds respectively.
 The load on the compute nodes is 35\%, 70\%, and 84\% respectively.
 
-@@@ TODO: beschrijf async transpose, performance vershil met sync transpose.
+The asynchronous transpose is somewhat more efficient than the synchronous
+transpose (not shown in the figure): the run time for processing one chunk
+decreases by up to 190~ms.
 
-@@@ TODO: hoeveel sneller is de FFT in tijd? --Rob @@@
 The correlator is extremely efficient: it achieves 96\% of the FPU peak
 performance, thanks to the highly-optimized assembly code.
 The FIR filter runs at 86\% of the peak performance, and the hand-crafted
@@ -1187,7 +1194,7 @@ The FIR filter runs at 86\% of the peak performance, and the hand-crafted
 \footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
 $5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
 more than 44\% FPU efficiency, its absolute run time would be higher.}
-(``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
+(\textbf{Chris: fix} ``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
 Compared to equivalent C++ code that is written for clarity and not
 specifically tuned for optimal performance, the hand-written assembly code is
 typically an order of magnitude faster.
@@ -1217,7 +1224,8 @@ the vertical axis represents the 256~channels of one frequency subband.
 Each pixel corresponds to a (complex) correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
 The phase changes over time, due to the earth rotation that alters the
-relative position of the observed sources.
+relative position of the observed source(s) and thus the time difference
+between the two stations.
 The white spots are caused by RFI; these bad data are detected and
 ignored in the remainder of the processing pipeline.
 
