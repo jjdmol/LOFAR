@@ -248,7 +248,8 @@ The UDP packets contain samples, where a sample is a complex number
 that represents the amplitude and phase of a signal at a particular
 time.  A sample is encoded by a $2\times4$, $2\times8$, or $2\times16$-bit
 complex integer. Sampled data can be invalid for various reasons, such as
-Radio Frequency Interference (RFI) and lost network packets.
+lost network packets or \emph{Radio Frequency Interference\/} (RFI, e.g.,
+caused by TV transmitters).
 Throughout the entire processing chain, we maintain which
 data is marked as invalid, so that eventual images are not blurred by
 bad data.  
@@ -372,7 +373,7 @@ sends the data to the storage nodes.
 This is where the third application (StorageProc) runs.
 The storage nodes are PC-like systems with large disks.
 The storage application collects the data from the I/O~nodes and writes the
-data in an astronomical data format (AIPS++ Measurement Sets) to disk.
+data to disk.
 
 
 \section{I/O-node processing}
@@ -680,8 +681,8 @@ are required.
 \subsection{Signal processing}
 \label{sec:signal-processing}
 
-After the data exchange, a core possesses the samples of one subband, from all
-stations.
+After the data exchange, a compute core possesses the samples of one subband,
+from all stations.
 The data are processed through a number of filters, as briefly described below.
 More details on the filters (except bandpass correction and beam forming)
 can be found elsewhere~\cite{Romein:06}.
@@ -689,11 +690,10 @@ can be found elsewhere~\cite{Romein:06}.
 The subband data are first filtered by a \emph{Poly-Phase Filter bank\/} (PPF) that
 splits a frequency subband into narrow frequency channels, trading time
 resolution for frequency resolution.
-The high frequency resolution allows for removal of narrow-band
-\emph{Radio Frequency Interference\/} (RFI, e.g., caused by TV transmitters)
-later in the pipeline.
+The high frequency resolution allows for removal of narrow-band RFI later in
+the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
-filter supports any power-of-two number of channels.
+filter supports any reasonable power-of-two number of channels.
 
 As a side effect, the PPF implicitly converts 16-bit little-endian integer
 samples to 32-bit big-endian floating point numbers, since the Blue Gene is
@@ -725,7 +725,7 @@ stations at different times (see Figure~\ref{fig:delay}).
 The time difference depends on the observation direction and the
 station positions, and is continuously altered by the rotation of the earth.
 Before the signals can be correlated, all station streams are aligned,
-by artificially delaying the stream of station samples.
+by artificially delaying the streams of station samples.
 For example, a delay of 22\us can be achieved by shifting four 5.12\us
 samples.
 This shift was already done on the I/O~node, by moving the read pointer
@@ -735,8 +735,9 @@ rotating the phase of the signal.
 The phase rotation itself costs a complex multiplication per sample.
 Since the rotation depends on the frequency, the correction is done after 
 the PPF: the correction is more accurate on narrow frequency channels.
-The delays are computed once per second and interpolated in frequency
-and time for each individual sample, costing another complex multiplication.
+The delays are computed exactly for the begin time and end time of a chunk,
+and interpolated in frequency and time for each individual sample, costing
+another complex multiplication.
 
 The \emph{bandpass correction} step compensates for an artefact
 introduced by a station filter bank (the PPF that creates the subbands).
@@ -748,19 +749,41 @@ in channels, not in subbands.
 Another document describes how the correction factors are
 computed~\cite{Romein:08}.
 
-The \emph{beam former} combines the data of all the stations by taking the
-complex sum for each sample. As a result, the noise measured by the individual
-stations level out, while any signals that were measured by multiple stations
-are amplified. The output of the beam former is a single data stream,
-representing a beam focused on a celestial source.
+Up to this point, processing the chunks from different stations can be done
+independently, but from here on, the data from all stations are required.
+This means that the asynchronous data exchange ends here.
 
+The next step, called \emph{beam forming}, is optional, and adds the samples
+from a group of co-located stations, so that the group forms a virtual
+``superstation'' with more sensitivity.
+This step will typically be used in European observations.
+From the perspective of an international station, the baselines to the core
+stations are nearly identical.
+Treating the baselines separately makes no sense and increases the correlator
+output unnecessarily.
+Therefore, the core stations will be grouped.
+Other uses of grouped, beam-formed stations are foreseen.
 
-The final step is the \emph{correlator}.
+This \emph{coherent\/} way of beam forming is a special case of the beam
+forming algorithms that are also used for pulsar observations.
+With coherent beam forming, the (phase-corrected) complex samples from
+different stations are added.
+The applied phase correction determines the observation direction.
+\emph{Incoherent\/} beam forming is performed by adding the powers (amplitudes)
+of the samples.
+Since the phase information is lost, this mode sees a much larger part of the
+sky, and is used to search for unknown pulsars.
+Both modes are implemented but not optimized yet, therefore we do not include
+them in the performance measurements of Section~\ref{sec:performance}.
+
+In the standard imaging mode, the samples from individual or grouped stations
+are \emph{correlated}.
+Computationally, this is the most time-consuming operation.
 The received signals from sky sources are so weak, that the antennas mainly
 receive noise.
 To see if there is statistical coherence in the noise, simultaneous samples of
-each pair of stations are correlated, by multiplying the sample of one station
-with the complex conjugate of the sample of the other station.
+each \emph{pair\/} of stations are correlated, by multiplying the sample of one
+station with the complex conjugate of the sample of the other station.
 To reduce the output size, the products are integrated, by accumulating all
 products.
 We accumulate 768~correlations at 763~Hz, so that the integration time is
@@ -776,10 +799,22 @@ sky sources.
 These are disambiguated during the imaging step in the off-line processing
 pipeline.
 
+We support concurrent pulsar and imaging observations, even on the same data.
+This is not only computationally more efficient (the computations in the
+shared components of the pipelines are done only once), more astronomical
+science can be done with a single observation.
+Additionally, in the future these pipelines can mutually benefit from each
+other.
+For example, the correlations from the standard imaging pipeline can be used
+to calibrate the station samples in real time in a feedback loop, so that the
+pulsar pipeline can beam-form calibrated samples.
+This would not be possible without correlating the data, and would be
+particularly useful to calibrate out station clock drifts, for example.
+
 
 \subsection{Optimizations}
 
-For optimal performance, most time-intensive code is written in assembly,
+For optimal performance, time-critical code is written in assembly,
 because the performance from compiled C++ code was by far not sufficient.
 We maintain equivalent C++ reference code for testing and portability.
 The assembly version hides load and instruction latencies, issues concurrent
@@ -788,10 +823,6 @@ and uses the L2 prefetch buffers in the most optimal way.
 Most instructions are parallel fused multiply-adds, that sustain four
 operations per cycle.
 
-The assembly code minimizes the amount of memory loads by reusing a loaded
-word as many times as possible.
-The register file can hold 32~complex numbers \emph{TODO: cite many-core paper?}
-
 Although the FIR filters, FFTs, delay compensation, and bandpass correction
 are conceptually separate, consecutive blocks, their implementations are
 highly interwoven to achieve better performance.
@@ -799,6 +830,52 @@ This avoids that four separate passes over all data are made.
 Also, the data are laid out in memory in such a way that they are read
 consecutively as much as possible, allowing burst transfers through the
 cache hierarchy.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=5cm]{correlation-triangle.pdf}
+\end{center}
+\caption{The correlation triangle is divided into as many as possible $2\times2$
+tiles.}
+\label{fig:correlation-triangle}
+\end{figure}
+
+An example of an optimization that we implemented is the reduction of
+memory references by the correlator~\cite{Romein:06}.
+This is achieved by keeping correlations that are being integrated
+in registers, and by reusing samples that are loaded from memory as many times
+as possible.
+A sample can be used multiple times by correlating it with the samples from
+multiple other stations in the same loop iteration.
+For example, a sample from station~A in the X~polarization that is loaded into
+a register pair can be correlated with the X~and Y~polarizations of
+stations~B and~C, using it 4 times.
+In fact, it is used 8~times, since a correlation requires 2~complex, fused
+multiply-add instructions.
+Figure~\ref{fig:correlation-triangle} shows how we correlate multiple
+stations at the same time.
+Each square represents the XX, XY, YX, and YY correlations of the stations
+as indicated by row and column number.
+The figure is triangular, because we only compute the correlation of each
+pair of stations.
+The squares labeled ``\textsf{A}'' are autocorrelations, that are treated
+specially since they require fewer computations.
+The triangle is divided into as many $2\times2$ tiles as possible, for which
+the best performance is obtained.
+These $2\times2$ tiles are correlated interwovenly.
+For example, the lower right-hand-side rectangle correlates stations 8 and~9
+with stations 0 and~1.
+The X and Y samples of each of these four stations are read, requiring eight
+memory load instructions (one load instruction reads a complex sample).
+Computing the correlations requires 128~real operations: 32~double fused
+multiply-add instructions.
+Hence, four floating-point instructions per load instruction are performed.
+An unoptimized implementation would perform four times more memory accesses,
+making the memory subsytem a severe bottleneck.
+The interwoven correlation computations also helps to hide the 5-cycle
+instruction latencies of the fused multiply-add instructions, since
+the correlations are independently computed.
+
 %This is not always possible, and in those cases we try to hide the memory
 %Also, many of the computations are hidden by the memory access delays that
 %are the result of a transpose in main memory.
@@ -1114,7 +1191,7 @@ all observation modes on a single rack.
 If the need would arise to achieve even higher bandwidths, UDP packet receipt
 could be optimized by not using the \texttt{read()} system call interface,
 but by using another interface that reads the data directly from kernel buffers
-and does not enforce a (370~MiB/s !) kernel-to-user-space copy.
+and does not enforce a (370~MiB/s!) kernel-to-user-space copy.
 Right now, we felt no need to implement the required kernel changes.
 Alternatively, the second rack could be used.
 %If future observation modes would require higher output data rates, we may
@@ -1231,9 +1308,16 @@ between the two stations.
 The white spots are caused by RFI; these bad data are detected and
 ignored in the remainder of the processing pipeline.
 
+\begin{figure}[ht]
+\includegraphics[width=\columnwidth]{all-sky-image.jpg}
+\caption{An all-sky image created with prototype LOFAR antennas.}
+\label{fig:all-sky-image}
+\end{figure}
+
 The correlations are used to create images.
 Even with the limited amount of prototype antennas that have been employed
-during the last few years, impressive (all-sky) images were made.
+during the last few years, impressive (all-sky) images were made (see
+Figure~\ref{fig:all-sky-image}).
 Also, the prototype pulsar pipeline software successfully detected several
 known pulsars~\cite{Hessels:09}.
 
