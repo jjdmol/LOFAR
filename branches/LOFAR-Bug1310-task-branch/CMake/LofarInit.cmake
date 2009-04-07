@@ -50,8 +50,6 @@
 
 if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
-  message(STATUS "**** ENTER: LofarInit.cmake ****")
-
   set(LOFAR_INIT_INCLUDED TRUE)
 
   # Root directory of the LOFAR source code tree
@@ -98,7 +96,6 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
   # Check if build variant is known. Build variants should be defined in the
   # variants file.
-  message(STATUS "LOFAR_BUILD_VARIANTS = ${LOFAR_BUILD_VARIANTS}")
   if(LOFAR_BUILD_VARIANTS MATCHES ${var})
     set(LOFAR_BUILD_VARIANT ${var} CACHE INTERNAL
       "Build variant, options are ${LOFAR_BUILD_VARIANTS}")
@@ -192,7 +189,5 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   set(lofar_top_srcdir "${LOFAR_ROOT}" CACHE INTERNAL "lofar_top_srcdir")
   set(lofar_sharedir "${lofar_top_srcdir}/autoconf_share" CACHE INTERNAL "lofar_sharedir")
   set(prefix "${CMAKE_INSTALL_PREFIX}" CACHE INTERNAL "prefix")
-
-  message(STATUS "**** LEAVE: LofarInit.cmake ****")
 
 endif(NOT DEFINED LOFAR_INIT_INCLUDED)

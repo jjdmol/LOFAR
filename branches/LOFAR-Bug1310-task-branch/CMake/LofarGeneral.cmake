@@ -20,16 +20,12 @@
 #
 #  $Id$
 
-include(LofarFindPackage)
-
 if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
-
-  message(STATUS "**** ENTER: LofarGeneral.cmake ****")
 
   set(LOFAR_GENERAL_INCLUDED TRUE)
 
   ## --------------------------------------------------------------------------
-  ## Include Lofar build configuration options
+  ## Handle all LOFAR build configuration options
   ## --------------------------------------------------------------------------
   include(LofarOptions)
 
@@ -38,7 +34,9 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   ## --------------------------------------------------------------------------
   include(CTest)
   
-  # Add directory to the -I path.
+  ## --------------------------------------------------------------------------
+  ## Add include directory in the binary directory to the -I path.
+  ## --------------------------------------------------------------------------
   include_directories(${CMAKE_BINARY_DIR}/include)
 
   ## --------------------------------------------------------------------------
@@ -71,16 +69,5 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
       break()
     endif(HAVE_${func_name})
   endforeach(func_name)
-
-  ## --------------------------------------------------------------------------
-  ## Initialize the LOFAR logger
-  ## --------------------------------------------------------------------------
-  include(LofarFindPackage)
-#  include(LofarLogger)
-#  lofar_logger()
-
-  lofar_find_package(Backtrace)
-
-  message(STATUS "**** LEAVE: LofarGeneral.cmake ****")
 
 endif(NOT DEFINED LOFAR_GENERAL_INCLUDED)

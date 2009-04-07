@@ -1,4 +1,4 @@
-#  LofarConfig.cmake: global configurations for LOFAR builds.
+#  $Id$
 #
 #  Copyright (C) 2008-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,10 +17,10 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#  $Id$
 
-# Configure header file, but only when we're at the top-level source directory.
+
+# Configure header containing global configurations for LOFAR builds. 
+# We should only do this when we're at the top-level source directory.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   message(STATUS "Generating lofar_config.h ...")
   configure_file(
@@ -28,5 +28,8 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     ${CMAKE_BINARY_DIR}/include/lofar_config.h)
 endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Add directory to the -I path.
-include_directories(${CMAKE_BINARY_DIR}/include)
+# Set LOFAR Logger package name to the current project
+string(REGEX REPLACE "^${LOFAR_ROOT}" "" _pkg "${PROJECT_SOURCE_DIR}")
+string(REGEX REPLACE "^/" "" _pkg "${_pkg}")
+string(REPLACE "/" "." _pkg "${_pkg}")
+add_definitions(-DLOFARLOGGER_PACKAGE="${_pkg}")

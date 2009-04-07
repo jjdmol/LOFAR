@@ -20,23 +20,18 @@
 #
 #  $Id$
 
-message(STATUS "**** ENTER: LofarFindPackage.cmake ****")
-
 ## ----------------------------------------------------------------------------
 ## Includes
 ## ----------------------------------------------------------------------------
-
-# LOFAR CMake modules
-include(LofarInit)
 include(LofarSearchPath)
-
-# Standard CMake modules
 include(FindPackageHandleStandardArgs)
 
 ## ----------------------------------------------------------------------------
 ## function lofar_find_package
 ## ----------------------------------------------------------------------------
 function(lofar_find_package _package)
+
+  message(STATUS "*** ENTER: lofar_find_package(${_package} ${ARGN})")
 
   string(TOLOWER ${_package} _pkg)
   string(TOUPPER ${_package} _PKG)
@@ -132,6 +127,6 @@ function(lofar_find_package _package)
 
   endif(NOT ${_PKG}_FOUND)
 
-endfunction(lofar_find_package _package)
+  message(STATUS "*** LEAVE: lofar_find_package(${_package} ${ARGN})")
 
-message(STATUS "**** LEAVE: LofarFindPackage.cmake ****")
+endfunction(lofar_find_package _package)

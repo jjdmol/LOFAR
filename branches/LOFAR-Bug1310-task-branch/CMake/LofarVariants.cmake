@@ -34,7 +34,7 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   set(variants_file ${LOFAR_ROOT}/CMake/variants/variants.${hostname})
   
   if (EXISTS ${variants_file})
-    message(STATUS "Loading host-specific variants file: ${variants_file}")
+    message(STATUS "Loading host-specific variants file")
     include(${variants_file})
   endif (EXISTS ${variants_file})
   

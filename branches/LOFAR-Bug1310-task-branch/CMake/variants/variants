@@ -46,7 +46,6 @@ set(LOFAR_SEARCH_PATH
   "/usr/local/+pkg+vers"
   "/usr/local"
   "/usr"
-  #CACHE INTERNAL "Search path for external packages"
 )
 
 # List of options that may be set for the LOFAR build.
@@ -65,7 +64,6 @@ set(LOFAR_OPTIONS
   USE_SOCKETS
   USE_THREADS
   USE_ZOID
-  #CACHE INTERNAL "Lofar CMake options"
 )
 
 # Define default values for all LOFAR build options. These options may
