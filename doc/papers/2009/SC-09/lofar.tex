@@ -116,21 +116,46 @@ The availability of sufficiently powerful supercomputers allows this.
 \end{minipage}
 \end{figure*}
 
+LOFAR is driven by the astronomical community, that needs a new instrument
+to study an extensive amount of new science cases~\footnote{See also \texttt{http://en.wikipedia.org/wiki/LOFAR}.}.
+Five key science projects have been defined.
+First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
+that the first star galaxies and quasars were formed.
+The 1.42~GHz emission line of hydrogen is expected to be
+redshifted into the LOFAR sensitivity range.
+Second, LOFAR offers a unique possibility in particle astrophysics for
+studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
+\emph{cosmic rays}.
+Neither the source, nor the physical process that accelerates such particles
+is known.
+Third, LOFAR's ability to continuously monitor a large fraction of the sky
+makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
+Since LOFAR has no moving parts, it can instantaneously switch focus to
+some galactic event.
+Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
+most distant radio galaxies and study star-forming galaxies.
+Fifth, LOFAR will be capable of observing the so far unexplored radio
+waves emitted by \emph{cosmic magnetic fields}.
+For a more extensive description of the astronomical aspects of the LOFAR
+system, see de Bruyn et.~al.~\cite{Bruyn:02}.
+
 This paper describes the implementation and performance characteristics of
-the real-time part of some of these pipelines.
+the real-time part of the standard imaging pipeline.
 The \emph{standard imaging pipeline}, used to generate sky images,
-filters and correlates the data sent by the stations.
+filters and correlates the data sent by the stations, is the regular mode
+of operation for LOFAR.
 We present a highly-optimized implementation that achieves very high
 computational performance: the correlator sustains 96\% of the theoretical
 floating-point peak performance during the computational phase.
-The \emph{Epoch of Reionization (EoR)\/} pipeline should detect the faint,
-very first sky objects.
-It is a similar pipeline, but with even higher computational demands, due to
-the increased amount of concurrent observation directions.
+%The \emph{Epoch of Reionization (EoR)\/} pipeline should detect the faint,
+%very first sky objects.
+%It is a similar pipeline, but with even higher computational demands, due to
+%the increased amount of concurrent observation directions.
 Several \emph{pulsar pipelines\/} are being developed as well, that either
 search large sky regions to find unknown pulsars or, once found, sensitively
 observe their characteristics.
-The pipelines share common components.
+The pipelines share common components, which shortens the development time for
+new components, pipelines, and to implement the key science projects.
 The software also supports multiple concurrent observations, even of different
 types.
 
@@ -653,7 +678,7 @@ processing them, up to the point that the data from \emph{all\/} stations
 are required.
 
 
-\subsection{Signal Processing}
+\subsection{Signal processing}
 \label{sec:signal-processing}
 
 After the data exchange, a core possesses the samples of one subband, from all
@@ -1203,7 +1228,7 @@ Also, the prototype pulsar pipeline software successfully detected several
 known pulsars.
 
 
-\section{Related Work}
+\section{Related work}
 \label{sec:related-work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
@@ -1236,7 +1261,8 @@ processing pipeline, is not implemented in software, but on an
 FPGA~\cite{Ord:08}.
 Finally, the Joint Institute for VLBI in Europe (JIVE) develops a new software
 correlator for e-VLBI observations, but is not capable of processing telescope
-data in real time~\cite{Kruithof:08}.
+data in real time~\cite{Kruithof:08}, even though the title of their paper suggests
+otherwise.
 
 In another paper, we compare the efficiency of five different many-core
 architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
