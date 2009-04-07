@@ -18,6 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+cmake_minimum_required(VERSION 2.6)
+
 ## ---------------------------------------------------------------------------
 ## Preamble: set compilers
 ## ---------------------------------------------------------------------------
@@ -27,14 +29,8 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Common)
-cmake_minimum_required(VERSION 2.6)
-
-if(BUILD_TESTING)
-  include(CTest)
-endif(BUILD_TESTING)
-
+set(PACKAGE_VERSION 3.1)
 include(LofarGeneral)
-include(LofarOptions)
 
 ## ---------------------------------------------------------------------------
 ## External packages
@@ -43,15 +39,14 @@ include(LofarFindPackage)
 lofar_find_package(Boost 1)
 
 ## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/Common)
 add_subdirectory(src)
-if(BUILD_TESTING)
-  add_subdirectory(test)
-endif(BUILD_TESTING)
+add_subdirectory(test EXCLUDE_FROM_ALL)
+
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)
+

@@ -24,6 +24,10 @@ set(common_LIB_SRCS
   Net/FdSet.cc
   Net/Socket.cc)
 
+set(common_PROGRAMS
+  getparsetvalue
+)
+
 if(HAVE_BACKTRACE)
   list(APPEND common_LIB_SRCS 
     AddressTranslator.cc 
@@ -53,13 +57,12 @@ if(HAVE_SHMEM)
 endif(HAVE_SHMEM)
 
 add_library(common ${common_LIB_SRCS})
-target_link_libraries(common ${LOFAR_LIBRARIES})
+#add_library(common_two ${common_two_LIB_SRCS})
+target_link_libraries(common)
 install(TARGETS common DESTINATION ${LOFAR_LIBDIR})
 
-#add_executable(versioncommon versioncommon.cc)
-#target_link_libraries(versioncommon common)
-#install(TARGETS versioncommon DESTINATION bin)
-
-add_executable(getparsetvalue getparsetvalue.cc)
-target_link_libraries(getparsetvalue common ${LOFAR_LIBRARIES})
-install(TARGETS getparsetvalue DESTINATION bin)
+foreach(prog ${common_PROGRAMS})
+  add_executable(${prog} ${prog}.cc)
+  target_link_libraries(${prog} common ${LOFAR_LIBRARIES})
+  install(TARGETS ${prog} DESTINATION bin)
+endforeach(prog ${common_PROGRAMS})

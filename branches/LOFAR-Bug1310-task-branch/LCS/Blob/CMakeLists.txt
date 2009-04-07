@@ -18,6 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+cmake_minimum_required(VERSION 2.6)
+
 ## ---------------------------------------------------------------------------
 ## Preamble: set compilers
 ## ---------------------------------------------------------------------------
@@ -27,14 +29,7 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Blob)
-cmake_minimum_required(VERSION 2.6)
-
-if(BUILD_TESTING)
-  include(CTest)
-endif(BUILD_TESTING)
-
 include(LofarGeneral)
-include(LofarOptions)
 
 ## ---------------------------------------------------------------------------
 ## External packages
@@ -51,6 +46,4 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/Blob)
 add_subdirectory(src)
-if(BUILD_TESTING)
-  add_subdirectory(test)
-endif(BUILD_TESTING)
+add_subdirectory(test EXCLUDE_FROM_ALL)

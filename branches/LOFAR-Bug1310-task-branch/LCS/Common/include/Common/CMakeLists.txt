@@ -3,7 +3,7 @@ if (USE_BACKTRACE)
 endif (USE_BACKTRACE)
 
 # List of header files that will be installed.
-set (inst_HEADERS
+set(inst_HEADERS
   Allocator.h
   Backtrace.h
   CheckConfig.h

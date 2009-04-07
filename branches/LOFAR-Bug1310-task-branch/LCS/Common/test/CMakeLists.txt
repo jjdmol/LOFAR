@@ -22,7 +22,7 @@ set (CHECK_PROGRAMS
   tParameterValue
   tParameterSet
   tParameterSetPerf
-#  tBacktrace
+  tBacktrace
 )
 
 message(STATUS "[LCS/Common/test] LOFAR_LIBRARIES = ${LOFAR_LIBRARIES}")
@@ -48,9 +48,10 @@ add_executable(tPrettyUnits tPrettyUnits.cc)
 add_executable(tParameterValue tParameterValue.cc)
 add_executable(tParameterSet tParameterSet.cc)
 add_executable(tParameterSetPerf tParameterSetPerf.cc)
-#add_executable(tBacktrace tBacktrace.cc)
+add_executable(tBacktrace tBacktrace.cc)
 
 foreach (prog ${CHECK_PROGRAMS})
   add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}.sh)
+  add_dependencies(check ${prog})
   target_link_libraries(${prog} common ${LOFAR_LIBRARIES})
 endforeach (prog CHECK_PROGRAMS)

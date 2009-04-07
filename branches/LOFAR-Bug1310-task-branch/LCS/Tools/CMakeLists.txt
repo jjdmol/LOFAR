@@ -18,6 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+cmake_minimum_required(VERSION 2.6)
+
 ## ---------------------------------------------------------------------------
 ## Preamble: set compilers
 ## ---------------------------------------------------------------------------
@@ -27,7 +29,7 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Tools)
-cmake_minimum_required(VERSION 2.6)
+include(LofarGeneral)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration-specific header file
