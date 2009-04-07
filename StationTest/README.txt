@@ -11,7 +11,7 @@
 1) Introduction
 
 a) Purpose
-This test suite uses scripts that call rsptcl and tbbctl to control a LOFAR
+This test suite uses scripts that call rspctl and tbbctl to control a LOFAR
 station. Most scripts are written in Python. The test suite offers modules
 written in Python that allow easy access to rspctl and tbbctl, and that offer
 pass/fail handling and logging. The test scripts allow focussing on a typical
@@ -147,7 +147,7 @@ c) The 'rspctl --readblock' and 'rspctl --writeblock' are quite slow, due to:
    - the double buffering in the RSP driver
    - maybe rspctl excepts only one access per pps interval
    - the hex translations in mep.py to adhere to the format ot rspctl
-  For scripts that only use these low level peek and poke rsptcl commands it
+  For scripts that only use these low level peek and poke rspctl commands it
   would be a great improvement to have a dedicated driver program that takes 
   care of these low level commands. This may be a driver program or some C
   functions that can be used directly in Python. The scripts can then remain as
@@ -281,6 +281,50 @@ b) HBA server access
  python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py
                   --server 2 --server_access uc --server_function gw
 		  --server_reg delay_x --data 50,51
+		  
+c) Read version nummers of station hardware, firmware and software:
+  - The RSP board version and BP and AP firmware versions: 'rspctl --version'.
+  - The RSP CPLD CP firmware version: 'tc/status.py --pid rsu'.
+    Should be version 3 (although 2 probably also works). Version 3 reveals
+    what caused the RSP board to reset (e.g. user, watchdog, overtemperature).
+  - The RCU firmware version: 'rspctl --rcu'.
+    The version number is given by the most significant nibble in the control
+    word "RCU[ 0].control=0x10057980". Shouls be 1 for RCUs with the I2C
+    problem of bug 1111 solved. This fix also implies that the I2C to the RCU
+    requires an active system clock (160 or 200 MHz). For I2C access to the
+    HBA client the system clock is not used.
+  - HBA client software version (old HBA software does not have a version
+    register): 'tc/hba_client.py --client_access r --client_reg version
+    --data 10' --> should be version 10.
+  - HBA server software version (old HBA software does not have a version
+    register) for all 1-16 servers: 'tc/hba_server.py --server 1
+    --server_access uc --server_reg version --server_func gb --data 10'
+    --> should be version 10.
+
+d) Useful tests for monitoring the data on the serdes ring between the RSP
+   boards (carries the crosslets for the XST and the beamlets for CDO):
+   
+   - 'rspctl --rcumode=3', 'rspctl --xcsubband=256', 'rspctl --xcstat' and/or
+     'rspctl --xcstat --xcangle' --> Should yield an smooth, noisy XST matrix
+     with autocorrelation diagonal.
+   - 'tc/rad_latency.py' --> Shows how the arrival delay in number of samples
+     for the crosslet and beamlet packets at each subsequent RSP board.
+   - 'tc/rad_lanemode.py --read' --> Reads the lane mode settings, this 
+     corresponds to the beamlet and crosslet out settings in RSP_Driver.conf.
+   - 'tc/status.py --pid rad' --> Shows whether no data packets go lost on the
+     serdes ring and whether the data streams from the local AP and the
+     preceding RSP are aligned.
+
+e) Clock and PPS can also affect the XST:
+   - 'tc/serdes.py --diag_sync 0' --> Uses the PPS to start and stop the
+     test, so implicitely it verifies that the PPS from the Rubidium is OK.
+   - The diff in 'rspctl --status' should be fixed (or +0, +512 at 200 MHz). 
+     Same as ext_cnt in 'tc/status.py --pid bs'. If it drifts then the XO
+     on the TDS clock board is free running, i.e. the PLL on the TDS clock
+     board is not (always) in lock.
+   - 'rspctl --tdstat' shows whether the PLL on the clock board is in lock.
+     However, this is based on a single measurement read via I2C. The PLL could
+     in fact loose and reaquire lock regular basis.
 
 
 ################################################################################
