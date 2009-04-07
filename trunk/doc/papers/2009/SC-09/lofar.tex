@@ -1285,6 +1285,13 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
 % plus en minpunten van de bluegene, die we ontdekten tijdens development, of waarvan we de impact realiseerden
 
+% Conclusions:
+%	- telescope data can be processed in real time using software
+%	- exceed specs by 50%
+%	- flexibility and speed through the mix of C and assembly
+%	- core component is correlator, running at 96% of FPU peak performance
+%	- unconventional use of I/O node and network stack pays off
+
 % - assembly
 % - DP FP overkill
 % - ION not in torus
@@ -1302,34 +1309,45 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
 We have shown that the IBM Blue Gene/P supercomputer is capable of
 processing telescope data in real time, even if the input data rate is
-hundreds of gigabits per second. In fact, our LOFAR processing
-software was efficient enough to exceed the LOFAR specifications by
-50\%, and to only require a single Blue Gene/P rack to process the input
-from up to 64 stations. In order to obtain such performance, we use
-several parts of the Blue Gene/P in unconventional
-ways, and worked around several weak points in the I/O nodes and compute
-nodes of the Blue Gene/P that we discovered during development.
+hundreds of gigabits per second. In fact, our software is so efficient
+that we exceed the LOFAR specifications by 50\%, and only require
+a single Blue Gene/P rack to process the input from 64
+stations. To obtain such performance, we used several parts of the
+Blue Gene/P in unconventional ways, and worked around architectural weak points 
+that we discovered during development. We use the
+compute power that we saved with our optimizations to improve the
+effectiveness of the entire telescope.
 
 The I/O nodes were meant to be a transparent bridge between the
 compute nodes and the external network. However, we were able to equip
-them with custom software to be able to deal with the up to 3.1 Gb/s
-input, the up to 1.2 GB/s output, and to perform necessary pre- and
-postprocessing. Unfortunately, the I/O nodes can only communicate with
-the compute nodes in their own pset, which limits the flexibility with
-which the tasks can efficiently be assigned to the total set of
-compute cores. Within a pset, we use a custom network protocol called
-FCNP to be able to obtain the required data rates to and from the
-compute nodes. Between the compute nodes, the fast interconnect (the
-3-D torus) turned out to be very beneficial, as it allows expensive
-operations such as an all-to-all exchange of data.
+them with custom software to deal with the high input and output data
+rates, and to perform pre- and postprocessing steps.  Unfortunately,
+the I/O nodes are not integrated into the 3-D torus, and can only
+communicate with the compute nodes in their own pset, which severely
+limits our scheduling flexibility.  Within a pset, we use a custom
+network protocol called FCNP to obtain the required data rates between the I/O node and the
+compute nodes. Between the compute nodes, the fast 3-D torus
+interconnect turned out to be beneficial, as it provides the
+mechanisms to efficiently perform communication operations such as an
+all-to-all exchange.  To implement this, we exploited MPI's
+asynchronous primitives, overlapping communication with useful
+work. With the Blue Gene/L, this was not possible.  In addition, in
+collaboration with Argonne National Laboratory, we modified the
+I/O node kernel to use large memory pages.  This was needed since
+the fact that the Blue Gene/P handles TLB misses in software led to
+prohibitive overhead. With the new kernel, copying sample data from
+the network packets to our buffers is up to five times faster.
 
-The compute cores have a high throughput, due to their high memory
-bandwidth~\cite{Nieuwpoort:09} and their ability to perform four FLOPS
-per cycle. However, these FLOPS are limited to double-precision
-floating point operations. Since our data starts as 4-bit to 16-bit
-integers, the data has to be expanded severalfold before computations
-can commence. To achieve the throughput necessary to perform our
-processing at real time, specific FPU instructions have to be used, as
+The compute cores obtain a high throughput, thanks to their high
+memory bandwidth~\cite{Nieuwpoort:09} and their ability to perform
+four FLOPS per cycle. However, these FLOPS are always executed in
+double precision, which is overkill for our application.
+% Onderstaande tekst maar weg laten? Wat veel detail hier, en in geheugen staat de data immers wel als floats. --Rob
+%Since our data starts as 4-bit to 16-bit
+%integers, the data has to be expanded severalfold before computations
+%can commence. 
+To achieve the throughput necessary to 
+process in real time, specific FPU instructions have to be used, as
 well as careful cache timings. The latter is complicated further by
 the fact that the L1 cache uses a round-robin replacement policy. The
 L1 cache is thus constantly flushed with the streaming data, even if
@@ -1337,27 +1355,22 @@ this is undesirable. For these reasons, most of our data processing
 routines are written in assembly. Our core processing component (the
 correlator) runs at 96\% of the FPU peak performance.
 
-% Conclusions:
-%	- telescope data can be processed in real time using software
-%	- exceed specs by 50%
-%	- flexibility and speed through the mix of C and assembly
-%	- core component is correlator, running at 96% of FPU peak performance
-%	- unconventional use of I/O node and network stack pays off
+Our implementation benefits from a mix of C++ and assembly. The C++
+code base offers the flexibility to implement several pipelines and to
+easily combine and reuse components. The use of assembly allows the
+performance critical parts to run at high efficiency. The architecture
+of the Blue Gene/P makes this flexibility possible, and offers a
+development environment which is a substantial improvement over its
+predecessor, the Blue Gene/L, and other solutions such as FPGAs and
+special-purpose hardware.
 
-Our implementation benefits from a mix of C++ and assembly. The C++ code base offers the flexibility
-to implement several pipelines and to easily combine and reuse components. The use of assembly allows
-the performance critical parts to run at high efficiency. The architecture of the Blue Gene/P makes this
-flexibility possible, and offers a development environment which is a substantial improvement over
-its predecessor, the Blue Gene/L. Also, by using the Blue Gene/P, we are able to develop our software at a much higher pace than would be possible on different high-performance architectures such as FPGAs and GPUs.
-%We were able to push the performance of both the I/O nodes and the compute nodes to their extremes, and because
-%of that we need only a single Blue Gene/P rack to process the data from up to 64 stations.
-
-The flexibility of our setup allows more pipelines to be implemented in order to facilitate several
-modes of observation. We plan to finish the implementation of several pipelines, for the detection
-and analysis of pulsars, but most notably to obtain images from the Epoch-of-Reionization era. Furthermore,
-we plan to extend our on-line processing, for example by including RFI detection and on-line calibration.
-
-% Future work: RFI, online calibration, other pipelines
+The flexibility of our setup allows multiple pipelines that facilitate
+several modes of observation.  We plan to finish the implementation of
+several additional pipelines, e.g. for the detection and analysis of
+pulsars, and to obtain images from the
+Epoch of Reionization era. Furthermore, we plan to extend our on-line
+processing, for example by including RFI detection and on-line
+calibration.
 
 
 \section*{Acknowledgments}
