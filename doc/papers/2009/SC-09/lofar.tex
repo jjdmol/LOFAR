@@ -1187,17 +1187,20 @@ The asynchronous transpose is somewhat more efficient than the synchronous
 transpose (not shown in the figure): the run time for processing one chunk
 decreases by up to 190~ms.
 
-The correlator is extremely efficient: it achieves 96\% of the FPU peak
-performance, thanks to the highly-optimized assembly code.
-The FIR filter runs at 86\% of the peak performance, and the hand-crafted
-256-point FFT run at 44\%%
-\footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
-$5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
-more than 44\% FPU efficiency, its absolute run time would be higher.}
-(\textbf{Chris: fix} ``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
-Compared to equivalent C++ code that is written for clarity and not
-specifically tuned for optimal performance, the hand-written assembly code is
-typically an order of magnitude faster.
+The correlator is extremely efficient: it achieves 96\% of the FPU
+peak performance, thanks to the highly-optimized assembly code.  The
+FIR filter runs at 86\% of the peak performance, and the hand-crafted
+256-point FFT runs at 44\%.  Compared to ``Vienna'' FFTW, which
+achieves an already relatively high 34\% of the FPU peak performance,
+our hand-written FFT is about 34\% faster in absolute run
+time. Compared to equivalent C++ code that is written for clarity and
+not specifically tuned for optimal performance, the hand-written
+assembly code is typically an order of magnitude faster.
+
+%\footnote{The FFT requires 8,390~operations, 18\% less than an unoptimized
+%$5n \log_2 n$ implementation.  Although an unoptimized FFT could achieve even
+%more than 44\% FPU efficiency, its absolute run time would be higher.}
+%``Vienna'' FFTW achieves 34\%, which is also high for a FFT).
 
 Due to all optimizations, the correlator can process 50\% more data than
 the specifications require, on only half the amount of planned resources.
