@@ -293,7 +293,7 @@ Below, we describe the key features of the Blue Gene/P.
 More information can be found elsewhere~\cite{IBM:08}.
 
 Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
-processing power.
+processing power (including I/O nodes).
 The system is built using SoC (System-on-a-Chip) technology that integrates
 all processing and networking functionality on a single die.
 One chip contains four PowerPC~450 cores, running at a modest 850~MHz clock
@@ -313,7 +313,7 @@ The compute nodes run a fast, simple, single-process kernel
 The Blue Gene/P contains several networks.
 A fast \emph{3-dimensional torus\/} connects all compute nodes and is used
 for point-to-point and all-to-all communications.
-Unlike the Blue Gene/L, the torus uses DMA to offload the CPUs and to allow
+Unlike the Blue Gene/L, the torus uses DMA to offload the CPUs and allows
 asynchronous communication.
 The \emph{collective network\/} is used for MPI collective operations,
 but also for external communication.
@@ -328,7 +328,7 @@ Additional networks exist for initialization, diagnostics, and debugging.
 
 Each compute node is connected to an I/O~node via the collective network
 (see Figure~\ref{fig:pset}).
-An I/O~node uses the same hardware as a compute node, but has its Ethernet
+An I/O~node uses the same hardware as a compute node, but has its 10 Gb/s Ethernet
 interface connected and runs another operating system (a modified Linux kernel).
 Since our application demands high bandwidths, our system is configured with
 the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
@@ -362,7 +362,7 @@ processing chain.
 The first application, \emph{IONProc}, runs on the Blue Gene/P I/O nodes.
 Its main tasks are to receive the station UDP data, to buffer the data
 for up to 2.5~seconds, and to forward it to the compute nodes in the pset.
-The second application called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
+The second application, called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
 compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
 internal torus network, to filter the data, and to correlate or beam-form
@@ -394,7 +394,7 @@ Blue Gene/P.
 We run one multi-threaded process on each I/O~node that takes care of two
 tasks: the handling of input and the handling of output (see
 Figure~\ref{fig:ion-processing}).
-The \emph{input section\/} deals with UDP receipt of station data, buffering,
+The \emph{input section\/} deals with receipt of UDP station data, buffering,
 and forwarding to the compute nodes.
 The \emph{output section\/} collects outgoing result data from the compute
 nodes, optionally integrates the data over multiple seconds in time, and
@@ -442,7 +442,7 @@ behavior of the application, 2.5~seconds is sufficient.
 
 Another thread reads data from the circular buffer and sends the data to
 the compute nodes for further processing.
-It sends data in large bursts that contain approximately one second of samples.
+It sends data in large bursts that contain approximately one second worth of samples.
 Unfortunately, existing network software did not provide sufficient bandwidth
 and consumed too much CPU time.
 We therefore developed \emph{FCNP (Fast Collective-Network Protocol)}, a 
@@ -466,7 +466,7 @@ When processing off-line, the input is read from file or TCP socket rather
 than a UDP socket.
 In off-line mode we do not use the wall-clock time as
 trigger, but we synchronize the threads that read and write the circular
-buffer differently to prevent them from overrunning each other.
+buffer differently to prevent them from overtaking each other.
 
 
 \subsection{The output section}
@@ -567,12 +567,12 @@ In practice, under normal circumstances, this rarely happens
 \section{Compute-node processing}
 \label{sec:CNProc}
 
-The bulk of the signal-processing computations take place at the compute nodes.
+The bulk of the signal-processing computations take place on the compute nodes.
 In this section, we continue describing the processing pipeline depicted in
 Figure~\ref{fig:processing}. 
 We explain how the work is scheduled over the compute nodes, how the data are
 received from the I/O~nodes, how the data are exchanged between other compute
-nodes, what signal processing takes place, and which optimizations we
+nodes, what signal processing takes place, and which optimizations were
 implemented.
 The compute node pipeline is shown in more detail in
 Figure~\ref{fig:cn-processing}.
@@ -701,7 +701,7 @@ much better at floating-point processing than integer processing.
 Since this conversion doubles the data size, the PPF runs \emph{after\/} the
 data exchange.
 The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
-filters, of which the outputs are Fourier Transformed.
+filters, the outputs of which are Fourier Transformed.
 The FIR filters and a 256-point FFT are implemented in assembly, for optimal
 performance.
 For other FFT sizes, we use the Blue Gene ``Vienna'' version of
@@ -723,7 +723,7 @@ time, generating the FIR filter constants on the fly.
 \end{figure}
 
 The next step is \emph{delay compensation}.
-Due to the finite speed of light, the wave from a celestial source hits
+Due to the finite speed of electromagnetic waves, the wavefront from a celestial source hits
 stations at different times (see Figure~\ref{fig:delay}).
 The time difference depends on the observation direction and the
 station positions, and is continuously altered by the rotation of the earth.
@@ -743,7 +743,7 @@ and interpolated in frequency and time for each individual sample, costing
 another complex multiplication.
 
 The \emph{bandpass correction} step compensates for an artefact
-introduced by a station filter bank (the PPF that creates the subbands).
+introduced by a station filter bank (another PPF that creates the subbands).
 Without correction, some channels contain more power than others.
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
@@ -838,8 +838,7 @@ cache hierarchy.
 \begin{center}
 \includegraphics[width=5cm]{correlation-triangle.pdf}
 \end{center}
-\caption{The correlation triangle is divided into as many as possible $2\times2$
-tiles.}
+\caption{The correlation triangle is divided into as many $2\times2$ tiles as possible.}
 \label{fig:correlation-triangle}
 \end{figure}
 
