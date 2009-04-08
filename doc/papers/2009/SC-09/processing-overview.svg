@@ -49,14 +49,14 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.30351"
-     inkscape:cx="309.19249"
-     inkscape:cy="92.354844"
+     inkscape:zoom="1.4643751"
+     inkscape:cx="227.87829"
+     inkscape:cy="95.866646"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="1125"
+     inkscape:window-width="1280"
+     inkscape:window-height="949"
      inkscape:window-x="0"
      inkscape:window-y="25" />
   <metadata
@@ -89,16 +89,16 @@
        rx="3.6841967"
        height="35.972847"
        width="97.368042"
-       y="118.49626"
+       y="154.49626"
        x="46.059673" />
     <rect
        id="rect6"
-       style="fill:#deffde;stroke:#00b000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none"
-       rx="7.425571"
-       height="125.9733"
-       width="196.24721"
-       y="68.13356"
-       x="197.68187" />
+       style="fill:#deffde;stroke:#00b000;stroke-width:1.218;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none"
+       rx="7.4193721"
+       height="162.27565"
+       width="196.08337"
+       y="68.215477"
+       x="197.76378" />
     <rect
        id="rect10"
        style="fill:#ffffde;stroke:#a14000;stroke-width:1.06164372;stroke-linecap:butt;stroke-linejoin:miter"
@@ -113,7 +113,7 @@
        rx="7.4315052"
        height="31.849306"
        width="175.17119"
-       y="121.13756"
+       y="157.13756"
        x="208.21947" />
     <text
        style="font-size:13.5890379px;font-style:normal;font-weight:bold;text-anchor:middle;fill:#a14000;stroke:#a14000;stroke-width:0.00176947in;font-family:Helvetica"
@@ -130,7 +130,7 @@
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="142.37077"
+       y="178.37077"
        x="293.15073"
        xml:space="preserve">output section</text>
     <text
@@ -166,7 +166,7 @@
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="181.77846"
+       y="217.77846"
        x="291.40884"
        xml:space="preserve">IONProc</text>
     <text
@@ -175,7 +175,7 @@
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="140.70558"
+       y="176.70558"
        x="94.781754"
        xml:space="preserve">StorageProc</text>
     <rect
@@ -216,12 +216,12 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 547.54337,85.436931 L 588.24287,85.436931 L 588.24287,230.88596 L 448.28205,230.88596 L 384.86037,146.43235"
+       d="M 547.54337,85.436931 L 588.24287,85.436931 L 588.24287,230.88596 L 448.28205,230.88596 L 384.86037,180.43235"
        id="path4316"
        sodipodi:nodetypes="ccccc" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.21816742;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 549.67157,175.08791 L 567.05251,175.08791 L 567.47289,209.7444 L 459.15387,210.78415 L 384.64236,131.07411"
+       d="M 549.67157,175.08791 L 567.05251,175.08791 L 567.47289,209.7444 L 459.15387,210.78415 L 384.64236,169.07411"
        id="path4833"
        sodipodi:nodetypes="ccccc" />
     <text
@@ -230,7 +230,7 @@
        font-size="192"
        font-weight="bold"
        font-style="normal"
-       y="176.2487"
+       y="208.2487"
        x="93.88237"
        xml:space="preserve">storage cluster node</text>
     <a
@@ -244,7 +244,7 @@
     </a>
     <a
        id="a4841"
-       transform="matrix(-7.0776239e-2,0,0,-7.0776239e-2,625.20077,553.6763)">
+       transform="matrix(-7.0776239e-2,0,0,-7.0776239e-2,625.20077,589.6763)">
       <path
          id="path4843"
          d="M 5901.0005,5894.7275 L 6773.4018,5894.7275"
