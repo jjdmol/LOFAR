@@ -277,7 +277,7 @@ the off-line processing.
 A prototype of a set of other observation modes, used to find and observe
 pulsars, is functional, but not optimized for performance yet.
 Hence, we do not discuss the pulsar modes in this paper.
-However, the precense of multiple observation modes demonstrates the
+However, the presence of multiple observation modes demonstrates the
 flexibility of a \emph{software\/} solution.
 More observation modes will be implemented in the future.
 
@@ -428,7 +428,7 @@ Multiple threads are necessary, since a single core is too slow to receive all
 data.
 Together, the threads receive a total of 48,828~packets per second.
 
-The samples from the received UDP packets are copied into a cicular buffer that
+The samples from the received UDP packets are copied into a circular buffer that
 holds the most recent 2.5~seconds of data.
 The buffer serves three purposes.
 First, it is used to synchronize the stations, since the travel times over
@@ -457,7 +457,7 @@ pre-recorded data off-line, frequently used for experimental observations.
 When processing in real time, the NTP-synchronized wall-clock time
 is used to trigger the sending of a new block of data.
 A block of data containing samples from time $t_1$ to $t_2$ are sent some 
-undreds of milliseconds (the WAN delay plus a safe margin) after $t_2$,
+hundreds of milliseconds (the WAN delay plus a safe margin) after $t_2$,
 whether or not all data were factually received from the station.
 This ruthless method assures real-time continuation of the correlator and
 provides fault-tolerance against a failing station or WAN link.
@@ -571,7 +571,7 @@ The bulk of the signal-processing computations take place at the compute nodes.
 In this section, we continue describing the processing pipeline depicted in
 Figure~\ref{fig:processing}. 
 We explain how the work is scheduled over the compute nodes, how the data are
-receieved from the I/O~nodes, how the data are exchanged between other compute
+received from the I/O~nodes, how the data are exchanged between other compute
 nodes, what signal processing takes place, and which optimizations we
 implemented.
 The compute node pipeline is shown in more detail in
@@ -794,7 +794,7 @@ correlation of station~B and~A, only one pair is computed.
 Stations are also autocorrelated, i.e., with themselves.
 Both polarizations of station~A are correlated with both polarizations of
 station~B, yielding correlations in XX, XY, YX, and YY directions.
-The result, a correlation, contains the combined contribution of all visibile
+The result, a correlation, contains the combined contribution of all visible
 sky sources.
 These are disambiguated during the imaging step in the off-line processing
 pipeline.
