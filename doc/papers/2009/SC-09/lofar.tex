@@ -1434,9 +1434,9 @@ double precision, which is overkill for our application.
 %integers, the data has to be expanded severalfold before computations
 %can commence. 
 To achieve the throughput necessary to 
-process in real time, specific FPU instructions have to be used, as
-well as careful cache timings. The latter is complicated further by
-the fact that the L1 cache uses a round-robin replacement policy. The
+process in real time, specific FPU instructions and careful cache timings have to be used.
+The latter is complicated further by
+the round-robin replacement policy of the L1 cache. The
 L1 cache is thus constantly flushed with the streaming data, even if
 this is undesirable. For these reasons, most of our data processing
 routines are written in assembly. Our core processing component (the
@@ -1461,11 +1461,11 @@ calibration.
 
 
 \section*{Acknowledgments}
-
+\begin{small}
 We thank Ger van Diepen, Martin Gels, Marcel Loose and Ruud Overeem
 for their contributions to the LOFAR software.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
-for their work on ZOID and ZeptoOS.
+for their work on ZeptoOS.
 Todd Inglet, Tom Liebsch, and Andrew Taufener from IBM Rochester provided the
 necessary support to optimally use the Blue Gene/P.
 
@@ -1476,6 +1476,7 @@ European Regional Development Fund (EFRO) and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. This work was
 partially performed in the context of the NWO STARE AstroStream
 project.
+\end{small}
 
 \bibliographystyle{plain}
 \bibliography{lofar}
