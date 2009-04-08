@@ -7,6 +7,7 @@
 \newcommand{\us}{\,$\muup$s\xspace}
 
 \hyphenation{ob-ser-va-tion}
+\hyphenation{pipe-li-nes}
 \hyphenation{FPGAs}
 
 \begin{document}
@@ -77,44 +78,22 @@ of the entire telescope.
 \end{figure}
 
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency \textbf{AR}ray},
-an aperture array radio telescope operating at the 10 to 250~MHz frequency
+an aperture array radio telescope operating in the 10 to 250~MHz frequency
 range.
 It is the first of a new generation of radio telescopes, that breaks with
 the concepts of traditional telescopes in several ways.
 Rather than using large, expensive dishes, LOFAR uses many thousands of
-simple antennas that have no moveable parts~\cite{Butcher:04,deVos:09}, see Figure~\ref{fig:lba-field}.
+simple antennas that have no movable parts~\cite{Butcher:04,deVos:09}, see Figure~\ref{fig:lba-field}.
 Essentially, it is a distributed sensor network that monitors the sky
 and combines all signals centrally.
 This concept requires much more signal processing, but the additional costs
-of silicon are easily offset by cost savings of steel.
+of silicon are easily offset by cost savings in steel that would be needed for dishes.
 Moreover, LOFAR can observe the sky in many directions concurrently and
-switch directions instantaneously. In several ways, LOFAR will be the largest telescope of the world.
-%and will
-%enable groundbreaking research in astronomy and particle
-%physics~\cite{Bruyn:02}.
-
-LOFAR is driven by the astronomical community, that needs a new instrument
-to study an extensive amount of new science cases.
-Five key science projects have been defined.
-First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
-that the first star galaxies and quasars were formed.
-The 1.42~GHz emission line of hydrogen is expected to be
-red-shifted into the LOFAR sensitivity range.
-Second, LOFAR offers a unique possibility in particle astrophysics for
-studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
-\emph{cosmic rays}.
-Neither the source, nor the physical process that accelerates such particles
-is known.
-Third, LOFAR's ability to continuously monitor a large fraction of the sky
-makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
-Since LOFAR has no moving parts, it can instantaneously switch focus to
-some galactic event.
-Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
-most distant radio galaxies and study star-forming galaxies.
-Fifth, LOFAR will be capable of observing the so far unexplored radio
-waves emitted by \emph{cosmic magnetic fields}.
-For a more extensive description of the astronomical aspects of the LOFAR
-system, see de Bruyn et.~al.~\cite{Bruyn:02}.
+switch directions instantaneously. 
+In several ways, LOFAR will be the largest telescope of the world, 
+and will enable groundbreaking research in several areas of astronomy and particle
+physics~\cite{Bruyn:02}. The different goals and observation types require
+several different processing pipelines, however.
 
 Another novelty is the elaborate use of \emph{software\/} to process
 the telescope data in real time.
@@ -139,9 +118,10 @@ The availability of sufficiently powerful supercomputers allows this.
 \end{minipage}
 \end{figure*}
 
-The \emph{standard imaging pipeline}, used to generate sky images,
-filters and correlates the data sent by the stations, is the regular mode
-of operation for LOFAR. This paper describes the implementation and
+The most common mode of operation for LOFAR is the 
+\emph{standard imaging pipeline}, which is used to generate sky images.
+This mode filters and correlates the data sent by the stations.
+This paper describes the implementation and
 performance characteristics of the real-time part of this pipeline.
 We present a highly-optimized implementation that achieves very high
 computational performance: the correlator sustains 96\% of the theoretical
@@ -153,16 +133,15 @@ floating-point peak performance during the computational phase.
 Several \emph{pulsar pipelines\/} are being developed as well, that either
 search large sky regions to find unknown pulsars or, once found, sensitively
 observe their characteristics.
-The pipelines share common components, which shortens the development time of
-new components and pipelines, and the time to implement the key science projects.
+The pipelines share common components, shortening their development time. 
 The software also supports multiple concurrent observations, even of different
 types.
 
 The receivers produce hundreds of gigabits of data per second.
 To handle the high data rate,
 we use the Blue Gene/P (BG/P) in an unconventional way: we run
-\emph{application\/} software on the so-called I/O~nodes to preprocess and
-postprocess data that are further handled on the compute nodes.
+\emph{application\/} software on the so-called I/O~nodes to preprocessed and
+post-process data that are further handled on the compute nodes.
 This yields an efficient system and substantially saved us on
 costs~\cite{Iskra:08}.
 Additionally, we developed a low-overhead network protocol~\cite{Romein:09a}
@@ -177,9 +156,9 @@ the Blue Gene/P.
 Next, we explain how we process the telescope data on the Blue Gene/P
 (Section~\ref{sec:processing}), focusing on the processing on the I/O~nodes
 (Section~\ref{sec:IONProc}) and compute nodes (Section~\ref{sec:CNProc}).
+Section~\ref{sec:performance} extensively discusses performance results.
 In Section~\ref{sec:results}, we briefly illustrate the astronomical results
 of the correlator output.
-Section~\ref{sec:performance} extensively discusses performance results.
 We mention related work in Section~\ref{sec:related-work}.
 Finally, we discuss, conclude, and describe future work in
 Section~\ref{sec:conclusions}.
@@ -187,6 +166,29 @@ Section~\ref{sec:conclusions}.
 
 \section{The LOFAR Telescope}
 \label{sec:overview}
+
+LOFAR is driven by the astronomical community, that needs a new instrument
+to study an extensive amount of new science cases.
+Five key science projects have been defined.
+First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
+that the first star galaxies and quasars were formed.
+The 1.42~GHz emission line of hydrogen is expected to be
+red-shifted into the LOFAR sensitivity range.
+Second, LOFAR offers a unique possibility in particle astrophysics for
+studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
+\emph{cosmic rays}.
+Neither the source, nor the physical process that accelerates such particles
+is known.
+Third, LOFAR's ability to continuously monitor a large fraction of the sky
+makes it uniquely suited to find new \emph{pulsars} and to study \emph{transient sources}.
+Since LOFAR has no moving parts, it can instantaneously switch focus to
+some galactic event.
+Fourth, \emph{Deep Extragalactic Surveys\/} will be carried out to find the
+most distant radio galaxies and study star-forming galaxies.
+Fifth, LOFAR will be capable of observing the so far unexplored radio
+waves emitted by \emph{cosmic magnetic fields}.
+For a more extensive description of the astronomical aspects of the LOFAR
+system, see De Bruyn et.~al.~\cite{Bruyn:02}.
 
 A global overview of the LOFAR instrument is given in
 Figure~\ref{fig:lofar-overview}. LOFAR uses two different types of
@@ -206,7 +208,7 @@ However, combining the data of all individual antennas centrally would
 require too much network bandwidth and would result in excessive
 computational requirements. Therefore, multiple antennas are grouped
 to form a \emph{station}.
-The signals of the receivers are combined locally, within the station.
+The signals of the receivers are combined locally, within the station, using FPGAs.
 
 Geographically, LOFAR consists of a compact core area and a number of
 remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will
@@ -217,12 +219,12 @@ The station fields are centrally condensed,
 following a logarithmic distribution.  About 50\% of the stations are
 located in the 2~km-wide central core.
 Additionally, eight to fifteen European stations will or have been built,
-extending the maximum distance to order 1000~km.
-The longer baselines allows observations with high angular resolution,
+extending the maximum distance to roughly 1000~km.
+The longer baselines (distance between two stations) allows observations with high angular resolution,
 but limits the Field-of-View; therefore the European stations will not be
 used for all observations.
 In the past several years we have deployed a number of prototype antennas,
-while the roll-out of the real stations currently is in progress.
+while the roll-out of the real stations is currently in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
 A station also features a cabinet where initial processing is done, using
@@ -247,11 +249,11 @@ retransmission, and real-time issues.
 The UDP packets contain samples, where a sample is a complex number
 that represents the amplitude and phase of a signal at a particular
 time.  A sample is encoded by a $2\times4$, $2\times8$, or $2\times16$-bit
-complex integer. Sampled data can be invalid for various reasons, such as
+complex integer. Data can be invalid for various reasons, such as
 lost network packets or \emph{Radio Frequency Interference\/} (RFI, e.g.,
 caused by TV transmitters).
 Throughout the entire processing chain, we maintain which
-data is marked as invalid, so that eventual images are not blurred by
+data is marked as invalid, so that eventual images are not distorted by
 bad data.  
 
 This paper focuses on the real-time, central processing of LOFAR data on
@@ -262,8 +264,7 @@ We filter the data, and split the subbands in narrower frequency bands called
 In addition, we perform phase shift and bandpass corrections.
 Finally, the signals from all stations are optionally beam-formed,
 correlated and forwarded to a storage cluster, where results can be
-kept for several days.  We will explain the central processing steps
-in more detail in Section~\ref{sec:signal-processing}.
+kept for several days. 
 
 After an observation has finished, further processing is done off-line, on
 commodity cluster hardware. 
@@ -271,11 +272,11 @@ First, the \emph{flagger\/} uses an RFI detection algorithm to remove bad data.
 Then, the results are calibrated for instrumental and environmental effects and
 for sky source parameters (e.g., position, flux)~\cite{Nijboer:07}.
 An imaging algorithm creates an image of the observed source(s).
-Despite the computational challenges, the scope of this paper does not cover
+Despite considerable computational challenges, the scope of this paper does not cover
 the off-line processing.
 
 A prototype of a set of other observation modes, used to find and observe
-pulsars, is functional, but not optimized for performance yet.
+pulsars, is functional, but is not optimized for performance yet.
 Hence, we do not discuss the pulsar modes in this paper.
 However, the presence of multiple observation modes demonstrates the
 flexibility of a \emph{software\/} solution.
@@ -399,7 +400,7 @@ and forwarding to the compute nodes.
 The \emph{output section\/} collects outgoing result data from the compute
 nodes, optionally integrates the data over multiple seconds in time, and
 forwards the data to storage.
-An I/O node may run both sections, either of them, or none at all, depending
+An I/O node may run both sections, only one of them, or none at all, depending
 on the configuration.
 Both tasks are described in detail below.
 
@@ -441,7 +442,7 @@ The buffer is limited by the small memory size, but due to good real-time
 behavior of the application, 2.5~seconds is sufficient.
 
 Another thread reads data from the circular buffer and sends the data to
-the compute nodes for further processing.
+the compute nodes for further processing. 
 It sends data in large bursts that contain approximately one second worth of samples.
 Unfortunately, existing network software did not provide sufficient bandwidth
 and consumed too much CPU time.
@@ -451,6 +452,8 @@ compute nodes~\cite{Romein:09a}.
 FCNP achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
+In contrast to the UDP receive, one thread is sufficient to obtain the
+required throughput, thanks to the low host overhead of FCNP.
 
 The correlator typically processes in real time, but can also correlate
 pre-recorded data off-line, frequently used for experimental observations.
@@ -476,7 +479,7 @@ elaborate in Section~\ref{sec:CNProc}.
 The resulting output data are sent back to the I/O~node.
 The second major task of the I/O-node application is the \emph{output section},
 that handles output data.
-This task performs four operations.
+This task consists of four operations.
 
 First, the data are received from the compute nodes, also using FCNP.
 Second, the data are optionally added to previously received data from other
@@ -535,10 +538,10 @@ virtual memory map, using six fixed mappings of 256~MiB that are never evicted
 from the TLB.
 Hence, this memory does not generate TLB misses.
 The remainder of the memory is used for normal, paged operation.
-The application uses this fast memory for the circular buffer and for the
+The application uses the fast memory for the circular buffer and for the
 output queues.
 Copying data from received UDP packets to the input buffer is up to five times
-faster than using paged memory.
+faster than when using paged memory.
 
 To achieve good real-time behavior, we found that it is of utmost importance
 to carefully manage thread priorities using the Linux real-time scheduler.
@@ -675,7 +678,7 @@ the data transfer from the I/O nodes to the compute nodes, and with
 the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
-are required.
+are required. 
 
 
 \subsection{Signal processing}
@@ -692,8 +695,19 @@ splits a frequency subband into narrow frequency channels, trading time
 resolution for frequency resolution.
 The high frequency resolution allows for removal of narrow-band RFI later in
 the pipeline.
+The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
+filters, the outputs of which are Fourier Transformed.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
-filter supports any reasonable power-of-two number of channels.
+filter supports any reasonable power-of-two number of channels for different
+observation modes.
+The FIR filters and a 256-point FFT are implemented in assembly, for optimal
+performance.
+For other FFT sizes, we use the Blue Gene ``Vienna'' version of
+FFTW~\cite{Lorenz:05}.
+This demonstrates the flexibility of a software solution: our software
+automatically designs a filter bank with the desired properties and
+number of channels at run time, generating the FIR filter constants on
+the fly.
 
 As a side effect, the PPF implicitly converts 4-bit, 8-bit, or 16-bit
 little-endian integer samples to 32-bit big-endian floating point numbers,
@@ -701,15 +715,6 @@ since the Blue Gene is much better at floating-point processing than integer
 processing.
 Since this conversion doubles the data size, the PPF runs \emph{after\/} the
 data exchange.
-The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
-filters, the outputs of which are Fourier Transformed.
-The FIR filters and a 256-point FFT are implemented in assembly, for optimal
-performance.
-For other FFT sizes, we use the Blue Gene ``Vienna'' version of
-FFTW~\cite{Lorenz:05}.
-This demonstrates the flexibility of a software solution: we
-automatically design a filter bank with the desired properties at run
-time, generating the FIR filter constants on the fly.
 
 %The next step is to artificially ``delay'' the stream of station samples,
 %to compensate for the fact that a celestial wave hits stations at different
@@ -740,11 +745,11 @@ The phase rotation itself costs a complex multiplication per sample.
 Since the rotation depends on the frequency, the correction is done after 
 the PPF: the correction is more accurate on narrow frequency channels.
 The delays are computed exactly for the begin time and end time of a chunk,
-and interpolated in frequency and time for each individual sample, costing
+and interpolated in frequency and time for each individual sample, with
 another complex multiplication.
 
 The \emph{bandpass correction} step compensates for an artefact
-introduced by a station filter bank (another PPF that creates the subbands).
+introduced by a station filter bank (a PPF on the FPGAs that created the subbands).
 Without correction, some channels contain more power than others.
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
@@ -813,7 +818,7 @@ For example, the correlations from the standard imaging pipeline can be used
 to calibrate the station samples in real time in a feedback loop, so that the
 pulsar pipeline can beam-form calibrated samples.
 This would not be possible without correlating the data, and would be
-particularly useful to calibrate out station clock drifts, for example.
+particularly useful to compensate for station clock drifts, for example.
 
 
 \subsection{Optimizations}
@@ -863,9 +868,9 @@ The figure is triangular, because we only compute the correlation of each
 pair of stations.
 The squares labeled ``\textsf{A}'' are autocorrelations, that are treated
 specially since they require fewer computations.
-The triangle is divided into as many $2\times2$ tiles as possible, for which
+The triangle is divided into as many $2\times2$ tiles as possible. With this size, 
 the best performance is obtained.
-These $2\times2$ tiles are correlated interleaved.
+%These $2\times2$ tiles are correlated interleaved.
 For example, the lower right-hand-side rectangle correlates stations 8 and~9
 with stations 0 and~1.
 The X and Y samples of each of these four stations are read, requiring eight
@@ -1017,11 +1022,10 @@ the correlations are independently computed.
 %	- first detectable objects in the universe (universe was opaque before that)
 %	- due to redshift, wavelength of H is 1.5-3m (115-180MHz)
 %	- 
-\label{sec:results}
 
 
 
-\section{Performance}
+\section{Performance Evaluation}
 \label{sec:performance}
 
 Since only a small number of LOFAR stations has already been constructed
@@ -1088,7 +1092,7 @@ reducing the available time per subband to 8.05~second.
 Mode~\textsf{C} uses 4-bit samples, and is only suitable for frequency
 subbands that are mostly free of RFI (otherwise, the bits are used to encode
 the RFI, not the signal of interest).
-This mode is planned for \emph{Epoch-of-Reionization} observations, where the
+This mode is planned for \emph{Epoch-of-Reionization} (EoR) observations, where the
 high number of subbands is used to observe the sky at 32~MHz bandwidth in six
 directions simultaneously.
 If the same amount of stations were used, the processing requirements and
@@ -1096,15 +1100,15 @@ output data rate would double again, but EoR observations will only use the
 stations near the center, not the remote ones.
 The exact number of stations that will be correlated is not yet known, but is
 likely between 36 and~46.
-For the performance measurements, we optimistically assume the most challenging
+For the performance measurements, we assume the most challenging
 case, and use 48~stations.
 
 
-\subsection{Computational performance on the \\ I/O Nodes}
+\subsection{Performance on the I/O Nodes}
 \label{sec:ION-performance}
 
 \begin{figure}[ht]
-\subfigure[As function of number of subbands.  The input samples are 8~bit,
+\subfigure[Performance as function of number of subbands.  The input samples are 8~bit,
   and in total, 64 stations are used.]{
   %\includegraphics[width=\columnwidth]{ion-performance.pdf}
   \makebox[60mm][l]{
@@ -1113,7 +1117,7 @@ case, and use 48~stations.
   \label{fig:ion-performance-func-subbands}
 }
 \hfill
-\subfigure[For three observation modes.]{
+\subfigure[The three observation modes.]{
   \hspace{15mm}
   \label{fig:ion-performance-obs-mode}
 }
@@ -1129,7 +1133,7 @@ A load of 100\% means that all four cores are fully occupied.
 A load above 85\% must be avoided to prevent major data loss.
 
 We first show how the performance scales with the number of subbands.
-We again use a setting resembles observation mode~\textsf{B}, for up
+We use a setting resembling observation mode~\textsf{B}, for up
 to 496~subbands, see Figure~\ref{fig:ion-performance-func-subbands}.
 The I/O~nodes receive and forward the samples
 of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
@@ -1139,7 +1143,7 @@ This amount is partially independent of the number of subbands, since a lower
 number of subbands decreases the packet size (down from 7,998~bytes), but not
 the amount of packets.
 The I/O nodes have to handle 48,828~packets per second.
-All other work scales linearly with the amount of subbands.
+All other work scales linearly with the number of subbands.
 
 Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
 for the three challenging observation modes.
@@ -1203,7 +1207,7 @@ Alternatively, the second rack could be used.
 %We think this will reduce the system time of I/O operations.
 
 
-\subsection{Computational performance on the \\ Compute Nodes}
+\subsection{Performance on the Compute Nodes}
 
 \begin{figure}[ht]
 \subfigure[Performance as a function of the number of stations.  The input samples are 8~bit,
@@ -1215,7 +1219,7 @@ Alternatively, the second rack could be used.
 }
 \hfill
 %\subfigure[Performance of three challenging observation modes.]{
-\subfigure[For three observation modes.]{
+\subfigure[The three observation modes.]{
   \hspace{15mm}
   \label{fig:cn-performance-obs-mode}
 }
@@ -1261,9 +1265,9 @@ All modes run within their real-time constraints of 16.1, 8.05, and 4.03
 seconds respectively.
 The load on the compute nodes is 35\%, 70\%, and 84\% respectively.
 
-The asynchronous transpose is somewhat more efficient than the synchronous
-transpose (not shown in the figure): the run time for processing one chunk
-decreases by up to 190~ms.
+The asynchronous transpose is much more efficient than the original synchronous
+version. It successfully overlaps communication with useful work, reducing
+the data exchange overhead by roughly a factor of four.
 
 The correlator is extremely efficient: it achieves 96\% of the FPU
 peak performance, thanks to the highly-optimized assembly code.  The
@@ -1284,15 +1288,17 @@ Due to all optimizations, the correlator can process 50\% more data than
 the specifications require, on only half the amount of planned resources.
 Only if the need to correlate more than 64~stations would ever arise, or if
 significant additional real-time signal processing would be needed, the
-second rack must be employed.
+second rack must be employed. We can exloit the compute power we saved to
+create more beams, or to move additional computational steps, such as calibration and flagging,
+to the online processing pipeline.
 
 
 \section{Astronomical results}
+\label{sec:results}
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{fringe.jpg}
-\caption{Correlations from a 9-hour observation.  See the main text for
-an explanation.}
+\caption{Correlations from a 9-hour observation.}
 \label{fig:fringe}
 \end{figure}
 
@@ -1464,9 +1470,9 @@ calibration.
 We thank Ger van Diepen, Martin Gels, Marcel Loose and Ruud Overeem
 for their contributions to the LOFAR software.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
-for their work on ZeptoOS.
+for their work on ZOID and ZeptoOS.
 Todd Inglet, Tom Liebsch, and Andrew Taufener from IBM Rochester provided the
-necessary support to optimally use the Blue Gene/P.
+necessary support to optimally use the BG/P.
 
 LOFAR is funded by the Dutch government in the BSIK programme for
 interdisciplinary research for improvements of the knowledge
