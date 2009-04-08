@@ -362,8 +362,8 @@ processing chain.
 The first application, \emph{IONProc}, runs on the Blue Gene/P I/O nodes.
 Its main tasks are to receive the station UDP data, to buffer the data
 for up to 2.5~seconds, and to forward it to the compute nodes in the pset.
-The second application, called \emph{CNProc}, runs on the Blue Gene/P compute nodes, where the
-compute-intensive processing takes place.
+The second application, called \emph{CNProc}, runs on the Blue Gene/P compute
+nodes, where the compute-intensive processing takes place.
 The main tasks are to reorder the data across the compute nodes over the
 internal torus network, to filter the data, and to correlate or beam-form
 the filtered data.
@@ -421,7 +421,7 @@ connected to a station.
 
 The input section receives the UDP packets, taking care of out-of-order,
 duplicated, and lost packets.
-Each station uses four FPGAs to send data to its associated I/O~node,
+At each station, four of the FPGAs send data to their associated I/O~node,
 each FPGA to a different UDP port.
 The I/O~node runs four ``input'' threads, one thread per socket.
 Multiple threads are necessary, since a single core is too slow to receive all
@@ -448,7 +448,7 @@ and consumed too much CPU time.
 We therefore developed \emph{FCNP (Fast Collective-Network Protocol)}, a 
 network library for high-bandwidth communication between the I/O~nodes and the
 compute nodes~\cite{Romein:09a}.
-FCNP, in contrast, achieves link-speed bandwidths for large messages, due to
+FCNP achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
 
@@ -493,7 +493,7 @@ data are simply discarded until space is available.
 This mechanism is important to keep the correlator running in real
 time: it is much better to lose a small part of the data than to stall the
 entire correlator and lose \emph{all\/} data.
-In practice, under normal circumstances, no data are lost.
+In practice, under normal circumstances, no data are lost here.
 
 
 \begin{figure*}[ht]
@@ -626,7 +626,7 @@ Blue Gene/P, it unnecessarily increases torus communication.
 
 \subsection{All-to-All data exchange}
 
-The compute nodes perform a large number of operations on the data, as shown in
+The compute nodes perform several operations on the data, as shown in
 Figure~\ref{fig:cn-processing}.
 The very first step is to exchange data with another group of processor cores.
 This is necessary, because an I/O~node receives all frequency subbands from one
@@ -639,7 +639,7 @@ buffer to the compute core that will process the data, since the I/O~node is
 only connected to the compute nodes in its own pset.
 The data are thus first sent over the collective network from the I/O~node to
 a compute node and then over the 3-D~torus network.
-We use the 3-D~torus because of its high bandwidth and switching capabilities.
+The torus provides high bandwidth and switches packets efficiently.
 
 \begin{figure}[ht]
 \begin{center}
@@ -657,9 +657,9 @@ Figure~\ref{fig:colinear} illustrates this; the bandwidth between nodes
 between nodes \textsf{A} and \textsf{C} (in practice, it is somewhat less).
 Therefore, we schedule work that needs exchange of data 
 on non-coplanar cores as much as possible.
-We also avoid situations where multiple cores of the same processor need to
-access the torus or collective network simultaneously, since these resources
-are shared and simultaneous access decreases performance.
+We also schedule the work so that multiple cores of the same processor do not
+need to access the torus or collective network simultaneously, since these
+resources are shared and simultaneous access decreases performance.
 The program parts that implement the data exchange and scheduling are, in the
 presence of many stations, many subbands, time slicing, round-robin core
 allocation, and avoidance of resource conflicts, \emph{extremely\/}
@@ -695,9 +695,10 @@ the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
 filter supports any reasonable power-of-two number of channels.
 
-As a side effect, the PPF implicitly converts 16-bit little-endian integer
-samples to 32-bit big-endian floating point numbers, since the Blue Gene is
-much better at floating-point processing than integer processing.
+As a side effect, the PPF implicitly converts 4-bit, 8-bit, or 16-bit
+little-endian integer samples to 32-bit big-endian floating point numbers,
+since the Blue Gene is much better at floating-point processing than integer
+processing.
 Since this conversion doubles the data size, the PPF runs \emph{after\/} the
 data exchange.
 The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
@@ -729,7 +730,7 @@ The time difference depends on the observation direction and the
 station positions, and is continuously altered by the rotation of the earth.
 Before the signals can be correlated, all station streams are aligned,
 by artificially delaying the streams of station samples.
-For example, a delay of 22\us can be achieved by shifting four 5.12\us
+For example, the bulk of a delay of 22\us is achieved by shifting four 5.12\us
 samples.
 This shift was already done on the I/O~node, by moving the read pointer
 of the circular buffer (see Section~\ref{sec:input-handling}).
@@ -836,7 +837,7 @@ cache hierarchy.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=5cm]{correlation-triangle.pdf}
+\includegraphics[width=48mm]{correlation-triangle.pdf}
 \end{center}
 \caption{The correlation triangle is divided into as many $2\times2$ tiles as possible.}
 \label{fig:correlation-triangle}
@@ -869,8 +870,7 @@ For example, the lower right-hand-side rectangle correlates stations 8 and~9
 with stations 0 and~1.
 The X and Y samples of each of these four stations are read, requiring eight
 memory load instructions (one load instruction reads a complex sample).
-Computing the correlations requires 128~real operations: 32~double fused
-multiply-add instructions.
+Computing the correlations requires 128~real operations: 32~instructions.
 Hence, four floating-point instructions per load instruction are performed.
 An unoptimized implementation would perform four times more memory accesses,
 making the memory subsystem a severe bottleneck.
@@ -1129,7 +1129,7 @@ A load of 100\% means that all four cores are fully occupied.
 A load above 85\% must be avoided to prevent major data loss.
 
 We first show how the performance scales with the number of subbands.
-We again use a setting similar or equal to observation mode~\textsf{B}, for up
+We again use a setting resembles observation mode~\textsf{B}, for up
 to 496~subbands, see Figure~\ref{fig:ion-performance-func-subbands}.
 The I/O~nodes receive and forward the samples
 of one station (up to 3.1~Gb/s) and send the correlations of up to 8~subbands
@@ -1144,9 +1144,9 @@ All other work scales linearly with the amount of subbands.
 Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
 for the three challenging observation modes.
 In the standard 16-bit sample mode, the stations can produce at most
-248~subbands (observation mode A).
+248~subbands (observation mode \textsf{A}).
 Hence, the output data rate (the lower two bars) is twice as low as in the
-8-bit mode of scenario B.
+8-bit mode of scenario \textsf{B}.
 Also, copying 16-bit samples into the circular buffer is somewhat more
 efficient, due to L3-cache effects.
 In the 4-bit mode, only 48~stations are used.
