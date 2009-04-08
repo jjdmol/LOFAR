@@ -309,15 +309,15 @@ fi
 fgrep Package__Version.cc src/CMakeLists.txt > /dev/null 2>&1
 if [ $? != 0 ]; then
   # Lookup variable that contains the list of library sources.
-  grep "^[ \t]*set[ \t]*([ \t]*${libsrcs}" src/CMakeLists.txt > /dev/null 2>&1
+  grep "^[ \t]*set[ \t]*([ \t]*${libsrcs}[ \t]*$" src/CMakeLists.txt > /dev/null 2>&1
   if [ $? = 0 ]; then
     # Found it. Add Package__Version.cc to the list
     sed "s,^\([ \t]*\)\(set[ \t]*([ \t]*${libsrcs}\)\(.*\)$,\1\2\n\1  Package__Version.cc\3," src/CMakeLists.txt > version.mf.tmp
   else
     # It's not there. Create a line with a set() command
     cat > version.mf.tmp <<EOF
-set("\${$libsrcs}" Package__Version.cc)
-add_library(${lpkg} "\${$libsrcs}"
+set(${libsrcs} Package__Version.cc)
+add_library(${lpkg} \${$libsrcs})
 
 EOF
     cat src/CMakeLists.txt >> version.mf.tmp
