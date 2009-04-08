@@ -69,11 +69,11 @@ of the entire telescope.
 \section{Introduction}
 
 \begin{figure}[ht]
-\center{
+\begin{center}
 \includegraphics[width=0.8\columnwidth]{LBA-field.jpg}
+\end{center}
 \caption{A field with low-band antennas (dipoles).}
 \label{fig:lba-field}
-}
 \end{figure}
 
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency \textbf{AR}ray},
@@ -99,7 +99,7 @@ Five key science projects have been defined.
 First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
 that the first star galaxies and quasars were formed.
 The 1.42~GHz emission line of hydrogen is expected to be
-redshifted into the LOFAR sensitivity range.
+red-shifted into the LOFAR sensitivity range.
 Second, LOFAR offers a unique possibility in particle astrophysics for
 studying the origin of high-energy ($10^{15}$--$10^{20.5}$~eV)
 \emph{cosmic rays}.
@@ -526,7 +526,7 @@ in software.
 This is not a problem on the compute nodes, where the compute-node kernels 
 map all memory using a few large pages, so that TLB misses do not occur.
 However, the I/O~nodes run a Linux kernel that typically uses a page size of
-4~KB, generating a huge number of TLB-miss interrupts.
+4~KiB, generating a huge number of TLB-miss interrupts.
 
 To avoid the interrupts, we use a modified ZeptoOS (Linux-based)
 kernel\cite{Yoshii:09}.
@@ -825,7 +825,7 @@ operations per cycle.
 
 Although the FIR filters, FFTs, delay compensation, and bandpass correction
 are conceptually separate, consecutive blocks, their implementations are
-highly interwoven to achieve better performance.
+highly interleaved to achieve better performance.
 This avoids that four separate passes over all data are made.
 Also, the data are laid out in memory in such a way that they are read
 consecutively as much as possible, allowing burst transfers through the
@@ -862,7 +862,7 @@ The squares labeled ``\textsf{A}'' are autocorrelations, that are treated
 specially since they require fewer computations.
 The triangle is divided into as many $2\times2$ tiles as possible, for which
 the best performance is obtained.
-These $2\times2$ tiles are correlated interwovenly.
+These $2\times2$ tiles are correlated interleaved.
 For example, the lower right-hand-side rectangle correlates stations 8 and~9
 with stations 0 and~1.
 The X and Y samples of each of these four stations are read, requiring eight
@@ -871,8 +871,8 @@ Computing the correlations requires 128~real operations: 32~double fused
 multiply-add instructions.
 Hence, four floating-point instructions per load instruction are performed.
 An unoptimized implementation would perform four times more memory accesses,
-making the memory subsytem a severe bottleneck.
-The interwoven correlation computations also helps to hide the 5-cycle
+making the memory subsystem a severe bottleneck.
+The interleaved correlation computations also helps to hide the 5-cycle
 instruction latencies of the fused multiply-add instructions, since
 the correlations are independently computed.
 
@@ -955,7 +955,7 @@ the correlations are independently computed.
 %\label{sec:upgrade}
 %
 %Recently, the six-rack Blue Gene/L system was replaced by a 2.5-rack Blue
-%Gene/P system, that provides approxiamately the same computational power.
+%Gene/P system, that provides approximately the same computational power.
 %The biggest improvements of the BG/P over the BG/L are summarized below.
 %First, the number of cores in a processor and the speeds of the processors and
 %networks have increased.
@@ -1381,7 +1381,7 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 % - ION not in torus
 % - power efficiency = good, not bad [ref]
 % (- 2^n allocation)
-% - TLB interrupt handfler in sw
+% - TLB interrupt handler in sw
 % + torus (DMA)
 % + high mem bw [ref]
 % + ondersteuning complex ops & double hummer
