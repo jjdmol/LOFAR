@@ -877,7 +877,7 @@ Computing the correlations requires 128~real operations: 32~instructions.
 Hence, four floating-point instructions per load instruction are performed.
 An unoptimized implementation would perform four times more memory accesses,
 making the memory subsystem a severe bottleneck.
-The interleaved correlation computations also helps to hide the 5-cycle
+The interleaved correlation computations also help to hide the 5-cycle
 instruction latencies of the fused multiply-add instructions, since
 the correlations are independently computed.
 
