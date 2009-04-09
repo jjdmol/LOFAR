@@ -1408,25 +1408,25 @@ and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 In general, we are rather satisfied with the capabilities of the Blue Gene/P
 as a platform for a real-time correlator.
 The double FPU is highly efficient and provides excellent support for complex
-numbers, which is indispensible for signal processing.
+numbers, which is indispensable for signal processing.
 The relatively high memory bandwidth helps to keep the FPUs busy.
 The 3-D torus easily handles the all-to-all exchange, thanks to the high
 bandwidth, its switching capabilities, and a DMA controller.
 We also think that the programming environment of the Blue Gene/P is a
 considerable improvement over its predecessor,
 and are pleased with the open programming interfaces.
-The power efficiency of the Blue Gene/P is good, although the IBM Cell BE is
-better~\cite{Nieuwpoort:09}, but the Cell BE does not incorporate a high-speed
-interconnect like the 3-D~torus.
+The power efficiency of the Blue Gene/P is good.
+The Cell BE is more energy efficient~\cite{Nieuwpoort:09}, but it does not incorporate a high-speed
+interconnect.
 
 There are some disadvantages as well.
 Most notably, the separation of compute nodes and I/O~nodes, along with their
 limited connectivity (within a pset only), and the use of \emph{two\/}
 networks types complicates and impedes efficient streaming of data into the
 machine.
-For example, data generally cannot be sent directly from the I/O~node to the
-compute node that needs them.
-Also, the absense of a hardware TLB-miss handler causes significant
+For example, data cannot be sent directly from an I/O~node to 
+compute nodes outside its pset.
+Also, the absence of a hardware TLB-miss handler causes significant
 performance degradation with paged memory.
 Furthermore, double-precision floating-point arithmetic is overkill for our
 application.
@@ -1442,8 +1442,8 @@ programming; the gap with compiled C++ code is large.
 % dit geldt ook een beetje voor het stroomverbruik, etc.
 
 To handle the high LOFAR station data rates, we use the I/O nodes in an
-unorthodox way: we run the part of the application software that takes care
-of external communication there.
+unorthodox way: they run the part of the application software that takes care
+of external communication.
 A custom network protocol (FCNP) provides link-speed bandwidths between the
 I/O~nodes and compute nodes, and reduces the CPU utilization.
 On the I/O~nodes, the use of a large, pinned memory area avoids excessive
