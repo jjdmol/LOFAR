@@ -67,6 +67,7 @@ set(inst_HEADERS
   Timer.h
   TypeNames.h
   TypeNames.tcc
+  Version.h
   Net/FdSet.h
   Net/Socket.h)
 

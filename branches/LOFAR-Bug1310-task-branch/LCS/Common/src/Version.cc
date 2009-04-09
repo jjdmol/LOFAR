@@ -124,7 +124,7 @@ namespace LOFAR {
   { 
     os << indent << packageName() << ": version = " << version();
     if (version() != confVersion()) {
-      os << " (in configure.in: " << confVersion() << ')';
+      os << " (in CMakeLists.txt: " << confVersion() << ')';
     }
     os << std::endl;
     os << indent << " overall revision  = " << revision();

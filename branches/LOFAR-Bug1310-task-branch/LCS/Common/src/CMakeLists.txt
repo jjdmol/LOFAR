@@ -1,4 +1,5 @@
 set(common_LIB_SRCS
+  Package__Version.cc
   Allocator.cc
   DataConvert.cc
   Exception.cc
@@ -21,11 +22,13 @@ set(common_LIB_SRCS
   SystemUtil.cc
   Timer.cc
   TypeNames.cc
+  Version.cc
   Net/FdSet.cc
   Net/Socket.cc)
 
 set(common_PROGRAMS
   getparsetvalue
+  versioncommon
 )
 
 if(HAVE_BACKTRACE)
@@ -36,7 +39,6 @@ if(HAVE_BACKTRACE)
 endif(HAVE_BACKTRACE)
 
 if(HAVE_SHMEM)
-  include(JoinArguments)
   set(shmem_LIB_SRCS
     shmem/segbasemap.cc
     shmem/dlmalloc.c
@@ -57,8 +59,6 @@ if(HAVE_SHMEM)
 endif(HAVE_SHMEM)
 
 add_library(common ${common_LIB_SRCS})
-#add_library(common_two ${common_two_LIB_SRCS})
-target_link_libraries(common)
 install(TARGETS common DESTINATION ${LOFAR_LIBDIR})
 
 foreach(prog ${common_PROGRAMS})
