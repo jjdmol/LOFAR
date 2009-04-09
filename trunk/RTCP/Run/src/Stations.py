@@ -16,6 +16,8 @@ class Station(object):
     def getPset(self, partition):
 	return IONodes.get(partition).index(self.ionode)
 
+    def getIONode(self):
+        return self.ionode
 
 
 CS001_lba0  = [Station('CS001LBA_LBA0', '10.170.0.1', ['10.170.0.1:4346'])]
