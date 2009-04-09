@@ -18,12 +18,17 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include(LofarAddCheck)
+#include(LofarAddCheck)
 
 ## --------------------------------------------------------------------------
 ## "Auto-tools variable" needed for backward compatibility
 ## --------------------------------------------------------------------------
-set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "srcdir")
+set(srcdir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+## --------------------------------------------------------------------------
+## Add current source directory to compiler's include path
+## --------------------------------------------------------------------------
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 ## ----------------------------------------------------------------------------
 ## Configure the LOFAR CTest wrapper script in the current binary directory

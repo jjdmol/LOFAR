@@ -2,7 +2,7 @@
 
 # makeversion: create the version.cc file of a package
 #
-#  Copyright (C) 2007
+#  Copyright (C) 2007-2009
 #  ASTRON (Netherlands Foundation for Research in Astronomy)
 #  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -24,8 +24,9 @@
 
 # This script creates files <package>Version.h and .cc containing a class
 # to return the version and revision of the package.
-# The .cc fle includes a file which gets created by lofar_init.m4 and filled
-# by lofar_internal.m4 which contains the packages it is dependent on.
+# The .cc file includes a file which is created by LofarPackageVersion.cmake
+# (Each package's CMakeLists.txt file must set a variable
+# <package>_DEPENDENCIES for this to work).
 # It also creates an file version<package>.cc which is an executable program
 # to print the version.
 # Optionally the CMakeLists.txt files are changed to build the code.
@@ -35,9 +36,8 @@
 # directory which works fine for the normal cases. However, MAC uses some
 # special directory structure like GCF/TM/include/GCF/TM. It also detects
 # this and sets in this example the package name to GCFTM (removes the /).
-# In lofar_internal.m4 the package name given as the second argument has
-# to match the package name found here, thus must be GCFTM in this example.
-# lofar_internal.m4 derives the include path from the given header file.
+# The package name given in <package>_DEPENDENCIES has to match the package
+# name found here, thus must be GCFTM in this example.
 
 # Determine which parts of the version info have to be made.
 # if the main program versionXXX has to be made.
@@ -76,6 +76,12 @@ incpath=$pkg
 incdir=`sed -n 's,^[ \t]*add_subdirectory[ \t]*([ \t]*\(include/[^/)]\+\).*$,\1,ip' CMakeLists.txt`
 if test "$incdir" = ""; then
   incdir="src"
+fi
+
+if ! [ -d src -a -d $incdir ]; then
+  echo "makeversion: no source or include directory found: "
+  echo "  is this a package directory?"
+  exit 1
 fi
 
 # Get version and revision (if possible) from repository.
@@ -203,8 +209,8 @@ namespace LOFAR {
     { return "$nrch"; }
 }
 
-//# fillversion.h is generated in build area by lofar_internal.m4
-//# It contains function fillInfo
+//# FillPackage__VersionFunc.h is generated in the build area by
+//# LofarPackageVersion.cmake. It contains function fillInfo.
 #include "FillPackage__VersionFunc.h"
 EOF
 
@@ -231,36 +237,36 @@ EOF
 # Do not copy if existing version is the same,
 # so code is not rebuilt needlessly.
 if [ ! -e $incdir/Package__Version.h ]; then
-  echo "makeversion created $incdir/Package__Version.h"
   cp version.h.tmp $incdir/Package__Version.h
+  echo "makeversion created $incdir/Package__Version.h"
 elif [ $hassvn = 0 ]; then
   diff version.h.tmp $incdir/Package__Version.h > /dev/null 2>&1
   if [ $? != 0 ]; then
-    echo "makeversion replaced $incdir/Package__Version.h"
     cp version.h.tmp $incdir/Package__Version.h
+    echo "makeversion replaced $incdir/Package__Version.h"
   fi
 fi
 
 if [ ! -e src/Package__Version.cc ]; then
-  echo "makeversion created src/Package__Version.cc"
   cp version.cc.tmp src/Package__Version.cc
+  echo "makeversion created src/Package__Version.cc"
 elif [ $hassvn = 0 ]; then
   diff version.cc.tmp src/Package__Version.cc > /dev/null 2>&1
   if [ $? != 0 ]; then
-    echo "makeversion replaced src/Package__Version.cc"
     cp version.cc.tmp src/Package__Version.cc
+    echo "makeversion replaced src/Package__Version.cc"
   fi
 fi
 
 versmainname=version${lpkg}
 if [ ! -e src/${versmainname}.cc ]; then
-  echo "makeversion created src/${versmainname}.cc"
   cp version.mcc.tmp src/${versmainname}.cc
+  echo "makeversion created src/${versmainname}.cc"
 elif [ $hassvn = 0 ]; then
   diff version.mcc.tmp src/${versmainname}.cc > /dev/null 2>&1
   if [ $? != 0 ]; then
-    echo "makeversion replaced src/${versmainname}.cc"
     cp version.mcc.tmp src/${versmainname}.cc
+    echo "makeversion replaced src/${versmainname}.cc"
   fi
 fi
 
