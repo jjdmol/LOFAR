@@ -66,7 +66,16 @@ set(blob_LIB_SRCS
   KeyValue.cc
   KeyValueMap.cc)
 
+set(blob_PROGRAMS
+)
+
 add_library(blob ${blob_LIB_SRCS})
 target_link_libraries(blob common ${LOFAR_LIBRARIES})
 install(TARGETS blob DESTINATION ${LOFAR_LIBDIR})
+
+foreach(prog ${blob_PROGRAMS})
+  add_executable(${prog} ${prog}.cc)
+  target_link_libraries(${prog} blob ${LOFAR_LIBRARIES})
+  install(TARGETS ${prog} DESTINATION bin)
+endforeach(prog ${blob_PROGRAMS})
 

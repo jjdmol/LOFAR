@@ -29,7 +29,11 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Blob)
+set(PACKAGE_VERSION 1.0)
+set(Blob_DEPENDENCIES Common)
+
 include(LofarGeneral)
+include(LofarPackageVersion)
 
 ## ---------------------------------------------------------------------------
 ## External packages
