@@ -205,6 +205,8 @@ if __name__ == '__main__':
 	    os.remove(MSdatabaseFile)
     except:
 	print 'caught exception'
+	import traceback
+	traceback.print_exc()
 	sys.exit(1)
 
     obsID = 'L' + dateStr[0] + '_' + '%05d' % measurementnumber

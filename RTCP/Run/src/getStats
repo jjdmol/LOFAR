@@ -3,7 +3,7 @@
 # Do the first part in a shell script so the startup delay is
 # less unpredictable
 DATAFILE='/tmp/CURINPUT'
-tcpdump -c 10 -i eth1 -X -s 62 -e -n 2> /dev/null > $DATAFILE
+tcpdump -c 10 -i eth0 -X -s 62 -e -n 2> /dev/null > $DATAFILE
 ifconfig | grep HW | awk '{print $1, $5;}' > $DATAFILE.MACS
 ifconfig |grep inet\ addr|awk '{print $2;}'|cut -b 1-5 --complement > $DATAFILE.IPS
 
@@ -11,6 +11,10 @@ python <<EOF
 
 import sys
 import time
+from sets import Set
+
+#index of board in the sourceMac 
+bordIndex = 4
 
 class Packet(object):
   """
@@ -34,8 +38,6 @@ class Packet(object):
   lofarMacStart = '10:fa:00:'
   #index of station in the sourceMac 
   stationIndex = 3
-  #index of board in the sourceMac 
-  bordIndex = 5
 
   #index of the formatstring in the EPAheader
   formatIndex = 4
@@ -67,7 +69,8 @@ class Packet(object):
       srcMac, dstMac = self.getMacs()
       if not srcMac.startswith(self.lofarMacStart):
         return 'not a LOFAR station'
-      return 'CS' + str(int(srcMac.split(':')[self.stationIndex], 16)) + ' board ' + str(int(srcMac.split(':')[self.bordIndex], 16))
+       
+      return 'CS' + str(int(srcMac.split(':')[self.stationIndex], 16)) + ' board ' + str(int(srcMac.split(':')[bordIndex], 16))
     except IndexError:
       return 'not a LOFAR station'
   def getBeamletAndTimes(self):
@@ -120,19 +123,29 @@ def parsefile(inputfile):
   return packets
 
 packets = parsefile('$DATAFILE')
-
 # store all unique (by macs) packets and remember only the first one
 streams = dict()
+lBoardIds = set()
+
 for packet in reversed(packets):
+  IDFound = 0
   ml = packet.getMacs()
+  for id in lBoardIds:
+    if ml[0].split(':')[bordIndex] == id:
+      IDFound = 1
+      break
+  
+  if not IDFound:
+    lBoardIds.add(ml[0].split(':')[bordIndex])
+  
   # if a newer one was already found, it is now forgotten
-  streams[ml] = packet
+  if not IDFound:
+    streams[ml] = packet
 
 mymacs = open('$DATAFILE.MACS').readlines()
 myips = open('$DATAFILE.IPS').readlines()
 
 # analyze each packet for each data stream
-print
 print ('Found the following datastreams:')
 
 # some methods for easier formatting
@@ -144,7 +157,6 @@ def printokornot(text):
   print (' ??? ' + text)
 
 for (srcMac, dstMac), packet in streams.iteritems():
-  print
   beamlets, times = packet.getBeamletAndTimes()
   utcTime = packet.getUTC()
   packetLength = packet.getLength()
