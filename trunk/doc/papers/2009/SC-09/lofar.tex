@@ -70,7 +70,7 @@ of the entire telescope.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=0.8\columnwidth]{LBA-field.jpg}
+\includegraphics[width=70mm]{LBA-field.jpg}
 \end{center}
 \caption{A field with low-band antennas (dipoles).}
 \label{fig:lba-field}
@@ -110,7 +110,7 @@ The availability of sufficiently powerful supercomputers allows this.
 \label{fig:lofar-overview}
 \end{minipage}
 \hfill
-\begin{minipage}[b]{6cm}
+\begin{minipage}[b]{56mm}
 \includegraphics[width=\columnwidth]{map.jpg}
 \caption{Possible LOFAR layout.}
 \label{fig:map}
@@ -476,7 +476,7 @@ buffer differently to prevent them from overtaking each other.
 The bulk of the signal processing is done on the compute nodes, on which we
 elaborate in Section~\ref{sec:CNProc}.
 The resulting output data are sent back to the I/O~node.
-The second major task of the I/O~node application is the \emph{output section},
+The second major task of the I/O-node application is the \emph{output section},
 that handles output data.
 This task consists of four operations.
 
@@ -525,7 +525,7 @@ TLB\footnote{Translation Look-aside Buffer: a cache that caches
 virtual-to-physical address mappings --- indispensable for efficient virtual
 memory.} misses in hardware, but generates an interrupt and handles the fault
 in software.
-This is not a problem on the compute nodes, where the compute node kernels 
+This is not a problem on the compute nodes, where the compute-node kernels 
 map all memory using a few large pages, so that TLB misses do not occur.
 However, the I/O~nodes run a Linux kernel that typically uses a page size of
 4~KiB, generating a huge number of TLB-miss interrupts.
@@ -566,7 +566,7 @@ In practice, under normal circumstances, this rarely happens
 
 
 
-\section{Compute node processing}
+\section{Compute-node processing}
 \label{sec:CNProc}
 
 The bulk of the signal-processing computations take place on the compute nodes.
@@ -584,7 +584,7 @@ Figure~\ref{fig:cn-processing}.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{round-robin.pdf}
-\caption{Round robin processing of work over compute node cores.}
+\caption{Round-robin processing of work over compute-node cores.}
 \label{fig:round-robin}
 \end{figure}
 
@@ -725,7 +725,7 @@ data exchange.
 %to compensate for the fact that a celestial wave hits stations at different
 %times~\cite[Sec.~2.1]{Romein:06}.
 
-\begin{figure}[ht]
+\begin{figure}[t]
 \begin{center}
 \includegraphics[width=4cm]{delay.pdf}
 \end{center}
@@ -1239,7 +1239,7 @@ work load.
 The vertical axis shows the execution time to process one subband with
 1.007~second of station samples.
 
-Before comparing the performance of the three observation modes described
+Before presenting the performance of the three observation modes described
 above, we show how the performance scales with the number of stations.
 Figure~\ref{fig:cn-performance-func-stations} shows execution times for up to
 64~stations in a setting that is similar to observation mode~\textsf{B}.
@@ -1371,7 +1371,7 @@ correlator for e-VLBI observations, but is not capable of processing telescope
 data in real time~\cite{Kruithof:08}, even though the title of their paper suggests
 otherwise.
 
-In another paper, we compare the efficiency of five different many-core
+In another paper, we compare the efficiency of five many-core
 architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
 and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
@@ -1437,9 +1437,6 @@ A minor disadvantage is the omission of an integer-to-floating-point conversion
 instruction.
 Finally, the need to use assembly to obtain sufficient performance complicates
 programming; the gap with compiled C++ code is large.
-% eigenlijk zouden we het feit dat er geen instructie voor loating point conversie eerst
-% echt moeten uitleggen in het paper zelf. We moeten hier niet met nieuwe dingen op de proppen komen.
-% dit geldt ook een beetje voor het stroomverbruik, etc.
 
 To handle the high LOFAR station data rates, we use the I/O nodes in an
 unorthodox way: they run the part of the application software that takes care
@@ -1453,30 +1450,62 @@ achieve good real-time behavior.
 Special provisions were made to obtain fault tolerance against
 station, WAN link, and disk failures.
 
-Furthermore, We demonstrated that the correlator achieves extremely high performance,
-both computationally and with respect to I/O, due to the applied optimizations.
+Furthermore, we demonstrated that the correlator achieves exceptionally high
+performance, both computationally and with respect to I/O, due to the applied
+optimizations.
 The correlations are computed at 96\% of the FPU peak performance; other
 signal-processing functions perform impressively as well.
 The work distribution scheme is efficient but complex, due to the real-time
 requirements, the need to exchange data, and the avoidance of resource
 contention.
 
-Performance measurements show that, using only a \emph{single} Blue Gene/P rack, 
-we can handle even the most challenging
-observation modes that are currently foreseen.
-Up to 64~stations can be processed at the highest data rates that the
-stations can produce, which are 50\% beyond the requirements of the original
-LOFAR specifications. This is a fourfold performance increase,
-resulting in a major improvement in the
-effectiveness of the \emph{entire\/} telescope.
+%Performance measurements show that, using only a \emph{single} Blue Gene/P rack,
+%we can handle even the most challenging
+%observation modes that are currently foreseen.
+%Up to 64~stations can be processed at the highest data rates that the
+%stations can produce, which are 50\% beyond the requirements of the original
+%LOFAR specifications. This is a fourfold performance increase,
+
+We showed performance measurements for the most challenging observation modes
+that are currently foreseen.
+Due to the optimizations, we need only \emph{half the amount of planned
+resources\/} to process \emph{50\% more station data\/} than the LOFAR
+specifications require.
+The latter ability led to the decision to adjust the specifications, resulting
+in a major improvement in the effectiveness of the \emph{entire\/} telescope.
+
+%Performance measurements show that, due to the optimizations, we need only
+%\emph{half the amount of planned resources\/} to process \emph{50\% more
+%station data\/} than the LOFAR specifications require.
+%The latter ability led to the decision to adjust the specifications, resulting
+%in a major improvement in the effectiveness of the \emph{entire\/} telescope.
+
+%Thanks to the optimizations, we need only half the amount of planned resources
+%(one instead of two BG/P racks), even for the most challenging observation
+%modes.
+%In addition, performance measurements show that we can process 50\%
+%higher station data rates than the LOFAR specifications require.
+%This led to the decision to alter the specifications, resulting in a major
+%improvement in the effectiveness of the \emph{entire\/} telescope.
+
+%We showed performance measurements for the most challenging observation
+%modes that are currently foreseen, for up to 64~stations.
+%Due to all optimizations, we can do so on a \emph{single\/} rack, where
+%two racks were planned.
+%The ability to process 50\% more station data than the LOFAR specifications
+%require, led to the decision to alter the specifications, resulting in a major
+%improvement in the effectiveness of the \emph{entire\/} telescope.
 
 Traditionally, real-time telescope data are processed using customized hardware.
-However, LOFAR's innovative, dishless design, with many thousands of omni-directional antennas, allows
-new types of observations that need different processing pipelines.
-The required flexibility is obtained by using the \emph{software} presented in this paper.
-We are currently optimizing the pulsar pipelines that are functional, but not yet efficient enough.
+However, LOFAR's innovative, dishless design, with many thousands of
+omni-directional antennas, allows new types of observations that need different
+processing pipelines.
+The required flexibility is obtained by using the \emph{software\/} presented
+in this paper.
+For example, we have other functional pipelines for pulsar observations, that
+we are currently optimizing.
 Future work includes the integration of other processing pipelines,
-and possibly real-time RFI removal, and real-time calibration.
+real-time calibration, and possibly real-time RFI removal.
 %possibly real-time RFI rejection, and real-time calibration by means of a
 %feed-back loop that analyzes correlated data and corrects future station
 %samples.
@@ -1549,7 +1578,6 @@ and possibly real-time RFI removal, and real-time calibration.
 
 
 \section*{Acknowledgments}
-\begin{small}
 We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
 for their contributions to the LOFAR software.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
@@ -1557,14 +1585,12 @@ for their work on the Blue Gene system software.
 Bruce Elmegreen, Todd Inglet, Tom Liebsch, and Andrew Taufener from IBM
 provided the support to optimally use the BG/P.
 
-LOFAR is funded by the Dutch government in the BSIK programme for
+LOFAR is funded by the Dutch government in the BSIK program for
 interdisciplinary research for improvements of the knowledge
 infrastructure.  Additional funding is provided by the European Union,
 European Regional Development Fund (EFRO), and by the
-``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. This work was
-partially performed in the context of the NWO STARE AstroStream
-project.
-\end{small}
+``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
+performed in the context of the NWO STARE AstroStream project.
 
 \bibliographystyle{plain}
 \bibliography{lofar}
