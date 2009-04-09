@@ -293,7 +293,7 @@ Below, we describe the key features of the Blue Gene/P.
 More information can be found elsewhere~\cite{IBM:08}.
 
 Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
-processing power (including I/O nodes).
+processing power (including I/O~nodes).
 The system is built using SoC (System-on-a-Chip) technology that integrates
 all processing and networking functionality on a single die.
 One chip contains four PowerPC~450 cores, running at a modest 850~MHz clock
@@ -476,7 +476,7 @@ buffer differently to prevent them from overtaking each other.
 The bulk of the signal processing is done on the compute nodes, on which we
 elaborate in Section~\ref{sec:CNProc}.
 The resulting output data are sent back to the I/O~node.
-The second major task of the I/O-node application is the \emph{output section},
+The second major task of the I/O~node application is the \emph{output section},
 that handles output data.
 This task consists of four operations.
 
@@ -525,7 +525,7 @@ TLB\footnote{Translation Look-aside Buffer: a cache that caches
 virtual-to-physical address mappings --- indispensable for efficient virtual
 memory.} misses in hardware, but generates an interrupt and handles the fault
 in software.
-This is not a problem on the compute nodes, where the compute-node kernels 
+This is not a problem on the compute nodes, where the compute node kernels 
 map all memory using a few large pages, so that TLB misses do not occur.
 However, the I/O~nodes run a Linux kernel that typically uses a page size of
 4~KiB, generating a huge number of TLB-miss interrupts.
@@ -566,7 +566,7 @@ In practice, under normal circumstances, this rarely happens
 
 
 
-\section{Compute-node processing}
+\section{Compute node processing}
 \label{sec:CNProc}
 
 The bulk of the signal-processing computations take place on the compute nodes.
@@ -584,7 +584,7 @@ Figure~\ref{fig:cn-processing}.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{round-robin.pdf}
-\caption{Round robin processing of work over compute-node cores.}
+\caption{Round robin processing of work over compute node cores.}
 \label{fig:round-robin}
 \end{figure}
 
@@ -674,7 +674,7 @@ The BG/P, in contrast, uses DMA for the torus, allowing asynchronous
 communication.
 We re-implemented the data exchange using asynchronous point-to-point
 communication, that overlaps the communication over the torus network with 
-the data transfer from the I/O nodes to the compute nodes, and with
+the data transfer from the I/O~nodes to the compute nodes, and with
 the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
