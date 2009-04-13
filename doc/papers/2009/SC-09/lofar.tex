@@ -310,6 +310,12 @@ on the compute cores.  % TODO: tree is shared resource; mention?
 The compute nodes run a fast, simple, single-process kernel
 \emph{(Compute Node Kernel, CNK)},
 
+\begin{figure}[b]
+\includegraphics[width=\columnwidth]{pset.pdf}
+\caption{A pset.}
+\label{fig:pset}
+\end{figure}
+
 The BG/P contains several networks.
 A fast \emph{3-dimensional torus\/} connects all compute nodes and is used
 for point-to-point and all-to-all communications.
@@ -319,12 +325,6 @@ The \emph{collective network\/} is used for MPI collective operations,
 but also for external communication.
 A \emph{global interrupt network\/} provides support for fast barriers.
 Additional networks exist for initialization, diagnostics, and debugging.
-
-\begin{figure}[ht]
-\includegraphics[width=\columnwidth]{pset.pdf}
-\caption{A pset.}
-\label{fig:pset}
-\end{figure}
 
 Each compute node is connected to an I/O~node via the collective network
 (see Figure~\ref{fig:pset}).
@@ -337,7 +337,7 @@ is called a \emph{pset}.
 Our system has 160~psets in total, 64 per rack.
 Normally, the I/O~node is used as a black box that provides transparent
 communication from the compute nodes to external systems: all I/O-related
-system calls on the compute nodes are forwarded to a daemon program that runs
+system calls on the compute nodes are forwarded to a daemon that runs
 on the I/O~node and performs the real operation.
 In Section~\ref{sec:IONProc}, we show that it is much more
 efficient to run part of the application software on the I/O~node.
@@ -452,7 +452,7 @@ FCNP achieves link-speed bandwidths for large messages, due to
 its low overhead.
 The data are sent directly from the circular buffer without additional copying.
 In contrast to the UDP receive, one thread is sufficient to obtain the
-required throughput, thanks to the low host overhead of FCNP.
+required throughput, thanks to the low processing overhead of FCNP.
 
 The correlator typically processes in real time, but can also correlate
 pre-recorded data off-line, frequently used for experimental observations.
@@ -779,7 +779,7 @@ Therefore, the core stations will be grouped.
 Other uses of grouped, beam-formed stations are foreseen.
 
 This \emph{coherent\/} way of beam forming is a special case of the beam
-forming algorithms that are also used for pulsar observations.
+forming algorithms that are also used for pulsar and transient observations.
 With coherent beam forming, the (phase-corrected) complex samples from
 different stations are added.
 The applied phase correction determines the observation direction.
@@ -840,7 +840,7 @@ operations per cycle.
 Although the FIR filters, FFTs, delay compensation, and bandpass correction
 are conceptually separate, consecutive blocks, their implementations are
 highly interleaved to achieve better performance.
-This avoids that four separate passes over all data are made.
+This increases the efficiency of the L1~cache.
 Also, the data are laid out in memory in such a way that they are read
 consecutively as much as possible, allowing burst transfers through the
 cache hierarchy.
@@ -863,8 +863,8 @@ multiple other stations in the same loop iteration.
 For example, a sample from station~A in the X~polarization that is loaded into
 a register pair can be correlated with the X~and Y~polarizations of
 stations~B and~C, using it 4 times.
-In fact, it is used 8~times, since a correlation requires 2~complex, fused
-multiply-add instructions.
+In fact, it is used 8~times, since a complex multiply/accumulate requires two
+instructions.
 Figure~\ref{fig:correlation-triangle} shows how we correlate multiple
 stations at the same time.
 Each square represents the XX, XY, YX, and YY correlations of the stations
@@ -1132,8 +1132,11 @@ case, and use 48~stations.
 
 The I/O requirements are challenging, and the processing power on the I/O~nodes
 is limited.
-Figure~\ref{fig:ion-performance} shows where the processor cores of the
+Figure~\ref{fig:ion-performance} shows where the cores of the
 I/O~nodes spend their time in various situations.
+The five major tasks are each represented by a different color in the bar
+graph; the size of each bar is proportional to the contribution to the total
+work load.
 A load of 100\% means that all four cores are fully occupied.
 A load above 85\% must be avoided to prevent major data loss.
 
@@ -1195,21 +1198,16 @@ the 10~GbE network switches.
 The data loss is negligible to other places where data can be lost,
 (e.g., the flagger sometimes rejects tens of percents of the data due to RFI),
 and does not hurt the astronomical signal quality.
-With the I/O-related optimizations, we obtain bandwidths that are on a par
-with the achieved processing data rates.
-Unless the requirements change, sufficient bandwidth is obtained to support
-all observation modes on a single rack.
-If the need would arise to achieve even higher bandwidths, UDP packet receipt
-could be optimized by not using the \texttt{read()} system call interface,
+
+With the I/O-related optimizations, we obtain sufficient bandwidth to
+support all currently foreseen observation modes on a single rack.
+If the requirements would change and the need would arise to achieve even
+higher bandwidths, UDP packet receipt could be optimized by not using the
+\texttt{read()} system call interface,
 but by using another interface that reads the data directly from kernel buffers
 and does not enforce a (370~MiB/s!) kernel-to-user-space copy.
 Right now, we felt no need to implement the required kernel changes.
 Alternatively, the second rack could be used.
-%If future observation modes would require higher output data rates, we may
-%optimize the memory copy routines in the Linux kernel by using the
-%Blue-Gene-specific 16-byte load/store instructions, rather
-%than standard 4-byte PowerPC load/stores.
-%We think this will reduce the system time of I/O operations.
 
 
 \subsection{Performance on the Compute Nodes}
@@ -1233,9 +1231,6 @@ Alternatively, the second rack could be used.
 \end{figure}
 
 Figure~\ref{fig:cn-performance} shows how the compute nodes spend their time.
-The seven major tasks are each represented by a different color in the bar
-graph; the size of each bar is proportional to the contribution to the total
-work load.
 The vertical axis shows the execution time to process one subband with
 1.007~second of station samples.
 
@@ -1277,10 +1272,9 @@ the data exchange overhead by roughly a factor of four.
 The correlator is extremely efficient: it achieves 96\% of the FPU
 peak performance, thanks to the highly-optimized assembly code.  The
 FIR filter runs at 86\% of the peak performance, and the hand-crafted
-256-point FFT runs at 44\%.  Compared to ``Vienna'' FFTW, which
-achieves an already relatively high 34\% of the FPU peak performance,
-our hand-written FFT is about 34\% faster in absolute run
-time. Compared to equivalent C++ code that is written for clarity and
+256-point FFT runs at 44\%.  Compared to ``Vienna'' FFTW, which is already
+efficient, our hand-written FFT is about 34\% faster.
+Compared to equivalent C++ code that is written for clarity and
 not specifically tuned for optimal performance, the hand-written
 assembly code is typically an order of magnitude faster.
 
@@ -1293,9 +1287,10 @@ Due to all optimizations, the correlator can process 50\% more data than
 the specifications require, on only half the amount of planned resources.
 Only if the need to correlate more than 64~stations would ever arise, or if
 significant additional real-time signal processing would be needed, the
-second rack must be employed. We can exploit the compute power we saved to
-create more beams, or to move additional computational steps, such as flagging, calibration and imaging,
-to the online processing pipeline.
+second rack must be employed.
+We can exploit the compute power we saved to run other observation types
+simultaneously, or to do additional signal processing that improves the
+signal quality, such as real-time flagging and real-time calibration.
 
 
 \section{Astronomical results}
@@ -1316,7 +1311,7 @@ the vertical axis represents the 256~channels of one frequency subband.
 Each pixel corresponds to a (complex) correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
 The phase changes over time, due to the earth rotation that alters the
-relative position of the observed source(s) and thus the time difference
+relative position of the observed sources and thus the time difference
 between the two stations.
 The white spots are caused by RFI; these bad data are detected and
 ignored in the remainder of the processing pipeline.
@@ -1416,8 +1411,8 @@ We also think that the programming environment of the Blue Gene/P is a
 considerable improvement over its predecessor,
 and are pleased with the open programming interfaces.
 The power efficiency of the Blue Gene/P is good.
-The Cell BE is more energy efficient~\cite{Nieuwpoort:09}, but it does not incorporate a high-speed
-interconnect.
+The Cell BE is more energy efficient~\cite{Nieuwpoort:09}, but does not
+incorporate a high-speed interconnect.
 
 There are some disadvantages as well.
 Most notably, the separation of compute nodes and I/O~nodes, along with their
@@ -1579,7 +1574,8 @@ real-time calibration, and possibly real-time RFI removal.
 
 \section*{Acknowledgments}
 We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
-for their contributions to the LOFAR software.
+for their contributions to the LOFAR software, and many other colleagues
+for their work on the LOFAR telescope.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
 for their work on the Blue Gene system software.
 Bruce Elmegreen, Todd Inglet, Tom Liebsch, and Andrew Taufener from IBM
@@ -1591,6 +1587,8 @@ infrastructure.  Additional funding is provided by the European Union,
 European Regional Development Fund (EFRO), and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
 performed in the context of the NWO STARE AstroStream project.
+
+\newpage
 
 \bibliographystyle{plain}
 \bibliography{lofar}
