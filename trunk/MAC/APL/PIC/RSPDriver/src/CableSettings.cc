@@ -49,16 +49,16 @@ CableSettings* CableSettings::instance()
 CableSettings::CableSettings(const RCUCables*	cableObject)
 {
 	int	nrRCUs = StationSettings::instance()->nrRcus();
-	itsAtts.resize(nrRCUs, NR_RCU_MODES);
-	itsDelays.resize(nrRCUs, NR_RCU_MODES);
+	itsAtts.resize(nrRCUs, NR_RCU_MODES+1);
+	itsDelays.resize(nrRCUs, NR_RCU_MODES+1);
 
 	// Construct arrays cantaining with the smallest Atts and delays that are possible.
 	for (int	mode = 0; mode <= NR_RCU_MODES; mode++) {
-		float	smallestAtt   = cableObject->getSmallestAtt(mode);
-		float	smallestDelay = cableObject->getSmallestDelay(mode);
+		float	largestAtt   = cableObject->getLargestAtt(mode);
+		float	largestDelay = cableObject->getLargestDelay(mode);
 		for (int	rcu = 0; rcu < nrRCUs; rcu++) {
-			itsAtts  (rcu, mode) = cableObject->getAtt  (rcu,mode) - smallestAtt;
-			itsDelays(rcu, mode) = cableObject->getDelay(rcu,mode) - smallestDelay;
+			itsAtts  (rcu, mode) = largestAtt   - cableObject->getAtt  (rcu,mode);
+			itsDelays(rcu, mode) = largestDelay - cableObject->getDelay(rcu,mode);
 		}
 	}
 
