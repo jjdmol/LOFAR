@@ -1,0 +1,3 @@
+gnu.compiler.conf: CXX="$CCACHE /usr/bin/g++" --with-cppflags='-I/usr/java/default/include -I/usr/java/default/include/linux'
+gnu.compiler.aipspp.var: --with-casacore=/usr/local/casacore
+gnu.compiler.sse.var:    --with-sse
