@@ -40,10 +40,10 @@ int main (int	argc, char*	argv[])
 	RCUCables	RC1("tRCUCables.in_CableAtts", "tRCUCables.in_1");
 	// Note: test it in 4 loops iso 1 because the results are easier to interpret than.
 	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
-		LOG_DEBUG_STR("Smallest delay for mode  " << rcuMode << ": " << RC1.getSmallestDelay(rcuMode));
+		LOG_DEBUG_STR("Largest delay for mode   " << rcuMode << ": " << RC1.getLargestDelay(rcuMode));
 	}
 	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
-		LOG_DEBUG_STR("Smallest atten for mode  " << rcuMode << ": " << RC1.getSmallestAtt  (rcuMode));
+		LOG_DEBUG_STR("Largest atten for mode   " << rcuMode << ": " << RC1.getLargestAtt  (rcuMode));
 	}
 	for (int rcuMode = 0; rcuMode <= 7; rcuMode++) {
 		LOG_DEBUG_STR("Delay for RCU 5 in mode " << rcuMode << ": " << RC1.getDelay(5, rcuMode));
