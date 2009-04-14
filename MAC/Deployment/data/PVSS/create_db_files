@@ -26,7 +26,7 @@
 #
 # $Id$
 #
-VERSION="v1.0"
+VERSION="v2.0"
 
 #
 # SyntaxError msg
@@ -37,13 +37,13 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-d destdir] [-o observation] [-s station]"
-	echo "Syntax: $(basename $0) [-d destdir] [-o observation] [-S]"
+	echo "Syntax: $(basename $0) [-d destdir] [-o observation] [-s station | -C]"
 	echo "    destdir      Relative directory where the resultfiles are placed."
 	echo "    observation  Name of an observation. When omitted the datapoints"
 	echo "                 for the permanent software are generated."
 	echo "    station      Name of the station. When omitted the datapoints"
 	echo "                 for the main database are generated."
+	echo "    -C           CEP datapoints are created (overrules -s)"
 	echo ""
 	exit 1
 }
@@ -116,6 +116,277 @@ labelize()
 	echo $1 | sed "s/[A-Z][a-z]/_&/g" | sed "s/^_//" | sed "s/\./_/g" | \
 		awk '{ print toupper($1) }'
 }
+
+#
+# substitute_adder
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_adder()
+{
+	awk '
+	{
+		hasAdder=index($1,"@adder@");
+		if (hasAdder > 0) {
+			for (adNr = 0; adNr < 256; adNr++) {  
+				printf "Adder%d	%s\n", adNr, $2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_inputbuffer
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_inputbuffer()
+{
+	awk '
+	{
+		hasInputBuffer=index($1,"@inputbuffer@");
+		if (hasInputBuffer > 0) {
+			for (ibNr = 0; ibNr < 128; ibNr++) {  
+				printf "InputBuffer%d	%s\n", ibNr, $2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_BGP
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_BGP()
+{
+	awk '
+	{
+		hasBGP=index($1,"@bgp@");
+		if (hasBGP > 0) {
+			for (bgp=0; bgp<2; bgp++) {
+				dpname=$1;
+				sub("@bgp@", "BGP"bgp, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_BGP_midplane
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_BGP_midplane()
+{
+	awk '
+	{
+		hasBGPMid=index($1,"@bgp@_@midplane@");
+		if (hasBGPMid > 0) {
+			for (midplane=0; midplane<4; midplane++) {
+				dpname=$1;
+				bgp=int(midplane/2)
+				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_BGP_midplane
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_BGP_midplane()
+{
+	awk '
+	{
+		hasBGPMid=index($1,"@bgp@_@midplane@");
+		if (hasBGPMid > 0) {
+			for (midplane=0; midplane<4; midplane++) {
+				dpname=$1;
+				bgp=int(midplane/2)
+				sub("@bgp@_@midplane@", "BGP"bgp"_Midplane"midplane, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+#
+# substitute_BGP_midplane_ionode		# Adder and InputBuffer need an _mp and _dt also, and logMsg set
+		if [ "${dpt}" == "Adder" ];then
+			echo "DpName	TypeName	ID"
+			echo "_mp_${dpt}	${dpt}	0"
+			echo "_dt_${dpt}	_DynamicDatapoints	0"
+			echo ""
+			echo "ElementName	TypeName	_original.._value	_original.._status"
+			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
+			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
+			echo ""
+
+			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
+			echo ""
+		fi
+
+		if [ "${dpt}" == "InputBuffer" ];then
+			echo "DpName	TypeName	ID"
+			echo "_mp_${dpt}	${dpt}	0"
+			echo "_dt_${dpt}	_DynamicDatapoints	0"
+			echo ""
+		   	echo "ElementName	TypeName	_original.._value	_original.._status"
+			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
+			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
+			echo ""
+
+			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
+			echo ""
+		fi
+
+
+
+
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_BGP_midplane_ionode()
+{
+	awk  '
+	{
+		hasBGPMidIONode=index($1,"@bgp@_@midplane@_@ionode@");
+		if (hasBGPMidIONode > 0) {
+			for (ionode=0; ionode<128; ionode++) {
+				dpname=$1;
+				bgp=int(ionode/64)
+				midplane=int(ionode/32)
+				sub("@bgp@_@midplane@_@ionode@", "BGP"bgp"_Midplane"midplane"_IONode"ionode, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_osrack
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_osrack()
+{
+	awk '
+	{
+		hasOSRack=index($1,"@osrack@");
+		if (hasOSRack > 0) {
+			for (osr=0; osr<4; osr++) {
+				dpname=$1;
+				sub("@osrack@", "OSRack"osr, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+#
+# substitute_osrack_ossubcluster
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_osrack_ossubcluster()
+{
+	awk '
+	{
+		hasOSRSub=index($1,"@osrack@_@ossubcluster@");
+		if (hasOSRSub > 0) {
+			for (osrsub=0; osrsub<8; osrsub++) {
+				dpname=$1;
+				osrack=int(osrsub/2)
+				sub("@osrack@_@ossubcluster@", "OSRack"osrack"_OSSubcluster"osrsub, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_osrack_ossubcluster_offlinenode
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_osrack_ossubcluster_offlinenode()
+{
+	awk  '
+	{
+		hasOSRSubOff=index($1,"@osrack@_@ossubcluster@_@offlinenode@");
+		if (hasOSRSubOff > 0) {
+			for (offnode=0; offnode<128; offnode++) {
+				dpname=$1;
+				osrack=int(offnode/18)
+				ossub=int(offnode/9)
+				sub("@osrack@_@ossubcluster@_@offlinenode@", "OSRack"osrack"_OSSubcluster"ossub"_OfflineNode"offnode, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_osrack_ossubcluster_storagenode
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_osrack_ossubcluster_storagenode()
+{
+	awk  '
+	{
+		hasOSRSubStor=index($1,"@osrack@_@ossubcluster@_@storagenode@");
+		if (hasOSRSubStor > 0) {
+			for (stornode=0; stornode<128; stornode++) {
+				dpname=$1;
+				osrack=int(stornode/6)
+				ossub=int(stornode/3)
+				sub("@osrack@_@ossubcluster@_@storagenode@", "OSRack"osrack"_OSSubcluster"ossub"_StorageNode"stornode, dpname)
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+
+
 
 #
 # substitute_antenna
@@ -473,6 +744,7 @@ substitute_instancenr()
 	} '
 }
 
+
 #
 # number_dps
 #
@@ -493,8 +765,10 @@ number_dps()
 #
 # create_dpt_file inputfile dbtype
 #
+
 create_dpt_file()
 {
+
 	rm -f ${ERRORFILE}
 
 	(
@@ -524,13 +798,27 @@ create_dpt_file()
 			echo "	status	41#2:ObjectStatus"
 			let count=count+1
 		fi
+		# Adder and InputBuffer need an ObjectStatus && ProcessStatus element
+		if [ "${dpt}" == "Adder" ];then
+			echo "	status	41#2:ObjectStatus"
+		  	echo "	process	41#3:ProcessStatus"
+			let count=count+2
+		fi
+
+		if [ "${dpt}" == "InputBuffer" ];then
+			echo "	status	41#2:ObjectStatus"
+		  	echo "	process	41#3:ProcessStatus"
+			let count=count+2
+		fi
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
-			echo "	process	41#3:ProcessStatus"
-			let count=count+1
+			if [[ ${dpt} != *Observation ]]; then
+				echo "	process	41#3:ProcessStatus"
+				let count=count+1
+			fi
 		fi
 
 		if [ -f ${dpt}.dpdef ]; then
@@ -642,10 +930,20 @@ create_dp_file()
 				substitute_observation | \
 				substitute_instancenr | \
 				substitute_antenna | \
+				substitute_adder | \
+				substitute_inputbuffer | \
+				substitute_BGP_midplane_ionode | \
+				substitute_BGP_midplane | \
+				substitute_BGP | \
+				substitute_osrack_ossubcluster_storagenode | \
+				substitute_osrack_ossubcluster_offlinenode | \
+				substitute_osrack_ossubcluster | \
+				substitute_osrack | \
 				sort -k1,1 |\
 				number_dps >>${DESTDIR}/${DP_FILE}
 
 	# Setup the values of the antenna datapoints
+
 	if [ $3 == "P" ]; then
 		if [ $NRLBAS -gt 0 -o $NRHBAS -gt 0 ]; then
 		(
@@ -708,6 +1006,26 @@ create_dp_file()
 		# if software then create an hourarchive for the logMsg in the MasterDataPoint
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
+			if [[ ${dpt} != *Observation ]]; then
+				echo "ElementName	TypeName	_original.._value	_original.._status"
+				echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
+				echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
+				echo ""
+
+				echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
+				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
+				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
+				echo ""
+			fi
+		fi
+
+
+		# Adder and InputBuffer need an _mp and _dt also, and logMsg set
+		if [ "${dpt}" == "Adder" ];then
+			echo "DpName	TypeName	ID"
+			echo "_mp_${dpt}	${dpt}	0"
+			echo "_dt_${dpt}	_DynamicDatapoints	0"
+			echo ""
 			echo "ElementName	TypeName	_original.._value	_original.._status"
 			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
 			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
@@ -718,6 +1036,26 @@ create_dp_file()
 			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
 			echo ""
 		fi
+
+		if [ "${dpt}" == "InputBuffer" ];then
+			echo "DpName	TypeName	ID"
+			echo "_mp_${dpt}	${dpt}	0"
+			echo "_dt_${dpt}	_DynamicDatapoints	0"
+			echo ""
+		   	echo "ElementName	TypeName	_original.._value	_original.._status"
+			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
+			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
+			echo ""
+
+			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
+			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
+			echo ""
+		fi
+
+
+
+
 	done >>${DESTDIR}/${DPT_FILE}
 
 	echo "created: ${DESTDIR}/${DP_FILE}"
@@ -800,7 +1138,7 @@ create_cpp_headerfile()
 
 #------------------------------ MAIN program ------------------------------
 #
-# Syntax: create_db_files [-d destdir] [-o observation] [-s station]
+# Syntax: create_db_files [-d destdir] [-o observation] [-s station | -C]
 #
 
 # setup defaults
@@ -812,8 +1150,8 @@ DBTYPENAME=Main
 DBTYPE=M
 STNNAME="Station"
 
-argv=`getopt "d:o:s:Sh" $*`		# reformat arguments
-#eval set argv=`getopt "d:o:s:Sh" $*`		# reformat arguments
+argv=`getopt "d:o:s:Ch" $*`		# reformat arguments
+#eval set argv=`getopt "d:o:s:Ch" $*`		# reformat arguments
 #shift
 while [ -n "$1" -a "$1" != "--" ]
 do
@@ -833,14 +1171,15 @@ do
 			DBTYPE=S
 			shift 2
 			;;
-		-S) DBTYPENAME=Station
-			DBTYPE=S
+		-C) DBTYPENAME=CEP
+			DBTYPE=C
 			shift 1
 			;;
 		-h) SyntaxError
 			;;
 		*) SyntaxError
 			;;
+
 	esac
 done
 shift				# remove '--'
@@ -867,9 +1206,14 @@ RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
-let NRRSPBOARDS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $7 }'`
-let NRLBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $9 }'`
-let NRHBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $10 }'`
+let NRRSPBOARDS=0
+let NRLBAS=0
+let NRHBAS=0
+if [ "${DBTYPE}" == "S" ]; then
+	let NRRSPBOARDS=`grep -s ${STNNAME}[[:space:]]  ${STATIONINFOFILE} | awk '{ print $7 }'`
+	let NRLBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $9 }'`
+	let NRHBAS=`grep -s ${STNNAME}[[:space:]] ${STATIONINFOFILE} | awk '{ print $10 }'`
+fi
 
 # create the desired files
 create_dpt_file ${INPUTFILE} ${DBTYPE} ${DPTYPE}
