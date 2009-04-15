@@ -14,43 +14,31 @@ PNG_SOURCES =
 STY_SOURCES =	
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-GEN_EPS_FILES =	$(FIG_SOURCES:%.fig=%.eps) $(JGR_SOURCES:%.jgr=%.eps) $(JPG_SOURCES:%.jpg=%.eps) $(PNG_SOURCES:%.png=%.eps)
+FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)
 EPS_FILES =	$(GEN_EPS_FILES) ionode-load.eps
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
-GEN_FILES =	$(AUX_FILES) $(GEN_EPS_FILES) $(GEN_EXT:%=fcnp.%) mfput.log\
+GEN_FILES =	$(AUX_FILES) $(FIGURES) $(GEN_EXT:%=fcnp.%) mfput.log\
 		missfont.log texput.log
 
 TEXINPUTS =	inputs:.:
 TEXFONTS =	:
 
-%.eps:		%.jgr
-		jgraph $< >$@
+%.pdf:		%.jgr
+		jgraph $< | epstopdf --filter >$@
 
-%.eps:		%.fig
-		fig2dev -L eps $< $@
+%.pdf:		%.fig
+		fig2dev -L pdf $< $@
 
-%.eps:		%.jpg
-		convert $< $@
-
-%.eps:		%.png
-		convert $< $@
-
-fcnp.dvi:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(EPS_FILES)
-		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) latex fcnp
+fcnp.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES) ionode-load.pdf
+		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
 		bibtex fcnp
-		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) latex fcnp
-		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) latex fcnp
+		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
+		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
 
 fcnp.ps:	fcnp.dvi
-		#dvips -t a4 -f $< >$@
-		dvips -t letter -f $< >$@
-
-fcnp.pdf:	fcnp.ps
-		ps2pdf $< $@
-
-xdvi::		fcnp.dvi
-		MFINPUTS=`pwd`/mf: xdvi -thorough -s 7 -paper a4 $<
+		#pdftops -t letter -f $< >$@
+		pdftops -t a4 -f $< >$@
 
 evince::	fcnp.pdf
 		evince $<
