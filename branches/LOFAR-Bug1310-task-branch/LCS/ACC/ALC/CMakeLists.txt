@@ -28,15 +28,26 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Tools)
+project(ALC)
+set(PACKAGE_VERSION 2.1)
+set(ALC_DEPENDENCIES Common Blob Transport)
+
 include(LofarGeneral)
+include(LofarPackageVersion)
 
 ## ---------------------------------------------------------------------------
-## Generate configuration-specific header file
+## External packages
+## ---------------------------------------------------------------------------
+include(LofarFindPackage)
+
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
+add_subdirectory(include/ALC)
 add_subdirectory(src)
+add_subdirectory(test EXCLUDE_FROM_ALL)

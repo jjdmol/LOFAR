@@ -7,7 +7,7 @@ using namespace LOFAR::ACC::PLC;
 
 #define NAME_TEST(cmd)	cout <<	"value: " << (cmd) << " = " << PCCmdName(cmd) << endl;
 
-int main (int /*argc*/, char /* *argv[]*/) {
+int main (int /*argc*/, char** /*argv*/) {
 	NAME_TEST(PCCmdNone);
 	NAME_TEST(PCCmdBoot);
 	NAME_TEST(PCCmdQuit);

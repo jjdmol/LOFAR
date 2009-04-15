@@ -28,15 +28,26 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Tools)
+project(Stream)
+set(PACKAGE_VERSION 0.1)
+set(Stream_DEPENDENCIES Common)
+
 include(LofarGeneral)
+include(LofarPackageVersion)
 
 ## ---------------------------------------------------------------------------
-## Generate configuration-specific header file
+## External packages
+## ---------------------------------------------------------------------------
+include(LofarFindPackage)
+
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
+add_subdirectory(include/Stream)
 add_subdirectory(src)
+add_subdirectory(test EXCLUDE_FROM_ALL)

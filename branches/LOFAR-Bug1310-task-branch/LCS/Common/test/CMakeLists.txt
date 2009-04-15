@@ -25,8 +25,6 @@ set (CHECK_PROGRAMS
   tBacktrace
 )
 
-message(STATUS "[LCS/Common/test] LOFAR_LIBRARIES = ${LOFAR_LIBRARIES}")
-
 add_executable(testLogger testLogger.cc)
 add_executable(tAllocator tAllocator.cc)
 add_executable(tDataConvert tDataConvert.cc)

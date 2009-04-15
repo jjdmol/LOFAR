@@ -39,6 +39,7 @@ include(LofarPackageVersion)
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
+lofar_find_package(aipspp 0 "casa/aips.h" "casa_casa")
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

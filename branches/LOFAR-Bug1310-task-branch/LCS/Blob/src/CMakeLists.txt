@@ -44,6 +44,7 @@ flex_target(KeyTokenize KeyTokenize.ll
 add_flex_bison_dependency(KeyTokenize KeyParse)
 
 set(blob_LIB_SRCS
+  Package__Version.cc
   BlobAipsIO.cc
   BlobArray.cc
   BlobField2.cc
@@ -67,6 +68,7 @@ set(blob_LIB_SRCS
   KeyValueMap.cc)
 
 set(blob_PROGRAMS
+  versionblob
 )
 
 add_library(blob ${blob_LIB_SRCS})
@@ -78,4 +80,3 @@ foreach(prog ${blob_PROGRAMS})
   target_link_libraries(${prog} blob ${LOFAR_LIBRARIES})
   install(TARGETS ${prog} DESTINATION bin)
 endforeach(prog ${blob_PROGRAMS})
-

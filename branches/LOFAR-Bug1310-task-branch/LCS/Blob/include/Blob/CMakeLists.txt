@@ -1,5 +1,6 @@
 # List of header files that will be installed.
 set (inst_HEADERS
+  Package__Version.h
   BlobAipsIO.h
   BlobArray.h
   BlobArray.tcc
