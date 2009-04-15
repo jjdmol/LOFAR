@@ -1,17 +1,21 @@
+set(amcimpl_LIB_SRCS
+  Package__Version.cc
+  ConverterImpl.cc
+  ConverterProcess.cc
+  ConverterServer.cc
+)
 
-## ------------------------------------------------------------------------------
-## Build the library
+set(amcimpl_PROGRAMS
+  versionamcimpl
+  AMCServer
+  WGS84toITRF)
 
-file (GLOB libamcimpl_SOURCES *.cc)
+add_library(amcimpl ${amcimpl_LIB_SRCS})
+target_link_libraries(amcimpl common transport amcbase ${LOFAR_LIBRARIES})
+install(TARGETS amcimpl DESTINATION ${LOFAR_LIBDIR})
 
-add_library (amcimpl ${libamcimpl_SOURCES})
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS amcimpl
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
-
+foreach(prog ${amcimpl_PROGRAMS})
+  add_executable(${prog} ${prog}.cc)
+  target_link_libraries(${prog} amcimpl ${LOFAR_LIBRARIES})
+  install(TARGETS ${prog} DESTINATION bin)
+endforeach(prog ${amcimpl_PROGRAMS})
