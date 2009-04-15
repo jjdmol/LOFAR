@@ -230,19 +230,19 @@ int	main(int argc, char *argv[])
 	int		caps;
 	int		ch;
 
-	printf("(This version has been compiled"
-#ifdef __linux__
-	       " on Linux %s\n", UTS_RELEASE
-#endif
-	       );
-	printf(" using "
-#if !defined(__GNU_LIBRARY__) || __GNU_LIBRARY__ < 6
-	       "an old C library (not glibc-2.x)"
-#else
-	       "glibc-%d.%d",
-	       __GLIBC__, __GLIBC_MINOR__
-#endif
-	       );
+//	printf("(This version has been compiled"
+//#ifdef __linux__
+//	       " on Linux %s\n", UTS_RELEASE
+//#endif
+//	       );
+//	printf(" using "
+//#if !defined(__GNU_LIBRARY__) || __GNU_LIBRARY__ < 6
+//	       "an old C library (not glibc-2.x)"
+//#else
+//	       "glibc-%d.%d",
+//	       __GLIBC__, __GLIBC_MINOR__
+//#endif
+//	       );
 	uname(&un);
 	printf(". Now running %s %s)\n", un.sysname, un.release);
 	parm.mode = PPS_TSFMT_TSPEC;	/* set default flags */
