@@ -30,15 +30,16 @@ TEXFONTS =	:
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
 
+%.ps:		%.pdf
+		#pdftops -paper letter $<
+		pdftops -paper A4 $<
+
+
 fcnp.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES) ionode-load.pdf
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
 		bibtex fcnp
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
-
-fcnp.ps:	fcnp.dvi
-		#pdftops -t letter -f $< >$@
-		pdftops -t a4 -f $< >$@
 
 evince::	fcnp.pdf
 		evince $<
