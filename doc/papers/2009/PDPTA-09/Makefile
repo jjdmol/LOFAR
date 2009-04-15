@@ -11,11 +11,12 @@ JPG_SOURCES =	station.jpg
 
 PNG_SOURCES =	
 
+SVG_SOURCES =	ionode-load.svg
+
 STY_SOURCES =	
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)
-EPS_FILES =	$(GEN_EPS_FILES) ionode-load.eps
+FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
 GEN_FILES =	$(AUX_FILES) $(FIGURES) $(GEN_EXT:%=fcnp.%) mfput.log\
@@ -30,12 +31,15 @@ TEXFONTS =	:
 %.pdf:		%.fig
 		fig2dev -L pdf $< $@
 
+%.pdf:		%.svg
+		convert $< $@
+
 %.ps:		%.pdf
 		#pdftops -paper letter $<
 		pdftops -paper A4 $<
 
 
-fcnp.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES) ionode-load.pdf
+fcnp.pdf:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(FIGURES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
 		bibtex fcnp
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) pdflatex fcnp
@@ -48,4 +52,4 @@ lpr::		fcnp.ps
 		lpr $<
 
 clean::
-		rm -f $(GEN_FILES)
+		rm -f $(GEN_FILES:ionode-load.pdf=)
