@@ -60,8 +60,9 @@ b) This test suite uses different types of test scripting:
       LOFAR-ASTRON-MEM-186. The Python / rspctl test scripts run rather slow,
       about a factor 2 slower than a comparable TCL / C test script.
   - Stand alone Python scripts
-    . e.g.: python i2c_spy.py
+    . e.g.: python i2c_spu.py, i2c_td.py
     . suitable for simple tests without argument passing
+    . test pass/fail and logging avaiable via testlog.py 
   - BASH shell scripts
     . e.g.: ./rsp_version.sh
   
@@ -209,14 +210,16 @@ a) The testcases in tc/ are ran using verify.py. The test results are reported
 b) The following test scripts are available in tc/, they are more or less plain,
    manual translations from TCL test cases:
 
-  - empty.py   = empty, can be used to try verify.py
-  - prsg.py    = TC 5.10, capture RCU PSRG data
-  - serdes.py  = TC 3.8, serdes ring test
-  - status.py  = TC 11.1, read RSP status register
-  - spustat.py = TC 9.6, read SPU sensor status <=> 'rspctl --spustat'
-  - tdstat.py  = TC 9.1, read TD sensor status <=> 'rspctl --tdstat' 
-  - hba_client = TC 5.42, read or write to a HBA client register at the RCU
-  - hba_server = TC 5.43, read or write to a HBA server register at the tile
+  - empty.py     = empty, can be used to try verify.py
+  - prsg.py      = TC 5.10, capture RCU PSRG data
+  - serdes.py    = TC 3.8, serdes ring test
+  - status.py    = TC 11.1, read RSP status register
+  - spustat.py   = TC 9.6, read SPU sensor status <=> 'rspctl --spustat'
+  - tdstat.py    = TC 9.1, read TD sensor status <=> 'rspctl --tdstat' 
+  - hba_client   = TC 5.42, read or write to a HBA client register at the RCU
+  - hba_server   = TC 5.43, read or write to a HBA server register at the tile
+  - rad_lanemode = TC 5.24, write or read the lane mode for the SERDES lanes
+  - rad_latency  = TC 5.49, show latency of data frames on the SERDES lanes
 
 c) 'rspctl --readblock' and 'rspctl --writeblock'
 
