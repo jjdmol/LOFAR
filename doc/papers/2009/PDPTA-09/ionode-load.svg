@@ -14,7 +14,7 @@
    id="svg2"
    sodipodi:version="0.32"
    inkscape:version="0.46"
-   sodipodi:docname="drawing.svg"
+   sodipodi:docname="ionode-load.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape">
   <defs
      id="defs4">
@@ -81,17 +81,17 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.94"
-     inkscape:cx="1467.1136"
+     inkscape:cx="1484.7769"
      inkscape:cy="270.92783"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:window-width="2112"
+     inkscape:window-width="1823"
      inkscape:window-height="920"
-     inkscape:window-x="138"
-     inkscape:window-y="79">
+     inkscape:window-x="0"
+     inkscape:window-y="0">
     <sodipodi:guide
        orientation="0,1"
        position="422.72727,1325"
@@ -356,7 +356,7 @@
          y="578.07648" /></text>
     <text
        xml:space="preserve"
-       style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Sans;-inkscape-font-specification:Sans"
+       style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Sans;-inkscape-font-specification:Sans"
        x="1600"
        y="606.64789"
        id="text3386"
@@ -365,36 +365,36 @@
          id="tspan3388"
          x="1600"
          y="606.64789"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">UDP/IP receipt (kernel)</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">UDP/IP receipt (kernel)</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="682.24786"
+         y="682.80786"
          id="tspan3400"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">UDP packet to cirular buffer copy</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">UDP packet to cirular buffer copy</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="757.8479"
+         y="758.9679"
          id="tspan3402"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">FCNP send to compute node</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">FCNP send to compute node</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="833.44788"
+         y="835.12787"
          id="tspan3404"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">FCNP receive from I/O node</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">FCNP receive from compute node</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="909.04791"
+         y="911.2879"
          id="tspan3406"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">TCP/IP send to storage (kernel)</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">TCP/IP send to storage (kernel)</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="984.64789"
+         y="987.44788"
          id="tspan3408"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">idle</tspan><tspan
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans">idle</tspan><tspan
          sodipodi:role="line"
          x="1600"
-         y="1060.2479"
+         y="1063.6079"
          id="tspan3390"
-         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136%;writing-mode:lr;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans" /></text>
+         style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:136.00000143%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans" /></text>
   </g>
 </svg>
