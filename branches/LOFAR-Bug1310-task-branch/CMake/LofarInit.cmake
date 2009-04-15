@@ -105,7 +105,8 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   endif(LOFAR_BUILD_VARIANTS MATCHES ${var})
 
   # Define all the available build types. 
-  set(CMAKE_CONFIGURATION_TYPES ${LOFAR_BUILD_VARIANTS})
+  set(CMAKE_CONFIGURATION_TYPES ${LOFAR_BUILD_VARIANTS} CACHE INTERNAL
+    "Specify the available build types" FORCE)
 
   # Set the correct build type. The build type influences which compiler flags
   # will be supplied by CMake (see below).

@@ -40,7 +40,7 @@ function(lofar_find_package _package)
 
     # Set CMAKE_PREFIX_PATH; used by the find_xxx() commands for searching.
     if(DEFINED ${_PKG}_PREFIX_PATH)
-      set(CMAKE_PREFIX_PATH ${_PKG}_PREFIX_PATH)
+      set(CMAKE_PREFIX_PATH ${${_PKG}_PREFIX_PATH})
     else(DEFINED ${_PKG}_PREFIX_PATH)
       lofar_search_path(_prefix_path ${_pkg})
       set(CMAKE_PREFIX_PATH ${_prefix_path})

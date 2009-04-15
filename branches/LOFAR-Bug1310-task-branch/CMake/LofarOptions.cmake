@@ -41,7 +41,7 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   ## --------------------------------------------------------------------------
 
   if(USE_AIPSPP)
-    lofar_find_package(CasaCore)
+#    lofar_find_package(CasaCore)
   endif(USE_AIPSPP)
   
   if(USE_BACKTRACE)

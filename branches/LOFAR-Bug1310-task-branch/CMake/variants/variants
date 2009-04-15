@@ -72,7 +72,7 @@ set(LOFAR_OPTIONS
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_TESTING     "Build the testing tree" ON)
 option(LOFAR_VERBOSE_CONFIGURE "Be verbose when configuring" ON)
-option(USE_AIPSPP        "Use AIPS++"    OFF)
+option(USE_AIPSPP        "Use AIPS++"    ON)
 option(USE_BACKTRACE     "Use backtrace" OFF)
 #option(USE_BOOST         "Use Boost"     ON)
 option(USE_LOG4CPLUS     "Use Log4Cplus" ON)

@@ -4,7 +4,7 @@ include(LofarMacros)
 # First check to see whether we need to update our CMakeLists.txt files.
 
 # Generate version program source file
-execute_process(COMMAND ${CMAKE_MODULE_PATH}/makeversion 1
+execute_process(COMMAND ${CMAKE_MODULE_PATH}/makeversion
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   RESULT_VARIABLE result)
 if(result)
