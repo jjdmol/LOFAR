@@ -27,10 +27,14 @@ def getStationList():
 #
 # MAIN
 #
-if __name__ == '__main__':    
+if __name__ == '__main__':
+    print "Connecting to database coordtest"
     db = pg.connect(user="postgres", host="dop50", dbname="coordtest")
 
     for station in getStationList():
+        print findStationInfo(station)
+        if (len(findStationInfo(station)) < 12):
+            continue
         (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
         print "updating %s to the coordinate database" % station
         for lba in xrange(0, int(nrLBA)):

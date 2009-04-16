@@ -24,13 +24,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/KVT_Protocol.ph>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
 #include <OTDB/ClassifConv.h>
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeValue.h>
@@ -38,7 +38,6 @@
 #include "../Package__Version.h"
 
 namespace LOFAR {
-  using namespace APLCommon;
   using namespace MACIO;
   using namespace OTDB;
   namespace GCF {

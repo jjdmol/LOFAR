@@ -95,11 +95,15 @@ private:
 	typedef		map<string, obsInfo*>::iterator		OMiter;
 	OMiter					itsCurrentObs;			// Obs currently handled by claimMgr.
 
-	ClaimMgrTask*			itsClaimMgrTask;		// Pointer to claimMgr.
-	GCFITCPort*				itsITCPort;				// Answer back from CMtask.
-   	GCFTimerPort*			itsHeartBeat;			// 1 second tick
-   	GCFTimerPort*			itsTimerPort;			// general purpose timer
+	ClaimMgrTask*	itsClaimMgrTask;		// Pointer to claimMgr.
+	GCFITCPort*		itsITCPort;				// Answer back from CMtask.
+   	GCFTimerPort*	itsHeartBeat;			// 1 second tick
+   	GCFTimerPort*	itsTimerPort;			// general purpose timer
 
+	int				itsNrLBAs;				// nr LBA antennas on this station
+	int				itsNrHBAs;				// nr HBA antennas on this station
+	int				itsNrRSPs;				// nr RSPboards on this station
+	bool			itshasSplitters;		// station has splitter boards.
 
 };
 

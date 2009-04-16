@@ -21,7 +21,6 @@ libaplcommon_la_SOURCES   = Package__Version.cc \
 							Controller_Protocol.cc \
 							APLUtilities.cc \
 							ControllerDefines.cc \
-							StationInfo.cc \
 							CTState.cc \
 							ControllerAdmin.cc \
 							ChildControl.cc \

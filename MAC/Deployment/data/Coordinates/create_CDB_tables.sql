@@ -54,9 +54,9 @@ CREATE TABLE reference_coord (
 	measure_date	DATE			NOT NULL,
 	abs_reference	VARCHAR(20),
 	derived_from	TEXT,
-	person1			VARCHAR(30)		NOT NULL REFERENCES personnel(name),
-	person2			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
-	person3			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
+	person1			VARCHAR(40)		NOT NULL REFERENCES personnel(name),
+	person2			VARCHAR(40)		REFERENCES personnel(name) MATCH SIMPLE,
+	person3			VARCHAR(40)		REFERENCES personnel(name) MATCH SIMPLE,
 	comment			TEXT,
 	
 	CONSTRAINT	reference_coord_uniq	UNIQUE(ID,measure_date)
@@ -79,8 +79,8 @@ CREATE TABLE transformation (
 	Rx				FLOAT8			NOT NULL,
 	Ry				FLOAT8			NOT NULL,
 	Rz				FLOAT8			NOT NULL,
-	person1			VARCHAR(30)		NOT NULL REFERENCES personnel(name),
-	person2			VARCHAR(30)		REFERENCES personnel(name) MATCH SIMPLE,
+	person1			VARCHAR(40)		NOT NULL REFERENCES personnel(name),
+	person2			VARCHAR(40)		REFERENCES personnel(name) MATCH SIMPLE,
 	comment			TEXT,
 	
 	CONSTRAINT	transformation_uniq	UNIQUE(from_frame,to_frame,target_date)

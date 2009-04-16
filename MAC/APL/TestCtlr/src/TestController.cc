@@ -29,7 +29,6 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
 
 #include "TestController.h"
 

@@ -39,7 +39,7 @@ private:
 	GSAPvssApi();
     virtual ~GSAPvssApi() {};
 
-    void workProc();
+    void doWork();
     void stop();
     void init();
 };

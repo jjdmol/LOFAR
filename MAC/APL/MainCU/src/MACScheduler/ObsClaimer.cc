@@ -26,6 +26,7 @@
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_PortInterface.h>
@@ -33,7 +34,6 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/RTDBCommon/CM_Protocol.ph>
 #include <APL/RTDBCommon/ClaimMgrTask.h>

@@ -12,7 +12,7 @@ def getHeaderLines(filename):
     pattern=re.compile("^[a-zA-Z]+.*", re.IGNORECASE | re.MULTILINE)
     answer = {}
     for line in pattern.findall(open(filename).read()):
-        (key, value) = line.split(';',1) 
+        (key, value, dummy) = line.split(';',2) 
         answer[key]=value
     return answer
 

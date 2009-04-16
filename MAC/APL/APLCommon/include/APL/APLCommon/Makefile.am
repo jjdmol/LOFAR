@@ -6,7 +6,6 @@ pkginclude_HEADERS = Package__Version.h  \
 					APLUtilities.h \
 					bitsetUtil.tcc \
 					ControllerDefines.h \
-					StationInfo.h \
 					CTState.h \
 					ControllerInfo.h \
 					ControllerAdmin.h \

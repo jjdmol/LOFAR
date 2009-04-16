@@ -82,6 +82,7 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	itsDPservice = new DPservice(this);
 	ASSERTSTR(itsDPservice, "Can't allocate DPservice");
 
+	itsSplitters.reset();
 }
 
 
@@ -91,6 +92,20 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 RSPMonitor::~RSPMonitor()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+
+	// database should be ready by now, check if allocation was succesfull
+	for (int	cabinet = itsNrCabinets - 1; cabinet >= 0; cabinet--) {
+		delete itsCabinets[cabinet];
+	}
+	for (int	subrack = itsNrSubracks - 1; subrack >= 0; subrack--) {
+		delete itsSubracks[subrack];
+	}
+	for (int	rsp = itsNrRSPboards - 1; rsp >= 0; rsp--) {
+		delete itsRSPs[rsp];
+	}
+	for (int	rcu = itsNrRCUs - 1; rcu >= 0; rcu--) {
+		delete itsRCUs[rcu];
+	}
 
 	if (itsRSPDriver)	itsRSPDriver->close();
 
@@ -146,7 +161,6 @@ GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("RSP:initial"));
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
 		
 		LOG_DEBUG_STR("Going to connect to the RSPDriver.");
 		TRAN (RSPMonitor::connect2RSP);
@@ -191,7 +205,7 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 	case F_CONNECTED:
 		if (&port == itsRSPDriver) {
 			LOG_DEBUG ("Connected with RSPDriver, going to get the configuration");
-//			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,  GCFPVString(""));
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
 			itsOwnPropertySet->setValue(PN_HWM_RSP_CONNECTED,GCFPVBool(true));
 			TRAN(RSPMonitor::askConfiguration);		// go to next state.
 		}
@@ -259,12 +273,23 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 						 	((itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK) ? 1 : 0);
 		itsNrCabinets  = (itsNrSubracks /NR_SUBRACKS_PER_CABINET)  + 
 						 	((itsNrSubracks%NR_SUBRACKS_PER_CABINET) ? 1 : 0);
+		// construct a mask containing all available RSPboards.
+		itsRSPmask.reset();
+		for(uint32	rsp = 0; rsp < itsNrRSPboards; rsp++) {
+			itsRSPmask.set(rsp);
+		}
+		// construct a mask containing all available RCUs.
+		itsRCUmask.reset();
+		for(uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
+			itsRCUmask.set(rcu);
+		}
 		
 		// Read number of Antenna's from RemoteStation.conf file.
 		ConfigLocator	CL;
 		ParameterSet	RSconf(CL.locate("RemoteStation.conf"));
 		itsNrHBAs = RSconf.getInt("RS.N_HBAS", 0);
 		itsNrLBAs = RSconf.getInt("RS.N_LBAS", 0);
+		itsHasSplitters = RSconf.getBool("RS.HBA_SPLIT", false);
 
 		// inform user
 		LOG_DEBUG(formatString("nr RCUs      = %d",ack.n_rcus));
@@ -273,6 +298,8 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 		LOG_DEBUG(formatString("nr Cabinets  = %d", itsNrCabinets));
 		LOG_DEBUG(formatString("nr LBAs      = %d", itsNrLBAs));
 		LOG_DEBUG(formatString("nr HBAs      = %d", itsNrHBAs));
+		LOG_DEBUG_STR(         "RSPmask      = " << itsRSPmask);
+		LOG_DEBUG(formatString("has splitters= %s", (itsHasSplitters ? "yes" : "no")));
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -341,36 +368,41 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 		string	subrackNameMask (createPropertySetName(PSN_SUB_RACK,  getName()));
 		string	rspboardNameMask(createPropertySetName(PSN_RSP_BOARD, getName()));
 		string	rcuNameMask     (createPropertySetName(PSN_RCU, 	  getName()));
+		// Note: when we are REconnected to the RSPdriver we already have the 
+		// propertySet allocated. So only create a PS when we don't have one yet.
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			// new cabinet?
 			if (rcu % (NR_RCUS_PER_CABINET) == 0) {
 				cabinet++;
 				string	PSname(formatString(cabinetNameMask.c_str(), cabinet));
-				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
-//				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
+				if (!itsCabinets[cabinet]) {
+					itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO | PSAT_CW, this);
+				}
 			}
 
 			// new subrack?
 			if (rcu % (NR_RCUS_PER_SUBRACK) == 0) {
 				subrack++;
 				string	PSname(formatString(subrackNameMask.c_str(), cabinet, subrack));
-				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
-				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO, this);
-//
+				if (!itsSubracks[subrack]) {
+					itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO | PSAT_CW, this);
+				}
 			}
 
 			// new RSPboard?
 			if (rcu % (NR_RCUS_PER_RSPBOARD) == 0) {
 				RSP++;
 				string	PSname(formatString(rspboardNameMask.c_str(), cabinet, subrack, RSP));
-				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
-//				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
+				if (!itsRSPs[RSP]) {
+					itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO | PSAT_CW, this);
+				}
 			}
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
-//			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
+			if (!itsRCUs[rcu]) {
+				itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO | PSAT_CW, this);
+			}
 			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
@@ -432,6 +464,12 @@ GCFEvent::TResult RSPMonitor::subscribeToRCUs(GCFEvent& event,
 	switch (event.signal) {
 
 	case F_ENTRY: {
+		if (itsRCUquery) {
+			// still have the query connected (in case of a REconnect of the RSPDriver)
+			TRAN(RSPMonitor::askVersion);
+			return (status);
+		}
+
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:Subscribe to RCUstates"));
 		// time to init our RCU admin
 		itsAntMapper = new AntennaMapper(itsNrRCUs, itsNrLBAs, itsNrHBAs);
@@ -551,7 +589,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 
 		LOG_DEBUG_STR ("Version information updated, going to status information");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-		TRAN(RSPMonitor::askRSPinfo);				// go to next state.
+		TRAN(RSPMonitor::askSplitterInfo);				// go to next state.
 		break;
 	}
 
@@ -580,12 +618,85 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 
 
 //
+// askSplitterInfo(event, port)
+//
+// Ask the information of the RSP boards
+//
+GCFEvent::TResult RSPMonitor::askSplitterInfo(GCFEvent& event, 
+											  GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("askSplitterInfo:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+
+	case F_ENTRY: {
+		if (!itsHasSplitters) {
+			TRAN(RSPMonitor::askRSPinfo);
+			return (status);
+		}
+
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating splitter info"));
+
+		RSPGetsplitterEvent		getSplitter;
+		getSplitter.timestamp.setNow();
+		getSplitter.rspmask   = itsRSPmask;
+		itsRSPDriver->send(getSplitter);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes.
+	}
+	break;
+
+	case RSP_GETSPLITTERACK: {
+		itsTimerPort->cancelAllTimers();
+		RSPGetsplitterackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR_STR ("RSP:Failed to get the splitter information, trying status information");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getSplitter error"));
+		}
+		else {
+			itsSplitters = ack.splitter;		// save for later
+		}
+		TRAN (RSPMonitor::askRSPinfo);
+	}
+	break;
+
+	case F_TIMER: 
+		LOG_ERROR_STR("RSP:Timeout on getting the splitter information, trying status information");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getSplitter timeout"));
+		TRAN (RSPMonitor::askRSPinfo);
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
+		break;
+
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
+	case F_QUIT:
+		TRAN (RSPMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG_STR ("askSplitterInfo, DEFAULT");
+		break;
+	}    
+
+	return (status);
+}
+
+//
 // askRSPinfo(event, port)
 //
 // Ask the information of the RSP boards
 //
 GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event, 
-													GCFPortInterface& port)
+										 GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askRSPinfo:" << eventName(event) << "@" << port.getName());
 
@@ -595,16 +706,24 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating RSP info"));
-//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+
 		RSPGetstatusEvent	getStatus;
 		getStatus.timestamp.setNow();
 		getStatus.cache = true;
-		getStatus.rspmask = bitset<MAX_N_RSPBOARDS>((1<<itsNrRSPboards)-1);
+		getStatus.rspmask = itsRSPmask;
 		itsRSPDriver->send(getStatus);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes
 	}
 	break;
 
+	case F_TIMER:
+		LOG_ERROR_STR ("RSP:Timeout on getting the status information, trying other information");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getStatus timeout"));
+		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
+		break;
+
 	case RSP_GETSTATUSACK: {
+		itsTimerPort->cancelAllTimers();
 		RSPGetstatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get the status information, trying other information");
@@ -685,6 +804,10 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 			itsRSPs[rsp]->setValue(PN_RSP_AP3_SYNC_ERROR_COUNT,  GCFPVUnsigned(bStat.ap3_sync.ext_count), 
 									double(ack.timestamp), false);
 
+			// finally set the splitter
+			itsRSPs[rsp]->setValue(PN_RSP_SPLITTER_ON,			 GCFPVUnsigned(itsSplitters.test(rsp)),
+									double(ack.timestamp), false);
+
 			itsRSPs[rsp]->flush();
 			usleep(1000); // wait 1 ms
 		} // for all boards
@@ -723,8 +846,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 //
 // Ask the settings of the clock board.
 //
-GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, 
-													GCFPortInterface& port)
+GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askTDstatus:" << eventName(event) << "@" << port.getName());
 
@@ -738,12 +860,20 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 		RSPGettdstatusEvent	getTDstatus;
 		getTDstatus.timestamp.setNow();
 		getTDstatus.cache = true;
-		getTDstatus.rspmask = bitset<MAX_N_RSPBOARDS>((1<<itsNrRSPboards)-1);
+		getTDstatus.rspmask = itsRSPmask;
 		itsRSPDriver->send(getTDstatus);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes
 	}
 	break;
+	
+	case F_TIMER:
+		LOG_ERROR_STR ("RSP:Timeout on getting information of the TD board, trying again in next run");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getClockboard timeout"));
+		TRAN(RSPMonitor::askSPUstatus);				// go to next state.
+		break;
 
 	case RSP_GETTDSTATUSACK: {
+		itsTimerPort->cancelAllTimers();
 		RSPGettdstatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get information of the TD board, trying again in next run");
@@ -831,8 +961,7 @@ GCFEvent::TResult RSPMonitor::askTDstatus(GCFEvent& event,
 //
 // Read the settings from the Station Power Unit
 //
-GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, 
-													GCFPortInterface& port)
+GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("askSPUstatus:" << eventName(event) << "@" << port.getName());
 
@@ -847,10 +976,18 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 		getSPUstatus.timestamp.setNow();
 		getSPUstatus.cache = true;
 		itsRSPDriver->send(getSPUstatus);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes.
 	}
 	break;
 
+	case F_TIMER:
+		LOG_ERROR_STR ("RSP:Failed to get information of the power board, trying again in next run");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:get powerboard timeout"));
+		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
+		break;
+
 	case RSP_GETSPUSTATUSACK: {
+		itsTimerPort->cancelAllTimers();
 		RSPGetspustatusackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get information of the power board, trying again in next run");
@@ -881,8 +1018,7 @@ GCFEvent::TResult RSPMonitor::askSPUstatus(GCFEvent& event,
 			setObjectState(getName(), itsSubracks[subrack]->getFullScope()+".SPU", RTDB_OBJ_STATE_OPERATIONAL);
 		}
 
-		LOG_DEBUG_STR ("Clockboard information updated, going to RCU status information");
-//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		LOG_DEBUG_STR ("Powerboard information updated, going to RCU status information");
 		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
 		break;
 	}
@@ -924,27 +1060,26 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
-		break;
-
 	case F_ENTRY: {
-		// update PVSS
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating RSP info"));
-//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+
 		RSPGetrcuEvent	getStatus;
 		getStatus.timestamp.setNow();
-		getStatus.cache = true;
-		getStatus.rcumask.reset();
-		for (uint32 r = 0; r < itsNrRCUs; r++) {	// construct bitset : move this to an 'its' variable?
-			getStatus.rcumask.set(r);
-		}
+		getStatus.cache   = true;
+		getStatus.rcumask = itsRCUmask;
 		itsRSPDriver->send(getStatus);
-		LOG_DEBUG(formatString("MAX_RCUS=%d, itsRCUs=%d", MAX_RCUS, itsNrRCUs));
-		LOG_DEBUG_STR("rcumask=" << getStatus.rcumask);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes
 		break;
 	}
 
+	case F_TIMER:
+		LOG_ERROR_STR ("RSP:Timeout on getting the RCU information, trying other information");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU timeout"));
+		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+		break;
+
 	case RSP_GETRCUACK: {
+		itsTimerPort->cancelAllTimers();
 		RSPGetrcuackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR_STR ("RSP:Failed to get the RCU information, trying other information");
@@ -1083,7 +1218,8 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 													GCFPortInterface& port)
 {
 	if (eventName(event) != "DP_SET") {
-		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	}
+		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	
+	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -1106,7 +1242,7 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
 
 	case F_TIMER: {
 		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
-		TRAN(RSPMonitor::askRSPinfo);
+		TRAN(RSPMonitor::askSplitterInfo);
 	}
 	break;
 

@@ -551,7 +551,6 @@ void PVSSservice::doWork()
 	itsSCADAHandler->workProc();
 }
 
-
 //
 // dpCreate(dpname, typename)
 //

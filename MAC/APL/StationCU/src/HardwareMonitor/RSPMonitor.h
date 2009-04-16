@@ -27,6 +27,7 @@
 #include <blitz/array.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/LofarConstants.h>
 
 //# GCF Includes
 #include <APL/APLCommon/AntennaMapper.h>
@@ -64,6 +65,7 @@ private:
    	GCFEvent::TResult subscribeToRCUs		 (GCFEvent& e, GCFPortInterface& p);
 
    	GCFEvent::TResult askVersion    		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askSplitterInfo  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRSPinfo	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askTDstatus	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askSPUstatus	  		 (GCFEvent& e, GCFPortInterface& p);
@@ -107,6 +109,10 @@ private:
 	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs
 	int							itsRCUquery;		// ID of the PVSS query
 	AntennaMapper*				itsAntMapper;
+	bool						itsHasSplitters;	// from RemoteStation.conf
+	bitset<MAX_RSPBOARDS>		itsSplitters;		// on or off.
+	bitset<MAX_RSPBOARDS>		itsRSPmask;			// present in station or not
+	bitset<MAX_RCUS>			itsRCUmask;			// present in station or not
 
 };
 

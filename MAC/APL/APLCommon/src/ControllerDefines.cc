@@ -29,7 +29,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
+#include <ApplCommon/StationInfo.h>
 #include "Controller_Protocol.ph"
 
 #include <boost/config.hpp>

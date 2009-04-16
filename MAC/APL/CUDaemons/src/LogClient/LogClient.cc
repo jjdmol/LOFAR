@@ -25,10 +25,10 @@
 #include <Common/lofar_fstream.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
 //#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/LOG_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
 #include <log4cplus/socketappender.h>
 #include "LogClient.h"
 #include "../Package__Version.h"

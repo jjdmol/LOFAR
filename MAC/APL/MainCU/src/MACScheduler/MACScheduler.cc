@@ -31,7 +31,6 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/RTDBCommon/CM_Protocol.ph>

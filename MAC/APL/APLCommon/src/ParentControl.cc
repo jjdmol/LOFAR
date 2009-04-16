@@ -27,11 +27,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ParentControl.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <Controller_Protocol.ph>
 #include <StartDaemon_Protocol.ph>
 

@@ -24,6 +24,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -31,7 +32,6 @@
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
