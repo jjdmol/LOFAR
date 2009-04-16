@@ -37,10 +37,8 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-d destdir] [-o observation] [-s station | -C]"
+	echo "Syntax: $(basename $0) [-d destdir] [-s station | -C]"
 	echo "    destdir      Relative directory where the resultfiles are placed."
-	echo "    observation  Name of an observation. When omitted the datapoints"
-	echo "                 for the permanent software are generated."
 	echo "    station      Name of the station. When omitted the datapoints"
 	echo "                 for the main database are generated."
 	echo "    -C           CEP datapoints are created (overrules -s)"
@@ -708,24 +706,20 @@ substitute_ring()
 #
 substitute_observation()
 {
-	while read dp dpt
-	do
-		if [ -n "$OBSNAME" ]; then
-			echo $dp"	"$dpt | awk -v obsname=$OBSNAME '{
-				hasObs=index($1,"@observation@");
-				if (hasObs > 0) {
-					dpname=$1;
-					sub("@observation@", obsname, dpname)
-					print dpname"	"$2;
-				}
-				else {
-					print $1"	"$2;
-				}
-			} '
-		else
-			echo $dp"	"$dpt
-		fi
-	done
+	awk '
+	{
+		hasObservation=index($1,"@observation@");
+		if (hasObservation > 0) {
+			for (obsNr = 1; obsNr < 101; obsNr++) {  
+			    dpname=$1;
+			    sub("@observation@", "TempObs"obsNr, dpname)
+			    print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
 }
 
 #
@@ -778,7 +772,7 @@ create_dpt_file()
 	) >${DESTDIR}/${DPT_FILE}
 
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype dptype leaf dp
+	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -887,8 +881,8 @@ create_dpt_file()
 		echo    "ElementName	TypeName	_original.._value	_original.._status"
 	) >${TMP_FILE}
 
-	cleanlist $1 | awk -v dbtype=$2 -v dptype=$3 '{ 
-		if ($3 == dbtype && $4 == dptype && $5 == "Y") {
+	cleanlist $1 | awk -v dbtype=$2 '{ 
+		if ($3 == dbtype && $4 == "Y") {
 			print "_mp_"$1".status.leaf	"$1"	1	0x101"
 		} }' >>${TMP_FILE}
 
@@ -900,7 +894,7 @@ create_dpt_file()
 }
 
 #
-# create_dp_file inputfile dbtype dptype
+# create_dp_file inputfile dbtype
 #
 create_dp_file()
 {
@@ -912,12 +906,13 @@ create_dp_file()
 	) >${DESTDIR}/${DP_FILE}
 
 	# Note: ignore the PermSW_@... lines because they are there only for SAS
-	cleanlist $1 | grep -v "PermSW_@" | awk -v dbtype=$2 -v dptype=$3 '{ 
-		if ($3 == dbtype && $4 == dptype) {
-			print $6"	"$1	
+	cleanlist $1 | grep -v "PermSW_@" | awk -v dbtype=$2 '{ 
+		if ($3 == dbtype ) {
+			print $5"	"$1	
 		} }' | \
 				substitute_ring_station  | \
 				substitute_ring | \
+				substitute_observation | \
 				substitute_wan_switch  | \
 				substitute_wan  | \
 				substitute_Cabinet_SubRack_RSPBoard_RCU | \
@@ -927,7 +922,6 @@ create_dp_file()
 				substitute_Cabinet | \
 				substitute_cluster_node | \
 				substitute_cluster | \
-				substitute_observation | \
 				substitute_instancenr | \
 				substitute_antenna | \
 				substitute_adder | \
@@ -944,47 +938,46 @@ create_dp_file()
 
 	# Setup the values of the antenna datapoints
 
-	if [ $3 == "P" ]; then
-		if [ $NRLBAS -gt 0 -o $NRHBAS -gt 0 ]; then
-		(
-			echo ""
-			echo "ElementName	TypeName	_original.._value	_original.._status"
-			echo "dummy" | awk -v nrHBAs=$NRHBAS -v nrLBAs=$NRLBAS -v nrRSPs=$NRRSPBOARDS '{
-				for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
-					RSPboard=antNr/4
+	if [ $NRLBAS -gt 0 -o $NRHBAS -gt 0 ]; then
+	(
+		echo ""
+		echo "ElementName	TypeName	_original.._value	_original.._status"
+		echo "dummy" | awk -v nrHBAs=$NRHBAS -v nrLBAs=$NRLBAS -v nrRSPs=$NRRSPBOARDS '{
+			for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
+				RSPboard=antNr/4
+				Subrack=RSPboard/4
+				Cabinet=Subrack/2
+				if (antNr < nrHBAs) {
+					printf "HBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2;
+					printf "HBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
+				}
+				if (RSPboard >= nrRSPs) {	# use of both LBL and LBH input?
+					RSPboard=antNr/4 - nrRSPs
 					Subrack=RSPboard/4
 					Cabinet=Subrack/2
-					if (antNr < nrHBAs) {
-						printf "HBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2;
-						printf "HBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
-					}
-					if (RSPboard >= nrRSPs) {	# use of both LBL and LBH input?
-						RSPboard=antNr/4 - nrRSPs
-						Subrack=RSPboard/4
-						Cabinet=Subrack/2
-						printf "LBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8)+1;
-						printf "LBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8);
-					}
-					else {
-						printf "LBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2;
-						printf "LBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
-								antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
-					}
+					printf "LBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8)+1;
+					printf "LBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBLEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2-(nrRSPs*8);
 				}
-			}'
-		) >>${DESTDIR}/${DP_FILE}
-		fi
+				else {
+					printf "LBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2;
+					printf "LBA%d.RCUY	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.LBHEnable\"	0x101\n", 
+							antNr, Cabinet, Subrack, RSPboard, antNr*2+1;
+				}
+			}
+		}'
+	) >>${DESTDIR}/${DP_FILE}
 	fi
+	
 
 	# setup master point and archives 
 	# NOTE: THIS IS ADDED TO THE DataPointTYPES file!
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype dptype leaf dp
+	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -1092,7 +1085,7 @@ expand_component()
 }
 
 #
-# create_cpp_headerfile inputfile dbtype dptype
+# create_cpp_headerfile inputfile dbtype
 #
 create_cpp_headerfile()
 {
@@ -1107,9 +1100,9 @@ create_cpp_headerfile()
 		echo ""
 	)  >>${DESTDIR}/${CPP_HEADERFILE}
 
-	cleanlist $1 | while read dpt prefix dbtype dptype leaf dp
+	cleanlist $1 | while read dpt prefix dbtype leaf dp
 	do
-#		if [ "${dbtype}" != "$2" -o "${dptype}" != "$3" ]; then
+#		if [ "${dbtype}" != "$2" ]; then
 #			continue
 #		fi
 
@@ -1138,20 +1131,17 @@ create_cpp_headerfile()
 
 #------------------------------ MAIN program ------------------------------
 #
-# Syntax: create_db_files [-d destdir] [-o observation] [-s station | -C]
+# Syntax: create_db_files [-d destdir] [-s station | -C]
 #
 
 # setup defaults
 DESTDIR="."
-DPTYPENAME=Perm
-DPTYPE=P
-OBSNAME=""
 DBTYPENAME=Main
 DBTYPE=M
 STNNAME="Station"
 
-argv=`getopt "d:o:s:Ch" $*`		# reformat arguments
-#eval set argv=`getopt "d:o:s:Ch" $*`		# reformat arguments
+argv=`getopt "d:s:Ch" $*`		# reformat arguments
+#eval set argv=`getopt "d:s:Ch" $*`		# reformat arguments
 #shift
 while [ -n "$1" -a "$1" != "--" ]
 do
@@ -1159,11 +1149,6 @@ do
 		-d)	DESTDIR=$2
 			[ -d ${DESTDIR} ] ||
 				SyntaxError "Destination directory >${DESTDIR}< does not exist"
-			shift 2
-			;;
-		-o) OBSNAME=$2
-			DPTYPENAME=Obs
-			DPTYPE=O
 			shift 2
 			;;
 		-s) STNNAME=$2
@@ -1196,7 +1181,7 @@ INPUTFILE=./PVSSDataPoints.base
 
 # define the output files
 CPP_HEADERFILE=PVSSDatapointDefs.h
-DP_FILE=${DBTYPENAME}${DPTYPENAME}Datapoints.dpl
+DP_FILE=${DBTYPENAME}Datapoints.dpl
 DPT_FILE=${DBTYPENAME}Datapointtypes.dpl
 TMP_FILE=/tmp/dpts$$.dpl
 
@@ -1216,15 +1201,15 @@ if [ "${DBTYPE}" == "S" ]; then
 fi
 
 # create the desired files
-create_dpt_file ${INPUTFILE} ${DBTYPE} ${DPTYPE}
-create_dp_file  ${INPUTFILE} ${DBTYPE} ${DPTYPE}
+create_dpt_file ${INPUTFILE} ${DBTYPE}
+create_dp_file  ${INPUTFILE} ${DBTYPE}
 cat ${TMP_FILE} >>${DESTDIR}/${DPT_FILE}
 rm -f ${TMP_FILE}
 (
 	echo -n "// This file was generated by $(basename $0) ${VERSION} on " ; date
 	echo	""
 ) >${DESTDIR}/${CPP_HEADERFILE}
-create_cpp_headerfile ${INPUTFILE} ${DBTYPE} ${DPTYPE}
+create_cpp_headerfile ${INPUTFILE} ${DBTYPE}
 echo "created: ${DESTDIR}/${CPP_HEADERFILE}"
 mkdir -p ../../../../installed/gnu_debug/include/Deployment/
 cp ${DESTDIR}/${CPP_HEADERFILE} ../../../../installed/gnu_debug/include/Deployment/

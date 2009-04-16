@@ -1,0 +1,6 @@
+# InputBuffer
+late		int
+IOTime		int
+packedIn	int
+percBad		float
+rejected	float
