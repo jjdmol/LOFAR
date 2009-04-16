@@ -7,103 +7,102 @@
 # DPtype	Reference to xxx.dpef file
 # Prefix	prefix used in defining C++ constants for the datapoints.
 # M/C/S		Main/CEP/ Station database
-# P/O		Permanent / Observation-based datapoint
 # Datapoint	Name of datapoint or placeholder for multiple points.
 #
-# DPtype	 		Prefix 		M/C/S	P/O	leaf	DataPoint
+# DPtype	 		Prefix 		M/C/S	leaf	DataPoint
 #----------------------------------------------------------------------------
-LOFAR				-		M	P	N	LOFAR
-PIC				-		M	P	N	LOFAR_PIC
-Ring				-		M	P	N	LOFAR_PIC_@ring@
-Station				STS		M	P	Y	LOFAR_PIC_@ring@_@station@
-Cluster				-		M	P	N	LOFAR_PIC_@cluster@
-Node				-		M	P	Y	LOFAR_PIC_@cluster@_@node@
-WAN				-		M	P	N	LOFAR_PIC_WAN
-WANarea				-		M	P	N	LOFAR_PIC_WAN_@wan@
-Switch				-		M	P	Y	LOFAR_PIC_WAN_@wan@_@switch@
-PermSW				-		M	P	N	LOFAR_PermSW
+LOFAR				-		M	N	LOFAR
+PIC				-		M	N	LOFAR_PIC
+Ring				-		M	N	LOFAR_PIC_@ring@
+Station				STS		M	Y	LOFAR_PIC_@ring@_@station@
+Cluster				-		M	N	LOFAR_PIC_@cluster@
+Node				-		M	Y	LOFAR_PIC_@cluster@_@node@
+WAN				-		M	N	LOFAR_PIC_WAN
+WANarea				-		M	N	LOFAR_PIC_WAN_@wan@
+Switch				-		M	Y	LOFAR_PIC_WAN_@wan@_@switch@
+PermSW				-		M	N	LOFAR_PermSW
 # Note: the next 4 lines are neccesary for PVSS2SAS to create the PIC tree.
-Ring				-		M	P	N	LOFAR_PermSW_@ring@
-Station				STS		M	P	Y	LOFAR_PermSW_@ring@_@station@
-Cluster				-		M	P	N	LOFAR_PermSW_@cluster@
-Node				-		M	P	Y	LOFAR_PermSW_@cluster@_@node@
-Daemons				-		M	P	N	LOFAR_PermSW_Daemons
-PVSS00pmon			-		M	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon
-LogProcessor			-		M	P	Y	LOFAR_PermSW_Daemons_LogProcessor
-ServiceBroker			- 		M	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
-CTStartDaemon			-		M	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon
-SASGateway			-		M	P	Y	LOFAR_PermSW_Daemons_SASGateway
-KeyValueLogger			-		M	P	Y	LOFAR_PermSW_Daemons_KeyValueLogger
-SoftwareMonitor			-		M	P	Y	LOFAR_PermSW_SoftwareMonitor
-MACScheduler			MS		M	P	Y	LOFAR_PermSW_MACScheduler
-ObsSW				-		M	P	N	LOFAR_ObsSW
-Observation			OBS		M	O	N	LOFAR_ObsSW_@observation@
-ObservationControl		OBSCTRL		M	O	Y	LOFAR_ObsSW_@observation@_ObservationControl
-#OfflineControl	 		OFFLCTRL	M	O	N	LOFAR_ObsSW_@observation@_OfflineControl
-#CImager			CIMG		M	O	N	LOFAR_ObsSW_@observation@_OfflineControl_CImager
-Ring				-		M	O	N	LOFAR_ObsSW_@observation@_@ring@
-Station				-		M	O	N	LOFAR_ObsSW_@observation@_@ring@_@station@
+Ring				-		M	N	LOFAR_PermSW_@ring@
+Station				STS		M	Y	LOFAR_PermSW_@ring@_@station@
+Cluster				-		M	N	LOFAR_PermSW_@cluster@
+Node				-		M	Y	LOFAR_PermSW_@cluster@_@node@
+Daemons				-		M	N	LOFAR_PermSW_Daemons
+PVSS00pmon			-		M	Y	LOFAR_PermSW_Daemons_PVSS00pmon
+LogProcessor			-		M	Y	LOFAR_PermSW_Daemons_LogProcessor
+ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
+CTStartDaemon			-		M	Y	LOFAR_PermSW_Daemons_CTStartDaemon
+SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
+KeyValueLogger			-		M	Y	LOFAR_PermSW_Daemons_KeyValueLogger
+SoftwareMonitor			-		M	Y	LOFAR_PermSW_SoftwareMonitor
+MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
+ObsSW				-		M	N	LOFAR_ObsSW
+Observation			OBS		M	N	LOFAR_ObsSW_@observation@
+ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
+#OfflineControl	 		OFFLCTRL	M	N	LOFAR_ObsSW_@observation@_OfflineControl
+#CImager			CIMG		M	N	LOFAR_ObsSW_@observation@_OfflineControl_CImager
+Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
+Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-Adder				-		C	P	Y	@adder@
-InputBuffer			-		C	P	Y	@inputbuffer@
-CEPLOFAR			-		C	P	N	LOFAR
-CEPPIC				-		C	P	N	LOFAR_PIC
-BGPRack				-		C	P	N	LOFAR_PIC_@bgp@
-BGPMidplane			-		C	P	N	LOFAR_PIC_@bgp@_@midplane@
-IONode				-		C	P	Y	LOFAR_PIC_@bgp@_@midplane@_@ionode@
-OSRack				-		C	P	N	LOFAR_PIC_@osrack@
-OSSubcluster			-		C	P	N	LOFAR_PIC_@osrack@_@ossubcluster@
-StorageNode			-		C	P	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@storagenode@
-OfflineNode			-		C	P	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@offlinenode@
-CEPPermSW			-		C	P	N	LOFAR_PermSW
-InputBufferControl		-		C	P	Y	LOFAR_PermSW_InputBufferControl
-CEPHardwareMonitor		-		C	P	Y	LOFAR_PermSW_HardwareMonitor
-SoftwareMonitor			-		C	P	Y	LOFAR_PermSW_SoftwareMonitor
-Daemons				-		C	P	N	LOFAR_PermSW_Daemons
-PVSS00pmon			-		C	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon
-LogProcessor			-		C	P	Y	LOFAR_PermSW_Daemons_LogProcessor
-ServiceBroker			- 		C	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
-CTStartDaemon			-		C	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon
-SASGateway			-		C	P	Y	LOFAR_PermSW_Daemons_SASGateway
-CEPObsSW			-		C	P	N	LOFAR_ObsSW
-CEPObservation			-		C	O	N	LOFAR_ObsSW_@observation@
-OnlineControl			-		C	O	N	LOFAR_ObsSW_@observation@_OnlineControl
-StorageAppl			-		C	O	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
-BGPAppl				-		C	O	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
-BGPProc				-		C	O	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_@bgpproc@
+Adder				-		C	Y	@adder@
+InputBuffer			-		C	Y	@inputbuffer@
+CEPLOFAR			-		C	N	LOFAR
+CEPPIC				-		C	N	LOFAR_PIC
+BGPRack				-		C	N	LOFAR_PIC_@bgp@
+BGPMidplane			-		C	N	LOFAR_PIC_@bgp@_@midplane@
+IONode				-		C	Y	LOFAR_PIC_@bgp@_@midplane@_@ionode@
+OSRack				-		C	N	LOFAR_PIC_@osrack@
+OSSubcluster			-		C	N	LOFAR_PIC_@osrack@_@ossubcluster@
+StorageNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@storagenode@
+OfflineNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@offlinenode@
+CEPPermSW			-		C	N	LOFAR_PermSW
+InputBufferControl		-		C	Y	LOFAR_PermSW_InputBufferControl
+CEPHardwareMonitor		-		C	Y	LOFAR_PermSW_HardwareMonitor
+SoftwareMonitor			-		C	Y	LOFAR_PermSW_SoftwareMonitor
+Daemons				-		C	N	LOFAR_PermSW_Daemons
+PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon
+LogProcessor			-		C	Y	LOFAR_PermSW_Daemons_LogProcessor
+ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
+CTStartDaemon			-		C	Y	LOFAR_PermSW_Daemons_CTStartDaemon
+SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
+CEPObsSW			-		C	N	LOFAR_ObsSW
+CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
+OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
+StorageAppl			-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
+BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
+BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 #
-StnLOFAR			-		S	P	N	LOFAR
-StnPIC				-		S	P	N	LOFAR_PIC
-Cabinet				CAB		S	P	N	LOFAR_PIC_@cabinet@
-SubRack				SRCK		S	P	N	LOFAR_PIC_@cabinet@_@subrack@
-RSPBoard			RSP		S	P	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
-RCU				RCU		S	P	Y	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
-TBBoard				TBB		S	P	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
-StnPermSW			-		S	P	N	LOFAR_PermSW
+StnLOFAR			-		S	N	LOFAR
+StnPIC				-		S	N	LOFAR_PIC
+Cabinet				CAB		S	N	LOFAR_PIC_@cabinet@
+SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
+RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
+RCU				RCU		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
+TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
+StnPermSW			-		S	N	LOFAR_PermSW
 # Note: the next 2 lines are neccesary for PVSS2SAS to create the PIC tree.
-Cluster				-		S	P	N	LOFAR_PermSW_@cluster@
-Node				-		S	P	Y	LOFAR_PermSW_@cluster@_@node@
-Daemons				-		S	P	N	LOFAR_PermSW_Daemons
-PVSS00pmon			-		S	P	Y	LOFAR_PermSW_Daemons_PVSS00pmon
-LogProcessor			LGP		S	P	Y	LOFAR_PermSW_Daemons_LogProcessor
-ServiceBroker			- 		S	P	Y	LOFAR_PermSW_Daemons_ServiceBroker
-CTStartDaemon			-		S	P	Y	LOFAR_PermSW_Daemons_CTStartDaemon
-SASGateway			SGW		S	P	Y	LOFAR_PermSW_Daemons_SASGateway
-RSPDriver			-		S	P	Y	LOFAR_PermSW_RSPDriver
-TBBDriver			-		S	P	Y	LOFAR_PermSW_TBBDriver
-AMCServer			-		S	P	Y	LOFAR_PermSW_AMCServer
-BeamServer			-		S	P	Y	LOFAR_PermSW_BeamServer
-CalServer			-		S	P	Y	LOFAR_PermSW_CalServer
-HardwareMonitor			HWM		S	P	Y	LOFAR_PermSW_HardwareMonitor
-SoftwareMonitor			SWM		S	P	Y	LOFAR_PermSW_SoftwareMonitor
-SHMInfoServer			MIS		S	P	Y	LOFAR_PermSW_SHMInfoServer
-StationControl			SC		S	P	Y	LOFAR_PermSW_StationControl
-ClockControl			CLC		S	P	Y	LOFAR_PermSW_ClockControl
-Antenna				ANT		S	P	N	@antenna@
-RemoteStation			-		S	P	N	remoteStation
-StnObsSW			-		S	P	N	LOFAR_ObsSW
-StnObservation			OBS		S	O	N	LOFAR_ObsSW_@observation@
-BeamControl			BC		S	O	Y	LOFAR_ObsSW_@observation@_BeamControl
-CalibrationControl		CC		S	O	Y	LOFAR_ObsSW_@observation@_CalibrationControl
-TBBControl			TBC		S	O	Y	LOFAR_ObsSW_@observation@_TBBControl
+Cluster				-		S	N	LOFAR_PermSW_@cluster@
+Node				-		S	Y	LOFAR_PermSW_@cluster@_@node@
+Daemons				-		S	N	LOFAR_PermSW_Daemons
+PVSS00pmon			-		S	Y	LOFAR_PermSW_Daemons_PVSS00pmon
+LogProcessor			LGP		S	Y	LOFAR_PermSW_Daemons_LogProcessor
+ServiceBroker			- 		S	Y	LOFAR_PermSW_Daemons_ServiceBroker
+CTStartDaemon			-		S	Y	LOFAR_PermSW_Daemons_CTStartDaemon
+SASGateway			SGW		S	Y	LOFAR_PermSW_Daemons_SASGateway
+RSPDriver			-		S	Y	LOFAR_PermSW_RSPDriver
+TBBDriver			-		S	Y	LOFAR_PermSW_TBBDriver
+AMCServer			-		S	Y	LOFAR_PermSW_AMCServer
+BeamServer			-		S	Y	LOFAR_PermSW_BeamServer
+CalServer			-		S	Y	LOFAR_PermSW_CalServer
+HardwareMonitor			HWM		S	Y	LOFAR_PermSW_HardwareMonitor
+SoftwareMonitor			SWM		S	Y	LOFAR_PermSW_SoftwareMonitor
+SHMInfoServer			MIS		S	Y	LOFAR_PermSW_SHMInfoServer
+StationControl			SC		S	Y	LOFAR_PermSW_StationControl
+ClockControl			CLC		S	Y	LOFAR_PermSW_ClockControl
+Antenna				ANT		S	N	@antenna@
+RemoteStation			-		S	N	remoteStation
+StnObsSW			-		S	N	LOFAR_ObsSW
+StnObservation			OBS		S	N	LOFAR_ObsSW_@observation@
+BeamControl			BC		S	Y	LOFAR_ObsSW_@observation@_BeamControl
+CalibrationControl		CC		S	Y	LOFAR_ObsSW_@observation@_CalibrationControl
+TBBControl			TBC		S	Y	LOFAR_ObsSW_@observation@_TBBControl
 

@@ -1,0 +1,4 @@
+# Adder
+dropping		bool
+nrBlocksDropped		int
+
