@@ -2,6 +2,7 @@
 #define LOFAR_INTERFACE_STREAMABLE_DATA_H
 
 #include <Stream/Stream.h>
+#include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <Interface/Parset.h>
 #include <Interface/MultiDimArray.h>
