@@ -144,8 +144,12 @@ namespace LOFAR
                   toString(itsModelConfig.sources));
       ps.replace(prefix + "Model.Components",
 		  toString(itsModelConfig.components));
-      ps.replace(prefix + "Model.Ionosphere.Rank",
-		 toString(itsModelConfig.ionoConfig->rank));
+
+      if(itsModelConfig.ionoConfig) {
+        ps.replace(prefix + "Model.Ionosphere.Rank",
+          toString(itsModelConfig.ionoConfig->rank));
+      }
+
       // Cancel any inherited beam type. If we did inherit, this key will
       // be replaced again below (this is related to bug 1054).
       ps.replace(prefix + "Model.Beam.Type", "");
@@ -207,15 +211,13 @@ namespace LOFAR
         ps.getStringVector("Model.Sources", itsModelConfig.sources);
       itsModelConfig.components =
         ps.getStringVector("Model.Components", itsModelConfig.components);
-
-      
         
-      if(ps.isDefined("Model.Ionosphere.Rank")){
-	IonoConfig::Pointer config(new IonoConfig());
-	
+      if(ps.isDefined("Model.Ionosphere.Rank")) {
+        IonoConfig::Pointer config(new IonoConfig());
         config->rank = ps.getUint32("Model.Ionosphere.Rank");
-	itsModelConfig.ionoConfig = config;
+        itsModelConfig.ionoConfig = config;
       }
+      
       if(ps.isDefined("Model.Beam.Type")) {
         string beamType(ps.getString("Model.Beam.Type"));
 
