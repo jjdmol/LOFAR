@@ -3,7 +3,8 @@ pkginclude_HEADERS = Package__Version.h  \
 					 Observation.h \
 					 CableAttenuation.h \
 					 RCUCables.h \
-					 StationConfig.h
+					 StationConfig.h \
+					 StationInfo.h
 
 noinst_HEADERS =
 

@@ -5,7 +5,8 @@ libapplcommon_la_SOURCES = Package__Version.cc   \
 						   Observation.cc \
 						   CableAttenuation.cc \
 						   RCUCables.cc \
-						   StationConfig.cc 
+						   StationConfig.cc \
+						   StationInfo.cc
 
 BUILT_SOURCES 			= 
 

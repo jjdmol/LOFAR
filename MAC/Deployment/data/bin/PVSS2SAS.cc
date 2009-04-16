@@ -27,9 +27,9 @@
 #include <ostream>
 using namespace std;
 #include <Common/LofarTypes.h>
-#include <APL/APLCommon/StationInfo.h>
+#include <ApplCommon/StationInfo.h>
 
-using namespace LOFAR::APLCommon;
+using namespace LOFAR;
 
 int	main (int	argc, char*	argv[]) {
 	string	input;
