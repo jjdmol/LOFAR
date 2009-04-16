@@ -70,7 +70,7 @@ class CN_Configuration
     void		  write(Stream *);
 
     static const unsigned MAX_PSETS       = 64;
-    static const unsigned MAX_SUBBANDS    = 256;
+    static const unsigned MAX_SUBBANDS    = 1024;
     static const unsigned MAX_STATIONS    = 100;
     static const unsigned MAX_PENCILBEAMS = 256;
 
