@@ -46,7 +46,7 @@ namespace LOFAR {
 	   ~VHECRTask();
             
       // define responsefunctionType
-      void VHECRTask::readTBBdata(vector<TBBReadCmd>	cmdVector);
+      void readTBBdata(vector<TBBReadCmd> cmdVector);
       void addTrigger(const TBBTrigger&	trigger);
       
     private:
