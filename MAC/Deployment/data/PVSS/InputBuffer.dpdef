@@ -1,6 +1,20 @@
 # InputBuffer
-late		int
-IOTime		int
-packedIn	int
-percBad		float
-rejected	float
+stationName			string
+
+# statistics of the 4 input streams
+stream0.blocksIn	int
+stream0.percBad		float
+stream0.rejected	float
+stream1.blocksIn	int
+stream1.percBad		float
+stream1.rejected	float
+stream2.blocksIn	int
+stream2.percBad		float
+stream2.rejected	float
+stream3.blocksIn	int
+stream3.percBad		float
+stream3.rejected	float
+
+# Info about the backside of the ringbuffer
+late				float
+IOTime				float
