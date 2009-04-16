@@ -40,6 +40,11 @@ using namespace EPA_Protocol;
 namespace LOFAR {
   namespace RSP {
 
+    const int RCUProtocolWrite::PROTOCOL_WRITE_SIZE;
+    const int RCUProtocolWrite::PROTOCOL_READ_SIZE;
+    const int RCUProtocolWrite::RESULT_WRITE_SIZE;
+    const int RCUProtocolWrite::RESULT_READ_SIZE;
+
     uint8 RCUProtocolWrite::i2c_protocol_write[] = { 
 		0x0F, // PROTOCOL_C_SEND_BLOCK
 		0x01, // I2C address for RCU
