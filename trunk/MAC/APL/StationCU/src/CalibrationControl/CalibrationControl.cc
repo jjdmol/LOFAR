@@ -24,11 +24,11 @@
 #include <Common/lofar_datetime.h>
 #include <Common/Version.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>

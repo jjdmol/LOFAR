@@ -3,6 +3,7 @@ voltage25			float
 voltage33			float
 version				string
 alert				int
+splitterOn			int
 Ethernet.status			:ObjectStatus
 Ethernet.packetsReceived	uint
 Ethernet.packetsError		uint

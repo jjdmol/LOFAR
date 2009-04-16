@@ -81,7 +81,7 @@ INSERT INTO measurement_method VALUES ('derived');
 -- personnel
 --
 CREATE TABLE personnel (
-	name		VARCHAR(30)		NOT NULL,
+	name		VARCHAR(40)		NOT NULL,
 	CONSTRAINT	personnel_uniq	UNIQUE(name)
 ) WITHOUT OIDS;
 INSERT INTO personnel VALUES ('');
@@ -130,28 +130,59 @@ INSERT INTO station VALUES ('CS030', 'Exloo');
 INSERT INTO station VALUES ('CS031', 'Exloo');
 INSERT INTO station VALUES ('CS032', 'Exloo');
 
+INSERT INTO station VALUES ('CS101', 'Unknown');
+INSERT INTO station VALUES ('CS102', 'Unknown');
+INSERT INTO station VALUES ('CS103', 'Unknown');
+INSERT INTO station VALUES ('CS201', 'Unknown');
+INSERT INTO station VALUES ('CS301', 'Unknown');
+INSERT INTO station VALUES ('CS302', 'Unknown');
+INSERT INTO station VALUES ('CS401', 'Unknown');
+INSERT INTO station VALUES ('CS501', 'Unknown');
+
 INSERT INTO station VALUES ('RS104', 'Nieuw-Buinen');
+INSERT INTO station VALUES ('RS105', 'Unknown');
 INSERT INTO station VALUES ('RS106', 'Valthermond');
 INSERT INTO station VALUES ('RS107', 'Sellingen');
+INSERT INTO station VALUES ('RS108', 'Unknown');
+INSERT INTO station VALUES ('RS109', 'Unknown');
 
+INSERT INTO station VALUES ('RS202', 'Unknown');
+INSERT INTO station VALUES ('RS203', 'Unknown');
+INSERT INTO station VALUES ('RS204', 'Unknown');
 INSERT INTO station VALUES ('RS205', 'Valthermond');
 INSERT INTO station VALUES ('RS206', 't Haantje');
 INSERT INTO station VALUES ('RS207', 'Klazienaveen');
 INSERT INTO station VALUES ('RS208', 'Schoonebeek');
+INSERT INTO station VALUES ('RS209', 'Unknown');
+INSERT INTO station VALUES ('RS210', 'Unknown');
 
 INSERT INTO station VALUES ('RS302', 'Borger');
+INSERT INTO station VALUES ('RS303', 'Unknown');
+INSERT INTO station VALUES ('RS304', 'Unknown');
+INSERT INTO station VALUES ('RS305', 'Unknown');
 INSERT INTO station VALUES ('RS306', 'Ellertshaar');
 INSERT INTO station VALUES ('RS307', 'Oldeveen');
 INSERT INTO station VALUES ('RS308', 'Wijster');
 INSERT INTO station VALUES ('RS309', 'Stegeren');
+INSERT INTO station VALUES ('RS310', 'Unknown');
 
+INSERT INTO station VALUES ('RS402', 'Unknown');
+INSERT INTO station VALUES ('RS403', 'Unknown');
 INSERT INTO station VALUES ('RS404', 'Borger');
+INSERT INTO station VALUES ('RS405', 'Unknown');
 INSERT INTO station VALUES ('RS406', 'Gieten');
 INSERT INTO station VALUES ('RS407', 'Gasteren');
 INSERT INTO station VALUES ('RS408', 'Zuidvelde');
 INSERT INTO station VALUES ('RS409', 'Hoomsterzwaag');
+INSERT INTO station VALUES ('RS410', 'Unknown');
+INSERT INTO station VALUES ('RS411', 'Unknown');
+INSERT INTO station VALUES ('RS412', 'Unknown');
+INSERT INTO station VALUES ('RS413', 'Unknown');
 
+INSERT INTO station VALUES ('RS502', 'Unknown');
 INSERT INTO station VALUES ('RS503', 'Buinen');
+INSERT INTO station VALUES ('RS504', 'Unknown');
+INSERT INTO station VALUES ('RS505', 'Unknown');
 INSERT INTO station VALUES ('RS506', 'Vledderhuizen');
 INSERT INTO station VALUES ('RS507', 'Alteveer');
 INSERT INTO station VALUES ('RS508', 't Waar');

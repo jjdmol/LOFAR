@@ -77,13 +77,16 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/APL/ClockProtocol/Makefile
 src/Makefile
 src/BeamControl/Makefile
 src/CalibrationControl/Makefile
+src/ClockProtocol/Makefile
 src/ClockControl/Makefile
-src/HardwareMonitor/Makefile
 src/StationControl/Makefile
 src/TBBControl/Makefile
+src/HardwareMonitor/Makefile
 Makefile
 StationCU.spec
 )

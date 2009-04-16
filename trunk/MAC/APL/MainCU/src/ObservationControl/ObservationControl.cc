@@ -23,16 +23,15 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
-
 #include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationInfo.h>
+
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/RTDBCommon/CM_Protocol.ph>
@@ -185,8 +184,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 	LOG_INFO_STR(getName() << " now in state " << cts.name(newState));
 
 	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),
-									 GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION), GCFPVString(cts.name(newState)));
 	}
 
 	itsParentControl->nowInState(getName(), newState);

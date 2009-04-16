@@ -26,8 +26,8 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/StationInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
-#include <APL/APLCommon/StationInfo.h>
 
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;

@@ -26,12 +26,12 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RTDBCommon/CM_Protocol.ph>

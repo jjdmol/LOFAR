@@ -127,7 +127,7 @@ void GSASCADAHandler::stop()
 void GSASCADAHandler::workProc()
 { 
   if (_running) {
-	_pvssApi.workProc();
+	_pvssApi.doWork();
   }
 }
 

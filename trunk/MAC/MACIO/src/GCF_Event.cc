@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include <MACIO/GCF_Event.h>
 
 using namespace std;
@@ -58,6 +59,23 @@ void GCFEvent::resizeBuf(uint32 requiredSize)
     _upperbound = requiredSize;
   }
   length = requiredSize - sizeof(length) - sizeof(signal);
+}
+
+GCFEvent* GCFEvent::clone()
+{
+	int		mySize = sizeof(GCFEvent) + length;
+	char* 	theClone = new char[mySize];
+	memcpy(theClone, (const char*)this, mySize);
+
+//	string	hd;
+//	hexdump(hd, this, mySize);
+//	LOG_DEBUG(hd);
+	LOG_DEBUG_STR("The clone is " << mySize << " bytes");
+//	hd.clear();
+//	hexdump(hd, theClone, mySize);
+//	LOG_DEBUG(hd);
+
+	return ((GCFEvent*) theClone);
 }
 
 void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint32 sizeofMemberType)

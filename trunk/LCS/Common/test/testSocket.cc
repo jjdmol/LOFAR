@@ -113,6 +113,7 @@ void doWrite(bool	blocking)
 
 	cout << "Type message to send to other side: ";
 	cin	>> buf;
+	buf = buf + "\n";
 
 	if (blocking)
 		bytesWrtn = dataSock->writeBlocking(buf.c_str(), buf.length());

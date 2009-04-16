@@ -75,7 +75,7 @@ public:
                                       const string& queryWhere);
     PVSSresult dpQueryUnsubscribe	(uint32 queryId);
 
-	void doWork();
+	void doWork();	// Needed by RTDB_Propertyset.
     
 private: 
 	// methods

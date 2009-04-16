@@ -59,7 +59,7 @@ void GSAPvssApi::init()
     // It won't take that long...
     sec = 1;
     usec = 0;
-    dispatch(sec, usec);
+    dispatch(sec, usec);	// dispatch of the PVSS manager
   }
 
   // We are now in STATE_ADJUST and can connect to Event manager
@@ -73,12 +73,12 @@ void GSAPvssApi::init()
   // We are now hopefully in STATE_RUNNING. 
 }
 
-void GSAPvssApi::workProc()
+void GSAPvssApi::doWork()
 {
   if (getManagerState() == STATE_RUNNING) {
    	long sec(0), usec(1);
 
-    dispatch(sec, usec);
+    dispatch(sec, usec);	// dispatch of the PVSS manager
   }
   else {
     init();

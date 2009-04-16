@@ -28,6 +28,7 @@
 //#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
+#include <ApplCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
 #include <MACIO/MACServiceInfo.h>
@@ -35,7 +36,6 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
 #include <GCF/RTDB/DP_Protocol.ph>
