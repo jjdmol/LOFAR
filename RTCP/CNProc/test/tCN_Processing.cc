@@ -197,9 +197,10 @@ template <typename SAMPLE_TYPE> void doWork()
     unsigned   nrChannels	= 256;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
-    double     refFreq		= 384 * sampleRate;
+    double     centerFrequency	= 384 * sampleRate;
+    double     baseFrequency	= centerFrequency - .5 * sampleRate;
     unsigned   testSignalChannel = 5;
-    double     signalFrequency	= refFreq + (testSignalChannel + (nrChannels/2)) * sampleRate / nrChannels;
+    double     signalFrequency	= baseFrequency + testSignalChannel * sampleRate / nrChannels;
     unsigned   nrSamplesToCNProc = nrChannels * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
     std::vector<unsigned> station2SuperStation;
@@ -237,7 +238,8 @@ template <typename SAMPLE_TYPE> void doWork()
       signalFrequency = atof(env);
     }
 
-    std::clog << "base frequency = " << refFreq << std::endl;
+    std::clog << "base   frequency = " << baseFrequency   << std::endl;
+    std::clog << "center frequency = " << centerFrequency << std::endl;
     std::clog << "signal frequency = " << signalFrequency << std::endl;
 
     ArenaMapping mapping;
@@ -261,7 +263,7 @@ template <typename SAMPLE_TYPE> void doWork()
 
     for (unsigned stat = 0; stat < nrStations; stat ++) {
       ppf.computeFlags(stat, &transposedData, &filteredData);
-      ppf.filter(stat, refFreq, &transposedData, &filteredData);
+      ppf.filter(stat, centerFrequency, &transposedData, &filteredData);
     }
 
     beamFormer.formBeams(&filteredData);
