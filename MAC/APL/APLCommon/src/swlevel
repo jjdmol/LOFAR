@@ -243,6 +243,12 @@ goto_level()
 			program=`echo $line | cut -d":" -f6`
 			stop_prog $program x$asroot x$withmpi
 		done
+
+		# set rcumode to 0 (power save) when entering level 1
+		if [ ${l} == 1 ]; then
+		    rspctl --rcumode=0
+		fi
+
 	done
 
 	# then power up to new level
