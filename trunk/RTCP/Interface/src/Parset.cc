@@ -23,6 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#if defined HAVE_APPLCOMMON
+
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
@@ -360,3 +362,5 @@ int Parset::findIndex(uint32 pset, const vector<uint32> &psets)
 
 } // namespace RTCP
 } // namespace LOFAR
+
+#endif

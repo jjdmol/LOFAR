@@ -27,6 +27,8 @@
 namespace LOFAR {
 namespace RTCP {
 
+#if defined HAVE_APPLCOMMON
+
 CN_Configuration::CN_Configuration( const Parset &parset )
 {
   nrStations()              = parset.nrStations();
@@ -76,6 +78,8 @@ CN_Configuration::CN_Configuration( const Parset &parset )
     }
   }
 }
+
+#endif
  
 
 void CN_Configuration::read(Stream *str)

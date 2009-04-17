@@ -38,7 +38,10 @@ class CN_Configuration
 {
   public:
     CN_Configuration() {}
+
+#if defined HAVE_APPLCOMMON
     CN_Configuration( const Parset &parset );
+#endif
 
     unsigned		  &nrStations();
     unsigned		  &nrBitsPerSample();
