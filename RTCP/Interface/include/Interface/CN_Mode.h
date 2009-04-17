@@ -25,7 +25,10 @@ class CN_Mode
     };
 
     CN_Mode();
-    CN_Mode( const Parset &ps );
+
+#if defined HAVE_APPLCOMMON
+    CN_Mode(const Parset &ps);
+#endif
 
     Mode mode() const;
 

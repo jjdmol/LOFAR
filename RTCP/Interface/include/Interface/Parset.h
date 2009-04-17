@@ -28,6 +28,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#if defined HAVE_APPLCOMMON
+
 //# Includes
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
@@ -429,4 +431,5 @@ inline bool Parset::stokesIntegrateChannels() const
 } // namespace RTCP
 } // namespace LOFAR
 
+#endif // defined HAVE_APPLCOMMON
 #endif

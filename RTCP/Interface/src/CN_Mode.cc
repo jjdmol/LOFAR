@@ -26,6 +26,9 @@ CN_Mode::CN_Mode()
   itsMarshalledData.mode = INVALID;
 }
 
+
+#if defined HAVE_APPLCOMMON
+
 CN_Mode::CN_Mode( const Parset &ps )
 {
   string name = ps.getModeName();
@@ -41,6 +44,9 @@ CN_Mode::CN_Mode( const Parset &ps )
     }
   }
 }
+
+#endif
+
 
 std::string CN_Mode::getModeName()
 {
