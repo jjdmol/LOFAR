@@ -35,7 +35,7 @@
 
 #include "CalibrationControl.h"
 #include "PVSSDatapointDefs.h"
-#include "../Package__Version.h"
+//#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -63,7 +63,7 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-	LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
+//	LOG_INFO(Version::getInfo<StationCUVersion>("CalibrationControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);

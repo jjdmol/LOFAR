@@ -30,6 +30,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -41,14 +42,13 @@
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <GCF/RTDB/DPservice.h>
-#include <APL/APLCommon/StationInfo.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
 
 #include "ActiveObs.h"
 #include "StationControl.h"
 #include "PVSSDatapointDefs.h"
-#include "../Package__Version.h"
+//#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -81,7 +81,7 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTimerPort		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
+//	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
 
 	// Readin some parameters from the ParameterSet.
 	itsInstanceNr = globalParameterSet()->getUint32("instanceNr", 0);
