@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 {
 //	signal (SIGCHLD, SIG_IGN);
 
-	GCFTask::init(argc, argv, "CTStartDaemon");
+	GCFScheduler::instance()->init(argc, argv, "CTStartDaemon");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_CTStartDaemon");
 
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
 	sd.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

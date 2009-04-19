@@ -39,6 +39,7 @@ namespace LOFAR {
 	using	MACIO::GCFEvent;
 	using	GCF::TM::GCFTimerPort;
 	using	GCF::TM::GCFTCPPort;
+	using	GCF::TM::GCFITCPort;
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;

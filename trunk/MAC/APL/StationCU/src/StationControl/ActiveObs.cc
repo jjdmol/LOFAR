@@ -229,7 +229,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		dispatch(event, port);
+		doEvent(event, port);
 	}
 	break;
 
@@ -320,7 +320,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		dispatch(event, port);
+		doEvent(event, port);
 	}
 	break;
 
@@ -414,7 +414,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		dispatch(event, port);
+		doEvent(event, port);
 	}
 	break;
 
@@ -553,7 +553,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		dispatch(event, port);
+		doEvent(event, port);
 	}
 	break;
 

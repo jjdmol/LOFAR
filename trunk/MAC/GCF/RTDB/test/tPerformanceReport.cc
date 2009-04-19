@@ -116,7 +116,7 @@ GCFEvent::TResult tPerformance::final(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 	
 	case F_TIMER:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -365,12 +365,12 @@ int main(int argc, char* argv[])
 	NR_OF_DPS = 1;
 	NR_OF_ACTIONS = 1000;
 
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	RTDB::tPerformance test_task("PVSSperformanceTest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

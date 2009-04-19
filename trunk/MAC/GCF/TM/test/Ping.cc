@@ -23,10 +23,10 @@
 //
 
 #include <lofar_config.h>
-
+#include <Common/LofarLogger.h>
 #include "Ping.h"
 #include "Echo_Protocol.ph"
-#include <Common/lofar_iostream.h>
+
 
 namespace LOFAR 
 {
@@ -58,7 +58,7 @@ Ping::Ping(string name)
    * - This is a Service Access Port which uses the
    *   ECHO_PROTOCOL 
    */
-  client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
+  client.init(*this, "EchoServer:test", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }
 
 Ping::~Ping()
@@ -68,6 +68,8 @@ Ping::~Ping()
 
 GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+	LOG_DEBUG_STR("Ping::initial: " << eventName(e));
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -107,6 +109,8 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 
 GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
 {
+	LOG_DEBUG_STR("Ping::connected: " << eventName(e));
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static int seqnr = 0;
@@ -156,6 +160,8 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
 
 GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
 {
+	LOG_DEBUG_STR("Ping::awaiting_echo: " << eventName(e));
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -175,7 +181,7 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
     	     << time_elapsed(&(echo.ping_time), &echo_time) << " sec."<< endl;
       if (echo.seqnr == 600)
       {
-        GCFTask::stop();
+        GCFScheduler::instance()->stop();
       }
       else
       {
@@ -206,13 +212,13 @@ using namespace LOFAR::GCF::TM;
 
 int main(int argc, char* argv[])
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   Ping ping_task("PING");
 
   ping_task.start(); // make initial transition
 
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 
   return 0;
 }

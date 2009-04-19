@@ -111,7 +111,7 @@ GCFEvent::TResult tPerformance::final(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 	
 	case F_TIMER:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -396,12 +396,12 @@ int main(int argc, char* argv[])
 		NR_OF_DPS = 10;
 	}
 
-	TM::GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	PVSS::tPerformance test_task("SALSpeedTest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

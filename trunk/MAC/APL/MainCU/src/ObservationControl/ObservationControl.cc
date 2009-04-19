@@ -578,7 +578,7 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 	}
   
     case F_TIMER:
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       break;
     
 	default:

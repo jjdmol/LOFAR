@@ -30,7 +30,7 @@ using namespace LOFAR::Test;
 
 int main(int argc, char* argv[])
 {
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	TestController	tc(argv[1]);
 	tc.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

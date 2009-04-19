@@ -24,11 +24,9 @@
 #define GCF_FSM_H
 
 #include <MACIO/GCF_Event.h>
-#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_PortInterface.h>
-
-#include <iostream>
-#include <cstdlib>
+#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/TM/GCF_Scheduler.h>
 
 namespace LOFAR {
   using MACIO::GCFEvent;
@@ -37,62 +35,8 @@ namespace LOFAR {
 
 #define TRAN(_target_) \
   { \
-    tran(static_cast<State>(&_target_), __func__, #_target_); \
+    tran(this, static_cast<State>(&_target_), __func__, #_target_); \
   }
-
-/**
- * This type of port can be used to transport internal messages linked to a 
- * port, which does not implement anything of the typical features of a port
- */
-class GCFDummyPort : public GCFPortInterface
-{
-  public:
-    explicit GCFDummyPort (GCFTask* pTask, 
-                  string name, 
-                  int protocol) : 
-      GCFPortInterface(pTask, name, SPP, protocol, false) 
-    {};
-
-    bool close () {return false;}
-    bool open () {return false;}
-
-    ssize_t send (GCFEvent& /*event*/)
-    {	return (0);	}
-    
-
-    ssize_t recv (void* /*buf*/, 
-                  size_t /*count*/) 
-    {	return (0);	}
-
-    long setTimer (long  /*delay_sec*/,
-                   long  /*delay_usec*/,
-                   long  /*interval_sec*/,
-                   long  /*interval_usec*/,
-                   void* /*arg*/) 
-    {	return (0);	}
-
-    long setTimer (double /*delay_seconds*/, 
-                   double /*interval_seconds*/,
-                   void*  /*arg*/)
-    {	return (0);	}
-
-    int cancelTimer (long /*timerid*/, 
-                     void** /*arg*/) 
-    {	return (0);	}
-
-    int cancelAllTimers ()
-    {	return (0);	}
-
-	double timeLeft(long	/*timerID*/)
-    {	return (0);	}
-  
-  private:
-    // not allowed
-    GCFDummyPort();
-    GCFDummyPort(GCFDummyPort&);
-    GCFDummyPort& operator= (GCFDummyPort&);
-
-};
 
 /**
  * Fsm = Finite State Machine
@@ -116,49 +60,80 @@ class GCFDummyPort : public GCFPortInterface
  */
 class GCFFsm
 {
-  protected: // constructors && destructors
-    typedef MACIO::GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
+public:
+	// ----- Internal type definitions -----
+	// Define the State function_type.
+    typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
     
-    explicit  GCFFsm (State initial) : _state(initial) {;} 
+    /// let the current State from the adapted task execute the event.
+    GCFEvent::TResult doEvent (GCFEvent& 		 event, 
+							   GCFPortInterface& port)
+    { 
+		if (event.signal == F_TRAN) {
+			GCFTranEvent*	tranEvent((GCFTranEvent*)&event);
+			itsState = tranEvent->state;
+			return (GCFEvent::HANDLED);
+		}
+		return (this->*itsState)(event, port); 
+	}
 
-  private:
-    GCFFsm();
+protected: // constructors && destructors
+	// Define TRANEvent
+	struct GCFTranEvent : public GCFEvent
+	{
+		GCFTranEvent() : GCFEvent(F_TRAN)
+		{
+			length = sizeof(GCFTranEvent);
+		}
+		State 	state;
+	};
 
-  public:
+    explicit  GCFFsm (State initial) : itsState(initial) {
+		itsScheduler = GCFScheduler::instance();
+	}
+
     virtual ~GCFFsm () {;}
   
     /// starts the statemachine with a F_ENTRY signal followed by a F_INIT signal
     void initFsm ();
   
-    /// dispatch incomming signals to the adapted task in the current state
-    MACIO::GCFEvent::TResult dispatch (GCFEvent& event, 
-                                GCFPortInterface& port)
-    {
-      return (this->*_state)(event, port);
-    }
-
 	/// send F_QUIt signal
 	void quitFsm();
   
-  protected:
-  
-    /** state transition; will be used by the MACRO TRAN see above
-     * sends a F_EXIT signal to the current state followed by the state transition
-     * and finaly sends a F_ENTRY signal to the new current state
-     * @param target new state
-     * @param from text of the current state
-     * @param to text of the new state
-     */
-    void tran (State target, 
+    // state transition; will be used by the MACRO TRAN see above
+    // sends a F_EXIT signal to the current state followed by the state transition
+    // and finaly sends a F_ENTRY signal to the new current state
+    // @param target new state
+    // @param from text of the current state
+    // @param to text of the new state
+    void tran (GCFFsm*	task,
+			   State target, 
                const char* from, 
                const char* to);
   
-  protected:
-    volatile State _state;
-  
-  private:
-    static GCFDummyPort _gcfPort;
+	// Allow the scheduler to manipulate my eventQueue.
+	friend class GCFScheduler;
+	void queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port);
+	void handleTaskQueue();
+
+private:
+	// Default construction and copying is not allowed.
+    GCFFsm();
+	GCFFsm(const GCFFsm& that);
+	GCFFsm& operator=(const GCFFsm& that);
+	
+	// ----- DATA MEMBERS -----
+	// Structure for the eventqueue
+	typedef struct {
+		GCFEvent*			event;
+		GCFPortInterface*	port;
+	} waitingTaskEvent_t;
+	list<waitingTaskEvent_t*>	itsEventQueue;
+
+    State 			itsState;
+	GCFScheduler*	itsScheduler;
 };
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

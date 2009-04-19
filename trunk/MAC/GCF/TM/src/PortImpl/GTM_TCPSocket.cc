@@ -84,9 +84,9 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 }
 
 //
-// recv(buf, count)
+// recv(buf, count, raw)
 //
-ssize_t GTMTCPSocket::recv(void* buf, size_t count)
+ssize_t GTMTCPSocket::recv(void* buf, size_t count, bool raw)
 {
 	if (_fd < 0) {
 		LOG_WARN("recv, error: Socket not opend");
@@ -110,9 +110,9 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 		else {
 			countLeft -= received;
 		}      
-	} while (countLeft > 0);
+	} while (!raw && (countLeft > 0));
 
-	return count;
+	return (count - countLeft);
 }
 
 //

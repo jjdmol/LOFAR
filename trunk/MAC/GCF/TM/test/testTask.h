@@ -39,6 +39,7 @@ namespace LOFAR {
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
   namespace GCF {
+	namespace TM {
 
 // \addtogroup GCF
 // @{
@@ -69,6 +70,7 @@ private:
 };
 
 // @}
+    } // namespace TM
   } // namespace GCF
 } // namespace LOFAR
 

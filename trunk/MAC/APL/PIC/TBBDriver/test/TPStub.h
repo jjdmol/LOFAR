@@ -32,6 +32,9 @@
 #include "TP_Protocol.ph"
 
 namespace LOFAR {
+	using GCF::TM::GCFTask;
+	using GCF::TM::GCFETHRawPort;
+	using GCF::TM::GCFPortInterface;
 	namespace TBB_Test {
 
     class TPStub : public GCFTask, public Test

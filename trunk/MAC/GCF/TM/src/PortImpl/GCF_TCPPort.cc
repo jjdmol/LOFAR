@@ -29,10 +29,10 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <Common/ParameterSet.h>
-#include "GTM_TCPServerSocket.h"
+#include <Timer/GTM_TimerHandler.h>
 #include <ServiceBroker/ServiceBrokerTask.h>
-//#include <ServiceBroker/GSB_Defines.h>
 #include <GTM_Defines.h>
+#include "GTM_TCPServerSocket.h"
 #include <errno.h>
 
 namespace LOFAR {
@@ -50,13 +50,18 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
                        int 			 protocol, 
                        bool 		 transportRawData) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
-    _pSocket(0),
-    _addrIsSet(false),
-	_addr(),
-	_host(myHostname(false)),
-    _portNumber(0),
-	itsFixedPortNr(false),
-    _broker(0)
+    _pSocket		  (0),
+    _addrIsSet		  (false),
+	_addr			  (),
+	_host			  (myHostname(false)),
+    _portNumber		  (0),
+	itsFixedPortNr	  (false),
+	itsAutoOpen		  (false),
+	itsAutoOpenTimer  (0),
+	itsAutoRetryTimer (0),
+	itsAutoRetries	  (0),
+	itsAutoRetryItv	  (0.0),
+    _broker			  (0)
 {
 	if (SPP == getType() || MSPP == getType()) {
 		_pSocket = new GTMTCPServerSocket(*this, (MSPP == type));
@@ -71,13 +76,18 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 //
 GCFTCPPort::GCFTCPPort()
     : GCFRawPort(),
-    _pSocket(0),
-    _addrIsSet(false),
-	_addr(),
-	_host(myHostname(false)),
-    _portNumber(0),
-	itsFixedPortNr(false),
-    _broker(0)
+    _pSocket		  (0),
+    _addrIsSet		  (false),
+	_addr			  (),
+	_host			  (myHostname(false)),
+    _portNumber		  (0),
+	itsFixedPortNr	  (false),
+	itsAutoOpen		  (false),
+	itsAutoOpenTimer  (0),
+	itsAutoRetryTimer (0),
+	itsAutoRetries	  (0),
+	itsAutoRetryItv	  (0.0),
+    _broker			  (0)
 {
 }
 
@@ -120,9 +130,10 @@ void GCFTCPPort::init(GCFTask& 		task,
 }
 
 //
-// try to open the socket
-// Remember that this routine may be called many times before a socket is
-// really open.
+// Try to open the socket
+// Remember that this routine may be called many times before a socket is realy open.
+//
+// NOTE: the return state reflects whether or not an answer is already send to the caller.
 //
 bool GCFTCPPort::open()
 {
@@ -155,7 +166,7 @@ bool GCFTCPPort::open()
 		if (_portNumber != 0) {					// dest. overruled by user?
 												// or answer already received before
 			// Try to 'open' en 'connect' to port
-			serviceInfo(SB_NO_ERROR, _portNumber, _host);
+			serviceInfo(SB_NO_ERROR, _portNumber, _host);		// sends a F_CONNECTED
 			return (true);
 		}
 
@@ -190,29 +201,127 @@ bool GCFTCPPort::open()
 		ASSERT(_broker);
 		_broker->getServiceinfo(*this, remoteServiceName, _host);
 		// a (dis)connect event will be scheduled
-		return (true);
+		return (false);	// REO: changed that
 	}
 
 	// porttype = MSPP or SPP
 	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
-	string portNumParam = formatString(PARAM_TCP_PORTNR, 
-						getTask()->getName().c_str(), getRealName().c_str());
+	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
 	if (globalParameterSet()->isDefined(portNumParam)) {
 		_portNumber = globalParameterSet()->getInt32(portNumParam);
 	}
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port
-		// a (dis)connect event will be scheduled
-		// Note: service is NOT registered at service broker!!!
-	}
-	else {	// portnumber not overruled by user so ask SB for a portnumber
-		_broker = ServiceBrokerTask::instance();
-		ASSERT(_broker);
-		_broker->registerService(*this);
-		// a (dis)connect event will be scheduled
+		return (true);
 	}
 
-	return (true);
+	// portnumber not overruled by user so ask SB for a portnumber
+	_broker = ServiceBrokerTask::instance();
+	ASSERT(_broker);
+	_broker->registerService(*this); // a (dis)connect event will be scheduled
+	return (false);	// REO changed that
+}
+
+//
+// autoOpen(nrRetries, timeout, reconnectInterval)
+//	Will generate a F_CONNECTED or F_DISCONNECTED event.
+//
+void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterval)
+{
+	itsAutoOpen = true;
+
+	if (open()) {							// first try to open it
+		return;
+	}
+
+	// It is not open yet. But the call to open() activated the ServiceBroker task to do it job.
+	// All we have to do is copy the user settings, (start a timer) and wait.
+
+	itsAutoOpenTimer  = 0;
+	itsAutoRetryTimer = 0;
+	itsAutoRetries    = nrRetries;
+	itsAutoRetryItv   = reconnectInterval;
+	if (timeout > 0.0) {		// absolute max auto-open time specified? Set timer for doomsday.
+		itsAutoOpenTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*timeout), 0, &itsAutoOpenTimer);
+		if (itsAutoRetries == 0) {
+			itsAutoRetries = -1;		// to let the timeout timer running
+		}
+	}
+}
+
+//
+// _handleDisconnect()
+//
+void GCFTCPPort::_handleDisconnect()
+{
+	LOG_TRACE_COND_STR("_handleDisco:autoOpen=" << (itsAutoOpen ? "Yes" : "No") << ", nrRetries=" << itsAutoRetries << ", retryTimer=" << itsAutoRetryTimer << ", maxTimer=" << itsAutoOpenTimer);
+
+	// retries left?
+	if (itsAutoOpen) {
+		if (itsAutoRetries != 0) {
+			itsAutoRetryTimer = _pTimerHandler->setTimer(*this, (uint64)(1000000.0*itsAutoRetryItv), 0, &itsAutoRetryTimer);
+			return;
+		}
+	}
+
+	// stop auto timer
+	if (itsAutoOpenTimer) {
+		_pTimerHandler->cancelTimer(itsAutoOpenTimer);
+		itsAutoOpenTimer = 0;
+	}
+	if (itsAutoRetryTimer) {
+		_pTimerHandler->cancelTimer(itsAutoRetryTimer);
+		itsAutoRetryTimer = 0;
+	}
+
+	// inform user
+	schedule_disconnected();
+}
+
+//
+// _handleConnect()
+//
+void GCFTCPPort::_handleConnect()
+{
+	// stop auto timer
+	if (itsAutoOpenTimer) {
+		_pTimerHandler->cancelTimer(itsAutoOpenTimer);
+		itsAutoOpenTimer = 0;
+	}
+	if (itsAutoRetryTimer) {
+		_pTimerHandler->cancelTimer(itsAutoRetryTimer);
+		itsAutoRetryTimer = 0;
+	}
+	itsAutoOpen = false;
+
+	// inform user
+	schedule_connected();
+}
+
+//
+// dispatch(event)
+//
+GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
+{
+	if (event.signal == F_TIMER) {
+		GCFTimerEvent	*TEptr = static_cast<GCFTimerEvent*>(&event);
+		if (TEptr->arg == &itsAutoOpenTimer) {	// Max auto open time reached?
+			itsAutoRetries   = 0;
+			itsAutoOpenTimer = 0;
+			_handleDisconnect();
+			return (GCFEvent::HANDLED);
+		}
+		if (TEptr->arg == &itsAutoRetryTimer) {
+			if (itsAutoRetries > 0) {		// don't lower counter when it is set by the maxTimer
+				itsAutoRetries--;
+			}
+			itsAutoRetryTimer = 0;
+			open();
+			return (GCFEvent::HANDLED);
+		}
+	}
+
+	return(GCFRawPort::dispatch(event));	// call dispatch from parent (RawPort).
 }
 
 
@@ -226,22 +335,20 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 {
 	ASSERT(MSPP == getType() || SPP == getType());
 	if (result != SB_NO_ERROR) {
-		schedule_disconnected();
+		_handleDisconnect();
 		return;
 	}
 
-	LOG_DEBUG(formatString (
-				"(M)SPP port '%s' in task '%s' listens on portnumber %d.",
-				getRealName().c_str(), _pTask->getName().c_str(),
-				portNumber));
+	LOG_DEBUG(formatString ( "(M)SPP port '%s' in task '%s' listens on portnumber %d.",
+				getRealName().c_str(), _pTask->getName().c_str(), portNumber));
 	_portNumber = portNumber;
 	if (!_pSocket->open(portNumber)) {
-		schedule_disconnected();
+		_handleDisconnect();
 		return;
 	}
 
 	if (getType() == MSPP) {
-		schedule_connected();
+		_handleConnect();
 	}
 }
 
@@ -262,7 +369,7 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 								makeServiceName().c_str(),
 								_addr.taskname.c_str(), _addr.portname.c_str()));
 
-		schedule_disconnected();
+		_handleDisconnect();
 		return;
 	}
 
@@ -276,12 +383,13 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 								_addr.taskname.c_str(), _addr.portname.c_str(),
 								host.c_str(), portNumber));
 
+		// Note: _pSocket is of type GTMTCPSocket
 		if (_pSocket->open(portNumber) && _pSocket->connect(portNumber, host)) {
-			schedule_connected();
+			_handleConnect();
 			return;
 		}
 
-		schedule_disconnected();
+		_handleDisconnect();
 	}
 }
 
@@ -317,14 +425,13 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 
 	LOG_TRACE_STAT(formatString (
 						"Sending event '%s' for task '%s' on port '%s'",
-//						getTask()->eventName(e).c_str(), 
 						eventName(e).c_str(), 
 						getTask()->getName().c_str(), 
 						getRealName().c_str()));
 
 	if ((written = _pSocket->send(buf, packsize)) != (ssize_t) packsize) {  
 		setState(S_DISCONNECTING);     
-		schedule_disconnected();
+		_handleDisconnect();
 
 		written = 0;
 	}
@@ -347,10 +454,10 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
 		return 0;
 	}
 
-	ssize_t	btsRead = _pSocket->recv(buf, count);
+	ssize_t	btsRead = _pSocket->recv(buf, count, isTransportRawData());
 	if (btsRead == 0) {
 		setState(S_DISCONNECTING);     
-		schedule_disconnected();
+		_handleDisconnect();
 	}
 
 	return (btsRead);
@@ -419,7 +526,7 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 
 	if (pProvider->accept(*port._pSocket)) {
 		setState(S_CONNECTING);        
-		port.schedule_connected();
+		port.schedule_connected();		// NO _handleConnect()  !!!!
 		result = true;
 	}
 	return result;

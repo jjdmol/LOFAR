@@ -30,7 +30,7 @@ namespace LOFAR {
  namespace APL {
   namespace RTDBCommon {
 
-class MgrTest : public GCFTask
+class MgrTest : public GCF::TM::GCFTask
 {
 public:
 	MgrTest (const string& name);
@@ -39,9 +39,9 @@ public:
 	GCFEvent::TResult doTest	(GCFEvent& e, GCFPortInterface& p);
 
 private:
-	GCFTimerPort*		itsTimerPort;
-	GCFITCPort*			itsMsgPort;
-	ClaimMgrTask*		itsClaimMgrTask;
+	GCF::TM::GCFTimerPort*		itsTimerPort;
+	GCF::TM::GCFITCPort*		itsMsgPort;
+	ClaimMgrTask*				itsClaimMgrTask;
 };
 
   } // namespace RTDBCommon

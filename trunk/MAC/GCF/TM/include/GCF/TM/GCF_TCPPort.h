@@ -65,53 +65,63 @@ public:// consturctors && destructors
      */ 
     GCFTCPPort ();
   
-private:  
-    /// copying is not allowed.
-    GCFTCPPort (const GCFTCPPort&);
-    GCFTCPPort& operator= (const GCFTCPPort&);
-
-public:
-    /// desctructor
+    /// destructor
     virtual ~GCFTCPPort ();
   
-public: // GCFPortInterface overloaded/defined methods
+	// GCFPortInterface overloaded/defined methods
     void init (GCFTask& 	 task, 
                const string& name, 
                TPortType 	 type, 
                int 			 protocol, 
                bool 		 transportRawData = false); 
 
-    /**
-     * open/close methods
-     */
+    // open/close methods
     virtual bool open ();
     virtual bool close ();
       
-    /**
-     * send/recv functions
-     */
+    // send/recv functions
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
-public: // GCFTCPPort specific methods    
+
+	// Special auto-open mode that does the retries itself
+	// nrRetries		: -1 = infinite ; How often to retry the open when it fails.
+	// reconnectInterval: After how many seconds after a fail a reconnect attempt will be made.
+	// timeout  		: -1 = infinite ; How long the auto-open attempts may last.
+	//
+	// Note: autoOpen(0,0) acts the same as open()
+	// When both nrRetries and timeout are specified the condition that will be met first will stop the auto open sequence.
+	void autoOpen(uint	nrRetries=5, double	timeout=-1.0, double	reconnectInterval=10.0);
+	virtual GCFEvent::TResult	dispatch(GCFEvent&	event);		// need to overright this one for autoOpen
+
+	// GCFTCPPort specific methods    
     virtual bool accept (GCFTCPPort& port); 
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
-    void setAddr (const TPeerAddr& addr);
-    void setHostName(const string& hostname);
+    void setAddr 	  (const TPeerAddr& addr);
+    void setHostName  (const string& hostname);
     void setPortNumber(unsigned int portNumber);
     string getHostName();
     unsigned int getPortNumber();
 
-private: // helper methods
+private:  
+    /// copying is not allowed.
+    GCFTCPPort (const GCFTCPPort&);
+    GCFTCPPort& operator= (const GCFTCPPort&);
+
+	// helper methods
     friend class SB::ServiceBrokerTask;
     void serviceRegistered(unsigned int result, unsigned int portNumber);
     void serviceUnregistered();
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
     void serviceGone();
+
+	void _handleConnect();
+	void _handleDisconnect();
     
-protected: // data members
-    GTMTCPSocket*   _pSocket;
+	// ----- Data Members -----
+protected: 
+    GTMTCPSocket*   		_pSocket;
 
 private:
     bool					_addrIsSet;
@@ -119,8 +129,14 @@ private:
     string					_host;
     unsigned int			_portNumber;
 	bool					itsFixedPortNr;
+	bool					itsAutoOpen;
+	unsigned int			itsAutoOpenTimer;
+	unsigned int			itsAutoRetryTimer;
+	int						itsAutoRetries;
+	double					itsAutoRetryItv;
     SB::ServiceBrokerTask*	_broker;
 };
+
 
 inline void GCFTCPPort::setHostName(const string& hostname)
 {
@@ -141,12 +157,12 @@ inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
 
 inline string GCFTCPPort::getHostName()
 {
-  return _host;
+	return _host;
 }
 
 inline unsigned int GCFTCPPort::getPortNumber()
 {
-  return _portNumber;
+	return _portNumber;
 }
   } // namespace TM
  } // namespace GCF

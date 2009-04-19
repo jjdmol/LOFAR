@@ -27,9 +27,12 @@
 
 #include <Suite/test.h>
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/TM/GCF_ETHRawPort.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTimerPort;
+  using GCF::TM::GCFETHRawPort;
   namespace RSP_Test {
 
     class EPAStub : public GCFTask, public Test

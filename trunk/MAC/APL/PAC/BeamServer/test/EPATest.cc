@@ -239,7 +239,7 @@ GCFEvent::TResult EPATest::done(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
   case F_ENTRY:
-    GCFTask::stop();
+    GCFScheduler::instance()->stop();
     break;
   }
 
@@ -249,12 +249,12 @@ GCFEvent::TResult EPATest::done(GCFEvent& e, GCFPortInterface& /*port*/)
 void EPATest::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   if (argc != 4) {
     cerr << "usage: EPATest subarrayname startbeamlet nbeamlets" << endl;

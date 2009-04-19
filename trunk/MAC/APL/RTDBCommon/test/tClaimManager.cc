@@ -89,7 +89,7 @@ GCFEvent::TResult MgrTest::doTest(GCFEvent& event, GCFPortInterface& port)
 	break;
 
 	case F_TIMER:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -111,12 +111,12 @@ using namespace LOFAR::APL::RTDBCommon;
 
 int main(int argc, char* argv[])
 {
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	MgrTest test_task("UtilTest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

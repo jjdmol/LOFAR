@@ -30,6 +30,8 @@
 
 namespace LOFAR {
  namespace GCF {
+  using TM::GCFTask;
+  using TM::GCFTimerPort;
   namespace PVSS {
 /**
  * The tMonitorState task receives ECHO_PING events from the Ping task and

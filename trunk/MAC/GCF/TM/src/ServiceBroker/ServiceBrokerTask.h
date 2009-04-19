@@ -28,20 +28,27 @@
 #include <Common/lofar_list.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
-#include "GTM_SBTCPPort.h"
 #include <GCF/TM/GCF_Handler.h>
+#include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_TimerPort.h>
+#include "GTM_SBTCPPort.h"
 
 namespace LOFAR {
- using MACIO::GCFEvent;
- namespace GCF {  
-  namespace SB {
+  using MACIO::GCFEvent;
+  namespace GCF {
+	using TM::GCFPortInterface;
+	using TM::GCFTCPPort;
+	using TM::GCFTimerPort;
+	using TM::GCFTask;
+	using TM::GCFHandler;
+	namespace SB {
 
 /**
 */
 
 class GTMSBHandler;
 
-class ServiceBrokerTask : public TM::GCFTask
+class ServiceBrokerTask : public GCFTask
 {
 public:
     ~ServiceBrokerTask ();
@@ -49,25 +56,25 @@ public:
     static void release();
 
 	// member functions
-    void registerService  (TM::GCFTCPPort&	servicePort);
-    void unregisterService(TM::GCFTCPPort&	servicePort);
-    void getServiceinfo   (TM::GCFTCPPort&	clientPort, 
+    void registerService  (GCFTCPPort&	servicePort);
+    void unregisterService(GCFTCPPort&	servicePort);
+    void getServiceinfo   (GCFTCPPort&	clientPort, 
 						   const string& 	remoteServiceName,
 						   const string&	hostname);
-    void deletePort		  (TM::GCFTCPPort&	port);
+    void deletePort		  (GCFTCPPort&	port);
   
 private:
     friend class GTMSBHandler;
     ServiceBrokerTask ();
 
 	// state methods
-    GCFEvent::TResult operational (GCFEvent& e, TM::GCFPortInterface& p);
+    GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
         
 	// helper structures and classes
     typedef struct action_t {
 		uint16				seqnr;
 		uint16 				type;
-		TM::GCFTCPPort*		pPort;
+		GCFTCPPort*		pPort;
 		string 				servicename;
 		string				hostname;
 		time_t				timestamp;
@@ -100,6 +107,7 @@ private:
 	void	_deleteService     (GCFTCPPort&			aPort);
     uint16	_registerAction    (Action 				action);
 	void	_doActionList	   (const string&		hostname);
+	void	_printActionList   ();
 	ALiter	_findAction		   (uint16				seqnr);
 	BMiter	_getBroker		   (const string&		hostname);
 	void	_reconnectBrokers  ();
@@ -120,7 +128,7 @@ private:
 
 };
 
-class GTMSBHandler : public TM::GCFHandler
+class GTMSBHandler : public GCFHandler
 {
 public:
     ~GTMSBHandler() { _pInstance = 0; }

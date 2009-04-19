@@ -40,15 +40,15 @@ namespace LOFAR {
   namespace TM {
     
 GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider) : 
-  GTMTCPSocket(port),
-  _isProvider(isProvider),
-  _pDataSocket(0)
+	GTMTCPSocket(port),
+	_isProvider(isProvider),
+	_pDataSocket(0)
 {
 }
 
 GTMTCPServerSocket::~GTMTCPServerSocket()
 {
-  close();  
+	close();  
 }
 
 bool GTMTCPServerSocket::open(unsigned int portNumber)
@@ -110,102 +110,112 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 	return (true);
 }
 
-void GTMTCPServerSocket::workProc()
+//
+// doWork()
+//
+// Called by the GTM_FileHandler when 'select' returned an event on this fd.
+//
+void GTMTCPServerSocket::doWork()
 {
-  if (_isProvider) {
-    GCFEvent acceptReqEvent(F_ACCEPT_REQ);
-    dispatch(acceptReqEvent);
-  }
-  else {
-    GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
+	LOG_TRACE_FLOW("GTMTCPServerSocket::doWork()");
 
-    ASSERT(_pDataSocket == 0);
-    _pDataSocket = new GTMTCPSocket(*pPort);
-    ASSERT (_pDataSocket->getFD() < 0);
+	if (_isProvider) {
+		GCFEvent acceptReqEvent(F_ACCEPT_REQ);
+		forwardEvent(acceptReqEvent);
+	}
+	else {
+		GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
 
-    struct sockaddr_in clientAddress;
-    socklen_t clAddrLen = sizeof(clientAddress);
-    int newSocketFD;
+		ASSERT(_pDataSocket == 0);
+		_pDataSocket = new GTMTCPSocket(*pPort);
+		ASSERT (_pDataSocket->getFD() < 0);
 
-    /* loop to handle transient errors */
-    int retries = MAX_ACCEPT_RETRIES;
-    while ((newSocketFD = ::accept(_fd, 
-			   (struct sockaddr*) &clientAddress,
-				   &clAddrLen)) < 0
-	   && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)
-	   && --retries > 0) /*noop*/;
+		struct sockaddr_in clientAddress;
+		socklen_t clAddrLen = sizeof(clientAddress);
+		int newSocketFD;
 
-    _pDataSocket->setFD(newSocketFD);
-         
-    if (_pDataSocket->getFD() >= 0) {
-      GCFEvent connectedEvent(F_CONNECTED);
-      dispatch(connectedEvent);
-    }
-    else {
-      LOG_WARN(formatString ( "::accept, error: %s", strerror(errno)));
-    }
-    
-    // because we only accept one connection (SPP), we don't need to listen with
-    // this socket anymore
-    GTMFile::close();
-  }
+		/* loop to handle transient errors */
+		int retries = MAX_ACCEPT_RETRIES;
+		while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
+			&& (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
+			/*noop*/;
+
+		_pDataSocket->setFD(newSocketFD);
+
+		if (_pDataSocket->getFD() >= 0) {
+			GCFEvent connectedEvent(F_CONNECTED);
+			forwardEvent(connectedEvent);
+		}
+		else {
+			LOG_WARN(formatString ( "::accept, error: %s", strerror(errno)));
+		}
+
+		// because we only accept one connection (SPP), we don't need to listen with
+		// this socket anymore
+		GTMFile::close();
+	}
 }
 
+//
+// accept(newsocket)
+//
+// Called by the usercode after getting an F_ACCEPT_REQ
+//
 bool GTMTCPServerSocket::accept(GTMFile& newSocket)
 {
-  bool result(false);
-  if (_isProvider && _pDataSocket == 0) {
-    struct sockaddr_in clientAddress;
-    socklen_t clAddrLen = sizeof(clientAddress);
-    int newSocketFD;
+	bool result(false);
+	if (_isProvider && _pDataSocket == 0) {
+		struct sockaddr_in clientAddress;
+		socklen_t clAddrLen = sizeof(clientAddress);
+		int newSocketFD;
 
-    /* loop to handle transient errors */
-    int retries = MAX_ACCEPT_RETRIES;
-    while ((newSocketFD = ::accept(_fd, 
-                       (struct sockaddr*) &clientAddress, 
-				   &clAddrLen)) < 0
-	   && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno)
-	   && --retries > 0) /*noop*/;
-    
-    result = (newSocket.setFD(newSocketFD) > 0);
-    if (!result) {
-      LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
-    }
-  }
-  
-  return result;
+		/* loop to handle transient errors */
+		int retries = MAX_ACCEPT_RETRIES;
+		while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
+			&& (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
+			/*noop*/;
+
+		result = (newSocket.setFD(newSocketFD) > 0);
+		if (!result) {
+			LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
+		}
+	}
+
+	return result;
 }
 
 bool GTMTCPServerSocket::close()
 {
-  bool result(true);
-  
-  if (!_isProvider && _pDataSocket != 0) {
-    result = _pDataSocket->close();
-    delete _pDataSocket;
-    _pDataSocket = 0;
-  }
-  if (result)
-    result = GTMFile::close();
-    
-  return result;
+	bool result(true);
+
+	if (!_isProvider && _pDataSocket != 0) {
+		result = _pDataSocket->close();
+		delete _pDataSocket;
+		_pDataSocket = 0;
+	}
+	if (result) {
+		result = GTMFile::close();
+	}
+
+	return result;
 }
 
 ssize_t GTMTCPServerSocket::send(void* buf, size_t count)
 {
-  if (!_isProvider && _pDataSocket != 0) 
-    return _pDataSocket->send(buf, count);
-  else
-    return 0;
+	if (!_isProvider && _pDataSocket != 0) {
+		return _pDataSocket->send(buf, count);
+	}
+	return 0;
 }
 
-ssize_t GTMTCPServerSocket::recv(void* buf, size_t count)
+ssize_t GTMTCPServerSocket::recv(void* buf, size_t count, bool  raw)
 {
-  if (!_isProvider && _pDataSocket != 0) 
-    return _pDataSocket->recv(buf, count);
-  else
-    return 0;
+	if (!_isProvider && _pDataSocket != 0) {
+		return _pDataSocket->recv(buf, count, raw);
+	}
+	return 0;
 }
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

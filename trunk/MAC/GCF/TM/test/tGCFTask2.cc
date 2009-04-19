@@ -34,7 +34,7 @@ using namespace LOFAR::GCF;
 
 int main(int argc,	char*	argv[]) 
 {
-	GCFTask::init(argc, argv, basename(argv[0]));
+	GCFScheduler::instance()->init(argc, argv, basename(argv[0]));
 
 	LOG_INFO("THIS PROGRAM RUNS UNTIL YOU STOP IT WITH CTRL-C!!!");
 	sleep(2);
@@ -47,15 +47,15 @@ int main(int argc,	char*	argv[])
 	medium.start();
 	slow.start();
 
-	GCFTask::setDelayedQuit(true);
+	GCFScheduler::instance()->setDelayedQuit(true);
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	fast.quit();
 	medium.quit();
 	slow.quit();
 
-	GCFTask::run(2.0);
+	GCFScheduler::instance()->run(2.0);
 
 	return (0);
 }

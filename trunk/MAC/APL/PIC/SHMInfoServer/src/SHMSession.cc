@@ -207,12 +207,14 @@ GCFEvent::TResult SHMSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
     
     case SHM_RECONFIGURATION_REQUEST:
       TRAN(SHMSession::reconfigure_state);
-      dispatch(e, p);
+//      dispatch(e, p);
+	  GCFScheduler::instance()->queueEvent(this, e, &p);
       break;
     
     case SHM_LOFAR_STRUCTURE_REQUEST:
       TRAN(SHMSession::getPICStructure_state);
-      dispatch(e, p);
+//      dispatch(e, p);
+	  GCFScheduler::instance()->queueEvent(this, e, &p);
       break;
     
 //    case SHM_PVSS_DP_SUBSCRIPTION_REQUEST:

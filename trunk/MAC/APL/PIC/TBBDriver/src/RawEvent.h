@@ -28,6 +28,8 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
+	using GCF::TM::GCFTask;
+	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 		
 		class RawEvent

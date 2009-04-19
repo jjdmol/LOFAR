@@ -149,7 +149,7 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 
 				// client timer expired? dispatch to slave
 				if (clientIt != itsToSlaveTimerId.end()) {
-					status = itsSlaveTask.dispatch(*pActualEvent, *this);
+					status = itsSlaveTask.doEvent(*pActualEvent, *this);
 					// extra check to see if it still exists:
 					clientIt = itsToSlaveTimerId.find(timerEvent.id);
 					if (clientIt != itsToSlaveTimerId.end()) {
@@ -158,7 +158,7 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 				}
 				// server timer expired? dispatch to server
 				else if (serverIt != itsToContainerTimerId.end()) {
-					status = _pTask->dispatch(*pActualEvent, *this);
+					status = _pTask->doEvent(*pActualEvent, *this);
 					// extra check to see if it still exists:
 					serverIt = itsToContainerTimerId.find(timerEvent.id);
 					if (serverIt != itsToContainerTimerId.end()) {

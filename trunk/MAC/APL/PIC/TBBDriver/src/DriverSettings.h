@@ -31,6 +31,7 @@
 
 
 namespace LOFAR {
+  using GCF::TM::GCFPortInterface;
   namespace TBB {
 
 static const int DRIVER_VERSION = 206; // 2.06 

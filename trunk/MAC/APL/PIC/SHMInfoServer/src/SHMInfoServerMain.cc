@@ -31,7 +31,7 @@ using namespace LOFAR::AMI;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "SHMInfoServer");
+	GCFScheduler::instance()->init(argc, argv, "SHMInfoServer");
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_SHMInfoServer");
 
 	SHMInfoServer 	sis;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
 	//
 	try {
-	  GCFTask::run();
+	  GCFScheduler::instance()->run();
 	}
 	catch (std::exception& x) {
 	  LOG_INFO_STR("Unexpected exception: " << x.what());

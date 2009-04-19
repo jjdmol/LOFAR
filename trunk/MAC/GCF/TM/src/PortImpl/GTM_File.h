@@ -34,6 +34,7 @@ namespace LOFAR {
 // forward declaration
 class GTMFileHandler;
 class GCFRawPort;
+class GCFScheduler;
 
 /**
  * This class consists of the basic implementation of a "file/device". 
@@ -60,34 +61,28 @@ class GTMFile
      * send/recv methods
      */
     virtual ssize_t send (void* buf, size_t count) = 0;
-    virtual ssize_t recv (void* buf, size_t count) = 0;
+    virtual ssize_t recv (void* buf, size_t count, bool raw = false) = 0;
 
     int getFD () const {return _fd;}
     virtual int setFD (int fd);
-    virtual void workProc ();
+    virtual void doWork ();
     
   protected: // helper methods
-    GCFEvent::TResult   dispatch (GCFEvent& event);
+    void forwardEvent (GCFEvent& event);
         
   protected: // data members
     /// filedescriptor
-    int               _fd;
+    int					_fd;
     /// selects on all registered filedescriptors
-    GTMFileHandler*   _pHandler; 
+    GTMFileHandler*		_pHandler; 
     /// related port
-    GCFRawPort&       _port;    
+    GCFRawPort&			_port;    
+	// Pointer to the scheduler.
+	GCFScheduler*		itsScheduler;
 };
 
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR
 
-#include <GCF/TM/GCF_RawPort.h>
-
-using namespace LOFAR::GCF::TM;
-
-inline LOFAR::MACIO::GCFEvent::TResult GTMFile::dispatch (LOFAR::MACIO::GCFEvent& event) 
-{
-  return _port.dispatch(event);
-}
 #endif

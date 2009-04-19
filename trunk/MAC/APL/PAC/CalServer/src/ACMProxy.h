@@ -31,7 +31,10 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
-typedef		void*		memptr_t;
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFPortInterface;
+  typedef		void*		memptr_t;
   namespace CAL {
 
     class ACMProxy : public GCFTask

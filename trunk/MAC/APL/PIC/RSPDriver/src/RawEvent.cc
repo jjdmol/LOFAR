@@ -33,6 +33,7 @@
 #include "RawEvent.h"
 
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace EPA_Protocol;
 
 /**
@@ -830,7 +831,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		//
 		// dispatch the MEP message as a GCFEvent (which it now is)
 		//
-		status = task.dispatch(buf.event, port);
+		status = task.doEvent(buf.event, port);
 	}
 	else {
 		LOG_WARN("F_DATAIN: Discarding unknown message.");

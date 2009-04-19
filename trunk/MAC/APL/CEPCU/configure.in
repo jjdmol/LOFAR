@@ -75,6 +75,7 @@ AC_OUTPUT(
 src/Makefile
 src/ApplController/Makefile
 src/CEPlogProcessor/Makefile
+src/BGPlogProcessor/Makefile
 src/OnlineControl/Makefile
 dnl src/OfflineControl/Makefile
 Makefile

@@ -28,6 +28,8 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFFsm;
+  using GCF::TM::GCFPortInterface;
   namespace RSP {
 
     class SyncAction : public GCFFsm

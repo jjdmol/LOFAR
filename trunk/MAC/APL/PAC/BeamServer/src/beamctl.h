@@ -32,10 +32,11 @@
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 
-namespace LOFAR
-{
-  namespace BS
-    {
+namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFPortInterface;
+  namespace BS {
 
       class beamctl : public GCFTask
 	{

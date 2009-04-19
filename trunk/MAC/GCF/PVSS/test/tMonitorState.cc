@@ -112,7 +112,7 @@ GCFEvent::TResult tMonitorState::final(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	switch (e.signal) {
 	case F_ENTRY:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -160,12 +160,12 @@ using namespace LOFAR::GCF;
 
 int main(int argc, char* argv[])
 {
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	PVSS::tMonitorState test_task("QueryTest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

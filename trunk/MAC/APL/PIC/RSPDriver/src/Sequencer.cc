@@ -30,11 +30,12 @@
 #include "Cache.h"
 #include "StationSettings.h"
 
-using namespace LOFAR;
-using namespace RSP;
-using namespace EPA_Protocol;
-using namespace RTC;
 using namespace blitz;
+namespace LOFAR {
+	using namespace GCF::TM;
+	using namespace EPA_Protocol;
+	using namespace RTC;
+	namespace RSP {
 
 #define TDREAD_TIMEOUT 3
 #define RSUCLEAR_WAIT  5
@@ -65,7 +66,7 @@ Sequencer::~Sequencer()
 
 void Sequencer::run(GCFEvent& event, GCFPortInterface& port)
 {
-  this->dispatch(event, port);
+  this->doEvent(event, port);
 }
 
 bool Sequencer::isActive() const
@@ -583,3 +584,7 @@ GCFEvent::TResult Sequencer::cdoenable_state(GCFEvent& event, GCFPortInterface& 
 
   return GCFEvent::HANDLED;
 }
+
+  } // namespace RSP
+} // namespace LOFAR
+

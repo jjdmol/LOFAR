@@ -23,16 +23,17 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
+
+#include <GCF/TM/GCF_Scheduler.h>
 
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include "RawEvent.h"
+#include <APL/RSP_Protocol/BeamletWeights.h>
+#include <APL/RTCCommon/PSAccess.h>
 
+#include "RawEvent.h"
 #include "EPAStub.h"
 
-#include <APL/RSP_Protocol/BeamletWeights.h>
-
-#include <APL/RTCCommon/PSAccess.h>
-#include <Common/ParameterSet.h>
 
 #include <iostream>
 #include <sys/time.h>
@@ -40,8 +41,9 @@
 #include <math.h>
 
 using namespace std;
-using namespace LOFAR;
-using namespace RSP_Test;
+namespace LOFAR {
+  using namespace GCF::TM;
+  namespace RSP_Test {
 
 #define ETHERTYPE_EPA 0x10FA
 
@@ -547,7 +549,7 @@ GCFEvent::TResult EPAStub::final(GCFEvent& event, GCFPortInterface& /*port*/)
   switch(event.signal)
   {
     case F_ENTRY:
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       break;
 
     case F_EXIT:
@@ -618,12 +620,21 @@ GCFEvent::TResult EPAStub::read_stats(EPAReadEvent& event, GCFPortInterface& por
 void EPAStub::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
+
+
+  } // namespace RSP_Test
+} // namespace LOFAR
+
+
+using namespace LOFAR;
+using namespace RSP_Test;
+using namespace GCF::TM;
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 

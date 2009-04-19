@@ -25,10 +25,12 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include "testTask.h"
 
 namespace LOFAR {
   namespace GCF {
+    namespace TM {
 
 //
 // testTask(name, timerInterval)
@@ -80,7 +82,7 @@ GCFEvent::TResult	testTask::mainTask(GCFEvent&	event, GCFPortInterface&	port)
 			GCFTimerEvent&		timerEvent = static_cast<GCFTimerEvent&>(event);
 			if (timerEvent.id == itsStopTimer) {
 				LOG_INFO("STOPTIMER EXPIRED, CALLING STOP()");
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
 		break;
@@ -114,5 +116,6 @@ GCFEvent::TResult	testTask::mainTask(GCFEvent&	event, GCFPortInterface&	port)
 	return (GCFEvent::HANDLED);
 }
 
+	} // namespace TM
   } // namespace GCF
 } // namespace LOFAR

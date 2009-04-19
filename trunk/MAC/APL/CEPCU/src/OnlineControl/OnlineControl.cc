@@ -512,7 +512,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	}
 
 	case F_TIMER:
-		GCFTask::stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:

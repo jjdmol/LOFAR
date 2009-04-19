@@ -81,7 +81,7 @@ ServiceBrokerTask* ServiceBrokerTask::instance(bool temporary)
 		GTMSBHandler::_pInstance->use();
 	}
 
-	return &GTMSBHandler::_pInstance->_controller;
+	return (&GTMSBHandler::_pInstance->_controller);
 }
 
 //
@@ -267,7 +267,7 @@ void ServiceBrokerTask::_logResult(uint16	 	result,
 		break;
 
 		case SB_UNKNOWN_SERVICE:
-			LOG_FATAL_STR("Unknown remote service: "<< servicename << "@" << hostname);
+			LOG_WARN_STR("Unknown remote service: "<< servicename << "@" << hostname);
 		break;
 
 		case SB_NO_CONNECTION:
@@ -332,6 +332,7 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 	if (itsActionList.empty()) {
 		return;
 	}
+	_printActionList();
 
 	// Note: while processing the list, the list grows. Therefore we use actionsLeft.
 	ALiter		end  = itsActionList.end();
@@ -431,16 +432,43 @@ void ServiceBrokerTask::_reconnectBrokers()
 }
 
 //
+// _printActionList
+//
+void ServiceBrokerTask::_printActionList()
+{
+	if (itsActionList.empty()) {
+		return;
+	}
+
+	ALiter	end  = itsActionList.end();
+	ALiter	iter = itsActionList.begin();
+	string	typeName;
+	LOG_TRACE_FLOW_STR("ActionList at " << time(0));
+	while (iter != end) {
+		switch (iter->type) {
+		case SB_REGISTER_SERVICE:	typeName = "Register";		break;
+		case SB_UNREGISTER_SERVICE: typeName = "Unregister";	break;
+		case SB_GET_SERVICEINFO: 	typeName = "ServiceInfo";	break;
+		default:					typeName = "???";			break;
+		}
+
+		LOG_DEBUG_STR(typeName << " " << iter->servicename << "@" << iter->hostname << 
+						"(" << iter->timestamp << ")");
+		++iter;
+	}
+}
+
+//
 // _checkActionList(hostname);
 //
 void ServiceBrokerTask::_checkActionList(const string&	hostname)
 {
 	LOG_TRACE_FLOW_STR("_checkActionList(" << hostname <<")");
+	_printActionList();
 
 	ALiter	end  = itsActionList.end();
 	ALiter	iter = itsActionList.begin();
 	time_t	currentTime = time(0);
-
 	// check for which actions we are late.
 	while (iter != end) {
 		if (iter->hostname == hostname && currentTime > iter->timestamp+itsMaxResponse) {

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	}
 
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, "ClockControl");
+	GCFScheduler::instance()->init(argc, argv, "ClockControl");
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	ClockControl	cc(argv[1]);
 	cc.start(); 	// make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

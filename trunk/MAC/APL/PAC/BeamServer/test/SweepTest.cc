@@ -230,7 +230,7 @@ GCFEvent::TResult SweepTest::done(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
   case F_ENTRY:
-    GCFTask::stop();
+    GCFScheduler::instance()->stop();
     break;
   }
 
@@ -240,13 +240,13 @@ GCFEvent::TResult SweepTest::done(GCFEvent& e, GCFPortInterface& /*port*/)
 void SweepTest::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
   LOG_INFO(formatString("Program %s has started", argv[0]));
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   cout << "Subband index to plot: ";
   char buf[32];

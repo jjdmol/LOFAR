@@ -26,7 +26,7 @@
 
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
-#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Scheduler.h>
 //#include <Common/ParameterSet.h>
 
 namespace LOFAR {
@@ -38,8 +38,8 @@ GSASCADAHandler* GSASCADAHandler::instance()
 {
   if (0 == _pInstance) {
     string cmdline;
-    for (int i = 0; i < GCFTask::_argc; i++) {
-      cmdline += GCFTask::_argv[i];
+    for (int i = 0; i < TM::GCFScheduler::_argc; i++) {
+      cmdline += TM::GCFScheduler::_argv[i];
       cmdline += " ";
     }
     cmdline += "-currentproj ";
@@ -47,9 +47,9 @@ GSASCADAHandler* GSASCADAHandler::instance()
 //#define PARAM_PVSS_CMDLINE "mac.%s.pvss.cmdline"
 //#define PARAM_DEFAULT_PVSS_CMDLINE "mac.controller.pvss.cmdline"
 //    string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
-//    char* appName = strrchr(GCFTask::_argv[0], '/');
+//    char* appName = strrchr(GCFScheduler::_argv[0], '/');
 //    if (!globalParameterSet()->isDefined(pvssCmdLineParam)) {            
-//      pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
+//      pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFScheduler::_argv[0]));
 //    }
 //    if (globalParameterSet()->isDefined(pvssCmdLineParam)) {
 //      cmdline += globalParameterSet()->getString(pvssCmdLineParam);

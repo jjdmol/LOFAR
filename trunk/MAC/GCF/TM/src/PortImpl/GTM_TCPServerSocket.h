@@ -25,12 +25,9 @@
 
 #include "GTM_TCPSocket.h"
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 // forward declaration
 
@@ -42,37 +39,33 @@ namespace LOFAR
  */
 class GTMTCPServerSocket : public GTMTCPSocket
 {
-  public: // constructors, destructors and default operators
+public: 
+	// constructors, destructors and default operators
     GTMTCPServerSocket (GCFTCPPort& port, 
                         bool isProvider = false);
-  
     virtual ~GTMTCPServerSocket ();
   
-  private:
+	// GTMTCPServerSocket specific member methods
+    // open/close methods
+    virtual bool open (unsigned int portNumber);
+    virtual bool close ();
+    bool accept (GTMFile& newSocket);
+    
+    // send/recv methods
+    virtual ssize_t send (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count, bool raw = false);
+
+private:
     GTMTCPServerSocket();
     /// Don't allow copying of the GTMTCPServerSocket object.
     GTMTCPServerSocket (const GTMTCPServerSocket&);
     GTMTCPServerSocket& operator= (const GTMTCPServerSocket&);
 
-  public: // GTMTCPServerSocket specific member methods
-    /**
-     * open/close methods
-     */
-    virtual bool open (unsigned int portNumber);
-    virtual bool close ();
-    bool accept (GTMFile& newSocket);
+protected:
+    virtual void doWork();
     
-    /**
-     * send/recv methods
-     */
-    virtual ssize_t send (void* buf, size_t count);
-    virtual ssize_t recv (void* buf, size_t count);
-
-  protected:
-    virtual void workProc ();
-    
-    bool _isProvider;
-    GTMTCPSocket* _pDataSocket;
+    bool 			_isProvider;
+    GTMTCPSocket*	_pDataSocket;
 };
 
   } // namespace TM

@@ -175,10 +175,12 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 		if (&port == itsListener) {
 			client->init(*this, "application", GCFPortInterface::SPP, 0, true);
 			itsListener->accept(*client);
+			LOG_DEBUG("New connection with an application");
 		}
 		if (&port == itsBackDoor) {
 			client->init(*this, "LogClient", GCFPortInterface::SPP, LOG_PROTOCOL);
 			itsBackDoor->accept(*client);
+			LOG_DEBUG("New connection with a LogCLient");
 		}
 	}
 	break;
@@ -242,6 +244,7 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 
 		// Construct an InternalLoggingEvent from the buffer
 		spi::InternalLoggingEvent l4cpLogEvent = readFromBuffer(buffer);           
+		LOG_TRACE_RTTI_STR("IN:" << l4cpLogEvent.getMessage());
 
 		// Has client a known DP?
 		string 	PVSSdp(_searchClientDP(l4cpLogEvent, port));

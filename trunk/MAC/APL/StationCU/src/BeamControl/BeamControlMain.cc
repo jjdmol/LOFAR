@@ -31,7 +31,7 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, argv[1]);
+	GCFScheduler::instance()->init(argc, argv, argv[1]);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	BeamControl	bc(argv[1]);
 	bc.start(); 	// make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

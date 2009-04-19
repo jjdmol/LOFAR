@@ -33,6 +33,7 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFPortInterface;
   namespace RSP {
 
 class Command : public RefCount

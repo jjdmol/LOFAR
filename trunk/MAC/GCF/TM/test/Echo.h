@@ -27,12 +27,9 @@
 
 #include <GCF/TM/GCF_Control.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 /**
  * The Echo task receives ECHO_PING events from the Ping task and
@@ -72,7 +69,7 @@ class Echo : public GCFTask
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-  GCFPort server;
+  GCFTCPPort* server;
 };
 
   } // namespace TM

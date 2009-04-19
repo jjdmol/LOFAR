@@ -60,7 +60,7 @@ ssize_t GTMDevice::send(void* buf, size_t count)
     return 0;
 }
 
-ssize_t GTMDevice::recv(void* buf, size_t count)
+ssize_t GTMDevice::recv(void* buf, size_t count, bool /*raw*/)
 {
   if (_fd > -1) 
     return ::read(_fd, buf, count);

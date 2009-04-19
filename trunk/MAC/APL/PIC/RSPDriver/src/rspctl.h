@@ -36,7 +36,6 @@
 #include "RSPFE_Protocol.ph"
 #endif
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/TM/GCF_ETHRawPort.h>
 
 #include <APL/RTCCommon/Timestamp.h>
 
@@ -44,6 +43,10 @@
 #include <blitz/array.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFPortInterface;
   namespace rspctl {
 		
 //

@@ -1288,7 +1288,7 @@ GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& p
 		} break;
 		
 		case F_TIMER: {
-			GCFTask::stop();
+			GCFScheduler::instance()->stop();
 		} break;
 	
 		default: {

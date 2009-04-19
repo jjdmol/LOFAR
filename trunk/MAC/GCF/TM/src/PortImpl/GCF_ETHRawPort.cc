@@ -66,8 +66,6 @@ GCFETHRawPort::~GCFETHRawPort()
 
 bool GCFETHRawPort::close()
 {
-  LOG_DEBUG("close -> schedule_close");
-
   setState(S_CLOSING);
   schedule_close();
 

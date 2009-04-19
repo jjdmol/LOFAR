@@ -88,7 +88,7 @@ GCFEvent::TResult tRTDButil::doTest(GCFEvent& e, GCFPortInterface& /*p*/)
 			itsTimerPort->setTimer(3.0);
 		}
 		else {
-			stop();
+			GCFScheduler::instance()->stop();
 		}
 	break;
 
@@ -111,12 +111,12 @@ using namespace LOFAR::APL::RTDBCommon;
 
 int main(int argc, char* argv[])
 {
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	tRTDButil test_task("UtilTest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

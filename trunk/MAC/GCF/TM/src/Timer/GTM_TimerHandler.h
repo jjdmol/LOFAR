@@ -23,14 +23,12 @@
 #ifndef GTM_TIMERHANDLER_H
 #define GTM_TIMERHANDLER_H
 
+#include <Common/lofar_map.h>
 #include <GCF/TM/GCF_Handler.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 class GTMTimer;
 class GCFRawPort;
@@ -64,9 +62,7 @@ class GTMTimerHandler : GCFHandler
     GTMTimerHandler ();
     static GTMTimerHandler* _pInstance;
 
-    /**
-     * Don't allow copying of the GTMTimerHandler object.
-     */
+    // Don't allow copying of the GTMTimerHandler object.
     GTMTimerHandler (const GTMTimerHandler&);
     GTMTimerHandler& operator= (const GTMTimerHandler&);
     

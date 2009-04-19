@@ -101,7 +101,7 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
 /**
  * recv a maximum of count bytes, return actually returned bytes
  */
-ssize_t GTMETHSocket::recv(void* buf, size_t count)
+ssize_t GTMETHSocket::recv(void* buf, size_t count, bool /*raw*/)
 {
   ssize_t received = -1;
 

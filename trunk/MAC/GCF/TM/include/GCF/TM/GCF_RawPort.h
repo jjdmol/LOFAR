@@ -26,6 +26,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Scheduler.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
@@ -92,6 +93,7 @@ public:
 
 	virtual double	timeLeft(long	timerID);
 
+    virtual GCFEvent::TResult   dispatch(GCFEvent& event);
 protected: 
 	// constructors && destructors
     /// params see constructor of GCFPortInterface
@@ -113,17 +115,26 @@ protected:
     
 	// helper methods
     friend class GCFPort; // to access the setMaster method
-    friend class GTMTimer;
-    friend class GTMFile;
+//    friend class GTMTimer;//
+//    friend class GTMFile; // they all call dispatch
+//    friend class GCFTask; //
 
-    void schedule_disconnected();
-    void schedule_close();
-    void schedule_connected();
+    void schedule_disconnected() {
+		GCFEvent	event(F_DISCONNECTED);
+		GCFScheduler::instance()->queueEvent(0, event, this);
+	}
+    void schedule_close() {
+		GCFEvent	event(F_CLOSED);
+		GCFScheduler::instance()->queueEvent(0, event, this);
+	}
+    void schedule_connected() {
+		GCFEvent	event(F_CONNECTED);
+		GCFScheduler::instance()->queueEvent(0, event, this);
+	}
 
     bool                        isSlave () const {return _pMaster != 0;}
     virtual void                setMaster (GCFPort* pMaster) {_pMaster = pMaster;}
 
-    virtual GCFEvent::TResult   dispatch (GCFEvent& event);
     GCFEvent::TResult           recvEvent();
 
     bool                        findAddr (TPeerAddr& addr);
@@ -131,7 +142,10 @@ protected:
     /// returns the original name of the port (given by the user). 
     /// in case it is a slave port an extension is append to the original name 
     string		                getRealName() const;  
-  
+
+	// admin. data member
+    GTMTimerHandler*            _pTimerHandler;
+
 private: 
     /// copying is not allowed.
     GCFRawPort (const GCFRawPort&);
@@ -140,8 +154,8 @@ private:
 	// data member
     GCFPort* 					_pMaster;
 
-	// admin. data member
-    GTMTimerHandler*            _pTimerHandler;
+	// Pointer to scheduler
+	GCFScheduler*				itsScheduler;
 };
   } // namespace TM
  } // namespace GCF

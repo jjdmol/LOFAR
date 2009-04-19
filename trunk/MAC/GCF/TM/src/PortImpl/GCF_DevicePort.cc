@@ -76,68 +76,47 @@ GCFDevicePort::~GCFDevicePort()
 
 bool GCFDevicePort::open()
 {
-  if (isConnected())
-  {
-    LOG_ERROR(formatString ( 
-        "Port %s already open.",
-	      getRealName().c_str()));
+  if (isConnected()) {
+    LOG_ERROR(formatString ( "Port %s already open.", getRealName().c_str()));
     return false;
-  }
-  else if (SAP != getType())
-  {
-    LOG_ERROR(formatString ( 
-        "Device ports only can act as a SAP (%s).",
-        getRealName().c_str()));
-    return false;
-  }
-  else if (!_pDevice)
-  {
-    if (isSlave())
-    {
-      LOG_ERROR(formatString ( 
-          "Port %s not initialised.",
-          getRealName().c_str()));
-      return false;
-    }
-    else
-    {
-      _pDevice = new GTMDevice(*this);
-    }
   }
 
-  try
-  {
-    if (!_devNameIsSet)
-    {
+  if (SAP != getType()) {
+    LOG_ERROR(formatString ( "Device ports only can act as a SAP (%s).", getRealName().c_str()));
+    return false;
+  }
+  
+  if (!_pDevice) {
+    if (isSlave()) {
+      LOG_ERROR(formatString ( "Port %s not initialised.", getRealName().c_str()));
+      return false;
+    }
+    _pDevice = new GTMDevice(*this);
+  }
+
+  try {
+    if (!_devNameIsSet) {
       // retrieve the device name from the parameter set
       setDeviceName(
           globalParameterSet()->getString(
-              formatString(
-                  "mac.ns.%s.%s.deviceName",
-                  _pTask->getName().c_str(),
-                  getRealName().c_str())
+              formatString( "mac.ns.%s.%s.deviceName", _pTask->getName().c_str(), getRealName().c_str())
               )
           );    
     }
   }
-  catch (...)
-  {
-    if (!_devNameIsSet)
-    {
-      LOG_ERROR(formatString (
-          "Could not get address info for port '%s' of task '%s'",
+  catch (...) {
+    if (!_devNameIsSet) {
+      LOG_ERROR(formatString ( "Could not get address info for port '%s' of task '%s'",
           getRealName().c_str(), _pTask->getName().c_str()));
       return false;
     }
   }
 
-  if (_pDevice->open(_deviceName))
-  { 
+  if (_pDevice->open(_deviceName)) { 
     setState(S_CONNECTING);
     schedule_connected();
   }
-  else
-  {
+  else {
     setState(S_DISCONNECTING);
     schedule_disconnected();
   }
@@ -148,10 +127,8 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
 {
   size_t written = 0;
   
-  if (!isConnected()) 
-  {
-    LOG_ERROR(formatString (
-        "Port '%s' on task '%s' not connected! Event not sent!",
+  if (!isConnected()) {
+    LOG_ERROR(formatString ( "Port '%s' on task '%s' not connected! Event not sent!",
         getRealName().c_str(),
         getTask()->getName().c_str()));
     return 0;
@@ -169,11 +146,8 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
       getTask()->getName().c_str(), 
       getRealName().c_str()));
 
-  if ((written = _pDevice->send(buf, packsize)) != packsize)
-  {
-    LOG_DEBUG(formatString (
-        "truncated send: %s",
-        strerror(errno)));
+  if ((written = _pDevice->send(buf, packsize)) != packsize) {
+    LOG_DEBUG(formatString ( "truncated send: %s", strerror(errno)));
       
     setState(S_DISCONNECTING);    
     schedule_disconnected();

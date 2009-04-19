@@ -685,7 +685,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   hexdump(hd,&buf,sizeof(buf));
   LOG_DEBUG_STR("raw buf all=" << hd);
   // dispatch the EC message as a GCFEvent (which it now is)
-  status = task.dispatch(buf.event, port);
+  status = task.doEvent(buf.event, port);
   
   return(status);
 }

@@ -38,6 +38,11 @@
 #include <list>
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFTimerPort;
+  using GCF::TM::GCFPortInterface;
   namespace BS {
 
 extern	int		g_bf_gain;

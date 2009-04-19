@@ -601,7 +601,7 @@ GCFEvent::TResult AVTStub::done(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
   case F_ENTRY:
-    GCFTask::stop();
+    GCFScheduler::instance()->stop();
     break;
   }
 
@@ -611,12 +611,12 @@ GCFEvent::TResult AVTStub::done(GCFEvent& e, GCFPortInterface& /*port*/)
 void AVTStub::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 

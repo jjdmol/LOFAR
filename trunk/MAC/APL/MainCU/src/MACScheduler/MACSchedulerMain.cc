@@ -31,7 +31,7 @@ using namespace LOFAR::APLCommon;
 
 int main(int argc, char* argv[])
 {
-	GCFTask::init(argc, argv, "MACScheduler");
+	GCFScheduler::instance()->init(argc, argv, "MACScheduler");
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	MACScheduler	ms;
 	ms.start(); // make initial transition
   
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

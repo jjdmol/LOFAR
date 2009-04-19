@@ -40,6 +40,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 namespace LOFAR{
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFETHRawPort;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTimerPort;
   namespace TBB{
 
     // Description of class.

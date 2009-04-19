@@ -32,7 +32,7 @@ using namespace LOFAR::CUDaemons;
 
 int main(int argc, char *argv[])
 {
-  GCFTask::init(argc, argv, "ServiceBroker");
+  GCFScheduler::instance()->init(argc, argv, "ServiceBroker");
   
   LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_ServiceBroker");
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
   
   sb.start(); // make initial transition
   
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 
   return 0;
 }

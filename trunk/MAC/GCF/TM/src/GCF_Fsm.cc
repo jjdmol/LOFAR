@@ -25,47 +25,39 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Fsm.h>
-#include <GTM_Defines.h>
 
 namespace LOFAR {
  using MACIO::GCFEvent;
  namespace GCF {
   namespace TM {
 
-// static data member initialisation
-GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
-
 //
 // initFsm()
 //
 void GCFFsm::initFsm()
 {
-	GCFEvent e;
-	e.signal = F_ENTRY;
-	(void)(this->*_state)(e, _gcfPort); // entry signal
-	e.signal = F_INIT;
-	if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) { // initial transition
-		LOG_FATAL(LOFAR::formatString (
-			"Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT) not handled."));
-		exit(1);
-	}
+	GCFEvent	entryEvent(F_ENTRY);
+	itsScheduler->queueEvent(this, entryEvent, 0);
+
+	GCFEvent	initEvent(F_INIT);
+	itsScheduler->queueEvent(this, initEvent, 0);
 }
 
 //
 // tran(target, from, to)
 //
-void GCFFsm::tran(State target, const char* from, const char* to)
+void GCFFsm::tran(GCFFsm*	task, State target, const char* from, const char* to)
 {
-	GCFEvent e;
-	e.signal = F_EXIT;
-	(void)(this->*_state)(e, _gcfPort); // exit signal
+	GCFEvent	exitEvent(F_EXIT);
+	itsScheduler->queueEvent(this, exitEvent, 0);
 
 	LOG_DEBUG(LOFAR::formatString ( "State transition to %s <<== %s", to, from));
+	GCFTranEvent	tranEvent;
+	tranEvent.state = target;
+	itsScheduler->queueEvent(this, tranEvent, 0);
 
-	_state = target; // state transition
-
-	e.signal = F_ENTRY;
-	(void)(this->*_state)(e, _gcfPort); // entry signal
+	GCFEvent	entryEvent(F_ENTRY);
+	itsScheduler->queueEvent(this, entryEvent, 0);
 }
 
 //
@@ -73,9 +65,45 @@ void GCFFsm::tran(State target, const char* from, const char* to)
 //
 void GCFFsm::quitFsm()
 {
-	GCFEvent	event;
-	event.signal = F_QUIT;
-	(void)(this->*_state)(event, _gcfPort);
+	GCFEvent	quitEvent(F_QUIT);
+	itsScheduler->queueEvent(this, quitEvent, 0);
+}
+
+//
+// queueTaskEvent(event,port)
+//
+// Add the given event/port pair to the eventqueue of the task. This queue is emptied as soon as the
+// state of the task is switched.
+//
+void GCFFsm::queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port)
+{
+	waitingTaskEvent_t*		newEntry = new waitingTaskEvent_t;
+	newEntry->event = &event;
+	newEntry->port  = &port;
+	itsEventQueue.push_back(newEntry);
+}
+
+//
+// handleTaskQueue()
+//
+// Send all the events in the task queue ONCE to the task. If the task does not handle them log this
+// problem and continue.
+//
+void GCFFsm::handleTaskQueue()
+{
+	while (!itsEventQueue.empty()) {
+		waitingTaskEvent_t*		theEvent = itsEventQueue.front();
+		LOG_DEBUG_STR("handleTaskQueue:(" << eventName(*(theEvent->event)) << "@" << theEvent->port->getName() << ")");
+		
+		GCFEvent::TResult result = (this->*itsState)(*(theEvent->event), *(theEvent->port));
+		if (result != GCFEvent::HANDLED) {
+			LOG_WARN_STR("Result on taskEvent " << eventName(*(theEvent->event)) << 
+						  " was NOT HANDLED, DELETING event.");
+		}
+		itsEventQueue.pop_front();
+		delete theEvent->event;
+		delete theEvent;
+	}
 }
 
   } // namespace TM

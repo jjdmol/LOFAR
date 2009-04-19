@@ -590,7 +590,7 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	}
 	
 	case F_TIMER:
-		GCFTask::stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:

@@ -150,6 +150,7 @@
 #define PPS_FETCH_TIMEOUT { 3, 0 }
 
 namespace LOFAR {
+  using namespace GCF::TM;
   namespace RSP {
 	using namespace blitz;
 	using namespace std;
@@ -734,10 +735,12 @@ int RSPDriver::fetchPPS()
 //
 GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("RSPDriver::initial(" << eventName(event) << "@" << port.getName());
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch(event.signal) {
-	case F_INIT: {
+	case F_ENTRY: {
 		if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
 #ifdef HAVE_SYS_TIMEPPS_H
 			pps_params_t parm;
@@ -787,10 +790,10 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 			exit(EXIT_FAILURE);
 #endif
 		} // sync mode
-	} // F_INIT
+	} // F_ENTRY
 	break;
 
-	case F_ENTRY: {
+	case F_INIT: {
 #if 0
 	if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL) {
 		if (!m_clock.isConnected()) m_clock.open();
@@ -2621,7 +2624,8 @@ using namespace LOFAR::RSP;
 
 int main(int argc, char** argv)
 {
-	GCFTask::init(argc, argv, "RSPDriver");    // initializes log system
+	GCFScheduler::instance()->init(argc, argv, "RSPDriver");    // initializes log system
+	GCFScheduler::instance()->disableQueue();					// run as fast as possible
 
 	// Inform Logprocessor who we are
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_RSPDriver");
@@ -2688,7 +2692,7 @@ int main(int argc, char** argv)
 	rsp.start(); // make initial transition
 
 	try {
-		GCFTask::run();
+		GCFScheduler::instance()->run();
 	}
 	catch (Exception& e) {
 		LOG_ERROR_STR("Exception: " << e.text());

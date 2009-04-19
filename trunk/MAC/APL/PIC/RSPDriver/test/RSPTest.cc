@@ -41,6 +41,7 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace RTC;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
@@ -1172,7 +1173,7 @@ GCFEvent::TResult RSPTest::final(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
       case F_ENTRY:
-	  GCFTask::stop();
+	  GCFScheduler::instance()->stop();
 	  break;
       
       case F_EXIT:
@@ -1189,12 +1190,12 @@ GCFEvent::TResult RSPTest::final(GCFEvent& e, GCFPortInterface& /*port*/)
 void RSPTest::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
