@@ -30,13 +30,13 @@ using namespace LOFAR::GCF::RTDBDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "SASGateway");
+	GCFScheduler::instance()->init(argc, argv, "SASGateway");
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_SASGateway");
 
 	SASGateway SGW("SASGateway"); 
 	SGW.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

@@ -40,7 +40,7 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, "HardwareMonitor");
+	GCFScheduler::instance()->init(argc, argv, "HardwareMonitor");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
 	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
 	}
 
 	// ok, we have something to do, do it.
-	GCFTask::setDelayedQuit(true);	// we need a clean shutdown
-	GCFTask::run();	// until stop was called
+	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
+	GCFScheduler::instance()->run();	// until stop was called
 
 	if (rsp) {
 		rsp->quit();		// let task quit nicely
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 		ec->quit();		   // let task quit nicely
 	}
 	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-	GCFTask::run(postRunTime);	// let processes die.
+	GCFScheduler::instance()->run(postRunTime);	// let processes die.
 
 	return (0);
 }

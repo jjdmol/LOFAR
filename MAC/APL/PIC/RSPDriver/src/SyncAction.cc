@@ -27,9 +27,10 @@
 #include "SyncAction.h"
 #include "Sequencer.h"
 
-using namespace LOFAR;
-using namespace RSP;
-using namespace EPA_Protocol;
+namespace LOFAR {
+  using namespace GCF::TM;
+  using namespace EPA_Protocol;
+  namespace RSP {
 
 #define N_RETRIES 10
 
@@ -238,3 +239,5 @@ void SyncAction::reset()
   TRAN(SyncAction::idle_state);
 }
 
+  } // namespace RSP
+} // namespace LOFAR

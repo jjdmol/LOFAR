@@ -30,16 +30,16 @@ namespace LOFAR {
  namespace APL {
   namespace RTDBCommon {
 
-class tRTDButil : public GCFTask
+class tRTDButil : public GCF::TM::GCFTask
 {
 public:
 	tRTDButil (const string& name);
 	virtual ~tRTDButil();
 
-	GCFEvent::TResult doTest	(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult doTest	(GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
 private:
-	GCFTimerPort*		itsTimerPort;
+	GCF::TM::GCFTimerPort*		itsTimerPort;
 };
 
   } // namespace RTDBCommon

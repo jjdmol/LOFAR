@@ -30,14 +30,14 @@ using namespace LOFAR::CUDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "LogClient");
+	GCFScheduler::instance()->init(argc, argv, "LogClient");
 
 //	LOG_INFO("MACProcessScope: LOFAR_PermSW_LogClient");
 
 	LogClient LC("LogClient"); 
 	LC.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

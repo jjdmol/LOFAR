@@ -45,6 +45,9 @@
 #include "DriverSettings.h"
 
 namespace LOFAR {
+	using GCF::TM::GCFFsm;
+	using GCF::TM::GCFPortInterface;
+	using GCF::TM::GCFTimerPort;
 	namespace TBB {
 	
 		class BoardCmdHandler : public GCFFsm

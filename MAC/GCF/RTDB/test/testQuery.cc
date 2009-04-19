@@ -90,7 +90,7 @@ GCFEvent::TResult testQuery::final(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 	
 	case F_TIMER:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -118,7 +118,7 @@ GCFEvent::TResult testQuery::waitForChanges(GCFEvent& event, GCFPortInterface& /
 		PVSSresult	result = itsDPservice->query(DPclause, whereClause);
 		if (result != SA_NO_ERROR) {
 			LOG_ERROR ("Taking subscription failed. Bailing out.");
-			stop();
+			GCFScheduler::instance()->stop();
 		}
 	}
 	break;
@@ -128,7 +128,7 @@ GCFEvent::TResult testQuery::waitForChanges(GCFEvent& event, GCFPortInterface& /
 		if (answer.result != SA_NO_ERROR) {
 			LOG_ERROR_STR ("Taking subscription on PVSS-states failed (" << answer.result  <<
 								"). Bailing out.");
-			stop();
+			GCFScheduler::instance()->stop();
 			break;
 		}
 		itsQueryID = answer.QryID;
@@ -184,12 +184,12 @@ int main(int argc, char* argv[])
 	DPclause    = argv[1];
 	whereClause = argv[2];
 
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	RTDB::testQuery test_task("DPStest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

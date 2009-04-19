@@ -71,8 +71,9 @@ public:
 	/// result of a dispatch action
 	enum TResult { 
 		ERROR = -1, 
-		HANDLED = 0, 
-		NOT_HANDLED = 1
+		HANDLED, 
+		NOT_HANDLED,
+		NEXT_STATE
 	};
 
 	// packs all fields of the event into the event buffer and returns its 
@@ -80,7 +81,7 @@ public:
 	virtual void* pack(uint32& packsize);
 
 	// Make a copy of the event
-	GCFEvent* clone();
+	GCFEvent* clone() const;
 
 protected:
 	// special constructor it will be call by the specialised "unpack"- 

@@ -33,6 +33,7 @@
 namespace LOFAR {
   using GCF::TM::GCFTask;
   using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFTimerPort;
   using GCF::TM::GCFPortInterface;
   using GCF::TM::GCFHandler;
   using GCF::RTDB::RTDBPropertySet;

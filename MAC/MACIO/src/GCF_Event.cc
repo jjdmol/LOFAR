@@ -61,19 +61,13 @@ void GCFEvent::resizeBuf(uint32 requiredSize)
   length = requiredSize - sizeof(length) - sizeof(signal);
 }
 
-GCFEvent* GCFEvent::clone()
+GCFEvent* GCFEvent::clone() const
 {
 	int		mySize = sizeof(GCFEvent) + length;
 	char* 	theClone = new char[mySize];
 	memcpy(theClone, (const char*)this, mySize);
 
-//	string	hd;
-//	hexdump(hd, this, mySize);
-//	LOG_DEBUG(hd);
-	LOG_DEBUG_STR("The clone is " << mySize << " bytes");
-//	hd.clear();
-//	hexdump(hd, theClone, mySize);
-//	LOG_DEBUG(hd);
+	LOG_TRACE_CALC_STR("The clone is " << mySize << " bytes");
 
 	return ((GCFEvent*) theClone);
 }

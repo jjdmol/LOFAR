@@ -37,7 +37,7 @@ using namespace LOFAR::RTDBDaemons;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv, "SoftwareMonitor");
+	GCFScheduler::instance()->init(argc, argv, "SoftwareMonitor");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_SoftwareMonitor");
 	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("SoftwareMonitor"));
@@ -51,13 +51,13 @@ int main(int argc, char* argv[])
 	swm->start();
 
 	// ok, we have something to do, do it.
-	GCFTask::setDelayedQuit(true);	// we need a clean shutdown
-	GCFTask::run();	// until stop was called
+	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
+	GCFScheduler::instance()->run();	// until stop was called
 
 	swm->quit();		// let task quit nicely
 
 	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-	GCFTask::run(postRunTime);	// let processes die.
+	GCFScheduler::instance()->run(postRunTime);	// let processes die.
 
 	return (0);
 }

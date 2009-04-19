@@ -31,6 +31,7 @@
 #include <Common/lofar_bitset.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFPortInterface;
   class RTC::Subject; // forward declaration
   namespace CAL {
     class SubArray; // forward declaration

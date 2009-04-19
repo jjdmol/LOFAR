@@ -30,13 +30,13 @@ using namespace LOFAR::GCF::RTDBDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "LogProcessor");
+	GCFScheduler::instance()->init(argc, argv, "LogProcessor");
 //	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
 
 	LogProcessor clp("LogProcessor"); 
 	clp.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

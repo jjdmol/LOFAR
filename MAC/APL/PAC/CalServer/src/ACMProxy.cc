@@ -42,6 +42,7 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace CAL;
 using namespace RTC;
+using namespace GCF::TM;
 
 #define START_DELAY 4
 

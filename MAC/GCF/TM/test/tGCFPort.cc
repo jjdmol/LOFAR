@@ -797,7 +797,7 @@ GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& /*port*/)
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(5);
-			GCFTask::stop();
+			GCFScheduler::instance()->stop();
 //			TRAN(tServer::test3);
 		}
 		else {
@@ -892,7 +892,7 @@ GCFEvent::TResult tClient::test5(GCFEvent& event, GCFPortInterface& port)
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(5);
-			GCFTask::stop();
+			GCFScheduler::instance()->stop();
 //			TRAN(tClient::test3);
 		}
 		else {
@@ -929,7 +929,7 @@ using namespace LOFAR::GCF::TM;
 //
 int main(int argc, char* argv[])
 {
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	tServer	serverTask("SERVER");
 	tClient	clientTask("CLIENT");
@@ -937,7 +937,7 @@ int main(int argc, char* argv[])
 	serverTask.start(); // make initial transition
 	clientTask.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	LOG_INFO_STR("Test result=" << gError);
 

@@ -29,6 +29,9 @@
 
 namespace LOFAR {
  namespace GCF {
+  using TM::GCFTask;
+  using TM::GCFPortInterface;
+  using TM::GCFTimerPort;
   namespace RTDB {
 
 class tPropertySet : public GCFTask

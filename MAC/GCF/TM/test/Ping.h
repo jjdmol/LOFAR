@@ -27,12 +27,9 @@
 #include <GCF/TM/GCF_Control.h>
 #include <sys/time.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 /**
  * The Ping task sends ECHO_PING events to the Echo task and expects 

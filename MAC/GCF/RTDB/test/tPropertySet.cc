@@ -126,7 +126,7 @@ GCFEvent::TResult tPropertySet::final(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 	
 	case F_TIMER:
-		stop();
+		GCFScheduler::instance()->stop();
 		break;
 
 	default:
@@ -461,12 +461,12 @@ using namespace LOFAR::GCF;
 
 int main(int argc, char* argv[])
 {
-	TM::GCFTask::init(argc, argv);
+	TM::GCFScheduler::instance()->init(argc, argv);
 
 	RTDB::tPropertySet test_task("PStest");  
 	test_task.start(); // make initial transition
 
-	TM::GCFTask::run();
+	TM::GCFScheduler::instance()->run();
 
 	return 0;
 }

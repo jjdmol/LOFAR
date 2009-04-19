@@ -43,27 +43,30 @@ class GTMFile;
  */
 class GTMFileHandler : public GCFHandler
 {
-  public: // constructors, destructors and default operators
+public: 
+	// constructors, destructors and default operators
     virtual ~GTMFileHandler () { _pInstance = 0;}
-  
-  private:
-    friend class GTMFile; // is not necessary but suppress a warning, which we can accept
-    GTMFileHandler ();
-    /// Don't allow copying of the GTMTimerHandler object.
-    GTMFileHandler (const GTMFileHandler&);
-    GTMFileHandler& operator= (const GTMFileHandler&);
 
-  public: // GTMFileHandler specific member methods
+	// GTMFileHandler specific member methods
     /// singleton pattern methods
     static GTMFileHandler* instance ();
     static void release ();
 
     void workProc (); /// part of the mainloop
     void stop ();
-    void registerFile (GTMFile& timer);
-    void deregisterFile (GTMFile& timer); 
+    void registerFile (GTMFile& file);
+    void deregisterFile (GTMFile& file); 
 
-  private:
+  
+private:
+    friend class GTMFile; // is not necessary but suppress a warning, which we can accept
+
+    GTMFileHandler ();
+    /// Don't allow copying of the GTMTimerHandler object.
+    GTMFileHandler (const GTMFileHandler&);
+    GTMFileHandler& operator= (const GTMFileHandler&);
+
+	// ----- Data Members -----
     static GTMFileHandler* _pInstance; // singleton pointer
 
     /// all registered "files"

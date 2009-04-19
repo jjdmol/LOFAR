@@ -53,6 +53,7 @@
 using namespace std;
 //using namespace blitz;
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
 
@@ -2509,7 +2510,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 
 		case TBB_DRIVER_BUSY_ACK: {
 		cout << endl << "=x=x=   DRIVER BUSY, with setting up boards, try again   =x=x=" << endl << flush;
-		GCFTask::stop();    
+		GCFScheduler::instance()->stop();    
 	 }
 
 	 case TBB_GET_CONFIG_ACK: {
@@ -2519,7 +2520,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		itsMaxChannels = itsMaxBoards * 16;
 		if (itsActiveBoards == 0) {
 		  cout << "=x=x=   NO boards available   =x=x=" << endl << flush;
-		  GCFTask::stop();    
+		  GCFScheduler::instance()->stop();    
 		}      
 			
 		// send subscribe 
@@ -2592,7 +2593,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 				cout << endl;
 				TBBUnsubscribeEvent unsubscribe;
 				itsServerPort.send(unsubscribe);
-				GCFTask::stop();
+				GCFScheduler::instance()->stop();
 			}
 		} break;
 	
@@ -2601,7 +2602,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	
 		case TBB_DRIVER_BUSY_ACK: {
 			cout << "DRIVER BUSY, try again" << endl << flush;
-			GCFTask::stop();    
+			GCFScheduler::instance()->stop();    
 		}
 			
 		case TBB_ALLOC_ACK:
@@ -2652,7 +2653,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 			cout << formatString("Error: unhandled event. %d",e.signal) << endl;
 			//TBBUnsubscribeEvent unsubscribe;
 			//itsServerPort.send(unsubscribe);
-			GCFTask::stop();
+			GCFScheduler::instance()->stop();
 		} break;
 	}
 	
@@ -2660,7 +2661,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		//TBBUnsubscribeEvent unsubscribe;
 		//itsServerPort.send(unsubscribe);
 		cout << flush;
-		GCFTask::stop();
+		GCFScheduler::instance()->stop();
 	}
 		 
 	return(status);
@@ -3290,7 +3291,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint32 word[8];
 					
 					int numitems = sscanf(optarg, "%d,%d,%x,%x,%x,%x,%x,%x,%x,%x,%x", &board,&mp,&addr,
-										 &word[0],&word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
+										 &word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
 						cout <<  "       '--writew=board, mp, addr, word[0], word[1] .. word[7]'"<< endl; 
@@ -3510,7 +3511,7 @@ std::list<int> TBBCtl::strtolist(const char* str, int max)
 void TBBCtl::mainloop()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 	
 	TBBUnsubscribeEvent unsubscribe;
 	itsServerPort.send(unsubscribe);
@@ -3519,7 +3520,7 @@ void TBBCtl::mainloop()
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv, "tbbctl");
+  GCFScheduler::instance()->init(argc, argv, "tbbctl");
   
   LOG_DEBUG(formatString("Program %s has started", argv[0]));
 

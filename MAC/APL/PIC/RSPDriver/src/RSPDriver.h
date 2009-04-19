@@ -41,6 +41,9 @@
 #endif
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFETHRawPort;
   namespace RSP {
 
     class RSPDriver : public GCFTask

@@ -22,9 +22,9 @@
 //  $Id$
 
 #include <lofar_config.h>
-#include "Echo.h"
+#include <Common/LofarLogger.h>
 #include "Echo_Protocol.ph"
-#include <Common/lofar_iostream.h>
+#include "Echo.h"
 
 static 	int		gDelay = 0;
 static	timeval	gTime;
@@ -40,11 +40,13 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
   // initialize the port
-  server.init(*this, "EchoServer", GCFPortInterface::SPP, ECHO_PROTOCOL);
+  server = new GCFTCPPort(*this, "EchoServer:test", GCFPortInterface::MSPP, ECHO_PROTOCOL);
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
+	LOG_DEBUG_STR("Echo::initial: " << eventName(e));
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
@@ -52,24 +54,17 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 
     case F_ENTRY:
-    case F_TIMER:
-		if (!server.isConnected())
-			server.open();
+		server->open();
 		break;
 
     case F_CONNECTED:
-		if (server.isConnected()) {
+		if (server->isConnected()) {
 			TRAN(Echo::connected);
 		}
 		break;
 
-    case F_DISCONNECTED:
-		if (!server.isConnected()) {
-			server.setTimer(1.0); // try again after 1 second
-		}
-		break;
-
     default:
+		LOG_DEBUG_STR("$$$ DEFAULT at initial of " << eventName(e));
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -79,9 +74,19 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
 GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 {
+	LOG_DEBUG_STR("Echo::connected: " << eventName(e));
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
+	case F_ACCEPT_REQ: {
+		GCFTCPPort*		clientSock = new GCFTCPPort();
+		clientSock->init(*this, "clientSock", GCFPortInterface::SPP, ECHO_PROTOCOL);
+		ASSERTSTR(clientSock, "Blerk");
+		server->accept(*clientSock);
+		break;
+	}
+
 	case F_DISCONNECTED:
 		cout << "Lost connection to client" << endl;
 		p.close();
@@ -101,7 +106,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 		// otherwise an interrupt will be forced by means of setting the pin 9.
 		cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
 		cout << "delay = " << gDelay << endl;
-		server.setTimer((gDelay < 0) ? -1.0 * gDelay : 1.0 * gDelay);
+		server->setTimer((gDelay < 0) ? -1.0 * gDelay : 1.0 * gDelay);
 		gSeqnr = ping.seqnr;
 		gTime  = ping.ping_time;
 		break;
@@ -121,7 +126,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 		echo.ping_time = gTime;
 		echo.echo_time = echo_time;
 
-		server.send(echo);
+		server->send(echo);
 
 		cout << "ECHO sent" << endl;
 		break;
@@ -139,7 +144,11 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 		break;
 	}
 
+	case F_CONNECTED:
+		break;
+
 	default:
+		LOG_DEBUG_STR("$$$ DEFAULT at connected of " << eventName(e));
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -156,7 +165,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	switch (argc) {
 	case 1:		gDelay = 0;
@@ -174,7 +183,7 @@ int main(int argc, char* argv[])
 
 	Echo echo_task("ECHO");
 	echo_task.start(); // make initial transition
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

@@ -26,12 +26,9 @@
 #include "GTM_File.h"
 #include <Common/lofar_string.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 // forward declaration
 class GCFTCPPort;
@@ -43,31 +40,26 @@ class GCFTCPPort;
 
 class GTMTCPSocket : public GTMFile
 {
-  public: // constructors, destructors and default operators
+public: 
+	// constructors, destructors and default operators
     GTMTCPSocket (GCFTCPPort& port);
     virtual ~GTMTCPSocket ();
   
-  private:
+	// GTMTCPSocket specific member methods
+    // open/close methods
+    virtual bool open (unsigned int portNumber);
+    virtual bool connect (unsigned int portNumber, const string& host);
+  
+    // send/recv methods
+    virtual ssize_t send (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count, bool raw = false);
+
+private:
     GTMTCPSocket ();
     /// Don't allow copying of the GTMTCPSocket object.
     GTMTCPSocket (const GTMTCPSocket&);
     GTMTCPSocket& operator= (const GTMTCPSocket&);
 
-  
-  public: // GTMTCPSocket specific member methods
-    /**
-     * open/close methods
-     */
-    virtual bool open (unsigned int portNumber);
-    virtual bool connect (unsigned int portNumber, const string& host);
-  
-    /**
-     * send/recv methods
-     */
-    virtual ssize_t send (void* buf, size_t count);
-    virtual ssize_t recv (void* buf, size_t count);
-
-  protected: // data member
 };
 
   } // namespace TM

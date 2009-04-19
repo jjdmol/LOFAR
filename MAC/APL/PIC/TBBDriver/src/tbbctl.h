@@ -36,6 +36,10 @@
 
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTimerPort;
+  using GCF::TM::GCFPortInterface;
   namespace TbbCtl {
   	
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph

@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	GCFTask::init(argc, argv, "BeamServer");
+	GCFScheduler::instance()->init(argc, argv, "BeamServer");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_BeamServer");
 	LOG_INFO(formatString("Program %s has started", argv[0]));
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
 		beamserver.start(); // make initial transition
 
-		GCFTask::run();
+		GCFScheduler::instance()->run();
 	}
 	catch (Exception& e) {
 		LOG_FATAL_STR("Exception: " << e.text());

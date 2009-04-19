@@ -6,25 +6,37 @@ SUFFIXES = .ph
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
-check_PROGRAMS 		= tmEcho tmPing tGCFPort tTimer \
+check_PROGRAMS 			= tAutoOpen tEventQueue tStateResult tmEcho tmPing tGCFPort tTimer \
 						tGCFTask1 tGCFTask2 tGCFTask3 tGCFTask4 tGCFTask5
 
-tmEcho_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Echo.cc Echo.h 
-tmEcho_LDADD		= ../src/libgcftm.la
-tmEcho_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+tmEcho_SOURCES 			= $(BUILT_SOURCES) Echo.cc Echo_Protocol.cc
+tmEcho_LDADD			= ../src/libgcftm.la
+tmEcho_DEPENDENCIES		= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-tmPing_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Ping.cc Ping.h
-tmPing_LDADD		= ../src/libgcftm.la
-tmPing_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+tmPing_SOURCES 			= $(BUILT_SOURCES) Ping.cc Echo_Protocol.cc
+tmPing_LDADD			= ../src/libgcftm.la
+tmPing_DEPENDENCIES		= ../src/libgcftm.la $(LOFAR_DEPEND)
 
 tGCFPort_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc \
 						  tGCFPort.cc tGCFPort.h 
 tGCFPort_LDADD			= ../src/libgcftm.la
 tGCFPort_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-tTimer_SOURCES 		= $(BUILT_SOURCES) tTimer.cc
-tTimer_LDADD		= ../src/libgcftm.la
-tTimer_DEPENDENCIES	= ../src/libgcftm.la tTimer.h $(LOFAR_DEPEND)
+tTimer_SOURCES 			= $(BUILT_SOURCES) tTimer.cc
+tTimer_LDADD			= ../src/libgcftm.la
+tTimer_DEPENDENCIES		= ../src/libgcftm.la tTimer.h $(LOFAR_DEPEND)
+
+tEventQueue_SOURCES 	= $(BUILT_SOURCES) tEventQueue.cc tClient.cc Echo_Protocol.cc
+tEventQueue_LDADD		= ../src/libgcftm.la
+tEventQueue_DEPENDENCIES= ../src/libgcftm.la $(LOFAR_DEPEND)
+
+tAutoOpen_SOURCES 		= $(BUILT_SOURCES) tAutoOpen.cc tServer.cc Echo_Protocol.cc
+tAutoOpen_LDADD			= ../src/libgcftm.la
+tAutoOpen_DEPENDENCIES  = ../src/libgcftm.la $(LOFAR_DEPEND)
+
+tStateResult_SOURCES	 = $(BUILT_SOURCES) tStateResult.cc tServer.cc Echo_Protocol.cc
+tStateResult_LDADD		 = ../src/libgcftm.la
+tStateResult_DEPENDENCIES= ../src/libgcftm.la $(LOFAR_DEPEND)
 
 tGCFTask1_SOURCES 		= $(BUILT_SOURCES) tGCFTask1.cc testTask.cc
 tGCFTask1_LDADD			= ../src/libgcftm.la

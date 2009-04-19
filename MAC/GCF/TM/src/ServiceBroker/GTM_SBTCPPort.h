@@ -25,12 +25,9 @@
 
 #include <GCF/TM/GCF_TCPPort.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace SB 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace SB {
 
 // forward declaration
 

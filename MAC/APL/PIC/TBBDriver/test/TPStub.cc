@@ -38,6 +38,7 @@
 
 using namespace std;
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace TP_Protocol;
 using namespace TBB;
 using namespace TBB_Test;
@@ -318,7 +319,7 @@ GCFEvent::TResult TPStub::final(GCFEvent &event, GCFPortInterface& /*port*/)
   {
     case F_ENTRY:
 			{
-				GCFTask::stop();
+				GCFScheduler::instance()->stop();
     	} break;
 
     case F_EXIT:
@@ -335,12 +336,12 @@ GCFEvent::TResult TPStub::final(GCFEvent &event, GCFPortInterface& /*port*/)
 void TPStub::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 	
 	LOG_DEBUG_STR("Reading configuration files");
   try {

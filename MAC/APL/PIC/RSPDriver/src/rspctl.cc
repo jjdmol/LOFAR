@@ -28,6 +28,7 @@
 #include <Common/hexdump.h>
 
 #include <MACIO/MACServiceInfo.h>
+#include <GCF/TM/GCF_Scheduler.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -58,6 +59,7 @@
                 c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
 
 namespace LOFAR {
+  using namespace GCF::TM;
   namespace rspctl {
 	using namespace std;
 	using namespace blitz;
@@ -229,7 +231,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 			
       if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
-				GCFTask::stop();
+				GCFScheduler::instance()->stop();
 				return status;
       }
 			
@@ -261,7 +263,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 					}
 	      }
 	     
-	      GCFTask::stop();
+	      GCFScheduler::instance()->stop();
       	return status;
 	    } else {	
       	itsStage = 1;
@@ -276,13 +278,13 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
       if (RSP_SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETWEIGHTS command failed.");
       }
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       return status;
     } break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       return status;
       break;
   }
@@ -413,7 +415,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
       break;
   }
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return status;
 }
@@ -488,7 +490,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 	break;
   } // switch
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return GCFEvent::HANDLED;
 }
@@ -620,7 +622,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 	break;
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 
 	return (GCFEvent::HANDLED);
 }
@@ -688,7 +690,7 @@ GCFEvent::TResult RSUCommand::ack(GCFEvent& e)
     }
   }
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return GCFEvent::HANDLED;
 }
@@ -748,7 +750,7 @@ GCFEvent::TResult ClockCommand::ack(GCFEvent& e)
     }
   }
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return GCFEvent::HANDLED;
 }
@@ -789,7 +791,7 @@ GCFEvent::TResult SubClockCommand::ack(GCFEvent& e)
 	if (g_getclock) {
 
 	  logMessage(cout,formatString("Sample frequency: clock=%dMHz", ack.clock));
-	  GCFTask::stop();
+	  GCFScheduler::instance()->stop();
 
 	} else {
 
@@ -906,7 +908,7 @@ GCFEvent::TResult TDStatusCommand::ack(GCFEvent& event)
 		}
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 	return GCFEvent::HANDLED;
 }
 
@@ -1026,7 +1028,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 		break;
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 
 	return status;
 }
@@ -1138,7 +1140,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 		break;
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 
 	return status;
 }
@@ -1263,7 +1265,7 @@ GCFEvent::TResult SPUStatusCommand::ack(GCFEvent& event)
 		}
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }
 //
@@ -1340,7 +1342,7 @@ GCFEvent::TResult RawBlockCommand::ack(GCFEvent&	event)
 		cerr << "Unknown answer return while reading or writing a datablock" << endl;
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }
 
@@ -1447,7 +1449,7 @@ GCFEvent::TResult SplitterCommand::ack(GCFEvent& event)
 		break;
 	}
 
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }
 
@@ -1558,7 +1560,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
   }
   LOG_INFO("WGCommand success");
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return status;
 }
@@ -1723,7 +1725,7 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
     break;
   }
 
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
   return GCFEvent::HANDLED;
 }
 
@@ -1769,7 +1771,7 @@ void StatisticsCommand::send()
   else {
     // SET
     logMessage(cerr,"Error: set mode not support for option '--statistics'");
-    GCFTask::stop();
+    GCFScheduler::instance()->stop();
   }
 }
 
@@ -1822,7 +1824,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
       if(timeNow >= m_endTime) {
         logMessage(cout,"Statistics capturing successfully ended.");
         stop();
-        GCFTask::stop();
+        GCFScheduler::instance()->stop();
       }
     }
     
@@ -1998,7 +2000,7 @@ void XCStatisticsCommand::send()
   else {
     // SET
     logMessage(cerr,"Error: set mode not support for option '--xcstatistics'");
-    GCFTask::stop();
+    GCFScheduler::instance()->stop();
   }
 }
 
@@ -2051,7 +2053,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
 			if(timeNow >= m_endTime) {
 				logMessage(cout,"XCStatistics capturing successfully ended.");
 				stop();
-				GCFTask::stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
 
@@ -2209,7 +2211,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
   else {
     logMessage(cerr,"Error: RSP_GETVERSION command failed.");
   }
-  GCFTask::stop();
+  GCFScheduler::instance()->stop();
 
   return GCFEvent::HANDLED;
 }
@@ -2267,11 +2269,9 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
     break;
 
     case F_ENTRY: {
-      if (!m_server.isConnected())
-        if (!m_server.open()) {
-	  logMessage(cerr, "Error: failed to open port to RSPDriver");
-	  exit(EXIT_FAILURE);
-	}
+      if (!m_server.isConnected()) {
+        m_server.open();
+	  }
     }
     break;
 
@@ -2416,13 +2416,13 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	case RSPFE_STOP_RSPCTL:
 		logMessage(cout,"Rspctl stopped by frontend.");
 		m_command->stop();
-		GCFTask::stop();
+		GCFScheduler::instance()->stop();
 	break;
 #endif
 
 	default:
 		logMessage(cerr,"Error: unhandled event.");
-		GCFTask::stop();
+		GCFScheduler::instance()->stop();
 		break;
 	}
 
@@ -2432,7 +2432,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 void RSPCtl::mainloop()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 static void usage(bool exportMode)
@@ -3441,7 +3441,7 @@ using namespace LOFAR::rspctl;
 
 int main(int argc, char** argv)
 {
-	GCFTask::init(argc, argv, "rspctl");
+	GCFScheduler::instance()->init(argc, argv, "rspctl");
 
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 

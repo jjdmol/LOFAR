@@ -189,7 +189,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		//
 		// dispatch the TP message as a GCFEvent (which it now is)
 		//
-		status = task.dispatch(buf.event, port);
+		status = task.doEvent(buf.event, port);
 	}
   else
 	{

@@ -26,6 +26,7 @@
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <MACIO/MACServiceInfo.h>
+#include <GCF/TM/GCF_Control.h>
 #include <Common/LofarLocators.h>
 #include <Common/ParameterSet.h>
 
@@ -71,6 +72,7 @@ using namespace BS;
 using namespace RTC;
 using namespace CAL_Protocol;
 using namespace BS_Protocol;
+using namespace GCF::TM;
 
 beamctl::beamctl(string name,
 		 string parent,
@@ -347,7 +349,7 @@ GCFEvent::TResult beamctl::final(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
       case F_ENTRY:
-	  GCFTask::stop();
+	  GCFScheduler::instance()->stop();
 	  break;
       
       case F_EXIT:
@@ -470,7 +472,7 @@ static list<int> strtolist(const char* str, int max)
 void beamctl::mainloop()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
@@ -669,7 +671,7 @@ int main(int argc, char** argv)
   }
 
   cout << "Argument are ok, creating a task" << endl;
-  GCFTask::init(argc, argv, "beamctl");
+  GCFScheduler::instance()->init(argc, argv, "beamctl");
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   beamctl ctl("beamctl", array, rcus, subbands, beamlets, rcumode, longitude, latitude, type);

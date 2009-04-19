@@ -146,7 +146,7 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 											 itsInstanceNr,
 											 myHostname(false))) {
 				cout << "Error during start of controller, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 			cout << endl << "Startrequest queued, waiting for confirmation...";
 		}
@@ -165,7 +165,7 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 			}
 			else {
 				cout << endl << "StartDaemon could not start the controller, bailing out." << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
 		break;
@@ -175,7 +175,7 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 			cout << endl << "Connection result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();	// does a TRAN
@@ -210,7 +210,7 @@ GCFEvent::TResult ControllerMenu::claim_state(GCFEvent& event, GCFPortInterface&
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::CLAIMED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -225,7 +225,7 @@ GCFEvent::TResult ControllerMenu::claim_state(GCFEvent& event, GCFPortInterface&
 			cout << endl << "Claim result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();
@@ -261,7 +261,7 @@ GCFEvent::TResult ControllerMenu::prepare_state(GCFEvent& event, GCFPortInterfac
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::PREPARED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -276,7 +276,7 @@ GCFEvent::TResult ControllerMenu::prepare_state(GCFEvent& event, GCFPortInterfac
 			cout << endl << "Prepare result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();
@@ -311,7 +311,7 @@ GCFEvent::TResult ControllerMenu::run_state(GCFEvent& event, GCFPortInterface& /
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::RESUMED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -326,7 +326,7 @@ GCFEvent::TResult ControllerMenu::run_state(GCFEvent& event, GCFPortInterface& /
 			cout << endl << "Resume result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();
@@ -361,7 +361,7 @@ GCFEvent::TResult ControllerMenu::suspend_state(GCFEvent& event, GCFPortInterfac
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::SUSPENDED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -376,7 +376,7 @@ GCFEvent::TResult ControllerMenu::suspend_state(GCFEvent& event, GCFPortInterfac
 			cout << endl << "Suspend result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();
@@ -411,7 +411,7 @@ GCFEvent::TResult ControllerMenu::release_state(GCFEvent& event, GCFPortInterfac
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::RELEASED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -426,7 +426,7 @@ GCFEvent::TResult ControllerMenu::release_state(GCFEvent& event, GCFPortInterfac
 			cout << endl << "Release result = " << msg.result << endl;
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				GCFScheduler::instance()->stop ();
 			}
 			else {
 				_doActionMenu();
@@ -461,7 +461,7 @@ GCFEvent::TResult ControllerMenu::finish_state(GCFEvent& event, GCFPortInterface
 			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::QUITED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
-				stop();
+				GCFScheduler::instance()->stop();
 			}
 		}
    		break;
@@ -527,7 +527,7 @@ int16 ControllerMenu::_chooseController()
 	}
 
 	if (CntlrType == 0) {
-		stop();
+		GCFScheduler::instance()->stop();
 	}
 	
 	return (CntlrType + 1);
@@ -551,7 +551,7 @@ void ControllerMenu::_doStartMenu()
 		cin.clear();
 		cin >> obsnr;
 		if (obsnr == 0) {
-			stop();
+			GCFScheduler::instance()->stop();
 			return;
 		}
 		ifstream	iFile;
@@ -618,7 +618,7 @@ void ControllerMenu::_doActionMenu()
 			return;
 			break;
 		case 'q':
-			stop();
+			GCFScheduler::instance()->stop();
 			break;
 		default:
 			command = "";

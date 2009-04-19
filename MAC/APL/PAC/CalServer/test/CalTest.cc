@@ -46,6 +46,7 @@ using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
+using namespace GCF::TM;
 
 CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int nyquistzone, uint32 rcucontrol, int subarrayid)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
@@ -272,7 +273,7 @@ GCFEvent::TResult CalTest::final(GCFEvent& e, GCFPortInterface& /*port*/)
   switch(e.signal)
   {
       case F_ENTRY:
-	  GCFTask::stop();
+	  GCFScheduler::instance()->stop();
 	  break;
       
       case F_EXIT:
@@ -289,12 +290,12 @@ GCFEvent::TResult CalTest::final(GCFEvent& e, GCFPortInterface& /*port*/)
 void CalTest::run()
 {
   start(); // make initial transition
-  GCFTask::run();
+  GCFScheduler::instance()->run();
 }
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  GCFScheduler::instance()->init(argc, argv);
 
   if (argc != 8) {
     cerr << "usage: CalTest arrayname parentname nantennas nyquistzone rcucontrol subarray=[0|1|2]" << endl;

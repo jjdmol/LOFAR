@@ -112,7 +112,7 @@ GCFEvent::TResult tTimer::test1(GCFEvent& event, GCFPortInterface& /*port*/)
 				LOG_DEBUG_STR("ID = " << timerEvent.id << ", *arg = " << (char*)timerEvent.arg);
 				if (gTest++ > 20) {
 					itsTimerPort->cancelTimer(gTimerID);
-					stop();
+					GCFScheduler::instance()->stop();
 				}
 			}
 			break;
@@ -140,13 +140,13 @@ using namespace LOFAR::GCF::TM;
 //
 int main(int argc, char* argv[])
 {
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	tTimer	timerTask("TimerTask");
 
 	timerTask.start(); // make initial transition
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

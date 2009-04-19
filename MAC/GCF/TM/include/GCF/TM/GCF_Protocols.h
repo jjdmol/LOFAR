@@ -53,6 +53,7 @@ enum {
     F_EXIT_ID,      // state exit; currently unused
     F_INIT_ID,      // initial transition
     F_QUIT_ID,      // final run
+	F_TRAN_ID,		// state transition (internal, never send to FSM)
 };
 
 // convenience macros
@@ -60,6 +61,7 @@ enum {
 #define F_EXIT  F_SIGNAL(F_FSM_PROTOCOL, F_EXIT_ID,  F_IN)
 #define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
 #define F_QUIT  F_SIGNAL(F_FSM_PROTOCOL, F_QUIT_ID,  F_IN)
+#define F_TRAN  F_SIGNAL(F_FSM_PROTOCOL, F_TRAN_ID,  F_IN)
 
 extern const char* F_FSM_PROTOCOL_names[]; 
 extern const struct protocolStrings F_FSM_PROTOCOL_STRINGS; 

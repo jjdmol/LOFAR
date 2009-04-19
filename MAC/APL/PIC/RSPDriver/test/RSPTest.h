@@ -33,6 +33,10 @@
 using LOFAR::MACIO::GCFEvent;
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTimerPort;
   namespace RSP_Test {
   class RSPTest : public GCFTask, public Test
   {

@@ -110,6 +110,17 @@ string GCFPortInterface::makeServiceName() const
 	return(formatString("%s:%s", _pTask->getName().c_str(), _name.c_str()));
 }
 
+//
+// dispatch(e)
+//
+// NB: this function is added for the GCFScheduler.
+//
+GCFEvent::TResult   GCFPortInterface::dispatch  (GCFEvent& event)
+{ 
+	return (_pTask->doEvent(event, *this)); 
+}
+
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

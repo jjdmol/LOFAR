@@ -121,7 +121,7 @@ GCFEvent::TResult	calinfo::getInfo(GCFEvent&	event, GCFPortInterface&	port)
 }
 
 GCFEvent::TResult	calinfo::finish(GCFEvent&	event, GCFPortInterface&	port) {
-	GCFTask::stop();
+	GCFScheduler::instance()->stop();
 	return (GCFEvent::HANDLED);
 }
 
@@ -143,13 +143,13 @@ int main(int	argc,	char*	argv[])
 		saName = argv[1];
 	}
 
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 
 	CAL::calinfo		ciTask(saName);
 	ciTask.start();
 
-	GCFTask::run();
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

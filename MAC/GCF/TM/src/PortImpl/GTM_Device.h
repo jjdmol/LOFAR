@@ -57,7 +57,7 @@ class GTMDevice : public GTMFile
      * send/recv methods
      */
     virtual ssize_t send (void* buf, size_t count);
-    virtual ssize_t recv (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count, bool raw = false);
 
   private:
     /// default contructor

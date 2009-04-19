@@ -30,7 +30,7 @@
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GTM_Defines.h>
+#include <GCF/TM/GCF_Scheduler.h>
 
 namespace LOFAR 
 {
@@ -71,7 +71,7 @@ void GTMTimer::decreaseTime()
 	te.usec = now.tv_usec;
 	te.id   = _id;
 	te.arg  = _arg;
-	_port.dispatch(te);
+	GCFScheduler::instance()->queueEvent(0, te, &_port);
 
 	if (_intervalTime == 0) {
 		_elapsed = true;

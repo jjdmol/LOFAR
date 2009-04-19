@@ -39,7 +39,7 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  using namespace MACIO;
+  using MACIO::GCFEvent;
   namespace GCF {  
     namespace RTDBDaemons {
 
@@ -58,8 +58,8 @@ private:
 	bool _readFromPortData(TM::GCFPortInterface& 				port, 
 						   log4cplus::helpers::SocketBuffer&	buf);
 	string _searchClientDP(log4cplus::spi::InternalLoggingEvent&	logEvent,
-						   GCFPortInterface&						port);
-	void _registerFailure (GCFPortInterface&	port);
+						   TM::GCFPortInterface&						port);
+	void _registerFailure (TM::GCFPortInterface&	port);
 
 	// data members        
 	TM::GCFTCPPort*			itsListener;	// application inpt

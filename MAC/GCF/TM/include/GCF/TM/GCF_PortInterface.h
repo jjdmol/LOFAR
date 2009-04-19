@@ -34,6 +34,7 @@
 namespace LOFAR {
  namespace GCF {
   namespace TM {
+	using LOFAR::MACIO::GCFEvent;
 
 // forward declacations
 class GCFTask;
@@ -72,7 +73,7 @@ public:
     /**
     * send/recv functions
     */
-    virtual ssize_t send (LOFAR::MACIO::GCFEvent& event) = 0;
+    virtual ssize_t send (GCFEvent& event) = 0;
     
     virtual ssize_t recv (void* buf, 
                           size_t count) = 0;
@@ -98,6 +99,8 @@ public:
     virtual int  cancelAllTimers() = 0;
         
 	virtual double	timeLeft(long	timerID) = 0;
+
+    virtual GCFEvent::TResult   dispatch  (GCFEvent& event);
 
     /**
     * Attribute access functions

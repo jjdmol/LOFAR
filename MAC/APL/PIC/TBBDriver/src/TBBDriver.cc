@@ -74,6 +74,7 @@
 #define ETHERTYPE_TP 0x7BB0     // letters of TBB
 
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace TBB;
 
 static bool   itsDaemonize  = false;
@@ -590,7 +591,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 				LOG_DEBUG_STR("queue:" << eventName(*e));
 				
 				if (SetTbbCommand(e->signal)) {
-					status = cmdhandler->dispatch(*e,*itsTbbQueue->front()->port);
+					status = cmdhandler->doEvent(*e,*itsTbbQueue->front()->port);
 					// delete e;
 
 					TbbEvent* tmp = itsTbbQueue->front();
@@ -709,7 +710,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 					itsAliveTimer->cancelAllTimers();
 					itsAliveTimer->setTimer(ALIVECHECKTIME);
 					itsAliveCheck = false;
-					status = cmdhandler->dispatch(event,port);
+					status = cmdhandler->doEvent(event,port);
 					TRAN(TBBDriver::busy_state);
 				} else {
 					TBBDriverBusyAckEvent ack;    
@@ -788,7 +789,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 					itsAliveTimer->setTimer(ALIVECHECKTIME);
 				}
 			} else {
-				status = cmdhandler->dispatch(event,port); // dispatch time-out event 
+				status = cmdhandler->doEvent(event,port); // dispatch time-out event 
 			}
 		} break;
 		
@@ -865,7 +866,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_WATCHDOG_ACK:
 		case TP_TEMP_LIMIT_ACK: 
 		{
-			status = cmdhandler->dispatch(event,port); // dispatch ack from boards  
+			status = cmdhandler->doEvent(event,port); // dispatch ack from boards  
 			if (cmdhandler->tpCmdDone()) {
 				TRAN(TBBDriver::idle_state);
 			}
@@ -1358,7 +1359,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 //
 int main(int argc, char** argv)
 {
-	LOFAR::GCF::TM::GCFTask::init(argc, argv, "TBBDriver");    // initializes log system
+	LOFAR::GCF::TM::GCFScheduler::instance()->init(argc, argv, "TBBDriver");    // initializes log system
 	
 	// Inform Logprocessor who we are
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_TBBDriver");
@@ -1394,7 +1395,7 @@ int main(int argc, char** argv)
 	tbb.start(); // make initialsition
 	
 	try {
-		LOFAR::GCF::TM::GCFTask::run();
+		LOFAR::GCF::TM::GCFScheduler::instance()->run();
 	}
 	catch (LOFAR::Exception& e) {
 		LOG_ERROR_STR("Exception: " << e.text());

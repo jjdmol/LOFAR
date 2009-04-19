@@ -27,6 +27,7 @@
 #include "WritewCmd.h"
 
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using	namespace TBB;

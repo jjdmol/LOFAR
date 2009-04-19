@@ -328,7 +328,7 @@ public:
 
 int main(int argc, char** argv)
 {
-	GCFTask::init(argc, argv);
+	GCFScheduler::instance()->init(argc, argv);
 
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 

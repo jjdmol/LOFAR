@@ -513,7 +513,7 @@ GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterfac
 	}
   
     case F_TIMER:
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       break;
     
 	default:

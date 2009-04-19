@@ -29,10 +29,11 @@
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
 
-namespace LOFAR
-{
-  namespace CAL
-    {
+namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFPortInterface;
+  namespace CAL {
 
       class CalTest : public GCFTask, public Test
 	{

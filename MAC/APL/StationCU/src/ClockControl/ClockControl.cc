@@ -781,7 +781,7 @@ GCFEvent::TResult ClockControl::finishing_state(GCFEvent& event, GCFPortInterfac
 	}
   
     case F_TIMER:
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       break;
     
 	default:

@@ -23,9 +23,11 @@
 #include <lofar_config.h>
 #include <Common/StringUtil.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <GCF/TM/GCF_Scheduler.h>
 #include "CEPApplMgr.h"
 
 namespace LOFAR {
+  using namespace GCF::TM;
   using namespace ACC::ALC;
   using namespace APLCommon;
   namespace CEPCU {
@@ -56,7 +58,7 @@ CEPApplMgr::CEPApplMgr(CEPApplMgrInterface& interface,
 //
 CEPApplMgr::~CEPApplMgr()
 {
-	GCFTask::deregisterHandler(*this);
+	GCFScheduler::instance()->deregisterHandler(*this);
 }
 
 //

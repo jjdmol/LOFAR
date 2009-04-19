@@ -17,9 +17,10 @@ DOCHDRS = \
 lib_LTLIBRARIES 	= libgcftm.la
 
 libgcftm_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
+  GCF_Handler.cc \
+  GCF_Scheduler.cc \
   GCF_Fsm.cc \
   GCF_Protocols.cc \
-  GCF_Task.cc \
   Port/GCF_PortInterface.cc \
   Port/GCF_Port.cc \
   Port/GCF_RawPort.cc \
@@ -38,7 +39,7 @@ libgcftm_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
   ServiceBroker/GTM_SBTCPPort.cc \
   ServiceBroker/ServiceBrokerTask.cc 
 
-libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker
+libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker 
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 

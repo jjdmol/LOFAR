@@ -486,12 +486,12 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 						" should have died by now, sending an extra QUIT command.");
 			CONTROLQuitEvent	quitevent;
 			quitevent.cntlrName = theObs->second->getName();
-			theObs->second->dispatch(quitevent, port);
+			theObs->second->doEvent(quitevent, port);
 		}
 
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
-		theObs->second->dispatch(event, port);
+		theObs->second->doEvent(event, port);
 		LOG_TRACE_FLOW("Back from dispatch");
 	}
 	break;
@@ -581,7 +581,7 @@ LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
 #endif
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
-		theObs->second->dispatch(event, port);
+		theObs->second->doEvent(event, port);
 
 		// end of FSM?
 		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
@@ -666,7 +666,7 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 	}
   
     case F_TIMER:
-      GCFTask::stop();
+      GCFScheduler::instance()->stop();
       break;
     
 	default:

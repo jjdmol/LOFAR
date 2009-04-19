@@ -34,6 +34,8 @@
 
 namespace LOFAR {
   using GCF::TM::GCFTask;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTCPPort;
   namespace CAL {
 
 // \addtogroup CAL

@@ -66,6 +66,7 @@ using namespace CAL;
 using namespace RTC;
 using namespace RSP_Protocol;
 using namespace CAL_Protocol;
+using namespace GCF::TM;
 
 #define NPOL 2
 
@@ -869,7 +870,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	GCFTask::init(argc, argv, "CalServer");
+	GCFScheduler::instance()->init(argc, argv, "CalServer");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_CalServer");
 
@@ -896,7 +897,7 @@ int main(int argc, char** argv)
 		cal.start();      // make initial transition
 		acmproxy.start(); // make initial transition
 
-		GCFTask::run();
+		GCFScheduler::instance()->run();
 	}
 	catch (Exception& e) {
 		LOG_ERROR_STR("Exception: " << e.text());

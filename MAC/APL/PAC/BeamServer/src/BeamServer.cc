@@ -1060,7 +1060,7 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 		LOG_DEBUG_STR(">>> recalling event " << m_deferred_queue.size() << " <<<");
 		pair<char*, GCFPortInterface*> port_event = m_deferred_queue.front();
 		m_deferred_queue.pop_front();
-		status = dispatch(*(GCFEvent*)(port_event.first), *port_event.second);
+		status = doEvent(*(GCFEvent*)(port_event.first), *port_event.second);
 		delete [] port_event.first;
 	}
 	else {

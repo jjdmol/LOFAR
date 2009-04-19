@@ -37,7 +37,7 @@ namespace LOFAR {
  * uses the PVSS API. It calls the dispatch of the PVSS API to handle incoming 
  * and outgoing messages from/to PVSS.
  */
-class GSASCADAHandler : GCFHandler
+class GSASCADAHandler : TM::GCFHandler
 {
 public:
     static GSASCADAHandler* instance ();

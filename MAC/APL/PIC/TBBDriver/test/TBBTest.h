@@ -30,6 +30,10 @@
 #include <GCF/TM/GCF_ETHRawPort.h>
 
 namespace LOFAR {
+	using GCF::TM::GCFTask;
+	using GCF::TM::GCFPort;
+	using GCF::TM::GCFETHRawPort;
+	using GCF::TM::GCFPortInterface;
 	namespace TBB_Test {
   
   class TBBTest : public GCFTask, public Test

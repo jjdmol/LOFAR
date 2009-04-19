@@ -29,19 +29,15 @@
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_Task.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 GTMTimerHandler* GTMTimerHandler::_pInstance = 0;
 
 GTMTimerHandler* GTMTimerHandler::instance()
 {
-  if (0 == _pInstance)
-  {
+  if (0 == _pInstance) {
     _pInstance = new GTMTimerHandler();
     ASSERT(!_pInstance->mayDeleted());
   }
@@ -54,8 +50,7 @@ void GTMTimerHandler::release()
   ASSERT(_pInstance);
   ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
-  if (_pInstance->mayDeleted())
-  {
+  if (_pInstance->mayDeleted()) {
     delete _pInstance;
     ASSERT(!_pInstance);
   }
@@ -69,9 +64,7 @@ GTMTimerHandler::GTMTimerHandler() :
 GTMTimerHandler::~GTMTimerHandler()
 { 
   GTMTimer* pCurTimer(0);
-  for (TTimers::iterator iter = _timers.begin(); 
-       iter != _timers.end(); ++iter)
-  {
+  for (TTimers::iterator iter = _timers.begin(); iter != _timers.end(); ++iter) {
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
     delete pCurTimer;
@@ -92,18 +85,14 @@ void GTMTimerHandler::workProc()
   TTimers tempTimers;
   tempTimers.insert(_timers.begin(), _timers.end());
     
-  for (TTimers::iterator iter = tempTimers.begin(); 
-       iter != tempTimers.end() && _running; ++iter)
-  {
+  for (TTimers::iterator iter = tempTimers.begin(); iter != tempTimers.end() && _running; ++iter) {
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
-    if (pCurTimer->isElapsed() || pCurTimer->isCanceled())
-    {
+    if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
       delete pCurTimer;
       _timers.erase(iter->first);
     }
-    else
-    {
+    else {
       pCurTimer->decreaseTime();	// and dispatch F_TIMER when elapsed
     }
   }
@@ -118,8 +107,7 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
 
   // search the first unused timerid
   TTimers::iterator iter;
-  do 
-  {
+  do {
     timerid++;
     iter = _timers.find(timerid);
   }
@@ -140,14 +128,19 @@ int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
   int result(0);
   GTMTimer* pCurTimer(0);
   TTimers::iterator iter = _timers.find(timerid);
-  if (arg) *arg = 0;
-  if (iter == _timers.end())
+  if (arg) {
+	*arg = 0;
+  }
+  if (iter == _timers.end()) {
     return result;
+  }
   pCurTimer = iter->second;
 
   ASSERT(pCurTimer);
   result = 1;
-  if (arg) *arg = pCurTimer->getTimerArg();
+  if (arg) {
+	*arg = pCurTimer->getTimerArg();
+  }
   pCurTimer->cancel();
   
   return result;
@@ -158,13 +151,10 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
   int result(0);
   GTMTimer* pCurTimer(0);
   
-  for (TTimers::iterator iter = _timers.begin(); 
-       iter != _timers.end(); ++iter)
-  {
+  for (TTimers::iterator iter = _timers.begin(); iter != _timers.end(); ++iter) {
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
-    if (&(pCurTimer->getPort()) == &port)
-    {  
+    if (&(pCurTimer->getPort()) == &port) {  
       pCurTimer->cancel();
       result++;
     }

@@ -73,15 +73,13 @@ GTMSBTCPPort::~GTMSBTCPPort()
 bool GTMSBTCPPort::open()
 {
 	if (isConnected()) {
-		LOG_ERROR(formatString ("Port %s already open.", 
-								makeServiceName().c_str()));
+		LOG_ERROR(formatString ("Port %s already open.", makeServiceName().c_str()));
 		return false;
 	}
 
 	if (!_pSocket) {
 		if (isSlave()) {
-			LOG_ERROR(formatString ("Port %s not initialised.", 
-									makeServiceName().c_str()));
+			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
 			return false;
 		}
 

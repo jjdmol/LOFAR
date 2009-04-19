@@ -37,6 +37,10 @@
 #include <AMCBase/ConverterClient.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFTask;
+  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
+  using GCF::TM::GCFPortInterface;
   namespace CAL {
 
     class CalibrationAlgorithm;

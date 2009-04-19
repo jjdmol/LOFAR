@@ -43,7 +43,8 @@ const char* F_FSM_PROTOCOL_names[] =
   "F_ENTRY",
   "F_EXIT",
   "F_INIT",
-  "F_QUIT"
+  "F_QUIT",
+  "F_TRAN"
 };
 
 //
@@ -64,7 +65,7 @@ const char* F_PORT_PROTOCOL_names[] =
 };
 
 const struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
-	5, 0, F_FSM_PROTOCOL_names, 0
+	6, 0, F_FSM_PROTOCOL_names, 0
 };
 
 const struct protocolStrings F_PORT_PROTOCOL_STRINGS = {

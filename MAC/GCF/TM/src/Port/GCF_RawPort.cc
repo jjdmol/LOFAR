@@ -36,11 +36,6 @@ namespace LOFAR {
  namespace GCF {
   namespace TM {
 
-// static framework events
-static GCFEvent disconnectedEvent(F_DISCONNECTED);
-static GCFEvent connectedEvent   (F_CONNECTED);
-static GCFEvent closedEvent      (F_CLOSED);
-
 //
 // GCFRawPort(task, name, type, protocol, raw)
 //
@@ -50,10 +45,14 @@ GCFRawPort::GCFRawPort(GCFTask& 	 task,
                        int 			 protocol,
                        bool 		 transportRawData) : 
     GCFPortInterface(&task, name, type, protocol, transportRawData),   
-    _pMaster(0)
+    _pMaster(0),
+	itsScheduler(0)
 {
 	_pTimerHandler = GTMTimerHandler::instance(); 
-	ASSERT(_pTimerHandler);
+	ASSERTSTR(_pTimerHandler, "Cannot reach the Timer handler");
+
+	itsScheduler = GCFScheduler::instance();
+	ASSERTSTR(itsScheduler, "Cannot reach the GCF scheduler");
 }
 
 //
@@ -64,7 +63,10 @@ GCFRawPort::GCFRawPort() :
     _pMaster(0)
 {
 	_pTimerHandler = GTMTimerHandler::instance(); 
-	ASSERT(_pTimerHandler);
+	ASSERTSTR(_pTimerHandler, "Cannot reach the Timer handler");
+
+	itsScheduler = GCFScheduler::instance();
+	ASSERTSTR(itsScheduler, "Cannot reach the GCF scheduler");
 }
 
 //
@@ -96,7 +98,6 @@ GCFRawPort::~GCFRawPort()
 //
 GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 {
-	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 	ASSERT(_pTask);
 
 	// Test whether the event is a framework event or not
@@ -105,7 +106,6 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 						  (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL)) {
 		// Inform about the fact of an incomming message
 		LOG_DEBUG(formatString ("%s was received on port '%s' in task '%s'",
-//								_pTask->eventName(event).c_str(), 
 								eventName(event).c_str(), 
 								getRealName().c_str(), 
 								_pTask->getName().c_str())); 
@@ -126,16 +126,6 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 		_state = S_DISCONNECTED;
 		break;
 
-	case F_TIMER: {
-		// result of the schedule_* methods
-		GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
-		if (&disconnectedEvent == pTE->arg || &connectedEvent == pTE->arg ||
-												&closedEvent == pTE->arg) {    
-			return dispatch(*((GCFEvent*) pTE->arg));
-		}
-		break;
-	}
-
 	case F_DATAIN: {
 		// the specific transport implementations informs the rawport about 
 		// incomming data
@@ -147,41 +137,15 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 	}
 
 	default:
-	// 170507: This IN/OUT stuff is not very handy in the control-chains.
-	//		   It is also not neccesary to check this because signals will always
-	//		   be catched in switches. It is much more usefull to use these two bits
-	//		   for marking whether a message is an order/request or an acknowlegdement.
-	//		   For now these checks are disabled.
-#if 0
-		if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) {    
-			LOG_ERROR(formatString ("Developer error in %s (port %s): "
-									"received an OUT event (%s) in a SPP",
-									_pTask->getName().c_str(), 
-									getRealName().c_str(), 
-									_pTask->eventName(event)));    
-		return (status);
-		}
-		else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) {
-			LOG_ERROR(formatString ("Developer error in %s (port %s): "
-									"received an IN event (%s) in a SAP",
-									_pTask->getName().c_str(), 
-									getRealName().c_str(), 
-									_pTask->eventName(event)));    
-			return (status);
-		}
-#endif
 		break;
 	}
 
 	if (isSlave()) {
 		_pMaster->setState(_state);
-		status = _pTask->dispatch(event, *_pMaster);      
-	}
-	else {
-		status = _pTask->dispatch(event, *this);
+		return(_pTask->doEvent(event, *_pMaster));
 	}
 
-	return (status);
+	return(_pTask->doEvent(event, *this));
 }
 
 //
@@ -283,78 +247,53 @@ bool GCFRawPort::findAddr(TPeerAddr& addr)
 }
 
 //
-// schedule_disconnect()
-//
-void GCFRawPort::schedule_disconnected()
-{
-  // forces a context switch
-  setTimer(0, 0, 0, 0, (void*)&disconnectedEvent);
-}
-
-//
-// schedule_close()
-//
-void GCFRawPort::schedule_close()
-{
-  // forces a context switch
-  setTimer(0, 0, 0, 0, (void*)&closedEvent);
-}
-
-//
-// schedule_connect()
-//
-void GCFRawPort::schedule_connected()
-{
-  // forces a context switch
-  setTimer(0, 0, 0, 0, (void*)&connectedEvent);
-}
-
-//
 // recvEvent()
 //
 GCFEvent::TResult GCFRawPort::recvEvent()
 {
-	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+	bool		error (false);
+	GCFEvent	e;
+	char* 		event_buf(0);
+	GCFEvent*	full_event(&e);
 
-	GCFEvent e;
 	// expects and reads signal
 	if (recv(&e.signal, sizeof(e.signal)) != sizeof(e.signal)) {
+		error = true;
 		// don't continue with receiving
 	}
 	// expects and reads length
 	else if (recv(&e.length, sizeof(e.length)) != sizeof(e.length)) {
+		error = true;
 		// don't continue with receiving
 	}  
 	// reads payload if specified
 	else if (e.length > 0) {
-		GCFEvent* full_event = 0;
-		char* event_buf = new char[sizeof(e) + e.length];
-		full_event = (GCFEvent*)event_buf;
+		event_buf = new char[sizeof(e) + e.length];
 		memcpy(event_buf, &e, sizeof(e));
+		full_event = (GCFEvent*)event_buf;
 
 		// read the payload right behind the just memcopied basic event struct
-		if (recv(event_buf + sizeof(e), e.length) > 0) {          
-			// dispatchs an event with just received params
-			status = dispatch(*full_event);
+		if (recv(event_buf + sizeof(e), e.length) != e.length) {
+			error = true;
 		}    
+	}
+
+	// receive errors?
+	if (error) {
+		LOG_ERROR_STR("Error during receiption of an event on port " << getRealName());
+		if (event_buf) {
+			delete [] event_buf;
+		}
+		return (GCFEvent::NOT_HANDLED);
+	}
+
+	// dispatch the event to the task
+	itsScheduler->queueEvent(const_cast<GCFTask*>(getTask()), *full_event, this);
+
+	if (event_buf) {
 		delete [] event_buf;
 	}
-	// dispatchs an event without params
-	else {
-		status = dispatch(e);
-	}
-
-	if (status != GCFEvent::HANDLED) {
-		ASSERT(getTask());
-		LOG_DEBUG(formatString (
-			"'%s' for port '%s' in task '%s' not handled or an error occured",
-//			getTask()->eventName(e).c_str(), 
-			eventName(e).c_str(), 
-			getRealName().c_str(),
-			getTask()->getName().c_str()));
-	}
-
-	return (status);
+	return (GCFEvent::HANDLED);
 }
 
 //

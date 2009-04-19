@@ -27,10 +27,11 @@
 #include "Scheduler.h"
 #include "SyncAction.h"
 
-using namespace LOFAR;
-using namespace RSP;
-using namespace RSP_Protocol;
-using namespace RTC;
+namespace LOFAR  {
+	using namespace GCF::TM;
+	using namespace RSP_Protocol;
+	using namespace RTC;
+	namespace RSP {
 
 #define SCHEDULING_DELAY 2
 
@@ -135,7 +136,7 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 		if (!(*sa)->hasCompleted()) {
 			// stil busy
 			sync_completed = false;
-			status = (*sa)->dispatch(*current_event, (*sa)->getBoardPort());
+			status = (*sa)->doEvent(*current_event, (*sa)->getBoardPort());
 
 			// When the SyncAction finished its work it set the completed-flag and went to the idle state.
 			// If the Syncaction was not finished is has sent a new msg to the board and we can wait for
@@ -435,7 +436,7 @@ void Scheduler::initiateSync(GCFEvent& event)
 		// dispatch F_TIMER event to first syncactions for each board
 		if (!(*port).second.empty()) {
 			for (unsigned int i = 0; i < (*port).second.size(); i++) {
-				(*port).second[i]->dispatch(event, (*port).second[i]->getBoardPort());
+				(*port).second[i]->doEvent(event, (*port).second[i]->getBoardPort());
 				if (!(*port).second[i]->doContinue()) {	// !doContinue() == msg was send, waiting for answer
 					break;
 				}
@@ -529,3 +530,5 @@ void Scheduler::completeCommands()
 	}
 }
 
+  } // namespace RSP
+} // namespace LOFAR

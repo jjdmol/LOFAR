@@ -30,6 +30,8 @@
 
 namespace LOFAR {
  namespace GCF {
+  using TM::GCFTask;
+  using TM::GCFPortInterface;
   namespace PVSS {
 /**
  * The tGSAService task receives ECHO_PING events from the Ping task and
@@ -74,9 +76,9 @@ class tGSAService : public GCFTask
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-	PVSSservice* 	itsService;;
-	PVSSresponse*	itsResponse;
-	GCFTimerPort*	itsTimerPort;
+	PVSSservice* 		itsService;;
+	PVSSresponse*		itsResponse;
+	TM::GCFTimerPort*	itsTimerPort;
 };
 
   } // namespace PVSS

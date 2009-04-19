@@ -29,6 +29,9 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
+  using GCF::TM::GCFFsm;
+  using GCF::TM::GCFPortInterface;
+  using GCF::TM::GCFTimerPort;
   namespace RSP {
 
     class Sequencer : public GCFFsm

@@ -26,15 +26,11 @@
 //# Includes
 
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 //# forward declaration
-class GCFTask;
 
 /**
   This is the pure abstract (interface) class for all different kind of
@@ -84,7 +80,7 @@ class GCFTask;
 
 class GCFHandler
 {
-  public:
+public:
     /// @return true if no other objects use this handler anymore otherwise false
     bool mayDeleted() { return (_usecount == 0);}
     /// increments the uscount
@@ -92,21 +88,17 @@ class GCFHandler
     /// decrements the uscount
     void leave() { _usecount--;}
   
-  protected:
-    GCFHandler();
-    virtual ~GCFHandler() {;}
-
-    friend class GCFTask;
-
     virtual void workProc () = 0;
     virtual void stop () = 0;
+    virtual ~GCFHandler() {;}
 
-  private:
-    //@{ 
-    /// Don't allow copying this object.
+protected:
+    GCFHandler();
+
+private:
+    // Don't allow copying this object.
     GCFHandler (const GCFHandler&);
     GCFHandler& operator= (const GCFHandler&);  
-    //@}
     
     /// count the usage of this handler    
     unsigned int _usecount;
@@ -116,13 +108,4 @@ class GCFHandler
  } // namespace GCF
 } // namespace LOFAR
 
-
-#include <GCF/TM/GCF_Task.h>
-
-using namespace LOFAR::GCF::TM;
-
-inline GCFHandler::GCFHandler() : _usecount(0) 
-{
-  GCFTask::registerHandler(*this);
-}
 #endif

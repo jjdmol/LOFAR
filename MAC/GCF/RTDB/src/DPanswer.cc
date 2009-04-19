@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>	
 
 #include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Scheduler.h>
 #include <DP_Protocol.ph>
 #include "DPanswer.h"
 
@@ -166,7 +167,7 @@ void DPanswer::_dispatchEvent(GCFEvent&	event)
 	memcpy(newEventBuffer + GCFEVENT_LEN, packedBuffer + sizeof(signal) + sizeof(length), length);
 
 	// Finally we can send the reconstructed event.
-	itsTask->dispatch(*pActualEvent, gDummyPort);
+	itsTask->doEvent(*pActualEvent, gDummyPort);
 
 	// and delete it again.
 	delete newEventBuffer;

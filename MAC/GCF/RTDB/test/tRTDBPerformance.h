@@ -32,6 +32,9 @@
 
 namespace LOFAR {
  namespace GCF {
+  using TM::GCFTask;
+  using TM::GCFPortInterface;
+  using TM::GCFTimerPort;
   namespace RTDB {
 /**
  * The tPerformance task receives ECHO_PING events from the Ping task and
