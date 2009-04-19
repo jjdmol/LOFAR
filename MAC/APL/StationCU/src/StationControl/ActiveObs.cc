@@ -35,7 +35,7 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/StationInfo.h>
+//#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "PVSSDatapointDefs.h"
 #include "ActiveObs.h"

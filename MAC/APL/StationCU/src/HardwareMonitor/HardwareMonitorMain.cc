@@ -30,7 +30,7 @@
 #include "RSPMonitor.h"
 #include "TBBMonitor.h"
 #include "ECMonitor.h"
-#include "../Package__Version.h"
+//#include "../Package__Version.h"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	GCFScheduler::instance()->init(argc, argv, "HardwareMonitor");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
-	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
+//	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
 
 	// for debugging purposes
 	registerProtocol (RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);

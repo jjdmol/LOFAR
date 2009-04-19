@@ -38,7 +38,7 @@
 
 #include "BeamControl.h"
 #include "PVSSDatapointDefs.h"
-#include "../Package__Version.h"
+//#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -68,7 +68,7 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsNrBeams			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-	LOG_INFO(Version::getInfo<StationCUVersion>("BeamControl"));
+//	LOG_INFO(Version::getInfo<StationCUVersion>("BeamControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
