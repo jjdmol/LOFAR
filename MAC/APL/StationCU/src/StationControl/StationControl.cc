@@ -48,7 +48,7 @@
 #include "ActiveObs.h"
 #include "StationControl.h"
 #include "PVSSDatapointDefs.h"
-//#include "../Package__Version.h"
+#include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -81,7 +81,7 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTimerPort		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-//	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
+	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
 
 	// Readin some parameters from the ParameterSet.
 	itsInstanceNr = globalParameterSet()->getUint32("instanceNr", 0);

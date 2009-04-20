@@ -36,7 +36,7 @@
 
 #include "ClockControl.h"
 #include "PVSSDatapointDefs.h"
-//#include "../Package__Version.h"
+#include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -63,7 +63,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsClock			(160)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
-//	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
+	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
 
 	// TODO
 	LOG_INFO("MACProcessScope: LOFAR.PermSW.ClockControl");
