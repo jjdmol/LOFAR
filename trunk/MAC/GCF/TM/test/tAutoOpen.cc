@@ -61,12 +61,13 @@ GCFEvent::TResult tAutoOpen::retryTest(GCFEvent& event, GCFPortInterface& /*port
 	case F_ENTRY:
 		break;
 
-	case F_INIT:
+	case F_INIT: {
 		itsConn = new GCFTCPPort(*this, "Echo:Server", GCFPortInterface::SAP, ECHO_PROTOCOL, false);
 		ASSERTSTR(itsConn, "Can't allocate a TCPport");
 		LOG_DEBUG("Calling autoOpen(5, 0, 4)");
 		itsConn->autoOpen(5, 0, 4); // nrRetry, timeout, retryItv
 		break;
+	}
 
 	case F_CONNECTED:
 		LOG_DEBUG_STR("THIS IS REALY STRANGE!!!");
@@ -302,12 +303,13 @@ GCFEvent::TResult tAutoOpen::relayedOpenTest(GCFEvent& event, GCFPortInterface& 
 	LOG_DEBUG_STR ("tAutoOpen::relayedOpenTest: " << eventName(event.signal));
 
 	switch (event.signal) {
-	case F_ENTRY:
+	case F_ENTRY: {
 		LOG_DEBUG("\n\n\n\nStarting the server task");
 		tServer*	server = new tServer("Server", 25);
 		server->start();
 		itsConn->autoOpen(10, 0, 10);	// connect within 100 seconds.
 		break;
+	}
 
 	case F_CONNECTED: {
 		LOG_DEBUG("COOL its is realy working");
