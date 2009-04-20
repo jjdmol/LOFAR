@@ -34,8 +34,8 @@ class Semaphore: boost::noncopyable
     Semaphore(unsigned level = 0);
     ~Semaphore();
 
-    void up();
-    void down();
+    void up(unsigned count = 1);
+    void down(unsigned count = 1);
     
   private:
     pthread_mutex_t mutex;
@@ -46,38 +46,38 @@ class Semaphore: boost::noncopyable
 
 inline Semaphore::Semaphore(unsigned level)
 :
-    level(level)
+  level(level)
 {
-    pthread_mutex_init(&mutex, 0);
-    pthread_cond_init(&condition, 0);
+  pthread_mutex_init(&mutex, 0);
+  pthread_cond_init(&condition, 0);
 }
 
 
 inline Semaphore::~Semaphore()
 {
-    pthread_cond_destroy(&condition);
-    pthread_mutex_destroy(&mutex);
+  pthread_cond_destroy(&condition);
+  pthread_mutex_destroy(&mutex);
 }
 
 
-inline void Semaphore::up()
+inline void Semaphore::up(unsigned count)
 {
-    pthread_mutex_lock(&mutex);
-    ++ level;
-    pthread_cond_signal(&condition);
-    pthread_mutex_unlock(&mutex);
+  pthread_mutex_lock(&mutex);
+  level += count;
+  pthread_cond_broadcast(&condition); // pthread_cond_signal() is incorrect
+  pthread_mutex_unlock(&mutex);
 }
 
 
-inline void Semaphore::down()
+inline void Semaphore::down(unsigned count)
 {
-    pthread_mutex_lock(&mutex);
+  pthread_mutex_lock(&mutex);
 
-    while (level == 0)
-	pthread_cond_wait(&condition, &mutex);
+  while (level < count)
+    pthread_cond_wait(&condition, &mutex);
 
-    -- level;
-    pthread_mutex_unlock(&mutex);
+  level -= count;
+  pthread_mutex_unlock(&mutex);
 }
 
 #endif
