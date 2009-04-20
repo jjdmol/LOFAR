@@ -24,6 +24,7 @@
 #define GTM_TIMERHANDLER_H
 
 #include <Common/lofar_map.h>
+#include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Handler.h>
 
 namespace LOFAR {
