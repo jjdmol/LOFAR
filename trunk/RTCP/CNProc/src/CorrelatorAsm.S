@@ -1203,7 +1203,6 @@ _weigh_visibilities:
 	li	11,SIZEOF_NR_VALID_SAMPLES
 	srwi	7,7,1
 	sub	4,4,11
-	li	12,0
 	mtctr	7
 	sub	7,3,8
 
@@ -1218,18 +1217,17 @@ _weigh_visibilities:
 	lwzux	10,4,11
 #endif
 
-	lfpsx	9,0,6
 	lfpsx	0,3,8
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
 
 0:	
-	fxpmul	0,9,0		; slwi	9,9,2
-	fxpmul	1,9,1		; lfsx	8,5,9
+				; slwi	9,9,2
+				; lfsx	8,5,9
 
-	fxpmul	2,9,2		; lfpsux 4,3,8
-	fxpmul	3,9,3		; lfpsux 5,3,8
+				; lfpsux 4,3,8
+				; lfpsux 5,3,8
 				; lfpsux 6,3,8
 				; lfpsux 7,3,8
 
@@ -1246,19 +1244,19 @@ _weigh_visibilities:
 	lwzux	9,4,11
 #endif
 
-	addi	12,12,8		; stfpsux 0,7,8
-	and	12,12,0		; stfpsux 1,7,8
+				; stfpsux 0,7,8
+				; stfpsux 1,7,8
 				; stfpsux 2,7,8
 				; stfpsux 3,7,8
 
-	fxsmul	4,9,4		; slwi	10,10,2
-	fxsmul	5,9,5		; lfsx	8,5,10
+				; slwi	10,10,2
+				; lfsx	8,5,10
 
-	fxsmul	6,9,6		; lfpsux 0,3,8
-	fxsmul	7,9,7		; lfpsux 1,3,8
+				; lfpsux 0,3,8
+				; lfpsux 1,3,8
 				; lfpsux 2,3,8
 				; lfpsux 3,3,8
-	fxpmul	4,8,4		; lfpsx	 9,6,12
+	fxpmul	4,8,4	
 	fxpmul	5,8,5
 	fxpmul	6,8,6
 	fxpmul	7,8,7

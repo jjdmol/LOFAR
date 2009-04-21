@@ -53,7 +53,8 @@ extern "C" {
 				  const fcomplex *in,
 				  const struct phase_shift *,
 				  int stride,
-				  unsigned nrChannels);
+				  unsigned nrChannels,
+				  const float *bandPass);
 
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128

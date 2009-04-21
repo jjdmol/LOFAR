@@ -48,9 +48,9 @@ extern "C" {
 #endif
 
 #if (defined HAVE_BGP || defined HAVE_BGL)
-#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
- //#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
- //#define LOG_CONDITION	1
+//#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
+#define LOG_CONDITION	(itsLocationInfo.rank() == 0)
+//#define LOG_CONDITION	1
 #else
 #define LOG_CONDITION	1
 #endif
