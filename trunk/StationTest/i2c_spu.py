@@ -10,14 +10,6 @@ import cli
 import testlog
 
 ################################################################################
-# User imports
-import sys
-from optparse import OptionParser
-
-import cli
-import testlog
-
-################################################################################
 # Parse command line for verbosity and subrack ID
 #
 # -v  0 : only PASSED or FAILED
