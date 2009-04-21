@@ -51,7 +51,7 @@ namespace LOFAR {
 //		  ring = 1..9  [ 2 digits ]
 //		  CUType = C | W
 //
-int16	stationTypeValue();									// 0..2 : for resp. error, CS, RS, ES
+int		stationTypeValue();									// 0..2 : for resp. error, CS, RS, ES
 string	stationTypeStr();									// CS, RS, ES
 string	stationRingName();									// Core, Remote, Europe
 string	PVSSDatabaseName(const string&	someName = "");		// hostname w/o CUtype

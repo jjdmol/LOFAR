@@ -44,7 +44,7 @@ static	char*	ringTypeTable[]    = { "Core", "Remote", "Europe" };
 // Returns the stationType (0..2) of the current machine.
 // The the returned value is an index in the stationTypeTable or ringTypeTable.
 //
-int16	stationTypeValue()
+int	stationTypeValue()
 {
 	string	stsType(toUpper(myHostname(false).substr(0,2)));	// RS, CS, xx
 	if (stsType == "CS") {
