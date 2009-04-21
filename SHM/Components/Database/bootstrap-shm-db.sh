@@ -3,10 +3,9 @@
 set -e
 set -x
 
-# Leave empty for pg_default tablespace
-export LOFARSHM_DBLOCATION=/shmdb/shmtest
-
-export LOFARSHM_DBNAME=lofar-shmtest
+# Leave empty for pg_default tablespace, or fill in for custom tablespace
+export LOFARSHM_DBLOCATION=
+export LOFARSHM_DBNAME=lofar-shm
 export LOFARSHM_DBUSER=shm2
 export LOFARSHM_DBHOST=localhost
 export LOFARSHM_DBPORT=5432
@@ -51,7 +50,7 @@ fi
 
 # Create USER, DB, and add the 'plpgsql' language for stored procedures.
 if [ $LOFARSHM_DBLOCATION != "" ]; then 
-   psql --host $LOFARSHM_DBHOST --port $LOFARSHM_DBPORT -c "CREATE TABLESPACE shmtablespace LOCATION '${LOFARSHM_DBLOCATION}'"
+   psql --host $LOFARSHM_DBHOST --port $LOFARSHM_DBPORT -c "CREATE TABLESPACE shmtablespace LOCATION '${LOFARSHM_DBLOCATION}'" || true
 fi
 createuser --host $LOFARSHM_DBHOST --port $LOFARSHM_DBPORT --no-superuser --no-createdb --no-createrole --echo $LOFARSHM_DBUSER || true
 if [ $LOFARSHM_DBLOCATION != "" ]; then 
