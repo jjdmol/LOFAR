@@ -9,10 +9,6 @@
 CalServer.N_SUBBANDS=512
 
 #
-# FTS-1 spec = 8 antennas (16 signal paths)
-CalServer.N_ANTENNAS=48
-
-#
 # Set name for various configuration files
 CalServer.DipoleModelFile=DipoleModel.conf
 CalServer.SourceCatalogFile=SourceCatalog.conf
