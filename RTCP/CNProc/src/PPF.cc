@@ -52,6 +52,7 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations,
   itsNrChannels(nrChannels),
   itsChannelBandwidth(channelBandwidth),
   itsDelayCompensation(delayCompensation),
+  itsBandPass(true, nrChannels), // FIXME
 
 #if defined PPF_C_IMPLEMENTATION
   itsFIRs(boost::extents[nrStations][NR_POLARIZATIONS][nrChannels]),
@@ -227,17 +228,24 @@ template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(const unsi
 
 template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const double delayAtBegin, const double delayAfterEnd, const double baseFrequency) const
 {
-  const double   phiBegin = -2 * M_PI * delayAtBegin;
-  const double   phiEnd   = -2 * M_PI * delayAfterEnd;
-  const double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
-  dcomplex v	          = cosisin(phiBegin * baseFrequency);
-  dcomplex dv             = cosisin(phiBegin * itsChannelBandwidth);
-  const dcomplex vf       = cosisin(deltaPhi * baseFrequency);
-  const dcomplex dvf      = cosisin(deltaPhi * itsChannelBandwidth);
+  if (itsDelayCompensation) {
+    const double   phiBegin = -2 * M_PI * delayAtBegin;
+    const double   phiEnd   = -2 * M_PI * delayAfterEnd;
+    const double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
+    dcomplex v	          = cosisin(phiBegin * baseFrequency);
+    dcomplex dv           = cosisin(phiBegin * itsChannelBandwidth);
+    const dcomplex vf     = cosisin(deltaPhi * baseFrequency);
+    const dcomplex dvf    = cosisin(deltaPhi * itsChannelBandwidth);
 
-  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-    phaseShifts[time].v0 =  v;  v *=  vf;
-    phaseShifts[time].dv = dv; dv *= dvf;
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      phaseShifts[time].v0 =  v;  v *=  vf;
+      phaseShifts[time].dv = dv; dv *= dvf;
+    }
+  } else {
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      phaseShifts[time].v0 = makefcomplex(1.0f, 0.0f);
+      phaseShifts[time].dv = makefcomplex(1.0f, 0.0f);
+    }
   }
 }
 
@@ -313,7 +321,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned sta
     FFTtimer.stop();
 
 #else // assembly implementation
-    const int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
+    const int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - 3);
 
     for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
@@ -341,9 +349,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned sta
 
     struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
-    if (itsDelayCompensation) {
-      computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
-    }
+    computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
 
     // forward (pencil) beam forming information
     for( unsigned i = 0; i < 3; i++ ) {
@@ -382,23 +388,15 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned sta
       }
 
       if (time & 1) {
-	if (itsDelayCompensation) {
-	  _phase_shift_and_transpose(&filteredData->samples[0][stat][time - 1][0],
-				     itsFFToutData.origin(),
-				     &phaseShifts[time - 1],
-				     transpose_stride,
-				     itsNrChannels);
-	} else {
-	  _transpose_4x8(&filteredData->samples[0][stat][time - 1][0],
-			 itsFFToutData.origin(),
-			 itsNrChannels,
-			 sizeof(fcomplex) * itsNrChannels,
-			 transpose_stride);
-	}
+	_phase_shift_and_transpose(&filteredData->samples[0][stat][time - 1][0],
+				   itsFFToutData.origin(),
+				   &phaseShifts[time - 1],
+				   transpose_stride,
+				   itsNrChannels,
+				   itsBandPass.correctionFactors());
       }
     }
 #endif // PPF_C_IMPLEMENTATION
-//  }
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   _bgl_mutex_unlock(mutex);

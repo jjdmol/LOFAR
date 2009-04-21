@@ -121,6 +121,7 @@ _phase_shift_and_transpose:
 #	r5 :	const dcomplex phases[2][2]: v0, delta_v0, v1, delta_v1
 #	r6 :	stride
 #	r7 :	nrChannels
+#	r8 :    const float bandpass[nrChannels]
 
 #	f8 :	v0;
 #	f9 :	delta_v0
@@ -132,6 +133,7 @@ _phase_shift_and_transpose:
 	stfpdux 15,1,9
 	stfpdux 16,1,9
 	stfpdux 17,1,9
+	stfpdux 18,1,9
 
 	lfpdx	8,0,5
 	li	9,16
@@ -139,7 +141,9 @@ _phase_shift_and_transpose:
 	lfpdux	10,5,9
 	lfpdux	11,5,9
 
-	mulli	8,7,24
+	lfpsx	18,0,8
+
+	mulli	5,7,24
 	srwi	0,7,1		# nrChannels / 2
 	slwi	7,7,3		# nrChannels * FCOMPLEX_SIZE
 	li	10,FCOMPLEX_SIZE
@@ -151,7 +155,7 @@ _phase_shift_and_transpose:
 	lfpsux	3,4,7
 
 	sub	3,3,6
-	subfic	8,8,8		# FCOMPLEX_SIZE*(1-3*nrChannels)
+	subfic	5,5,8		# FCOMPLEX_SIZE*(1-3*nrChannels)
 
 	fxpmul	12,0,8	
 	fxpmul	13,1,8 	
@@ -162,10 +166,16 @@ L5:
 	fxpmul  16,8,9
 	fxpmul  17,10,11
 
-	fxcxnpma 0,0,8,12	; lfpsux	4,4,8
-	fxcxnpma 1,1,8,13	; lfpsux	5,4,7
-	fxcxnpma 2,2,10,14	; lfpsux	6,4,7
-	fxcxnpma 3,3,10,15	; lfpsux	7,4,7
+	fxcxnpma 0,0,8,12	; lfpsux	4,4,5
+	fxcxnpma 1,1,8,13
+	fxcxnpma 2,2,10,14	; lfpsux	5,4,7
+	fxcxnpma 3,3,10,15
+
+	# correct bandpass
+	fxpmul	 0,18,0		; lfpsux	6,4,7
+	fxpmul	 1,18,1
+	fxpmul	 2,18,2
+	fxpmul	 3,18,3		; lfpsux	7,4,7
 
 	fxcxnpma 8,8,9,16
 #if defined HAVE_BGP
@@ -182,18 +192,24 @@ L5:
 	fxpmul  16,8,9
 	fxpmul  17,10,11
 
-	fxcxnpma 4,4,8,12	; lfpsux	0,4,8
-	fxcxnpma 5,5,8,13	; lfpsux	1,4,7
-	fxcxnpma 6,6,10,14	; lfpsux	2,4,7
-	fxcxnpma 7,7,10,15	; lfpsux	3,4,7
+	fxcxnpma 4,4,8,12	; lfpsux	0,4,5
+	fxcxnpma 5,5,8,13
+	fxcxnpma 6,6,10,14	; lfpsux	1,4,7
+	fxcxnpma 7,7,10,15
 
-	fxcxnpma 8,8,9,16
+	fxcxnpma 8,8,9,16	; lfpsux	2,4,7
 #if defined HAVE_BGP
 	fxcxnpma 10,10,11,17
 #else
 	fxcxnpma 10,10,11,17	; dcbz		3,6
 #endif
  
+	# correct bandpass
+	fxsmul	 4,18,4		; lfpsux	3,4,7
+	fxsmul	 5,18,5
+	fxsmul	 6,18,6
+	fxsmul	 7,18,7		; lfpsux	18,8,10
+
 	fxpmul	12,0,8		; stfpsux	4,3,6
 	fxpmul	13,1,8 		; stfpsux	5,3,10
 	fxpmul	14,2,10		; stfpsux	6,3,10
@@ -201,7 +217,8 @@ L5:
 
 	bdnz	L5
 
-	lfpdx	17,0,1		# restore registers
+	lfpdx	18,0,1		# restore registers
+	lfpdux	17,1,9
 	lfpdux	16,1,9
 	lfpdux	15,1,9
 	lfpdux	14,1,9
@@ -683,7 +700,7 @@ _ZN5LOFAR4RTCP7_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi:
 #	The implementation works on 5 or 6 time samples concurrently, to avoid
 #	stalls in the double hummer.  This unfortunately leads to totally
 #	incomprehensible code.  The loop processes 16 samples at a time.
-#	The input is converted from int16complex to dcomplex by black magic,
+#	The input is converted from int8complex to dcomplex by black magic,
 #	making the code even harder to understand.
 
 	mtctr	7		# set number of iterations
@@ -736,7 +753,7 @@ _ZN5LOFAR4RTCP7_filterISt7complexIcEEEvjPKfPKT_PS2_IfEi:
 	lfpsux	15,3,9
 #endif
 
-	# convert 15 i16complex numbers to fcomplex
+	# convert 15 i8complex numbers to fcomplex
 	lhzx	29,0,5		# fetch FIR history samples
 	lhzux	30,5,10
 	lhzux	31,5,10

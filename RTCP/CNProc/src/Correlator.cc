@@ -272,7 +272,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels);
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsBandPass.squaredCorrectionFactors(), itsNrBaselines, itsNrChannels); // FIXME
 #endif
   weightTimer.stop();
 #endif  

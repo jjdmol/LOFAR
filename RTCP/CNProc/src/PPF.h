@@ -6,6 +6,7 @@
 #endif
 
 
+#include <BandPass.h>
 #include <FIR.h>
 #include <TransposedData.h>
 #include <Interface/FilteredData.h>
@@ -57,6 +58,7 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     unsigned       itsLogNrChannels;
     const double   itsChannelBandwidth;
     const bool     itsDelayCompensation;
+    BandPass itsBandPass;
 
 #if defined PPF_C_IMPLEMENTATION
     boost::multi_array<FIR, 3> itsFIRs; //[itsNrStations][NR_POLARIZATIONS][itsNrChannels]
