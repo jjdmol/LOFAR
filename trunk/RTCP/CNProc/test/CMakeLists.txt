@@ -14,7 +14,8 @@ endif (CMAKE_ASM-BGP_COMPILER_WORKS)
 ## ------------------------------------------------------------------------------
 ## Sourses
 
-file (GLOB tCN_Processing_SRCS         tCN_Processing.cc
+file (GLOB tCN_Processing_SRCS         tBeamForming.cc
+				       tCN_Processing.cc
 				       ../src/BandPass.cc
 				       ../src/CN_Processing.cc
 				       ../src/Correlator.cc
@@ -39,6 +40,7 @@ ENDMACRO (TARGETLINKLIBRARIES_CNPROC_TEST)
 ## --- Programs to be built -------------------------
 
 set (CHECKPROGS
+     tBeamForming
      tCN_Processing
 )
 

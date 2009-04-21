@@ -1,5 +1,5 @@
 
-check_PROGRAMS = tCN_Processing
+check_PROGRAMS = tCN_Processing tBeamForming
 
 
 AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
@@ -23,6 +23,10 @@ tCN_Processing.cc				\
 ../src/Stokes.cc				\
 ../src/AsyncCommunication.cc			\
 ../src/AsyncTranspose.cc
+
+tBeamForming_SOURCES =				\
+tBeamForming.cc					\
+../src/BeamFormerAsm.S
 
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 

@@ -11,6 +11,7 @@ FIR.h			\
 PPF.h			\
 AsyncTranspose.h	\
 BeamFormer.h            \
+BeamFormerAsm.h         \
 Correlator.h		\
 CN_Processing.h	        \
 FCNP_ClientStream.h     \
@@ -37,6 +38,9 @@ CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 CN_Processing_SOURCES	= $(DOCHDRS) \
 Package__Version.cc             \
 BandPass.cc			\
+BeamFormerAsm.S			\
+BeamFormerAsm3st6Bm.inc		\
+BeamFormerAsm6st3Bm.inc		\
 LocationInfo.cc			\
 CorrelatorAsm.S			\
 FIR_Asm.S			\
