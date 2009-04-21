@@ -102,29 +102,21 @@ else:
   tc.appendLog(11, 'Server register -%s- is unknown or not supported!' % arg_reg)
   sys.exit()
   
-# Define the server data: count values for bc and arg_data for uc
-data    = range(2)
-data[0] = arg_data[0]
-data[1] = 0
-if len(arg_data) == 2:
-  data[1] = arg_data[1]
-
+# Define the server data
 server_data = range(256)
 for i in range(256):
   server_data[i]    = range(2)
   server_data[i][0] = 0
   server_data[i][1] = 0
-  
-if arg_access == 'bc':
-  for si in range(first_server, last_server+1):
-    offset = 1
-    for di in range(funcWidth):
-      server_data[si][di] = funcWidth*(si-first_server)+offset
-      offset += 1
-else:
+
+index = 0
+for si in range(first_server, last_server+1):
   for di in range(funcWidth):
-    server_data[first_server][di] = data[di]
-  
+    # Use arg_data arguments as long as available else repeat last arg_data argument
+    server_data[si][di] = arg_data[index]
+    if index < len(arg_data)-1:
+      index += 1
+   
 # Init random seed to allow reproduceble results for arg_rand
 random.seed(0)
     
