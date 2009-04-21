@@ -31,7 +31,7 @@ extern "C"
 
 #else
 
-inline static dcomplex cosisin(const double x)
+inline static dcomplex cosisin(double x)
 {
   return makedcomplex(cos(x), sin(x));
 }
@@ -45,7 +45,7 @@ static NSTimer FFTtimer("PPF::FFT", true, true);
 static NSTimer PPFtimer("PPF::filter()", true, true);
 
 
-template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation, const bool verbose)
+template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool verbose)
 :
   itsNrStations(nrStations),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
@@ -191,22 +191,20 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::destroy_fft()
 }
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   computeFlagsTimer.start();
 
-//  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-    filteredData->flags[stat].reset();
-    SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
-    const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
+  filteredData->flags[stat].reset();
+  SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
+  const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
-    for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-      const unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
-      const unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
+  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+    unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
+    unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
-      filteredData->flags[stat].include(begin, end);
-    }
-//  }
+    filteredData->flags[stat].include(begin, end);
+  }
 
   computeFlagsTimer.stop();
 }
@@ -214,28 +212,28 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(const unsign
 
 #if defined PPF_C_IMPLEMENTATION
 
-template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(const unsigned time, const unsigned chan, const double baseFrequency, const double delayAtBegin, const double delayAfterEnd) const
+template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
-  const double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
-  const double frequency	       = baseFrequency + chan * itsChannelBandwidth;
-  const double phaseShift	       = timeInterpolatedDelay * frequency;
-  const double phi		       = -2 * M_PI * phaseShift;
+  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
+  double frequency	       = baseFrequency + chan * itsChannelBandwidth;
+  double phaseShift	       = timeInterpolatedDelay * frequency;
+  double phi		       = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
 
 #else
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const double delayAtBegin, const double delayAfterEnd, const double baseFrequency) const
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const
 {
   if (itsDelayCompensation) {
-    const double   phiBegin = -2 * M_PI * delayAtBegin;
-    const double   phiEnd   = -2 * M_PI * delayAfterEnd;
-    const double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
-    dcomplex v	          = cosisin(phiBegin * baseFrequency);
-    dcomplex dv           = cosisin(phiBegin * itsChannelBandwidth);
-    const dcomplex vf     = cosisin(deltaPhi * baseFrequency);
-    const dcomplex dvf    = cosisin(deltaPhi * itsChannelBandwidth);
+    double   phiBegin = -2 * M_PI * delayAtBegin;
+    double   phiEnd   = -2 * M_PI * delayAfterEnd;
+    double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
+    dcomplex v	      = cosisin(phiBegin * baseFrequency);
+    dcomplex dv       = cosisin(phiBegin * itsChannelBandwidth);
+    dcomplex vf       = cosisin(deltaPhi * baseFrequency);
+    dcomplex dvf      = cosisin(deltaPhi * itsChannelBandwidth);
 
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
       phaseShifts[time].v0 =  v;  v *=  vf;
@@ -252,11 +250,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computePhaseShifts(struct
 #endif // PPF_C_IMPLEMENTATION
 
 
-template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned stat, const double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
 {
   PPFtimer.start();
 
-  const double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
+  double baseFrequency = centerFrequency - (itsNrChannels / 2) * itsChannelBandwidth;
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
   // PPF puts a lot of pressure on the memory bus.  Avoid that both cores
@@ -264,138 +262,137 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(const unsigned sta
   _bgl_mutex_lock(mutex);
 #endif
 
-//  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
-    const unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
+  unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
 
 #if 0
-    LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
+  LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
+  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
 
-    FIRtimer.start();
-    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-	  SAMPLE_TYPE tmp = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
+  FIRtimer.start();
+
+  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+    for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
+      for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+	SAMPLE_TYPE tmp = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
-	  dataConvert(LittleEndian, &tmp, 1);
+	dataConvert(LittleEndian, &tmp, 1);
 #endif
-	  fcomplex sample = makefcomplex(real(tmp), imag(tmp));
-	  itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, chan);
-	}
+	fcomplex sample = makefcomplex(real(tmp), imag(tmp));
+	itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, chan);
       }
     }
-    FIRtimer.stop();
+  }
 
-    FFTtimer.start();
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	if (filteredData->flags[stat].test(time)) {
-	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
-	  }
-	} else {
+  FIRtimer.stop();
+
+  FFTtimer.start();
+
+  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+      if (filteredData->flags[stat].test(time)) {
+	for (unsigned chan = 0; chan < itsNrChannels; chan ++)
+	  filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
+      } else {
 #if defined HAVE_FFTW3
-	  fftwf_execute_dft(itsFFTWPlan,
-			    (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-			    (fftwf_complex *) (void *) &fftOutData[0]);
+	fftwf_execute_dft(itsFFTWPlan,
+			  (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+			  (fftwf_complex *) (void *) &fftOutData[0]);
 #else
-	  fftw_one(itsFFTWPlan,
-		   (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-		   (fftw_complex *) (void *) &fftOutData[0]);
+	fftw_one(itsFFTWPlan,
+		 (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+		 (fftw_complex *) (void *) &fftOutData[0]);
 #endif
 
-	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	    if (itsDelayCompensation) {
-	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd);
-	    }
+	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
+	  if (itsDelayCompensation)
+	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd);
 
-	    filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
-	  }
+	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
 	}
       }
     }
-    FFTtimer.stop();
+  }
+
+  FFTtimer.stop();
 
 #else // assembly implementation
-    const int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - 3);
+  int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - 3);
 
-    for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+  for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if defined __GNUC__	// work around bug ???
-	for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
+      for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
 #else
-	for (unsigned ch = 0; ch < 4; ch ++) {
+      for (unsigned ch = 0; ch < 4; ch ++) {
 #endif
-	  FIRtimer.start();
-	  _filter(itsNrChannels,
-		  FIR::weights[chan + ch].origin(),
-		  &transposedData->samples[stat][chan + ch + alignmentShift][pol],
-		  itsTmp[ch].origin(),
-		  itsNrSamplesPerIntegration / NR_TAPS);
-	  FIRtimer.stop();
-	}
-
-	_transpose_4x8(&itsFFTinData[0][pol][chan],
-		       itsTmp.origin(),
-		       itsNrSamplesPerIntegration,
-		       sizeof(fcomplex) * itsNrSamplesPerIntegration,
-		       sizeof(fcomplex) * NR_POLARIZATIONS * (itsNrChannels + 4));
+	FIRtimer.start();
+	_filter(itsNrChannels,
+		FIR::weights[chan + ch].origin(),
+		&transposedData->samples[stat][chan + ch + alignmentShift][pol],
+		itsTmp[ch].origin(),
+		itsNrSamplesPerIntegration / NR_TAPS);
+	FIRtimer.stop();
       }
+
+      _transpose_4x8(&itsFFTinData[0][pol][chan],
+		     itsTmp.origin(),
+		     itsNrSamplesPerIntegration,
+		     sizeof(fcomplex) * itsNrSamplesPerIntegration,
+		     sizeof(fcomplex) * NR_POLARIZATIONS * (itsNrChannels + 4));
     }
+  }
 
-    struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
+  struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
-    computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
+  computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
 
-    // forward (pencil) beam forming information
-    for( unsigned i = 0; i < 3; i++ ) {
-      filteredData->metaData[stat].beamDirectionAtBegin[i] = transposedData->metaData[stat].beamDirectionAtBegin[i];
-      filteredData->metaData[stat].beamDirectionAfterEnd[i] = transposedData->metaData[stat].beamDirectionAfterEnd[i];
-    }
+  // forward (pencil) beam forming information
+  for( unsigned i = 0; i < 3; i++ ) {
+    filteredData->metaData[stat].beamDirectionAtBegin[i] = transposedData->metaData[stat].beamDirectionAtBegin[i];
+    filteredData->metaData[stat].beamDirectionAfterEnd[i] = transposedData->metaData[stat].beamDirectionAfterEnd[i];
+  }
 
-    const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
-    SparseSet<unsigned>::const_iterator it = ranges.begin();
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
+  SparseSet<unsigned>::const_iterator it = ranges.begin();
 
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-      const bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));
+  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+    bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));
 
-      if (good) {
-	FFTtimer.start();
+    if (good) {
+      FFTtimer.start();
 #if 0
-	_prefetch(itsFFTinData[time].origin(),
-		  sizeof(fcomplex[NR_POLARIZATIONS][itsNrChannels]) / CACHE_LINE_SIZE,
-		  CACHE_LINE_SIZE);
+      _prefetch(itsFFTinData[time].origin(),
+		sizeof(fcomplex[NR_POLARIZATIONS][itsNrChannels]) / CACHE_LINE_SIZE,
+		CACHE_LINE_SIZE);
 #endif
 
-	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	  if(itsNrChannels == 256) {
-	    _fft256(itsFFTinData[time][pol].origin(),
-		    itsFFToutData[time & 1][pol].origin());
-	  } else {
-	    fftw_one(itsFFTWPlan,
-		     (fftw_complex *) itsFFTinData[time][pol].origin(),
-		     (fftw_complex *) itsFFToutData[time & 1][pol].origin());
-	  }
-	}
-	FFTtimer.stop();
-      } else {
-	  _memzero(itsFFToutData[time & 1].origin(),
-		   itsFFToutData[time & 1].num_elements() * sizeof(fcomplex));
-      }
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
+	if(itsNrChannels == 256)
+	  _fft256(itsFFTinData[time][pol].origin(),
+		  itsFFToutData[time & 1][pol].origin());
+	else
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) itsFFTinData[time][pol].origin(),
+		   (fftw_complex *) itsFFToutData[time & 1][pol].origin());
 
-      if (time & 1) {
-	_phase_shift_and_transpose(&filteredData->samples[0][stat][time - 1][0],
-				   itsFFToutData.origin(),
-				   &phaseShifts[time - 1],
-				   transpose_stride,
-				   itsNrChannels,
-				   itsBandPass.correctionFactors());
-      }
+      FFTtimer.stop();
+    } else {
+	_memzero(itsFFToutData[time & 1].origin(),
+		 itsFFToutData[time & 1].num_elements() * sizeof(fcomplex));
     }
+
+    if (time & 1)
+      _phase_shift_and_transpose(&filteredData->samples[0][stat][time - 1][0],
+				 itsFFToutData.origin(),
+				 &phaseShifts[time - 1],
+				 transpose_stride,
+				 itsNrChannels,
+				 itsBandPass.correctionFactors());
+  }
 #endif // PPF_C_IMPLEMENTATION
 
 #if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION

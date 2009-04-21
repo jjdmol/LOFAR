@@ -34,11 +34,11 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
 {
   public:
-    PPF(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double channelBandwidth, const bool delayCompensation, const bool verbose);
+    PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool verbose);
     ~PPF();
 
-    void computeFlags(const unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
-    void filter(const unsigned stat, const double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void computeFlags(unsigned stat, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void filter(unsigned stat, double centerFrequency, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
   private:
     void init_fft(), destroy_fft();
@@ -48,9 +48,9 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    fcomplex phaseShift(const unsigned time, const unsigned chan, const double baseFrequency, const double delayAtBegin, const double delayAfterEnd) const;
+    fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
 #else
-    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const double delayAtBegin, const double delayAfterEnd, const double baseFrequency) const;
+    void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const;
 #endif
 
     const unsigned itsNrStations, itsNrSamplesPerIntegration;
