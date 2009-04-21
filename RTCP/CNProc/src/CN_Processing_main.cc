@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     
 #if defined HAVE_MPI
     MPI_Finalize();
-    usleep(5000 * locationInfo.rank()); // do not dump stats all at the same time
+    usleep(500 * locationInfo.rank()); // do not dump stats all at the same time
 #endif
     
     return 0;
