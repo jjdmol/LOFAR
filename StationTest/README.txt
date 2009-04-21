@@ -1,11 +1,6 @@
 #
 # Test scripts for LOFAR station regression, production and operation tests.
 #
-#  2 sep 2008  Eric Kooistra  First working test environment.
-# 31 oct 2008  Eric kooistra  More readme info.
-#                             Added subrack_production.py, smbus.py, spustat.py,
-#                             tdstat.py, hba_client.py, hba_server.py
-#
 
 ################################################################################
 1) Introduction
