@@ -21,6 +21,7 @@ file (GLOB libinterface_HEADERS BandPass.h
 				PPF.h
 				AsyncTranspose.h
 				BeamFormer.h
+				BeamFormerAsm.h
 				Correlator.h
 				CN_Processing.h
 				FCNP_ClientStream.h
@@ -31,7 +32,10 @@ file (GLOB libinterface_HEADERS BandPass.h
 enable_language(ASM-BGP)
 
 if (CMAKE_ASM-BGP_COMPILER_WORKS)
-  file(GLOB amsSrcs CorrelatorAsm.S
+  file(GLOB amsSrcs BeamFormerAsm.S
+		    BeamFormerAsm3St6Bm.inc
+		    BeamFormerAsm6St3Bm.inc
+		    CorrelatorAsm.S
                     FIR_Asm.S
 		    FFT_Asm.S)
 endif (CMAKE_ASM-BGP_COMPILER_WORKS)  

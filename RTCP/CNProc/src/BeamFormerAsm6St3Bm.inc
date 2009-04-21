@@ -1,0 +1,875 @@
+	mtctr	9
+
+	mr	26,5
+#if NR_STATIONS == 2
+	add	29,26,6
+#elif NR_STATIONS == 3
+	add	27,26,6
+	add	29,27,6
+#elif NR_STATIONS == 4
+	add	27,26,6
+	add	29,27,6
+	add	30,29,6
+#elif NR_STATIONS == 5
+	add	27,26,6
+	add	28,27,6
+	add	29,28,6
+	add	30,29,6
+#elif NR_STATIONS == 6
+	add	27,26,6
+	add	28,27,6
+	add	29,28,6
+	add	30,29,6
+	add	31,30,6
+#endif
+
+	lfpsx	0,0,7
+	lfpsux	1,7,0
+	lfpsux	2,7,0
+#if NR_STATIONS >= 3
+	lfpsux	3,7,11
+	lfpsux	4,7,0
+	lfpsux	5,7,0
+#endif
+#if NR_STATIONS >= 5
+	lfpsux	6,7,11
+	lfpsux	7,7,0
+	lfpsux	8,7,0
+#endif
+#if NR_STATIONS >= 2
+	lfpsux	9,7,11
+	lfpsux	10,7,0
+	lfpsux	11,7,0
+#endif
+#if NR_STATIONS >= 4
+	lfpsux	12,7,11
+	lfpsux	13,7,0
+	lfpsux	14,7,0
+#endif
+#if NR_STATIONS == 6
+	lfpsux	15,7,11
+	lfpsux	16,7,0
+	lfpsux	17,7,0
+#endif
+
+	# phase 0
+
+#if !defined FIRST_TIME
+	mr 20,21
+	; lfpsx  24,0,20
+	mr 22,23
+	; lfpsx  25,0,22
+	mr 24,25
+	; lfpsx  26,0,24
+#endif
+
+	; lfpsx  31,0,26	# stat 0, time 2
+#if NR_STATIONS >= 3
+	; lfpsx	 29,0,27	# stat 1, time 2
+#endif
+
+	# phase 1
+
+#if defined FIRST_TIME
+	fxpmul	 24,31,0	# stat 0, beam 0, time 2
+	fxpmul	 25,31,1	# stat 0, beam 1, time 2
+	fxpmul	 26,31,2	# stat 0, beam 2, time 2
+#else
+	fxcpmadd 24,31,0,24	# stat 0, beam 0, time 2
+	fxcpmadd 25,31,1,25	# stat 0, beam 1, time 2
+	fxcpmadd 26,31,2,26	# stat 0, beam 2, time 2
+#endif
+
+	fxcxnpma 24,31,0,24	# stat 0, beam 0, time 2
+	fxcxnpma 25,31,1,25	# stat 0, beam 1, time 2
+	fxcxnpma 26,31,2,26	# stat 0, beam 2, time 2
+#if NR_STATIONS >= 5
+	; lfpsx  31,0,28	# stat 2, time 2
+#endif
+
+#if !defined FIRST_TIME
+	; lfpsux 27,20,0
+	; lfpsux 28,22,0
+#endif
+	; lfpsux 21,26,0	# stat 0, time 3
+#if NR_STATIONS >= 2
+	; lfpsx  22,0,29	# stat 3, time 2
+#endif
+#if NR_STATIONS >= 3
+	fxcpmadd 24,29,3,24	# stat 1, beam 0, time 2
+	fxcpmadd 25,29,4,25	# stat 1, beam 1, time 2
+	fxcpmadd 26,29,5,26	# stat 1, beam 2, time 2
+
+	fxcxnpma 24,29,3,24	# stat 1, beam 0, time 2
+	fxcxnpma 25,29,4,25	# stat 1, beam 1, time 2
+	fxcxnpma 26,29,5,26	# stat 1, beam 2, time 2
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 29,24,0
+#endif
+
+#if NR_STATIONS >= 5
+	fxcpmadd 24,31,6,24	# stat 2, beam 0, time 2
+	fxcpmadd 25,31,7,25	# stat 2, beam 1, time 2
+	fxcpmadd 26,31,8,26	# stat 2, beam 2, time 2
+#endif
+
+#if NR_STATIONS >= 3
+	; lfpsux 30,27,0	# stat 1, time 3
+#endif
+#if NR_STATIONS >= 5
+	fxcxnpma 24,31,6,24	# stat 2, beam 0, time 2
+	fxcxnpma 25,31,7,25	# stat 2, beam 1, time 2
+	fxcxnpma 26,31,8,26	# stat 2, beam 2, time 2
+#endif
+#if NR_STATIONS >= 4
+	; lfpsx  31,0,30	# stat 4, time 2
+#endif
+
+	# phase 2
+
+#if defined FIRST_TIME
+	fxpmul	 27,21,0	# stat 0, beam 0, time 3
+	fxpmul	 28,21,1	# stat 0, beam 1, time 3
+	fxpmul	 29,21,2	# stat 0, beam 2, time 3
+#else
+	fxcpmadd 27,21,0,27	# stat 0, beam 0, time 3
+	fxcpmadd 28,21,1,28	# stat 0, beam 1, time 3
+	fxcpmadd 29,21,2,29	# stat 0, beam 2, time 3
+#endif
+#if NR_STATIONS >= 2
+	fxcpmadd 24,22,9,24	# stat 3, beam 0, time 2
+	fxcpmadd 25,22,10,25	# stat 3, beam 1, time 2
+	fxcpmadd 26,22,11,26	# stat 3, beam 2, time 2
+#endif
+#if NR_STATIONS >= 5
+	; lfpsux 18,28,0	# stat 2, time 3
+#endif
+#if NR_STATIONS == 6
+	; lfpsx  19,0,31	# stat 5, time 2
+#endif
+
+	fxcxnpma 27,21,0,27	# stat 0, beam 0, time 3
+	fxcxnpma 28,21,1,28	# stat 0, beam 1, time 3
+	fxcxnpma 29,21,2,29	# stat 0, beam 2, time 3
+#if !defined FIRST_TIME
+	; lfpsux 21,20,0
+#endif
+#if NR_STATIONS >= 2
+	fxcxnpma 24,22,9,24	# stat 3, beam 0, time 2
+	fxcxnpma 25,22,10,25	# stat 3, beam 1, time 2
+	fxcxnpma 26,22,11,26	# stat 3, beam 2, time 2
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 22,22,0
+#endif
+
+#if !defined FIRST_TIME
+	; lfpsux 23,24,0
+#endif
+#if NR_STATIONS >= 3
+	fxcpmadd 27,30,3,27	# stat 1, beam 0, time 3
+	fxcpmadd 28,30,4,28	# stat 1, beam 1, time 3
+	fxcpmadd 29,30,5,29	# stat 1, beam 2, time 3
+#endif
+#if NR_STATIONS >= 4
+	fxcpmadd 24,31,12,24	# stat 4, beam 0, time 2
+	fxcpmadd 25,31,13,25	# stat 4, beam 1, time 2
+	fxcpmadd 26,31,14,26	# stat 4, beam 2, time 2
+#endif
+
+#if NR_STATIONS >= 3
+	fxcxnpma 27,30,3,27	# stat 1, beam 0, time 3
+	fxcxnpma 28,30,4,28	# stat 1, beam 1, time 3
+	fxcxnpma 29,30,5,29	# stat 1, beam 2, time 3
+#endif
+#if NR_STATIONS >= 2
+	; lfpsux 30,29,0	# stat 3, time 3
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 24,31,12,24	# stat 4, beam 0, time 2
+	fxcxnpma 25,31,13,25	# stat 4, beam 1, time 2
+	fxcxnpma 26,31,14,26	# stat 4, beam 2, time 2
+#endif
+	; lfpsux 31,26,0	# stat 0, time 0
+
+#if NR_STATIONS >= 5
+	fxcpmadd 27,18,6,27	# stat 2, beam 0, time 3
+	fxcpmadd 28,18,7,28	# stat 2, beam 1, time 3
+	fxcpmadd 29,18,8,29	# stat 2, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	fxcpmadd 24,19,15,24	# stat 5, beam 0, time 2
+	fxcpmadd 25,19,16,25	# stat 5, beam 1, time 2
+	fxcpmadd 26,19,17,26	# stat 5, beam 2, time 2
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 20,27,0	# stat 1, time 0
+#endif
+
+#if NR_STATIONS >= 5
+	fxcxnpma 27,18,6,27	# stat 2, beam 0, time 3
+	fxcxnpma 28,18,7,28	# stat 2, beam 1, time 3
+	fxcxnpma 29,18,8,29	# stat 2, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	fxcxnpma 24,19,15,24	# stat 5, beam 0, time 2
+	fxcxnpma 25,19,16,25	# stat 5, beam 1, time 2
+	fxcxnpma 26,19,17,26	# stat 5, beam 2, time 2
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 19,30,0	# stat 4, time 3
+#endif
+
+	# phase 3
+
+#if NR_STATIONS >= 2
+	fxcpmadd 27,30,9,27	# stat 3, beam 0, time 3
+	fxcpmadd 28,30,10,28	# stat 3, beam 1, time 3
+	fxcpmadd 29,30,11,29	# stat 3, beam 2, time 3
+#endif
+#if defined FIRST_TIME
+	fxpmul	 21,31,0	# stat 0, beam 0, time 0
+	; stfpsx  24,0,21
+	fxpmul	 22,31,1	# stat 0, beam 1, time 0
+	; stfpsx  25,0,23
+	fxpmul	 23,31,2	# stat 0, beam 2, time 0
+#else
+	fxcpmadd 21,31,0,21	# stat 0, beam 0, time 0
+	; stfpsx  24,0,21
+	fxcpmadd 22,31,1,22	# stat 0, beam 1, time 0
+	; stfpsx  25,0,23
+	fxcpmadd 23,31,2,23	# stat 0, beam 2, time 0
+#endif
+	; stfpsx  26,0,25
+
+#if NR_STATIONS >= 2
+	fxcxnpma 27,30,9,27	# stat 3, beam 0, time 3
+	fxcxnpma 28,30,10,28	# stat 3, beam 1, time 3
+	fxcxnpma 29,30,11,29	# stat 3, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	; lfpsux 30,31,0	# stat 5, time 3
+#endif
+	fxcxnpma 21,31,0,21	# stat 0, beam 0, time 0
+	fxcxnpma 22,31,1,22	# stat 0, beam 1, time 0
+	fxcxnpma 23,31,2,23	# stat 0, beam 2, time 0
+#if NR_STATIONS >= 5
+	; lfpsux 31,28,0	# stat 2, time 0
+#endif
+
+#if NR_STATIONS >= 4
+	fxcpmadd 27,19,12,27	# stat 4, beam 0, time 3
+	fxcpmadd 28,19,13,28	# stat 4, beam 1, time 3
+	fxcpmadd 29,19,14,29	# stat 4, beam 2, time 3
+#endif
+	; lfpsux 24,26,0	# stat 0, time 1
+#if NR_STATIONS >= 2
+	; lfpsux 25,29,0	# stat 3, time 0
+#endif
+#if NR_STATIONS >= 3
+	fxcpmadd 21,20,3,21	# stat 1, beam 0, time 0
+	fxcpmadd 22,20,4,22	# stat 1, beam 1, time 0
+	fxcpmadd 23,20,5,23	# stat 1, beam 2, time 0
+#endif
+
+#if !defined FIRST_TIME
+	; lfpsux 18,20,0
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 27,19,12,27	# stat 4, beam 0, time 3
+	fxcxnpma 28,19,13,28	# stat 4, beam 1, time 3
+	fxcxnpma 29,19,14,29	# stat 4, beam 2, time 3
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 19,22,0
+#endif
+#if NR_STATIONS >= 3
+	fxcxnpma 21,20,3,21	# stat 1, beam 0, time 0
+	fxcxnpma 22,20,4,22	# stat 1, beam 1, time 0
+	fxcxnpma 23,20,5,23	# stat 1, beam 2, time 0
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 20,24,0
+#endif
+
+#if NR_STATIONS == 6
+	fxcpmadd 27,30,15,27	# stat 5, beam 0, time 3
+	fxcpmadd 28,30,16,28	# stat 5, beam 1, time 3
+	fxcpmadd 29,30,17,29	# stat 5, beam 2, time 3
+#endif
+#if NR_STATIONS >= 5
+	fxcpmadd 21,31,6,21	# stat 2, beam 0, time 0
+	fxcpmadd 22,31,7,22	# stat 2, beam 1, time 0
+	fxcpmadd 23,31,8,23	# stat 2, beam 2, time 0
+#endif
+
+#if NR_STATIONS == 6
+	fxcxnpma 27,30,15,27	# stat 5, beam 0, time 3
+	fxcxnpma 28,30,16,28	# stat 5, beam 1, time 3
+	fxcxnpma 29,30,17,29	# stat 5, beam 2, time 3
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 30,27,0	# stat 1, time 1
+#endif
+#if NR_STATIONS >= 5
+	fxcxnpma 21,31,6,21	# stat 2, beam 0, time 0
+	fxcxnpma 22,31,7,22	# stat 2, beam 1, time 0
+	fxcxnpma 23,31,8,23	# stat 2, beam 2, time 0
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 31,30,0	# stat 4, time 0
+#endif
+
+	li	7,64
+
+0:	# phase 0
+
+	; stfpsux 27,21,0
+#if NR_STATIONS >= 5
+	; lfpsux 27,28,0	# stat 2, time 1
+#endif
+#if defined FIRST_TIME
+	fxpmul	 18,24,0	# stat 0, beam 0, time 1
+	fxpmul	 19,24,1	# stat 0, beam 1, time 1
+	fxpmul	 20,24,2	# stat 0, beam 2, time 1
+#else
+	fxcpmadd 18,24,0,18	# stat 0, beam 0, time 1
+	fxcpmadd 19,24,1,19	# stat 0, beam 1, time 1
+	fxcpmadd 20,24,2,20	# stat 0, beam 2, time 1
+#endif
+	; stfpsux 28,23,0
+#if NR_STATIONS == 6
+	; lfpsux 28,31,0	# stat 5, time 0
+#endif
+#if NR_STATIONS >= 2
+	fxcpmadd 21,25,9,21	# stat 3, beam 0, time 0
+	fxcpmadd 22,25,10,22	# stat 3, beam 1, time 0
+	fxcpmadd 23,25,11,23	# stat 3, beam 2, time 0
+#endif
+
+	; stfpsux 29,25,0
+	fxcxnpma 18,24,0,18	# stat 0, beam 0, time 1
+	fxcxnpma 19,24,1,19	# stat 0, beam 1, time 1
+	fxcxnpma 20,24,2,20	# stat 0, beam 2, time 1
+#if !defined FIRST_TIME
+	; lfpsux 24,20,0
+#endif
+#if NR_STATIONS >= 2
+	fxcxnpma 21,25,9,21	# stat 3, beam 0, time 0
+	fxcxnpma 22,25,10,22	# stat 3, beam 1, time 0
+	fxcxnpma 23,25,11,23	# stat 3, beam 2, time 0
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 25,22,0
+#endif
+
+#if NR_STATIONS >= 3
+	fxcpmadd 18,30,3,18	# stat 1, beam 0, time 1
+	fxcpmadd 19,30,4,19	# stat 1, beam 1, time 1
+	fxcpmadd 20,30,5,20	# stat 1, beam 2, time 1
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 26,24,0
+#endif
+	; dcbt	 26,7		# stat 0
+#if NR_STATIONS >= 4
+	fxcpmadd 21,31,12,21	# stat 4, beam 0, time 0
+	fxcpmadd 22,31,13,22	# stat 4, beam 1, time 0
+	fxcpmadd 23,31,14,23	# stat 4, beam 2, time 0
+#endif
+
+#if NR_STATIONS >= 3
+	fxcxnpma 18,30,3,18	# stat 1, beam 0, time 1
+	fxcxnpma 19,30,4,19	# stat 1, beam 1, time 1
+	fxcxnpma 20,30,5,20	# stat 1, beam 2, time 1
+#endif
+#if NR_STATIONS >= 2
+	; lfpsux 30,29,0	# stat 3, time 1
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 21,31,12,21	# stat 4, beam 0, time 0
+	fxcxnpma 22,31,13,22	# stat 4, beam 1, time 0
+	fxcxnpma 23,31,14,23	# stat 4, beam 2, time 0
+#endif
+	; lfpsux 31,26,0	# stat 0, time 2
+
+#if NR_STATIONS >= 5
+	fxcpmadd 18,27,6,18	# stat 2, beam 0, time 1
+	fxcpmadd 19,27,7,19	# stat 2, beam 1, time 1
+	fxcpmadd 20,27,8,20	# stat 2, beam 2, time 1
+#endif
+#if !defined FIRST_TIME
+	; dcbt	 22,7
+#endif
+#if NR_STATIONS == 6
+	fxcpmadd 21,28,15,21	# stat 5, beam 0, time 0
+	fxcpmadd 22,28,16,22	# stat 5, beam 1, time 0
+	fxcpmadd 23,28,17,23	# stat 5, beam 2, time 0
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 29,27,0	# stat 1, time 2
+#endif
+
+#if NR_STATIONS >= 5
+	fxcxnpma 18,27,6,18	# stat 2, beam 0, time 1
+	fxcxnpma 19,27,7,19	# stat 2, beam 1, time 1
+	fxcxnpma 20,27,8,20	# stat 2, beam 2, time 1
+#endif
+#if NR_STATIONS >= 3
+	; dcbt	 27,7		# stat 1
+#endif
+#if NR_STATIONS == 6
+	fxcxnpma 21,28,15,21	# stat 5, beam 0, time 0
+	fxcxnpma 22,28,16,22	# stat 5, beam 1, time 0
+	fxcxnpma 23,28,17,23	# stat 5, beam 2, time 0
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 28,30,0	# stat 4, time 1
+#endif
+
+	# phase 1
+
+#if NR_STATIONS >= 2
+	fxcpmadd 18,30,9,18	# stat 3, beam 0, time 1
+	fxcpmadd 19,30,10,19	# stat 3, beam 1, time 1
+	fxcpmadd 20,30,11,20	# stat 3, beam 2, time 1
+#endif
+#if defined FIRST_TIME
+	fxpmul	 24,31,0	# stat 0, beam 0, time 2
+	; stfpsux 21,21,0
+	fxpmul	 25,31,1	# stat 0, beam 1, time 2
+	; lfpsux 21,26,0	# stat 0, time 3
+	fxpmul	 26,31,2	# stat 0, beam 2, time 2
+#else
+	fxcpmadd 24,31,0,24	# stat 0, beam 0, time 2
+	; stfpsux 21,21,0
+	fxcpmadd 25,31,1,25	# stat 0, beam 1, time 2
+	; lfpsux 21,26,0	# stat 0, time 3
+	fxcpmadd 26,31,2,26	# stat 0, beam 2, time 2
+#endif
+	; stfpsux 22,23,0
+
+#if NR_STATIONS >= 2
+	fxcxnpma 18,30,9,18	# stat 3, beam 0, time 1
+	; lfpsux 22,29,0	# stat 3, time 2
+	fxcxnpma 19,30,10,19	# stat 3, beam 1, time 1
+	fxcxnpma 20,30,11,20	# stat 3, beam 2, time 1
+#endif
+	; stfpsux 23,25,0
+#if NR_STATIONS == 6
+	; lfpsux 30,31,0	# stat 5, time 1
+#endif
+	fxcxnpma 24,31,0,24	# stat 0, beam 0, time 2
+	fxcxnpma 25,31,1,25	# stat 0, beam 1, time 2
+	fxcxnpma 26,31,2,26	# stat 0, beam 2, time 2
+#if NR_STATIONS >= 5
+	; lfpsux 31,28,0	# stat 2, time 2
+#endif
+
+#if NR_STATIONS >= 4
+	fxcpmadd 18,28,12,18	# stat 4, beam 0, time 1
+	fxcpmadd 19,28,13,19	# stat 4, beam 1, time 1
+	fxcpmadd 20,28,14,20	# stat 4, beam 2, time 1
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 27,20,0
+#endif
+#if NR_STATIONS >= 3
+	fxcpmadd 24,29,3,24	# stat 1, beam 0, time 2
+	fxcpmadd 25,29,4,25	# stat 1, beam 1, time 2
+	fxcpmadd 26,29,5,26	# stat 1, beam 2, time 2
+#endif
+#if NR_STATIONS >= 5
+	; dcbt	 28,7		# stat 2
+#endif
+
+#if NR_STATIONS >= 4
+	fxcxnpma 18,28,12,18	# stat 4, beam 0, time 1
+	fxcxnpma 19,28,13,19	# stat 4, beam 1, time 1
+	fxcxnpma 20,28,14,20	# stat 4, beam 2, time 1
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 28,22,0
+#endif
+#if NR_STATIONS >= 3
+	fxcxnpma 24,29,3,24	# stat 1, beam 0, time 2
+	fxcxnpma 25,29,4,25	# stat 1, beam 1, time 2
+	fxcxnpma 26,29,5,26	# stat 1, beam 2, time 2
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 29,24,0
+#endif
+
+#if NR_STATIONS == 6
+	fxcpmadd 18,30,15,18	# stat 5, beam 0, time 1
+	fxcpmadd 19,30,16,19	# stat 5, beam 1, time 1
+	fxcpmadd 20,30,17,20	# stat 5, beam 2, time 1
+#endif
+#if NR_STATIONS >= 2
+	; dcbt	 29,7		# stat 3
+#endif
+#if NR_STATIONS >= 5
+	fxcpmadd 24,31,6,24	# stat 2, beam 0, time 2
+	fxcpmadd 25,31,7,25	# stat 2, beam 1, time 2
+	fxcpmadd 26,31,8,26	# stat 2, beam 2, time 2
+#endif
+
+#if NR_STATIONS == 6
+	fxcxnpma 18,30,15,18	# stat 5, beam 0, time 1
+	fxcxnpma 19,30,16,19	# stat 5, beam 1, time 1
+	fxcxnpma 20,30,17,20	# stat 5, beam 2, time 1
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 30,27,0	# stat 1, time 3
+#endif
+#if NR_STATIONS >= 5
+	fxcxnpma 24,31,6,24	# stat 2, beam 0, time 2
+	fxcxnpma 25,31,7,25	# stat 2, beam 1, time 2
+	fxcxnpma 26,31,8,26	# stat 2, beam 2, time 2
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 31,30,0	# stat 4, time 2
+#endif
+
+	# phase 2
+
+	; stfpsux 18,21,0
+#if defined FIRST_TIME
+	fxpmul	 27,21,0	# stat 0, beam 0, time 3
+	fxpmul	 28,21,1	# stat 0, beam 1, time 3
+	fxpmul	 29,21,2	# stat 0, beam 2, time 3
+#else
+	fxcpmadd 27,21,0,27	# stat 0, beam 0, time 3
+	fxcpmadd 28,21,1,28	# stat 0, beam 1, time 3
+	fxcpmadd 29,21,2,29	# stat 0, beam 2, time 3
+#endif
+#if NR_STATIONS >= 5
+	; lfpsux 18,28,0	# stat 2, time 3
+#endif
+	; stfpsux 19,23,0
+#if NR_STATIONS >= 2
+	fxcpmadd 24,22,9,24	# stat 3, beam 0, time 2
+	fxcpmadd 25,22,10,25	# stat 3, beam 1, time 2
+	fxcpmadd 26,22,11,26	# stat 3, beam 2, time 2
+#endif
+#if NR_STATIONS == 6
+	; lfpsux 19,31,0	# stat 5, time 2
+#endif
+
+	fxcxnpma 27,21,0,27	# stat 0, beam 0, time 3
+	; stfpsux 20,25,0
+	fxcxnpma 28,21,1,28	# stat 0, beam 1, time 3
+	fxcxnpma 29,21,2,29	# stat 0, beam 2, time 3
+#if !defined FIRST_TIME
+	; lfpsux 21,20,0
+#endif
+#if NR_STATIONS >= 2
+	fxcxnpma 24,22,9,24	# stat 3, beam 0, time 2
+	fxcxnpma 25,22,10,25	# stat 3, beam 1, time 2
+	fxcxnpma 26,22,11,26	# stat 3, beam 2, time 2
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 22,22,0
+#endif
+
+#if !defined FIRST_TIME
+	; lfpsux 23,24,0
+#endif
+#if NR_STATIONS >= 3
+	fxcpmadd 27,30,3,27	# stat 1, beam 0, time 3
+	fxcpmadd 28,30,4,28	# stat 1, beam 1, time 3
+	fxcpmadd 29,30,5,29	# stat 1, beam 2, time 3
+#endif
+#if NR_STATIONS >= 4
+	; dcbt	 30,7		# stat 4
+#endif
+#if NR_STATIONS >= 4
+	fxcpmadd 24,31,12,24	# stat 4, beam 0, time 2
+	fxcpmadd 25,31,13,25	# stat 4, beam 1, time 2
+	fxcpmadd 26,31,14,26	# stat 4, beam 2, time 2
+#endif
+
+#if NR_STATIONS >= 3
+	fxcxnpma 27,30,3,27	# stat 1, beam 0, time 3
+	fxcxnpma 28,30,4,28	# stat 1, beam 1, time 3
+	fxcxnpma 29,30,5,29	# stat 1, beam 2, time 3
+#endif
+#if NR_STATIONS >= 2
+	; lfpsux 30,29,0	# stat 3, time 3
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 24,31,12,24	# stat 4, beam 0, time 2
+	fxcxnpma 25,31,13,25	# stat 4, beam 1, time 2
+	fxcxnpma 26,31,14,26	# stat 4, beam 2, time 2
+#endif
+	; lfpsux 31,26,0	# stat 0, time 0
+
+#if !defined FIRST_TIME
+	; dcbt	 24,7
+#endif
+#if NR_STATIONS >= 5
+	fxcpmadd 27,18,6,27	# stat 2, beam 0, time 3
+	fxcpmadd 28,18,7,28	# stat 2, beam 1, time 3
+	fxcpmadd 29,18,8,29	# stat 2, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	fxcpmadd 24,19,15,24	# stat 5, beam 0, time 2
+	fxcpmadd 25,19,16,25	# stat 5, beam 1, time 2
+	fxcpmadd 26,19,17,26	# stat 5, beam 2, time 2
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 20,27,0	# stat 1, time 0
+#endif
+
+#if !defined FIRST_TIME
+	; dcbt	 20,7
+#endif
+#if NR_STATIONS >= 5
+	fxcxnpma 27,18,6,27	# stat 2, beam 0, time 3
+	fxcxnpma 28,18,7,28	# stat 2, beam 1, time 3
+	fxcxnpma 29,18,8,29	# stat 2, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	fxcxnpma 24,19,15,24	# stat 5, beam 0, time 2
+	fxcxnpma 25,19,16,25	# stat 5, beam 1, time 2
+	fxcxnpma 26,19,17,26	# stat 5, beam 2, time 2
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 19,30,0	# stat 4, time 3
+#endif
+
+	# phase 3
+
+#if NR_STATIONS >= 2
+	fxcpmadd 27,30,9,27	# stat 3, beam 0, time 3
+	fxcpmadd 28,30,10,28	# stat 3, beam 1, time 3
+	fxcpmadd 29,30,11,29	# stat 3, beam 2, time 3
+#endif
+#if defined FIRST_TIME
+	fxpmul	 21,31,0	# stat 0, beam 0, time 0
+	; stfpsux 24,21,0
+	fxpmul	 22,31,1	# stat 0, beam 1, time 0
+	; lfpsux 24,26,0	# stat 0, time 1
+	fxpmul	 23,31,2	# stat 0, beam 2, time 0
+#else
+	fxcpmadd 21,31,0,21	# stat 0, beam 0, time 0
+	; stfpsux 24,21,0
+	fxcpmadd 22,31,1,22	# stat 0, beam 1, time 0
+	; lfpsux 24,26,0	# stat 0, time 1
+	fxcpmadd 23,31,2,23	# stat 0, beam 2, time 0
+#endif
+
+	; stfpsux 25,23,0
+#if NR_STATIONS >= 2
+	fxcxnpma 27,30,9,27	# stat 3, beam 0, time 3
+	fxcxnpma 28,30,10,28	# stat 3, beam 1, time 3
+	; lfpsux 25,29,0	# stat 3, time 0
+	fxcxnpma 29,30,11,29	# stat 3, beam 2, time 3
+#endif
+#if NR_STATIONS == 6
+	; lfpsux 30,31,0	# stat 5, time 3
+#endif
+	fxcxnpma 21,31,0,21	# stat 0, beam 0, time 0
+	fxcxnpma 22,31,1,22	# stat 0, beam 1, time 0
+	fxcxnpma 23,31,2,23	# stat 0, beam 2, time 0
+#if NR_STATIONS >= 5
+	; lfpsux 31,28,0	# stat 2, time 0
+#endif
+
+#if NR_STATIONS >= 4
+	fxcpmadd 27,19,12,27	# stat 4, beam 0, time 3
+	fxcpmadd 28,19,13,28	# stat 4, beam 1, time 3
+	fxcpmadd 29,19,14,29	# stat 4, beam 2, time 3
+#endif
+	; stfpsux 26,25,0
+#if NR_STATIONS >= 3
+	fxcpmadd 21,20,3,21	# stat 1, beam 0, time 0
+	fxcpmadd 22,20,4,22	# stat 1, beam 1, time 0
+	fxcpmadd 23,20,5,23	# stat 1, beam 2, time 0
+#endif
+
+#if !defined FIRST_TIME
+	; lfpsux 18,20,0
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 27,19,12,27	# stat 4, beam 0, time 3
+	fxcxnpma 28,19,13,28	# stat 4, beam 1, time 3
+	fxcxnpma 29,19,14,29	# stat 4, beam 2, time 3
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 19,22,0
+#endif
+#if NR_STATIONS >= 3
+	fxcxnpma 21,20,3,21	# stat 1, beam 0, time 0
+	fxcxnpma 22,20,4,22	# stat 1, beam 1, time 0
+	fxcxnpma 23,20,5,23	# stat 1, beam 2, time 0
+#endif
+#if !defined FIRST_TIME
+	; lfpsux 20,24,0
+#endif
+
+#if NR_STATIONS == 6
+	fxcpmadd 27,30,15,27	# stat 5, beam 0, time 3
+	fxcpmadd 28,30,16,28	# stat 5, beam 1, time 3
+	fxcpmadd 29,30,17,29	# stat 5, beam 2, time 3
+	; dcbt	 31,7		# stat 5
+#endif
+#if NR_STATIONS >= 5
+	fxcpmadd 21,31,6,21	# stat 2, beam 0, time 0
+	fxcpmadd 22,31,7,22	# stat 2, beam 1, time 0
+	fxcpmadd 23,31,8,23	# stat 2, beam 2, time 0
+#endif
+
+#if NR_STATIONS == 6
+	fxcxnpma 27,30,15,27	# stat 5, beam 0, time 3
+	fxcxnpma 28,30,16,28	# stat 5, beam 1, time 3
+	fxcxnpma 29,30,17,29	# stat 5, beam 2, time 3
+#endif
+#if NR_STATIONS >= 3
+	; lfpsux 30,27,0	# stat 1, time 1
+#endif
+#if NR_STATIONS >= 5
+	fxcxnpma 21,31,6,21	# stat 2, beam 0, time 0
+	fxcxnpma 22,31,7,22	# stat 2, beam 1, time 0
+	fxcxnpma 23,31,8,23	# stat 2, beam 2, time 0
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 31,30,0	# stat 4, time 0
+#endif
+
+	bdnz	 0b
+
+	# epilogue
+	# phase 0
+
+#if defined FIRST_TIME
+	fxpmul	 18,24,0	# stat 0, beam 0, time 1
+	; stfpsux 27,21,0
+	fxpmul	 19,24,1	# stat 0, beam 1, time 1
+	; stfpsux 28,23,0
+	fxpmul	 20,24,2	# stat 0, beam 2, time 1
+#else
+	fxcpmadd 18,24,0,18	# stat 0, beam 0, time 1
+	; stfpsux 27,21,0
+	fxcpmadd 19,24,1,19	# stat 0, beam 1, time 1
+	; stfpsux 28,23,0
+	fxcpmadd 20,24,2,20	# stat 0, beam 2, time 1
+#endif
+	; stfpsux 29,25,0
+#if NR_STATIONS >= 2
+	fxcpmadd 21,25,9,21	# stat 3, beam 0, time 0
+	fxcpmadd 22,25,10,22	# stat 3, beam 1, time 0
+	fxcpmadd 23,25,11,23	# stat 3, beam 2, time 0
+#endif
+#if NR_STATIONS >= 5
+	; lfpsux 27,28,0	# stat 2, time 1
+#endif
+#if NR_STATIONS == 6
+	; lfpsux 28,31,0	# stat 5, time 0
+#endif
+
+	fxcxnpma 18,24,0,18	# stat 0, beam 0, time 1
+	fxcxnpma 19,24,1,19	# stat 0, beam 1, time 1
+	fxcxnpma 20,24,2,20	# stat 0, beam 2, time 1
+#if NR_STATIONS >= 2
+	fxcxnpma 21,25,9,21	# stat 3, beam 0, time 0
+	fxcxnpma 22,25,10,22	# stat 3, beam 1, time 0
+	fxcxnpma 23,25,11,23	# stat 3, beam 2, time 0
+#endif
+
+#if NR_STATIONS >= 3
+	fxcpmadd 18,30,3,18	# stat 1, beam 0, time 1
+	fxcpmadd 19,30,4,19	# stat 1, beam 1, time 1
+	fxcpmadd 20,30,5,20	# stat 1, beam 2, time 1
+#endif
+#if NR_STATIONS >= 4
+	fxcpmadd 21,31,12,21	# stat 4, beam 0, time 0
+	fxcpmadd 22,31,13,22	# stat 4, beam 1, time 0
+	fxcpmadd 23,31,14,23	# stat 4, beam 2, time 0
+#endif
+
+#if NR_STATIONS >= 3
+	fxcxnpma 18,30,3,18	# stat 1, beam 0, time 1
+	fxcxnpma 19,30,4,19	# stat 1, beam 1, time 1
+	fxcxnpma 20,30,5,20	# stat 1, beam 2, time 1
+#endif
+#if NR_STATIONS >= 2
+	; lfpsux 30,29,0	# stat 3, time 1
+#endif
+#if NR_STATIONS >= 4
+	fxcxnpma 21,31,12,21	# stat 4, beam 0, time 0
+	fxcxnpma 22,31,13,22	# stat 4, beam 1, time 0
+	fxcxnpma 23,31,14,23	# stat 4, beam 2, time 0
+#endif
+
+#if NR_STATIONS >= 5
+	fxcpmadd 18,27,6,18	# stat 2, beam 0, time 1
+	fxcpmadd 19,27,7,19	# stat 2, beam 1, time 1
+	fxcpmadd 20,27,8,20	# stat 2, beam 2, time 1
+#endif
+#if NR_STATIONS == 6
+	fxcpmadd 21,28,15,21	# stat 5, beam 0, time 0
+	fxcpmadd 22,28,16,22	# stat 5, beam 1, time 0
+	fxcpmadd 23,28,17,23	# stat 5, beam 2, time 0
+#endif
+
+#if NR_STATIONS >= 5
+	fxcxnpma 18,27,6,18	# stat 2, beam 0, time 1
+	fxcxnpma 19,27,7,19	# stat 2, beam 1, time 1
+	fxcxnpma 20,27,8,20	# stat 2, beam 2, time 1
+#endif
+#if NR_STATIONS == 6
+	fxcxnpma 21,28,15,21	# stat 5, beam 0, time 0
+	fxcxnpma 22,28,16,22	# stat 5, beam 1, time 0
+	fxcxnpma 23,28,17,23	# stat 5, beam 2, time 0
+#endif
+#if NR_STATIONS >= 4
+	; lfpsux 28,30,0	# stat 4, time 1
+#endif
+
+	# phase 1
+
+#if NR_STATIONS >= 2
+	fxcpmadd 18,30,9,18	# stat 3, beam 0, time 1
+	fxcpmadd 19,30,10,19	# stat 3, beam 1, time 1
+	fxcpmadd 20,30,11,20	# stat 3, beam 2, time 1
+#endif
+	; stfpsux 21,21,0
+	; stfpsux 22,23,0
+	; stfpsux 23,25,0
+
+#if NR_STATIONS >= 2
+	fxcxnpma 18,30,9,18	# stat 3, beam 0, time 1
+	fxcxnpma 19,30,10,19	# stat 3, beam 1, time 1
+	fxcxnpma 20,30,11,20	# stat 3, beam 2, time 1
+#endif
+#if NR_STATIONS == 6
+	; lfpsux 30,31,0	# stat 5, time 1
+#endif
+
+#if NR_STATIONS >= 4
+	fxcpmadd 18,28,12,18	# stat 4, beam 0, time 1
+	fxcpmadd 19,28,13,19	# stat 4, beam 1, time 1
+	fxcpmadd 20,28,14,20	# stat 4, beam 2, time 1
+
+	fxcxnpma 18,28,12,18	# stat 4, beam 0, time 1
+	fxcxnpma 19,28,13,19	# stat 4, beam 1, time 1
+	fxcxnpma 20,28,14,20	# stat 4, beam 2, time 1
+#endif
+
+#if NR_STATIONS == 6
+	fxcpmadd 18,30,15,18	# stat 5, beam 0, time 1
+	fxcpmadd 19,30,16,19	# stat 5, beam 1, time 1
+	fxcpmadd 20,30,17,20	# stat 5, beam 2, time 1
+
+	fxcxnpma 18,30,15,18	# stat 5, beam 0, time 1
+	fxcxnpma 19,30,16,19	# stat 5, beam 1, time 1
+	fxcxnpma 20,30,17,20	# stat 5, beam 2, time 1
+#endif
+
+	# phase 2
+
+	; stfpsux 18,21,0
+	; stfpsux 19,23,0
+	; stfpsux 20,25,0
