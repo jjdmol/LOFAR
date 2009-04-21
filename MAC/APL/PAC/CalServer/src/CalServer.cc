@@ -28,6 +28,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/lofar_bitset.h>
 #include <Common/Version.h>
+#include <ApplCommon/StationConfig.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -273,12 +274,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		RSPGetconfigackEvent ack(e);
 		m_n_rspboards = ack.n_rspboards;
 		m_n_rcus = ack.n_rcus;
-		if (ack.n_rcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol()) {
-			LOG_FATAL_STR("CalServer.N_ANTENNAS (" << 
-						m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol() << 
-						") does not match value from hardware (" << m_n_rcus << ")");
-			exit(EXIT_FAILURE);
-		}
 
 		// get initial clock setting
 		RSPGetclockEvent getclock;
@@ -368,7 +363,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
 		if (!m_acceptor.accept(*client)) {
 			delete client;
-			LOG_ERROR ("Could not setup a connection with a niew client");
+			LOG_ERROR ("Could not setup a connection with a new client");
 		}
 //		else {
 //			m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
@@ -586,7 +581,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
 			LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
 			LOG_ERROR_STR("Expecting AntenneArray with " << 
-			m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
+							m_accs.getFront().getACC().extent(fourthDim) << " antennas.");
 			ack.status = ERR_RANGE;
 		}
 		else if ((start.subset & invalidmask).any()) {
@@ -824,8 +819,8 @@ void CalServer::write_acc()
 	Array<std::complex<double>, 3> newacc;
 
 	newacc.resize(acc.extent(firstDim),
-	acc.extent(secondDim)*acc.extent(fourthDim),
-	acc.extent(thirdDim)*acc.extent(fifthDim));
+					acc.extent(secondDim)*acc.extent(fourthDim),
+					acc.extent(thirdDim)*acc.extent(fifthDim));
 
 	for (int s = 0; s < newacc.extent(firstDim); s++) {
 		for (int i = 0; i < newacc.extent(secondDim); i++) {
@@ -876,10 +871,9 @@ int main(int argc, char** argv)
 
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 
-	ACCs* accs; // the ACC buffers
-	accs = new ACCs(GET_CONFIG("CalServer.N_SUBBANDS", i),
-					GET_CONFIG("CalServer.N_ANTENNAS", i),
-					NPOL);
+	ACCs* 			accs; // the ACC buffers
+	StationConfig	SC;
+	accs = new ACCs(GET_CONFIG("CalServer.N_SUBBANDS", i), SC.nrRSPs * NR_ANTENNAS_PER_RSPBOARD, NPOL);
 
 	if (!accs) {
 		LOG_FATAL("Failed to allocate memory for the ACC arrays.");
