@@ -50,10 +50,11 @@ GCFEvent::TResult tServer::initial(GCFEvent& event, GCFPortInterface& port)
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
+	case F_INIT: {
 		int	timerID = itsTimerPort->setTimer(1.0*itsStartupDelay);
 		LOG_DEBUG_STR("WAITING " << itsStartupDelay << " seconds before starting server, timerID=" << timerID);
-		break;
+	}
+	break;
 
     case F_TIMER:
 		LOG_DEBUG("STARTING server");

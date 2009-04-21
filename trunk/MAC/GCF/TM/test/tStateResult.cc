@@ -61,14 +61,15 @@ GCFEvent::TResult tStateResult::initial(GCFEvent& event, GCFPortInterface& /*por
 	case F_INIT:
 		return (GCFEvent::HANDLED);
 
-	case F_ENTRY:
+	case F_ENTRY: {
 		LOG_DEBUG("\n\n\n\nStarting the server task");
 		tServer*	itsServer = new tServer("Server", 0);
 		itsServer->start();
 		itsConn = new GCFTCPPort(*this, "Echo:Server", GCFPortInterface::SAP, ECHO_PROTOCOL, false);
 		ASSERTSTR(itsConn, "Can't allocate a TCPport");
 		itsConn->autoOpen(10, 0, 2);	// try to connect to my server
-		break;
+	}
+	break;
 
 	case F_CONNECTED:
 		TRAN(tStateResult::collecting);

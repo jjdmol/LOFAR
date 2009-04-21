@@ -67,7 +67,6 @@ GCFScheduler::GCFScheduler() :
 	itsUseQueue		(true),
 	itsFrameworkPort(0)
 {
-	cout << "Creation of GCFScheduler" << endl;
  	itsFrameworkPort = new GCFDummyPort(0, "FrameWork", F_FSM_PROTOCOL);
 	ASSERTSTR(itsFrameworkPort, "Cannot construct a port for the framework");
 }
