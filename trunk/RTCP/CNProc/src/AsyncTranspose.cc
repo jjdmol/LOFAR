@@ -18,8 +18,9 @@ namespace RTCP {
                        // Higher tags are metadata.
 
 template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
-  const bool isTransposeInput, const bool isTransposeOutput, const unsigned nrCoresPerPset,
-  const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, 
+  const bool isTransposeInput, const bool isTransposeOutput, 
+  const unsigned groupNumber, const LocationInfo &locationInfo, 
+  const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, 
   const unsigned nrSamplesToCNProc, const unsigned nrSubbands, const unsigned nrSubbandsPerPset)
 :
   itsIsTransposeInput(isTransposeInput),
@@ -28,24 +29,15 @@ template <typename SAMPLE_TYPE> AsyncTranspose<SAMPLE_TYPE>::AsyncTranspose(
   itsNrSubbandsPerPset(nrSubbandsPerPset),
   itsInputPsets(inputPsets),
   itsOutputPsets(outputPsets),
-  itsLocationInfo(locationInfo)
+  itsLocationInfo(locationInfo),
+  itsGroupNumber(groupNumber)
 {
   InputData<SAMPLE_TYPE> oneSample( 1, nrSamplesToCNProc );
-
-  itsGroupNumber = -1;
-  for(unsigned core = 0; core < nrCoresPerPset; core++) {
-    const unsigned rank = locationInfo.remapOnTree(locationInfo.psetNumber(), core);
-    if(rank == locationInfo.rank()) {
-      itsGroupNumber = core;
-      break;
-    }
-  }
 
   for(unsigned i=0; i<inputPsets.size(); i++) {
     const unsigned rank = locationInfo.remapOnTree(inputPsets[i], itsGroupNumber);
     itsRankToPsetIndex[rank] = i;
   }
-
 
   itsMessageSize = oneSample.requiredSize();
   dataHandles.resize(inputPsets.size());

@@ -36,7 +36,8 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 {
   public:
 
-  AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, const unsigned nrCoresPerPset, const LocationInfo &, 
+  AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, 
+		 const unsigned groupNumber, const LocationInfo &, 
 		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const unsigned nrSamplesToCNProc, 
 		 const unsigned nrSubbands, const unsigned nrSubbandsPerPset);
 
