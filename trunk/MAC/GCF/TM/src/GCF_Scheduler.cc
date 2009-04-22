@@ -286,8 +286,9 @@ void GCFScheduler::queueEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface*  
 		break;
 
 	case GCFEvent::NEXT_STATE:
-		LOG_TRACE_COND("Moving event to eventQ of task, waiting there for state switch");
-		task->queueTaskEvent(*(event.clone()), *port);
+		LOG_TRACE_COND_STR("Moving event " << eventName(event) << 
+							" to eventQ of task, waiting there for state switch");
+		task->queueTaskEvent(event, *port);
 		break;
 	} // switch
 }
@@ -366,7 +367,8 @@ void GCFScheduler::handleEventQueue()
 				break;
 
 			case GCFEvent::NEXT_STATE:
-				LOG_TRACE_COND("Moving event to eventQ of task, waiting there for state switch");
+				LOG_TRACE_COND_STR("Moving event " << eventName(*(theQueueEntry->event)) << 
+									" to eventQ of task, waiting there for state switch");
 				theQueueEntry->task->queueTaskEvent(*(theQueueEntry->event), *(theQueueEntry->port));
 				handled = false;
 				break;
