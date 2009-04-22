@@ -12,7 +12,8 @@
 # - Select the appropriate log-level for the rootLogger (DEBUG or INFO)
 # - Leave the TRC logger on DEBUG,DUMP
 # - Comment out the rootLogger and the TRC logger in the TEST section of this file
-log4cplus.rootLogger=DEBUG, DAILYFILE, MACCLP
+#log4cplus.rootLogger=DEBUG, DAILYFILE, MACCLP
+log4cplus.rootLogger=INFO, DAILYFILE, MACCLP
 log4cplus.logger.TRC=DEBUG, DUMP
 
 # For TESTING:
