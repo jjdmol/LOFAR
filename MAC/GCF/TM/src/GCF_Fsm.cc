@@ -78,7 +78,7 @@ void GCFFsm::quitFsm()
 void GCFFsm::queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port)
 {
 	waitingTaskEvent_t*		newEntry = new waitingTaskEvent_t;
-	newEntry->event = &event;
+	newEntry->event = event.clone();
 	newEntry->port  = &port;
 	itsEventQueue.push_back(newEntry);
 }
@@ -101,7 +101,8 @@ void GCFFsm::handleTaskQueue()
 						  " was NOT HANDLED, DELETING event.");
 		}
 		itsEventQueue.pop_front();
-		delete theEvent->event;
+//		LOG_DEBUG("delete theEvent->event");
+//		delete theEvent->event;
 		delete theEvent;
 	}
 }

@@ -124,8 +124,11 @@ protected:
 		GCFScheduler::instance()->queueEvent(0, event, this);
 	}
     void schedule_close() {
-		GCFEvent	event(F_CLOSED);
-		GCFScheduler::instance()->queueEvent(0, event, this);
+// IN SOME CASES THE PORT IS DELETED IMMEDIATELY AFTER THE CLOSE, WHEN THE DELAYED
+// EVENT IS HANDLED AFTERWARDS THE PORT VALUE IS INVALID --> Segmentation fault.
+// TRY IT WITHOUT THE CLOSE EVENTS. WHO IT USING THOSE?
+//		GCFEvent	event(F_CLOSED);
+//		GCFScheduler::instance()->queueEvent(0, event, this);
 	}
     void schedule_connected() {
 		GCFEvent	event(F_CONNECTED);
