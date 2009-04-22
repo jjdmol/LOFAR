@@ -216,6 +216,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkConsistenc
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::printSubbandList() const
 {
   std::stringstream logStr;
+  
   logStr << "node " << itsLocationInfo.rank() << " filters and correlates subbands ";
 
   unsigned sb = itsCurrentSubband; 
@@ -385,7 +386,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
-							usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets, 
+							myCore, itsLocationInfo, inputPsets, outputPsets, 
 							nrSamplesToCNProc, itsNrSubbands, itsNrSubbandsPerPset);
   }
 #endif // HAVE_MPI
@@ -421,10 +422,13 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transpose()
       unsigned subband = (itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if(subband < itsNrSubbands) {
+//	LOG_DEBUG("read subband " << subband << " from IO node");
 	readTimer.start();
-	itsInputData->readOne(itsStream); // Synchronously read 1 subband from my IO node.
+	itsInputData->readOne(itsStream, i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
+//	LOG_DEBUG("transpose: send subband " << subband << " to pset id " << i);
+
 	itsAsyncTranspose->asyncSend(i, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
       }
@@ -455,6 +459,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     asyncReceiveTimer.start();
     const unsigned stat = itsAsyncTranspose->waitForAnyReceive();
     asyncReceiveTimer.stop();
+
+//    LOG_DEBUG("transpose: received subband " << itsCurrentSubband << " from " << stat);
 
     computeTimer.start();
     itsPPF->computeFlags(stat, itsTransposedData, itsFilteredData);

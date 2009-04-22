@@ -29,14 +29,13 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 
     // used for asynchronous transpose
     void readMetaData(Stream *str);
-    void readOne(Stream *str);
+    void readOne(Stream *str, unsigned subbandPosition);
 
     // used for synchronous transfer
     void readAll(Stream *str);
 
   private:
     const unsigned	    itsNrSubbands;
-    unsigned		    itsSubbandIndex;
 
   public:
     Vector<SubbandMetaData> metaData; //[outputPsets.size()]
@@ -46,8 +45,7 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc)
 :
   SuperType( false, boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0 ),
-  itsNrSubbands(nrSubbands),
-  itsSubbandIndex(0)
+  itsNrSubbands(nrSubbands)
 {
 }
 
@@ -66,16 +64,13 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readMetaData
 }
 
 // used for asynchronous transpose
-template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readOne(Stream *str)
+template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readOne(Stream *str, unsigned subbandPosition)
 {
-  str->read(SuperType::samples[itsSubbandIndex].origin(), SuperType::samples[itsSubbandIndex].num_elements() * sizeof(SAMPLE_TYPE));
+  str->read(SuperType::samples[subbandPosition].origin(), SuperType::samples[subbandPosition].num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, SuperType::samples[itsSubbandIndex].origin(), SuperType::samples[itsSubbandIndex].num_elements());
+  dataConvert(LittleEndian, SuperType::samples[subbandPosition].origin(), SuperType::samples[subbandPosition].num_elements());
 #endif
-
-  if (++ itsSubbandIndex == itsNrSubbands) // we have read all data
-    itsSubbandIndex = 0;
 }
 
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readAll(Stream *str)
@@ -88,7 +83,7 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readAll(Stre
   str->read(SuperType::samples.origin(), SuperType::samples.num_elements() * sizeof(SAMPLE_TYPE));
 
 #if defined C_IMPLEMENTATION && defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples[itsSubbandIndex].origin(), samples[itsSubbandIndex].num_elements());
+  dataConvert(LittleEndian, SuperType::samples.origin(), SuperType::samples.num_elements());
 #endif
 }
 
