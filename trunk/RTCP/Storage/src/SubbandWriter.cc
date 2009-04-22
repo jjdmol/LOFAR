@@ -174,7 +174,8 @@ void SubbandWriter::preprocess()
     }
   }
 
-  cout << "Subbands per storage = " << itsNrSubbandsPerStorage << ", I will store " << itsMyNrSubbands << " subbands" << std::endl;
+  LOG_TRACE_VAR_STR("Subbands per storage = " << itsNrSubbandsPerStorage << ", I will store " 
+		    << itsMyNrSubbands << " subbands, nrOutputs = " << itsNrOutputs);
 
   vector<string> stationNames;
   if (itsPS->nrTabStations() > 0)
@@ -243,7 +244,7 @@ void SubbandWriter::preprocess()
     unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + sb;
     if(currentSubband < itsNrSubbands) {
       // compensate for the half-channel shift introduced by the PPF
-      double refFreq = frequencies[itsRank * itsNrSubbandsPerStorage + sb] - chanWidth / 2;
+      double refFreq = frequencies[currentSubband] - chanWidth / 2;
       for (unsigned output = 0; output < itsNrOutputs; output++ ) {
 	itsBandIDs[sb][output] = itsWriters[sb][output]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
       }
