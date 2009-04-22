@@ -23,6 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#if defined HAVE_BOOST_REGEX
+
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
@@ -70,3 +72,4 @@ int main (int	argc, char* argv[])
 	return (0);
 }
 
+#endif

@@ -22,6 +22,9 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
+#if defined HAVE_BOOST_REGEX
+
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
@@ -217,3 +220,5 @@ string SAS2PVSSname(const string&	SASname)
 	}
 
 } // namespace LOFAR
+
+#endif
