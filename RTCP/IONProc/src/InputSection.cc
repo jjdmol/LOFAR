@@ -388,7 +388,6 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
 	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
 	unsigned beam     = itsSubbandToBeamMapping[subband];
-
 	itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
       }
     }
