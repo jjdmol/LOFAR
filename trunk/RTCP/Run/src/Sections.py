@@ -57,15 +57,9 @@ class Section(object):
  
         # For now set the timeout on 100 times the number of seconds to process
         if 'IONProc' in self.executable:
-	    self.runJob.runIONProc(runlog, 
-                                   self.parsetfile,
-                                   100*timeOut,
-                                   runCmd)
+	    self.runJob.runIONProc(runlog, self.parsetfile, 100*timeOut, runCmd)
 	else:
-	    self.runJob.run(runlog, 
-                            self.parsetfile,
-                            100*timeOut,
-                            runCmd)
+	    self.runJob.run(runlog, self.parsetfile, 100*timeOut, runCmd)
 
     def isRunDone(self):
         return self.runJob.isDone()
