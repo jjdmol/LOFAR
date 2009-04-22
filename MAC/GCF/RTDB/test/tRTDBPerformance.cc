@@ -24,10 +24,11 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+#include <Common/StringUtil.h>
 #include <Common/Timer.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
-#include <GCF/RTDB/DP_Protocol.ph>
+#include "DP_Protocol.ph"
 #include "tRTDBPerformance.h"
 #include "RTDBPerfResp.h"
 
@@ -137,7 +138,7 @@ GCFEvent::TResult tPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p)
 	case F_ENTRY: {
 		// test PVSSInfo class
 		bool	DBok (PVSSinfo::typeExists("ExampleDP_Int"));
-		LOG_INFO_STR("typeExist(ExampleDP_Int): " << DBok ? "Yes" : "no");
+		LOG_INFO_STR("typeExist(ExampleDP_Int): " << (DBok ? "Yes" : "no"));
 		ASSERTSTR(DBok, "type ExampleDP_Int does not exist in PVSS");
 
 		LOG_INFO_STR("Cleaning up old datapoints if any");

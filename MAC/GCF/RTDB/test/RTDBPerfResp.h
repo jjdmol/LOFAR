@@ -20,7 +20,7 @@
 //
 //  $Id$
 //
-
+#include <Common/LofarTypes.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
 extern int	gDeleteCounter;

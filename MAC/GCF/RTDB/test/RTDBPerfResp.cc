@@ -1,4 +1,5 @@
 #include <lofar_config.h>
+#include <Common/StringUtil.h>
 #include <GCF/PVSS/GCF_PValue.h>
 #include "RTDBPerfResp.h"
 

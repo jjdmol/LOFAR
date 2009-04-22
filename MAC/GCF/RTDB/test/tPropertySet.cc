@@ -27,7 +27,7 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/RTDB/DP_Protocol.ph>
+#include "DP_Protocol.ph"
 #include "tPropertySet.h"
 
 namespace LOFAR {
