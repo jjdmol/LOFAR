@@ -28,7 +28,7 @@
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/DPservice.h>
-#include <GCF/RTDB/DP_Protocol.ph>
+#include "DP_Protocol.ph"
 #include "tDPservice.h"
 #include "DPresponse.h"
 

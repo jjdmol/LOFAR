@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I$(top_srcdir)/RTDB/src
+AM_CPPFLAGS	= -DUSES_NEW_IOSTREAMS -I$(top_srcdir)/RTDB/src -I../src
 
 check_PROGRAMS 					= tPropertySet tRTDBPerformance tDPservice testQuery tPerformanceReport
 
