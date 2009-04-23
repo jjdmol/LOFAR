@@ -35,7 +35,6 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-//#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "PVSSDatapointDefs.h"
 #include "ActiveObs.h"
@@ -54,7 +53,7 @@ ActiveObs::ActiveObs(const string&		name,
 					 State				initial,
 					 ParameterSet*		thePS,
 					 GCFTask&			task) :
-	GCFFsm				(initial),
+	GCFTask				(initial, string("ActiveObs:") + name),
 	itsStopTimerID		(0),
 	itsPropSetTimer		(new GCFTimerPort(task, name)),
 	itsName				(name),
@@ -229,7 +228,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		doEvent(event, port);
+		queueTaskEvent(event, port);
 	}
 	break;
 
@@ -271,16 +270,16 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
 		itsTBBCntlrReady  = false;
+
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to connect to CalServer");
-		ChildControl::instance()->
-				requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()-> requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to connect to BeamServer");
-		ChildControl::instance()->
-				requestState(CTState::CLAIMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()-> requestState(CTState::CLAIMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+
 		if (itsUsesTBB) {
 			LOG_DEBUG_STR("Asking " << itsTBBCntlrName << " to connect to TBBDriver");
-			ChildControl::instance()->
-					requestState(CTState::CLAIMED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			ChildControl::instance()-> requestState(CTState::CLAIMED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		}
 		// will result in CONTROL_CLAIMED
 	}
@@ -320,7 +319,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		doEvent(event, port);
+		queueTaskEvent(event, port);
 	}
 	break;
 
@@ -414,12 +413,9 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		doEvent(event, port);
+		queueTaskEvent(event, port);
 	}
 	break;
-
-	case F_INIT: 
-		break;
 
 	default:
 		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<
@@ -553,12 +549,9 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		CONTROLQuitedEvent		msg(event);
 		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
 		TRAN(ActiveObs::stopping);
-		doEvent(event, port);
+		queueTaskEvent(event, port);
 	}
 	break;
-
-	case F_INIT: 
-		break;
 
 	default:
 		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<
@@ -632,9 +625,6 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		}
 	}
 	break;
-
-	case F_INIT: 
-		break;
 
 	default:
 		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<

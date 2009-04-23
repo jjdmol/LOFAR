@@ -567,20 +567,8 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
 		itsBeamServer->close();
-		break;
-	}
 
-	case F_INIT:
-	case F_EXIT:
-		break;
-
-	case F_DISCONNECTED:		// propably from beamserver
-		port.close();
-		// fall through!!! 
-	case F_CLOSED: {
-		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_INFO("Connection with BeamServer down, sending QUITED to parent");
+		LOG_INFO("Connection with BeamServer closed, sending QUITED to parent");
 		CONTROLQuitedEvent		request;
 		request.cntlrName = getName();
 		request.result	  = CT_RESULT_NO_ERROR;

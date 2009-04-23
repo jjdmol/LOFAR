@@ -581,16 +581,8 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 
 		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsCalServer->close();
-		break;
-	}
 
-	case F_DISCONNECTED:
-		port.close();
-		// fall through!!!
-	case F_CLOSED:  {
-		ASSERTSTR (&port == itsCalServer,
-						"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with CalServer down, sending QUITED");
+		LOG_DEBUG("Connection with CalServer closed, sending QUITED");
 		CONTROLQuitedEvent		request;
 		request.cntlrName = getName();
 		request.result	  = CT_RESULT_NO_ERROR;

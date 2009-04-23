@@ -26,6 +26,9 @@
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_list.h>
+#include <Common/LofarConstants.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
@@ -67,10 +70,13 @@ public:
 private:
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state   		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult connect_state   		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult connect2RSP_state		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult startListener_state	 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult subscribe_state 		 (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult retrieve_state  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult retrieveSplitters_state(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult retrieveClock_state  	 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult setClock_state  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult setSplitters_state 	 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult active_state    		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult defaultMessageHandling (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult finishing_state  		 (GCFEvent& e, GCFPortInterface& p);
@@ -81,11 +87,14 @@ private:
    	ClockControl& operator=(const ClockControl&);
 
    	void _disconnectedHandler(GCFPortInterface& port);
+   	void _acceptRequestHandler(GCFPortInterface& port);
    	void _databaseEventHandler(GCFEvent& answer);
 	void requestSubscription();
 	void cancelSubscription();
 	void requestClockSetting();
 	void sendClockSetting();
+	void requestSplitterSetting();
+	void sendSplitterSetting();
 
 	// Data members
    	RTDBPropertySet*		itsOwnPropertySet;
@@ -99,12 +108,17 @@ private:
 
 	GCFTCPPort*				itsRSPDriver;
 
+	GCFTCPPort*				itsCommandPort;
+	list<GCFPortInterface*>	itsClientList;
+
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
-	int32					itsClock;
 	void*					itsSubscription;
+	int32					itsClock;
+	bool					itsSplitterRequest;
+	bitset<MAX_RSPBOARDS>	itsSplitters;
 };
 
   };//StationCU
