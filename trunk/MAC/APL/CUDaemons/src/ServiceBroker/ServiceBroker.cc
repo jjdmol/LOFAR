@@ -139,12 +139,9 @@ GCFEvent::TResult ServiceBroker::operational(GCFEvent& event, GCFPortInterface& 
 	case F_DISCONNECTED:      
 		if (&port != &itsListener) {
 			port.close();
+			releasePort(&port);
 		}
 		// else //TODO: find out this can realy happend
-		break;
-
-	case F_CLOSED:
-		releasePort(&port);
 		break;
 
 	case SB_REGISTER_SERVICE: {

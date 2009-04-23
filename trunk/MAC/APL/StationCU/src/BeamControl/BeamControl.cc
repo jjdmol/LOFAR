@@ -239,7 +239,6 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_DISCONNECTED:
-	case F_CLOSED:
 	case F_EXIT:
 		break;
 	
@@ -318,9 +317,6 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
-	case F_CLOSED:
-		break;
-
 	case F_TIMER: 
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		LOG_DEBUG ("Trying to reconnect to BeamServer");
@@ -380,9 +376,6 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		TRAN(BeamControl::started_state);
 		break;
 	}
-
-	case F_CLOSED:
-		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_PREPARE: {
@@ -473,9 +466,6 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		break;
 	}
 	
-	case F_CLOSED:
-		break;
-
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 
 	case CONTROL_SCHEDULE: {

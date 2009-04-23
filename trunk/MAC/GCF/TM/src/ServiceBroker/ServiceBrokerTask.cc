@@ -529,9 +529,6 @@ GCFEvent::TResult ServiceBrokerTask::operational(GCFEvent& event, GCFPortInterfa
 		itsTimerPort.setTimer(1.0);
 		break;
 
-	case F_CLOSED:
-		break;
-
 	case F_TIMER:
 		// reconnect timer expired, try to reconnect
 		_reconnectBrokers();	// reopen not-connected broker ports

@@ -197,10 +197,6 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED: {
 		port.close();
-	}
-	break;
-
-	case F_CLOSED: {
 		// try connecting again in 2 seconds
 		port.setTimer((long)2);
 		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
@@ -359,16 +355,10 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED: {
 		if (&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port) {
-			LOG_WARN("Lost connection with CalServer of RSPDriver, going to 'cleanup'");
+			LOG_WARN("Lost connection with CalServer or RSPDriver, going to 'cleanup'");
 			TRAN(BeamServer::cleanup);
 		} else {	// some client
 			port.close();
-		}
-	}
-	break;
-
-	case F_CLOSED: {
-		if (!(&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port)) {
 			destroyAllBeams(&port);
 			m_client_list.remove(&port);
 			m_dead_clients.push_back(&port);
@@ -405,44 +395,25 @@ GCFEvent::TResult BeamServer::cleanup(GCFEvent& event, GCFPortInterface& port)
 													it != m_client_list.end(); it++) {
 				if ((*it)->isConnected()) {
 					(*it)->close();
+					destroyAllBeams(*it);
+					m_client_list.remove(*it);
+					m_dead_clients.push_back(*it);
 				}
 			}
-		} else {
-			// cancelAllTimers is called here BEFORE m_rspdriver.close()
-			// because cancelAllTimers really cancels all timers, also any
-			// internal timers such as the zero timers used to send internal
-			// signals such as F_CLOSED!!! If you call cancelAllTimers after
-			// m_rspdriver.close() you will never receive an F_CLOSED on m_rspdriver.
-			m_rspdriver.cancelAllTimers();
-			m_rspdriver.close();
-			m_acceptor.close();
-			m_calserver.close();
-			LOG_DEBUG("closed all TCP ports, going to 'initial' state again");
-			TRAN(BeamServer::initial);
 		}
+
+		m_rspdriver.cancelAllTimers();
+		m_rspdriver.close();
+		m_acceptor.close();
+		m_calserver.close();
+		itsUpdateTimer->cancelAllTimers();
+		itsUpdateTimer->setTimer(2.0);		// give ports time to close.
 	}
 	break;
 
-	case F_CLOSED: {
-		if (!(&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port)) {
-			destroyAllBeams(&port);
-			m_client_list.remove(&port);
-			m_dead_clients.push_back(&port);
-		}
-
-		if (m_client_list.size() == 0) {
-			// cancelAllTimers is called here BEFORE m_rspdriver.close()
-			// because cancelAllTimers really cancels all timers, also any
-			// internal timers such as the zero timers used to send internal
-			// signals such as F_CLOSED!!! If you call cancelAllTimers after
-			// m_rspdriver.close() you will never receive an F_CLOSED on m_rspdriver.
-			m_rspdriver.cancelAllTimers();
-			m_rspdriver.close();
-			m_acceptor.close();
-			m_calserver.close();
-			LOG_DEBUG("closed all TCP ports, going to 'initial' state again");
-			TRAN(BeamServer::initial);
-		}
+	case F_TIMER: {
+		LOG_DEBUG("closed all TCP ports, going to 'initial' state again");
+		TRAN(BeamServer::initial);
 	}
 	break;
 

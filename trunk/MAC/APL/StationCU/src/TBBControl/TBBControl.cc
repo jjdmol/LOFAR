@@ -250,7 +250,6 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 		} break;
 	
 		case F_DISCONNECTED:
-		case F_CLOSED:
 		case F_EXIT: {
 		} break;
 		
@@ -335,9 +334,6 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
 				itsPropertySet->setValue(PN_TBC_CONNECTED,	GCFPVBool(false));	// [TBB]
 				itsTimerPort->setTimer(2.0);
 			}
-		} break;
-	
-		case F_CLOSED: {
 		} break;
 	
 		case F_TIMER: { 
@@ -938,9 +934,6 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			TRAN(TBBControl::doTBBread);
 		} break;
 				
-		case F_CLOSED: {
-		} break;
-	
 		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	
 		case CONTROL_SCHEDULE: {
@@ -1272,10 +1265,8 @@ GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& p
 		case F_EXIT: {
 		} break;
 	
-		case F_DISCONNECTED: 		// propably from beamserver
+		case F_DISCONNECTED: {		// propably from beamserver
 			port.close();
-			// fall through!!! 
-		case F_CLOSED: {
 			ASSERTSTR (&port == itsTBBDriver, 
 									"F_DISCONNECTED event from port " << port.getName());
 			LOG_INFO("Connection with TBBDriver down, sending QUITED to parent");

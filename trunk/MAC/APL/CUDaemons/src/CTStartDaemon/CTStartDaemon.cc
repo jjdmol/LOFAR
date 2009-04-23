@@ -368,9 +368,6 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 		handleClientDisconnect(port);
 		break;
 
-	case F_CLOSED:
-		break;
-
 	case F_TIMER: {
 			GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 			actionIter		action = findAction(timerEvent.id);

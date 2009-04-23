@@ -177,10 +177,6 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 		break;
 	}  
 
-	case F_CLOSED:
-		DBGFAILWHEN(&p == itsListener);
-		break;
-
 	case F_CONNECTED:
 		DBGFAILWHEN(&p == itsListener);
 		break;

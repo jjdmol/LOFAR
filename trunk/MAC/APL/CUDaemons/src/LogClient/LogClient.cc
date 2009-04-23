@@ -211,14 +211,9 @@ GCFEvent::TResult LogClient::operational(GCFEvent&			event,
 			}
 		}
 		port.close();
+		itsClients.erase(&port);
+		itsClientsGarbage.push_back(&port);
 	}
-	break;
-
-	case F_CLOSED:
-		if (&port != itsCLmaster) {
-			itsClients.erase(&port);
-			itsClientsGarbage.push_back(&port);
-		}
 	break;
 
 	case F_TIMER: {
