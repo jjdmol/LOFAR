@@ -362,6 +362,7 @@ vector<uint32> Observation::getRspSlotList() const
 //
 uint32 Observation::nyquistzoneFromFilter(const string&	filterName)
 {
+	// support of old names
 	if (filterName == "LBL_10_80")		{ return(1); }
 	if (filterName == "LBL_30_80")		{ return(1); }
 	if (filterName == "LBH_10_80")		{ return(1); }
@@ -369,6 +370,13 @@ uint32 Observation::nyquistzoneFromFilter(const string&	filterName)
 	if (filterName == "HB_100_190") 	{ return(2); }
 	if (filterName == "HB_170_230") 	{ return(3); }
 	if (filterName == "HB_210_240") 	{ return(3); }
+
+	// support of new names
+	if (filterName == "LBA_30_80")		{ return(1); }
+	if (filterName == "LBA_10_90")		{ return(1); }
+	if (filterName == "HBA_110_190") 	{ return(2); }
+	if (filterName == "HBA_170_230") 	{ return(3); }
+	if (filterName == "HBA_210_250") 	{ return(3); }
 
 	LOG_ERROR_STR ("filterselection value '" << filterName << 
 											"' not recognized, using LBL_10_80");
