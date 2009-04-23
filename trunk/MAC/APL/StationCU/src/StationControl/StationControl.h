@@ -77,11 +77,13 @@ public:
 
 private:
 	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state     (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult connect_state     (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult subscribe2HWstates(GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult operational_state (GCFEvent& e, GCFPortInterface& p);
-   	GCFEvent::TResult finishing_state   (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult initial_state			(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult connect_state			(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribe2HWstates 	(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribe2Splitters	(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult operational_state		(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult startObservation_state(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finishing_state		(GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	StationControl();
@@ -96,6 +98,7 @@ private:
 	void	_updateAntennaMasks  ();
 	void	_updateObsListInPVSS ();
 	uint16	_addObservation		 (const string&   	name);
+	void	_abortObservation	 (ObsIter			theObs);
    	void	_disconnectedHandler (GCFPortInterface&	port);
    	void	_databaseEventHandler(GCFEvent& 		event);
 	void	_handleQueryEvent	 (GCFEvent&			event);
@@ -106,10 +109,12 @@ private:
    	RTDBPropertySet*		itsOwnPropSet;
 	bool					itsClockPSinitialized;
 	bool					itsOwnPSinitialized;
+	bool					itsParentInitialized;
 
 	// PVSS query related
 	DPservice*				itsDPservice;			// for the queries.
-	uint32					itsQueryID;				// ID of query connected to HW state-changes
+	uint32					itsStateQryID;			// ID of query connected to HW state-changes
+	uint32					itsSplitterQryID;		// ID of query connected to splitter changes
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
@@ -119,6 +124,9 @@ private:
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
+	// Command port to the ClockController
+	GCFTCPPort*				itsClkCtrlPort;
+
 	GCFTimerPort*			itsTimerPort;
 
 	// ParameterSet variables
@@ -127,6 +135,7 @@ private:
 	int32					itsClock;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
+	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
 
 	// Availability information of Antenna's and circuit boards.
 	bool									itsUseHWinfo;
@@ -136,6 +145,9 @@ private:
 	bitset<MAX_RCUS / NR_RCUS_PER_TBBOARD>	itsTBmask;
 	uint32									itsNrLBAs;
 	uint32									itsNrHBAs;
+	uint32									itsNrRSPboards;
+	bool									itsHasSplitters;
+	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
 };
 
   };//StationCU

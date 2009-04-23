@@ -1,6 +1,6 @@
-//#  ClockControl.cc: Implementation of the MAC Scheduler task
+//#  ClockControl.cc: Implementation of ClockController of the station.
 //#
-//#  Copyright (C) 2006
+//#  Copyright (C) 2006-2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -25,12 +25,14 @@
 #include <Common/Version.h>
 
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationConfig.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-//#include <APL/APLCommon/StationInfo.h>
+#include <APL/RTCCommon/Timestamp.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/ClockProtocol/Clock_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
@@ -60,6 +62,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
+	itsCommandPort		(0),
 	itsClock			(160)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -83,10 +86,16 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
 	itsParentPort->open();		// will result in F_CONNECTED
 
+	// open port for get/set clock/splitters
+	itsCommandPort = new GCFTCPPort (*this, MAC_SVCMASK_CLOCKCTRL, 
+										GCFPortInterface::MSPP, CLOCK_PROTOCOL);
+	ASSERTSTR(itsCommandPort, "Cannot allocate listener for clock commands");
+
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
-	registerProtocol (RSP_PROTOCOL, 	    RSP_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL,	CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL,			DP_PROTOCOL_STRINGS);
+	registerProtocol (RSP_PROTOCOL,			RSP_PROTOCOL_STRINGS);
+	registerProtocol (CLOCK_PROTOCOL,		CLOCK_PROTOCOL_STRINGS);
 }
 
 
@@ -98,6 +107,10 @@ ClockControl::~ClockControl()
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
 	cancelSubscription();	// tell RSPdriver to stop sending updates.
+
+	if (itsCommandPort) {
+		itsCommandPort->close();
+	}
 
 	if (itsRSPDriver) {
 		itsRSPDriver->close();
@@ -183,9 +196,6 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
-   		break;
-
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		string	myPropSetName(createPropertySetName(PSN_CLOCK_CONTROL, getName()));
@@ -240,17 +250,20 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 			itsClock = clockVal.getValue();
 			LOG_DEBUG_STR("ClockSetting is " << itsClock);
 
-			itsParentPort = itsParentControl->registerTask(this);
-			LOG_DEBUG ("Going to connect state");
-			TRAN(ClockControl::connect_state);			// go to next state.
+			LOG_DEBUG ("Going to connect2RSP state");
+			TRAN(ClockControl::connect2RSP_state);			// go to next state.
 		}
 	}
 	break;
 
 	case F_CONNECTED:
-	case F_DISCONNECTED:
-	case F_EXIT:
+		ASSERTSTR(&port == itsParentPort, "Received unexpected F_CONNECTED at port " << port.getName());
+		LOG_INFO_STR("Connected to Parent Control Task");
 		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -266,14 +279,14 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 
 
 //
-// connect_state(event, port)
+// connect2RSP_state(event, port)
 //
 // Setup connection with RSPdriver
 //
-GCFEvent::TResult ClockControl::connect_state(GCFEvent& event, 
+GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("connect:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("connect2RSP:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -282,6 +295,10 @@ GCFEvent::TResult ClockControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY:
+		if (itsRSPDriver->getState() == GCFPortInterface::S_CONNECTED) {
+			TRAN(ClockControl::startListener_state);        // go to next state.
+		}
+		// NO BREAK !!!!
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Connecting"));
 		itsOwnPropertySet->setValue(PN_CLC_CONNECTED,  GCFPVBool(false));
@@ -291,21 +308,29 @@ GCFEvent::TResult ClockControl::connect_state(GCFEvent& event,
 
 	case F_CONNECTED:
 		if (&port == itsRSPDriver) {
-			LOG_DEBUG ("Connected with RSPDriver, going to subscription state");
+			itsTimerPort->cancelAllTimers();
+			LOG_DEBUG ("Connected with RSPDriver, starting listener for commands");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 			itsOwnPropertySet->setValue(PN_CLC_CONNECTED,  GCFPVBool(true));
-			TRAN(ClockControl::subscribe_state);		// go to next state.
+			TRAN(ClockControl::startListener_state);		// go to next state.
 		}
 		break;
 
 	case F_DISCONNECTED:
-		port.close();
 		ASSERTSTR (&port == itsRSPDriver, 
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("connection timeout"));
+		port.close();		// wait for F_CLOSED
+		break;
+
+	case F_CLOSED:
 		itsTimerPort->setTimer(2.0);
 		break;
+		
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -313,6 +338,67 @@ GCFEvent::TResult ClockControl::connect_state(GCFEvent& event,
 	
 	default:
 		LOG_DEBUG_STR ("connect, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+//
+// startListener_state(event, port)
+//
+// Start listener for clock and splitter commands
+//
+GCFEvent::TResult ClockControl::startListener_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("startListener:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+	case F_ENTRY:
+		if (itsCommandPort->getState() == GCFPortInterface::S_CONNECTED) {
+			TRAN(ClockControl::subscribe_state);        // go to next state.
+		}
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Opening command-port"));
+		itsCommandPort->autoOpen(0, 10, 2);		// will result in F_CONN or F_DISCONN
+		break;
+
+	case F_CONNECTED:
+		if (&port == itsCommandPort) {
+			LOG_DEBUG ("Command port opened, taking subscription on the clock");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+
+			// let Parent task register itself at the startDaemon. This will in a CONTROL_CONNECT event from the
+			// Parenttask (which we ignore) and probably CLKCTRL_XXX messages from the StationController 
+			itsParentPort = itsParentControl->registerTask(this);	// PC reports itself at the startDaemon
+
+			TRAN(ClockControl::subscribe_state);		// go to next state.
+		}
+		break;
+
+	case F_DISCONNECTED:
+		if (&port == itsCommandPort) { 
+			LOG_FATAL("Opening of commandport failed, no communication with stationController!!");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("commandport error"));
+			TRAN(ClockControl::finishing_state);
+		}
+		else {
+			_disconnectedHandler(port);		// might result in transition to connect_state
+		}
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("startListener, default");
 		status = defaultMessageHandling(event, port);
 		break;
 	}    
@@ -346,6 +432,10 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 		_disconnectedHandler(port);		// might result in transition to connect_state
 		break;
 
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
 	case RSP_SUBCLOCKACK: {
 		RSPSubclockackEvent	ack(event);
 		if (ack.status != RSP_SUCCESS) {
@@ -357,9 +447,9 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 
 		itsSubscription = ack.handle;
 	
-		LOG_DEBUG ("Subscription successful, going to retrieve state");
+		LOG_DEBUG ("Subscription successful, going to retrieve splitter state");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		TRAN(ClockControl::retrieve_state);				// go to next state.
+		TRAN(ClockControl::retrieveSplitters_state);				// go to next state.
 		}
 		break;
 
@@ -367,6 +457,13 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 		_databaseEventHandler(event);
 		break;
 	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
 	default:
 		LOG_DEBUG_STR ("subscribe, default");
 		status = defaultMessageHandling(event, port);
@@ -378,14 +475,82 @@ GCFEvent::TResult ClockControl::subscribe_state(GCFEvent& event,
 
 
 //
-// retrieve_state(event, port)
+// retrieveSplitters_state(event, port)
+//
+// Retrieve splitters-state from RSP driver
+//
+GCFEvent::TResult ClockControl::retrieveSplitters_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("retrieveSplitters:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_EXIT:
+   		break;
+
+	case F_ENTRY:
+	case F_TIMER:
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Retrieve clock"));
+		requestSplitterSetting();		// will result in RSP_GETSPLITTERACK;
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect_state
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case RSP_GETSPLITTERACK: {
+		RSPGetsplitterackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_WARN ("Could not retrieve splittersetting of RSPDriver, retry in 2 seconds");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getsplitter failed"));
+			itsTimerPort->setTimer(2.0);
+			break;
+		}
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+
+		itsSplitters = ack.splitter;
+		LOG_DEBUG_STR ("rspmask="  << ack.rspmask);
+		LOG_DEBUG_STR ("Splitters="  << itsSplitters << ", going to retrieve-clock state");
+		TRAN(ClockControl::retrieveClock_state);				// go to next state.
+	}
+	break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
+	default:
+		LOG_DEBUG_STR ("retrieveSplitters, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+
+
+//
+// retrieveClock_state(event, port)
 //
 // Retrieve sampleclock from RSP driver
 //
-GCFEvent::TResult ClockControl::retrieve_state(GCFEvent& event, 
+GCFEvent::TResult ClockControl::retrieveClock_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("retrieve:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("retrieveClock:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -402,6 +567,10 @@ GCFEvent::TResult ClockControl::retrieve_state(GCFEvent& event,
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect_state
 		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
 
 	case RSP_GETCLOCKACK: {
 		RSPGetclockackEvent	ack(event);
@@ -441,8 +610,15 @@ GCFEvent::TResult ClockControl::retrieve_state(GCFEvent& event,
 		_databaseEventHandler(event);
 		break;
 	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
 	default:
-		LOG_DEBUG_STR ("retrieve, default");
+		LOG_DEBUG_STR ("retrieveClock, default");
 		status = defaultMessageHandling(event, port);
 		break;
 	}    
@@ -464,18 +640,19 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
-   		break;
-
 	case F_ENTRY:
 	case F_TIMER:
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set clock"));
-		sendClockSetting();		// will result in RSP_SETCLOCKACK;
+		sendClockSetting();				// will result in RSP_SETCLOCKACK;
 		break;
 
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect_state
 		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
 
 	case RSP_SETCLOCKACK: {
 		RSPSetclockackEvent		ack(event);
@@ -497,8 +674,90 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 		_databaseEventHandler(event);
 		break;
 	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
 	default:
 		LOG_DEBUG_STR ("setClock, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+
+
+//
+// setSplitters_state(event, port)
+//
+// Set station splitters on or off
+//
+GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("setSplitters:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+   		break;
+
+	case F_ENTRY:
+	case F_TIMER:
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set splitters"));
+		sendSplitterSetting();				// will result in RSP_SETSPLITTERACK;
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect_state
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case RSP_SETSPLITTERACK: {
+		RSPSetsplitterackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR_STR ("Splitters could not be set to " << (itsSplitterRequest ? "ON" : "OFF") << 
+															", retry in 5 seconds.");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("splitter set error"));
+			itsTimerPort->setTimer(5.0);
+			break;
+		}
+		LOG_INFO_STR ("Splitter are set to " << (itsSplitterRequest ? "ON" : "OFF") << ", going to operational state");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		// update our admin
+		itsSplitters.reset();
+		if (itsSplitterRequest) {
+			StationConfig			sc;
+			for (int i = 0; i < sc.nrRSPs; i++) {
+				itsSplitters.set(i);
+			}
+		}
+
+		TRAN(ClockControl::active_state);				// go to next state.
+		break;
+	}
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
+	default:
+		LOG_DEBUG_STR ("setSplitter, default");
 		status = defaultMessageHandling(event, port);
 		break;
 	}    
@@ -526,21 +785,16 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		// update PVSS
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
 		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-		break;
 	}
+	break;
 
 	case F_ACCEPT_REQ:
-		break;
-
-	case F_CONNECTED:
-		break;
+		_acceptRequestHandler(port);
+	break;
 
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect_state
-		break;
-
-	case F_TIMER: 
-		break;
+	break;
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent	updateEvent(event);
@@ -566,6 +820,49 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
 		break;
+
+	case CLKCTRL_GET_CLOCK: {
+		CLKCTRLGetClockAckEvent		answer;
+		answer.clock = itsClock;
+		port.send(answer);
+	}
+	break;
+
+	case CLKCTRL_SET_CLOCK:	{
+		CLKCTRLSetClockEvent		request(event);
+		CLKCTRLSetClockAckEvent		response;
+		if (request.clock != 160 && request.clock != 200) {
+			LOG_DEBUG_STR("Received request to change the clock to invalid value " << request.clock);
+			response.status = CLKCTRL_CLOCKFREQ_ERR;
+			port.send(response);
+			break;
+		}
+		response.status = CLKCTRL_NO_ERR;
+		LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
+		itsClock = request.clock;
+		TRAN(ClockControl::setClock_state);
+		port.send(response);
+	}
+	break;
+
+	case CLKCTRL_GET_SPLITTERS: {
+		CLKCTRLGetSplittersAckEvent	answer;
+		answer.splitters = itsSplitters;
+		port.send(answer);
+	}
+	break;
+
+	case CLKCTRL_SET_SPLITTERS: {
+		CLKCTRLSetSplittersEvent		request(event);
+		LOG_INFO_STR("Received request to switch the splitters " << (request.splittersOn ? "ON" : "OFF"));
+		itsSplitterRequest = request.splittersOn;
+		TRAN (ClockControl::setSplitters_state);
+		LOG_INFO("@@@@@@@@@@@@@@@");
+		CLKCTRLSetSplittersAckEvent		response;
+		response.status = CLKCTRL_NO_ERR;
+		port.send(response);
+	}
+	break;
 	
 	default:
 //		LOG_DEBUG("active_state, default");
@@ -586,7 +883,26 @@ void ClockControl::_disconnectedHandler(GCFPortInterface& port)
 	if (&port == itsRSPDriver) {
 		LOG_DEBUG("Connection with RSPDriver failed, going to reconnect state");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("connection lost"));
-		TRAN (ClockControl::connect_state);
+		TRAN (ClockControl::connect2RSP_state);
+	}
+	else {
+		itsClientList.remove(&port);
+	}
+}
+
+//
+// _acceptRequestHandler(port)
+//
+void ClockControl::_acceptRequestHandler(GCFPortInterface& /*port*/)
+{
+	GCFTCPPort*	client = new GCFTCPPort();
+	client->init(*this, "client", GCFPortInterface::SPP, CLOCK_PROTOCOL);
+	if (!itsCommandPort->accept(*client)) {
+		delete client;
+	}
+	else {
+		itsClientList.push_back(client);
+		LOG_INFO("New client connected");
 	}
 }
 
@@ -598,10 +914,8 @@ void ClockControl::requestSubscription()
 	LOG_INFO ("Taking subscription on clock settings");
 
 	RSPSubclockEvent		msg;
-	
 //	msg.timestamp = 0;
 	msg.period = 1;				// let RSPdriver check every second
-
 	itsRSPDriver->send(msg);
 }
 
@@ -613,10 +927,8 @@ void ClockControl::cancelSubscription()
 	LOG_INFO ("Canceling subscription on clock settings");
 
 	RSPUnsubclockEvent		msg;
-	
 	msg.handle = itsSubscription;
 	itsSubscription = 0;
-
 	itsRSPDriver->send(msg);
 }
 
@@ -628,10 +940,8 @@ void ClockControl::requestClockSetting()
 	LOG_INFO ("Asking RSPdriver current clock setting");
 
 	RSPGetclockEvent		msg;
-	
-//	msg.timestamp = 0;
+	msg.timestamp = RTC::Timestamp(0,0);
 	msg.cache = 1;
-
 	itsRSPDriver->send(msg);
 }
 
@@ -644,18 +954,52 @@ void ClockControl::sendClockSetting()
 	LOG_INFO_STR ("Setting stationClock to " << itsClock << " MHz");
 
 	RSPSetclockEvent		msg;
-	
-//	msg.timestamp = 0;
+	msg.timestamp = RTC::Timestamp(0,0);
 	msg.clock = itsClock;
-
 	itsRSPDriver->send(msg);
 }
 
 //
+// requestSplitterSetting()
+//
+void ClockControl::requestSplitterSetting()
+{
+	LOG_INFO ("Asking RSPdriver current splitter setting");
+
+	StationConfig			sc;
+	RSPGetsplitterEvent		msg;
+	msg.timestamp = RTC::Timestamp(0,0);
+	msg.cache = 1;
+	msg.rspmask.reset();
+	for (int i = 0; i < sc.nrRSPs; i++) {
+		msg.rspmask.set(i);
+	}
+	itsRSPDriver->send(msg);
+}
+
+
+//
+// sendSplitterSetting()
+//
+void ClockControl::sendSplitterSetting()
+{
+	LOG_INFO_STR ("Setting stationSplitters to " << (itsSplitterRequest ? "ON" : "OFF"));
+
+	StationConfig			sc;
+	RSPSetsplitterEvent		msg;
+	msg.timestamp = RTC::Timestamp(0,0);
+	msg.switch_on = itsSplitterRequest;
+	msg.rspmask.reset();
+	for (int i = 0; i < sc.nrRSPs; i++) {
+		msg.rspmask.set(i);
+	}
+	itsRSPDriver->send(msg);
+}
+//
 // defaultMessageHandling
 //
 GCFEvent::TResult ClockControl::defaultMessageHandling(GCFEvent& 		event, 
-															  GCFPortInterface& port)
+													  GCFPortInterface& /*port*/)
 {
 	switch (event.signal) {
 		case CONTROL_CONNECT: {
@@ -740,6 +1084,9 @@ GCFEvent::TResult ClockControl::defaultMessageHandling(GCFEvent& 		event,
 		break;
 
 		case DP_SET:
+		case F_INIT:
+		case F_EXIT:
+		case F_ENTRY:
 		break;
 
 		default: {

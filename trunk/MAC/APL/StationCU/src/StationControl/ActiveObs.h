@@ -57,7 +57,7 @@ namespace LOFAR {
 // The ActiveObs class can instruct the ChildControl task directly, the responses
 // are captured in the StationController task that will forward them.
 //
-class ActiveObs : public GCFFsm
+class ActiveObs : public GCFTask
 {
 public:
 	ActiveObs (const string&			name,

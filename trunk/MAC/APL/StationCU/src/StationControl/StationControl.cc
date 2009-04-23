@@ -48,6 +48,7 @@
 #include "ActiveObs.h"
 #include "StationControl.h"
 #include "PVSSDatapointDefs.h"
+#include <APL/ClockProtocol/Clock_Protocol.ph>
 #include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
@@ -72,8 +73,10 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsOwnPropSet		(0),
 	itsClockPSinitialized(false),
 	itsOwnPSinitialized (false),
+	itsParentInitialized(false),
 	itsDPservice		(0),
-	itsQueryID			(0),
+	itsStateQryID		(0),
+	itsSplitterQryID	(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -115,6 +118,7 @@ StationControl::StationControl(const string&	cntlrName) :
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (CLOCK_PROTOCOL, 	CLOCK_PROTOCOL_STRINGS);
 
 	// reset some mappings.
 	itsRCUmask.reset();
@@ -135,10 +139,6 @@ StationControl::~StationControl()
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
 	if (itsDPservice) {
-		if  (itsQueryID) {
-			itsDPservice->cancelQuery(itsQueryID);
-			itsQueryID = 0;
-		}
 		delete itsDPservice;
 	}
 
@@ -286,7 +286,8 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 //
 // connect_state(event, port)
 //
-// Setup connection with ClockController
+// Start the ClockController, and wait for STARTED and CONNECTED event
+// Finally open the command port.
 //
 GCFEvent::TResult StationControl::connect_state(GCFEvent& event, 
 													GCFPortInterface& port)
@@ -296,11 +297,10 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
-   		break;
 
+	case F_TIMER:
 	case F_ENTRY: {
-		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Connected"));
+		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Starting ClockController"));
 
 		// start ClockController
 		LOG_DEBUG_STR("Starting ClockController");
@@ -322,39 +322,47 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 											" succesful, waiting for connection");
 			}
 			else {
-				LOG_WARN_STR("Startup of " << msg.cntlrName << "FAILED");
+				LOG_WARN_STR("Startup of " << msg.cntlrName << "FAILED, retry in 5 seconds");
 				// inform parent about the failure
-				CONTROLConnectedEvent	answer;
-				answer.cntlrName = getName();
-				answer.result    = CT_RESULT_LOST_CONNECTION;
-				itsParentPort->send(answer);
+//				CONTROLConnectedEvent	answer;
+//				answer.cntlrName = getName();
+//				answer.result    = CT_RESULT_LOST_CONNECTION;
+//				itsParentPort->send(answer);
 			}
+			itsTimerPort->setTimer(5.0);	// in case we fail
 		}
 		break;
 
 	case CONTROL_CONNECTED: {
+		itsTimerPort->cancelAllTimers();
 		CONTROLConnectedEvent		msg(event);
 //		ASSERTSTR(msg.cntlrName == controllerName(CNTLRTYPE_CLOCKCTRL, 0 ,0),
 //							"Connect event of unknown controller: " << msg.cntlrName);
 // note: need more complex test because the hostname is now in controllername.
 
 		// inform parent the chain is up
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = getName();
-		answer.result    = CT_RESULT_NO_ERROR;
-		itsParentPort->send(answer);
+//		CONTROLConnectedEvent	answer;
+//		answer.cntlrName = getName();
+//		answer.result    = CT_RESULT_NO_ERROR;
+//		itsParentPort->send(answer);
 
-		LOG_DEBUG ("Attached to ClockController, taking a subscription on the hardware states");
-		TRAN(StationControl::subscribe2HWstates);
-		}
-		break;
-
-	case F_CONNECTED:
-		break;
+		itsClkCtrlPort = new GCFTCPPort(*this, MAC_SVCMASK_CLOCKCTRL, GCFPortInterface::SAP, CLOCK_PROTOCOL);
+		ASSERTSTR(itsClkCtrlPort, "Cannot allocate port for communicating with the ClockController");
+		itsClkCtrlPort->autoOpen(10,0,1);
+	}
+	break;
 
 	case F_DISCONNECTED:
 		port.close();
-		break;
+		LOG_FATAL("Cannot open the command-port to the ClockController, bailing out!");
+		TRAN(StationControl::finishing_state);
+	break;
+	
+	case F_CONNECTED: {
+		LOG_DEBUG ("Attached to ClockController, taking a subscription on the hardware states");
+		TRAN(StationControl::subscribe2HWstates);
+	}
+	break;
 	
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -365,6 +373,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
+
 	return (status);
 }
 
@@ -399,7 +408,8 @@ GCFEvent::TResult StationControl::subscribe2HWstates(GCFEvent& event, GCFPortInt
 	}
 	break;
 
-	case DP_QUERY_SUBSCRIBED: {
+	case DP_QUERY_SUBSCRIBED: {			// NOTE: DIT EVENT KOMT EIGENLIJK NOOIT. WAAROM?
+		itsTimerPort->cancelAllTimers();
 		DPQuerySubscribedEvent  answer(event);
 		if (answer.result != SA_NO_ERROR) {
 			LOG_ERROR_STR ("Taking subscription on PVSS-states failed (" << answer.result  <<
@@ -407,20 +417,87 @@ GCFEvent::TResult StationControl::subscribe2HWstates(GCFEvent& event, GCFPortInt
 			itsTimerPort->setTimer(10.0);
 			break;
 		}
-		itsQueryID = answer.QryID;
-		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
-					"), going to operational mode");
-
-		itsTimerPort->cancelAllTimers();
-		TRAN(StationControl::operational_state);			// go to next state.
+		itsStateQryID = answer.QryID;
+		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsStateQryID  << ")");
+		if (itsHasSplitters) {
+			LOG_INFO("Going to setup a query for the splitter state");
+			TRAN(StationControl::subscribe2Splitters);		// go to next state.
+		}
+		else {
+			LOG_INFO("Going to operational mode");
+			TRAN(StationControl::operational_state);		// go to next state.
+		}
 	}
 	break;
 
 	case DP_QUERY_CHANGED:
 		// don't expect this event here right now, but you never know.
+ 		// in case DP_QUERY_SUBSCRIBED is skipped.
+		LOG_WARN("STRANGE ORDER OF EVENTS IN subscribe2HWState");
+		itsTimerPort->cancelAllTimers();
 		_handleQueryEvent(event);
-		itsTimerPort->cancelAllTimers();					// in case DP_QUERY_SUBSCRIBED is skipped.
-		TRAN(StationControl::operational_state);			// go to next state.
+		if (itsHasSplitters) {
+			TRAN(StationControl::subscribe2Splitters);		// go to next state.
+		}
+		else {
+			TRAN(StationControl::operational_state);		// go to next state.
+		}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
+	}
+
+	return (status);
+}
+//
+// subscribe2Splitters(event, port)
+//
+// Take a subscribtion to the setting of the splitters
+//
+GCFEvent::TResult StationControl::subscribe2Splitters(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("subscribe2splitters:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	switch (event.signal) {
+	case F_ENTRY:
+	case F_TIMER: {
+		// take subscribtion on *.state
+		LOG_DEBUG("Taking subscription on all splitter settings");
+		PVSSresult  result = itsDPservice->query("'LOFAR_PIC_*.splitterOn'", "");
+		if (result != SA_NO_ERROR) {
+			LOG_ERROR ("Taking subscription on splitter-settings failed, retry in 10 seconds");
+			itsTimerPort->setTimer(10.0);
+			break;
+		}
+		// wait for DP event
+		LOG_DEBUG ("Waiting for subscription answer");
+	}
+	break;
+
+	case DP_QUERY_SUBSCRIBED: {
+		itsTimerPort->cancelAllTimers();
+		DPQuerySubscribedEvent  answer(event);
+		if (answer.result != SA_NO_ERROR) {
+			LOG_ERROR_STR ("Taking subscription on splitter settings failed (" << answer.result  <<
+							"), retry in 10 seconds");
+			itsTimerPort->setTimer(10.0);
+			break;
+		}
+		itsSplitterQryID = answer.QryID;
+		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsSplitterQryID  << ")");
+		LOG_INFO("Going to operational mode");
+		TRAN(StationControl::operational_state);		// go to next state.
+	}
+	break;
+
+	case DP_QUERY_CHANGED:
+		itsTimerPort->cancelAllTimers();
+		_handleQueryEvent(event);
+		LOG_INFO("Going to operational mode");
+		TRAN(StationControl::operational_state);		// go to next state.
 	break;
 
 	default:
@@ -444,16 +521,16 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
-		break;
-
 	case F_ENTRY: {
 		// update PVSS
-		LOG_DEBUG ("All initialisation done, enabling ParentControl task");
-		itsParentPort = itsParentControl->registerTask(this);
+		if (!itsParentInitialized) {
+			LOG_DEBUG ("All initialisation done, enabling ParentControl task");
+			itsParentPort = itsParentControl->registerTask(this);
 
-		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
-		itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
+			itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
+			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
+			itsParentInitialized = true;
+		}
 	}
 	break;
 
@@ -477,7 +554,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			GCFTimerEvent	timerEvt = static_cast<GCFTimerEvent&>(event);
 			theObs = _searchObsByTimerID(timerEvt.id);
 			if (theObs == itsObsMap.end()) {	// still not found?
-				LOG_WARN_STR("Event for unknown observation: " << port.getName());
+				LOG_WARN_STR("Timer event for unknown observation: " << port.getName());
 				break;
 			}
 			// found on timerID. This means that the Observation should have died
@@ -506,8 +583,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		answer.cntlrName = msg.cntlrName;
 		// add observation to the list if not already in the list
 		answer.result = _addObservation(msg.cntlrName);
-		if (answer.result != CT_RESULT_NO_ERROR) {
-			port.send(answer);
+		if (answer.result != CT_RESULT_NO_ERROR) {	// problem?
+			port.send(answer);						// tell parent we didn't start the obs.
 		}
 	}
 	break;
@@ -548,30 +625,28 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			break;
 		}
 
-		// Clock changes are done in the claim state and require an extra action
-		// TODO: CHECK ALL OTHERS OBSs ARE DOWN OTHERWISE WE MAY NOT SWITCH THE CLOCK
-		if (event.signal == CONTROL_CLAIM && 
-								itsClock != theObs->second->obsPar()->sampleClock) {
-			itsClock = theObs->second->obsPar()->sampleClock;
-			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
-			// TODO: give clock 5 seconds to stabelize
+		// In the claim state station-wide changes are activated.
+		if (event.signal == CONTROL_CLAIM) {
+			itsStartingObs = theObs;
+			TRAN(StationControl::startObservation_state);
+			queueTaskEvent(event, port);
+			return (GCFEvent::HANDLED);
 		}
 
+		// TODO: CLEAN UP THE CODE BELOW
+
+#if 0
 		// before passing a new state request from the ObsController to the 
 		// activeObs, make sure the last state is reached.
 LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
 LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
 LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
 LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
-#if 0
 		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
 			// TODO
 			CTState		cts;
-			LOG_FATAL_STR("Ignoring change to state " << 
-						cts.name(cts.signal2stateNr(event.signal)) << 
-						" for observation " << treeID << 
-						" because obs is still in state " << 
+			LOG_FATAL_STR("Ignoring change to state " << cts.name(cts.signal2stateNr(event.signal)) << 
+						" for observation " << treeID << " because obs is still in state " << 
 						cts.name(theObs->second->curState()));
 			sendControlResult(*itsParentPort, event.signal, cntlrName, 
 																CT_RESULT_OUT_OF_SYNC);
@@ -623,6 +698,9 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 	}
 	break;
 
+	case F_EXIT:
+		break;
+
 	default:
 		LOG_DEBUG("active_state, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -631,6 +709,111 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 
 	return (status);
 }
+
+
+//
+// startObservation_state(event,port)
+//
+// Substate where we optionally set the clock and the splitters before passing the CLAIM event to the ActiveObs.
+//
+GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPortInterface&	port)
+{
+	LOG_DEBUG_STR("startObservation: " << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case CONTROL_CLAIM: {
+		// Clock changes are done in the claim state and require an extra action
+		if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
+			// Check if all others obs are down otherwise we may not switch the clock
+			CONTROLCommonEvent	ObsEvent(event);		// we just need the name
+			uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
+			OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
+			string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, instanceNr, treeID);
+			if (itsObsMap.size() != 1) {
+				LOG_FATAL_STR("Need to switch the clock to " <<  itsStartingObs->second->obsPar()->sampleClock << 
+						" for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
+						" other observations running at clockspeed" << itsClock << ".");
+				_abortObservation(itsStartingObs);
+				itsStartingObs = 0;
+				TRAN(StationControl::operational_state);
+				break;
+			}
+			// its OK to switch te clock
+			itsClock = itsStartingObs->second->obsPar()->sampleClock;
+			LOG_DEBUG_STR ("Changing clock to " << itsClock);
+			CLKCTRLSetClockEvent	setClock;
+			setClock.clock = itsClock;
+			itsClkCtrlPort->send(setClock);		// results in CLKCTRL_SET_CLOCK_ACK
+			itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
+		}
+		else {
+			LOG_INFO_STR("new observation also uses clock " << itsClock);
+			itsTimerPort->setTimer(0.0);	// goto set splitter section
+		}
+	}
+	break;
+
+	case CLKCTRL_SET_CLOCK_ACK: {
+		CLKCTRLSetClockAckEvent		ack(event);
+		if (ack.status != CLKCTRL_NO_ERR) {
+			LOG_FATAL_STR("Unable to set the clock to " << itsClock << ".");
+			_abortObservation(itsStartingObs);
+			itsStartingObs = 0;
+			TRAN(StationControl::operational_state);
+			break;
+		}
+		// clock was set succesfully, give clock 5 seconds to stabelize
+		LOG_INFO("Stationclock is changed, waiting 5 seconds to let the clock stabelize");
+		itsTimerPort->setTimer(5.0);
+	}
+	break;
+
+	case F_TIMER: {
+		bool	splitterState = itsStartingObs->second->obsPar()->splitter;
+		LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
+		CLKCTRLSetSplittersEvent	setEvent;
+		setEvent.splittersOn = splitterState;
+		itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+	}
+	break;
+
+	case CLKCTRL_SET_SPLITTERS_ACK: {
+		CLKCTRLSetSplittersAckEvent		ack(event);
+		bool	splitterState = itsStartingObs->second->obsPar()->splitter;
+		if (ack.status != CLKCTRL_NO_ERR) {
+			LOG_FATAL_STR("Unable to set the splittters to " << (splitterState ? "ON" : "OFF"));
+			_abortObservation(itsStartingObs);
+			itsStartingObs = 0;
+			TRAN(StationControl::operational_state);
+			break;
+		}
+		
+		itsSplitters = splitterState;
+
+		// finally send a CLAIM event to the observation
+		LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
+		CONTROLClaimEvent		claimEvent;
+		itsStartingObs->second->doEvent(claimEvent, port);
+
+		LOG_INFO("Going back to operational state");
+		itsStartingObs = 0;
+		TRAN(StationControl::operational_state);
+	}
+	break;
+
+	case F_EXIT:
+		break;
+
+	default:
+		LOG_DEBUG_STR("Postponing event " << eventName(event) << " till operational state");
+		return (GCFEvent::NEXT_STATE);
+	}
+
+	LOG_DEBUG("startObservation_state: just before exit");
+
+	return (GCFEvent::HANDLED);
+}
+
 
 //
 // finishing_state(event, port)
@@ -660,6 +843,16 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 		// update PVSS
 		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Finished"));
 		itsOwnPropSet->setValue(PN_FSM_ERROR,    GCFPVString(""));
+
+		// cancel active queries
+		if  (itsStateQryID) {
+			itsDPservice->cancelQuery(itsStateQryID);
+			itsStateQryID = 0;
+		}
+		if  (itsSplitterQryID) {
+			itsDPservice->cancelQuery(itsSplitterQryID);
+			itsSplitterQryID = 0;
+		}
 
 		itsTimerPort->setTimer(1L);
 		break;
@@ -719,32 +912,32 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 	
 	DPQueryChangedEvent		DPevent(event);
 	if (DPevent.result != SA_NO_ERROR) {
-		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for query " << itsQueryID << 
+		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for a query " << 
 				", cannot determine actual state of the hardware! Assuming everything is available.");
 		return;
 	}
 
-	// remember QueryID if not yet set
-	if (!itsQueryID) {
-		itsQueryID = DPevent.QryID;
+	if (!itsStateQryID) {
+		itsStateQryID = DPevent.QryID;
 	}
 
 	// The selected datapoints are delivered with full PVSS names, like:
 	// CS001:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU5.status.state
+	// CS001:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.splitterOn
 	// Each event may contain more than one DP.
 	int     nrDPs = ((GCFPVDynArr*)(DPevent.DPnames._pValue))->getValue().size();
 	GCFPVDynArr*    DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
 	GCFPVDynArr*    DPvalues = (GCFPVDynArr*)(DPevent.DPvalues._pValue);
 	// GCFPVDynArr*    DPtimes  = (GCFPVDynArr*)(DPevent.DPtimes._pValue);
 
+	uint32	modeOff(objectStateIndex2Value(RTDB_OBJ_STATE_OFF));
+	uint32	modeOperational(objectStateIndex2Value(RTDB_OBJ_STATE_OPERATIONAL));
 	for (int    idx = 0; idx < nrDPs; ++idx) {
 		// Get the name and figure out what circuitboard we are talking about
 		string  nameStr(DPnames->getValue()[idx]->getValueAsString());				// DP name
 		uint32	newState(((GCFPVInteger*)(DPvalues->getValue()[idx]))->getValue());	// value
 		size_t	pos;
 
-		uint32	modeOff(objectStateIndex2Value(RTDB_OBJ_STATE_OFF));
-		uint32	modeOperational(objectStateIndex2Value(RTDB_OBJ_STATE_OPERATIONAL));
 		// test for RCU
 		if ((pos = nameStr.find("_RCU")) != string::npos) {
 			int		rcu;
@@ -766,20 +959,35 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 		// test for RSPBoard
 		else if ((pos = nameStr.find("_RSPBoard")) != string::npos) {
 			int		rsp;
-			if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.status.state", &rsp) != 1) {
-				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
-								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
-				continue;
+			if (nameStr.find(".status.state") != string::npos) {
+				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.status.state", &rsp) == 1) {
+					LOG_INFO_STR("New state of RSPBoard " << rsp << " is " << newState);
+					int rcubase = rsp * NR_RCUS_PER_RSPBOARD;
+					for (int i = 0; i < NR_RCUS_PER_RSPBOARD; i++) {
+						if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
+							itsRCUmask.reset(rcubase + i);
+						}
+						else {
+							itsRCUmask.set(rcubase + i);
+						}
+					}
+				}
 			}
-			LOG_INFO_STR("New state of RSPBoard " << rsp << " is " << newState);
-			int rcubase = rsp * NR_RCUS_PER_RSPBOARD;
-			for (int i = 0; i < NR_RCUS_PER_RSPBOARD; i++) {
-				if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
-					itsRCUmask.reset(rcubase + i);
+			else if (nameStr.find(".splitterOn") != string::npos) {
+				// remember QueryID if not yet set
+				if (!itsSplitterQryID) {
+					itsSplitterQryID = DPevent.QryID;
 				}
-				else {
-					itsRCUmask.set(rcubase + i);
+
+				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.splitterOn", &rsp) == 1) {
+					LOG_INFO_STR("New setting of splitter " << rsp << " is " << (newState ? "on" : "off"));
+					itsSplitters.set(rsp);
 				}
+			}
+			else {
+				LOG_ERROR_STR("Unrecognized datapoint " << nameStr << 
+								". STATE OF ANTENNA'S OR SPLITTERS MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
 			}
 		}
 
@@ -841,8 +1049,10 @@ LOG_DEBUG_STR("theOBS=" << theObs);
 				 " has no conflicts with other running observations");
 
 	// Create a bitset containing the available receivers for this oberservation.
-	StationConfig	config;
-	Observation::RCUset_t	realReceivers = Observation(&theObsPS).getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
+	StationConfig			config;
+	Observation::RCUset_t	realReceivers = 
+			Observation(&theObsPS).getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
+
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
 		realReceivers &= itsRCUmask;
@@ -879,6 +1089,24 @@ LOG_DEBUG_STR("theOBS=" << theObs);
 	return (CT_RESULT_NO_ERROR);
 }
 
+
+//
+// _abortObservation(theObsIter)
+//
+void StationControl::_abortObservation(ObsIter	theObs)
+{
+	LOG_ERROR_STR("Aborting observation " << getObservationNr(theObs->second->getName()));
+
+	CONTROLQuitEvent		quitEvent;
+	quitEvent.cntlrName = theObs->second->getName();
+	GCFDummyPort	DP(this, "abortObsPort", 0);
+	theObs->second->doEvent(quitEvent, DP);
+
+	// tell Parent task we initiated a quit
+	itsParentControl->nowInState(theObs->second->getName(), CTState::QUIT);
+}
+
+
 //      
 // _initAntennaMasks
 //      
@@ -890,22 +1118,13 @@ void StationControl::_initAntennaMasks()
 	itsLBAmask.reset();
 	itsHBAmask.reset();
 
-	// Try to find the configurationfile
-	ConfigLocator   CL;
-	string          fileName(CL.locate("RemoteStation.conf"));
-	if (fileName.empty()) {
-		LOG_ERROR("Cannot find file 'RemoteStation.conf', assuming I have 96 antennas");
-		itsNrLBAs = 96;
-		itsNrHBAs = 96;
-	}   
-	else {  // read info from configfile
-		ParameterSet    StationInfo(fileName);
-		int defaultValue = 4 * StationInfo.getUint32("RS.N_RSPBOARDS", 24);   // key must be present for RSPDriver.
-		itsNrLBAs = StationInfo.getUint32("RS.N_LBAS", defaultValue);          // step5 key
-		itsNrHBAs = StationInfo.getUint32("RS.N_HBAS", defaultValue);          // step5 key
-	}
+	// Adopt values from RemoteStation.conf
+	StationConfig	SC;
+	itsNrRSPboards = SC.nrRSPs;
+	itsNrLBAs 	   = SC.nrLBAs;
+	itsNrHBAs 	   = SC.nrHBAs;
+	itsHasSplitters= SC.hasSplitters;
 
-	LOG_INFO(formatString("Stations has %d LBA and %d HBA antennas", itsNrLBAs, itsNrHBAs));
 	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
 			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
 
@@ -947,6 +1166,11 @@ void StationControl::_updateAntennaMasks()
 	LOG_DEBUG_STR("itsRCU:" << string(itsRCUmask.to_string<char,char_traits<char>,allocator<char> >()));
 	LOG_DEBUG_STR("itsLBA:" << string(itsLBAmask.to_string<char,char_traits<char>,allocator<char> >()));
 	LOG_DEBUG_STR("itsHBA:" << string(itsHBAmask.to_string<char,char_traits<char>,allocator<char> >()));
+
+	if (itsHasSplitters && itsSplitters.count() != 0 && itsSplitters.count() != itsNrRSPboards) {
+		LOG_WARN_STR("Not all splitters have the same state! " << itsSplitters);
+		// TODO: ring some bells in the Navigator?
+	}
 }
 
 //

@@ -9,8 +9,8 @@ StationControl_SOURCES		= ../Package__Version.cc \
 							  ActiveObs.cc \
 							  StationControlMain.cc 
 
-StationControl_LDADD		= $(LOFAR_DEPEND)
-StationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
+StationControl_LDADD		= $(LOFAR_DEPEND) $(top_builddir)/src/ClockProtocol/libclock_protocol.la
+StationControl_DEPENDENCIES	= $(LOFAR_DEPEND) $(top_builddir)/src/ClockProtocol/libclock_protocol.la
 
 NOINSTHDRS 					= StationControl.h \
 							  ActiveObs.h \
