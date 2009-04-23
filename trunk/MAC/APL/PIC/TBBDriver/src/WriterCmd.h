@@ -36,38 +36,36 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class WriterCmd : public Command 
-		{
-			public:
-				// Constructors for a WriterCmd object.
-				WriterCmd();
-	  
-				// Destructor for WriterCmd.
-				virtual ~WriterCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class WriterCmd : public Command 
+{
+public:
+	// Constructors for a WriterCmd object.
+	WriterCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for WriterCmd.
+	virtual ~WriterCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				TPWriterEvent			*itsTPE;
-				TPWriterAckEvent	*itsTPackE;
-				TBBWriterEvent		*itsTBBE;
-				TBBWriterAckEvent	*itsTBBackE;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	uint32 itsMp; 
+	uint32 itsPid;
+	uint32 itsRegId;
+	uint32 itsData[4];
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

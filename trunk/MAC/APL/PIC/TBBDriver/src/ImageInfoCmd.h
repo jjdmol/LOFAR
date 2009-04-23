@@ -36,41 +36,39 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ImageInfoCmd : public Command 
-		{
-			public:
-				// Constructors for a ImageInfoCmd object.
-				ImageInfoCmd();
-	  
-				// Destructor for ImageInfoCmd.
-				virtual ~ImageInfoCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ImageInfoCmd : public Command 
+{
+public:
+	// Constructors for a ImageInfoCmd object.
+	ImageInfoCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for ImageInfoCmd.
+	virtual ~ImageInfoCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				TPReadfEvent					*itsTPE;
-				TPReadfAckEvent				*itsTPackE;
-				TBBImageInfoEvent			*itsTBBE;
-				TBBImageInfoAckEvent	*itsTBBackE;
-				
-				int32				itsImage;
-				int32				itsBlock;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	
+	uint32 itsStatus;
+	int32 itsImage;
+	int32 itsBlock;
+	
+	uint32 itsImageVersion[MAX_N_IMAGES];	  
+	uint32 itsWriteDate[MAX_N_IMAGES];	
+	char itsTpFileName[MAX_N_IMAGES][16];
+	char itsMpFileName[MAX_N_IMAGES][16];
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

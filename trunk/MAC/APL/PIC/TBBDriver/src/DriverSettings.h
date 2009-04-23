@@ -31,48 +31,48 @@
 
 
 namespace LOFAR {
-  using GCF::TM::GCFPortInterface;
-  namespace TBB {
+	using GCF::TM::GCFPortInterface;
+	namespace TBB {
 
-static const int DRIVER_VERSION = 206; // 2.06 
+static const int DRIVER_VERSION = 210; // 2.10 
 
 enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, watchdogSet, freeBoard, boardFreed, boardReady, boardError};
 
 // info for all channels
 struct ChannelInfo
 {
-	bool		Selected;
-	uint32	Status;
-	char		State;
-	int32		RcuNr;
-	int32		BoardNr;
-	int32		InputNr;
-	int32		MpNr;
-	uint32	StartAddr;
-	uint32	PageSize;
+	bool   Selected;
+	uint32 Status;
+	char   State;
+	int32  RcuNr;
+	int32  BoardNr;
+	int32  InputNr;
+	int32  MpNr;
+	uint32 StartAddr;
+	uint32 PageSize;
 	// settings for the trigger system
-	bool	TriggerReleased;
-	bool	Triggered;
-	uint16	TriggerLevel;
-	uint8	TriggerStartMode;
-	uint8	TriggerStopMode;
-	uint8	FilterSelect;
-	uint8	DetectWindow;
-	uint8 OperatingMode;
-	uint16	Coefficient[4];
+	bool   TriggerReleased;
+	bool   Triggered;
+	uint16 TriggerLevel;
+	uint8  TriggerStartMode;
+	uint8  TriggerStopMode;
+	uint8  FilterSelect;
+	uint8  DetectWindow;
+	uint8  OperatingMode;
+	uint16 Coefficient[4];
 };
 
 struct BoardInfo
 {
 	GCFPortInterface* port;
 	BoardStateT boardState; 
-	uint32	memorySize;
-	uint32   imageNr;
-	bool     freeToReset;
-	string	srcIp;
-	string	dstIp;
-	string	srcMac;
-	string	dstMac;
+	uint32 memorySize;
+	uint32 imageNr;
+	bool   freeToReset;
+	string srcIp;
+	string dstIp;
+	string srcMac;
+	string dstMac;
 };
 
 // forward declaration
@@ -176,7 +176,6 @@ friend class TBBDriver;
 
 protected:	// note TBBDriver must be able to set them
 	void getTbbSettings();
-	void setConversionTable(int32 rcu, int32 channel); 
 	void setMaxBoards (int32 maxboards);
 	void setMaxRetries(int32 retries);
 	void setTimeOut(double timeout);
@@ -188,34 +187,32 @@ private:
 	TbbSettings& operator=(const TbbSettings& that);
 
 	// --- Datamembers ---  
-	int32	itsDriverVersion;
-	int32	itsMaxBoards;	// constants
-	int32	itsMaxChannels;
-	int32	itsMpsOnBoard;
-	int32	itsChannelsOnMp;
-	int32 itsChannelsOnBoard;
-	int32 itsFlashMaxPages;
-	int32 itsFlashSectorsInPage;
-	int32 itsFlashBlocksInPage;
-	int32 itsFlashPageSize;
-	int32 itsFlashPageSectorSize;
-	int32 itsFlashPageBlockSize;
-	int32	itsMaxRetries;
-	double	itsTimeOut;
-	int32 itsSaveTriggersToFile;
-
+	int32  itsDriverVersion;
+	int32  itsMaxBoards;	// constants
+	int32  itsMaxChannels;
+	int32  itsMpsOnBoard;
+	int32  itsChannelsOnMp;
+	int32  itsChannelsOnBoard;
+	int32  itsFlashMaxPages;
+	int32  itsFlashSectorsInPage;
+	int32  itsFlashBlocksInPage;
+	int32  itsFlashPageSize;
+	int32  itsFlashPageSectorSize;
+	int32  itsFlashPageBlockSize;
+	int32  itsMaxRetries;
+	double itsTimeOut;
+	int32  itsSaveTriggersToFile;
+	
 	// mask with active boards
-	uint32	itsActiveBoardsMask;
+	uint32 itsActiveBoardsMask;
 	
-	int32				*itsRcu2ChTable;
-	int32				*itsCh2RcuTable;
-	BoardInfo		*itsBoardInfo;
-	ChannelInfo	*itsChannelInfo;
-	bool				itsBoardSetup;
-	uint16			itsTriggerMode;
-	string			itsIfName;
+	BoardInfo   *itsBoardInfo;
+	ChannelInfo *itsChannelInfo;
+	bool        itsBoardSetup;
+	uint16      itsTriggerMode;
+	string      itsIfName;
 	
-	static TbbSettings	*theirTbbSettings;
+	static TbbSettings *theirTbbSettings;
 };
 
 
@@ -236,7 +233,6 @@ inline	int32 TbbSettings::flashPageBlockSize() { return (itsFlashPageBlockSize);
 inline	uint32 TbbSettings::activeBoardsMask()	{ return (itsActiveBoardsMask);   }
 inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
-//inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (itsBoardPorts[boardnr]); }
 inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
@@ -292,8 +288,8 @@ inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boar
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
 inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
-  
-  } // namespace TBB
+	 
+	} // namespace TBB
 } // namespace LOFAR
 
 #endif

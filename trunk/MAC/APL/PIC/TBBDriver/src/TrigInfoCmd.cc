@@ -34,24 +34,16 @@ using namespace TP_Protocol;
 using	namespace TBB;
 
 //--Constructors for a TrigInfoCmd object.----------------------------------------
-TrigInfoCmd::TrigInfoCmd()
+TrigInfoCmd::TrigInfoCmd():
+	itsStatus(0), itsRcu(0), itsSequenceNr(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
+	itsTriggerSamples(0), itsPeakValue(0), itsPowerBefore(0), itsPowerAfter(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPTrigInfoEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBTrigInfoAckEvent();
-	
-	itsTBBackE->status_mask	= 0;
-	setWaitAck(true);		
+	TS = TbbSettings::instance();
+	setWaitAck(true);
 }
-	  
+
 //--Destructor for TrigInfoCmd.---------------------------------------------------
-TrigInfoCmd::~TrigInfoCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+TrigInfoCmd::~TrigInfoCmd() { }
 
 // ----------------------------------------------------------------------------
 bool TrigInfoCmd::isValid(GCFEvent& event)
@@ -65,13 +57,14 @@ bool TrigInfoCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigInfoCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBTrigInfoEvent(event);
+	TBBTrigInfoEvent tbb_event(event);
 	
-	int32 board;				// board 0 .. 11
+	int32 board;			// board 0 .. 11
 	int32 board_channel;// board_channel 0 .. 15	
 	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
-		
-	TS->convertRcu2Ch(itsTBBE->rcu,&board,&board_channel);
+	
+	itsRcu = tbb_event.rcu;
+	TS->convertRcu2Ch(itsRcu,&board,&board_channel);
 	channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 	TS->setChSelected(channel,true);
 	
@@ -80,25 +73,21 @@ void TrigInfoCmd::saveTbbEvent(GCFEvent& event)
 	boardmask = TS->activeBoardsMask();
 	setBoardMask(boardmask);
 	
-	itsTBBackE->status_mask = 0;
-	
 	nextSelectedChannelNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPTRIGINFO;
-	itsTPE->status			=	0;
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void TrigInfoCmd::sendTpEvent()
 {
 	// send cmd if no errors
-	if (itsTBBackE->status_mask == 0) {
+	if (itsStatus == 0) {
+		TPTrigInfoEvent tp_event;
 		
-		itsTPE->channel = static_cast<uint32>(getChannelNr()); 
-		TS->boardPort(getBoardNr()).send(*itsTPE);
+		tp_event.opcode = TPTRIGINFO;
+		tp_event.status = 0;
+		tp_event.channel = static_cast<uint32>(TS->getChInputNr(getChannelNr())); 
+		
+		TS->boardPort(getBoardNr()).send(tp_event);
 		LOG_DEBUG_STR(formatString("Sending TrigInfo to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
 	}
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	
@@ -109,25 +98,25 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 	} else {
-		itsTPackE = new TPTrigInfoAckEvent(event);
+		TPTrigInfoAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask |= (1 << (16 + (itsTPackE->status & 0x0F)));
-			
-		TS->convertCh2Rcu(itsTPackE->trigger.channel,&itsTBBackE->rcu);
-		itsTBBackE->sequence_nr			= itsTPackE->trigger.sequence_nr;
-		itsTBBackE->time						= itsTPackE->trigger.time;
-		itsTBBackE->sample_nr				=	itsTPackE->trigger.sample_nr;
-		itsTBBackE->trigger_sum			= itsTPackE->trigger.sum;
-		itsTBBackE->trigger_samples	= itsTPackE->trigger.samples;
-		itsTBBackE->peak_value			= itsTPackE->trigger.peak;
-		itsTBBackE->power_before		= itsTPackE->trigger.pwr_bt_at & 0x0000FFFF;
-		itsTBBackE->power_after		= (itsTPackE->trigger.pwr_bt_at & 0xFFFF0000) >> 16;
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) 
+			itsStatus |= (1 << (16 + (tp_ack.status & 0x0F)));
+		
+		int32 channel = (getBoardNr() * TS->nrChannelsOnBoard()) + tp_ack.trigger.channel;
+		TS->convertCh2Rcu(channel,&itsRcu);
+		itsSequenceNr     = tp_ack.trigger.sequence_nr;
+		itsTime           = tp_ack.trigger.time;
+		itsSampleNr       = tp_ack.trigger.sample_nr;
+		itsTriggerSum     = tp_ack.trigger.sum;
+		itsTriggerSamples = tp_ack.trigger.samples;
+		itsPeakValue      = tp_ack.trigger.peak;
+		itsPowerBefore    = tp_ack.trigger.pwr_bt_at & 0x0000FFFF;
+		itsPowerAfter     = (tp_ack.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
 		
 		LOG_DEBUG_STR(formatString("Received TrigInfoAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	nextSelectedChannelNr();
 }
@@ -135,9 +124,22 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0) {
-		itsTBBackE->status_mask = TBB_SUCCESS;
-	}
+	TBBTrigInfoAckEvent tbb_ack;
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
+	tbb_ack.rcu             = itsRcu;
+	tbb_ack.sequence_nr     = itsSequenceNr;
+	tbb_ack.time            = itsTime;
+	tbb_ack.sample_nr       = itsSampleNr;
+	tbb_ack.trigger_sum     = itsTriggerSum;
+	tbb_ack.trigger_samples = itsTriggerSamples;
+	tbb_ack.peak_value      = itsPeakValue;
+	tbb_ack.power_before    = itsPowerBefore;
+	tbb_ack.power_after     = itsPowerAfter;
+	
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

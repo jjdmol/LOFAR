@@ -36,40 +36,37 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class FreeCmd : public Command 
-		{
-			public:
-				// Constructors for a FreeCmd object.
-				FreeCmd();
-	  
-				// Destructor for FreeCmd.
-				virtual ~FreeCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class FreeCmd : public Command 
+{
+public:
+	// Constructors for a FreeCmd object.
+	FreeCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for FreeCmd.
+	virtual ~FreeCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				int32		itsBoardNr;
-				uint32	itsChannelMask[MAX_N_TBBOARDS];
-				bool		itsBoardFreeAll;
-				uint32	itsRcuStatus;
-				
-				TPFreeEvent			*itsTPE;
-				TPFreeAckEvent	*itsTPackE;
-				TBBFreeEvent		*itsTBBE;
-				TBBFreeAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	int32  itsBoardNr;
+	uint32 itsChannelMask[MAX_N_TBBOARDS];
+	int32  itsChannels;
+	uint32 itsRcuStatus;
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

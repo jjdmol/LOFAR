@@ -35,25 +35,17 @@ using	namespace TBB;
 //--Constructors for a SizeCmd object.----------------------------------------
 SizeCmd::SizeCmd()
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPSizeEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBSizeAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
-		itsTBBackE->npages[boardnr] 			= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsNpages[boardnr] = 0;
 	}
 	setWaitAck(true);		
 }
 	  
 //--Destructor for SizeCmd.---------------------------------------------------
-SizeCmd::~SizeCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+SizeCmd::~SizeCmd() { }
 
 // ----------------------------------------------------------------------------
 bool SizeCmd::isValid(GCFEvent& event)
@@ -67,30 +59,28 @@ bool SizeCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void SizeCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBSizeEvent(event);
+	TBBSizeEvent tbb_event(event);
 	
-	setBoardMask(itsTBBE->boardmask);
+	setBoardMask(tbb_event.boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr))
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
-	}						
+			itsStatus[boardnr] |= TBB_NO_BOARD;
+	}
 		
 	// get first board
 	nextBoardNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode	= TPSIZE;
-	itsTPE->status	=	0;
-		
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void SizeCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPSizeEvent tp_event;
+	
+	tp_event.opcode	= TPSIZE;
+	tp_event.status	= 0;
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -99,20 +89,19 @@ void SizeCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	} else {
-		itsTPackE = new TPSizeAckEvent(event);
+		TPSizeAckEvent tp_event(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+		if ((tp_event.status >= 0xF0) && (tp_event.status <= 0xF6)) 
+			itsStatus[getBoardNr()] |= (1 << (16 + (tp_event.status & 0x0F)));	
 		
 		LOG_DEBUG_STR(formatString("SizeCmd: board[%d] status[0x%08X] pages[%u]", 
-																getBoardNr(), itsTPackE->status, itsTPackE->npages));
+																getBoardNr(), tp_event.status, tp_event.npages));
 																
-		TS->setMemorySize(getBoardNr(),itsTPackE->npages);
-		itsTBBackE->npages[getBoardNr()]	= itsTPackE->npages;
+		TS->setMemorySize(getBoardNr(),tp_event.npages);
+		itsNpages[getBoardNr()]	= tp_event.npages;
 		
-		delete itsTPackE;
 	}
 	nextBoardNr();
 }
@@ -120,10 +109,16 @@ void SizeCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void SizeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBSizeAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
+		tbb_ack.npages[boardnr] = itsNpages[boardnr];
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

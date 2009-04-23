@@ -36,35 +36,41 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class TrigInfoCmd : public Command 
-		{
-			public:
-				// Constructors for a TrigInfoCmd object.
-				TrigInfoCmd();
-	  
-				// Destructor for TrigInfoCmd.
-				virtual ~TrigInfoCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class TrigInfoCmd : public Command 
+{
+public:
+	// Constructors for a TrigInfoCmd object.
+	TrigInfoCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for TrigInfoCmd.
+	virtual ~TrigInfoCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				TPTrigInfoEvent			*itsTPE;
-				TPTrigInfoAckEvent		*itsTPackE;
-				TBBTrigInfoEvent			*itsTBBE;
-				TBBTrigInfoAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	int32 itsRcu;
+	uint32 itsSequenceNr;
+	uint32 itsTime;
+	uint32 itsSampleNr;
+	uint32 itsTriggerSum;
+	uint32 itsTriggerSamples;
+	uint32 itsPeakValue;
+	uint32 itsPowerBefore;
+	uint32 itsPowerAfter;
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

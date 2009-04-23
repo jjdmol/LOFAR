@@ -36,39 +36,36 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class TrigGenCmd : public Command 
-		{
-			public:
-				// Constructors for a TrigGenCmd object.
-				TrigGenCmd();
-	  
-				// Destructor for TrigGenCmd.
-				virtual ~TrigGenCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class TrigGenCmd : public Command 
+{
+public:
+	// Constructors for a TrigGenCmd object.
+	TrigGenCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for TrigGenCmd.
+	virtual ~TrigGenCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				TPTrigGenerateEvent			*itsTPE;
-				TPTrigGenerateAckEvent	*itsTPackE;
-				TBBTrigGenerateEvent		*itsTBBE;
-				TBBTrigGenerateAckEvent	*itsTBBackE;
-				
-				int32 itsStage;
-				// variables holding data from tp cmd
-				uint32	itsChannelMask[MAX_N_TBBOARDS];
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+   uint32 itsMp;	
+	int32 itsStage;
+	// variables holding data from tp cmd
+	uint32	itsChannelMask[MAX_N_TBBOARDS];
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

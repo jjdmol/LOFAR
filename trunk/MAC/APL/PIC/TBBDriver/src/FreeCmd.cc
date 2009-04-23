@@ -34,27 +34,19 @@ using	namespace TBB;
 
 //--Constructors for a FreeCmd object.----------------------------------------
 FreeCmd::FreeCmd():
-		itsBoardNr(0),itsBoardFreeAll(0),itsRcuStatus(0)
+		itsBoardNr(0), itsChannels(1), itsRcuStatus(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPFreeEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBFreeAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
-		itsChannelMask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsChannelMask[boardnr] = 0;
 	}
 	setWaitAck(true);
 }
-	  
+
 //--Destructor for FreeCmd.---------------------------------------------------
-FreeCmd::~FreeCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+FreeCmd::~FreeCmd() { }
 
 // ----------------------------------------------------------------------------
 bool FreeCmd::isValid(GCFEvent& event)
@@ -68,16 +60,16 @@ bool FreeCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void FreeCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE = new TBBFreeEvent(event);
+	TBBFreeEvent tbb_event(event);
 	
 	// convert rcu-bitmask to tbb-channelmask
-	int32 board;				// board 0 .. 11
-	int32 board_channel;// board_channel 0 .. 15	
-	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
+	int32 board;         // board 0 .. 11
+	int32 board_channel; // board_channel 0 .. 15	
+	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
-		if(itsTBBE->rcu_mask.test(rcunr)) {
+		if(tbb_event.rcu_mask.test(rcunr)) {
 			itsChannelMask[board] |= (1 << board_channel);
 			TS->setChSelected(channel,true);
 		}
@@ -85,79 +77,75 @@ void FreeCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
-		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
+		itsStatus[boardnr] = 0;
+		if (itsChannelMask[boardnr] != 0) { 
+			boardmask |= (1 << boardnr);
+		} 
 			
-		if (!TS->isBoardActive(boardnr)) 
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		if (!TS->isBoardActive(boardnr)) {
+			itsStatus[boardnr] |= TBB_NO_BOARD;
+		}
 		
-		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
-				
-		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
-		LOG_DEBUG_STR(formatString("FreeCmd savetbb status board[%d] = 0x%08X",boardnr,itsTBBackE->status_mask[boardnr]));
+		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) {
+			itsStatus[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
+		}
+		
+		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0)) {
+			itsStatus[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
+		}
+		LOG_DEBUG_STR(formatString("FreeCmd savetbb status board[%d] = 0x%08X",boardnr,itsStatus[boardnr]));
 	}
 	
 	setBoardMask(boardmask);
 	
 	// select firt channel to handle
 	nextSelectedChannelNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPFREE;
-	itsTPE->status			= 0;
-	
-	itsBoardFreeAll = false;	
-	delete itsTBBE;
 }
 
 // ----------------------------------------------------------------------------
 void FreeCmd::sendTpEvent()
 {
+	TPFreeEvent tp_event;
+	tp_event.opcode = TPFREE;
+	tp_event.status = 0;
+	
 	itsRcuStatus = 0;
 	
-	if (itsBoardNr != getBoardNr()) itsBoardFreeAll = false; // new board
+	if (itsBoardNr != getBoardNr()) itsChannels = 1; // new board
 	itsBoardNr = getBoardNr();
 	
-	if (!itsBoardFreeAll) {
-		
-		if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
-			itsTPE->channel = 0xFFFFFFFF; // uint32 -> -1 to free all
-			itsBoardFreeAll = true;
-		} else {
-			itsTPE->channel = TS->getChInputNr(getChannelNr()); 
-		}
-				
-		if (itsTBBackE->status_mask[getBoardNr()] == 0) {
-			TS->boardPort(getBoardNr()).send(*itsTPE);
-			
-			LOG_DEBUG_STR(formatString("Sending FreeCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
-		} 
+	if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
+		tp_event.channel = 0xFFFFFFFF; // uint32 -> -1 to free all
+		itsChannels = 16;
+	} else {
+		tp_event.channel = TS->getChInputNr(getChannelNr());
+		itsChannels = 1;
 	}
+			
+	if (itsStatus[getBoardNr()] == 0) {
+		TS->boardPort(getBoardNr()).send(tp_event);
+		
+		LOG_DEBUG_STR(formatString("Sending FreeCmd to boardnr[%d], channel[%08X]", getBoardNr(), tp_event.channel));
+	} 
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
 void FreeCmd::saveTpAckEvent(GCFEvent& event)
 {
-	int32 channels = 1;
-	
-	if (itsBoardFreeAll) channels = 16;
-	
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_RCU_COMM_ERROR;
 		itsRcuStatus |= TBB_TIMEOUT_ETH;
-	}
-	else {
-		itsTPackE = new TPFreeAckEvent(event);
+	} else {
+		TPFreeAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsRcuStatus |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
 				
-		if ((itsTPackE->status == 0) && (itsRcuStatus == 0)) {
-			for (int ch = getChannelNr(); ch < (getChannelNr() + channels); ch++) {
+		if ((tp_ack.status == 0) && (itsRcuStatus == 0)) {
+			for (int ch = getChannelNr(); ch < (getChannelNr() + itsChannels); ch++) {
 				TS->setChSelected(ch, false); 	
 				TS->setChState(ch, 'F'); 	
 				TS->setChStartAddr(ch, 0);
@@ -166,26 +154,26 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event)
 		} 
 			
 		LOG_DEBUG_STR(formatString("Received FreeAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	
-	for (int ch = getChannelNr(); ch < (getChannelNr() + channels); ch++) {
+	for (int ch = getChannelNr(); ch < (getChannelNr() + itsChannels); ch++) {
 		if (itsRcuStatus) TS->setChState(ch, 'E');
 		TS->setChStatus(ch,(uint16)(itsRcuStatus >> 16));
 	}
 	
-	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+	if (itsRcuStatus || itsStatus[getBoardNr()]) {
 		int32 rcu;
 		TS->convertCh2Rcu(getChannelNr(),&rcu);
-		if (channels == 1)
+		if (itsChannels == 1) {
 			LOG_INFO_STR(formatString("ERROR FreeCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
-				rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
-		else
+				rcu, itsStatus[getBoardNr()],itsRcuStatus));
+		} else {
 			LOG_INFO_STR(formatString("ERROR FreeCmd Rcu[%d .. %d], DriverStatus[0x%x], RcuStatus[0x%x]",
-				(getBoardNr() * 16),((getBoardNr() + 1) * 16), itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+				(getBoardNr() * 16),((getBoardNr() + 1) * 16), itsStatus[getBoardNr()],itsRcuStatus));
+		}
 	}
-	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
-	if (itsTPE->channel == 0xFFFFFFFF) {
+	itsStatus[getBoardNr()] |= itsRcuStatus;
+	if (itsChannels == 16) {
 		setChannelNr((getBoardNr() * 16) + 15);
 	}
 	nextSelectedChannelNr();
@@ -194,20 +182,25 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void FreeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
+	TBBFreeAckEvent tbb_ack;
+	
 	int32 rcunr;
 	
-	itsTBBackE->rcu_mask.reset();
+	tbb_ack.rcu_mask.reset();
 	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
 		if (TS->getChStatus(channelnr)) {
 			TS->convertCh2Rcu(channelnr,&rcunr);
-			itsTBBackE->rcu_mask.set(rcunr);
+			tbb_ack.rcu_mask.set(rcunr);
 		}
 	}
 	
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
  
-	if(clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if(clientport->isConnected()) { clientport->send(tbb_ack); }
 }

@@ -31,14 +31,13 @@ namespace LOFAR {
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
-		
-		class RawEvent
-		{
-			public:
-				//static LOFAR::GCF::TM::GCFEvent::TResult dispatch(LOFAR::GCF::TM::GCFTask& task,
-				//																LOFAR::GCF::TM::GCFPortInterface& port);
-				static GCFEvent::TResult dispatch(GCFTask& task, GCFPortInterface& port);
-		};
+
+class RawEvent
+{
+public:
+	static GCFEvent::TResult dispatch(GCFTask& task, GCFPortInterface& port);
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 #endif /* RAWEVENT_H_ */

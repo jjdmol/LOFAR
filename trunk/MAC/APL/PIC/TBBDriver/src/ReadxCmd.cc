@@ -33,24 +33,18 @@ using namespace TP_Protocol;
 using	namespace TBB;
 
 //--Constructors for a ReadxCmd object.----------------------------------------
-ReadxCmd::ReadxCmd()
+ReadxCmd::ReadxCmd():
+	itsStatus(0),itsMp(0), itsPid(0), itsRegId(0), itsPageLength(0), itsPageAddr(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPReadxEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBReadxAckEvent();
-	
-	itsTBBackE->status_mask = 0;
+	TS = TbbSettings::instance();
+	for (int32 an = 0; an < 256;an++) {
+		itsData[an]	= 0;
+	}
 	setWaitAck(true);
 }
-	  
+
 //--Destructor for ReadxCmd.---------------------------------------------------
-ReadxCmd::~ReadxCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;	
-}
+ReadxCmd::~ReadxCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ReadxCmd::isValid(GCFEvent& event)
@@ -64,36 +58,43 @@ bool ReadxCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadxCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBReadxEvent(event);
+	TBBReadxEvent tbb_event(event);
 	
-	itsTBBackE->status_mask = 0;	
-	if (TS->isBoardActive(itsTBBE->board)) {	
-		setBoardNr(itsTBBE->board);
+	if (TS->isBoardActive(tbb_event.board)) {	
+		setBoardNr(tbb_event.board);
 	} else {
-		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		itsStatus |= TBB_NO_BOARD ;
 		setDone(true);
 	}
-		
+
 	// initialize TP send frame
-	itsTPE->opcode	= TPREADX;
-	itsTPE->status	=	0;
-	itsTPE->mp	 		= static_cast<uint32>(itsTBBE->mp);
-	itsTPE->pid	 		= static_cast<uint32>(itsTBBE->pid);
-	itsTPE->regid		= static_cast<uint32>(itsTBBE->regid);
-	itsTPE->pagelength	= itsTBBE->pagelength;
-	itsTPE->pageaddr	= itsTBBE->pageaddr;
-	LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x][%x]", 
-															itsTPE->opcode,itsTBBE->mp,itsTBBE->pid,
-															itsTBBE->regid,itsTBBE->pagelength,
-															itsTBBE->pageaddr));
-	delete itsTBBE;	
+	itsMp         = static_cast<uint32>(tbb_event.mp);
+	itsPid        = static_cast<uint32>(tbb_event.pid);
+	itsRegId      = static_cast<uint32>(tbb_event.regid);
+	itsPageLength = tbb_event.pagelength;
+	itsPageAddr   = tbb_event.pageaddr;
 }
 
 
 // ----------------------------------------------------------------------------
 void ReadxCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPReadxEvent tp_event;
+	
+	tp_event.opcode     = TPREADX;
+	tp_event.status     = 0;
+	tp_event.mp         = itsMp;
+	tp_event.pid        = itsPid;
+	tp_event.regid      = itsRegId;
+	tp_event.pagelength = itsPageLength;
+	tp_event.pageaddr   = itsPageAddr;
+	
+	LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x][%x]", 
+										tp_event.opcode,tp_event.mp,tp_event.pid,
+										tp_event.regid,tp_event.pagelength,
+										tp_event.pageaddr));
+
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -102,19 +103,20 @@ void ReadxCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
-	}
-	else {
-		itsTPackE = new TPReadxAckEvent(event);
+		itsStatus |= TBB_COMM_ERROR;
+	} else {
+		TPReadxAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask |= (1 << (16 + (itsTPackE->status & 0x0F)));	
-		
-		for (int32 an = 0; an < 256;an++) {
-			itsTBBackE->pagedata[an]	= itsTPackE->pagedata[an];
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsStatus |= (1 << (16 + (tp_ack.status & 0x0F)));
 		}
+		if (tp_ack.status == 0) {
+			for (int32 an = 0; an < 256;an++) {
+				itsData[an]	= tp_ack.pagedata[an];
+			}
+		}
+		
 		LOG_DEBUG_STR(formatString("Received ReadxAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	setDone(true);
 }
@@ -122,8 +124,17 @@ void ReadxCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;
-	 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	TBBReadxAckEvent tbb_ack;
+	
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
+
+	for (int32 an = 0; an < 256;an++) {
+		tbb_ack.pagedata[an] = itsData[an];
+	}
+	
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

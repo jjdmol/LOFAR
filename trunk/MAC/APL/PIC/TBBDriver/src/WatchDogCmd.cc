@@ -35,26 +35,18 @@ using	namespace TBB;
 
 //--Constructors for a WatchDogCmd object.----------------------------------------
 WatchDogCmd::WatchDogCmd():
-	itsBoardMask(0), itsBoardNr(0)
+	itsMode(0)
 {
-	TS				= TbbSettings::instance();
-	itsTPE		= new TPWatchdogEvent();
-	itsTPackE	= 0;
-	itsTBBE		= 0;
-	itsTBBackE	= new TBBWatchdogAckEvent();
+	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	setWaitAck(true);	
 }
-	  
+
 //--Destructor for WatchDogCmd.---------------------------------------------------
-WatchDogCmd::~WatchDogCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+WatchDogCmd::~WatchDogCmd() { }
 
 // ----------------------------------------------------------------------------
 bool WatchDogCmd::isValid(GCFEvent& event)
@@ -68,44 +60,34 @@ bool WatchDogCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WatchDogCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBWatchdogEvent(event);
+	TBBWatchdogEvent tbb_event(event);
 	
-	itsBoardMask = itsTBBE->boardmask;
+	setBoardMask(tbb_event.boardmask);
+	itsMode = tbb_event.mode;
 	
-	itsTPE->opcode	= TPWATCHDOG;
-	itsTPE->status	= 0;
-	itsTPE->mode	= itsTBBE->mode;
-	
-	LOG_DEBUG_STR("boardMask= " << formatString("%08x",itsBoardMask));
+	LOG_DEBUG_STR("boardMask= " << formatString("%08x",tbb_event.boardmask));
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
-	}
-	
-	// look for first board in mask
-	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
-		itsBoardNr++;
-		if (itsBoardNr >= TS->maxBoards()) { 
-			break;	
+		itsStatus[boardnr] = 0;
+		if (!TS->isBoardActive(boardnr)) {
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setDone(true);
-	}
-	
-	delete itsTBBE;	
+	// select first board
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
 void WatchDogCmd::sendTpEvent()
 {
-	if (TS->boardPort(getBoardNr()).isConnected()) {
-		TS->boardPort(getBoardNr()).send(*itsTPE);
-		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
-	}
+	TPWatchdogEvent tp_event;
+	tp_event.opcode = TPWATCHDOG;
+	tp_event.status = 0;
+	tp_event.mode = itsMode;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
@@ -115,39 +97,32 @@ void WatchDogCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		TS->setBoardState(getBoardNr(),noBoard);
 	}	else {
-		itsTPackE = new TPWatchdogAckEvent(event);
+		TPWatchdogAckEvent tp_ack(event);
+/*
 		TS->setImageNr(getBoardNr(), 0);
-    if (itsTPackE->status == 0) {
+		
+		if (tp_ack.status == 0) {
 			TS->setBoardState(getBoardNr(),setImage1);
 		} else {
 			TS->setBoardState(getBoardNr(),boardError);
 		}
-		delete itsTPackE;
+*/
 	}
-	
-	itsBoardNr++;
-	// look for next board in mask
-	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
-		itsBoardNr++;
-		if (itsBoardNr >= TS->maxBoards()) { 
-			break;
-		}	
-	}
-	LOG_DEBUG_STR("boardnr=" << itsBoardNr);
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setDone(true);
-	}
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
 void WatchDogCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBWatchdogAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

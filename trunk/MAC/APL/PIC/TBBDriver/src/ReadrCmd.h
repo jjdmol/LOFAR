@@ -36,38 +36,35 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ReadrCmd : public Command 
-		{
-			public:
-				// Constructors for a ReadrCmd object.
-				ReadrCmd();
-	  
-				// Destructor for ReadrCmd.
-				virtual ~ReadrCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ReadrCmd : public Command 
+{
+public:
+	// Constructors for a ReadrCmd object.
+	ReadrCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for ReadrCmd.
+	virtual ~ReadrCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				TPReadrEvent			*itsTPE;
-				TPReadrAckEvent		*itsTPackE;
-				TBBReadrEvent			*itsTBBE;
-				TBBReadrAckEvent	*itsTBBackE;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	uint32 itsMp;
+	uint32 itsPid;
+	uint32 itsRegId;
+	uint32 itsData[256];
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

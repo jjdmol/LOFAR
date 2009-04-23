@@ -29,79 +29,78 @@
 #include "DriverSettings.h"
 
 namespace LOFAR {
-  namespace TBB {
+	namespace TBB {
 
-		class Command
-    {
-    public:
-						
-			// Constructor for Command
-			Command();
-	  
-      // Destructor for Command.
-      virtual ~Command();
-			
-			virtual bool isValid(GCFEvent& event) = 0;
-				
-			virtual void saveTbbEvent(GCFEvent& event) = 0;
-											
-			virtual void sendTpEvent() = 0;
-			
-			virtual void saveTpAckEvent(GCFEvent& event) = 0;
+class Command
+{
+public:
+	// Constructor for Command
+	Command();
 
-			virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
-			
-			bool retry();
-			
-			void setRetry(bool retry);
+	// Destructor for Command.
+	virtual ~Command();
 	
-			bool waitAck();
-			
-			void setWaitAck(bool waitack);
-			
-			void setSleepTime(double sleeptime);
-			
-			double	getSleepTime();
-			
-			void reset();
-			
-			bool isDone();
-			
-			void setDone(bool done);
-			
-			void resetBoardNr();
-			
-			void resetChannelNr();
-			
-			int32 getBoardNr();
-			
-			int32 getChannelNr();
-			
-			void setBoardNr(int32 boardnr);
-			
-			void setChannelNr(int32 channelnr);
-				
-			void nextBoardNr();
-			
-			void nextChannelNr();
-			
-			void nextSelectedChannelNr();
-			
-			void setBoardMask(uint32 mask);
-			
-    private:
-    	TbbSettings *TS;
-    	
-    	bool		itsRetry;		// true if resending of a command is needed
-		bool		itsWaitAck;		// true if an ack is expected
-    	bool		itsDone;			// true if the command is completed
-    	bool		itsAllPorts;	// true if command must be send to all available ports
-    	int32		itsBoard;
-		int32		itsChannel;
-		uint32	itsBoardMask;
-		double	itsSleepTime;
-    };
+	virtual bool isValid(GCFEvent& event) = 0;
+		
+	virtual void saveTbbEvent(GCFEvent& event) = 0;
+
+	virtual void sendTpEvent() = 0;
+	
+	virtual void saveTpAckEvent(GCFEvent& event) = 0;
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
+	
+	bool retry();
+	
+	void setRetry(bool retry);
+
+	bool waitAck();
+	
+	void setWaitAck(bool waitack);
+	
+	void setSleepTime(double sleeptime);
+	
+	double	getSleepTime();
+	
+	void reset();
+	
+	bool isDone();
+	
+	void setDone(bool done);
+	
+	void resetBoardNr();
+	
+	void resetChannelNr();
+	
+	int32 getBoardNr();
+	
+	int32 getChannelNr();
+	
+	void setBoardNr(int32 boardnr);
+	
+	void setChannelNr(int32 channelnr);
+		
+	void nextBoardNr();
+	
+	void nextChannelNr();
+	
+	void nextSelectedChannelNr();
+	
+	void setBoardMask(uint32 mask);
+	
+private:
+	TbbSettings *TS;
+	
+	bool		itsRetry;		// true if resending of a command is needed
+	bool		itsWaitAck;		// true if an ack is expected
+	bool		itsDone;			// true if the command is completed
+	bool		itsAllPorts;	// true if command must be send to all available ports
+	int32		itsBoard;
+	int32		itsChannel;
+	uint32	itsBoardMask;
+	double	itsSleepTime;
+};
 	} // end TBB namespace
 } // end LOFAR namespace
-     
+
 #endif /* COMMAND_H_ */

@@ -51,6 +51,7 @@ int32 Command::getChannelNr()
 {
 	return(itsChannel);
 }
+
 // ----------------------------------------------------------------------------
 void Command::setBoardNr(int32 boardnr)
 {
@@ -63,7 +64,6 @@ void Command::setChannelNr(int32 channelnr)
 	itsChannel = channelnr;
 	itsBoard = TS->getChBoardNr(itsChannel); 
 }
-
 
 // ----------------------------------------------------------------------------
 void Command::reset()

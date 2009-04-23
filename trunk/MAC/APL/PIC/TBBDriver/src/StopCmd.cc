@@ -34,27 +34,19 @@ using	namespace TBB;
 
 //--Constructors for a StopCmd object.----------------------------------------
 StopCmd::StopCmd():
-		itsRcuStatus(0)
+		itsRcuStatus(0), itsChannels(1)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPStopEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBStopAckEvent();
+	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
-		itsChannelMask[boardnr]	= 0;
+		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsChannelMask[boardnr] = 0;
 	}
 	setWaitAck(true);		
 }
 	  
 //--Destructor for StopCmd.---------------------------------------------------
-StopCmd::~StopCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+StopCmd::~StopCmd() { }
 
 // ----------------------------------------------------------------------------
 bool StopCmd::isValid(GCFEvent& event)
@@ -68,9 +60,8 @@ bool StopCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void StopCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBStopEvent(event);
-	
-		
+	TBBStopEvent tbb_event(event);
+			
 	// convert rcu-bitmask to tbb-channelmask
 	int32 board;				// board 0 .. 11
 	int32 board_channel;// board_channel 0 .. 15	
@@ -78,7 +69,7 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;	
-		if(itsTBBE->rcu_mask.test(rcunr)) { 
+		if(tbb_event.rcu_mask.test(rcunr)) { 
 			if (TS->getChState(channel) == 'R') {
 				itsChannelMask[board] |= (1 << board_channel);
 				TS->setChSelected(channel,true);
@@ -90,45 +81,50 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr)) { 
 			if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr);
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 		
 		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) {
-			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
+			itsStatus[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
 		}
 		
-		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0)) {
-			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
+		if (!TS->isBoardActive(boardnr) && (itsChannelMask[boardnr] != 0)) {
+			itsStatus[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
 		}
-		LOG_DEBUG_STR(formatString("StopCmd savetbb boardnr[%d], status[0x%x]",boardnr, itsTBBackE->status_mask[boardnr]));
+		LOG_DEBUG_STR(formatString("StopCmd savetbb boardnr[%d], status[0x%x]",boardnr, itsStatus[boardnr]));
 	}
 		
 	setBoardMask(boardmask);
 	
 	// select firt channel to handle
 	nextSelectedChannelNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPSTOP;
-	itsTPE->status			=	0;
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void StopCmd::sendTpEvent()
 {
-	itsTPE->channel = TS->getChInputNr(getChannelNr());
+	TPStopEvent tp_event;
+	
+	tp_event.opcode = TPSTOP;
+	tp_event.status = 0;
+	if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
+		tp_event.channel = ~0;
+		itsChannels = 16;
+	} else {
+		tp_event.channel = TS->getChInputNr(getChannelNr());
+		itsChannels = 1;
+	}
+	
 	itsRcuStatus = 0;
 	
-	if ((itsTBBackE->status_mask[getBoardNr()] == 0) && (itsRcuStatus == 0)) {
-		TS->boardPort(getBoardNr()).send(*itsTPE);
-		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
-		LOG_DEBUG_STR(formatString("Sending StopCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
+	if (itsStatus[getBoardNr()] == 0) {
+		TS->boardPort(getBoardNr()).send(tp_event);
+		LOG_DEBUG_STR(formatString("Sending StopCmd to boardnr[%d], channel[%08X]", getBoardNr(), tp_event.channel));
 	}
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
@@ -136,55 +132,69 @@ void StopCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_RCU_COMM_ERROR;
 		itsRcuStatus |= TBB_TIMEOUT_ETH;
-	}
-	else {
-		itsTPackE = new TPStopAckEvent(event);
+	} else {
+		TPStopAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsRcuStatus |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
 		
-		if ((itsTPackE->status == 0) && (itsRcuStatus == 0))
-			TS->setChState(getChannelNr(), 'S'); 	
+		if ((tp_ack.status == 0) && (itsRcuStatus == 0)) {
+			for (int ch = getChannelNr(); ch < (getChannelNr() + itsChannels); ch++) {
+				TS->setChState(ch, 'S');
+			}
+		} 
 		
 		LOG_DEBUG_STR(formatString("Received StopCmd savetp boardnr[%d], status[0x%x]",
-			getBoardNr(), itsTBBackE->status_mask[getBoardNr()]));
-		delete itsTPackE;
+											getBoardNr(), itsStatus[getBoardNr()]));
 	}
 	
-	if (itsRcuStatus) TS->setChState(getChannelNr(), 'E');
-	TS->setChStatus(getChannelNr(),(uint16)(itsRcuStatus >> 16));
+	for (int ch = getChannelNr(); ch < (getChannelNr() + itsChannels); ch++) {
+		TS->setChStatus(ch,(uint16)(itsRcuStatus >> 16));
+		if (itsRcuStatus) {
+			TS->setChState(ch, 'E');
+		}
+	}
 	
-	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+	if (itsRcuStatus || itsStatus[getBoardNr()]) {
 		int32 rcu;
 		TS->convertCh2Rcu(getChannelNr(),&rcu);
 		LOG_INFO_STR(formatString("ERROR StopCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
-			rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+											rcu, itsStatus[getBoardNr()],itsRcuStatus));
 	}
-	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
+	itsStatus[getBoardNr()] |= itsRcuStatus;
+	
+	if (itsChannels == 16) {
+		setChannelNr((getBoardNr() * 16) + 15);
+	}
+	
 	nextSelectedChannelNr();
 }
 
 // ----------------------------------------------------------------------------
 void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	int32 rcunr;
+	TBBStopAckEvent tbb_ack;
 	
-	itsTBBackE->rcu_mask.reset();
+	tbb_ack.rcu_mask.reset();
 	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
-		if (TS->getChStatus(channelnr)) {
+		if (TS->getChStatus(channelnr) == 0) {
+			int32 rcunr;
 			TS->convertCh2Rcu(channelnr,&rcunr);
-			itsTBBackE->rcu_mask.set(rcunr);
+			tbb_ack.rcu_mask.set(rcunr);
 		}
 	}
 	
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
-		LOG_DEBUG_STR(formatString("StopCmd sendtbb status[0x%x]", itsTBBackE->status_mask[boardnr]));		
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
-	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+		
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }
 

@@ -34,26 +34,19 @@ using namespace TP_Protocol;
 using	namespace TBB;
 
 //--Constructors for a ConfigCmd object.----------------------------------------
-ConfigCmd::ConfigCmd()
+ConfigCmd::ConfigCmd():
+	itsImage(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPConfigEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBConfigAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	setWaitAck(true);		
 }
-	  
+
 //--Destructor for ConfigCmd.---------------------------------------------------
-ConfigCmd::~ConfigCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;	
-}
+ConfigCmd::~ConfigCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ConfigCmd::isValid(GCFEvent& event)
@@ -67,33 +60,31 @@ bool ConfigCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ConfigCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE = new TBBConfigEvent(event);
-	//TBBConfigEvent itsTBBE(event);
-		
+	TBBConfigEvent tbb_event(event);
+
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (TS->isBoardActive(boardnr) == false) { 
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
-	setBoardMask(itsTBBE->boardmask);
+	setBoardMask(tbb_event.boardmask);
+	itsImage = tbb_event.imagenr;
 	
 	// select first boards
 	nextBoardNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode	= TPCONFIG;
-	itsTPE->status	=	0;
-	itsTPE->imagenr	= static_cast<uint32>(itsTBBE->imagenr);
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ConfigCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPConfigEvent tp_event;
+	tp_event.opcode = TPCONFIG;
+	tp_event.status = 0;
+	tp_event.imagenr = itsImage;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -102,30 +93,35 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPConfigAckEvent(event);
-		TS->setImageNr(getBoardNr(), itsTPE->imagenr);
+		TPConfigAckEvent tp_ack(event);
+		TS->setImageNr(getBoardNr(), itsImage);
 		TS->setFreeToReset(getBoardNr(), false);
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
 		
 		LOG_DEBUG_STR(formatString("Received ConfigAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	nextBoardNr();
 	if (isDone()) { 
-	   setSleepTime(15.0);
+		setSleepTime(15.0);
 	}
 }
 
 // ----------------------------------------------------------------------------
 void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBConfigAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

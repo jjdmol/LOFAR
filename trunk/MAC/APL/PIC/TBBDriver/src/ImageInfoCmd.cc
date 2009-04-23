@@ -32,35 +32,32 @@ using namespace TP_Protocol;
 using	namespace TBB;
 
 // information about the flash memory
-static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
-static const int FL_N_IMAGES 				= 16; // 16 pages in flash
+static const int FL_SIZE            = 64 * 1024 *1024; // 64 MB in bytes
+static const int FL_N_BLOCKS        = 65536; // 65336 blocks in flash
+static const int FL_N_IMAGES        = 16; // 16 pages in flash
 
-static const int FL_IMAGE_SIZE 			= FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
-static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
+static const int FL_IMAGE_SIZE      = FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
+static const int FL_BLOCK_SIZE      = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
 
-static const int FL_BLOCKS_IN_IMAGE	= FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
+static const int FL_BLOCKS_IN_IMAGE = FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
 
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():
-		itsImage(0),itsBlock(0),itsBoardStatus(0)
+		itsStatus(0), itsImage(0), itsBlock(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPReadfEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBImageInfoAckEvent();
+	TS = TbbSettings::instance();
+	for (int image = 0; image < MAX_N_IMAGES; image++) {
+		itsImageVersion[image] = 0;	  
+		itsWriteDate[image] = 0;	
+		memset(itsTpFileName[image],'\0',16);
+		memset(itsMpFileName[image],'\0',16);
+	}
 	setWaitAck(true);
 }
-	  
-//--Destructor for ImageInfoCmd.---------------------------------------------------
-ImageInfoCmd::~ImageInfoCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
 
+//--Destructor for ImageInfoCmd.---------------------------------------------------
+ImageInfoCmd::~ImageInfoCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ImageInfoCmd::isValid(GCFEvent& event)
@@ -74,34 +71,28 @@ bool ImageInfoCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE = new TBBImageInfoEvent(event);
+	TBBImageInfoEvent tbb_event(event);
+
+	if (TS->isBoardActive(tbb_event.board)) {
+		setBoardNr(tbb_event.board);
+	} else {
+		itsStatus |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 	
-  itsTBBackE->status_mask = 0;
-  
-  if (TS->isBoardActive(itsTBBE->board)) {
-    setBoardNr(itsTBBE->board);
-  } else {
-    itsTBBackE->status_mask |= TBB_NO_BOARD ;
-    setDone(true);
-  }
-	
-  itsTBBackE->board = getBoardNr();	
-	
-	itsTBBackE->active_image = TS->getImageNr(getBoardNr());
 	itsImage = 0;
-		
-	// initialize TP send frame
-	itsTPE->opcode	= TPREADF;
-	itsTPE->status	=	0;
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ImageInfoCmd::sendTpEvent()
 {
+	TPReadfEvent tp_event;
+	tp_event.opcode = TPREADF;
+	tp_event.status = 0;
+	
 	itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
-	itsTPE->addr		= static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -110,23 +101,20 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 		setDone(true);	
 	} else {
-		itsTPackE = new TPReadfAckEvent(event);
+		TPReadfAckEvent tp_ack(event);
 		
-		if (itsTPackE->status == 0) {
+		if (tp_ack.status == 0) {
 			char info[256];
 			memset(info,0,256);
-			memcpy(info,&itsTPackE->data[2],256);
+			memcpy(info,&tp_ack.data[2],256);
 			
 			LOG_DEBUG_STR("ImageInfoCmd: " << info); 
 			
-			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
-			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];	
-			
-			memset(itsTBBackE->tp_file_name[itsImage],'\0',16);
-			memset(itsTBBackE->mp_file_name[itsImage],'\0',16);
+			itsImageVersion[itsImage]= tp_ack.data[0];	  
+			itsWriteDate[itsImage] = tp_ack.data[1];	
 			char* startptr;
 			char* stopptr;
 			int namesize;
@@ -135,32 +123,45 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			stopptr = strstr(startptr," ");
 			if (stopptr != 0) {
 				namesize = stopptr - startptr;
-				memcpy(itsTBBackE->tp_file_name[itsImage],startptr,namesize);
+				memcpy(itsTpFileName[itsImage], startptr, namesize);
 				
 				startptr = stopptr + 1;
 				stopptr = strstr(startptr + 1," ");
 				if (stopptr != 0) {	
 					namesize = stopptr - startptr;
-					memcpy(itsTBBackE->mp_file_name[itsImage],startptr,namesize);
+					memcpy(itsMpFileName[itsImage], startptr, namesize);
 				}
 			}			
-			LOG_DEBUG_STR("tp_file_name: " << itsTBBackE->tp_file_name[itsImage]);
-			LOG_DEBUG_STR("mp_file_name: " << itsTBBackE->mp_file_name[itsImage]);
+			LOG_DEBUG_STR("tp_file_name: " << itsTpFileName[itsImage]);
+			LOG_DEBUG_STR("mp_file_name: " << itsMpFileName[itsImage]);
 		
 			itsImage++;
 			if (itsImage == FL_N_IMAGES) {
 				setDone(true);
 			}
 		}
-		delete itsTPackE;
 	}
 }
 
 // ----------------------------------------------------------------------------
 void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;
+	TBBImageInfoAckEvent tbb_ack;
+	tbb_ack.board = getBoardNr();
+	tbb_ack.active_image = TS->getImageNr(getBoardNr());
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	for (int image = 0; image < MAX_N_IMAGES; image++) {
+		tbb_ack.image_version[image] = itsImageVersion[image];	  
+		tbb_ack.write_date[image] = itsWriteDate[image];	
+		memcpy(tbb_ack.tp_file_name[image], itsTpFileName[image], 16);
+		memcpy(tbb_ack.mp_file_name[image], itsMpFileName[image], 16);
+	}
+	
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
+	
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

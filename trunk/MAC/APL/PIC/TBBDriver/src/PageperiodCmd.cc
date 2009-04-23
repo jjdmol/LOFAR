@@ -34,22 +34,14 @@ using namespace TBB;
 
 //--Constructors for a PageperiodCmd object.----------------------------------------
 PageperiodCmd::PageperiodCmd():
-		itsBoardStatus(0)
+		itsStatus(0), itsChannel(0), itsPagePeriod(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPPageperiodEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBPageperiodAckEvent();
+	TS = TbbSettings::instance();
 	setWaitAck(true);
 }
 	  
 //--Destructor for PageperiodCmd.---------------------------------------------------
-PageperiodCmd::~PageperiodCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+PageperiodCmd::~PageperiodCmd() { }
 
 // ----------------------------------------------------------------------------
 bool PageperiodCmd::isValid(GCFEvent& event)
@@ -63,28 +55,25 @@ bool PageperiodCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE = new TBBPageperiodEvent(event);
+	TBBPageperiodEvent tbb_event(event);
 	
 	int32 boardnr;
-	int32 channelnr;
-	TS->convertRcu2Ch(itsTBBE->rcu,&boardnr,&channelnr);
+	TS->convertRcu2Ch(tbb_event.rcu,&boardnr,&itsChannel);
 		
 	setBoardNr(boardnr);
 			
-	itsTBBackE->status_mask = 0;
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPPAGEPERIOD;
-	itsTPE->status			=	0;
-	itsTPE->channel 		= channelnr; 
-	
-	delete itsTBBE;	
+	itsStatus = 0;
 }
 
 // ----------------------------------------------------------------------------
 void PageperiodCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPPageperiodEvent tp_event;
+	tp_event.opcode = TPPAGEPERIOD;
+	tp_event.status = 0;
+	tp_event.channel = static_cast<uint32>(itsChannel); 
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -93,16 +82,15 @@ void PageperiodCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPPageperiodAckEvent(event);
+		TPPageperiodAckEvent tp_ack(event);
 		
-		itsBoardStatus 					= itsTPackE->status;
-		itsTBBackE->pageperiod	= itsTPackE->pageperiod;
-		
+		if (tp_ack.status == 0) {
+			itsPagePeriod = tp_ack.pageperiod;
+		}
 		LOG_DEBUG_STR(formatString("Received PageperiodAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	setDone(true);
 }
@@ -110,8 +98,14 @@ void PageperiodCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void PageperiodCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;
+	TBBPageperiodAckEvent tbb_ack;
+	
+	tbb_ack.pageperiod = itsPagePeriod;
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
 	 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

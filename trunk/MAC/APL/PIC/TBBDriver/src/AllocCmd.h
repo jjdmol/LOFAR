@@ -36,7 +36,7 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
 		class AllocCmd : public Command 
 		{
@@ -66,11 +66,7 @@ namespace LOFAR {
 				//uint32	itsBoardMask;  // mask indicates the boards to communicate with
 				uint32	itsRcuStatus;
 				uint32	itsChannelMask[MAX_N_TBBOARDS];
-								
-				TPAllocEvent			*itsTPE;
-				TPAllocAckEvent		*itsTPackE;
-				TBBAllocEvent			*itsTBBE;
-				TBBAllocAckEvent	*itsTBBackE;
+				uint32	itsStatus[MAX_N_TBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

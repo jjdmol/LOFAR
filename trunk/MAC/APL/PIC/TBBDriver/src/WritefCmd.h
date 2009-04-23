@@ -36,57 +36,52 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 		
-		
-		class WritefCmd : public Command 
-		{
-			public:
-		    enum flashStage {idle, erase_flash, write_flash, verify_flash};
-				
-        // Constructors for a WritefCmd object.
-				WritefCmd();
-	  
-				// Destructor for WritefCmd.
-				virtual ~WritefCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class WritefCmd : public Command 
+{
+public:
+	enum flashStage {idle, unprotect, protect, erase_flash, write_flash, verify_flash};
+	
+	// Constructors for a WritefCmd object.
+	WritefCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for WritefCmd.
+	virtual ~WritefCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+	bool readFiles();
 				
-				bool readFiles();
-							
-				uint8 charToHex(int ch);
-				      
-			private:
-				TbbSettings *TS;
-				
-				flashStage	itsStage;
-				
-				int32		itsImage;
-				int32		itsSector;
-				int32		itsBlock;
-				int32		itsImageSize;
-				int32		itsDataPtr;
-				char		itsFileNameTp[64];
-				char		itsFileNameMp[64];
-				
-								
-				TPWritefEvent					*itsTPE;
-				TPWritefAckEvent			*itsTPackE;
-				TBBWriteImageEvent		*itsTBBE;
-				TBBWriteImageAckEvent	*itsTBBackE;
-				uint8									*itsImageData; // data from hex files
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	uint8 charToHex(int ch);
+	
+private:
+	TbbSettings *TS;
+	
+	flashStage	itsStage;
+	
+	int32		itsImage;
+	int32		itsSector;
+	int32		itsBlock;
+	int32		itsImageSize;
+	int32		itsDataPtr;
+	char		itsFileNameTp[64];
+	char		itsFileNameMp[64];
+	uint32	itsPassword;
+	uint8		*itsImageData; // data from hex files
+	
+	// return status
+	uint32	itsStatus;
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

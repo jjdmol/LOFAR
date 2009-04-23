@@ -36,39 +36,37 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class TrigReleaseCmd : public Command 
-		{
-			public:
-				// Constructors for a TrigReleaseCmd object.
-				TrigReleaseCmd();
-	  
-				// Destructor for TrigReleaseCmd.
-				virtual ~TrigReleaseCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class TrigReleaseCmd : public Command 
+{
+public:
+	// Constructors for a TrigReleaseCmd object.
+	TrigReleaseCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for TrigReleaseCmd.
+	virtual ~TrigReleaseCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				TbbSettings *TS;
-				
-				int32		itsStage;
-				uint32	itsChannelStopMask[MAX_N_TBBOARDS];
-				uint32	itsChannelStartMask[MAX_N_TBBOARDS];
-				
-				TPTrigReleaseEvent			*itsTPE;
-				TPTrigReleaseAckEvent		*itsTPackE;
-				TBBTrigReleaseEvent			*itsTBBE;
-				TBBTrigReleaseAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	int32  itsStage;
+	uint32 itsMp;
+	uint32 itsMpMask;
+	uint32 itsChannelStopMask[MAX_N_TBBOARDS];
+	uint32 itsChannelStartMask[MAX_N_TBBOARDS];
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 
