@@ -730,13 +730,14 @@ epilogue_3_6:
 _beamform_up_to_6_stations_and_3_beams:
 
 	lwz	11,8(1)		
-	slwi	11,11,1
-	addic	0,10,-1
-	addze	11,11
-	slwi	11,11,2
+	slwi	10,10,2
+	slwi	11,11,3
+	add	11,11,10
+	lwz	10,12(1)		
 	addis	11,11,jump_table@ha
+	slwi	10,10,6
+	add	11,11,10
 	lwz	11,jump_table@l(11)
-	mtctr	11
 
 	srwi	9,9,1
 	addi	9,9,-1
@@ -770,92 +771,269 @@ _beamform_up_to_6_stations_and_3_beams:
 	add	25,23,4
 
 	li	0,8
-	addi	11,8,-2*8
 
+	mtctr	11
 	bctr
 
-first_time_1:
+first_time_1_1:
 
+#define NR_BEAMS    1
 #define NR_STATIONS 1
+#elsif 
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_1:
+not_first_time_1_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 #undef NR_STATIONS
 
-first_time_2:
+first_time_2_1:
 
 #define NR_STATIONS 2
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_2:
+not_first_time_2_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 #undef NR_STATIONS
 
-first_time_3:
+first_time_3_1:
 
 #define NR_STATIONS 3
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_3:
+not_first_time_3_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 #undef NR_STATIONS
 
-first_time_4:
+first_time_4_1:
 
 #define NR_STATIONS 4
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_4:
+not_first_time_4_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 #undef NR_STATIONS
 
-first_time_5:
+first_time_5_1:
 
 #define NR_STATIONS 5
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_5:
+not_first_time_5_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 #undef NR_STATIONS
 
-first_time_6:
+first_time_6_1:
 
 #define NR_STATIONS 6
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
 
-not_first_time_6:
+not_first_time_6_1:
 
 #undef FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 #undef NR_STATIONS
+#undef NR_BEAMS
+	b	epilogue
+
+first_time_1_2:
+
+#define NR_BEAMS    2
+#define NR_STATIONS 1
+#elsif 
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_1_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_2_2:
+
+#define NR_STATIONS 2
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_2_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_3_2:
+
+#define NR_STATIONS 3
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_3_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_4_2:
+
+#define NR_STATIONS 4
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_4_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_5_2:
+
+#define NR_STATIONS 5
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_5_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_6_2:
+
+#define NR_STATIONS 6
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_6_2:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+#undef NR_STATIONS
+#undef NR_BEAMS
+	b	epilogue
+
+first_time_1_3:
+
+#define NR_BEAMS    3
+#define NR_STATIONS 1
+#elsif 
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_1_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_2_3:
+
+#define NR_STATIONS 2
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_2_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_3_3:
+
+#define NR_STATIONS 3
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_3_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_4_3:
+
+#define NR_STATIONS 4
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_4_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_5_3:
+
+#define NR_STATIONS 5
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_5_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+#undef NR_STATIONS
+
+first_time_6_3:
+
+#define NR_STATIONS 6
+#define FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+	b	epilogue
+
+not_first_time_6_3:
+
+#undef FIRST_TIME
+#include "BeamFormerAsm6St3Bm.inc"
+#undef NR_STATIONS
+#undef NR_BEAMS
 
 epilogue:
 
@@ -886,12 +1064,37 @@ epilogue:
 
 jump_table:
 	.long	illegal, illegal
-	.long	not_first_time_1, first_time_1
-	.long	not_first_time_2, first_time_2
-	.long	not_first_time_3, first_time_3
-	.long	not_first_time_4, first_time_4
-	.long	not_first_time_5, first_time_5
-	.long	not_first_time_6, first_time_6
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	not_first_time_1_1, first_time_1_1
+	.long	not_first_time_2_1, first_time_2_1
+	.long	not_first_time_3_1, first_time_3_1
+	.long	not_first_time_4_1, first_time_4_1
+	.long	not_first_time_5_1, first_time_5_1
+	.long	not_first_time_6_1, first_time_6_1
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	not_first_time_1_2, first_time_1_2
+	.long	not_first_time_2_2, first_time_2_2
+	.long	not_first_time_3_2, first_time_3_2
+	.long	not_first_time_4_2, first_time_4_2
+	.long	not_first_time_5_2, first_time_5_2
+	.long	not_first_time_6_2, first_time_6_2
+	.long	illegal, illegal
+	.long	illegal, illegal
+	.long	not_first_time_1_3, first_time_1_3
+	.long	not_first_time_2_3, first_time_2_3
+	.long	not_first_time_3_3, first_time_3_3
+	.long	not_first_time_4_3, first_time_4_3
+	.long	not_first_time_5_3, first_time_5_3
+	.long	not_first_time_6_3, first_time_6_3
+	.long	illegal, illegal
 
 illegal:
 	trap
