@@ -1,3 +1,5 @@
+AM_CPPFLAGS 					= -DUSES_NEW_IOSTREAMS -I../src
+
 check_PROGRAMS 					= tRTDButilities tClaimManager
 
 TESTS							= 
