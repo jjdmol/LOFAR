@@ -42,6 +42,7 @@ static const uint32 TBB_PAGE_SEL_ERROR       = 0x00000800;
 static const uint32 TBB_ADDR_SEL_ERROR       = 0x00001000;
 static const uint32 TBB_MODE_SEL_ERROR       = 0x00002000;
 static const uint32 TBB_IMAGE_SEL_ERROR      = 0x00004000;
+static const uint32 TBB_PROTECT_ERROR        = 0x00008000;
 
 static const uint32 TBB_CRC_ERROR_MP0        = 0x00010000;
 static const uint32 TBB_CRC_ERROR_MP1        = 0x00020000;
@@ -663,7 +664,7 @@ event = {
 		type = "uint32[MAX_N_TBBOARDS]";
 	};
 	param = {
-		name = "swversion";
+		name = "tpswversion";
 		type = "uint32[MAX_N_TBBOARDS]";
 	};
 	param = {
@@ -671,7 +672,7 @@ event = {
 		type = "uint32[MAX_N_TBBOARDS]";
 	};
 	param = {
-		name = "tpversion";
+		name = "tphwversion";
 		type = "uint32[MAX_N_TBBOARDS]";
 	};
 	param = {
@@ -779,6 +780,18 @@ event = {
 	param = {
 		name = "Tmp3";
 		type = "uint32[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Image";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "WatchDogMode";
+		type = "uint8[MAX_N_TBBOARDS]";
+	};
+	param = {
+		name = "Pgood";
+		type = "uint8[MAX_N_TBBOARDS]";
 	};
 };
 
@@ -960,6 +973,10 @@ event  = {
 	param = {
 		name = "filename_mp";
 		type = "char[64]";
+	};
+	param = {
+		name = "password";
+		type = "uint32";
 	};
 };
 
