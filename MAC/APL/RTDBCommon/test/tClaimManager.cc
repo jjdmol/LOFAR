@@ -23,8 +23,8 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APL/RTDBCommon/CM_Protocol.ph>
 #include <APL/RTDBCommon/ClaimMgrTask.h>
+#include "CM_Protocol.ph"
 #include "tClaimManager.h"
 
 namespace LOFAR {
