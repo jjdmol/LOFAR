@@ -53,9 +53,14 @@ prelude = << PRELUDE_END
 	static const uint32 TPRESET       = 0x00000711;  // OUT reset to facory image
 	static const uint32 TPCONFIG      = 0x00000712;  // OUT reconfigure image
 	//--Remote system update----      
+	static const uint32 TPERASEFSPEC  = 0x00000719;  // OUT erase flash memory image 0
 	static const uint32 TPERASEF      = 0x00000720;  // OUT erase flash memory
 	static const uint32 TPREADF       = 0x00000721;  // IN/OUT read flash memory
 	static const uint32 TPWRITEF      = 0x00000722;  // OUT write flash memory
+	static const uint32 TPWRITEFSPEC  = 0x00000723;  // OUT write flash memory image 0
+	static const uint32 TPPROTECT     = 0x00000724;  // OUT protect writing to image 0
+	static const uint32 TPUNPROTECT   = 0x00000725;  // OUT unprotect writing to image 0
+	
 	//--DDR2 acces--------------      
 	static const uint32 TPREADW       = 0x00000730;  // IN/OUT read 64bit word from mp
 	static const uint32 TPWRITEW      = 0x00000731;  // OUT write 64bit wort to mp
@@ -687,7 +692,7 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "swversion";
+		name = "tpswversion";
 		type = "uint32";
 	};
 	param = {
@@ -695,7 +700,7 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "tpversion";
+		name = "tphwversion";
 		type = "uint32";
 	};
 	param = {
@@ -828,6 +833,10 @@ event = {
 		name = "V12";
 		type = "uint32";
 	};
+	param = {
+		name = "info";
+		type = "uint32[10]";
+	};
 };
 
 event  = {
@@ -858,6 +867,10 @@ event  = {
 	};
 	param = {
 		name = "resetflag";
+		type = "uint32";
+	};
+	param = {
+		name = "imagenr";
 		type = "uint32";
 	};
 };
@@ -1054,6 +1067,38 @@ event  = {
 
 event  = {
 	noheader;
+	signal = ERASEF_SPEC;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = ERASEF_SPEC_ACK;
+	dir = INOUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
 	signal = READF;
 	dir = OUT;
 	param = {
@@ -1113,6 +1158,102 @@ event  = {
 event  = {
 	noheader;
 	signal = WRITEF_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF_SPEC;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "addr";
+		type = "uint32";
+	};
+	param = {
+		name = "data";
+		type = "uint32[256]";
+	};
+};
+
+event  = {
+	noheader;
+	signal = WRITEF_SPEC_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = PROTECT;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = PROTECT_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UNPROTECT;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "password";
+		type = "uint32";
+	};
+};
+
+event  = {
+	noheader;
+	signal = UNPROTECT_ACK;
 	dir = IN;
 	param = {
 		name = "opcode";

@@ -36,35 +36,43 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class StatusCmd : public Command 
-		{
-			public:
-				// Constructors for a StatusCmd object.
-				StatusCmd();
-	  
-				// Destructor for StatusCmd.
-				virtual ~StatusCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class StatusCmd : public Command 
+{
+public:
+	// Constructors for a StatusCmd object.
+	StatusCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for StatusCmd.
+	virtual ~StatusCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				      
-			private:
-				TbbSettings *TS;
-				
-				TPStatusEvent			*itsTPE;
-				TPStatusAckEvent	*itsTPackE;
-				TBBStatusEvent		*itsTBBE;
-				TBBStatusAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	      
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	uint32 itsV12[MAX_N_TBBOARDS];
+	uint32 itsV25[MAX_N_TBBOARDS];
+	uint32 itsV33[MAX_N_TBBOARDS];
+	uint32 itsTpcb[MAX_N_TBBOARDS];
+	uint32 itsTtp[MAX_N_TBBOARDS];
+	uint32 itsTmp0[MAX_N_TBBOARDS];
+	uint32 itsTmp1[MAX_N_TBBOARDS];
+	uint32 itsTmp2[MAX_N_TBBOARDS];
+	uint32 itsTmp3[MAX_N_TBBOARDS];
+	uint32 itsImage[MAX_N_TBBOARDS];
+	uint32 itsWatchDogMode[MAX_N_TBBOARDS];
+	uint32 itsPgood[MAX_N_TBBOARDS];
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

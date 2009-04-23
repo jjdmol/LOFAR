@@ -34,24 +34,17 @@ using	namespace TBB;
 
 //--Constructors for a ReadwCmd object.----------------------------------------
 ReadwCmd::ReadwCmd():
-		itsBoardStatus(0)
+		itsStatus(0), itsMp(0), itsAddr(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPReadwEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBReadwAckEvent();
-	
-	itsTBBackE->status_mask = 0;
+	TS = TbbSettings::instance();
+	for (int i = 0; i < 8; i++) {
+		itsData[i] = 0;
+	}
 	setWaitAck(true);
 }
 	  
 //--Destructor for ReadwCmd.---------------------------------------------------
-ReadwCmd::~ReadwCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+ReadwCmd::~ReadwCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ReadwCmd::isValid(GCFEvent& event)
@@ -65,28 +58,28 @@ bool ReadwCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBReadwEvent(event);
+	TBBReadwEvent tbb_event(event);
 	
-	itsTBBackE->status_mask = 0;
-	if (TS->isBoardActive(itsTBBE->board)) {	
-		setBoardNr(itsTBBE->board);
+	if (TS->isBoardActive(tbb_event.board)) {	
+		setBoardNr(tbb_event.board);
 	} else {
-		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		itsStatus |= TBB_NO_BOARD ;
 		setDone(true);
 	}
-	
-	// initialize TP send frame
-	itsTPE->opcode	= TPREADW;
-	itsTPE->status	= 0;
-	itsTPE->mp			=	static_cast<uint32>(itsTBBE->mp);
-	itsTPE->addr		=	itsTBBE->addr;
-	delete itsTBBE;	
+	itsMp = static_cast<uint32>(tbb_event.mp);
+	itsAddr = tbb_event.addr;
 }
 
 // ----------------------------------------------------------------------------
 void ReadwCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPReadwEvent tp_event;
+	tp_event.opcode = TPREADW;
+	tp_event.status = 0;
+	tp_event.mp     = itsMp;
+	tp_event.addr   = itsAddr;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -95,17 +88,16 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 	} else {
-		itsTPackE = new TPReadwAckEvent(event);
+		TPReadwAckEvent tp_ack(event);
 		
-		itsBoardStatus	= itsTPackE->status;
-		for (int i = 0; i < 8; i++) {
-			itsTBBackE->word[i]	= itsTPackE->word[i];
+		if (tp_ack.status == 0) {
+			for (int i = 0; i < 8; i++) {
+				itsData[i] = tp_ack.word[i];
+			}
 		}
-		
 		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	setDone(true);
 }
@@ -113,8 +105,17 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;	
+	TBBReadwAckEvent tbb_ack;
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}	
+	
+	for (int i = 0; i < 8; i++) {
+		tbb_ack.word[i]= itsData[i];
+	}
+	
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

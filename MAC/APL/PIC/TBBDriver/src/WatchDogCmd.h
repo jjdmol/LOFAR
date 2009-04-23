@@ -36,38 +36,34 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class WatchDogCmd : public Command 
-		{
-			public:
-				// Constructors for a WatchDogCmd object.
-				WatchDogCmd();
-	  
-				// Destructor for WatchDogCmd.
-				virtual ~WatchDogCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class WatchDogCmd : public Command 
+{
+public:
+	// Constructors for a WatchDogCmd object.
+	WatchDogCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for WatchDogCmd.
+	virtual ~WatchDogCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				uint32	itsBoardMask;
-				int			itsBoardNr;
-				
-				TbbSettings *TS;
-				
-				TPWatchdogEvent		*itsTPE;
-				TPWatchdogAckEvent	*itsTPackE;
-				TBBWatchdogEvent		*itsTBBE;
-				TBBWatchdogAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	
+	uint32 itsMode;
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

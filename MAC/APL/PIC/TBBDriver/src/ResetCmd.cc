@@ -37,25 +37,17 @@ using	namespace TBB;
 ResetCmd::ResetCmd():
 	itsBoardMask(0), itsBoardNr(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPResetEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBResetAckEvent();
+	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	setWaitAck(true);	
 	setRetry(false);	
 }
-	  
+
 //--Destructor for ResetCmd.---------------------------------------------------
-ResetCmd::~ResetCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+ResetCmd::~ResetCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ResetCmd::isValid(GCFEvent& event)
@@ -69,16 +61,14 @@ bool ResetCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBResetEvent(event);
+	TBBResetEvent tbb_event(event);
 	
-	itsBoardMask = itsTBBE->boardmask;
+	itsBoardMask = tbb_event.boardmask;
 	
-	itsTPE->opcode			= TPRESET;
-	itsTPE->status			=	0;
 	LOG_DEBUG_STR("boardMask= " << formatString("%08x",itsBoardMask));
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	
 	// look for first board in mask
@@ -94,17 +84,21 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 	} else {
 		setDone(true);
 	}
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTpEvent()
 {
+	
+	TPResetEvent tp_event;
+	tp_event.opcode = TPRESET;
+	tp_event.status = 0;
+
 	if (TS->boardPort(getBoardNr()).isConnected()) {
-			TS->boardPort(getBoardNr()).send(*itsTPE);
-			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+		TS->boardPort(getBoardNr()).send(tp_event);
+		TS->boardPort(getBoardNr()).setTimer(5.0);
 	}
+	LOG_DEBUG_STR("Reset is send to boardnr " << getBoardNr());
 }
 
 // ----------------------------------------------------------------------------
@@ -114,14 +108,14 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		TS->setBoardState(getBoardNr(),noBoard);
 	}	else {
-		itsTPackE = new TPResetAckEvent(event);
+		TPResetAckEvent tp_ack(event);
 		TS->setImageNr(getBoardNr(), 0);
-    if (itsTPackE->status == 0) {
+		itsStatus[getBoardNr()] = tp_ack.status;
+		if (tp_ack.status == 0) {
 			TS->setBoardState(getBoardNr(),setImage1);
 		} else {
 			TS->setBoardState(getBoardNr(),boardError);
 		}
-		delete itsTPackE;
 	}
 	
 	itsBoardNr++;
@@ -132,11 +126,10 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 			break;
 		}	
 	}
-	LOG_DEBUG_STR("boardnr=" << itsBoardNr);
 	if (itsBoardNr < TS->maxBoards()) {
 		setBoardNr(itsBoardNr);
 	} else {
-		setSleepTime(15.0);
+		setSleepTime(10.0);
 		setDone(true);
 	}
 }
@@ -144,10 +137,15 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBResetAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

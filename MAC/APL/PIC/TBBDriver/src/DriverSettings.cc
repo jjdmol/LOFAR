@@ -33,6 +33,11 @@ using namespace LOFAR;
 	//using namespace GCFCommon;
 using namespace TBB;
 
+// rcu to channel conversion, rcu-0 is on channel-2
+static const int RCU_TO_CH_TABLE[16] = {2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 4, 5, 8, 9, 12, 13};
+
+// channel to rcu conversion, ch-0 is rcu-8
+static const int CH_TO_RCU_TABLE[16] = {8, 9, 0, 1, 10, 11, 2, 3, 12, 13, 4, 5, 14, 15, 6, 7};
 
 //
 // Initialize singleton
@@ -67,19 +72,13 @@ TbbSettings::TbbSettings() :
 	itsTimeOut(0.2),							// response timeout
 	itsSaveTriggersToFile(0),			// save trigger info to a file
 	itsActiveBoardsMask(0),				// mask with active boards
-	itsRcu2ChTable(0),						// conversion table Rcu-number to Channnel-number
-	itsCh2RcuTable(0),						// conversion table Channel-number to Rcu-number
 	itsBoardInfo(0),
 	itsChannelInfo(0) 								// Struct with channel info
 {
-	itsRcu2ChTable = new int32[itsChannelsOnBoard];
-	itsCh2RcuTable = new int32[itsChannelsOnBoard];
 }
 
 TbbSettings::~TbbSettings()
 {
-	if (itsRcu2ChTable) delete itsRcu2ChTable;
-	if (itsCh2RcuTable) delete itsCh2RcuTable;
 	if (itsBoardInfo) delete itsBoardInfo;
 	if (itsChannelInfo) delete itsChannelInfo;
 	if (theirTbbSettings) delete theirTbbSettings;	
@@ -88,57 +87,49 @@ TbbSettings::~TbbSettings()
 //---- get Tbb settings loaded from config file ---
 void TbbSettings::getTbbSettings()
 { 
-  bool configOK = true;
-  
-  // the conversion table must be set 1e
-  char chname[64];
-  for (int32 channelnr = 0; channelnr < itsChannelsOnBoard; channelnr++) {
-  	snprintf(chname, 64, "TBBDriver.TBB_CH_%d", channelnr);	
-  	try { setConversionTable(globalParameterSet()->getInt32(chname), channelnr); }
-  	catch (...) { LOG_INFO_STR(formatString("%s not found",chname)); configOK = false; } 
-  }
-  
-  int32 n_tbboards = MAX_N_TBBOARDS;
-  try { n_tbboards = globalParameterSet()->getInt32("RS.N_TBBOARDS"); }
-  catch (...) { LOG_INFO_STR(formatString("RS.N_TBBOARDS not found")); }
-  LOG_INFO_STR(formatString("RS.N_TBBOARDS=%d", n_tbboards));
-  // setMaxBoards() must be set 2e
-  setMaxBoards(n_tbboards);
-  //setMaxBoards(MAX_N_TBBOARDS);
-  
-  try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
-  catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
-  
-  try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }
-  catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
-  
-  try { itsMaxRetries = globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"); }
-  catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_RETRIES not found")); configOK = false; }
-    
-  try { itsIfName = globalParameterSet()->getString("TBBDriver.IF_NAME"); }
-  catch (...) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
-    
-  char dstip[64];
-  char srcip[64];
-  char srcmac[64];
-  char dstmac[64];
-  for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
-  	snprintf(srcip,  64, "TBBDriver.SRC_IP_ADDR_%d", boardnr);
-  	snprintf(dstip,  64, "TBBDriver.DST_IP_ADDR_%d", boardnr);
+	bool configOK = true;
+	
+	int32 n_tbboards = MAX_N_TBBOARDS;
+	try { n_tbboards = globalParameterSet()->getInt32("RS.N_TBBOARDS"); }
+	catch (...) { LOG_INFO_STR(formatString("RS.N_TBBOARDS not found")); }
+	LOG_INFO_STR(formatString("RS.N_TBBOARDS=%d", n_tbboards));
+	// setMaxBoards() must be set 2e
+	setMaxBoards(n_tbboards);
+	//setMaxBoards(MAX_N_TBBOARDS);
+	
+	try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
+	catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
+	
+	try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }
+	catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
+	
+	try { itsMaxRetries = globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"); }
+	catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_RETRIES not found")); configOK = false; }
+		
+	try { itsIfName = globalParameterSet()->getString("TBBDriver.IF_NAME"); }
+	catch (...) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
+		
+	char dstip[64];
+	char srcip[64];
+	char srcmac[64];
+	char dstmac[64];
+	for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
+		snprintf(srcip,  64, "TBBDriver.SRC_IP_ADDR_%d", boardnr);
+		snprintf(dstip,  64, "TBBDriver.DST_IP_ADDR_%d", boardnr);
 		snprintf(srcmac, 64, "TBBDriver.MAC_ADDR_%d", boardnr);
 		snprintf(dstmac, 64, "TBBDriver.DST_MAC_ADDR_%d", boardnr);
 		
 		try { itsBoardInfo[boardnr].srcIp = globalParameterSet()->getString(srcip); }
-  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
 		
 		try { itsBoardInfo[boardnr].dstIp = globalParameterSet()->getString(dstip); }
-  	catch (APSException&) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
+		catch (APSException&) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
 		
 		try { itsBoardInfo[boardnr].srcMac = globalParameterSet()->getString(srcmac); }
-  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
 		
 		try { itsBoardInfo[boardnr].dstMac = globalParameterSet()->getString(dstmac); }
-  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
+		catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
 		
 		LOG_INFO_STR(formatString("Board %d:",boardnr));
 		LOG_INFO_STR(formatString("Control port: Mac = '%s'"
@@ -148,10 +139,8 @@ void TbbSettings::getTbbSettings()
 		LOG_INFO_STR(formatString("            : Dst Ip = '%s', Dst Mac = '%s'"
 															,itsBoardInfo[boardnr].dstIp.c_str()
 															,itsBoardInfo[boardnr].dstMac.c_str()));		
-  }
+	}
 }
-  
-  
 
 //---- setBoardPorts ------------------------------
 void TbbSettings::setBoardPorts(int board, GCFPortInterface* board_ports)
@@ -226,8 +215,8 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].boardState = setImage1;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
-	   itsBoardInfo[nr].freeToReset = true;
-      itsBoardInfo[nr].srcIp = "";
+		 itsBoardInfo[nr].freeToReset = true;
+			itsBoardInfo[nr].srcIp = "";
 		itsBoardInfo[nr].dstIp = "";
 		itsBoardInfo[nr].srcMac = "";
 		itsBoardInfo[nr].dstMac = "";
@@ -281,23 +270,15 @@ void TbbSettings::setTimeOut(double timeout)
 	itsTimeOut = timeout;
 }
 
-//---- set RCU2CH conversion table ----------------
-void TbbSettings::setConversionTable(int32 rcu, int32 channel)
-{
-	itsRcu2ChTable[rcu] = channel;
-	itsCh2RcuTable[channel] = rcu;
-	//LOG_INFO_STR(formatString("table rcu.%d = chan.%d",rcu, channel));
-}
-
 void TbbSettings::convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr)
 {
-	int32 board;		// board 0 .. 11
+	int32 board;	// board 0 .. 11
 	int32 channel;	// channel 0 .. 15
 	
 	board = (int32)(rcunr / itsChannelsOnBoard);
-	channel = itsRcu2ChTable[rcunr - (board * itsChannelsOnBoard)];
+	channel = RCU_TO_CH_TABLE[rcunr % itsChannelsOnBoard];
 	*boardnr = board;
-	*channelnr = channel;	
+	*channelnr = channel;
 }
 
 void TbbSettings::convertCh2Rcu(int32 channelnr, int32 *rcunr)
@@ -306,7 +287,7 @@ void TbbSettings::convertCh2Rcu(int32 channelnr, int32 *rcunr)
 	int32 rcu;
 	
 	boardnr = (int32)(channelnr / itsChannelsOnBoard);
-	rcu = itsCh2RcuTable[(channelnr - (boardnr * itsChannelsOnBoard))] + (boardnr * itsChannelsOnBoard);
+	rcu = CH_TO_RCU_TABLE[channelnr % itsChannelsOnBoard] + (boardnr * itsChannelsOnBoard);
 	*rcunr = rcu;
 }
 
@@ -335,16 +316,16 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].State = 'F';
 		itsChannelInfo[(boardnr * 16) + cn].StartAddr = 0;
 		itsChannelInfo[(boardnr * 16) + cn].PageSize = 0;	
-	}		
+	}
 }
 
 void TbbSettings::logChannelInfo(int32 channel)
 {
-		LOG_DEBUG_STR(formatString("Channel %d ,Rcu %d = status[0x%04X] state[%c] addr[%u] pages[%u]"
-					, channel
-					, itsChannelInfo[channel].RcuNr
-					, itsChannelInfo[channel].Status
-					, itsChannelInfo[channel].State
-					, itsChannelInfo[channel].StartAddr
-					, itsChannelInfo[channel].PageSize));
+	LOG_DEBUG_STR(formatString("Channel %d ,Rcu %d = status[0x%04X] state[%c] addr[%u] pages[%u]"
+				, channel
+				, itsChannelInfo[channel].RcuNr
+				, itsChannelInfo[channel].Status
+				, itsChannelInfo[channel].State
+				, itsChannelInfo[channel].StartAddr
+				, itsChannelInfo[channel].PageSize));
 }

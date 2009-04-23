@@ -38,62 +38,55 @@
 namespace LOFAR {
 	namespace TBB {
 		
-		typedef struct TriggerStruct {
-			int32 rcu;
-      uint32 sequence_nr;
-      uint32 time;
-      uint32 sample_nr;
-      uint32 trigger_sum;
-      uint32 trigger_samples;
-      uint32 peak_value;
-      uint16 power_before;
-      uint16 power_after;
-		};
-				
-		class MsgHandler
-		{
+typedef struct TriggerStruct {
+	int32 rcu;
+	uint32 sequence_nr;
+	uint32 time;
+	uint32 sample_nr;
+	uint32 trigger_sum;
+	uint32 trigger_samples;
+	uint32 peak_value;
+	uint16 power_before;
+	uint16 power_after;
+};
+		
+class MsgHandler
+{
+
+public:
+	// Constructors for a MsgHandler object.
+	MsgHandler();
+
+	// Destructor for MsgHandler. */
+	~MsgHandler();
 	
-			public:
-				// Constructors for a MsgHandler object.
-				MsgHandler();
+	void addTriggerClient(GCFPortInterface& port);
+	
+	void addHardwareClient(GCFPortInterface& port);
+	
+	void removeTriggerClient(GCFPortInterface& port);
+	
+	void removeHardwareClient(GCFPortInterface& port);
+	
+	void sendTrigger(GCFEvent& event, int boardnr);
+	
+	void sendError(GCFEvent& event);
+	
+	void sendBoardChange(uint32 activeboards);
+		
+	void sendTriggerMessage(GCFEvent& event);
+	
+	void saveTriggerMessage();
+	
+	void sendHardwareMessage(GCFEvent& event);
 
-				// Destructor for MsgHandler. */
-				~MsgHandler();
-				
-				void addTriggerClient(GCFPortInterface& port);
-				
-				void addHardwareClient(GCFPortInterface& port);
-				
-				void removeTriggerClient(GCFPortInterface& port);
-				
-				void removeHardwareClient(GCFPortInterface& port);
-				
-				void sendTrigger(GCFEvent& event, int boardnr);
-				
-				void sendError(GCFEvent& event);
-				
-				void sendBoardChange(uint32 activeboards);
-					
-				void sendTriggerMessage(GCFEvent& event);
-				
-				void saveTriggerMessage();
-				
-				void sendHardwareMessage(GCFEvent& event);
-
-			protected:
-				
-			private:
-				TbbSettings *TS;
-				
-				list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
-				list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
-				list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
-				
-				TBBTriggerEvent			*itsTriggerE;
-				TBBErrorEvent				*itsErrorE;
-				TBBBoardchangeEvent	*itsBoardchangeE;
-					
-		};
+private:
+	TbbSettings *TS;
+	
+	list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
+	list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
+	list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

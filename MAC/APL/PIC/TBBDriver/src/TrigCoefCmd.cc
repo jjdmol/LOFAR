@@ -36,24 +36,16 @@ using	namespace TBB;
 //--Constructors for a TrigCoefCmd object.----------------------------------------
 TrigCoefCmd::TrigCoefCmd()
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPTrigCoefEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBTrigCoefAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	setWaitAck(true);		
 }
 	  
 //--Destructor for TrigCoefCmd.---------------------------------------------------
-TrigCoefCmd::~TrigCoefCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+TrigCoefCmd::~TrigCoefCmd() { }
 
 // ----------------------------------------------------------------------------
 bool TrigCoefCmd::isValid(GCFEvent& event)
@@ -67,7 +59,7 @@ bool TrigCoefCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBTrigCoefEvent(event);
+	TBBTrigCoefEvent tbb_event(event);
 		
 	int32 board;				// board 0 .. 11
 	int32 board_channel;// board_channel 0 .. 15	
@@ -76,10 +68,10 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
-		TS->setChFilterCoefficient(channel, 0, itsTBBE->coefficients[rcunr].c0);
-		TS->setChFilterCoefficient(channel, 1, itsTBBE->coefficients[rcunr].c1);
-		TS->setChFilterCoefficient(channel, 2, itsTBBE->coefficients[rcunr].c2);
-		TS->setChFilterCoefficient(channel, 3, itsTBBE->coefficients[rcunr].c3);
+		TS->setChFilterCoefficient(channel, 0, tbb_event.coefficients[rcunr].c0);
+		TS->setChFilterCoefficient(channel, 1, tbb_event.coefficients[rcunr].c1);
+		TS->setChFilterCoefficient(channel, 2, tbb_event.coefficients[rcunr].c2);
+		TS->setChFilterCoefficient(channel, 3, tbb_event.coefficients[rcunr].c3);
 	}
 	
 	// Send only commands to boards installed
@@ -88,38 +80,37 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (TS->isBoardActive(boardnr) == false) {
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
 	// select firt channel to handle
 	nextChannelNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPTRIGCOEF;
-	itsTPE->status			=	0;
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void TrigCoefCmd::sendTpEvent()
 {
+	TPTrigCoefEvent tp_event;
+	
+	tp_event.opcode = TPTRIGCOEF;
+	tp_event.status = 0;
+	
 	// send cmd if no errors
-	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
+	if (itsStatus[getBoardNr()] == 0) {
 		uint32 mpnr = TS->getChMpNr(getChannelNr());
-		itsTPE->mp = mpnr;
+		tp_event.mp = mpnr;
 		
 		for (int ch = 0; ch < 4; ch++) {
-			itsTPE->channel[ch].c0 = TS->getChFilterCoefficient((getChannelNr() + ch), 0);
-			itsTPE->channel[ch].c1 = TS->getChFilterCoefficient((getChannelNr() + ch), 1);
-			itsTPE->channel[ch].c2 = TS->getChFilterCoefficient((getChannelNr() + ch), 2);
-			itsTPE->channel[ch].c3 = TS->getChFilterCoefficient((getChannelNr() + ch), 3);
+			tp_event.channel[ch].c0 = TS->getChFilterCoefficient((getChannelNr() + ch), 0);
+			tp_event.channel[ch].c1 = TS->getChFilterCoefficient((getChannelNr() + ch), 1);
+			tp_event.channel[ch].c2 = TS->getChFilterCoefficient((getChannelNr() + ch), 2);
+			tp_event.channel[ch].c3 = TS->getChFilterCoefficient((getChannelNr() + ch), 3);
 		}
 		
-		TS->boardPort(getBoardNr()).send(*itsTPE);
+		TS->boardPort(getBoardNr()).send(tp_event);
 		LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
 	}
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	
@@ -130,16 +121,15 @@ void TrigCoefCmd::saveTpAckEvent(GCFEvent& event)
 {
 		// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
-	}
-	else {
-		itsTPackE = new TPTrigCoefAckEvent(event);
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+	} else {
+		TPTrigCoefAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));
-			
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
+		
 		LOG_DEBUG_STR(formatString("Received TrigCoefAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	// one mp done, go to next mp
 	setChannelNr((getBoardNr() * TS->nrChannelsOnBoard()) + (TS->getChMpNr(getChannelNr()) * TS->nrMpsOnBoard()) + 3);
@@ -149,10 +139,15 @@ void TrigCoefCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigCoefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBTrigCoefAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

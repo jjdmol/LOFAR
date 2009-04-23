@@ -34,23 +34,19 @@ using	namespace TBB;
 
 //--Constructors for a WritewCmd object.----------------------------------------
 WritewCmd::WritewCmd():
-		itsBoardStatus(0)		
+		itsStatus(0), itsMp(0), itsAddr(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPWritewEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBWritewAckEvent();
-	
-	itsTBBackE->status_mask = 0;
+	TS = TbbSettings::instance();
+	for (int i = 0; i < 8; i++) {
+		itsData[i] = 0;
+	}
 	setWaitAck(true);
 }
-	  
+
 //--Destructor for WritewCmd.---------------------------------------------------
 WritewCmd::~WritewCmd()
 {
-	delete itsTPE;
-	delete itsTBBackE;
+
 }
 
 // ----------------------------------------------------------------------------
@@ -65,32 +61,34 @@ bool WritewCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WritewCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBWritewEvent(event);
+	TBBWritewEvent tbb_event(event);
 	
-	itsTBBackE->status_mask = 0;
-	if (TS->isBoardActive(itsTBBE->board)) {	
-		setBoardNr(itsTBBE->board);
+	if (TS->isBoardActive(tbb_event.board)) {	
+		setBoardNr(tbb_event.board);
+		itsMp = static_cast<uint32>(tbb_event.mp);
+		itsAddr = tbb_event.addr;
+		for (int i = 0; i < 8; i++) {
+			itsData[i] = tbb_event.word[i];
+		}
 	} else {
-		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		itsStatus |= TBB_NO_BOARD ;
 		setDone(true);
 	}
-		
-	// initialize TP send frame
-	itsTPE->opcode	= TPWRITEW;
-	itsTPE->status	= 0;
-	itsTPE->mp			=	static_cast<uint32>(itsTBBE->mp);
-	itsTPE->addr		=	itsTBBE->addr;
-	for (int i = 0; i < 8; i++) {
-		itsTPE->word[i] = itsTBBE->word[i];
-	}
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void WritewCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPWritewEvent tp_event;
+	tp_event.opcode = TPWRITEW;
+	tp_event.status = 0;
+	tp_event.mp = itsMp;
+	tp_event.addr = itsAddr;
+	for (int i = 0; i < 8; i++) {
+		tp_event.word[i] = itsData[i];
+	}
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -99,15 +97,13 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPWritewAckEvent(event);
+		TPWritewAckEvent tp_ack(event);
 		
-		itsBoardStatus	= itsTPackE->status;
-				
+		itsStatus = tp_ack.status;
 		LOG_DEBUG_STR(formatString("Received WritewAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
 	}
 	setDone(true);
 }
@@ -115,8 +111,13 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;
+	TBBWritewAckEvent tbb_ack;
+	
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

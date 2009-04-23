@@ -35,27 +35,19 @@ using	namespace TBB;
 
 //--Constructors for a TrigGenCmd object.----------------------------------------
 TrigGenCmd::TrigGenCmd():
-	itsStage(0)
+	itsMp(0), itsStage(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPTrigGenerateEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBTrigGenerateAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
-		itsChannelMask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsChannelMask[boardnr] = 0;
 	}
 	setWaitAck(true);		
 }
-	  
+
 //--Destructor for TrigGenCmd.---------------------------------------------------
-TrigGenCmd::~TrigGenCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+TrigGenCmd::~TrigGenCmd() { }
 
 // ----------------------------------------------------------------------------
 bool TrigGenCmd::isValid(GCFEvent& event)
@@ -72,14 +64,14 @@ bool TrigGenCmd::isValid(GCFEvent& event)
 void TrigGenCmd::saveTbbEvent(GCFEvent& event)
 {
 	
-	itsTBBE	= new TBBTrigGenerateEvent(event);
+	TBBTrigGenerateEvent tbb_event(event);
 	
 	// convert rcu-bitmask to tbb-channelmask
 	int32 board;				// board 0 .. 11
 	int32 board_channel;// board_channel 0 .. 15	
 	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
-		if(itsTBBE->rcu_mask.test(rcunr)) {
+		if(tbb_event.rcu_mask.test(rcunr)) {
 			TS->convertRcu2Ch(rcunr,&board,&board_channel);
 			channel = (board * TS->nrChannelsOnBoard()) + board_channel;	
 			itsChannelMask[board] |= (1 << board_channel);
@@ -95,9 +87,9 @@ void TrigGenCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (TS->isBoardActive(boardnr) == false) {
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
@@ -105,47 +97,46 @@ void TrigGenCmd::saveTbbEvent(GCFEvent& event)
 	
 	// select firt channel to handle
 	nextSelectedChannelNr();
-	//itsStage = 1;
-	// initialize TP send frame
-	itsTPE->opcode			= TPTRIGGENERATE;
-	itsTPE->status			=	0;
-	
-	delete itsTBBE;
-		
 }
 
 // ----------------------------------------------------------------------------
 void TrigGenCmd::sendTpEvent()
 {
 	// send cmd if no errors
-	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
+	if (itsStatus[getBoardNr()] == 0) {
 		switch (itsStage) {
 			case 0: {
 				// set all channels to zero
-				TPTrigReleaseEvent TPE;
-				TPE.opcode = TPTRIGRELEASE;
-				TPE.status = 0;
-				TPE.mp = 0xFFFFFFFF; 
-				//TPE.mp = TS->getChMpNr(getChannelNr());
-				TPE.channel_mask = 0;
-				TS->boardPort(getBoardNr()).send(TPE);
+				TPTrigReleaseEvent tp_event;
+				
+				tp_event.opcode = TPTRIGRELEASE;
+				tp_event.status = 0;
+				tp_event.mp = 0xFFFFFFFF; 
+				tp_event.channel_mask = 0;
+				
+				itsMp = tp_event.mp;
+				TS->boardPort(getBoardNr()).send(tp_event);
 			} break;
 			
 			case 1: {
+				TPTrigGenerateEvent tp_event;
+				tp_event.opcode = TPTRIGGENERATE;
+				tp_event.status = 0;
 				
 				if (itsChannelMask[getBoardNr()] == 0xFFFF) {
-					itsTPE->mp = 0xFFFFFFFF; // set mp = -1, all channels on all mp's will be set
-					itsTPE->channel_mask = 0xF;
+					tp_event.mp = ~0; // set mp = -1, all channels on all mp's will be set
+					tp_event.channel_mask = 0xF;
 				} else {
 				
 					uint32 mpnr = TS->getChMpNr(getChannelNr());
-					itsTPE->mp = mpnr;
+					tp_event.mp = mpnr;
 						
 					uint32 chmask = (itsChannelMask[getBoardNr()] >> (mpnr * 4)) & 0xF; // only 4 bits
-					itsTPE->channel_mask = chmask;	
+					tp_event.channel_mask = chmask;	
 				}
 				
-				TS->boardPort(getBoardNr()).send(*itsTPE);
+				itsMp = tp_event.mp;
+				TS->boardPort(getBoardNr()).send(tp_event);
 				LOG_DEBUG_STR(formatString("Sending TrigGenerate to boardnr[%d], channel_mask[0x%08X]",getBoardNr(),itsChannelMask[getBoardNr()]));
 			} break;
 			
@@ -160,32 +151,30 @@ void TrigGenCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	} else {
 		switch (itsStage) {
 			case 0: {
-				TPTrigReleaseAckEvent TPackE;
-				if ((TPackE.status >= 0xF0) && (TPackE.status <= 0xF6)) {
-					itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (TPackE.status & 0x0F)));
+				TPTrigReleaseAckEvent tp_ack(event);
+				if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+					itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
 				}
 				itsStage = 1;
 			} break;
 			
 			case 1: {
-				itsTPackE = new TPTrigGenerateAckEvent(event);
+				TPTrigGenerateAckEvent tp_ack(event);
 		
-				if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) {
-					itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+				if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+					itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
 				}
 			
 				LOG_DEBUG_STR(formatString("Received TrigGenerateAck from boardnr[%d]", getBoardNr()));
-				delete itsTPackE;
 				
-				if (itsTPE->mp == 0xFFFFFFFF) {
+				if (itsMp == 0xFFFFFFFF) {
 					// all channels done, go to next board
 					setChannelNr((getBoardNr() * 16) + 15);
 				} else {
-				
 					// one mp done, go to next mp
 					setChannelNr((getBoardNr() * 16) + (TS->getChMpNr(getChannelNr()) * 4) + 3);
 				}
@@ -204,10 +193,15 @@ void TrigGenCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigGenCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBTrigGenerateAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

@@ -34,27 +34,19 @@ using namespace TP_Protocol;
 using namespace TBB;
 
 //--Constructors for a VersionCmd object.--------------------------------------
-ArpModeCmd::ArpModeCmd()
+ArpModeCmd::ArpModeCmd(): itsMode(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPArpModeEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBArpModeAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	
 	setWaitAck(true);
 }
   
 //--Destructor for GetVersions.------------------------------------------------
-ArpModeCmd::~ArpModeCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+ArpModeCmd::~ArpModeCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ArpModeCmd::isValid(GCFEvent& event)
@@ -68,33 +60,33 @@ bool ArpModeCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ArpModeCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBArpModeEvent(event);
+	TBBArpModeEvent tbb_event(event);
 	
-	setBoardMask(itsTBBE->boardmask);
+	setBoardMask(tbb_event.boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr)) {
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
+	itsMode = tbb_event.mode;
+	
 	// select first board
 	nextBoardNr();
-	
-	// fill TP command, to send
-	itsTPE->opcode  = TPARPMODE;
-	itsTPE->status  = 0;
-	itsTPE->mode    = itsTBBE->mode;
-			
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ArpModeCmd::sendTpEvent()
 {
-		TS->boardPort(getBoardNr()).send(*itsTPE);
-		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	TPArpModeEvent tp_event;
+	tp_event.opcode = TPARPMODE;
+	tp_event.status = 0;
+	tp_event.mode = itsMode;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
@@ -102,18 +94,17 @@ void ArpModeCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPArpModeAckEvent(event);
+		TPArpModeAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
 		
 		// fill in extra code 
 		LOG_DEBUG_STR(formatString("ArpModeCmd: board[%d] %08X",
-				getBoardNr(),itsTBBackE->status_mask[getBoardNr()]));
-		
-		delete itsTPackE;
+				getBoardNr(),itsStatus[getBoardNr()]));
 	}
 	nextBoardNr();
 }
@@ -121,10 +112,15 @@ void ArpModeCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ArpModeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBArpModeAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

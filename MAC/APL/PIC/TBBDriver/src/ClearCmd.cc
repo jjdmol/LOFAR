@@ -36,24 +36,16 @@ using	namespace TBB;
 //--Constructors for a ClearCmd object.----------------------------------------
 ClearCmd::ClearCmd()
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPClearEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBClearAckEvent();
+	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
+	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
 	setWaitAck(true);		
 }
 	  
 //--Destructor for ClearCmd.---------------------------------------------------
-ClearCmd::~ClearCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;	
-}
+ClearCmd::~ClearCmd() { }
 
 // ----------------------------------------------------------------------------
 bool ClearCmd::isValid(GCFEvent& event)
@@ -67,63 +59,65 @@ bool ClearCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ClearCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBClearEvent(event);
+	TBBClearEvent tbb_event(event);
 		
-	setBoardMask(itsTBBE->boardmask);
+	setBoardMask(tbb_event.boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (TS->isBoardActive(boardnr) == false) {
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 		}
 	}
 	
 	// get first board
 	nextBoardNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPCLEAR;
-	itsTPE->status			=	0;
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ClearCmd::sendTpEvent()
 {
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TPClearEvent tp_event;
+	tp_event.opcode = TPCLEAR;
+	tp_event.status = 0;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
 void ClearCmd::saveTpAckEvent(GCFEvent& event)
 {
-	itsTPackE = new TPClearAckEvent(event);
+	TPClearAckEvent tp_ack(event);
 	
-	if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-		itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+	if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) 
+		itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));	
 	
 	// reset channel-information for selected board	
-	if (itsTPackE->status == 0) {
+	if (tp_ack.status == 0) {
 		TS->clearRcuSettings(getBoardNr());
 		TS->setBoardState(getBoardNr(),boardCleared);	
 	}
 	LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
-	delete itsTPackE;
 	
 	nextBoardNr();
-	//if (isDone()) {
-	//	setSleepTime(3.0); // clearing the registers will last 3 seconds
-	//}
+	if (getBoardNr() == -1) {
+		setSleepTime(4.0);
+	}
 }
 
 // ----------------------------------------------------------------------------
 void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBClearAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

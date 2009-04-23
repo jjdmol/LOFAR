@@ -36,38 +36,33 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+ namespace TBB {
 
-		class PageperiodCmd : public Command 
-		{
-			public:
-				// Constructors for a PageperiodCmd object.
-				PageperiodCmd();
-	  
-				// Destructor for PageperiodCmd.
-				virtual ~PageperiodCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class PageperiodCmd : public Command 
+{
+public:
+	// Constructors for a PageperiodCmd object.
+	PageperiodCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for PageperiodCmd.
+	virtual ~PageperiodCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-      
-			private:
-				TbbSettings *TS;
-				
-				TPPageperiodEvent			*itsTPE;
-				TPPageperiodAckEvent	*itsTPackE;
-				TBBPageperiodEvent		*itsTBBE;
-				TBBPageperiodAckEvent	*itsTBBackE;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	int32 itsChannel;
+	uint32 itsPagePeriod;
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

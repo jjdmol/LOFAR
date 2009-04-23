@@ -34,24 +34,17 @@ using	namespace TBB;
 
 //--Constructors for a WriterCmd object.----------------------------------------
 WriterCmd::WriterCmd():
-		itsBoardStatus(0)
+		itsStatus(0), itsMp(0), itsPid(0), itsRegId(0)
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPWriterEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBWriterAckEvent();
-	
-	itsTBBackE->status_mask = 0;
+	TS = TbbSettings::instance();
 	setWaitAck(true);
+	for(int an = 0; an < 3;an++) {
+		itsData[an] = 0;
+	}
 }
 	  
 //--Destructor for WriterCmd.---------------------------------------------------
-WriterCmd::~WriterCmd()
-{
-	delete itsTPE;
-	delete itsTBBackE;
-}
+WriterCmd::~WriterCmd() { }
 
 // ----------------------------------------------------------------------------
 bool WriterCmd::isValid(GCFEvent& event)
@@ -65,36 +58,38 @@ bool WriterCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WriterCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBWriterEvent(event);
+	TBBWriterEvent tbb_event(event);
 		
-	itsTBBackE->status_mask = 0;
-	if (TS->isBoardActive(itsTBBE->board)) {	
-		setBoardNr(itsTBBE->board);
+	if (TS->isBoardActive(tbb_event.board)) {	
+		setBoardNr(tbb_event.board);
+		itsMp = static_cast<uint32>(tbb_event.mp);
+		itsPid = static_cast<uint32>(tbb_event.pid);
+		itsRegId = static_cast<uint32>(tbb_event.regid);
+		for(int an = 0; an < 3;an++) {
+			itsData[an] = tbb_event.data[an];
+		}
 	} else {
-		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		itsStatus |= TBB_NO_BOARD ;
 		setDone(true);
 	}
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPWRITER;
-	itsTPE->status			=	0;
-	itsTPE->mp					= static_cast<uint32>(itsTBBE->mp);
-	itsTPE->pid	 				= static_cast<uint32>(itsTBBE->pid);
-	itsTPE->regid				= static_cast<uint32>(itsTBBE->regid);
-	
-	for(int an = 0; an < 3;an++) {
-  		itsTPE->data[an] = itsTBBE->data[an];
-  }
-	
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void WriterCmd::sendTpEvent()
 {
+	TPWriterEvent tp_event;
+	tp_event.opcode = TPWRITER;
+	tp_event.status = 0;
+	tp_event.mp = itsMp;
+	tp_event.pid = itsPid;
+	tp_event.regid = itsRegId;
+	for (int an = 0; an < 3; an++) {
+		tp_event.data[an] = itsData[an];
+	}
+
 	//LOG_DEBUG_STR(formatString("send Writer tpevent %d %d %d %u %u %u",
-	//							itsTBBE->mp,itsTBBE->pid,itsTBBE->regid,itsTBBE->data[0],itsTBBE->data[1],itsTBBE->data[2]));	
-	TS->boardPort(getBoardNr()).send(*itsTPE);
+	//							tbb_event.mp,tbb_event.pid,tbb_event.regid,tbb_event.data[0],tbb_event.data[1],tbb_event.data[2]));	
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -103,14 +98,13 @@ void WriterCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+		itsStatus |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPWriterAckEvent(event);
+		TPWriterAckEvent tp_ack(event);
 	
-		itsBoardStatus = itsTPackE->status;
+		itsStatus = tp_ack.status;
 		
-		//LOG_DEBUG_STR(formatString("Received WriterAck from board %d [0x%08X]", getBoardNr(), itsTPackE->status));
-		delete itsTPackE;
+		//LOG_DEBUG_STR(formatString("Received WriterAck from board %d [0x%08X]", getBoardNr(), tp_ack.status));
 	}
 	setDone(true);
 }
@@ -118,8 +112,14 @@ void WriterCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WriterCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status_mask == 0)
-			itsTBBackE->status_mask = TBB_SUCCESS;
-	//LOG_DEBUG_STR(formatString("send Writer tbbackevent board %d [0x%08X]", getBoardNr(), itsTBBackE->status_mask)); 
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	TBBWriterAckEvent tbb_ack;
+	
+	if (itsStatus == 0) {
+		tbb_ack.status_mask = TBB_SUCCESS;
+	} else {
+		tbb_ack.status_mask = itsStatus;
+	}
+	
+	//LOG_DEBUG_STR(formatString("send Writer tbbackevent board %d [0x%08X]", getBoardNr(), itsStatus)); 
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

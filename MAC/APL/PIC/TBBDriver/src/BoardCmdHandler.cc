@@ -30,23 +30,20 @@
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "BoardCmdHandler.h"
 
-
-
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using	namespace TBB;
 
-BoardCmdHandler::BoardCmdHandler(GCFTimerPort* port)
-  : GCFFsm((State)&BoardCmdHandler::idle_state)
-{		
+BoardCmdHandler::BoardCmdHandler(GCFTimerPort* port):
+	GCFTask((State)&BoardCmdHandler::idle_state, "BoardHandler")
+{
 	itsSleepTimer = port;
-	TS	= TbbSettings::instance();
+	TS = TbbSettings::instance();
 	itsDone = true;
 	itsRetries = 0;
 	itsClientPort	= 0;
 	itsCmd = 0;
-			
 }
 
 BoardCmdHandler::~BoardCmdHandler()
@@ -57,22 +54,21 @@ BoardCmdHandler::~BoardCmdHandler()
 
 GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  switch (event.signal)	{
-  	
-  	case F_INIT: {
-  	} break;
-  	
-  	case F_ENTRY: {
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	switch (event.signal) {
+		case F_INIT: {
+		} break;
+
+		case F_ENTRY: {
 			//itsCmd = 0;
 			if (itsCmd) delete itsCmd;
 		} break;			
-	  
-	  case F_TIMER: {
-	  } break;
+
+		case F_TIMER: {
+		} break;
 	  	
-    case F_EXIT: {
-  	} break;
+		case F_EXIT: {
+		} break;
 
 		default: {
 			if (itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
@@ -85,23 +81,21 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 			}	else {
 				status = GCFEvent::NOT_HANDLED;
 			}
-    } break;
+		} break;
 	}
 	return(status);
 }
 
 GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal)	{
-  	
-  	case F_INIT: {
-  	} break;
-  	
-  	case F_ENTRY: {
+		case F_INIT: {
+		} break;
+
+		case F_ENTRY: {
 			if (itsCmd != 0) {
-				if (itsCmd->isDone()) {
-					itsDone = true;
+				if (itsDone) {
 					itsCmd->sendTbbAckEvent(itsClientPort);
 					TRAN(BoardCmdHandler::idle_state);
 				} else {
@@ -113,32 +107,32 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 		} break;
 		
 		case F_TIMER: {
-	  } break;			
-	  
-    case F_EXIT: {
-  	} break;
+		} break;			
+		
+		case F_EXIT: {
+		} break;
 
 		default: {
-    } break;
+		} break;
 	}
 	return(status);
 }
- 
+
 
 GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch(event.signal) {
-  	case F_INIT: {
-		}	break;
-  	
-  	case F_ENTRY: {
+		case F_INIT: {
+		} break;
+
+		case F_ENTRY: {
 			// if cmd returns no ack or board/channel is not selected or not responding return to send_state		
 			if (!itsCmd->waitAck()) {
 				TRAN(BoardCmdHandler::send_state);
 			}
-		}	break;
-		    
+		} break;
+
 		case F_TIMER: {
 			if (&port == itsSleepTimer) {
 				TRAN(BoardCmdHandler::send_state);	
@@ -151,7 +145,7 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 				itsCmd->sendTpEvent();
 				itsRetries++;
 				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsCmd->getBoardNr(), itsRetries));	
-			}	else {
+			} else {
 				if (itsRetries == TS->maxRetries()) {
 					TS->setBoardState(itsCmd->getBoardNr(),boardError);
 				}
@@ -160,22 +154,19 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 					itsSleepTimer->setTimer(itsCmd->getSleepTime());
 					itsCmd->setSleepTime(0.0);
 				} else {
+					if (itsCmd->isDone()) {
+						itsDone = true;
+					}
 					TRAN(BoardCmdHandler::send_state);
 				}
 			}	
-			/*
-			if (itsCmd->isDone() && itsCmd->getSleepTime() == 0) {
-				TRAN(BoardCmdHandler::send_state);
-			}
-			*/
-			 
-		}	break;
-		
-    case F_EXIT: {
 		} break;
-      
-    default: {
-    	LOG_DEBUG_STR("default cmd");
+		
+		case F_EXIT: {
+		} break;
+
+		default: {
+			LOG_DEBUG_STR("default cmd");
 			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
 				itsCmd->saveTpAckEvent(event);
@@ -183,9 +174,12 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 					itsSleepTimer->setTimer(itsCmd->getSleepTime());
 					itsCmd->setSleepTime(0);
 				} else {
+					if (itsCmd->isDone()) {
+						itsDone = true;
+					}
 					TRAN(BoardCmdHandler::send_state);
 				}
-			}	else {
+			} else {
 				status = GCFEvent::NOT_HANDLED;
 			}
 		}	break;

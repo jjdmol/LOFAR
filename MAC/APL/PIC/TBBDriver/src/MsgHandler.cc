@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <time.h>
 
 #include "MsgHandler.h"
 
@@ -32,18 +31,10 @@ namespace LOFAR {
 
 MsgHandler::MsgHandler()
 {
-	TS						= TbbSettings::instance();
-	itsTriggerE		= new TBBTriggerEvent();
-	itsErrorE			=	new TBBErrorEvent();
-	itsBoardchangeE	= new	TBBBoardchangeEvent();
+	TS = TbbSettings::instance();
 }
 
-MsgHandler::~MsgHandler()
-{
-	delete itsTriggerE;
-	delete itsErrorE;
-	delete itsBoardchangeE;
-}
+MsgHandler::~MsgHandler() { }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::addTriggerClient(GCFPortInterface& port)
@@ -79,30 +70,26 @@ void MsgHandler::removeHardwareClient(GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 {
-	TPTriggerEvent	TPE(event);
-  
-	time_t timenow = time(NULL);	
-	if (timenow > (TPE.trigger.time + 1)) {
-		LOG_WARN_STR("trigger canceled dT=" << (timenow - TPE.trigger.time) << " sec");
-		return;
-	}
-	int channel = TPE.trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
-	TS->convertCh2Rcu(channel, &itsTriggerE->rcu);
-	itsTriggerE->sequence_nr			=	TPE.trigger.sequence_nr;
-	itsTriggerE->time							=	TPE.trigger.time;
-	itsTriggerE->sample_nr				= TPE.trigger.sample_nr;
-	itsTriggerE->trigger_sum 			= TPE.trigger.sum;
-	itsTriggerE->trigger_samples	= TPE.trigger.samples;
-	itsTriggerE->peak_value 			= TPE.trigger.peak;
-	itsTriggerE->power_before			= TPE.trigger.pwr_bt_at & 0x0000FFFF;
-	itsTriggerE->power_after			= (TPE.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
+	TPTriggerEvent	tp_event(event);
+	TBBTriggerEvent tbb_event;
+	
+	int channel = tp_event.trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
+	TS->convertCh2Rcu(channel, &tbb_event.rcu);
+	tbb_event.sequence_nr     = tp_event.trigger.sequence_nr;
+	tbb_event.time            = tp_event.trigger.time;
+	tbb_event.sample_nr       = tp_event.trigger.sample_nr;
+	tbb_event.trigger_sum     = tp_event.trigger.sum;
+	tbb_event.trigger_samples = tp_event.trigger.samples;
+	tbb_event.peak_value      = tp_event.trigger.peak;
+	tbb_event.power_before    = tp_event.trigger.pwr_bt_at & 0x0000FFFF;
+	tbb_event.power_after     = (tp_event.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
 				
-	sendTriggerMessage(*itsTriggerE);
+	sendTriggerMessage(tbb_event);
 	
 	// save trigger messages to a file
 	if (TS->saveTriggersToFile()) { 
 		TriggerStruct* trig = new TriggerStruct;
-		memcpy(&trig->rcu,&itsTriggerE->rcu,sizeof(TriggerStruct));
+		memcpy(&trig->rcu, &tbb_event.rcu, sizeof(TriggerStruct));
 		itsTriggerList.push_back(trig);
 	}
 	TS->setChTriggered(channel, true);
@@ -111,81 +98,84 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 //-----------------------------------------------------------------------------
 void MsgHandler::sendError(GCFEvent& event)
 {
-	TPErrorEvent	TPE(event);
-		
-	itsErrorE->code	= TPE.code;
+	TPErrorEvent tp_event(event);
+	TBBErrorEvent tbb_event;
 	
-	sendHardwareMessage(*itsErrorE);
+	tbb_event.code	= tp_event.code;
+	
+	sendHardwareMessage(tbb_event);
 }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::sendBoardChange(uint32 activeboards)
 {
-	itsBoardchangeE->activeboards = activeboards;
+	TBBBoardchangeEvent tbb_event;
 	
-	sendHardwareMessage(*itsBoardchangeE);
+	tbb_event.activeboards = activeboards;
+	
+	sendHardwareMessage(tbb_event);
 }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::sendTriggerMessage(GCFEvent& event)
 {
-  if (!itsClientTriggerMsgList.empty()) {
-    for (list<GCFPortInterface*>::iterator it = itsClientTriggerMsgList.begin();
-         it != itsClientTriggerMsgList.end();
-         it++)
-    {
-  		if ((*it)->isConnected()) { (*it)->send(event); }
-    }
-  }
+	if (!itsClientTriggerMsgList.empty()) {
+		for (list<GCFPortInterface*>::iterator it = itsClientTriggerMsgList.begin();
+				it != itsClientTriggerMsgList.end();
+				it++)
+		{
+			if ((*it)->isConnected()) { (*it)->send(event); }
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::saveTriggerMessage()
 {
-  if (!itsTriggerList.empty()) {  
-	  
-	  FILE* file;
-  	char filename[256];
-  	char timestring[12];
-  	time_t timenow;
-	  
-	  timenow = time(NULL);
-	  
-	  strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
-	  snprintf(filename, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat",timestring);
-	  file = fopen(filename,"a");
-	  
-	  list<TriggerStruct*>::iterator it;
-	  for (it = itsTriggerList.begin(); it != itsTriggerList.end(); it++) {
-		  fprintf(file,"%d %u %u %u %u %u %u %u %u\n",
-		  	(*it)->rcu,
-		  	(*it)->sequence_nr,
-		  	(*it)->time,
-		  	(*it)->sample_nr,
-		  	(*it)->trigger_sum,
-		  	(*it)->trigger_samples,
-		  	(*it)->peak_value,
-		  	(*it)->power_before,
-		  	(*it)->power_after);
-		  	
-		  delete (*it);	
-	  }
-	  itsTriggerList.clear();
-	  fclose(file);
+	if (!itsTriggerList.empty()) {  
+		
+		FILE* file;
+		char filename[256];
+		char timestring[12];
+		time_t timenow;
+		
+		timenow = time(NULL);
+		
+		strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
+		snprintf(filename, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat",timestring);
+		file = fopen(filename,"a");
+		
+		list<TriggerStruct*>::iterator it;
+		for (it = itsTriggerList.begin(); it != itsTriggerList.end(); it++) {
+			fprintf(file,"%d %u %u %u %u %u %u %u %u\n",
+				(*it)->rcu,
+				(*it)->sequence_nr,
+				(*it)->time,
+				(*it)->sample_nr,
+				(*it)->trigger_sum,
+				(*it)->trigger_samples,
+				(*it)->peak_value,
+				(*it)->power_before,
+				(*it)->power_after);
+				
+			delete (*it);	
+		}
+		itsTriggerList.clear();
+		fclose(file);
 	}
 } 
-  
+	
 //-----------------------------------------------------------------------------
 void MsgHandler::sendHardwareMessage(GCFEvent& event)
 { 
-  if (!itsClientHardwareMsgList.empty()) {
-    for (list<GCFPortInterface*>::iterator it = itsClientHardwareMsgList.begin();
-         it != itsClientHardwareMsgList.end();
-         it++)
-    {
-  		if ((*it)->isConnected()) { (*it)->send(event); }
-    }
-  }
+	if (!itsClientHardwareMsgList.empty()) {
+		for (list<GCFPortInterface*>::iterator it = itsClientHardwareMsgList.begin();
+				it != itsClientHardwareMsgList.end();
+				it++)
+		{
+			if ((*it)->isConnected()) { (*it)->send(event); }
+		}
+	}
 }
 	} // end namespace TBB
 } // end namespace LOFAR

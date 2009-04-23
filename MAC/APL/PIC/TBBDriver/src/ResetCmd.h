@@ -36,38 +36,34 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ResetCmd : public Command 
-		{
-			public:
-				// Constructors for a ResetCmd object.
-				ResetCmd();
-	  
-				// Destructor for ResetCmd.
-				virtual ~ResetCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ResetCmd : public Command 
+{
+public:
+	// Constructors for a ResetCmd object.
+	ResetCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for ResetCmd.
+	virtual ~ResetCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-			private:
-				uint32	itsBoardMask;
-				int			itsBoardNr;
-				
-				TbbSettings *TS;
-				
-				TPResetEvent		*itsTPE;
-				TPResetAckEvent	*itsTPackE;
-				TBBResetEvent		*itsTBBE;
-				TBBResetAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	uint32 itsBoardMask;
+	int itsBoardNr;
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

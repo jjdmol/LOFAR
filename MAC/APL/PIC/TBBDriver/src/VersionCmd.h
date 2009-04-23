@@ -36,35 +36,40 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class VersionCmd : public Command 
-		{
-			public:
-				// Constructors for a GetVersions object.
-				VersionCmd();
-	  
-				// Destructor for GetVersions.
-				virtual ~VersionCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class VersionCmd : public Command 
+{
+public:
+	// Constructors for a GetVersions object.
+	VersionCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for GetVersions.
+	virtual ~VersionCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-      
-			private:
-				TbbSettings *TS;
-				
-				TPVersionEvent			*itsTPE;
-				TPVersionAckEvent		*itsTPackE;
-				TBBVersionEvent			*itsTBBE;
-				TBBVersionAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	uint32 itsBoardId[MAX_N_TBBOARDS];
+	uint32 itsTpSwVersion[MAX_N_TBBOARDS];
+	uint32 itsBoardVersion[MAX_N_TBBOARDS];
+	uint32 itsTpHwVersion[MAX_N_TBBOARDS];
+	uint32 itsMp0Version[MAX_N_TBBOARDS];
+	uint32 itsMp1Version[MAX_N_TBBOARDS];
+	uint32 itsMp2Version[MAX_N_TBBOARDS];
+	uint32 itsMp3Version[MAX_N_TBBOARDS];
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

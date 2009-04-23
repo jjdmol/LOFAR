@@ -40,12 +40,11 @@ static const uint8 OPCODE_LEN = 4;
 // GCFEvent must be 4byte aligned
 //
 typedef struct {
-	GCFEvent  event;
-	uint32		opcode;
-	uint8     payload[ETH_DATA_LEN - sizeof(uint32)];
+	GCFEvent event;
+	uint32   opcode;
+	uint8    payload[ETH_DATA_LEN - sizeof(uint32)];
 } RawFrame;
 static RawFrame buf;
-
 
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
@@ -109,7 +108,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;	
 		case TPREAD:
 			buf.event.signal = TP_READ_ACK;
-			buf.event.length = 8;
+			buf.event.length = 28;
 			break;
 		case TPUDP:
 			buf.event.signal = TP_UDP_ACK;
@@ -130,7 +129,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;
 		case TPSTATUS:
 			buf.event.signal = TP_STATUS_ACK;
-			buf.event.length = 44;
+			buf.event.length = 84;
 			break;
 		case TPERROR:
 			buf.event.signal = TP_ERROR;
@@ -152,12 +151,28 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			buf.event.signal = TP_ERASEF_ACK;
 			buf.event.length = 8;
 			break;
+		case TPERASEFSPEC:
+			buf.event.signal = TP_ERASEF_SPEC_ACK;
+			buf.event.length = 8;
+			break;
 		case TPREADF:
 			buf.event.signal = TP_READF_ACK;
 			buf.event.length = 1032;
 			break;
 		case TPWRITEF:
 			buf.event.signal = TP_WRITEF_ACK;
+			buf.event.length = 8;
+			break;
+		case TPWRITEFSPEC:
+			buf.event.signal = TP_WRITEF_SPEC_ACK;
+			buf.event.length = 8;
+			break;
+		case TPPROTECT:
+			buf.event.signal = TP_PROTECT_ACK;
+			buf.event.length = 8;
+			break;
+		case TPUNPROTECT:
+			buf.event.signal = TP_UNPROTECT_ACK;
 			buf.event.length = 8;
 			break;
 		case TPREADW:

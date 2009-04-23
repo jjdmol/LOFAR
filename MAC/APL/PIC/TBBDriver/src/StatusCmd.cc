@@ -34,23 +34,22 @@ using	namespace TBB;
 //--Constructors for a StatusCmd object.----------------------------------------
 StatusCmd::StatusCmd()
 {
-	TS					= TbbSettings::instance();
-	itsTPE 			= new TPStatusEvent();
-	itsTPackE 	= 0;
-	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBStatusAckEvent();
+	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]	= 0;
-		itsTBBackE->V12[boardnr]	= 0;
-		itsTBBackE->V25[boardnr]	= 0;
-		itsTBBackE->V33[boardnr]	= 0;
-		itsTBBackE->Tpcb[boardnr]	= 0;
-		itsTBBackE->Ttp[boardnr]	= 0;
-		itsTBBackE->Tmp0[boardnr]	= 0;
-		itsTBBackE->Tmp1[boardnr]	= 0;
-		itsTBBackE->Tmp2[boardnr]	= 0;
-		itsTBBackE->Tmp3[boardnr]	= 0;
+		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsV12[boardnr] = 0;
+		itsV25[boardnr] = 0;
+		itsV33[boardnr] = 0;
+		itsTpcb[boardnr] = 0;
+		itsTtp[boardnr] = 0;
+		itsTmp0[boardnr] = 0;
+		itsTmp1[boardnr] = 0;
+		itsTmp2[boardnr] = 0;
+		itsTmp3[boardnr] = 0;
+		itsImage[boardnr] = 0;
+		itsWatchDogMode[boardnr] = 0;
+		itsPgood[boardnr] = 0;
 	}
 	setWaitAck(true);		
 }
@@ -58,8 +57,7 @@ StatusCmd::StatusCmd()
 //--Destructor for StatusCmd.---------------------------------------------------
 StatusCmd::~StatusCmd()
 {
-	delete itsTPE;
-	delete itsTBBackE;
+
 }
 
 // ----------------------------------------------------------------------------
@@ -74,31 +72,29 @@ bool StatusCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void StatusCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE	= new TBBStatusEvent(event);
+	TBBStatusEvent tbb_event(event);
 	
-	setBoardMask(itsTBBE->boardmask);
+	setBoardMask(tbb_event.boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsTBBackE->status_mask[boardnr] = 0;
+		itsStatus[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr)) 
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+			itsStatus[boardnr] |= TBB_NO_BOARD;
 	}	
 		
 	// select first boards
 	nextBoardNr();
-	
-	// initialize TP send frame
-	itsTPE->opcode	= TPSTATUS;
-	itsTPE->status	=	0;
-			
-	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void StatusCmd::sendTpEvent()
 {
-		TS->boardPort(getBoardNr()).send(*itsTPE);
-		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	TPStatusEvent tp_event;
+	tp_event.opcode = TPSTATUS;
+	tp_event.status = 0;
+	
+	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
@@ -106,25 +102,31 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPStatusAckEvent(event);
+		TPStatusAckEvent tp_ack(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
-		
-		itsTBBackE->V12[getBoardNr()]	= itsTPackE->V12;
-		itsTBBackE->V25[getBoardNr()]	= itsTPackE->V25;
-		itsTBBackE->V33[getBoardNr()]	= itsTPackE->V33;
-		itsTBBackE->Tpcb[getBoardNr()]	= itsTPackE->Tpcb;
-		itsTBBackE->Ttp[getBoardNr()]	= itsTPackE->Ttp;
-		itsTBBackE->Tmp0[getBoardNr()]	= itsTPackE->Tmp0;
-		itsTBBackE->Tmp1[getBoardNr()]	= itsTPackE->Tmp1;
-		itsTBBackE->Tmp2[getBoardNr()]	= itsTPackE->Tmp2;
-		itsTBBackE->Tmp3[getBoardNr()]	= itsTPackE->Tmp3;
-		
+		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
+			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		}
+		if (tp_ack.status == 0) {
+			itsV12[getBoardNr()]  = tp_ack.V12;
+			itsV25[getBoardNr()]  = tp_ack.V25;
+			itsV33[getBoardNr()]  = tp_ack.V33;
+			itsTpcb[getBoardNr()] = tp_ack.Tpcb;
+			itsTtp[getBoardNr()]  = tp_ack.Ttp;
+			itsTmp0[getBoardNr()] = tp_ack.Tmp0;
+			itsTmp1[getBoardNr()] = tp_ack.Tmp1;
+			itsTmp2[getBoardNr()] = tp_ack.Tmp2;
+			itsTmp3[getBoardNr()] = tp_ack.Tmp3;
+			itsImage[getBoardNr()] = (tp_ack.info[5] & 0xf);
+			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
+			itsPgood[getBoardNr()] = tp_ack.info[0];
+		}
 		LOG_DEBUG_STR(formatString("Received StatusAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
+		
+		LOG_INFO_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
+			tp_ack.info[0], tp_ack.info[5], tp_ack.info[6], tp_ack.info[7], tp_ack.info[8], tp_ack.info[9]));
 	}
 	nextBoardNr();
 }
@@ -132,10 +134,27 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void StatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status_mask[boardnr] == 0)
-			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+	TBBStatusAckEvent tbb_ack;
+	
+	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
+		if (itsStatus[boardnr] == 0) {
+			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
+		} else {
+			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
+		}
+		tbb_ack.V12[boardnr]  = itsV12[boardnr];
+		tbb_ack.V25[boardnr]  = itsV25[boardnr];
+		tbb_ack.V33[boardnr]  = itsV33[boardnr];
+		tbb_ack.Tpcb[boardnr] = itsTpcb[boardnr];
+		tbb_ack.Ttp[boardnr]  = itsTtp[boardnr];
+		tbb_ack.Tmp0[boardnr] = itsTmp0[boardnr];
+		tbb_ack.Tmp1[boardnr] = itsTmp1[boardnr];
+		tbb_ack.Tmp2[boardnr] = itsTmp2[boardnr];
+		tbb_ack.Tmp3[boardnr] = itsTmp3[boardnr];
+		tbb_ack.Image[boardnr] = itsImage[boardnr];
+		tbb_ack.WatchDogMode[boardnr] = itsWatchDogMode[boardnr];
+		tbb_ack.Pgood[boardnr] = itsPgood[boardnr];
 	}
 	
-	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

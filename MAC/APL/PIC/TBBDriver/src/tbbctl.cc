@@ -44,8 +44,8 @@
 
 //#include <APL/RTCCommon/gnuplot_i.h>
 
-#include <netinet/in.h>    
-#include <net/ethernet.h>  
+#include <netinet/in.h>
+#include <net/ethernet.h>
 
 
 #include "tbbctl.h"
@@ -57,13 +57,13 @@ using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
 
-static const double DELAY = 60.0; 
+static const double DELAY = 60.0;
 
 //---- ALLOC  ----------------------------------------------------------------
 AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
 {
 	cout << endl;
-	cout << "== TBB ================================================== allocate memory ====" << endl;  
+	cout << "== TBB ================================================== allocate memory ====" << endl;
 	cout << endl;
 }
 
@@ -71,9 +71,9 @@ AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
 void AllocCmd::send()
 {
 	TBBAllocEvent event;
-	
+
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -88,15 +88,15 @@ GCFEvent::TResult AllocCmd::ack(GCFEvent& e)
 	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			if ((ack.status_mask[bnr] == TBB_SUCCESS) || (ack.status_mask[bnr] & TBB_RCU_COMM_ERROR)) {
-				cout << formatString(" %2d memory allocated for selected rcu's", bnr) << endl;
+				cout << formatString(" %2d  memory allocated for selected rcu's", bnr) << endl;
 			} else {
-				cout << formatString(" %2d %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
+				cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
-		
+
 		if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
 			if (ack.rcu_mask.test(cnr)) {
 				if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -108,7 +108,7 @@ GCFEvent::TResult AllocCmd::ack(GCFEvent& e)
 		}
 		oldbnr = bnr;
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -134,7 +134,7 @@ void ChannelInfoCmd::send()
 GCFEvent::TResult ChannelInfoCmd::ack(GCFEvent& e)
 {
 	TBBRcuInfoAckEvent ack(e);
-	
+
 	int32 bnr = 0;
 	int32 oldbnr = -1;
 	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
@@ -156,7 +156,7 @@ GCFEvent::TResult ChannelInfoCmd::ack(GCFEvent& e)
 	cout << endl;
 	cout << " *State:  F = Free, A = Allocated, R = Recording, S = Stopped, E = Error" << endl;
 	cout << " *Only NOT Free rcu's are listed " << endl;
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -174,9 +174,9 @@ FreeCmd::FreeCmd(GCFPortInterface& port) : Command(port)
 void FreeCmd::send()
 {
 	TBBFreeEvent event;
-	
+
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -191,7 +191,7 @@ GCFEvent::TResult FreeCmd::ack(GCFEvent& e)
 	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  buffer dischard and channel disabled for selected rcu's", bnr) << endl;
@@ -210,7 +210,7 @@ GCFEvent::TResult FreeCmd::ack(GCFEvent& e)
 		}
 		oldbnr = bnr;
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -228,9 +228,9 @@ RecordCmd::RecordCmd(GCFPortInterface& port) : Command(port)
 void RecordCmd::send()
 {
 	TBBRecordEvent event;
-	
+
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -245,15 +245,15 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
 	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				cout << formatString(" %2d  recording started for selected rcu's", bnr) << endl;
+				cout << formatString(" %2d  recording started for selected rcu's in 'A' or 'S' state", bnr) << endl;
 			} else {
 				cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
-		
+
 		if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
 			if (ack.rcu_mask.test(cnr)) {
 				if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -266,8 +266,8 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
 		}
 		oldbnr = bnr;
 	}
-	
-	
+
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -277,7 +277,7 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
 StopCmd::StopCmd(GCFPortInterface& port) : Command(port)
 {
 	cout << endl;
-	cout << "== TBB ============================== stop recording on selected rcu's ====" << endl;  
+	cout << "== TBB ============================== stop recording on selected rcu's ====" << endl;
 	cout << endl;
 }
 
@@ -286,7 +286,7 @@ void StopCmd::send()
 {
 	TBBStopEvent event;
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -301,15 +301,15 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
 	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				cout << formatString(" %2d  recording stopped for selected rcu's", bnr) << endl;
+				cout << formatString(" %2d  recording stopped for selected rcu's in 'R' state", bnr) << endl;
 			} else {
 				cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
-		
+
 		if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
 			if (ack.rcu_mask.test(cnr)) {
 				if (!(ack.status_mask[bnr] == TBB_SUCCESS)) {
@@ -319,8 +319,8 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
 		}
 		oldbnr = bnr;
 	}
-	
-	
+
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -346,25 +346,25 @@ void TriggerSettingsCmd::send()
 GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
 {
 	TBBTrigSettingsAckEvent ack(e);
-	
+
 	int32 bnr = 0;
 	int32 oldbnr = -1;
 	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
 		bnr = static_cast<int32>(rcu / 16);
 		if (isSelected(rcu) ) {
 			if (bnr != oldbnr) {
-				cout << "Rcu  Board  level   start   stop    filter  window  c0      c1      c2      c3" << endl;
-				cout << "---  -----  ------  ------  ------  ------  ------  ------  ------  ------  ------" << endl;
+				cout << "Rcu  Board  level  start  stop   filter  window  c0     c1     c2     c3" << endl;
+				cout << "---  -----  -----  -----  -----  ------  ------  -----  -----  -----  -----" << endl;
 			}
-			cout << formatString("%3d  %5d  %6d  %6d  %6d  %6d  %6d  %6d  %6d  %6d  %6d",
+			cout << formatString("%3d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d  %5d",
 					rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
-					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.coefficients[rcu].c0, 
+					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.coefficients[rcu].c0,
 					ack.coefficients[rcu].c1, ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
 		}
 		oldbnr = bnr;
 	}
 	cout << endl;
-	
+
 	setCmdDone(true);
 	return(GCFEvent::HANDLED);
 }
@@ -394,23 +394,23 @@ GCFEvent::TResult TrigReleaseCmd::ack(GCFEvent& e)
 {
 	TBBTrigReleaseAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 	int32 bnr = 0;
-	int32 oldbnr = -1;  
+	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			//cout << formatString("status[%d]%08x",bnr, ack.status_mask[bnr]);
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  trigger detection released for selected rcu's",bnr ) << endl;
-			} else {   
+			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
 		oldbnr = bnr;
 	}
-	
+
 	setCmdDone(true);
 	return(GCFEvent::HANDLED);
 }
@@ -418,11 +418,12 @@ GCFEvent::TResult TrigReleaseCmd::ack(GCFEvent& e)
 //---- TRIGGENERATE -----------------------------------------------------------
 TrigGenerateCmd::TrigGenerateCmd(GCFPortInterface& port) : Command(port)
 {
+	itsTriggerNr = 0;
 	cout << endl;
 	cout << "== TBB ============================ generate trigger on selected rcu's ====" << endl;
 	cout << endl;
-	cout << "RCU   seq_nr      time        sample       sum          samples     peak        pwr_before  pwr_after" << endl;
-	cout << "---   ---------   ---------   ----------   ----------   ---------   ---------   ---------   ---------" << endl;  
+	cout << "RCU  seq_nr     time       sample      sum         samples    peak       pwr_before  pwr_after" << endl;
+	cout << "---  ---------  ---------  ----------  ----------  ---------  ---------  ----------  ---------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -433,7 +434,7 @@ void TrigGenerateCmd::send()
 	subscribe.triggers = true;
 	subscribe.hardware = true;
 	itsPort.send(subscribe);
-	
+
 	TBBTrigGenerateEvent event;
 	if (isSelectionDone()) {
 		event.rcu_mask = getRcuMask();
@@ -452,7 +453,7 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 	}
 	if (e.signal == TBB_TRIGGER) {
 		TBBTriggerEvent trig(e);
-		cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u   %9u   %9u",
+		cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u",
 									trig.rcu,
 									trig.sequence_nr,
 									trig.time,
@@ -462,7 +463,13 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 									trig.peak_value,
 									trig.power_before,
 									trig.power_after ) << endl;
+		++itsTriggerNr;
+		if (itsTriggerNr == itsMaxChannels) {
+			setCmdDone(true);
+		}
 	}
+
+
 	return(GCFEvent::HANDLED);
 }
 
@@ -480,7 +487,7 @@ void TrigSetupCmd::send()
 {
 	TBBTrigSetupEvent event;
 	if (isSelectionDone()) {
-		for (int cnr=0; cnr < getMaxSelections(); cnr++) { 
+		for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 			event.setup[cnr].level = itsLevel;
 			event.setup[cnr].start_mode = itsStartMode;
 			event.setup[cnr].stop_mode = itsStopMode;
@@ -502,10 +509,10 @@ GCFEvent::TResult TrigSetupCmd::ack(GCFEvent& e)
 		cout << "TBB  Info" << endl;
 		cout << "---  -------------------------------------------------------" << endl;
 		int32 bnr = 0;
-		int32 oldbnr = -1;  
+		int32 oldbnr = -1;
 		for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 			bnr = static_cast<int32>(cnr / 16);
-			
+
 			if (bnr != oldbnr) {
 				if (ack.status_mask[bnr] == TBB_SUCCESS) {
 					cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
@@ -550,12 +557,12 @@ GCFEvent::TResult TrigCoefficientCmd::ack(GCFEvent& e)
 {
 	TBBTrigCoefAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 	int32 bnr = 0;
-	int32 oldbnr = -1;  
+	int32 oldbnr = -1;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		bnr = static_cast<int32>(cnr / 16);
-		
+
 		if (bnr != oldbnr) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  setup trigger system for all rcu's",bnr ) << endl;
@@ -593,7 +600,7 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
 {
 	TBBTrigInfoAckEvent ack(e);
 	cout << "RCU  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 	if (ack.status_mask == TBB_SUCCESS) {
 		cout << formatString(" %2d  sequence   : %lu",getRcu(),ack.sequence_nr) << endl;
 		cout << formatString("      time       : %lu",ack.time) << endl;
@@ -603,7 +610,7 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
 		cout << formatString("      peak value : %lu",ack.peak_value) << endl;
 		cout << formatString("      pwr before : %u",ack.power_before) << endl;
 		cout << formatString("      pwr after  : %u",ack.power_after) << endl;
-	} else {   
+	} else {
 		cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
 	setCmdDone(true);
@@ -617,7 +624,7 @@ ListenCmd::ListenCmd(GCFPortInterface& port) : Command(port),
 	cout << endl;
 	cout << "== TBB ============================ listen for triggers on selected rcu's ====" << endl;
 	cout << endl;
-	 
+
 }
 
 //-----------------------------------------------------------------------------
@@ -631,38 +638,38 @@ void ListenCmd::send()
 			release.rcu_start_mask.reset();
 			itsPort.send(release);
 		} break;
-		
+
 		case 1: {
-			cout << "-stopped recording on all allocated rcu's" << endl;
+			cout << "-stop recording on all allocated rcu's" << endl;
 			TBBStopEvent stop;
 			stop.rcu_mask = getRcuMask();
-			itsPort.send(stop);  
+			itsPort.send(stop);
 		} break;
 
 		case 2: {
-			cout << "-restarted recording on all allocated rcu's" << endl;
+			cout << "-restart recording on all allocated rcu's" << endl;
 			TBBRecordEvent record;
 			record.rcu_mask = getRcuMask(); // if select cmd is used
-			itsPort.send(record);   
+			itsPort.send(record);
 		} break;
 
 		case 3: {
 			TBBSubscribeEvent subscribe;
 			subscribe.triggers = true;
 			subscribe.hardware = true;
-		itsPort.send(subscribe);
+			itsPort.send(subscribe);
 		} break;
-		
+
 		case 4: {
-			cout << "-released all trigger systems, and waiting  (STOP WAITING WITH CTRL-C)" << endl;
+			cout << "-release all trigger systems, and waiting  (STOP WAITING WITH CTRL-C)" << endl;
 			setCmdSendNext(false);
 			TBBTrigReleaseEvent release;
 			release.rcu_stop_mask.reset();
 			release.rcu_start_mask = getRcuMask();
 			itsPort.send(release);
 			cout << endl;
-			cout << "RCU   seq_nr      time         sample       sum          samples     peak        pwr_before  pwr_after" << endl;
-			cout << "---   ---------   ----------   ----------   ----------   ---------   ---------   ---------   ---------" << endl; 
+			cout << "RCU  seq_nr     time        sample      sum         samples    peak       pwr_before  pwr_after" << endl;
+			cout << "---  ---------  ----------  ----------  ----------  ---------  ---------  ----------  ---------" << endl;
 		} break;
 
 		default: {
@@ -692,12 +699,12 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 		if (itsCmdStage == 0) itsCmdStage = 1;
 		if (itsCmdStage == 4) itsCmdStage = 5;
 	}
-		
+
 	if (e.signal == TBB_TRIGGER) {
-		
+
 			TBBTriggerEvent trig(e);
-			nummer++;   
-			cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u   %9u   %9u   (stopped) %6d",
+			nummer++;
+			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  (stopped) %6d",
 										trig.rcu,
 										trig.sequence_nr,
 										trig.time,
@@ -728,7 +735,7 @@ ReadCmd::ReadCmd(GCFPortInterface& port) : Command(port),
 	itsSecondsTime(0),itsSampleTime(0),itsPrePages(0),itsPostPages(0)
 {
 	cout << endl;
-	cout << "== TBB ==============  transfer data to CEP for all selected rcu ====" << endl;  
+	cout << "== TBB ==============  transfer data to CEP for all selected rcu ====" << endl;
 	cout << endl;
 }
 
@@ -750,7 +757,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 {
 	TBBReadAckEvent ack(e);
 	cout << "RCU  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
 		if (isSelected(cnr) ) {
 			if (ack.status_mask == TBB_SUCCESS) {
@@ -760,7 +767,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -771,7 +778,7 @@ ReadAllCmd::ReadAllCmd(GCFPortInterface& port) : Command(port),
 	itsStage(0), itsRcu(0), itsSecondsTime(0),itsSampleTime(0),itsPages(0)
 {
 	cout << endl;
-	cout << "== TBB ==============  transfer all data to CEP for all selected rcu ====" << endl;  
+	cout << "== TBB ==============  transfer all data to CEP for all selected rcu ====" << endl;
 	cout << endl;
 }
 
@@ -786,14 +793,14 @@ void ReadAllCmd::send()
 		case 0: {
 			TBBStopEvent event;
 			if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
-	
+
 		case 1: {
 			TBBReadrEvent event;
-			
+
 			event.board = rcu2board(itsRcu);
 			event.mp = rcu2mp(itsRcu);
 			event.pid = rcu2writer(itsRcu);
@@ -801,8 +808,8 @@ void ReadAllCmd::send()
 			cout << "readr board=" << event.board << " mp=" << event.mp << " writer=" << event.pid << endl;
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
-		} break; 
-	 
+		} break;
+
 		case 2: {
 			TBBReadEvent event;
 			event.rcu = itsRcu;
@@ -817,16 +824,16 @@ void ReadAllCmd::send()
 			event.postpages = 0;
 			itsPort.send(event);
 			itsPort.setTimer(600.0);
-		} break; 
-		
+		} break;
+
 		case 3: {
 			TBBRecordEvent event;
 			if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
-	
+
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
-	 
+
 		default: break;
 	}
 }
@@ -846,18 +853,18 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 					break;
 				}
 			}
-			itsStage = 1;	
+			itsStage = 1;
 		} break;
-	
+
 		case 1: {
 			TBBReadrAckEvent ack(e);
 			itsSecondsTime = ack.data[0];
 		 	itsSampleTime = ack.data[1];
-		 	cout << formatString("time of last frame from rcu-%d, %d seconds, sample number %d", 
-		 								itsRcu, itsSecondsTime, itsSampleTime) << endl; 
+		 	cout << formatString("time of last frame from rcu-%d, %d seconds, sample number %d",
+		 								itsRcu, itsSecondsTime, itsSampleTime) << endl;
 			itsStage = 2;
-		} break; 
-	 
+		} break;
+
 		case 2: {
 			TBBReadAckEvent ack(e);
 			// look for next Rcu
@@ -871,14 +878,14 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 					break;
 				}
 			}
-		} break; 
-		
+		} break;
+
 		case 3: {
 			TBBRecordAckEvent ack(e);
 			cout << "all stopped channels are started again" << endl;
 			setCmdDone(true);
 		} break;
-	 
+
 		default: break;
 	}
 	return(GCFEvent::HANDLED);
@@ -907,7 +914,7 @@ GCFEvent::TResult ModeCmd::ack(GCFEvent& e)
 {
 	TBBModeAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int i = 0; i < itsMaxBoards; i++) {
 		if (ack.status_mask[i] == TBB_SUCCESS) {
 			cout << formatString(" %2d  mode set and UDP/IP configured", i) << endl;
@@ -915,7 +922,7 @@ GCFEvent::TResult ModeCmd::ack(GCFEvent& e)
 			cout << formatString(" %2d  %s",i, getDriverErrorStr(ack.status_mask[i]).c_str()) << endl;
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -942,28 +949,27 @@ void VersionCmd::send()
 GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 {
   TBBVersionAckEvent ack(e);
-	
+
 	cout << formatString("TBBDriver software version %3.2f",(ack.driverversion / 100.)) << endl;
 	cout << endl;
-	cout << "TBB  ID  Software   Board    TP     MP      " << endl;
-	cout << "---  --  --------  -------  ------  ------- " << endl;
+	cout << "TBB  ID  Board  TP sw  TP hw  MP    " << endl;
+	cout << "---  --  -----  -----  -----  -----" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				cout << formatString(" %2u  %2u   V%5.1f    V%4.1f    V%4.1f    V%4.1f",
+				cout << formatString(" %2u  %2u  V%4.1f  V%4.1f  V%4.1f  V%4.1f",
 				 bnr,
 				 ack.boardid[bnr],
-						(ack.swversion[bnr] / 10.),
-						(ack.boardversion[bnr] / 10.),
-						(ack.tpversion[bnr] / 10.),
-						(ack.mp0version[bnr] / 10.)) << endl;
+				(ack.boardversion[bnr] / 10.),
+				(ack.tpswversion[bnr] / 10.),
+				(ack.tphwversion[bnr] / 10.),
+				(ack.mp0version[bnr] / 10.)) << endl;
 			} else {
-					cout << formatString(" %2u  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;  
+					cout << formatString(" %2u  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
-			
 	}
 	}
-	
+
   setCmdDone(true);
 
   return(GCFEvent::HANDLED);
@@ -973,7 +979,7 @@ GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 SizeCmd::SizeCmd(GCFPortInterface& port) : Command(port)
 {
   cout << endl;
-  cout << "== TBB ==================================== installed memory information ====" << endl; 
+  cout << "== TBB ==================================== installed memory information ====" << endl;
   cout << endl;
 }
 
@@ -990,12 +996,12 @@ void SizeCmd::send()
 GCFEvent::TResult SizeCmd::ack(GCFEvent& e)
 {
 	TBBSizeAckEvent ack(e);
-	cout << "TBB  pages     Total memory " << endl;
-	cout << "---  --------  ------------" << endl; 
+	cout << "TBB  pages     Total memory" << endl;
+	cout << "---  --------  ------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				double gbyte = ((double)ack.npages[bnr] * 2048.) / (1024. * 1024. * 1024.); 
+				double gbyte = ((double)ack.npages[bnr] * 2048.) / (1024. * 1024. * 1024.);
 				cout << formatString(" %2d  %8d  %6.3f GByte",bnr,ack.npages[bnr],gbyte) << endl;
 			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -1004,7 +1010,7 @@ GCFEvent::TResult SizeCmd::ack(GCFEvent& e)
 	}
 	cout << endl;
 	cout << "1 page = 2048 Bytes" << endl;
-	
+
 	setCmdDone(true);
 	return(GCFEvent::HANDLED);
 }
@@ -1013,7 +1019,7 @@ GCFEvent::TResult SizeCmd::ack(GCFEvent& e)
 StatusCmd::StatusCmd(GCFPortInterface& port) : Command(port)
 {
   cout << endl;
-  cout << "== TBB ============================= voltage and temperature information ====" << endl; 
+  cout << "== TBB ============================= voltage and temperature information ====" << endl;
 	cout << endl;
 }
 
@@ -1030,33 +1036,35 @@ void StatusCmd::send()
 GCFEvent::TResult StatusCmd::ack(GCFEvent& e)
 {
 	TBBStatusAckEvent ack(e);
-	
-	cout << "TBB  Voltage 1.2  Voltage 2.5  Voltage 3.3  Temp PCB  Temp TP   Temp MP0  Temp MP1  Temp MP2  Temp MP3" << endl;
-	cout << "---  -----------  -----------  -----------  --------  --------  --------  --------  --------  --------" << endl;
+
+	cout << "TBB  Image  WD mode  V 1.2  V 2.5  V 3.3  PCB   TP    MP0      MP1      MP2      MP3  " << endl;
+	cout << "---  -----  -------  -----  -----  -----  ----  ----  -------  -------  -------  -------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
-				
-				cout << formatString(" %2d     %4.2f V       %4.2f V       %4.2f V    %3u 'C    %3u 'C    %3u 'C    %3u 'C    %3u 'C    %3u 'C",
+
+				cout << formatString(" %2d    %2d    %s   %4.2fV  %4.2fV  %4.2fV  %2u'C  %2u'C  %2u'C %s  %2u'C %s  %2u'C %s  %2u'C %s",
 						bnr,
+						ack.Image[bnr],
+						ack.WatchDogMode[bnr]?" ETH ":"clock",
 						((double)ack.V12[bnr] * (2.5 / 192.)), // MAX6652 pin-2:  2.5 / 192  = 0.0130 / count
 						((double)ack.V25[bnr] * (3.3 / 192.)), // MAX6652 pin-3:  3.3 / 192  = 0.0172 / count
 						((double)ack.V33[bnr] * (5.0 / 192.)), // MAX6652 pin-1:  5.0 / 192  = 0.0625 / count
 						ack.Tpcb[bnr],
 						ack.Ttp[bnr],
-						ack.Tmp0[bnr],
-						ack.Tmp1[bnr],
-						ack.Tmp2[bnr],
-						ack.Tmp3[bnr] ) << endl;
+						ack.Tmp0[bnr], (ack.Pgood[bnr] & 0x1)?"Pg":"Pb",
+						ack.Tmp1[bnr], (ack.Pgood[bnr] & 0x2)?"Pg":"Pb",
+						ack.Tmp2[bnr], (ack.Pgood[bnr] & 0x4)?"Pg":"Pb",
+						ack.Tmp3[bnr], (ack.Pgood[bnr] & 0x8)?"Pg":"Pb" ) << endl;
 			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
+			}
 		}
 	}
-	}
-	
-  setCmdDone(true);
+	cout << endl << "On MP's: Pg=Power-good, Pb=Power-bad" << endl;
+	setCmdDone(true);
 
-  return(GCFEvent::HANDLED);
+	return(GCFEvent::HANDLED);
 }
 
 //---- CLEAR -------------------------------------------------------------------
@@ -1082,7 +1090,7 @@ GCFEvent::TResult ClearCmd::ack(GCFEvent& e)
 {
 	TBBClearAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -1092,7 +1100,7 @@ GCFEvent::TResult ClearCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1121,18 +1129,18 @@ GCFEvent::TResult ResetCmd::ack(GCFEvent& e)
 {
 	TBBResetAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  board is reset to image-0",bnr ) << endl;
-			} else {   
+			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
 	}
 	cout << " automatic reconfigure to image-1 and clearing registers take another 15 seconds" << endl;
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1162,7 +1170,7 @@ GCFEvent::TResult ConfigCmd::ack(GCFEvent& e)
 {
 	TBBConfigAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -1172,7 +1180,7 @@ GCFEvent::TResult ConfigCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1200,7 +1208,7 @@ GCFEvent::TResult ArpCmd::ack(GCFEvent& e)
 {
 	TBBArpAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -1210,7 +1218,7 @@ GCFEvent::TResult ArpCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1240,7 +1248,7 @@ GCFEvent::TResult ArpModeCmd::ack(GCFEvent& e)
 {
 	TBBArpModeAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -1250,7 +1258,7 @@ GCFEvent::TResult ArpModeCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1278,7 +1286,7 @@ GCFEvent::TResult StopCepCmd::ack(GCFEvent& e)
 {
 	TBBStopCepAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
@@ -1288,7 +1296,7 @@ GCFEvent::TResult StopCepCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1319,17 +1327,17 @@ GCFEvent::TResult TempLimitCmd::ack(GCFEvent& e)
 {
 	TBBTempLimitAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  Temp limit set %d .. %d ",bnr, itsLimitLow, itsLimitHigh ) << endl;
-			} else {   
+			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
 		}
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1343,7 +1351,7 @@ ErasefCmd::ErasefCmd(GCFPortInterface& port) : Command(port)
 	cout << "== TBB ===================================================== erase flash ====" << endl;
 	cout << endl;
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 
 }
 
@@ -1355,7 +1363,7 @@ void ErasefCmd::send()
 	event.image = itsPage;
 	cout << formatString(" %2d  erasing flash memory of image %d", getBoard(), itsPage) << endl;
 	cout << endl;
-	cout << "     erasing will take about 8 seconds" << endl;   
+	cout << "     erasing will take about 8 seconds" << endl;
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -1364,13 +1372,13 @@ void ErasefCmd::send()
 GCFEvent::TResult ErasefCmd::ack(GCFEvent& e)
 {
 	TBBEraseImageAckEvent ack(e);
-	  
+
 	if (ack.status_mask == TBB_SUCCESS) {
 		cout << formatString(" %2d  image is erased",getBoard()) << endl;
 	} else {
 		cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1386,7 +1394,7 @@ ReadfCmd::ReadfCmd(GCFPortInterface& port) : Command(port)
 	cout << "== TBB ====================================================== read flash ====" << endl;
 	cout << endl;
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -1397,7 +1405,7 @@ void ReadfCmd::send()
 	event.image = itsPage;
 	cout << formatString(" %2d  reading flash memory of image %d", getBoard(), itsPage) << endl;
 	cout << endl;
-	cout << "     reading will take about 10 seconds" << endl;  
+	cout << "     reading will take about 10 seconds" << endl;
 	itsPort.send(event);
 	itsPort.setTimer(60.0);
 }
@@ -1409,17 +1417,17 @@ GCFEvent::TResult ReadfCmd::ack(GCFEvent& e)
 
 	if (ack.status_mask == TBB_SUCCESS) {
 		cout << formatString(" %2d  image is read",getBoard()) << endl;
-	} else {   
+	} else {
 		cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
-	
+
 	setCmdDone(true);
 	return(GCFEvent::HANDLED);
 }
 
 //---- WRITE IMAGE -----------------------------------------------------------
 WritefCmd::WritefCmd(GCFPortInterface& port) : Command(port)
-	,itsPage(0)
+	,itsPage(0), itsPassword(0)
 {
 	memset(itsFileNameTp,'\0',sizeof(itsFileNameTp));
 	memset(itsFileNameMp,'\0',sizeof(itsFileNameMp));
@@ -1427,7 +1435,7 @@ WritefCmd::WritefCmd(GCFPortInterface& port) : Command(port)
 	cout << "== TBB ===================================================== write flash ====" << endl;
 	cout << endl;
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -1439,9 +1447,10 @@ void WritefCmd::send()
 	event.version = static_cast<int32>(round(itsVersion * 10.));
 	memcpy(event.filename_tp,itsFileNameTp,sizeof(itsFileNameTp));
 	memcpy(event.filename_mp,itsFileNameMp,sizeof(itsFileNameMp));
+	event.password = itsPassword;
 	cout << formatString(" %2d  writing flash memory of image %d", getBoard(), itsPage) << endl;
 	cout << endl;
-	cout << "     writing will take at least 60 seconds" << endl;  
+	cout << "     writing will take at least 60 seconds" << endl;
 	itsPort.send(event);
 	itsPort.setTimer(240.0);
 }
@@ -1455,7 +1464,7 @@ GCFEvent::TResult WritefCmd::ack(GCFEvent& e)
 	} else {
 		cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1485,9 +1494,9 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 	cout << formatString("Reading image information from TBB %d", getBoard()) << endl;
 	cout << endl;
 	cout << "IMAGE    SW       Flash date_time        TP file name       MP file name" << endl;
-	cout << "------   ------   --------------------   ----------------   ----------------" << endl;  
+	cout << "------   ------   --------------------   ----------------   ----------------" << endl;
 	if (ack.status_mask == TBB_SUCCESS) {
-		for (int image = 0; image < 16; image++) {   
+		for (uint32 image = 0; image < 16; image++) {
 			if (ack.write_date[image] == 0xFFFFFFFF) {
 				//cout << formatString("  %2d   no information",image) << endl;
 				cout << formatString("   %2d     free",image) << endl;
@@ -1495,14 +1504,14 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 				time_t write_time;
 				struct tm t;
 				double version;
-				
+
 				write_time = static_cast<time_t>(ack.write_date[image]);
 				t = *gmtime(&write_time);
 				version = static_cast<double>(ack.image_version[image] / 10.);
 				cout << formatString("%s %2d    V%5.1lf   %02d-%02d-%4d  %2d:%02d:%02d   %-16.16s   %-16.16s",
 										(ack.active_image == image)?"->":"  ",
 										image,
-										version, 
+										version,
 										t.tm_mday,t.tm_mon+1,t.tm_year+1900,
 										t.tm_hour,t.tm_min,t.tm_sec,
 										ack.tp_file_name[image],
@@ -1510,10 +1519,10 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 				//cout << "TP: " << ack.tp_file_name[image] <<  ",  MP: " << ack.mp_file_name[image] << endl;
 			}
 		}
-	} else {   
+	} else {
 		cout << formatString("TBB %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1528,7 +1537,7 @@ ReadwCmd::ReadwCmd(GCFPortInterface& port) : Command(port)
 	cout << "== TBB ======================================================= read DDR2 ====" << endl;
 	cout << endl;
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;  
+	cout << "---  -------------------------------------------------------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -1551,7 +1560,7 @@ GCFEvent::TResult ReadwCmd::ack(GCFEvent& e)
 			if (ack.status_mask == TBB_SUCCESS) {
 				cout << formatString(" %2d  MP[%u] Addr[0x%08X]  [0x%08X] [0x%08X] [0x%08X] [0x%08X] [0x%08X] [0x%08X] [0x%08X] [0x%08X]"
 						,bnr, itsMp, itsAddr, ack.word[0], ack.word[1], ack.word[2], ack.word[3], ack.word[4], ack.word[5], ack.word[6], ack.word[7] ) << endl;
-			} else {   
+			} else {
 				cout << formatString(" %2d  %s"
 						,bnr, getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsAddr = itsStopAddr - 1;
@@ -1559,10 +1568,10 @@ GCFEvent::TResult ReadwCmd::ack(GCFEvent& e)
 		}
 	}
 	//if (itsAddr == (itsStopAddr - 1))
-	
+
 	itsAddr++;
-	if (itsAddr >= itsStopAddr) { 
-		setCmdDone(true); 
+	if (itsAddr >= itsStopAddr) {
+		setCmdDone(true);
 	} else {
 		//itsPort.setTimer(0.0);
 	}
@@ -1586,7 +1595,7 @@ void WritewCmd::send()
 	event.addr = itsAddr;
 	for (int i = 0; i < 8; i++) {
 		event.word[i] = itsWord[i];
-	}   
+	}
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -1596,7 +1605,7 @@ GCFEvent::TResult WritewCmd::ack(GCFEvent& e)
 {
 	TBBWritewAckEvent ack(e);
 	cout << "TBB  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;    
+	cout << "---  -------------------------------------------------------" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
 			if (ack.status_mask == TBB_SUCCESS) {
@@ -1606,8 +1615,8 @@ GCFEvent::TResult WritewCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
-	
+
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1622,7 +1631,7 @@ TestDdrCmd::TestDdrCmd(GCFPortInterface& port) : Command(port),
 	 itsWord[i] = 0;
 	}
 	cout << endl;
-	cout << "==== TBB-board, test ddr =================================================" << endl;   
+	cout << "==== TBB-board, test ddr =================================================" << endl;
 	cout << endl;
 }
 
@@ -1635,7 +1644,7 @@ void TestDdrCmd::send()
 		cout << "Nr  Line   Writen      Read         Info                         " << endl;
 		cout << "--  -----  ----------  ----------   -----------------------------" << endl;
 	}
-	
+
 	if ((itsCmdStage == 3)&&(itsMp == 0)&&(itsTestPatern == 1)) {
 		cout << endl;
 		cout << formatString("Testing DDR memory data lines of board %d",getBoard()) << endl;
@@ -1651,7 +1660,7 @@ void TestDdrCmd::send()
 			event.boardmask = getBoardMask();
 			itsPort.send(event);
 		} break;
-				
+
 		case 1: {
 			TBBWritewEvent event;
 			event.board = getBoard();
@@ -1665,10 +1674,10 @@ void TestDdrCmd::send()
 			event.word[5] = 0x55;
 			event.word[6] = 0x66;
 			event.word[7] = 0x77;
-			
+
 			itsPort.send(event);
 		} break;
-		
+
 		case 2: {
 			TBBReadwEvent event;
 			event.board = getBoard();
@@ -1676,7 +1685,7 @@ void TestDdrCmd::send()
 			event.addr = itsAddr;
 			itsPort.send(event);
 		} break;
-		
+
 		case 3: {
 			TBBWritewEvent event;
 			event.board = getBoard();
@@ -1684,9 +1693,9 @@ void TestDdrCmd::send()
 			event.addr = itsAddr;
 			event.word[0] = itsTestPatern;
 			event.word[1] = ~itsTestPatern;
-			itsPort.send(event); 
+			itsPort.send(event);
 		} break;
-		
+
 		case 4: {
 			TBBReadwEvent event;
 			event.board = getBoard();
@@ -1694,10 +1703,10 @@ void TestDdrCmd::send()
 			event.addr = itsAddr;
 			itsPort.send(event);
 		} break;
-		
+
 		default: break;
 	}
-	
+
 	itsPort.setTimer(DELAY);
 }
 
@@ -1710,34 +1719,34 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 			cout << formatString("Testing DDR memory address lines of board %d",getBoard()) << endl;
 			if (ack.status_mask[getBoard()] == TBB_SUCCESS) {
 				double mpMemorySize = ((double)ack.npages[getBoard()] * 2048.) / (1024. * 1024. * 1024.) / 4.;
-				cout << "Memory size 1 MP = " << mpMemorySize << " GByte" << endl; 
+				cout << "Memory size 1 MP = " << mpMemorySize << " GByte" << endl;
 				// total bytes = (npages * 2048), 1 mp = total / 4, in words = 1mp / 4 ==> (npages * (2048 / (4 * 4))
-				itsAddrLines = static_cast<uint32>(log10(ack.npages[getBoard()] * 128.) / log10(2.)); 
+				itsAddrLines = static_cast<uint32>(log10(ack.npages[getBoard()] * 128.) / log10(2.));
 				cout << "Number of addr lines to check = " << itsAddrLines << endl;
 			}
 			itsCmdStage = 1;
 		} break;
-		
+
 		case 1: {
 			TBBWritewAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
 				cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 			}
-			
+
 			if (itsAddrLine == 0) {
 				itsAddrLine += 2;
 			} else {
 				itsAddrLine++;
 			}
 			itsAddr = (1 << itsAddrLine);
-			
+
 			if (itsAddrLine == itsAddrLines) {
 				itsAddr = 0;
 				itsAddrLine = 0;
 				itsCmdStage = 2;
 			}
 		}break;
-		
+
 		case 2: {
 			TBBReadwAckEvent ack(e);
 			if (ack.status_mask == TBB_SUCCESS) {
@@ -1751,14 +1760,14 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 			} else {
 				cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 			}
-			
+
 			if (itsAddrLine == 0) {
 				itsAddrLine += 2;
 			} else {
 				itsAddrLine++;
 			}
 			itsAddr = (1 << itsAddrLine);
-			
+
 			if (itsAddrLine == itsAddrLines) {
 				itsAddr = 0;
 				itsAddrLine = 0;
@@ -1772,7 +1781,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 				}
 			}
 		} break;
-		
+
 		case 3: {
 			TBBWritewAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
@@ -1781,18 +1790,18 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 			itsAddr += 4;
 			itsTestPatern <<= 1;
 			//if (itsTestPatern == 0) itsTestPatern == 1;
-				
+
 			if (itsTestPatern == 0x00000000) {
 				itsAddr = 0;
 				itsTestPatern = 1;
 				itsCmdStage = 4;
-			}        
+			}
 		}break;
-		
+
 		case 4: {
 			TBBReadwAckEvent ack(e);
 			if (ack.status_mask == TBB_SUCCESS) {
-				cout << formatString("%2d  0x%08x  0x%08x  0x%08x  0x%08x   ",itsMp, itsTestPatern, ack.word[0], ~itsTestPatern, ack.word[1]);    
+				cout << formatString("%2d  0x%08x  0x%08x  0x%08x  0x%08x   ",itsMp, itsTestPatern, ack.word[0], ~itsTestPatern, ack.word[1]);
 				if ((ack.word[0] == itsTestPatern) && (ack.word[1] == ~itsTestPatern)) {
 					cout << "SAME" << endl;
 				} else {
@@ -1805,7 +1814,7 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 			itsAddr += 4;
 			itsTestPatern <<= 1;
 			//if (itsTestPatern == 0) itsTestPatern == 1;
-				
+
 			if (itsTestPatern == 0x00000000) {
 				itsAddr = 0;
 				itsTestPatern = 1;
@@ -1827,8 +1836,8 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
 				}
 			}
 		} break;
-		
-		
+
+
 		default: break;
 	}
 	return(GCFEvent::HANDLED);
@@ -1850,7 +1859,7 @@ void ReadrCmd::send()
 	event.mp = itsMp;
 	event.pid = itsPid;
 	event.regid = itsRegId;
-	
+
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
 }
@@ -1859,14 +1868,14 @@ void ReadrCmd::send()
 GCFEvent::TResult ReadrCmd::ack(GCFEvent& e)
 {
 	TBBReadrAckEvent ack(e);
-	
+
 	cout <<   "Board : " <<  getBoard() << endl;
 	if (ack.status_mask == TBB_SUCCESS) {
 		cout << "MP    : " << itsMp << endl;
 		cout << "PID   : " << itsPid << endl;
 		cout << "REGID : " << itsRegId << endl;
-		cout << "Received data : "; 
-				  
+		cout << "Received data : ";
+
 		for (int i = 0; i < (REG_SIZE[itsPid][itsRegId]); i++) {
 			if (i % 4 == 0) {
 				if (i != 0) cout << endl << "                ";
@@ -1875,9 +1884,9 @@ GCFEvent::TResult ReadrCmd::ack(GCFEvent& e)
 			cout << formatString("%08x ",ack.data[i]);
 		}
 	} else {
-		cout << "ERROR : " << getDriverErrorStr(ack.status_mask).c_str(); 
+		cout << "ERROR : " << getDriverErrorStr(ack.status_mask).c_str();
 	}
-	
+
 	setCmdDone(true);
 
 	return(GCFEvent::HANDLED);
@@ -1891,7 +1900,7 @@ WriterCmd::WriterCmd(GCFPortInterface& port) : Command(port),
 		itsData[i] = 0;
 	}
 	cout << endl;
-	cout << "==== TBB-board, write register ===============================================" << endl;  
+	cout << "==== TBB-board, write register ===============================================" << endl;
 	cout << endl;
 }
 
@@ -1914,13 +1923,13 @@ void WriterCmd::send()
 GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
 {
 	TBBWriterAckEvent ack(e);
-	
+
 	cout <<   "Board : " <<  getBoard() << endl;
 	if (ack.status_mask == TBB_SUCCESS) {
 		cout << "MP    : " << itsMp << endl;
 		cout << "PID   : " << itsPid << endl;
 		cout << "REGID : " << itsRegId << endl;
-		cout << "Transmitted data : "; 
+		cout << "Transmitted data : ";
 		for (int i = 0; i < (REG_SIZE[itsPid][itsRegId]); i++) {
 			if (i % 4 == 0) {
 				if (i != 0) cout << endl << "                ";
@@ -1928,7 +1937,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
 			}
 			cout << formatString("%08x ",itsData[i]);
 		}
-	} else {   
+	} else {
 		cout << getDriverErrorStr(ack.status_mask).c_str();
 	}
 	setCmdDone(true);
@@ -1950,43 +1959,44 @@ ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
 //-----------------------------------------------------------------------------
 void ReadPageCmd::send()
 {
-	
+
 	switch (itsCmdStage) {
-		
+
 		case 0: {   // get info about allocated RCU's
 			TBBRcuInfoEvent send;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
 		} break;
-		
+
 		case 1: {   // get total memmory size
 			TBBSizeEvent send;
 			send.boardmask = (1 << itsBoard);
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
 		} break;
-		
+
 		case 2: {   // write page address to board
 			TBBWriterEvent send;
 
-			uint32 mem_page_addr = itsStartAddr + itsStartPage + itsPage; // address in total memory
-			itsMp = static_cast<int32>(mem_page_addr / itsMpSize); // lookup mp by addr
-			uint32 mp_page_addr = mem_page_addr - (itsMp * itsMpSize); // address on mp
-			
+			uint32 mp_rcu_start = itsStartAddr - ((uint32)itsMp * itsMpSize); // address in total memory
+			uint32 mp_page_addr = mp_rcu_start + itsStartPage + itsPage; // address on mp
+
 			send.board = itsBoard;
 			send.mp = itsMp;
 			send.pid = PID6;
 			send.regid = REGID1;
 			send.data[0] = mp_page_addr;
-			send.data[1] = 0; 
+			send.data[1] = 0;
 			send.data[2] = 0;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
-			
-			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]", 
+
+			cout << formatString("MP=%d  Addr=%X", itsMp, mp_page_addr) << endl;
+
+			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]",
 				send.mp,send.pid,send.regid,send.data[0]));
 		} break;
-		
+
 		case 3: { // write page-read-cmd to board
 			TBBWriterEvent send;
 			send.board = itsBoard;
@@ -1994,18 +2004,18 @@ void ReadPageCmd::send()
 			send.pid = PID6;
 			send.regid = REGID0;
 			send.data[0] = PAGEREAD;
-			send.data[1] = 0; 
+			send.data[1] = 0;
 			send.data[2] = 0;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
-			
-			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]", 
+
+			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]",
 				send.mp,send.pid,send.regid,send.data[0]));
 		} break;
-		
+
 		case 4: { // read first part of frame
 			TBBReadxEvent send;
-			send.board = itsBoard;  
+			send.board = itsBoard;
 			send.mp = itsMp;
 			send.pid = PID6;
 			send.regid = REGID2;
@@ -2013,14 +2023,14 @@ void ReadPageCmd::send()
 			send.pageaddr = 0;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
-			
-			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]", 
+
+			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]",
 				send.mp,send.pid,send.regid,send.pagelength,send.pageaddr));
 		} break;
-		
+
 		case 5: {   // read second part of frame
 			TBBReadxEvent send;
-			send.board = itsBoard;  
+			send.board = itsBoard;
 			send.mp = itsMp;
 			send.pid = PID6;
 			send.regid = REGID2;
@@ -2028,11 +2038,11 @@ void ReadPageCmd::send()
 			send.pageaddr = 256;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
-			
-			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]", 
+
+			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]",
 				send.mp,send.pid,send.regid,send.pagelength,send.pageaddr));
 		} break;
-		
+
 		default:{
 		} break;
 	}
@@ -2046,13 +2056,13 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	char timestring[256];
 
 	int16 val[1400];
-	
+
 	double         bar_size = 50;
 	static double  bar_interval = 1;
 	static double  bar_buff = 0;
-		
+
 	switch (itsCmdStage) {
-		
+
 		case 0: {
 			TBBRcuInfoAckEvent ack(e);
 			itsRcu = getRcu();
@@ -2060,15 +2070,14 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			itsStartAddr = ack.rcu_start_addr[itsRcu];
 			itsSize = ack.rcu_pages[itsRcu];
 			itsBoard = ack.rcu_on_board[itsRcu];
-			//itsMp = static_cast<int32>(ack.rcu_on_input[itsRcu] / 4);
-			//cout << formatString("Rcu-%d Board[%d] Mp[%d]",itsRcu,itsBoard,itsMp) << endl;
-			
+			itsMp = rcu2mp(itsRcu);
+
 			if (itsState == 'F') {
 				cout << "Rcu not allocated" << endl;
 				itsCmdStage = 10;
 			}
 		} break;
-				
+
 		case 1: {
 		TBBSizeAckEvent ack(e);
 		if (!(ack.status_mask[itsBoard] == TBB_SUCCESS)) {
@@ -2076,83 +2085,83 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				itsCmdStage = 10;
 			} else {
 				itsMpSize = ack.npages[itsBoard] / 4;
-				
-				if ((itsStartPage < itsStartAddr) || ((itsStartPage + itsPages) > (itsStartAddr + itsSize))) {
-					cout << formatString("Requested Page belongs not to rcu %d", itsRcu) << endl;        
+				if ((itsStartPage + itsPages) > itsSize) {
+					cout << formatString("Requested Page belongs not to rcu %d", itsRcu) << endl;
 				} else {
-					//cout << formatString("StartPage = %u ",itsStartPage) << endl;          
+					//cout << formatString("StartPage = %u ",itsStartPage) << endl;
 				}
 			}
 		} break;
-		
+
 		case 2: {
 			TBBWriterAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
-				cout << formatString("%s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
+				cout << formatString("2 %s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
 			}
 		} break;
-		
+
 		case 3: {
 			TBBWriterAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
-				cout << formatString("%s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
+				cout << formatString("3 %s",getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
 			}
 		} break;
-		
+
 		case 4: {
 			TBBReadxAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
-				cout << formatString("%s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
+				cout << formatString("4 %s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
 		  }
-		  
+
 		  // memcpy(itsData, ack.pagedata, sizeof(ack.pagedata));
-			for (int32 dn = 0; dn < 256; dn++) { 
+			for (int32 dn = 0; dn < 256; dn++) {
 				itsData[dn] = ack.pagedata[dn];
 			}
 		} break;
-		
+
 		case 5: {
 			TBBReadxAckEvent ack(e);
 			if (!(ack.status_mask == TBB_SUCCESS)) {
-				cout << formatString("%s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
+				cout << formatString("5 %s", getDriverErrorStr(ack.status_mask).c_str()) << endl;
 				itsCmdStage = 10;
 		  }
-			for (int32 dn = 0; dn < 256; dn++) { 
+			for (int32 dn = 0; dn < 256; dn++) {
 				itsData[256 + dn] = ack.pagedata[dn];
 			}
 		} break;
 	}
-	
+
 	// if error in communication stop
 	if (itsCmdStage == 10) {
 		setCmdDone(true);
 		return(GCFEvent::HANDLED);
 	}
-	
+
 	itsCmdStage++;
 	if (itsCmdStage > 5) { // if stage > 5, received 1 frame
-				
+
 		bar_buff += 1;
 		if (itsPage == 0) {
-						
+
 			itsStationId = static_cast<int>(itsData[0] & 0xFF);
 			itsRspId = static_cast<int>((itsData[0] >> 8) & 0xFF);
 			itsRcuId = static_cast<int>((itsData[0] >> 16) & 0xFF);
 			itsSampleFreq = static_cast<int>((itsData[0] >> 24) & 0xFF);
 			itsTime = static_cast<time_t>(itsData[2]);
 			itsFreqBands = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
-			
+
 			if (itsFreqBands == 0) {
 				itsSampleNr = static_cast<uint32>(itsData[3]);
+
 			} else {
 				itsBandNr = static_cast<int>(itsData[3] & 0x03FF);
 				itsSliceNr = static_cast<int>(itsData[3] >> 10);
 			}
 			strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&itsTime));
-			
+
 			cout << "Station ID      : " << itsStationId << endl;
 			cout << "RSP ID          : " << itsRspId << endl;
 			cout << "RCU ID          : " << itsRcuId << endl;
@@ -2171,7 +2180,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				cout << "Sample number of 1e sample : " << itsSampleNr << endl;
 				cout << "Data file format           : binary  int16" << endl;
 			}
-			
+
 			// print size of progressbar on screen
 			bar_interval = itsPages / bar_size;
 			int recvtime = static_cast<int>((1043. / 262144.) * itsPages);  // measured 262144 pages in 1043 seconds
@@ -2186,31 +2195,43 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			}
 			cout << "|" << endl ;
 			cout << "         |" << flush;
-			
+
 			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsFreqBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 			//next row for testset
 			//snprintf(basefilename, PATH_MAX, "%s_board%02d_rcu%02d",(itsFreqBands == 0)?"rw":"sb",itsStationId,itsRcuId);
 		}
 		itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
-		
+
+		if (itsFreqBands > 0) {
+			if (itsSamplesPerFrame > 512) {
+				cout << "wrong number of samples in frame " << itsSamplesPerFrame << endl;
+				itsSamplesPerFrame = 512;
+			}
+		} else {
+			if (itsSamplesPerFrame > 1024) {
+				cout << "wrong number of samples in frame " << itsSamplesPerFrame << endl;
+				itsSamplesPerFrame = 1024;
+			}
+		}
+
 		// print receive progress on screen
 		if (bar_interval < 1.) {
 			int count = static_cast<int>(ceil(bar_buff / bar_interval));
 			for (int i = 0; i < count; i++) {
 				cout << "x" << flush;
 			}
-			bar_buff -= (count * bar_interval); 
+			bar_buff -= (count * bar_interval);
 		} else {
 			if (bar_buff >= bar_interval) {
 				cout << "x" << flush;
 				bar_buff -= bar_interval;
 			}
 		}
-								
+
 		int sample_cnt = 0;
 		int val_cnt = 0;
 		int data_cnt = 22; // 22 = startadress of data in frame
-		
+
 		// extract payload
 		if (itsFreqBands > 0) { // if itsFreqBands > 0 then it's SPECTRAL data
 			itsTotalSamples += itsSamplesPerFrame;
@@ -2232,7 +2253,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				data[0] = itsData[data_cnt++];
 				data[1] = itsData[data_cnt++];
 				data[2] = itsData[data_cnt++];
-				
+
 				// extract 8 values of 12 bit
 				val[val_cnt++] = static_cast<int16>(  data[0] & 0x00000FFF);
 				val[val_cnt++] = static_cast<int16>(( data[0] & 0x00FFF000) >> 12);
@@ -2242,10 +2263,10 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				val[val_cnt++] = static_cast<int16>(((data[1] & 0xF0000000) >> 28) | ((data[2] & 0x000000FF) << 4));
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0x000FFF00) >> 8);
 				val[val_cnt++] = static_cast<int16>(( data[2] & 0xFFF00000) >> 20);
-				
+
 				sample_cnt += 8;
 			}
-			
+
 			// 2e convert all received samples from signed 12bit to signed 16bit
 			for (int cnt = 0; cnt < val_cnt; cnt++) {
 				if (val[cnt] & 0x0800) val[cnt] |= 0xF000;
@@ -2260,14 +2281,14 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	memcpy(data,itsData,88);
 	memset(&data[4],0,4); // clear SEQNR
 	memset(&data[86],0,2); // clear CRC
-	
+
 	// print data
 	cout << "data=";
 	for (int i = 0; i < 88; i++) {
 		cout << formatString("%02x ",data[i]);
 	}
 	cout << endl;
-	
+
 	// start crc
 	crc16 = 0;
 	for (int w = 0; w < 88; w += 2) {
@@ -2288,7 +2309,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			}
 		}
 	}
-	
+
 	cout << endl;
 	cout << formatString("CRC-16 header data = 0x%04x", (itsData[21] >> 16)&0xFFFF) << endl;
 	cout << formatString("CRC-16 header      = 0x%04x", crc16) << endl;
@@ -2313,7 +2334,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 */
 		// write all data to file
 		FILE* file;
-				
+
 		if (val_cnt > 0) {
 			// save unpacked frame to file
 			snprintf(filename, PATH_MAX, "%s.dat",basefilename);
@@ -2323,9 +2344,9 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			fwrite(&itsData[509],sizeof(uint32),1,file); // payload CRC 4 bytes (4 x 1)
 			fclose(file);
 		}
-		
+
 		itsPage++;
-		if ((itsPage < itsPages) && (itsPage < itsSize)) { 
+		if ((itsPage < itsPages) && (itsPage < itsSize)) {
 				itsCmdStage = 2;
 		} else {
 			// last page received, print last info on screen
@@ -2348,13 +2369,13 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			} else {
 				cout << "Filename        : NO DATA IN FRAME" << endl;
 			}
-			
+
 			// save page information to file
 			strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
 
 			snprintf(filename, PATH_MAX, "%s.nfo",basefilename);
-			file = fopen(filename,"w");      
-			
+			file = fopen(filename,"w");
+
 			fprintf(file,  "Station ID      : %d",itsStationId);
 			fprintf(file,  "RSP ID          : %d",itsRspId);
 			fprintf(file,  "RCU ID          : %d",itsRcuId);
@@ -2386,7 +2407,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	return(GCFEvent::HANDLED);
 }
 
-//====END OF TBB COMMANDS========================================================================== 
+//====END OF TBB COMMANDS==========================================================================
 
 
 //---- HELP --------------------------------------------------------------------
@@ -2407,26 +2428,26 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --record [--select=<set>]                                   # start recording on selected rcu's" << endl;
 	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
 	cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
-	cout << "        # before using: --read, --arp or --arpmode," << endl;   
+	cout << "        # before using: --read, --arp or --arpmode," << endl;
 	cout << "        # first use --mode to setup UDP/IP header" << endl;
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
-	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending CEP messages" << endl; 
-	cout << " tbbctl --arp [--select=<set>]                                      # send 1 arp message" << endl; 
-	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto" << endl; 
+	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending CEP messages" << endl;
+	cout << " tbbctl --arp [--select=<set>]                                      # send 1 arp message" << endl;
+	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto" << endl;
 	cout << endl;
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
 	cout << " tbbctl --settings [--select=<set>]                                 # list trigger settings for selected rcu's" << endl;
 	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
-	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;   
+	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;
 	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<set>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
 	cout << " tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for elected rcu's" << endl;
 	cout << " tbbctl --triginfo=rcu                                              # get trigger info for selected rcu" << endl;
-	cout << " tbbctl --listen                                                    # put in listen mode, all triggers will be listed" << endl;
+	cout << " tbbctl --listen=[one_shot | continues]                             # put in listen mode, all triggers will be listed" << endl;
 	cout << endl;
 	cout << "______| INFO |____________________________________________________________________________________________________________" << endl;
 	cout << " tbbctl --version [--select=<set>]                                  # get version information from selected boards" << endl;
-	cout << " tbbctl --status [--select=<set>]                                   # get status information from selected boards" << endl;   
+	cout << " tbbctl --status [--select=<set>]                                   # get status information from selected boards" << endl;
 	cout << " tbbctl --size [--select=<set>]                                     # get installed memory size from selected boards" << endl;
 	cout << endl;
 	cout << "______| DDR |_____________________________________________________________________________________________________________" << endl;
@@ -2443,9 +2464,10 @@ void TBBCtl::commandHelp(int level)
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
 		cout << " tbbctl --eraseimage=board,image                                    # erase image from flash" << endl;
 		cout << " tbbctl --readimage=board,image                                     # read image from flash to file" << endl;
-		cout << " tbbctl --writeimage=boardnr,imagenr,version,tpfilename,mpfilename  # write tp and mp file to imagenr on boardnr" << endl;
-		cout << "                                                                    # version is the sw version of the image stored" << endl;
-	} 
+		cout << " tbbctl --writeimage=boardnr,imagenr,version,tpfilename,mpfilename,password  # write tp and mp file to imagenr on boardnr" << endl;
+		cout << "                                                                             # version is the sw version of the image stored" << endl;
+		cout << "                                                                             # right password is needed for image-0 " << endl;
+	}
 	if (level == 1) {
 		cout << endl;
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
@@ -2454,7 +2476,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --config=imagenr [--select=<set>]                           # reconfigure TP and MP's with imagenr [0..31] on " << endl;
 	cout << "                                                                    # selected boards" << endl;
 	cout << "__________________________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --templimits=high,low [--select=<set>]                      # set temp limts for fan control" << endl; 
+	cout << " tbbctl --templimits=high,low [--select=<set>]                      # set temp limts for fan control" << endl;
 	cout << " tbbctl --clear [--select=<set>]                                    # clear selected board" << endl;
 	cout << " tbbctl --reset [--select=<set>]                                    # reset to factory images on selected boards" << endl;
 	cout << endl;
@@ -2496,7 +2518,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 	 case F_ENTRY: {
 		if (!itsServerPort.isConnected()) {
 			itsServerPort.open();
-			itsServerPort.setTimer(DELAY);
+			itsServerPort.setTimer(5.0);
 		}
 	 } break;
 
@@ -2510,7 +2532,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 
 		case TBB_DRIVER_BUSY_ACK: {
 		cout << endl << "=x=x=   DRIVER BUSY, with setting up boards, try again   =x=x=" << endl << flush;
-		GCFScheduler::instance()->stop();    
+		GCFScheduler::instance()->stop();
 	 }
 
 	 case TBB_GET_CONFIG_ACK: {
@@ -2518,22 +2540,28 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		itsMaxBoards      = ack.max_boards;
 		itsActiveBoards   = ack.active_boards_mask;
 		itsMaxChannels = itsMaxBoards * 16;
+		cout << "active boards=" << itsActiveBoards << endl;
+
 		if (itsActiveBoards == 0) {
-		  cout << "=x=x=   NO boards available   =x=x=" << endl << flush;
-		  GCFScheduler::instance()->stop();    
-		}      
-			
-		// send subscribe 
+			if (itsMaxBoards == 0) {
+				cout << "=x=x=   Driver in init state  =x=x=" << endl;
+			} else {
+				cout << "=x=x=   NO boards available   =x=x=" << endl;
+		  }
+			GCFScheduler::instance()->stop();
+		}
+
+		// send subscribe
 		TBBSubscribeEvent subscribe;
 		subscribe.triggers = false;
 		subscribe.hardware = true;
 		itsServerPort.send(subscribe);
 	 } break;
-		
+
 		case TBB_SUBSCRIBE_ACK: {
 			TRAN(TBBCtl::docommand);
 		} break;
-		
+
 	 case F_DISCONNECTED: {
 		//port.setTimer(DELAY);
 		port.close();
@@ -2565,7 +2593,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 	switch (e.signal) {
 		case F_INIT: {
 		} break;
-	
+
 		case F_ENTRY: {
 		// reparse options
 		itsCommand = parse_options(itsArgc, itsArgv);
@@ -2578,13 +2606,13 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
 		case F_CONNECTED: {
 		} break;
-	
+
 		case F_DISCONNECTED: {
 		port.close();
 		cout << formatString("Error: port '%s' disconnected.",port.getName().c_str()) << endl;
 		exit(EXIT_FAILURE);
 		} break;
-		
+
 		case F_TIMER: {
 			if (&port == itsCmdTimer) {
 				itsCommand->send();
@@ -2596,23 +2624,23 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 				GCFScheduler::instance()->stop();
 			}
 		} break;
-	
+
 		case TBB_BOARDCHANGE: {
 		} break;
-	
+
 		case TBB_DRIVER_BUSY_ACK: {
 			cout << "DRIVER BUSY, try again" << endl << flush;
-			GCFScheduler::instance()->stop();    
+			GCFScheduler::instance()->stop();
 		}
-			
+
 		case TBB_ALLOC_ACK:
 		case TBB_RCU_INFO_ACK:
 		case TBB_FREE_ACK:
 		case TBB_RECORD_ACK:
 		case TBB_STOP_ACK:
-		case TBB_TRIG_SETTINGS_ACK:  
+		case TBB_TRIG_SETTINGS_ACK:
 		case TBB_TRIG_RELEASE_ACK:
-		case TBB_TRIG_SETUP_ACK:  
+		case TBB_TRIG_SETUP_ACK:
 		case TBB_TRIG_COEF_ACK:
 		case TBB_TRIG_GENERATE_ACK:
 		case TBB_TRIG_INFO_ACK:
@@ -2621,7 +2649,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_MODE_ACK:
 		case TBB_VERSION_ACK:
 		case TBB_SIZE_ACK:
-		case TBB_STATUS_ACK: 
+		case TBB_STATUS_ACK:
 		case TBB_CLEAR_ACK:
 		case TBB_RESET_ACK:
 		case TBB_CONFIG_ACK:
@@ -2639,7 +2667,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_ARP_MODE_ACK:
 		case TBB_CEP_STATUS_ACK:
 		case TBB_STOP_CEP_ACK:
-		case TBB_TEMP_LIMIT_ACK: { 
+		case TBB_TEMP_LIMIT_ACK: {
 			itsServerPort.cancelAllTimers();
 			status = itsCommand->ack(e); // handle the acknowledgement
 			if (!itsCommand->isCmdDone() && itsCommand->isCmdSendNext()) {
@@ -2656,14 +2684,14 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 			GCFScheduler::instance()->stop();
 		} break;
 	}
-	
+
 	if (itsCommand->isCmdDone()) {
 		//TBBUnsubscribeEvent unsubscribe;
 		//itsServerPort.send(unsubscribe);
 		cout << flush;
 		GCFScheduler::instance()->stop();
 	}
-		 
+
 	return(status);
 }
 
@@ -2672,49 +2700,49 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 {
 	Command*  command = 0;
 	std::list<int> select;
-	
+
 	optind = 0; // reset option parsing
 	//opterr = 0; // no error reporting to stderr
-	
+
 	while(1) {
 	static struct option long_options[] = {
-			{ "select",       required_argument,   0, 'l' }, 
-			{ "alloc",        no_argument,            0, 'a' }, 
-			{ "rcuinfo",      no_argument,            0, 'i' }, 
-			{ "free",            no_argument,            0, 'f' }, 
-			{ "record",        no_argument,            0, 'r' }, 
+			{ "select",       required_argument,   0, 'l' },
+			{ "alloc",        no_argument,            0, 'a' },
+			{ "rcuinfo",      no_argument,            0, 'i' },
+			{ "free",            no_argument,            0, 'f' },
+			{ "record",        no_argument,            0, 'r' },
 			{ "stop",          no_argument,            0, 's' },
-			{ "settings",      no_argument,            0, 'b' }, 
-			{ "release",    no_argument,            0, 'e' }, 
-			{ "generate",      no_argument,            0, 'g' }, 
-			{ "setup",         required_argument,   0, 't' }, 
-			{ "coef",          required_argument,   0, 'c' }, 
-			{ "triginfo",      required_argument,   0, 'I' }, 
-			{ "listen",     optional_argument,   0, 'L' }, 
-			{ "read",            required_argument,   0, 'R' }, 
-			{ "readall",         required_argument,   0, 'B' }, 
-			{ "mode",            required_argument,   0, 'm' }, 
-			{ "version",      no_argument,            0, 'v' }, 
-			{ "size",            no_argument,            0, 'z' }, 
-			{ "status",       no_argument,            0, 'A' }, 
-			{ "readpage",     required_argument,   0, 'p' }, 
+			{ "settings",      no_argument,            0, 'b' },
+			{ "release",    no_argument,            0, 'e' },
+			{ "generate",      no_argument,            0, 'g' },
+			{ "setup",         required_argument,   0, 't' },
+			{ "coef",          required_argument,   0, 'c' },
+			{ "triginfo",      required_argument,   0, 'I' },
+			{ "listen",     optional_argument,   0, 'L' },
+			{ "read",            required_argument,   0, 'R' },
+			{ "readall",         required_argument,   0, 'B' },
+			{ "mode",            required_argument,   0, 'm' },
+			{ "version",      no_argument,            0, 'v' },
+			{ "size",            no_argument,            0, 'z' },
+			{ "status",       no_argument,            0, 'A' },
+			{ "readpage",     required_argument,   0, 'p' },
 			{ "arp",         no_argument,          0, 'D' },
 			{ "arpmode",      required_argument,   0, 'E' },
 			{ "stopcep",      no_argument,            0, 'F' },
 			{ "templimits",   required_argument,   0, 'G' },
-			{ "clear",        no_argument,            0, 'C' }, 
-			{ "reset",        no_argument,            0, 'Z' }, 
-			{ "config",       required_argument,   0, 'S' }, 
-			{ "eraseimage", required_argument,   0, '1' }, 
-			{ "readimage",  required_argument,   0, '2' }, 
-			{ "writeimage", required_argument,   0, '3' }, 
-			{ "imageinfo", required_argument,   0, '8' }, 
-			{ "readddr",    required_argument,   0, '4' }, 
-			{ "writeddr",      required_argument,   0, '5' }, 
-			{ "testddr",    required_argument,   0, '9' }, 
-			{ "readreg",    required_argument,   0, '6' }, 
-			{ "writereg",      required_argument,   0, '7' }, 
-			{ "help",            no_argument,            0, 'h' }, 
+			{ "clear",        no_argument,            0, 'C' },
+			{ "reset",        no_argument,            0, 'Z' },
+			{ "config",       required_argument,   0, 'S' },
+			{ "eraseimage", required_argument,   0, '1' },
+			{ "readimage",  required_argument,   0, '2' },
+			{ "writeimage", required_argument,   0, '3' },
+			{ "imageinfo", required_argument,   0, '8' },
+			{ "readddr",    required_argument,   0, '4' },
+			{ "writeddr",      required_argument,   0, '5' },
+			{ "testddr",    required_argument,   0, '9' },
+			{ "readreg",    required_argument,   0, '6' },
+			{ "writereg",      required_argument,   0, '7' },
+			{ "help",            no_argument,            0, 'h' },
 			{ "expert",       no_argument,            0, 'X' },
 			{ 0,                 0,                          0, 0 },
 		};
@@ -2723,13 +2751,13 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 	 int c = getopt_long(argc, argv,
 												"l:afrsbegt:c:I:L::R:m:vzAp:DE:FG:CZS:1:2:3:8:4:5:9:6:7:hX",
 				long_options, &option_index);
-		
+
 	 if (c == -1) {
 			break;
 		}
 
 		switch (c) {
-			
+
 			case 'l': {    // --select
 			if (!command->isSelectionDone()) {
 			if (optarg) {
@@ -2738,7 +2766,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					exit(EXIT_FAILURE);
 					}
 					select = strtolist(optarg, command->getMaxSelections());
-											
+
 				if (select.empty()) {
 					cout << "Error: invalid or missing '--select' option" << endl;
 					exit(EXIT_FAILURE);
@@ -2753,49 +2781,49 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				cout << "Error: channels already selected" << endl;
 				}
 		 } break;
-		 
+
 		 case 'a': {   // --alloc
 				if (command) delete command;
 				AllocCmd* alloccmd = new AllocCmd(itsServerPort);
 				command = alloccmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'i': {    // --channelinfo
 				if (command) delete command;
 				ChannelInfoCmd* channelinfocmd = new ChannelInfoCmd(itsServerPort);
 				command = channelinfocmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'f': {    // --free
 				if (command) delete command;
 				FreeCmd* freecmd = new FreeCmd(itsServerPort);
 				command = freecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'r': {    // --record
 				if (command) delete command;
 				RecordCmd* recordcmd = new RecordCmd(itsServerPort);
 				command = recordcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 's': {    // --stop
 				if (command) delete command;
 				StopCmd* stopcmd = new StopCmd(itsServerPort);
 				command = stopcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'b': {
 				if (command) delete command;
 				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(itsServerPort);
 				command = trigsettingscmd;
-				command->setCmdType(RCUCMD);  
+				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'e': {    // --trigrelease
 				if (command) delete command;
 				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(itsServerPort);
@@ -2805,29 +2833,29 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%d",&rcu);
 					if (numitems == 0 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--trigclr=rcu' " << endl;  
+						cout << "       '--trigclr=rcu' " << endl;
 						exit(EXIT_FAILURE);
 					}
 					select.clear();
 				select.push_back(rcu);
 					command->setSelected(true);
 				}
-				
+
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'g': {    // --triggenerate
 				if (command) delete command;
 				TrigGenerateCmd* triggeneratecmd = new TrigGenerateCmd(itsServerPort);
 				command = triggeneratecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 't': {    // --trigsetup
 				if (command) delete command;
 				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(itsServerPort);
 				command = trigsetupcmd;
-				
+
 				if (optarg) {
 					uint32 level = 0;
 					uint32 start = 0;
@@ -2835,24 +2863,24 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint32 filter = 0;
 					uint32 window = 0;
 					uint32 triggermode = 0;
-					
+
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
-					if (  numitems < 6 || numitems == EOF 
-							|| level < 1 || level > 255 
-							|| start < 1 || start > 15 
-							|| stop < 1 || stop > 15 
+					if (  numitems < 6 || numitems == EOF
+							|| level < 1 || level > 255
+							|| start < 1 || start > 15
+							|| stop < 1 || stop > 15
 							|| window > 8
 							|| triggermode > 3)
 					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;  
+						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;
 						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(on) or 1(off)" << endl;
 						cout << "       window=0..8, mode=0..3 (b0=0 single shot),(b0=1 continues)" << endl;
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
-					
+
 					//================================================
 					// set triggermode to single shot, continues mode
 					// will give more than 6000 triggers per second per
@@ -2860,11 +2888,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					// handle that amount of trigger per board.
 					if (triggermode == 1) {
 						cout << "mode=1 can generate to many triggers, auto corrected to mode=0(single-shot)" << endl;
-					}  
+					}
 					triggermode = 0;
 					//================================================
-					
-										
+
+
 					trigsetupcmd->setLevel(static_cast<uint16>(level));
 					trigsetupcmd->setStartMode(static_cast<uint8>(start));
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
@@ -2873,10 +2901,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					trigsetupcmd->setOperatingMode(0);
 					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
-							
+
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'c': {    // --trigcoef
 				if (command) delete command;
 				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(itsServerPort);
@@ -2890,7 +2918,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					if (numitems < 4 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--trigcoef=c0, c1, c2, c3'   (use decimal values)" << endl;
-						cout << "       co, c1, c2, c3=16bit value"<< endl; 
+						cout << "       co, c1, c2, c3=16bit value"<< endl;
 						exit(EXIT_FAILURE);
 					}
 					trigcoefficientcmd->setC0(static_cast<uint16>(c0));
@@ -2900,7 +2928,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'I': {    // --triginfo
 				if (command) delete command;
 				TrigInfoCmd* triginfocmd = new TrigInfoCmd(itsServerPort);
@@ -2910,8 +2938,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%d",&rcu);
 					if (numitems < 1 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--triginfo=rcu' " << endl; 
-						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl;  
+						cout << "       '--triginfo=rcu' " << endl;
+						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl;
 						exit(EXIT_FAILURE);
 					}
 					select.clear();
@@ -2920,14 +2948,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'L': {    // --listen
 				if (command) delete command;
 				ListenCmd* listencmd = new ListenCmd(itsServerPort);
 				command = listencmd;
 				char listen_mode[64];
+				strcpy(listen_mode,"one_shot");
 				if (optarg) {
-					strcpy(listen_mode,"one_shot");
 					sscanf(optarg, "%s", listen_mode);
 					if ((strcmp(listen_mode,"one_shot") != 0 && strcmp(listen_mode,"continues") != 0)) {
 						cout << "Error: invalid argument. Should be of the format " << endl;
@@ -2943,12 +2971,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-			
+
 			case 'R': {    // --read
 				if (command) delete command;
 				ReadCmd* readcmd = new ReadCmd(itsServerPort);
 				command = readcmd;
-				
+
 				if (optarg) {
 					int rcu = 0;
 					uint32 secondstime = 0;
@@ -2960,26 +2988,26 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					if (numitems < 5 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--read=rcu,secondstime,sampletime,prepages,postpages' " << endl;
-						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time = secondstime + (sampletime * sample-interval) "<< endl;  
+						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time = secondstime + (sampletime * sample-interval) "<< endl;
 						exit(EXIT_FAILURE);
 					}
 					readcmd->setSecondsTime(secondstime);
 					readcmd->setSampleTime(sampletime);
 					readcmd->setPrePages(prepages);
 					readcmd->setPostPages(postpages);
-					
+
 					select.clear();
 					select.push_back(rcu);
 					command->setSelected(true);
-				} 
+				}
 				command->setCmdType(RCUCMD);
 			} break;
-	 
+
 		case 'B': {    // --readall
 				if (command) delete command;
 				ReadAllCmd* readallcmd = new ReadAllCmd(itsServerPort);
 				command = readallcmd;
-				
+
 				if (optarg) {
 					uint32 pages = 0;
 					int numitems = sscanf(optarg, "%u", &pages);
@@ -2989,11 +3017,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						exit(EXIT_FAILURE);
 					}
 					readallcmd->setPages(pages);
-				} 
+				}
 				command->setCmdType(RCUCMD);
 			} break;
 
-			
+
 			case 'm': {    // --mode
 				if (command) delete command;
 				ModeCmd* modecmd = new ModeCmd(itsServerPort);
@@ -3005,60 +3033,60 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					if (numitems < 1 || numitems == EOF ||(strcmp(rec_mode,"transient") != 0 && strcmp(rec_mode,"subbands") != 0)) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
 						cout << "       '--udp=rec_mode'" << endl;
-						cout << "       rec_mode=transient or subbands" << endl;  
+						cout << "       rec_mode=transient or subbands" << endl;
 						exit(EXIT_FAILURE);
 					}
-					
+
 					if (strcmp(rec_mode,"transient") == 0)
 						modecmd->setRecMode(TBB_MODE_TRANSIENT);
 					if (strcmp(rec_mode,"subbands") == 0)
 						modecmd->setRecMode(TBB_MODE_SUBBANDS);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
-			} break;                           
-						
+			} break;
+
 			case 'v': {    // --version
 			if (command) delete command;
 			VersionCmd* versioncmd = new VersionCmd(itsServerPort);
 			command = versioncmd;
 				command->setCmdType(BOARDCMD);
-		} break;   
-		
+		} break;
+
 		case 'z': {    // --size
 			if (command) delete command;
 			SizeCmd* sizecmd = new SizeCmd(itsServerPort);
 			command = sizecmd;
 				command->setCmdType(BOARDCMD);
 		} break;
-		
+
 		case 'A': {    // --status
 			if (command) delete command;
 			StatusCmd* statuscmd = new StatusCmd(itsServerPort);
 			command = statuscmd;
 				command->setCmdType(BOARDCMD);
 		} break;
-			
+
 			case 'C': {    // --clear
 				if (command) delete command;
 				ClearCmd* clearcmd = new ClearCmd(itsServerPort);
 				command = clearcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case 'Z': {    // --reset
 				if (command) delete command;
 				ResetCmd* resetcmd = new ResetCmd(itsServerPort);
 				command = resetcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-		
+
 			case 'D': {    // --arp
 				if (command) delete command;
 				ArpCmd* arpcmd = new ArpCmd(itsServerPort);
 				command = arpcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case 'E': {    // --arpmode
 				if (command) delete command;
 				ArpModeCmd* arpmodecmd = new ArpModeCmd(itsServerPort);
@@ -3069,21 +3097,21 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					if (numitems == 0 || numitems == EOF || mode < 0 || mode > 1) {
 						cout << "Error: invalid mode value. Should be of the format " << endl;
 						cout << "       '--arpmode=mode'" << endl;
-						cout << "       mode=0 or 1" << endl; 
+						cout << "       mode=0 or 1" << endl;
 						exit(EXIT_FAILURE);
 					}
 					arpmodecmd->setMode((uint32)mode);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case 'F': {    // --stopcep
 				if (command) delete command;
 				StopCepCmd* stopcepcmd = new StopCepCmd(itsServerPort);
 				command = stopcepcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case 'G': {    // --templimits
 				if (command) delete command;
 				TempLimitCmd* templimitscmd = new TempLimitCmd(itsServerPort);
@@ -3099,48 +3127,48 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					}
 					templimitscmd->setLimitHigh((uint32)high);
 					templimitscmd->setLimitLow((uint32)low);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
-			
-			
+
+
+
 			case 'S': {    // --config
 				if (command) delete command;
 				ConfigCmd* configcmd = new ConfigCmd(itsServerPort);
 				command = configcmd;
-				
+
 				if (optarg) {
 					int32 imagenr = 0;
 					int numitems = sscanf(optarg, "%d", &imagenr);
 					if (numitems == 0 || numitems == EOF || imagenr < 0 || imagenr >= FL_N_IMAGES) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
 						cout << "       '--config=imagenr'" << endl;
-						cout << "       imagenr=0..15" << endl; 
+						cout << "       imagenr=0..15" << endl;
 						exit(EXIT_FAILURE);
 					}
 					configcmd->setImage((uint32)imagenr);
-				} 
-				
+				}
+
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case 'p': {    // --readpage
 				if (command) delete command;
 				ReadPageCmd* readddrcmd = new ReadPageCmd(itsServerPort);
 				command = readddrcmd;
-				
+
 				if (optarg) {
 					int32 rcu = 0;
 					uint32 startpage = 0;
 					uint32 pages = 0;
-					
+
 					int numitems = sscanf(optarg, "%d,%u,%u", &rcu,&startpage,&pages);
-					
+
 					if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid readpage value's. Should be of the format " << endl;
 						cout << "       '--readpage=rcu, startpage, pages'" << endl;
-						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl; 
+						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl;
 						exit(EXIT_FAILURE);
 					}
 					readddrcmd->setStartPage(startpage);
@@ -3148,10 +3176,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					select.clear();
 				select.push_back(rcu);
 				command->setSelected(true);
-				}  
+				}
 				command->setCmdType(BOARDCMD);
-			} break;         
-						
+			} break;
+
 			case '1': {    // --erasef
 				if (command) delete command;
 				ErasefCmd* erasefcmd = new ErasefCmd(itsServerPort);
@@ -3160,21 +3188,21 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-					
+
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid page value. Should be of the format " << endl;
 						cout <<  "       '--eraseimage=board, image'" << endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..15" << endl; 
+						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..15" << endl;
 						exit(EXIT_FAILURE);
 					}
 					erasefcmd->setPage(page);
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '2': {    // --readf
 				if (command) delete command;
 				ReadfCmd* readfcmd = new ReadfCmd(itsServerPort);
@@ -3183,22 +3211,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-					
+
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
 						cout << "       '--readimage=board, image'"<< endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;  
+						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;
 						exit(EXIT_FAILURE);
 					}
 					readfcmd->setPage(page);
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
-			case '3': {    // --writef
+
+			case '3': {    // --writeimage
 				if (command) delete command;
 				WritefCmd* writefcmd = new WritefCmd(itsServerPort);
 				command = writefcmd;
@@ -3210,27 +3238,34 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					char filename_mp[64];
 					memset(filename_tp,0,64);
 					memset(filename_mp,0,64);
-					
-					int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,]", &board, &page, &version, filename_tp, filename_mp);
-					if (numitems < 5 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
+					uint32 password = 0;
+
+					int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,],%x",
+															&board, &page, &version,
+															filename_tp, filename_mp,
+															&password );
+
+					if (numitems < 6 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid values. Should be of the format " << endl;
-						cout << "       '--writeimage=board, image, file-tp, file-mp'"<< endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;  
+						cout << "       '--writeimage=board, image, file-tp, file-mp, password'"<< endl;
+						cout << "       board=0.." << (itsMaxBoards - 1) << ", image=0..31" << endl;
+						cout << "       password= xxxx for image-0 otherwise use 0" << endl;
 						exit(EXIT_FAILURE);
 					}
-					
+
 					writefcmd->setPage(page);
 					writefcmd->setVersion(version);
 					writefcmd->setFileNameTp(filename_tp);
 					writefcmd->setFileNameMp(filename_mp);
+					writefcmd->setPassword(password);
 
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '8': { // --imageinfo
 				if (command) delete command;
 				ImageInfoCmd* imageinfocmd = new ImageInfoCmd(itsServerPort);
@@ -3241,33 +3276,33 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid values. Should be of the format " << endl;
 						cout <<  "       '--imageinfo=board'"<< endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << endl;   
+						cout << "       board=0.." << (itsMaxBoards - 1) << endl;
 						exit(EXIT_FAILURE);
 					}
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '4': {    // --readw
 				if (command) delete command;
 				ReadwCmd* readwcmd = new ReadwCmd(itsServerPort);
 				command = readwcmd;
-				
+
 				if (optarg) {
 					int board = 0;
 					uint32 mp = 0;
 					uint32 startaddr = 0;
 					uint32 size = 0;
-					
+
 					int numitems = sscanf(optarg, "%d,%x,%x,%x", &board,&mp,&startaddr, &size);
-					
+
 					if (numitems < 3 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid read ddr value. Should be of the format " << endl;
 						cout <<  "       '--readw=board, mp, addr'" << endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x.." << endl;  
+						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x.." << endl;
 						exit(EXIT_FAILURE);
 					}
 					readwcmd->setMp(mp);
@@ -3276,10 +3311,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					select.clear();
 				select.push_back(board);
 				command->setSelected(true);
-				} 
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '5': {    // --writew
 				if (command) delete command;
 				WritewCmd* writewcmd = new WritewCmd(itsServerPort);
@@ -3289,13 +3324,13 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int32 mp = 0;
 					uint32 addr = 0;
 					uint32 word[8];
-					
+
 					int numitems = sscanf(optarg, "%d,%d,%x,%x,%x,%x,%x,%x,%x,%x,%x", &board,&mp,&addr,
 										 &word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
-						cout <<  "       '--writew=board, mp, addr, word[0], word[1] .. word[7]'"<< endl; 
-						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x..,  word[x]=0x.., etc." << endl;  
+						cout <<  "       '--writew=board, mp, addr, word[0], word[1] .. word[7]'"<< endl;
+						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  addr=0x..,  word[x]=0x.., etc." << endl;
 						exit(EXIT_FAILURE);
 					}
 					writewcmd->setMp(mp);
@@ -3306,48 +3341,48 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					select.clear();
 				select.push_back(board);
 				command->setSelected(true);
-				}  
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '9': {    // --testddr
 				if (command) delete command;
 				TestDdrCmd* testddrcmd = new TestDdrCmd(itsServerPort);
 				command = testddrcmd;
 				if (optarg) {
 					int32 board = 0;
-										
+
 					int numitems = sscanf(optarg, "%d", &board);
 					if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
-						cout << "       '--testddr=board' "<< endl;  
+						cout << "       '--testddr=board' "<< endl;
 						cout << "       board=0.." << (itsMaxBoards - 1) << endl;
 						exit(EXIT_FAILURE);
 					}
 					select.clear();
 				select.push_back(board);
 				command->setSelected(true);
-				}  
+				}
 				command->setCmdType(BOARDCMD);
 			} break;
-						
+
 			case '6': {    // --readr
 				if (command) delete command;
 				ReadrCmd* readrcmd = new ReadrCmd(itsServerPort);
 				command = readrcmd;
-				
+
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
-										
+
 					int numitems = sscanf(optarg, "%d,%u,%u,%u", &board, &mp, &pid, &regid);
-					
+
 					if (numitems < 4 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid read register value. Should be of the format" << endl;
 						cout << "       '--readreg=board, mp, pid, regid'" << endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;  
+						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;
 						exit(EXIT_FAILURE);
 					}
 					if ((REG_TABLE_3[pid][regid] == REG_WRITE_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {
@@ -3357,32 +3392,32 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					readrcmd->setMp(mp);
 					readrcmd->setPid(pid);
 					readrcmd->setRegId(regid);
-					
+
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				}  
-				
+				}
+
 				command->setCmdType(BOARDCMD);
 			} break;
-			
+
 			case '7': {    // --writer
 				if (command) delete command;
 				WriterCmd* writercmd = new WriterCmd(itsServerPort);
 				command = writercmd;
-				
+
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
 					char datastr[256];
-					
+
 					int numitems = sscanf(optarg, "%d,%u,%u,%u,%s", &board, &mp, &pid, &regid, datastr);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid write register value. Should be of the format " << endl;
 						cout <<  "       '--writereg=board, mp, pid, regid, data1, data2 etc.'" << endl;
-						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;   
+						cout << "       board=0.." << (itsMaxBoards - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;
 						exit(EXIT_FAILURE);
 					}
 					if ((REG_TABLE_3[pid][regid] == REG_READ_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {
@@ -3392,7 +3427,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					writercmd->setMp(mp);
 					writercmd->setPid(pid);
 					writercmd->setRegId(regid);
-					
+
 					char* dstr;
 					uint32 val = 0;
 					int wordcnt = 0;
@@ -3410,22 +3445,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
-				}  
-				
+				}
+
 				command->setCmdType(BOARDCMD);
 			} break;
-						
+
 			case 'h':
 			case '?': {
 				commandHelp(1);
 				exit(0);
 			} break;
-			
+
 			case 'X':   {
 				commandHelp(3);
 				exit(0);
 			} break;
-			
+
 			default:
 			{
 				commandHelp(1);
@@ -3438,7 +3473,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 		if (!command->isSelectionDone()) {  // --select not used, select all
 			select.clear();
 			for (int i = 0; i < command->getMaxSelections(); i++) {
-				select.push_back(i); 
+				select.push_back(i);
 			}
 			command->setSelected(true);
 		}
@@ -3456,7 +3491,7 @@ std::list<int> TBBCtl::strtolist(const char* str, int max)
   bool  range = false;
   long prevval = 0;
 	std::list<int> resultset;
-			
+
 	resultset.clear();
 
   while(start) {
@@ -3512,7 +3547,7 @@ void TBBCtl::mainloop()
 {
   start(); // make initial transition
   GCFScheduler::instance()->run();
-	
+
 	TBBUnsubscribeEvent unsubscribe;
 	itsServerPort.send(unsubscribe);
 }
@@ -3521,7 +3556,7 @@ void TBBCtl::mainloop()
 int main(int argc, char** argv)
 {
   GCFScheduler::instance()->init(argc, argv, "tbbctl");
-  
+
   LOG_DEBUG(formatString("Program %s has started", argv[0]));
 
   TBBCtl tbbctl("tbbctl", argc, argv);

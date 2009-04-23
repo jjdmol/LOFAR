@@ -36,41 +36,33 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ErasefCmd : public Command 
-		{
-			public:
-				// Constructors for a ErasefCmd object.
-				ErasefCmd();
-	  
-				// Destructor for ErasefCmd.
-				virtual ~ErasefCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ErasefCmd : public Command 
+{
+public:
+	// Constructors for a ErasefCmd object.
+	ErasefCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for ErasefCmd.
+	virtual ~ErasefCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				      
-			private:
-				TbbSettings *TS;
+	virtual void saveTpAckEvent(GCFEvent& event);
 
-				TPErasefEvent					*itsTPE;
-				TPErasefAckEvent			*itsTPackE;
-				TBBEraseImageEvent		*itsTBBE;
-				TBBEraseImageAckEvent	*itsTBBackE;
-				
-				int32				itsImage;
-				int32				itsSector;
-				
-				// variables holding data from tp cmd
-				uint32	itsBoardStatus;
-		};
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+	      
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	int32 itsImage;
+	int32 itsSector;
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 

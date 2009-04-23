@@ -45,43 +45,39 @@
 #include "DriverSettings.h"
 
 namespace LOFAR {
-	using GCF::TM::GCFFsm;
+	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPortInterface;
 	using GCF::TM::GCFTimerPort;
 	namespace TBB {
 	
-		class BoardCmdHandler : public GCFFsm
-		{
-	
-			public:
-				// Constructors for a SyncAction object.
-				// Default direction is read.
-				BoardCmdHandler(GCFTimerPort* port);
+class BoardCmdHandler : public GCFTask
+{
+public:
+	// Constructors for a SyncAction object.
+	// Default direction is read.
+	BoardCmdHandler(GCFTimerPort* port);
 
-				// Destructor for SyncAction. */
-				~BoardCmdHandler();
+	// Destructor for SyncAction. */
+	~BoardCmdHandler();
 
-				// The states of the statemachine.
-				GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
-				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
-				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
-								
-				void setTpCmd(Command *cmd);
-				bool tpCmdDone();
-				
-			protected:
+	// The states of the statemachine.
+	GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
+					
+	void setTpCmd(Command *cmd);
+	bool tpCmdDone();
+private:
+	TbbSettings* TS;
+	bool itsDone;
+	bool itsFlashMode;
+	// variables
+	int32 itsRetries;
+	GCFPortInterface* itsClientPort; // return port of the actual commmand
+	Command* itsCmd; // command to use
+	GCFTimerPort* itsSleepTimer;
+};
 
-			private:
-				TbbSettings* 			TS;
-				bool							itsDone;
-				bool							itsFlashMode;
-				// variables
-				int32							 itsRetries;
-				GCFPortInterface* itsClientPort; // return port of the actual commmand
-				Command* itsCmd; // command to use
-				GCFTimerPort* itsSleepTimer;			
-				
-		};
 	} // end TBB namespace
 } // end LOFAR namespace
 

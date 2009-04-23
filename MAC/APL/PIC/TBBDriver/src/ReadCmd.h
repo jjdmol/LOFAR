@@ -36,35 +36,37 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ReadCmd : public Command 
-		{
-			public:
-				// Constructors for a ReadCmd object.
-				ReadCmd();
-	  
-				// Destructor for ReadCmd.
-				virtual ~ReadCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ReadCmd : public Command 
+{
+public:
+	// Constructors for a ReadCmd object.
+	ReadCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for ReadCmd.
+	virtual ~ReadCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-      
-			private:
-				TbbSettings *TS;
-				
-				TPReadEvent			*itsTPE;
-				TPReadAckEvent	*itsTPackE;
-				TBBReadEvent		*itsTBBE;
-				TBBReadAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+
+private:
+	TbbSettings *TS;
+	uint32 itsStatus;
+	uint32 itsSecondstime;
+	uint32 itsSampletime;
+	uint32 itsPrepages;
+	uint32 itsPostpages;
+
+};
+
 	} // end TBB namespace
 } // end LOFAR namespace
 

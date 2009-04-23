@@ -36,35 +36,32 @@
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
-  namespace TBB {
+	namespace TBB {
 
-		class ArpModeCmd : public Command 
-		{
-			public:
-				// Constructors for a GetVersions object.
-				ArpModeCmd();
-	  
-				// Destructor for GetVersions.
-				virtual ~ArpModeCmd();
-				
-				virtual bool isValid(GCFEvent& event);
-				
-				virtual void saveTbbEvent(GCFEvent& event);
-									
-				virtual void sendTpEvent();
+class ArpModeCmd : public Command 
+{
+public:
+	// Constructors for a GetVersions object.
+	ArpModeCmd();
 
-				virtual void saveTpAckEvent(GCFEvent& event);
+	// Destructor for GetVersions.
+	virtual ~ArpModeCmd();
+	
+	virtual bool isValid(GCFEvent& event);
+	
+	virtual void saveTbbEvent(GCFEvent& event);
+						
+	virtual void sendTpEvent();
 
-				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-      
-			private:
-				TbbSettings *TS;
-				
-				TPArpModeEvent			*itsTPE;
-				TPArpModeAckEvent		*itsTPackE;
-				TBBArpModeEvent			*itsTBBE;
-				TBBArpModeAckEvent	*itsTBBackE;
-		};
+	virtual void saveTpAckEvent(GCFEvent& event);
+
+	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
+
+private:
+	TbbSettings *TS;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	uint32 itsMode;
+};
 	} // end TBB namespace
 } // end LOFAR namespace
 
