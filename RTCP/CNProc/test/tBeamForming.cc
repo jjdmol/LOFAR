@@ -55,11 +55,11 @@ void init_data()
     for (unsigned chan = 0; chan < NR_CHANNELS; chan ++)
       for (unsigned time = 0; time < NR_TIMES; time ++)
 	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++, count += 17, count &= 0xFF)
-	  samples[chan][stat][time][pol] = makefcomplex(count, count + 9);
+	  samples[chan][stat][time][pol] = 1;//makefcomplex(count, count + 9);
 
   for (unsigned count = 37, stat = 0; stat < NR_STATIONS; stat ++)
     for (unsigned beam = 1; beam < NR_BEAMS; beam ++, count += 51, count &= 0xFF)
-      weights[stat][beam] = makefcomplex(count, 2 * count + 5);
+      weights[stat][beam] = 1;//makefcomplex(count, 2 * count + 5);
 }
 
 
@@ -172,7 +172,7 @@ void check_beamformed_data(unsigned nr_stations)
 
 	  if (sums[chan][beam][time][pol] != sum) {
 	    std::cout << "sums[" << chan << "][" << beam << "][" << time << "][" << pol << "] = " << sums[chan][beam][time][pol] << ", sum = " << sum << std::endl;
-	    abort();
+	    //abort();
 	  }
 
 	  //assert(sums[chan][beam][time][pol] == sum);
@@ -206,17 +206,21 @@ void test_beamform_3stations_6beams()
 }
 
 
-void test_beamform_3_beams(unsigned nr_stations_at_once)
+void test_beamformer(unsigned nr_stations_at_once, unsigned nr_beams_at_once)
 {
   unsigned nr_stations = NR_STATIONS / nr_stations_at_once * nr_stations_at_once;
+  unsigned nr_beams    = NR_BEAMS / nr_beams_at_once * nr_beams_at_once;
 
-  std::cout << "beam forming " << nr_stations << " stations in groups of " << nr_stations_at_once << std::endl;
+  std::cout << "beam forming " << nr_stations << " stations and "
+	    << nr_beams " beams in groups of "
+	    << nr_stations_at_once << " stations and "
+	    << nr_beams_at_once << " beams" << std::endl;
   NSTimer timer("beamform_3bm", true);
   timer.start();
   for (unsigned chan = 0; chan < NR_CHANNELS; chan ++)
     for (unsigned stat = 0; stat + nr_stations_at_once <= NR_STATIONS; stat += nr_stations_at_once)
       for (unsigned time = 0; time < NR_TIMES; time += 96)
-	for (unsigned beam = 1; beam < NR_BEAMS; beam += 3)
+	for (unsigned beam = 1; beam + nr_beams_at_once <= NR_BEAMS; beam += nr_beams_at_once)
 	  _beamform_up_to_6_stations_and_3_beams(
 	    &sums[chan][beam][time][0],
 	    (char *) &sums[0][1][0][0] - (char *) &sums[0][0][0][0],
@@ -226,7 +230,8 @@ void test_beamform_3_beams(unsigned nr_stations_at_once)
 	    (char *) &weights[1][0] - (char *) &weights[0][0],
 	    96,
 	    stat == 0,
-	    nr_stations_at_once
+	    nr_stations_at_once,
+	    nr_beams_at_once
 	  );
   timer.stop();
 
@@ -240,14 +245,26 @@ int main()
   BGP_UPC_Initialize_Counter_Config(BGP_UPC_MODE_0, BGP_UPC_CFG_EDGE_DEFAULT);
 
   init_data();
-  test_add2();
-  test_add3();
-  test_add4();
-  test_add6();
+
+#if 0
+  if (NR_STATIONS >= 2)
+    test_add2();
+
+  if (NR_STATIONS >= 3)
+    test_add3();
+
+  if (NR_STATIONS >= 4)
+    test_add4();
+
+  if (NR_STATIONS >= 6)
+    test_add6();
+#endif
+
   //test_beamform_3stations_6beams();
 
-  for (unsigned nr_stations_at_once = 4; nr_stations_at_once <= 6; ++ nr_stations_at_once)
-    test_beamform_3_beams(nr_stations_at_once);
+  for (unsigned nr_beams_at_once = 1; nr_beams_at_once <= std::min(NR_BEAMS, 3); ++ nr_beams_at_once)
+    for (unsigned nr_stations_at_once = 1; nr_stations_at_once <= std::min(NR_STATIONS, 6); ++ nr_stations_at_once)
+      test_beamformer(nr_stations_at_once, nr_beams_at_once);
 
 #if 0
   BGP_UPC_Start(0);

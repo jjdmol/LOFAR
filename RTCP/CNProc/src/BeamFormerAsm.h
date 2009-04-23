@@ -91,7 +91,8 @@ void *_beamform_up_to_6_stations_and_3_beams(
   /* r8 */ unsigned weights_stride,
   /* r9 */ unsigned nr_times,
   /* r10 */ bool first_time, // if !first_time, then add to complex_voltages
-  /* 8(1) */ unsigned nr_stations
+  /* 8(r1) */ unsigned nr_stations, // 1-6
+  /* 12(r1) */ unsigned nr_beams // 1-3
 );
 
 #if 0
