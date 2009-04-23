@@ -238,7 +238,6 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_DISCONNECTED:
-	case F_CLOSED:
 	case F_EXIT:
 		break;
 
@@ -311,9 +310,6 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 		itsTimerPort->setTimer(2.0);
 		break;
 
-	case F_CLOSED:
-		break;
-
 	case F_TIMER:
 		LOG_DEBUG ("Trying to reconnect to CalServer");
 		itsCalServer->open();		// will result in F_CONN or F_DISCONN
@@ -377,9 +373,6 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with CalServer lost, going to reconnect state.");
 		TRAN(CalibrationControl::started_state);
-		break;
-
-	case F_CLOSED:
 		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
@@ -453,7 +446,6 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	switch (event.signal) {
 	case F_INIT:
 	case F_EXIT:
-	case F_CLOSED:
 		break;
 
 	case F_ENTRY: {

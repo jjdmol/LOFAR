@@ -321,10 +321,6 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	case F_DISCONNECTED: {
 		LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
 		port.close();
-	}
-	break;
-
-	case F_CLOSED: {
 		port.setTimer(3.0);
 	}
 	break;

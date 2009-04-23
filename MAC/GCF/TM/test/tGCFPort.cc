@@ -121,7 +121,6 @@ GCFEvent::TResult tServer::test1(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		break;
 
-	case F_CLOSED:
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(1);
@@ -214,7 +213,6 @@ GCFEvent::TResult tClient::test1(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED:
 		port.close();
-	case F_CLOSED:
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(1);
@@ -289,7 +287,6 @@ GCFEvent::TResult tServer::test2(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		break;
 
-	case F_CLOSED:
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(2);
@@ -382,7 +379,6 @@ GCFEvent::TResult tClient::test2(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED:
 		port.close();
-	case F_CLOSED:
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(2);
@@ -459,7 +455,6 @@ GCFEvent::TResult tServer::test3(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		break;
 
-	case F_CLOSED:
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(3);
@@ -552,7 +547,6 @@ GCFEvent::TResult tClient::test3(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED:
 		port.close();
-	case F_CLOSED:
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(3);
@@ -625,7 +619,6 @@ GCFEvent::TResult tServer::test4(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		break;
 
-	case F_CLOSED:
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(4);
@@ -718,7 +711,6 @@ GCFEvent::TResult tClient::test4(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED:
 		port.close();
-	case F_CLOSED:
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(4);
@@ -793,7 +785,6 @@ GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		break;
 
-	case F_CLOSED:
 	case F_DISCONNECTED:
 		if (itsFinished) {	// timer exists when msg was received.
 			finishTest(5);
@@ -888,7 +879,6 @@ GCFEvent::TResult tClient::test5(GCFEvent& event, GCFPortInterface& port)
 
 	case F_DISCONNECTED:
 		port.close();
-	case F_CLOSED:
 		if (itsFinishedTimer) {
 			LOG_INFO ("Client:Lost connection with server");
 			finishTest(5);

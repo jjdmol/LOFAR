@@ -321,10 +321,7 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 								"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("connection timeout"));
-		port.close();		// wait for F_CLOSED
-		break;
-
-	case F_CLOSED:
+		port.close();
 		itsTimerPort->setTimer(2.0);
 		break;
 		

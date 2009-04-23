@@ -137,16 +137,13 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
     	TRAN(Ping::awaiting_echo); // wait for the echo
       break;
     }    
-    case F_DISCONNECTED:
 
+    case F_DISCONNECTED:
       //(void)client.open(); // try to reopen
       (void)client.cancelTimer(ping_timer);
 
       seqnr = 0;
       p.close();      
-      break;
-
-    case F_CLOSED:
       TRAN(Ping::initial);
       break;
 
@@ -189,14 +186,13 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
+
     case F_DISCONNECTED:
       (void)client.cancelTimer(ping_timer);
       p.close();      
-      break;
-
-    case F_CLOSED:
       TRAN(Ping::initial);
       break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

@@ -174,12 +174,9 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 			}
 		}
 		port.close();
-	}
-	break;
-
-	case F_CLOSED:
 		itsClients.erase(&port);
 		itsClientsGarbage.push_back(&port);
+	}
 	break;
 
 	case F_TIMER: {

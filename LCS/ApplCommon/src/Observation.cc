@@ -87,8 +87,19 @@ Observation::Observation(ParameterSet*		aParSet) :
 	// new way of specifying the receivers and choosing the antenna array.
 	antennaSet  	 = aParSet->getString(prefix+"antennaSet", "");
 	useLongBaselines = aParSet->getBool  (prefix+"longBaselines", false);
-	if (antennaSet == "HBA_BOTH") {
-		splitter = true;
+
+	// auto select the right antennaArray when antennaSet variable is used.
+	if (!antennaSet.empty()) {
+		if (antennaSet == "HBA_BOTH") {
+			antennaArray = "HBA";
+			splitter = true;
+		}
+		else if (antennaSet == "HBA_ONE") {
+			antennaArray = "HBA";
+		}
+		else {
+			antennaArray = "LBA";
+		}
 	}
 
 	RCUset.reset();							// clear RCUset by default.
@@ -285,23 +296,26 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, b
 
 	// HBA's in Core stations sometimes use half of the rcus.
 	bool	fullStation(MAX2(nrLBAs, nrHBAs) <= (nrRSPs * NR_ANTENNAS_PER_RSPBOARD));
-	int		nrAnts = ((antennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
+	int		nrAnts   = ((antennaSet.find("LBA") == 0) ? nrLBAs : nrHBAs);
+	int		firstRCU = 0;
 	if (!fullStation && (antennaSet.find("LBA") == 0)) {
 		nrAnts /= 2;
 	}
 	else if (hasSplitters && (antennaSet == "HBA_ONE")) {
 		nrAnts /= 2;
 	}
+	else if (hasSplitters && (antennaSet == "HBA_TWO")) {
+		nrAnts /= 2;
+		firstRCU = nrAnts;
+	}
 	
 	// Set up the RCUbits. Remember that we don't care here which of the three inputs is used.
 	RCUset.reset();
-	for (int rcu = 0; rcu < nrAnts; rcu++) {
+	for (int rcu = firstRCU; rcu < nrAnts; rcu++) {
 			RCUset.set(rcu);
 	}
 	return (RCUset);
 }
-
-
 
 //
 // getBeamName(beamidx): string
