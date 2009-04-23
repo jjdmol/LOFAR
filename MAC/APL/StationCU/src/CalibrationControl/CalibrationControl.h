@@ -82,7 +82,7 @@ private:
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
 	void    setState          	  (CTState::CTstateNr     newState);
-	int32	convertFilterSelection(const string&	bandselection);
+	int32	convertFilterSelection(const string&	bandselection, const string&	antennaSet);
 	uint16	handleClaimEvent	  ();
 	uint16	handlePrepareEvent	  ();
 	bool	startCalibration  	  ();

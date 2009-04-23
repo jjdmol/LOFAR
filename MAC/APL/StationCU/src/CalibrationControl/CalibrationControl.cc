@@ -144,8 +144,9 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 // convertFilterSelection(string) : uint8
 //
-int32 CalibrationControl::convertFilterSelection(const string&	filterselection) 
+int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
 {
+	// support old filters
 	if (filterselection == "LBL_10_80")		{ return(1); }
 	if (filterselection == "LBL_30_80")		{ return(2); }
 	if (filterselection == "LBH_10_80")		{ return(3); }
@@ -153,6 +154,19 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection)
 	if (filterselection == "HB_100_190")	{ return(5); }
 	if (filterselection == "HB_170_230")	{ return(6); }
 	if (filterselection == "HB_210_240")	{ return(7); }
+
+	// support new filternames
+	if (antennaSet == "LBA_OUTER") {
+		if (filterselection == "LBA_30_80")	{ return(1); }
+		if (filterselection == "LBA_10_90")	{ return(2); }
+	}
+	if (antennaSet == "LBA_INNER") {
+		if (filterselection == "LBA_30_80")	{ return(3); }
+		if (filterselection == "LBA_10_90")	{ return(4); }
+	}
+	if (filterselection == "HBA_110_190")	{ return(5); }
+	if (filterselection == "HBA_170_230")	{ return(6); }
+	if (filterselection == "HBA_210_250")	{ return(7); }
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
 									"' not recognized, using LBL_10_80");
@@ -614,7 +628,7 @@ bool	CalibrationControl::startCalibration()
 		calStartEvent.parent 	   = itsObsPar.antennaArray;
 		calStartEvent.rcumode().resize(1);
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
-											convertFilterSelection(itsObsPar.filter));
+											convertFilterSelection(itsObsPar.filter, itsObsPar.antennaSet));
 		StationConfig		config;
 		calStartEvent.subset = itsObsPar.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters);
 		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
