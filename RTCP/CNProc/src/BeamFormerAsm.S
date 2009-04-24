@@ -779,7 +779,6 @@ first_time_1_1:
 
 #define NR_BEAMS    1
 #define NR_STATIONS 1
-#elsif 
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
@@ -866,7 +865,6 @@ first_time_1_2:
 
 #define NR_BEAMS    2
 #define NR_STATIONS 1
-#elsif 
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue
@@ -953,7 +951,6 @@ first_time_1_3:
 
 #define NR_BEAMS    3
 #define NR_STATIONS 1
-#elsif 
 #define FIRST_TIME
 #include "BeamFormerAsm6St3Bm.inc"
 	b	epilogue

@@ -212,7 +212,7 @@ void test_beamformer(unsigned nr_stations_at_once, unsigned nr_beams_at_once)
   unsigned nr_beams    = NR_BEAMS / nr_beams_at_once * nr_beams_at_once;
 
   std::cout << "beam forming " << nr_stations << " stations and "
-	    << nr_beams " beams in groups of "
+	    << nr_beams << " beams in groups of "
 	    << nr_stations_at_once << " stations and "
 	    << nr_beams_at_once << " beams" << std::endl;
   NSTimer timer("beamform_3bm", true);
@@ -262,8 +262,8 @@ int main()
 
   //test_beamform_3stations_6beams();
 
-  for (unsigned nr_beams_at_once = 1; nr_beams_at_once <= std::min(NR_BEAMS, 3); ++ nr_beams_at_once)
-    for (unsigned nr_stations_at_once = 1; nr_stations_at_once <= std::min(NR_STATIONS, 6); ++ nr_stations_at_once)
+  for (int nr_beams_at_once = 1; nr_beams_at_once <= std::min(NR_BEAMS, 3); ++ nr_beams_at_once)
+    for (int nr_stations_at_once = 1; nr_stations_at_once <= std::min(NR_STATIONS, 6); ++ nr_stations_at_once)
       test_beamformer(nr_stations_at_once, nr_beams_at_once);
 
 #if 0
