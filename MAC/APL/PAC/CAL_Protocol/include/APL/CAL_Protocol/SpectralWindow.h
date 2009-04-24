@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <Common/LofarTypes.h>
+#include <Common/LofarConstants.h>
 
 namespace LOFAR {
   namespace CAL {
@@ -67,7 +68,7 @@ namespace LOFAR {
       int getNumSubbands() const { return m_numsubbands; }
       
       // Return the width of the subbands.
-      double getSubbandWidth() const { return m_sampling_freq / (2.0 * m_numsubbands); }
+      double getSubbandWidth() const { return m_sampling_freq / (2.0 * MAX_SUBBANDS); }
       
       // Return frequency of a specific subband.
       double getSubbandFreq(int subband) const;
