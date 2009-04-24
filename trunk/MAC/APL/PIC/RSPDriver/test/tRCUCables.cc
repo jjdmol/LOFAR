@@ -28,7 +28,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/hexdump.h>
-#include <ApplCommon/RCUCables.h>
+#include "RCUCables.h"
 
 using namespace LOFAR;
 

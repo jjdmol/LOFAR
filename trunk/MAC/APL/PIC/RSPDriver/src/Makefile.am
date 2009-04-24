@@ -35,6 +35,8 @@ RSPDriver_SOURCES	= \
 	Command.cc \
 	Cache.cc \
 	StationSettings.cc \
+	RCUCables.cc \
+	CableAttenuation.cc \
 	CableSettings.cc \
 	SerdesBuffer.cc \
 	\
@@ -126,6 +128,8 @@ NOINSTHDRS	= \
 	Command.h \
 	Cache.h \
 	StationSettings.h \
+	RCUCables.h \
+	CableAttenuation.h \
 	CableSettings.h \
 	SerdesBuffer.h \
 	\
