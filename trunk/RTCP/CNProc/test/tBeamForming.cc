@@ -55,11 +55,11 @@ void init_data()
     for (unsigned chan = 0; chan < NR_CHANNELS; chan ++)
       for (unsigned time = 0; time < NR_TIMES; time ++)
 	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++, count += 17, count &= 0xFF)
-	  samples[chan][stat][time][pol] = 1;//makefcomplex(count, count + 9);
+	  samples[chan][stat][time][pol] = makefcomplex(count, count + 9);
 
   for (unsigned count = 37, stat = 0; stat < NR_STATIONS; stat ++)
     for (unsigned beam = 1; beam < NR_BEAMS; beam ++, count += 51, count &= 0xFF)
-      weights[stat][beam] = 1;//makefcomplex(count, 2 * count + 5);
+      weights[stat][beam] = makefcomplex(count, 2 * count + 5);
 }
 
 
