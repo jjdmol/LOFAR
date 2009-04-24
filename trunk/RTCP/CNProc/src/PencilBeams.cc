@@ -167,7 +167,7 @@ void PencilRings::computeBeamCoordinates()
   }
 }
 
-PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres, const bool correctBandPass )
+PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres )
 :
   itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
@@ -176,8 +176,7 @@ PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStatio
   itsCenterFrequency(centerFrequency),
   itsChannelBandwidth(channelBandwidth),
   itsBaseFrequency(centerFrequency - (nrChannels/2) * channelBandwidth),
-  itsRefPhaseCentre(refPhaseCentre),
-  itsBandPass(BandPass(correctBandPass,nrChannels))
+  itsRefPhaseCentre(refPhaseCentre)
 {
   // copy all phase centres and their derived constants
   itsPhaseCentres.reserve( nrStations );
@@ -261,8 +260,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
   for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
-      const double bandPassFactor = itsBandPass.correctionFactors()[ch];
-      const float factor = averagingFactor * bandPassFactor;
+      const float factor = averagingFactor;
 
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
         if( !out->flags[beam].test(time) ) {
@@ -346,8 +344,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
-    const double bandPassFactor = itsBandPass.correctionFactors()[ch];
-    const float factor = averagingFactor * bandPassFactor;
+    const float factor = averagingFactor; // add multiplication factors as needed
 
     for( unsigned beam = 0; beam < itsCoordinates.size(); beam += NRBEAMS ) {
       for( unsigned stat = 0; stat < stations.size(); stat += NRSTATIONS ) {
