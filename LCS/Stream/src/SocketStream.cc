@@ -43,6 +43,11 @@ SocketStream::SocketStream(const char *hostname, short port, Protocol protocol, 
       else
 	throw SystemCallException("connect", errno, THROW_ARGS);
   } else {
+    int on = 1;
+
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
+      throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
+
     if (bind(fd, (struct sockaddr *) &sa, sizeof sa) < 0)
       throw SystemCallException("bind", errno, THROW_ARGS);
 
