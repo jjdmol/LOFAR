@@ -65,123 +65,17 @@ SpectralWindow::~SpectralWindow()
 
 double SpectralWindow::getSubbandFreq(int subband) const
 {
-  LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
+	LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
 
-  ASSERT(m_numsubbands);
-  ASSERT(subband >= 0 && subband <= m_numsubbands);
+	ASSERT(m_numsubbands);
+	ASSERT(subband >= 0 && subband <= m_numsubbands);
 
-  bool is160 	   = ::fabs(160e6 - m_sampling_freq) < 1e-4;
-  float freqOffset = (is160 ? 80.0e6 : 100.0e6) * (m_nyquist_zone - 1);
+	bool is160 	   = ::fabs(160e6 - m_sampling_freq) < 1e-4;
+	float freqOffset = (is160 ? 80.0e6 : 100.0e6) * (m_nyquist_zone - 1);
 
-  return (freqOffset + ((subband % m_numsubbands) * getSubbandWidth()));
+	return (freqOffset + ((subband % m_numsubbands) * getSubbandWidth()));
 }
 
-bool SpectralWindow::isSuitable(int subband) const
-{
-  LOG_TRACE_OBJ_STR("SpectralWindow::isSuitable(" << subband << ")");
-
-  bool is160 = ::fabs(160e6 - m_sampling_freq) < 1e-4;
-  bool is200 = ::fabs(200e6 - m_sampling_freq) < 1e-4;
-
-  switch (m_rcucontrol) {
-  case 0xB9: // LB_10_90
-    {
-      if (m_nyquist_zone == 1) {
-	if (is160) {
-	  // filter stopband < 10 MHz
-	  if (getSubbandFreq(subband) < 10e6) return false;
-	  
-	  // aliasing > 70 Mhz (filter stopband > 90 MHz)
-	  if (getSubbandFreq(subband) > 70e6) return false;
-
-	} else if (is200) {
-	  // filter stopband < 10 Mhz
-	  if (getSubbandFreq(subband) < 10e6) return false;
-
-	  // filter stoppband > 90 MHz
-	  if (getSubbandFreq(subband) > 90e6) return false;
-	}
-      } else {
-	// not suitable at all
-	return false;
-      }
-    }
-    break;
-
-  case 0xC6: // HB_110_190
-    {
-      if (m_nyquist_zone == 2) {
-	if (is160) {
-	  // filter stopband < 110 MHz
-	  if (getSubbandFreq(subband) < 110e6) return false;
-
-	  // aliasing > 130 MHz
-	  if (getSubbandFreq(subband) > 130e6) return false;
-	} else if (is200) {
-	  // filter stopband < 110 MHz
-	  if (getSubbandFreq(subband) < 110e6) return false;
-
-	  // filter stopband > 190 MHz
-	  if (getSubbandFreq(subband) > 190e6) return false;
-	}
-      } else {
-	// not suitable at all
-	return false;
-      }
-    }
-    break;
-      
-  case 0xCE: // HB_170_230
-    {
-      if (m_nyquist_zone == 3) {
-	if (is160) {
-	  // filter stopband < 170 MHz
-	  if (getSubbandFreq(subband) < 170e6) return false;
-
-	  // filter stopband > 230 MHz
-	  if (getSubbandFreq(subband) > 230e6) return false;
-	} else if (is200) {
-	  // not suitable at all
-	  return false;
-	} 
-      } else {
-	// not suitable at all
-	return false;
-      }
-    }
-    break;
-
-  case 0xD6: // HB_210_250
-    {
-      if (m_nyquist_zone == 3) {
-	if (is160) {
-	  // filter stopband < 210 MHz
-	  if (getSubbandFreq(subband) < 210e6) return false;
-
-	  // filter stopband > 230 MHz
-	  if (getSubbandFreq(subband) > 230e6) return false;
-	} else if (is200) {
-	  // filter stopband < 210 MHz
-	  if (getSubbandFreq(subband) < 210e6) return false;
-
-	  // filter stopband > 250 MHz
-	  if (getSubbandFreq(subband) > 250e6) return false;
-	}
-      } else {
-	// not suitable at all
-	return false;
-      }
-    }
-    break;
-
-  default:
-    LOG_WARN(formatString("SpectralWindow::isSuitable: unsupported RCU control setting (0x%x).",
-			  m_rcucontrol));
-    break;
-  }
-
-  return false; // assume that the subband is not suitable
-}
 
 //
 // isForHBA(): bool

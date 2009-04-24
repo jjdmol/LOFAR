@@ -73,15 +73,6 @@ namespace LOFAR {
       // Return frequency of a specific subband.
       double getSubbandFreq(int subband) const;
 
-      // Based on the subband, the spectral window and
-      // the rcucontrol. Determine whether a subband
-      // is suitable for calibration. A subband is not
-      // suitable for calibration when it is in the stop-band
-      // of the filter or antenna or if it is aliased
-      // by frequencies around the sampling frequency or
-      // one of its harmonics.
-      bool isSuitable(int subband) const;
-
 	  // Returns try if spectralWindow is ment for the HBA antennas.
 	  bool isForHBA() const;
 
@@ -94,7 +85,6 @@ namespace LOFAR {
       /*@}*/
 
     private:
-
       std::string m_name;          // name of the spectral window
       double      m_sampling_freq; // sampling frequency
       uint16      m_nyquist_zone;  // defines the window
