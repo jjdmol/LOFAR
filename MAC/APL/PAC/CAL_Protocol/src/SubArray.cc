@@ -44,6 +44,8 @@ SubArray::SubArray() :
 	m_antenna_selection(), 
 	m_spw("undefined", 0, 0, 0, 0)
 {
+	LOG_TRACE_OBJ("SubArray()");
+
 	m_result[FRONT] = 0;
 	m_result[BACK]  = 0;
 }
@@ -63,6 +65,9 @@ SubArray::SubArray (string					name,
 	m_antenna_selection(select),
 	m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)
 {
+	LOG_TRACE_OBJ(formatString("SubArray(%s,%f,%d,%d,%08X)", 
+							name.c_str(), sampling_frequency, nyquist_zone, nsubbands, rcucontrol));
+
 	// assert sizes
 	ASSERT(m_antenna_selection.extent(firstDim) == m_pos.extent(firstDim)
 		&& m_antenna_selection.extent(secondDim) == m_pos.extent(secondDim)
@@ -243,27 +248,6 @@ unsigned int SubArrayMap::pack(void* buffer)
 {
 	unsigned int	offset = 0;
 	MSH_PACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
-#if 0
-	do { 
-		int32 nrElem = (*this).size(); 
-		memcpy(((char*)(buffer)) + (offset), &nrElem, sizeof(int32)); 
-		offset += sizeof(int32); 
-		map<string, SubArray*>::iterator iter = (*this).begin(); 
-		map<string, SubArray*>::iterator end = (*this).end(); 
-		while (iter != end) { 
-			do { 
-				uint32 size = (iter->first).size() * sizeof(char); 
-				memcpy(((char*)(buffer)) + (offset), &size, sizeof(size)); 
-				offset += sizeof(size); 
-				memcpy(((char*)(buffer)) + (offset), (iter->first).c_str(), size * sizeof(char)); 
-				offset += size * sizeof(char); 
-			} while (0); 
-			offset += iter->second->pack((char*)buffer + offset); 
-			iter++; 
-		} 
-	} while (0);
-#endif
-
 	return (offset);
 }
 

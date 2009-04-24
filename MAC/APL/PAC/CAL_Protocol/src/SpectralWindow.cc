@@ -43,14 +43,30 @@ using namespace CAL;
 SpectralWindow::SpectralWindow() :
   m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0), m_rcucontrol(0)
 {
+	LOG_TRACE_OBJ("SpectralWindow()");
 }
 
+SpectralWindow::SpectralWindow(std::string name, double sampling_freq,
+								 int nyquist_zone, int numsubbands, uint32 rcucontrol) :
+	m_name(name), 
+	m_sampling_freq(sampling_freq),
+	m_nyquist_zone(nyquist_zone), 
+	m_numsubbands(numsubbands), 
+	m_rcucontrol(rcucontrol) 
+{
+	LOG_TRACE_OBJ(formatString("SpectralWindow(%s,%f,%d,%d,%08X)", 
+						name.c_str(), sampling_freq, nyquist_zone, numsubbands, rcucontrol));
+}
+ 
 SpectralWindow::~SpectralWindow()
 {
+	LOG_TRACE_OBJ("~SpectralWindow()");
 }
 
 double SpectralWindow::getSubbandFreq(int subband) const
 {
+  LOG_TRACE_OBJ_STR("SpectralWindow::getSubbandFreq(" << subband << " of " << m_numsubbands << ")");
+
   ASSERT(m_numsubbands);
   ASSERT(subband >= 0 && subband <= m_numsubbands);
 
@@ -62,6 +78,8 @@ double SpectralWindow::getSubbandFreq(int subband) const
 
 bool SpectralWindow::isSuitable(int subband) const
 {
+  LOG_TRACE_OBJ_STR("SpectralWindow::isSuitable(" << subband << ")");
+
   bool is160 = ::fabs(160e6 - m_sampling_freq) < 1e-4;
   bool is200 = ::fabs(200e6 - m_sampling_freq) < 1e-4;
 

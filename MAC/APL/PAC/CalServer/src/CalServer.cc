@@ -606,6 +606,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			setrcu.timestamp = Timestamp(0,0); // immediate
 
 			// TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+
 			// mask only available RCUs
 			bitset<MEPHeader::MAX_N_RCUS> validmask;
 			for (int i = 0; i < m_n_rcus; i++) {

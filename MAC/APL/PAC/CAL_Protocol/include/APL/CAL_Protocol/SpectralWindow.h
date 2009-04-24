@@ -48,59 +48,37 @@ namespace LOFAR {
     class SpectralWindow
     {
     public:
-      /**
-       * Default constructor.
-       */
+      // Constructors
       SpectralWindow();
-
-      /**
-       * Constructor
-       */
       SpectralWindow(std::string name, double sampling_freq,
-		     int nyquist_zone, int numsubbands, uint32 rcucontrol) :
-	m_name(name), m_sampling_freq(sampling_freq),
-	m_nyquist_zone(nyquist_zone), m_numsubbands(numsubbands), m_rcucontrol(rcucontrol) {}
+					 int nyquist_zone, int numsubbands, uint32 rcucontrol);
       virtual ~SpectralWindow();
 
-      /**
-       * Return the name of the spectral window.
-       */
+      // Return the name of the spectral window.
       std::string getName() const { return m_name; }
       
-      /**
-       * Return the sampling frequency for this window
-       */
+      // Return the sampling frequency for this window
       double getSamplingFrequency() const { return m_sampling_freq; }
       
-      /**
-       * Return the nyquist zone for this window.
-       */
+      // Return the nyquist zone for this window.
       int getNyquistZone() const { return m_nyquist_zone; }
 
-      /**
-       * Return the number of subbands for the spectral window.
-       */
+      // Return the number of subbands for the spectral window.
       int getNumSubbands() const { return m_numsubbands; }
       
-      /**
-       * Return the width of the subbands.
-       */
+      // Return the width of the subbands.
       double getSubbandWidth() const { return m_sampling_freq / (2.0 * m_numsubbands); }
       
-      /**
-       * Return frequency of a specific subband.
-       */
+      // Return frequency of a specific subband.
       double getSubbandFreq(int subband) const;
 
-      /**
-       * Based on the subband, the spectral window and
-       * the rcucontrol. Determine whether a subband
-       * is suitable for calibration. A subband is not
-       * suitable for calibration when it is in the stop-band
-       * of the filter or antenna or if it is aliased
-       * by frequencies around the sampling frequency or
-       * one of its harmonics.
-       */
+      // Based on the subband, the spectral window and
+      // the rcucontrol. Determine whether a subband
+      // is suitable for calibration. A subband is not
+      // suitable for calibration when it is in the stop-band
+      // of the filter or antenna or if it is aliased
+      // by frequencies around the sampling frequency or
+      // one of its harmonics.
       bool isSuitable(int subband) const;
 
 	  // Returns try if spectralWindow is ment for the HBA antennas.
@@ -108,9 +86,7 @@ namespace LOFAR {
 
     public:
       /*@{*/
-      /**
-       * marshalling methods
-       */
+      // marshalling methods
       unsigned int getSize() const;
       unsigned int pack   (void* buffer) const;
       unsigned int unpack (void* buffer);

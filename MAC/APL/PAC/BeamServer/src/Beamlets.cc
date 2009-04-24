@@ -93,8 +93,8 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 		const Beam* 			 beam  = beamlet->getBeam();
 		const CAL::AntennaGains& gains = beam->getCalibration();
 
-		LOG_DEBUG_STR("gains[" << (gains.isDone()?"valid":"invalid") << 
-					  "]=" << gains.getGains().shape());
+		LOG_DEBUG_STR("gains(" << (gains.isDone()?"":"un") << 
+					  "calibrated)[" << bi << "]=" << gains.getGains().shape());
 
 		// get coordinates from beam
 		if (!beam) {
