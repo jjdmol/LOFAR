@@ -32,12 +32,12 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
-#include <APL/ClockProtocol/Clock_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
 #include "ClockControl.h"
 #include "PVSSDatapointDefs.h"
+#include "Clock_Protocol.ph"
 #include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;

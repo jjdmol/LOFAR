@@ -48,7 +48,7 @@
 #include "ActiveObs.h"
 #include "StationControl.h"
 #include "PVSSDatapointDefs.h"
-#include <APL/ClockProtocol/Clock_Protocol.ph>
+#include "Clock_Protocol.ph"
 #include <APL/ClockProtocol/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;

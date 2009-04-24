@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <MACIO/MACServiceInfo.h>
-#include <APL/ClockProtocol/Clock_Protocol.ph>
+#include "Clock_Protocol.ph"
 
 #include <getopt.h>
 
