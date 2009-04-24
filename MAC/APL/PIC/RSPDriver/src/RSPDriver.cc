@@ -27,8 +27,6 @@
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
 
-#include <ApplCommon/RCUCables.h>
-
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
 
@@ -50,6 +48,7 @@
 #include "RSPDriver.h"
 #include "Command.h"
 #include "StationSettings.h"
+#include "RCUCables.h"
 #include "CableSettings.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"

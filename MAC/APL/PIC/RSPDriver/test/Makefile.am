@@ -1,3 +1,16 @@
+check_PROGRAMS		= tCableAttenuation tRCUCables 
+
+TESTSCRIPTS			= tCableAttenuation.sh tRCUCables.sh
+
+TESTS				= $(TESTSCRIPTS)
+
+tCableAttenuation_SOURCES	= tCableAttenuation.cc ../src/CableAttenuation.cc
+tCableAttenuation_LDADD		= $(LOFAR_DEPEND)
+tCableAttenuation_DEPENCIES	= $(LOFAR_DEPEND)
+
+tRCUCables_SOURCES			= tRCUCables.cc ../src/RCUCables.cc ../src/CableAttenuation.cc
+tRCUCables_LDADD			= $(LOFAR_DEPEND)
+tRCUCables_DEPENCIES		= $(LOFAR_DEPEND)
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
@@ -7,15 +20,9 @@ AM_CPPFLAGS = \
 # 	RSPTest \
 # 	EPAStub
 
-sbin_PROGRAMS = \
-	EPAStub \
-	RSPTest
+sbin_PROGRAMS = EPAStub RSPTest
 
-sbin_SCRIPTS = \
-	beamtest 
-
-#check_PROGRAMS = \
-#	RSPTest
+sbin_SCRIPTS = beamtest 
 
 RSPTest_SOURCES = \
 	RSPTest.h \

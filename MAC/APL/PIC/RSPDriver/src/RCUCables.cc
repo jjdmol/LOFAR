@@ -25,8 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/RCUCables.h>
-#include <boost/algorithm/string.hpp>
+#include "RCUCables.h"
 
 namespace LOFAR {
   using namespace blitz;

@@ -30,7 +30,7 @@
 //# Includes
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
-#include <ApplCommon/RCUCables.h>
+#include "RCUCables.h"
 
 // Avoid 'using namespace' in headerfiles
 

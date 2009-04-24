@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/CableAttenuation.h>
+#include "CableAttenuation.h"
 #include <boost/algorithm/string.hpp>
 
 namespace LOFAR {

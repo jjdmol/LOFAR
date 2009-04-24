@@ -53,9 +53,9 @@ dnl
 lofar_GENERAL
 lofar_MPI
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
+dnl lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, "boost_date_time boost_regex")
 lofar_EXTERNAL(BOOST_DATE_TIME,1,boost/date_time/date.hpp, "boost_date_time")
 lofar_EXTERNAL(BOOST_REGEX,0,boost/regex.hpp, "boost_regex")
-lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl
 dnl Output Makefiles

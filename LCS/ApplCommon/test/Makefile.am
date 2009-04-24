@@ -1,20 +1,12 @@
-check_PROGRAMS			= tObservation tCableAttenuation tRCUCables tStationInfo
+check_PROGRAMS			= tObservation tStationInfo
 
-TESTSCRIPTS			= tObservation.sh tCableAttenuation.sh tRCUCables.sh
+TESTSCRIPTS			= tObservation.sh 
 
 TESTS				= $(TESTSCRIPTS)
 
 tObservation_SOURCES		= tObservation.cc
 tObservation_LDADD			= ../src/libapplcommon.la
 tObservation_DEPENCIES		= ../src/libapplcommon.la $(LOFAR_DEPEND)
-
-tCableAttenuation_SOURCES	= tCableAttenuation.cc
-tCableAttenuation_LDADD		= ../src/libapplcommon.la $(LOFAR_DEPEND)
-tCableAttenuation_DEPENCIES	= ../src/libapplcommon.la $(LOFAR_DEPEND)
-
-tRCUCables_SOURCES			= tRCUCables.cc
-tRCUCables_LDADD			= ../src/libapplcommon.la $(LOFAR_DEPEND)
-tRCUCables_DEPENCIES		= ../src/libapplcommon.la $(LOFAR_DEPEND)
 
 tStationInfo_SOURCES		= tStationInfo.cc
 tStationInfo_LDADD			= ../src/libapplcommon.la $(LOFAR_DEPEND)
