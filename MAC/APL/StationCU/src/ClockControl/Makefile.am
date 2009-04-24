@@ -1,9 +1,13 @@
+AM_CPPFLAGS					= -I../../src/ClockProtocol
+
 bin_PROGRAMS 				= ClockControl clkctl
 
 ClockControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once \
-								  -I$(top_builddir)/include
+								  -I$(top_builddir)/include \
+								  -I../../src/ClockProtocol
+
 ClockControl_SOURCES		= ../Package__Version.cc \
 								  ClockControl.cc \
 								  ClockControlMain.cc 

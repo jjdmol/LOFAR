@@ -1,8 +1,11 @@
+AM_CPPFLAGS					= -I../../src/ClockProtocol
+
 bin_PROGRAMS 				= StationControl
 
 StationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
-								  -fdiagnostics-show-location=once
+								  -fdiagnostics-show-location=once \
+								  -I../../src//ClockProtocol
 
 StationControl_SOURCES		= ../Package__Version.cc \
 							  StationControl.cc \
