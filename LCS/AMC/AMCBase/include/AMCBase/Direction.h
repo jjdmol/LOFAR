@@ -118,12 +118,12 @@ namespace LOFAR
       // Calculate the inner product of \c this and the Direction \a that.
       // \throw TypeException if the reference types of \c this and \a that
       // differ.
-      double operator*(const Direction& that);
+      double operator*(const Direction& that) const;
 
       // Calculate the inner product of \c this and the Position \a that.
       // \throw TypeException if the reference types of \c this and \a that
       // differ.
-      double operator*(const Position& that);
+      double operator*(const Position& that) const;
 
     private:
       // The direction coordinates.

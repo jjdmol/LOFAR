@@ -106,7 +106,7 @@ namespace LOFAR
     }
 
 
-    double Direction::operator*(const Direction& that)
+    double Direction::operator*(const Direction& that) const
     {
       if (itsType != that.itsType) {
         THROW (TypeException, showType() << " != " << that.showType());
@@ -115,7 +115,7 @@ namespace LOFAR
     }
 
 
-    double Direction::operator*(const Position& that)
+    double Direction::operator*(const Position& that) const
     {
       if (itsType != ITRF) {
         THROW (TypeException, "Direction type must be ITRF");
