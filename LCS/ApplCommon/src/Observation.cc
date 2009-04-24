@@ -66,11 +66,19 @@ Observation::Observation(ParameterSet*		aParSet) :
 	obsID = aParSet->getInt32("_treeID", 0);
 	realPVSSdatapoint = aParSet->getString("_DPname","NOT_THE_REAL_DPNAME");
 #if !defined HAVE_BGL
-	if (aParSet->isDefined(prefix+"startTime")) {
-		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
+	try {
+		if (aParSet->isDefined(prefix+"startTime")) {
+			startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
+		}
+	} catch( boost::bad_lexical_cast ) {
+		THROW( Exception, prefix << "startTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
-	if (aParSet->isDefined(prefix+"stopTime")) {
-		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
+	try {
+		if (aParSet->isDefined(prefix+"stopTime")) {
+			stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
+		}
+	} catch( boost::bad_lexical_cast ) {
+		THROW( Exception, prefix << "stopTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
