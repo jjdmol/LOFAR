@@ -110,41 +110,34 @@ GCFEvent::TResult beamctl::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(e.signal)
-  {
-    case F_INIT:
-    {
+  switch(e.signal) {
+    case F_INIT: {
     }
     break;
 
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       m_calserver.open();
       m_beamserver.open();
     }
     break;
 
-    case F_CONNECTED:
-    {
+    case F_CONNECTED: {
       // if both calserver and beamserver are connected
       // then transition to connected state
-      if (m_calserver.isConnected()
-	  && m_beamserver.isConnected()) {
-	TRAN(beamctl::create_subarray);
+      if (m_calserver.isConnected() && m_beamserver.isConnected()) {
+		TRAN(beamctl::create_subarray);
       }
     }
     break;
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       // retry once every second
       port.setTimer((long)1);
       port.close();
     }
     break;
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       // try again
       port.open();
     }
@@ -165,11 +158,8 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
   //
   // Create a new subarray
   //
-
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
+  switch (e.signal) {
+    case F_ENTRY: {
 	CALStartEvent start;
 
 	start.name   = BEAMCTL_ARRAY + formatString("_%d", getpid());
@@ -186,25 +176,19 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case CAL_STARTACK:
-      {
+    case CAL_STARTACK: {
 	CALStartackEvent ack(e);
 
 	if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-
 	  cerr << "Error: failed to start calibration" << endl;
 	  TRAN(beamctl::final);
-
 	} else {
-
 	  TRAN(beamctl::create_beam);
-
 	}
       }
       break;
 
-    case F_DISCONNECTED:
-      {
+    case F_DISCONNECTED: {
 	port.close();
 
 	cerr << "Error: unexpected disconnect" << endl;
@@ -213,8 +197,6 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
       break;
 
     case F_EXIT:
-      {
-      }
       break;
 
     default:
@@ -233,10 +215,8 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
   // Create a new subarray
   //
 
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
+  switch (e.signal) {
+    case F_ENTRY: {
 	BSBeamallocEvent alloc;
 	
 	alloc.name = BEAMCTL_BEAM + formatString("_%d", getpid());
@@ -252,8 +232,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case BS_BEAMALLOCACK:
-      {
+      case BS_BEAMALLOCACK: {
 	BSBeamallocackEvent ack(e);
 
 	if (BS_Protocol::BS_SUCCESS != ack.status) {
@@ -320,8 +299,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_DISCONNECTED:
-      {
+    case F_DISCONNECTED: {
 	port.close();
 
 	cerr << "Error: unexpected disconnect" << endl;
@@ -330,8 +308,6 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
       break;
 
     case F_EXIT:
-      {
-      }
       break;
 
     default:
@@ -346,8 +322,7 @@ GCFEvent::TResult beamctl::final(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(e.signal)
-  {
+  switch(e.signal) {
       case F_ENTRY:
 	  GCFScheduler::instance()->stop();
 	  break;
@@ -416,36 +391,28 @@ static list<int> strtolist(const char* str, int max)
   {
     long val = strtol(start, &end, 10); // read decimal numbers
     start = (end ? (*end ? end + 1 : 0) : 0); // advance
-    if (val >= max || val < 0)
-    {
+    if (val >= max || val < 0) {
       cerr << formatString("Error: value %ld out of range",val) << endl;
       resultset.clear();
       return resultset;
     }
 
-    if (end)
-    {
-      switch (*end)
-      {
+    if (end) {
+      switch (*end) {
         case ',':
-        case 0:
-        {
-          if (range)
-          {
+        case 0: {
+          if (range) {
             if (0 == prevval && 0 == val)
               val = max - 1;
-            if (val < prevval)
-            {
+            if (val < prevval) {
 	      cerr << "Error: invalid range specification" << endl;
               resultset.clear();
               return resultset;
             }
             for (long i = prevval; i <= val; i++)
               resultset.push_back(i);
-          }
-
-          else
-          {
+          } 
+          else {
             resultset.push_back(val);
           }
           range=false;
@@ -467,6 +434,17 @@ static list<int> strtolist(const char* str, int max)
   }
 
   return resultset;
+}
+
+void printList(list<int>&		theList)
+{
+	list<int>::reverse_iterator		riter = theList.rbegin();
+	list<int>::reverse_iterator		rend  = theList.rend();
+	while (riter != rend) {
+		cout << *riter;
+		++riter;
+	}
+	cout << endl;
 }
 
 void beamctl::mainloop()
@@ -606,7 +584,7 @@ int main(int argc, char** argv)
 	} else {
 	  subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
 	  presence |= SUBBANDS_FLAG;
-	  cout << "subbands = " << optarg << endl;
+	  cout << "subbands = " << optarg << "(" << subbands.size() << ")" << endl;
 	}
       }
       break;
@@ -618,7 +596,7 @@ int main(int argc, char** argv)
 	} else {
 	  beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
 	  presence |= BEAMLETS_FLAG;
-	  cout << "beamlets = " << optarg << endl;
+	  cout << "beamlets = " << optarg << "(" << beamlets.size() << ")" << endl;
 	}
       }
       break;

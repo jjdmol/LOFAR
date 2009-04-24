@@ -218,12 +218,11 @@ public:
 	static const uint16 MAX_N_RCUS       = 96 * MEPHeader::N_POL;	// in real
 	static const uint16 N_BLPS           = 4;                    // number of BLP's per RSP board
 	static const uint16 N_SUBBANDS       = 512;
-	static const uint16 N_REMOTE_XLETS   = 54; 
+	static const uint16 N_DATA_SLOTS	 = 62; 
 	static const uint16 N_SERDES_LANES   = 4;
-	static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_REMOTE_XLETS;
+	static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 N_LOCAL_XLETS    = 4;
-	static const uint16 N_BEAMLETS       = 216;
-	static const uint16 N_LOCAL_BEAMLETS = 54; // N_BEAMLETS / N_SERDES_LANES
+	static const uint16 N_BEAMLETS       = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
 
@@ -262,7 +261,7 @@ public:
 	static const uint16 BF_YROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 	static const uint16 BF_YIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 
-	static const uint16 BST_POWER_SIZE        = N_LOCAL_BEAMLETS * N_POL * sizeof(uint32);
+	static const uint16 BST_POWER_SIZE        = N_DATA_SLOTS * N_POL * sizeof(uint32);
 
 	static const uint16 SST_POWER_SIZE        = N_SUBBANDS * N_POL * sizeof(uint32);
 
@@ -272,8 +271,8 @@ public:
 
 	static const uint16 CR_CONTROL_SIZE       = 1;
 
-	// (N_LOCAL_XLETS + N_REMOTE_XLETS) * XLET_SIZE; // 928 (!= 3424?)
-	static const uint16 XST_STATS_SIZE        = N_REMOTE_XLETS * XLET_SIZE; // 864
+	// (N_LOCAL_XLETS + N_DATA_SLOTS) * XLET_SIZE; // 928 (!= 3424?)
+	static const uint16 XST_STATS_SIZE        = N_DATA_SLOTS * XLET_SIZE; // 864
 
 	// The CDO register will be extended to 
 	// allow setting the UDP/IP header and some

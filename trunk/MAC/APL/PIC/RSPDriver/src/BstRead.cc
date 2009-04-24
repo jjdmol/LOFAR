@@ -111,8 +111,8 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   LOG_DEBUG(formatString("BstRead::handleack: boardid=%d",
 			 getBoardId()));
 
-  Range fragment_range(0, MEPHeader::N_LOCAL_BEAMLETS - 1);
-  fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_LOCAL_BEAMLETS);
+  Range fragment_range(0, MEPHeader::N_DATA_SLOTS - 1);
+  fragment_range = fragment_range + (getCurrentIndex() * MEPHeader::N_DATA_SLOTS);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
