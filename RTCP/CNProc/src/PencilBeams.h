@@ -171,7 +171,7 @@ class PencilBeams
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres, const bool correctBandPass );
+    PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres );
 
     void formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
 
@@ -198,7 +198,6 @@ class PencilBeams
     std::vector<PencilCoord3D> itsPhaseCentres;
     std::vector<PencilCoord3D> itsBaselines;
     std::vector<PencilCoord3D> itsBaselinesSeconds;
-    BandPass                itsBandPass;
 };
 
 inline double operator*( const PencilCoord3D &lhs, const PencilCoord3D &rhs )
