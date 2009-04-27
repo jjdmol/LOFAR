@@ -120,8 +120,8 @@ main()
       for (int i=1; i<= nr_ofAnt;i++) {
         string ant=(i-1);
         dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
-            strCurConfig+ant+".deltaY",antConfFileNB[i],
-            strCurConfig+ant+".deltaH",antConfFileH[i]);
+              strCurConfig+ant+".deltaY",antConfFileNB[i],
+              strCurConfig+ant+".deltaH",antConfFileH[i]);
       }
     } else {
       DebugN("--> will be skipped");
