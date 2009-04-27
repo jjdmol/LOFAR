@@ -649,6 +649,19 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+class CepDelayCmd : public Command
+{
+public:
+	CepDelayCmd(GCFPortInterface& port);
+	virtual ~CepDelayCmd() { }
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void setDelay(uint32 delay) { itsDelay = delay; }
+private:
+	uint32 itsDelay;
+};
+
+//-----------------------------------------------------------------------------
 class TempLimitCmd : public Command
 {
 public:

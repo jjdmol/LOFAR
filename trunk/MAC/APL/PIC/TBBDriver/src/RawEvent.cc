@@ -211,6 +211,14 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			buf.event.signal = TP_STOP_CEP_ACK;
 			buf.event.length = 8;
 			break;
+		case TPCEPSTATUS:
+			buf.event.signal = TP_CEP_STATUS_ACK;
+			buf.event.length = 12;
+			break;
+		case TPCEPDELAY:
+			buf.event.signal = TP_CEP_DELAY_ACK;
+			buf.event.length = 8;
+			break;
 		case TPWATCHDOG:
 			buf.event.signal = TP_WATCHDOG_ACK;
 			buf.event.length = 8;

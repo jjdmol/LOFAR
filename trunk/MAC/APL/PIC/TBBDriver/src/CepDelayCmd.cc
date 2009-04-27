@@ -1,4 +1,4 @@
-//#  XxxCmd.cc: implementation of the XxxCmd class
+//#  CepDelayCmd.cc: implementation of the CepDelayCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "XxxCmd.h"
+#include "CepDelayCmd.h"
 
 
 using namespace LOFAR;
@@ -33,7 +33,8 @@ using namespace TP_Protocol;
 using namespace TBB;
 
 //--Constructors for a VersionCmd object.--------------------------------------
-XxxCmd::XxxCmd()
+CepDelayCmd::CepDelayCmd():
+	itsDelay(0)
 {
 	TS = TbbSettings::instance();
 	
@@ -45,28 +46,25 @@ XxxCmd::XxxCmd()
 }
   
 //--Destructor for GetVersions.------------------------------------------------
-XxxCmd::~XxxCmd()
-{
-
-}
+CepDelayCmd::~CepDelayCmd() { }
 
 // ----------------------------------------------------------------------------
-bool XxxCmd::isValid(GCFEvent& event)
+bool CepDelayCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_X_X)||(event.signal == TP_X_X_ACK)) {
+	if ((event.signal == TBB_CEP_DELAY)||(event.signal == TP_CEP_DELAY_ACK)) {
 		return(true);
 	}
 	return(false);
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::saveTbbEvent(GCFEvent& event)
+void CepDelayCmd::saveTbbEvent(GCFEvent& event)
 {
-	TBBXxxEvent tbb_event(event);
+	TBBCepDelayEvent tbb_event(event);
 	
 	setBoardMask(tbb_event.boardmask);
 	
-	 = ;
+	itsDelay = tbb_event.delay;
 	 
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 		itsStatus[boardnr] = 0;
@@ -80,31 +78,30 @@ void XxxCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::sendTpEvent()
+void CepDelayCmd::sendTpEvent()
 {
-	TPXxxEvent tp_event;
-	tp_event.opcode = TPXXX;
+	TPCepDelayEvent tp_event;
+	tp_event.opcode = TPCEPDELAY;
 	tp_event.status = 0;
+	tp_event.delay  = itsDelay;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::saveTpAckEvent(GCFEvent& event)
+void CepDelayCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		TPXxxAckEvent tp_ack(event);
+		TPCepDelayAckEvent tp_ack(event);
 		
 		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
 			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));	
 		}
-		
-		 = ;
-		
+
 		// fill in extra code 
 		LOG_DEBUG_STR(formatString("XxxCmd: board[%d] %08X",
 				getBoardNr(),itsStatus[getBoardNr()]));
@@ -113,9 +110,9 @@ void XxxCmd::saveTpAckEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void CepDelayCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	TBBXxxAckEvent tbb_ack;
+	TBBCepDelayAckEvent tbb_ack;
 	
 	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
 		if (itsStatus[boardnr] == 0) {

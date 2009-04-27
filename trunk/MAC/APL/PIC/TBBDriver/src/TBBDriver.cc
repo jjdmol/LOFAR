@@ -66,6 +66,8 @@
 #include "ArpCmd.h"
 #include "ArpModeCmd.h"
 #include "StopCepCmd.h"
+#include "CepStatusCmd.h"
+#include "CepDelayCmd.h"
 #include "TempLimitCmd.h"
 #include "WatchDogCmd.h"
 
@@ -752,6 +754,8 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case TP_ARP_ACK:
 		case TP_ARP_MODE_ACK:
 		case TP_STOP_CEP_ACK:
+		case TP_CEP_STATUS_ACK:
+		case TP_CEP_DELAY_ACK:
 		case TP_WATCHDOG_ACK:
 		case TP_TEMP_LIMIT_ACK:
 		{
@@ -1010,6 +1014,8 @@ bool TBBDriver::isTbbCommand(unsigned short signal)
 		case TBB_ARP:
 		case TBB_ARP_MODE:
 		case TBB_STOP_CEP:
+		case TBB_CEP_STATUS:
+		case TBB_CEP_DELAY:
 		case TBB_WATCHDOG:
 		case TBB_TEMP_LIMIT: {
 			return(true);
@@ -1209,6 +1215,18 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 		case TBB_STOP_CEP:  {
 			StopCepCmd *itsCmd;
 			itsCmd = new StopCepCmd();
+			itsCmdHandler->setTpCmd(itsCmd);
+		} break;
+	
+		case TBB_CEP_STATUS:  {
+			CepStatusCmd *itsCmd;
+			itsCmd = new CepStatusCmd();
+			itsCmdHandler->setTpCmd(itsCmd);
+		} break;
+		
+		case TBB_CEP_DELAY:  {
+			CepDelayCmd *itsCmd;
+			itsCmd = new CepDelayCmd();
 			itsCmdHandler->setTpCmd(itsCmd);
 		} break;
 
