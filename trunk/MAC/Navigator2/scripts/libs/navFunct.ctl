@@ -621,6 +621,26 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
       }
       newDatapoint +=splitted[i];
     }
+  } else if (systemName == "CEP001:") {
+    //determine breakpoint in typeList
+    int cepLofarIdx = dynContains(typeList,"CEPLOFAR");
+    // check if backwards will leave CEP
+    if (choice >= cepLofarIdx) { // no it won't leave CEP
+      for (int i=1; i<= choice-cepLofarIdx+1; i++) {
+        if (i>1) {
+          newDatapoint+="_";
+        }
+        newDatapoint +=splitted[i];
+      }
+    } else {   //   yes we will jump back to maincu level
+      if (ACTIVE_TAB == "Hardware") {
+        newDatapoint=MainDBName+"LOFAR_PIC_Europe";
+      } else if (ACTIVE_TAB == "Observations") {
+        newDatapoint=MainDBName+"LOFAR_ObsSW";
+      } else if (ACTIVE_TAB == "Processes") {
+        newDatapoint=MainDBName+"LOFAR_PermSW";
+      }
+    }
   } else {
     //determine breakpoint in typeList
     int stnLofarIdx = dynContains(typeList,"StnLOFAR");
@@ -1302,6 +1322,13 @@ void navFunct_clearGlobalLists() {
   dynClear(g_RSPList);
   dynClear(g_TBBList);
   dynClear(g_RCUList);
+  dynClear(g_BGPRackList);
+  dynClear(g_BGPMidplaneList);
+  dynClear(g_IONodeList);
+  dynClear(g_OSRackList);
+  dynClear(g_OSSubclusterList);
+  dynClear(g_storageNodeList);
+  dynClear(g_offlineNodeList);
 
   dynClear(g_observationsList);
   dynClear(g_processesList);
@@ -1332,8 +1359,8 @@ dyn_string navFunct_listToDynString(string aS) {
 // ****************************************
 void navFunct_fillStationLists() {
   coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
-                               "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032");
-  remoteStations = makeDynString("RS106","RS208","RS302","RS306","RS307","RS503");
+                               "CS010","CS012","CS016","CS026","CS027","CS030","CS031","CS032","CS302");
+  remoteStations = makeDynString("RS106","RS208","RS306","RS307","RS503");
   europeStations = makeDynString("DE601","DE602","DE603","DE604","FR606","SE607","UK608");
 }
 

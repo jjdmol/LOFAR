@@ -14,9 +14,8 @@ void prepareHardwareList() {
   dynAppend(g_stationList,\"CEP001\");
   dynAppend(g_stationList,\"Core\");
   dynAppend(g_stationList,\"RS106\");  
-  dynAppend(g_stationList,\"RS208\");  
-  dynAppend(g_stationList,\"RS302\");  
-  dynAppend(g_stationList,\"RS306\");  
+  dynAppend(g_stationList,\"RS208\");
+    dynAppend(g_stationList,\"RS306\");  
   dynAppend(g_stationList,\"RS307\");  
   dynAppend(g_stationList,\"RS503\");  
 }
@@ -93,41 +92,35 @@ E E 0 1 1 0 1 E U  2  1 0  "pictures/LOFAR20_Remote.jpg" 13434828 E 0 0 1008 744
 0
 1 12 12 "" 1
 0
-1 13 13 "" 2
+1 13 14 "" 2
 0
-1 14 13 "1" 1
+1 14 14 "1" 1
 0
-1 15 13 "" 1
+1 15 14 "" 1
 0
-1 16 14 "" 2
+1 16 15 "" 2
 0
-1 17 14 "1" 1
+1 17 15 "1" 1
 0
-1 18 14 "" 1
+1 18 15 "" 1
 0
-1 19 15 "" 2
+1 19 16 "" 2
 0
-1 20 15 "1" 1
+1 20 16 "1" 1
 0
-1 21 15 "" 1
+1 21 16 "" 1
 0
-1 22 16 "" 2
+1 22 18 "" 2
 0
-1 23 16 "1" 1
+1 23 18 "1" 1
 0
-1 24 16 "" 1
+1 24 18 "" 1
 0
-1 25 18 "" 2
+1 25 19 "" 2
 0
-1 26 18 "1" 1
+1 26 19 "1" 1
 0
-1 27 18 "" 1
-0
-1 28 19 "" 2
-0
-1 29 19 "1" 1
-0
-1 30 19 "" 1
+1 27 19 "" 1
 0
 0
 LAYER, 1 
@@ -159,33 +152,29 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 10 "PANEL_REF11"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 29 0.7424242424242424 0 0.7407407407407407 233.7121212121212 42
+"objects\\Hardware\\Station_small.pnl" 457 486 T 29 0.7424242424242424 0 0.7407407407407407 349.7121212121212 44
 1
 "$Station""RS106"
 3 12 "PANEL_REF13"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 33 0.7424242424242424 0 0.7407407407407407 195.7121212121212 252.0000000000001
+"objects\\Hardware\\Station_small.pnl" 457 486 T 33 0.7424242424242424 0 0.7407407407407407 308.1779915092959 267.1415586739259
 1
 "$Station""RS208"
-3 13 "PANEL_REF14"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 34 0.7424242424242424 0 0.7407407407407407 152.7121212121212 15
-1
-"$Station""RS302"
 3 14 "PANEL_REF15"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 35 0.7424242424242424 0 0.7407407407407407 84.71212121212119 26.47077678092165
+"objects\\Hardware\\Station_small.pnl" 457 486 T 35 0.7424242424242424 0 0.7407407407407407 198.1779915092959 27.14155867392588
 1
 "$Station""RS306"
 3 15 "PANEL_REF16"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 36 0.7424242424242424 0 0.7407407407407407 48.71212121212119 116.4707767809217
+"objects\\Hardware\\Station_small.pnl" 457 486 T 36 0.7424242424242424 0 0.7407407407407407 158.1779915092959 117.1415586739259
 1
 "$Station""RS307"
 3 16 "PANEL_REF17"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 37 0.7424242424242424 0 0.7407407407407407 153.7121212121212 -29
+"objects\\Hardware\\Station_small.pnl" 457 486 T 37 0.7424242424242424 0 0.7407407407407407 268.1779915092959 -32.85844132607411
 1
 "$Station""RS503"
 3 18 "PANEL_REF19"
-"objects\\Hardware\\CEP_small.pnl" 286 26 T 40 1 0 1 5 3
+"objects\\Hardware\\CEP_small.pnl" 286 26 T 40 1 0 1 119.5617391304348 -19.9144513457557
 0
 3 19 "PANEL_REF20"
-"objects\\Hardware\\Core_smalll.pnl" 506 345 T 41 1 0 1 -2 0
+"objects\\Hardware\\Core_smalll.pnl" 506 345 T 41 1 0 1 109.5617391304348 0.2707338394294538
 0
 0
