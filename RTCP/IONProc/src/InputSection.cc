@@ -61,7 +61,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const std
   itsPsetNumber(psetNumber),
   itsDelayComp(0),
   itsLogThread(0),
-  itsDelayTimer("delay",false,false)
+  itsDelayTimer("delay consumer",true,true)
 {
 }
 
@@ -156,13 +156,12 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsSubbandToBeamMapping     = ps->subbandToBeamMapping();
   itsSubbandToRSPboardMapping = ps->subbandToRSPboardMapping();
   itsSubbandToRSPslotMapping  = ps->subbandToRSPslotMapping();
-  itsNrCalcDelays	      = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
-  double startTime = ps->startTime();
+  const double startTime = ps->startTime();
 
-  int sampleFreq = (int) ps->sampleRate();
-  int seconds	 = (int) floor(startTime);
-  int samples	 = (int) ((startTime - floor(startTime)) * sampleFreq);
+  const double sampleFreq = ps->sampleRate();
+  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
+  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
 
   itsSyncedStamp = TimeStamp(seconds, samples);
  
@@ -171,24 +170,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
     itsDelaysAfterEnd.resize(itsNrBeams);
     itsBeamDirectionsAtBegin.resize(itsNrBeams);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams);
-    itsAllBeamDirections.resize(itsNrCalcDelays * itsNrBeams);
     
-    itsDelayComp = new WH_DelayCompensation(ps, inputs[0].station); // TODO: support more than one station
+    itsDelayComp = new WH_DelayCompensation(ps, inputs[0].station, itsSyncedStamp); // TODO: support more than one station
 
-    std::vector<double> startTimes(itsNrCalcDelays);
-
-    for (uint i = 0; i < itsNrCalcDelays; i ++) {
-      startTimes[i] = static_cast<int64>(itsSyncedStamp + i * itsNSamplesPerSec) * itsSampleDuration;
-    }
-
-    itsAllBeamDirections = itsDelayComp->calculateAllBeamDirections(startTimes);
-    
-    itsCounter = 0;
-    
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-      itsBeamDirectionsAfterEnd[beam] = itsAllBeamDirections[beam];
-      itsDelaysAfterEnd[beam] = itsDelayComp->getDelay( itsAllBeamDirections[beam] );
-    }
+    itsDelayComp->getNextDelays( itsBeamDirectionsAfterEnd, itsDelaysAfterEnd );
 
     itsDelaysAtBegin = itsDelaysAfterEnd;
     itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd;
@@ -241,50 +226,29 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::limitFlagsLength(
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
 {
   if (itsNeedDelays) {
-    itsCounter ++;
+    itsDelayTimer.start();
+
     itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
     itsBeamDirectionsAtBegin = itsBeamDirectionsAfterEnd; // from previous integration
     
-    if (itsCounter > itsNrCalcDelays - 1) {
-      std::vector<double> stopTimes(itsNrCalcDelays);
-
-      for (uint i = 0; i < itsNrCalcDelays; i ++)
-        stopTimes[i] = static_cast<int64>(itsSyncedStamp + (i + 1) * itsNSamplesPerSec) * itsSampleDuration;
-
-      itsDelayTimer.start();
-      itsAllBeamDirections = itsDelayComp->calculateAllBeamDirections(stopTimes);
-      itsDelayTimer.stop();
-
-      itsCounter = 0;
-      
-      for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-        itsBeamDirectionsAfterEnd[beam] = itsAllBeamDirections[beam];
-	itsDelaysAfterEnd[beam] = itsDelayComp->getDelay( itsAllBeamDirections[beam] );
-      }	
-    } else {
-      unsigned firstBeam = itsCounter * itsNrBeams;
-      for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-        itsBeamDirectionsAfterEnd[beam] = itsAllBeamDirections[firstBeam];
-	itsDelaysAfterEnd[beam] = itsDelayComp->getDelay( itsAllBeamDirections[firstBeam] );
-
-        firstBeam++;
-      }	
-    }
+    itsDelayComp->getNextDelays( itsBeamDirectionsAfterEnd, itsDelaysAfterEnd );
    
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       // The coarse delay is determined for the center of the current
       // time interval and is expressed in an entire amount of samples.
-      signed int coarseDelay = (signed int) floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
+      const signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5));
     
       // The fine delay is determined for the boundaries of the current
       // time interval and is expressed in seconds.
-      double d = coarseDelay * itsSampleDuration;
+      const double d = coarseDelay * itsSampleDuration;
     
       itsDelayedStamps[beam]     += coarseDelay;
       itsSamplesDelay[beam]       = +coarseDelay; // FIXME: or - ?
-      itsFineDelaysAtBegin[beam]  = (float) (itsDelaysAtBegin[beam] - d);
-      itsFineDelaysAfterEnd[beam] = (float) (itsDelaysAfterEnd[beam] - d);
+      itsFineDelaysAtBegin[beam]  = static_cast<float>(itsDelaysAtBegin[beam] - d);
+      itsFineDelaysAfterEnd[beam] = static_cast<float>(itsDelaysAfterEnd[beam] - d);
     }
+
+    itsDelayTimer.stop();
   } else {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       itsSamplesDelay[beam]       = 0;
@@ -545,8 +509,6 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::postprocess()
   itsSubbandToBeamMapping.resize(0);
   itsSubbandToRSPboardMapping.resize(0);
   itsSubbandToRSPslotMapping.resize(0);
-
-  itsDelayTimer.print(std::clog);
 }
 
 

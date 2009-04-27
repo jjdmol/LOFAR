@@ -35,6 +35,7 @@
 #include <AMCImpl/ConverterImpl.h>    // Only for testing
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
+#include <Interface/Exceptions.h>
 
 namespace LOFAR 
 {
@@ -42,76 +43,172 @@ namespace LOFAR
 
   namespace RTCP 
   {
-    INIT_TRACER_CONTEXT(WH_DelayCompensation, LOFARLOGGER_PACKAGE);
-
     //##----------------  Public methods  ----------------##//
 
     WH_DelayCompensation::WH_DelayCompensation(const Parset *ps,
-                                               const string &stationName) :      
-      itsNrBeams   (ps->nrBeams()),
-      itsStationName(stationName),
-      itsConverter (0)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      
-      itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
-     
-       // Pre-allocate and initialize storage for the beam direction vectors.
-      itsBeamDirectionsAfterEnd.resize(itsNrCalcDelays*itsNrBeams);
-      itsObservationEpoch.resize(itsNrCalcDelays);
+                                               const string &stationName,
+					       const TimeStamp &startTime) :
+      stop         (false),					       
+      itsBuffer    (bufferSize,ps->nrBeams()),
+      head         (0),
+      tail         (0),
+      bufferFree   (bufferSize),
+      bufferUsed   (0),
 
-      getBeamDirections(ps);
+      itsNrBeams   (ps->nrBeams()),
+      itsStartTime (startTime),
+      itsNrSamplesPerSec (ps->nrSubbandSamples()),
+      itsSampleDuration  (ps->sampleDuration()),
+      itsStationName     (stationName),
+      itsNrCalcDelays    (ps->getUint32("OLAP.DelayComp.nrCalcDelays")),
+      itsDelayTimer      ("delay producer",true,true)
+    {
+      setBeamDirections(ps);
       setPositionDiffs(ps);
       
-      // Create the AMC converter.
-      ASSERT(!itsConverter);
-      itsConverter = createConverter();
-      ASSERT(itsConverter);
+      if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
+        LOG_ERROR("could not create delay compensation thread");
+        exit(1);
+      }
     }
-
 
     WH_DelayCompensation::~WH_DelayCompensation()
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      // Delete the AMC converter
-      ASSERT(itsConverter);
-      delete itsConverter;
-      itsConverter = 0;
+      // trigger mainLoop and force it to stop
+      stop = true;
+      bufferFree.up( itsNrCalcDelays );
+
+      if (pthread_join(thread, 0) != 0) {
+        LOG_ERROR("could not join delay compensation thread");
+        exit(1);
+      }
     }
 
-    vector<Direction> WH_DelayCompensation::calculateAllBeamDirections(vector<double> &startIntegrationTime)
+    void *WH_DelayCompensation::mainLoopStub( void *delayCompensationObject )
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      for (uint i = 0; i < startIntegrationTime.size(); i++) {
-	itsObservationEpoch[i].utc(startIntegrationTime[i]);
-      }	
+      try {
+        static_cast<WH_DelayCompensation*>(delayCompensationObject)->mainLoop();
+      } catch (Exception &ex) {
+        LOG_FATAL_STR("delay compensation thread caught Exception: " << ex);
+      } catch (std::exception &ex) {
+        LOG_FATAL_STR("delay compensation thread caught std::exception: " << ex.what());
+      } catch (...) {
+        LOG_FATAL("delay compensation thread caught non-std::exception");
+      }
+
+      return 0;
+    }
+
+    void WH_DelayCompensation::mainLoop()
+    {
+      // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
+      // the middle of the batch calculations. This makes life a lot easier and there is no
+      // need to support other cases.
+
+      if( bufferSize % itsNrCalcDelays > 0 ) {
+        THROW(IONProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")" );
+      }
+
+      vector<AMC::Epoch>	observationEpochs( itsNrCalcDelays );
+      AMC::Converter*		converter = new ConverterImpl();
+
+      const int64 startTime = static_cast<int64>(itsStartTime);
+      unsigned sampleNr = 0;
+
+      while( !stop ) {
+        bufferFree.down( itsNrCalcDelays );
+
+	itsDelayTimer.start();
+
+	// Calculate itsNrCalcDelays seconds worth of delays. Technically, we do not have
+	// to calculate that many at the end of the run, but there is no need to
+	// prevent the few excess delays from being calculated.
+
+        // Derive the next list of timestamps
+	for( unsigned i = 0; i < itsNrCalcDelays; i++ ) {
+	  // recalculate from startTime to avoid cumulating inaccuracies
+	  const double timestamp = startTime + (sampleNr * itsNrSamplesPerSec) * itsSampleDuration;
+	  
+	  sampleNr++;
+
+	  observationEpochs[i].utc( timestamp );
+	}
+
+        // Convert the source coordinates to ITRF, for all beams and all
+        // stations for the epoch "after-end" of the current time interval.
+        RequestData request (itsBeamDirections, itsPhaseCentres, 
+                             observationEpochs);
+
+        // From the source coordinates in ITRF, calculate the geometrical
+        // delays. Please remember that the vector result.direction stores the
+        // directions per epoch, per position, per direction. I.e. the first
+        // itsNrBeams elements contain the converted directions
+        // for itsPhaseCentres[0], the second for itsPhaseCentres[1],
+        // etc.
+        ResultData result;
+        converter->j2000ToItrf(result, request); // expensive
+
+        ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams,
+	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams);
+
+	// append the results to the circular buffer
+	unsigned resultIndex = 0;
+
+        for( unsigned t = 0; t < itsNrCalcDelays; t++ ) {
+	  for( unsigned b = 0; b < itsNrBeams; b++ ) {
+	    ASSERTSTR( tail < bufferSize, tail << " < " << bufferSize );
+
+	    itsBuffer[tail][b] = result.direction[resultIndex++];
+	  }
+
+	  // increment the tail pointer
+	  ++tail;
+	}
+
+	// check for wrap around for the next run
+	if( tail >= bufferSize ) {
+	  tail = 0;
+	}
+
+	itsDelayTimer.stop();
+
+	bufferUsed.up( itsNrCalcDelays );
+      }
       
-      // Calculate the delays for the epoch after the end of the current time
-      // interval. Put the results in itsBeamDirectionsAfterEnd.
-      calculateDirections();
-      
-      return itsBeamDirectionsAfterEnd;
+      delete converter;
     }
 
-    const Position& WH_DelayCompensation::getPositionDiffs() const
+    void WH_DelayCompensation::getNextDelays( vector<Direction> &directions, vector<double> &delays )
     {
-      return itsPhasePositionDiffs;
-    }
+      ASSERTSTR(directions.size() == itsNrBeams,
+                directions.size() << " == " << itsNrBeams);
 
-    double WH_DelayCompensation::getDelay( Direction &dir ) const
-    {
-      return dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
+      ASSERTSTR(delays.size() == itsNrBeams,
+                delays.size() << " == " << itsNrBeams);
+
+      bufferUsed.down();
+
+      // copy the directions at itsBuffer[head] into the provided buffer,
+      // and calculate the respective delays
+      for( unsigned b = 0; b < itsNrBeams; b++ ) {
+        const Direction &dir = itsBuffer[head][b];
+
+        directions[b] = dir;
+	delays[b] = dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
+      }
+
+      // increment the head pointer
+      if( ++head == bufferSize ) {
+        head = 0;
+      }
+
+      bufferFree.up();
     }
 
     //##----------------  Private methods  ----------------##//
 
-    void WH_DelayCompensation::getBeamDirections(const Parset *ps)
+    void WH_DelayCompensation::setBeamDirections(const Parset *ps)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      
-      // First let's find out how many sources we have.
-      LOG_TRACE_VAR_STR(itsNrBeams << " beam direction(s):");
-
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
       Direction::Types dirType(Direction::INVALID);
@@ -121,33 +218,32 @@ namespace LOFAR
       // Get the source directions from the parameter set. 
       // Split the \a dir vector into separate Direction objects.
       for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-        string str = toUpper(ps->getBeamDirectionType(beam));
+        const string str = toUpper(ps->getBeamDirectionType(beam));
+        const vector<double> beamDir = ps->getBeamDirection(beam);
+	
         
 	if      (str == "J2000") dirType = Direction::J2000;
         else if (str == "ITRF")  dirType = Direction::ITRF;
         else if (str == "AZEL")  dirType = Direction::AZEL;
-        else ASSERTSTR(false, "Observation.BeamDirectionType must be one of "
+        else THROW(IONProcException, "Observation.BeamDirectionType must be one of "
                        "J2000, ITRF, or AZEL");
 
-        vector<double> beamDir = ps->getBeamDirection(beam);
-	
         itsBeamDirections[beam] = Direction(beamDir[0], beamDir[1], dirType);
-	LOG_TRACE_VAR_STR(" [" << beam << "] = " << itsBeamDirections[beam]);
       }
     }
 
     void WH_DelayCompensation::setPositionDiffs(const Parset *ps)
     {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
        // Calculate the station to reference station position difference of apply station.
-      LOG_TRACE_VAR("Position difference vectors:");
       
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
       Position::Types posType(Position::INVALID);
       string str = toUpper(ps->getString("OLAP.DelayComp.positionType"));
-      if (str == "ITRF") posType = Position::ITRF;
-      else ASSERTSTR(false, "OLAP.DelayComp.positionType must be ITRF");
+      if (str == "ITRF")
+        posType = Position::ITRF;
+      else
+        THROW(IONProcException, "OLAP.DelayComp.positionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
@@ -156,49 +252,7 @@ namespace LOFAR
       itsPhaseCentres = phaseCentres;
       
       itsPhasePositionDiffs = itsPhaseCentres - pRef;
-      LOG_TRACE_VAR_STR(itsPhasePositionDiffs);
     }
-
-    Converter* WH_DelayCompensation::createConverter()
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      return new ConverterImpl();  
-    }
-
-    void WH_DelayCompensation::calculateDirections()
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-      // Convert the source coordinates to ITRF, for all beams and all
-      // stations for the epoch "after-end" of the current time interval.
-      RequestData request (itsBeamDirections, itsPhaseCentres, 
-                           itsObservationEpoch);
-
-      ResultData result;
-      itsConverter->j2000ToItrf(result, request); //duur!!
-      // Since we've calculated the coordinates for only one epoch, the number
-      // of directions in the result vector must be equal to the number of
-      // delays per epoch.
-
-      ASSERTSTR(result.direction.size() == itsObservationEpoch.size() * itsNrBeams,
-		result.direction.size() << " == " << itsObservationEpoch.size() * itsNrBeams);
-
-      for (uint i = 0; i < result.direction.size(); ++i) {
-        itsBeamDirectionsAfterEnd[i] = result.direction[i];
-      }
-     
-      // From the source coordinates in ITRF, calculate the geometrical
-      // delays. Please remember that the vector result.direction stores the
-      // directions per epoch, per position, per direction. I.e. the first
-      // itsBeamDirections.size() elements contain the converted directions
-      // for itsPhaseCentres[0], the second for itsPhaseCentres[1],
-      // etc.
-      LOG_TRACE_CALC("Beamlet geometrical delays:");
-      for (uint i = 0; i < itsObservationEpoch.size() * itsNrBeams; ++i) {
-	LOG_TRACE_CALC_STR(" [" << i << "]: " << getDelay( itsBeamDirectionsAfterEnd[i]) );
-      }
-    }
-
   } // namespace RTCP
 
 } // namespace LOFAR

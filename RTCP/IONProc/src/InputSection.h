@@ -89,9 +89,6 @@ template <typename SAMPLE_TYPE> class InputSection {
     std::vector<double>		 itsDelaysAfterEnd;
     std::vector<AMC::Direction>	 itsBeamDirectionsAtBegin;
     std::vector<AMC::Direction>	 itsBeamDirectionsAfterEnd;
-    std::vector<AMC::Direction>	 itsAllBeamDirections;
-    unsigned			 itsNrCalcDelays;
-    unsigned			 itsCounter;
     unsigned			 itsNrPsets;
     
     unsigned			 itsMaxNetworkDelay; // in samples
