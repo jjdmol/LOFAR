@@ -1,17 +1,40 @@
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-## ------------------------------------------------------------------------------
-## Build the library
+include(LofarPackageVersion)
 
-file (GLOB libapplcommon_SOURCES *.cc)
+set(applcommon_LIB_SRCS
+  Package__Version.cc
+  Observation.cc)
 
-add_library (applcommon ${libapplcommon_SOURCES})
+set(applcommon_PROGRAMS
+  versionapplcommon)
 
-## ------------------------------------------------------------------------------
-## Installation
+add_library(applcommon ${applcommon_LIB_SRCS})
+message(STATUS "target_link_libraries(applcommon common ${LOFAR_LIBRARIES})")
+target_link_libraries(applcommon common ${LOFAR_LIBRARIES})
+install(TARGETS applcommon DESTINATION ${LOFAR_LIBDIR})
 
-install (
-  TARGETS applcommon
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
+foreach(prog ${stream_PROGRAMS})
+  add_executable(${prog} ${prog}.cc)
+  target_link_libraries(${prog} applcommon)
+  install(TARGETS ${prog} DESTINATION bin)
+endforeach(prog ${stream_PROGRAMS})
 

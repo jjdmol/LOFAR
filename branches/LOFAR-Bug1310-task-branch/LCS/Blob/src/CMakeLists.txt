@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include(LofarPackageVersion)
 
 ## ----------------------------------------------------------------------------
 ## Process input files for Flex and Bison
@@ -36,6 +36,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   KeyParse.hh
   KeyParse.h
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# Add current binary directory to include, because that's where flex/bison
+# will output the files they generate.
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 flex_target(KeyTokenize KeyTokenize.ll 
   ${CMAKE_CURRENT_BINARY_DIR}/KeyTokenize.cc
@@ -72,11 +76,11 @@ set(blob_PROGRAMS
 )
 
 add_library(blob ${blob_LIB_SRCS})
-target_link_libraries(blob common ${LOFAR_LIBRARIES})
+target_link_libraries(blob common ${LOFAR_LIBRARIES})# ${Blob_LINK_LIBRARIES})
 install(TARGETS blob DESTINATION ${LOFAR_LIBDIR})
 
 foreach(prog ${blob_PROGRAMS})
   add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} blob ${LOFAR_LIBRARIES})
+  target_link_libraries(${prog} blob)# ${LOFAR_LIBRARIES})
   install(TARGETS ${prog} DESTINATION bin)
 endforeach(prog ${blob_PROGRAMS})

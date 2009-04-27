@@ -33,7 +33,11 @@ set(PACKAGE_VERSION 2.1)
 set(PLC_DEPENDENCIES Common Blob Transport)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
+
+foreach(dep ${PLC_DEPENDENCIES})
+  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+  include_directories(${_incdir})
+endforeach(dep ${PLC_DEPENDENCIES})
 
 ## ---------------------------------------------------------------------------
 ## External packages

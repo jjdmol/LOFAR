@@ -28,13 +28,17 @@
 # Variables defined by this module:
 #  CASACORE_FOUND            - System has Casacore, which means that the
 #                              include dir was found, as well as all 
-#                              libraries specified
+#                              libraries specified (not cached)
 #  CASACORE_INCLUDE_DIR      - Casacore include directory (cached)
-#  CASACORE_LIBRARIES        - The Casacore libraries
-#
-#  CASA_${COMPONENT}_FOUND   - True IF "component" was found.
+#  CASACORE_INCLUDE_DIRS     - Casacore include directories (not cached)
+#                              identical to CASACORE_INCLUDE_DIR
+#  CASACORE_LIBRARIES        - The Casacore libraries (not cached)
 #  CASA_${COMPONENT}_LIBRARY - The absolute path of Casacore library 
-#                              "component"
+#                              "component" (cached)
+#  HAVE_AIPSPP               - True if system has Casacore (cached)
+#                              for backward compatibility with AIPS++
+#  HAVE_CASACORE             - True if system has Casacore (cached)
+#                              identical to CASACORE_FOUND
 #
 # ATTENTION: The component names need to be in lower case, just as the
 # casacore library names. However, the CMake variables use all upper case.
@@ -93,7 +97,7 @@ endmacro(casacore_resolve_dependencies _result)
 
 # - casacore_find_library(_name)
 #
-# Search for the library casa_${_name} or ${_name}. 
+# Search for the library ${_name}. 
 # If library is found, add it to CASACORE_LIBRARIES; if not, add ${_name}
 # to CASACORE_MISSING_COMPONENTS and set CASACORE_FOUND to false.
 #
@@ -101,8 +105,8 @@ endmacro(casacore_resolve_dependencies _result)
 #
 macro(casacore_find_library _name)
   string(TOUPPER ${_name} _NAME)
-  find_library(${_NAME}_LIBRARY NAMES casa_${_name} ${_name})
-  mark_as_advanced(${_NAME}_LIBRARY})
+  find_library(${_NAME}_LIBRARY NAMES ${_name})
+  mark_as_advanced(${_NAME}_LIBRARY)
   if(${_NAME}_LIBRARY)
     list(APPEND CASACORE_LIBRARIES ${${_NAME}_LIBRARY})
   else(${_NAME}_LIBRARY)
@@ -165,14 +169,24 @@ if(NOT CASACORE_INCLUDE_DIR)
 endif(NOT CASACORE_INCLUDE_DIR)
 
 if(NOT CASACORE_INCLUDE_DIR)
-  set(CASACORE_ERROR_MESSAGE "Casacore: unable to find the header file casa/aips.h.\nPlease set CASACORE_ROOT_DIR to the root directory containing Casacore.")
+  set(CASACORE_ERROR_MESSAGE "Casacore: unable to find the header file casa/aips.h.\n   Please set CASACORE_ROOT_DIR to the root directory containing Casacore.")
 else(NOT CASACORE_INCLUDE_DIR)
+  # We've found the header file; let's continue.
   set(CASACORE_FOUND TRUE)
+  set(CASACORE_INCLUDE_DIRS ${CASACORE_INCLUDE_DIR})
+
+  # If the user specified components explicity, use that list; otherwise we'll
+  # assume that the user wants to use all components.
+  if(NOT Casacore_FIND_COMPONENTS)
+    set(Casacore_FIND_COMPONENTS ${Casacore_components})
+  endif(NOT Casacore_FIND_COMPONENTS)
+
   # Get a list of all dependent Casacore libraries that need to be found.
   casacore_resolve_dependencies(find_components ${Casacore_FIND_COMPONENTS})
+
   # Find the library for each component
   foreach(component ${find_components})
-    casacore_find_library(${component})
+    casacore_find_library(casa_${component})
   endforeach(component ${find_components})
 
   # Find required external packages.
@@ -187,6 +201,13 @@ else(NOT CASACORE_INCLUDE_DIR)
   casacore_find_library(m)
 endif(NOT CASACORE_INCLUDE_DIR)
 
+# Set HAVE_CASACORE; and HAVE_AIPSPP (for backward compatibility with AIPS++).
+if(CASACORE_FOUND)
+  set(HAVE_CASACORE TRUE CACHE BOOL "Define if Casacore is installed")
+  set(HAVE_AIPSPP TRUE CACHE BOOL "Define if AIPS++/Casacore is installed")
+endif(CASACORE_FOUND)
+
+# Compose diagnostic message if not all necessary components were found.
 if(CASACORE_MISSING_COMPONENTS)
   set(CASACORE_ERROR_MESSAGE "Casacore: the following components could not be found:\n     ${CASACORE_MISSING_COMPONENTS}")
 endif(CASACORE_MISSING_COMPONENTS)

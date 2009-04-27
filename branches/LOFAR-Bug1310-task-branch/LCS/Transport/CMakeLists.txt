@@ -33,7 +33,11 @@ set(PACKAGE_VERSION 2.3)
 set(Transport_DEPENDENCIES Blob)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
+
+foreach(dep ${Transport_DEPENDENCIES})
+  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+  include_directories(${_incdir})
+endforeach(dep ${Transport_DEPENDENCIES})
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

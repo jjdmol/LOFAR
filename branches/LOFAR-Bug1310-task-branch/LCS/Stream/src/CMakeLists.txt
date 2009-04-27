@@ -18,7 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include(LofarPackageVersion)
+#include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(stream_LIB_SRCS
   Package__Version.cc
@@ -39,6 +40,6 @@ install(TARGETS stream DESTINATION ${LOFAR_LIBDIR})
 
 foreach(prog ${stream_PROGRAMS})
   add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} stream ${LOFAR_LIBRARIES})
+  target_link_libraries(${prog} stream)
   install(TARGETS ${prog} DESTINATION bin)
 endforeach(prog ${stream_PROGRAMS})

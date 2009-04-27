@@ -33,13 +33,17 @@ set(PACKAGE_VERSION 1.0)
 set(Blob_DEPENDENCIES Common)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
+
+foreach(dep ${Blob_DEPENDENCIES})
+  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+  include_directories(${_incdir})
+endforeach(dep ${Blob_DEPENDENCIES})
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(aipspp 0 "casa/aips.h" "casa_casa")
+lofar_find_package(Casacore COMPONENTS casa)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

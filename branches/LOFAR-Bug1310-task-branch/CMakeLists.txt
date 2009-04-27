@@ -29,8 +29,7 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(LOFAR)
-
-include(CTest)
+include(LofarGeneral)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories

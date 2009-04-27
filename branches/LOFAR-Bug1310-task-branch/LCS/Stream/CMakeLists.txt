@@ -33,7 +33,11 @@ set(PACKAGE_VERSION 0.1)
 set(Stream_DEPENDENCIES Common)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
+
+foreach(dep ${Stream_DEPENDENCIES})
+  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+  include_directories(${_incdir})
+endforeach(dep ${Stream_DEPENDENCIES})
 
 ## ---------------------------------------------------------------------------
 ## External packages

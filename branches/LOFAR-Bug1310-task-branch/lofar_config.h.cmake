@@ -108,6 +108,9 @@
 /* Define if we are compiling with debugging information */
 #cmakedefine LOFAR_DEBUG 1
 
+/* Define if AIPS++ is installed */
+#cmakedefine HAVE_AIPSPP
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #cmakedefine LT_OBJDIR 1

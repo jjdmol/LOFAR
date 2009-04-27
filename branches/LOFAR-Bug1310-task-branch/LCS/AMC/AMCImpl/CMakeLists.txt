@@ -33,16 +33,17 @@ set(PACKAGE_VERSION 2.0)
 set(AMCImpl_DEPENDENCIES Common Transport AMCBase)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
+
+foreach(dep ${AMCImpl_DEPENDENCIES})
+  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+  include_directories(${_incdir})
+endforeach(dep ${AMCImpl_DEPENDENCIES})
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-set(AIPSPP_PREFIX_PATH /opt/lofar/external/casacore)
-lofar_find_package(aipspp 1 
-  "casa/aips.h"
-  "casa_measures casa_tables casa_scimath casa_scimath_f casa_casa")
+lofar_find_package(Casacore COMPONENTS measures)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

@@ -33,13 +33,12 @@ set(PACKAGE_VERSION 3.1)
 set(Common_DEPENDENCIES)
 
 include(LofarGeneral)
-include(LofarPackageVersion)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost 1)
+lofar_find_package(Boost)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

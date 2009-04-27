@@ -41,7 +41,7 @@ add_subdirectory(Stream)        # Low-level support for streaming data
 add_subdirectory(Transport)     # Low-level transport library
 add_subdirectory(ACC)           # Application Configuration & Control
 add_subdirectory(AMC)           # Astronomical Measures Conversions
-#add_subdirectory(ApplCommon)    # Application common stuff
+add_subdirectory(ApplCommon)    # Application common stuff
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
