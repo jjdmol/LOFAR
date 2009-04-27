@@ -421,14 +421,14 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
 			if (ack.status_mask[tbb] & TBB_SUCCESS) {
 				// TBB board version
-				versionStr = formatString("%d.%d", ack.swversion[tbb] / 10, ack.swversion[tbb] % 10);
+				versionStr = formatString("%d.%d", ack.tpswversion[tbb] / 10, ack.tpswversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_SW_VERSION, GCFPVString(versionStr), 0.0, false);
 				versionStr = formatString("%d.%d", ack.boardversion[tbb] / 10, ack.boardversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString(versionStr), 0.0, false);
 				itsTBBs[tbb]->setValue(PN_TBB_BOARDID, GCFPVUnsigned(ack.boardid[tbb]), 0.0, false);
 			
 				// BP version
-				versionStr = formatString("%d.%d", ack.tpversion[tbb] / 10, ack.tpversion[tbb] % 10);
+				versionStr = formatString("%d.%d", ack.tphwversion[tbb] / 10, ack.tphwversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION, GCFPVString(versionStr), 0.0, false);
 			
 				// MPx versions
