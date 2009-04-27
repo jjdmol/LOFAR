@@ -36,8 +36,9 @@ prelude = << PRELUDE_END
 	static const uint32 TPUDP         = 0x00000301;  // OUT configure UDP and IP header
 	static const uint32 TPPAGEPERIOD  = 0x00000302;  // OUT time in one page 30.2 format in nsec
 	static const uint32 TPSTOPCEP     = 0x00000303;  // OUT stop CEP transfers
-	static const uint32 TPCEPSTATUS   = 0x00000304;  // OUT read CEP pages left
-	
+	static const uint32 TPCEPSTATUS   = 0x00000304;  // IN read CEP pages left
+	static const uint32 TPCEPDELAY    = 0x00000305;  // OUT set CEP delay between pages
+		
 	//--Board information-------      
 	static const uint32 TPVERSION     = 0x00000700;  // IN/OUT returns board version
 	static const uint32 TPSIZE        = 0x00000701;  // IN/OUT returns TBB memory size
@@ -659,6 +660,37 @@ event = {
 	};
 };
 
+event = {
+	noheader;
+	signal = CEP_DELAY;
+	dir = OUT;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+	param = {
+		name = "delay";
+		type = "uint32";
+	};
+};  
+
+event = {
+	noheader;
+	signal = CEP_DELAY_ACK;
+	dir = IN;
+	param = {
+		name = "opcode";
+		type = "uint32";
+	};
+	param = {
+		name = "status";
+		type = "uint32";
+	};
+};
 	
 //--Operation and Maintenance-
 event = {

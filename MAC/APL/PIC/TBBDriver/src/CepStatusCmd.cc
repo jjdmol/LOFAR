@@ -1,4 +1,4 @@
-//#  XxxCmd.cc: implementation of the XxxCmd class
+//#  CepStatusCmd.cc: implementation of the CepStatusCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "XxxCmd.h"
+#include "CepStatusCmd.h"
 
 
 using namespace LOFAR;
@@ -33,41 +33,37 @@ using namespace TP_Protocol;
 using namespace TBB;
 
 //--Constructors for a VersionCmd object.--------------------------------------
-XxxCmd::XxxCmd()
+CepStatusCmd::CepStatusCmd()
 {
 	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
 		// fill in extra code
 		itsStatus[boardnr] = TBB_NO_BOARD;
+		itsPagesLeft[boardnr] = 0;
 	}
 	setWaitAck(true);
 }
   
 //--Destructor for GetVersions.------------------------------------------------
-XxxCmd::~XxxCmd()
-{
-
-}
+CepStatusCmd::~CepStatusCmd() { }
 
 // ----------------------------------------------------------------------------
-bool XxxCmd::isValid(GCFEvent& event)
+bool CepStatusCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_X_X)||(event.signal == TP_X_X_ACK)) {
+	if ((event.signal == TBB_CEP_STATUS)||(event.signal == TP_CEP_STATUS_ACK)) {
 		return(true);
 	}
 	return(false);
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::saveTbbEvent(GCFEvent& event)
+void CepStatusCmd::saveTbbEvent(GCFEvent& event)
 {
-	TBBXxxEvent tbb_event(event);
+	TBBCepStatusEvent tbb_event(event);
 	
 	setBoardMask(tbb_event.boardmask);
 	
-	 = ;
-	 
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 		itsStatus[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr)) {
@@ -80,10 +76,10 @@ void XxxCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::sendTpEvent()
+void CepStatusCmd::sendTpEvent()
 {
-	TPXxxEvent tp_event;
-	tp_event.opcode = TPXXX;
+	TPCepStatusEvent tp_event;
+	tp_event.opcode = TPCEPSTATUS;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
@@ -91,20 +87,19 @@ void XxxCmd::sendTpEvent()
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::saveTpAckEvent(GCFEvent& event)
+void CepStatusCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		TPXxxAckEvent tp_ack(event);
+		TPCepStatusAckEvent tp_ack(event);
+		itsPagesLeft[getBoardNr()] = tp_ack.pages_left;
 		
 		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
 			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));	
 		}
-		
-		 = ;
-		
+
 		// fill in extra code 
 		LOG_DEBUG_STR(formatString("XxxCmd: board[%d] %08X",
 				getBoardNr(),itsStatus[getBoardNr()]));
@@ -113,9 +108,9 @@ void XxxCmd::saveTpAckEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-void XxxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void CepStatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	TBBXxxAckEvent tbb_ack;
+	TBBCepStatusAckEvent tbb_ack;
 	
 	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
 		if (itsStatus[boardnr] == 0) {
@@ -123,7 +118,9 @@ void XxxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		} else {
 			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
 		}
+		
+		tbb_ack.pages_left[boardnr] = itsPagesLeft[boardnr];
 	}
-
+	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

@@ -952,7 +952,7 @@ GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 
 	cout << formatString("TBBDriver software version %3.2f",(ack.driverversion / 100.)) << endl;
 	cout << endl;
-	cout << "TBB  ID  Board  TP sw  TP hw  MP    " << endl;
+	cout << "TBB  ID  Board  TP sw  TP hw  MP hw" << endl;
 	cout << "---  --  -----  -----  -----  -----" << endl;
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
 		if (isSelected(bnr) ) {
@@ -1291,6 +1291,45 @@ GCFEvent::TResult StopCepCmd::ack(GCFEvent& e)
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  CEP messages stopped",bnr ) << endl;
+			} else {
+				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
+			}
+		}
+	}
+
+	setCmdDone(true);
+
+	return(GCFEvent::HANDLED);
+}
+
+//---- CEPDELAY -------------------------------------------------------------------
+CepDelayCmd::CepDelayCmd(GCFPortInterface& port) : Command(port)
+{
+	cout << endl;
+	cout << "== TBB ========================================= set delay between CEP frames====" << endl;
+	cout << endl;
+}
+
+//-----------------------------------------------------------------------------
+void CepDelayCmd::send()
+{
+	TBBCepDelayEvent event;
+	event.boardmask = getBoardMask();
+	event.delay = itsDelay;
+	itsPort.send(event);
+	itsPort.setTimer(DELAY);
+}
+
+//-----------------------------------------------------------------------------
+GCFEvent::TResult CepDelayCmd::ack(GCFEvent& e)
+{
+	TBBCepDelayAckEvent ack(e);
+	cout << "TBB  Info" << endl;
+	cout << "---  -------------------------------------------------------" << endl;
+	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
+		if (isSelected(bnr) ) {
+			if (ack.status_mask[bnr] == TBB_SUCCESS) {
+				cout << formatString(" %2d  CEP delay set to %d uS",bnr, (itsDelay * 5)) << endl;
 			} else {
 				cout << formatString(" %2d  %s",bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
 			}
@@ -2433,6 +2472,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
 	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending CEP messages" << endl;
+	cout << " tbbctl --cepdelay=delay [--select=<set>]                           # set delay between CEP frames, 1 unit = 5 uS" << endl;
 	cout << " tbbctl --arp [--select=<set>]                                      # send 1 arp message" << endl;
 	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto" << endl;
 	cout << endl;
@@ -2667,6 +2707,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		case TBB_ARP_MODE_ACK:
 		case TBB_CEP_STATUS_ACK:
 		case TBB_STOP_CEP_ACK:
+		case TBB_CEP_DELAY_ACK:
 		case TBB_TEMP_LIMIT_ACK: {
 			itsServerPort.cancelAllTimers();
 			status = itsCommand->ack(e); // handle the acknowledgement
@@ -2705,126 +2746,127 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 	//opterr = 0; // no error reporting to stderr
 
 	while(1) {
-	static struct option long_options[] = {
-			{ "select",       required_argument,   0, 'l' },
-			{ "alloc",        no_argument,            0, 'a' },
-			{ "rcuinfo",      no_argument,            0, 'i' },
-			{ "free",            no_argument,            0, 'f' },
-			{ "record",        no_argument,            0, 'r' },
-			{ "stop",          no_argument,            0, 's' },
-			{ "settings",      no_argument,            0, 'b' },
-			{ "release",    no_argument,            0, 'e' },
-			{ "generate",      no_argument,            0, 'g' },
-			{ "setup",         required_argument,   0, 't' },
-			{ "coef",          required_argument,   0, 'c' },
-			{ "triginfo",      required_argument,   0, 'I' },
-			{ "listen",     optional_argument,   0, 'L' },
-			{ "read",            required_argument,   0, 'R' },
-			{ "readall",         required_argument,   0, 'B' },
-			{ "mode",            required_argument,   0, 'm' },
-			{ "version",      no_argument,            0, 'v' },
-			{ "size",            no_argument,            0, 'z' },
-			{ "status",       no_argument,            0, 'A' },
-			{ "readpage",     required_argument,   0, 'p' },
-			{ "arp",         no_argument,          0, 'D' },
-			{ "arpmode",      required_argument,   0, 'E' },
-			{ "stopcep",      no_argument,            0, 'F' },
-			{ "templimits",   required_argument,   0, 'G' },
-			{ "clear",        no_argument,            0, 'C' },
-			{ "reset",        no_argument,            0, 'Z' },
-			{ "config",       required_argument,   0, 'S' },
-			{ "eraseimage", required_argument,   0, '1' },
-			{ "readimage",  required_argument,   0, '2' },
-			{ "writeimage", required_argument,   0, '3' },
-			{ "imageinfo", required_argument,   0, '8' },
-			{ "readddr",    required_argument,   0, '4' },
-			{ "writeddr",      required_argument,   0, '5' },
-			{ "testddr",    required_argument,   0, '9' },
-			{ "readreg",    required_argument,   0, '6' },
-			{ "writereg",      required_argument,   0, '7' },
-			{ "help",            no_argument,            0, 'h' },
-			{ "expert",       no_argument,            0, 'X' },
-			{ 0,                 0,                          0, 0 },
+		static struct option long_options[] = {
+			{ "select",     required_argument, 0, 'a' },
+			{ "alloc",      no_argument,       0, 'b' },
+			{ "rcuinfo",    no_argument,       0, 'c' },
+			{ "free",       no_argument,       0, 'd' },
+			{ "record",     no_argument,       0, 'e' },
+			{ "stop",       no_argument,       0, 'f' },
+			{ "settings",   no_argument,       0, 'g' },
+			{ "release",    no_argument,       0, 'h' },
+			{ "generate",   no_argument,       0, 'i' },
+			{ "setup",      required_argument, 0, 'j' },
+			{ "coef",       required_argument, 0, 'k' },
+			{ "triginfo",   required_argument, 0, 'l' },
+			{ "listen",     optional_argument, 0, 'm' },
+			{ "read",       required_argument, 0, 'n' },
+			{ "readall",    required_argument, 0, 'o' },
+			{ "mode",       required_argument, 0, 'p' },
+			{ "version",    no_argument,       0, 'q' },
+			{ "size",       no_argument,       0, 'r' },
+			{ "status",     no_argument,       0, 's' },
+			{ "readpage",   required_argument, 0, 't' },
+			{ "arp",        no_argument,       0, 'u' },
+			{ "arpmode",    required_argument, 0, 'v' },
+			{ "stopcep",    no_argument,       0, 'w' },
+			{ "cepdelay",   required_argument, 0, 'x' },
+			{ "templimits", required_argument, 0, 'y' },
+			{ "clear",      no_argument,       0, 'z' },
+			{ "reset",      no_argument,       0, 'A' },
+			{ "config",     required_argument, 0, 'B' },
+			{ "eraseimage", required_argument, 0, 'C' },
+			{ "readimage",  required_argument, 0, 'D' },
+			{ "writeimage", required_argument, 0, 'E' },
+			{ "imageinfo",  required_argument, 0, 'F' },
+			{ "readddr",    required_argument, 0, 'G' },
+			{ "writeddr",   required_argument, 0, 'H' },
+			{ "testddr",    required_argument, 0, 'I' },
+			{ "readreg",    required_argument, 0, 'J' },
+			{ "writereg",   required_argument, 0, 'K' },
+			{ "help",       no_argument,       0, 'L' },
+			{ "expert",     no_argument,       0, 'M' },
+			{ 0,            0,                 0,  0 },
 		};
 
-	 int option_index = 0;
-	 int c = getopt_long(argc, argv,
-												"l:afrsbegt:c:I:L::R:m:vzAp:DE:FG:CZS:1:2:3:8:4:5:9:6:7:hX",
-				long_options, &option_index);
+		int option_index = 0;
+		int c = getopt_long(argc, argv,
+								"a:bcdefghij:k:l:m::n:o:p:qrst:uv:wx:y:zAB:C:D:E:F:G:H:I:J:K:LM",
+								long_options, &option_index);
 
-	 if (c == -1) {
+		if (c == -1) {
 			break;
 		}
 
 		switch (c) {
 
-			case 'l': {    // --select
-			if (!command->isSelectionDone()) {
-			if (optarg) {
-				if (!command) {
-					cout << "Error: 'command' argument should come before --select argument" << endl;
-					exit(EXIT_FAILURE);
-					}
-					select = strtolist(optarg, command->getMaxSelections());
-
-				if (select.empty()) {
-					cout << "Error: invalid or missing '--select' option" << endl;
-					exit(EXIT_FAILURE);
+			case 'a': {    // --select
+				if (!command->isSelectionDone()) {
+					if (optarg) {
+						if (!command) {
+							cout << "Error: 'command' argument should come before --select argument" << endl;
+							exit(EXIT_FAILURE);
+							}
+							select = strtolist(optarg, command->getMaxSelections());
+		
+						if (select.empty()) {
+							cout << "Error: invalid or missing '--select' option" << endl;
+							exit(EXIT_FAILURE);
+							} else {
+								command->setSelected(true);
+							}
 					} else {
-						command->setSelected(true);
+						cout << "Error: option '--select' requires an argument" << endl;
+						exit(EXIT_FAILURE);
 					}
-			} else {
-				cout << "Error: option '--select' requires an argument" << endl;
-				exit(EXIT_FAILURE);
-			}
 				} else {
-				cout << "Error: channels already selected" << endl;
+					cout << "Error: channels already selected" << endl;
 				}
-		 } break;
-
-		 case 'a': {   // --alloc
+			} break;
+	
+			case 'b': {   // --alloc
 				if (command) delete command;
 				AllocCmd* alloccmd = new AllocCmd(itsServerPort);
 				command = alloccmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'i': {    // --channelinfo
+	
+			case 'c': {    // --channelinfo
 				if (command) delete command;
 				ChannelInfoCmd* channelinfocmd = new ChannelInfoCmd(itsServerPort);
 				command = channelinfocmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'f': {    // --free
+	
+			case 'd': {    // --free
 				if (command) delete command;
 				FreeCmd* freecmd = new FreeCmd(itsServerPort);
 				command = freecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'r': {    // --record
+	
+			case 'e': {    // --record
 				if (command) delete command;
 				RecordCmd* recordcmd = new RecordCmd(itsServerPort);
 				command = recordcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 's': {    // --stop
+	
+			case 'f': {    // --stop
 				if (command) delete command;
 				StopCmd* stopcmd = new StopCmd(itsServerPort);
 				command = stopcmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'b': {
+	
+			case 'g': {
 				if (command) delete command;
 				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(itsServerPort);
 				command = trigsettingscmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'e': {    // --trigrelease
+	
+			case 'h': {    // --trigrelease
 				if (command) delete command;
 				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(itsServerPort);
 				command = trigreleasecmd;
@@ -2840,22 +2882,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				select.push_back(rcu);
 					command->setSelected(true);
 				}
-
+	
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'g': {    // --triggenerate
+	
+			case 'i': {    // --triggenerate
 				if (command) delete command;
 				TrigGenerateCmd* triggeneratecmd = new TrigGenerateCmd(itsServerPort);
 				command = triggeneratecmd;
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 't': {    // --trigsetup
+	
+			case 'j': {    // --trigsetup
 				if (command) delete command;
 				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(itsServerPort);
 				command = trigsetupcmd;
-
+	
 				if (optarg) {
 					uint32 level = 0;
 					uint32 start = 0;
@@ -2863,10 +2905,10 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint32 filter = 0;
 					uint32 window = 0;
 					uint32 triggermode = 0;
-
+	
 					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
 					// check if valid arguments
-					if (  numitems < 6 || numitems == EOF
+					if ( numitems < 6 || numitems == EOF
 							|| level < 1 || level > 255
 							|| start < 1 || start > 15
 							|| stop < 1 || stop > 15
@@ -2880,7 +2922,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "                              (b1=0 RSP input),(b1=1 external input)" << endl;
 						exit(EXIT_FAILURE);
 					}
-
+	
 					//================================================
 					// set triggermode to single shot, continues mode
 					// will give more than 6000 triggers per second per
@@ -2891,8 +2933,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					}
 					triggermode = 0;
 					//================================================
-
-
+	
+	
 					trigsetupcmd->setLevel(static_cast<uint16>(level));
 					trigsetupcmd->setStartMode(static_cast<uint8>(start));
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
@@ -2901,11 +2943,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					trigsetupcmd->setOperatingMode(0);
 					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
-
+	
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'c': {    // --trigcoef
+	
+			case 'k': {    // --trigcoef
 				if (command) delete command;
 				TrigCoefficientCmd* trigcoefficientcmd = new TrigCoefficientCmd(itsServerPort);
 				command = trigcoefficientcmd;
@@ -2928,8 +2970,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'I': {    // --triginfo
+	
+			case 'l': {    // --triginfo
 				if (command) delete command;
 				TrigInfoCmd* triginfocmd = new TrigInfoCmd(itsServerPort);
 				command = triginfocmd;
@@ -2948,8 +2990,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'L': {    // --listen
+	
+			case 'm': {    // --listen
 				if (command) delete command;
 				ListenCmd* listencmd = new ListenCmd(itsServerPort);
 				command = listencmd;
@@ -2971,12 +3013,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-
-			case 'R': {    // --read
+	
+			case 'n': {    // --read
 				if (command) delete command;
 				ReadCmd* readcmd = new ReadCmd(itsServerPort);
 				command = readcmd;
-
+	
 				if (optarg) {
 					int rcu = 0;
 					uint32 secondstime = 0;
@@ -2995,19 +3037,19 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					readcmd->setSampleTime(sampletime);
 					readcmd->setPrePages(prepages);
 					readcmd->setPostPages(postpages);
-
+	
 					select.clear();
 					select.push_back(rcu);
 					command->setSelected(true);
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-
-		case 'B': {    // --readall
+	
+			case 'o': {    // --readall
 				if (command) delete command;
 				ReadAllCmd* readallcmd = new ReadAllCmd(itsServerPort);
 				command = readallcmd;
-
+	
 				if (optarg) {
 					uint32 pages = 0;
 					int numitems = sscanf(optarg, "%u", &pages);
@@ -3020,9 +3062,9 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(RCUCMD);
 			} break;
-
-
-			case 'm': {    // --mode
+	
+	
+			case 'p': {    // --mode
 				if (command) delete command;
 				ModeCmd* modecmd = new ModeCmd(itsServerPort);
 				command = modecmd;
@@ -3036,58 +3078,58 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "       rec_mode=transient or subbands" << endl;
 						exit(EXIT_FAILURE);
 					}
-
-					if (strcmp(rec_mode,"transient") == 0)
-						modecmd->setRecMode(TBB_MODE_TRANSIENT);
-					if (strcmp(rec_mode,"subbands") == 0)
-						modecmd->setRecMode(TBB_MODE_SUBBANDS);
-				}
+	
+						if (strcmp(rec_mode,"transient") == 0)
+							modecmd->setRecMode(TBB_MODE_TRANSIENT);
+						if (strcmp(rec_mode,"subbands") == 0)
+							modecmd->setRecMode(TBB_MODE_SUBBANDS);
+					}
+					command->setCmdType(BOARDCMD);
+				} break;
+	
+			case 'q': {    // --version
+				if (command) delete command;
+				VersionCmd* versioncmd = new VersionCmd(itsServerPort);
+				command = versioncmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'v': {    // --version
-			if (command) delete command;
-			VersionCmd* versioncmd = new VersionCmd(itsServerPort);
-			command = versioncmd;
+	
+			case 'r': {    // --size
+				if (command) delete command;
+				SizeCmd* sizecmd = new SizeCmd(itsServerPort);
+				command = sizecmd;
 				command->setCmdType(BOARDCMD);
-		} break;
-
-		case 'z': {    // --size
-			if (command) delete command;
-			SizeCmd* sizecmd = new SizeCmd(itsServerPort);
-			command = sizecmd;
+			} break;
+	
+			case 's': {    // --status
+				if (command) delete command;
+				StatusCmd* statuscmd = new StatusCmd(itsServerPort);
+				command = statuscmd;
 				command->setCmdType(BOARDCMD);
-		} break;
-
-		case 'A': {    // --status
-			if (command) delete command;
-			StatusCmd* statuscmd = new StatusCmd(itsServerPort);
-			command = statuscmd;
-				command->setCmdType(BOARDCMD);
-		} break;
-
-			case 'C': {    // --clear
+			} break;
+	
+			case 'z': {    // --clear
 				if (command) delete command;
 				ClearCmd* clearcmd = new ClearCmd(itsServerPort);
 				command = clearcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'Z': {    // --reset
+	
+			case 'A': {    // --reset
 				if (command) delete command;
 				ResetCmd* resetcmd = new ResetCmd(itsServerPort);
 				command = resetcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'D': {    // --arp
+	
+			case 'u': {    // --arp
 				if (command) delete command;
 				ArpCmd* arpcmd = new ArpCmd(itsServerPort);
 				command = arpcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'E': {    // --arpmode
+	
+			case 'v': {    // --arpmode
 				if (command) delete command;
 				ArpModeCmd* arpmodecmd = new ArpModeCmd(itsServerPort);
 				command = arpmodecmd;
@@ -3104,15 +3146,33 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'F': {    // --stopcep
+	
+			case 'w': {    // --stopcep
 				if (command) delete command;
 				StopCepCmd* stopcepcmd = new StopCepCmd(itsServerPort);
 				command = stopcepcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'G': {    // --templimits
+	
+			case 'x': {    // --cepdelay
+				if (command) delete command;
+				CepDelayCmd* cepdelaycmd = new CepDelayCmd(itsServerPort);
+				command = cepdelaycmd;
+				if (optarg) {
+					int32 delay = 0;
+					int numitems = sscanf(optarg, "%d", &delay);
+					if (numitems == 0 || numitems == EOF || delay < 0) {
+						cout << "Error: invalid delay value. Should be of the format " << endl;
+						cout << "       '--cepdelay=dealy'" << endl;
+						cout << "       delay > 0" << endl;
+						exit(EXIT_FAILURE);
+					}
+					cepdelaycmd->setDelay((uint32)delay);
+				}
+				command->setCmdType(BOARDCMD);
+			} break;
+	
+			case 'y': {    // --templimits
 				if (command) delete command;
 				TempLimitCmd* templimitscmd = new TempLimitCmd(itsServerPort);
 				command = templimitscmd;
@@ -3130,14 +3190,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-
-
-			case 'S': {    // --config
+	
+	
+	
+			case 'B': {    // --config
 				if (command) delete command;
 				ConfigCmd* configcmd = new ConfigCmd(itsServerPort);
 				command = configcmd;
-
+	
 				if (optarg) {
 					int32 imagenr = 0;
 					int numitems = sscanf(optarg, "%d", &imagenr);
@@ -3149,22 +3209,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					}
 					configcmd->setImage((uint32)imagenr);
 				}
-
+	
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'p': {    // --readpage
+	
+			case 't': {    // --readpage
 				if (command) delete command;
 				ReadPageCmd* readddrcmd = new ReadPageCmd(itsServerPort);
 				command = readddrcmd;
-
+	
 				if (optarg) {
 					int32 rcu = 0;
 					uint32 startpage = 0;
 					uint32 pages = 0;
-
+	
 					int numitems = sscanf(optarg, "%d,%u,%u", &rcu,&startpage,&pages);
-
+	
 					if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid readpage value's. Should be of the format " << endl;
 						cout << "       '--readpage=rcu, startpage, pages'" << endl;
@@ -3179,8 +3239,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '1': {    // --erasef
+	
+			case 'C': {    // --erasef
 				if (command) delete command;
 				ErasefCmd* erasefcmd = new ErasefCmd(itsServerPort);
 				command = erasefcmd;
@@ -3188,7 +3248,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-
+	
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid page value. Should be of the format " << endl;
 						cout <<  "       '--eraseimage=board, image'" << endl;
@@ -3202,8 +3262,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '2': {    // --readf
+	
+			case 'D': {    // --readf
 				if (command) delete command;
 				ReadfCmd* readfcmd = new ReadfCmd(itsServerPort);
 				command = readfcmd;
@@ -3211,7 +3271,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int board = 0;
 					int page = 0;
 					int numitems = sscanf(optarg, "%d,%d", &board, &page);
-
+	
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
 						cout << "       '--readimage=board, image'"<< endl;
@@ -3225,8 +3285,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '3': {    // --writeimage
+	
+			case 'E': {    // --writeimage
 				if (command) delete command;
 				WritefCmd* writefcmd = new WritefCmd(itsServerPort);
 				command = writefcmd;
@@ -3239,12 +3299,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					memset(filename_tp,0,64);
 					memset(filename_mp,0,64);
 					uint32 password = 0;
-
+	
 					int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,],%x",
 															&board, &page, &version,
 															filename_tp, filename_mp,
 															&password );
-
+	
 					if (numitems < 6 || numitems == EOF || page < 0 || page >= FL_N_IMAGES  || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid values. Should be of the format " << endl;
 						cout << "       '--writeimage=board, image, file-tp, file-mp, password'"<< endl;
@@ -3252,21 +3312,21 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						cout << "       password= xxxx for image-0 otherwise use 0" << endl;
 						exit(EXIT_FAILURE);
 					}
-
+	
 					writefcmd->setPage(page);
 					writefcmd->setVersion(version);
 					writefcmd->setFileNameTp(filename_tp);
 					writefcmd->setFileNameMp(filename_mp);
 					writefcmd->setPassword(password);
-
+	
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '8': { // --imageinfo
+	
+			case 'F': { // --imageinfo
 				if (command) delete command;
 				ImageInfoCmd* imageinfocmd = new ImageInfoCmd(itsServerPort);
 				command = imageinfocmd;
@@ -3285,20 +3345,20 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '4': {    // --readw
+	
+			case 'G': {    // --readw
 				if (command) delete command;
 				ReadwCmd* readwcmd = new ReadwCmd(itsServerPort);
 				command = readwcmd;
-
+	
 				if (optarg) {
 					int board = 0;
 					uint32 mp = 0;
 					uint32 startaddr = 0;
 					uint32 size = 0;
-
+	
 					int numitems = sscanf(optarg, "%d,%x,%x,%x", &board,&mp,&startaddr, &size);
-
+	
 					if (numitems < 3 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid read ddr value. Should be of the format " << endl;
 						cout <<  "       '--readw=board, mp, addr'" << endl;
@@ -3314,8 +3374,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '5': {    // --writew
+	
+			case 'H': {    // --writew
 				if (command) delete command;
 				WritewCmd* writewcmd = new WritewCmd(itsServerPort);
 				command = writewcmd;
@@ -3324,9 +3384,9 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int32 mp = 0;
 					uint32 addr = 0;
 					uint32 word[8];
-
+	
 					int numitems = sscanf(optarg, "%d,%d,%x,%x,%x,%x,%x,%x,%x,%x,%x", &board,&mp,&addr,
-										 &word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
+										&word[0],&word[1],&word[2],&word[3],&word[4],&word[5],&word[6],&word[7]);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
 						cout <<  "       '--writew=board, mp, addr, word[0], word[1] .. word[7]'"<< endl;
@@ -3344,14 +3404,14 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '9': {    // --testddr
+	
+			case 'I': {    // --testddr
 				if (command) delete command;
 				TestDdrCmd* testddrcmd = new TestDdrCmd(itsServerPort);
 				command = testddrcmd;
 				if (optarg) {
 					int32 board = 0;
-
+	
 					int numitems = sscanf(optarg, "%d", &board);
 					if (numitems < 1 || numitems == EOF || board < 0 || board >= itsMaxBoards) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
@@ -3365,20 +3425,20 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '6': {    // --readr
+	
+			case 'J': {    // --readr
 				if (command) delete command;
 				ReadrCmd* readrcmd = new ReadrCmd(itsServerPort);
 				command = readrcmd;
-
+	
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
-
+	
 					int numitems = sscanf(optarg, "%d,%u,%u,%u", &board, &mp, &pid, &regid);
-
+	
 					if (numitems < 4 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid read register value. Should be of the format" << endl;
 						cout << "       '--readreg=board, mp, pid, regid'" << endl;
@@ -3392,27 +3452,27 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					readrcmd->setMp(mp);
 					readrcmd->setPid(pid);
 					readrcmd->setRegId(regid);
-
+	
 					select.clear();
 					select.push_back(board);
 					command->setSelected(true);
 				}
-
+	
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case '7': {    // --writer
+	
+			case 'K': {    // --writer
 				if (command) delete command;
 				WriterCmd* writercmd = new WriterCmd(itsServerPort);
 				command = writercmd;
-
+	
 				if (optarg) {
 					int32 board = 0;
 					uint32 mp = 0;
 					uint32 pid = 0;
 					uint32 regid = 0;
 					char datastr[256];
-
+	
 					int numitems = sscanf(optarg, "%d,%u,%u,%u,%s", &board, &mp, &pid, &regid, datastr);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= itsMaxBoards || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid write register value. Should be of the format " << endl;
@@ -3427,11 +3487,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					writercmd->setMp(mp);
 					writercmd->setPid(pid);
 					writercmd->setRegId(regid);
-
+	
 					char* dstr;
 					uint32 val = 0;
 					int wordcnt = 0;
-
+	
 				dstr = strtok (datastr," ,");
 				while (dstr != NULL)
 				{
@@ -3446,23 +3506,21 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					select.push_back(board);
 					command->setSelected(true);
 				}
-
 				command->setCmdType(BOARDCMD);
 			} break;
-
-			case 'h':
+	
+			case 'L':
 			case '?': {
 				commandHelp(1);
 				exit(0);
 			} break;
-
-			case 'X':   {
+	
+			case 'M': {
 				commandHelp(3);
 				exit(0);
 			} break;
-
-			default:
-			{
+	
+			default: {
 				commandHelp(1);
 				exit(EXIT_FAILURE);
 			} break;
@@ -3485,68 +3543,67 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 //-----------------------------------------------------------------------------
 std::list<int> TBBCtl::strtolist(const char* str, int max)
 {
-  string inputstring(str);
-  char* start = (char*)inputstring.c_str();
-  char* end   = 0;
-  bool  range = false;
-  long prevval = 0;
+	string inputstring(str);
+	char* start  = (char*)inputstring.c_str();
+	char* end    = 0;
+	bool range   = false;
+	long prevval = 0;
 	std::list<int> resultset;
 
 	resultset.clear();
 
-  while(start) {
-	 long val = strtol(start, &end, 10); // read decimal numbers
-	 start = (end ? (*end ? end + 1 : 0) : 0); // determine next start
-	 if (val >= max || val < 0) {
-		cout << formatString("Error: value %ld out of range",val) << endl;
+	while(start) {
+		long val = strtol(start, &end, 10); // read decimal numbers
+		start = (end ? (*end ? end + 1 : 0) : 0); // determine next start
+		if (val >= max || val < 0) {
+			cout << formatString("Error: value %ld out of range",val) << endl;
 			resultset.clear();
-		return(resultset);
-	 }
+			return(resultset);
+	 	}
 
-	 if (end) {
-		switch (*end) {
-		  case ',':
-		  case 0:
-		  {
-			 if (range) {
-				if (0 == prevval && 0 == val) {
-				  val = max - 1;
-				}
-				if (val < prevval) {
-				  cout << "Error: invalid range specification" << endl;
+		if (end) {
+			switch (*end) {
+				case ',':
+				case 0: {
+					if (range) {
+						if (0 == prevval && 0 == val) {
+							val = max - 1;
+						}
+						if (val < prevval) {
+							cout << "Error: invalid range specification" << endl;
 							resultset.clear();
 							return(resultset);
 						}
-				for(long i = prevval; i <= val; i++)
-				  resultset.push_back(i);
-			 } else {
+						for (long i = prevval; i <= val; i++) {
+							resultset.push_back(i);
+						}
+					} else {
 						resultset.push_back(val);
-			 }
-			 range = false;
-		  } break;
-
-		  case ':': {
-			 range = true;
-		  } break;
-
-		  default: {
-			 cout << formatString("Error: invalid character %c",*end) << endl;
+					}
+					range = false;
+				} break;
+	
+				case ':': {
+					range = true;
+				} break;
+	
+				default: {
+					cout << formatString("Error: invalid character %c",*end) << endl;
 					resultset.clear();
 					return(resultset);
 				} break;
+			}
 		}
-	 }
-	 prevval = val;
-  }
-
-  return(resultset);
+		prevval = val;
+	}
+	return(resultset);
 }
 
 //-----------------------------------------------------------------------------
 void TBBCtl::mainloop()
 {
-  start(); // make initial transition
-  GCFScheduler::instance()->run();
+	start(); // make initial transition
+	GCFScheduler::instance()->run();
 
 	TBBUnsubscribeEvent unsubscribe;
 	itsServerPort.send(unsubscribe);
@@ -3555,24 +3612,24 @@ void TBBCtl::mainloop()
 //-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-  GCFScheduler::instance()->init(argc, argv, "tbbctl");
+	GCFScheduler::instance()->init(argc, argv, "tbbctl");
 
-  LOG_DEBUG(formatString("Program %s has started", argv[0]));
+	LOG_DEBUG(formatString("Program %s has started", argv[0]));
 
-  TBBCtl tbbctl("tbbctl", argc, argv);
+	TBBCtl tbbctl("tbbctl", argc, argv);
 
-  try {
-	 tbbctl.mainloop();
-  }
-  catch (Exception& e) {
-	 cout << "Exception: " << e.text() << endl;
-	 cout << endl;
-	 cout << "== abnormal termination of tbbctl ============================================" << endl;
-	 exit(EXIT_FAILURE);
-  }
+	try {
+		tbbctl.mainloop();
+	}
+	catch (Exception& e) {
+		cout << "Exception: " << e.text() << endl;
+		cout << endl;
+		cout << "== abnormal termination of tbbctl ============================================" << endl;
+		exit(EXIT_FAILURE);
+	}
 	cout << endl;
 	// cout << "== normal termination of tbbctl ==============================================" << endl;
 
-  return(0);
+	return(0);
 }
 

@@ -64,6 +64,8 @@ libtbbdriver_la_SOURCES = Package__Version.cc \
 	ArpCmd.cc \
 	ArpModeCmd.cc \
 	StopCepCmd.cc	\
+	CepStatusCmd.cc	\
+	CepDelayCmd.cc	\
 	WatchDogCmd.cc \
 	TempLimitCmd.cc
 
@@ -110,6 +112,8 @@ noinst_HEADERS = \
 	ArpCmd.h \
 	ArpModeCmd.h \
 	StopCepCmd.h \
+	CepStatusCmd.h \
+	CepDelayCmd.h \
 	WatchDogCmd.h \
 	TempLimitCmd.h	
 
