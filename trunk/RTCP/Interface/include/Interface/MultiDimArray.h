@@ -34,13 +34,28 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     MultiDimArray(const ExtentList &extents, size_t alignment = defaultAlignment(), Allocator &allocator = heapAllocator)
     :
-      SuperType(static_cast<T *>(allocator.allocate(nrElements(extents) * sizeof(T), alignment)), extents),
+      // Use 'placement new' to force initialisation through constructors if T is a class
+
+      // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
+      // delete[] will be called, but that's an empty stub.
+      SuperType(new(allocator.allocate(nrElements(extents) * sizeof(T), alignment))T[nrElements(extents)], extents),
       allocator(&allocator)
     {
     }
 
     ~MultiDimArray()
     {
+      // explicitly call the destructors in the 'placement new' array since C++
+      // cannot do this for us. The delete[] operator cannot know the size of the
+      // array, and the placement delete[] operator exists (since new()[] will look
+      // for it) but does nothing.
+      T *elem = this->origin();
+
+      for( size_t i = 0; i < this->num_elements_; i++ ) {
+        // amazingly, this also works for T = float etc.
+        (elem++)->~T();
+      }
+
       allocator->deallocate(this->origin());
     }
 
