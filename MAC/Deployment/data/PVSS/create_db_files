@@ -712,7 +712,13 @@ substitute_observation()
 		if (hasObservation > 0) {
 			for (obsNr = 1; obsNr < 101; obsNr++) {  
 			    dpname=$1;
-			    sub("@observation@", "TempObs"obsNr, dpname)
+			    obsbase="TempObs0"obsNr;
+			    if (obsNr < 10) {
+			      obsbase="TempObs000"obsNr;
+                            } else if (obsNr > 9 && obsNr < 100) {
+                              obsbase="TempObs00"obsNr;
+			    }
+			    sub("@observation@", obsbase, dpname)
 			    print dpname"	"$2;
 			}
 		}
