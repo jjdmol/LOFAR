@@ -56,6 +56,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs
 {
   LOG_DEBUG("InputThread::InputThread(...)");
 
+  // we need a signal to interrupt the read() system call when we shut down
   struct sigaction sa;
 
   sigemptyset(&sa.sa_mask);

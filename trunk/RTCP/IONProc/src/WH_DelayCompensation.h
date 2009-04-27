@@ -33,7 +33,13 @@
 #include <AMCBase/Epoch.h>
 #include <AMCBase/Position.h>
 #include <Common/Timer.h>
+#include <Common/Semaphore.h>
 #include <AMCBase/ResultData.h>
+#include <Interface/RSPTimeStamp.h>
+#include <Interface/MultiDimArray.h>
+
+#include <boost/noncopyable.hpp>
+#include <pthread.h>
 
 namespace LOFAR 
 {
@@ -79,31 +85,42 @@ namespace LOFAR
     // applied in the input section as a true time delay, by shifting the
     // input samples. The fine delay will be applied in the correlator as a
     // phase shift in each frequency channel.
-    class WH_DelayCompensation
+    class WH_DelayCompensation: boost::noncopyable
     {
     public:
       WH_DelayCompensation(const Parset *ps,
-                           const string &stationName);
+                           const string &stationName,
+			   const TimeStamp &startTime);
 
       ~WH_DelayCompensation();
 
-      vector<AMC::Direction> calculateAllBeamDirections(vector<double> &startIntegrationTime);
-
-      const AMC::Position& getPositionDiffs() const;
-
-      double getDelay( AMC::Direction &direction ) const;
+      void getNextDelays( vector<AMC::Direction> &directions, vector<double> &delays );
       
     private:
-      // Copying is not allowed
-      WH_DelayCompensation (const WH_DelayCompensation& that);
-      WH_DelayCompensation& operator= (const WH_DelayCompensation& that);
+      // do the delay compensation calculations in a separate thread to allow bulk
+      // calculations and to avoid blocking other threads
+      pthread_t			thread;
+      bool			stop;
+      static void *mainLoopStub( void *delayCompensationObject );
+      void mainLoop();
+
+      // the circular buffer to hold the moving beam directions for every second of data
+      Matrix<AMC::Direction>	itsBuffer;
+      size_t			head, tail;
+
+      // two semaphores are used: one to trigger the producer that free space is available,
+      // another to trigger the consumer that data is available.
+      Semaphore			bufferFree, bufferUsed;
+
+      // the number of seconds to maintain in the buffer
+      static const size_t	bufferSize = 128;
 
       // Get the source directions from the parameter file and initialize \c
       // itsBeamDirections. Beam positions must be specified as
       // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
       // are in radians; the direction type must be one of J2000, ITRF, or
       // AZEL.
-      void getBeamDirections(const Parset *);
+      void setBeamDirections(const Parset *);
 
       // Set the station to reference station position differences for all
       // stations. The choice of reference station is arbitrary (so we choose
@@ -114,57 +131,27 @@ namespace LOFAR
       // \f$j\f$.
       void setPositionDiffs(const Parset *);
 
-      // Create an instance of an AMC converter, using the data in \c
-      // itsConverterConfig.
-      AMC::Converter* createConverter();
+      // Beam info.
+      const unsigned                itsNrBeams;
+      vector<AMC::Direction>        itsBeamDirections;
 
-      // Perform the actual coordinate conversion for the epoch after the end
-      // of the current time interval and store the result in
-      // itsResultAfterEnd.
-      // \post itsResultAtBegin contains the data previously contained by
-      // itsResultAfterEnd.
-      void doConvert();
-
-      // Calculate the beam directions  for all stations for the epoch after the end of
-      // the current time interval and store the results in itsBeamDirectionsAfterEnd.
-      void calculateDirections();
-      
-      // Number of beams.
-      const uint                    itsNrBeams;
+      // Sample timings.
+      const TimeStamp               itsStartTime;
+      const unsigned                itsNrSamplesPerSec;
+      const double                  itsSampleDuration;
 
       // Station Name.
       const string                  itsStationName;
       
-      // A beam direction consists of two doubles.
-      vector<double>                itsAngle1;
-      vector<double>                itsAngle2;
-
-      // Pointer to the Converter we're using.
-      AMC::Converter*               itsConverter;
-
-      // Beam directions.
-      vector<AMC::Direction>        itsBeamDirections;
-
       // Station phase centres. 
       AMC::Position                 itsPhaseCentres;
       
-      // Observation epoch.
-      std::vector<AMC::Epoch>       itsObservationEpoch;
-
       // Station to reference station position difference vectors.
       AMC::Position                 itsPhasePositionDiffs;
+      
+      const unsigned                itsNrCalcDelays;
 
-      // Beam directions for all stations, for the epoch after the end of
-      // the current time interval.
-      vector<AMC::Direction>        itsBeamDirectionsAfterEnd;
-      
-      unsigned                      itsNrCalcDelays;
-      
-      AMC::ResultData itsResult;
-      
-      // Allocate a tracer context
-      ALLOC_TRACER_CONTEXT;
-      
+      NSTimer                       itsDelayTimer;
     };
 
     // @}

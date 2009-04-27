@@ -1,4 +1,4 @@
-SUBDIRS=src
+SUBDIRS=src test
 
 ACLOCAL_AMFLAGS = -I autoconf_share
 
