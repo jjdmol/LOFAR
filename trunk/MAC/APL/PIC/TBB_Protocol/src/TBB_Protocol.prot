@@ -621,7 +621,7 @@ event = {
 	};
 	param = {
 		name = "pages_left";
-		type = "uint32";
+		type = "uint32[MAX_N_TBBOARDS]";
 	};
 };
 
@@ -636,6 +636,28 @@ event = {
 
 event = {
 	signal = STOP_CEP_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32[MAX_N_TBBOARDS]";
+	};
+};
+
+event = {
+	signal = CEP_DELAY;
+	dir = IN;
+	param = {
+		name = "boardmask";
+		type = "uint32";
+	};
+	param = {
+		name = "delay";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CEP_DELAY_ACK;
 	dir = OUT;
 	param = {
 		name = "status_mask";
