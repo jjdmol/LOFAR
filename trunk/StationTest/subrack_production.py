@@ -88,6 +88,42 @@ else:
   sr.appendFile(11,'gold/tbb_version.gold')
   sr.setResult('FAILED')
  
+################################################################################
+sr.setId('TBB size check - ')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Verify the size of the TBB memory modules')
+sr.appendLog(21,'')
+res = cli.command('./tbb_size.sh')
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> TBB size test went OK')
+else:
+  sr.appendLog(11,'>>> TBB size test went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.appendLog(11,'Result:')
+  sr.appendFile(11,'tbb_size.log')
+  sr.appendLog(11,'Expected:')
+  sr.appendFile(11,'gold/tbb_size.gold')
+  sr.setResult('FAILED')
+ 
+ 
+################################################################################
+sr.setId('TBB memory check - ')
+sr.appendLog(21,'')
+sr.appendLog(21,'### Verify TBB memory modules on the TBB')
+sr.appendLog(21,'')
+res = cli.command('./tbb_memory.sh')
+if res.find('wrong')==-1:
+  sr.appendLog(11,'>>> TBB memory test went OK')
+else:
+  sr.appendLog(11,'>>> TBB memory test went wrong')
+  sr.appendLog(11,'CLI:')
+  sr.appendLog(11,res,1,1,1)
+  sr.appendLog(11,'Result:')
+  sr.appendFile(11,'tbb_memory.log')
+  sr.appendLog(11,'Expected:')
+  sr.appendFile(11,'gold/tbb_memory.gold')
+  sr.setResult('FAILED')
 
 ################################################################################
 sr.setId('SPU status - ')
@@ -145,19 +181,19 @@ else:
 
 
 ################################################################################
-sr.setId('RCU-RSP-TBB - ')
-sr.appendLog(21,'')
-sr.appendLog(21,'### Verify the RCU - RSP - TBB LVDS interfaces by capturing pseudo random data on TBB')
-sr.appendLog(21,'')
+#sr.setId('RCU-RSP-TBB - ')
+#sr.appendLog(21,'')
+#sr.appendLog(21,'### Verify the RCU - RSP - TBB LVDS interfaces by capturing pseudo random data on TBB')
+#sr.appendLog(21,'')
 
-res = cli.command('./tbb_prbs_tester.sh')
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
-else:
-  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
-  sr.appendLog(11,'CLI:')
-  sr.appendLog(11,res,1,1,1)
-  sr.setResult('FAILED')
+#res = cli.command('./tbb_prbs_tester.sh')
+#if res.find('wrong')==-1:
+#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces test went OK')
+#else:
+#  sr.appendLog(11,'>>> RCU - RSP - TBB LVDS interfaces went wrong')
+#  sr.appendLog(11,'CLI:')
+#  sr.appendLog(11,res,1,1,1)
+#  sr.setResult('FAILED')
 
 
 ################################################################################
