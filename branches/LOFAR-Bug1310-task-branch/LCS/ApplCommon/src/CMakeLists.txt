@@ -27,14 +27,9 @@ set(applcommon_LIB_SRCS
 set(applcommon_PROGRAMS
   versionapplcommon)
 
-add_library(applcommon ${applcommon_LIB_SRCS})
-message(STATUS "target_link_libraries(applcommon common ${LOFAR_LIBRARIES})")
-target_link_libraries(applcommon common ${LOFAR_LIBRARIES})
-install(TARGETS applcommon DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(applcommon ${applcommon_LIB_SRCS})
 
 foreach(prog ${stream_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} applcommon)
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${stream_PROGRAMS})
 

@@ -43,7 +43,7 @@ endforeach(dep ${AMCImpl_DEPENDENCIES})
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Casacore COMPONENTS measures)
+lofar_find_package(Casacore COMPONENTS measures REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

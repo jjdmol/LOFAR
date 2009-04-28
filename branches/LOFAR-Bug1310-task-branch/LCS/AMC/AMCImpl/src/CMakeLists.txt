@@ -36,12 +36,8 @@ set(amcimpl_PROGRAMS
 set_source_files_properties(${amcimpl_LIB_SRCS} ${amcimpl_PROGRAMS}
   PROPERTIES COMPILE_FLAGS "-Wno-ignored-qualifiers")
 
-add_library(amcimpl ${amcimpl_LIB_SRCS})
-target_link_libraries(amcimpl amcbase ${LOFAR_LIBRARIES})
-install(TARGETS amcimpl DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(amcimpl ${amcimpl_LIB_SRCS})
 
 foreach(prog ${amcimpl_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} amcimpl)# ${LOFAR_LIBRARIES})
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${amcimpl_PROGRAMS})

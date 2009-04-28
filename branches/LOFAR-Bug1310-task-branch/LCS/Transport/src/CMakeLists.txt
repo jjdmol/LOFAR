@@ -42,13 +42,9 @@ set(transport_PROGRAMS
   versiontransport
 )
 
-add_library(transport ${transport_LIB_SRCS})
-target_link_libraries(transport blob)
-install(TARGETS transport DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(transport ${transport_LIB_SRCS})
 
 foreach(prog ${transport_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} transport ${LOFAR_LIBRARIES})
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${transport_PROGRAMS})
 

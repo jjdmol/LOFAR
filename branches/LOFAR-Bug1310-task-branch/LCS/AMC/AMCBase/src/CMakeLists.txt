@@ -37,12 +37,8 @@ set(amcbase_PROGRAMS
   versionamcbase
 )
 
-add_library(amcbase ${amcbase_LIB_SRCS})
-target_link_libraries(amcbase transport)
-install(TARGETS amcbase DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(amcbase ${amcbase_LIB_SRCS})
 
 foreach(prog ${amcbase_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} amcbase ${LOFAR_LIBRARIES})
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${amcbase_PROGRAMS})

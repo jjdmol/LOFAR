@@ -1,5 +1,15 @@
 #!/bin/sh
 
+trap 'cleanup; trap - 0; exit' 0 1 2 3 15
+
+# Kill the background (server) process (if it's still running)
+cleanup()
+{
+  if kill -0 $! 2>/dev/null; then 
+    kill -9 $! 2>/dev/null
+  fi
+}
+
 if [ "$LOFAR_LIMITEXEC" != "" ]; then
   CMDPREFIX="$LOFAR_LIMITEXEC 300"
 fi
@@ -9,14 +19,9 @@ fi
 $CMDPREFIX $LOFAR_CHECKTOOL ./ExampleSocket -s > ExampleSocket_tmp.outs1 &
 $CMDPREFIX $LOFAR_CHECKTOOL ./ExampleSocket -c > ExampleSocket_tmp.outc1
 
-# If something went wrong, kill the background process (if it's still running)
-# and exit.
-STATUS=$?
-if [ $STATUS != 0 ]; then
-  if kill -0 $! 2>/dev/null; then 
-    kill -9 $! 2>/dev/null
-  fi
-  exit $STATUS
+# Exit if something went wrong.
+if [ $? != 0 ]; then
+  exit $?
 fi
 
 # Output the result in order.
@@ -28,14 +33,9 @@ cat ExampleSocket_tmp.outs1 ExampleSocket_tmp.outc1
 $CMDPREFIX $LOFAR_CHECKTOOL ./ExampleSocket -c > ExampleSocket_tmp.outc2 &
 $CMDPREFIX $LOFAR_CHECKTOOL ./ExampleSocket -s > ExampleSocket_tmp.outs2
 
-# If something went wrong, kill the background process (if it's still running)
-# and exit.
-STATUS=$?
-if [ $STATUS != 0 ]; then 
-  if kill -0 $! 2>/dev/null; then 
-    kill -9 $! 2>/dev/null
-  fi
-  exit $STATUS
+# Exit if something went wrong.
+if [ $? != 0 ]; then 
+  exit $?
 fi
 
 # Output the result in order.

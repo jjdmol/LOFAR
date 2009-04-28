@@ -32,6 +32,8 @@ project(Blob)
 set(PACKAGE_VERSION 1.0)
 set(Blob_DEPENDENCIES Common)
 
+#lofar_add_package(Blob 1.0 DEPENDS Common)
+
 include(LofarGeneral)
 
 foreach(dep ${Blob_DEPENDENCIES})

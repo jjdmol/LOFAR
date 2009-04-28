@@ -19,7 +19,6 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 include(LofarPackageVersion)
-#include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(stream_LIB_SRCS
   Package__Version.cc
@@ -34,12 +33,8 @@ set(stream_PROGRAMS
   versionstream
 )
 
-add_library(stream ${stream_LIB_SRCS})
-target_link_libraries(stream common ${LOFAR_LIBRARIES})
-install(TARGETS stream DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(stream ${stream_LIB_SRCS})
 
 foreach(prog ${stream_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} stream)
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${stream_PROGRAMS})

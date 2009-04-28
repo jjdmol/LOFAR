@@ -34,12 +34,8 @@ set(plc_LIB_SRCS
 set(plc_PROGRAMS
   versionplc)
 
-add_library(plc ${plc_LIB_SRCS})
-target_link_libraries(plc common blob transport ${LOFAR_LIBRARIES})
-install(TARGETS plc DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(plc ${plc_LIB_SRCS})
 
 foreach(prog ${plc_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} plc ${LOFAR_LIBRARIES})
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${plc_PROGRAMS})

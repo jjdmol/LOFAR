@@ -31,14 +31,26 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   ## --------------------------------------------------------------------------
 
   if(USE_LOG4CXX AND USE_LOG4CPLUS)
-    message(FATAL_ERROR "You cannot use more than one logger implementation. "
+    message(FATAL_ERROR 
+      "You cannot use more than one logger implementation. "
       "Please check your variants file!")
   endif(USE_LOG4CXX AND USE_LOG4CPLUS)
+
+  if(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
+    message(FATAL_ERROR 
+      "Cannot create static executables, when creating shared libraries. "
+      "Please check your variants file!")
+  endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
 
 
   ## --------------------------------------------------------------------------
   ## Handle each option
   ## --------------------------------------------------------------------------
+
+  if(BUILD_STATIC_EXECUTABLES)
+    set(CMAKE_EXE_LINKER_FLAGS -static)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+  endif(BUILD_STATIC_EXECUTABLES)
 
   if(USE_AIPSPP)
 #    lofar_find_package(CasaCore)

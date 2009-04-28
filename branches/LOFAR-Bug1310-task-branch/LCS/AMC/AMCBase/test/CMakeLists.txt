@@ -1,19 +1,11 @@
 include(LofarCTest)
 
-set(CHECK_PROGRAMS
-  tCoord3D
-  tDirection
-  tPosition
-  tEpoch
-  tConverterCommand
-  tConverterStatus
-  tBlobIO
-  tDH_Request
-  tDH_Result)
-
-foreach(prog ${CHECK_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}.sh)
-  add_dependencies(check ${prog})
-  target_link_libraries(${prog} amcbase ${LOFAR_LIBRARIES})
-endforeach(prog ${CHECK_PROGRAMS})
+lofar_add_test(tCoord3D tCoord3D.cc)
+lofar_add_test(tDirection tDirection.cc)
+lofar_add_test(tPosition tPosition.cc)
+lofar_add_test(tEpoch tEpoch.cc)
+lofar_add_test(tConverterCommand tConverterCommand.cc)
+lofar_add_test(tConverterStatus tConverterStatus.cc)
+lofar_add_test(tBlobIO tBlobIO.cc)
+lofar_add_test(tDH_Request tDH_Request.cc)
+lofar_add_test(tDH_Result tDH_Result.cc)

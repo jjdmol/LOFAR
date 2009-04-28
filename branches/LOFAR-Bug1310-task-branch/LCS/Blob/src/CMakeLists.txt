@@ -75,12 +75,8 @@ set(blob_PROGRAMS
   versionblob
 )
 
-add_library(blob ${blob_LIB_SRCS})
-target_link_libraries(blob common ${LOFAR_LIBRARIES})# ${Blob_LINK_LIBRARIES})
-install(TARGETS blob DESTINATION ${LOFAR_LIBDIR})
+lofar_add_library(blob ${blob_LIB_SRCS})
 
 foreach(prog ${blob_PROGRAMS})
-  add_executable(${prog} ${prog}.cc)
-  target_link_libraries(${prog} blob)# ${LOFAR_LIBRARIES})
-  install(TARGETS ${prog} DESTINATION bin)
+  lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${blob_PROGRAMS})

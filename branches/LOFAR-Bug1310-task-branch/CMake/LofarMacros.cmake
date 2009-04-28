@@ -83,4 +83,43 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endmacro(lofar_get_hostname _hostname)
 
+
+  macro(lofar_add_library _name)
+    add_library(${_name} ${ARGN})
+    set_property(GLOBAL APPEND PROPERTY ${PROJECT_NAME}_LIBRARIES ${_name})
+    set(_link_libs)
+    foreach(_dep ${${PROJECT_NAME}_DEPENDENCIES})
+      get_property(_dep_libs GLOBAL PROPERTY ${_dep}_LIBRARIES)
+      list(APPEND _link_libs ${_dep_libs})
+    endforeach(_dep ${${PROJECT_NAME}_DEPENDENCIES})
+    target_link_libraries(${_name} ${_link_libs} ${LOFAR_LIBRARIES})
+    install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
+  endmacro(lofar_add_library _name)
+
+
+  macro(lofar_add_executable _name)
+    add_executable(${_name} ${ARGN})
+    get_property(_libs GLOBAL PROPERTY ${PROJECT_NAME}_LIBRARIES)
+    target_link_libraries(${_name} ${_libs})
+  endmacro(lofar_add_executable _name)
+
+
+  macro(lofar_add_test _name)
+    lofar_add_executable(${_name} EXCLUDE_FROM_ALL ${ARGN})
+    add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+    add_dependencies(check ${_name})
+  endmacro(lofar_add_test _name)
+
+
+  macro(lofar_add_bin_program _name)
+    lofar_add_executable(${_name})
+    install(TARGETS ${_name} DESTINATION bin)
+  endmacro(lofar_add_bin_program _name)
+
+
+  macro(lofar_add_sbin_program _name)
+    lofar_add_executable(${_name})
+    install(TARGETS ${_name} DESTINATION sbin)
+  endmacro(lofar_add_sbin_program _name)
+
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)

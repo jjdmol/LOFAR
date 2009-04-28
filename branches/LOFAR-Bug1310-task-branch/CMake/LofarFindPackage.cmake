@@ -46,12 +46,15 @@ function(lofar_find_package _package)
       set(CMAKE_PREFIX_PATH ${_prefix_path})
     endif(DEFINED ${_PKG}_PREFIX_PATH)
 
-    # If package is required, but has been disabled explicitly, raise an
+    # If package has been disabled explicitly, but is required, raise an
     # error.
-    if(${_package}_FIND_REQUIRED AND DEFINED USE_${_PKG} AND NOT USE_${_PKG})
-      message(SEND_ERROR 
-        "Package ${_package} is required, but has been disabled explicitly!")
-    endif(${_package}_FIND_REQUIRED AND DEFINED USE_${_PKG} AND NOT USE_${_PKG})
+    if(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
+      list(FIND ARGN REQUIRED is_required)
+      if(is_required GREATER -1)
+        message(SEND_ERROR 
+          "Package ${_package} is required, but has been disabled explicitly!")
+      endif(is_required GREATER -1)
+    endif(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
 
     # Use the Find${_package}.cmake module.
     message(STATUS "find_package(${ARGV})")

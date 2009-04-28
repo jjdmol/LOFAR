@@ -43,7 +43,7 @@ endforeach(dep ${PLC_DEPENDENCIES})
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost 1)
+lofar_find_package(Boost REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

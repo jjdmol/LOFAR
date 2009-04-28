@@ -50,6 +50,7 @@ set(LOFAR_SEARCH_PATH
 
 # List of options that may be set for the LOFAR build.
 set(LOFAR_OPTIONS
+  BUILD_STATIC_EXECUTABLES
   BUILD_SHARED_LIBS
   BUILD_TESTING
 #  ENABLE_TESTING
@@ -69,12 +70,13 @@ set(LOFAR_OPTIONS
 # Define default values for all LOFAR build options. These options may
 # be overridden for a given compiler suite. For example:
 # option(USE_BOOST_GNU "Use Boost for GNU" OFF)
+option(BUILD_STATIC_EXECUTABLES "Build static executables" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(BUILD_TESTING     "Build the testing tree" ON)
+#option(BUILD_TESTING     "Build the testing tree" OFF)
 option(LOFAR_VERBOSE_CONFIGURE "Be verbose when configuring" ON)
-option(USE_AIPSPP        "Use AIPS++"    ON)
 option(USE_BACKTRACE     "Use backtrace" OFF)
-#option(USE_BOOST         "Use Boost"     ON)
+option(USE_BOOST         "Use Boost"     ON)
+#option(USE_CASACORE      "Use Casacore"  OFF)
 option(USE_LOG4CPLUS     "Use Log4Cplus" ON)
 option(USE_LOG4CXX       "Use Log4Cxx"   OFF)
 option(USE_PYTHON        "Use Python"    OFF)
