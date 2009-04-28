@@ -347,7 +347,7 @@ inline bool Parset::delayCompensation() const
 
 inline uint32 Parset::nrCalcDelays() const
 {
-  return getBool("OLAP.DelayComp.nrCalcDelays");
+  return getUint32("OLAP.DelayComp.nrCalcDelays");
 }
 
 inline string Parset::positionType() const
