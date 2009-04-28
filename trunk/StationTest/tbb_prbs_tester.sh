@@ -4,12 +4,12 @@
 # Test the LVDS interfaces between RCU -> RSP -> TBB using the Pseudo Random generator in the RCUs.
 #
 
-nof_rcu=32
+let rspboards=`sed -n  's/^\s*RS\.N_RSPBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
+let nof_rcu=8*$rspboards
 
 rm -f *.log
 rm -f *.diff
 rm -f ./prbs/*.*
-rm -f ./prbs/.*
 
 
 # Set up RCU and RSP, make sure waveform generator is off
