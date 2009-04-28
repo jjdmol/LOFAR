@@ -55,12 +55,12 @@ namespace LOFAR
       bufferFree   (bufferSize),
       bufferUsed   (0),
 
+      itsNrCalcDelays    (ps->nrCalcDelays()),
       itsNrBeams   (ps->nrBeams()),
       itsStartTime (startTime),
       itsNrSamplesPerSec (ps->nrSubbandSamples()),
       itsSampleDuration  (ps->sampleDuration()),
       itsStationName     (stationName),
-      itsNrCalcDelays    (ps->getUint32("OLAP.DelayComp.nrCalcDelays")),
       itsDelayTimer      ("delay producer",true,true)
     {
       setBeamDirections(ps);
@@ -161,7 +161,8 @@ namespace LOFAR
 	    itsBuffer[tail][b] = result.direction[resultIndex++];
 	  }
 
-	  // increment the tail pointer
+	  // increment the tail pointer. since itsNrCalcDelays % bufferSize == 0, wrap
+	  // around can only occur between runs
 	  ++tail;
 	}
 
@@ -221,7 +222,6 @@ namespace LOFAR
         const string str = toUpper(ps->getBeamDirectionType(beam));
         const vector<double> beamDir = ps->getBeamDirection(beam);
 	
-        
 	if      (str == "J2000") dirType = Direction::J2000;
         else if (str == "ITRF")  dirType = Direction::ITRF;
         else if (str == "AZEL")  dirType = Direction::AZEL;
@@ -239,7 +239,7 @@ namespace LOFAR
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
       Position::Types posType(Position::INVALID);
-      string str = toUpper(ps->getString("OLAP.DelayComp.positionType"));
+      string str = toUpper(ps->positionType());
       if (str == "ITRF")
         posType = Position::ITRF;
       else
