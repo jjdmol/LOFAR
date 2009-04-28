@@ -12,7 +12,7 @@ if (CMAKE_ASM-BGP_COMPILER_WORKS)
 endif (CMAKE_ASM-BGP_COMPILER_WORKS) 
 
 ## ------------------------------------------------------------------------------
-## Sourses
+## Sources
 
 file (GLOB tCN_Processing_SRCS         tBeamForming.cc
 				       tCN_Processing.cc
