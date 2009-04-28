@@ -431,7 +431,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     }
                     // Next for VIC only
                     if (itsTreeType.equals("VHtree")) {
-                        if (!itsStarttime.equals(startTimeInput.getText()) || !itsStoptime.equals(stopTimeInput.getText())) {
+                        if (itsStarttime != null && itsStoptime != null &&
+                                (!itsStarttime.equals(startTimeInput.getText()) || !itsStoptime.equals(stopTimeInput.getText()))) {
                             if (startTimeInput.getText().length() > 0 && stopTimeInput.getText().length() > 0 ) {
                                hasChanged=true;
                                itsTree.starttime = startTimeInput.getText();
@@ -712,7 +713,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             String errorMsg = "When changing to scheduled, description needs to be filled";
             JOptionPane.showMessageDialog(this,errorMsg,"description error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );
-        } else if (itsTreeType.equals("VHtree") && itsStartDate.after(itsStopDate)) {
+        } else if (itsTreeType.equals("VHtree") && itsStartDate!= null && itsStopDate != null && itsStartDate.after(itsStopDate)) {
             String errorMsg = "StartDate after stopdate!!!!";
             JOptionPane.showMessageDialog(this,errorMsg,"date error",JOptionPane.ERROR_MESSAGE);
             logger.error(errorMsg );  
