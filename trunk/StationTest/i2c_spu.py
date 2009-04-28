@@ -110,9 +110,9 @@ while data_str != '':
       # Verify that sensor values are in valid range
       if volt_5v  <  4.5 or volt_5v  >  5.5 or \
          volt_8v  <  7   or volt_8v  >  9   or \
-         volt_48v < 45   or volt_48v > 50   or \
+         volt_48v < 44   or volt_48v > 50   or \
          volt_3v3 <  3.0 or volt_3v3 >  4.0 or \
-         temp_pcb < 10   or temp_pcb > 40:
+         temp_pcb < 10   or temp_pcb > 50:
         tlog.appendLog(11,'Subrack-%s --> SPU I2C sensor values are wrong' % subId[j])
         tlog.setResult('FAILED')
       else:
