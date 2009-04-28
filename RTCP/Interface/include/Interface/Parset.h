@@ -71,6 +71,7 @@ public:
 	double         sampleDuration() const;
 	uint32	       nrBitsPerSample() const;
 	vector<double> positions() const;
+	string         positionType() const;
 	vector<double> getRefPhaseCentres() const;
 	vector<double> getPhaseCentresOf(const string& name) const;	
 	uint32	       CNintegrationSteps() const;
@@ -90,6 +91,7 @@ public:
 	uint32         nrCoresPerPset() const;
 	double         channelWidth() const;
 	bool	       delayCompensation() const;
+	uint32	       nrCalcDelays() const;
 	bool	       correctBandPass() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         stationName(const int index) const;
@@ -341,6 +343,16 @@ inline double Parset::channelWidth() const
 inline bool Parset::delayCompensation() const
 {
   return getBool("OLAP.delayCompensation");
+}
+
+inline uint32 Parset::nrCalcDelays() const
+{
+  return getBool("OLAP.DelayComp.nrCalcDelays");
+}
+
+inline string Parset::positionType() const
+{
+  return getString("OLAP.DelayComp.positionType");
 }
 
 inline bool Parset::correctBandPass() const

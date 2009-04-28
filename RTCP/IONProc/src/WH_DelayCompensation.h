@@ -94,6 +94,7 @@ namespace LOFAR
 
       ~WH_DelayCompensation();
 
+      // get the set of directions and delays for the beams, for the next CN integration time
       void getNextDelays( vector<AMC::Direction> &directions, vector<double> &delays );
       
     private:
@@ -114,6 +115,9 @@ namespace LOFAR
 
       // the number of seconds to maintain in the buffer
       static const size_t	bufferSize = 128;
+
+      // the number of delays to calculate in a single run
+      const unsigned            itsNrCalcDelays;
 
       // Get the source directions from the parameter file and initialize \c
       // itsBeamDirections. Beam positions must be specified as
@@ -149,8 +153,6 @@ namespace LOFAR
       // Station to reference station position difference vectors.
       AMC::Position                 itsPhasePositionDiffs;
       
-      const unsigned                itsNrCalcDelays;
-
       NSTimer                       itsDelayTimer;
     };
 
