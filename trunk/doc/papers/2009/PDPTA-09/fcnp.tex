@@ -1,8 +1,20 @@
-\documentclass[journal]{IEEEtran}
+%\documentclass[conference]{IEEEtran}
+\documentclass[conference]{worldcomp}
+
+\usepackage[hmargin=15mm,vmargin=1in]{geometry}
+\usepackage[american]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{caption}
+\usepackage{textcomp}
+%\usepackage{epsfig,graphicx}
+\usepackage{amsfonts,amsmath,amssymb}
+%\usepackage{fixltx2e} % Fixing numbering problem when using figure/table* 
+\usepackage{booktabs}
 
 \usepackage{cite, graphicx, subfigure, listings, xspace, txfonts} 
 
-\begin{document}
+\columnsep 6mm
 
 \title{FCNP: Fast I/O on the Blue Gene/P}
 
@@ -13,6 +25,8 @@ Stichting ASTRON (Netherlands Institute for Radio Astronomy), Dwingeloo, The Net
 
 \newcommand{\us}{\,$\muup$s\xspace}
 \newcommand{\ns}{\,ns\xspace}
+
+\begin{document}
 
 \maketitle
 
@@ -37,8 +51,8 @@ so that the telescope can observe proportionally more sources or frequencies
 and becomes a much more efficient instrument.
 \end{abstract}
 
-\vspace{4mm}\noindent
-\textbf{Keywords:} low-overhead network protocol, IBM Blue Gene/P, LOFAR radio telescope
+\vspace{1em}\noindent
+\textbf{Keywords:} {\small low-overhead network protocol, IBM Blue Gene/P, LOFAR radio telescope}
 
 
 \section{Introduction}
@@ -66,6 +80,7 @@ By default, the I/O~nodes work transparently.
 However, the performance of I/O-intensive applications can improve
 significantly if a select part of the application or communication library
 (like PVFS) runs on I/O~nodes rather than compute nodes~\cite{Iskra:08}.
+
 We use the Blue Gene to process real-time radio-telescope data.
 Part of the application runs on the I/O~nodes, while the compute-intensive
 processing is done on compute nodes.
@@ -107,21 +122,28 @@ transport user data.
 We will show performance results and characterize the performance in terms
 of bandwidth, latency, and overhead.
 
+\addtocounter{figure}{1}
+\begin{figure*}[t]
+\includegraphics[width=\textwidth]{processing.pdf}
+\caption{LOFAR real-time signal processing.}
+\label{fig:processing}
+\end{figure*}
+
 FCNP is heavily used to process LOFAR telescope data.
 LOFAR~\cite{Butcher:04,deVos:09} is the first of a new generation of
 telescopes, that
-combines the signals of many thousands of simple, cheap, omni-directional
+combines the signals of tens of thousands of simple, cheap, omni-directional
 antennas rather than using expensive dishes.
 In several ways, it will be the largest telescope of the world.
 Another novel feature is that the data are processed in \emph{software\/} on a
-supercomputer~\cite{Romein:06}, where traditionally custom-built hardware is
+supercomputer~\cite{Romein:06,Romein:09b}, where traditionally custom-built hardware is
 used.
 The data are streamed at high bandwidths into the system and processed in real
 time.
 I/O~nodes receive the data and internally forward them to compute nodes.
 Standard system software does not provide sufficient bandwidth to handle
 2.1~Gb/s input and 0.58~Gb/s output per I/O~node, needed to meet the LOFAR
-specifications\footnote{\texttt{http://www.lofar.org/p/astronomy\_spec.htm}}.
+specifications~\cite{LOFAR_SPECS}.
 In contrast, FCNP achieves 3.1~Gb/s input and 1.2~Gb/s output bandwidth per
 I/O~node.
 The improved input data rate matches the absolute maximum that the telescope
@@ -135,13 +157,6 @@ precision), increasing the flexibility of the instrument.
 
 We developed FCNP to support streaming LOFAR data,
 but the ideas of this protocol are more widely applicable.
-
-\addtocounter{figure}{1}
-\begin{figure*}[t]
-\includegraphics[width=\textwidth]{processing.pdf}
-\caption{LOFAR real-time signal processing.}
-\label{fig:processing}
-\end{figure*}
 
 This paper is structured as follows.
 In Section~\ref{sec:LOFAR}, we describe the relevant parts of the LOFAR
@@ -158,42 +173,26 @@ Section~\ref{sec:conclusions} concludes.
 \section{LOFAR processing}
 \label{sec:LOFAR}
 
-LOFAR is a new type of radio telescope, that combines the signals of many
+LOFAR is a new type of radio telescope, that combines the signals of tens of
 thousands of antennas and processes the data centrally on a BG/P supercomputer.
 We briefly explain how LOFAR data are processed, other papers provide more
-details\cite{Romein:06,Iskra:08}.
-%\emph{Note to the reviewers: a survey paper that describes the entire real-time
-%processing system (including recent additions, focusing on performance and
-%scalability) is in preparation.
-%We feel, however, that FCNP should be published separately.}
-
-%\begin{figure}[h]
-%\epsfxsize=\columnwidth
-%\epsffile{station.eps}
-%\caption{A LOFAR station.}
-%\label{fig:station}
-%\end{figure}
+details~\cite[Sec.~2]{Romein:06},~\cite[Sec.~4--6]{Romein:09b}.
 
 \addtocounter{figure}{-2}
 \begin{figure}[h]
-%\begin{minipage}[b]{.3\textwidth}
 \begin{center}
 \includegraphics[width=.7\columnwidth]{station.jpg}
 \end{center}
-\caption{Part of a LOFAR station, showing some low-band antennas.}
+\caption{The low-band antennas of a LOFAR station.}
 \label{fig:station}
-%\end{minipage}
-%\hfill
-%\end{minipage}
 \end{figure}
 \addtocounter{figure}{1}
 
 Co-located groups of 48 or 96 dual-polarized low-band antennas (see
 Figure~\ref{fig:station}) and high-band receivers form a \emph{station},
 i.e.\ a virtual telescope.
-Construction of 36--54 Dutch stations and 8--20~European stations has started.
-\emph{Note to the reviewers: we are currently in a transition phase
-where pre-production test stations are replaced by final stations.}
+Construction of 36--54 Dutch stations and 8--20~European stations is well
+underway.
 Each station digitizes the antenna voltages and pre-processes the data using
 FPGAs~\cite{Gunst:07}.
 The FPGAs send UDP packets with station data over dedicated Wide-Area
@@ -206,9 +205,9 @@ The application that runs on the BG/P is called the \emph{correlator},
 although it does much more processing than correlating only.
 Figure~\ref{fig:processing} shows a simplified scheme of one of the processing
 pipelines: the standard imaging pipeline that creates sky images.
-An I/O~node receives 48,828 UDP packets per second of up to 8\,KB from one
+An I/O~node receives 48,828 UDP packets per second of up to 8\,KiB from one
 station.
-It copies the samples into a large, circular buffer that holds the most recent
+It copies the samples into a circular buffer that holds the most recent
 three seconds of data.
 The buffer is used to synchronize the stations (the travel times over the
 WAN are higher for remote stations than for nearby stations) and to prevent
@@ -219,29 +218,24 @@ the fact that a celestial wave hits stations at different
 times~\cite[Sec.~2.1]{Romein:06}.
 
 The buffered data are sent to the compute nodes for further processing.
-These include the following tasks:
-\begin{itemize}
-\item	An all-to-all data exchange over the 3-D~torus: each input contains all
-	subbands (frequencies) from one station, while each output contains
-	one subband from all stations;
-\item	Filtering and a Fast Fourier Transform to split each subband into
-	narrow frequency channels;
-\item	A phase correction to fine-tune the observation direction;
-\item	A per-channel bandpass correction to flatten a ripple introduced by
-	a station filter;
-\item	Optionally beamform a group of stations (by weighted addition of their
-	samples) to form a more sensitive, virtual ``super station'';
-\item	Correlate the data (by multiplying the samples of all station pairs)
-	to filter out noise.
-\end{itemize}
-The signal-processing tasks are described in more detail
-elsewhere~\cite[Sec.~2]{Romein:06}.
+There, the data are first exchanged over the torus network, to collect pieces
+of data that can be processed independently.
+Then, the data are filtered and Fourier transformed to split each subband into
+narrow frequency channels.
+Next, a phase correction fine-tunes the observation direction.
+Then, a per-channel bandpass correction flattens a ripple introduced by
+a station filter.
+Optionally, a group of stations can be beam formed (by weighted addition of
+their samples) to form a more sensitive, virtual ``super station''.
+Finally, the data are correlated (by multiplying the samples of all station
+pairs) to filter out noise and integrated to reduce the amount of output.
 
 The compute node sends the correlated data back to the I/O~node.
 The I/O node optionally adds data from other compute nodes, and sends the
 result (asynchronously) to external systems that temporarily store the data
 on disk.
-After an observation, bad data (due to interference) are removed, and the
+After an observation has finished (not shown in Figure~\ref{fig:processing}),
+bad data (due to interference) are removed, and the
 resulting data are calibrated~\cite{Nijboer:07} and imaged.
 
 Two tasks are of particular interest to this paper: the transport of buffered
@@ -251,8 +245,8 @@ Moreover, each I/O~node also needs to receive 3.1~Gb/s of UDP data from the
 stations and send 1.2~Gb/s of TCP data to external systems, and are therefore
 already quite busy processing the data through the IP protocol stack.
 The two available mechanisms to communicate between the
-I/O~nodes and compute nodes (TCP and Unix domain sockets) do not even come
-close to these bandwidths (see Section~\ref{sec:performance}), and consume
+I/O~nodes and compute nodes (TCP and Unix domain sockets) do not provide
+sufficient bandwidth (see Section~\ref{sec:performance}) and consume
 too many CPU resources,
 necessitating the need for a light-weight protocol for internal communication.
 
@@ -319,14 +313,12 @@ Our system has 160~psets in total.
 
 The original BG/L design did not support the idea of running user applications
 on the I/O~nodes, but in earlier work~\cite{Iskra:08}, we showed that doing so 
-significantly improved performance and flexibility.
-We also saved on costs for additional hardware by doing part of the LOFAR
-processing on the I/O~nodes.
+significantly improved performance, flexibility, and costs.
 Unfortunately, this required major changes to the BG/L system
 software~\cite{Iskra:08,Boonstoppel:08}.
-In contrast, the BG/P fully supports user applications on I/O~nodes, but
+In contrast, the BG/P supports user applications on I/O~nodes, but
 the existing communication protocols between the compute nodes and the
-I/O~nodes did not provide sufficient bandwidth for the LOFAR application.
+I/O~nodes provided insufficient bandwidth for the LOFAR correlator.
 
 The tree uses bi-directional links at 6.8~Gb/s per direction.
 The network has a tree topology with a complex physical structure.
@@ -336,7 +328,7 @@ The processor cores of in-between nodes are not interrupted by the routing
 process.
 The hardware provides two separate virtual channels.
 One is used by CIOD;
-the other is typically only used on the compute nodes, by the MPI library for
+the other is typically only used on the compute nodes: by the MPI library for
 some of the collective MPI operations.
 However, the runtime environment can be changed so that MPI uses the
 3-D~torus for these collectives instead of the tree, leaving one of the virtual
@@ -350,10 +342,10 @@ instead of the tree.
 On the BG/L, the collective network was specifically designed to
 support collective operations.
 However, the BG/P is very well capable of doing collective operations
-using the torus, since the BG/P added DMA support for the torus
+using the torus, since the BG/P has DMA support for the torus
 (but not for the tree).
-Therefore, the free virtual channel can be used for FCNP, without
-significant performance penalty for collective operations.
+Therefore, FCNP can use the free virtual channel, without significantly
+slowing down collective operations.
 
 A processor can send and receive fixed-size packets over a virtual channel.
 A packet consists of a 4-byte header (used for routing) and 256 bytes payload.
@@ -387,12 +379,12 @@ and external systems.
 It is also possible to use TCP or Unix domain sockets internally,
 between an application on the compute nodes and an application on the I/O~node.
 However, the obtained bandwidth (see Section~\ref{sec:performance}) is
-insufficient for LOFAR.
+insufficient for the LOFAR correlator.
 Therefore, we developed a new protocol, \emph{Fast Collective Network
 Protocol\/} (FCNP), that uses the free virtual channel of the tree.
 
 Since one compute core is barely able to keep up with the link speed,
-any protocol overhead would decrease the obtained bandwidth.
+any heavy-weight protocol overhead would decrease the obtained bandwidth.
 FCNP reduces the protocol overhead to a single bit test in the normal case.
 FCNP distinguishes control packets (requests and acknowledgments) from data
 packets by setting the Irq (interrupt-on-receipt) bit in the header.
@@ -401,15 +393,15 @@ that do not contain any metadata in the payload part.
 
 \begin{figure}[h]
 \subfigure[write.]{
-  \includegraphics[width=.46\columnwidth]{FCNP-write.pdf}
+  \includegraphics[width=.46\columnwidth,height=35mm]{FCNP-write.pdf}
   \label{fig:FCNP-write}
 }
 \hfill
 \subfigure[read.]{
-  \includegraphics[width=.46\columnwidth]{FCNP-read.pdf}
+  \includegraphics[width=.46\columnwidth,height=35mm]{FCNP-read.pdf}
   \label{fig:FCNP-read}
 }
-\caption{The protocol.}
+\caption{The FCNP protocol.}
 \label{fig:FCNP-protocol}
 \end{figure}
 
@@ -447,7 +439,6 @@ struct RequestReplyPacket {
 \caption{Format of the payload part of request and acknowledgment packets.}
 \label{fig:control-packet-format}
 \end{figure}
-
 
 Figure~\ref{fig:control-packet-format} shows the format of request and reply
 packets.
@@ -494,8 +485,7 @@ makes sure that only one read can be active at a given time.
 %Transferring ownership of the receive FIFO is complicated and prone to
 %race conditions.
 
-On the compute cores, we use extremely fast hardware mutexes to synchronize
-the cores.
+On the compute cores, we use fast hardware mutexes to synchronize the cores.
 On the I/O~nodes, the same hardware mutexes are physically present, but not
 exposed by the Linux kernel, so we use atomic instructions to implement spin
 locks.
@@ -504,7 +494,7 @@ the implementation writes up to eight consecutive packets before releasing
 and re-obtaining a lock.
 This way, the amortized locking overhead is negligible.
 
-FCNP strongly encourages 16-byte aligned data and the message sizes, but
+FCNP strongly encourages 16-byte aligned data and message sizes, but
 does not enforce this.
 Unaligned transfers are supported at the expense of a copy to an
 intermediate buffer.
@@ -659,6 +649,20 @@ DMA hardware would limit the use of asynchronous~I/O anyway.
 %required data rates.
 
 
+\begin{figure*}[t]
+\subfigure[I/O~node to compute node.]{
+  \includegraphics[width=.44\textwidth]{ion-to-cn-performance.pdf}
+  \label{fig:ion-to-cn-performance}
+}
+\hfill
+\subfigure[Compute node to I/O~node.]{
+  \includegraphics[width=.44\textwidth]{cn-to-ion-performance.pdf}
+  \label{fig:cn-to-ion-performance}
+}
+\caption{Measured bandwidths, as function of message size.}
+\label{fig:performance}
+\end{figure*}
+
 \section{Related Work}
 \label{sec:related-work}
 
@@ -681,7 +685,7 @@ ZOID is extensible: a small daemon on the I/O~node provides a basic function
 forwarding facility from the compute nodes to the I/O~nodes.
 On top of this, plug-ins (in the form of shared objects) that implement some
 functionality are loaded by the daemon and perform the real work.
-A standard plug-in is the \emph{Unix\/} plug-in that implements the standard
+A standard plug-in is the \emph{Unix\/} plug-in that implements the
 Unix I/O related system calls.
 On the compute nodes, the glibc library was adapted to replace the Unix
 system calls by stubs that forwards calls like \emph{socket()\/} and
@@ -710,9 +714,9 @@ application code on the I/O~nodes~\cite{Iskra:08}.
 
 ZOID was ported to the BG/P, but runs only with ZeptoOS kernels on the
 compute nodes, not with the CNK.
-Unfortunately, ZeptoOS did not yet support the 3-D~torus, which is of critical
+ZeptoOS did not yet support the 3-D~torus, which is of critical
 importance to the LOFAR application.
-Once ZeptoOS fully supports the torus, we may use it instead of CNK.
+Once ZeptoOS fully supports the torus, we might use it instead of CNK.
 
 A fundamental difference between ZOID and FCNP is that ZOID integrates system
 control and application I/O into the same process.
@@ -749,30 +753,16 @@ FCNP can separate control I/O from application I/O, without performance penalty.
 \section{Performance}
 \label{sec:performance}
 
-\begin{figure*}[t]
-\subfigure[I/O~node to compute node.]{
-  \includegraphics[width=.44\textwidth]{ion-to-cn-performance.pdf}
-  \label{fig:ion-to-cn-performance}
-}
-\hfill
-\subfigure[Compute node to I/O~node.]{
-  \includegraphics[width=.44\textwidth]{cn-to-ion-performance.pdf}
-  \label{fig:cn-to-ion-performance}
-}
-\caption{Measured bandwidths, as function of message size.}
-\label{fig:performance}
-\end{figure*}
-
 Figure~\ref{fig:performance} shows the measured bandwidths for FCNP (with
 interrupts enabled or disabled) and for TCP and Unix domain socket
 communication using CIOD.
 The benchmark communicates data between the I/O node and one of the compute
 nodes as fast as possible, using messages of various sizes.
-For large messages, FCNP approaches the link speed of the tree.
+For large messages, FCNP approaches the link speed.
 
-CIOD peaks at a bandwidth that is slightly higher than 2~Gb/s.
+CIOD peaks at a bandwidth that is slightly over 2~Gb/s.
 In theory, this equals the required LOFAR data rate, but we found that the
-bandwidth is not stable over long times, and definitely provides too little
+bandwidth is not stable over long times, and provides too little
 headroom for real-time processing.
 
 FCNP is significantly faster than CIOD, because its overhead is much lower.
@@ -785,7 +775,7 @@ The discontinuity in the curve for interrupt-driven FCNP in
 Figure~\ref{fig:ion-to-cn-performance} is caused by the fact that the polling
 thread polls the tree for 50\us after receiving a request packet, before
 suspending itself (see Section~\ref{sec:interrupts}).
-Messages of 64~KB or more take over 50\us to send.
+Messages of 64~KiB or more take over 50\us to send.
 Therefore, a request for a large message causes an interrupt that increases the
 latency.
 In contrast, requests for smaller messages will be received through polling.
@@ -825,11 +815,11 @@ core~0: Ethernet interrupts are handled there as well).
 
 In both directions, FCNP obtains a bandwidth of 6.54~Gb/s for large messages,
 hence the time per byte is 1.22\ns.
-This is as fast as a protocol-less benchmark achieves that simply sends packets
+This is as fast as a protocol-less benchmark, that simply sends packets
 on one side and receives them on the other side, and thus the maximum that
 the hardware can practically achieve.
 
-Since reading and writing is done in separate threads on separate hardware,
+Since reading and writing is done in separate threads,
 this bandwidth can be achieved in both directions simultaneously.
 A separate benchmark confirmed this claim.
 
@@ -840,7 +830,7 @@ A separate benchmark confirmed this claim.
 
 \begin{figure}[h]
 \includegraphics[width=\columnwidth]{ionode-load.pdf}
-\caption{Performance breakdown for the LOFAR Application on the I/O~node.}
+\caption{Performance breakdown on the I/O~node.}
 \label{fig:ionode-load}
 \end{figure}
 
@@ -943,13 +933,14 @@ it was ever designed for.
 Chris Broekema, Jan David Mol, and Rob van Nieuwpoort made useful comments to
 a draft version of this paper.
 We thank Kamil Iskra and Kazutomo Yoshii from Argonne National Labs and 
-Todd Inglett, Tom Liebsch, and Andrew Tauferner from IBM for their support.
+Bruce Elmegreen, Todd Inglett, Tom Liebsch, and Andrew Tauferner from IBM for
+their support.
 
 LOFAR is funded by the Dutch government through the
 BSIK program for interdisciplinary research and
 improvement of the knowledge infrastructure. Additional
 funding is provided through the European Regional
-Development Fund (EFRO) and the innovation program
+Development Fund and the innovation program
 EZ/KOMPAS of the Collaboration of the Northern
 Provinces (SNN). ASTRON is part of the Netherlands
 Organization for Scientific Research, NWO.
