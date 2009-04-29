@@ -53,8 +53,8 @@ namespace LOFAR
   public:
     MyDH* clone() const { return new MyDH(*this); }
     void init() { addField("MyText", BlobField<char>(1, 64)); createDataBlock();}
-    char* text() { return myText; }
-    void text(char* txt) { strcpy(myText, txt); }
+    const char* text() { return myText; }
+    void text(const char* txt) { strcpy(myText, txt); }
   private:
     virtual void fillDataPointers() { myText = getData<char>("MyText"); }
     char* myText;
