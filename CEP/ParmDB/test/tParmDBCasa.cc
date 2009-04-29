@@ -85,8 +85,8 @@ void checkDef (const ParmValueSet& pset, double value,
     ASSERT (pvalue.getValues().data()[0] == value);
   } else {
     // Array
-    ASSERT (pvalue.nx() == values.shape()[0]);
-    ASSERT (pvalue.ny() == values.shape()[1]);
+    ASSERT (pvalue.nx() == static_cast<uint>(values.shape()[0]));
+    ASSERT (pvalue.ny() == static_cast<uint>(values.shape()[1]));
     ASSERT (allEQ(pvalue.getValues(), values));
   }
 }

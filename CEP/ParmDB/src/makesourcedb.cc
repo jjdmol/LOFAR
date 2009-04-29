@@ -757,8 +757,8 @@ int main (int argc, char* argv[])
     string center = inputs.getString ("center");
     string radius = inputs.getString ("radius");
     string width  = inputs.getString ("width");
-    double minFlux = inputs.getDouble ("minflux");
-    double maxFlux = inputs.getDouble ("maxflux");
+//    double minFlux = inputs.getDouble ("minflux");
+//    double maxFlux = inputs.getDouble ("maxflux");
     string beamModel = inputs.getString ("beammodel");
     // Check if the format has to be read from a file.
     // It is if it starts with a <. Te filename should follow it. An empty
