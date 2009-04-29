@@ -16,7 +16,8 @@ SVG_SOURCES =	ionode-load.svg
 STY_SOURCES =	
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf) $(SVG_SOURCES:%.svg=%.pdf)
+FIGURES =	$(FIG_SOURCES:%.fig=%.pdf) $(JGR_SOURCES:%.jgr=%.pdf)\
+		$(JPG_SOURCES) $(SVG_SOURCES:%.svg=%.pdf)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
 GEN_FILES =	$(AUX_FILES) $(FIGURES) $(GEN_EXT:%=fcnp.%) mfput.log\
