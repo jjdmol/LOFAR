@@ -92,10 +92,10 @@ namespace BBS {
 
     // Get the value shape.
     // <group>
-    int nx() const
-      { return itsValues.shape()[0]; }
-    int ny() const
-      { return itsValues.shape()[1]; }
+    uint nx() const
+      { return static_cast<uint>(itsValues.shape()[0]); }
+    uint ny() const
+      { return static_cast<uint>(itsValues.shape()[1]); }
     // </group>
 
     // Get the values.
