@@ -60,6 +60,7 @@ public:
 private:
 	TbbSettings *TS;
 	uint32 itsStatus;
+	int32  itsStage;
 	uint32 itsSecondstime;
 	uint32 itsSampletime;
 	uint32 itsPrepages;

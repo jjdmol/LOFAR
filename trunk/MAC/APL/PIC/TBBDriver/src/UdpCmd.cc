@@ -208,7 +208,7 @@ void UdpCmd::saveTbbEvent(GCFEvent& event)
 void UdpCmd::sendTpEvent()
 {
 	TPUdpEvent tp_event;
-	tp_event.opcode = TPUDP;
+	tp_event.opcode = oc_UDP;
 	tp_event.status = 0;
 	
 	// fill in destination mac address

@@ -91,7 +91,7 @@ void ResetCmd::sendTpEvent()
 {
 	
 	TPResetEvent tp_event;
-	tp_event.opcode = TPRESET;
+	tp_event.opcode = oc_RESET;
 	tp_event.status = 0;
 
 	if (TS->boardPort(getBoardNr()).isConnected()) {

@@ -120,15 +120,15 @@ void AllocCmd::sendTpEvent()
 		// stage 1, get board memory size
 		case 0: {
 			TPSizeEvent tp_event;
-			tp_event.opcode	= TPSIZE;
-			tp_event.status	= 0;
+			tp_event.opcode = oc_SIZE;
+			tp_event.status = 0;
 			TS->boardPort(getBoardNr()).send(tp_event);
 		} break;
 		
 		// stage 2, allocate memory
 		case 1: {
 			TPAllocEvent tp_event;
-			tp_event.opcode = TPALLOC;
+			tp_event.opcode = oc_ALLOC;
 			tp_event.status = 0;
 			
 			itsRcuStatus = 0;

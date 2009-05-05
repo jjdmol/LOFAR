@@ -77,7 +77,7 @@ void ReadrCmd::sendTpEvent()
 {
 	TPReadrEvent tp_event;
 	
-	tp_event.opcode = TPREADR;
+	tp_event.opcode = oc_READR;
 	tp_event.status = 0;
 	tp_event.mp     = itsMp;
 	tp_event.pid    = itsPid;

@@ -80,7 +80,7 @@ void WritewCmd::saveTbbEvent(GCFEvent& event)
 void WritewCmd::sendTpEvent()
 {
 	TPWritewEvent tp_event;
-	tp_event.opcode = TPWRITEW;
+	tp_event.opcode = oc_WRITEW;
 	tp_event.status = 0;
 	tp_event.mp = itsMp;
 	tp_event.addr = itsAddr;

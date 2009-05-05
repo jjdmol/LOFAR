@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <unistd.h>
 
 #include "ConfigCmd.h"
 
@@ -42,7 +43,7 @@ ConfigCmd::ConfigCmd():
 	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
 		itsStatus[boardnr] = TBB_NO_BOARD;
 	}
-	setWaitAck(true);		
+	setWaitAck(true);
 }
 
 //--Destructor for ConfigCmd.---------------------------------------------------
@@ -80,12 +81,12 @@ void ConfigCmd::saveTbbEvent(GCFEvent& event)
 void ConfigCmd::sendTpEvent()
 {
 	TPConfigEvent tp_event;
-	tp_event.opcode = TPCONFIG;
+	tp_event.opcode = oc_CONFIG;
 	tp_event.status = 0;
 	tp_event.imagenr = itsImage;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
-	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	TS->boardPort(getBoardNr()).setTimer(5.0);
 }
 
 // ----------------------------------------------------------------------------
@@ -106,7 +107,7 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 	}
 	nextBoardNr();
 	if (isDone()) { 
-		setSleepTime(15.0);
+		setSleepTime(10.0);
 	}
 }
 
@@ -122,6 +123,6 @@ void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
 		}
 	}
-	 
+	LOG_DEBUG_STR("Sending ConfigAck to client");
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

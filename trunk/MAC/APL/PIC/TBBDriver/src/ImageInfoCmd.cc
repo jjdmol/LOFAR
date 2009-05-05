@@ -87,7 +87,7 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 void ImageInfoCmd::sendTpEvent()
 {
 	TPReadfEvent tp_event;
-	tp_event.opcode = TPREADF;
+	tp_event.opcode = oc_READF;
 	tp_event.status = 0;
 	
 	itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);

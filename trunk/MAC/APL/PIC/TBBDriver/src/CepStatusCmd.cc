@@ -79,7 +79,7 @@ void CepStatusCmd::saveTbbEvent(GCFEvent& event)
 void CepStatusCmd::sendTpEvent()
 {
 	TPCepStatusEvent tp_event;
-	tp_event.opcode = TPCEPSTATUS;
+	tp_event.opcode = oc_CEP_STATUS;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

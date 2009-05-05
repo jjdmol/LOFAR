@@ -66,169 +66,189 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	//
 	// for all commands opcode(4) + status(4)
 	switch(buf.opcode) {
-		case TPALLOC:
+		case oc_ALLOC:
 			buf.event.signal = TP_ALLOC_ACK;
 			buf.event.length = 8;
 			break;
-		case TPFREE:
+		case oc_FREE:
 			buf.event.signal = TP_FREE_ACK;
 			buf.event.length = 8;
 			break;
-		case TPRECORD:
+		case oc_RECORD:
 			buf.event.signal = TP_RECORD_ACK;
 			buf.event.length = 8;
 			break;
-		case TPSTOP:
+		case oc_STOP:
 			buf.event.signal = TP_STOP_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTRIGGER:
+		case oc_TRIGGER:
 			buf.event.signal = TP_TRIGGER;
 			buf.event.length = 44;
 			break;
-		case TPTRIGRELEASE:
+		case oc_TRIG_RELEASE:
 			buf.event.signal = TP_TRIG_RELEASE_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTRIGGENERATE:
+		case oc_TRIG_GENERATE:
 			buf.event.signal = TP_TRIG_GENERATE_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTRIGSETUP:
+		case oc_TRIG_SETUP:
 			buf.event.signal = TP_TRIG_SETUP_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTRIGCOEF:
+		case oc_TRIG_COEF:
 			buf.event.signal = TP_TRIG_COEF_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTRIGINFO:
+		case oc_TRIG_INFO:
 			buf.event.signal = TP_TRIG_INFO_ACK;
 			buf.event.length = 40;
 			break;	
-		case TPREAD:
+		case oc_READ:
 			buf.event.signal = TP_READ_ACK;
 			buf.event.length = 28;
 			break;
-		case TPUDP:
+		case oc_UDP:
 			buf.event.signal = TP_UDP_ACK;
 			buf.event.length = 8;
 			break;
-		case TPPAGEPERIOD:
+		case oc_PAGE_PERIOD:
 			buf.event.signal = TP_PAGEPERIOD_ACK;
 			buf.event.length = 12;
 			break;
 			
-		case TPVERSION:
+		case oc_VERSION:
 			buf.event.signal = TP_VERSION_ACK;
 			buf.event.length = 40;
 			break;
-		case TPSIZE:
+		case oc_SIZE:
 			buf.event.signal = TP_SIZE_ACK;
 			buf.event.length = 12;
 			break;
-		case TPSTATUS:
+		case oc_STATUS:
 			buf.event.signal = TP_STATUS_ACK;
 			buf.event.length = 84;
 			break;
-		case TPERROR:
+		case oc_ERROR:
 			buf.event.signal = TP_ERROR;
 			buf.event.length = 12;
 			break;
-		case TPCLEAR:
+		case oc_CLEAR:
 			buf.event.signal = TP_CLEAR_ACK;
 			buf.event.length = 8;
 			break;
-		case TPRESET:
+		case oc_RESET:
 			buf.event.signal = TP_RESET_ACK;
 			buf.event.length = 8;
 			break;
-		case TPCONFIG:
+		case oc_CONFIG:
 			buf.event.signal = TP_CONFIG_ACK;
 			buf.event.length = 8;
 			break;
-		case TPERASEF:
+		case oc_ERASEF:
 			buf.event.signal = TP_ERASEF_ACK;
 			buf.event.length = 8;
 			break;
-		case TPERASEFSPEC:
+		case oc_ERASEF_SPEC:
 			buf.event.signal = TP_ERASEF_SPEC_ACK;
 			buf.event.length = 8;
 			break;
-		case TPREADF:
+		case oc_READF:
 			buf.event.signal = TP_READF_ACK;
 			buf.event.length = 1032;
 			break;
-		case TPWRITEF:
+		case oc_WRITEF:
 			buf.event.signal = TP_WRITEF_ACK;
 			buf.event.length = 8;
 			break;
-		case TPWRITEFSPEC:
+		case oc_WRITEF_SPEC:
 			buf.event.signal = TP_WRITEF_SPEC_ACK;
 			buf.event.length = 8;
 			break;
-		case TPPROTECT:
+		case oc_PROTECT:
 			buf.event.signal = TP_PROTECT_ACK;
 			buf.event.length = 8;
 			break;
-		case TPUNPROTECT:
+		case oc_UNPROTECT:
 			buf.event.signal = TP_UNPROTECT_ACK;
 			buf.event.length = 8;
 			break;
-		case TPREADW:
+		case oc_READW:
 			buf.event.signal = TP_READW_ACK;
 			buf.event.length = 16;
 			break;
-		case TPWRITEW:
+		case oc_WRITEW:
 			buf.event.signal = TP_WRITEW_ACK;
 			buf.event.length = 8;
 			break;
-		case TPREADR:
+		case oc_READR:
 			buf.event.signal = TP_READR_ACK;
 			buf.event.length = 2056;
 			break;
-		case TPWRITER:
+		case oc_WRITER:
 			buf.event.signal = TP_WRITER_ACK;
 			buf.event.length = 8;
 			break;
-		case TPREADX:
+		case oc_READX:
 			buf.event.signal = TP_READX_ACK;
 			buf.event.length = 1032;
 			break;	
-		case TPALIVE:
+		case oc_ALIVE:
 			buf.event.signal = TP_ALIVE_ACK;
 			buf.event.length = 12;
 			break;	
-		case TPARP:
+		case oc_ARP:
 			buf.event.signal = TP_ARP_ACK;
 			buf.event.length = 8;
 			break;
-		case TPARPMODE:
+		case oc_ARPMODE:
 			buf.event.signal = TP_ARP_MODE_ACK;
 			buf.event.length = 8;
 			break;
-		case TPSTOPCEP:
+		case oc_STOP_CEP:
 			buf.event.signal = TP_STOP_CEP_ACK;
 			buf.event.length = 8;
 			break;
-		case TPCEPSTATUS:
+		case oc_CEP_STATUS:
 			buf.event.signal = TP_CEP_STATUS_ACK;
 			buf.event.length = 12;
 			break;
-		case TPCEPDELAY:
+		case oc_CEP_DELAY:
 			buf.event.signal = TP_CEP_DELAY_ACK;
 			buf.event.length = 8;
 			break;
-		case TPWATCHDOG:
+		case oc_WATCHDOG:
 			buf.event.signal = TP_WATCHDOG_ACK;
 			buf.event.length = 8;
 			break;
-		case TPTEMPLIMIT:
+		case oc_TEMP_LIMIT:
 			buf.event.signal = TP_TEMP_LIMIT_ACK;
 			buf.event.length = 8;
 			break;					
-			
-		default:
+		case oc_TESTMODE:
+			buf.event.signal = TP_TESTMODE_ACK;
+			buf.event.length = 8;
+			break;
+		case oc_UDP_EN_PRG:
+			buf.event.signal = TP_UDP_EN_PRG_ACK;
+			buf.event.length = 8;
+			break;
+		case oc_UDP_DIS_PRG:
+			buf.event.signal = TP_UDP_DIS_PRG_ACK;
+			buf.event.length = 8;
+			break;
+		case oc_UDP_CLR_ERR:
+			buf.event.signal = TP_UDP_CLR_ERR_ACK;
+			buf.event.length = 8;
+			break;
+		case oc_UDP_GET_ERR:
+			buf.event.signal = TP_UDP_GET_ERR_ACK;
+			buf.event.length = 32;
+			break;
+			 
+ 		default:
 			buf.event.signal = 0;
 			buf.event.length = 0;
 			break;

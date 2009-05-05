@@ -78,7 +78,7 @@ void WriterCmd::saveTbbEvent(GCFEvent& event)
 void WriterCmd::sendTpEvent()
 {
 	TPWriterEvent tp_event;
-	tp_event.opcode = TPWRITER;
+	tp_event.opcode = oc_WRITER;
 	tp_event.status = 0;
 	tp_event.mp = itsMp;
 	tp_event.pid = itsPid;

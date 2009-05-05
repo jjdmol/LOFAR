@@ -95,7 +95,7 @@ void TrigCoefCmd::sendTpEvent()
 {
 	TPTrigCoefEvent tp_event;
 	
-	tp_event.opcode = TPTRIGCOEF;
+	tp_event.opcode = oc_TRIG_COEF;
 	tp_event.status = 0;
 	
 	// send cmd if no errors

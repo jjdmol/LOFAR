@@ -109,7 +109,7 @@ void TrigGenCmd::sendTpEvent()
 				// set all channels to zero
 				TPTrigReleaseEvent tp_event;
 				
-				tp_event.opcode = TPTRIGRELEASE;
+				tp_event.opcode = oc_TRIG_RELEASE;
 				tp_event.status = 0;
 				tp_event.mp = 0xFFFFFFFF; 
 				tp_event.channel_mask = 0;
@@ -120,7 +120,7 @@ void TrigGenCmd::sendTpEvent()
 			
 			case 1: {
 				TPTrigGenerateEvent tp_event;
-				tp_event.opcode = TPTRIGGENERATE;
+				tp_event.opcode = oc_TRIG_GENERATE;
 				tp_event.status = 0;
 				
 				if (itsChannelMask[getBoardNr()] == 0xFFFF) {

@@ -107,7 +107,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 void RecordCmd::sendTpEvent()
 {
 	TPRecordEvent tp_event;
-	tp_event.opcode = TPRECORD;
+	tp_event.opcode = oc_RECORD;
 	tp_event.status = 0;
 	if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
 		tp_event.channel = ~0;

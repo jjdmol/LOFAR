@@ -87,7 +87,7 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 void VersionCmd::sendTpEvent()
 {
 	TPVersionEvent tp_event;
-	tp_event.opcode = TPVERSION;
+	tp_event.opcode = oc_VERSION;
 	tp_event.status = 0;
 		
 	TS->boardPort(getBoardNr()).send(tp_event);

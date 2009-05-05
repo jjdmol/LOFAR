@@ -103,7 +103,7 @@ void TrigSetupCmd::sendTpEvent()
 	// send cmd if no errors
 	if (itsStatus[getBoardNr()] == 0) {
 		TPTrigSetupEvent tp_event;
-		tp_event.opcode = TPTRIGSETUP;
+		tp_event.opcode = oc_TRIG_SETUP;
 		tp_event.status = 0;
 	
 		tp_event.mp = TS->getChMpNr(getChannelNr());

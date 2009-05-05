@@ -215,8 +215,8 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].boardState = setImage1;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
-		 itsBoardInfo[nr].freeToReset = true;
-			itsBoardInfo[nr].srcIp = "";
+		itsBoardInfo[nr].freeToReset = true;
+		itsBoardInfo[nr].srcIp = "";
 		itsBoardInfo[nr].dstIp = "";
 		itsBoardInfo[nr].srcMac = "";
 		itsBoardInfo[nr].dstMac = "";
@@ -296,17 +296,6 @@ bool TbbSettings::isBoardActive(int32 boardnr)
 	if (itsActiveBoardsMask & (1 << boardnr)) return (true);
 	return (false);
 }
-
-bool TbbSettings::isBoardSelected(int32 boardnr)
-{
-	bool active = false;
-	
-	for (int cn = 0; cn < itsChannelsOnBoard; cn++) {
-		if (itsChannelInfo[(boardnr * itsChannelsOnBoard) + cn].Selected) active = true;		
-	}
-	return (active);
-}
-
 
 void TbbSettings::clearRcuSettings(int32 boardnr)
 {

@@ -166,7 +166,7 @@ void WritefCmd::sendTpEvent()
 
 			case unprotect: {
 				TPUnprotectEvent tp_event;
-				tp_event.opcode = TPUNPROTECT;
+				tp_event.opcode = oc_UNPROTECT;
 				tp_event.status = 0;
 				tp_event.password = itsPassword;
 				TS->boardPort(getBoardNr()).send(tp_event);
@@ -176,13 +176,13 @@ void WritefCmd::sendTpEvent()
 			case erase_flash: {
 				if ((itsImage == 0) && (itsPassword != 0xfac)) {
 					TPErasefSpecEvent tp_event;
-					tp_event.opcode = TPERASEFSPEC;
+					tp_event.opcode = oc_ERASEF_SPEC;
 					tp_event.status = 0;
 					tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
 					TS->boardPort(getBoardNr()).send(tp_event);
 				} else {
 					TPErasefEvent tp_event;
-					tp_event.opcode = TPERASEF;
+					tp_event.opcode = oc_ERASEF;
 					tp_event.status = 0;
 					tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
 					TS->boardPort(getBoardNr()).send(tp_event);
@@ -195,7 +195,7 @@ void WritefCmd::sendTpEvent()
 				// fill event with data and send
 				if ((itsImage == 0) && (itsPassword != 0xfac)) {
 					TPWritefSpecEvent tp_event;
-					tp_event.opcode = TPWRITEFSPEC;
+					tp_event.opcode = oc_WRITEF_SPEC;
 					tp_event.status = 0;
 					tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 					
@@ -209,7 +209,7 @@ void WritefCmd::sendTpEvent()
 					TS->boardPort(getBoardNr()).send(tp_event);
 				} else {
 					TPWritefEvent tp_event;
-					tp_event.opcode = TPWRITEF;
+					tp_event.opcode = oc_WRITEF;
 					tp_event.status = 0;
 					tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 					
@@ -229,8 +229,8 @@ void WritefCmd::sendTpEvent()
 			// stage 3, verify flash
 			case verify_flash: {
 				TPReadfEvent tp_event;
-				tp_event.opcode  = TPREADF;
-				tp_event.status  = 0;
+				tp_event.opcode = oc_READF;
+				tp_event.status = 0;
 				tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 				TS->boardPort(getBoardNr()).send(tp_event);
 				TS->boardPort(getBoardNr()).setTimer(5.0);
@@ -238,7 +238,7 @@ void WritefCmd::sendTpEvent()
 
 			case protect: {
 				TPProtectEvent tp_event;
-				tp_event.opcode = TPPROTECT;
+				tp_event.opcode = oc_PROTECT;
 				tp_event.status = 0;
 				TS->boardPort(getBoardNr()).send(tp_event);
 				TS->boardPort(getBoardNr()).setTimer(TS->timeout());

@@ -69,7 +69,7 @@ void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 void PageperiodCmd::sendTpEvent()
 {
 	TPPageperiodEvent tp_event;
-	tp_event.opcode = TPPAGEPERIOD;
+	tp_event.opcode = oc_PAGE_PERIOD;
 	tp_event.status = 0;
 	tp_event.channel = static_cast<uint32>(itsChannel); 
 	

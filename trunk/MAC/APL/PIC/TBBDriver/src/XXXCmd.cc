@@ -83,7 +83,7 @@ void XxxCmd::saveTbbEvent(GCFEvent& event)
 void XxxCmd::sendTpEvent()
 {
 	TPXxxEvent tp_event;
-	tp_event.opcode = TPXXX;
+	tp_event.opcode = oc_XXX;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

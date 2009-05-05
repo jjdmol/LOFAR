@@ -106,7 +106,7 @@ void FreeCmd::saveTbbEvent(GCFEvent& event)
 void FreeCmd::sendTpEvent()
 {
 	TPFreeEvent tp_event;
-	tp_event.opcode = TPFREE;
+	tp_event.opcode = oc_FREE;
 	tp_event.status = 0;
 	
 	itsRcuStatus = 0;

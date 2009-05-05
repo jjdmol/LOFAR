@@ -36,7 +36,7 @@ using	namespace TBB;
 
 //--Constructors for a ReadCmd object.----------------------------------------
 ReadCmd::ReadCmd():
-	itsStatus(0), itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0)
+	itsStatus(0), itsStage(0), itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0)
 {
 	TS = TbbSettings::instance();
 	setWaitAck(true);
@@ -50,7 +50,8 @@ bool ReadCmd::isValid(GCFEvent& event)
 {
 	if ((event.signal == TBB_READ)
 		||(event.signal == TP_READ_ACK)
-		||(event.signal == TP_WATCHDOG_ACK)) {
+		||(event.signal == TP_WATCHDOG_ACK)
+		||(event.signal == TP_CEP_STATUS_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -74,6 +75,12 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	itsPostpages   = tbb_event.postpages;
 	
 	itsStatus = 0;
+	// check if channel is stopped
+	if (TS->getChState(getChannelNr()) != 'S') {
+		itsStatus |= TBB_RCU_NOT_FREE;
+		setDone(true);
+	}
+			
 	if (!TS->isBoardActive(getBoardNr())) {	
 		itsStatus |= TBB_NO_BOARD ;
 		setDone(true);
@@ -83,17 +90,31 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadCmd::sendTpEvent()
 {
-	TPReadEvent tp_event;
-
-	tp_event.opcode      = TPREAD;
-	tp_event.status      = 0;
-	tp_event.channel     = getChannelNr();
-	tp_event.secondstime = itsSecondstime;
-	tp_event.sampletime  = itsSampletime;
-	tp_event.prepages    = itsPrepages;
-	tp_event.postpages   = itsPostpages;
-	
-	TS->boardPort(getBoardNr()).send(tp_event);
+	switch (itsStage) {
+		case 0: {
+			TPReadEvent tp_event;
+			
+			tp_event.opcode      = oc_READ;
+			tp_event.status      = 0;
+			tp_event.channel     = getChannelNr();
+			tp_event.secondstime = itsSecondstime;
+			tp_event.sampletime  = itsSampletime;
+			tp_event.prepages    = itsPrepages;
+			tp_event.postpages   = itsPostpages;
+			TS->boardPort(getBoardNr()).send(tp_event);
+		} break;
+		
+		case 1: {
+			TPCepStatusEvent tp_event;
+			
+			tp_event.opcode = oc_CEP_STATUS;
+			tp_event.status = 0;
+			TS->boardPort(getBoardNr()).send(tp_event);
+		} break;
+		
+		default: {
+		} break;
+	}
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -103,15 +124,25 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		itsStatus |= TBB_COMM_ERROR;
-	}	else {
+	}
+	else if (event.signal == TP_READ_ACK) {
 		TPReadAckEvent tp_ack(event);
-		// check if busy
+		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
+		LOG_DEBUG_STR(formatString("ReadAck.status=%d", tp_ack.status));
 		if (tp_ack.status == 0xfd) {
 			LOG_DEBUG_STR(formatString("TBB busy, %d pages left, trying until free", tp_ack.pages_left));
 			setSleepTime(0.1);		
 		} else {
-			LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
+			itsStage = 1;
+		}
+	}
+	else if (event.signal == TP_CEP_STATUS_ACK) {
+		TPCepStatusAckEvent tp_ack(event);
+		
+		if (tp_ack.pages_left == 0) {
 			setDone(true);
+		} else {
+			setSleepTime(0.1);
 		}
 	}
 }

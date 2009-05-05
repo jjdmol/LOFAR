@@ -81,7 +81,7 @@ void ReadxCmd::sendTpEvent()
 {
 	TPReadxEvent tp_event;
 	
-	tp_event.opcode     = TPREADX;
+	tp_event.opcode     = oc_READX;
 	tp_event.status     = 0;
 	tp_event.mp         = itsMp;
 	tp_event.pid        = itsPid;

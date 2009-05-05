@@ -82,7 +82,7 @@ void WatchDogCmd::saveTbbEvent(GCFEvent& event)
 void WatchDogCmd::sendTpEvent()
 {
 	TPWatchdogEvent tp_event;
-	tp_event.opcode = TPWATCHDOG;
+	tp_event.opcode = oc_WATCHDOG;
 	tp_event.status = 0;
 	tp_event.mode = itsMode;
 	

@@ -74,7 +74,7 @@ void ReadwCmd::saveTbbEvent(GCFEvent& event)
 void ReadwCmd::sendTpEvent()
 {
 	TPReadwEvent tp_event;
-	tp_event.opcode = TPREADW;
+	tp_event.opcode = oc_READW;
 	tp_event.status = 0;
 	tp_event.mp     = itsMp;
 	tp_event.addr   = itsAddr;
