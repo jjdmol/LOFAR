@@ -504,9 +504,9 @@ GCFEvent::TResult TBBTest::test008(GCFEvent& e, GCFPortInterface& port)
 			for(int cnt = 0;cnt < 12;cnt++) {
 				LOG_INFO_STR(formatString("boardnr      = %d", cnt));
 				LOG_INFO_STR(formatString("boardid      = 0X%08X", ack.boardid[cnt]));
-				LOG_INFO_STR(formatString("swversion    = 0X%08X", ack.swversion[cnt]));
 				LOG_INFO_STR(formatString("boardversion = 0X%08X", ack.boardversion[cnt]));
-				LOG_INFO_STR(formatString("tpversion    = 0X%08X", ack.tpversion[cnt]));
+				LOG_INFO_STR(formatString("tpswversion  = 0X%08X", ack.tpswversion[cnt]));
+				LOG_INFO_STR(formatString("tphwversion  = 0X%08X", ack.tphwversion[cnt]));
 				LOG_INFO_STR(formatString("mp0version   = 0X%08X", ack.mp0version[cnt]));
 				LOG_INFO_STR(formatString("mp1version   = 0X%08X", ack.mp1version[cnt]));
 				LOG_INFO_STR(formatString("mp2version   = 0X%08X", ack.mp2version[cnt]));
