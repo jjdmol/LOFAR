@@ -37,57 +37,49 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB_Test {
 
-    class TPStub : public GCFTask, public Test
-    {
-    public:
-      /**
-       * The constructor of the TPStub task.
-       * @param name The name of the task. The name is used for looking
-       * up connection establishment information using the GTMNameService and
-       * GTMTopologyService classes.
-       */
-      TPStub(string name);
-      virtual ~TPStub();
+class TPStub : public GCFTask, public Test
+{
+public:
+	/**
+	* The constructor of the TPStub task.
+	* @param name The name of the task. The name is used for looking
+	* up connection establishment information using the GTMNameService and
+	* GTMTopologyService classes.
+	*/
+	
+	TPStub(string name);
+	virtual ~TPStub();
 
-      // state methods
+	// state methods
 
-      /**
-       * The initial and final state.
-       */
-      /*@{*/
-      GCFEvent::TResult initial(GCFEvent &event, GCFPortInterface &port);
-      GCFEvent::TResult final(GCFEvent &event, GCFPortInterface &port);
-      /*@}*/
+	/**
+	* The initial and final state.
+	*/
+	/*@{*/
+	GCFEvent::TResult initial(GCFEvent &event, GCFPortInterface &port);
+	GCFEvent::TResult final(GCFEvent &event, GCFPortInterface &port);
+	/*@}*/
 
-      /**
-       * The stub states.
-       */
-      GCFEvent::TResult connected(GCFEvent &event, GCFPortInterface &port);
+	/**
+	* The stub states.
+	*/
+	GCFEvent::TResult connected(GCFEvent &event, GCFPortInterface &port);
 
-      
-      /**
-       * Run the tests.
-       */
-      void run();
 
-    private:
-      // member variables
+	/**
+	* Run the tests.
+	*/
+	void run();
 
-    private:
-      // ports
-      GCFETHRawPort itsServer;
+private:
+	// member variables
 
-//       // lookup for register pointers
-//       typedef struct
-//       {
-// 				char*  addr;
-// 				uint16 size;
-//       } reginfo;
-//       
-//       reginfo m_reg[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1];
-    };
-		
-  }
+private:
+	// ports
+	GCFETHRawPort itsServer;
+};
+
+	}
 }
-     
+
 #endif /* TPSTUB_H_ */
