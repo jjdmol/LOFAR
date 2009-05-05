@@ -108,7 +108,7 @@ void StopCmd::sendTpEvent()
 {
 	TPStopEvent tp_event;
 	
-	tp_event.opcode = TPSTOP;
+	tp_event.opcode = oc_STOP;
 	tp_event.status = 0;
 	if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
 		tp_event.channel = ~0;

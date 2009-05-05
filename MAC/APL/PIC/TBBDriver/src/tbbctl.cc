@@ -624,7 +624,6 @@ ListenCmd::ListenCmd(GCFPortInterface& port) : Command(port),
 	cout << endl;
 	cout << "== TBB ============================ listen for triggers on selected rcu's ====" << endl;
 	cout << endl;
-
 }
 
 //-----------------------------------------------------------------------------
@@ -805,7 +804,7 @@ void ReadAllCmd::send()
 			event.mp = rcu2mp(itsRcu);
 			event.pid = rcu2writer(itsRcu);
 			event.regid = 4; // Last stored time instance
-			cout << "readr board=" << event.board << " mp=" << event.mp << " writer=" << event.pid << endl;
+			//cout << "readr board=" << event.board << " mp=" << event.mp << " writer=" << event.pid << endl;
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
@@ -820,7 +819,7 @@ void ReadAllCmd::send()
 			} else {
 				event.prepages = itsPages - 1;
 			}
-			cout << "sending " << itsPages << " pages to cep" << endl;
+			cout << "         wait while sending " << itsPages << " pages to cep" << endl;
 			event.postpages = 0;
 			itsPort.send(event);
 			itsPort.setTimer(600.0);
@@ -860,7 +859,7 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 			TBBReadrAckEvent ack(e);
 			itsSecondsTime = ack.data[0];
 		 	itsSampleTime = ack.data[1];
-		 	cout << formatString("time of last frame from rcu-%d, %d seconds, sample number %d",
+		 	cout << formatString("rcu %-3d, last recorded time 0x%08x seconds and sample number 0x%08x",
 		 								itsRcu, itsSecondsTime, itsSampleTime) << endl;
 			itsStage = 2;
 		} break;
@@ -939,18 +938,19 @@ VersionCmd::VersionCmd(GCFPortInterface& port) : Command(port)
 //-----------------------------------------------------------------------------
 void VersionCmd::send()
 {
-  TBBVersionEvent event;
-  event.boardmask = getBoardMask();
-  itsPort.send(event);
-  itsPort.setTimer(DELAY);
+	TBBVersionEvent event;
+	event.boardmask = getBoardMask();
+	itsPort.send(event);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 {
-  TBBVersionAckEvent ack(e);
+	TBBVersionAckEvent ack(e);
 
-	cout << formatString("TBBDriver software version %3.2f",(ack.driverversion / 100.)) << endl;
+	cout << formatString("TBBDriver version %3.2f",(ack.driverversion / 100.)) << endl;
+	cout << formatString("tbbctl    version %3.2f",(TBBCTL_VERSION / 100.)) << endl;
 	cout << endl;
 	cout << "TBB  ID  Board  TP sw  TP hw  MP hw" << endl;
 	cout << "---  --  -----  -----  -----  -----" << endl;
@@ -1608,7 +1608,7 @@ GCFEvent::TResult ReadwCmd::ack(GCFEvent& e)
 	}
 	//if (itsAddr == (itsStopAddr - 1))
 
-	itsAddr++;
+	itsAddr += 4;
 	if (itsAddr >= itsStopAddr) {
 		setCmdDone(true);
 	} else {
@@ -2029,8 +2029,6 @@ void ReadPageCmd::send()
 			send.data[2] = 0;
 			itsPort.send(send);
 			itsPort.setTimer(DELAY);
-
-			cout << formatString("MP=%d  Addr=%X", itsMp, mp_page_addr) << endl;
 
 			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]",
 				send.mp,send.pid,send.regid,send.data[0]));
@@ -2461,31 +2459,35 @@ void TBBCtl::commandHelp(int level)
 	cout << " #    Example: --select=0,1,4  or  --select=0:6  or  --select=0,1,2,8:11" << endl;
 	cout << endl;
 	cout << "______| CHANNEL |_________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --rcuinfo [--select=<set>]                                  # list rcu info, only allocated rcu's are listed" << endl;
 	cout << " tbbctl --alloc [--select=<set>]                                    # allocate memmory locations for selected rcu's" << endl;
 	cout << " tbbctl --free [--select=<set>]                                     # free memmory locations for selected rcu's" << endl;
 	cout << " tbbctl --record [--select=<set>]                                   # start recording on selected rcu's" << endl;
 	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
-	cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
-	cout << "        # before using: --read, --arp or --arpmode," << endl;
+	cout << endl;
+	cout << "______| CEP |_____________________________________________________________________________________________________________" << endl;
+		cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
+	cout << "        # before using: --read, readall, --arp or --arpmode," << endl;
 	cout << "        # first use --mode to setup UDP/IP header" << endl;
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<set>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
-	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending CEP messages" << endl;
-	cout << " tbbctl --cepdelay=delay [--select=<set>]                           # set delay between CEP frames, 1 unit = 5 uS" << endl;
+	cout << " tbbctl --stopcep [--select=<set>]                                  # stop sending data to CEP" << endl;
+	cout << " tbbctl --cepdelay=delay [--select=<set>]                           # set delay between CEP frames, 1 delay unit = 5 uS" << endl;
 	cout << " tbbctl --arp [--select=<set>]                                      # send 1 arp message" << endl;
-	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto" << endl;
+	cout << " tbbctl --arpmode=mode [--select=<set>]                             # set arp mode, 0=manual, 1=auto(every 42 seconds 1 message)" << endl;
 	cout << endl;
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
 	cout << " tbbctl --settings [--select=<set>]                                 # list trigger settings for selected rcu's" << endl;
 	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
 	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;
 	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<set>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
-	cout << " tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for elected rcu's" << endl;
+	cout << " tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for selected rcu's" << endl;
 	cout << " tbbctl --triginfo=rcu                                              # get trigger info for selected rcu" << endl;
-	cout << " tbbctl --listen=[one_shot | continues]                             # put in listen mode, all triggers will be listed" << endl;
+	cout << " tbbctl --listen=[one_shot | continues]                             # listen for triggers, in continues mode the system" << endl;
+	cout << "                                                                    # is released after a trigger, in one_shot mode" << endl;
+	cout << "                                                                    # the recording is stopped after a trigger" << endl;
 	cout << endl;
 	cout << "______| INFO |____________________________________________________________________________________________________________" << endl;
+	cout << " tbbctl --rcuinfo [--select=<set>]                                  # list rcu info, only allocated rcu's are listed" << endl;
 	cout << " tbbctl --version [--select=<set>]                                  # get version information from selected boards" << endl;
 	cout << " tbbctl --status [--select=<set>]                                   # get status information from selected boards" << endl;
 	cout << " tbbctl --size [--select=<set>]                                     # get installed memory size from selected boards" << endl;
@@ -2494,8 +2496,8 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --readpage=rcunr,startpage,npages                           # ddr read npages from rcunr, starting on startpage" << endl;
 	if (level == 3) {
 		cout << " tbbctl --testddr=board                                             # ddr memory test, adress and data lines" << endl;
-		cout << " tbbctl --readddr=board,mp,addr,size                                # ddr read, (size x 2) words starting on addr" << endl;
-		cout << " tbbctl --writeddr=board,mp,addr,wordL,wordH                        # ddr write, 2 words to starting on addr" << endl;
+		cout << " tbbctl --readddr=board,mp,addr,size                                # read 'size' blocks of 8 words from ddr starting on addr" << endl;
+		cout << " tbbctl --writeddr=board,mp,addr,word[0],word[1] .. word[7]         # write 8 words to ddr starting on addr" << endl;
 		cout << endl;
 		cout << "______| MP-REGISTER |_____________________________________________________________________________________________________" << endl;
 		cout << " tbbctl --readreg=board,mp,pid,regid                                # register read" << endl;
@@ -2513,10 +2515,12 @@ void TBBCtl::commandHelp(int level)
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
 	}
 	cout << " tbbctl --imageinfo=board                                           # read info from all images on board" << endl;
-	cout << " tbbctl --config=imagenr [--select=<set>]                           # reconfigure TP and MP's with imagenr [0..31] on " << endl;
+	cout << " tbbctl --config=imagenr [--select=<set>]                           # reconfigure TP and MP's with imagenr [0..15] on " << endl;
 	cout << "                                                                    # selected boards" << endl;
 	cout << "__________________________________________________________________________________________________________________________" << endl;
-	cout << " tbbctl --templimits=high,low [--select=<set>]                      # set temp limts for fan control" << endl;
+	if (level == 3) {
+		cout << " tbbctl --templimits=high,low [--select=<set>]                      # set temp limts for fan control" << endl;
+	}
 	cout << " tbbctl --clear [--select=<set>]                                    # clear selected board" << endl;
 	cout << " tbbctl --reset [--select=<set>]                                    # reset to factory images on selected boards" << endl;
 	cout << endl;
@@ -2534,7 +2538,7 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 	for(int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
 		itsMemory[boardnr] = 0;
 	}
-  registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
+	registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
 	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	itsCmdTimer = new GCFTimerPort(*this, "AliveTimer");
 }
@@ -2542,93 +2546,87 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 //-----------------------------------------------------------------------------
 TBBCtl::~TBBCtl()
 {
-	if (itsCommand)      { delete itsCommand; }
-  if (itsCmdTimer)   { delete itsCmdTimer; }
+	if (itsCommand) { delete itsCommand; }
+	if (itsCmdTimer) { delete itsCmdTimer; }
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal) {
-	 case F_INIT: {
-	} break;
+	switch (e.signal) {
+		case F_INIT: {
+		} break;
 
-	 case F_ENTRY: {
-		if (!itsServerPort.isConnected()) {
-			itsServerPort.open();
-			itsServerPort.setTimer(5.0);
-		}
-	 } break;
+		case F_ENTRY: {
+			if (!itsServerPort.isConnected()) {
+				itsServerPort.open();
+				itsServerPort.setTimer(5.0);
+			}
+		} break;
 
-	 case F_CONNECTED: {
-		if (itsServerPort.isConnected()) {
-		  itsServerPort.cancelAllTimers();
-		  TBBGetConfigEvent getconfig;
-		  itsServerPort.send(getconfig);
-		 }
-	 } break;
+		case F_CONNECTED: {
+			if (itsServerPort.isConnected()) {
+				itsServerPort.cancelAllTimers();
+				TBBGetConfigEvent getconfig;
+				itsServerPort.send(getconfig);
+			}
+		} break;
 
 		case TBB_DRIVER_BUSY_ACK: {
-		cout << endl << "=x=x=   DRIVER BUSY, with setting up boards, try again   =x=x=" << endl << flush;
-		GCFScheduler::instance()->stop();
-	 }
-
-	 case TBB_GET_CONFIG_ACK: {
-		TBBGetConfigAckEvent ack(e);
-		itsMaxBoards      = ack.max_boards;
-		itsActiveBoards   = ack.active_boards_mask;
-		itsMaxChannels = itsMaxBoards * 16;
-		cout << "active boards=" << itsActiveBoards << endl;
-
-		if (itsActiveBoards == 0) {
-			if (itsMaxBoards == 0) {
-				cout << "=x=x=   Driver in init state  =x=x=" << endl;
-			} else {
-				cout << "=x=x=   NO boards available   =x=x=" << endl;
-		  }
+			cout << endl << "=x=x=   DRIVER BUSY, with setting up boards, try again   =x=x=" << endl << flush;
 			GCFScheduler::instance()->stop();
 		}
 
-		// send subscribe
-		TBBSubscribeEvent subscribe;
-		subscribe.triggers = false;
-		subscribe.hardware = true;
-		itsServerPort.send(subscribe);
-	 } break;
+		case TBB_GET_CONFIG_ACK: {
+			TBBGetConfigAckEvent ack(e);
+			itsMaxBoards    = ack.max_boards;
+			itsActiveBoards = ack.active_boards_mask;
+			itsMaxChannels  = itsMaxBoards * 16;
 
-		case TBB_SUBSCRIBE_ACK: {
-			TRAN(TBBCtl::docommand);
+			if (itsActiveBoards == 0) {
+				cout << "=x=x=   NO boards available at this moment   =x=x=" << endl;
+				GCFScheduler::instance()->stop();
+			}
+
+			// send subscribe
+			TBBSubscribeEvent subscribe;
+			subscribe.triggers = false;
+			subscribe.hardware = true;
+			itsServerPort.send(subscribe);
 		} break;
 
-	 case F_DISCONNECTED: {
-		//port.setTimer(DELAY);
-		port.close();
-	 } break;
+			case TBB_SUBSCRIBE_ACK: {
+				TRAN(TBBCtl::docommand);
+			} break;
 
-	 case F_TIMER: {
-		// try again
-		cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
-		cout << "   =x=         TBBDriver is NOT responding           =x=" << endl;
-		cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
-		//itsServerPort.open();
-		exit(EXIT_FAILURE);
-	 } break;
+		case F_DISCONNECTED: {
+			//port.setTimer(DELAY);
+			port.close();
+		} break;
 
-	 default: {
-		status = GCFEvent::NOT_HANDLED;
-	 } break;
-  }
+		case F_TIMER: {
+			// try again
+			cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
+			cout << "   =x=         TBBDriver is NOT responding           =x=" << endl;
+			cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
+			//itsServerPort.open();
+			exit(EXIT_FAILURE);
+		} break;
 
-  return(status);
+		default: {
+			status = GCFEvent::NOT_HANDLED;
+		} break;
+	}
+	return(status);
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 {
-  //cout << "docommand signal:" << eventName(e) << endl;
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	//cout << "docommand signal:" << eventName(e) << endl;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
 		case F_INIT: {

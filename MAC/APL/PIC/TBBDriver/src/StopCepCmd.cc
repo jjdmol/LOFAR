@@ -79,7 +79,7 @@ void StopCepCmd::saveTbbEvent(GCFEvent& event)
 void StopCepCmd::sendTpEvent()
 {
 	TPStopCepEvent tp_event;
-	tp_event.opcode = TPSTOPCEP;
+	tp_event.opcode = oc_STOP_CEP;
 	tp_event.status = 0;
 
 	TS->boardPort(getBoardNr()).send(tp_event);

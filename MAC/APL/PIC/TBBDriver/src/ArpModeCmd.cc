@@ -81,7 +81,7 @@ void ArpModeCmd::saveTbbEvent(GCFEvent& event)
 void ArpModeCmd::sendTpEvent()
 {
 	TPArpModeEvent tp_event;
-	tp_event.opcode = TPARPMODE;
+	tp_event.opcode = oc_ARPMODE;
 	tp_event.status = 0;
 	tp_event.mode = itsMode;
 	

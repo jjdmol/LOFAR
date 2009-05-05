@@ -79,7 +79,7 @@ void ArpCmd::saveTbbEvent(GCFEvent& event)
 void ArpCmd::sendTpEvent()
 {
 	TPArpEvent tp_event;
-	tp_event.opcode = TPARP;
+	tp_event.opcode = oc_ARP;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);

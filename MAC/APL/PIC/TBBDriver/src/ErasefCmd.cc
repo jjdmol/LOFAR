@@ -89,7 +89,7 @@ void ErasefCmd::saveTbbEvent(GCFEvent& event)
 void ErasefCmd::sendTpEvent()
 {
 	TPErasefEvent tp_event;
-	tp_event.opcode = TPERASEF;
+	tp_event.opcode = oc_ERASEF;
 	tp_event.status = 0;
 	
 	tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);

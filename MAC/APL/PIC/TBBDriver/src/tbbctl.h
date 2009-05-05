@@ -42,6 +42,8 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   namespace TbbCtl {
 
+static const int TBBCTL_VERSION = 210;
+
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
 static const int BOARDCMD = 1;

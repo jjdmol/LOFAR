@@ -161,7 +161,6 @@ public:
 	void convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr);
 	void convertCh2Rcu(int32 channelnr, int32 *rcunr);
 	bool isBoardActive(int32 boardnr);
-	bool isBoardSelected(int32 boardnr);
 	void logChannelInfo(int32 channel);
 		
 	uint32 getMemorySize(int32 boardnr);

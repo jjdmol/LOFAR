@@ -83,7 +83,7 @@ void TrigInfoCmd::sendTpEvent()
 	if (itsStatus == 0) {
 		TPTrigInfoEvent tp_event;
 		
-		tp_event.opcode = TPTRIGINFO;
+		tp_event.opcode = oc_TRIG_INFO;
 		tp_event.status = 0;
 		tp_event.channel = static_cast<uint32>(TS->getChInputNr(getChannelNr())); 
 		

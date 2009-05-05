@@ -93,7 +93,7 @@ void ReadfCmd::saveTbbEvent(GCFEvent& event)
 void ReadfCmd::sendTpEvent()
 {
 	TPReadfEvent tp_event;
-	tp_event.opcode = TPREADF;
+	tp_event.opcode = oc_READF;
 	tp_event.status = 0;
 	
 	tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);

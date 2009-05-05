@@ -78,8 +78,8 @@ void SizeCmd::sendTpEvent()
 {
 	TPSizeEvent tp_event;
 	
-	tp_event.opcode	= TPSIZE;
-	tp_event.status	= 0;
+	tp_event.opcode = oc_SIZE;
+	tp_event.status = 0;
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }

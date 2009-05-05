@@ -78,7 +78,7 @@ void ClearCmd::saveTbbEvent(GCFEvent& event)
 void ClearCmd::sendTpEvent()
 {
 	TPClearEvent tp_event;
-	tp_event.opcode = TPCLEAR;
+	tp_event.opcode = oc_CLEAR;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
@@ -101,7 +101,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
 	
 	nextBoardNr();
-	if (getBoardNr() == -1) {
+	if (isDone()) {
 		setSleepTime(4.0);
 	}
 }

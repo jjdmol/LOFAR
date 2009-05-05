@@ -81,7 +81,7 @@ void CepDelayCmd::saveTbbEvent(GCFEvent& event)
 void CepDelayCmd::sendTpEvent()
 {
 	TPCepDelayEvent tp_event;
-	tp_event.opcode = TPCEPDELAY;
+	tp_event.opcode = oc_CEP_DELAY;
 	tp_event.status = 0;
 	tp_event.delay  = itsDelay;
 	

@@ -109,7 +109,7 @@ void TrigReleaseCmd::sendTpEvent()
 	// send cmd if no errors
 	if (itsStatus[getBoardNr()] == 0) {
 		TPTrigReleaseEvent tp_event;
-		tp_event.opcode = TPTRIGRELEASE;
+		tp_event.opcode = oc_TRIG_RELEASE;
 		tp_event.status = 0;
 		
 		switch (itsStage) {

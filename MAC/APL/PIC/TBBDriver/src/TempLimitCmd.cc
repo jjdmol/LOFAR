@@ -82,7 +82,7 @@ void TempLimitCmd::saveTbbEvent(GCFEvent& event)
 void TempLimitCmd::sendTpEvent()
 {
 	TPTempLimitEvent tp_event;
-	tp_event.opcode = TPTEMPLIMIT;
+	tp_event.opcode = oc_TEMP_LIMIT;
 	tp_event.status = 0;
 	tp_event.high   = itsHigh;
 	tp_event.low    = itsLow;

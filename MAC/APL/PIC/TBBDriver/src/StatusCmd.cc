@@ -90,7 +90,7 @@ void StatusCmd::saveTbbEvent(GCFEvent& event)
 void StatusCmd::sendTpEvent()
 {
 	TPStatusEvent tp_event;
-	tp_event.opcode = TPSTATUS;
+	tp_event.opcode = oc_STATUS;
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
