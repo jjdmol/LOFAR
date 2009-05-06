@@ -288,6 +288,22 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     os.write(outFile, RSconfig)
     os.close(outFile)
 
+def createAntennaArraysFile(resultDir, stationName, dataDir):
+    """
+    Copies the right AntennaArrays.conf file for this station
+    """
+    # Copy file <stationname>-antennaarrays.conf> to
+    # /opt/lofar/etc/AntennaArray.conf
+    srcFile = stationName + "-antennaarrays.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating AntennaArray.conf"
+        return
+    
+    destFile = resultDir + "/AntennaArrays.conf"
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
+
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -321,6 +337,7 @@ if (sys.argv[1] == "localhost"):
             createRSPDriverFile    (resultDir, stationName, dataDir) 
             createTBBDriverFile    (resultDir, stationName, dataDir)
             createRemoteStationFile(resultDir, stationName, dataDir)
+            createAntennaArraysFile(resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -352,6 +369,7 @@ else:
         createRSPDriverFile    (resultDir, stationName, dataDir) 
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
+        createAntennaArraysFile(resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"
