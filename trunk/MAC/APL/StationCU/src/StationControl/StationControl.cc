@@ -734,7 +734,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 						" for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
 						" other observations running at clockspeed" << itsClock << ".");
 				_abortObservation(itsStartingObs);
-				itsStartingObs = 0;
+				itsStartingObs = itsObsMap.end();
 				TRAN(StationControl::operational_state);
 				break;
 			}
@@ -758,7 +758,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		if (ack.status != CLKCTRL_NO_ERR) {
 			LOG_FATAL_STR("Unable to set the clock to " << itsClock << ".");
 			_abortObservation(itsStartingObs);
-			itsStartingObs = 0;
+			itsStartingObs = itsObsMap.end();
 			TRAN(StationControl::operational_state);
 			break;
 		}
@@ -783,7 +783,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		if (ack.status != CLKCTRL_NO_ERR) {
 			LOG_FATAL_STR("Unable to set the splittters to " << (splitterState ? "ON" : "OFF"));
 			_abortObservation(itsStartingObs);
-			itsStartingObs = 0;
+			itsStartingObs = itsObsMap.end();
 			TRAN(StationControl::operational_state);
 			break;
 		}
@@ -796,7 +796,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		itsStartingObs->second->doEvent(claimEvent, port);
 
 		LOG_INFO("Going back to operational state");
-		itsStartingObs = 0;
+		itsStartingObs = itsObsMap.end();
 		TRAN(StationControl::operational_state);
 	}
 	break;
