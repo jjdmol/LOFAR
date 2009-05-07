@@ -3,7 +3,7 @@
 echo "Checking for RSP driver"
 rspdriver_pid=`swlevel|awk '/RSPDriver/ {print $4}'`
 if test "$rspdriver_pid" = "DOWN" ; then
-    swlevel 2 && rspctl --regstat;
+    swlevel 2 & sleep 50;
     rspdriver_pid=`swlevel|awk '/RSPDriver/ {print $4}'`
 fi
 echo "RSPDriver has PID $rspdriver_pid";
