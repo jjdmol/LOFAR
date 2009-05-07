@@ -159,7 +159,7 @@ sr.setId('TD status - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the RSP - TD I2C interface by reading the TD sensor data')
 sr.appendLog(21,'')
-res = cli.command('python i2c_td.py --sub %s --rep 1 -v 11' %(SubBrd,))
+res = cli.command('python i2c_td.py --brd %s' %(SubBrd,))
 if res.find('FAILED')==-1:
   sr.appendLog(11,'>>> RSP - TD I2c interface test went OK')
 else:
