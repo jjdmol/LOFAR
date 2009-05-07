@@ -5,10 +5,17 @@
 #
 # Version 1.0   13 feb 2009   M.J.Norden
 
-rm -f *.log
-rm -f *.diff
+rm -f hba_modem*.log
+rm -f hba_modem*.diff
 
 declare ontime=4
+
+let hbamode=5
+
+eval "rspctl --rcumode=$hbamode"
+
+echo "The rcumode is "$hbamode 
+sleep 2
 
 echo "rspctl --hbadelays=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"
 eval "rspctl --hbadelays=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"
