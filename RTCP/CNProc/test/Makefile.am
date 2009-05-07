@@ -10,6 +10,7 @@ AM_CXXFLAGS = \
 tCN_Processing_SOURCES =			\
 tCN_Processing.cc				\
 ../src/BandPass.cc				\
+../src/BeamFormerAsm.S				\
 ../src/CN_Processing.cc		        	\
 ../src/Correlator.cc				\
 ../src/CorrelatorAsm.S				\
