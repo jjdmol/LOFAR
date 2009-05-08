@@ -6,7 +6,8 @@ sbin_SCRIPTS = \
 	rsuctl3 \
 	rsuctl3.pl \
 	rsuctl3_reset \
-	README.rsuctl
+	README.rsuctl \
+	flash_tbb.sh
 
 dist_sbin_SCRIPTS = $(sbin_SCRIPTS)
 
