@@ -77,8 +77,6 @@ function(lofar_find_package _package)
       ## LOFAR_LIBRARIES, but this command has been deprecated.
       # link_libraries(${${_PKG}_LIBRARIES}) 
       set(LOFAR_LIBRARIES ${LOFAR_LIBRARIES} ${${_PKG}_LIBRARIES} PARENT_SCOPE)
-#      set_property(GLOBAL APPEND PROPERTY 
-#        ${PROJECT_NAME}_LINK_LIBRARIES ${${_PKG}_LIBRARIES})
     endif(${_PKG}_FOUND)
 
   endif(NOT ${_PKG}_FOUND)

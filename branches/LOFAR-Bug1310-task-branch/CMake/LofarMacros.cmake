@@ -75,7 +75,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # --------------------------------------------------------------------------
   # lofar_get_hostname(name)
   #
-  # Return the machine name (hostname) in the variable NAME.
+  # Return the machine name (hostname) in the variable _hostname.
   # --------------------------------------------------------------------------
   macro(lofar_get_hostname _hostname)
     execute_process(COMMAND hostname -s
@@ -84,6 +84,22 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   endmacro(lofar_get_hostname _hostname)
 
 
+  # --------------------------------------------------------------------------
+  # lofar_add_library(name)
+  #
+  # Adds a library like add_library() does. 
+  # Furthermore:
+  # - add the library to the list of libraries for the current project
+  #   (global property ${PROJECT_NAME}_LIBRARIES). 
+  # - set the link dependencies of this library on other LOFAR libraries 
+  #   using the information in ${PROJECT_NAME}_DEPENDENCIES.
+  # - mark the library for install into LOFAR_LIBDIR.
+  # - add a dependency of the current project on the library.
+  #
+  # Note: link dependencies are determined by examining the link dependencies
+  # of the libraries in the LOFAR packages that the current package depends
+  # on. For this to work, each package must have its own CMake project.
+  # --------------------------------------------------------------------------
   macro(lofar_add_library _name)
     add_library(${_name} ${ARGN})
     set_property(GLOBAL APPEND PROPERTY ${PROJECT_NAME}_LIBRARIES ${_name})
@@ -94,16 +110,41 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     endforeach(_dep ${${PROJECT_NAME}_DEPENDENCIES})
     target_link_libraries(${_name} ${_link_libs} ${LOFAR_LIBRARIES})
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
+    add_dependencies(${PROJECT_NAME} ${_name})
   endmacro(lofar_add_library _name)
 
 
+  # --------------------------------------------------------------------------
+  # lofar_add_executable(name)
+  #
+  # Adds an executable like add_executable() does.
+  # Furthermore:
+  # - set the link dependencies of this executable on other LOFAR libraries
+  #   using the information in ${PROJECT_NAME}_LIBRARIES.
+  # - add a dependency of the current project on this executable.
+  #
+  # Note: since the libraries of the current project already have all their
+  # link dependencies setup correctly (using lofar_add_library()), executables
+  # only need to link to the libraries of the current project.
+  # --------------------------------------------------------------------------
   macro(lofar_add_executable _name)
     add_executable(${_name} ${ARGN})
     get_property(_libs GLOBAL PROPERTY ${PROJECT_NAME}_LIBRARIES)
     target_link_libraries(${_name} ${_libs})
+    add_dependencies(${PROJECT_NAME} ${_name})
   endmacro(lofar_add_executable _name)
 
 
+  # --------------------------------------------------------------------------
+  # lofar_add_test(name)
+  #
+  # Adds a test like add_test() does.
+  # Furthermore:
+  # - Instructs CMake how to compile and link the test program using
+  #   lofar_add_executable().
+  # - Adds a dependency for this test on the global target 'check', so that
+  #   it will be compiled, linked and run when you do a 'make check'.
+  # --------------------------------------------------------------------------
   macro(lofar_add_test _name)
     lofar_add_executable(${_name} EXCLUDE_FROM_ALL ${ARGN})
     add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
@@ -111,15 +152,22 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   endmacro(lofar_add_test _name)
 
 
+  # --------------------------------------------------------------------------
+  # lofar_add_bin_program(name)
+  # --------------------------------------------------------------------------
   macro(lofar_add_bin_program _name)
     lofar_add_executable(${_name})
     install(TARGETS ${_name} DESTINATION bin)
   endmacro(lofar_add_bin_program _name)
 
 
+  # --------------------------------------------------------------------------
+  # lofar_add_sbin_program(name)
+  # --------------------------------------------------------------------------
   macro(lofar_add_sbin_program _name)
     lofar_add_executable(${_name})
     install(TARGETS ${_name} DESTINATION sbin)
   endmacro(lofar_add_sbin_program _name)
+
 
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)

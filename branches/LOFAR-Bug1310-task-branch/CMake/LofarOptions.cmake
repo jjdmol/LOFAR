@@ -69,7 +69,7 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   endif(USE_LOG4CPLUS)
 
   if(USE_PYTHON)
-    lofar_find_package(Python)
+#    lofar_find_package(Python)
   endif(USE_PYTHON)
 
   if(USE_SSE)

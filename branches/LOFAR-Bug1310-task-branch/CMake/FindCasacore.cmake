@@ -105,7 +105,7 @@ endmacro(casacore_resolve_dependencies _result)
 #
 macro(casacore_find_library _name)
   string(TOUPPER ${_name} _NAME)
-  find_library(${_NAME}_LIBRARY NAMES ${_name})
+  find_library(${_NAME}_LIBRARY ${_name})
   mark_as_advanced(${_NAME}_LIBRARY)
   if(${_NAME}_LIBRARY)
     list(APPEND CASACORE_LIBRARIES ${${_NAME}_LIBRARY})
