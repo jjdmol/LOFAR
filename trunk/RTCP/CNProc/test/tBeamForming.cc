@@ -21,7 +21,11 @@
 //#  $Id$
 
 //# Always #include <lofar_config.h> first!
+
+
 #include <lofar_config.h>
+
+#if defined HAVE_BGP
 
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
@@ -284,3 +288,12 @@ int main(int, char **argv)
 
   return 0;
 }
+
+#else // not HAVE_BGP
+
+// cannot test beamform assembly outside Blue Gene
+int main( int, char** ) {
+  return 0;
+}
+
+#endif
