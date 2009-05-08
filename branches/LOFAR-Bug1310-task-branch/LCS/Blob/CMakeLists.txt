@@ -29,17 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Blob)
-set(PACKAGE_VERSION 1.0)
-set(Blob_DEPENDENCIES Common)
-
-#lofar_add_package(Blob 1.0 DEPENDS Common)
-
 include(LofarGeneral)
 
-foreach(dep ${Blob_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${Blob_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

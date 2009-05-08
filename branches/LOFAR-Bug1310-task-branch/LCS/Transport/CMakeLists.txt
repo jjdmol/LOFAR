@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Transport)
-set(PACKAGE_VERSION 2.3)
-set(Transport_DEPENDENCIES Blob)
-
 include(LofarGeneral)
 
-foreach(dep ${Transport_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${Transport_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 2.3 DEPENDS Blob)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(AMCImpl)
-set(PACKAGE_VERSION 2.0)
-set(AMCImpl_DEPENDENCIES Common Transport AMCBase)
-
 include(LofarGeneral)
 
-foreach(dep ${AMCImpl_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${AMCImpl_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 2.0 DEPENDS Common Transport AMCBase)
 
 ## ---------------------------------------------------------------------------
 ## External packages

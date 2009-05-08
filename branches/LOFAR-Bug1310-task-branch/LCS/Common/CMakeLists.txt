@@ -29,10 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Common)
-set(PACKAGE_VERSION 3.1)
-set(Common_DEPENDENCIES)
-
 include(LofarGeneral)
+
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 3.1)
 
 ## ---------------------------------------------------------------------------
 ## External packages

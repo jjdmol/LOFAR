@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(Stream)
-set(PACKAGE_VERSION 0.1)
-set(Stream_DEPENDENCIES Common)
-
 include(LofarGeneral)
 
-foreach(dep ${Stream_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${Stream_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages

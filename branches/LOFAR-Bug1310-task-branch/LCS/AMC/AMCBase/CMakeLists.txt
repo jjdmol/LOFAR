@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(AMCBase)
-set(PACKAGE_VERSION 2.0)
-set(AMCBase_DEPENDENCIES Common Blob Transport)
-
 include(LofarGeneral)
 
-foreach(dep ${AMCBase_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${AMCBase_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 2.0 DEPENDS Common Blob Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages

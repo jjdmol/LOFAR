@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(ALC)
-set(PACKAGE_VERSION 2.1)
-set(ALC_DEPENDENCIES Common Blob Transport)
-
 include(LofarGeneral)
 
-foreach(dep ${ALC_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${ALC_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 2.1 DEPENDS Common Blob Transport)
 
 ## ---------------------------------------------------------------------------
 ## External packages
