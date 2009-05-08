@@ -29,15 +29,10 @@ include(LofarInit)
 ## Project characteristics
 ## ---------------------------------------------------------------------------
 project(ApplCommon)
-set(PACKAGE_VERSION 3.1)
-set(ApplCommon_DEPENDENCIES Common)
-
 include(LofarGeneral)
 
-foreach(dep ${ApplCommon_DEPENDENCIES})
-  get_directory_property(_incdir DIRECTORY ${${dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
-  include_directories(${_incdir})
-endforeach(dep ${ApplCommon_DEPENDENCIES})
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
 ## External packages
