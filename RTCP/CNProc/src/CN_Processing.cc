@@ -327,7 +327,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
         break;
 
       default:
-	LOG_DEBUG("Invalid mode: " << itsMode);
+	LOG_DEBUG_STR("Invalid mode: " << itsMode);
         break;
     }
 

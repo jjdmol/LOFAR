@@ -95,8 +95,10 @@ int main(int argc, char **argv)
     
     std::stringstream sysInfo;
     sysInfo << basename(argv[0]) << "@" << locationInfo.rank();
- 
+
+#if defined HAVE_BGP 
     INIT_BGP_LOGGER(sysInfo.str());
+#endif
   
 #if !defined HAVE_PKVERSION    
     if (locationInfo.rank() == 0) {
