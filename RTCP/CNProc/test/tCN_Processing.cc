@@ -286,6 +286,8 @@ int main (int argc, char **argv)
   setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
 #endif
 
+  INIT_BGP_LOGGER(argv[0]);
+
 #if defined HAVE_MPI
   MPI_Init(&argc, &argv);
 #else
