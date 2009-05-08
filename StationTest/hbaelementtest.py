@@ -67,7 +67,7 @@ def main() :
 	dir_name = './hbadatatest/' #Work directory will be cleaned
   	rmfile = '*.log'
 	hba_elements=16
-        factor=20
+        factor=10
  	ctrl_string='='
 	# read in arguments
         if len(sys.argv) < 2 :
@@ -76,7 +76,7 @@ def main() :
 		subband_nr = int(sys.argv[1])
         print ' Dir name is ' + dir_name
         if len(sys.argv) < 3 :
-	        num_rcu=48
+	        num_rcu=96
         else :
 		num_rcu = int(sys.argv[2])
         print ' Number of RCUs is ' + str(num_rcu)
@@ -96,7 +96,7 @@ def main() :
         rm_files(dir_name,'*')
         os.popen("rspctl --rcumode=5 2>/dev/null")
         for ind in range(hba_elements) :
-		ctrl_string=ctrl_string + '0,'
+		ctrl_string=ctrl_string + '2,'
 	strlength=len(ctrl_string)
         ctrl_string=ctrl_string[0:strlength-1]
 	cmd_str='rspctl --hbadelay' + ctrl_string + ' 2>/dev/null'
@@ -125,9 +125,9 @@ def main() :
         	ctrl_string='='
         	for ind in range(hba_elements) :
                         if ind == element:
-				ctrl_string=ctrl_string + '253,'
+				ctrl_string=ctrl_string + '128,'
 			else:	
-				ctrl_string=ctrl_string + '0,'
+				ctrl_string=ctrl_string + '2,'
 		strlength=len(ctrl_string)
         	ctrl_string=ctrl_string[0:strlength-1]
 		cmd_str='rspctl --hbadelay' + ctrl_string + ' 2>/dev/null'
