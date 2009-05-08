@@ -239,12 +239,14 @@ void test_beamformer(unsigned nr_stations_at_once, unsigned nr_beams_at_once)
 }
 
 
-int main()
+int main(int, char **argv)
 {
   BGP_UPC_Initialize();
   BGP_UPC_Initialize_Counter_Config(BGP_UPC_MODE_0, BGP_UPC_CFG_EDGE_DEFAULT);
 
   init_data();
+
+  INIT_BGP_LOGGER(argv[0]);
 
 #if 0
   if (NR_STATIONS >= 2)
