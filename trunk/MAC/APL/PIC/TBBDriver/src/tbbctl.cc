@@ -90,7 +90,7 @@ GCFEvent::TResult AllocCmd::ack(GCFEvent& e)
 		bnr = static_cast<int32>(cnr / 16);
 
 		if (bnr != oldbnr) {
-			if ((ack.status_mask[bnr] == TBB_SUCCESS) || (ack.status_mask[bnr] & TBB_RCU_COMM_ERROR)) {
+			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 				cout << formatString(" %2d  memory allocated for selected rcu's", bnr) << endl;
 			} else {
 				cout << formatString(" %2d  %s", bnr, getDriverErrorStr(ack.status_mask[bnr]).c_str()) << endl;
@@ -2220,7 +2220,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 
 			// print size of progressbar on screen
 			bar_interval = itsPages / bar_size;
-			int recvtime = static_cast<int>((1043. / 262144.) * itsPages);  // measured 262144 pages in 1043 seconds
+			int recvtime = static_cast<int>((673. / 100000.) * itsPages);  // measured 100000 pages in 673 seconds
 			int hours = recvtime / (60 * 60);
 			int mins = (recvtime - (hours * 60 * 60)) / 60;
 			int secs = recvtime - (hours * 60 * 60) - (mins * 60) + 1; // 1 second for overhead
@@ -2598,6 +2598,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		} break;
 
 			case TBB_SUBSCRIBE_ACK: {
+				cout << "subscribed, execute command" << endl;
 				TRAN(TBBCtl::docommand);
 			} break;
 
@@ -2633,22 +2634,22 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 		} break;
 
 		case F_ENTRY: {
-		// reparse options
-		itsCommand = parse_options(itsArgc, itsArgv);
-		if (itsCommand == 0) {
-			cout << "Warning: no command specified." << endl;
-			exit(EXIT_FAILURE);
-		}
-		itsCommand->send();
+			// reparse options
+			itsCommand = parse_options(itsArgc, itsArgv);
+			if (itsCommand == 0) {
+				cout << "Warning: no command specified." << endl;
+				exit(EXIT_FAILURE);
+			}
+			itsCommand->send();
 		} break;
 
 		case F_CONNECTED: {
 		} break;
 
 		case F_DISCONNECTED: {
-		port.close();
-		cout << formatString("Error: port '%s' disconnected.",port.getName().c_str()) << endl;
-		exit(EXIT_FAILURE);
+			port.close();
+			cout << formatString("Error: port '%s' disconnected.",port.getName().c_str()) << endl;
+			exit(EXIT_FAILURE);
 		} break;
 
 		case F_TIMER: {

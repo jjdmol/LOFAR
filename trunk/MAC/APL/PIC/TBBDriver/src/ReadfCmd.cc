@@ -32,27 +32,10 @@ using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using	namespace TBB;
 
-// information about the flash memory
-static const int FL_SIZE              = 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_IMAGES          = 16; // 32 pages in flash
-//static const int FL_N_SECTORS       = 512; // 512 sectors in flash
-static const int FL_N_BLOCKS          = 65536; // 65536 blocks in flash
-
-static const int FL_PAGE_SIZE         = FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
-//static const int FL_SECTOR_SIZE     = FL_SIZE / FL_N_SECTORS; // 131.072 bytes
-static const int FL_BLOCK_SIZE        = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
-
-//static const int FL_SECTORS_IN_PAGE = FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
-//static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
-static const int FL_BLOCKS_IN_PAGE    = FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
-
-//static const int IMAGE_SIZE         = 977489; // 977489 bytes in 1 image 
-//static const int IMAGE_BLOCKS       = IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
-
 
 //--Constructors for a ReadfCmd object.----------------------------------------
 ReadfCmd::ReadfCmd():
-		itsStatus(0),itsFile(0),itsImage(0),itsBlock(0)
+		itsFile(0),itsImage(0),itsBlock(0)
 {
 	TS = TbbSettings::instance();
 	setWaitAck(true);
@@ -75,18 +58,13 @@ void ReadfCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBReadImageEvent tbb_event(event);
 	
-	itsStatus = 0;
-	if (TS->isBoardActive(tbb_event.board)) {	
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
+	setBoard(tbb_event.board);
 	
 	itsImage = tbb_event.image;
-	itsBlock = (itsImage * FL_BLOCKS_IN_PAGE);
-	
+	itsBlock = (itsImage * TS->flashBlocksInImage());
 	itsFile = fopen("image.hex","wb");
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -96,7 +74,7 @@ void ReadfCmd::sendTpEvent()
 	tp_event.opcode = oc_READF;
 	tp_event.status = 0;
 	
-	tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
+	tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
@@ -106,15 +84,19 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
 		setDone(true);	
 	} else {
 		TPReadfAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received ReadfAck from boardnr[%d]", getBoardNr()));
 		
-		int byte_val;
-		int nible_val;
-		uint32 status = tp_ack.status;
-		if (status == 0) { 
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
+			setDone(true);
+		} else {
+			int byte_val;
+			int nible_val;
+
 			for (int dp = 0; dp < 256; dp++) {	// there are 256 words in 1 message
 				for (int bn = 0; bn < 4; bn++) {
 					byte_val = (tp_ack.data[dp] >> (bn * 8)) & 0xFF; // take 1 byte
@@ -138,13 +120,10 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event)
 			}
 			
 			itsBlock++;
-			if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_PAGE)) {
+			if (itsBlock == ((itsImage + 1) * TS->flashBlocksInImage())) {
 				setDone(true);
 			}
-		} else {
-			LOG_DEBUG_STR(formatString("Block %d received status = 0x%08X (ReadfCmd)", itsBlock, status));
-			setDone(true);
-		}
+		} 
 	}
 }
 
@@ -155,11 +134,7 @@ void ReadfCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	
 	TBBReadImageAckEvent tbb_ack;
 		
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

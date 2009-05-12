@@ -59,7 +59,6 @@ public:
 	
 private:
 	TbbSettings *TS;
-	uint32	itsStatus;
 	
 	FILE  *itsFile;
 	int32 itsImage;

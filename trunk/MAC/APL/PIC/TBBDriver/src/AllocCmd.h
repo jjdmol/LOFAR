@@ -63,10 +63,6 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				int32		itsStage;
-				//uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32	itsRcuStatus;
-				uint32	itsChannelMask[MAX_N_TBBOARDS];
-				uint32	itsStatus[MAX_N_TBBOARDS];
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

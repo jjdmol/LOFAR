@@ -163,10 +163,6 @@ UdpCmd::UdpCmd():
 		itsMode(0)
 {
 	TS = TbbSettings::instance();
-	
-	for (int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) {
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);	
 }
 
@@ -187,21 +183,13 @@ void UdpCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBModeEvent tbb_event(event);
 	
-	setBoardMask(0xFFF);
+	setBoards(0xFFF);
 	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-
 	itsMode = tbb_event.rec_mode;
-	for (int ch = 0; ch < TS->maxChannels(); ch++) {
-		TS->setChOperatingMode(ch,static_cast<uint8>(itsMode));
+	for (int i = 0; i < TS->maxChannels(); i++) {
+		TS->setChOperatingMode(i,static_cast<uint8>(itsMode));
 	}
-
-	nextBoardNr();	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -234,17 +222,16 @@ void UdpCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}
 	else {
 		TPUdpAckEvent tp_ack(event);
 		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
 		
-		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d], status[0x%08X]", 
-											getBoardNr(), tp_ack.status));
+		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d]", getBoardNr()));
 	}
 	nextBoardNr();
 }
@@ -254,14 +241,10 @@ void UdpCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBModeAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
-
-	clientport->send(tbb_ack);
+	
+	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }
 

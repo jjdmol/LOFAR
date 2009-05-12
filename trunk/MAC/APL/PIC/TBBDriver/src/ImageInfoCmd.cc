@@ -31,27 +31,16 @@ using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using	namespace TBB;
 
-// information about the flash memory
-static const int FL_SIZE            = 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_BLOCKS        = 65536; // 65336 blocks in flash
-static const int FL_N_IMAGES        = 16; // 16 pages in flash
-
-static const int FL_IMAGE_SIZE      = FL_SIZE / FL_N_IMAGES; // 2.097.152 bytes  
-static const int FL_BLOCK_SIZE      = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
-
-static const int FL_BLOCKS_IN_IMAGE = FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
-
-
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():
-		itsStatus(0), itsImage(0), itsBlock(0)
+		itsImage(0), itsBlock(0)
 {
 	TS = TbbSettings::instance();
-	for (int image = 0; image < MAX_N_IMAGES; image++) {
-		itsImageVersion[image] = 0;	  
-		itsWriteDate[image] = 0;	
-		memset(itsTpFileName[image],'\0',16);
-		memset(itsMpFileName[image],'\0',16);
+	for (int i = 0; i < TS->flashMaxImages(); i++) {
+		itsImageVersion[i] = 0;	  
+		itsWriteDate[i] = 0;	
+		memset(itsTpFileName[i],'\0',16);
+		memset(itsMpFileName[i],'\0',16);
 	}
 	setWaitAck(true);
 }
@@ -73,14 +62,10 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBImageInfoEvent tbb_event(event);
 
-	if (TS->isBoardActive(tbb_event.board)) {
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
-	
+	setBoard(tbb_event.board);
 	itsImage = 0;
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -90,8 +75,8 @@ void ImageInfoCmd::sendTpEvent()
 	tp_event.opcode = oc_READF;
 	tp_event.status = 0;
 	
-	itsBlock = (itsImage * FL_BLOCKS_IN_IMAGE) + (FL_BLOCKS_IN_IMAGE - 1);
-	tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
+	itsBlock = (itsImage * TS->flashBlocksInImage()) + (TS->flashBlocksInImage() - 1);
+	tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
@@ -101,12 +86,16 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
 		setDone(true);	
 	} else {
 		TPReadfAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received ReadfAck from boardnr[%d]", getBoardNr()));
 		
-		if (tp_ack.status == 0) {
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
+			setDone(true);
+		} else {
 			char info[256];
 			memset(info,0,256);
 			memcpy(info,&tp_ack.data[2],256);
@@ -136,7 +125,7 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			LOG_DEBUG_STR("mp_file_name: " << itsMpFileName[itsImage]);
 		
 			itsImage++;
-			if (itsImage == FL_N_IMAGES) {
+			if (itsImage == TS->flashMaxImages()) {
 				setDone(true);
 			}
 		}
@@ -156,12 +145,7 @@ void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		memcpy(tbb_ack.tp_file_name[image], itsTpFileName[image], 16);
 		memcpy(tbb_ack.mp_file_name[image], itsMpFileName[image], 16);
 	}
-	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

@@ -42,7 +42,7 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   namespace TbbCtl {
 
-static const int TBBCTL_VERSION = 210;
+static const int TBBCTL_VERSION = 212;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -131,45 +131,54 @@ public:
 	virtual string getDriverErrorStr(uint32 status)
 	{
 		string str;
-
 		str.clear();
 
-		// all TBB_XXX constants come from TBB_Protocol.ph
-
-		if (!(status & TBB_SUCCESS)) {
-			if (status & TBB_NO_BOARD) {
-				str.append("board not available ");
-				return(str);
-			}
-
-			if (status & TBB_COMM_ERROR)        str.append(",comm. time-out ");
-			if (status & TBB_SELECT_ERROR)      str.append(",not selectable ");
-			if (status & TBB_FLASH_ERROR)       str.append(",flash error ");
-			if (status & TBB_ALLOC_ERROR)       str.append(",alloc error ");
-			if (status & TBB_RCU_COMM_ERROR)    str.append(",rcu error ");
-			if (status & TBB_PROTECT_ERROR)     str.append(",flash protect error ");
-
-			if (status & TBB_CHANNEL_IN_USE)    str.append(",channel in use ");
-			if (status & TBB_INPUT_IN_USE)      str.append(",input in use ");
-			if (status & TBB_BUFFER_TO_LARGE)   str.append(",buffer to large ");
-			if (status & TBB_NO_MP_WRITER)      str.append(",no mp writer ");
-			if (status & TBB_RING_FULL)         str.append(",ring full ");
-			if (status & TBB_RCU_NOT_FREE)      str.append(",rcu not free ");
-			if (status & TBB_RCU_NOT_ALLOCATED) str.append(",rcu not allocated ");
-			if (status & TBB_RCU_NOT_RECORDING) str.append(",rcu not recording ");
-
-			if (status & TBB_CRC_ERROR_MP0)     str.append(",crc error mp0 ");
-			if (status & TBB_CRC_ERROR_MP1)     str.append(",crc error mp1 ");
-			if (status & TBB_CRC_ERROR_MP2)     str.append(",crc error mp2 ");
-			if (status & TBB_CRC_ERROR_MP3)     str.append(",crc error mp3 ");
-			if (status & TBB_CRC_ERROR_TP)      str.append(",crc error tp ");
-			if (status & TBB_ACK_ERROR_TP)      str.append(",ack error tp ");
-			if (status & TBB_TIMEOUT_TP_MP)     str.append(",timeout tp-mp ");
-			if (status & TBB_TIMEOUT_ETH)       str.append(",timeout eth ");
-
+		switch (status & ~TBB_BOARD_STATUS_MASK) {
+			case TBB_NO_BOARD            : str = "board not available"; break;
+			case TBB_NOT_ACTIVE          : str = "board not active"; break;
+			case TBB_NOT_READY           : str = "board not ready"; break;
+			case TBB_TIME_OUT            : str = "time-out"; break;
+			case TBB_BUSY                : str = "driver busy"; break;
+			case TBB_FLASH_FILE_NOT_FIND : str = "hex files not found"; break;
+			case TBB_FLASH_ERROR         : str = "flash error"; break;
+			case TBB_FLASH_BAD_PASSWORD  : str = "bad password for image 0"; break;
+			case TBB_CH_NOT_FREE         : str = "channel not free"; break;
+			case TBB_CH_NOT_ALLOCATED    : str = "channel not allocated"; break;
+			case TBB_CH_NOT_STOPPED      : str = "channel not stopped"; break;
+			case TBB_ALLOC_ERROR         : str = "allocation error"; break;
+			case TBB_BOARD_SELECT_ERROR  : str = "board not in range"; break;
+			case TBB_MP_SELECT_ERROR     : str = "mp not in range"; break;
+			case TBB_RCU_SELECT_ERROR    : str = "rcu not in range"; break;
+			case TBB_IMAGE_SELECT_ERROR  : str = "image not in range"; break;
+			case TBB_PID_SELECT_ERROR    : str = "pid not in range"; break;
+			case TBB_REGID_SELECT_ERROR  : str = "regid not in range"; break;
+			case TBB_ADDR_SEL_ERROR      : str = "addr not in range"; break;
+			default: break;
+		}
+		switch (status & TBB_BOARD_STATUS_MASK) {
+			case TBB_CH_ALREADY_ALLOCATED : str.append(" [board-status]= channel already allocated"); break;
+			case TBB_CH_ALREADY_IN_USE    : str.append(" [board-status]= channel already inuse"); break;
+			case TBB_SIZE_TO_LARGE        : str.append(" [board-status]= channel size to large"); break;
+			case TBB_NO_MEMORY_AVAILABLE  : str.append(" [board-status]= no memory available"); break;
+			case TBB_RING_FULL            : str.append(" [board-status]= no ring resources available"); break;
+			case TBB_MPI_CRC_ERROR_MP0    : str.append(" [board-status]= mpi crc error mp0"); break;
+			case TBB_MPI_CRC_ERROR_MP1    : str.append(" [board-status]= mpi crc error mp1"); break;
+			case TBB_MPI_CRC_ERROR_MP2    : str.append(" [board-status]= mpi crc error mp2"); break;
+			case TBB_MPI_CRC_ERROR_MP3    : str.append(" [board-status]= mpi crc error mp3"); break;
+			case TBB_MPI_CRC_ERROR_TP     : str.append(" [board-status]= mpi crc error tp"); break;
+			case TBB_MPI_ACK_ERROR        : str.append(" [board-status]= mpi ack error"); break;
+			case TBB_MPI_TIMEOUT_ERROR    : str.append(" [board-status]= mpi time-out"); break;
+			case TBB_CEP_CONFIG_ERRORR    : str.append(" [board-status]= cep config error"); break;
+			case TBB_FLASH_ACCESS_DENIED  : str.append(" [board-status]= flash access denied"); break;
+			case TBB_CEP_ALREADY_IN_USE   : str.append(" [board-status]= cep already in use"); break;
+			case TBB_WRONG_COMMAND        : str.append(" [board-status]= wrong command"); break;
+			default: break;
+		}	
+		
+		if (str.empty() && status) {
 			char statusstr[64];
 			sprintf(statusstr,"unknown ERROR, 0x%08X",status);
-			if (str.empty() && status) str.append(statusstr);
+			str.append(statusstr);
 		}
 		return(str);
 	}

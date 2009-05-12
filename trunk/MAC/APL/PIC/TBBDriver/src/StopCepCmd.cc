@@ -38,10 +38,6 @@ StopCepCmd::StopCepCmd()
 {
 	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
-	
 	setWaitAck(true);
 }
   
@@ -62,17 +58,9 @@ void StopCepCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBStopCepEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
-	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-	
-	// select first board
-	nextBoardNr();
+	setBoards(tbb_event.boardmask);
+
+	nextBoardNr(); // select first board
 }
 
 // ----------------------------------------------------------------------------
@@ -91,17 +79,14 @@ void StopCepCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPStopCepAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received StopCepAck from boardnr[%d]", getBoardNr()));
 		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
-		
-		// fill in extra code 
-		LOG_DEBUG_STR(formatString("StopCepCmd: board[%d] %08X",
-				getBoardNr(),itsStatus[getBoardNr()]));
 	}
 	nextBoardNr();
 }
@@ -111,12 +96,8 @@ void StopCepCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBStopCepAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

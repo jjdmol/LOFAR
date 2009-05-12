@@ -59,8 +59,6 @@ public:
 
 private:
 	TbbSettings *TS;
-	uint32 itsStatus;
-	int32 itsChannel;
 	uint32 itsPagePeriod;
 };
 	} // end TBB namespace

@@ -37,10 +37,6 @@ using	namespace TBB;
 TrigCoefCmd::TrigCoefCmd()
 {
 	TS = TbbSettings::instance();
-	
-	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);		
 }
 	  
@@ -61,9 +57,9 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBTrigCoefEvent tbb_event(event);
 		
-	int32 board;				// board 0 .. 11
-	int32 board_channel;// board_channel 0 .. 15	
-	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)
+	int32 board;         // board 0 .. 11
+	int32 board_channel; // board_channel 0 .. 15	
+	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)
 	
 	for(int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		TS->convertRcu2Ch(rcunr,&board,&board_channel);	
@@ -74,17 +70,9 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChFilterCoefficient(channel, 3, tbb_event.coefficients[rcunr].c3);
 	}
 	
-	// Send only commands to boards installed
-	uint32 boardmask;
-	boardmask = TS->activeBoardsMask();
-	setBoardMask(boardmask);
-	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (TS->isBoardActive(boardnr) == false) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
+	std::bitset<MAX_N_RCUS> channels;
+	channels.set();
+	setChannels(channels);
 	
 	// select firt channel to handle
 	nextChannelNr();
@@ -98,41 +86,35 @@ void TrigCoefCmd::sendTpEvent()
 	tp_event.opcode = oc_TRIG_COEF;
 	tp_event.status = 0;
 	
-	// send cmd if no errors
-	if (itsStatus[getBoardNr()] == 0) {
-		uint32 mpnr = TS->getChMpNr(getChannelNr());
-		tp_event.mp = mpnr;
-		
-		for (int ch = 0; ch < 4; ch++) {
-			tp_event.channel[ch].c0 = TS->getChFilterCoefficient((getChannelNr() + ch), 0);
-			tp_event.channel[ch].c1 = TS->getChFilterCoefficient((getChannelNr() + ch), 1);
-			tp_event.channel[ch].c2 = TS->getChFilterCoefficient((getChannelNr() + ch), 2);
-			tp_event.channel[ch].c3 = TS->getChFilterCoefficient((getChannelNr() + ch), 3);
-		}
-		
-		TS->boardPort(getBoardNr()).send(tp_event);
-		LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
+	tp_event.mp = TS->getChMpNr(getChannelNr());
+	for (int i = 0; i < 4; i++) {
+		tp_event.channel[i].c0 = TS->getChFilterCoefficient((getChannelNr() + i), 0);
+		tp_event.channel[i].c1 = TS->getChFilterCoefficient((getChannelNr() + i), 1);
+		tp_event.channel[i].c2 = TS->getChFilterCoefficient((getChannelNr() + i), 2);
+		tp_event.channel[i].c3 = TS->getChFilterCoefficient((getChannelNr() + i), 3);
 	}
+
+	LOG_DEBUG_STR(formatString("Sending TrigCoef to boardnr[%d]",getBoardNr()));
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());	
 }
 
 // ----------------------------------------------------------------------------
 void TrigCoefCmd::saveTpAckEvent(GCFEvent& event)
 {
-		// in case of a time-out, set error mask
+	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
-	} else {
-		TPTrigCoefAckEvent tp_ack(event);
-		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
-		}
-		
+		setStatus(getBoardNr(), TBB_TIME_OUT);
+	}	else {
+		TPTrigSetupAckEvent tp_ack(event);
 		LOG_DEBUG_STR(formatString("Received TrigCoefAck from boardnr[%d]", getBoardNr()));
+		
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		}
 	}
 	// one mp done, go to next mp
-	setChannelNr((getBoardNr() * TS->nrChannelsOnBoard()) + (TS->getChMpNr(getChannelNr()) * TS->nrMpsOnBoard()) + 3);
+	setChannelNr(TS->getFirstChannelNr(getBoardNr(), TS->getChMpNr(getChannelNr())) + 3);
 	nextChannelNr();
 }
 
@@ -141,12 +123,8 @@ void TrigCoefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBTrigCoefAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

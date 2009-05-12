@@ -38,7 +38,6 @@ SizeCmd::SizeCmd()
 	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
 		itsNpages[boardnr] = 0;
 	}
 	setWaitAck(true);		
@@ -61,25 +60,18 @@ void SizeCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBSizeEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr))
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-	}
-		
-	// get first board
-	nextBoardNr();
+	nextBoardNr(); // get first board
 }
 
 // ----------------------------------------------------------------------------
 void SizeCmd::sendTpEvent()
 {
 	TPSizeEvent tp_event;
-	
 	tp_event.opcode = oc_SIZE;
 	tp_event.status = 0;
+	
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
@@ -89,19 +81,21 @@ void SizeCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	} else {
-		TPSizeAckEvent tp_event(event);
+		TPSizeAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received SizeAck from boardnr[%d]", getBoardNr()));
 		
-		if ((tp_event.status >= 0xF0) && (tp_event.status <= 0xF6)) 
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_event.status & 0x0F)));	
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		} else {
 		
-		LOG_DEBUG_STR(formatString("SizeCmd: board[%d] status[0x%08X] pages[%u]", 
-																getBoardNr(), tp_event.status, tp_event.npages));
-																
-		TS->setMemorySize(getBoardNr(),tp_event.npages);
-		itsNpages[getBoardNr()]	= tp_event.npages;
-		
+			LOG_DEBUG_STR(formatString("SizeCmd: board[%d] status[0x%08X] pages[%u]", 
+																	getBoardNr(), tp_ack.status, tp_ack.npages));
+																	
+			TS->setMemorySize(getBoardNr(),tp_ack.npages);
+			itsNpages[getBoardNr()]	= tp_ack.npages;
+		}
 	}
 	nextBoardNr();
 }
@@ -111,13 +105,9 @@ void SizeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBSizeAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
-		tbb_ack.npages[boardnr] = itsNpages[boardnr];
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
+		tbb_ack.npages[i] = itsNpages[i];
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

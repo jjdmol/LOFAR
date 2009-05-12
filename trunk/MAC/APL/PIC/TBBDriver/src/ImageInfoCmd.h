@@ -60,10 +60,8 @@ public:
 private:
 	TbbSettings *TS;
 	
-	uint32 itsStatus;
 	int32 itsImage;
 	int32 itsBlock;
-	
 	uint32 itsImageVersion[MAX_N_IMAGES];	  
 	uint32 itsWriteDate[MAX_N_IMAGES];	
 	char itsTpFileName[MAX_N_IMAGES][16];

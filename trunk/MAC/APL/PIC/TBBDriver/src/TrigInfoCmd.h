@@ -59,7 +59,6 @@ public:
 	
 private:
 	TbbSettings *TS;
-	uint32 itsStatus;
 	int32 itsRcu;
 	uint32 itsSequenceNr;
 	uint32 itsTime;

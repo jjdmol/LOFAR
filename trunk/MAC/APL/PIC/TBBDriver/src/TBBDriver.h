@@ -103,7 +103,7 @@ private:
 	bool CheckAlive(GCFEvent& event, GCFPortInterface& port);
 	bool CheckSize(GCFEvent& event, GCFPortInterface& port);
 	bool sendInfo(GCFEvent& event, GCFPortInterface& port);
-	bool isTbbCommand(unsigned short signal);
+	bool addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port);
 	bool SetTbbCommand(unsigned short signal);
 	
 	TbbSettings *TS;
@@ -123,6 +123,8 @@ private:
 		uint32 length;
 		uint8  *event;
 	};
+	
+	std::deque<TbbEvent*> *itsTbbQueue;
 	
 	GCFTCPPort     itsAcceptor;     // listen for clients on this port
 	GCFETHRawPort* itsBoard;        // array of ports, one for each TBB board

@@ -39,7 +39,6 @@ VersionCmd::VersionCmd()
 	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
 		itsBoardId[boardnr] = 0;
 		itsTpSwVersion[boardnr] = 0;
 		itsBoardVersion[boardnr] = 0;
@@ -69,18 +68,9 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBVersionEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-	
-	
-	// select firt board
-	nextBoardNr();
+	nextBoardNr(); // select firt board
 }
 
 // ----------------------------------------------------------------------------
@@ -99,28 +89,28 @@ void VersionCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}
 	else {
 		//TPVersionEvent tpe(event);
 		TPVersionAckEvent tp_ack(event);
-		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
+		LOG_DEBUG_STR(formatString("Received VersionAck from boardnr[%d]", getBoardNr()));
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		} else {
+			itsBoardId[getBoardNr()]     = tp_ack.boardid;
+			itsTpSwVersion[getBoardNr()] = tp_ack.tpswversion;
+			itsBoardVersion[getBoardNr()]= tp_ack.boardversion;
+			itsTpHwVersion[getBoardNr()] = tp_ack.tphwversion;
+			itsMp0Version[getBoardNr()]  = (tp_ack.mp0version >> 24);
+			itsMp1Version[getBoardNr()]  = (tp_ack.mp1version >> 24);
+			itsMp2Version[getBoardNr()]  = (tp_ack.mp2version >> 24);
+			itsMp3Version[getBoardNr()]  = (tp_ack.mp3version >> 24);
+			
+			LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %08X;%u;%u;%u;%u;%u;%u;%u;%u",
+							  getBoardNr(),getStatus(getBoardNr()),tp_ack.boardid,tp_ack.tpswversion,tp_ack.boardversion,
+					tp_ack.tphwversion,tp_ack.mp0version,tp_ack.mp1version,tp_ack.mp2version,tp_ack.mp3version));
 		}
-		
-		itsBoardId[getBoardNr()]     = tp_ack.boardid;
-		itsTpSwVersion[getBoardNr()]   = tp_ack.tpswversion;
-		itsBoardVersion[getBoardNr()]= tp_ack.boardversion;
-		itsTpHwVersion[getBoardNr()]   = tp_ack.tphwversion;
-		itsMp0Version[getBoardNr()]  = (tp_ack.mp0version >> 24);
-		itsMp1Version[getBoardNr()]  = (tp_ack.mp1version >> 24);
-		itsMp2Version[getBoardNr()]  = (tp_ack.mp2version >> 24);
-		itsMp3Version[getBoardNr()]  = (tp_ack.mp3version >> 24);
-		
-		LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %08X;%u;%u;%u;%u;%u;%u;%u;%u",
-				getBoardNr(),itsStatus[getBoardNr()],tp_ack.boardid,tp_ack.tpswversion,tp_ack.boardversion,
-				tp_ack.tphwversion,tp_ack.mp0version,tp_ack.mp1version,tp_ack.mp2version,tp_ack.mp3version));
 	}
 	nextBoardNr();
 }
@@ -130,24 +120,18 @@ void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBVersionAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
-		tbb_ack.boardid[boardnr]      = itsBoardId[boardnr];
-		tbb_ack.tpswversion[boardnr]  = itsTpSwVersion[boardnr];
-		tbb_ack.boardversion[boardnr] = itsBoardVersion[boardnr];
-		tbb_ack.tphwversion[boardnr]  = itsTpHwVersion[boardnr];
-		tbb_ack.mp0version[boardnr]   = itsMp0Version[boardnr];
-		tbb_ack.mp1version[boardnr]   = itsMp1Version[boardnr];
-		tbb_ack.mp2version[boardnr]   = itsMp2Version[boardnr];
-		tbb_ack.mp3version[boardnr]   = itsMp3Version[boardnr];
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i]  = getStatus(i);
+		tbb_ack.boardid[i]      = itsBoardId[i];
+		tbb_ack.tpswversion[i]  = itsTpSwVersion[i];
+		tbb_ack.boardversion[i] = itsBoardVersion[i];
+		tbb_ack.tphwversion[i]  = itsTpHwVersion[i];
+		tbb_ack.mp0version[i]   = itsMp0Version[i];
+		tbb_ack.mp1version[i]   = itsMp1Version[i];
+		tbb_ack.mp2version[i]   = itsMp2Version[i];
+		tbb_ack.mp3version[i]   = itsMp3Version[i];
 	}
-
-	tbb_ack.driverversion = TS->driverVersion(); // set cvs version of TBBDriver.c
-
+	tbb_ack.driverversion = TS->driverVersion(); 
 
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

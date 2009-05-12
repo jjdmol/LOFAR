@@ -39,9 +39,6 @@ WatchDogCmd::WatchDogCmd():
 {
 	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);	
 }
 
@@ -62,20 +59,10 @@ void WatchDogCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBWatchdogEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	itsMode = tbb_event.mode;
 	
-	LOG_DEBUG_STR("boardMask= " << formatString("%08x",tbb_event.boardmask));
-	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-	
-	// select first board
-	nextBoardNr();
+	nextBoardNr(); // select first board
 }
 
 // ----------------------------------------------------------------------------
@@ -95,18 +82,14 @@ void WatchDogCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		TS->setBoardState(getBoardNr(),noBoard);
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPWatchdogAckEvent tp_ack(event);
-/*
-		TS->setImageNr(getBoardNr(), 0);
+		LOG_DEBUG_STR(formatString("Received WatchDogAck from boardnr[%d]", getBoardNr()));
 		
-		if (tp_ack.status == 0) {
-			TS->setBoardState(getBoardNr(),setImage1);
-		} else {
-			TS->setBoardState(getBoardNr(),boardError);
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
-*/
 	}
 	nextBoardNr();
 }
@@ -116,12 +99,8 @@ void WatchDogCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBWatchdogAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

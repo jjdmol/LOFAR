@@ -59,9 +59,6 @@ public:
 	      
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
-	uint32 itsChannelMask[MAX_N_TBBOARDS];
-	uint32 itsRcuStatus;
 	int32 itsChannels;
 };
 

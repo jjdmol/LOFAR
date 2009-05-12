@@ -40,9 +40,6 @@ ConfigCmd::ConfigCmd():
 {
 	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);
 }
 
@@ -63,18 +60,10 @@ void ConfigCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBConfigEvent tbb_event(event);
 
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (TS->isBoardActive(boardnr) == false) { 
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-	
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	itsImage = tbb_event.imagenr;
 	
-	// select first boards
-	nextBoardNr();
+	nextBoardNr(); // select first boards
 }
 
 // ----------------------------------------------------------------------------
@@ -94,16 +83,17 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPConfigAckEvent tp_ack(event);
-		TS->setImageNr(getBoardNr(), itsImage);
-		TS->setFreeToReset(getBoardNr(), false);
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
-		}
-		
 		LOG_DEBUG_STR(formatString("Received ConfigAck from boardnr[%d]", getBoardNr()));
+		
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		} else {
+			TS->setImageNr(getBoardNr(), itsImage);
+			TS->setFreeToReset(getBoardNr(), false);
+		}
 	}
 	nextBoardNr();
 	if (isDone()) { 
@@ -116,13 +106,8 @@ void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBConfigAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
-	LOG_DEBUG_STR("Sending ConfigAck to client");
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

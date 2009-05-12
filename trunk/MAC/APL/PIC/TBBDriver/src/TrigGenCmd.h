@@ -59,11 +59,8 @@ public:
 	
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
-   uint32 itsMp;	
 	int32 itsStage;
-	// variables holding data from tp cmd
-	uint32	itsChannelMask[MAX_N_TBBOARDS];
+	int32 itsChannels;
 };
 
 	} // end TBB namespace

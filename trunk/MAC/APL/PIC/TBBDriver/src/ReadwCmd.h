@@ -59,7 +59,6 @@ public:
 	      
 private:
 	TbbSettings *TS;
-	uint32 itsStatus;
 	uint32 itsMp;
 	uint32 itsAddr;
 	uint32 itsData[8];

@@ -77,8 +77,6 @@ private:
 
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
-	
 	uint32	itsMode; // Transient or subbands
 };
 

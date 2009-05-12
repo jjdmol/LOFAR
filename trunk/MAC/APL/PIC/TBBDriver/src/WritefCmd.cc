@@ -34,30 +34,15 @@ using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using namespace TBB;
 
-// information about the flash memory
-static const int FL_SIZE            = 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_SECTORS       = 512; // 512 sectors in flash
-static const int FL_N_BLOCKS        = 65536; // 65336 blocks in flash
-static const int FL_N_IMAGES        = 16; // 16 images in flash
-
-static const int FL_IMAGE_SIZE      = FL_SIZE / FL_N_IMAGES; // 4194304 bytes  
-static const int FL_SECTOR_SIZE     = FL_SIZE / FL_N_SECTORS; // 131.072 bytes
-static const int FL_BLOCK_SIZE      = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
-
-static const int FL_SECTORS_IN_IMAGE = FL_IMAGE_SIZE / FL_SECTOR_SIZE; // 32 sectors per image
-//static const int FL_BLOCKS_IN_SECTOR = FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
-static const int FL_BLOCKS_IN_IMAGE  = FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 4096 blocks per image
-
-
 
 //--Constructors for a WritefCmd object.----------------------------------------
 WritefCmd::WritefCmd():
 		itsStage(idle),itsImage(0),itsSector(0),itsBlock(0),itsImageSize(0),
-		itsDataPtr(0),itsPassword(0),itsStatus(0)
+		itsDataPtr(0),itsPassword(0)
 {
 	TS = TbbSettings::instance();
-	itsImageData = new uint8[FL_IMAGE_SIZE];
-	memset(itsImageData,0xFF,FL_IMAGE_SIZE);
+	itsImageData = new uint8[TS->flashImageSize()];
+	memset(itsImageData,0xFF,TS->flashImageSize());
 	
 	setWaitAck(true);
 }
@@ -89,12 +74,7 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBWriteImageEvent tbb_event(event);
 	
-	if (TS->isBoardActive(tbb_event.board)) {  
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
+	setBoard(tbb_event.board);
 	
 	// copy filename
 	memcpy(itsFileNameTp,tbb_event.filename_tp,sizeof(char) * 64);
@@ -106,7 +86,7 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	if (readFiles()) {
 		LOG_DEBUG_STR("Image files are read");
 	} else {
-		itsStatus |= TBB_FLASH_ERROR;
+		setStatus(0, TBB_FLASH_FILE_NOT_FIND);
 		setDone(true);
 	}
 	
@@ -135,8 +115,8 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	sprintf(info," %s %s ",tp_name,mp_name);
 	LOG_DEBUG_STR(formatString("ImageInfo: %s",info));
 	
-	int addr = (FL_BLOCKS_IN_IMAGE - 1) * FL_BLOCK_SIZE;
-	memset(&itsImageData[addr],0x00,FL_BLOCK_SIZE);
+	int addr = (TS->flashBlocksInImage() - 1) * TS->flashBlockSize();
+	memset(&itsImageData[addr],0x00,TS->flashBlockSize());
 	
 	memcpy(&itsImageData[addr],&tbb_event.version,sizeof(uint32));
 	addr += sizeof(uint32); 
@@ -147,8 +127,8 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 
 	// set start of image, 1 image-set = 2 pages
 	itsImage  = tbb_event.image;
-	itsSector = (itsImage * FL_SECTORS_IN_IMAGE);
-	itsBlock  = (itsImage * FL_BLOCKS_IN_IMAGE); 
+	itsSector = (itsImage * TS->flashSectorsInImage());
+	itsBlock  = (itsImage * TS->flashBlocksInImage()); 
 	
 	itsPassword = tbb_event.password;
 	
@@ -157,145 +137,147 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	} else {
 		itsStage = erase_flash;
 	}
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
 void WritefCmd::sendTpEvent()
 {
-		switch (itsStage) {
+	switch (itsStage) {
 
-			case unprotect: {
-				TPUnprotectEvent tp_event;
-				tp_event.opcode = oc_UNPROTECT;
+		case unprotect: {
+			TPUnprotectEvent tp_event;
+			tp_event.opcode = oc_UNPROTECT;
+			tp_event.status = 0;
+			tp_event.password = itsPassword;
+			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+		} break;
+		
+		case erase_flash: {
+			if ((itsImage == 0) && (itsPassword != 0xfac)) {
+				TPErasefSpecEvent tp_event;
+				tp_event.opcode = oc_ERASEF_SPEC;
 				tp_event.status = 0;
-				tp_event.password = itsPassword;
+				tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
 				TS->boardPort(getBoardNr()).send(tp_event);
-				TS->boardPort(getBoardNr()).setTimer(TS->timeout());
-			} break;
-			
-			case erase_flash: {
-				if ((itsImage == 0) && (itsPassword != 0xfac)) {
-					TPErasefSpecEvent tp_event;
-					tp_event.opcode = oc_ERASEF_SPEC;
-					tp_event.status = 0;
-					tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
-					TS->boardPort(getBoardNr()).send(tp_event);
-				} else {
-					TPErasefEvent tp_event;
-					tp_event.opcode = oc_ERASEF;
-					tp_event.status = 0;
-					tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
-					TS->boardPort(getBoardNr()).send(tp_event);
-				}
-				TS->boardPort(getBoardNr()).setTimer(5.0); // erase time sector is 500 mSec
-			} break;
-			
-			// stage 2, write flash
-			case write_flash: {
-				// fill event with data and send
-				if ((itsImage == 0) && (itsPassword != 0xfac)) {
-					TPWritefSpecEvent tp_event;
-					tp_event.opcode = oc_WRITEF_SPEC;
-					tp_event.status = 0;
-					tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-					
-					//int ptr = itsBlock - (itsImage * FL_BLOCKS_IN_IMAGE);
-					for (int tp_an=0; tp_an < 256; tp_an++) {
-						tp_event.data[tp_an]  = itsImageData[itsDataPtr]; itsDataPtr++;
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
-					}
-					TS->boardPort(getBoardNr()).send(tp_event);
-				} else {
-					TPWritefEvent tp_event;
-					tp_event.opcode = oc_WRITEF;
-					tp_event.status = 0;
-					tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-					
-					//int ptr = itsBlock - (itsImage * FL_BLOCKS_IN_IMAGE);
-					for (int tp_an=0; tp_an < 256; tp_an++) {
-						tp_event.data[tp_an]  = itsImageData[itsDataPtr]; itsDataPtr++;
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
-						tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
-					}
-					TS->boardPort(getBoardNr()).send(tp_event);
-				}
+			} else {
+				TPErasefEvent tp_event;
+				tp_event.opcode = oc_ERASEF;
+				tp_event.status = 0;
+				tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
+				TS->boardPort(getBoardNr()).send(tp_event);
+			}
+			TS->boardPort(getBoardNr()).setTimer(5.0); // erase time sector is 500 mSec
+		} break;
+		
+		// stage 2, write flash
+		case write_flash: {
+			// fill event with data and send
+			if ((itsImage == 0) && (itsPassword != 0xfac)) {
+				TPWritefSpecEvent tp_event;
+				tp_event.opcode = oc_WRITEF_SPEC;
+				tp_event.status = 0;
+				tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
 				
-				TS->boardPort(getBoardNr()).setTimer(5.0);
-			} break;
+				for (int tp_an=0; tp_an < 256; tp_an++) {
+					tp_event.data[tp_an]  = itsImageData[itsDataPtr]; itsDataPtr++;
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
+				}
+				TS->boardPort(getBoardNr()).send(tp_event);
+			} else {
+				TPWritefEvent tp_event;
+				tp_event.opcode = oc_WRITEF;
+				tp_event.status = 0;
+				tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
+				
+				for (int tp_an=0; tp_an < 256; tp_an++) {
+					tp_event.data[tp_an]  = itsImageData[itsDataPtr]; itsDataPtr++;
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
+					tp_event.data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++;    
+				}
+				TS->boardPort(getBoardNr()).send(tp_event);
+			}
 			
-			// stage 3, verify flash
-			case verify_flash: {
-				TPReadfEvent tp_event;
-				tp_event.opcode = oc_READF;
-				tp_event.status = 0;
-				tp_event.addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
-				TS->boardPort(getBoardNr()).send(tp_event);
-				TS->boardPort(getBoardNr()).setTimer(5.0);
-			} break;
+			TS->boardPort(getBoardNr()).setTimer(5.0);
+		} break;
+		
+		// stage 3, verify flash
+		case verify_flash: {
+			TPReadfEvent tp_event;
+			tp_event.opcode = oc_READF;
+			tp_event.status = 0;
+			tp_event.addr = static_cast<uint32>(itsBlock * TS->flashBlockSize());
+			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->boardPort(getBoardNr()).setTimer(5.0);
+		} break;
 
-			case protect: {
-				TPProtectEvent tp_event;
-				tp_event.opcode = oc_PROTECT;
-				tp_event.status = 0;
-				TS->boardPort(getBoardNr()).send(tp_event);
-				TS->boardPort(getBoardNr()).setTimer(TS->timeout());
-			} break;
-		 
-			default : {
-			} break;
-		}
+		case protect: {
+			TPProtectEvent tp_event;
+			tp_event.opcode = oc_PROTECT;
+			tp_event.status = 0;
+			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+		} break;
+	 
+		default : {
+		} break;
+	}
 }
 
 // ----------------------------------------------------------------------------
 void WritefCmd::saveTpAckEvent(GCFEvent& event)
 {
 	if (event.signal == F_TIMER) {
-				itsStatus |= TBB_COMM_ERROR;
-				setDone(true);
+		setStatus(0, TBB_TIME_OUT);
+		setDone(true);
 	} else {
 		
 		switch (itsStage) {
 			
 			case unprotect: {
-				itsStage = erase_flash;
+				TPUnprotectAckEvent tp_ack(event);
+				LOG_DEBUG_STR(formatString("Received UnprotectAck from boardnr[%d]", getBoardNr()));
+				if (tp_ack.status != 0) {
+					setStatus(0, (TBB_FLASH_BAD_PASSWORD | (tp_ack.status << 24)));
+					setDone(true);
+				} else {
+					itsStage = erase_flash;
+				}
 			} break;
 			
 			case erase_flash: {
 				TPErasefAckEvent tp_ack(event);
-				
-				if (tp_ack.status == 0) {
-					//setSleepTime(0.50);
+				LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", getBoardNr()));
+				if (tp_ack.status != 0) {
+					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					setDone(true);
+				} else {
 					itsSector++;
-					if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_IMAGE)) {
+					if (itsSector == ((itsImage + 1) * TS->flashSectorsInImage())) {
 						itsStage = write_flash;
 					}   
-				} else {
-					itsStatus |= TBB_FLASH_ERROR;
-					LOG_DEBUG_STR("Received status > 0 (WritefCmd(erase_flash stage))");
-					setDone(true);
 				}
 			} break;
 			
 			case write_flash: {
 				TPWritefAckEvent tp_ack(event);
-					
-					if (tp_ack.status == 0) {
-						//setSleepTime(0.002);
-						itsBlock++;
-					} else {
-						itsStatus |= TBB_FLASH_ERROR;
-						LOG_DEBUG_STR("Received status > 0 (WritefCmd(write_flash stage))");
-						setDone(true);
-					}
-					
-					if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_IMAGE)) {
-						itsBlock  = (itsImage * FL_BLOCKS_IN_IMAGE);
+				LOG_DEBUG_STR(formatString("Received WritefAck from boardnr[%d]", getBoardNr()));	
+				if (tp_ack.status != 0) {
+					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					setDone(true);
+				} else {
+					itsBlock++;
+					if (itsBlock == ((itsImage + 1) * TS->flashBlocksInImage())) {
+						itsBlock  = (itsImage * TS->flashBlocksInImage());
 						itsDataPtr = 0; 
 						itsStage = verify_flash;    
 					}
+				}
 			} break;
 			
 			case verify_flash: {
@@ -303,9 +285,16 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 				uint32 testdata;
 				
 				TPReadfAckEvent tp_ack(event);
-				
-				if (tp_ack.status == 0) {
-					for (int i = 0; i < (FL_BLOCK_SIZE / 4); i++) {
+				LOG_DEBUG_STR(formatString("Received ReadfAck from boardnr[%d]", getBoardNr()));	
+				if (tp_ack.status != 0) {
+					setStatus(0, (TBB_FLASH_ERROR | (tp_ack.status << 24)));
+					if (itsImage == 0) {
+						itsStage = protect;
+					} else {
+						setDone(true);
+					}
+				} else {
+					for (int i = 0; i < (TS->flashBlockSize() / 4); i++) {
 						testdata  = itsImageData[itsDataPtr]; itsDataPtr++;
 						testdata |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
 						testdata |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
@@ -314,7 +303,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 						if (tp_ack.data[i] != testdata) {
 							LOG_DEBUG_STR(formatString("block(%d) uint32(%d) NOT same 0x%08X 0x%08X (WritefCmd(verify_flash stage))",
 																			itsBlock,i,tp_ack.data[i],testdata));
-							itsStatus |= TBB_FLASH_ERROR;
+							setStatus(0, TBB_FLASH_ERROR);
 							if (itsImage == 0) {
 								itsStage = protect;
 							} else {
@@ -323,25 +312,22 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 						}
 					}
 					itsBlock++;
-					if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_IMAGE)) {
+					if (itsBlock == ((itsImage + 1) * TS->flashBlocksInImage())) {
 						if (itsImage == 0) {
 							itsStage = protect;
 						} else {
 							setDone(true);
 						}
 					}
-				} else {
-					itsStatus |= TBB_FLASH_ERROR;
-					LOG_DEBUG_STR("Received status > 0 (WritefCmd(verify_flash stage))");
-					if ((itsImage == 0) && (itsPassword != 0xfac)) {
-						itsStage = protect;
-					} else {
-						setDone(true);
-					}
-				}
+				} 
 			} break;
 			
 			case protect: {
+				TPProtectAckEvent tp_ack(event);
+				LOG_DEBUG_STR(formatString("Received ProtectAck from boardnr[%d]", getBoardNr()));
+				if (tp_ack.status != 0) {
+					setStatus(0, (tp_ack.status << 24));
+				}
 				setDone(true);
 			} break;
 			
@@ -356,11 +342,7 @@ void WritefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBWriteImageAckEvent tbb_ack;
 	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

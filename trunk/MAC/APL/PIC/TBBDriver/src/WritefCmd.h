@@ -67,7 +67,6 @@ private:
 	TbbSettings *TS;
 	
 	flashStage	itsStage;
-	
 	int32		itsImage;
 	int32		itsSector;
 	int32		itsBlock;
@@ -77,9 +76,6 @@ private:
 	char		itsFileNameMp[64];
 	uint32	itsPassword;
 	uint8		*itsImageData; // data from hex files
-	
-	// return status
-	uint32	itsStatus;
 };
 
 	} // end TBB namespace

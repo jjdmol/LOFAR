@@ -38,9 +38,6 @@ ClearCmd::ClearCmd()
 {
 	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);		
 }
 	  
@@ -61,17 +58,9 @@ void ClearCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBClearEvent tbb_event(event);
 		
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (TS->isBoardActive(boardnr) == false) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
-	
-	// get first board
-	nextBoardNr();
+	nextBoardNr(); // get first board
 }
 
 // ----------------------------------------------------------------------------
@@ -88,18 +77,20 @@ void ClearCmd::sendTpEvent()
 // ----------------------------------------------------------------------------
 void ClearCmd::saveTpAckEvent(GCFEvent& event)
 {
-	TPClearAckEvent tp_ack(event);
-	
-	if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) 
-		itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));	
-	
-	// reset channel-information for selected board	
-	if (tp_ack.status == 0) {
-		TS->clearRcuSettings(getBoardNr());
-		TS->setBoardState(getBoardNr(),boardCleared);	
+	if (event.signal == F_TIMER) {
+		setStatus(getBoardNr(), TBB_TIME_OUT);
+	}	else {
+		TPClearAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
+		
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		} else {
+			// reset channel-information for selected board	
+			TS->clearRcuSettings(getBoardNr());
+			TS->setBoardState(getBoardNr(),boardCleared);	
+		}
 	}
-	LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
-	
 	nextBoardNr();
 	if (isDone()) {
 		setSleepTime(4.0);
@@ -111,12 +102,8 @@ void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBClearAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

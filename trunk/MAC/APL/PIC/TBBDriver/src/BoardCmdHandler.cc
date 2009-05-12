@@ -77,6 +77,9 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 				itsDone = false;
 				itsCmd->reset();
 				itsCmd->saveTbbEvent(event);
+				if (itsCmd->isDone()) {
+					itsDone = true;
+				}
 				TRAN(BoardCmdHandler::send_state);
 			}	else {
 				status = GCFEvent::NOT_HANDLED;
