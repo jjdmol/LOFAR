@@ -123,8 +123,34 @@ a) To see all script options (both general and test case specific) do:
      combination
    - via --pol a test can be ran on RCU x and/or RCU y of the AP.
    - There are 2 RCU per AP and 4 AP per RSP. In a station the RCUs are
-     numbered starting from 0. Hence e.g. RCU[64] = (rsp8, blp0, x) and
-     RCU[65] = (rsp8, blp0, y).
+     numbered starting from 0:
+     
+       . RCU[0]  = (rsp0, blp0, x)
+       . RCU[1]  = (rsp0, blp0, y)
+       . RCU[2]  = (rsp0, blp1, x)
+       . RCU[3]  = (rsp0, blp1, y)
+       . RCU[4]  = (rsp0, blp2, x)
+       . RCU[5]  = (rsp0, blp2, y)
+       . RCU[6]  = (rsp0, blp3, x)
+       . RCU[7]  = (rsp0, blp3, y)
+       . RCU[8]  = (rsp1, blp0, x)
+       . RCU[9]  = (rsp1, blp0, y)
+       .
+       . etc
+       .
+       . RCU[64] = (rsp8, blp0, x)
+       . RCU[65] = (rsp8, blp0, y)
+       . RCU[66] = (rsp8, blp1, x)
+       . RCU[67] = (rsp8, blp1, y)
+       . RCU[68] = (rsp8, blp2, x)
+       . RCU[69] = (rsp8, blp2, y)
+       . RCU[70] = (rsp8, blp3, x)
+       . RCU[71] = (rsp8, blp3, y)
+       . RCU[72] = (rsp9, blp0, x)
+       . RCU[73] = (rsp9, blp0, y)
+       .
+       . etc
+       .
   
 b) Classes:
    - mep.py defines class MepMessage
@@ -279,6 +305,22 @@ b) HBA server access
  python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py
                   --server 2 --server_access uc --server_function gw
 		  --server_reg delay_x --data 50,51
+	
+  To change the default server address 127 to operational server address # in
+  1-16 range, first be sure to set a free address, otherwise two servers in the
+  tile will have the same address and can not be controlled remotely anymore.
+  Use the following command to check whether server # = 1, 2, ... 16, or 127
+  exists in the tile on RSP 8, BLP 0:
+
+ python verify.py --brd rsp8 --fp blp0 -v 21 --te tc/hba_server.py
+                  --server # --server_access uc --server_function gb
+                  --server_reg address --data #
+
+  Then use the following command to change the default server address into #:
+  
+ python verify.py --brd rsp8 --fp blp0 -v 21 --te tc/hba_server.py
+                  --server 127 --server_access uc --server_function sb
+		              --server_reg address --data #
 		  
 c) Read version nummers of station hardware, firmware and software:
   - The RSP board version and BP and AP firmware versions: 'rspctl --version'.
