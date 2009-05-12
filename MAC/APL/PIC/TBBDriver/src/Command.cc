@@ -28,34 +28,160 @@
 
 using namespace LOFAR;
 using namespace TBB;
-			
+
+// ----------------------------------------------------------------------------
 Command::Command() : 
 	itsRetry(true), itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), 
-	itsChannel(-1), itsBoardMask(0), itsSleepTime(0)
+	itsChannel(-1), itsSleepTime(0)
 {
 	TS = TbbSettings::instance();
-}
-
-Command::~Command()
-{
-}
-
-// ----------------------------------------------------------------------------
-int32 Command::getBoardNr()
-{
-	return(itsBoard);
+	itsBoards.reset();
+	itsChannels.reset();
+	for (int i = 0 ; i < MAX_N_TBBOARDS; i++) {
+		itsStatus[i] = TBB_SUCCESS;
+	}
 }
 
 // ----------------------------------------------------------------------------
-int32 Command::getChannelNr()
+Command::~Command() { }
+
+// ----------------------------------------------------------------------------
+void Command::setBoard(int32 board)
 {
-	return(itsChannel);
+	if (board >= TS->maxBoards()) {
+		itsStatus[0] = TBB_NO_BOARD;
+	} else {
+
+		if (TS->isBoardReady(board) == false) {
+			itsStatus[0] = TBB_NOT_READY;
+		}
+
+		if (TS->isBoardActive(board) == false) {
+			itsStatus[0] = TBB_NOT_ACTIVE;
+		}
+				
+		if (itsStatus[0] == TBB_SUCCESS) {
+			itsBoards.set(board);
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------
-void Command::setBoardNr(int32 boardnr)
+void Command::setBoards(uint32 board_mask)
 {
-	itsBoard = boardnr;
+	for (int i = 0; i < MAX_N_TBBOARDS; i++) {
+		
+		if (i >= TS->maxBoards()) {
+			itsStatus[i] = TBB_NO_BOARD;
+			continue;
+		}
+		
+		if (board_mask & (1 << i)) {
+
+			if (TS->isBoardReady(i) == false) {
+				itsStatus[i] = TBB_NOT_READY;
+			}
+
+			if (TS->isBoardActive(i) == false) {
+				itsStatus[i] = TBB_NOT_ACTIVE;
+			}
+			
+			if (itsStatus[i] == TBB_SUCCESS) {
+				itsBoards.set(i);
+			}
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+void Command::setChannel(int32 rcu)
+{
+	// convert rcu-bitmask to tbb-channelmask
+	int32 board;         // board 0 .. 11
+	int32 board_channel; // board_channel 0 .. 15	
+	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)	
+	
+	TS->convertRcu2Ch(rcu,&board,&board_channel);
+	
+	if (board >= TS->maxBoards()) {
+		itsStatus[0] = TBB_NO_BOARD;
+	} else {
+		
+		if (TS->isBoardReady(board) == false) {
+			itsStatus[0] = TBB_NOT_READY;
+		}
+		
+		if (TS->isBoardActive(board) == false) {
+			itsStatus[0] = TBB_NOT_ACTIVE;
+		}
+			
+		if (itsStatus[0] == TBB_SUCCESS) {
+			itsBoards.set(board);
+			channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+			itsChannels.set(channel);
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+void Command::setChannels(std::bitset<MAX_N_RCUS> rcus)
+{
+	// convert rcu-bitmask to tbb-channelmask
+	int32 board;         // board 0 .. 11
+	int32 board_channel; // board_channel 0 .. 15	
+	int32 channel;       // channel 0 .. 191 (= maxboard * max_channels_on_board)	
+
+	for (int i = 0; i < MAX_N_RCUS; i++) {
+		TS->convertRcu2Ch(i,&board,&board_channel);
+		
+		if (board >= TS->maxBoards()) {
+			itsStatus[board] = TBB_NO_BOARD;
+			continue;
+		} 
+
+		if (rcus.test(i)) {
+	
+			if (TS->isBoardReady(board) == false) {
+				itsStatus[board] = TBB_NOT_READY;
+			}
+			
+			if (TS->isBoardActive(board) == false) {
+				itsStatus[board] = TBB_NOT_ACTIVE;
+			}
+	
+			if (itsStatus[board] == TBB_SUCCESS) {
+				itsBoards.set(board);
+				channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+				itsChannels.set(channel);
+			}
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+uint32 Command::getBoardChannels(int32 board)
+{
+	uint board_channels = 0;
+	int start_channel = board * TS->nrChannelsOnBoard(); 
+	for (int i = 0; i < TS->nrChannelsOnBoard(); i ++) {
+		if (itsChannels.test(start_channel + i)) {
+			board_channels |= (1 << i);
+		}
+	}
+	return(board_channels);
+}
+
+// ----------------------------------------------------------------------------	
+uint32 Command::getMpChannels(int32 board, int32 mp)
+{
+	uint mp_channels = 0;
+	int start_channel = (board * TS->nrChannelsOnBoard()) + (mp * TS->nrChannelsOnMp()); 
+	for (int i = 0; i < TS->nrChannelsOnMp(); i ++) {
+		if (itsChannels.test(start_channel + i)) {
+			mp_channels |= (1 << i);
+		}
+	}
+	return(mp_channels);
 }
 
 // ----------------------------------------------------------------------------
@@ -71,7 +197,9 @@ void Command::reset()
 	itsDone = false;
 	itsWaitAck = true;
 	itsBoard = -1;
-	itsChannel = -1;	
+	itsChannel = -1;
+	itsBoards.reset();
+	itsChannels.reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -86,90 +214,24 @@ void Command::setDone(bool done)
 }
 
 // ----------------------------------------------------------------------------
-void Command::resetBoardNr()
-{
-	itsBoard = -1;
-}
-
-// ----------------------------------------------------------------------------
-void Command::resetChannelNr()
-{
-	itsBoard = -1;
-}
-
-// ----------------------------------------------------------------------------
-bool Command::isDone()
-{
-	return(itsDone);
-}
-
-// ----------------------------------------------------------------------------
-bool Command::retry()
-{
-	return(itsRetry);
-}
-
-// ----------------------------------------------------------------------------			
-void Command::setRetry(bool retry)
-{
-	itsRetry = retry;
-}
-
-// ----------------------------------------------------------------------------
-bool Command::waitAck()
-{
-	return(itsWaitAck);
-}
-
-// ----------------------------------------------------------------------------			
-void Command::setWaitAck(bool waitack)
-{
-	itsWaitAck = waitack;
-}
-
-// ----------------------------------------------------------------------------
-void Command::setSleepTime(double sleeptime)
-{
-	itsSleepTime = sleeptime;
-}
-
-// ----------------------------------------------------------------------------
-double Command::getSleepTime()
-{
-	return (itsSleepTime);
-}
-
-// ----------------------------------------------------------------------------
-void Command::setBoardMask(uint32 mask)
-{
-	itsBoardMask = mask;
-}
-
-// ----------------------------------------------------------------------------
 void Command::nextBoardNr()
 {
 	bool validNr = false;
 	
 	do {
 		itsBoard++;
-		if (itsBoard < TS->maxBoards()) {
-			// see if board is active
-			if (TS->boardPort(itsBoard).isConnected() 
-						&& (TS->getBoardState(itsBoard) == boardReady)
-						&& (itsBoardMask & (1 << itsBoard))) 
-			{
-				validNr = true;
-			}
-		} else {
-			break;	
+		if (itsBoard == TS->maxBoards()) { break; }
+		itsChannel = itsBoard * TS->nrChannelsOnBoard();
+		if (itsBoards.test(itsBoard) && (itsStatus[itsBoard] == TBB_SUCCESS)) {
+			validNr = true;
 		}
-	} while (!validNr);
+	} while (validNr == false);
 		
 	// if all nr done send clear all variables
-	if (!validNr) {
+	if (validNr == false) {
 		itsDone = true;
 		itsBoard = -1;
-		itsBoardMask = 0;
+		itsChannel = -1;
 	}
 	LOG_DEBUG_STR(formatString("nextBoardNr() = %d",itsBoard));		
 }
@@ -181,65 +243,19 @@ void Command::nextChannelNr()
 	
 	do {
 		itsChannel++;
-		if (itsChannel == TS->maxChannels()) break;
+		if (itsChannel == TS->maxChannels()) { break; }
 		itsBoard = TS->getChBoardNr(itsChannel);
-		
-		if (itsBoard < TS->maxBoards()) {
-			// see if board is active 
-			if (	TS->boardPort(itsBoard).isConnected()
-						&& (TS->getBoardState(itsBoard) == boardReady)
-						&& (itsChannel < TS->maxChannels())) 
-			{
-				validNr = true;
-			}
-		} else {
-			break;	
+		if (itsChannels.test(itsChannel)  && (itsStatus[itsBoard] == TBB_SUCCESS)) {
+			validNr = true;
 		}
-	} while (!validNr && (itsChannel < TS->maxChannels()));
+	} while (validNr == false);
 		
 	// if all nr done send clear all variables
-	if (!validNr) {
+	if (validNr == false) {
 		itsDone = true;
+		itsBoard = -1;
 		itsChannel = -1;
-		for (int ch = 0; ch < TS->maxChannels(); ch++) {
-			TS->setChSelected(ch, false);
-		}
 	}
 	LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));	
 }
 
-// ----------------------------------------------------------------------------
-// only channels with a state different than 'F' are selected
-void Command::nextSelectedChannelNr()
-{
-	bool validNr = false;
-	
-	do {
-		itsChannel++;
-		if (itsChannel == TS->maxChannels()) break;
-		itsBoard = TS->getChBoardNr(itsChannel);
-
-		if (itsBoard < TS->maxBoards()) {
-			// see if board is active and channel is selected
-			if (TS->boardPort(itsBoard).isConnected()
-						&& (TS->getBoardState(itsBoard) == boardReady)
-						&& (itsChannel < TS->maxChannels()) 
-						&& TS->isChSelected(itsChannel)) 
-			{
-				validNr = true;
-			}
-		} else {
-			break;	
-		}
-	} while (!validNr && (itsChannel < TS->maxChannels()));
-		
-	// if all nr done send clear all variables
-	if (!validNr) {
-		itsDone = true;
-		itsChannel = -1;
-		for (int ch = 0; ch < TS->maxChannels(); ch++) {
-			TS->setChSelected(ch, false);
-		}
-	}
-	LOG_DEBUG_STR(formatString("nextSelectedChannelNr() = %d",itsChannel));	
-}

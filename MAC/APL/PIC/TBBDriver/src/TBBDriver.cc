@@ -190,6 +190,11 @@ TBBDriver::TBBDriver(string name)
 
 	itsResetCount = new int32[TS->maxBoards()];
 	memset(itsResetCount,0,sizeof(int32)*TS->maxBoards());
+	
+	// set Tbb queue
+	LOG_DEBUG_STR("initializing TbbQueue");
+	itsTbbQueue = new deque<TbbEvent*>(100);
+	itsTbbQueue->clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -200,6 +205,7 @@ TBBDriver::~TBBDriver()
 	delete itsSetupTimer;
 	delete itsCmdHandler;
 	delete itsMsgHandler;
+	delete itsTbbQueue;
 	delete [] itsResetCount;
 	if (itsCmd) delete itsCmd;
 }
@@ -237,8 +243,8 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		default: {
-			if (isTbbCommand(event.signal)) {
-				status = GCFEvent::NEXT_STATE;
+			if (addTbbCommandToQueue(event, port)) {
+				LOG_DEBUG_STR("init_state: received TBB cmd, and put on queue");
 			} else {
 				status = GCFEvent::NOT_HANDLED;
 			}
@@ -252,7 +258,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	//LOG_DEBUG_STR ("setup_state:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("setup_state:" << eventName(event) << "@" << port.getName());
 
 	static bool setupDone;
 	static int* retries;
@@ -270,6 +276,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		} break;
 
 		case F_ENTRY: {
+			LOG_DEBUG_STR("Entering setup_state");
 			itsSaveTimer->cancelAllTimers();
 			itsAliveTimer->cancelAllTimers();
 			retries = new int[TS->maxBoards()];
@@ -469,8 +476,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 		} break;
 
 		default: {
-			if (isTbbCommand(event.signal)) {
-				status = GCFEvent::NEXT_STATE;
+			if (addTbbCommandToQueue(event, port)) {
+				LOG_DEBUG_STR("setup_state: received TBB cmd, and put on queue");
 			} else {
 				status = GCFEvent::NOT_HANDLED;
 			}
@@ -486,8 +493,10 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR("idle:" << eventName(event) << "@" << port.getName());
-
+	LOG_DEBUG_STR("idle_state:" << eventName(event) << "@" << port.getName());
+	
+	static bool busy;
+			
 	switch(event.signal) {
 		case F_INIT: {
 		} break;
@@ -496,13 +505,48 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_ENTRY: {
-			LOG_DEBUG_STR("Entering Idle State");
-
+			LOG_DEBUG_STR("Entering idle_state");
+			busy = false;
 			// if board setup needed
 			if ((itsAliveCheck == false) && TS->boardSetupNeeded()) {
 				LOG_DEBUG_STR("need boards setup");
 				TRAN(TBBDriver::setup_state);
 				break;
+			}
+			if (itsClientList.empty()) {
+				itsTbbQueue->clear();
+				LOG_DEBUG_STR("Client list is empty, the queue is cleared");
+			}
+      
+      // look if there is an Tbb command in queue 
+			if (!itsTbbQueue->empty()) {
+				LOG_DEBUG_STR("The queue is NOT empty");
+      
+				uint8* bufptr = new uint8[sizeof(GCFEvent) + itsTbbQueue->front()->length];
+        
+				GCFEvent* e = new (bufptr) GCFEvent;
+				memcpy(e, &(itsTbbQueue->front()->event), itsTbbQueue->front()->length);
+        
+        
+				LOG_DEBUG_STR("queue:" << eventName(*e) << "@" << (*itsTbbQueue->front()->port).getName());
+        
+				if (SetTbbCommand(e->signal)) {
+					busy = true;
+					status = itsCmdHandler->doEvent(*e,*itsTbbQueue->front()->port);
+          // delete e;
+
+					TbbEvent* tmp = itsTbbQueue->front();
+					itsTbbQueue->pop_front();
+					delete tmp;
+
+					TRAN(TBBDriver::busy_state);
+				} else {
+					sendInfo(*e, *itsTbbQueue->front()->port);
+          
+					TbbEvent* tmp = itsTbbQueue->front();
+					itsTbbQueue->pop_front();
+					delete tmp;
+				}
 			}
 		} break;
 
@@ -601,13 +645,24 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		default: {
-			// look if the event is a Tbb event
-			if (SetTbbCommand(event.signal)) {
-				status = itsCmdHandler->doEvent(event,port);
-				TRAN(TBBDriver::busy_state);
+			
+			// look if there is already a command running
+			if (busy) {
+				if (addTbbCommandToQueue(event, port)) {
+					LOG_DEBUG_STR("idle_state: received TBB cmd, and put on queue");
+				} else {
+					status = GCFEvent::NOT_HANDLED;
+				}
 			} else {
-				// if not a Tbb event, return not-handled
-				status = GCFEvent::NOT_HANDLED;
+				// look if the event is a Tbb event
+				if (SetTbbCommand(event.signal)) {
+					busy = true;
+					status = itsCmdHandler->doEvent(event,port);
+					TRAN(TBBDriver::busy_state);
+				} else {
+					// if not a Tbb event, return not-handled
+					status = GCFEvent::NOT_HANDLED;
+				}
 			}
 		} break;
 	}
@@ -632,6 +687,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		case F_ENTRY: {
+			LOG_DEBUG_STR("Entering busy_state");
 			if (itsCmdHandler->tpCmdDone()) {
 				TRAN(TBBDriver::idle_state);
 			}
@@ -640,13 +696,16 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		case F_ACCEPT_REQ: {
 			GCFTCPPort* client = new GCFTCPPort();
 			client->init(*this, "client", GCFPortInterface::SPP, TBB_PROTOCOL);
-				itsAcceptor.accept(*client);
-		} break;
+			itsAcceptor.accept(*client);
+			itsClientList.push_back(client);
 
+			LOG_DEBUG_STR("NEW CLIENT CONNECTED: " << itsClientList.size() << " clients connected");
+		} break;
+		
 		case F_CONNECTED: {
 			LOG_DEBUG_STR("CONNECTED: port '" << port.getName() << "'");
 		} break;
-
+		
 		case F_DISCONNECTED: {
 			LOG_DEBUG_STR("DISCONNECTED: port '" << port.getName() << "'");
 			port.close();
@@ -697,12 +756,12 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			TBBSubscribeAckEvent subscribeack;
 			port.send(subscribeack);
 		} break;
-
+		
 		case TBB_UNSUBSCRIBE: {
 			itsMsgHandler->removeTriggerClient(port);
 			itsMsgHandler->removeHardwareClient(port);
 		} break;
-
+		
 		case TP_TRIGGER: {
 			for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 				if (&port == &TS->boardPort(boardnr)) {
@@ -758,8 +817,8 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 		} break;
 
 		default: {
-			if (isTbbCommand(event.signal)) {
-				status = GCFEvent::NEXT_STATE;
+			if (addTbbCommandToQueue(event, port)) {
+				LOG_DEBUG_STR("busy_state: received TBB cmd, and put on queue");
 			} else {
 				status = GCFEvent::NOT_HANDLED;
 			}
@@ -968,9 +1027,11 @@ bool TBBDriver::sendInfo(GCFEvent& event, GCFPortInterface& port)
 }
 
 //-----------------------------------------------------------------------------
-bool TBBDriver::isTbbCommand(unsigned short signal)
+bool TBBDriver::addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port)
 {
-	switch(signal)
+	bool event_saved;
+	
+	switch(event.signal)
 	{
 		case TBB_GET_CONFIG:
 		case TBB_RCU_INFO:
@@ -1009,13 +1070,28 @@ bool TBBDriver::isTbbCommand(unsigned short signal)
 		case TBB_CEP_DELAY:
 		case TBB_WATCHDOG:
 		case TBB_TEMP_LIMIT: {
-			return(true);
+			// put event on the queue
+			LOG_DEBUG_STR("Put event on queue");
+          
+			uint8* bufptr = new uint8[sizeof(GCFPortInterface*) 
+					+ sizeof(uint32)
+					+ sizeof(GCFEvent) 
+					+ event.length];
+			TbbEvent* tbbevent = new (bufptr) TbbEvent;
+      
+			memcpy(&(tbbevent->event), &event, (sizeof(GCFEvent) + event.length));      
+			tbbevent->length = sizeof(GCFEvent) + event.length;
+			tbbevent->port = &port;
+      
+			itsTbbQueue->push_back(tbbevent);
+			event_saved = true;
 		} break;
 
 		default: {
-			return(false);
+			event_saved = false;
 		} break;
 	}
+	return(event_saved);
 }
 
 //-----------------------------------------------------------------------------

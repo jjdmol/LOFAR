@@ -50,33 +50,33 @@ public:
 
 	virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
 	
-	bool retry();
+	bool retry() { return(itsRetry); }
 	
-	void setRetry(bool retry);
+	void setRetry(bool retry) { itsRetry = retry; }
 
-	bool waitAck();
+	bool waitAck() { return(itsWaitAck); }
 	
-	void setWaitAck(bool waitack);
+	void setWaitAck(bool waitack) { itsWaitAck = waitack; }
 	
-	void setSleepTime(double sleeptime);
+	void setSleepTime(double sleeptime) { itsSleepTime = sleeptime; }
 	
-	double	getSleepTime();
+	double getSleepTime() { return (itsSleepTime); }
 	
 	void reset();
 	
-	bool isDone();
+	bool isDone() { return(itsDone); }
 	
 	void setDone(bool done);
 	
-	void resetBoardNr();
+	void resetBoardNr() { itsBoard = -1; }
 	
-	void resetChannelNr();
+	void resetChannelNr() { itsChannel = -1; }
 	
-	int32 getBoardNr();
+	int32 getBoardNr() { return(itsBoard); }
 	
-	int32 getChannelNr();
+	int32 getChannelNr() { return(itsChannel); }
 	
-	void setBoardNr(int32 boardnr);
+	void setBoardNr(int32 boardnr) { itsBoard = boardnr; }
 	
 	void setChannelNr(int32 channelnr);
 		
@@ -86,19 +86,41 @@ public:
 	
 	void nextSelectedChannelNr();
 	
-	void setBoardMask(uint32 mask);
+	void setBoard(int32 board);
+	
+	void setBoards(uint32 board_mask);
+	
+	void setChannel(int32 rcu);
+	
+	void setChannels(std::bitset<MAX_N_RCUS> rcus);
+	
+	void incChannelNr(int32 inc) { itsChannel += (inc - 1); }
+	
+	uint32 getBoardChannels(int32 board);
+	
+	uint32 getMpChannels(int32 board, int32 mp);
+	
+	
+	uint32 getStatus(int32 board) { return(itsStatus[board]); }
+	
+	void setStatus(int32 board, uint32 status) { itsStatus[board] = status; }
+	
+	void addStatus(int32 board, uint32 status) { itsStatus[board] |= status; }
 	
 private:
 	TbbSettings *TS;
 	
-	bool		itsRetry;		// true if resending of a command is needed
-	bool		itsWaitAck;		// true if an ack is expected
-	bool		itsDone;			// true if the command is completed
-	bool		itsAllPorts;	// true if command must be send to all available ports
-	int32		itsBoard;
-	int32		itsChannel;
-	uint32	itsBoardMask;
-	double	itsSleepTime;
+	bool   itsRetry;    // true if resending of a command is needed
+	bool   itsWaitAck;  // true if an ack is expected
+	bool   itsDone;     // true if the command is completed
+	bool   itsAllPorts; // true if command must be send to all available ports
+	int32  itsBoard;    // board to handle
+	int32  itsChannel;  // channel to handle
+	
+	std::bitset<MAX_N_TBBOARDS> itsBoards;
+	std::bitset<MAX_N_RCUS> itsChannels;
+	uint32 itsStatus[MAX_N_TBBOARDS];
+	double itsSleepTime;
 };
 	} // end TBB namespace
 } // end LOFAR namespace

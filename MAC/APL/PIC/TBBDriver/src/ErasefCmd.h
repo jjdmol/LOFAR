@@ -59,7 +59,6 @@ public:
 	      
 private:
 	TbbSettings *TS;
-	uint32 itsStatus;
 	int32 itsImage;
 	int32 itsSector;
 };

@@ -59,7 +59,6 @@ public:
 	      
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
 	uint32 itsV12[MAX_N_TBBOARDS];
 	uint32 itsV25[MAX_N_TBBOARDS];
 	uint32 itsV33[MAX_N_TBBOARDS];

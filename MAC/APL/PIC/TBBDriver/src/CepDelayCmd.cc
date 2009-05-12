@@ -38,10 +38,6 @@ CepDelayCmd::CepDelayCmd():
 {
 	TS = TbbSettings::instance();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		// fill in extra code
-		itsStatus[boardnr] = TBB_NO_BOARD;
-	}
 	setWaitAck(true);
 }
   
@@ -62,19 +58,10 @@ void CepDelayCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBCepDelayEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
-	
+	setBoards(tbb_event.boardmask);
 	itsDelay = tbb_event.delay;
-	 
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) {
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-		}
-	}
 	
-	// select first board
-	nextBoardNr();
+	nextBoardNr(); // select first board
 }
 
 // ----------------------------------------------------------------------------
@@ -94,17 +81,14 @@ void CepDelayCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPCepDelayAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received CepDelayAck from boardnr[%d]", getBoardNr()));
 		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));	
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
 		}
-
-		// fill in extra code 
-		LOG_DEBUG_STR(formatString("XxxCmd: board[%d] %08X",
-				getBoardNr(),itsStatus[getBoardNr()]));
 	}
 	nextBoardNr();
 }
@@ -114,12 +98,8 @@ void CepDelayCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBCepDelayAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
 	}
 
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

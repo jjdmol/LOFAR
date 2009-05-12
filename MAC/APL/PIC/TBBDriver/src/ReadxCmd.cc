@@ -34,7 +34,7 @@ using	namespace TBB;
 
 //--Constructors for a ReadxCmd object.----------------------------------------
 ReadxCmd::ReadxCmd():
-	itsStatus(0),itsMp(0), itsPid(0), itsRegId(0), itsPageLength(0), itsPageAddr(0)
+	itsMp(0), itsPid(0), itsRegId(0), itsPageLength(0), itsPageAddr(0)
 {
 	TS = TbbSettings::instance();
 	for (int32 an = 0; an < 256;an++) {
@@ -60,12 +60,7 @@ void ReadxCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBReadxEvent tbb_event(event);
 	
-	if (TS->isBoardActive(tbb_event.board)) {	
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
+	setBoard(tbb_event.board);
 
 	// initialize TP send frame
 	itsMp         = static_cast<uint32>(tbb_event.mp);
@@ -73,6 +68,8 @@ void ReadxCmd::saveTbbEvent(GCFEvent& event)
 	itsRegId      = static_cast<uint32>(tbb_event.regid);
 	itsPageLength = tbb_event.pagelength;
 	itsPageAddr   = tbb_event.pageaddr;
+	
+	nextBoardNr();
 }
 
 
@@ -103,20 +100,18 @@ void ReadxCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
 	} else {
 		TPReadxAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received ReadxAck from boardnr[%d]", getBoardNr()));
 		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus |= (1 << (16 + (tp_ack.status & 0x0F)));
-		}
-		if (tp_ack.status == 0) {
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
+		} else {
 			for (int32 an = 0; an < 256;an++) {
 				itsData[an]	= tp_ack.pagedata[an];
 			}
 		}
-		
-		LOG_DEBUG_STR(formatString("Received ReadxAck from boardnr[%d]", getBoardNr()));
 	}
 	setDone(true);
 }
@@ -126,11 +121,7 @@ void ReadxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBReadxAckEvent tbb_ack;
 	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 
 	for (int32 an = 0; an < 256;an++) {
 		tbb_ack.pagedata[an] = itsData[an];

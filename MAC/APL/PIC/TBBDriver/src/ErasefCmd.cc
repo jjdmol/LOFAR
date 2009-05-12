@@ -26,30 +26,15 @@
 
 #include "ErasefCmd.h"
 
-
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
 using	namespace TBB;
-// information about the flash memory
-static const int FL_SIZE            = 64 * 1024 *1024; // 64 MB in bytes
-static const int FL_N_SECTORS       = 512; // 512 sectors in flash
-static const int FL_N_BLOCKS        = 65536; // 65336 blocks in flash
-static const int FL_N_IMAGES        = 16; // 16 images in flash
-
-static const int FL_IMAGE_SIZE      = FL_SIZE / FL_N_IMAGES; // 4194304 bytes  
-static const int FL_SECTOR_SIZE     = FL_SIZE / FL_N_SECTORS; // 131.072 bytes
-static const int FL_BLOCK_SIZE      = FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
-
-static const int FL_SECTORS_IN_IMAGE = FL_IMAGE_SIZE / FL_SECTOR_SIZE; // 32 sectors per image
-static const int FL_BLOCKS_IN_SECTOR = FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
-static const int FL_BLOCKS_IN_IMAGE  = FL_IMAGE_SIZE / FL_BLOCK_SIZE; // 4096 blocks per image
-
 
 //--Constructors for a ErasefCmd object.----------------------------------------
 ErasefCmd::ErasefCmd():
-		itsStatus(0), itsImage(0),itsSector(0)
+		itsImage(0),itsSector(0)
 {
 	TS = TbbSettings::instance();
 	
@@ -73,16 +58,12 @@ void ErasefCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBEraseImageEvent tbb_event(event);
 	
-	itsStatus = 0;	
-	if (TS->isBoardActive(tbb_event.board)) {	
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
+	setBoard(tbb_event.board);
 	
 	itsImage = tbb_event.image;
-	itsSector = (itsImage * FL_SECTORS_IN_IMAGE);
+	itsSector = (itsImage * TS->flashSectorsInImage());
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -92,7 +73,7 @@ void ErasefCmd::sendTpEvent()
 	tp_event.opcode = oc_ERASEF;
 	tp_event.status = 0;
 	
-	tp_event.addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
+	tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
 	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout()); // erase time of sector = 500 mSec
 }
@@ -104,19 +85,20 @@ void ErasefCmd::saveTpAckEvent(GCFEvent& event)
 	
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
+		setDone(true);
 	} else {
 		TPErasefAckEvent tp_ack(event);
-		
-		if (tp_ack.status == 0) {
-			itsSector++; 
-			
-			if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_IMAGE)) {
-				setDone(true);
-			}
-		} else {
-			LOG_DEBUG_STR("Received status > 0  (ErasefCmd)");
+		LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", getBoardNr()));
+				
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
 			setDone(true);
+		} else {
+			itsSector++;
+			if (itsSector == ((itsImage + 1) * TS->flashSectorsInImage())) {
+				setDone(true);
+			} 
 		}
 	}
 }
@@ -126,11 +108,7 @@ void ErasefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBEraseImageAckEvent tbb_ack;
 	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

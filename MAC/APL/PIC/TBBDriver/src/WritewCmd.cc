@@ -34,7 +34,7 @@ using	namespace TBB;
 
 //--Constructors for a WritewCmd object.----------------------------------------
 WritewCmd::WritewCmd():
-		itsStatus(0), itsMp(0), itsAddr(0)
+		itsMp(0), itsAddr(0)
 {
 	TS = TbbSettings::instance();
 	for (int i = 0; i < 8; i++) {
@@ -44,10 +44,7 @@ WritewCmd::WritewCmd():
 }
 
 //--Destructor for WritewCmd.---------------------------------------------------
-WritewCmd::~WritewCmd()
-{
-
-}
+WritewCmd::~WritewCmd() { }
 
 // ----------------------------------------------------------------------------
 bool WritewCmd::isValid(GCFEvent& event)
@@ -63,17 +60,14 @@ void WritewCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBWritewEvent tbb_event(event);
 	
-	if (TS->isBoardActive(tbb_event.board)) {	
-		setBoardNr(tbb_event.board);
-		itsMp = static_cast<uint32>(tbb_event.mp);
-		itsAddr = tbb_event.addr;
-		for (int i = 0; i < 8; i++) {
-			itsData[i] = tbb_event.word[i];
-		}
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
+	setBoard(tbb_event.board);
+	itsMp = static_cast<uint32>(tbb_event.mp);
+	itsAddr = tbb_event.addr;
+	for (int i = 0; i < 8; i++) {
+		itsData[i] = tbb_event.word[i];
 	}
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -97,13 +91,15 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
 	}
 	else {
 		TPWritewAckEvent tp_ack(event);
-		
-		itsStatus = tp_ack.status;
 		LOG_DEBUG_STR(formatString("Received WritewAck from boardnr[%d]", getBoardNr()));
+		
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
+		}
 	}
 	setDone(true);
 }
@@ -113,11 +109,7 @@ void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBWritewAckEvent tbb_ack;
 	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}
+	tbb_ack.status_mask = getStatus(0);
 
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
 }

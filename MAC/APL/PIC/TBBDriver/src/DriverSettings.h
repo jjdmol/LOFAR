@@ -34,14 +34,13 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 210; // 2.10 
+static const int DRIVER_VERSION = 212; // 2.10 
 
 enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, watchdogSet, freeBoard, boardFreed, boardReady, boardError};
 
 // info for all channels
 struct ChannelInfo
 {
-	bool   Selected;
 	uint32 Status;
 	char   State;
 	int32  RcuNr;
@@ -93,12 +92,12 @@ public:
 	int32 nrMpsOnBoard();
 	int32 nrChannelsOnMp();
 	int32 nrChannelsOnBoard();
-	int32 flashMaxPages();
-	int32 flashSectorsInPage();
-	int32 flashBlocksInPage();
-	int32 flashPageSize();
-	int32 flashPageSectorSize();
-	int32 flashPageBlockSize();
+	int32 flashMaxImages();
+	int32 flashSectorsInImage();
+	int32 flashBlocksInImage();
+	int32 flashImageSize();
+	int32 flashSectorSize();
+	int32 flashBlockSize();
 	uint32 activeBoardsMask();
 	int32 maxRetries();
 	double timeout();
@@ -107,11 +106,11 @@ public:
 		
 	uint32 getChStatus(int32 channelnr);
 	char getChState(int32 channelnr);
-	bool isChSelected(int32 channelnr);
 	int32 getChRcuNr(int32 channelnr);
 	int32 getChBoardNr(int32 channelnr);
 	int32 getChInputNr(int32 channelnr);
 	int32 getChMpNr(int32 channelnr);
+	int32 getFirstChannelNr(int32 board, int32 mp);
 	uint32 getChStartAddr(int32 channelnr);
 	uint32 getChPageSize(int32 channelnr);
 	bool isChTriggerReleased(int32 channelnr);
@@ -140,7 +139,6 @@ public:
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
 
-	void setChSelected(int32 channelnr, bool selected);
 	void setChStatus(int32 channelnr, uint32 status);
 	void setChState(int32 channelnr, char state);
 	void setChStartAddr(int32 channelnr, uint32 startaddr);
@@ -161,6 +159,7 @@ public:
 	void convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr);
 	void convertCh2Rcu(int32 channelnr, int32 *rcunr);
 	bool isBoardActive(int32 boardnr);
+	bool isBoardReady(int32 boardnr);
 	void logChannelInfo(int32 channel);
 		
 	uint32 getMemorySize(int32 boardnr);
@@ -192,12 +191,12 @@ private:
 	int32  itsMpsOnBoard;
 	int32  itsChannelsOnMp;
 	int32  itsChannelsOnBoard;
-	int32  itsFlashMaxPages;
-	int32  itsFlashSectorsInPage;
-	int32  itsFlashBlocksInPage;
-	int32  itsFlashPageSize;
-	int32  itsFlashPageSectorSize;
-	int32  itsFlashPageBlockSize;
+	int32  itsFlashMaxImages;
+	int32  itsFlashSectorsInImage;
+	int32  itsFlashBlocksInImage;
+	int32  itsFlashImageSize;
+	int32  itsFlashSectorSize;
+	int32  itsFlashBlockSize;
 	int32  itsMaxRetries;
 	double itsTimeOut;
 	int32  itsSaveTriggersToFile;
@@ -213,8 +212,6 @@ private:
 	
 	static TbbSettings *theirTbbSettings;
 };
-
-
 	
 //# --- inline functions ---
 inline	int32 TbbSettings::driverVersion() { return (itsDriverVersion); }
@@ -223,12 +220,12 @@ inline	int32 TbbSettings::maxChannels() { return (itsMaxChannels); }
 inline	int32 TbbSettings::nrMpsOnBoard() { return (itsMpsOnBoard); }
 inline	int32 TbbSettings::nrChannelsOnMp() { return (itsChannelsOnMp); }
 inline	int32 TbbSettings::nrChannelsOnBoard() { return (itsChannelsOnBoard); }
-inline	int32 TbbSettings::flashMaxPages() { return (itsFlashMaxPages); }
-inline	int32 TbbSettings::flashSectorsInPage() { return (itsFlashSectorsInPage); }
-inline	int32 TbbSettings::flashBlocksInPage() { return (itsFlashBlocksInPage); }
-inline	int32 TbbSettings::flashPageSize() { return (itsFlashPageSize); }
-inline	int32 TbbSettings::flashPageSectorSize() { return (itsFlashPageSectorSize); }
-inline	int32 TbbSettings::flashPageBlockSize() { return (itsFlashPageBlockSize); }
+inline	int32 TbbSettings::flashMaxImages() { return (itsFlashMaxImages); }
+inline	int32 TbbSettings::flashSectorsInImage() { return (itsFlashSectorsInImage); }
+inline	int32 TbbSettings::flashBlocksInImage() { return (itsFlashBlocksInImage); }
+inline	int32 TbbSettings::flashImageSize() { return (itsFlashImageSize); }
+inline	int32 TbbSettings::flashSectorSize() { return (itsFlashSectorSize); }
+inline	int32 TbbSettings::flashBlockSize() { return (itsFlashBlockSize); }
 inline	uint32 TbbSettings::activeBoardsMask()	{ return (itsActiveBoardsMask);   }
 inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
@@ -239,7 +236,6 @@ inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
 inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
 
 //---- inline functions for channel information ------------
-inline	bool TbbSettings::isChSelected(int32 channelnr) { return (itsChannelInfo[channelnr].Selected); }
 inline	uint32 TbbSettings::getChStatus(int32 channelnr) { return (itsChannelInfo[channelnr].Status); }
 inline	char TbbSettings::getChState(int32 channelnr) { return (itsChannelInfo[channelnr].State); }
 inline	int32 TbbSettings::getChRcuNr(int32 channelnr) { return (itsChannelInfo[channelnr].RcuNr); }
@@ -265,7 +261,6 @@ inline	string TbbSettings::getSrcMac(int32 boardnr) { return(itsBoardInfo[boardn
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
 
-inline	void TbbSettings::setChSelected(int32 channelnr, bool selected) { itsChannelInfo[channelnr].Selected = selected; }
 inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannelInfo[channelnr].Status = status; }
 inline	void TbbSettings::setChState(int32 channelnr, char state){ itsChannelInfo[channelnr].State = state; }
 inline	void TbbSettings::setChStartAddr(int32 channelnr, uint32 startaddr){ itsChannelInfo[channelnr].StartAddr = startaddr; }
@@ -287,6 +282,7 @@ inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boar
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
 inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
+inline	bool TbbSettings::isBoardReady(int32 boardnr) { return(itsBoardInfo[boardnr].boardState == boardReady); }
 	 
 	} // namespace TBB
 } // namespace LOFAR

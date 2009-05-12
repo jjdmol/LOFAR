@@ -59,7 +59,6 @@ public:
 	
 private:
 	TbbSettings *TS;
-	uint32 itsStatus;
 	uint32 itsMp;
 	uint32 itsPid;
 	uint32 itsRegId;

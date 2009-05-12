@@ -60,11 +60,7 @@ public:
 private:
 	TbbSettings *TS;
 	
-	uint32 itsStatus[MAX_N_TBBOARDS];
-	int32  itsBoardNr;
-	uint32 itsChannelMask[MAX_N_TBBOARDS];
 	int32  itsChannels;
-	uint32 itsRcuStatus;
 };
 
 	} // end TBB namespace

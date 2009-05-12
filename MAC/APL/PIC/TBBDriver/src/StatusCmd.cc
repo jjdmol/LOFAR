@@ -37,7 +37,6 @@ StatusCmd::StatusCmd()
 	TS = TbbSettings::instance();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBOARDS;boardnr++) { 
-		itsStatus[boardnr] = TBB_NO_BOARD;
 		itsV12[boardnr] = 0;
 		itsV25[boardnr] = 0;
 		itsV33[boardnr] = 0;
@@ -55,10 +54,7 @@ StatusCmd::StatusCmd()
 }
 	  
 //--Destructor for StatusCmd.---------------------------------------------------
-StatusCmd::~StatusCmd()
-{
-
-}
+StatusCmd::~StatusCmd() { }
 
 // ----------------------------------------------------------------------------
 bool StatusCmd::isValid(GCFEvent& event)
@@ -74,16 +70,9 @@ void StatusCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBStatusEvent tbb_event(event);
 	
-	setBoardMask(tbb_event.boardmask);
+	setBoards(tbb_event.boardmask);
 	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		itsStatus[boardnr] = 0;
-		if (!TS->isBoardActive(boardnr)) 
-			itsStatus[boardnr] |= TBB_NO_BOARD;
-	}	
-		
-	// select first boards
-	nextBoardNr();
+	nextBoardNr(); // select first boards
 }
 
 // ----------------------------------------------------------------------------
@@ -102,14 +91,14 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus[getBoardNr()] |= TBB_COMM_ERROR;
+		setStatus(getBoardNr(), TBB_TIME_OUT);
 	}	else {
 		TPStatusAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received StatusAck from boardnr[%d]", getBoardNr()));
 		
-		if ((tp_ack.status >= 0xF0) && (tp_ack.status <= 0xF6)) {
-			itsStatus[getBoardNr()] |= (1 << (16 + (tp_ack.status & 0x0F)));
-		}
-		if (tp_ack.status == 0) {
+		if (tp_ack.status != 0) {
+			setStatus(getBoardNr(), (tp_ack.status << 24));
+		} else {
 			itsV12[getBoardNr()]  = tp_ack.V12;
 			itsV25[getBoardNr()]  = tp_ack.V25;
 			itsV33[getBoardNr()]  = tp_ack.V33;
@@ -122,11 +111,11 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsImage[getBoardNr()] = (tp_ack.info[5] & 0xf);
 			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
+				
+			LOG_INFO_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
+												tp_ack.info[0], tp_ack.info[5], tp_ack.info[6], 
+												tp_ack.info[7], tp_ack.info[8], tp_ack.info[9]));
 		}
-		LOG_DEBUG_STR(formatString("Received StatusAck from boardnr[%d]", getBoardNr()));
-		
-		LOG_INFO_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
-			tp_ack.info[0], tp_ack.info[5], tp_ack.info[6], tp_ack.info[7], tp_ack.info[8], tp_ack.info[9]));
 	}
 	nextBoardNr();
 }
@@ -136,24 +125,20 @@ void StatusCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBStatusAckEvent tbb_ack;
 	
-	for (int32 boardnr = 0; boardnr < MAX_N_TBBOARDS; boardnr++) { 
-		if (itsStatus[boardnr] == 0) {
-			tbb_ack.status_mask[boardnr] = TBB_SUCCESS;
-		} else {
-			tbb_ack.status_mask[boardnr] = itsStatus[boardnr];
-		}
-		tbb_ack.V12[boardnr]  = itsV12[boardnr];
-		tbb_ack.V25[boardnr]  = itsV25[boardnr];
-		tbb_ack.V33[boardnr]  = itsV33[boardnr];
-		tbb_ack.Tpcb[boardnr] = itsTpcb[boardnr];
-		tbb_ack.Ttp[boardnr]  = itsTtp[boardnr];
-		tbb_ack.Tmp0[boardnr] = itsTmp0[boardnr];
-		tbb_ack.Tmp1[boardnr] = itsTmp1[boardnr];
-		tbb_ack.Tmp2[boardnr] = itsTmp2[boardnr];
-		tbb_ack.Tmp3[boardnr] = itsTmp3[boardnr];
-		tbb_ack.Image[boardnr] = itsImage[boardnr];
-		tbb_ack.WatchDogMode[boardnr] = itsWatchDogMode[boardnr];
-		tbb_ack.Pgood[boardnr] = itsPgood[boardnr];
+	for (int32 i = 0; i < MAX_N_TBBOARDS; i++) { 
+		tbb_ack.status_mask[i] = getStatus(i);
+		tbb_ack.V12[i]  = itsV12[i];
+		tbb_ack.V25[i]  = itsV25[i];
+		tbb_ack.V33[i]  = itsV33[i];
+		tbb_ack.Tpcb[i] = itsTpcb[i];
+		tbb_ack.Ttp[i]  = itsTtp[i];
+		tbb_ack.Tmp0[i] = itsTmp0[i];
+		tbb_ack.Tmp1[i] = itsTmp1[i];
+		tbb_ack.Tmp2[i] = itsTmp2[i];
+		tbb_ack.Tmp3[i] = itsTmp3[i];
+		tbb_ack.Image[i] = itsImage[i];
+		tbb_ack.WatchDogMode[i] = itsWatchDogMode[i];
+		tbb_ack.Pgood[i] = itsPgood[i];
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }

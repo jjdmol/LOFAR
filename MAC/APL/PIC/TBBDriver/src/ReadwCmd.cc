@@ -34,7 +34,7 @@ using	namespace TBB;
 
 //--Constructors for a ReadwCmd object.----------------------------------------
 ReadwCmd::ReadwCmd():
-		itsStatus(0), itsMp(0), itsAddr(0)
+		itsMp(0), itsAddr(0)
 {
 	TS = TbbSettings::instance();
 	for (int i = 0; i < 8; i++) {
@@ -60,14 +60,11 @@ void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBReadwEvent tbb_event(event);
 	
-	if (TS->isBoardActive(tbb_event.board)) {	
-		setBoardNr(tbb_event.board);
-	} else {
-		itsStatus |= TBB_NO_BOARD ;
-		setDone(true);
-	}
+	setBoard(tbb_event.board);
 	itsMp = static_cast<uint32>(tbb_event.mp);
 	itsAddr = tbb_event.addr;
+	
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
@@ -88,16 +85,18 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsStatus |= TBB_COMM_ERROR;
+		setStatus(0, TBB_TIME_OUT);
 	} else {
 		TPReadwAckEvent tp_ack(event);
+		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", getBoardNr()));
 		
-		if (tp_ack.status == 0) {
+		if (tp_ack.status != 0) {
+			setStatus(0, (tp_ack.status << 24));
+		} else {
 			for (int i = 0; i < 8; i++) {
 				itsData[i] = tp_ack.word[i];
 			}
 		}
-		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", getBoardNr()));
 	}
 	setDone(true);
 }
@@ -107,12 +106,7 @@ void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBReadwAckEvent tbb_ack;
 	
-	if (itsStatus == 0) {
-		tbb_ack.status_mask = TBB_SUCCESS;
-	} else {
-		tbb_ack.status_mask = itsStatus;
-	}	
-	
+	tbb_ack.status_mask = getStatus(0);
 	for (int i = 0; i < 8; i++) {
 		tbb_ack.word[i]= itsData[i];
 	}

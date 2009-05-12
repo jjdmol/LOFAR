@@ -59,7 +59,6 @@ public:
 
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
 };
 
 	} // end TBB namespace

@@ -59,12 +59,10 @@ public:
 	
 private:
 	TbbSettings *TS;
-	uint32 itsStatus[MAX_N_TBBOARDS];
 	int32  itsStage;
-	uint32 itsMp;
-	uint32 itsMpMask;
-	uint32 itsChannelStopMask[MAX_N_TBBOARDS];
-	uint32 itsChannelStartMask[MAX_N_TBBOARDS];
+	int32  itsChannels;
+	std::bitset<MAX_N_RCUS> itsChannelStopMask;
+	std::bitset<MAX_N_RCUS> itsChannelStartMask;
 };
 
 	} // end TBB namespace

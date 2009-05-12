@@ -56,24 +56,26 @@ TbbSettings* TbbSettings::instance()
 // Default constructor
 //
 TbbSettings::TbbSettings() :
-	itsDriverVersion(DRIVER_VERSION),				// set version of TBBDriver.cc
-	itsMaxBoards(0),							// max.number of boards on 1 driver 
-	itsMaxChannels(0),						// max.number of channels on 1 driver
-	itsMpsOnBoard(4),							// number of MPs on 1 board
-	itsChannelsOnMp(4),						// number of channels on 1 MP
-	itsChannelsOnBoard(16),				// number of channels on 1 board
-	itsFlashMaxPages(32),					// max.number of pages in flash on 1 board
-	itsFlashSectorsInPage(16),		// number of sectors in 1 page
-	itsFlashBlocksInPage(2048),		// number of blocks in 1 page
-	itsFlashPageSize(2097152),		// size of 1 page in bytes
-	itsFlashPageSectorSize(131072),// size of 1 sector in bytes
-	itsFlashPageBlockSize(1024),	// size of 1 block in bytes
-	itsMaxRetries(5),							// max.number of retries for each command
-	itsTimeOut(0.2),							// response timeout
-	itsSaveTriggersToFile(0),			// save trigger info to a file
-	itsActiveBoardsMask(0),				// mask with active boards
+	itsDriverVersion(DRIVER_VERSION),  // set version of TBBDriver.cc
+	itsMaxBoards(0),                   // max.number of boards on 1 driver 
+	itsMaxChannels(0),                 // max.number of channels on 1 driver
+	itsMpsOnBoard(4),                  // number of MPs on 1 board
+	itsChannelsOnMp(4),                // number of channels on 1 MP
+	itsChannelsOnBoard(16),            // number of channels on 1 board
+	// Flash memory size is 64 MB, divided in 512 sectors or 65536 blocks
+	itsFlashMaxImages(16),             // max.number of images in flash
+	itsFlashSectorsInImage(32),        // number of sectors in 1 image (512 / 16)
+	itsFlashBlocksInImage(4096),       // number of blocks in 1 image (65536 / 16)
+	itsFlashImageSize(4194304),        // size of 1 image in bytes ((64x1024x1024) / 16)
+	itsFlashSectorSize(131072),        // size of 1 sector in bytes ((64x1024x1024) / 512)
+	itsFlashBlockSize(1024),           // size of 1 block in bytes ((64x1024x1024) / 65536) 
+	
+	itsMaxRetries(5),                  // max.number of retries for each command
+	itsTimeOut(0.2),                   // response timeout
+	itsSaveTriggersToFile(0),          // save trigger info to a file
+	itsActiveBoardsMask(0),            // mask with active boards
 	itsBoardInfo(0),
-	itsChannelInfo(0) 								// Struct with channel info
+	itsChannelInfo(0)                  // Struct with channel info
 {
 }
 
@@ -175,7 +177,6 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	int32 mpnr = 0;
 	
 	for (int32 ch = 0; ch < itsMaxChannels; ch++) {
-		itsChannelInfo[ch].Selected = false;
 		itsChannelInfo[ch].Status = 0;
 		itsChannelInfo[ch].State = 'F';
 		convertCh2Rcu(ch,&itsChannelInfo[ch].RcuNr);
@@ -297,10 +298,15 @@ bool TbbSettings::isBoardActive(int32 boardnr)
 	return (false);
 }
 
+int32 TbbSettings::getFirstChannelNr(int32 board, int32 mp)
+{
+	return((board * itsChannelsOnBoard) + (mp * itsChannelsOnMp));
+}
+
+
 void TbbSettings::clearRcuSettings(int32 boardnr)
 {
 	for (int cn = 0; cn < itsChannelsOnBoard; cn++) {
-		itsChannelInfo[(boardnr * 16) + cn].Selected = false;
 		itsChannelInfo[(boardnr * 16) + cn].Status = 0;
 		itsChannelInfo[(boardnr * 16) + cn].State = 'F';
 		itsChannelInfo[(boardnr * 16) + cn].StartAddr = 0;
