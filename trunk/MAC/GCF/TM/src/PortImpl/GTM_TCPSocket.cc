@@ -70,6 +70,9 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 		}
 
 		if (written == -1) {
+			if (errno == ECONNRESET) {
+				return (0);
+			}
 			if (errno != EINTR) {
 				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
 				return -1;
