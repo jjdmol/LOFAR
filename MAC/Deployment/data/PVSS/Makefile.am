@@ -5,15 +5,19 @@ dist_sbin_SCRIPTS = $(sbin_SCRIPTS)
 pvss_dpdir = $(prefix)/pvss/dpdef
 
 pvss_dp_DATA = 	PVSSDataPoints.base \
+		Adder.dpdef \
 		Antenna.dpdef \
 		BeamControl.dpdef \
 		Cabinet.dpdef \
 		CalibrationControl.dpdef \
+		CEPObservation.dpdef \
 		ClockControl.dpdef \
 		HardwareMonitor.dpdef \
+		InputBuffer.dpdef \
 		MACScheduler.dpdef \
 		MCUbase.dpdef \
 		Observation.dpdef \
+		OSRack.dpdef \
 		PVSSbase.dpdef \
 		RCU.dpdef \
 		RemoteStation.dpdef \
