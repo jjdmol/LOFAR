@@ -120,7 +120,7 @@ def main() :
         #---------------------------------------------
         # capture hba element data for all elements
 
-        for element in range(hba_elements) :
+        for element in range(1,hba_elements+1) :
         	rm_files(dir_name,'*')
         	ctrl_string='='
         	for ind in range(hba_elements) :
@@ -154,7 +154,7 @@ def main() :
                         f_logfac.write(str(element) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
 			if meet_data[rcuind] < factor*ref_data[rcuind] :        
  		#	        print 'Element ' + str(element) + ' in RCU: ' + str(rcuind)
-                                f_log.write('Element ' + str(element) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+                                f_log.write('Element ' + str(element) + ', Tile ' + str(int(rcuind/2)) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
 
         f_log.close
 	f_logfac.close
