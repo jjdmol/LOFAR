@@ -25,6 +25,7 @@
 #include <Interface/Parset.h>
 #include <AMCBase/Direction.h>
 #include <Common/Exception.h>
+#include <Interface/RSPTimeStamp.h>
 
 #include <cassert>
 
@@ -37,6 +38,8 @@ void doTest()
 
   ParameterSet pset("tDelayCompensation.parset");
   Parset       ps(&pset);
+
+  TimeStamp::setStationClockSpeed(static_cast<unsigned>(1024 * ps.sampleRate()));
 
   std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
   const unsigned  nrBeams = ps.nrBeams();
