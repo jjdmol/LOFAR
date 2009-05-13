@@ -112,8 +112,10 @@ namespace LOFAR
       vector<AMC::Epoch>	observationEpochs( itsNrCalcDelays );
       AMC::Converter*		converter = new ConverterImpl();
 
-      const int64 startTime = static_cast<int64>(itsStartTime);
       unsigned sampleNr = 0;
+
+      // the start time, in samples
+      const int64 startTime = itsStartTime;
 
       while( !stop ) {
         bufferFree.down( itsNrCalcDelays );
@@ -127,7 +129,7 @@ namespace LOFAR
         // Derive the next list of timestamps
 	for( unsigned i = 0; i < itsNrCalcDelays; i++ ) {
 	  // recalculate from startTime to avoid cumulating inaccuracies
-	  const double timestamp = startTime + (sampleNr * itsNrSamplesPerSec) * itsSampleDuration;
+	  const double timestamp = (startTime + (sampleNr * itsNrSamplesPerSec)) * itsSampleDuration;
 	  
 	  sampleNr++;
 
