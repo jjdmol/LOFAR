@@ -1,4 +1,4 @@
-sbin_SCRIPTS = create_db_station
+sbin_SCRIPTS = create_db_files
 
 dist_sbin_SCRIPTS = $(sbin_SCRIPTS)
 
