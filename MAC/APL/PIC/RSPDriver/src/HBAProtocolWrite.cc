@@ -348,11 +348,13 @@ void HBAProtocolWrite::sendrequest()
 		EPARcuProtocolEvent rcuprotocol;
 		rcuprotocol.hdr.set(MEPHeader::RCU_PROTOCOLY_HDR, 1 << (getCurrentIndex() / N_WRITES), MEPHeader::WRITE, sizeof(i2c_protocol));
 		rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
-
+		
+		/*
 		string tmpbuf;
 		hexdump (tmpbuf, i2c_protocol, sizeof(i2c_protocol));
 		LOG_INFO_STR("HBA WRITE: " << tmpbuf);
-  
+  		*/
+	
 		m_hdr = rcuprotocol.hdr; // remember header to match with ack
 		getBoardPort().send(rcuprotocol);
 	}
@@ -367,11 +369,13 @@ void HBAProtocolWrite::sendrequest()
 		uint8 clear[RESULT_SIZE];
 		memset(clear, 0xBB, RESULT_SIZE); // clear result
 		rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
-
+		
+		/*
 		string tmpbuf;
 		hexdump (tmpbuf, clear, sizeof(clear));
 		LOG_INFO_STR("HBA RESULT WRITE: " << tmpbuf);
-
+		*/
+		
 		m_hdr = rcuresultwrite.hdr; // remember header to match with ack
 		getBoardPort().send(rcuresultwrite);
 	}
