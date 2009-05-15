@@ -50,11 +50,19 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   if(BUILD_STATIC_EXECUTABLES)
     set(CMAKE_EXE_LINKER_FLAGS -static)
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+    set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS)       # remove -Wl,-Bdynamic
+    set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS)
+    set(CMAKE_SHARED_LIBRARY_C_FLAGS)         # remove -fPIC
+    set(CMAKE_SHARED_LIBRARY_CXX_FLAGS)
+    set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)    # remove -rdynamic
+    set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
+    # Maybe this works as well, haven't tried yet.
+    # set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
   endif(BUILD_STATIC_EXECUTABLES)
-
-  if(USE_AIPSPP)
+  
+#  if(USE_AIPSPP)
 #    lofar_find_package(CasaCore)
-  endif(USE_AIPSPP)
+#  endif(USE_AIPSPP)
   
   if(USE_BACKTRACE)
     lofar_find_package(Backtrace)
@@ -85,12 +93,8 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     #
   endif(USE_SOCKETS)
 
-  if(USE_SOCKETS)
-    #
-  endif(USE_SOCKETS)
-
   if(USE_THREADS)
-    #
+    lofar_find_package(Pthreads)
   endif(USE_THREADS)
 
   if(USE_ZOID)

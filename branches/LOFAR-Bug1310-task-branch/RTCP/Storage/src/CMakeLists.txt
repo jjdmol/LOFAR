@@ -1,40 +1,35 @@
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-## ------------------------------------------------------------------------------
-## Build the library
+include(LofarPackageVersion)
 
-file (GLOB libstorage_SOURCES *.cc)
+set(storage_LIB_SRCS
+  Package__Version.cc
+  InputThread.cc
+  SubbandWriter.cc
+  MSWriter.cc
+  MSWriterCasa.cc
+  MSWriterNull.cc
+  MSWriterFile.cc)
 
-add_library (storage ${libstorage_SOURCES})
+lofar_add_library(storage ${storage_LIB_SRCS})
 
-## linker instructions
-target_link_libraries (  storage 
-                         amcbase
-                         cepframe
-                         cs1_interface
-                         tinycep
-                         plc
-                         transport
-                         applcommon
-                         blob
-                         aps
-                         common                          
-			 ${LOG4CPLUS_LIBRARIES}
-			 ${CASACORE_LIBRARIES}
-			 ${BOOST_LIBRARIES}
-			 )
-
-add_executable(CS1_Storage CS1_Storage_main.cc)
-
-target_link_libraries (CS1_Storage
-                       storage
-		      )
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS storage CS1_Storage
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  )  
+lofar_add_executable(Storage_main Storage_main.cc)
+lofar_add_executable(versionstorage versionstorage.cc)

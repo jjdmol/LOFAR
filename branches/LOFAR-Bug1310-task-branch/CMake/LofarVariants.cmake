@@ -32,7 +32,7 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   ## First, include host-specific variants file, if present
   ## --------------------------------------------------------------------------
   lofar_get_hostname(hostname)
-  set(variants_file ${LOFAR_ROOT}/CMake/variants/variants.${hostname})
+  set(variants_file ${CMAKE_MODULE_PATH}/variants/variants.${hostname})
   
   if (EXISTS ${variants_file})
     message(STATUS "Loading host-specific variants file")
@@ -43,6 +43,6 @@ if(NOT DEFINED LOFAR_VARIANTS_INCLUDED)
   ## Next, include global variants file.
   ## --------------------------------------------------------------------------
   message(STATUS "Loading global variants file")
-  include(${LOFAR_ROOT}/CMake/variants/variants)
+  include(${CMAKE_MODULE_PATH}/variants/variants)
   
 endif(NOT DEFINED LOFAR_VARIANTS_INCLUDED)

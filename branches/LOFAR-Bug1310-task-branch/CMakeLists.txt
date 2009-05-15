@@ -31,10 +31,15 @@ include(LofarInit)
 project(LOFAR)
 include(LofarGeneral)
 
+#find_package(FFTW REQUIRED COMPONENTS double threads)# COMPONENTS SINGLE_REAL)
+#return()
+
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(LCS)
+add_subdirectory(CEP)
+#add_subdirectory(RTCP)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -45,7 +50,7 @@ if(0)
   get_cmake_property(cache_vars CACHE_VARIABLES)
   message(STATUS "vvvvvvvv Cache variables vvvvvvvv")
   foreach(var ${cache_vars})
-    message(STATUS "${var} = ${${var}}")
+    message(STATUS "[cached] ${var} = ${${var}}")
   endforeach(var ${cache_vars})
   message(STATUS "^^^^^^^^ Cache variables ^^^^^^^^")
   message(STATUS "vvvvvvvv Variables vvvvvvvv")

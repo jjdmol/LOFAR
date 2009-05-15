@@ -1,7 +1,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <AsyncTranspose.h>
+#include "AsyncTranspose.h"
 
 #include <Interface/CN_Mapping.h>
 #include <Interface/PrintVector.h>

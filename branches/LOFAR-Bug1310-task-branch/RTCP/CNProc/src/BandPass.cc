@@ -1,7 +1,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <BandPass.h>
+#include "BandPass.h"
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Config.h>
 

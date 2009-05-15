@@ -25,18 +25,19 @@
 # This script creates files <package>Version.h and .cc containing a class
 # to return the version and revision of the package.
 # The .cc file includes a file which is created by LofarPackageVersion.cmake
-# (Each package's CMakeLists.txt file must set a variable
-# <package>_DEPENDENCIES for this to work).
 # It also creates an file version<package>.cc which is an executable program
 # to print the version.
 # Optionally the CMakeLists.txt files are changed to build the code.
+# Note: Each package's CMakeLists.txt file must contain a line
+#     lofar_add_package(<package> [version] [DEPENDS <depend> [depend]])
+#   for this to work.
 
 # The class name used is <package>Version, for eaxmple CommonVersion.
 # makeversion retrieves the package name from the basename of the current
 # directory which works fine for the normal cases. However, MAC uses some
 # special directory structure like GCF/TM/include/GCF/TM. It also detects
 # this and sets in this example the package name to GCFTM (removes the /).
-# The package name given in <package>_DEPENDENCIES has to match the package
+# The package name given in lofar_add_package() has to match the package
 # name found here, thus must be GCFTM in this example.
 
 # Trap handler
@@ -115,8 +116,9 @@ if [ $hassvn = 0 ]; then
 fi
 # Get the version from the CMakeLists.txt. We'll assume (for the time being)
 # that the project's CMakeLists.txt file contains a line like
-# "set(PACKAGE_VERSION 3.1)"
-cvers1=`sed -n 's,^[ \t]*set[ \t]*([ \t]*package_version[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
+# "lofad_add_package(<name> [version] [DEPENDS <depend> [depend]])
+cvers1=`sed -n 's,^[ \t]*lofar_add_package[ \t]*([ \t]*[^ \t]*[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
+#cvers1=`sed -n 's,^[ \t]*set[ \t]*([ \t]*package_version[ \t]\+\([0-9.]\+\).*$,\1,ip' CMakeLists.txt`
 if [ "$cvers1" != "" ]; then
   cvers=$cvers1
 fi

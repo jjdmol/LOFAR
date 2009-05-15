@@ -55,6 +55,10 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   # Root directory of the LOFAR source code tree
   string(REGEX REPLACE 
     "^(.*/LOFAR)/.*$" "\\1" LOFAR_ROOT ${CMAKE_SOURCE_DIR})
+  if(NOT LOFAR_ROOT MATCHES "/LOFAR$")
+    message(FATAL_ERROR 
+      "${CMAKE_SOURCE_DIR} is not inside the LOFAR source code tree!")
+  endif(NOT LOFAR_ROOT MATCHES "/LOFAR$")
   set(LOFAR_ROOT ${LOFAR_ROOT} CACHE INTERNAL "LOFAR root directory")
 
   # Here's where we keep our own CMake modules.

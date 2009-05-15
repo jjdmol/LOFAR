@@ -9,17 +9,17 @@
 ## $Id$
 
 # Define compiler suites.
-set(LOFAR_COMPILER_SUITES
+list(APPEND LOFAR_COMPILER_SUITES
   GNU
 )
 
 # Define build variants.
-set(LOFAR_BUILD_VARIANTS
-  DEBUG
+list(APPEND LOFAR_BUILD_VARIANTS
+  DEBUG  
   OPT
 )
 
-# Default search path to use when searching for an external package.
+# GNU compiler suite
 set(GNU_COMPILERS GNU_C GNU_CXX)  # GNU Compiler Suite
 set(GNU_C         /usr/bin/gcc )  # GNU C compiler
 set(GNU_CXX       /usr/bin/g++ )  # GNU C++ compiler
@@ -37,6 +37,7 @@ set(GNU_COMPILE_DEFINITIONS)
 set(GNU_COMPILE_DEFINITIONS_DEBUG "-DLOFAR_DEBUG -DENABLE_TRACER")
 set(GNU_COMPILE_DEFINITIONS_OPT)
 
+# Default search path to use when searching for an external package.
 set(LOFAR_SEARCH_PATH 
   "+prefix"
   "+root"
@@ -74,7 +75,7 @@ option(BUILD_STATIC_EXECUTABLES "Build static executables" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 #option(BUILD_TESTING     "Build the testing tree" OFF)
 option(LOFAR_VERBOSE_CONFIGURE "Be verbose when configuring" ON)
-option(USE_BACKTRACE     "Use backtrace" OFF)
+option(USE_BACKTRACE     "Use backtrace" ON)
 option(USE_BOOST         "Use Boost"     ON)
 #option(USE_CASACORE      "Use Casacore"  OFF)
 option(USE_LOG4CPLUS     "Use Log4Cplus" ON)

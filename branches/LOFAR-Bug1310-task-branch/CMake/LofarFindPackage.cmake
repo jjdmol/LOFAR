@@ -31,8 +31,6 @@ include(FindPackageHandleStandardArgs)
 ## ----------------------------------------------------------------------------
 function(lofar_find_package _package)
 
-  message(STATUS "*** ENTER: lofar_find_package(${_package} ${ARGN})")
-
   string(TOLOWER ${_package} _pkg)
   string(TOUPPER ${_package} _PKG)
 
@@ -57,7 +55,6 @@ function(lofar_find_package _package)
     endif(DEFINED USE_${_PKG} AND NOT USE_${_PKG})
 
     # Use the Find${_package}.cmake module.
-    message(STATUS "find_package(${ARGV})")
     find_package(${ARGV})
 
     # Define an all-uppercase variable for each mixed-case variable we're
@@ -80,7 +77,5 @@ function(lofar_find_package _package)
     endif(${_PKG}_FOUND)
 
   endif(NOT ${_PKG}_FOUND)
-
-  message(STATUS "*** LEAVE: lofar_find_package(${_package} ${ARGN})")
 
 endfunction(lofar_find_package _package)
