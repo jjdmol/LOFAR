@@ -304,6 +304,27 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
+
+def createCableDelaysFile(resultDir, stationName, dataDir):
+    """
+    Copies the right CableDelays.conf file for this station
+    """
+    # Copy file <stationname>-cabledelays.conf> to
+    # /opt/lofar/etc/CableDelays.conf
+    
+    # stationName is in lowercase!
+    srcFile = stationName + "-cabledelays.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
+        return
+    
+    destFile = resultDir + "/CableDelays.conf"
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
+
+
+
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -338,6 +359,7 @@ if (sys.argv[1] == "localhost"):
             createTBBDriverFile    (resultDir, stationName, dataDir)
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
+            createCableDelaysFile(resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -370,6 +392,7 @@ else:
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
+        createCableDelaysFile(resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"
