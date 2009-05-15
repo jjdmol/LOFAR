@@ -29,6 +29,10 @@ staticmeta_DATA = RemoteStation.conf.tmpl \
 		  AntennaArrays/cs302-antennaarrays.conf \
 		  AntennaArrays/de001-antennaarrays.conf \
 	  	  AntennaArrays/de602-antennaarrays.conf \
-	  	  AntennaArrays/de603-antennaarrays.conf
+	  	  AntennaArrays/de603-antennaarrays.conf \
+		  CableDelays/cs001-cabledelays.conf \
+		  CableDelays/cs010-cabledelays.conf \
+		  CableDelays/cs016-cabledelays.conf \
+		  CableDelays/cs302-cabledelays.conf
 
 include $(top_srcdir)/Makefile.common
