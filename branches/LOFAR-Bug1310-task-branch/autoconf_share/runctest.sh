@@ -26,3 +26,12 @@ export lofar_sharedir=${lofar_sharedir}
 export srcdir=${srcdir}
 
 $lofar_sharedir/runtest.sh "$@"
+
+# The Autotools use the magic return value 77 for skipped tests. CMake can
+# only handle zero and non-zero return values. To avoid that CMake will flag a
+# skipped test as failed, we will silently change the return value 77 to 0.
+STATUS=$?
+if [ $STATUS -eq 77 ]; then
+  STATUS=0
+fi
+exit $STATUS
