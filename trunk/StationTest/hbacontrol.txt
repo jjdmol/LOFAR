@@ -52,4 +52,5 @@ python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --serv
 verify rspctl --realdelays --sel=64,65 (wrong result!!!)
 or above read function server
 
-
+# HBA change default FE address 127 into #
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --server 127 --server_acces uc --server_function sb --server_reg address --data #
