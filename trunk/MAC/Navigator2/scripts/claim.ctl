@@ -44,7 +44,7 @@ global bool isConnected = false;
 global bool isClient = true;
 // contains the old known system to be able to check of the dist callback was caused by the master
 global dyn_int oldSystemList;
-// contains all known claimable DPTypes
+// contains all know DPTypes
 global dyn_string claimableTypes;
 
 
@@ -303,9 +303,9 @@ void clientAddClaimCallback(
       int maxMapSize;
       // get all dpNames from this type to be able to check if the map doesn't go out of size (indicates an error)
       if (isClient) {
-  	    maxMapSize = dynlen(dpNames("*","Stn"+typeName));
+  	    maxMapSize = dynlen(dpNames("LOFAR_*","Stn"+typeName));
       } else {
-	      maxMapSize = dynlen(dpNames("*",typeName));                    
+	    maxMapSize = dynlen(dpNames("LOFAR_*",typeName));                    
       }
                 
       // if index still -1, the name was not found and the entry can be added to the map
@@ -458,7 +458,8 @@ void claimCallback(
           exit;
        	}    
    		}       
-      
+       
+
       if (!found) {
       
         if (bDebug) DebugN("claim.ctl:claimCallback|Claim needs to be added to Cache"); 
@@ -526,7 +527,7 @@ void VerifyDatapointType( string strType )
   
   if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType| looking for DP type " + strType ); 
   
-  g_ClaimedTypes[ strType ]["DP"] = dpNames("*", strType );
+  g_ClaimedTypes[ strType ]["DP"] = dpNames("LOFAR_*", strType );
   
   if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType| number of instances=" + dynlen( g_ClaimedTypes[ strType ][ "DP"   ] ) );
 
@@ -555,6 +556,8 @@ void VerifyDatapointType( string strType )
     strDPNames    , g_ClaimedTypes[ strType ][ "NAME"      ],
     strDPClaimDate, g_ClaimedTypes[ strType ][ "CLAIMDATE" ] );
   
+  
+  if (bDebug) DebugN("claimedTypes after getClaimInfo :");
   if (bDebug) showMapping("VerifyDatapointType");
  
 }
@@ -619,6 +622,8 @@ string  FindFreeClaim(
     } 
   } 
   
+  if (bDebug) DebugN("Show g_ClaimedTypes:"+g_ClaimedTypes[ strTypeName ][ "DP" ]);
+  
   // the next entries will prepare to add data, so they are only allowed for the Master ClaimManager
   if (!isClient) { 
 
@@ -640,8 +645,10 @@ string  FindFreeClaim(
  
       if (bDebug) DebugN("claim.ctl:FindFreeClaim|We need to reuse the oldest claimed entry");
 
-      for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) && (iIndex ==-1); t++) {
+      for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) ; t++) {
         if( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t] < old ) {
+          if (bDebug) DebugN("older time found: " ,g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t] );
+          if (bDebug) DebugN("old was: ", old);
           old = g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t];
           iIndex = t;
         }
