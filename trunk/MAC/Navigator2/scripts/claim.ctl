@@ -37,7 +37,7 @@
 
 global mapping g_ClaimedTypes;
 
-global bool bDebug = true;
+global bool bDebug = false;
 // needed for dpDisconnect after a connect and a resync
 global bool isConnected = false;
 // is the machine we are running from a client or not
@@ -708,11 +708,12 @@ void checkAndCreateDPs() {
     //    CalControl:     LOFAR_ObsSW_TempObs0001-0100_CalibrationControl
     //    TBBControl:     LOFAR_ObsSW_TempObs0001-0100_TBBControl
     //
-    //And for CEP:
+    //And for CCU:
     //    DPType          DP's
     //    CEPObservation: LOFAR_ObsSW_TempObs0001-0100
     //    OnlineControl:  LOFAR_ObsSW_TempObs0001-0100_OnlineControl
-    //    Correlator:     LOFAR_ObsSW_TempObs0001-0100_OnlineControl_Correlator
+    //    BGLAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl
+    //    BGLProc:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl_BGLProc
     //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
     
 
@@ -730,7 +731,7 @@ void checkAndCreateDPs() {
         }
         
         if (isClient) {
-          if (substr(getSystemName(),0,3) == "CEP") {
+          if (substr(getSystemName(),0,3) == "CCU") {
             //CEPObservation
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre,"CEPObservation");
@@ -739,9 +740,13 @@ void checkAndCreateDPs() {
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl","OnlineControl");
             }
-            //Correlator
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_Correlator","Correlator");
+            //BGPAppl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl","BGPAppl");
+            }
+            //BGPProc
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
             }
             //StorageAppl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl")) {

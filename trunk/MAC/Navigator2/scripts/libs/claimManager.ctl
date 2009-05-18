@@ -119,7 +119,7 @@ string claimManager_realNameToName( string strName )
 void claimManager_queryConnectClaims()
 {
   // Local data
-  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \"Observation\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
