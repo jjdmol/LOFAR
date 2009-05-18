@@ -67,6 +67,7 @@ public:
 	uint32	       nrStations() const;
 	uint32	       nrTabStations() const;
 	uint32	       nrBaselines() const;
+	uint32         nrCrossPolarisations() const;
 	double         sampleRate() const;
 	double         sampleDuration() const;
 	uint32	       nrBitsPerSample() const;
@@ -103,6 +104,7 @@ public:
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned sb) const;
+	string         getMSBaseDir() const;
 	string         getTransportType(const string& prefix) const;
 	string         getModeName() const;
 	bool           outputIncoherentStokesI() const;
@@ -140,6 +142,9 @@ public:
 
 	string         getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 	static Stream  *createStream(const string &description, bool asReader);
+
+	string         observerName() const;
+	string         projectName() const;
 
 	string	       name;
 	vector<double> itsStPositions;
@@ -210,6 +215,11 @@ inline uint32 Parset::nrBaselines() const
 
   return stations * (stations + 1) / 2;
 } 
+
+inline uint32 Parset::nrCrossPolarisations() const
+{
+  return (getUint32("Observation.nrPolarisations") * getUint32("Observation.nrPolarisations"));
+}
   
 inline double Parset::sampleRate() const
 {
@@ -438,6 +448,18 @@ inline bool Parset::outputIncoherentStokesI() const
 inline bool Parset::stokesIntegrateChannels() const
 {
   return getBool("Observation.stokesIntegrateChannels");
+}
+
+inline string Parset::observerName() const
+{
+  // TODO - this should be included in the Parset from SAS
+  return "LOFAR";
+}
+
+inline string Parset::projectName() const
+{
+  // TODO - this should be included in the Parset from SAS
+  return "LOFAR";
 }
 
 } // namespace RTCP

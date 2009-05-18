@@ -309,6 +309,23 @@ string Parset::getMSname(unsigned sb) const
   return name;
 }
 
+string Parset::getMSBaseDir() const
+{
+  using namespace boost;
+  
+  string         name = this->getMSname(0);
+  string         basedir;
+  vector<string> splitName;
+  
+  split(splitName, name, is_any_of("/"));
+  
+  for (unsigned i = 0; i < splitName.size()-1 ; i++) {
+    basedir += splitName[i] + '/';
+  }
+  return basedir;
+}
+
+
 vector<string> Parset::getPortsOf(const string& aKey) const
 {
   return get(aKey + "_Ports").expand().getStringVector();
