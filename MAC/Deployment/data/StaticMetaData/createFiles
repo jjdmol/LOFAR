@@ -75,7 +75,12 @@ def copyTestFiles(dataDir):
     testFile = dataDir+"/RemoteStation.conf.test"
     destFile = "/opt/lofar/etc/RemoteStation.conf"
     command = "cp -f "+testFile+ " " + destFile
+    testFile = dataDir+"/CableDelays.conf.test"
+    destFile = "/opt/lofar/etc/CableDelays.conf"
+    command = "cp -f "+testFile+ " " + destFile
     os.system(command);
+    
+os.system(command);
 
     
     
