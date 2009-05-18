@@ -198,11 +198,11 @@ def createRSPDriverFile(resultDir, stationName, dataDir):
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
     if (ip_parts[1] == "151"):
-        ip_prefix = "167"
+        ip_prefix = "175"
     else:
-        ip_prefix = "166"
+        ip_prefix = "174"
 
-    hexStationID = str("%02x" % int(stationID))
+    hexStationID = str("%02x" % int(stationName[3:6]))
     ringID = '0'+stationName[2]
 
     RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
@@ -252,7 +252,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     else:
         ip_prefix = "166"
     
-    hexStationID = str("%02x" % int(stationID))
+    hexStationID = str("%02x" % int(stationName[3:6]))
     ringID = '0'+stationName[2]
     
     TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName)
@@ -328,7 +328,7 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
 # MAIN
 
 if (len(sys.argv) == 1):
-    print "Provide arguments: localhost or <rootdir> <stationname>"
+    print "Provide arguments: localhost or <rootdir> <resultdir> <stationname>"
     sys.exit(1)
     
 
