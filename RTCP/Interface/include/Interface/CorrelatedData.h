@@ -101,7 +101,7 @@ inline void CorrelatedData::readData(Stream *str)
 
 inline void CorrelatedData::writeData(Stream *str) 
 {
-#if !defined WORDS_BIGENDIAN
+#if !defined WORDS_BIGENDIAN && !defined WRITE_BIG_ON_LITTLE_ENDIAN
   THROW(AssertError, "not implemented: think about endianness");
 #endif
 
