@@ -108,7 +108,7 @@ updateObservations(string dp1, dyn_string obs,
       }
          
     } else {
-      LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp \"+obsDP+\" doesn't exist.\");   
+      LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp for LOFAR_ObsSW_\"+obs[i]+\" doesn't exist.\");   
     }
   }
 }
