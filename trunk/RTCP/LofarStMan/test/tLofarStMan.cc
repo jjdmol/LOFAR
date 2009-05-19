@@ -285,6 +285,13 @@ void updateTable (uInt nchan, uInt npol, const Complex& startValue)
   }
 }
 
+void copyTable()
+{
+  Table tab("tLofarStMan_tmp.data");
+  // Deep copy the table.
+  tab.deepCopy ("tLofarStMan_tmp.datcp", Table::New, true);
+}
+
 
 int main (int argc, char* argv[])
 {
@@ -305,6 +312,7 @@ int main (int argc, char* argv[])
       cout << "nrow=" << tab.nrow() << endl;
       ROArrayColumn<double> uvwcol(tab, "UVW");
       cout << "uvws="<< uvwcol(0) << endl;
+      cout << "uvws="<< uvwcol(1) << endl;
       cout << "uvwe="<< uvwcol(tab.nrow()-1) << endl;
     } else {
       if (argc > 2) {
@@ -335,6 +343,7 @@ int main (int argc, char* argv[])
       // Update the table and check again.
       updateTable (nchan, npol, Complex(3.52, 20.3));
       readTable  (nseq, nant, nchan, npol, 1e9, 10., Complex(3.52, 20.3));
+      copyTable();
     }
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
