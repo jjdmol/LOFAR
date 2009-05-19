@@ -5,6 +5,7 @@ libinterface_la_SOURCES	        = Package__Version.cc \
 				  CN_Configuration.cc \
 				  CN_Mapping.cc \
 				  Parset.cc \
+				  PencilCoordinates.cc \
 				  RSPTimeStamp.cc \
 				  CN_Mode.cc 
 
