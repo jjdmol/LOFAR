@@ -85,6 +85,10 @@ void reload() {
       dpConnect(\"workCB\",TRUE, \"_DistManager_2.State.SystemNums:_online.._value\", \"_DistManager_2.State.SystemNums:_online.._stime\", \"_Connections_2.Dist.ManNums:_online.._value\", \"_ReduManager_2.EvStatus:_online.._value\");    // right active -> use right
   }
   
+  // set panel to ready
+  g_objectReady=true;
+  
+  
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"LOFAR_System.pnl\",\"Update\");
 }

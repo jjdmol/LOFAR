@@ -227,7 +227,7 @@ bool Station_Processes_UpdateProcessesList() {
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
-        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
         dynAppend(g_processesList,path);
       } else {   // Ctrl
         dynAppend(list,obsDP+","+spl[1]+","+path);

@@ -5,14 +5,14 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
 "main()
 {
   
-  baseDP       = \"CEP001:LOFAR_PIC\";
+  baseDP       = \"CCU001:LOFAR_PIC\";
   CEPDP        = baseDP;
   
 
-  setValue(\"\",\"toolTipText\",\"CEP001\");
+  setValue(\"\",\"toolTipText\",\"CCU001\");
   setValue(\"selfState.light\",\"toolTipText\",CEPDP);
-  setValue(\"childStateBorder\",\"toolTipText\",\"CEP001\");
-  setValue(\"station_highLight\",\"toolTipText\",\"CEP001\");
+  setValue(\"childStateBorder\",\"toolTipText\",\"CCU001\");
+  setValue(\"station_highLight\",\"toolTipText\",\"CCU001\");
   setValue(\"selfState.light\",\"foreCol\",\"_Transparent\");
   
 
@@ -46,7 +46,7 @@ void click() {
     // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"CEP001\",\"EventClick\");
+    navPanel_setEvent(\"CCU001\",\"EventClick\");
   }
 }
 
@@ -59,7 +59,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"CEP_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"CEP001\",\"ChangePanel\");
+    navPanel_setEvent(\"CCU001\",\"ChangePanel\");
   }
   
   // set delay to avoid click event will be triggered
@@ -110,7 +110,7 @@ void CEPCallback(string dp1, bool aTrig) {
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback| objectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Found highlight : \" + highlight+ \" Looking for: CEP\");
   bool bHighlight=false;
-  if (dynContains(highlight,\"CEP001\")) {
+  if (dynContains(highlight,\"CCU001\")) {
     bHighlight=true;
   }
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Highlight request: \"+bHighlight);

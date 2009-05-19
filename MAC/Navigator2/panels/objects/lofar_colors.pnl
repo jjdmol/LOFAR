@@ -161,13 +161,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 100 72 324 86
+E E 0 1 1 2 1 E U  1 E 100 72 350 86
 0 2 2 "0s" 0 0 0 192 0 0  100 72 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 48 The datapoint you are looking for does not exist
+LANG:1 54 The datapoint you are looking for has an invalid state
 6 9
 "RECTANGLE4"
 ""
@@ -501,13 +501,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 100 312 397 326
+E E 0 1 1 2 1 E U  1 E 100 312 429 326
 0 2 2 "0s" 0 0 0 192 0 0  100 312 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 62 The is in alarm, but the alarm went again without acknowledge.
+LANG:1 69 The object is in alarm, but the alarm went again without acknowledge.
 6 29
 "RECTANGLE14"
 ""

@@ -26,15 +26,7 @@ void click(string originator) {
   delay(0, 100); 
   if (!bDoubleClicked) {
     // empty global listings
-    dynClear(g_stationList);
-    dynClear(g_cabinetList);
-    dynClear(g_subrackList);
-    dynClear(g_RSPList);
-    dynClear(g_TBBList);
-    dynClear(g_RCUList);
-
-    dynClear(g_observationsList);
-    dynClear(g_processesList);
+    navFunct_clearGlobalLists();
    
     if (originator == \"stationTree\") {
       navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
@@ -131,14 +123,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"frameShadow" "enum 48"
-"selectionMode" "enum 0"
-"backgroundOrigin" "enum 0"
-"defaultRenameAction" "enum 0"
-"frameShape" "enum 6"
-"vScrollBarMode" "enum 0"
-"hScrollBarMode" "enum 0"
 "resizeMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"vScrollBarMode" "enum 0"
+"frameShape" "enum 6"
+"defaultRenameAction" "enum 0"
+"backgroundOrigin" "enum 0"
+"selectionMode" "enum 0"
+"frameShadow" "enum 48"
  820 20 990 188
 10 TreeWidget
 7

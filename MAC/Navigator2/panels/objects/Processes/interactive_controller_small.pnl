@@ -47,8 +47,8 @@ void updateTrigger( string dp1, string objectName,
         }
       }     
       reload(observation,station);
-    } else if ( $databaselevel==\"cep\") {
-      reload(observation,\"CEP001:\");
+    } else if ( $databaselevel==\"ccu\") {
+      reload(observation,\"CCU001:\");
     } 
   }
 }" 0
@@ -85,7 +85,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent($name,\"EventClick\");
+    navPanel_setEvent(shortName,\"EventClick\");
   }
 }
 
@@ -96,7 +96,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"interactive_controller_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent($name,\"ChangePanel\");  
+    navPanel_setEvent(shortName,\"ChangePanel\");  
   }
   // set delay to avoid click event will be triggered
   delay(0, 500);
@@ -105,7 +105,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent($name,\"EventRightClick\");
+  navPanel_setEvent(shortName,\"EventRightClick\");
 }
 
 // ****************************************
@@ -150,6 +150,8 @@ void reload(string obsBDP,string station) {
     connected=false;
   }
   baseDP=obsBaseDP+\"_\"+$name;
+  LOG_DEBUG(\"interactive_controller_small.pnl:reload|new baseDP: \"+baseDP);
+  
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.error\")) {

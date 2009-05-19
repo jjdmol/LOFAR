@@ -30,7 +30,7 @@
 // it monitors the state changes in the database, and will update the alarms accordingly
 // 
 
-bool bDebug=true;
+bool bDebug=false;
 bool occupied=false;
 
 main () {
@@ -135,6 +135,9 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 // *******************************************
 void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   
+  if (bDebug) DebugTN( "monitorAlarms.ctl:objectStateCallback| Number of states in callback = " + dynlen( aResult ) );
+  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Result: "+ aResult);
+  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|occupied: "+ occupied);
   while (occupied) {
     delay(0,25);    
   }
@@ -142,8 +145,6 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   occupied = true;
   int iPos;
   
-  if (bDebug) DebugTN( "monitorAlarms.ctl:objectStateCallback| Number of states in callback = " + dynlen( aResult ) );
-  if (bDebug) DebugTN("monitorAlarms.ctl:objectStateCallback|Result: "+ aResult);
   
   if (dynlen(aResult) <= 0) {
     occupied = false;
@@ -157,6 +158,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   int state      = (int)aResult[3][2];
   
   if (state == 60) {
+    occupied = false;
     return;
   }
   string message = aResult[4][2];

@@ -240,20 +240,38 @@ bool navTabCtrl_showView(int panelNr=1)
       panelNr=1;
     }
     
+    // check if currentDP is available in list and if so change panelNr to the one belonging to this
+    // DP.
+    
+    
+    for (int i=1; i<= dynlen(viewPanels); i++) {
+      dyn_string splitName = strsplit(viewPanels[i],":");
+      if (dynlen(splitName) > 1) {
+        if (splitName[2] == dpSubStr(g_currentDatapoint,DPSUB_DP)) {
+          panelNr=i;
+          break;
+        }
+      }
+    }      
+    
     // check if chosen panel exists in the list
-    int nr=0;
-    for (int i=1;i<=dynlen(viewPanels);i++) {
-      if (strpos(viewPanels[i],panelSelection)>-1) {
-        nr=i;
-        break;
+    if (panelSelection != "") {
+      int nr=0;
+      for (int i=1;i<=dynlen(viewPanels);i++) {
+
+        if (strpos(viewPanels[i],panelSelection)>-1) {
+          nr=i;
+          break;
+        }
+      }
+    
+      if (nr > 0){
+        panelNr=nr;
+      } else {
+        panelSelection = "";
       }
     }
     
-    if (nr > 0){
-      panelNr=nr;
-    } else {
-      panelSelection = "";
-    }   
     
     // check if the panel also has a DPName if available set g_currentDatapoint to that dpName
     dyn_string splitName = strsplit(viewPanels[panelNr],":");

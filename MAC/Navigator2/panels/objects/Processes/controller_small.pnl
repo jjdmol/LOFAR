@@ -13,11 +13,11 @@ PANEL,-1 -1 1031 124 N "_3DFace" 1
   baseDP+=\"_PermSW_\"+$name;
 
   // check if the required datapoint for this view are enabled and accessible
-  if (dpExists(baseDP+\".process.error\")) {
+  if (dpExists(baseDP+\".process.logMsg\")) {
     if (dpConnect(\"updateController\", baseDP +\".process.error:_online.._value\",
                                       baseDP +\".process.currentAction:_online.._value\",
                                       baseDP +\".process.logMsg:_online.._value\",
-                                      baseDP +\".process.error:_online.._invalid\") == -1) {
+                                      baseDP +\".process.logMsg:_online.._invalid\") == -1) {
       LOG_ERROR(\"controller_small.pnl:main|Couldn't connect to: \"+baseDP+\" \"+getLastError());
     }
   } else {

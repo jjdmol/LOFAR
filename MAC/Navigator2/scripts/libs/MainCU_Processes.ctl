@@ -129,9 +129,10 @@ void MainCU_Processes_UpdateMainControllers() {
     LOG_TRACE("MainCU_Processes.ctl:updateMainControllers|connecting to  Main Observation Ctrls");    
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
+    // also connect to CCU Ctrls
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_CorrelatorPanel",
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }
 }
@@ -220,7 +221,7 @@ void MainCU_Processes_UpdateProcessesList() {
       // Remainder should be Ctrl Programs, split on _ 
       dyn_string spl=strsplit(aS,"_");
       if (dynlen(spl) > 1) { // low level Ctrl
-        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+        dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
         dynAppend(g_processesList,path);
       } else {   // Ctrl
         dynAppend(list,obsDP+","+spl[1]+","+path);
@@ -229,16 +230,16 @@ void MainCU_Processes_UpdateProcessesList() {
         }
       }
     }
-    //same for CEP
-    // strip system and add CEP001
-    string CEPObsDP="CEP001:"+dpSubStr(obsDP,DPSUB_DP);
+    //same for CCU
+    // strip system and add CCU001
+    string CEPObsDP="CCU001:"+dpSubStr(obsDP,DPSUB_DP);
     
     if (dpExists(CEPObsDP) ){
     
-      // add CEP to selected Observation
-      dynAppend(list,obsDP+",CEP001:,"+CEPObsDP);
-      dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CEP001:'", tab);
-      LOG_TRACE("MainCU_Processes:updateProcessesList|CEP001 controllers Found: "+ tab);
+      // add CCU to selected Observation
+      dynAppend(list,obsDP+",CCU001:,"+CEPObsDP);
+      dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
+      LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
     
       dyn_string aDS=navFunct_getDynString(tab, 2,1);
       dynSortAsc(aDS);
@@ -259,7 +260,7 @@ void MainCU_Processes_UpdateProcessesList() {
         // Remainder should be Ctrl Programs, split on _ 
         dyn_string spl=strsplit(aS,"_");
         if (dynlen(spl) > 1) { // low level Ctrl
-          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
           dynAppend(g_processesList,path);
         } else {   // Ctrl
           dynAppend(list,CEPObsDP+","+spl[1]+","+path);
@@ -301,7 +302,7 @@ void MainCU_Processes_UpdateProcessesList() {
         // Remainder should be Ctrl Programs, split on _ 
         dyn_string spl=strsplit(aS,"_");
         if (dynlen(spl) > 1) { // low level Ctrl
-          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[2]+","+path);
+          dynAppend(list,navFunct_dpStripLastElement(path)+","+spl[dynlen(spl)]+","+path);
           dynAppend(g_processesList,path);
         } else {   // Ctrl
           dynAppend(list,stationObsDP+","+spl[1]+","+path);

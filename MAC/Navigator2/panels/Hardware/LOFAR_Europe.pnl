@@ -82,6 +82,12 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2  1 0  "pictures/LOFAR20_Europe.jpg" 13434828 E 0 0 1008 744
+1 22 16 "" 2
+0
+1 23 16 "1" 1
+0
+1 24 16 "" 1
+0
 1 7 10 "" 2
 0
 1 8 10 "1" 1
@@ -111,12 +117,6 @@ E E 0 1 1 0 1 E U  2  1 0  "pictures/LOFAR20_Europe.jpg" 13434828 E 0 0 1008 744
 1 20 15 "1" 1
 0
 1 21 15 "" 1
-0
-1 22 16 "" 2
-0
-1 23 16 "1" 1
-0
-1 24 16 "" 1
 0
 1 25 20 "" 2
 0
@@ -170,7 +170,7 @@ LANG:1 6 Layer8
 1
 "$Station""DE603"
 3 12 "PANEL_REF13"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 33 0.7424242424242424 0 0.7407407407407407 168.1779915092959 127.1415586739259
+"objects\\Hardware\\Station_small.pnl" 457 486 T 33 0.7424242424242424 0 0.7407407407407407 170.7121212121212 126
 1
 "$Station""DE602"
 3 13 "PANEL_REF14"
@@ -186,7 +186,7 @@ LANG:1 6 Layer8
 1
 "$Station""FR606"
 3 16 "PANEL_REF17"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 37 0.7424242424242424 0 0.7407407407407407 28.17799150929585 27.14155867392589
+"objects\\Hardware\\Station_small.pnl" 457 486 T 37 0.7424242424242424 0 0.7407407407407407 29.71212121212119 23
 1
 "$Station""DE601"
 3 20 "PANEL_REF21"
