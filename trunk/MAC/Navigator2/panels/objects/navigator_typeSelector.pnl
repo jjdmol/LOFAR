@@ -397,8 +397,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"selectionMode" "enum 0"
 "allColumnsShowFocus" "bool TRUE"
+"selectionMode" "enum 0"
  10 30 212 378
 10 TreeWidget
 7
@@ -418,6 +418,8 @@ LANG:1 8 hardware
     panelSelection=\"LOFAR_Remote.pnl\";
   } else if (txt == \"Europe\") {
     panelSelection=\"LOFAR_Europe.pnl\";
+  } else if (txt == \"CCU001\") {
+    panelSelection=\"LOFAR_Remote.pnl\";
   } else {
     panelSelection=\"\";
   }

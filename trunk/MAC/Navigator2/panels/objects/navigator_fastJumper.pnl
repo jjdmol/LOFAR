@@ -296,6 +296,7 @@ LANG:1 5 Next
   if (dpExists(nextDatapoint)) {
     string old=g_currentDatapoint;
     g_currentDatapoint=nextDatapoint;
+    panelSelection = dpSubStr(g_currentDatapoint,DPSUB_DP)+\".pnl\";
     setEvent(old,\"ChangePanel\");
   } else {
     LOG_ERROR(\"Navigator_fastJumper.pnl:click|ERROR: nextDatapoint: \"+nextDatapoint+ \"does not seem to exist.\");

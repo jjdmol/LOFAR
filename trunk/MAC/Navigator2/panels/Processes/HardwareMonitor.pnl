@@ -289,7 +289,7 @@ addLogMessage(string aMsg)
 {
 
 
-  LOG_TRACE(\"navPanel.ctl:navPanel_addLogMsg|msg: \" + aMsg);
+  LOG_TRACE(\"HardwareMonitor.pnl:navPanel_addLogMsg|msg: \" + aMsg);
   if (aMsg != \"\") {
 
 
@@ -332,11 +332,11 @@ addLogMessage(string aMsg)
     }
 	
 	
-    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|dateTime: \" + dateTime);
-    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|level: \" + level);
-    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|source: \" + source);
-    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|logMsg: \" + logMsg);
-    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|codeLine: \" + codeLine);
+    LOG_DEBUG(\"HardwareMonitor.pnl:navPanel_showLogging|dateTime: \" + dateTime);
+    LOG_DEBUG(\"HardwareMonitor.pnl:navPanel_showLogging|level: \" + level);
+    LOG_DEBUG(\"HardwareMonitor.pnl:navPanel_showLogging|source: \" + source);
+    LOG_DEBUG(\"HardwareMonitor.pnl:navPanel_showLogging|logMsg: \" + logMsg);
+    LOG_DEBUG(\"HardwareMonitor.pnl:navPanel_showLogging|codeLine: \" + codeLine);
 
     if (!error) {
       

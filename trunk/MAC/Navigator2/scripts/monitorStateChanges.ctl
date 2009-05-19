@@ -28,7 +28,7 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = false;
+global bool bDebug = true;
 
 main () {
 

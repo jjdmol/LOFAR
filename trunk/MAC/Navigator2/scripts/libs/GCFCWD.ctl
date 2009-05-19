@@ -118,21 +118,21 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
       // changed to up, childstate is highest childstate of all stations.state and .childStates
       // else 
       // changed to down, childstate will be set to dpOffline
-      if (up[i]) {
+      if (up[i] && name[i] != "CCU001:") {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",OPERATIONAL,
                   MainDBName+"__navObjectState.message","System came online",
                   MainDBName+"__navObjectState.force",true);
         }        
-      } else {
+      } else if (name[i] != "CCU001:") {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",DPOFFLINE,
                   MainDBName+"__navObjectState.message","System went offline",
                   MainDBName+"__navObjectState.force",false);
         }
-      }
+      }    
     }
   }
 }
