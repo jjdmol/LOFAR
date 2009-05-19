@@ -222,8 +222,8 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
     // TODO: separate construction of central beam
 
-    unsigned processBeams;
-    unsigned processStations;
+    unsigned processBeams = NRBEAMS;
+    unsigned processStations = NRSTATIONS;
 
     // Iterate over the same portions of the input data as many times as possible to 
     // fully exploit the caches.
