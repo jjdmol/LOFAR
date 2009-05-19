@@ -5,6 +5,7 @@
 
 #include <Interface/MultiDimArray.h>
 #include <Interface/PrintVector.h>
+#include <Interface/Exceptions.h>
 #include <Common/Timer.h>
 #include <iostream>
 #include <cmath>
@@ -23,149 +24,6 @@ namespace LOFAR {
 namespace RTCP {
 
 static NSTimer pencilBeamFormTimer("PencilBeamFormer::formBeams()", true, true);
-
-PencilCoordinates& PencilCoordinates::operator+=( const PencilCoordinates &rhs )
-{
-  itsCoordinates.reserve( itsCoordinates.size() + rhs.size() );
-  for( unsigned i = 0; i < rhs.size(); i++ ) {
-     itsCoordinates.push_back( rhs.itsCoordinates[i] );
-  }
-
-  return *this;
-}
-
-PencilCoordinates::PencilCoordinates( const Matrix<double> &coordinates )
-{
-  itsCoordinates.reserve( coordinates.size() );
-  for( unsigned i = 0; i < coordinates.size(); i++ ) {
-    itsCoordinates.push_back( PencilCoord3D( coordinates[i][0], coordinates[i][1] ) );
-  }
-}
-
-PencilRings::PencilRings(const unsigned nrRings, const double ringWidth):
-  itsNrRings(nrRings),
-  itsRingWidth(ringWidth)
-{
-  computeBeamCoordinates();
-}
-
-unsigned PencilRings::nrPencils() const
-{
-  // the centered hexagonal number
-  return 3 * itsNrRings * (itsNrRings + 1) + 1;
-}
-
-double PencilRings::pencilEdge() const
-{
-  return itsRingWidth / M_SQRT3;
-}
-
-double PencilRings::pencilWidth() const
-{
-  //  _   //
-  // / \  //
-  // \_/  //
-  //|...| //
-  return 2.0 * pencilEdge();
-}
-
-double PencilRings::pencilHeight() const
-{
-  //  _  _ //
-  // / \ : //
-  // \_/ _ //
-  //       //
-  return itsRingWidth;
-}
-
-double PencilRings::pencilWidthDelta() const
-{
-  //  _    //
-  // / \_  //
-  // \_/ \ //
-  //   \_/ //
-  //  |.|  //
-  return 1.5 * pencilEdge();
-}
-
-double PencilRings::pencilHeightDelta() const
-{
-  //  _      //
-  // / \_  - //
-  // \_/ \ - //
-  //   \_/   //
-  return 0.5 * itsRingWidth;
-}
-
-void PencilRings::computeBeamCoordinates()
-{
-  std::vector<PencilCoord3D> &coordinates = getCoordinates();
-  double dl[6], dm[6];
-
-  // stride for each side, starting from the top, clock-wise
-
-  //  _    //
-  // / \_  //
-  // \_/ \ //
-  //   \_/ //
-  dl[0] = pencilWidthDelta();
-  dm[0] = -pencilHeightDelta();
-
-  //  _  //
-  // / \ //
-  // \_/ //
-  // / \ //
-  // \_/ //
-  dl[1] = 0;
-  dm[1] = -pencilHeight();
-
-  //    _  //
-  //  _/ \ //
-  // / \_/ //
-  // \_/   //
-  dl[2] = -pencilWidthDelta();
-  dm[2] = -pencilHeightDelta();
-
-  //  _    //
-  // / \_  //
-  // \_/ \ //
-  //   \_/ //
-  dl[3] = -pencilWidthDelta();
-  dm[3] = pencilHeightDelta();
-
-  //  _  //
-  // / \ //
-  // \_/ //
-  // / \ //
-  // \_/ //
-  dl[4] = 0;
-  dm[4] = pencilHeight();
-
-  //    _  //
-  //  _/ \ //
-  // / \_/ //
-  // \_/   //
-  dl[5] = pencilWidthDelta();
-  dm[5] = pencilHeightDelta();
-
-  // ring 0: the center pencil beam
-  coordinates.reserve(nrPencils());
-  coordinates.push_back( PencilCoord3D( 0, 0 ) );
-
-  // ring 1-n: create the pencil beams from the inner ring outwards
-  for( unsigned ring = 1; ring <= itsNrRings; ring++ ) {
-    // start from the top
-    double l = 0;
-    double m = pencilHeight() * ring;
-
-    for( unsigned side = 0; side < 6; side++ ) {
-      for( unsigned pencil = 0; pencil < ring; pencil++ ) {
-        coordinates.push_back( PencilCoord3D( l, m ) );
-        l += dl[side]; m += dm[side];
-      }
-    }
-  }
-}
 
 PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres )
 :
@@ -289,14 +147,23 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
 #else // ASM implementation
 
+// what we can process in one go
 static const unsigned NRSTATIONS = 3;
 static const unsigned NRBEAMS = 6;
-static const unsigned TIMESTEPSIZE = 128;
 #define BEAMFORMFUNC _beamform_up_to_6_stations_and_3_beams
+
+// the number of samples to do in one go, such that the
+// caches are optimally used. itsNrSamplesPerIntegration needs
+// to be a multiple of this
+static const unsigned TIMESTEPSIZE = 128;
 
 void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out )
 {
   const unsigned nrBeams = itsCoordinates.size();
+
+  if( itsNrSamplesPerIntegration % TIMESTEPSIZE > 0 ) {
+    THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
+  }
 
   // Maximum number of flagged samples. If a station has more, we discard it entirely
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
@@ -365,11 +232,99 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
       processStations = std::min( NRSTATIONS, itsNrStations - stat );
 
       for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += TIMESTEPSIZE ) {
+        // central beam (#0) has no weights, we can simply add the stations
+	switch( processStations ) {
+	  case 0:
+	  default:
+	    THROW(CNProcException,"Requested to add " << processStations << " stations, but can only add 1-6.");
+	    break;
 
-        for( unsigned beam = 0; beam < nrBeams; beam += processBeams ) {
+	  case 1:
+	    // nothing to add, so just copy the values
+	    memcpy( out->samples[ch][0][time].origin(), in->samples[ch][stat+0][time].origin(),
+              TIMESTEPSIZE * NR_POLARIZATIONS * sizeof out->samples[0][0][0][0] );
+	    break;
+
+	  case 2:
+	    _add_2_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+
+	  case 3:
+	    _add_3_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+
+	  case 4:
+	    _add_4_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+
+	  case 5:
+	    _add_4_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+
+	    _add_2_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+	      reinterpret_cast<const float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+#if 0
+	  case 5:
+	    _add_5_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+#endif
+	  case 6:
+	    _add_6_single_precision_vectors(
+	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
+              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
+              reinterpret_cast<const float*>(in->samples[ch][stat+5][time].origin()),
+	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
+	      );
+	    break;
+	}
+
+	// non-central beams
+        for( unsigned beam = 1; beam < nrBeams; beam += processBeams ) {
           processBeams = std::min( NRBEAMS, nrBeams - beam ); 
 
           // beam form
+	  // note: PPF.cc puts zeroes at flagged samples, so we can just add them
           BEAMFORMFUNC(
             out->samples[ch][beam][time].origin(),
             out->samples[ch][beam].strides()[0] * sizeof out->samples[0][0][0][0],

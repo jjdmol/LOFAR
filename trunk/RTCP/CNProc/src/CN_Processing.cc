@@ -27,6 +27,7 @@
 
 #include <Common/Timer.h>
 #include <Interface/CN_Configuration.h>
+#include <Interface/PencilCoordinates.h>
 #include <Interface/CN_Mapping.h>
 #include <cassert>
 #include <complex>
