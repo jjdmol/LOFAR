@@ -34,11 +34,13 @@
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MCPosition.h>
-#include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MCBaseline.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MUvw.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Utilities/Assert.h>
@@ -137,29 +139,39 @@ namespace LOFAR {
     // Read the station positions from the ANTENNA subtable
     // and convert them to a baseline in ITRF.
     const TableRecord& keyset = itsParent->table().keywordSet();
-    cout<<"nkeys="<<keyset.size()<<endl;
     itsCanCalc = keyset.isDefined ("ANTENNA");
     if (itsCanCalc) {
-      cout << "cancalc" << endl;
       Table anttab (keyset.asTable ("ANTENNA"));
       AlwaysAssert (anttab.nrow() > 0, AipsError);
       int nrant = anttab.nrow();
-      cout << "nrant="<<nrant<<endl;
       ROScalarMeasColumn<MPosition> antcol (anttab, "POSITION");
+      MPosition arrayPos;
+      Vector<Double> pos0;
       for (int i=0; i<nrant; ++i) {
         // Read antenna position and convert to ITRF.
         MPosition mpos = MPosition::Convert (antcol(i), MPosition::ITRF)();
-        const MVPosition& mvpos = mpos.getValue();
+        if (i == 0) {
+          pos0 = mpos.getValue().getVector();
+        }
+        // Use position of middle station as array position.
+        if (i == nrant/2) {
+          arrayPos = mpos;
+        }
+        Vector<Double> pos = mpos.getValue().getVector();
+        MVPosition mvpos((pos[0] - pos0[0]),
+                         (pos[1] - pos0[1]),
+                         (pos[2] - pos0[2]));
         itsAntMB.push_back (MBaseline (MVBaseline(mvpos), MBaseline::ITRF));
       }
       // Read the phase reference position from the FIELD subtable.
-      // Only use the first value from the PHASEDIR array.
+      // Only use the first value from the PHASE_DIR array in J2000.
       Table fldtab (itsParent->table().keywordSet().asTable ("FIELD"));
       AlwaysAssert (fldtab.nrow() == 1, AipsError);
-      ROArrayMeasColumn<MDirection> fldcol (fldtab, "PHASEDIR");
-      itsPhaseDir = *(fldcol(0).data());
+      ROArrayMeasColumn<MDirection> fldcol (fldtab, "PHASE_DIR");
+      itsPhaseDir = MDirection::Convert (*(fldcol(0).data()),
+                                         MDirection::J2000)();
       // Create a reference frame. Use the middle antenna as array position.
-      itsFrame.set (antcol(nrant/2));
+      itsFrame.set (arrayPos);
       itsFrame.set (itsPhaseDir);
       // Initialize the rest which is used to cache the UVW per antenna.
       // The cache is only useful if the MS is accessed in time order, but that
@@ -184,18 +196,18 @@ namespace LOFAR {
       int blnr   = rownr / nrbasel;
       int antinx = rownr - blnr * nrbasel;
       int ant1   = itsParent->ant1()[antinx];
-      int ant2   = itsParent->ant1()[antinx];
+      int ant2   = itsParent->ant2()[antinx];
       // If a different block (i.e. time), we have to calculate the UVWs.
       if (blnr != itsLastBlNr) {
         itsLastBlNr  = blnr;
-        itsFrame.set (MEpoch(MVEpoch(itsParent->time(blnr)), MEpoch::UTC));
+        Quantum<Double> tm(itsParent->time(blnr), "s");
+        itsFrame.set (MEpoch(MVEpoch(tm.get("d").getValue()), MEpoch::UTC));
         itsUvwFilled = false;
       }
       // Calculate the UVWs for this timestamp if not done yet.
       int ant = ant1;
       for (int i=0; i<2; ++i) {
         if (!itsUvwFilled[ant]) {
-          cout<<"calc for ant="<<ant<<", blnr="<<blnr<<endl;
           MBaseline& mbl = itsAntMB[ant];
           mbl.getRefPtr()->set(itsFrame);       // attach frame
           MBaseline::Convert mcvt(mbl, MBaseline::J2000);
