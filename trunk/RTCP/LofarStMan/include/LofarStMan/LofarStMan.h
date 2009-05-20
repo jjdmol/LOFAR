@@ -294,6 +294,8 @@ private:
   bool   itsDoSwap;       //# True = byte-swapping is needed
   int64  itsBlockSize;    //# size of a block containing a seqnr
   int64  itsBLDataSize;   //# data size of a single baseline
+  int64  itsDataStart;    //# start of data in a block
+  int64  itsSampStart;    //# start of nsamples in a block
   //# Buffer to hold swapped nsample values.
   casa::Block<casa::uShort> itsNSampleBuf;
   double  itsMaxNrSample;  //# weight = nsample / itsMaxNrSample;

@@ -273,13 +273,21 @@ void LofarStMan::init()
       >> itsNPol >> itsMaxNrSample >> alignment >> asBigEndian;
   aio.getend();
   AlwaysAssert (itsAnt1.size() == itsAnt2.size(), AipsError);
-  itsDoSwap = (asBigEndian != HostInfo::bigEndian());
+  uInt nrant = itsAnt1.size();
+  itsDoSwap  = (asBigEndian != HostInfo::bigEndian());
   // A block contains an Int seqnr, Complex data per baseline,chan,pol and
   // uShort nsample per baseline,chan. Align it as needed.
   itsBLDataSize = itsNChan * itsNPol * 8;    // #bytes/baseline
-  itsBlockSize  = 4 + itsAnt1.size() * (itsBLDataSize + itsNChan*2);
-  if (alignment > 1) {
-    itsBlockSize  = ((itsBlockSize + alignment-1) / alignment) * alignment;
+  if (alignment <= 1) {
+    itsDataStart = 4;
+    itsSampStart = itsDataStart + nrant*itsBLDataSize;
+    itsBlockSize = itsSampStart + nrant*itsNChan*2;
+  } else {
+    itsDataStart = alignment;
+    itsSampStart = itsDataStart + (nrant*itsBLDataSize + alignment-1)
+      / alignment * alignment;
+    itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
+      / alignment * alignment;
   }
   if (itsDoSwap) {
     itsNSampleBuf.resize (itsNChan * 2);
@@ -302,7 +310,7 @@ void LofarStMan::getData (uInt rownr, Complex* buf)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = 4 + baseline * itsBLDataSize;
+  uInt offset  = itsDataStart + baseline * itsBLDataSize;
   const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
   if (itsDoSwap) {
     const char* from = (const char*)ptr;
@@ -322,7 +330,7 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = 4 + baseline * itsBLDataSize;
+  uInt offset  = itsDataStart + baseline * itsBLDataSize;
   void* ptr = itsFile->getWritePointer (blocknr * itsBlockSize + offset);
   if (itsDoSwap) {
     const char* from = (const char*)buf;
@@ -342,7 +350,7 @@ const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = 4 + itsBLDataSize*itsAnt1.size() + baseline * itsNChan*2;
+  uInt offset  = itsSampStart + baseline * itsNChan*2;
   const void* ptr = itsFile->getReadPointer (blocknr * itsBlockSize + offset);
   const uShort* from = (const uShort*)ptr;
   if (!swapIfNeeded || !itsDoSwap) {
