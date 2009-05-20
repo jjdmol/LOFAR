@@ -95,6 +95,11 @@ void createTable()
   Table tab(newtab);
 }
 
+uInt nalign (uInt size, uInt alignment)
+{
+  return (size + alignment-1) / alignment * alignment - size;
+}
+
 void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  Double startTime, Double interval, const Complex& startValue,
                  uInt alignment, Bool bigEndian)
@@ -138,27 +143,32 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   indgen (data, startValue, Complex(0.01, 0.01));
   Array<uShort> nsample(IPosition(1,nchan));
   indgen (nsample);
-  // Allocate space for block alignment.
-  uInt blocksz = 4 + nrbl*(8*data.size() + 2*nsample.size());
-  uInt fullsz = blocksz;
-  if (alignment > 1) {
-    fullsz = ((blocksz + alignment-1) / alignment) * alignment;
+  // Allocate space for possible block alignment.
+  if (alignment < 1) {
+    alignment = 1;
   }
-  Block<Char> align(fullsz-blocksz, 0);
+  Block<Char> align1(nalign(4, alignment), 0);
+  Block<Char> align2(nalign(nrbl*8*data.size(), alignment), 0);
+  Block<Char> align3(nalign(nrbl*2*nsample.size(), alignment), 0);
   // Write the data as nseq blocks.
   for (uInt i=0; i<nseq; ++i) {
     cfile->write (1, &i);
+    if (align1.size() > 0) {
+      cfile->write (align1.size(), align1.storage());
+    }
     for (uInt j=0; j<nrbl; ++j) {
       cfile->write (data.size(), data.data());
       data += Complex(0.01, 0.02);
+    }
+    if (align2.size() > 0) {
+      cfile->write (align2.size(), align2.storage());
     }
     for (uInt j=0; j<nrbl; ++j) {
       cfile->write (nsample.size(), nsample.data());
       nsample += uShort(1);
     }
-    // Add alignment if needed.
-    if (align.size() > 0) {
-      cfile->write (align.size(), align.storage());
+    if (align3.size() > 0) {
+      cfile->write (align3.size(), align3.storage());
     }
   }
   delete cfile;
