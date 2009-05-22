@@ -154,11 +154,18 @@ void claimManager_queryConnectClaim_Callback(
     strName    = aResult[t][2];
     tClaimDate = aResult[t][3];
     
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tClaimDate: "+tClaimDate);
+    
     // We are claimed when the date is not 1970
     bClaimed = year( tClaimDate ) != 1970;
   
     // Do we already have this name 
     iPos = dynContains( strClaimDPName, strDP );  
+    
+    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| found old claim at postion: "+ iPos);
+
     
     // When we have the claim, and the datapoint is now 'not claimed'
     // then 
@@ -174,6 +181,10 @@ void claimManager_queryConnectClaim_Callback(
     {
       dynAppend(  strClaimDPName     , strDP   );
       dynAppend(  strClaimObjectName , strName );
+    } else if( bClaimed && (iPos > 0 )) {
+      // When we do have the item and it gets 'Claimed'
+      // then we have to alter the 
+      strClaimObjectName[iPos] = strName;
     }
   }  
 }

@@ -50,8 +50,17 @@ main()
   bool showDebug = true;
        
   string strCurConfig;
-//  string strDataDir             = "/opt/lofar/etc/";
-  string strDataDir               = "c:/data/CS20_CCU001/data/configs/";
+  string strDataDir     = "";
+  string strDataDir             = ""; 
+  if (isDir("/opt/lofar/etc/") ) {
+    strDataDir = "/opt/lofar/etc/";
+  } else if ( isDir ("c:/data/CS20_CS010/data/configs/") ) {
+    strDataDir = "c:/data/CS20_CS010/data/configs/";
+  } else {
+    DebugN("Could not find datadair to work with, leaving and no antenne data read.");
+    return;
+  }
+  
   string strConfFile    = strDataDir+"StationBGPconnections.conf";
 
   dyn_string dynStr_fileContent;

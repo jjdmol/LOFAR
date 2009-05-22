@@ -55,8 +55,17 @@ main()
       H          = 3;                // ArrayIndexnumber of dda_splittedLinesAntConfFile;
        
   string strCurConfig;
-//  string strDataDir             = "/opt/lofar/etc/";
-  string strDataDir               = "c:/data/CS20_CS010/data/configs/";
+  
+  string strDataDir             = ""; 
+  if (isDir("/opt/lofar/etc/") ) {
+    strDataDir = "/opt/lofar/etc/";
+  } else if ( isDir ("c:/data/CS20_CS010/data/configs/") ) {
+    strDataDir = "c:/data/CS20_CS010/data/configs/";
+  } else {
+    DebugN("Could not find datadair to work with, leaving and no antenne data read.");
+    return;
+  }
+    
   string strAntArrayConfFile      = strDataDir+"AntennaArrays.conf";
   string strRemoteStationConfFile = strDataDir+"RemoteStation.conf";
 
