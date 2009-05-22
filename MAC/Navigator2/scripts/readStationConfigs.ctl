@@ -57,9 +57,9 @@ main()
   string strCurConfig;
   
   string strDataDir             = ""; 
-  if (isDir("/opt/lofar/etc/") ) {
+  if (isdir("/opt/lofar/etc/") ) {
     strDataDir = "/opt/lofar/etc/";
-  } else if ( isDir ("c:/data/CS20_CS010/data/configs/") ) {
+  } else if ( isdir ("c:/data/CS20_CS010/data/configs/") ) {
     strDataDir = "c:/data/CS20_CS010/data/configs/";
   } else {
     DebugN("Could not find datadair to work with, leaving and no antenne data read.");
