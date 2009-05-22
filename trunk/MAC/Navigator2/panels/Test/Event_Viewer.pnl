@@ -1277,40 +1277,40 @@ LANG:1 5 claim
   int status = dpWaitForValue( dpNamesWait, conditions, dpNamesReturn, returnValues, 25 );
   
   if ( status == -1 ) {
-		LOG_DEBUG( \"Error in dpWaitFor Value\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:Error in dpWaitFor Value\" );
 
-		LOG_DEBUG( \"dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		LOG_DEBUG( \"dpNamesReturn : \" + dpNamesReturn );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
 		LOG_DEBUG( \"returnValues : \" + returnValues );
 	} else if ( dynlen(getLastError()) != 0 ) {
 
-		LOG_DEBUG( \"Error returned in message dpWaitForValue\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:Error returned in message dpWaitForValue\" );
 
 		// Reaction: e.g. output
 
 		LOG_DEBUG( getLastError() );
 
-		LOG_DEBUG( \"dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
 		LOG_DEBUG( \"dpNamesReturn : \" + dpNamesReturn );
 
-		LOG_DEBUG( \"returnValues : \" + returnValues );
+		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
 	} else {
-		LOG_DEBUG( \"dpWaitForValue : everything ok\" );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpWaitForValue : everything ok\" );
 
-		LOG_DEBUG( \"dpNamesWait : \" + dpNamesWait );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"conditions : \" + conditions );
+		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		LOG_DEBUG( \"dpNamesReturn : \" + dpNamesReturn );
+		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
-		LOG_DEBUG( \"returnValues : \" + returnValues );
+		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
        
     LOG_DEBUG(\"Set txt_response to: \"+ returnValues[3]);
     setValue(\"txt_response\",\"text\",returnValues[3]);
