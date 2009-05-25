@@ -1,5 +1,5 @@
 #!/bin/sh
 # do a hard copy until a variable is available
 cp ../../../test/DATABASENAME .
-$lofar_sharedir/runtest.sh tConverter 2>&1 > tConverter.log
+./runctest.sh tPICtree 2>&1 > tPICtree_test.log
 rm -f DATABASENAME
