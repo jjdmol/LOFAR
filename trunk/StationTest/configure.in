@@ -9,4 +9,13 @@ AC_OUTPUT(
 	gold/Makefile
 	modules/Makefile
 	tc/Makefile
+	test/Makefile
+	test/beamformertest/Makefile
+	test/hbatest/Makefile
+	test/hbatest/gold/Makefile
+	test/subbandstatistics/Makefile
+	test/systemnoise/Makefile
+	test/timing/Makefile
+	test/xcstatistics/Makefile
 )
+
