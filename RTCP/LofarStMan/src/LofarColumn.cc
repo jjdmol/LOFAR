@@ -41,7 +41,7 @@
 #include <measures/Measures/MCBaseline.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MUvw.h>
+#include <measures/Measures/Muvw.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
