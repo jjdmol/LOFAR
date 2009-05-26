@@ -70,6 +70,7 @@ OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
 StorageAppl			-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
 BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
+BGPConnectionInfo		-		C	N	
 #
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC

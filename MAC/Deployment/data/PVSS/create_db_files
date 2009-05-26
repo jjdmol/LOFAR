@@ -232,42 +232,7 @@ substitute_BGP_midplane()
 	} '
 }
 #
-# substitute_BGP_midplane_ionode		# Adder and InputBuffer need an _mp and _dt also, and logMsg set
-		if [ "${dpt}" == "Adder" ];then
-			echo "DpName	TypeName	ID"
-			echo "_mp_${dpt}	${dpt}	0"
-			echo "_dt_${dpt}	_DynamicDatapoints	0"
-			echo ""
-			echo "ElementName	TypeName	_original.._value	_original.._status"
-			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
-			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
-			echo ""
-
-			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
-			echo ""
-		fi
-
-		if [ "${dpt}" == "InputBuffer" ];then
-			echo "DpName	TypeName	ID"
-			echo "_mp_${dpt}	${dpt}	0"
-			echo "_dt_${dpt}	_DynamicDatapoints	0"
-			echo ""
-		   	echo "ElementName	TypeName	_original.._value	_original.._status"
-			echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
-			echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
-			echo ""
-
-			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
-			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
-			echo ""
-		fi
-
-
-
-
+# substitute_BGP_midplane_ionode\
 #
 # syntax of the lines must be: dp dpt
 #
@@ -753,6 +718,7 @@ substitute_instancenr()
 # number_dps
 #
 # add action & datapoint number to dplines
+# if dpt ($2) is missing, skip line since only type info was needed, no datapoint
 # 
 number_dps()
 {
@@ -761,8 +727,10 @@ number_dps()
 		count = 1000;
 	};
 	{
-		print $1"	"$2"	"count;
-		count+=1;
+                if ($2 != "") {
+		  print $1"	"$2"	"count;
+		  count+=1;
+                }
 	} '
 }
 
@@ -955,7 +923,7 @@ create_dp_file()
 		echo "dummy" | awk -v nrHBAs=$NRHBAS -v nrLBAs=$NRLBAS -v nrRSPs=$NRRSPBOARDS '{
 			for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
 				RSPboard=antNr/4
-				Subrack=RSPboard/4
+				Subrack=RSPboard/4if [ "${dbtype}" != "$2" ]; then
 				Cabinet=Subrack/2
 				if (antNr < nrHBAs) {
 					printf "HBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
