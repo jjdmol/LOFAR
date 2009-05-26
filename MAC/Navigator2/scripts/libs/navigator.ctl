@@ -53,7 +53,8 @@ global string     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
 
 global dyn_string g_observationsList;  // holds active observations
 global dyn_string g_processesList;     // holds active software
-global mapping    g_observations;      // 
+global mapping    g_observations;      //
+
 global dyn_string g_stationList;       // holds valid stations for choices in the viewBox
 // Station based globals
 global dyn_int    g_cabinetList;       // holds valid cabinets for choices in the viewBox
