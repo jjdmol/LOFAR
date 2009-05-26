@@ -31,6 +31,16 @@ void _add_4_single_precision_vectors(
   /* r8 */ unsigned count /* non-zero; multiple of 16 */
 );  
 
+void _add_5_single_precision_vectors(
+  /* r3 */ float *dst,
+  /* r4 */ const float *src1,
+  /* r5 */ const float *src2,
+  /* r6 */ const float *src3,
+  /* r7 */ const float *src4,
+  /* r8 */ const float *src5,
+  /* r9 */ unsigned count /* non-zero; multiple of 16 */
+);  
+
 void _add_6_single_precision_vectors(
   /* r3 */ float *dst,
   /* r4 */ const float *src1,

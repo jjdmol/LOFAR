@@ -443,6 +443,152 @@ _add_4_single_precision_vectors:
 	blr
 
 
+.global	_add_5_single_precision_vectors
+_add_5_single_precision_vectors:
+
+	li	 0,-16
+	stfpdux  14,1,0
+	stfpdux  15,1,0
+	stfpdux  16,1,0
+	stfpdux  17,1,0
+	stfpdux  18,1,0
+	stfpdux  19,1,0
+	stfpdux  24,1,0
+	stfpdux  25,1,0
+	stfpdux  26,1,0
+	stfpdux  27,1,0
+	stfpdux  28,1,0
+	stfpdux  29,1,0
+
+	srwi	 9,9,3
+	li	 11,8
+	subi	 9,9,1
+	mtctr	 9
+	subi	 3,3,8
+
+	cmpwi	 0,9,0
+
+	lfpsx	 0,0,4
+	lfpsx	 1,0,5
+	lfpsx	 2,0,6
+	lfpsx	 3,0,7
+	lfpsx	 4,0,8
+
+	lfpsux	 5,4,11
+	lfpsux	 6,5,11
+	lfpsux	 7,6,11
+	lfpsux	 8,7,11
+	lfpsux	 9,8,11
+
+	lfpsux	 10,4,11
+	lfpsux	 11,5,11
+	lfpsux	 12,6,11
+	lfpsux	 13,7,11
+	lfpsux	 14,8,11
+	fpadd	 24,0,1
+	fpadd	 25,2,3
+
+	lfpsux	 15,4,11
+	lfpsux	 16,5,11
+	lfpsux	 17,6,11
+	fpadd	 24,24,25
+	lfpsux	 18,7,11
+	lfpsux	 19,8,11
+	fpadd	 27,5,6
+	fpadd	 28,7,8
+
+	beq-	 0,1f
+	li	 10,48
+
+0:
+	dcbt	 4,10
+	lfpsux	 0,4,11
+	fpadd	 24,24,4
+	lfpsux	 1,5,11
+	lfpsux	 2,6,11
+	fpadd	 27,27,28
+	lfpsux	 3,7,11
+	lfpsux	 4,8,11
+	stfpsux	 24,3,11
+	fpadd	 24,10,11
+	dcbt	 5,10
+	fpadd	 25,12,13
+
+	lfpsux	 5,4,11
+	fpadd	 27,27,9
+	lfpsux	 6,5,11
+	lfpsux	 7,6,11
+	fpadd	 24,24,25
+	lfpsux	 8,7,11
+	lfpsux	 9,8,11
+	stfpsux	 27,3,11
+	fpadd	 27,15,16
+	dcbt	 6,10
+	fpadd	 28,17,18
+
+	lfpsux	 10,4,11
+	fpadd	 24,24,14
+	lfpsux	 11,5,11
+	lfpsux	 12,6,11
+	fpadd	 27,27,28
+	lfpsux	 13,7,11
+	lfpsux	 14,8,11
+	stfpsux	 24,3,11
+	fpadd	 24,0,1
+	dcbt	 7,10
+	fpadd	 25,2,3
+
+	lfpsux	 15,4,11
+	fpadd	 27,27,19
+	lfpsux	 16,5,11
+	lfpsux	 17,6,11
+	fpadd	 24,24,25
+	dcbt	 8,10
+	lfpsux	 18,7,11
+	lfpsux	 19,8,11
+	stfpsux	 27,3,11
+	fpadd	 27,5,6
+	fpadd	 28,7,8
+
+	bdnz	 0b
+
+1:
+	fpadd	 24,24,4
+	fpadd	 27,27,28
+	stfpsux	 24,3,11
+	fpadd	 24,10,11
+	fpadd	 25,12,13
+
+	fpadd	 27,27,9
+	fpadd	 24,24,25
+	stfpsux	 27,3,11
+	fpadd	 27,15,16
+	fpadd	 28,17,18
+
+	fpadd	 24,24,14
+	fpadd	 27,27,28
+	stfpsux	 24,3,11
+
+	fpadd	 27,27,19
+	stfpsux	 27,3,11
+
+	li	 0,16		# restore call-saved registers
+	lfpdx	 29,0,1
+	lfpdux	 28,1,0
+	lfpdux	 27,1,0
+	lfpdux	 26,1,0
+	lfpdux	 25,1,0
+	lfpdux	 24,1,0
+	lfpdux	 19,1,0
+	lfpdux	 18,1,0
+	lfpdux	 17,1,0
+	lfpdux	 16,1,0
+	lfpdux	 15,1,0
+	lfpdux	 14,1,0
+	addi	 1,1,16
+	blr
+
+
 .global	_add_6_single_precision_vectors
 _add_6_single_precision_vectors:
 

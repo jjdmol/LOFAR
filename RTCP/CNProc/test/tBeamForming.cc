@@ -133,6 +133,34 @@ void test_add4()
 }
 
 
+void test_add5()
+{
+  memset(sums, 0, sizeof sums);
+
+  NSTimer timer("add5", true);
+  timer.start();
+
+  for (unsigned chan = 0; chan < NR_CHANNELS; chan ++)
+    _add_5_single_precision_vectors((float *) sums[chan],
+				    (const float *) samples[chan][0],
+				    (const float *) samples[chan][1],
+				    (const float *) samples[chan][2],
+				    (const float *) samples[chan][3],
+				    (const float *) samples[chan][4],
+				    NR_TIMES * NR_POLARIZATIONS * 2);
+  timer.stop();
+
+  for (unsigned chan = 0; chan < NR_CHANNELS; chan ++)
+    for (unsigned time = 0; time < NR_TIMES; time ++)
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
+	assert(sums[chan][0][time][pol] == samples[0][chan][time][pol] +
+					   samples[1][chan][time][pol] +
+					   samples[2][chan][time][pol] +
+					   samples[3][chan][time][pol] +
+					   samples[4][chan][time][pol]);
+}
+
+
 void test_add6()
 {
   memset(sums, 0, sizeof sums);
@@ -252,7 +280,7 @@ int main(int, char **argv)
 
   INIT_BGP_LOGGER(argv[0]);
 
-#if 0
+#if 1
   if (NR_STATIONS >= 2)
     test_add2();
 
@@ -262,15 +290,20 @@ int main(int, char **argv)
   if (NR_STATIONS >= 4)
     test_add4();
 
+  if (NR_STATIONS >= 5)
+    test_add5();
+
   if (NR_STATIONS >= 6)
     test_add6();
 #endif
 
+#if 0
   //test_beamform_3stations_6beams();
 
   for (int nr_beams_at_once = 1; nr_beams_at_once <= std::min(NR_BEAMS, 3); ++ nr_beams_at_once)
     for (int nr_stations_at_once = 1; nr_stations_at_once <= std::min(NR_STATIONS, 6); ++ nr_stations_at_once)
       test_beamformer(nr_stations_at_once, nr_beams_at_once);
+#endif
 
 #if 0
   BGP_UPC_Start(0);
