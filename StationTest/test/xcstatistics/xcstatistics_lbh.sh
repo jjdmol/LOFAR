@@ -9,9 +9,6 @@ rspctl --wg=0
 rspctl --rcumode=3
 sleep 2
 
-rspctl --splitter=1
-sleep 2
-
 echo "check xcstat and xcangle"
 
 rspctl --xcsubband=256
