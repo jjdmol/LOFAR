@@ -19,6 +19,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     Exceptions.h \
 		     StreamableData.h \
 		     PencilBeamData.h \
+		     PencilCoordinates.h \
                      StokesData.h \
                      PipelineOutput.h
 
