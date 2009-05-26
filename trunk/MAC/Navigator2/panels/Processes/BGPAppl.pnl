@@ -37,21 +37,21 @@ updateBGPAppl(string dp1, string KSPType,
                string dp4, bool invalid)
 {
   LOG_TRACE(\"BGPAppl.pnl:updateBGPAppl|entered\");
-
+  string SymbolCol=\"_Window\";
   if (!invalid) {
     setValue(\"ksp_txt\", \"text\", KSPType);
     setValue(\"inputBuffer_txt\", \"text\", inputBufferList);
     setValue(\"adder_txt\", \"text\", adderList);
     
   } else {
-    string SymbolCol=\"Lofar_invalid\";
+    SymbolCol=\"Lofar_invalid\";
     if (dp1 == \"\") {
       SymbolCol=\"Lofar_dpOffline\";
     }
-    setValue(\"ksp_txt\", \"backCol\",SymbolCol );
-    setValue(\"inputBuffer_txt\", \"backCol\", SymbolCol);
-    setValue(\"adder_txt\", \"backCol\", SymbolCol);
   }  
+  setValue(\"ksp_txt\", \"backCol\",SymbolCol );
+  setValue(\"inputBuffer_txt\", \"backCol\", SymbolCol);
+  setValue(\"adder_txt\", \"backCol\", SymbolCol);
 }
 
 

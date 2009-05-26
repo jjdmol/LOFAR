@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 590 158 N "_3DFace" 1
+PANEL,-1 -1 823 158 N "_3DFace" 1
 "$nodeNr"
 "main()
 {
@@ -25,9 +25,22 @@ PANEL,-1 -1 590 158 N "_3DFace" 1
     
   baseDP+=\"_IONode\"+IONodeNr;
  
-  string aS = navFunct_DPName2CEPName(baseDP);
-
-  setValue(\"nodeName\",\"text\",aS);
+  string nodeName  = navFunct_DPName2CEPName(baseDP);
+  string ipAddress = \"000.000.000.000\";
+  string station   = \"\";
+  string macAddress= \"00:00:00:00:00:00\";
+  if (dpExists(\"CCU001:\"+nodeName)) {
+    dpGet(\"CCU001:\"+nodeName+\".station\",station);
+    dpGet(\"CCU001:\"+nodeName+\".IP\",ipAddress);
+    dpGet(\"CCU001:\"+nodeName+\".MAC\",macAddress);
+  } else{
+    LOG_ERROR(\"CEP_IONode_small.pnl:main|Couldn't find BGPConnections for CCU001:\"+nodeName);
+  }   
+  setValue(\"nodeName\",\"text\",\"Node: \"+nodeName);
+  setValue(\"ipAddress\",\"text\",\"IP: \"+ipAddress);
+  setValue(\"macAddress\",\"text\",\"MAC: \"+macAddress);
+  setValue(\"station\",\"text\",station);
+  
 
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP); 
@@ -137,7 +150,7 @@ void IONodeCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E 12.62100383631714 -3.356361617823352e-020 -1.094697582262634e-017 0.07739242972851142 -69.31505754475711 -0.3869621486425571 1 E 15 5 37 287
+ 0 1 1 2 1 E 24.95985904813425 -3.356361617823352e-020 -2.16492267239353e-017 0.07739242972851142 -254.3978857220141 -0.3869621486425571 1 E 15 5 37 287
 6 0
 "ionode"
 ""
@@ -163,8 +176,8 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 0 1 E 1 0 1 120 -5.551115123125783e-016 1 E 2 2 274 18
-1 5 0 "" 1
+ 0 1 1 0 1 E U  1 E 122 2 665 18
+1 7 0 "" 1
 0
 6 3
 "RECTANGLE1"
@@ -203,7 +216,7 @@ LANG:1 5 CSXXX
 2 6
 "nodeName"
 ""
-1 190 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 151 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -213,13 +226,53 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 190 4 285 18
-0 2 2 "0s" 0 0 0 192 0 0  190 4 1
+E E 0 1 1 2 1 E U  1 E 151 4 284 18
+0 2 2 "0s" 0 0 0 192 0 0  151 4 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 14 R00-M0-N00-J00
+LANG:1 20 Node: R00-M0-N00-J00
+2 9
+"ipAddress"
+""
+1 327 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 327 4 443 18
+0 2 2 "0s" 0 0 0 192 0 0  327 4 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 19 IP: 999.999.999.999
+2 10
+"macAddress"
+""
+1 499 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 499 4 637 18
+0 2 2 "0s" 0 0 0 192 0 0  499 4 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 22 MAC: 00:00:00:00:00:00
 0
 LAYER, 1 
 1

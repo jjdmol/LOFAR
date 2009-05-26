@@ -47,34 +47,73 @@
 main()
 { 
 
-  bool showDebug = true;
+  bool showDebug = false;
        
   string strCurConfig;
   string strDataDir     = "";
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
-    strDataDir = "/opt/lofar/etc/";
-  } else if ( isdir ("c:/data/CS20_CS010/data/configs/") ) {
-    strDataDir = "c:/data/CS20_CS010/data/configs/";
+    strDataDir = "/opt/lofar/etc/StaticMetaData";
+  } else if ( isdir ("c:/data/CS20_CCU001/data/configs/") ) {
+    strDataDir = "c:/data/CS20_CCU001/data/configs/";
   } else {
-    DebugN("Could not find datadair to work with, leaving and no antenne data read.");
+    DebugN("Could not find datadir to work with, leaving and no antenne data read.");
     return;
   }
   
-  string strConfFile    = strDataDir+"StationBGPconnections.conf";
+  string strRSPDatFile   = strDataDir+"RSPConnections.dat";
+  string strMACDatFile   = strDataDir+"MAC+IP.dat";
 
   dyn_string dynStr_fileContent;
    
-  
-  dynStr_fileContent = lto_getFile_asDynStr(strConfFile);
-//  if (showDebug) DebugN("fileContent: "+dynStr_fileContent);
-  
+  // first read the RSP
+  dynStr_fileContent = lto_getFile_asDynStr(strRSPDatFile);
+  DebugN("Filling Database from file " + strRSPDatFile);
   for (int index=1;index <= dynlen(dynStr_fileContent);index++) {
     if (strpos(dynStr_fileContent[index],"#") < 0 || strpos(dynStr_fileContent[index],"#") > 4) {
-      dyn_string linesplitted=strsplit(dynStr_fileContent[index],"\t");
+      dyn_string linesplitted=strsplit(dynStr_fileContent[index]," \t");
       if (showDebug) DebugN(index+" :"+linesplitted);
+      // check if stationname is not empty
+      if (dynlen(linesplitted) == 3 && linesplitted[3] != "") {
+        // if BGPNode allready in dplist, rewrite contents.
+        // if not, add to dp's and fill contents.
+        string node= linesplitted[3];
+        if (!dpExists(node) ){
+          dpCreate(node, "BGPConnectionInfo");
+        }
+        
+        dpSet(node+".station",linesplitted[1]);
+        dyn_string rsp = strsplit(linesplitted[2],"_");
+        int nr = rsp[2];
+        if (showDebug) DebugN( "node: "+node+ "  rspfull: " + linesplitted[2]+ "  rsp[2]" + rsp[2]+ "nr: "+nr);
+        dpSet(node+".RSPBoard",nr);
+      }   
     }
   }
+  DebugN("Ready");
+
+  // now read MAC+IP
+  dynStr_fileContent = lto_getFile_asDynStr(strMACDatFile);
+  DebugN("Filling Database from file " + strMACDatFile);
+  for (int index=1;index <= dynlen(dynStr_fileContent);index++) {
+    if (strpos(dynStr_fileContent[index],"#") < 0 || strpos(dynStr_fileContent[index],"#") > 4) {
+      dyn_string linesplitted=strsplit(dynStr_fileContent[index]," \t");
+      if (showDebug) DebugN(index+" :"+linesplitted);
+      // check if stationname is not empty
+      if (dynlen(linesplitted) == 3 && linesplitted[1] != "") {
+        // if BGPNode allready in dplist, add contents.
+        // if not, add to dp's and fill contents.
+        string node= linesplitted[1];
+        if (!dpExists(node) ){
+          dpCreate(node, "BGPConnectionInfo");
+        }
+        
+        dpSet(node+".IP",linesplitted[2]);
+        dpSet(node+".MAC",linesplitted[3]);
+      }   
+    }
+  }
+  DebugN("Ready");
 }
 
 dyn_string lto_getFile_asDynStr(string aFileName)

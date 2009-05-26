@@ -13,21 +13,21 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-1 10 6 "" 0
+1 19 6 "" 0
 0
-1 11 6 "3" 0
+1 20 6 "3" 0
 0
-1 12 6 "3" 2
+1 21 6 "3" 2
 0
-1 13 6 "" 5
+1 22 6 "" 5
 0
-1 14 7 "" 0
+1 23 7 "" 0
 0
-1 15 7 "3" 0
+1 24 7 "3" 0
 0
-1 16 7 "3" 2
+1 25 7 "3" 2
 0
-1 17 7 "" 5
+1 26 7 "" 5
 0
 13 9
 "PUSH_BUTTON1"
@@ -92,7 +92,7 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  378 58 452 132
 2
@@ -127,6 +127,48 @@ E E
     DebugN(radio.text(radio.number));
 }" 0
 
+13 27
+"PUSH_BUTTON2"
+""
+1 350 290 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 348 288 472 314
+
+T 
+1
+LANG:1 12 PUSH_BUTTON2
+"main()
+{
+
+string line=\"This  is a test\";
+ 
+dyn_string split;
+ 
+split=strsplit(line, \" \");
+ 
+// The result is
+ 
+DebugN(\"Part 1= \", split[1]); // This
+ 
+DebugN(\"Part 2= \", split[2]); // is
+ 
+DebugN(\"Part 3= \", split[3]); // a
+ 
+DebugN(\"Part 4= \", split[4]); // test
+ 
+}
+ " 0
+ E E E
 0
 LAYER, 1 
 1
