@@ -16,11 +16,11 @@
 namespace LOFAR {
 namespace RTCP {
 
-const double speedOfLight = 299792458;
 
 class PencilBeams
 {
   public:
+    static const double speedOfLight = 299792458;
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
     PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres );
