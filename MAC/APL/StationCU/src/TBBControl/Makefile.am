@@ -31,7 +31,10 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir				= $(bindir)
-configfiles_DATA 			= TBBControl.conf
-sysconf_DATA				= 
+configfiles_DATA 			= 
+sysconf_DATA				= TBBControl.conf
+
+%.conf: %.conf.in
+	cp $< $@
 
 include $(top_srcdir)/Makefile.common

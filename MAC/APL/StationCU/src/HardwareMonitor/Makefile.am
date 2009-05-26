@@ -44,6 +44,9 @@ DOCHDRS						= $(pkginclude_HEADERS) $(BUILT_SOURCES)
 
 EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 
-sysconf_DATA				= 
+sysconf_DATA				= HardwareMonitor.conf
+
+%.conf: %.conf.in
+	cp $< $@
 
 include $(top_srcdir)/Makefile.common

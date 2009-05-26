@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_datetime.h>
@@ -59,12 +60,12 @@ namespace LOFAR {
 // ECMonitor()
 //
 ECMonitor::ECMonitor(const string&  cntlrName) :
-	 GCFTask             ((State)&ECMonitor::initial_state,cntlrName),
-	 itsOwnPropertySet   (0),
-	 itsTimerPort        (0),
-	 itsECPort           (0),
-	 itsPollInterval (10),
-	 itsNrCabs         (4)
+	 GCFTask            ((State)&ECMonitor::initial_state,cntlrName),
+	 itsOwnPropertySet  (0),
+	 itsTimerPort       (0),
+	 itsECPort          (0),
+	 itsPollInterval    (10),
+	 itsNrCabs          (4)
 {
 	 LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -75,7 +76,9 @@ ECMonitor::ECMonitor(const string&  cntlrName) :
 	 itsECPort = new GCFTCPPort (*this, toString(MAC_EC_PORT),
 														  GCFPortInterface::SAP, EC_PROTOCOL, true /*raw*/);
 	 // IP adres
-	 itsECPort->setHostName("10.87.6.68");
+	 string hostName = globalParameterSet()->getString("EnvCntrl_IP","0.0.0.0");
+	 LOG_DEBUG_STR("IP of Environmental Controller = " << hostName);
+	 itsECPort->setHostName(hostName);
 	 itsECPort->setPortNumber(10000);
 		  
 	 ASSERTSTR(itsECPort, "Cannot allocate TCPport to EnvironmentController");
