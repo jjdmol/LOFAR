@@ -12,15 +12,16 @@ printToFile = 0
 printDataToFile = 0     # save setpoint, temp, humidity to data.txt
 
 # select mode
-doCheckFans = 0
-doCheckDoors = 0
+doCheckFans = 1
+doCheckDoors = 1
 
 #HOST = '192.168.178.111'   # Home TempControl
 #HOST = '10.151.19.2'   # CS010c TempControl
 #HOST = '10.151.134.3'   # RS106c TempControl
-HOST = '10.151.162.3'  # RS302c TempControl
+#HOST = '10.151.162.3'  # RS302c TempControl
 #HOST = '10.151.66.3'  # CS030c TempControl
 #HOST = '10.151.39.3'  # CS021c TempControl
+HOST = '10.151.177.3' # CS401c TempControl
 #HOST = '10.151.68.3'  # CS032c TempControl
 #HOST = '10.151.161.3'  # CS301c TempControl
 #HOST = '10.87.2.239'   # ASTRON TempControl on desk PD
