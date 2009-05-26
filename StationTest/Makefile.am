@@ -1,26 +1,9 @@
-SUBDIRS = modules gold tc
+SUBDIRS = modules gold tc test
 
 testdir	=  $(prefix)/stationtest
-test_SCRIPTS = 	README.txt \
-				i2c_spu.py \
-				i2c_td.py \
-				prbs_dir_test.py \
-				prbs_test.py \
-				rmfiles.sh \
-				rsp_version.sh \
-				rsp_xc_160.sh \
-				rsp_xc_200.sh \
-				station_production.py \
-				subrack_production.py \
-				subracktest.sh \
-                                subrackplustest.sh \
-				tbb_prbs_tester.sh \
-				tbb_version.sh \
-				verify.py \
-				wgtest.sh \
-				xc_160_setup.sh \
-				xc_160_verify.sh \
-				xc_200_setup.sh \
-				xc_200_verify.sh 
+
+test_SCRIPTS = 	README.txt
+test_SCRIPTS += $(srcdir)/*.py
+test_SCRIPTS += $(srcdir)/*.sh
 
 include $(top_srcdir)/Makefile.common
