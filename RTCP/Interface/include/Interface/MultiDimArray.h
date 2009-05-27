@@ -2,6 +2,7 @@
 #define LOFAR_INTERFACE_MULTI_DIM_ARRAY_H
 
 #include <Interface/Allocator.h>
+#include <Interface/Exceptions.h>
 #include <boost/multi_array.hpp>
 #include <boost/noncopyable.hpp>
 
@@ -57,6 +58,22 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       }
 
       allocator->deallocate(this->origin());
+    }
+
+    MultiDimArray<T,DIM> &operator=( const MultiDimArray<T,DIM> &other )
+    {
+      if( other.num_elements_ != this->num_elements_ ) {
+        THROW( InterfaceException, "Tried to assign an array with " << other.num_elements_ << " elements to an array with " << this->num_elements_ << "elements." );
+      }
+
+      T *me  = this->origin();
+      const T *him = other.origin();
+
+      for( size_t i = 0; i < this->num_elements_; i++ ) {
+        *(me++) = *(him++); 
+      }
+
+      return *this;
     }
 
     void resize(const ExtentList &extents, const size_t alignment, Allocator &allocator)
