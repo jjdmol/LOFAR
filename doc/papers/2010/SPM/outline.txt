@@ -1,0 +1,25 @@
+
+pas je algorithmen aan op many-cores
+
+
+1) zoek parallelisme in je algorithme.
+   vaak aanwezig. Zoek onafhankelijke operaties:
+    voorbeelden:
+   - correlator: kanalen, polatisaties, subbanden zijn onafhankelijk.
+   - polyphase: stations zijn onafhankelijk
+   - imaging: maak parallelisme: beeld elk kanaal af op een image, tel deze later op
+
+  
+2) mem bw/ops neemt af met many cores
+   optimaliseer.
+
+dus optimaliseren: 
+    - algo specifiek (reduceer mem loads)
+    - architectuur-specifieke optimalisaties (cache gedrag, delays, floating point instructions)
+
+manycores ondersteunen complex niet erg goed. Alleen BG/P wel.
+Vaal in aparte arrays stoppen.
+
+
+
+
