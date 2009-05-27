@@ -1,3 +1,6 @@
+#ifndef LOFAR_CNPROC_BEAMFORMERASM_H
+#define LOFAR_CNPROC_BEAMFORMERASM_H
+
 #if defined HAVE_BGP
 
 #include <cstring>
@@ -160,5 +163,7 @@ static inline void _add_7_single_precision_vectors(
 
 } // namespace LOFAR::RTCP
 } // namespace LOFAR
+
+#endif
 
 #endif
