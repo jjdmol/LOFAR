@@ -202,10 +202,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 #define STATION(nr)	(reinterpret_cast<const float*>(in->samples[ch][stat+nr][time].origin()))
 
 // shorthand for the add functions
-#define ADDGENERIC(nr,...)	ADDFUNC(nr)(						\
-	        OUTPUT,									\
-		__VA_ARGS__,								\
-	        TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */ )
+#define ADDGENERIC(nr,...)	ADDFUNC(nr)( OUTPUT, __VA_ARGS__, TIMESTEPSIZE * NR_POLARIZATIONS * 2 )
 
 // adds stations, and the subtotal if needed (if stat!=0)
 #define ADD(nr,nrplusone,...)	do {							\
