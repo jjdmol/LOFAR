@@ -1,4 +1,4 @@
-testdir	=  $(prefix)/stationtest/envcontroltest
+testdir	=  $(prefix)/stationtest/test/envcontroltest
 
 test_SCRIPTS = 	$(srcdir)/*.py
 
