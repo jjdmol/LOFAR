@@ -51,7 +51,7 @@ int AsyncCommunication::asyncWrite(const void* buf, unsigned size, unsigned dest
 {
     AsyncRequest* req = new AsyncRequest();
 
-    int res = MPI_Isend((void*)buf, size, MPI_BYTE, dest, tag, itsCommunicator, &req->mpiReq);
+    int res = MPI_Isend(const_cast<void*>(buf), size, MPI_BYTE, dest, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
 	THROW(CNProcException,"MPI_Isend() failed");
     }
