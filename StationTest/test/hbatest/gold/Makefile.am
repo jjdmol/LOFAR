@@ -1,4 +1,4 @@
-testdir	=  $(prefix)/stationtest/hbatest/gold
+testdir	=  $(prefix)/stationtest/test/hbatest/gold
 
 test_SCRIPTS = 	$(srcdir)/*.gold
 

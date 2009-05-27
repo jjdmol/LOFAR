@@ -1,4 +1,4 @@
-testdir	=  $(prefix)/stationtest/subbandstatistics
+testdir	=  $(prefix)/stationtest/test/subbandstatistics
 
 test_SCRIPTS = 	$(srcdir)/*.sh
 
