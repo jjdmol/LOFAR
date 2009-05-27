@@ -141,10 +141,8 @@ template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate( All
 
 template <typename T, unsigned DIM> inline SampleData<T,DIM>::~SampleData()
 {
-  if( flags ) {
-    delete [] flags;
-    flags = 0;
-  }
+  delete [] flags;
+  flags = 0;
 }
 
 template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
