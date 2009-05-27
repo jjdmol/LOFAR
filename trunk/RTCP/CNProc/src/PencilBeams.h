@@ -16,7 +16,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-const double speedOfLight = 299792458;
 
 class PencilBeams
 {
