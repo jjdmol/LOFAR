@@ -242,8 +242,8 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
       // time interval and is expressed in seconds.
       const double d = coarseDelay * itsSampleDuration;
     
-      itsDelayedStamps[beam]     += coarseDelay;
-      itsSamplesDelay[beam]       = +coarseDelay; // FIXME: or - ?
+      itsDelayedStamps[beam]      -= coarseDelay;
+      itsSamplesDelay[beam]       = -coarseDelay;
       itsFineDelaysAtBegin[beam]  = static_cast<float>(itsDelaysAtBegin[beam] - d);
       itsFineDelaysAfterEnd[beam] = static_cast<float>(itsDelaysAfterEnd[beam] - d);
     }
@@ -292,6 +292,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage()
   if (itsDelayCompensation) {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
       logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
+      //logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7) << " = " << itsSamplesDelay[beam] << " samples + " << PrettyTime(itsFineDelaysAtBegin[beam], 7);
 
     logStr << "]";
   }
