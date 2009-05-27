@@ -296,7 +296,7 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     # Copy file <stationname>-antennaarrays.conf> to
     # /opt/lofar/etc/AntennaArray.conf
-    srcFile = stationName + "-antennaarrays.conf"
+    srcFile = dataDir + "/" + stationName + "-antennaarrays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating AntennaArray.conf"
         return
@@ -315,7 +315,7 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     # /opt/lofar/etc/CableDelays.conf
     
     # stationName is in lowercase!
-    srcFile = stationName + "-cabledelays.conf"
+    srcFile = dataDir + "/" + stationName + "-cabledelays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
         return
@@ -330,7 +330,7 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
 # MAIN
 
 if (len(sys.argv) == 1):
-    print "Provide arguments: localhost or <rootdir> <resultdir> <stationname>"
+    print "Provide arguments: localhost or <resultdir> <datadir> <stationname>"
     sys.exit(1)
     
 
