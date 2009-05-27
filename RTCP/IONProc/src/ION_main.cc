@@ -65,6 +65,9 @@ extern "C" {
 
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
+//
+// JD: if exceptions are caught, a backtrace is produced now as well,
+//     plus the actual exception is printed. So that's preferable as a default.
 #define CATCH_EXCEPTIONS
 
 
