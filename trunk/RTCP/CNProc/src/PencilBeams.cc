@@ -281,13 +281,18 @@ void PencilBeams::calculateDelays( const FilteredData *filteredData )
   // portions, as used in computeComplexVoltages.
 
   for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
-    for( unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+    // we already compensated for the delay for the central beam
+    const SubbandMetaData::beamInfo &centralBeamInfo = filteredData->metaData[stat].beams[0];
+    const double compensatedDelay = (centralBeamInfo.delayAfterEnd - centralBeamInfo.delayAtBegin) * 0.5;
+
+    itsDelays[stat][0] = 0.0;
+
+    // non-central beams
+    for( unsigned pencil = 1; pencil < itsNrPencilBeams; pencil++ ) {
       const SubbandMetaData::beamInfo &beamInfo = filteredData->metaData[stat].beams[pencil];
 
-      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd - beamInfo.delayAtBegin) * 0.5;
-
-      // subtract the delay that was already compensated for (i.e. the central beam)
-      itsDelays[stat][pencil] -= itsDelays[stat][0];
+      // subtract the delay that was already compensated for
+      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd - beamInfo.delayAtBegin) * 0.5 - compensatedDelay;
     }
   }
 }
