@@ -128,7 +128,7 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
   switch( mode.mode() ) {
     case CN_Mode::FILTER:
 	o = new PipelineOutput( id++, PipelineOutput::FILTEREDDATA );
-        o->itsData = new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps() );
+        o->itsData = new FilteredData( ps.nrStations(), ps.nrChannelsPerSubband(), ps.CNintegrationSteps(), ps.nrPencilBeams() );
         break;
 
     case CN_Mode::CORRELATE:

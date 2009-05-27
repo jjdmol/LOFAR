@@ -26,6 +26,7 @@
 #include <Stream/Stream.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/CN_Mode.h>
+#include <Interface/PencilCoordinates.h>
 #include <Interface/Parset.h>
 
 #include <vector>
@@ -57,17 +58,13 @@ class CN_Configuration
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets(), &tabList();
     std::vector<double>	  &refFreqs();
-    unsigned              &nrPencilRings();
-    double                &pencilRingSize();
-    unsigned              &nrManualPencilBeams();
-    Matrix<double>        &manualPencilBeams();
+    PencilCoordinates     &pencilBeams();
     std::vector<double>   &refPhaseCentre();
     Matrix<double>        &phaseCentres();
     CN_Mode               &mode();
     bool                  &outputIncoherentStokesI();
     bool                  &stokesIntegrateChannels();
-
-    unsigned              nrPencilBeams() { return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams(); }
+    unsigned              nrPencilBeams() const;
     
     void		  read(Stream *);
     void		  write(Stream *);
@@ -81,7 +78,7 @@ class CN_Configuration
     std::vector<unsigned> itsInputPsets, itsOutputPsets, itsTabList;
     std::vector<double>	  itsRefFreqs;
     std::vector<double>	  itsRefPhaseCentre;
-    Matrix<double>        itsManualPencilBeams;
+    PencilCoordinates     itsPencilBeams;
     Matrix<double>        itsPhaseCentres;
     CN_Mode               itsMode;
 
@@ -103,12 +100,10 @@ class CN_Configuration
       unsigned		  itsRefFreqsSize;
       unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS], itsTabList[MAX_PSETS];
       double		  itsRefFreqs[MAX_SUBBANDS];
-      unsigned            itsNrPencilRings;
-      double              itsPencilRingSize;
       double              itsRefPhaseCentre[3];
       double              itsPhaseCentres[MAX_STATIONS * 3];
-      unsigned            itsNrManualPencilBeams;
-      double              itsManualPencilBeams[MAX_PENCILBEAMS * 2];
+      unsigned            itsNrPencilBeams;
+      double              itsPencilBeams[MAX_PENCILBEAMS * 2];
       bool                itsOutputIncoherentStokesI;
       bool                itsStokesIntegrateChannels;
     } itsMarshalledData;
@@ -195,24 +190,14 @@ inline std::vector<double> & CN_Configuration::refFreqs()
   return itsRefFreqs;
 }
 
-inline unsigned &CN_Configuration::nrPencilRings()
+inline PencilCoordinates &CN_Configuration::pencilBeams()
 {
-  return itsMarshalledData.itsNrPencilRings;
+  return itsPencilBeams;
 }
 
-inline double &CN_Configuration::pencilRingSize()
+inline unsigned CN_Configuration::nrPencilBeams() const
 {
-  return itsMarshalledData.itsPencilRingSize;
-}
-
-inline unsigned &CN_Configuration::nrManualPencilBeams()
-{
-  return itsMarshalledData.itsNrManualPencilBeams;
-}
-
-inline Matrix<double> &CN_Configuration::manualPencilBeams()
-{
-  return itsManualPencilBeams;
+  return itsPencilBeams.size();
 }
 
 inline std::vector<double> &CN_Configuration::refPhaseCentre()

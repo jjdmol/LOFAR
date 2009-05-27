@@ -24,7 +24,9 @@
 #define LOFAR_INTERFACE_SUBBAND_META_DATA_H
 
 #include <Interface/SparseSet.h>
+#include <Interface/MultiDimArray.h>
 #include <Stream/Stream.h>
+#include <Common/LofarLogger.h>
 
 #include <cassert>
 
@@ -32,38 +34,101 @@
 namespace LOFAR {
 namespace RTCP {
 
+// Note: struct must remain copyable to avoid ugly constructions when passing it around
 struct SubbandMetaData
 {
   public:
+    SubbandMetaData();
+    SubbandMetaData( const unsigned nrBeams );
+
     SparseSet<unsigned>	getFlags() const;
     void		setFlags(const SparseSet<unsigned> &);
 
-    float		delayAtBegin, delayAfterEnd;
-    double              beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+    unsigned            alignmentShift() const;
+    unsigned            &alignmentShift();
 
-    unsigned		alignmentShift;
+    void read( Stream *str );
+    void write( Stream *str ) const;
 
-  private:
-    unsigned char	flagsBuffer[132];
+    struct beamInfo {
+      float delayAtBegin, delayAfterEnd;
+      double beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+    };
+
+    // Note: CNProc/AsyncTranspose reads the information below directly
+    std::vector<struct beamInfo> beams;
+
+    struct marshallData {
+      unsigned char	flagsBuffer[132];
+      unsigned		alignmentShift;
+    } itsMarshalledData;
 };
 
+inline SubbandMetaData::SubbandMetaData()
+{
+  // Used for constructing vectors, such as Vector<SubbandMetaData> metaData( itsNrStations, 32, allocator )
+  // Without a default constructor, construction of such an array is possible, but quite awkward as it
+  // requires the manual construction and destruction of each element:
+  //
+  // SubbandMetaData *metaData = allocator.allocate(itsNrStations*sizeof(SubbandMetaData),32)
+  // for( unsigned i = 0; i < itsNrStations; i++ ) {
+  //   metaData[i] = new SubbandMetaData( ... );
+  // }
+  // ...
+  // for( unsigned i = 0; i < itsNrStations; i++ ) {
+  //   delete metaData[i];
+  // }
+  // allocator.deallocate( metaData );
+  //
+  // NOTE: While C++ has a new[](...) construction especially for this use case, it is not part of ISO C++.
+}
+
+inline SubbandMetaData::SubbandMetaData( const unsigned nrBeams )
+: 
+  beams(nrBeams)
+{
+}
 
 inline SparseSet<unsigned> SubbandMetaData::getFlags() const
 {
   SparseSet<unsigned> flags;
 
-  flags.unmarshall(flagsBuffer);
+  flags.unmarshall(itsMarshalledData.flagsBuffer);
   return flags;
 }
 
-
 inline void SubbandMetaData::setFlags(const SparseSet<unsigned> &flags)
 {
-  ssize_t size = flags.marshall(&flagsBuffer, sizeof flagsBuffer);
+  ssize_t size = flags.marshall(&itsMarshalledData.flagsBuffer, sizeof itsMarshalledData.flagsBuffer);
   
   assert(size >= 0);
 }
 
+inline unsigned SubbandMetaData::alignmentShift() const
+{
+  return itsMarshalledData.alignmentShift;
+}
+
+inline unsigned &SubbandMetaData::alignmentShift()
+{
+  return itsMarshalledData.alignmentShift;
+}
+
+inline void SubbandMetaData::read( Stream *str )
+{
+  // TODO: endianness
+
+  str->read(&itsMarshalledData, sizeof itsMarshalledData);
+  str->read(&beams.front(), beams.size() * sizeof beams[0] );
+}
+
+inline void SubbandMetaData::write( Stream *str ) const
+{
+  // TODO: endianness
+
+  str->write(&itsMarshalledData, sizeof itsMarshalledData);
+  str->write(&beams.front(), beams.size() * sizeof beams[0] );
+}
 
 } // namespace RTCP
 } // namespace LOFAR

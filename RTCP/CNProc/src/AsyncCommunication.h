@@ -26,7 +26,6 @@ public:
 class AsyncCommunication: boost::noncopyable {
   public:
     AsyncCommunication(MPI_Comm communicator = MPI_COMM_WORLD);
-    ~AsyncCommunication();
 
     // returns handle to this read
     int asyncRead(void* buf, unsigned size, unsigned source, int tag);

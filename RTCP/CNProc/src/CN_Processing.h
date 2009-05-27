@@ -117,6 +117,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base,
 #endif
 
     unsigned            itsNrStations;
+    unsigned            itsNrPencilBeams;
     unsigned            itsNrSubbands;
     unsigned            itsNrSubbandsPerPset;
     unsigned            itsComputeGroupRank;

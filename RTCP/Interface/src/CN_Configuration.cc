@@ -47,9 +47,7 @@ CN_Configuration::CN_Configuration( const Parset &parset )
   outputPsets()             = parset.getUint32Vector("OLAP.CNProc.outputPsets");
   tabList()                 = parset.getUint32Vector("OLAP.CNProc.tabList");
   refFreqs()                = parset.subbandToFrequencyMapping();
-  nrPencilRings()           = parset.nrPencilRings();
-  pencilRingSize()          = parset.pencilRingSize();
-  nrManualPencilBeams()     = parset.nrManualPencilBeams();
+  pencilBeams()             = parset.pencilBeams();
   refPhaseCentre()          = parset.getRefPhaseCentres();
   mode()                    = CN_Mode(parset);
   outputIncoherentStokesI() = parset.outputIncoherentStokesI();
@@ -68,15 +66,6 @@ CN_Configuration::CN_Configuration( const Parset &parset )
       itsPhaseCentres[stat][dim] = positions[stat*3+dim];
     }
   }
-
-  itsManualPencilBeams.resize( parset.nrManualPencilBeams(), 2 );
-  for( unsigned beam = 0; beam < parset.nrManualPencilBeams(); beam++ ) {
-    std::vector<double> coordinates = parset.getManualPencilBeam( beam );
-
-    for( unsigned dim = 0; dim < 2; dim++ ) {
-      itsManualPencilBeams[beam][dim] = coordinates[dim];
-    }
-  }
 }
 
 #endif
@@ -86,6 +75,7 @@ void CN_Configuration::read(Stream *str)
 {
   str->read(&itsMarshalledData, sizeof itsMarshalledData);
   itsMode.read(str);
+  itsPencilBeams.read(str);
 
   itsInputPsets.resize(itsMarshalledData.itsInputPsetsSize);
   memcpy(&itsInputPsets[0], itsMarshalledData.itsInputPsets, itsMarshalledData.itsInputPsetsSize * sizeof(unsigned));
@@ -105,11 +95,6 @@ void CN_Configuration::read(Stream *str)
   itsPhaseCentres.resize(nrStations(),3);
   for( unsigned stat = 0; stat < nrStations(); stat++ ) {
     memcpy(&itsPhaseCentres[stat][0], &itsMarshalledData.itsPhaseCentres[stat*3], 3 * sizeof(double));
-  }
-
-  itsManualPencilBeams.resize(nrManualPencilBeams(),2);
-  for( unsigned beam = 0; beam < nrManualPencilBeams(); beam++ ) {
-    memcpy(&itsManualPencilBeams[beam][0], &itsMarshalledData.itsManualPencilBeams[beam*2], 2 * sizeof(double));
   }
 }
 
@@ -137,12 +122,9 @@ void CN_Configuration::write(Stream *str)
     memcpy(&itsMarshalledData.itsPhaseCentres[stat*3], &itsPhaseCentres[stat][0], 3 * sizeof(double));
   }
 
-  for( unsigned beam = 0; beam < nrManualPencilBeams(); beam++ ) {
-    memcpy(&itsMarshalledData.itsManualPencilBeams[beam*2], &itsManualPencilBeams[beam][0], 2 * sizeof(double));
-  }
-
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
   itsMode.write(str);
+  itsPencilBeams.write(str);
 }
 
 } // namespace RTCP

@@ -36,6 +36,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
+#include <Interface/PencilCoordinates.h>
 
 namespace LOFAR 
 {
@@ -49,15 +50,16 @@ namespace LOFAR
                                                const string &stationName,
 					       const TimeStamp &startTime) :
       stop         (false),					       
-      itsBuffer    (bufferSize,ps->nrBeams()),
+      itsBuffer    (bufferSize,ps->nrBeams() * ps->nrPencilBeams()),
       head         (0),
       tail         (0),
       bufferFree   (bufferSize),
       bufferUsed   (0),
 
       itsNrCalcDelays    (ps->nrCalcDelays()),
-      itsNrBeams   (ps->nrBeams()),
-      itsStartTime (startTime),
+      itsNrBeams         (ps->nrBeams()),
+      itsNrPencilBeams   (ps->nrPencilBeams()),
+      itsStartTime       (startTime),
       itsNrSamplesPerSec (ps->nrSubbandSamples()),
       itsSampleDuration  (ps->sampleDuration()),
       itsStationName     (stationName),
@@ -150,14 +152,14 @@ namespace LOFAR
         ResultData result;
         converter->j2000ToItrf(result, request); // expensive
 
-        ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams,
-	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams);
+        ASSERTSTR(result.direction.size() == itsNrCalcDelays * itsNrBeams * itsNrPencilBeams,
+	  	  result.direction.size() << " == " << itsNrCalcDelays * itsNrBeams * itsNrPencilBeams );
 
 	// append the results to the circular buffer
 	unsigned resultIndex = 0;
 
         for( unsigned t = 0; t < itsNrCalcDelays; t++ ) {
-	  for( unsigned b = 0; b < itsNrBeams; b++ ) {
+	  for( unsigned b = 0; b < itsNrBeams * itsNrPencilBeams; b++ ) {
 	    ASSERTSTR( tail < bufferSize, tail << " < " << bufferSize );
 
 	    itsBuffer[tail][b] = result.direction[resultIndex++];
@@ -181,23 +183,25 @@ namespace LOFAR
       delete converter;
     }
 
-    void WH_DelayCompensation::getNextDelays( vector<Direction> &directions, vector<double> &delays )
+    void WH_DelayCompensation::getNextDelays( Matrix<Direction> &directions, Matrix<double> &delays )
     {
-      ASSERTSTR(directions.size() == itsNrBeams,
-                directions.size() << " == " << itsNrBeams);
+      ASSERTSTR(directions.num_elements() == itsNrBeams * itsNrPencilBeams,
+                directions.num_elements() << " == " << itsNrBeams << "*" << itsNrPencilBeams);
 
-      ASSERTSTR(delays.size() == itsNrBeams,
-                delays.size() << " == " << itsNrBeams);
+      ASSERTSTR(delays.num_elements() == itsNrBeams * itsNrPencilBeams,
+                delays.num_elements() << " == " << itsNrBeams << "*" << itsNrPencilBeams);
 
       bufferUsed.down();
 
       // copy the directions at itsBuffer[head] into the provided buffer,
       // and calculate the respective delays
       for( unsigned b = 0; b < itsNrBeams; b++ ) {
-        const Direction &dir = itsBuffer[head][b];
+        for( unsigned p = 0; p < itsNrPencilBeams; p++ ) {
+          const Direction &dir = itsBuffer[head][b*itsNrPencilBeams + p];
 
-        directions[b] = dir;
-	delays[b] = dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
+          directions[b][p] = dir;
+	  delays[b][p] = dir * itsPhasePositionDiffs * (1.0 / speedOfLight);
+	}  
       }
 
       // increment the head pointer
@@ -212,11 +216,18 @@ namespace LOFAR
 
     void WH_DelayCompensation::setBeamDirections(const Parset *ps)
     {
+      const PencilCoordinates& pencilBeams = ps->pencilBeams();
+
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
       Direction::Types dirType(Direction::INVALID);
+
+      // TODO: For now, we include pencil beams for all regular beams,
+      // and use the pencil beam offsets as offsets in J2000.
+      // To do the coordinates properly, the offsets should be applied
+      // in today's coordinates (JMEAN/JTRUE?), not J2000.
       
-      itsBeamDirections.resize(itsNrBeams);
+      itsBeamDirections.resize(itsNrBeams*itsNrPencilBeams);
       
       // Get the source directions from the parameter set. 
       // Split the \a dir vector into separate Direction objects.
@@ -230,7 +241,17 @@ namespace LOFAR
         else THROW(IONProcException, "Observation.BeamDirectionType must be one of "
                        "J2000, ITRF, or AZEL");
 
-        itsBeamDirections[beam] = Direction(beamDir[0], beamDir[1], dirType);
+        for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
+	  // obtain pencil coordinate
+	  const PencilCoord3D &pencilCoord = pencilBeams[pencil];
+
+	  // apply angle modification (TODO: different calculates for J2000 (ra/dec) and AZEL and ITRF!)
+	  const double angle1 = beamDir[0] + pencilCoord[0];
+	  const double angle2 = beamDir[1] + pencilCoord[1];
+
+	  // store beam
+          itsBeamDirections[beam*itsNrBeams + pencil] = Direction(angle1, angle2, dirType);
+	}
       }
     }
 

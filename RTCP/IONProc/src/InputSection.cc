@@ -134,6 +134,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
   itsNSamplesPerSec	= ps->nrSubbandSamples();
   itsNrBeams		= ps->nrBeams();
+  itsNrPencilBeams	= ps->nrPencilBeams();
   itsNrPsets		= ps->nrPsets();
 
 #if defined DUMP_RAW_DATA
@@ -166,10 +167,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsSyncedStamp = TimeStamp(seconds, samples);
  
   if (itsNeedDelays) {
-    itsDelaysAtBegin.resize(itsNrBeams);
-    itsDelaysAfterEnd.resize(itsNrBeams);
-    itsBeamDirectionsAtBegin.resize(itsNrBeams);
-    itsBeamDirectionsAfterEnd.resize(itsNrBeams);
+    itsDelaysAtBegin.resize(itsNrBeams,itsNrPencilBeams);
+    itsDelaysAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
+    itsBeamDirectionsAtBegin.resize(itsNrBeams,itsNrPencilBeams);
+    itsBeamDirectionsAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
     
     itsDelayComp = new WH_DelayCompensation(ps, inputs[0].station, itsSyncedStamp); // TODO: support more than one station
 
@@ -186,8 +187,8 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::preprocess(const 
   itsBBuffers.resize(itsNrInputs);
   itsDelayedStamps.resize(itsNrBeams);
   itsSamplesDelay.resize(itsNrBeams);
-  itsFineDelaysAtBegin.resize(itsNrBeams);
-  itsFineDelaysAfterEnd.resize(itsNrBeams);
+  itsFineDelaysAtBegin.resize(itsNrBeams,itsNrPencilBeams);
+  itsFineDelaysAfterEnd.resize(itsNrBeams,itsNrPencilBeams);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
   for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
@@ -236,24 +237,33 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::computeDelays()
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       // The coarse delay is determined for the center of the current
       // time interval and is expressed in an entire amount of samples.
-      const signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5));
-    
+      //
+      // We use the central pencil beam (#0) for the coarse delay compensation.
+      const signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSampleRate + 0.5));
+
       // The fine delay is determined for the boundaries of the current
       // time interval and is expressed in seconds.
       const double d = coarseDelay * itsSampleDuration;
-    
+
       itsDelayedStamps[beam]      -= coarseDelay;
       itsSamplesDelay[beam]       = -coarseDelay;
-      itsFineDelaysAtBegin[beam]  = static_cast<float>(itsDelaysAtBegin[beam] - d);
-      itsFineDelaysAfterEnd[beam] = static_cast<float>(itsDelaysAfterEnd[beam] - d);
+
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+        // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
+        itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
+        itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
+      }
     }
 
     itsDelayTimer.stop();
   } else {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
       itsSamplesDelay[beam]       = 0;
-      itsFineDelaysAtBegin[beam]  = 0;
-      itsFineDelaysAfterEnd[beam] = 0;
+
+      for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+        itsFineDelaysAtBegin[beam][pencil]  = 0;
+        itsFineDelaysAfterEnd[beam][pencil] = 0;
+      }
     }  
   }
 }
@@ -291,7 +301,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::writeLogMessage()
 
   if (itsDelayCompensation) {
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
+      logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam][0], 7);
       //logStr << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7) << " = " << itsSamplesDelay[beam] << " samples + " << PrettyTime(itsFineDelaysAtBegin[beam], 7);
 
     logStr << "]";
@@ -319,32 +329,43 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
     command.write(stream);
 
     // create and send all metadata in one "large" message
-    std::vector<SubbandMetaData, AlignedStdAllocator<SubbandMetaData, 16> > metaData(itsNrPsets);
-
+    Vector<SubbandMetaData> metaData( itsNrPsets, 16, heapAllocator );
+    for( unsigned i = 0; i < itsNrPsets; i++ ) {
+      metaData[i] = SubbandMetaData( itsNrPencilBeams );
+    }
+    
     if( itsNeedDelays ) {
       for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
         unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+
 	if(subband < itsNSubbands) {
 	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
 	  unsigned beam     = itsSubbandToBeamMapping[subband];
-	  const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam].coord().get();
-	  const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam].coord().get();
 
-	  metaData[pset].delayAtBegin   = itsFineDelaysAtBegin[beam];
-	  metaData[pset].delayAfterEnd  = itsFineDelaysAfterEnd[beam];
+          for( unsigned p = 0; p < itsNrPencilBeams; p++ ) {
+            struct SubbandMetaData::beamInfo &beamInfo = metaData[pset].beams[p];
 
-	  for( unsigned i = 0; i < 3; i++ ) {
-	    metaData[pset].beamDirectionAtBegin[i]  = beamDirBegin[i];
-	    metaData[pset].beamDirectionAfterEnd[i] = beamDirEnd[i];
-	  }
+	    beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
+	    beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
 
-	  metaData[pset].alignmentShift = itsBBuffers[rspBoard]->alignmentShift(beam);
+	    const vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].coord().get();
+	    const vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].coord().get();
+
+	    for( unsigned i = 0; i < 3; i++ ) {
+	      beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
+	      beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
+	    }
+	  }  
+
+	  metaData[pset].alignmentShift() = itsBBuffers[rspBoard]->alignmentShift(beam);
 	  metaData[pset].setFlags(itsFlags[rspBoard][beam]);
 	}
       }
     }
 
-    stream->write(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
+    for( unsigned pset = 0; pset < itsNrPsets; pset++ ) {
+      metaData[pset].write( stream );
+    }
 
     // now send all subband data
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {

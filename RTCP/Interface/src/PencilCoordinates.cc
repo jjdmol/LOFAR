@@ -153,7 +153,7 @@ double PencilRings::pencilHeightDelta() const
 
 void PencilRings::computeBeamCoordinates()
 {
-  std::vector<PencilCoord3D> &coordinates = getCoordinates();
+  std::vector<PencilCoord3D> coordinates;
   double dl[6], dm[6];
 
   // stride for each side, starting from the top, clock-wise
@@ -203,7 +203,6 @@ void PencilRings::computeBeamCoordinates()
   dm[5] = pencilHeightDelta();
 
   // ring 0: the center pencil beam
-  coordinates.reserve(nrPencils());
   coordinates.push_back( PencilCoord3D( 0, 0 ) );
 
   // ring 1-n: create the pencil beams from the inner ring outwards
@@ -219,6 +218,8 @@ void PencilRings::computeBeamCoordinates()
       }
     }
   }
+
+  *this += coordinates;
 }
 
 }

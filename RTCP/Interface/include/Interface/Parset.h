@@ -36,6 +36,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/Config.h>
+#include <Interface/PencilCoordinates.h>
 #include <ApplCommon/Observation.h>
 #include <Stream/Stream.h>
 
@@ -110,12 +111,8 @@ public:
 	bool           outputIncoherentStokesI() const;
 	bool           stokesIntegrateChannels() const;
 
-	uint32         nrManualPencilBeams() const;
-	vector<double> getManualPencilBeam( const unsigned pencil ) const;
-	uint32	       nrPencilRings() const;
-	double	       pencilRingSize() const;
-
 	uint32	       nrPencilBeams() const;
+	PencilCoordinates pencilBeams() const;
 
 	unsigned         nrSubbands() const;
 	unsigned         nrBeams() const;
@@ -150,6 +147,11 @@ public:
 	vector<double> itsStPositions;
 	
 private:
+	uint32         nrManualPencilBeams() const;
+	vector<double> getManualPencilBeam( const unsigned pencil ) const;
+	uint32	       nrPencilRings() const;
+	double	       pencilRingSize() const;
+
 	void           addPosition(string stName);
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
@@ -433,6 +435,17 @@ inline uint32 Parset::nrManualPencilBeams() const
 inline uint32 Parset::nrPencilBeams() const
 {
   return 3 * nrPencilRings() * (nrPencilRings() + 1) + 1 + nrManualPencilBeams();
+}
+
+inline PencilCoordinates Parset::pencilBeams() const
+{
+  // include both the pencil rings and the manually defined pencil beam coordinates
+  PencilRings coordinates( nrPencilRings(), pencilRingSize() );
+  for( unsigned i = 0; i < nrManualPencilBeams(); i++ ) {
+    coordinates += PencilCoord3D( getManualPencilBeam( i ) );
+  }
+
+  return coordinates;
 }
 
 inline double Parset::pencilRingSize() const

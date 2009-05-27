@@ -21,6 +21,7 @@ pkginclude_HEADERS = Package__Version.h \
 		     PencilBeamData.h \
 		     PencilCoordinates.h \
                      StokesData.h \
-                     PipelineOutput.h
+                     PipelineOutput.h \
+                     PencilCoordinates.h
 
 include $(top_srcdir)/Makefile.common

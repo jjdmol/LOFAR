@@ -48,7 +48,7 @@
 
 // if exceptions are not caught, an attempt is made to create a backtrace
 // from the place where the exception is thrown.
-#undef CATCH_EXCEPTIONS
+#define CATCH_EXCEPTIONS
 
 
 using namespace LOFAR;
