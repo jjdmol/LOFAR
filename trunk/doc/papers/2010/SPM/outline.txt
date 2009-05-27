@@ -23,3 +23,16 @@ Vaal in aparte arrays stoppen.
 
 
 
+
+---------------------------
+
+- into
+- modern astronomy
+    - LOFAR, SKA
+- correlator algorithme zelf
+- many cores algemeen
+- optimaliseren van het algorithme: tiles, etc
+- info per many core arch
+- architectuur specifieke optimalisaties + performance
+- programmeerbaarheid
+- conclusies
