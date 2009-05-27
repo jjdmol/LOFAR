@@ -17,6 +17,7 @@ CN_Processing.h	        \
 FCNP_ClientStream.h     \
 AsyncCommunication.h    \
 PencilBeams.h           \
+CN_Math.h               \
 Stokes.h
 
 NOINSTHDRS 		=

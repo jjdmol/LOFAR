@@ -161,7 +161,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
   // do the actual beamforming
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
     const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
-    const float factor = averagingFactor; // add multiplication factors as needed
+    const double factor = averagingFactor; // add multiplication factors as needed
 
     // construct the weights, with zeroes for unused data
     fcomplex weights[itsNrStations][itsNrPencilBeams] __attribute__ ((aligned(128)));
