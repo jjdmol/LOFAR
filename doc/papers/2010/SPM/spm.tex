@@ -1,0 +1,66 @@
+\documentclass{article}
+
+\usepackage{spconf}
+
+\title{How to Build a Correlator on Many-Core Hardware}
+
+\name{Rob V. van Nieuwpoort and John W. Romein}
+%\texttt{\{nieuwpoort,romein\}@astron.nl}}
+
+\address{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
+Oude Hoogeveensedijk 4 \\
+7991 PD\ \ Dwingeloo \\
+The Netherlands}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{Introduction}
+
+Radio telescopes produce enormous amounts of data.
+The Low Frequency Array (LOFAR) stations~\cite{Butcher:04,deVos:09}, for
+instance, will produce some tens of petabits per day; the dishes from the
+Australian SKA Pathfinder (ASKAP) will even produce over six exabits per day.
+To extract the sky signal from the system noise, the \emph{correlator\/}
+correlates the signals by multiplying the samples of each pair of receivers.
+Additionally, the correlator integrates correlations over time, to reduce
+the amount of data.
+
+Typically, custom-built hardware is used to correlate the signals.
+A recent development is to use a supercomputer~\cite{Romein:06,Romein:09b}.
+Both approaches have important advantages and disadvantages.
+Custom-built hardware is efficient and consumes modest amounts of power, but is
+inflexible, expensive to design, and has a long development time.
+Solutions that use a supercomputer are much more flexible, but are less
+efficient, consume more power, and are expensive to purchase.
+Future instruments, like the Square Kilometre Array (SKA), need several orders
+of magnitude more computational resources.
+It is likely that the requirements of the SKA cannot be met by using
+current supercomputer technology.
+
+The unparalleled growth in the computational performance of Graphics Processor
+Units (GPU) has attracted the attention of the high-performance computing 
+community during the past five years.
+
+%We do this using general-purpose multi-core processors, the Cell/B.E., and graphics processors
+%(GPUs) from different vendors (ATI and NVIDIA).  For comparison
+%reasons, we discuss the LOFAR production implementation on an IBM Blue
+%Gene/P supercomputer.  There are many advantages to the use of
+%many-cores: it is a flexible software solution, has lower costs in
+%terms of purchase, is cheaper and easier to maintain, and the power
+%usage per flop is significantly lower.  We use the LOFAR telescope as
+%an illustrative example, but the results can be applied equally well on other
+%instruments, including e-VLBI.
+
+
+
+
+\bibliographystyle{IEEEbib}
+\bibliography{spm}
+
+\end{document}
