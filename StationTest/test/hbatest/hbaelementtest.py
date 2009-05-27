@@ -65,6 +65,7 @@ def main() :
 	sub_time=[]
 	sub_file=[]
 	dir_name = './hbadatatest/' #Work directory will be cleaned
+	os.mkdir(dir_name)
   	rmfile = '*.log'
 	hba_elements=16
         factor=1000
