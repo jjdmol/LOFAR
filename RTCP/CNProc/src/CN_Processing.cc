@@ -59,15 +59,6 @@ extern "C" {
 namespace LOFAR {
 namespace RTCP {
 
-#if !defined HAVE_MASS
-
-inline static dcomplex cosisin(const double x) 
-{
-  return makedcomplex(cos(x), sin(x));
-}
-
-#endif
-
 
 //static NSTimer transposeTimer("transpose()", true); // Unused --Rob
 static NSTimer computeTimer("computing", true, true);

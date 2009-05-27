@@ -8,6 +8,7 @@
 #include <Interface/PencilBeamData.h>
 #include <Interface/PencilCoordinates.h>
 #include <BandPass.h>
+#include <CN_Math.h>
 
 #if 0 || !defined HAVE_BGP
 #define PENCILBEAMS_C_IMPLEMENTATION
@@ -15,7 +16,6 @@
 
 namespace LOFAR {
 namespace RTCP {
-
 
 class PencilBeams
 {
@@ -29,7 +29,7 @@ class PencilBeams
   private:
     void calculateDelays( const FilteredData *filteredData );
 
-    fcomplex phaseShift( const float frequency, const float delay ) const;
+    dcomplex phaseShift( const double frequency, const double delay ) const;
     void computeBeams( const MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, const std::vector<unsigned> stations );
 
     void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
@@ -44,12 +44,12 @@ class PencilBeams
     Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
 };
 
-inline fcomplex PencilBeams::phaseShift( const float frequency, const float delay ) const
+inline dcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
 {
-  const float phaseShift = delay * frequency;
-  const float phi = -2 * M_PI * phaseShift;
+  const double phaseShift = delay * frequency;
+  const double phi = -2 * M_PI * phaseShift;
 
-  return makefcomplex( std::cos(phi), std::sin(phi) );
+  return cosisin(phi);
 }
 
 } // namespace RTCP
