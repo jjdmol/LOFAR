@@ -23,7 +23,7 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
   public:
     typedef SampleData<SAMPLE_TYPE,3> SuperType;
 
-    InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc);
+    InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc, const unsigned nrPencilBeams);
 
     virtual void allocate( Allocator &allocator = heapAllocator );
 
@@ -36,31 +36,38 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 
   private:
     const unsigned	    itsNrSubbands;
+    const unsigned	    itsNrPencilBeams;
 
   public:
     Vector<SubbandMetaData> metaData; //[outputPsets.size()]
 };
 
 
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc, const unsigned nrPencilBeams)
 :
   SuperType( false, boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0 ),
-  itsNrSubbands(nrSubbands)
+  itsNrSubbands(nrSubbands),
+  itsNrPencilBeams(nrPencilBeams)
 {
 }
 
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::allocate( Allocator &allocator )
 {
   SuperType::allocate( allocator );
-  metaData.resize( itsNrSubbands );
-}
+  metaData.resize( itsNrSubbands, 32 );
 
+  for( unsigned i = 0; i < itsNrSubbands; i++ ) {
+    metaData[i] = SubbandMetaData( itsNrPencilBeams );
+  }
+}
 
 // used for asynchronous transpose
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readMetaData(Stream *str)
 {
   // read all metadata
-  str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
+  for( unsigned subband = 0; subband < itsNrSubbands; subband++ ) {
+    metaData[subband].read( str );
+  }
 }
 
 // used for asynchronous transpose
@@ -76,7 +83,7 @@ template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readOne(Stre
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readAll(Stream *str)
 {
   // read all metadata
-  str->read(&metaData[0], metaData.size() * sizeof(SubbandMetaData));
+  readMetaData( str );
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time

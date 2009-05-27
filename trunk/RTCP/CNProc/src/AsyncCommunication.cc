@@ -4,6 +4,7 @@
 #include <AsyncCommunication.h>
 
 #include <Common/Timer.h>
+#include <Interface/Exceptions.h>
 
 #include <cassert>
 #include <map>
@@ -17,14 +18,10 @@ namespace RTCP {
 #if defined HAVE_MPI
 
 AsyncCommunication::AsyncCommunication(MPI_Comm comm)
-{
-    itsCommunicator = comm;
-    itsCurrentReadHandle = 0;
-    itsCurrentWriteHandle = 0;
-}
-
-
-AsyncCommunication::~AsyncCommunication()
+:
+  itsCommunicator(comm),
+  itsCurrentReadHandle(0),
+  itsCurrentWriteHandle(0)
 {
 }
 
@@ -35,8 +32,7 @@ int AsyncCommunication::asyncRead(void* buf, unsigned size, unsigned source, int
 
     int res = MPI_Irecv(buf, size, MPI_BYTE, source, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Irecv() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Irecv() failed");
     }
 
     req->buf = buf;
@@ -57,8 +53,7 @@ int AsyncCommunication::asyncWrite(const void* buf, unsigned size, unsigned dest
 
     int res = MPI_Isend((void*)buf, size, MPI_BYTE, dest, tag, itsCommunicator, &req->mpiReq);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Isend() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Isend() failed");
     }
 
     req->buf = (void*)buf;
@@ -80,8 +75,7 @@ void AsyncCommunication::waitForRead(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Wait() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Wait() failed");
     }
 
     // done, now remove from map, and free req
@@ -96,8 +90,7 @@ void AsyncCommunication::waitForWrite(int handle)
 
     int res = MPI_Wait(&req->mpiReq, &status);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Wait() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Wait() failed");
     }
 
     // done, now remove from map, and free req
@@ -112,6 +105,8 @@ int AsyncCommunication::waitForAnyRead(void*& buf, unsigned& size, unsigned& sou
     int count = itsReadHandleMap.size();
     MPI_Request reqs[count];
     int mapping[count];
+
+    ASSERT( count > 0 );
     
     int i = 0;
     for (std::map<int, AsyncRequest*>::const_iterator it = itsReadHandleMap.begin(); it != itsReadHandleMap.end(); it++) {
@@ -129,8 +124,11 @@ int AsyncCommunication::waitForAnyRead(void*& buf, unsigned& size, unsigned& sou
     waitAnyTimer.stop();
 
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Waitany() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Waitany() failed");
+    }
+
+    if (index == MPI_UNDEFINED) {
+	THROW(CNProcException,"MPI_Waitany() failed: no (pending) receives");
     }
 
     int handle = mapping[index];
@@ -153,6 +151,11 @@ void AsyncCommunication::waitForAllReads()
     MPI_Request reqs[count];
     MPI_Status status[count];
 
+    if( count == 0 ) {
+      // nothing to wait for
+      return;
+    }
+
     int i = 0;
     for (std::map<int, AsyncRequest*>::const_iterator it = itsReadHandleMap.begin(); it != itsReadHandleMap.end(); it++) {
 	AsyncRequest* r = it->second;
@@ -162,8 +165,7 @@ void AsyncCommunication::waitForAllReads()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Waitall() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Waitall() failed");
     }
 
     for (std::map<int, AsyncRequest*>::const_iterator it = itsReadHandleMap.begin(); it != itsReadHandleMap.end(); it++) {
@@ -181,6 +183,11 @@ void AsyncCommunication::waitForAllWrites()
     MPI_Request reqs[count];
     MPI_Status status[count];
 
+    if( count == 0 ) {
+      // nothing to wait for
+      return;
+    }
+
     int i = 0;
     for (std::map<int, AsyncRequest*>::const_iterator it = itsWriteHandleMap.begin(); it != itsWriteHandleMap.end(); it++) {
 	AsyncRequest* r = it->second;
@@ -190,8 +197,7 @@ void AsyncCommunication::waitForAllWrites()
 
     int res = MPI_Waitall(count, reqs, status);
     if (res != MPI_SUCCESS) {
-	LOG_FATAL("MPI_Waitall() failed");
-	exit(1);
+	THROW(CNProcException,"MPI_Waitall() failed");
     }
 
     for (std::map<int, AsyncRequest*>::const_iterator it = itsWriteHandleMap.begin(); it != itsWriteHandleMap.end(); it++) {

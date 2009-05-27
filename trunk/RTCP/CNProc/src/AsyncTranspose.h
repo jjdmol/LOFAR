@@ -38,10 +38,8 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 
   AsyncTranspose(const bool isTransposeInput, const bool isTransposeOutput, 
 		 const unsigned groupNumber, const LocationInfo &, 
-		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, const unsigned nrSamplesToCNProc, 
-		 const unsigned nrSubbands, const unsigned nrSubbandsPerPset);
-
-  ~AsyncTranspose();
+		 const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, 
+		 const unsigned nrSubbands, const unsigned nrSubbandsPerPset, const unsigned nrPencilBeams );
   
   // Post all async receives for the transpose.
   void postAllReceives(TransposedData<SAMPLE_TYPE> *transposedData);
@@ -61,24 +59,24 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 
   unsigned itsNrSubbands;
   unsigned itsNrSubbandsPerPset;
+  unsigned itsNrPencilBeams;
 
-  // the size of a data message
-  unsigned itsMessageSize; 
-  
   // A mapping that tells us, if we receive a message from a source,
   // to which pset that source belongs.
   std::map<unsigned, unsigned> itsRankToPsetIndex; 
 
-  AsyncCommunication* itsAsyncComm;
+  AsyncCommunication itsAsyncComm;
   const std::vector<unsigned> &itsInputPsets;
-  const  std::vector<unsigned> &itsOutputPsets;
+  const std::vector<unsigned> &itsOutputPsets;
   const LocationInfo &itsLocationInfo;
 
-  // Two maps that contain the handles to the asynchronous reads.
+  // The number of communicates (writes/reads) needed to transport one sub band.
+  static const unsigned itsNrCommunications = 3;
+
+  // The maps that contain the handles to the asynchronous reads.
   // The maps are indexed by the inputPset index.
   // The value is -1 if the read finished.
-  std::vector<int> dataHandles;
-  std::vector<int> metaDataHandles;
+  Matrix<int> itsCommHandles; // [itsNrCommunications][itsNrInputPsets]
 
   // The number of the transpose group we belong to.
   // The cores with the same index in a pset together form a group.

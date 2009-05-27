@@ -95,7 +95,8 @@ namespace LOFAR
       ~WH_DelayCompensation();
 
       // get the set of directions and delays for the beams, for the next CN integration time
-      void getNextDelays( vector<AMC::Direction> &directions, vector<double> &delays );
+      // Both matrices must have dimensions [itsNrBeams][itsNrPencilBeams]
+      void getNextDelays( Matrix<AMC::Direction> &directions, Matrix<double> &delays );
       
     private:
       // do the delay compensation calculations in a separate thread to allow bulk
@@ -137,6 +138,7 @@ namespace LOFAR
 
       // Beam info.
       const unsigned                itsNrBeams;
+      const unsigned                itsNrPencilBeams;
       vector<AMC::Direction>        itsBeamDirections;
 
       // Sample timings.

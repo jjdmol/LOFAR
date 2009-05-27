@@ -264,6 +264,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
   itsNrStations	                   = configuration.nrStations();
+  itsNrPencilBeams                 = configuration.nrPencilBeams();
   itsNrSubbands                    = configuration.nrSubbands();
   itsNrSubbandsPerPset             = configuration.nrSubbandsPerPset();
   itsMode                          = configuration.mode();
@@ -283,10 +284,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   const unsigned nrBeamFormedStations = itsBeamFormer->getNrBeamFormedStations();
   const unsigned nrBaselines = nrBeamFormedStations * (nrBeamFormedStations + 1) / 2;
 
-  // include both the pencil rings and the manually defined pencil beam coordinates
-  PencilRings pencilCoordinates( configuration.nrPencilRings(), configuration.pencilRingSize() );
-  pencilCoordinates += PencilCoordinates( configuration.manualPencilBeams() );
-
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers
   // are used, and consecutive phases alternately use one of them as input
@@ -295,14 +292,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // Allocators for a single arena.
 
   if (itsIsTransposeInput) {
-    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc);
+    itsInputData = new InputData<SAMPLE_TYPE>(outputPsets.size(), nrSamplesToCNProc, itsNrPencilBeams);
   }
 
   if (itsIsTransposeOutput) {
     // create only the data structures that are used by the pipeline
 
-    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc);
-    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration);
+    itsTransposedData = new TransposedData<SAMPLE_TYPE>(itsNrStations, nrSamplesToCNProc, itsNrPencilBeams);
+    itsFilteredData   = new FilteredData(itsNrStations, nrChannels, nrSamplesPerIntegration, itsNrPencilBeams);
 
     switch( itsMode.mode() ) {
       case CN_Mode::FILTER:
@@ -314,17 +311,17 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
         break;
 
       case CN_Mode::COHERENT_COMPLEX_VOLTAGES:
-        itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration);
+        itsPencilBeamData = new PencilBeamData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
         break;
 
       case CN_Mode::COHERENT_STOKES_I:
       case CN_Mode::COHERENT_ALLSTOKES:
-        itsPencilBeamData = new PencilBeamData(pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration);
+        itsPencilBeamData = new PencilBeamData(itsNrPencilBeams, nrChannels, nrSamplesPerIntegration);
         // fallthrough
 
       case CN_Mode::INCOHERENT_STOKES_I:
       case CN_Mode::INCOHERENT_ALLSTOKES:
-        itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+        itsStokesData     = new StokesData(itsMode.isCoherent(), itsMode.nrStokes(), itsNrPencilBeams, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
         break;
 
       default:
@@ -337,7 +334,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
     }
 
     if( itsStokesIntegrateChannels ) {
-      itsStokesDataIntegratedChannels = new StokesDataIntegratedChannels(itsMode.isCoherent(), itsMode.nrStokes(), pencilCoordinates.size(), nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
+      itsStokesDataIntegratedChannels = new StokesDataIntegratedChannels(itsMode.isCoherent(), itsMode.nrStokes(), itsNrPencilBeams, nrSamplesPerIntegration, nrSamplesPerStokesIntegration);
     }
   }
 
@@ -359,7 +356,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   // create the arenas and allocate the data sets
   itsMapping.allocate();
 
-  
   if (itsIsTransposeOutput) {
     const unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
     // TODO: logicalNode assumes output psets are consecutively numbered
@@ -376,7 +372,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
 
     itsPPF	      = new PPF<SAMPLE_TYPE>(itsNrStations, nrChannels, nrSamplesPerIntegration, configuration.sampleRate() / nrChannels, configuration.delayCompensation(), itsLocationInfo.rank() == 0);
 
-    itsPencilBeamFormer  = new PencilBeams(pencilCoordinates, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels, configuration.refPhaseCentre(), configuration.phaseCentres() );
+    itsPencilBeamFormer  = new PencilBeams(itsNrPencilBeams, itsNrStations, nrChannels, nrSamplesPerIntegration, itsCenterFrequencies[itsCurrentSubband], configuration.sampleRate() / nrChannels );
     itsStokes            = new Stokes(itsMode.isCoherent(), itsMode.nrStokes(), nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
     itsIncoherentStokesI = new Stokes(false, 1, nrChannels, nrSamplesPerIntegration, nrSamplesPerStokesIntegration );
 
@@ -388,7 +384,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   if (itsIsTransposeInput || itsIsTransposeOutput) {
     itsAsyncTranspose = new AsyncTranspose<SAMPLE_TYPE>(itsIsTransposeInput, itsIsTransposeOutput, 
 							myCore, itsLocationInfo, inputPsets, outputPsets, 
-							nrSamplesToCNProc, itsNrSubbands, itsNrSubbandsPerPset);
+							itsNrSubbands, itsNrSubbandsPerPset, itsNrPencilBeams);
   }
 #endif // HAVE_MPI
 }
@@ -529,7 +525,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCohere
     LOG_DEBUG(std::setprecision(12) << "core " << itsLocationInfo.rank() << ": start calculating coherent Stokes at " << MPI_Wtime());
 #endif // HAVE_MPI
   computeTimer.start();
-  itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsPencilBeamFormer->nrCoordinates());
+  itsStokes->calculateCoherent(itsPencilBeamData,itsStokesData,itsNrPencilBeams);
   computeTimer.stop();
 }
 
@@ -609,7 +605,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process()
         formPencilBeams();
         calculateCoherentStokes();
 	if( itsStokesIntegrateChannels ) {
-	  itsStokes->compressStokes( itsStokesData, itsStokesDataIntegratedChannels, itsPencilBeamFormer->nrCoordinates() );
+	  itsStokes->compressStokes( itsStokesData, itsStokesDataIntegratedChannels, itsNrPencilBeams );
           sendOutput( itsStokesDataIntegratedChannels );
 	} else {
           sendOutput( itsStokesData );

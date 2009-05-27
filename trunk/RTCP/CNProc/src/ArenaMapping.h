@@ -28,6 +28,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/StreamableData.h>
 #include <boost/noncopyable.hpp>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 namespace RTCP {

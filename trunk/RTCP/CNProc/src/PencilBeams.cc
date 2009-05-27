@@ -6,11 +6,14 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/PrintVector.h>
 #include <Interface/Exceptions.h>
+#include <Interface/SubbandMetaData.h>
 #include <Common/Timer.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 #include <cmath>
 #include <cassert>
 #include <vector>
+#include <cstring>
 
 #ifndef PENCILBEAMS_C_IMPLEMENTATION
   #include <BeamFormerAsm.h>
@@ -25,63 +28,17 @@ namespace RTCP {
 
 static NSTimer pencilBeamFormTimer("PencilBeamFormer::formBeams()", true, true);
 
-PencilBeams::PencilBeams(PencilCoordinates &coordinates, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth, const std::vector<double> &refPhaseCentre, const Matrix<double> &phaseCentres )
+PencilBeams::PencilBeams(const unsigned nrPencilBeams, const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const double centerFrequency, const double channelBandwidth )
 :
-  itsCoordinates(coordinates.getCoordinates()),
   itsNrStations(nrStations),
+  itsNrPencilBeams(nrPencilBeams),
   itsNrChannels(nrChannels),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsCenterFrequency(centerFrequency),
   itsChannelBandwidth(channelBandwidth),
   itsBaseFrequency(centerFrequency - (nrChannels/2) * channelBandwidth),
-  itsRefPhaseCentre(refPhaseCentre)
+  itsDelays( nrStations, nrPencilBeams )
 {
-  // copy all phase centres and their derived constants
-  itsPhaseCentres.reserve( nrStations );
-  itsBaselines.reserve( nrStations );
-  itsBaselinesSeconds.reserve( nrStations );
-  itsDelays.resize( nrStations, itsCoordinates.size() );
-  itsDelayOffsets.resize( nrStations, itsCoordinates.size() );
-  for( unsigned stat = 0; stat < nrStations; stat++ ) {
-     const double x = phaseCentres[stat][0];
-     const double y = phaseCentres[stat][1];
-     const double z = phaseCentres[stat][2];
-
-     PencilCoord3D phaseCentre( x, y, z );
-     PencilCoord3D baseLine = phaseCentre - refPhaseCentre;
-     PencilCoord3D baseLineSeconds = baseLine * (1.0/speedOfLight);
-
-     itsPhaseCentres.push_back( phaseCentre );
-     itsBaselines.push_back( baseLine );
-     itsBaselinesSeconds.push_back( baseLineSeconds );
-
-     for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
-       itsDelayOffsets[stat][beam] = baseLine * itsCoordinates[beam] * (1.0/speedOfLight);
-     }
-  }
-}
-
-void PencilBeams::calculateDelays( unsigned stat, const PencilCoord3D &beamDir )
-{
-  const double compensatedDelay = itsDelayOffsets[stat][0] - itsBaselinesSeconds[stat] * beamDir;
-
-  //LOG_DEBUG_STR("station " << stat << " beam 0 has an absolute delay of  " << compensatedDelay);
-
-  // centre beam does not need compensation
-  itsDelays[stat][0] = 0.0;
-
-  for( unsigned i = 1; i < itsCoordinates.size(); i++ ) {
-     // delay[i] = baseline * (coordinate - beamdir) / c
-     //          = (baseline * coordinate / c) - (baseline * beamdir) / c
-     //          = delayoffset - baselinesec * beamdir
-     //
-     // further reduced by the delay we already compensate for when doing regular beam forming (the centre of the beam). that compensation is done at the IONode (sample shift) and the PPF (phase shift)
-     itsDelays[stat][i] = itsDelayOffsets[stat][i] - itsBaselinesSeconds[stat] * beamDir - compensatedDelay;
-
-     //LOG_DEBUG_STR("station " << stat << " beam " << i << "has an additional delay of " << itsDelays[stat][i]);
-     //LOG_DEBUG_STR(itsDelayOffsets[stat][i] << " " << itsBaselinesSeconds[stat] << " " << beamDir << " " << compensatedDelay);
-     //LOG_DEBUG_STR("example shift: " << phaseShift( itsBaseFrequency + itsNrChannels/2*itsChannelBandwidth, itsDelays[stat][i] ));
-  }
 }
 
 #ifdef PENCILBEAMS_C_IMPLEMENTATION
@@ -148,18 +105,20 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 #else // ASM implementation
 
 // what we can process in one go
-static const unsigned NRSTATIONS = 3;
-static const unsigned NRBEAMS = 6;
+static const unsigned NRSTATIONS = 6;
+static const unsigned NRBEAMS = 3;
 #define BEAMFORMFUNC _beamform_up_to_6_stations_and_3_beams
+#define ADDFUNC(nr)  _add_ ## nr ## _single_precision_vectors
 
 // the number of samples to do in one go, such that the
 // caches are optimally used. itsNrSamplesPerIntegration needs
-// to be a multiple of this
+// to be a multiple of this.
+// Also, TIMESTEPSIZE needs to be a multiple of 16, as the assembly code requires it
 static const unsigned TIMESTEPSIZE = 128;
 
 void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out )
 {
-  const unsigned nrBeams = itsCoordinates.size();
+  ASSERT( TIMESTEPSIZE % 16 == 0 );
 
   if( itsNrSamplesPerIntegration % TIMESTEPSIZE > 0 ) {
     THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
@@ -187,7 +146,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
   }
 
   // conservative flagging: flag output if any input was flagged 
-  for( unsigned beam = 0; beam < nrBeams; beam++ ) {
+  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
     out->flags[beam].reset();
 
     for (unsigned stat = 0; stat < itsNrStations; stat++ ) {
@@ -205,22 +164,20 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     const float factor = averagingFactor; // add multiplication factors as needed
 
     // construct the weights, with zeroes for unused data
-    fcomplex weights[itsNrStations][nrBeams] __attribute__ ((aligned(32)));
+    fcomplex weights[itsNrStations][itsNrPencilBeams] __attribute__ ((aligned(128)));
 
     for( unsigned s = 0; s < itsNrStations; s++ ) {
       if( validStation[s] ) {
-        for( unsigned b = 0; b < nrBeams; b++ ) {
+        for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
           weights[s][b] = phaseShift( frequency, itsDelays[s][b] ) * factor;
         }
       } else {
         // a dropped station has a weight of 0
-        for( unsigned b = 0; b < nrBeams; b++ ) {
+        for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
           weights[s][b] = makefcomplex( 0, 0 );
         }
       }
     }
-
-    // TODO: separate construction of central beam
 
     unsigned processBeams = NRBEAMS;
     unsigned processStations = NRSTATIONS;
@@ -233,104 +190,69 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
       for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += TIMESTEPSIZE ) {
         // central beam (#0) has no weights, we can simply add the stations
+
 	switch( processStations ) {
 	  case 0:
 	  default:
 	    THROW(CNProcException,"Requested to add " << processStations << " stations, but can only add 1-6.");
 	    break;
 
+// possible inputs
+#define OUTPUT		(reinterpret_cast<float*>(out->samples[ch][0][time].origin()))
+#define STATION(nr)	(reinterpret_cast<const float*>(in->samples[ch][stat+nr][time].origin()))
+
+// shorthand for the add functions
+#define ADDGENERIC(nr,...)	ADDFUNC(nr)(						\
+	        OUTPUT,									\
+		__VA_ARGS__,								\
+	        TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */ )
+
+// adds stations, and the subtotal if needed (if stat!=0)
+#define ADD(nr,nrplusone,...)	do {							\
+				  if( stat ) {						\
+				    ADDGENERIC(nrplusone,OUTPUT,__VA_ARGS__);		\
+				  } else {						\
+				    ADDGENERIC(nr,__VA_ARGS__);				\
+				  }							\
+				} while(0);
+
 	  case 1:
-	    // nothing to add, so just copy the values
-	    memcpy( out->samples[ch][0][time].origin(), in->samples[ch][stat+0][time].origin(),
-              TIMESTEPSIZE * NR_POLARIZATIONS * sizeof out->samples[0][0][0][0] );
+            ADD( 1, 2, STATION(0) );
 	    break;
 
 	  case 2:
-	    _add_2_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
+            ADD( 2, 3, STATION(0), STATION(1) );
 	    break;
 
 	  case 3:
-	    _add_3_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
+            ADD( 3, 4, STATION(0), STATION(1), STATION(2) );
 	    break;
 
 	  case 4:
-	    _add_4_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
+            ADD( 4, 5, STATION(0), STATION(1), STATION(2), STATION(3) );
 	    break;
 
 	  case 5:
-	    _add_4_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
+            ADD( 5, 6, STATION(0), STATION(1), STATION(2), STATION(3), STATION(4) );
+	    break;
 
-	    _add_2_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-	      reinterpret_cast<const float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
-	    break;
-#if 0
-	  case 5:
-	    _add_5_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
-	    break;
-#endif
 	  case 6:
-	    _add_6_single_precision_vectors(
-	      reinterpret_cast<float*>(out->samples[ch][0][time].origin()), 
-              reinterpret_cast<const float*>(in->samples[ch][stat+0][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+1][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+2][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+3][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+4][time].origin()),
-              reinterpret_cast<const float*>(in->samples[ch][stat+5][time].origin()),
-	      TIMESTEPSIZE * NR_POLARIZATIONS * 2 /* 2 for real & imaginary parts */
-	      );
+            ADD( 6, 7, STATION(0), STATION(1), STATION(2), STATION(3), STATION(4), STATION(5) );
 	    break;
 	}
 
 	// non-central beams
-        for( unsigned beam = 1; beam < nrBeams; beam += processBeams ) {
-          processBeams = std::min( NRBEAMS, nrBeams - beam ); 
+        for( unsigned beam = 1; beam < itsNrPencilBeams; beam += processBeams ) {
+          processBeams = std::min( NRBEAMS, itsNrPencilBeams - beam ); 
 
           // beam form
 	  // note: PPF.cc puts zeroes at flagged samples, so we can just add them
           BEAMFORMFUNC(
             out->samples[ch][beam][time].origin(),
-            out->samples[ch][beam].strides()[0] * sizeof out->samples[0][0][0][0],
+            out->samples[ch].strides()[0] * sizeof out->samples[0][0][0][0],
 
             in->samples[ch][stat][time].origin(),
-            in->samples[ch][stat].strides()[0] * sizeof in->samples[0][0][0][0],
+            in->samples[ch].strides()[0] * sizeof in->samples[0][0][0][0],
 
             &weights[stat][beam],
             (&weights[1][0] - &weights[0][0]) * sizeof weights[0][0],
@@ -350,16 +272,23 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
 #endif
 
-void PencilBeams::calculateAllDelays( const FilteredData *filteredData )
+void PencilBeams::calculateDelays( const FilteredData *filteredData )
 {
-  // calculate the delays for each station for this integration period
-  for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
-    // todo: interpolate per time step?
-    PencilCoord3D beamDirBegin = filteredData->metaData[stat].beamDirectionAtBegin;
-    PencilCoord3D beamDirEnd = filteredData->metaData[stat].beamDirectionAfterEnd;
-    PencilCoord3D beamDirAverage = (beamDirBegin + beamDirEnd) * 0.5;
+  // Calculate the delays for each station for this integration period.
 
-    calculateDelays( stat, beamDirAverage );
+  // We assume that the delay compensation has already occurred for the central beam. Also,
+  // we use the same delay for all time samples. This could be interpolated for TIMESTEPSIZE
+  // portions, as used in computeComplexVoltages.
+
+  for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
+    for( unsigned pencil = 0; pencil < itsNrPencilBeams; pencil++ ) {
+      const SubbandMetaData::beamInfo &beamInfo = filteredData->metaData[stat].beams[pencil];
+
+      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd - beamInfo.delayAtBegin) * 0.5;
+
+      // subtract the delay that was already compensated for (i.e. the central beam)
+      itsDelays[stat][pencil] -= itsDelays[stat][0];
+    }
   }
 }
 
@@ -370,7 +299,7 @@ void PencilBeams::formPencilBeams( const FilteredData *filteredData, PencilBeamD
 
   pencilBeamFormTimer.start();
 
-  calculateAllDelays( filteredData );
+  calculateDelays( filteredData );
   computeComplexVoltages( filteredData, pencilBeamData );
 
   pencilBeamFormTimer.stop();

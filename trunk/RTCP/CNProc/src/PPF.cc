@@ -262,7 +262,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   _bgl_mutex_lock(mutex);
 #endif
 
-  unsigned alignmentShift = transposedData->metaData[stat].alignmentShift;
+  const unsigned alignmentShift = transposedData->metaData[stat].alignmentShift();
 
 #if 0
   LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
@@ -348,12 +348,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
-  computePhaseShifts(phaseShifts, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd, baseFrequency);
+  computePhaseShifts(phaseShifts, transposedData->metaData[stat].beams[0].delayAtBegin, transposedData->metaData[stat].beams[0].delayAfterEnd, baseFrequency);
 
   // forward (pencil) beam forming information
-  for( unsigned i = 0; i < 3; i++ ) {
-    filteredData->metaData[stat].beamDirectionAtBegin[i] = transposedData->metaData[stat].beamDirectionAtBegin[i];
-    filteredData->metaData[stat].beamDirectionAfterEnd[i] = transposedData->metaData[stat].beamDirectionAfterEnd[i];
+  for( unsigned p = 0; p < filteredData->metaData[stat].beams.size(); p++ ) {
+    filteredData->metaData[stat].beams[p] = transposedData->metaData[stat].beams[p];
   }
 
   const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();

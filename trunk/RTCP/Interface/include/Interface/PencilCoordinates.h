@@ -89,7 +89,12 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline double& operator[]( const unsigned i )
+    inline const double operator[]( const unsigned i ) const
+    {
+      return itsXYZ[i];
+    }
+
+    inline double &operator[]( const unsigned i )
     {
       return itsXYZ[i];
     }
@@ -117,11 +122,14 @@ class PencilCoordinates
     PencilCoordinates( const std::vector<PencilCoord3D> &coordinates ): itsCoordinates(coordinates) {}
     PencilCoordinates( const Matrix<double> &coordinates );
 
-    std::vector<PencilCoord3D>& getCoordinates()
+    inline std::vector<PencilCoord3D>& getCoordinates() 
     { return itsCoordinates; }
 
-    size_t size() const
+    inline size_t size() const
     { return itsCoordinates.size(); }
+
+    inline const PencilCoord3D& operator[]( const unsigned nr ) const
+    { return itsCoordinates[nr]; }
 
     void read( Stream *s );
     void write( Stream *s ) const;

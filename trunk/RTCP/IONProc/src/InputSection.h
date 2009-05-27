@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Interface/Parset.h>
+#include <Interface/MultiDimArray.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
@@ -85,10 +86,10 @@ template <typename SAMPLE_TYPE> class InputSection {
     
     TimeStamp			 itsSyncedStamp;
    
-    std::vector<double>		 itsDelaysAtBegin;
-    std::vector<double>		 itsDelaysAfterEnd;
-    std::vector<AMC::Direction>	 itsBeamDirectionsAtBegin;
-    std::vector<AMC::Direction>	 itsBeamDirectionsAfterEnd;
+    Matrix<double>		 itsDelaysAtBegin;
+    Matrix<double>		 itsDelaysAfterEnd;
+    Matrix<AMC::Direction>	 itsBeamDirectionsAtBegin;
+    Matrix<AMC::Direction>	 itsBeamDirectionsAfterEnd;
     unsigned			 itsNrPsets;
     
     unsigned			 itsMaxNetworkDelay; // in samples
@@ -98,6 +99,7 @@ template <typename SAMPLE_TYPE> class InputSection {
     unsigned			 itsNHistorySamples;
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
+    unsigned			 itsNrPencilBeams;
 
     unsigned			 itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned			 itsPsetNumber;
@@ -108,8 +110,9 @@ template <typename SAMPLE_TYPE> class InputSection {
 
     std::vector<TimeStamp>	 itsDelayedStamps;
     std::vector<signed int>	 itsSamplesDelay;
-    std::vector<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
     boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
+
+    Matrix<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
 
     
     LogThread			 *itsLogThread;
