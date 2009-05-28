@@ -89,7 +89,7 @@ class PencilCoord3D {
       return *this;
     }
 
-    inline const double operator[]( const unsigned i ) const
+    inline double operator[]( const unsigned i ) const
     {
       return itsXYZ[i];
     }

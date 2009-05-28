@@ -1,7 +1,7 @@
 #ifndef LOFAR_CNPROC_CN_MATH_H
 #define LOFAR_CNPROC_CN_MATH_H
 
-#include <cmath>
+#include <Common/lofar_complex.h>
 
 #if defined HAVE_MASS
 
