@@ -4,23 +4,14 @@
 #include <PencilBeams.h>
 
 #include <Interface/MultiDimArray.h>
-#include <Interface/PrintVector.h>
 #include <Interface/Exceptions.h>
 #include <Interface/SubbandMetaData.h>
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
-#include <iostream>
-#include <cmath>
 #include <cassert>
-#include <vector>
-#include <cstring>
 
 #ifndef PENCILBEAMS_C_IMPLEMENTATION
   #include <BeamFormerAsm.h>
-#endif
-
-#ifndef M_SQRT3
-  #define M_SQRT3     1.73205080756887719000
 #endif
 
 namespace LOFAR {
