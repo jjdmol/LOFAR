@@ -68,7 +68,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 {
   const double averagingFactor = 1.0 / itsNrValidStations;
 
-  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
+  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
       const float factor = averagingFactor;
@@ -84,7 +84,9 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
             for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
               if( itsValidStations[stat] ) {
                 // note: for beam #0 (central beam), the phaseShift is 1
-                const fcomplex shift = phaseShift( frequency, itsDelays[stat][beam] );
+                //
+                // static_cast<fcomplex> is required here since GCC can't seem to figure it out otherwise
+                const fcomplex shift = static_cast<fcomplex>( phaseShift( frequency, itsDelays[stat][beam] ) );
                 sample += in->samples[ch][stat][time][pol] * shift;
               }
             }
