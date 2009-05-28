@@ -5,6 +5,7 @@
 #include <PPF.h>
 #include <FFT_Asm.h>
 #include <FIR_Asm.h>
+#include <CN_Math.h>
 
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
@@ -20,23 +21,6 @@
 
 namespace LOFAR {
 namespace RTCP {
-
-#if defined HAVE_MASS
-
-extern "C"
-{
-  // the return conventions for std::complex<double> and double _Complex differ!
-  double _Complex cosisin(double);
-}
-
-#else
-
-inline static dcomplex cosisin(double x)
-{
-  return makedcomplex(cos(x), sin(x));
-}
-
-#endif
 
 
 static NSTimer computeFlagsTimer("PPF::computeFlags()", true, true);

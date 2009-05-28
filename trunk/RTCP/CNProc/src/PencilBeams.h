@@ -27,11 +27,15 @@ class PencilBeams
     void formPencilBeams( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
 
   private:
-    void calculateDelays( const FilteredData *filteredData );
+    // extracts the delays from the metaData, and transforms them if necessary
+    void computeDelays( const FilteredData *filteredData );
 
     dcomplex phaseShift( const double frequency, const double delay ) const;
-    void computeBeams( const MultiDimArray<fcomplex,4> &in, MultiDimArray<fcomplex,4> &out, const std::vector<unsigned> stations );
 
+    // sets the flags in pencilBeamData, and decides which stations should be added
+    void computeFlags( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
+
+    // the actual beam former
     void computeComplexVoltages( const FilteredData *filteredData, PencilBeamData *pencilBeamData );
 
     const unsigned          itsNrStations;
@@ -42,6 +46,10 @@ class PencilBeams
     const double            itsChannelBandwidth;
     const double            itsBaseFrequency;
     Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
+
+    // the following are filled by computeFlags()
+    unsigned                itsNrValidStations; // the number
+    std::vector<bool>       itsValidStations;
 };
 
 inline dcomplex PencilBeams::phaseShift( const double frequency, const double delay ) const
