@@ -233,6 +233,13 @@ goto_level()
 {
 	#first power down to new level
 	newlevel=$1
+
+	# set rcumode to 0 (power save) when entering level 1
+	if [ ${newlevel} -le 1 ]; then
+	    echo "set rcumode to 0 (power save)"
+	    rspctl --rcumode=0
+	fi
+
 	for (( l=6 ; l>newlevel ; l-- ))
 	do
 		tac $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
@@ -243,12 +250,6 @@ goto_level()
 			program=`echo $line | cut -d":" -f6`
 			stop_prog $program x$asroot x$withmpi
 		done
-
-		# set rcumode to 0 (power save) when entering level 1
-		if [ ${l} == 1 ]; then
-		    rspctl --rcumode=0
-		fi
-
 	done
 
 	# then power up to new level
