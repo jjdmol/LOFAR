@@ -293,7 +293,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
 	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].delayAtBegin, transposedData->metaData[stat].delayAfterEnd);
+	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].beams[0].delayAtBegin, transposedData->metaData[stat].beams[0].delayAfterEnd);
 
 	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
 	}

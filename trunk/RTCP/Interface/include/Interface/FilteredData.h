@@ -18,7 +18,7 @@ class FilteredData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrStations);
+    FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrPencilBeams);
 
     virtual void allocate( Allocator &allocator = heapAllocator );
 

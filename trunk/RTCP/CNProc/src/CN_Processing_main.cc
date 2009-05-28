@@ -89,6 +89,9 @@ int main(int argc, char **argv)
 
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
+#else
+    (void)argc;
+    (void)argv;
 #endif
 
     LocationInfo locationInfo;
