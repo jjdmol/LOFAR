@@ -1,3 +1,4 @@
+subscribed, execute command
 
 ==== TBB-board, test ddr =================================================
 
@@ -117,7 +118,7 @@ Nr  Line   Writen      Read         Info
  3     26  0x8003001a  0x8003001a   SAME
  3     27  0x8003001b  0x8003001b   SAME
 
-Testing DDR memory data lines of board 6
+Testing DDR memory data lines of board 5
 
 Mp  Write       Read        Write        Read                                
 Nr  Word[0]     Word[0]     Word[1]      Word[1]     Info                    
