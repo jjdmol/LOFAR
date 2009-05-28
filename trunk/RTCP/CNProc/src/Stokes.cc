@@ -3,9 +3,12 @@
 
 #include <Stokes.h>
 #include <Interface/MultiDimArray.h>
+#include <Common/Timer.h>
 
 namespace LOFAR {
 namespace RTCP {
+
+static NSTimer stokesTimer("Stokes calculations", true, true);
 
 Stokes::Stokes( const bool coherent, const int nrStokes, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrSamplesPerStokesIntegration ):
   itsNrChannels(nrChannels),
@@ -46,13 +49,17 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
 // Calculate coherent stokes values from pencil beams.
 void Stokes::calculateCoherent( const PencilBeamData *pencilBeamData, StokesData *stokesData, const unsigned nrBeams )
 {
+  stokesTimer.start();
   computeCoherentStokes( pencilBeamData->samples, pencilBeamData->flags, stokesData, nrBeams );
+  stokesTimer.stop();
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
 void Stokes::calculateIncoherent( const FilteredData *filteredData, StokesData *stokesData, const unsigned nrStations )
 {
+  stokesTimer.start();
   computeIncoherentStokes( filteredData->samples, filteredData->flags, stokesData, nrStations );
+  stokesTimer.stop();
 }
 
 // Compress Stokes values by summing over all channels
