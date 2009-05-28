@@ -334,14 +334,14 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
       metaData[i] = SubbandMetaData( itsNrPencilBeams );
     }
     
-    if( itsNeedDelays ) {
-      for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
-        unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
+    for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
+      unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
 
-	if(subband < itsNSubbands) {
-	  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-	  unsigned beam     = itsSubbandToBeamMapping[subband];
+      if(subband < itsNSubbands) {
+        unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+        unsigned beam     = itsSubbandToBeamMapping[subband];
 
+        if( itsNeedDelays ) {
           for( unsigned p = 0; p < itsNrPencilBeams; p++ ) {
             struct SubbandMetaData::beamInfo &beamInfo = metaData[pset].beams[p];
 
@@ -356,10 +356,10 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 	      beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
 	    }
 	  }  
+        }  
 
-	  metaData[pset].alignmentShift() = itsBBuffers[rspBoard]->alignmentShift(beam);
-	  metaData[pset].setFlags(itsFlags[rspBoard][beam]);
-	}
+        metaData[pset].alignmentShift() = itsBBuffers[rspBoard]->alignmentShift(beam);
+        metaData[pset].setFlags(itsFlags[rspBoard][beam]);
       }
     }
 
