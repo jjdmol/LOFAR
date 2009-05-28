@@ -69,12 +69,13 @@ void runOnCore0()
 
 void setPriority(unsigned priority)
 {
+  // priority 0: non-real time
+  // priority 1-99: real time
   struct sched_param sched_param;
 
-  //sched_param.sched_priority = sched_get_priority_max(SCHED_RR) - belowMax;
   sched_param.sched_priority = priority;
 
-  if (pthread_setschedparam(pthread_self(), SCHED_RR, &sched_param) < 0)
+  if (pthread_setschedparam(pthread_self(), priority ? SCHED_RR : SCHED_OTHER, &sched_param) < 0)
     perror("pthread_setschedparam");
 }
 

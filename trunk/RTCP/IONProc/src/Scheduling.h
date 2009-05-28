@@ -33,6 +33,8 @@ namespace RTCP {
 // threads on this core.
 extern void doNotRunOnCore0();
 extern void runOnCore0();
+
+// set thread priority. 0 = normal, 1 - 99 = real time
 extern void setPriority(unsigned priority);
 #endif
 
