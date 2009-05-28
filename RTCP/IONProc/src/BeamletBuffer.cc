@@ -180,6 +180,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.lock(0, itsSize, itsSize); // avoid reset while other thread reads
 
+    int oldOffset = itsOffset;
     itsOffset   = - (newTimeStamp % itsNrTimesPerPacket);
     itsCurrentI = mapTime2Index(newTimeStamp);
     assert(aligned(itsCurrentI, itsNrTimesPerPacket));
@@ -190,7 +191,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
 
     itsLockedRanges.unlock(0, itsSize, itsSize);
 
-    LOG_DEBUG("reset BeamletBuffer");
+    LOG_DEBUG("reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
   }
 }
 
