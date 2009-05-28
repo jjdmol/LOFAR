@@ -37,40 +37,46 @@ PencilBeams::PencilBeams(const unsigned nrPencilBeams, const unsigned nrStations
   itsCenterFrequency(centerFrequency),
   itsChannelBandwidth(channelBandwidth),
   itsBaseFrequency(centerFrequency - (nrChannels/2) * channelBandwidth),
-  itsDelays( nrStations, nrPencilBeams )
+  itsDelays( nrStations, nrPencilBeams ),
+  itsNrValidStations( 0 ),
+  itsValidStations( itsNrStations )
 {
+}
+
+void PencilBeams::computeFlags( const FilteredData *in, PencilBeamData *out )
+{
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
+
+  // determine which stations have too much flagged data
+  itsNrValidStations = 0;
+  for(unsigned stat = 0; stat < itsNrStations; stat++) {
+    if( in->flags[stat].count() > upperBound ) {
+      // too much flagged data -- drop station
+      itsValidStations[stat] = false;
+    } else {
+      // keep station
+      itsValidStations[stat] = true;
+      itsNrValidStations++;
+    }
+  }
+
+  // conservative flagging: flag output if any input was flagged 
+  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
+    out->flags[beam].reset();
+
+    for (unsigned stat = 0; stat < itsNrStations; stat++ ) {
+      if( itsValidStations[stat] ) {
+        out->flags[beam] |= in->flags[stat];
+      }
+    }
+  }
 }
 
 #ifdef PENCILBEAMS_C_IMPLEMENTATION
 void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out )
 {
-  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
-  std::vector<unsigned> validStations;
+  const double averagingFactor = 1.0 / itsNrValidStations;
 
-  validStations.reserve( itsNrStations );
-
-  // determine which stations have too much flagged data
-  for(unsigned stat = 0; stat < itsNrStations; stat++) {
-    if( in->flags[stat].count() > upperBound ) {
-      // too much flagged data -- drop station
-    } else {
-      // keep station
-      validStations.push_back( stat );
-    }
-  }
-
-  // conservative flagging: flag output if any input was flagged 
-  for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
-    out->flags[beam].reset();
-
-    for (unsigned stat = 0; stat < validStations.size(); stat++ ) {
-      out->flags[beam] |= in->flags[validStations[stat]]; 
-    }
-  }
-
-  const double averagingFactor = 1.0 / validStations.size();
-
-  // do the actual beam forming
   for( unsigned beam = 0; beam < itsCoordinates.size(); beam++ ) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       const double frequency = itsBaseFrequency + ch * itsChannelBandwidth;
@@ -84,10 +90,12 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
             // combine the stations for this beam
             fcomplex sample = makefcomplex( 0, 0 );
 
-            for( unsigned stat = 0; stat < validStations.size(); stat++ ) {
-              // note: for beam #0 (central beam), the phaseShift is 1
-              const fcomplex shift = phaseShift( frequency, itsDelays[validStations[stat]][beam] );
-              sample += in->samples[ch][validStations[stat]][time][pol] * shift;
+            for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
+              if( itsValidStations[stat] ) {
+                // note: for beam #0 (central beam), the phaseShift is 1
+                const fcomplex shift = phaseShift( frequency, itsDelays[stat][beam] );
+                sample += in->samples[ch][stat][time][pol] * shift;
+              }
             }
             dest = sample * factor;
           }
@@ -124,39 +132,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
   }
 
-  // Maximum number of flagged samples. If a station has more, we discard it entirely
-  const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * PencilBeams::MAX_FLAGGED_PERCENTAGE);
-
-  // Whether each station is valid or discarded
-  std::vector<bool> validStation( itsNrStations );
-
-  // Number of valid stations
-  unsigned nrValidStations = 0;
-
-  // determine which stations have too much flagged data
-  for(unsigned stat = 0; stat < itsNrStations; stat++) {
-    if( in->flags[stat].count() > upperBound ) {
-      // too much flagged data -- drop station
-      validStation[stat] = false;
-    } else {
-      // keep station
-      validStation[stat] = true;
-      nrValidStations++;
-    }
-  }
-
-  // conservative flagging: flag output if any input was flagged 
-  for( unsigned beam = 0; beam < itsNrPencilBeams; beam++ ) {
-    out->flags[beam].reset();
-
-    for (unsigned stat = 0; stat < itsNrStations; stat++ ) {
-      if( validStation[stat] ) {
-        out->flags[beam] |= in->flags[stat];
-      }
-    }
-  }
-
-  const double averagingFactor = 1.0 / nrValidStations;
+  const double averagingFactor = 1.0 / itsNrValidStations;
 
   // do the actual beamforming
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
@@ -167,12 +143,12 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     fcomplex weights[itsNrStations][itsNrPencilBeams] __attribute__ ((aligned(128)));
 
     for( unsigned s = 0; s < itsNrStations; s++ ) {
-      if( validStation[s] ) {
+      if( itsValidStations[s] ) {
         for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
           weights[s][b] = phaseShift( frequency, itsDelays[s][b] ) * factor;
         }
       } else {
-        // a dropped station has a weight of 0
+        // a dropped station has a weight of 0, so we can just add them blindly
         for( unsigned b = 0; b < itsNrPencilBeams; b++ ) {
           weights[s][b] = makefcomplex( 0, 0 );
         }
@@ -269,7 +245,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
 #endif
 
-void PencilBeams::calculateDelays( const FilteredData *filteredData )
+void PencilBeams::computeDelays( const FilteredData *filteredData )
 {
   // Calculate the delays for each station for this integration period.
 
@@ -301,7 +277,8 @@ void PencilBeams::formPencilBeams( const FilteredData *filteredData, PencilBeamD
 
   pencilBeamFormTimer.start();
 
-  calculateDelays( filteredData );
+  computeDelays( filteredData );
+  computeFlags( filteredData, pencilBeamData );
   computeComplexVoltages( filteredData, pencilBeamData );
 
   pencilBeamFormTimer.stop();
