@@ -236,8 +236,15 @@ goto_level()
 
 	# set rcumode to 0 (power save) when entering level 1
 	if [ ${newlevel} -le 1 ]; then
+          if [ -e /tmp/level.admin ]; then
+            level=`cat /tmp/level.admin`
+          else
+            level=-1
+          fi
+          if [ ${level} -ge 2 ]; then 
 	    echo "set rcumode to 0 (power save)"
 	    rspctl --rcumode=0
+          fi
 	fi
 
 	for (( l=6 ; l>newlevel ; l-- ))
