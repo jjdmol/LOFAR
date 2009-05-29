@@ -40,6 +40,11 @@ function(lofar_add_package _name)
     "Wrong arguments supplied to lofar_add_package().\n"
     "Usage: lofar_add_package(name [version] [DEPENDS depend ...])\n")
 
+  # Print message to console if configuring verbose.
+  if(LOFAR_VERBOSE_CONFIGURE)
+    message(STATUS "Adding package ${_name}...")
+  endif(LOFAR_VERBOSE_CONFIGURE)
+
   # If arguments were given, then the first could be a version number.
   if(ARGC GREATER 1)
     list(GET ARGV 1 _version)
@@ -82,6 +87,8 @@ function(lofar_add_package _name)
     get_directory_property(_dirs 
       DIRECTORY ${${_dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
     add_dependencies(${_name} ${_dep})
+#    message(STATUS "set(BUILD_${_dep} TRUE CACHE BOOL \"Build ${_dep}?\"")
+#    set(BUILD_${_dep} TRUE CACHE BOOL "Build ${_dep}?")
     include_directories(${_dirs})
   endforeach(_dep ${_dependencies})
 

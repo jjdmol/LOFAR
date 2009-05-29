@@ -324,10 +324,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preprocess(CN_C
   }
 
   // create the arenas
-  unsigned totalSize = 0;
+  size_t totalSize = 0;
   for( unsigned arena = 0; arena < nrArenas; arena++ ) {
     // compute the size of the largest dataset for this arena
-    unsigned size = 0;
+    size_t size = 0;
 
     for( unsigned dataset = 0; dataset < nrDatasets; dataset++ ) {
       if( mapping[dataset].arena == arena ) {

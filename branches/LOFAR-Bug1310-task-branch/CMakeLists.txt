@@ -31,20 +31,24 @@ include(LofarInit)
 project(LOFAR)
 include(LofarGeneral)
 
-#find_package(FFTW REQUIRED COMPONENTS double threads)# COMPONENTS SINGLE_REAL)
+#find_package(FFTW3)# COMPONENTS single threads)
 #return()
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(LCS)
-add_subdirectory(CEP)
-#add_subdirectory(RTCP)
+#add_subdirectory(CEP)
+add_subdirectory(RTCP)
+#add_subdirectory(SAS)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
+
+get_directory_property(def DEFINITIONS)
+message(STATUS "COMPILE_DEFINITIONS = ${def}")
 
 if(0)
   get_cmake_property(cache_vars CACHE_VARIABLES)

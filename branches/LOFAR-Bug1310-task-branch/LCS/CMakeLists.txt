@@ -34,14 +34,14 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(Tools)         # Useful tools
-add_subdirectory(Common)        # Common stuff
-add_subdirectory(Blob)          # Binary Large Objects
-add_subdirectory(Stream)        # Low-level support for streaming data
-add_subdirectory(Transport)     # Low-level transport library
-add_subdirectory(ACC)           # Application Configuration & Control
-add_subdirectory(AMC)           # Astronomical Measures Conversions
-add_subdirectory(ApplCommon)    # Application common stuff
+lofar_add_subdirectory(Tools)         # Useful tools
+lofar_add_subdirectory(Common)        # Common stuff
+lofar_add_subdirectory(Blob)          # Binary Large Objects
+lofar_add_subdirectory(Stream)        # Low-level support for streaming data
+lofar_add_subdirectory(Transport)     # Low-level transport library
+lofar_add_subdirectory(ACC)           # Application Configuration & Control
+lofar_add_subdirectory(AMC)           # Astronomical Measures Conversions
+lofar_add_subdirectory(ApplCommon)    # Application common stuff
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

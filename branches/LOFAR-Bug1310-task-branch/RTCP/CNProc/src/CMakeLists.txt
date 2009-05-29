@@ -25,6 +25,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
+# Add current source directory to -I path. This is needed because CNProc uses
+# angle brackets for internal header files, instead of quotes.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 set(cnproc_LIB_SRCS
   Package__Version.cc
   AsyncCommunication.cc

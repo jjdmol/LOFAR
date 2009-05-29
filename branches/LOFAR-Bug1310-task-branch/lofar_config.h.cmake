@@ -111,6 +111,15 @@
 /* Define if AIPS++ is installed */
 #cmakedefine HAVE_AIPSPP
 
+/* Define if FFTW is installed */
+#cmakedefine HAVE_FFTW
+
+/* Define if FFTW3 is installed */
+#cmakedefine HAVE_FFTW3
+
+/* Define if libpqxx is installed */
+#cmakedefine HAVE_PQXX
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #cmakedefine LT_OBJDIR 1

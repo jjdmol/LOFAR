@@ -35,7 +35,7 @@ include(LofarGeneral)
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(BBSKernel)
-#add_subdirectory(BBSControl)
+add_subdirectory(BBSControl)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

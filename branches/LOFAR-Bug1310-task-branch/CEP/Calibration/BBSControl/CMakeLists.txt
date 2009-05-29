@@ -40,8 +40,8 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS BBSKernel Blob Common ParmDB PLC T
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(Casacore COMPONENTS casa REQUIRED)
-lofar_find_package(pqxx REQUIRED)
+lofar_find_package(Casacore REQUIRED COMPONENTS casa)
+lofar_find_package(PQXX REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

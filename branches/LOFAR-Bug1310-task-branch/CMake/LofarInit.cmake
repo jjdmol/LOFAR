@@ -154,6 +154,9 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
 
   # Set compiler definitions (e.g., -D options). There are global options that
   # apply to each build variant, and there are build variant-specific options.
+  # Use separate_arguments to convert spaces to semicolons first.
+  separate_arguments(${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS)
+  separate_arguments(${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS_${LOFAR_BUILD_VARIANT})
   add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS})
   add_definitions(${${LOFAR_COMPILER_SUITE}_COMPILE_DEFINITIONS_${LOFAR_BUILD_VARIANT}})
 

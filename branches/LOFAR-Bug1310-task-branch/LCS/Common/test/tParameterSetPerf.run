@@ -13,4 +13,4 @@ do
   done
 done
 
-tParameterSetPerf
+./tParameterSetPerf

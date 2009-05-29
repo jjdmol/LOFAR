@@ -26,8 +26,12 @@
 # Defines the following macros:
 #   join_arguments(var)
 #   list_append_if(condition var value1..valuen)
+#   find_handle_result(package, find_result, message)
 #   lofar_get_date(date)
 #   lofar_get_hostname(name)
+#   lofar_add_library(name)
+#   lofar_add_executable(name)
+#   lofar_add_test(name)
 # ----------------------------------------------------------------------------
 
 if(NOT DEFINED LOFAR_MACROS_INCLUDED)
@@ -60,6 +64,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       list(APPEND ${_list} ${ARGN})
     endif(${_cond})
   endmacro(list_append_if _cond _list)
+
 
   # --------------------------------------------------------------------------
   # lofar_get_date(date)
@@ -115,13 +120,39 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
 
   # --------------------------------------------------------------------------
+  # lofar_add_subdirectory(name)
+  #
+  # Add a subdirectory like add_subdirectory() does. 
+  # Furthermore:
+  # - It is not an error if the subdirectory does not exist. 
+  # - An option BUILD_${name} will be provided to enable or disable inclusion.
+  #   By default, the option will be set to TRUE if the directory exists, and
+  #   to FALSE otherwise.
+  #
+  # Note: This macro is intended to be used to include a LOFAR package.
+  # --------------------------------------------------------------------------
+  macro(lofar_add_subdirectory _name)
+    message(STATUS "lofar_add_subdirectory(${_name})")
+    get_filename_component(_fullname ${_name} ABSOLUTE)
+    if(EXISTS ${_fullname})
+      message(STATUS "Directory ${_name} exists")
+      option(BUILD_${_name} "Build package ${_name}?" TRUE)
+      if(BUILD_${_name})
+        add_subdirectory(${_name})
+      endif(BUILD_${_name})
+    else()
+      message(STATUS "Directory ${_name} DOES NOT exist")
+    endif(EXISTS ${_fullname})
+  endmacro(lofar_add_subdirectory _name)
+
+  # --------------------------------------------------------------------------
   # lofar_add_executable(name)
   #
-  # Adds an executable like add_executable() does.
+  # Add an executable like add_executable() does.
   # Furthermore:
-  # - set the link dependencies of this executable on other LOFAR libraries
+  # - Set the link dependencies of this executable on other LOFAR libraries
   #   using the information in ${PROJECT_NAME}_LIBRARIES.
-  # - add a dependency of the current project on this executable.
+  # - Add a dependency of the current project on this executable.
   #
   # Note: since the libraries of the current project already have all their
   # link dependencies setup correctly (using lofar_add_library()), executables
@@ -138,7 +169,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # --------------------------------------------------------------------------
   # lofar_add_test(name)
   #
-  # Adds a test like add_test() does.
+  # Add a test like add_test() does.
   # Furthermore:
   # - Instructs CMake how to compile and link the test program using
   #   lofar_add_executable().

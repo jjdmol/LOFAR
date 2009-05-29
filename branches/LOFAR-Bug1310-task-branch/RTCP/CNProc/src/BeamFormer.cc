@@ -3,7 +3,7 @@
 
 #include <Common/Timer.h>
 
-#include "BeamFormer.h"
+#include <BeamFormer.h>
 
 #include <map>
 

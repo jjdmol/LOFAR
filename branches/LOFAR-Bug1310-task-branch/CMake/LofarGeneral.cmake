@@ -40,11 +40,6 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   include_directories(${CMAKE_BINARY_DIR}/include)
 
   ## --------------------------------------------------------------------------
-  ## Locate the Doxygen documentation tool
-  ## --------------------------------------------------------------------------
-  find_package(Doxygen)
-
-  ## --------------------------------------------------------------------------
   ## Check for typedefs of primitive types
   ## --------------------------------------------------------------------------
   include(CheckTypeSize)
@@ -52,6 +47,12 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   check_type_size("uint"      HAVE_UINT     )
   check_type_size("ulong"     HAVE_ULONG    )
   check_type_size("long long" HAVE_LONG_LONG)
+
+  ## --------------------------------------------------------------------------
+  ## Check endianess
+  ## --------------------------------------------------------------------------
+  include(TestBigEndian)
+  test_big_endian(WORDS_BIGENDIAN)
 
   ## --------------------------------------------------------------------------
   ## Define `AUTO_FUNCTION_NAME' as either __PRETTY_FUNCTION__, __FUNCTION__,
@@ -69,5 +70,10 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
       break()
     endif(HAVE_${func_name})
   endforeach(func_name)
+
+  ## --------------------------------------------------------------------------
+  ## Locate the Doxygen documentation tool
+  ## --------------------------------------------------------------------------
+  find_package(Doxygen)
 
 endif(NOT DEFINED LOFAR_GENERAL_INCLUDED)

@@ -20,22 +20,26 @@
 
 # Try to find FFTW.
 #
+# Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]])
+#
 # This will define:
 #  
-#  FFTW_FOUND        - FFTW is present for the requested component.
-#  FFTW_COMPONENT    - FFTW component; only set when component was found.
-#                      (cached)
-#  FFTW_INCLUDE_DIR  - the FFTW include directory for the requested component 
-#                      (cached)
-#  FFTW_INCLUDE_DIRS - the FFTW include directories
-#                      (identical to FFTW_INCLUDE_DIR)
-#  FFTW_LIBRARY      - the FFTW library for the requested component 
-#                      (cached)
-#  FFTW_LIBRARIES    - the FFTW libraries
-#                      (identical to FFTW_LIBRARY)
+#  FFTW_FOUND           - FFTW is present for the requested components.
+#  FFTW_INCLUDE_DIR     - FFTW include directory for the requested components
+#                         (cached)
+#  FFTW_INCLUDE_DIRS    - FFTW include directory 
+#                         (identical to FFTW_INCLUDE_DIR)
+#  FFTW_<YYY>_LIBRARY   - FFTW library for the requested component <YYY>
+#                         (cached)
+#  FFTW_LIBRARIES       - FFTW libraries needed to when linking
+#
+#  FFTW_PRECISION       - FFTW precision specified (double|single)
+#                         (cached internal)
+#  FFTW_PARALLELIZATION - FFTW parallelization specified(off|mpi|threads)
+#                         (cached internal)
 
 set(_usage_msg 
-  "Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]")
+  "Usage: find_package(FFTW [COMPONENTS [real] [double|single] [mpi|threads]]")
 
 # -----------------------------------------------------------------------------
 # Get the optional `type' component: [real]. 
@@ -60,7 +64,7 @@ endmacro(get_fftw_type)
 # It is an error if, between multiple calls of FindFFTW(), the currently
 # specified component value is different from the cached one.
 #
-# Usage get_fftw_component(<kind> <default-option> [option] ...)
+# Usage: get_fftw_component(<kind> <default-option> [option] ...)
 # -----------------------------------------------------------------------------
 macro(get_fftw_component _kind)
   set(_options ${ARGN})
@@ -93,10 +97,14 @@ macro(get_fftw_component _kind)
   endif(DEFINED ${_cached_option})
 endmacro(get_fftw_component _kind)
 
+# -----------------------------------------------------------------------------
+
 # Get FFTW type (optional: [real])
 get_fftw_type()
+
 # Get FFTW precision (optional: [double|single])
 get_fftw_component(precision double single)
+
 # Get FFTW parallelization (optional: [off|mpi|threads])
 get_fftw_component(parallelization off mpi threads)
 
@@ -127,42 +135,33 @@ endif(_fftw_parallelization)
 # the precision: (s)ingle or (d)ouble.
 string(SUBSTRING ${_fftw_precision} 0 1 _prec)
 
-# Search for either prefixed or normal header file.
-find_path(FFTW_INCLUDE_DIR NAMES ${_prec}${_headerfile} ${_headerfile})
+# Keep a list of variable names that we need to pass on to
+# find_package_handle_standard_args().
+set(_check_list)
 
 # Search for all required libraries.
 set(FFTW_LIBRARIES)
 foreach(_lib ${_libraries})
   string(TOUPPER ${_lib} _LIB)
-  message(STATUS "Looking for ${_lib}")
-  find_library(${_LIB}_LIBRARY NAMES ${_prec}${_lib}S ${_lib})
-  if(${_LIB}_LIBRARY)
-    message(STATUS "Looking for ${_lib} - found")
-  else(${_LIB}_LIBRARY)
-    message(STATUS "Looking for ${_lib} - NOT found")
-  endif(${_LIB}_LIBRARY)
+  find_library(${_LIB}_LIBRARY NAMES ${_prec}${_lib} ${_lib})
   list(APPEND FFTW_LIBRARIES ${${_LIB}_LIBRARY})
+  list(APPEND _check_list ${_LIB}_LIBRARY)
 endforeach(_lib ${_libraries})
 
-foreach(lib ${FFTW_LIBRARIES})
-  if(lib)
-    message(STATUS "${lib} is TRUE")
-  else(lib)
-    message(STATUS "${lib} is FALSE")
-  endif(lib)
-endforeach(lib ${FFTW_LIBRARIES})
-
-message(STATUS "[FindFFTW] FFTW_INCLUDE_DIR = ${FFTW_INCLUDE_DIR}")
-message(STATUS "[FindFFTW] FFTW_LIBRARIES = ${FFTW_LIBRARIES}")
+# Search for header file, with and without prefix.
+find_path(FFTW_INCLUDE_DIR NAMES ${_prec}${_headerfile} ${_headerfile})
+list(APPEND _check_list FFTW_INCLUDE_DIR)
 
 # Handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(FFTW DEFAULT_MSG 
-  FFTW_LIBRARIES FFTW_INCLUDE_DIR)
+find_package_handle_standard_args(FFTW DEFAULT_MSG ${_check_list})
 
-message(STATUS "FFTW_FOUND = ${FFTW_FOUND}")
-
-set(FFTW_PRECISION ${_fftw_precision} CACHE INTERNAL "FFTW precision")
-set(FFTW_PARALLELIZATION ${_fftw_parallelization} CACHE INTERNAL "FFTW parallelization")
-
+# If everything was found, put the following variables in the cache. We need
+# them to check if a second call to FindFFTW has conflicting options.
+if(FFTW_FOUND)
+  set(FFTW_PRECISION ${_fftw_precision} CACHE INTERNAL
+    "FFTW precision")
+  set(FFTW_PARALLELIZATION ${_fftw_parallelization} CACHE INTERNAL
+    "FFTW parallelization")
+endif(FFTW_FOUND)

@@ -3,6 +3,7 @@
 
 //# Includes
 #include <FIR.h>
+#include <cstring>
 
 namespace LOFAR {
 namespace RTCP {
