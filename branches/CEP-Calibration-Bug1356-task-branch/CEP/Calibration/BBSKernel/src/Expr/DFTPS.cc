@@ -1,4 +1,4 @@
-//# DFTPS.cc: Station part of baseline phase shift. 
+//# DFTPS.cc: Station part of baseline phase shift.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,9 +26,7 @@
 #include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/Result.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/BasicSL/Constants.h>
@@ -40,124 +38,60 @@ namespace LOFAR
 namespace BBS
 {
 
-DFTPS::DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn)
-    : itsUVW(uvw)
-{
-    addChild(lmn);
-}
-
-DFTPS::~DFTPS()
+DFTPS::DFTPS(const StatUVW::ConstPointer &uvw,
+    const Expr<Vector<3> >::ConstPtr &lmn)
+    :   Expr1<Vector<3>, Vector<2> >(lmn),
+        itsUVW(uvw)
 {
 }
 
-ResultVec DFTPS::getResultVec(const Request &request)
+const Vector<2>::proxy DFTPS::evaluateImpl(const Request &request,
+        const Vector<3>::proxy &lmn) const
 {
-    // It is assumed that the channels are regularly spaced, i.e. the channel
-    // frequency can be written as f0 + k * df where f0 is the frequency of
-    // the first channel and k is an integer. Under this assumption, the phase
-    // shift can be expressed as:
-    //
-    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
-    //
-    // shift = exp(i * 2.0 * pi * (u . l) * (f0 + k * df) / c)
-    //       = exp(i * (2.0 * pi / c) * (u . l) * f0) 
-    //         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
-    //
-    // The StationShift node only computes the two exponential terms.
-    // Computing the phase shift for each channel is performed by the node that
-    // computes the phase shift for a baseline (by combining the result of two
-    // StationShift nodes).
-    
+    // If the request contains multiple frequencies then a "step" term is
+    // computed to be able to efficiently compute the phase shift at
+    // different frequencies in the PhaseShift node (see explanation in the
+    // DFTPS header file).
+    const bool calcDelta = request[FREQ]->size() > 1;
+
     // Check precondition (frequency axis must be regular).
     const Grid &reqGrid = request.getGrid();
     ASSERT(dynamic_cast<RegularAxis*>(reqGrid[FREQ].get()) != 0);
 
-    // Allocate the result.
-    ResultVec resultVec(2);
-    bool calcDelta = request.getChannelCount() > 1;
-    
     // Calculate 2.0 * pi / lambda0, where lambda0 = c / f0.
-    double df = reqGrid[FREQ]->width(0);
-    double f0 = reqGrid[FREQ]->center(0);
-    Matrix wavel0(C::_2pi * f0 / C::c);
-    Matrix dwavel(df / f0);
+    const double wavel0 = C::_2pi * reqGrid[FREQ]->center(0) / C::c;
+    const double dwavel = reqGrid[FREQ]->width(0) / reqGrid[FREQ]->center(0);
 
     // Get the UVW coordinates.
-    const Result &resU = itsUVW->getU(request);
-    const Result &resV = itsUVW->getV(request);
-    const Result &resW = itsUVW->getW(request);
-    const Matrix &u = resU.getValue();
-    const Matrix &v = resV.getValue();
-    const Matrix &w = resW.getValue();
+    // TODO: Re-implement the UVW node as a regular Expr<> derived class that
+    // returns a Vector<3> instead of 3 separate Scalar's.
+    Scalar resU = itsUVW->getU(request);
+    Scalar resV = itsUVW->getV(request);
+    Scalar resW = itsUVW->getW(request);
+    const Matrix &u = resU.getFieldSet().value();
+    const Matrix &v = resV.getFieldSet().value();
+    const Matrix &w = resW.getFieldSet().value();
+
+    // NOTE: Both UVW and LMN are vectors are required to be either scalar or
+    // variable in time.
+    ASSERT(u.nx() == 1 && v.nx() == 1 && w.nx() == 1);
+    ASSERT(lmn(0).nx() == 1 && lmn(1).nx() == 1 && lmn(2).nx() == 1);
+
+    // Create the result.
+    Vector<2>::proxy result;
 
     // Calculate the DFT contribution for this (station, direction) combination.
-    ResultVec tmpLMN;
-    const ResultVec &resLMN =
-        getChild(0).getResultVecSynced(request, tmpLMN);
-    const Result &resL = resLMN[0];
-    const Result &resM = resLMN[1];
-    const Result &resN = resLMN[2];
-    const Matrix &l = resL.getValue();
-    const Matrix &m = resM.getValue();
-    const Matrix &n = resN.getValue();
+    Matrix phase0 = (u * lmn(0) + v * lmn(1) + w * (lmn(2) - 1.0)) * wavel0;
+    result.assign(0, tocomplex(cos(phase0), sin(phase0)));
 
-    // Note that both UVW and LMN are required to either scalar or variable in
-    // time.
-    ASSERT(u.nx() == 1 && v.nx() == 1 && w.nx() == 1);
-    ASSERT(l.nx() == 1 && m.nx() == 1 && n.nx() == 1);
-
-    Matrix phase0 = (u * l + v * m + w * (n - 1.0)) * wavel0;
-    resultVec[0].setValue(tocomplex(cos(phase0), sin(phase0)));
-    
     if(calcDelta)
     {
         phase0 *= dwavel;
-        resultVec[1].setValue(tocomplex(cos(phase0), sin(phase0)));
+        result.assign(1, tocomplex(cos(phase0), sin(phase0)));
     }
 
-    // Compute the perturbed values.
-    enum PValues
-    {
-        PV_U, PV_V, PV_W, PV_L, PV_M, PV_N, N_PValues
-    };
-    
-    const Result *pvSet[N_PValues] =
-        {&resU, &resV, &resW, &resL, &resM, &resN};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
-    
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvU = pvIter.value(PV_U);
-        const Matrix &pvV = pvIter.value(PV_V);
-        const Matrix &pvW = pvIter.value(PV_W);
-        const Matrix &pvL = pvIter.value(PV_L);
-        const Matrix &pvM = pvIter.value(PV_M);
-        const Matrix &pvN = pvIter.value(PV_N);
-            
-        phase0 = (pvU * pvL + pvV * pvM + pvW * (pvN - 1.0)) * wavel0;
-        resultVec[0].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
-            sin(phase0)));
-            
-        if(calcDelta)
-        {
-            phase0 *= dwavel;
-            resultVec[1].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
-                sin(phase0)));
-        }
-
-        pvIter.next();
-    }
-
-    return resultVec;
+    return result;
 }
-
-
-#if 0
-string DFTPS::getLabel()
-{
-    return string("DFTPS\\nStation part of baseline phase\\n");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

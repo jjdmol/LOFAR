@@ -1,4 +1,4 @@
-//# VisData.h: 
+//# VisData.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -66,7 +66,7 @@ public:
 
 private:
     // Description of the four dimensions (freq, time, baseline, polarization).
-    VisDimensions                           itsDimensions;    
+    VisDimensions                           itsDimensions;
 };
 
 } //# namespace BBS

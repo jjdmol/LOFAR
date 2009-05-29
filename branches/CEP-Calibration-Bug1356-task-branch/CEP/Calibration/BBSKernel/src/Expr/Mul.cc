@@ -1,6 +1,7 @@
-//# PointCoherence.h: Spatial coherence function of a point source.
+//# PhaseShiftMS.cc: Phase delay due to baseline geometry with respect to
+//#     source direction.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -22,7 +23,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/PointCoherence.h>
+#include <BBSKernel/Expr/Mul.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
 
 namespace LOFAR
@@ -30,28 +31,41 @@ namespace LOFAR
 namespace BBS
 {
 
-PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes)
-    :   Expr1<Vector<4>, JonesMatrix>(stokes)
+Mul::Mul(const Expr<Scalar>::ConstPtr &lhs,
+    const Expr<JonesMatrix>::ConstPtr &rhs)
+    :   Expr2<Scalar, JonesMatrix, JonesMatrix>(lhs, rhs)
 {
 }
 
-const JonesMatrix::proxy PointCoherence::evaluateImpl(const Request &request,
-    const Vector<4>::proxy &stokes) const
+const JonesMatrix::proxy Mul::evaluateImpl(const Request &request,
+    const Scalar::proxy &lhs, const JonesMatrix::proxy &rhs) const
 {
     JonesMatrix::proxy result;
 
-    if(stokes.isDependent(0) || stokes.isDependent(1))
+    if(lhs.isDependent() || rhs.isDependent(0, 0))
     {
-        result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, 0.5 * (stokes(0) + stokes(1)));
+        result.assign(0, 0, lhs() * rhs(0, 0));
     }
 
-    if(stokes.isDependent(2) || stokes.isDependent(3))
+    if(lhs.isDependent() || rhs.isDependent(0, 1))
     {
-        Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
-        result.assign(0, 1, uv);
-        result.assign(1, 0, conj(uv));
+        result.assign(0, 1, lhs() * rhs(0, 1));
     }
+
+    if(lhs.isDependent() || rhs.isDependent(1, 0))
+    {
+        result.assign(1, 0, lhs() * rhs(1, 0));
+    }
+
+    if(lhs.isDependent() || rhs.isDependent(1, 1))
+    {
+        result.assign(1, 1, lhs() * rhs(1, 1));
+    }
+
+//    result.assign(0, 0, lhs() * rhs(0, 0));
+//    result.assign(0, 1, lhs() * rhs(0, 1));
+//    result.assign(1, 0, lhs() * rhs(1, 0));
+//    result.assign(1, 1, lhs() * rhs(1, 1));
 
     return result;
 }

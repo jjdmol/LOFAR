@@ -1,6 +1,6 @@
-//# PointSource.h: Abstract base class for holding a source
+//# Mul.h: Multiplication.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,14 +20,11 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
-#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MUL_H
+#define LOFAR_BBSKERNEL_EXPR_MUL_H
 
 // \file
-// Abstract base class for holding a source
-
-#include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
+// Multiplication
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
@@ -40,29 +37,19 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class Source
+class Mul: public Expr2<Scalar, JonesMatrix, JonesMatrix>
 {
 public:
-    typedef shared_ptr<Source>          Ptr;
-    typedef shared_ptr<const Source>    ConstPtr;
-    
-    Source();
-    Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
-    virtual ~Source();
+    typedef shared_ptr<Mul>         Ptr;
+    typedef shared_ptr<const Mul>   ConstPtr;
 
-    const string &getName() const
-    {
-        return itsName;
-    }
+    Mul(const Expr<Scalar>::ConstPtr &lhs,
+        const Expr<JonesMatrix>::ConstPtr &rhs);
 
-    const Expr<Vector<2> >::ConstPtr &getPosition() const
-    {
-        return itsPosition;
-    }
-
-protected:
-    string                      itsName;
-    Expr<Vector<2> >::ConstPtr  itsPosition;
+private:
+    // Compute a result for the given request.
+    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
+        const Scalar::proxy &lhs, const JonesMatrix::proxy &rhs) const;
 };
 
 // @}

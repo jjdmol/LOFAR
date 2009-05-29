@@ -20,16 +20,16 @@
 //#
 //# $Id$
 
-#ifndef EXPR_LMN_H
-#define EXPR_LMN_H
+#ifndef LOFAR_BBSKERNEL_EXPR_LMN_H
+#define LOFAR_BBSKERNEL_EXPR_LMN_H
 
 // \file
 // LMN-coordinates of a direction on the sky.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/Source.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/PhaseRef.h>
-#include <Common/lofar_string.h>
+
 
 namespace LOFAR
 {
@@ -39,25 +39,21 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class LMN: public ExprRep
+class LMN: public Expr1<Vector<2>, Vector<3> >
 {
 public:
-    LMN(const Source::Pointer &source,
-        const PhaseRef::ConstPointer &phaseRef);
-    ~LMN();
+    typedef shared_ptr<LMN>         Ptr;
+    typedef shared_ptr<const LMN>   ConstPtr;
 
-    const Source::Pointer &getSource() const
-    { return itsSource; }
-
-    ResultVec getResultVec(const Request &request);
+    LMN(const PhaseRef::ConstPointer &ref,
+        const Expr<Vector<2> >::ConstPtr &position);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
+    // Compute a result for the given request.
+    virtual const Vector<3>::proxy evaluateImpl(const Request &request,
+        const Vector<2>::proxy &position) const;
 
-    Source::Pointer          itsSource;
-    PhaseRef::ConstPointer   itsPhaseRef;
+    PhaseRef::ConstPointer  itsRef;
 };
 
 // @}

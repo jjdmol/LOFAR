@@ -20,18 +20,14 @@
 //#
 //# $Id$
 
-#ifndef EXPR_POINTCOHERENCE_H
-#define EXPR_POINTCOHERENCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POINTCOHERENCE_H
+#define LOFAR_BBSKERNEL_EXPR_POINTCOHERENCE_H
 
 // \file
 // Spatial coherence function of a point source.
 
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/PointSource.h>
-
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
+#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {
@@ -41,20 +37,18 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class PointCoherence: public JonesExprRep
+class PointCoherence: public Expr1<Vector<4>, JonesMatrix>
 {
 public:
-    PointCoherence(const PointSource::ConstPointer &source);
-    ~PointCoherence();
+    typedef shared_ptr<PointCoherence>          Ptr;
+    typedef shared_ptr<const PointCoherence>    ConstPtr;
 
-    virtual JonesResult getJResult(const Request &request);
+    PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
-
-    PointSource::ConstPointer    itsSource;
+    // Compute a result for the given request.
+    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
+        const Vector<4>::proxy &stokes) const;
 };
 
 // @}

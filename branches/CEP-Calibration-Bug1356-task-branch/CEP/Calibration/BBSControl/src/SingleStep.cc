@@ -1,4 +1,4 @@
-//#  SingleStep.cc: 
+//#  SingleStep.cc:
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,6 +28,7 @@
 #include <BBSControl/StreamUtil.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -48,7 +49,10 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::print(os);
       Indent id;
-      os << endl << indent << "Output column: " << itsOutputColumn;
+      os << endl << indent << "Output column: " << itsOutputColumn
+        << boolalpha
+        << endl << indent << "Write flags: " << itsWriteFlags
+	    << noboolalpha;
     }
 
 
@@ -73,7 +77,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::write(ps);
       const string prefix("Step." + name() + ".");
-      ps.replace(prefix + "OutputColumn", itsOutputColumn);
+      ps.replace(prefix + "Output.Column", itsOutputColumn);
+      ps.replace(prefix + "Output.WriteFlags", toString(itsWriteFlags));
       ps.replace(prefix + "Operation",  toUpper(operation()));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -83,7 +88,8 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::read(ps);
-      itsOutputColumn = ps.getString("OutputColumn");
+      itsOutputColumn = ps.getString("Output.Column", "");
+      itsWriteFlags = ps.getBool("Output.WriteFlags", false);
     }
 
   } // namespace BBS

@@ -117,7 +117,6 @@ void PQGetState::on_commit()
         {
             THROW(TranslationException, "Invalid session state: " << state);
         }
-        LOG_DEBUG_STR("RUN STATE: " << state);
         itsState = static_cast<CalSession::State>(state);
     }
 }
@@ -221,7 +220,7 @@ void PQRegisterAsKernel::operator()(argument_type &transaction)
         << pack_vector(transaction, itsGrid[0]->uppers()) << "',E'"
         << pack_vector(transaction, itsGrid[1]->lowers()) << "',E'"
         << pack_vector(transaction, itsGrid[1]->uppers()) << "')";
-    LOG_DEBUG_STR("Query: " << query.str());
+//    LOG_DEBUG_STR("Query: " << query.str());
 
     itsQueryResult = transaction.exec(query.str());
 }

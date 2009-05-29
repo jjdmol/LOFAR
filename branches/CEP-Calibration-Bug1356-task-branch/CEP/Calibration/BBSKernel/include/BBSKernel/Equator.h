@@ -27,7 +27,7 @@
 // Generate normal equations that tie a model to an observation.
 
 #include <BBSKernel/Model.h>
-#include <BBSKernel/Expr/Result.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/VisData.h>
 #include <Common/Timer.h>
@@ -60,7 +60,7 @@ public:
     void process(vector<CellEquation> &result, const Location &start,
         const Location &end);
 
-private:    
+private:
     // Create a mapping for each axis that maps from cells in the solution grid
     // to cell intervals in the observation (chunk) grid.
     void makeGridMapping();
@@ -71,11 +71,11 @@ private:
 
     // Pre-allocate thread private casa::LSQFit instances.
     void makeContexts();
-    
+
     // Generate normal equations for a single baseline.
     void blConstruct(uint threadId, const baseline_t &baseline,
-        const Request &request, const Location &cellStart,
-        const Location &cellEnd, const Location &visStart);
+        const Location &cellStart, const Location &cellEnd,
+        const Location &visStart);
 
     void resetTimers();
     void printTimers();
@@ -87,7 +87,7 @@ private:
     public:
         ThreadContext();
         ~ThreadContext();
-        void resize(uint nCoeff, uint nMaxCells);
+        void resize(uint nSolvables, uint nMaxCells);
         void clear(bool clearEq = false);
 
         // Normal matrices (one per cell).
@@ -95,17 +95,10 @@ private:
         // Mapping from available perturbed values (parmId, coeffId) to a
         // coefficient index in the normal matrix.
         vector<uint>            index;
-        // One over the perturbation (delta) used to compute the perturbed
-        // values. This number is used to approximate the partial derivatives
-        // of the model with respect to the solvables using forward differences.
-        vector<double>          inversePert;
-        // Pointers to the real and imaginary components of the perturbed
-        // values.
-        vector<const double*>   pertRe, pertIm;
+        // References to the (appoximated) partial derivatives.
+        vector<Matrix>          partial;
         // Value of the (approximated) partial derivatives.
-        // @{
         vector<double>          partialRe, partialIm;
-        // @}
 
         // Statistics
         unsigned long long      count;
@@ -115,15 +108,15 @@ private:
             MODEL_EVAL,
             PROCESS,
             BUILD_INDEX,
-            DERIVATIVES,
+            TRANSPOSE,
             MAKE_NORM,
             N_ThreadTimer
         };
-        
+
         static string           timerNames[N_ThreadTimer];
         NSTimer                 timers[N_ThreadTimer];
     };
-    
+
     // Nested struct that represents an interval of cells along an axis. Used to
     // create the mapping from cells in the solution grid to intervals of cells
     // in the observation grid.
@@ -134,10 +127,10 @@ private:
                 end(0)
         {
         }
-        
-        uint    start, end;                
+
+        uint    start, end;
     };
-    
+
     // Observed visibilities.
     VisData::Pointer                    itsChunk;
     // Model of the sky and the instrument.
@@ -153,7 +146,7 @@ private:
     // Selection of the visibility data to process.
     vector<baseline_t>                  itsBaselines;
     int                                 itsProductMask[4];
-    
+
     // Location in the solution grid of the current chunk's start and end cell.
     Location                            itsStartCell, itsEndCell;
     // Mapping of cells in the solution grid to intervals of cells along the

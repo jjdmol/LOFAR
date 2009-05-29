@@ -1,4 +1,4 @@
-//#  SolveStep.cc: 
+//#  SolveStep.cc:
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -39,21 +39,21 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    SolveStep::SolveStep(const Step* parent) : 
+    SolveStep::SolveStep(const Step* parent) :
       SingleStep(parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    SolveStep::SolveStep(const string& name, 
+    SolveStep::SolveStep(const string& name,
 			       const ParameterSet& parset,
 			       const Step* parent) :
       SingleStep(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Get the relevant parameters from the Parameter Set \a parset. 
+      // Get the relevant parameters from the Parameter Set \a parset.
       read(parset.makeSubset("Step." + name + "."));
     }
 
@@ -111,33 +111,33 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
       const string prefix = "Step." + name() + ".Solve.";
-      ps.replace(prefix + "Parms", 
+      ps.replace(prefix + "Parms",
                  toString(itsParms));
-      ps.replace(prefix + "ExclParms", 
+      ps.replace(prefix + "ExclParms",
                  toString(itsExclParms));
       ps.replace(prefix + "CalibrationGroups",
                  toString(itsCalibrationGroups));
       ps.replace(prefix + "CellSize.Freq",
                  toString(itsCellSize.freq));
-      ps.replace(prefix + "CellSize.Time", 
+      ps.replace(prefix + "CellSize.Time",
                  toString(itsCellSize.time));
-      ps.replace(prefix + "CellChunkSize", 
+      ps.replace(prefix + "CellChunkSize",
                  toString(itsCellChunkSize));
-      ps.replace(prefix + "PropagateSolutions", 
+      ps.replace(prefix + "PropagateSolutions",
                  toString(itsPropagateFlag));
-      ps.replace(prefix + "Options.MaxIter", 
+      ps.replace(prefix + "Options.MaxIter",
                  toString(itsSolverOptions.maxIter));
-      ps.replace(prefix + "Options.EpsValue", 
+      ps.replace(prefix + "Options.EpsValue",
                  toString(itsSolverOptions.epsValue));
-      ps.replace(prefix + "Options.EpsDerivative", 
+      ps.replace(prefix + "Options.EpsDerivative",
                  toString(itsSolverOptions.epsDerivative));
-      ps.replace(prefix + "Options.ColFactor", 
+      ps.replace(prefix + "Options.ColFactor",
                  toString(itsSolverOptions.colFactor));
-      ps.replace(prefix + "Options.LMFactor", 
+      ps.replace(prefix + "Options.LMFactor",
                  toString(itsSolverOptions.lmFactor));
-      ps.replace(prefix + "Options.BalancedEqs", 
+      ps.replace(prefix + "Options.BalancedEqs",
                  toString(itsSolverOptions.balancedEqs));
-      ps.replace(prefix + "Options.UseSVD", 
+      ps.replace(prefix + "Options.UseSVD",
                  toString(itsSolverOptions.useSVD));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -150,31 +150,31 @@ namespace LOFAR
       ParameterSet pss(ps.makeSubset("Solve."));
       itsParms                       =
         pss.getStringVector("Parms");
-      itsExclParms                   = 
+      itsExclParms                   =
         pss.getStringVector("ExclParms",    vector<string>());
-      itsCalibrationGroups           = 
+      itsCalibrationGroups           =
         pss.getUint32Vector("CalibrationGroups");//, vector<uint32>());
       itsCellSize.freq               =
         pss.getUint32      ("CellSize.Freq");
-      itsCellSize.time               = 
+      itsCellSize.time               =
         pss.getUint32      ("CellSize.Time");
-      itsCellChunkSize               = 
+      itsCellChunkSize               =
         pss.getUint32      ("CellChunkSize", 0);
       itsPropagateFlag               =
         pss.getBool("PropagateSolutions", false);
-      itsSolverOptions.maxIter       = 
+      itsSolverOptions.maxIter       =
         pss.getUint32      ("Options.MaxIter");
-      itsSolverOptions.epsValue      = 
+      itsSolverOptions.epsValue      =
         pss.getDouble      ("Options.EpsValue");
-      itsSolverOptions.epsDerivative = 
+      itsSolverOptions.epsDerivative =
         pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.colFactor     = 
+      itsSolverOptions.colFactor     =
         pss.getDouble      ("Options.ColFactor");
-      itsSolverOptions.lmFactor      = 
+      itsSolverOptions.lmFactor      =
         pss.getDouble      ("Options.LMFactor");
-      itsSolverOptions.balancedEqs   = 
+      itsSolverOptions.balancedEqs   =
         pss.getBool        ("Options.BalancedEqs");
-      itsSolverOptions.useSVD        = 
+      itsSolverOptions.useSVD        =
         pss.getBool        ("Options.UseSVD");
     }
 

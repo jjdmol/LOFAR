@@ -1,6 +1,7 @@
-//# Source.cc: Class holding the expressions defining a  source
+//# CondNumberFlagger.cc: Flag the result of an Expr<JonesMatrix> by
+//# thresholding on the condition number of the Jones matrices.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,27 +22,12 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/Source.h>
-
+#include <BBSKernel/Expr/ConditionNumber.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-Source::Source()
-{
-}
-
-Source::Source(const string &name, const Expr<Vector<2> >::ConstPtr &position)
-    :   itsName(name),
-        itsPosition(position)
-{
-}
-
-Source::~Source()
-{
-}
-
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR

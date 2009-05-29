@@ -1,6 +1,6 @@
-//# PointSource.h: Abstract base class for holding a source
+//# UVW.h: Baseline UVW coordinates in wavelengths.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,17 +20,15 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
-#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_UVW_H
+#define LOFAR_BBSKERNEL_EXPR_UVW_H
 
 // \file
-// Abstract base class for holding a source
-
-#include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
+// Baseline UVW coordinates in wavelengths.
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
+#include <BBSKernel/VisData.h>
 
 namespace LOFAR
 {
@@ -40,34 +38,25 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class Source
+class UVW: public ExprTerminus
 {
 public:
-    typedef shared_ptr<Source>          Ptr;
-    typedef shared_ptr<const Source>    ConstPtr;
-    
-    Source();
-    Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
-    virtual ~Source();
+    typedef shared_ptr<UVW>         Ptr;
+    typedef shared_ptr<const UVW>   ConstPtr;
 
-    const string &getName() const
-    {
-        return itsName;
-    }
+    UVW(const VisData::Pointer &chunk, const baseline_t &baseline);
 
-    const Expr<Vector<2> >::ConstPtr &getPosition() const
-    {
-        return itsPosition;
-    }
+private:
+    // Compute a result for the given request.
+    virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
 
-protected:
-    string                      itsName;
-    Expr<Vector<2> >::ConstPtr  itsPosition;
+    const VisData::Pointer  itsChunk;
+    baseline_t              itsBaseline;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

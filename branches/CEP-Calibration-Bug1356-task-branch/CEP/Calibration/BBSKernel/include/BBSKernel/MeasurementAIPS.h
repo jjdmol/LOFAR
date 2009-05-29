@@ -1,4 +1,4 @@
-//# MeasurementAIPS.h: 
+//# MeasurementAIPS.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

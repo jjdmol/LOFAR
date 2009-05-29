@@ -30,20 +30,8 @@
 
 #include <measures/Measures/MDirection.h>
 
-/*
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_set.h>
-
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MPosition.h>
-*/
-
 namespace LOFAR
 {
-    class BlobIStream;
-    class BlobOStream;
-
 namespace BBS
 {
     class Measurement
@@ -69,7 +57,7 @@ namespace BBS
 
         const casa::MDirection &getPhaseCenter() const
         { return itsPhaseCenter; }
-        
+
         const VisDimensions &getDimensions() const
         { return itsDimensions; }
 

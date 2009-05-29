@@ -21,16 +21,17 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/PValueIterator.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using LOFAR::operator<<;
 
@@ -39,7 +40,7 @@ Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
         uint nThreads)
     :   itsChunk(chunk),
         itsModel(model),
-        itsSolGrid(grid),   
+        itsSolGrid(grid),
         itsMaxCellCount(nMaxCells),
         itsThreadCount(nThreads)
 {
@@ -53,13 +54,13 @@ Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
 
     // By default, select all the baselines and polarizations products
     // available.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
-    
+
     // Create a mapping for each axis that maps from cells in the solution grid
     // to cell intervals in the observation (chunk) grid.
     makeGridMapping();
-    
+
     // Create a mapping that maps each (parmId, coeffId) combination to an
     // index.
     makeCoeffMapping(index);
@@ -76,7 +77,7 @@ void Equator::setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products)
 {
     itsBaselines = baselines;
-    
+
     // Determine product mask.
     const VisDimensions &dims = itsChunk->getDimensions();
 
@@ -146,7 +147,7 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
          std::min(end.second, itsEndCell.second));
     const size_t nCells =
         (end.first - start.first + 1) * (end.second - start.second + 1);
-    
+
     LOG_DEBUG_STR("Cells to process (solution grid relative): [("
         << reqStart.first << "," << reqStart.second << "),(" << reqEnd.first
         << "," << reqEnd.second << ")]");
@@ -165,17 +166,17 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         ++index;
         ++cellIt;
     }
-    
+
     // Transform to chunk relative coordinates.
     reqStart.first -= itsStartCell.first;
     reqStart.second -= itsStartCell.second;
     reqEnd.first -= itsStartCell.first;
     reqEnd.second -= itsStartCell.second;
-    
+
     LOG_DEBUG_STR("Cells to process (chunk relative): [(" << reqStart.first
         << "," << reqStart.second << "),(" << reqEnd.first << ","
         << reqEnd.second << ")]");
-      
+
     // Get frequency / time grid information.
     const Location visStart(itsFreqIntervals[reqStart.first].start,
         itsTimeIntervals[reqStart.second].start);
@@ -186,22 +187,22 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         << visStart.first << "," << visStart.second << "),(" << visEnd.first
         << "," << visEnd.second << ")]");
 
-    // Create request.
+    // Create request grid.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    Request request(visGrid.subset(visStart, visEnd), true);
-    
-    LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
-        << request.getTimeslotCount() << "t x " << request.getChannelCount()
-        << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
-        << "p");
+    itsModel->setRequestGrid(visGrid.subset(visStart, visEnd));
+
+//    LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
+//        << request.getTimeslotCount() << "t x " << request.getChannelCount()
+//        << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
+//        << "p");
 
     // Precompute.
-    LOG_DEBUG_STR("Precomputing...");
-    itsTimers[PRECOMPUTE].start();
-    itsModel->precalculate(request);
-    itsTimers[PRECOMPUTE].stop();
-    LOG_DEBUG_STR("Precomputing... done");
-    
+//    LOG_DEBUG_STR("Precomputing...");
+//    itsTimers[PRECOMPUTE].start();
+//    itsModel->precalculate(request);
+//    itsTimers[PRECOMPUTE].stop();
+//    LOG_DEBUG_STR("Precomputing... done");
+
 #ifdef _OPENMP
     // Reset casa::LSQFit instances for each non-main thread.
     for(size_t i = 1; i < itsThreadCount; ++i)
@@ -218,10 +219,10 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
 #ifdef _OPENMP
-        blConstruct(omp_get_thread_num(), itsBaselines[i], request, reqStart,
-            reqEnd, visStart);
+        blConstruct(omp_get_thread_num(), itsBaselines[i], reqStart, reqEnd,
+            visStart);
 #else
-        blConstruct(0, itsBaselines[i], request, reqStart, reqEnd, visStart);
+        blConstruct(0, itsBaselines[i], reqStart, reqEnd, visStart);
 #endif
     }
     itsTimers[COMPUTE].stop();
@@ -232,13 +233,13 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         // Merge thread private equations into a single result.
         // TODO: Re-implement the following in O(log(N)) steps.
         itsTimers[MERGE].start();
-        
+
         ThreadContext &main = itsContexts[0];
 
       	for(size_t i = 1; i < itsContexts.size(); ++i)
     	  {
             ThreadContext &thread = itsContexts[i];
-            
+
             for(size_t j = 0; j < nCells; ++j)
             {
                 main.eq[j]->merge(*thread.eq[j]);
@@ -258,98 +259,75 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
 }
 
 void Equator::blConstruct(uint threadId, const baseline_t &baseline,
-    const Request &request, const Location &cellStart, const Location &cellEnd,
+    const Location &cellStart, const Location &cellEnd,
     const Location &visStart)
 {
     ThreadContext &context = itsContexts[threadId];
 
     // Find baseline index.
     // NB. VisDimensions::getBaselineIndex() could throw an exception.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
-    // NB. Model::evaluate() could throw an exception.
     context.timers[ThreadContext::MODEL_EVAL].start();
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+    const JonesMatrix result = itsModel->evaluate(baseline);
+
+    // If the result contains no flags, assume no sample is flagged.
+    // TODO: This incurs a cost for results that do not contain flags because
+    // a call to virtual FlagArray::operator() is made for each sample.
+    const FlagArray flags =
+        (result.hasFlags() ? result.flags() : FlagArray((FlagType())));
     context.timers[ThreadContext::MODEL_EVAL].stop();
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    context.timers[ThreadContext::PROCESS].start();
-
-    const size_t nChannels = request.getChannelCount();
-
     // Construct equations.
-    for(size_t i = 0; i < 4; ++i)
+    context.timers[ThreadContext::PROCESS].start();
+    for(unsigned int prod = 0; prod < 4; ++prod)
     {
-        if(itsProductMask[i] == -1)
+        if(itsProductMask[prod] == -1)
         {
             continue;
         }
-        
-        const size_t extProd = itsProductMask[i];
-        
-        // Get the result for this polarization product (model visibilities).
-        const Result &modelRes = *modelJRes[i];
-        
-        // Get pointers to the main value.
-        const double *modelVisRe, *modelVisIm;
-        modelRes.getValue().dcomplexStorage(modelVisRe, modelVisIm);
+
+        const int extProd = itsProductMask[prod];
 
 //        typedef boost::multi_array<sample_t, 4>::index_range Range;
 //        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
 //        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
 //            [extProd]]);
 
-        // Determine which parameters have perturbed values (e.g. when
+        // Determine which parameters have partial derivatives (e.g. when
         // solving for station-bound parameters, only a few parameters
         // per baseline are relevant).
         context.timers[ThreadContext::BUILD_INDEX].start();
-        size_t nCoeff = 0;
-        PValueConstIterator it(modelRes);
-//        cout << "PValues:";
-        while(!it.atEnd())
-        {
-//            cout << " (" << it.key().parmId << "," << it.key().coeffId << ")";
+        unsigned int nSolvables = 0;
 
-            // Get pointers to the perturbed value.
-            it.value().dcomplexStorage(context.pertRe[nCoeff],
-                context.pertIm[nCoeff]);
+        FieldSet::const_iterator it = result.getFieldSet(prod).begin();
+        FieldSet::const_iterator itEnd = result.getFieldSet(prod).end();
+        while(it != itEnd)
+        {
+            // Get a reference to the data.
+            context.partial[nSolvables] = it->second;
 
             // Look-up coefficient index for the perturbed coefficient.
-            context.index[nCoeff] = itsCoeffMap[it.key()];
+            context.index[nSolvables] = itsCoeffMap[it->first];
 
-            // Precompute the inverse perturbation (will be used later on to
-            // approximate the partial derivative).
-            ParmProxy::ConstPointer parm =
-                ParmManager::instance().get(it.key().parmId);
-            context.inversePert[nCoeff] =
-                1.0 / parm->getPerturbation(it.key().coeffId);
-
-//            cout << "Parm: " << it.key().parmId << " Coeff: "
-//                << it.key().coeffId << " Index: " << context.index[nCoeff]
-//                << " Inverse perturbation: " << context.inversePert[nCoeff]
-//                << endl;
-
-            ++nCoeff;
-            it.next();
+            ++nSolvables;
+            ++it;
         }
-//        cout << endl;
         context.timers[ThreadContext::BUILD_INDEX].stop();
-        
-        // If no perturbed values were found, continue.
-        if(nCoeff == 0)
+
+        // If no partial derivatives were found, continue.
+        if(nSolvables == 0)
         {
             continue;
         }
 
-        size_t eqIndex = 0;
+        unsigned int eqIndex = 0;
+        const Matrix model = result.getFieldSet(prod).value();
+
+        // Loop over all selected cells and generate equations, adding them
+        // to the associated solver.
         CellIterator cellIt(cellStart, cellEnd);
         while(!cellIt.atEnd())
         {
@@ -360,73 +338,75 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 //            cout << "ch: " << chInterval.start << "-" << chInterval.end
 //                << " ts: " << tsInterval.start << "-" << tsInterval.end << endl;
 
-            size_t visOffset = (tsInterval.start - visStart.second)
-                * nChannels + (chInterval.start - visStart.first);
-                
+//            size_t visOffset = (tsInterval.start - visStart.second)
+//                * nChannels + (chInterval.start - visStart.first);
+
             casa::LSQFit *eq = context.eq[eqIndex];
-                
+
             for(size_t ts = tsInterval.start; ts <= tsInterval.end; ++ts)
             {
                 // Skip timeslot if flagged.
                 if(itsChunk->tslot_flag[blIndex][ts])
                 {
-                    visOffset += nChannels;
+//                    visOffset += nChannels;
                     continue;
                 }
 
                 // Construct two equations for each unflagged visibility.
                 for(size_t ch = chInterval.start; ch <= chInterval.end; ++ch)
                 {
-                    if(!itsChunk->vis_flag[blIndex][ts][ch][extProd])
+                    if(!itsChunk->vis_flag[blIndex][ts][ch][extProd]
+                        && !flags((int)(ch - visStart.first),
+                            (int)(ts - visStart.second)))
                     {
                         // Update statistics.
                         ++context.count;
 
                         // Compute right hand side of the equation pair.
-                        const sample_t obsVis =
-                            itsChunk->vis_data[blIndex][ts][ch][extProd];
-
-                        const double modelRe = modelVisRe[visOffset];
-                        const double modelIm = modelVisIm[visOffset];
+                        const complex_t rhs =
+                            static_cast<complex_t>
+                                (itsChunk->vis_data[blIndex][ts][ch][extProd])
+                            - model.getDComplex((int)(ch - visStart.first),
+                                (int)(ts - visStart.second));
 
                         // Approximate partial derivatives (forward differences)
-                        // TODO: Remove this transpose.                            
-                        context.timers[ThreadContext::DERIVATIVES].start();
-                        for(size_t i = 0; i < nCoeff; ++i)
+                        // TODO: Remove this transpose.
+                        context.timers[ThreadContext::TRANSPOSE].start();
+                        for(size_t i = 0; i < nSolvables; ++i)
                         {
-                            context.partialRe[i] = 
-                                (context.pertRe[i][visOffset] - modelRe)
-                                    * context.inversePert[i];
-                               
-                            context.partialIm[i] = 
-                                (context.pertIm[i][visOffset] - modelIm)
-                                    * context.inversePert[i];
+                            const complex_t partial =
+                                context.partial[i].getDComplex
+                                    ((int)(ch - visStart.first),
+                                    (int)(ts - visStart.second));
+
+                            context.partialRe[i] = real(partial);
+                            context.partialIm[i] = imag(partial);
                         }
-                        context.timers[ThreadContext::DERIVATIVES].stop();
+                        context.timers[ThreadContext::TRANSPOSE].stop();
 
                         context.timers[ThreadContext::MAKE_NORM].start();
-                        eq->makeNorm(nCoeff,
+                        eq->makeNorm(nSolvables,
                             &(context.index[0]),
                             &(context.partialRe[0]),
                             1.0,
-                            real(obsVis) - modelRe);
-                            
-                        eq->makeNorm(nCoeff,
+                            real(rhs));
+
+                        eq->makeNorm(nSolvables,
                             &(context.index[0]),
                             &(context.partialIm[0]),
                             1.0,
-                            imag(obsVis) - modelIm);
+                            imag(rhs));
                         context.timers[ThreadContext::MAKE_NORM].stop();
                     } // !itsChunk->vis_flag[blIndex][ts][ch][extProd]
-                    // Move to next channel.
-                    ++visOffset;
+//                    // Move to next channel.
+//                    ++visOffset;
                 } // for(size_t ch = chStart; ch < chEnd; ++ch)
-                    
+
                 // Move to next timeslot.
-                visOffset +=
-                    nChannels - (chInterval.end - chInterval.start + 1);
-            } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
-        
+//                visOffset +=
+//                    nChannels - (chInterval.end - chInterval.start + 1);
+            } // for(size_t ts = tsStart; ts < tsEnd; ++ts)
+
             // Move to next cell.
             ++eqIndex;
             ++cellIt;
@@ -439,7 +419,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 void Equator::makeContexts()
 {
     ASSERTSTR(itsCoeffMap.size() > 0, "Call Equator::makeCoeffIndex() first.");
-    
+
     // Pre-allocate thread private casa::LSQFit instances and initialize an
     // array of pointers to it for thread 1 and upwards.
     itsContexts.resize(itsThreadCount);
@@ -447,7 +427,7 @@ void Equator::makeContexts()
     {
         itsContexts[i].resize(itsCoeffMap.size(), itsMaxCellCount);
     }
-    
+
 #ifdef _OPENMP
     if(itsThreadCount > 1)
     {
@@ -486,7 +466,7 @@ void Equator::makeGridMapping()
     // Map cells to inclusive sample intervals (frequency axis).
     Axis::ShPtr visAxis = visGrid[FREQ];
     Axis::ShPtr solAxis = itsSolGrid[FREQ];
-    
+
     Interval interval;
     itsFreqIntervals.resize(nFreqCells);
     for(size_t i = 0; i < nFreqCells; ++i)
@@ -499,11 +479,11 @@ void Equator::makeGridMapping()
                 overlap.upperX()), false);
         itsFreqIntervals[i] = interval;
     }
-    
+
     // Map cells to inclusive sample intervals (time axis).
     visAxis = visGrid[TIME];
     solAxis = itsSolGrid[TIME];
-    
+
     itsTimeIntervals.resize(nTimeCells);
     for(size_t i = 0; i < nTimeCells; ++i)
     {
@@ -526,19 +506,19 @@ void Equator::makeCoeffMapping(const CoeffIndex &index)
     while(pertIt != pertItEnd)
     {
         ParmProxy::Pointer parm = ParmManager::instance().get(*pertIt);
-        
+
         CoeffIndex::const_iterator indexIt = index.find(parm->getName());
         ASSERT(indexIt != index.end());
-        
+
         const CoeffInterval &interval = indexIt->second;
         for(uint i = 0; i < interval.length; ++i)
         {
             itsCoeffMap[PValueKey(parm->getId(), i)] = interval.start + i;
         }
-        
+
         ++pertIt;
     }
-}    
+}
 
 void Equator::resetTimers()
 {
@@ -546,7 +526,7 @@ void Equator::resetTimers()
     {
         itsTimers[i].reset();
     }
-    
+
     for(size_t i = 0; i < itsContexts.size(); ++i)
     {
         itsContexts[i].count = 0;
@@ -561,16 +541,16 @@ void Equator::resetTimers()
 void Equator::printTimers()
 {
     LOG_DEBUG("Timings:");
-    
+
     unsigned long long count = 0;
     for(size_t i = 0; i < itsContexts.size(); ++i)
     {
         count += itsContexts[i].count;
     }
-    LOG_DEBUG_STR("Processing speed: " << (count
-        / itsTimers[PROCESS].getElapsed()) << " vis/s");
+    LOG_DEBUG_STR("Processing speed: " << static_cast<size_t>((count
+        / itsTimers[PROCESS].getElapsed())) << " vis/s");
 
-    LOG_DEBUG_STR("Total #visibilities (unflagged): " << fixed << count); 
+    LOG_DEBUG_STR("Total #visibilities (unflagged): " << fixed << count);
     LOG_DEBUG_STR("Total time: " << itsTimers[PROCESS].getElapsed() << " s");
     LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
         * 1000.0 << " ms");
@@ -590,7 +570,7 @@ void Equator::printTimers()
             sum += itsContexts[j].timers[i].getElapsed() * 1000.0;
             count += itsContexts[j].timers[i].getCount();
         }
-    
+
         if(count == 0)
         {
             LOG_DEBUG_STR("> > " << ThreadContext::timerNames[i]
@@ -616,8 +596,8 @@ void Equator::printTimers()
 string Equator::ThreadContext::timerNames[Equator::ThreadContext::N_ThreadTimer]
     = {"Model evaluation",
         "Process",
-        "Build coefficient index",
-        "Compute partial derivatives",
+        "Build solvable index",
+        "Transpose partial derivatives",
         "casa::LSQFit::makeNorm()"};
 
 Equator::ThreadContext::ThreadContext()
@@ -629,15 +609,13 @@ Equator::ThreadContext::~ThreadContext()
 {
 }
 
-void Equator::ThreadContext::resize(uint nCoeff, uint nMaxCells)
+void Equator::ThreadContext::resize(uint nSolvables, uint nMaxCells)
 {
-    index.resize(nCoeff);
-    inversePert.resize(nCoeff);
-    pertRe.resize(nCoeff);
-    pertIm.resize(nCoeff);
-    partialRe.resize(nCoeff);
-    partialIm.resize(nCoeff);
     eq.resize(nMaxCells);
+    index.resize(nSolvables);
+    partial.resize(nSolvables);
+    partialRe.resize(nSolvables);
+    partialIm.resize(nSolvables);
 }
 
 void Equator::ThreadContext::clear(bool clearEq)
@@ -646,14 +624,12 @@ void Equator::ThreadContext::clear(bool clearEq)
     {
         eq.clear();
     }
-    
+
     index.clear();
-    pertRe.clear();
-    pertIm.clear();
+    partial.clear();
     partialRe.clear();
     partialIm.clear();
 }
 
 } //# namespace BBS
 } //# namespace LOFAR
-

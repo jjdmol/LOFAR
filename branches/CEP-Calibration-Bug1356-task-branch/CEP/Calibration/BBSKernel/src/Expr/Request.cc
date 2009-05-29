@@ -30,6 +30,12 @@ namespace BBS
 
 RequestId Request::theirId = 0;
 
+Request::Request()
+    :   itsId(theirId++),
+        itsPValueFlag(false)
+{
+}        
+
 Request::Request(const Grid &grid, bool evalPValues)
     :   itsId(theirId++),
         itsGrid(grid),

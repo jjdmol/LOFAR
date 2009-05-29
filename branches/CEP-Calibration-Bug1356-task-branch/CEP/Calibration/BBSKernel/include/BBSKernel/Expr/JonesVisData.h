@@ -21,10 +21,10 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESVISDATA_H
-#define EXPR_JONESVISDATA_H
+#ifndef LOFAR_BBSKERNEL_EXPR_JONESVISDATA_H
+#define LOFAR_BBSKERNEL_EXPR_JONESVISDATA_H
 
-#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/VisData.h>
 
 // \file
@@ -38,18 +38,36 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class JonesVisData: public JonesExprRep
+class JonesVisData: public Expr<JonesMatrix>
 {
 public:
-    JonesVisData(const VisData::Pointer &chunk, const baseline_t &baseline);
-    ~JonesVisData();
+    typedef shared_ptr<JonesVisData>    Ptr;
+    typedef shared_ptr<JonesVisData>    ConstPtr;
 
-    // Get the result of the expression for the given domain.
-    virtual JonesResult getJResult (const Request&);
+    JonesVisData(const VisData::Pointer &chunk, const baseline_t &baseline);
+
+    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
+        const;
+
+protected:
+    virtual unsigned int getArgumentCount() const
+    {
+        return 0;
+    }
+
+    virtual const ExprBase::ConstPtr getArgument(unsigned int) const
+    {
+        ASSERT(false);
+    }
 
 private:
-    void copy(double *re, double *im,
-        const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src);
+    void copyData(double *re, double *im,
+        const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src)
+        const;
+
+    void copyFlags(FlagArray::iterator dest,
+        const boost::multi_array<flag_t, 4>::const_array_view<2>::type &src)
+        const;
 
     VisData::Pointer    itsChunk;
     uint                itsBaselineIndex;

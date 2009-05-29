@@ -24,10 +24,11 @@
 #include <lofar_config.h>
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/MatrixComplexArr.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
@@ -42,11 +43,11 @@ Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
 #ifndef _OPENMP
     // Ignore thread count specified in constructor.
     itsThreadCount = 1;
-#endif    
-    
+#endif
+
     // By default, select all the baselines and polarizations products
     // available.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
 }
 
@@ -58,7 +59,7 @@ void Evaluator::setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products)
 {
     itsBaselines = baselines;
-    
+
     // Determine product mask.
     const VisDimensions &dims = itsChunk->getDimensions();
 
@@ -97,199 +98,207 @@ void Evaluator::process(Mode mode)
     case ASSIGN:
         blProcessor = &Evaluator::blAssign;
         break;
-    case SUBTRACT:        
-        blProcessor = &Evaluator::blSubtract;
-        break;
-    case ADD:        
-        blProcessor = &Evaluator::blAdd;
-        break;
+//    case SUBTRACT:
+//        blProcessor = &Evaluator::blSubtract;
+//        break;
+//    case ADD:
+//        blProcessor = &Evaluator::blAdd;
+//        break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
-    }            
+    }
 
     // Create a request.
-    Request request(itsChunk->getDimensions().getGrid());
-    
+    itsModel->setRequestGrid(itsChunk->getDimensions().getGrid());
+
     // Precompute.
-    LOG_DEBUG_STR("Precomputing...");
-    itsTimers[PRECOMPUTE].reset();
-    itsTimers[PRECOMPUTE].start();
-    itsModel->precalculate(request);
-    itsTimers[PRECOMPUTE].stop();
-    LOG_DEBUG_STR("Precomputing... done");
+//    LOG_DEBUG_STR("Precomputing...");
+//    itsTimers[PRECOMPUTE].reset();
+//    itsTimers[PRECOMPUTE].start();
+//    itsModel->precalculate(request);
+//    itsTimers[PRECOMPUTE].stop();
+//    LOG_DEBUG_STR("Precomputing... done");
 
     itsTimers[COMPUTE].reset();
     itsTimers[COMPUTE].start();
 #pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
+        LOG_DEBUG_STR("" << itsBaselines[i].first << "-"
+            << itsBaselines[i].second);
+
 #ifdef _OPENMP
-        (this->*blProcessor)(omp_get_thread_num(), itsBaselines[i], request);
+        (this->*blProcessor)(omp_get_thread_num(), itsBaselines[i]);
 #else
-        (this->*blProcessor)(0, itsBaselines[i], request);
+        (this->*blProcessor)(0, itsBaselines[i]);
 #endif
     }
     itsTimers[COMPUTE].stop();
 
     LOG_DEBUG("Timings:");
-    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
-        * 1000.0 << " ms");
-    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
-        * 1000.0 << " ms");
+    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE]);
+    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE]);
+    LOG_DEBUG_STR("CLONE COUNT: " << MatrixComplexArr::clone_count);
 }
 
-void Evaluator::blAssign(uint, const baseline_t &baseline,
-    const Request &request)
+void Evaluator::blAssign(uint, const baseline_t &baseline)
 {
     // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const unsigned int blIndex = dims.getBaselineIndex(baseline);
+
+    const unsigned int nChannels = dims.getChannelCount();
+    const unsigned int nTimeslots = dims.getTimeslotCount();
 
     // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+    JonesMatrix result = itsModel->evaluate(baseline);
+    // If the result contains no flags, assume no sample is flagged.
+    // TODO: This incurs a cost for results that do not contain flags because
+    // a call to virtual FlagArray::operator() is made for each sample.
+    const FlagArray modelFlags =
+        (result.hasFlags() ? result.flags() : FlagArray((FlagType())));
+    const JonesMatrix::proxy model = result.value();
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
-
-    for(size_t i = 0; i < 4; ++i)
+    // Merge flags and copy visibilities.
+    for(unsigned int i = 0; i < 2; ++i)
     {
-        if(itsProductMask[i] == -1)
+        for(unsigned int j = 0; j < 2; ++j)
         {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+            const int extProd = itsProductMask[i * 2 + j];
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
-
-        // Copy visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
+            if(extProd == -1)
             {
-                vdata[ts][ch] = sample_t(*re, *im);
-                ++re;
-                ++im;
+                continue;
+            }
+
+            // Get the data and flags for this polarization product.
+            const Matrix &modelData = model(i, j);
+
+            // Get a view on the relevant slice of the chunk.
+            typedef boost::multi_array<sample_t, 4>::index_range DRange;
+            typedef boost::multi_array<sample_t, 4>::array_view<2>::type DView;
+            DView obsData(itsChunk->vis_data[boost::indices[blIndex][DRange()]
+                [DRange()][extProd]]);
+
+            typedef boost::multi_array<flag_t, 4>::index_range FRange;
+            typedef boost::multi_array<flag_t, 4>::array_view<2>::type FView;
+            FView obsFlags(itsChunk->vis_flag[boost::indices[blIndex][FRange()]
+                [FRange()][extProd]]);
+
+            // Merge flags and copy visibilities.
+            for(size_t ts = 0; ts < nTimeslots; ++ts)
+            {
+                for(size_t ch = 0; ch < nChannels; ++ch)
+                {
+                    obsFlags[ts][ch] |= modelFlags(ch, ts);
+                    obsData[ts][ch] = modelData.getDComplex(ch, ts);
+                }
             }
         }
     }
 }
 
-void Evaluator::blSubtract(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
+//void Evaluator::blSubtract(uint, const baseline_t &baseline,
+//    const Request &request)
+//{
+//    // Find baseline index.
+//    const VisDimensions &dims = itsChunk->getDimensions();
+//    const uint blIndex = dims.getBaselineIndex(baseline);
 
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+//    // Evaluate the model.
+//    JonesResult jresult = itsModel->evaluate(baseline, request);
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
+//    // Put the results into a single array for easier handling.
+//    const Result *modelJRes[4];
+//    modelJRes[0] = &(jresult.getResult11());
+//    modelJRes[1] = &(jresult.getResult12());
+//    modelJRes[2] = &(jresult.getResult21());
+//    modelJRes[3] = &(jresult.getResult22());
 
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
+//    const uint nChannels = dims.getChannelCount();
+//    const uint nTimeslots = dims.getTimeslotCount();
 
-    for(size_t i = 0; i < 4; ++i)
-    {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+//    for(size_t i = 0; i < 4; ++i)
+//    {
+//        if(itsProductMask[i] == -1)
+//        {
+//            continue;
+//        }
+//
+//        // Get a view on the relevant slice of the chunk.
+//        typedef boost::multi_array<sample_t, 4>::index_range Range;
+//        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
+//
+//        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
+//            [itsProductMask[i]]]);
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        // Get pointers to the real and imaginary values.
+//        const double *re = 0, *im = 0;
+//        modelJRes[i]->getValue().dcomplexStorage(re, im);
 
-        // Subtract from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] -= sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
-    }
-}
+//        // Subtract from visibilities.
+//        for(size_t ts = 0; ts < nTimeslots; ++ts)
+//        {
+//            for(size_t ch = 0; ch < nChannels; ++ch)
+//            {
+//                vdata[ts][ch] -= sample_t(*re, *im);
+//                ++re;
+//                ++im;
+//            }
+//        }
+//    }
+//}
 
-void Evaluator::blAdd(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
+//void Evaluator::blAdd(uint, const baseline_t &baseline,
+//    const Request &request)
+//{
+//    // Find baseline index.
+//    const VisDimensions &dims = itsChunk->getDimensions();
+//    const uint blIndex = dims.getBaselineIndex(baseline);
 
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+//    // Evaluate the model.
+//    JonesResult jresult = itsModel->evaluate(baseline, request);
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
+//    // Put the results into a single array for easier handling.
+//    const Result *modelJRes[4];
+//    modelJRes[0] = &(jresult.getResult11());
+//    modelJRes[1] = &(jresult.getResult12());
+//    modelJRes[2] = &(jresult.getResult21());
+//    modelJRes[3] = &(jresult.getResult22());
 
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
+//    const uint nChannels = dims.getChannelCount();
+//    const uint nTimeslots = dims.getTimeslotCount();
 
-    for(size_t i = 0; i < 4; ++i)
-    {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+//    for(size_t i = 0; i < 4; ++i)
+//    {
+//        if(itsProductMask[i] == -1)
+//        {
+//            continue;
+//        }
+//
+//        // Get a view on the relevant slice of the chunk.
+//        typedef boost::multi_array<sample_t, 4>::index_range Range;
+//        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
+//
+//        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
+//            [itsProductMask[i]]]);
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        // Get pointers to the real and imaginary values.
+//        const double *re = 0, *im = 0;
+//        modelJRes[i]->getValue().dcomplexStorage(re, im);
 
-        // Add from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] += sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
-    }
-}
+//        // Add from visibilities.
+//        for(size_t ts = 0; ts < nTimeslots; ++ts)
+//        {
+//            for(size_t ch = 0; ch < nChannels; ++ch)
+//            {
+//                vdata[ts][ch] += sample_t(*re, *im);
+//                ++re;
+//                ++im;
+//            }
+//        }
+//    }
+//}
 
 } //# namespace BBS
 } //# namespace LOFAR

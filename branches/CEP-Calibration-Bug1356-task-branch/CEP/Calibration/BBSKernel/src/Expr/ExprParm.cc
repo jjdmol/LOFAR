@@ -22,21 +22,18 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/ExprParm.h>
-
+//#include <BBSKernel/Expr/Cache.h>
 #include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 ExprParm::ExprParm(const ParmProxy::ConstPointer &parm)
-    :   itsParm(parm),
+    :   Expr<Scalar>(),
+        itsParm(parm),
         itsPValueFlag(false)
-{
-}
-
-ExprParm::~ExprParm()
 {
 }
 
@@ -50,61 +47,90 @@ void ExprParm::clearPValueFlag()
     itsPValueFlag = false;
 }
 
-Result ExprParm::getResult(const Request &request)
+void ExprParm::updateSolvables(set<PValueKey> &solvables) const
+{
+    if(getPValueFlag())
+    {
+        // TODO: The following is incorrect; need to know the id's of all the
+        // _solvable_ coefficients (get the mask?).
+        const size_t nCoeff = itsParm->getCoeffCount();
+        for(size_t i = 0; i < nCoeff; ++i)
+        {
+            solvables.insert(PValueKey(itsParm->getId(), i));
+        }
+    }
+
+    itsSolvables.clear();
+    itsSolvables.insert(itsSolvables.begin(), solvables.begin(), solvables.end());
+}
+
+const Scalar ExprParm::evaluate(const Request &request, Cache &cache) const
 {
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
-    itsParm->getResult(buffers, request.getGrid(), itsPValueFlag
-        && request.getPValueFlag());
+    itsParm->getResult(buffers, request.getGrid(), getPValueFlag()); //false);
     ASSERT(buffers.size() > 0);
 
-    // Transform into a Result.
-    Result result;
-    result.init();
+    // Transform into an ExprResult.
+    FieldSet result;
 
-    bool deleteStorage;
+    bool deleteStorage = false;
     const double *storage = 0;
-    
+
     // Copy the main value.
     storage = buffers[0].getStorage(deleteStorage);
     ASSERT(storage);
     if(buffers[0].nelements() == 1)
     {
-        result.setValue(Matrix(storage[0]));
+        result.assign(Matrix(*storage));
     }
     else
     {
         const casa::IPosition &shape = buffers[0].shape();
-        result.setValue(Matrix(storage, shape(0), shape(1)));
+        DBGASSERT(static_cast<unsigned int>(shape(0)) == request[FREQ]->size()
+            && static_cast<unsigned int>(shape(1)) == request[TIME]->size());
+        result.assign(Matrix(storage, shape(0), shape(1)));
     }
     buffers[0].freeStorage(storage, deleteStorage);
 
     // Copy the perturbed values if necessary.
-    if(itsPValueFlag && request.getPValueFlag())
+    // TODO: re-enable flag in request to avoid generating partials even if
+    // some parms are set to solvable?
+    if(getPValueFlag())// && request.getPValueFlag())
     {
+        // TODO: check correctness when some coefficients are masked
+        // non-solvable.
         const size_t nCoeff = itsParm->getCoeffCount();
         ASSERT(buffers.size() == nCoeff + 1);
-        
+
         for(size_t i = 0; i < nCoeff; ++i)
         {
             storage = buffers[i + 1].getStorage(deleteStorage);
             ASSERT(storage);
             if(buffers[i + 1].nelements() == 1)
             {
-                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
+                result.assign(PValueKey(itsParm->getId(), i),
                     Matrix(storage[0]));
             }
             else
             {
                 const casa::IPosition &shape = buffers[i + 1].shape();
-                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
-                    Matrix(storage, shape(0), shape(1)));
+                result.assign(PValueKey(itsParm->getId(), i), Matrix(storage,
+                    shape(0), shape(1)));
             }
             buffers[i + 1].freeStorage(storage, deleteStorage);
         }
     }
-    
-    return result;
+
+    Scalar scalar;
+//    if(itsParm->getId() == 32)
+//    {
+//        LOG_DEBUG_STR("Setting flags of parm: " << itsParm->getName());
+//        tmp.setFlags(FlagArray(3u));
+//    }
+//
+    scalar.setFieldSet(result);
+    return scalar;
 }
 
 } //# namespace BBS

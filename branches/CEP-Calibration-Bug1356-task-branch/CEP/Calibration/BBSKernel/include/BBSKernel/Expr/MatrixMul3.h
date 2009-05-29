@@ -1,6 +1,7 @@
-//# PointSource.h: Abstract base class for holding a source
+//# MatrixMul3.h: Compute A * B * C^H (e.g. to apply an effect described by a
+//# pair of station specific Jones matrices (A, C) to a set of visibilities (B).
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,14 +21,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
-#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXMUL3_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXMUL3_H
 
 // \file
-// Abstract base class for holding a source
-
-#include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
+// Compute A * B * C^H (e.g. to apply an effect described by a pair of station
+// specific Jones matrices (A, C) to a set of visibilities (B).
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
@@ -40,29 +39,21 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class Source
+class MatrixMul3: public Expr3<JonesMatrix, JonesMatrix, JonesMatrix,
+    JonesMatrix>
 {
 public:
-    typedef shared_ptr<Source>          Ptr;
-    typedef shared_ptr<const Source>    ConstPtr;
-    
-    Source();
-    Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
-    virtual ~Source();
+    typedef shared_ptr<MatrixMul3>          Ptr;
+    typedef shared_ptr<const MatrixMul3>    ConstPtr;
 
-    const string &getName() const
-    {
-        return itsName;
-    }
+    MatrixMul3(const Expr<JonesMatrix>::ConstPtr &left,
+        const Expr<JonesMatrix>::ConstPtr &mid,
+        const Expr<JonesMatrix>::ConstPtr &right);
 
-    const Expr<Vector<2> >::ConstPtr &getPosition() const
-    {
-        return itsPosition;
-    }
-
-protected:
-    string                      itsName;
-    Expr<Vector<2> >::ConstPtr  itsPosition;
+private:
+    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
+        const JonesMatrix::proxy &left, const JonesMatrix::proxy &mid,
+        const JonesMatrix::proxy &right) const;
 };
 
 // @}

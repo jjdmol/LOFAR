@@ -1,6 +1,7 @@
-//# ExprParm.h: Parameter that can be used in an expression.
+//# MatrixSum.h: Compute the (element-wise) sum of a collection of Jones
+//# matrices.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,15 +21,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
-#define LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXSUM_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXSUM_H
 
 // \file
-// Parameter that can be used in an expression.
+// Compute the (element-wise) sum of a collection of Jones matrices.
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
 {
@@ -38,44 +38,51 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class ExprParm: public Expr<Scalar>
+class MatrixSum: public Expr<JonesMatrix>
 {
 public:
-    typedef shared_ptr<ExprParm>        Ptr;
-    typedef shared_ptr<const ExprParm>  ConstPtr;
+    typedef shared_ptr<MatrixSum>       Ptr;
+    typedef shared_ptr<const MatrixSum> ConstPtr;
 
-//    using Expr0<Scalar>::ExprValueType;
+    ~MatrixSum()
+    {
+        for(size_t i = 0; i < itsExpr.size(); ++i)
+        {
+            disconnect(itsExpr[i]);
+        }
+    }
 
-    ExprParm(const ParmProxy::ConstPointer &parm);
+    void connect(const Expr<JonesMatrix>::ConstPtr &expr)
+    {
+        ExprBase::connect(expr);
+        itsExpr.push_back(expr);
+    }
 
-    void setPValueFlag();
-    bool getPValueFlag() const
-    { return itsPValueFlag; }
-    void clearPValueFlag();
+    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
+        const;
 
 protected:
     virtual unsigned int getArgumentCount() const
     {
-        return 0;
+        return itsExpr.size();
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int) const
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
     {
-        ASSERT(false);
+        ASSERT(i < itsExpr.size());
+        ASSERT(itsExpr[i]);
+        return itsExpr[i];
     }
 
 private:
-    virtual void updateSolvables(set<PValueKey> &solvables) const;
+    void merge(const FieldSet &in, FieldSet &out) const;
 
-    virtual const Scalar evaluate(const Request &request, Cache &cache) const;
-
-    ParmProxy::ConstPointer itsParm;
-    bool                    itsPValueFlag;
+    vector<Expr<JonesMatrix>::ConstPtr> itsExpr;
 };
 
 // @}
 
-} //# namespace BBS
-} //# namespace LOFAR
+} // namespace BBS
+} // namespace LOFAR
 
 #endif

@@ -38,17 +38,15 @@ namespace LOFAR
 
     // This is a so-called \e leaf class in the Step composite pattern (see
     // Gamma, 1995).
-    // \note Currently, a %CorrectStep is in fact identical to a
-    // SingleStep. Only the classType() method is overridden.
     class CorrectStep : public SingleStep
     {
     public:
-      CorrectStep(const Step* parent = 0) : 
+      CorrectStep(const Step* parent = 0) :
         SingleStep(parent)
       {
       }
 
-      CorrectStep(const string& name, 
+      CorrectStep(const string& name,
                   const ParameterSet& parSet,
                   const Step* parent);
 
@@ -58,12 +56,32 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
+
+      // @name Accessor methods
+      // @{
+      bool   useCondFlagging() const { return itsUseCondFlagging; }
+      double threshold()       const { return itsThreshold; }
+      // @}
+
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
+
+    private:
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ParameterSet& ps) const;
+
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ParameterSet& ps);
+
+      bool   itsUseCondFlagging;
+      double itsThreshold;
     };
 
     // @}
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

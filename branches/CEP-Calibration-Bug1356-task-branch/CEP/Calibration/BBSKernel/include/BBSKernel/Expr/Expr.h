@@ -1,6 +1,6 @@
-//# Expr.h: The base class of an expression.
+//# Expr.h: Expression base class
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,333 +20,715 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPR_H
-#define EXPR_EXPR_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPR_H
+#define LOFAR_BBSKERNEL_EXPR_EXPR_H
 
 // \file
-// The base class of an expression
+// Expression base class
 
-//# Includes
+#include <Common/lofar_smartptr.h>
+#include <Common/lofar_set.h>
+
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/Result.h>
-#include <BBSKernel/Expr/ResultVec.h>
-#include <vector>
+#include <BBSKernel/Expr/Cache.h>
 
-#ifdef EXPR_GRAPH
-    #include <string>
-    #include <iostream>
-#endif
+// TODO: Reduction functions like MatrixSum
+// TODO: Element-wise functions like MatrixSum
+// TODO: Rename Expr{1,2,3} to UnaryExpr, BinaryExpr, TernaryExpr?
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-//# Forward Declarations.
-class Expr;
-
 // \ingroup Expr
 // @{
 
+// Expression identifier (used for caching).
+typedef size_t ExprId;
 
-// This class is the (abstract) base class for an expression. The classes
-// derived from it implement an expression which must be evaluated for
-// a given request.
-// 
-// There are a few virtual methods which must or can be implemented in derived
-// classes. They are:
-// <ul>
-//  <li> \b getResult calculates the main value and the
-//       perturbed values of the solvable parameters. 
-//       The default implementation uses getResultValue for all of them.
-//       Sometimes a derived class can do it in a better way by reusing
-//       intermediate results. In that case it might be better implement
-//       to implement getResult in the derived class.
-//  <li> \b getResultVec returns the result as a vector. Only in very
-//       exceptional cases it needs to be implemented in a derived class.
-//  <li> getResultValue calculates the value of the expression represented
-//       by the derived class. It must be implemented if <tt>getResult</tt>
-//       is not implemented.
-// </ul>
-// So in short: either <tt>getResultValue</tt> or <tt>getResult</tt> must be
-// implemented in a derived class. Usually the simpler <tt>getResultValue</tt>
-// will do.
 
-class ExprRep
+// Helper function to compute the bitwise or of all the FlagArray instances
+// in the range [it, end).
+template <typename T_ITER>
+FlagArray mergeFlags(T_ITER it, T_ITER end)
+{
+    FlagArray result;
+
+    // Skip until a non-empty FlagArray is encountered.
+    while(it != end && !it->initialized())
+    {
+        ++it;
+    }
+
+    // Merge (bitwise or) all non-empty FlagArray's.
+    if(it != end)
+    {
+        ASSERT(it->initialized());
+        result = it->clone();
+        ++it;
+
+        while(it != end)
+        {
+            if(it->initialized())
+            {
+                result |= *it;
+            }
+            ++it;
+        }
+    }
+
+    return result;
+}
+
+
+class ExprBase
 {
 public:
-  // The default constructor.
-  ExprRep();
+    typedef shared_ptr<ExprBase>                Ptr;
+    typedef shared_ptr<const ExprBase>          ConstPtr;
 
-  virtual ~ExprRep();
+    typedef vector<PValueKey>::const_iterator   const_solvables_iterator;
 
-  // Link to this node (incrementing the refcount).
-  void link()
-    { itsCount++; }
+    ExprBase()
+        :   itsConsumerCount(0),
+            itsId(theirId++)
+    {
+    }
 
-  // Link to this node (decrementing the refcount).
-  // The object is deleted if the refcount gets zero.
-  static void unlink (ExprRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
+    virtual ~ExprBase()
+    {
+    }
 
-  // Increment number of parents.
-  void incrNParents()
-  {
-      itsNParents++;
-  }
+    ExprId getId() const
+    {
+        return itsId;
+    }
 
-  // Decrement the number of parents.
-  void decrNParents()
-  {
-      itsNParents--;
-  }
+    // Recurse the expression tree to determine which solvable parameters
+    // (coefficients) each sub-expression depends on. This information is cached
+    // internally.
+    void updateSolvables() const
+    {
+        set<PValueKey> solvables;
+        updateSolvables(solvables);
+    }
 
-  // Get the current number of parents
-  int getParentCount() const
-  {
-      return itsNParents;
-  }
+    const_solvables_iterator begin() const
+    {
+        return itsSolvables.begin();
+    }
 
-  // Recursively set the lowest and highest level of the node as used
-  // in the tree.
-  // Return the number of levels used so far.
-  int setLevel (int level);
+    const_solvables_iterator end() const
+    {
+        return itsSolvables.end();
+    }
 
-  // Clear the done flag recursively.
-  void clearDone();
+    // Provide a description of this node in human readable form.
+//    virtual string getDescription() const = 0;
 
-  // At which level is the node done?
-  int levelDone() const
-    { return itsLevelDone; }
-
-  // Get the nodes at the given level.
-  // All nodes or only nodes with multiple parents can be retrieved.
-  // It is used to find the nodes with results to be cached.
-  void getCachingNodes (std::vector<ExprRep*>& nodes,
-            int level, bool all=false);
-
-  // Get the single result of the expression for the given domain.
-  // The return value is a reference to the true result. This can either
-  // be a reference to the cached value (if the object maintains a cache)
-  // or to the result object in the parameter list (if no cache).
-  // If the result is stored in the cache, it is done in a thread-safe way.
-  // Note that a cache is used if the expression has multiple parents.
-  const Result& getResultSynced (const Request& request,
-                    Result& result)
-    { return itsReqId == request.getId()  ?
-    *itsResult : calcResult(request,result); }
-
-  // Get the actual result.
-  // The default implementation throw an exception.
-  virtual Result getResult (const Request&);
-
-  // Get the multi result of the expression for the given domain.
-  // The default implementation calls getResult.
-  const ResultVec& getResultVecSynced (const Request& request,
-                      ResultVec& result)
-    { return itsReqId == request.getId()  ?
-    *itsResVec : calcResultVec(request,result); }
-  
-  virtual ResultVec getResultVec (const Request&);
-  // </group>
-
-  // Precalculate the result and store it in the cache.
-  virtual void precalculate (const Request&);
-
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-  void writeExpressionGraph(std::ostream &os);
-#endif
+//  TODO: Create hook for visitors, like:
+//    virtual void accept(ExprVisitor &visitor, size_t level = 0) const = 0;
 
 protected:
-  // Add a child to this node.
-  // It also increases NParents in the child.
-  void addChild(Expr child);
-  void removeChild(Expr child);
-  Expr getChild(size_t index);
+    void connect(const ExprBase::ConstPtr &expr) const
+    {
+        expr->incConsumerCount();
+    }
+
+    void disconnect(const ExprBase::ConstPtr &expr) const
+    {
+        expr->decConsumerCount();
+    }
+
+    unsigned int getConsumerCount() const
+    {
+        return itsConsumerCount;
+    }
+
+    virtual unsigned int getArgumentCount() const = 0;
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const = 0;
+
+    virtual void updateSolvables(set<PValueKey> &solvables) const
+    {
+        set<PValueKey> tmp;
+        for(unsigned int i = 0; i < getArgumentCount(); ++i)
+        {
+            getArgument(i)->updateSolvables(tmp);
+        }
+
+        itsSolvables.clear();
+        itsSolvables.insert(itsSolvables.begin(), tmp.begin(), tmp.end());
+        solvables.insert(tmp.begin(), tmp.end());
+    }
+
+    mutable vector<PValueKey>   itsSolvables;
 
 private:
-  // Forbid copy and assignment.
-  ExprRep (const ExprRep&);
-  ExprRep& operator= (const ExprRep&);
+    // Forbid copy and assignment as it is probably not needed. Should it be
+    // needed in the future, care has to be taken that the consumer count is
+    // _not_ copied. Also, any derived classes should be checked for data
+    // members that should not be copied.
+    ExprBase(const ExprBase &);
+    ExprBase &operator=(const ExprBase &);
 
-  // Calculate the actual result in a cache thread-safe way.
-  // <group>
-  const Result& calcResult (const Request&, Result&);
-  const ResultVec& calcResultVec (const Request&, ResultVec&,
-                     bool useCache=false);
-  // </group>
+    // Dependencies between nodes are uni-directional and point from the node
+    // that produces a result to the node(s) that consume(s) (uses) the result.
+    //
+    // Consumer nodes are resposible for calling incConsumerCount() on the
+    // producer node to signal their interest in its result. Care should be
+    // taken to balance this with a call to decConsumerCount() when the
+    // dependency is no longer needed.
+    //
+    // Currently, a node only keeps track of the _number_ of nodes that depend
+    // on its result. This information is used to decide if a node should cache
+    // its result. If a list of references to consumer nodes would be needed
+    // in the future, these methods can be extended accordingly.
+    //
+    // NB. These methods ARE NOT thread safe.
+    // @{
+    void incConsumerCount() const
+    {
+        ++itsConsumerCount;
+    }
 
-  // Let a derived class calculate the resulting value.
-  virtual Matrix getResultValue (const std::vector<const Matrix*>&);
+    void decConsumerCount() const
+    {
+        --itsConsumerCount;
+    }
+    // @}
+
+    // The number of registered consumers. This attribute is mutable such that
+    // an expression tree can be constructed without requiring non-const access
+    // to the constituent nodes (derivatives of ExprBase). The consumer count is
+    // used to decide if it makes sense to cache a result. As caching is an
+    // implementation detail, anything related to it should not be detectable
+    // outside the Expr hierarchy.
+    mutable unsigned int        itsConsumerCount;
+
+    ExprId                      itsId;
+    static ExprId               theirId;
+};
 
 
-  int           itsCount;      //# Reference count
-  int           itsMinLevel;   //# Minimum level of node as used in tree.
-  int           itsMaxLevel;   //# Maximum level of node as used in tree.
-  int           itsLevelDone;  //# Level the node is handled by some parent.
-  Result*    itsResult;     //# Possibly cached result
-  ResultVec* itsResVec;     //# Possibly cached result vector
-  std::vector<Expr> itsChildren;   //# All children
+template <typename T_EXPR_VALUE>
+class Expr: public ExprBase
+{
+public:
+    typedef shared_ptr<Expr<T_EXPR_VALUE> >         Ptr;
+    typedef shared_ptr<const Expr<T_EXPR_VALUE> >   ConstPtr;
+
+    typedef T_EXPR_VALUE    ExprValueType;
+
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
+        const = 0;
+};
+
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+class Expr1: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<Expr1>       Ptr;
+    typedef shared_ptr<const Expr1> ConstPtr;
+
+    typedef T_ARG0  Arg0Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+    using ExprBase::begin;
+    using ExprBase::end;
+
+    using ExprBase::getId;
+    using ExprBase::getConsumerCount;
+
+    Expr1(const typename Expr<T_ARG0>::ConstPtr &expr0)
+        :   Expr<T_EXPR_VALUE>(),
+            itsExpr0(expr0)
+    {
+        connect(itsExpr0);
+    }
+
+    ~Expr1()
+    {
+        disconnect(itsExpr0);
+    }
+
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
+        const
+    {
+        T_EXPR_VALUE result;
+
+        if(!cache.query(getId(), request.getId(), result))
+        {
+            // Evaluate flags.
+            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
+            result.setFlags(evaluateFlags(request, arg0.flags()));
+
+            // Compute main value.
+            result.assign(evaluateImpl(request, arg0.value()));
+
+            // Compute perturbed values.
+            ExprBase::const_solvables_iterator it = begin();
+            while(it != end())
+            {
+                result.assign(*it, evaluateImpl(request, arg0.value(*it)));
+                ++it;
+            }
+
+            if(getConsumerCount() > 1)
+            {
+                cache.insert(getId(), request.getId(), result);
+            }
+        }
+
+        return result;
+    }
 
 protected:
-  int           itsNParents;   //# Nr of parents
-  RequestId  itsReqId;      //# Request-id of cached result.
+    virtual unsigned int getArgumentCount() const
+    {
+        return 1;
+    }
+
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    {
+        ASSERT(i == 0);
+        return itsExpr0;
+    }
+
+    virtual const FlagArray evaluateFlags(const Request&, const FlagArray &arg0)
+        const
+    {
+        return arg0;
+    }
+
+    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
+        (const Request &request, const typename T_ARG0::proxy &arg0) const = 0;
+
+private:
+    typename Expr<T_ARG0>::ConstPtr itsExpr0;
 };
 
 
-
-class Expr
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+class Expr2: public Expr<T_EXPR_VALUE>
 {
-friend class ExprRep;
-
 public:
-  // Construct from a rep object.
-  // It takes over the pointer, so it takes care of deleting the object.
-  Expr (ExprRep* expr = 0)
-    : itsRep(expr)
-    { if (itsRep) itsRep->link(); }
+    typedef shared_ptr<Expr2>       Ptr;
+    typedef shared_ptr<const Expr2> ConstPtr;
 
-  // Copy constructor (reference semantics).
-  Expr (const Expr&);
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
 
-  ~Expr()
-    { ExprRep::unlink (itsRep); }
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+    using ExprBase::begin;
+    using ExprBase::end;
 
-  // Assignment (reference semantics).
-  Expr& operator= (const Expr&);
+    using ExprBase::getId;
+    using ExprBase::getConsumerCount;
 
-  // Is the node empty?
-  bool isNull() const
-    { return itsRep == 0; }
+    Expr2(const typename Expr<T_ARG0>::ConstPtr &expr0,
+        const typename Expr<T_ARG1>::ConstPtr &expr1)
+        :   Expr<T_EXPR_VALUE>(),
+            itsExpr0(expr0),
+            itsExpr1(expr1)
+    {
+        connect(itsExpr0);
+        connect(itsExpr1);
+    }
 
-  // A Expr is essentially a reference counted shared
-  // pointer. Two Expr's can be considered equal if both
-  // reference the same underlying ExprRep.
-  bool operator ==(const Expr &other)
-  {
-    return (itsRep == other.itsRep);
-  }
+    ~Expr2()
+    {
+        disconnect(itsExpr0);
+        disconnect(itsExpr1);
+    }
 
-  ExprRep *getPtr()
-  { return itsRep; }
-  const ExprRep *getPtr() const
-  { return itsRep; }
-  
-  //# -- DELEGATED METHODS --
-  // Get the current number of parents
-  int getParentCount() const
-  {
-      return itsRep->getParentCount();
-  }
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
+        const
+    {
+        // Allocate result.
+        T_EXPR_VALUE result;
 
-  // Recursively set the lowest and highest level of the node as used
-  // in the tree.
-  // Return the number of levels used so far.
-  int setLevel (int level)
-    { return itsRep->setLevel (level); }
+        if(!cache.query(getId(), request.getId(), result))
+        {
+            // Evaluate flags.
+            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
+            const T_ARG1 arg1 = itsExpr1->evaluate(request, cache);
 
-  // Clear the done flag recursively.
-  void clearDone()
-    { itsRep->clearDone(); }
+            FlagArray flags[2];
+            flags[0] = arg0.flags();
+            flags[1] = arg1.flags();
+            result.setFlags(evaluateFlags(request, flags));
 
-  // At which level is the node done?
-  int levelDone() const
-    { return itsRep->levelDone(); }
-  
-  // Get the nodes at the given level.
-  // By default only nodes with multiple parents are retrieved.
-  // It is used to find the nodes with results to be cached.
-  void getCachingNodes (std::vector<ExprRep*>& nodes,
-               int level, bool all=false)
-    { itsRep->getCachingNodes (nodes, level, all); }
+            // Compute main value.
+            result.assign(evaluateImpl(request, arg0.value(), arg1.value()));
 
-  // Precalculate the result and store it in the cache.
-  void precalculate (const Request& request)
-    { itsRep->precalculate (request); }
+            // Compute perturbed values.
+            ExprBase::const_solvables_iterator it = begin();
+            while(it != end())
+            {
+                result.assign(*it, evaluateImpl(request, arg0.value(*it),
+                    arg1.value(*it)));
+                ++it;
+            }
 
-  // Get the result of the expression for the given domain.
-  // getResult will throw an exception if the node has a multi result.
-  // getResultVec will always succeed.
-  // <group>
-  const Result getResult (const Request& request)
-    { return itsRep->getResult (request); }
-  const Result& getResultSynced (const Request& request,
-                    Result& result)
-    { return itsRep->getResultSynced (request, result); }
-  const ResultVec getResultVec (const Request& request)
-    { return itsRep->getResultVec (request); }
-  const ResultVec& getResultVecSynced (const Request& request,
-                      ResultVec& result)
-    { return itsRep->getResultVecSynced (request, result); }
-  // </group>
+            if(getConsumerCount() > 1)
+            {
+                cache.insert(getId(), request.getId(), result);
+            }
+        }
 
-#ifdef EXPR_GRAPH
-  void writeExpressionGraph(std::ostream &os)
-  {
-      itsRep->writeExpressionGraph(os);
-  }
-#endif
+        return result;
+    }
 
 protected:
-  ExprRep* itsRep;
-};
+    virtual unsigned int getArgumentCount() const
+    {
+        return 2;
+    }
 
-class ExprToComplex: public ExprRep
-{
-public:
-  ExprToComplex (const Expr& real, const Expr& imag);
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    {
+        ASSERT(i < 2);
+        return i == 0 ? static_pointer_cast<const ExprBase>(itsExpr0)
+            : static_pointer_cast<const ExprBase>(itsExpr1);
+    }
 
-  virtual ~ExprToComplex();
+    virtual const FlagArray evaluateFlags(const Request&,
+        const FlagArray (&flags)[2]) const
+    {
+        return mergeFlags(flags, flags + 2);
+    }
 
-  virtual Result getResult (const Request&);
-
-private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
-
-  Expr itsReal;
-  Expr itsImag;
-};
-
-class ExprAPToComplex: public ExprRep
-{
-public:
-  ExprAPToComplex (const Expr& ampl, const Expr& phase);
-
-  virtual ~ExprAPToComplex();
-
-  virtual Result getResult (const Request&);
+    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
+        (const Request &request, const typename T_ARG0::proxy &arg0,
+        const typename T_ARG1::proxy &arg1) const = 0;
 
 private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
-
-  Expr itsAmpl;
-  Expr itsPhase;
+    typename Expr<T_ARG0>::ConstPtr itsExpr0;
+    typename Expr<T_ARG1>::ConstPtr itsExpr1;
 };
 
-class ExprPhaseToComplex: public ExprRep
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_EXPR_VALUE>
+class Expr3: public Expr<T_EXPR_VALUE>
 {
 public:
-    ExprPhaseToComplex(const Expr &phase);
-    virtual ~ExprPhaseToComplex();
+    typedef shared_ptr<Expr3>       Ptr;
+    typedef shared_ptr<const Expr3> ConstPtr;
 
-    virtual Result getResult(const Request &request);
+    typedef T_ARG0  Arg0Type;
+    typedef T_ARG1  Arg1Type;
+    typedef T_ARG2  Arg2Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+    using ExprBase::begin;
+    using ExprBase::end;
+
+    using ExprBase::getId;
+    using ExprBase::getConsumerCount;
+
+    Expr3(const typename Expr<T_ARG0>::ConstPtr &expr0,
+        const typename Expr<T_ARG1>::ConstPtr &expr1,
+        const typename Expr<T_ARG2>::ConstPtr &expr2)
+        :   Expr<T_EXPR_VALUE>(),
+            itsExpr0(expr0),
+            itsExpr1(expr1),
+            itsExpr2(expr2)
+    {
+        connect(itsExpr0);
+        connect(itsExpr1);
+        connect(itsExpr2);
+    }
+
+    ~Expr3()
+    {
+        disconnect(itsExpr0);
+        disconnect(itsExpr1);
+        disconnect(itsExpr2);
+    }
+
+    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
+        const
+    {
+        // Allocate result.
+        T_EXPR_VALUE result;
+
+        if(!cache.query(getId(), request.getId(), result))
+        {
+            // Evaluate arguments.
+            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
+            const T_ARG1 arg1 = itsExpr1->evaluate(request, cache);
+            const T_ARG2 arg2 = itsExpr2->evaluate(request, cache);
+
+            // Evaluate flags.
+            FlagArray flags[3];
+            flags[0] = arg0.flags();
+            flags[1] = arg1.flags();
+            flags[2] = arg2.flags();
+            result.setFlags(evaluateFlags(request, flags));
+
+            // Compute main value.
+            result.assign(evaluateImpl(request, arg0.value(), arg1.value(),
+                arg2.value()));
+
+            // Compute perturbed values.
+            ExprBase::const_solvables_iterator it = begin();
+            while(it != end())
+            {
+                result.assign(*it, evaluateImpl(request, arg0.value(*it),
+                    arg1.value(*it), arg2.value(*it)));
+                ++it;
+            }
+
+            if(getConsumerCount() > 1)
+            {
+                cache.insert(getId(), request.getId(), result);
+            }
+        }
+
+        return result;
+    }
+
+protected:
+    virtual unsigned int getArgumentCount() const
+    {
+        return 3;
+    }
+
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    {
+        switch(i)
+        {
+            case 0:
+                return itsExpr0;
+            case 1:
+                return itsExpr1;
+            case 2:
+                return itsExpr2;
+            default:
+                ASSERT(false);
+        }
+    }
+
+    virtual const FlagArray evaluateFlags(const Request&,
+        const FlagArray (&flags)[3]) const
+    {
+        return mergeFlags(flags, flags + 3);
+    }
+
+    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
+        (const Request &request, const typename T_ARG0::proxy &arg0,
+        const typename T_ARG1::proxy &arg1, const typename T_ARG1::proxy &arg2)
+        const = 0;
 
 private:
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
+    typename Expr<T_ARG0>::ConstPtr itsExpr0;
+    typename Expr<T_ARG1>::ConstPtr itsExpr1;
+    typename Expr<T_ARG2>::ConstPtr itsExpr2;
+};
 
-    Expr itsPhase;
+
+template <typename T_EXPR_VALUE>
+class AsExpr;
+
+
+// Adaptor class to bundle multiple Expr<Scalar> into a single Expr<Vector<N> >.
+template <>
+template <unsigned int LENGTH>
+class AsExpr<Vector<LENGTH> >: public Expr<Vector<LENGTH> >
+{
+public:
+    typedef shared_ptr<AsExpr>  Ptr;
+    typedef shared_ptr<AsExpr>  ConstPtr;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    ~AsExpr()
+    {
+        for(unsigned int i = 0; i < LENGTH; ++i)
+        {
+            disconnect(itsExpr[i]);
+        }
+    }
+
+    void connect(unsigned int i0, const typename Expr<Scalar>::ConstPtr &expr)
+    {
+        connect(expr);
+        itsExpr[i0] = expr;
+    }
+
+    virtual const Vector<LENGTH> evaluate(const Request &request, Cache &cache)
+        const
+    {
+        // Allocate result.
+        Vector<LENGTH> result;
+
+        // Evaluate arguments (pass through).
+        Scalar args[LENGTH];
+        for(unsigned int i = 0; i < LENGTH; ++i)
+        {
+            args[i] = itsExpr[i]->evaluate(request, cache);
+            result.setFieldSet(i, args[i].getFieldSet());
+        }
+
+        // Evaluate flags.
+        FlagArray flags[LENGTH];
+        for(unsigned int i = 0; i < LENGTH; ++i)
+        {
+            flags[i] = args[i].flags();
+        }
+        result.setFlags(mergeFlags(flags, flags + LENGTH));
+
+        return result;
+    }
+
+protected:
+    virtual unsigned int getArgumentCount() const
+    {
+        return LENGTH;
+    }
+
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    {
+        ASSERT(i < LENGTH);
+        return itsExpr[i];
+    }
+
+private:
+    typename Expr<Scalar>::ConstPtr itsExpr[LENGTH];
+};
+
+
+// Adaptor class to bundle multiple Expr<Scalar> into a single
+// Expr<JonesMatrix>.
+template <>
+class AsExpr<JonesMatrix>: public Expr<JonesMatrix>
+{
+public:
+    typedef shared_ptr<AsExpr>  Ptr;
+    typedef shared_ptr<AsExpr>  ConstPtr;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    ~AsExpr()
+    {
+        for(unsigned int i = 0; i < 4; ++i)
+        {
+            disconnect(itsExpr[i]);
+        }
+    }
+
+    void connect(unsigned int i1, unsigned int i0,
+        const Expr<Scalar>::ConstPtr &expr)
+    {
+        DBGASSERT(i1 < 2 && i0 < 2);
+        connect(expr);
+        itsExpr[i1 * 2 + i0] = expr;
+    }
+
+    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
+        const
+    {
+        // Allocate result.
+        JonesMatrix result;
+
+        // Evaluate arguments (pass through).
+        Scalar args[4];
+        for(unsigned int i = 0; i < 4; ++i)
+        {
+            args[i] = itsExpr[i]->evaluate(request, cache);
+            result.setFieldSet(i, args[i].getFieldSet());
+        }
+
+        // Evaluate flags.
+        FlagArray flags[4];
+        for(unsigned int i = 0; i < 4; ++i)
+        {
+            flags[i] = args[i].flags();
+        }
+        result.setFlags(mergeFlags(flags, flags + 4));
+
+        return result;
+    }
+
+protected:
+    virtual unsigned int getArgumentCount() const
+    {
+        return 4;
+    }
+
+    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    {
+        ASSERT(i < 4);
+        return itsExpr[i];
+    }
+
+private:
+    Expr<Scalar>::ConstPtr  itsExpr[4];
+};
+
+
+// Adaptor class to bundle two real Expr<Scalar> into a single complex
+// Expr<Scalar>, where the two input Expr represent the real and imaginary part
+// respectively.
+class AsComplex: public Expr2<Scalar, Scalar, Scalar>
+{
+public:
+    typedef shared_ptr<AsComplex>       Ptr;
+    typedef shared_ptr<const AsComplex> ConstPtr;
+
+    AsComplex(const Expr<Scalar>::ConstPtr &re,
+        const Expr<Scalar>::ConstPtr &im)
+        : Expr2<Scalar, Scalar, Scalar>(re, im)
+    {
+    }
+
+private:
+    virtual const Scalar::proxy evaluateImpl(const Request&,
+        const Scalar::proxy &re, const Scalar::proxy &im) const
+    {
+        Scalar::proxy result;
+        result.assign(tocomplex(re(), im()));
+        return result;
+    }
+};
+
+
+// Adaptor class to bundle two real Expr<Scalar> into a single complex
+// Expr<Scalar>, where the two input Expr represent the complex modulus
+// (amplitude)and the complex argument (phase) respectively.
+class AsPolar: public Expr2<Scalar, Scalar, Scalar>
+{
+public:
+    typedef shared_ptr<AsPolar>         Ptr;
+    typedef shared_ptr<const AsPolar>   ConstPtr;
+
+    AsPolar(const Expr<Scalar>::ConstPtr &modulus,
+        const Expr<Scalar>::ConstPtr &argument)
+        : Expr2<Scalar, Scalar, Scalar>(modulus, argument)
+    {
+    }
+
+private:
+    virtual const Scalar::proxy evaluateImpl(const Request&,
+        const Scalar::proxy &mod, const Scalar::proxy &arg) const
+    {
+        Scalar::proxy result;
+        result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
+        return result;
+    }
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

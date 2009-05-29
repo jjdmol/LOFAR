@@ -213,8 +213,13 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
                 boost::general_storage_order<3>(order_data, ascending));
 
         boost::multi_array_ref<flag_t, 3>::size_type order_flag[] = {2, 1, 0};
+//        Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
         Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
-        boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
+//        boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
+//                boost::extents[nRows][nChannels][nPolarizations],
+//                boost::general_storage_order<3>(order_flag, ascending));
+        boost::multi_array_ref<flag_t, 3>
+            flag(reinterpret_cast<flag_t*>(ptr_flag),
                 boost::extents[nRows][nChannels][nPolarizations],
                 boost::general_storage_order<3>(order_flag, ascending));
 
@@ -368,7 +373,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
                 
                 // Write visibility flags.
                 Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
-                    flagBuffer.data(), SHARE);
+                    reinterpret_cast<Bool*>(flagBuffer.data()), SHARE);
                 c_flag.putSlice(i, slicer, vis_flag);
             }
 

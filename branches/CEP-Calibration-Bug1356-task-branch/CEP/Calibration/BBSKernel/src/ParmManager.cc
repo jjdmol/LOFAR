@@ -32,7 +32,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 ParmManagerImpl::ParmManagerImpl()
@@ -67,15 +67,15 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
     const uint parmCat = status.first->second.first;
     const uint parmId = status.first->second.second;
 
-    // Verify that the parameter belong to the requested category.
+    // Verify that the parameter belongs to the requested category.
     ASSERTSTR(parmCat == category, "Category mismatch for parameter " << name);
 
     if(status.second)
     {
-        // This is the first reference to this parameter.
 //        cout << "Fetching parameter from db: " << name << " [" << parmId << "]"
 //            << endl;
 
+        // This is the first reference to this parameter.
         const ParmId internalId = itsParmSet.addParm(parmDb, name);
         Parm parm(itsParmCache, internalId);
         itsParms.push_back(ParmProxy::Pointer(new ParmProxy(parmId, name,
@@ -93,7 +93,7 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name,
     group.insert(proxy->getId());
     return proxy;
 }
-            
+
 void ParmManagerImpl::setDomain(const Box &domain)
 {
     itsParmCache.reset(domain);
@@ -121,7 +121,7 @@ void ParmManagerImpl::setGrid(const Grid &grid, const ParmGroup &group)
 
 ParmGroup ParmManagerImpl::makeSubset(const vector<string> &include,
     const vector<string> &exclude, const ParmGroup &group) const
-{    
+{
     vector<casa::Regex> includeRegex(include.size());
     vector<casa::Regex> excludeRegex(exclude.size());
 
@@ -162,7 +162,7 @@ ParmGroup ParmManagerImpl::makeSubset(const vector<string> &include,
             ++it;
         }
     }
-        
+
     return result;
 }
 
@@ -171,7 +171,7 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
     const
 {
     casa::String name(candidate);
-    
+
     bool flag = false;
     vector<casa::Regex>::const_iterator inc_it = include.begin();
     while(inc_it != include.end())
@@ -196,7 +196,7 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
             }
             ++exc_it;
         }
-    }            
+    }
 
     return flag;
 }

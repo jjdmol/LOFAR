@@ -1,7 +1,7 @@
-//# PhaseShift.cc: Phase delay due to baseline geometry with respect to
-//#     source direction.
+//# PhaseShift.cc: Phase delay due to baseline geometry with respect to a
+//#     direction on the sky.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -24,44 +24,88 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/PhaseShift.h>
-#include <BBSKernel/Expr/DFTPS.h>
-#include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
-#include <Common/LofarLogger.h>
-#include <Common/lofar_iomanip.h>
-
-using namespace casa;
+#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using LOFAR::dcomplex;
-using LOFAR::conj;
 
+//PhaseShift::PhaseShift()
+//    :   ExprStatic<PhaseShift::N_Inputs>()
+//{
+//}        
 
-PhaseShift::PhaseShift (const Expr& left, const Expr& right)
-  : itsLeft  (left),
-    itsRight (right)
+//ValueSet::ConstPtr PhaseShift::evaluateImpl(const Request &request,
+//    const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const
+//{
+//    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
+//    //
+//    // shift = exp(2.0 * pi * i * (u . l) * f / c)
+
+//    ValueSet::ConstPtr uvw = inputs[UVW];
+//    ValueSet::ConstPtr lmn = inputs[LMN];
+
+//    Matrix phase = casa::C::_2pi
+//        * (uvw->value(0) * lmn->value(0)
+//        + uvw->value(1) * lmn->value(1)
+//        + uvw->value(2) * (lmn->value(2) - 1.0));
+//        
+//    ValueSet::Ptr result(new ValueSet());
+//    result->assign(tocomplex(cos(phase), sin(phase)));
+//    return result;
+
+////    ASSERT(request[FREQ]->isRegular());
+////    const real_t l = lmn->value(0)(0, 0);
+////    const real_t m = lmn->value(1)(0, 0);
+////    const real_t n = lmn->value(2)(0, 0) - 1.0;
+////    
+////    ARRAY(real_t) inner(uvw->value(0) * l
+////        + uvw->value(1) * m
+////        + uvw->value(2) * n);
+
+////    const int nFreq = (int) request[FREQ]->size();
+////    const int nTime = (int) request[TIME]->size();
+
+////    const double scale0 = casa::C::_2pi * request[FREQ]->center(0) / casa::C::c;
+////    const double scaleDelta = casa::C::_2pi * request[FREQ]->width(0) / casa::C::c;
+////            
+////    ResultType::Ptr result(new ResultType());
+////    ARRAY(complex_t) shift(nTime, nFreq);
+////    complex_t *data = shift.data();
+////    
+////    for(int t = 0; t < nTime; ++t)
+////    {
+////        const double phase0 = scale0 * inner(0, t);
+////        const double phaseDelta = scaleDelta * inner(0, t);
+////        complex_t curr(cos(phase0), sin(phase0));
+////        const complex_t delta(cos(phaseDelta), sin(phaseDelta));
+
+////        for(int f = 0; f < nFreq; ++f)
+////        {
+////            *data++ = curr;
+////            curr *= delta;
+////        }
+////    }
+////    
+////    result->assign(shift);
+////    return result;
+//}
+
+// -------------------------------------------------------------------------- //
+
+PhaseShiftOld::PhaseShiftOld(const Expr<Vector<2> >::ConstPtr &lhs,
+    const Expr<Vector<2> >::ConstPtr &rhs)
+    :   Expr2<Vector<2>, Vector<2>, Scalar>(lhs, rhs)
 {
-    addChild (itsLeft);
-    addChild (itsRight);
-}
+}    
 
-
-PhaseShift::~PhaseShift()
+const Scalar::proxy PhaseShiftOld::evaluateImpl(const Request &request,
+    const Vector<2>::proxy &lhs, const Vector<2>::proxy &rhs) const
 {
-}
-
-
-Result PhaseShift::getResult (const Request& request)
-{
-    Result result;
-    result.init();
-
-    int nChannels = request.getChannelCount();
-    int nTimeslots = request.getTimeslotCount();
+    int nChannels = request[FREQ]->size();
+    int nTimeslots = request[TIME]->size();
     
     // Get N (for the division).
     // Assert it is a scalar value.
@@ -75,13 +119,11 @@ Result PhaseShift::getResult (const Request& request)
     // A delta in the station source predict is only available if multiple
     // frequency channels are used.
     bool multFreq = nChannels > 1;
-    ResultVec reslBuf, resrBuf;
-    const ResultVec& resl = itsLeft.getResultVecSynced (request, resrBuf);
-    const ResultVec& resr = itsRight.getResultVecSynced (request, reslBuf);
-    const Result& left = resl[0];
-    const Result& right = resr[0];
-    const Result& leftDelta = resl[1];
-    const Result& rightDelta = resr[1];
+
+    const Matrix &left = lhs(0);
+    const Matrix &right = rhs(0);
+    const Matrix &leftDelta = lhs(1);
+    const Matrix &rightDelta = rhs(1);
 
     // It is tried to compute the DFT as efficient as possible.
     // Therefore the baseline contribution is split into its antenna parts.
@@ -143,8 +185,8 @@ Result PhaseShift::getResult (const Request& request)
     Matrix res(makedcomplex(0,0), nChannels, nTimeslots, false);
     for(int iy=0; iy<nTimeslots; ++iy)
     {
-        dcomplex tmpl = left.getValue().getDComplex(0,iy);
-        dcomplex tmpr = right.getValue().getDComplex(0,iy);
+        dcomplex tmpl = left.getDComplex(0,iy);
+        dcomplex tmpr = right.getDComplex(0,iy);
         
         // We have to divide by N.
         // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
@@ -154,84 +196,79 @@ Result PhaseShift::getResult (const Request& request)
         dcomplex factor;
         if(multFreq)
         {
-            dcomplex deltal = leftDelta.getValue().getDComplex(0,iy);
-            dcomplex deltar = rightDelta.getValue().getDComplex(0,iy);
+            dcomplex deltal = leftDelta.getDComplex(0,iy);
+            dcomplex deltar = rightDelta.getDComplex(0,iy);
             factor = deltar * conj(deltal);
         }
 //        res.fillRowWithProducts (tmpr * conj(tmpl) / tmpnk, factor, iy);
         res.fillRowWithProducts (tmpr * conj(tmpl), factor, iy);
     }
-    result.setValue (res);
 
-    //  cout << "DFT:" << endl;
-    //  cout << setprecision(20) << res << endl;
+    Scalar::proxy result;
+    result.assign(res);
 
-    // Evaluate (if needed) for the perturbed parameter values.
-    // Note that we do not have to test for perturbed values in nk,
-    // because the left and right value already depend on nk.
+//    //  cout << "DFT:" << endl;
+//    //  cout << setprecision(20) << res << endl;
 
-    enum PValues
-    { PV_LEFT, PV_RIGHT, PV_LEFT_DELTA, PV_RIGHT_DELTA, N_PValues };
+//    // Evaluate (if needed) for the perturbed parameter values.
+//    // Note that we do not have to test for perturbed values in nk,
+//    // because the left and right value already depend on nk.
 
-    const Result *pvSet[N_PValues] =
-        {&left, &right, &leftDelta, &rightDelta};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
+//    enum PValues
+//    { PV_LEFT, PV_RIGHT, PV_LEFT_DELTA, PV_RIGHT_DELTA, N_PValues };
 
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvLeft = pvIter.value(PV_LEFT);
-        const Matrix &pvRight = pvIter.value(PV_RIGHT);
+//    const Result *pvSet[N_PValues] =
+//        {&left, &right, &leftDelta, &rightDelta};
+//    PValueSetIterator<N_PValues> pvIter(pvSet);
 
-        Matrix pres(makedcomplex(0,0), nChannels, nTimeslots, false);
+//    while(!pvIter.atEnd())
+//    {
+//        const Matrix &pvLeft = pvIter.value(PV_LEFT);
+//        const Matrix &pvRight = pvIter.value(PV_RIGHT);
 
-        if(multFreq)
-        {
-            const Matrix &pvLeftDelta = pvIter.value(PV_LEFT_DELTA);
-            const Matrix &pvRightDelta = pvIter.value(PV_RIGHT_DELTA);
-            
-            for(int iy=0; iy<nTimeslots; ++iy)
-            {
-                dcomplex tmpl = pvLeft.getDComplex(0, iy);
-                dcomplex tmpr = pvRight.getDComplex(0, iy);
+//        Matrix pres(makedcomplex(0,0), nChannels, nTimeslots, false);
 
-//            dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
-//            dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
-            
-            // double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
-//                double tmpnk = 2.0;
-//                dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-//                dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
-                dcomplex deltal = pvLeftDelta.getDComplex(0,iy);
-                dcomplex deltar = pvRightDelta.getDComplex(0,iy);
-                dcomplex factor = deltar * conj(deltal);
-//                pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
-                pres.fillRowWithProducts(tmpr * conj(tmpl), factor, iy);
-            }
-        }
-        else
-        {
-            for(int iy=0; iy<nTimeslots; ++iy)
-            {
-                dcomplex tmpl = pvLeft.getDComplex(0, iy);
-                dcomplex tmpr = pvRight.getDComplex(0, iy);
-                pres.fillRowWithProducts(tmpr * conj(tmpl), 1.0, iy);
-            }
-        }            
+//        if(multFreq)
+//        {
+//            const Matrix &pvLeftDelta = pvIter.value(PV_LEFT_DELTA);
+//            const Matrix &pvRightDelta = pvIter.value(PV_RIGHT_DELTA);
+//            
+//            for(int iy=0; iy<nTimeslots; ++iy)
+//            {
+//                dcomplex tmpl = pvLeft.getDComplex(0, iy);
+//                dcomplex tmpr = pvRight.getDComplex(0, iy);
 
-        result.setPerturbedValue(pvIter.key(), pres);
-//        result.setPerturbedParm (spinx, perturbedParm);
-        pvIter.next();
-    }
+////            dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
+////            dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
+//            
+//            // double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
+////                double tmpnk = 2.0;
+////                dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+////                dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex(0,iy);
+//                dcomplex deltal = pvLeftDelta.getDComplex(0,iy);
+//                dcomplex deltar = pvRightDelta.getDComplex(0,iy);
+//                dcomplex factor = deltar * conj(deltal);
+////                pres.fillRowWithProducts(tmpr * conj(tmpl) / tmpnk, factor, iy);
+//                pres.fillRowWithProducts(tmpr * conj(tmpl), factor, iy);
+//            }
+//        }
+//        else
+//        {
+//            for(int iy=0; iy<nTimeslots; ++iy)
+//            {
+//                dcomplex tmpl = pvLeft.getDComplex(0, iy);
+//                dcomplex tmpr = pvRight.getDComplex(0, iy);
+//                pres.fillRowWithProducts(tmpr * conj(tmpl), 1.0, iy);
+//            }
+//        }            
+
+//        result.setPerturbedValue(pvIter.key(), pres);
+////        result.setPerturbedParm (spinx, perturbedParm);
+//        pvIter.next();
+//    }
     
     return result;
 }
-
-#ifdef EXPR_GRAPH
-std::string PhaseShift::getLabel()
-{
-    return std::string("PhaseShift\\nPhase delay due to baseline geometry.");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

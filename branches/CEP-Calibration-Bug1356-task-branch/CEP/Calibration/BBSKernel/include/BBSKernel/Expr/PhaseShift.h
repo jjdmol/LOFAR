@@ -1,7 +1,7 @@
-//# PhaseShift.h: Phase delay due to baseline geometry with respect to source
-//#     direction.
+//# PhaseShift.h: Phase delay due to baseline geometry with respect to a
+//#     direction on the sky.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,14 +21,14 @@
 //#
 //# $Id$
 
-#ifndef EXPR_PHASESHIFT_H
-#define EXPR_PHASESHIFT_H
+#ifndef LOFAR_BBSKERNEL_EXPR_OHASESHIFT_H
+#define LOFAR_BBSKERNEL_EXPR_PHASESHIFT_H
 
 // \file
-// Phase delay due to baseline geometry with respect to source direction.
+// Phase delay due to baseline geometry with respect to a direction on the sky.
 
-//# Includes
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {
@@ -38,22 +38,39 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class PhaseShift: public ExprRep
+//class PhaseShift: public ExprStatic<2>
+//{
+//public:
+//    typedef shared_ptr<PhaseShift>          Ptr;
+//    typedef shared_ptr<const PhaseShift>    ConstPtr;
+
+//    enum Inputs
+//    {
+//        UVW,
+//        LMN,
+//        N_Inputs
+//    };
+//    
+//    PhaseShift();
+
+//private:
+//    // Compute a result for the given request.
+//    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
+//        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
+//};
+
+class PhaseShiftOld: public Expr2<Vector<2>, Vector<2>, Scalar>
 {
 public:
-    PhaseShift (const Expr& left, const Expr& right);
-    ~PhaseShift();
+    typedef shared_ptr<PhaseShiftOld>       Ptr;
+    typedef shared_ptr<const PhaseShiftOld> ConstPtr;
 
-    // Calculate the results for the given domain.
-    virtual Result getResult(const Request &request);
+    PhaseShiftOld(const Expr<Vector<2> >::ConstPtr &lhs,
+        const Expr<Vector<2> >::ConstPtr &rhs);
 
 private:
-    #ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-    #endif
-
-    Expr itsLeft;
-    Expr itsRight;
+    virtual const Scalar::proxy evaluateImpl(const Request &request,
+        const Vector<2>::proxy &lhs, const Vector<2>::proxy &rhs) const;
 };
 
 // @}
