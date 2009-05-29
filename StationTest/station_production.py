@@ -62,16 +62,13 @@ sr.appendLog(11,'')
 sr.appendLog(1,'Station production test %s' % logName)
 sr.appendLog(11,'')
 
-
 ################################################################################
 sr.setId('RSP version - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify LCU - RSP ethernet link by getting the RSP version info')
 sr.appendLog(21,'')
 res = cli.command('./rsp_version.sh')
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> RSP version test went OK')
-else:
+if res.find('OK')==-1:
   sr.appendLog(11,'>>> RSP version test went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
@@ -80,17 +77,16 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/rsp_version.gold')  
   sr.setResult('FAILED')
-
-
+else:
+  sr.appendLog(11,'>>> RSP version test went OK')
+  
 ################################################################################
 sr.setId('TBB version - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify LCU - TBB ethernet link by getting the TBB version info')
 sr.appendLog(21,'')
 res = cli.command('./tbb_version.sh')
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> TBB version test went OK')
-else:
+if res.find('OK')==-1:
   sr.appendLog(11,'>>> TBB version test went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
@@ -99,16 +95,16 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/tbb_version.gold')
   sr.setResult('FAILED')
-
+else:
+  sr.appendLog(11,'>>> TBB version test went OK')
+  
 ################################################################################
 sr.setId('TBB size check - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the size of the TBB memory modules')
 sr.appendLog(21,'')
 res = cli.command('./tbb_size.sh')
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> TBB size test went OK')
-else:
+if res.find('OK')==-1:
   sr.appendLog(11,'>>> TBB size test went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
@@ -117,17 +113,16 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/tbb_size.gold')
   sr.setResult('FAILED')
- 
- 
+else:
+  sr.appendLog(11,'>>> TBB size test went OK')
+   
 ################################################################################
 sr.setId('TBB memory check - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify TBB memory modules on the TBB')
 sr.appendLog(21,'')
 res = cli.command('./tbb_memory.sh')
-if res.find('wrong')==-1:
-  sr.appendLog(11,'>>> TBB memory test went OK')
-else:
+if res.find('OK')==-1:
   sr.appendLog(11,'>>> TBB memory test went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
@@ -136,7 +131,9 @@ else:
   sr.appendLog(11,'Expected:')
   sr.appendFile(11,'gold/tbb_memory.gold')
   sr.setResult('FAILED')
- 
+else:
+  sr.appendLog(11,'>>> TBB memory test went OK')
+   
 ################################################################################
 sr.setId('SPU status - ')
 sr.appendLog(21,'')
@@ -153,7 +150,6 @@ else:
   sr.appendFile(11,'spustat.log')
   sr.setResult('FAILED')
 
-
 ################################################################################
 sr.setId('TD status - ')
 sr.appendLog(21,'')
@@ -169,7 +165,6 @@ else:
   sr.appendLog(11,'Result:')
   sr.appendFile(11,'tdstat.log')
   sr.setResult('FAILED')
-
 
 ################################################################################
 sr.setId('RCU-RSP - ')
@@ -232,7 +227,6 @@ else:
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
   sr.setResult('FAILED')
-
 
 ################################################################################
 # End of the subrack test
