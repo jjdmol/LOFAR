@@ -1,5 +1,34 @@
 \documentclass{article}
 
+% opencl uitzoeken
+
+
+% zoek parallelisme: onafhankelijke berekeningen
+% voor de correlator geldt dat de berekiningen onafhankelijk zijn, maar IO niet!
+% met many cores is de I/O vaak de bottleneck
+
+
+%% pas je algorithmen aan op many-cores
+
+
+%% 1) zoek parallelisme in je algorithme.
+%%    vaak aanwezig. Zoek onafhankelijke operaties:
+%%     voorbeelden:
+%%    - correlator: kanalen, polatisaties, subbanden zijn onafhankelijk.
+%%    - polyphase: stations zijn onafhankelijk
+%%    - imaging: maak parallelisme: beeld elk kanaal af op een image, tel deze later op
+
+  
+%% 2) mem bw/ops neemt af met many cores
+%%    optimaliseer.
+
+%% dus optimaliseren: 
+%%     - algo specifiek (reduceer mem loads)
+%%     - architectuur-specifieke optimalisaties (cache gedrag, delays, floating point instructions)
+
+%% manycores ondersteunen complex niet erg goed. Alleen BG/P wel.
+%% Vaak de reals en de imags in aparte arrays stoppen.
+
 \usepackage{spconf}
 
 \title{How to Build a Correlator on Many-Core Hardware}
@@ -21,6 +50,14 @@ The Netherlands}
 \end{abstract}
 
 \section{Introduction}
+% wat gaat de lezer leren van dit paper?
+
+% we geven een leidraad voor het kiezen van de juiste architectuur voor het probleem van de lezer
+% voor goede performance heb je nodig:
+%  - kennis van algorithme
+%  - kennis van de architecturen
+%  - inzicht over hoe je de mapping van algorithme op architectuur het beste kunt doen
+% dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
 The Low Frequency Array (LOFAR) stations~\cite{Butcher:04,deVos:09}, for
@@ -74,6 +111,238 @@ should be of special interest to those who are willing to put some extra
 programming effort to obtain good performance, even if high-level programming
 support is not available.
 
+
+\section{Novel trends in modern radio astronomy}
+    - LOFAR, SKA
+
+\section{Correlating signals}
+
+
+\section{Many-core architectures}
+
+\subsection{General Purpose multi-core CPU (Intel Core i7 920)}
+
+As a reference, we implemented the correlator on a multi-core general
+purpose architecture. We use a quad core Intel Core~i7 920 CPU
+(code name Nehalem) at 2.67~GHz. 
+There is 32~KB of on-chip L1 data cache per core, 256~KB L2 cache per core, and 8~MB
+of shared L3 cache.  
+The thermal design power (TDP) is 130~Watts.
+The theoretical
+peak performance of the system is 85~gflops, in single precision.
+The parallelism comes from four cores with two-way hyperthreading, and a vector length of four floats,
+provided by the SSE4 instruction set.  
+
+The architecture has several
+important drawbacks for our application.  First, there is no fused
+multiply-add instruction.  Since the correlator performs mostly
+multiplies and adds, this can cause a performance penalty. The
+processor does have multiple pipelines, and the multiply and add
+instructions are executed in different pipelines, allowing eight
+flops per cycle per core.
+
+Another problem is that SSE's shuffle instructions
+to move data around in vector registers are more limited
+than for instance on the \mbox{Cell/B.E.} processor. This complicates an
+efficient implementation.
+For the future Intel Larrabee GPU, and for the next
+generation of Intel processors, both a fused multiply-add instruction
+and improved shuffle support has been announced.
+
+The number
+of SSE registers is small (sixteen 128-bit registers), allowing only little
+data reuse. 
+This is a problem for the correlator, since
+the tile size is limited by the number of registers.  A smaller tile
+size means less opportunity for data reuse, increasing the memory
+bandwidth that is required.
+
+\subsection{IBM Blue Gene/P}
+
+The IBM Blue Gene/P~(BG/P)~\cite{bgp} is the architecture that is
+currently used for the LOFAR correlator~\cite{spaa-06}.  Four 850~MHz
+PowerPC~450 processors are integrated on each Blue Gene/P chip.  We
+found that the BG/P is extremely suitable for our application, since
+it is highly optimized for processing of complex numbers.  The BG/P
+performs \emph{all} floating point operations in double precision, which is
+overkill for our application.
+The L2 prefetch unit prefetches the sample data efficiently from
+memory.  In contrast to all other architectures we evaluate, the
+problem is compute bound instead of I/O bound, thanks to the BG/P's high
+memory bandwidth per operation. It is 3.5--10 times higher than
+for the other architectures.  
+The ratio between flops and bytes/sec of
+memory bandwidth is exactly 1.0 for the BG/P.
+
+The BG/P has a register file with 32 vector registers of width 2.
+Therefore, 64 floating point numbers (with double precision) can be
+kept in the register file simultaneously. This is the same amount as
+on the general purpose Intel chip, but an important difference is that the
+BG/P has 32 registers of width 2, compared to Intel's 16 of width 4.
+The smaller vector size reduces the amount of shuffle instructions
+needed. 
+The BG/P is an energy efficient supercomputer. This is
+accomplished by using many small, low-power chips, at a low clock
+frequency.  The supercomputer also has excellent I/O capabilities,
+there are five specialized networks for communication.
+
+
+\subsection{ATI 4870 GPU (RV 770)}
+
+The most high-end GPU provided by ATI (recently acquired by AMD) is the 4870~\cite{amd-manual}. 
+The RV770 processor in the 4870 runs at 750 MHz, and has a thermal design
+power of 160 Watts. 
+The RV770 chip has ten SIMD cores, each containing 16 
+superscalar streaming processors. Each streaming
+processor has five independent scalar ALUs. Therefore, the GPU
+contains 800 ($10 \times 16 \times 5$) scalar 32-bit streaming processors.  The
+Ultra-Threaded Dispatch Processor controls how the execution units
+process streams. 
+The theoretical peak performance is 1.2~teraflops.
+The 4870 has 1~GB of GDDR5 memory with a theoretical bandwidth of 115.2~GB/s.
+The board uses a PCI-express~2.0 interface for communication with
+the host system.
+Each of the ten SIMD cores contains 16 KB of local memory and separate L1
+texture cache.
+The L2 cache is shared. The
+maximum L1 bandwidth is 480 GB/sec. The bandwidth between the L1 and
+L2 Caches is 384 GB/sec. The application can specify if a read should be cached or not.
+The SIMD cores can exchange data using 16 KB of global
+memory.
+
+The ATI 4870 GPU has the largest number of cores of all architectures
+we evaluate (800).  However, the architecture has several important
+drawbacks for data-intensive applications.  First, there is no way to
+synchronize threads. With other architectures, we can improve the
+cache hit ratio significantly by letting threads that access the same
+samples run in lock step, increasing data reuse.  Second, the
+host-to-device bandwidth is too low. In practice, the achieved
+PCI-express bandwidth is far from the theoretical limit. The achieved
+bandwidth is not enough to keep all cores busy.  Third, we found that
+overlapping communication with computation by performing asynchronous
+data transfers between the host and the device has a large impact on
+kernel performance. We observed kernel slowdowns of \emph{a factor of
+  three} due to transfers in the background.  Fourth, the architecture
+does not provide random write access to device memory, but only to
+\emph{host} memory. However, for our application which is mostly
+read-performance bound, this does not have a large impact.
+
+
+\subsection{NVIDIA GPU (Tesla C1060)}
+
+NVIDIA's Tesla C1060 contains a GTX~280 GPU (code-named GT200), is
+manufactured using a 65 nm process, and has 1.4 billion
+transistors. The device has 30 cores (called multiprocessors) running
+at 1296 MHz, with 8 single precision ALUs, and one double precision
+ALU per core.  Current NVIDIA GPUs thus have fewer cores than ATI
+GPUs, but the individual cores are faster. The memory architecture is
+also quite different. NVIDIA GPUs still use GDDR3 memory, while ATI
+already uses GDDR5 with the 4870~GPU. The GTX~280 in the Tesla
+configuration has 4~GB of device memory, and has a thermal design
+power of 236 Watts.  The theoretical peak performance is 933 gflops.
+
+The number of registers is large: there are 16384 32-bit floating
+point registers per multiprocessor. There also is 16~KB of shared memory per multiprocessor. 
+This memory is shared between all threads on a multiprocessor, but not globally.
+There is a total amount of 64 KB of constant memory on the chip.  
+Finally, texture caching hardware is available. 
+NVIDIA only specifies that ``the cache working set for texture memory
+is between 6 and 8 KB per multiprocessor''~\cite{cuda-manual}.
+The application has some control over the caching
+hardware.  It is possible to specify which area of device
+memory must be cached, while the shared memory is completely
+managed by the application.  
+
+On NVIDIA GPUs, it is possible to synchronize the threads within a multiprocessor.
+With our application, we exploit this to increase the cache hit
+ratio. This improves performance considerably. 
+When accessing device memory, it is important to make sure that simultaneous
+memory accesses by different threads are \emph{coalesced} into a
+single memory transaction.  
+In contrast to ATI hardware, NVIDIA GPUs support random write access
+to device memory. This allows a programming model that is much closer
+to traditional models, greatly simplifying software development.
+The NVIDIA GPUs suffer from a similar 
+problem as the ATI GPUs: the host-to-device bandwidth is equally
+low.
+
+
+
+\subsection{The Cell Broadband Engine (QS21 blade server)}
+
+The Cell Broadband Engine (\mbox{Cell/B.E.})~\cite{cell} is a heterogeneous many-core
+processor, designed by Sony, Toshiba and IBM (STI). 
+The \mbox{Cell/B.E.} has nine cores: the Power Processing Element
+(PPE), acting as a main processor, and eight Synergistic Processing
+Elements (SPEs) that provide the real processing power. All cores run at 3.2 GHz.
+The cores, the main memory, and the external I/O are connected by a
+high-bandwidth (205 GB/s) Element Interconnection Bus (EIB).
+The main memory has a high-bandwidth (25 GB/s), and uses XDR (Rambus).
+The PPE's main role is
+to run the operating system and to coordinate the SPEs.
+An SPE contains a RISC-core (the Synergistic Processing Unit (SPU)), 
+a 256KB Local Store (LS), and a memory flow controller. 
+
+The LS is an extremely fast local
+memory (SRAM) for both code and data and is managed entirely by the
+application with explicit DMA transfers.  The LS can be considered 
+the SPU's L1 cache.  %With the DMA transfers, random write access to
+%memory is available. 
+The LS bandwidth is 47.7 GB/s per SPU.
+The \mbox{Cell/B.E.} has a large number of registers: each SPU has 128, which are
+128-bit (4 floats) wide. The theoretical peak performance of one SPU
+is 25.6 single-precision gflops.
+The SPU can dispatch two instructions in each clock cycle using 
+the two pipelines designated \emph{even} and
+\emph{odd}. Most of the arithmetic instructions execute on the even
+pipe, while most of the memory instructions execute on the odd pipe.
+We use a QS21 Cell blade with two \mbox{Cell/B.E.} processors and 2 GB
+main memory (XDR). This is divided into 1 GB per processor.  
+A single \mbox{Cell/B.E.} in our system has a TDP of 70~W. 
+Recently, an equally fast version with a 50~W TDP has been announced.
+The 8 SPEs of a single chip in the system have a total theoretical single-precision peak performance of 205 gflops.
+
+\subsection{Larrabee}
+
+\subsection{Essential properties and differences}
+
+\begin{table*}
+\begin{center}
+{\small
+\begin{tabular}{l|l|l}
+feature                   & Cell/B.E.                  & GPUs \\
+\hline
+access times              & uniform                    & non-uniform \\
+%                          &                            &  \\
+cache sharing level       & single thread (SPE)        & all threads in a multiprocessor \\
+%                          &                            &  \\
+access to off-chip memory & not possible, only through DMA               & supported \\
+%                          &                            &  \\
+memory access overlapping & asynchronous DMA           & hardware-managed thread preemption \\
+%                          &                            &  \\
+communication             & communication between SPEs through EIB      & independent thread blocks + shared memory within a block \\
+\end{tabular}
+} %\small
+\end{center}
+\vspace{-0.5cm}
+\caption{Differences between many-core memory architectures.}
+\label{memory-properties}
+\end{table*}
+
+\section {optimizing the correlator algorithm}
+\- optimaliseren van het algorithme: tiles, etc
+\subsection{Intel}
+\subsection{BG/P}
+\subsection{NVIDIA}
+\subsection{ATI}
+\subsection{Cell}
+\subsection{Larrabee}
+
+ 
+\section{Programmability}
+
+
+\section{Conclusions}
 
 
 \bibliographystyle{IEEEbib}
