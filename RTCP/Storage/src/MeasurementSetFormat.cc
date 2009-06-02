@@ -29,7 +29,6 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 //#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/LofarStMan.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -47,17 +46,20 @@
 #include <casa/BasicSL/Constants.h>
 #include <ms/MeasurementSets.h>
 
+#include <LofarStMan/LofarStMan.h>
+
 
 using namespace casa;
 
 namespace LOFAR { 
 namespace RTCP {
 
-MeasurementSetFormat::MeasurementSetFormat(const Parset *ps)
+MeasurementSetFormat::MeasurementSetFormat(const Parset *ps, const unsigned alignment)
   : itsPS(ps),
     itsPipelineOutputSet(*ps),
     itsNrOutputs(itsPipelineOutputSet.size()),
-    itsMS(0)
+    itsMS(0), 
+    itsAlignment(alignment)
 {
  
   if (itsPS->nrTabStations() > 0) 
@@ -76,7 +78,8 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset *ps)
   epoch.utc(itsPS->startTime());
   itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
   itsTimeStep = itsPS->IONintegrationTime();
-  itsNrTimes = 29030400;  /// equates to about one year
+  itsNrTimes = 29030400;  /// equates to about one year, sets valid
+			  /// timerage to 1 year beyond starttime
 }
   
 MeasurementSetFormat::~MeasurementSetFormat()  
@@ -185,6 +188,7 @@ void MeasurementSetFormat::fillFeed()
   feedPos = 0.0;
   casa::Vector<Double> feedAngle(nRec);
   feedAngle = -C::pi_4;                      // 0 for parallel dipoles
+
   // Fill the FEED subtable.
   MSFeed msfeed = itsMS->feed();
   MSFeedColumns msfeedCol(msfeed);
@@ -260,7 +264,6 @@ void MeasurementSetFormat::fillPola() {
   mspolCol.corrProduct().put (rownr, corrProduct);
   mspolCol.flagRow().put (rownr, False);
   mspol.flush();
-  //return rownr;
 }
 
 void MeasurementSetFormat::fillDataDesc() {
@@ -352,13 +355,10 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
     }
   }
 
-  const uint32 alignment = 1;
+  // data is generated on a BigEndian machine and written as is to
+  // disk, regardless of endianness of writing machine.
   bool isBigEndian = true;
  
-  if (ENDIANNESS != BigEndian) {
-    isBigEndian = HostInfo::bigEndian();
-  }
-
   string filename = itsPS->getMSname(subband) + "/table.f0meta";
   
   AipsIO aio(filename, ByteIO::New);
@@ -369,7 +369,7 @@ void MeasurementSetFormat::createMSMetaFile(unsigned subband)
       << itsPS->nrChannelsPerSubband()
       << itsPS->nrCrossPolarisations()
       << itsPS->sampleRate()
-      << alignment
+      << itsAlignment
       << isBigEndian;
   aio.close();
 }

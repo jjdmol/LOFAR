@@ -34,19 +34,26 @@ namespace RTCP {
 
 RTStorage::RTStorage(const Parset *ps, unsigned rank, unsigned size)
   :
-  myToWriteQueue(0),
   itsPS(ps),
   itsRank(rank), 
   itsSize(size),
   itsPipelineOutputSet(*ps),
-  itsNrOutputs(itsPipelineOutputSet.size())
+  itsNrOutputs(itsPipelineOutputSet.size()),
+  itsAlignment(512),
+  itsWriteTimer("WriteTimer", false),
+  bytesWritten(0)
 {
-  myFormat = new MeasurementSetFormat(itsPS);
+  myFormat = new MeasurementSetFormat(itsPS, itsAlignment);
   ASSERTSTR( itsNrOutputs == 1, "Multiple outputs not (yet) sufficiently tested, unavailable for now" );
 }
 
 RTStorage::~RTStorage()
 {
+  LOG_INFO_STR(itsWriteTimer);
+
+  LOG_INFO_STR("Wrote a total of approximately " << bytesWritten/1024/1024 << " MB in " << itsWriteTimer.getElapsed() << " seconds.");
+  LOG_INFO_STR("Average write speed was " << bytesWritten/1024/1024/itsWriteTimer.getElapsed() << " MB/s.");
+
 }
   
 void RTStorage::preprocess() 
@@ -58,7 +65,6 @@ void RTStorage::preprocess()
   } else {
     itsNrSubbandsPerStorage = (itsNrSubbands / itsSize) + 1;
   }
-  
   
   itsMyNrSubbands = 0;
   for (unsigned i = 0; i < itsNrSubbandsPerStorage; i ++) {
@@ -94,7 +100,9 @@ void RTStorage::preprocess()
       std::stringstream out;
       out << o;
       
-      myFDs[sb][o] = new FileStream((itsPS->getMSname( itsNrSubbandsPerStorage * itsRank + sb )+"/table.f"+out.str()+"data").c_str(), S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
+      myFDs[sb][o] = new FileStream((itsPS->getMSname( itsNrSubbandsPerStorage * itsRank + sb )+"/table.f"+out.str()+"data").c_str(), 
+				    O_SYNC | O_RDWR | O_CREAT | O_TRUNC | O_DIRECT,
+				    S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
     }
     /// create input stream and thread to handle the inputstream
     createInputStream(sb);
@@ -110,7 +118,7 @@ void RTStorage::process()
 
   while (finishedSubbandsCount < itsMyNrSubbands) {
     writeLogMessage();
-      
+   
     for (unsigned sb = 0; sb < itsMyNrSubbands; sb++) {
       if (!finishedSubbands[sb]) {
 	if(!processSubband(sb)) {
@@ -124,6 +132,7 @@ void RTStorage::process()
 
 void RTStorage::postprocess()
 {
+
   /// close filedescriptors
   for (unsigned i = 0; i < itsMyNrSubbands; i++) {
     for (unsigned j = 0; j < itsNrOutputs; j++) {
@@ -131,6 +140,7 @@ void RTStorage::postprocess()
       delete myFDs[i][j];
       
     }
+
     delete itsInputThreads[i];
     delete itsInputStreams[i];
   }
@@ -164,20 +174,20 @@ bool RTStorage::processSubband(unsigned sb)
   unsigned o = itsInputThreads[sb]->itsReceiveQueueActivity.remove();
   struct InputThread::SingleInput &input = itsInputThreads[sb]->itsInputs[o];
 
-  itsWriteTimer.start();
-    
   StreamableData *data = input.receiveQueue.remove();
   if (data == 0) 
     return false;
 
+
+  itsWriteTimer.start();
   /// write data to correct fd
   for (unsigned i = 0; i < itsNrOutputs; i++) {
-    data->write( myFDs[sb][i], true );
+    data->write( myFDs[sb][i], true, itsAlignment);
   }
-      
-  input.freeQueue.append(data);
-
   itsWriteTimer.stop();
+
+  bytesWritten += data->requiredSize();
+  input.freeQueue.append(data);
 
   return true;
 }
