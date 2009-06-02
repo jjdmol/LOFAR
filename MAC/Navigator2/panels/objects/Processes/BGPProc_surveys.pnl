@@ -16,10 +16,28 @@ PANEL,-1 -1 1003 784 N "_3DFace" 3
   inputbuffer=$inputBufferList;
   adder=$adderList;
   
+  //determine Nodename
+  dyn_string list=navFunct_listToDynString(inputbuffer);  
+  string nodeName = navFunct_inputBuf2CEPName(list[1]);
+  
+  setValue(\"ionode\",\"text\",\"IONode: \"+nodeName);
+  
+  string stationName=\"\";
+  
+  if (dpExists(\"CCU001:\"+nodeName+\".station\")){
+    dpGet(\"CCU001:\"+nodeName+\".station\",stationName);
+  } else {
+    LOG_ERROR(\"BGPProc_surveys.pnl:main|Could not find dp for stationname: CCU001:\"+nodeName+\".station\");    
+  }
+  
+  setValue(\"stationLabel\",\"text\",stationName);
+  
   setValue(\"ksp_txt\",\"text\",ksp);
   
     // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  
 
   // start the logging process
   navPanel_showLogging(baseDP);
@@ -145,9 +163,9 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,
 1
 LANG:1 12 ComputeNodes
 2 228
-"PRIMITIVE_TEXT2"
+"ionode"
 ""
-1 410 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 339 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 135 0 0 0 0 0
 E E E
@@ -157,13 +175,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 410 132 471 153
-0 2 2 "0s" 0 0 0 192 0 0  410 132 1
+E E 0 1 1 2 1 E U  1 E 339 132 546 153
+0 2 2 "0s" 0 0 0 192 0 0  339 132 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 IONode
+LANG:1 22 IONode: R00-M0-N00-J00
 6 230
 "RECTANGLE18"
 ""
@@ -220,7 +238,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E 1 0 0.9999999999999999 50 182 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 30 240 104 314
-1 303 51 "" 1
+1 348 51 "" 1
 0
 2 285
 "PRIMITIVE_TEXT18"
@@ -469,89 +487,89 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E 1 0 1 200 174 1 E 740 230 789 279
-1 304 52 "" 226
+1 349 52 "" 226
 0
-1 305 52 "" 229
+1 350 52 "" 229
 0
-1 306 52 "" 234
+1 351 52 "" 234
 0
-1 307 52 "" 235
+1 352 52 "" 235
 0
-1 308 52 "" 236
+1 353 52 "" 236
 0
-1 309 52 "" 237
+1 354 52 "" 237
 0
-1 310 52 "" 238
+1 355 52 "" 238
 0
-1 311 52 "" 239
+1 356 52 "" 239
 0
-1 312 52 "" 240
+1 357 52 "" 240
 0
-1 313 52 "" 241
+1 358 52 "" 241
 0
-1 314 52 "" 242
+1 359 52 "" 242
 0
-1 315 52 "" 243
+1 360 52 "" 243
 0
-1 316 52 "" 244
+1 361 52 "" 244
 0
-1 317 52 "" 245
+1 362 52 "" 245
 0
-1 318 52 "" 246
+1 363 52 "" 246
 0
-1 319 52 "" 247
+1 364 52 "" 247
 0
-1 320 52 "51" 1
+1 365 52 "51" 1
 0
-1 321 52 "" 249
+1 366 52 "" 249
 0
-1 322 52 "" 250
+1 367 52 "" 250
 0
-1 323 52 "" 251
+1 368 52 "" 251
 0
-1 324 52 "" 252
+1 369 52 "" 252
 0
-1 325 52 "" 253
+1 370 52 "" 253
 0
-1 326 52 "" 254
+1 371 52 "" 254
 0
-1 327 52 "" 255
+1 372 52 "" 255
 0
-1 328 52 "" 261
+1 373 52 "" 261
 0
-1 329 52 "" 262
+1 374 52 "" 262
 0
-1 330 52 "" 263
+1 375 52 "" 263
 0
-1 331 52 "" 264
+1 376 52 "" 264
 0
-1 332 52 "" 265
+1 377 52 "" 265
 0
-1 333 52 "" 279
+1 378 52 "" 279
 0
-1 334 52 "" 280
+1 379 52 "" 280
 0
-1 335 52 "" 281
+1 380 52 "" 281
 0
-1 336 52 "" 282
+1 381 52 "" 282
 0
-1 337 52 "" 283
+1 382 52 "" 283
 0
-1 338 53 "" 227
+1 383 53 "" 227
 0
-1 339 53 "51" 1
+1 384 53 "51" 1
 0
-1 340 53 "" 256
+1 385 53 "" 256
 0
-1 341 53 "" 266
+1 386 53 "" 266
 0
-1 342 53 "" 267
+1 387 53 "" 267
 0
-1 343 53 "" 268
+1 388 53 "" 268
 0
-1 344 53 "" 269
+1 389 53 "" 269
 0
-1 345 53 "" 270
+1 390 53 "" 270
 0
 2 346
 "stationLabel"
@@ -569,7 +587,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 15 247 63 268
 0 2 2 "0s" 0 0 0 192 0 0  15 247 1
 1
-LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 5 CSxxx
@@ -589,7 +607,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 15 450 73 471
 0 2 2 "0s" 0 0 0 192 0 0  15 450 1
 1
-LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 7 Storxxx

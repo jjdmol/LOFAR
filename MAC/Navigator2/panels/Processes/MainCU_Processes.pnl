@@ -281,26 +281,6 @@ LANG:1 6 logMsg
 0
 1 203 19 "" 6
 0
-2 133
-"PRIMITIVE_TEXT11"
-""
-1 310 430 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-28 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 310 430 311 444
-0 2 2 "0s" 0 0 0 192 0 0  310 430 1
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 0 
 2 134
 "PRIMITIVE_TEXT12"
 ""
