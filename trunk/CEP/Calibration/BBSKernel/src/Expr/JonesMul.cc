@@ -50,23 +50,23 @@ JonesResult JonesMul::getJResult(const Request &request)
     // Create the result object.
     JonesResult result;
     result.init();
-    
+
     Result &result11 = result.result11();
     Result &result12 = result.result12();
     Result &result21 = result.result21();
     Result &result22 = result.result22();
-    
+
     // Evaluate the children.
     Result tmpLeft;
     JonesResult tmpRight;
     const Result &left = itsLeft.getResultSynced(request, tmpLeft);
     const JonesResult &right = itsRight.getResultSynced(request, tmpRight);
-        
+
     const Result &r11 = right.getResult11();
     const Result &r12 = right.getResult12();
     const Result &r21 = right.getResult21();
     const Result &r22 = right.getResult22();
-    
+
     const Matrix &mr11 = r11.getValue();
     const Matrix &mr12 = r12.getValue();
     const Matrix &mr21 = r21.getValue();
@@ -94,7 +94,7 @@ JonesResult JonesMul::getJResult(const Request &request)
         const Matrix &mr12 = pvIter.value(PV_RIGHT12);
         const Matrix &mr21 = pvIter.value(PV_RIGHT21);
         const Matrix &mr22 = pvIter.value(PV_RIGHT22);
-            
+
         if(pvIter.hasPValue(PV_LEFT))
         {
             result11.setPerturbedValue(pvIter.key(), ml * mr11);
@@ -108,7 +108,7 @@ JonesResult JonesMul::getJResult(const Request &request)
             {
                 result11.setPerturbedValue(pvIter.key(), ml * mr11);
             }
-            
+
             if(pvIter.hasPValue(PV_RIGHT12))
             {
                 result12.setPerturbedValue(pvIter.key(), ml * mr12);
@@ -121,10 +121,10 @@ JonesResult JonesMul::getJResult(const Request &request)
 
             if(pvIter.hasPValue(PV_RIGHT22))
             {
-                result21.setPerturbedValue(pvIter.key(), ml * mr22);
+                result22.setPerturbedValue(pvIter.key(), ml * mr22);
             }
         }
-        
+
         pvIter.next();
     }
 
