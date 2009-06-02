@@ -20,8 +20,13 @@ PANEL,-1 -1 640 211 N "_3DFace" 3
   dyn_string list=navFunct_listToDynString(inputbuffer);
   
   int bufNr = -1;
-  if (dynlen(list) <= 1+objectNr && list[1+objectNr] < 127) {
-    bufNr=list[1+objectNr];;
+  LOG_DEBUG(\"circularBuffer.pnl:main|dynlen list: \"+dynlen(list)+\" objectNr: \"+objectNr+\" list[1+objectNr]: \"+list[1+objectNr]);
+  if (dynlen(list) <= (1+objectNr)) {
+    bufNr=list[1+objectNr];
+    if (bufNr > 127) {
+      LOG_ERROR(\"circularBuffer.pnl:main|invalid InputBufferDP\");
+      return;
+    }
     inputBufferDP=database+\"InputBuffer\"+bufNr;
     
   
@@ -71,7 +76,7 @@ PANEL,-1 -1 640 211 N "_3DFace" 3
     showSelfState(inputBufferDP);
 
   } else {
-    LOG_ERROR(\"circularBuffer.pnl:main|inputBufferList out of range or invalid InputBufferDP\");
+    LOG_ERROR(\"circularBuffer.pnl:main|inputBufferList out of range\");
   }
 }
 

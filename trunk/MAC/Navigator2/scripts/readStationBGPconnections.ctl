@@ -22,27 +22,9 @@
 #uses "GCFCommon.ctl"
 
 /**
-  * Controller that will be run once during station startup.
+  * Controller that will be run once during ccu startup.
   * it will search for different conf files in /opt/lofar/etc/
   * and will fill the pvss database types for those config files.
- 
-  * For now we have: 
-
-  * AntennaArrays.conf.
-  * This will be used to fill: Antenna deltaX deltaY and deltaH fields for LBA and HBA
-  * antenna configurations. 
-  *
-  * Allowed for now are :  LBA-HBA
-  *
-  * The files contain fieldcenter coordinates in OL-NB-Height
-  * and Antenna positions in OL-NB-Height Offsets from the fieldCenter.
-  * As FieldCenter now the GPS coordinates are taken, this is not correct
-  *
-  * For future compatibility we have to consider other earth coordinates also
-  
-  * RemoteStation.conf
-  * This will fill the RemoteStation point with all data available for this station.
-  *
   */
 main()
 { 

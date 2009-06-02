@@ -73,7 +73,8 @@
 // navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
 // navFunct_waitObjectReady                   : Loops till object Read or breaks out with error. 
 // navFunct_CEPName2DPName                    : Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
-// navFunct_DPNAme2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
+// navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
+// navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
 
 
 
@@ -1785,5 +1786,30 @@ string navFunct_DPName2CEPName(string DPName) {
     }
   }
 
+  return name;
+}
+
+// ****************************************
+// Name: navFunct_inputBuf2CEPName
+// ****************************************
+// Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
+//
+// returns the CEPName 
+// ****************************************
+string navFunct_inputBuf2CEPName(int buf) {
+  int racknr = floor(buf/64);
+  buf=buf-(racknr*64);
+  int midnr = floor(buf/32);
+  buf=buf-midnr*32;
+  int nodenr = floor(buf/2);
+  buf=buf-nodenr*2;
+  int ionr = buf;
+  
+  string name = "R0"+racknr+"-M"+midnr;
+  if (nodenr < 10) {
+    name += "-N0" + nodenr + "-J0" + ionr;
+  } else {
+    name += "-N" + nodenr + "-J0" + ionr;
+  }
   return name;
 }
