@@ -47,7 +47,7 @@ static void child(int argc, char *argv[], int rank, int size)
     std::string type = "brief";
     Version::show<StorageVersion> (std::cout, "Storage", type);  
 #endif    
-    
+
     LOG_INFO_STR("trying to use parset \"" << argv[1] << '"');
     
     ParameterSet parameterSet(argv[1]);
