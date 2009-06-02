@@ -43,20 +43,36 @@ of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
 current supercomputer technology.
 
-The unparalleled growth in the computational performance of Graphics Processor
-Units (GPU) has attracted the attention of the high-performance computing 
-community during the past five years.
+During the past ten years, the high-performance computing community has
+steadily adopted clusters of Graphics Processor Units (GPUs) as a viable
+alternative to supercomputers, due to their unparalleled growth in
+computational performance, increasing flexibility, increasing programmability,
+relatively high power efficiency, and low purchase costs.
+High-end GPUs are highly parallel and contain hundreds of processor cores.
+However, their usefulness is often limited to applications that do not require
+double-precision floating-point arithmetics, since there is no need for
+double-precision calculations to play games.
+Hence, the support for double-precision arithmetic is typically poor.
+Fortunately, many signal-processing applications do not require double
+precision.
 
-%We do this using general-purpose multi-core processors, the Cell/B.E., and graphics processors
-%(GPUs) from different vendors (ATI and NVIDIA).  For comparison
-%reasons, we discuss the LOFAR production implementation on an IBM Blue
-%Gene/P supercomputer.  There are many advantages to the use of
-%many-cores: it is a flexible software solution, has lower costs in
-%terms of purchase, is cheaper and easier to maintain, and the power
-%usage per flop is significantly lower.  We use the LOFAR telescope as
-%an illustrative example, but the results can be applied equally well on other
-%instruments, including e-VLBI.
-
+In this article, we explain how modern multi-core architectures can be fully
+exploited for signal-processing purposes.
+Additionally, we give insights into their architectural limitations, and how
+to best cope with them.
+We treat five different, popular multi-core architectures: the IBM Cell
+Broadband Engine, GPUs from Nvidia and ATI, the IBM Blue Gene/P, and
+the Intel Core i7 processors.
+We discuss their similarities and differences, and how the architectural
+differences affect optimization choices and the eventual performance of a
+correlator.
+We strongly focus on correlators, but many of the findings, claims, and
+optimizations hold for other signal-processing algorithms as well, both in the
+area of radio astronomy and abroad.
+We discuss the programmability of each of the architectures, but this paper
+should be of special interest to those who are willing to put some extra
+programming effort to obtain good performance, even if high-level programming
+support is not available.
 
 
 
