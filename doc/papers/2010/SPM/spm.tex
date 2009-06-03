@@ -120,6 +120,15 @@ support is not available.
 
 \section{Correlating signals}
 
+\begin{figure*}[t]
+\begin{center}
+\includegraphics[width=12cm]{figures/processing-overview.pdf}
+\end{center}
+\vspace{-0.5cm}
+\caption{An extremely simplified view of LOFAR processing.}
+\label{fig-processing-overview}
+\end{figure*}
+
 We call a set of receivers that are grouped closely
 together a \emph{station}. The data streams from the different
 stations must be filtered, delays in the signal path must be
@@ -479,145 +488,6 @@ It is important to realize that the
 correlator itself is \emph{trivially parallel}, since tens of thousands of
 frequency channels can be processed independently.  This allows us to
 efficiently exploit many-core hardware.
-
-
-
-
-
-
-
-
-
-
-
-\begin{figure}[t]
-\begin{center}
-\includegraphics[width=4.2cm]{figures/correlation-triangle.eps}
-\end{center}
-\vspace{-0.5cm}
-\caption{An example correlation triangle.}
-\label{fig-correlation}
-\end{figure}
-
-An important optimization that we implemented is the reduction
-of memory loads by the correlator. 
-\longversion{
-This is achieved
-by keeping correlations that are being accumulated in registers, and
-by reusing samples that are loaded from memory as many times as
-possible. 
-}
-A sample can be used multiple times by correlating it
-with the samples from multiple other stations in the same loop iteration.
-For example, a sample from station A in the X polarization
-that is loaded into a register pair can be correlated with the X and
-Y polarizations of stations B, C and D, using it 6 times. 
-\longversion{
-In fact,
-it is used 12 times, since a correlation requires 2 complex, fused
-multiply-add instructions. 
-}
-Figure~\ref{fig-correlation} shows how we correlate multiple
-stations at the same time. Each square represents the XX, XY,
-YX, and YY correlations of the stations as indicated by row and
-column number. The figure is triangular, because we compute
-the correlation of each pair of stations only once. The squares labeled \emph{A} are
-autocorrelations, which could be treated specially since they require less
-computations. The triangle is divided into larger tiles, in this case 
-2x3 tiles (the dark gray boxes), but arbitrary sizes are possible.
-A tile is correlated as a unit. For example, the lower
-right-hand-side rectangle correlates stations 9 and 10 with stations
-0, 1, and 2.
-
-It is important to tune the tile size to the architecture. We want to
-make the tile size as large as possible, while still fitting in the
-register file. This offers the highest level of data reuse.  
-If we have a $w \times h$ tile size, the number of operations is given by $flops = 32wh$.
-The number of bytes that has to loaded from memory is $16(w+h)$.
-The minimum number of registers that is required is $4 (1 + min(w,h)) + 8 w h$.
-This is the total number of registers, including accumulators, while reusing
-registers if a value is no longer needed (hence the $min$ operation). However,
-this formula does not count additional registers that could be needed for data prefetching,
-address calculations and loop counters.
-The number of registers is expressed in single-precision float registers. If an architecture has vector
-registers, the result can be divided by the vector length.
-Table~\ref{tile-size-table} shows the properties of different tile sizes. 
-
-%\longversion{
-Despite the division of the correlation triangle in tiles, there
-still is opportunity for additional data reuse \emph{between} tiles. 
-%}
-%\shortversion{
-%There still is opportunity for additional data reuse \emph{between} tiles. 
-%}
-The tiles
-within a row or column in the triangle still need the same samples.
-\shortversion{Therefore, caches can increase data reuse.}
-\longversion{ In
-addition to registers, caches can thus also be used to increase data
-reuse.  Since we know exactly what data can be reused at what moment, we
-found it is important to have direct influence on the caches and the thread scheduler.  This
-way, we can make sure that tiles in same row or column are calculated
-at the same time by different threads. 
-}
-Because the algorithm is
-extremely data intensive, the resulting optimized implementation on
-many-cores is typically limited by the architecture's memory
-bandwidth. The memory aspects of the algorithm are twofold.
-There is an algorithmic part, the tile size, which is limited
-by the number of registers. The second aspect is architectural in nature: the cache
-sizes, cache hierarchy and hit ratio. Together, these two aspects dictate the
-memory bandwidth that is needed to keep the ALUs busy.
-
-\begin{table}
-\begin{center}
-{\small
-\begin{tabular}{l|r|r|r|r}
-tile & floating point & memory loads & arithmetic     &  minimum nr.           \\
-size & operations     & (bytes)      & intensity      &  registers (floats)    \\
-\hline
-1x1  &  32            &   32         &   1.00         &  16                    \\
-1x2  &  64            &   48         &   1.33         &  24                    \\
-2x2  & 128            &   64         &   2.00         &  44                    \\
-3x2  & 192            &   80         &   2.40         &  60                    \\
-3x3  & 288            &   96         &   3.00         &  88                    \\
-4x3  & 384            &  112         &   3.43         & 112                    \\
-4x4  & 512            &  128         &   4.00         & 148                    \\
-\end{tabular}
-} %\small
-\end{center}
-\vspace{-0.5cm}
-\caption{Properties of different tile sizes.}
-\label{tile-size-table}
-\end{table}
-
-In this paper, we  focus on the maximal performance that can be achieved
-with a \emph{single many-core chip}.  It is important to realize that the
-correlator itself is \emph{trivially parallel}, since tens of thousands of
-frequency channels can be processed independently.  This allows us to
-efficiently exploit many-core hardware. We use floating point instead
-of integer operations, since all architectures support this
-well. Single precision floating point is accurate enough for our
-purposes.
-
-Since the code is relatively straightforward, we implemented the
-performance-critical kernel in assembly on all
-architectures. Therefore, this paper really compares the hardware
-architectures; \emph{compilers do not influence the
-  performance}. Although we wrote the critical parts in assembly, the
-additional code was written in the natural programming model for each
-architecture. Therefore, we also take programmability into
-account.
-%\longversion{
-We do this both for the assembly parts, and the high-level code.
-The first is a measure of the programmability of the hardware architecture itself.
-The second gives an indication of the quality of the software stack.
-% @@@ actually do this!
-%}
-
-
-
-
 
 
 \subsection{Intel}
