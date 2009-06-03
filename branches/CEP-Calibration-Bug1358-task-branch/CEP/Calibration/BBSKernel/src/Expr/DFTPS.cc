@@ -26,9 +26,9 @@
 #include <BBSKernel/Expr/StatUVW.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/Result.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
+//#include <BBSKernel/Expr/PValueIterator.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/BasicSL/Constants.h>
@@ -40,17 +40,14 @@ namespace LOFAR
 namespace BBS
 {
 
-DFTPS::DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn)
-    : itsUVW(uvw)
-{
-    addChild(lmn);
-}
-
-DFTPS::~DFTPS()
+DFTPS::DFTPS(const StatUVW::ConstPointer &uvw)
+    : ExprStatic<DFTPS::N_Inputs>(),
+      itsUVW(uvw)
 {
 }
 
-ResultVec DFTPS::getResultVec(const Request &request)
+ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
+    const ValueSet::ConstPtr (&inputs)[DFTPS::N_Inputs]) const
 {
     // It is assumed that the channels are regularly spaced, i.e. the channel
     // frequency can be written as f0 + k * df where f0 is the frequency of
@@ -73,8 +70,9 @@ ResultVec DFTPS::getResultVec(const Request &request)
     ASSERT(dynamic_cast<RegularAxis*>(reqGrid[FREQ].get()) != 0);
 
     // Allocate the result.
-    ResultVec resultVec(2);
-    bool calcDelta = request.getChannelCount() > 1;
+    ValueSet::Ptr result(new ValueSet(2));
+//    ResultVec resultVec(2);
+    bool calcDelta = request[FREQ]->size() > 1;
     
     // Calculate 2.0 * pi / lambda0, where lambda0 = c / f0.
     double df = reqGrid[FREQ]->width(0);
@@ -83,23 +81,18 @@ ResultVec DFTPS::getResultVec(const Request &request)
     Matrix dwavel(df / f0);
 
     // Get the UVW coordinates.
-    const Result &resU = itsUVW->getU(request);
-    const Result &resV = itsUVW->getV(request);
-    const Result &resW = itsUVW->getW(request);
-    const Matrix &u = resU.getValue();
-    const Matrix &v = resV.getValue();
-    const Matrix &w = resW.getValue();
+    ExprResult::ConstPtr resU = itsUVW->getU(request);
+    ExprResult::ConstPtr resV = itsUVW->getV(request);
+    ExprResult::ConstPtr resW = itsUVW->getW(request);
+    const Matrix &u = resU->getValue()->value();
+    const Matrix &v = resV->getValue()->value();
+    const Matrix &w = resW->getValue()->value();
 
     // Calculate the DFT contribution for this (station, direction) combination.
-    ResultVec tmpLMN;
-    const ResultVec &resLMN =
-        getChild(0).getResultVecSynced(request, tmpLMN);
-    const Result &resL = resLMN[0];
-    const Result &resM = resLMN[1];
-    const Result &resN = resLMN[2];
-    const Matrix &l = resL.getValue();
-    const Matrix &m = resM.getValue();
-    const Matrix &n = resN.getValue();
+    ValueSet::ConstPtr lmn = inputs[LMN];
+    const Matrix &l = lmn->value(0);
+    const Matrix &m = lmn->value(1);
+    const Matrix &n = lmn->value(2);
 
     // Note that both UVW and LMN are required to either scalar or variable in
     // time.
@@ -107,48 +100,50 @@ ResultVec DFTPS::getResultVec(const Request &request)
     ASSERT(l.nx() == 1 && m.nx() == 1 && n.nx() == 1);
 
     Matrix phase0 = (u * l + v * m + w * (n - 1.0)) * wavel0;
-    resultVec[0].setValue(tocomplex(cos(phase0), sin(phase0)));
+    result->assign(0, tocomplex(cos(phase0), sin(phase0)));
+//    resultVec[0].setValue(tocomplex(cos(phase0), sin(phase0)));
     
     if(calcDelta)
     {
         phase0 *= dwavel;
-        resultVec[1].setValue(tocomplex(cos(phase0), sin(phase0)));
+        result->assign(1, tocomplex(cos(phase0), sin(phase0)));
+//        resultVec[1].setValue(tocomplex(cos(phase0), sin(phase0)));
     }
 
-    // Compute the perturbed values.
-    enum PValues
-    {
-        PV_U, PV_V, PV_W, PV_L, PV_M, PV_N, N_PValues
-    };
-    
-    const Result *pvSet[N_PValues] =
-        {&resU, &resV, &resW, &resL, &resM, &resN};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
-    
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvU = pvIter.value(PV_U);
-        const Matrix &pvV = pvIter.value(PV_V);
-        const Matrix &pvW = pvIter.value(PV_W);
-        const Matrix &pvL = pvIter.value(PV_L);
-        const Matrix &pvM = pvIter.value(PV_M);
-        const Matrix &pvN = pvIter.value(PV_N);
-            
-        phase0 = (pvU * pvL + pvV * pvM + pvW * (pvN - 1.0)) * wavel0;
-        resultVec[0].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
-            sin(phase0)));
-            
-        if(calcDelta)
-        {
-            phase0 *= dwavel;
-            resultVec[1].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
-                sin(phase0)));
-        }
+//    // Compute the perturbed values.
+//    enum PValues
+//    {
+//        PV_U, PV_V, PV_W, PV_L, PV_M, PV_N, N_PValues
+//    };
+//    
+//    const Result *pvSet[N_PValues] =
+//        {&resU, &resV, &resW, &resL, &resM, &resN};
+//    PValueSetIterator<N_PValues> pvIter(pvSet);
+//    
+//    while(!pvIter.atEnd())
+//    {
+//        const Matrix &pvU = pvIter.value(PV_U);
+//        const Matrix &pvV = pvIter.value(PV_V);
+//        const Matrix &pvW = pvIter.value(PV_W);
+//        const Matrix &pvL = pvIter.value(PV_L);
+//        const Matrix &pvM = pvIter.value(PV_M);
+//        const Matrix &pvN = pvIter.value(PV_N);
+//            
+//        phase0 = (pvU * pvL + pvV * pvM + pvW * (pvN - 1.0)) * wavel0;
+//        resultVec[0].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
+//            sin(phase0)));
+//            
+//        if(calcDelta)
+//        {
+//            phase0 *= dwavel;
+//            resultVec[1].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
+//                sin(phase0)));
+//        }
 
-        pvIter.next();
-    }
+//        pvIter.next();
+//    }
 
-    return resultVec;
+    return result;
 }
 
 

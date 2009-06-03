@@ -67,15 +67,18 @@ public:
 private:
     //# Define the signature for a function that processes the data of a single
     //# baseline.
-    typedef void (Evaluator::*BlProcessor) (uint threadId,
-        const baseline_t &baseline, const Request &request);
+//    typedef void (Evaluator::*BlProcessor) (uint threadId,
+//        const baseline_t &baseline, Cache &cache);
 
-    void blAssign(uint threadId, const baseline_t &baseline, 
-        const Request &request);
-    void blSubtract(uint threadId, const baseline_t &baseline,
-        const Request &request);
-    void blAdd(uint threadId, const baseline_t &baseline,
-        const Request &request);
+    typedef void (Evaluator::*BlProcessor) (uint threadId,
+        const baseline_t &baseline);
+
+    void blAssign(uint threadId, const baseline_t &baseline);
+
+//    void blSubtract(uint threadId, const baseline_t &baseline,
+//        const Request &request);
+//    void blAdd(uint threadId, const baseline_t &baseline,
+//        const Request &request);
 
     VisData::Pointer    itsChunk;
     Model::Pointer      itsModel;

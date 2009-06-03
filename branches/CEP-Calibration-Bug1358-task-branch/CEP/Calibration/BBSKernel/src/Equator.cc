@@ -23,7 +23,8 @@
 #include <lofar_config.h>
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/PValueIterator.h>
+//#include <BBSKernel/Expr/PValueIterator.h>
+#include <BBSKernel/Expr/Cache.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
@@ -186,21 +187,25 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         << visStart.first << "," << visStart.second << "),(" << visEnd.first
         << "," << visEnd.second << ")]");
 
+    // Create cache.
+//    Cache cache;
+    
     // Create request.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
-    Request request(visGrid.subset(visStart, visEnd), true);
+//    Request request(visGrid.subset(visStart, visEnd), true);
+    itsModel->setRequestGrid(visGrid.subset(visStart, visEnd));
     
-    LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
-        << request.getTimeslotCount() << "t x " << request.getChannelCount()
-        << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
-        << "p");
+//    LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
+//        << request.getTimeslotCount() << "t x " << request.getChannelCount()
+//        << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
+//        << "p");
 
     // Precompute.
-    LOG_DEBUG_STR("Precomputing...");
-    itsTimers[PRECOMPUTE].start();
-    itsModel->precalculate(request);
-    itsTimers[PRECOMPUTE].stop();
-    LOG_DEBUG_STR("Precomputing... done");
+//    LOG_DEBUG_STR("Precomputing...");
+//    itsTimers[PRECOMPUTE].start();
+//    itsModel->precalculate(request);
+//    itsTimers[PRECOMPUTE].stop();
+//    LOG_DEBUG_STR("Precomputing... done");
     
 #ifdef _OPENMP
     // Reset casa::LSQFit instances for each non-main thread.
@@ -217,11 +222,13 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
 #pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
+//        LOG_DEBUG_STR("" << itsBaselines[i].first << "-"
+//            << itsBaselines[i].second);
 #ifdef _OPENMP
-        blConstruct(omp_get_thread_num(), itsBaselines[i], request, reqStart,
-            reqEnd, visStart);
+        blConstruct(omp_get_thread_num(), itsBaselines[i], reqStart, reqEnd,
+            visStart);
 #else
-        blConstruct(0, itsBaselines[i], request, reqStart, reqEnd, visStart);
+        blConstruct(0, itsBaselines[i], reqStart, reqEnd, visStart);
 #endif
     }
     itsTimers[COMPUTE].stop();
@@ -255,10 +262,12 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
 
     itsTimers[PROCESS].stop();
     printTimers();
+//    cache.printStatistics();
+//    cache.clear();        
 }
 
 void Equator::blConstruct(uint threadId, const baseline_t &baseline,
-    const Request &request, const Location &cellStart, const Location &cellEnd,
+    const Location &cellStart, const Location &cellEnd,
     const Location &visStart)
 {
     ThreadContext &context = itsContexts[threadId];
@@ -267,40 +276,49 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
     // NB. VisDimensions::getBaselineIndex() could throw an exception.
     const VisDimensions &dims = itsChunk->getDimensions();    
     const uint blIndex = dims.getBaselineIndex(baseline);
-
+    
     // Evaluate the model.
-    // NB. Model::evaluate() could throw an exception.
     context.timers[ThreadContext::MODEL_EVAL].start();
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+//    JonesMatrix<complex_t>::ConstPtr main = itsModel->evaluate(baseline, cache);
+    map<PValueKey, ExprResult::ConstPtr> result =
+        itsModel->evalPerturbed(baseline);
     context.timers[ThreadContext::MODEL_EVAL].stop();
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
+    ValueSet::ConstPtr main = result[PValueKey()]->getValue();
+    
+//    // Put the results into a single array for easier handling.
+//    const Result *modelJRes[4];
+//    modelJRes[0] = &(jresult.getResult11());
+//    modelJRes[1] = &(jresult.getResult12());
+//    modelJRes[2] = &(jresult.getResult21());
+//    modelJRes[3] = &(jresult.getResult22());
 
     context.timers[ThreadContext::PROCESS].start();
 
-    const size_t nChannels = request.getChannelCount();
+//    const size_t nChannels = request.getChannelCount();
+//    const size_t nChannels = main->value(0, 0).shape()[0];
+//    cout << "nChannels: " << nChannels << endl;
 
     // Construct equations.
-    for(size_t i = 0; i < 4; ++i)
+    for(size_t prod = 0; prod < 4; ++prod)
     {
-        if(itsProductMask[i] == -1)
+        if(itsProductMask[prod] == -1)
         {
             continue;
         }
-        
-        const size_t extProd = itsProductMask[i];
+
+//        ARRAY(complex_t)::const_iterator it = result->value(i).begin();
+//        ASSERT(result->value(i).size() == nChannels * nTimeslots);
+
+        const size_t extProd = itsProductMask[prod];
         
         // Get the result for this polarization product (model visibilities).
-        const Result &modelRes = *modelJRes[i];
+//        const Result &modelRes = *modelJRes[i];
         
         // Get pointers to the main value.
-        const double *modelVisRe, *modelVisIm;
-        modelRes.getValue().dcomplexStorage(modelVisRe, modelVisIm);
+//        const ARRAY(complex_t) &modelVis = main->value(i);
+//        const double *modelVisRe, *modelVisIm;
+//        modelRes.getValue().dcomplexStorage(modelVisRe, modelVisIm);
 
 //        typedef boost::multi_array<sample_t, 4>::index_range Range;
 //        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
@@ -312,25 +330,32 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         // per baseline are relevant).
         context.timers[ThreadContext::BUILD_INDEX].start();
         size_t nCoeff = 0;
-        PValueConstIterator it(modelRes);
-//        cout << "PValues:";
-        while(!it.atEnd())
+
+        map<PValueKey, ExprResult::ConstPtr>::const_iterator it =
+            result.begin();
+
+        while(it != result.end())
         {
 //            cout << " (" << it.key().parmId << "," << it.key().coeffId << ")";
+            if(!it->first.valid())
+            {
+                ++it;
+                continue;
+            }
 
             // Get pointers to the perturbed value.
-            it.value().dcomplexStorage(context.pertRe[nCoeff],
-                context.pertIm[nCoeff]);
+            context.pertIt[nCoeff] = it->second->getValue();
 
             // Look-up coefficient index for the perturbed coefficient.
-            context.index[nCoeff] = itsCoeffMap[it.key()];
+//            context.index[nCoeff] = itsCoeffMap[it.key()];
+            context.index[nCoeff] = itsCoeffMap[it->first];
 
             // Precompute the inverse perturbation (will be used later on to
             // approximate the partial derivative).
-            ParmProxy::ConstPointer parm =
-                ParmManager::instance().get(it.key().parmId);
-            context.inversePert[nCoeff] =
-                1.0 / parm->getPerturbation(it.key().coeffId);
+//            ParmProxy::ConstPointer parm =
+//                ParmManager::instance().get(it->first.parmId);
+//            context.inversePert[nCoeff] =
+//                1.0 / parm->getPerturbation(it->first.coeffId);
 
 //            cout << "Parm: " << it.key().parmId << " Coeff: "
 //                << it.key().coeffId << " Index: " << context.index[nCoeff]
@@ -338,10 +363,12 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 //                << endl;
 
             ++nCoeff;
-            it.next();
+            ++it;
         }
 //        cout << endl;
         context.timers[ThreadContext::BUILD_INDEX].stop();
+
+//        cout << "nCoeff: " << nCoeff << endl;
         
         // If no perturbed values were found, continue.
         if(nCoeff == 0)
@@ -351,6 +378,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 
         size_t eqIndex = 0;
         CellIterator cellIt(cellStart, cellEnd);
+        ASSERT(!cellIt.atEnd());
         while(!cellIt.atEnd())
         {
             // Samples to process (observed visibilities).
@@ -360,8 +388,8 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 //            cout << "ch: " << chInterval.start << "-" << chInterval.end
 //                << " ts: " << tsInterval.start << "-" << tsInterval.end << endl;
 
-            size_t visOffset = (tsInterval.start - visStart.second)
-                * nChannels + (chInterval.start - visStart.first);
+//            size_t visOffset = (tsInterval.start - visStart.second)
+//                * nChannels + (chInterval.start - visStart.first);
                 
             casa::LSQFit *eq = context.eq[eqIndex];
                 
@@ -370,7 +398,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                 // Skip timeslot if flagged.
                 if(itsChunk->tslot_flag[blIndex][ts])
                 {
-                    visOffset += nChannels;
+//                    visOffset += nChannels;
                     continue;
                 }
 
@@ -383,24 +411,53 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                         ++context.count;
 
                         // Compute right hand side of the equation pair.
-                        const sample_t obsVis =
-                            itsChunk->vis_data[blIndex][ts][ch][extProd];
+                        const complex_t obsVis =
+                            static_cast<complex_t>(itsChunk->vis_data[blIndex][ts][ch][extProd]);
 
-                        const double modelRe = modelVisRe[visOffset];
-                        const double modelIm = modelVisIm[visOffset];
+                        const complex_t diff = obsVis -
+                            main->value(prod).getDComplex((int)(ch - visStart.first), (int)(ts - visStart.second));
+
+//                        const double modelRe =
+//                            real(main->value(prod)((int)(ts - visStart.second), (int)(ch - visStart.first)));
+//                        const double modelIm =
+//                            imag(main->value(prod)((int)(ts - visStart.second), (int)(ch - visStart.first)));
+
+//                        if(blIndex == 10)
+//                        {
+//                            cout << "vis(" << (int)(ts - visStart.second) << ","
+//                                << (int)(ch - visStart.first) << ": "
+//                                << main->value(prod)((int)(ts - visStart.second), (int)(ch - visStart.first))
+//                                << endl;
+//                        }
+                        
+//                        const double modelIm = imag(*(modelVis +visOffset));
+                        
+//                        const double modelRe = real(modelVisRe[visOffset];
+//                        const double modelIm = modelVisIm[visOffset];
 
                         // Approximate partial derivatives (forward differences)
                         // TODO: Remove this transpose.                            
                         context.timers[ThreadContext::DERIVATIVES].start();
                         for(size_t i = 0; i < nCoeff; ++i)
                         {
-                            context.partialRe[i] = 
-                                (context.pertRe[i][visOffset] - modelRe)
-                                    * context.inversePert[i];
+//                            context.partialRe[i] = 
+//                                (context.pertRe[i][visOffset] - modelRe)
+//                                    * context.inversePert[i];
+//                               
+//                            context.partialIm[i] = 
+//                                (context.pertIm[i][visOffset] - modelIm)
+//                                    * context.inversePert[i];
+
+                            const complex_t pertVis =
+                                context.pertIt[i]->value(prod).getDComplex((int)(ch - visStart.first), (int)(ts - visStart.second));
+                                
+                            context.partialRe[i] = real(pertVis);
+//                            (real(pertVis) - modelRe)
+//                                    * context.inversePert[i];
                                
-                            context.partialIm[i] = 
-                                (context.pertIm[i][visOffset] - modelIm)
-                                    * context.inversePert[i];
+                            context.partialIm[i] = imag(pertVis);
+//                                 (imag(pertVis) - modelIm)
+//                                    * context.inversePert[i];
                         }
                         context.timers[ThreadContext::DERIVATIVES].stop();
 
@@ -409,22 +466,24 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                             &(context.index[0]),
                             &(context.partialRe[0]),
                             1.0,
-                            real(obsVis) - modelRe);
+                            real(diff));
+//                            real(obsVis) - modelRe);
                             
                         eq->makeNorm(nCoeff,
                             &(context.index[0]),
                             &(context.partialIm[0]),
                             1.0,
-                            imag(obsVis) - modelIm);
+                            imag(diff));
+//                            imag(obsVis) - modelIm);
                         context.timers[ThreadContext::MAKE_NORM].stop();
                     } // !itsChunk->vis_flag[blIndex][ts][ch][extProd]
-                    // Move to next channel.
-                    ++visOffset;
+//                    // Move to next channel.
+//                    ++visOffset;
                 } // for(size_t ch = chStart; ch < chEnd; ++ch)
                     
                 // Move to next timeslot.
-                visOffset +=
-                    nChannels - (chInterval.end - chInterval.start + 1);
+//                visOffset +=
+//                    nChannels - (chInterval.end - chInterval.start + 1);
             } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
         
             // Move to next cell.
@@ -567,8 +626,8 @@ void Equator::printTimers()
     {
         count += itsContexts[i].count;
     }
-    LOG_DEBUG_STR("Processing speed: " << (count
-        / itsTimers[PROCESS].getElapsed()) << " vis/s");
+    LOG_DEBUG_STR("Processing speed: " << static_cast<size_t>((count
+        / itsTimers[PROCESS].getElapsed())) << " vis/s");
 
     LOG_DEBUG_STR("Total #visibilities (unflagged): " << fixed << count); 
     LOG_DEBUG_STR("Total time: " << itsTimers[PROCESS].getElapsed() << " s");
@@ -633,8 +692,9 @@ void Equator::ThreadContext::resize(uint nCoeff, uint nMaxCells)
 {
     index.resize(nCoeff);
     inversePert.resize(nCoeff);
-    pertRe.resize(nCoeff);
-    pertIm.resize(nCoeff);
+//    pertRe.resize(nCoeff);
+//    pertIm.resize(nCoeff);
+    pertIt.resize(nCoeff);
     partialRe.resize(nCoeff);
     partialIm.resize(nCoeff);
     eq.resize(nMaxCells);
@@ -648,8 +708,9 @@ void Equator::ThreadContext::clear(bool clearEq)
     }
     
     index.clear();
-    pertRe.clear();
-    pertIm.clear();
+//    pertRe.clear();
+//    pertIm.clear();
+    pertIt.clear();
     partialRe.clear();
     partialIm.clear();
 }

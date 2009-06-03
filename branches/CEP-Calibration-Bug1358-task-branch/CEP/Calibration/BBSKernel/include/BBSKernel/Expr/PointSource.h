@@ -20,14 +20,13 @@
 //#
 //# $Id$
 
-#ifndef EXPR_POINTSOURCE_H
-#define EXPR_POINTSOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POINTSOURCE_H
+#define LOFAR_BBSKERNEL_EXPR_POINTSOURCE_H
 
 // \file
 // Class holding the expressions defining a point source.
 
 #include <BBSKernel/Expr/Source.h>
-#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -40,28 +39,19 @@ namespace BBS
 class PointSource: public Source
 {
 public:
-    typedef shared_ptr<PointSource>          Pointer;
-    typedef shared_ptr<const PointSource>    ConstPointer;
+    typedef shared_ptr<PointSource>         Ptr;
+    typedef shared_ptr<const PointSource>   ConstPtr;
 
-    PointSource(const string& name, const Expr &ra, const Expr &dec,
-        const Expr &I, const Expr &Q, const Expr &U, const Expr &V);
+    PointSource(const string &name, const Expr::ConstPtr &position,
+        const Expr::ConstPtr &stokes);
 
-    virtual ~PointSource();
-
-    const Expr &getI() const
-    { return itsI; }
-    const Expr &getQ() const
-    { return itsQ; }
-    const Expr &getU() const
-    { return itsU; }
-    const Expr &getV() const
-    { return itsV; }
+    const Expr::ConstPtr &getStokesVector() const
+    {
+        return itsStokesVector;
+    }
 
 private:
-    Expr itsI;
-    Expr itsQ;
-    Expr itsU;
-    Expr itsV;
+    Expr::ConstPtr  itsStokesVector;
 };
 
 // @}

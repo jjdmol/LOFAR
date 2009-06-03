@@ -21,98 +21,88 @@
 //# $Id$
 
 #include <lofar_config.h>
-//include <Common/Timer.h>
 
 #include <BBSKernel/Expr/PointCoherence.h>
 #include <BBSKernel/Expr/MatrixTmp.h>
-#include <BBSKernel/Expr/PValueIterator.h>
-
-using namespace casa;
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-PointCoherence::PointCoherence(const PointSource::ConstPointer &source)
-    :   itsSource(source)
-{
-    addChild (itsSource->getI());
-    addChild (itsSource->getQ());
-    addChild (itsSource->getU());
-    addChild (itsSource->getV());
-}
-
-
-PointCoherence::~PointCoherence()
+PointCoherence::PointCoherence()
+    : ExprStatic<PointCoherence::N_Inputs>()
 {
 }
 
-
-JonesResult PointCoherence::getJResult(const Request &request)
+ValueSet::ConstPtr PointCoherence::evaluateImpl(const Request &request,
+    const ValueSet::ConstPtr (&inputs)[PointCoherence::N_Inputs]) const
 {
-    // Allocate the result.
-    JonesResult result;
-    result.init();
+    ASSERT(inputs[STOKES_VECTOR]);
     
-    Result& resXX = result.result11();
-    Result& resXY = result.result12();
-    Result& resYX = result.result21();
-    Result& resYY = result.result22();
-    
-    // Calculate the source fluxes.
-    Result ikBuf, qkBuf, ukBuf, vkBuf;
-    const Result& ik = getChild(0).getResultSynced(request, ikBuf);
-    const Result& qk = getChild(1).getResultSynced(request, qkBuf);
-    const Result& uk = getChild(2).getResultSynced(request, ukBuf);
-    const Result& vk = getChild(3).getResultSynced(request, vkBuf);
-    
-    // Compute main value.
-    Matrix uvk_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
-    resXX.setValue(0.5 * (ik.getValue() + qk.getValue()));
-    resXY.setValue(uvk_2);
-    resYX.setValue(conj(uvk_2));
-    resYY.setValue(0.5 * (ik.getValue() - qk.getValue()));
-    
-    // Compute perturbed values.
-    enum PValues
-    {   PV_I, PV_Q, PV_U, PV_V, N_PValues };
-    
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
+    ValueSet::ConstPtr stokes = inputs[STOKES_VECTOR];
+    Matrix uv = 0.5 * tocomplex(stokes->value(1), stokes->value(1));
 
-    while(!pvIter.atEnd())
-    {
-        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
-        {
-          const Matrix &pvI = pvIter.value(PV_I);
-          const Matrix &pvQ = pvIter.value(PV_Q);
-          resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ)); 
-          resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ)); 
-        }
+    ValueSet::Ptr result(new ValueSet(2, 2));
+    result->assign(0, 0, 0.5 * (stokes->value(0) + stokes->value(3)));
+    result->assign(0, 1, uv);
+    result->assign(1, 0, conj(uv));
+    result->assign(1, 1, 0.5 * (stokes->value(0) - stokes->value(3)));
 
-        if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
-        {
-            const Matrix &pvU = pvIter.value(PV_U);
-            const Matrix &pvV = pvIter.value(PV_V);
-            Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
-            resXY.setPerturbedValue(pvIter.key(), uvkp_2);
-            resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
-        }
+//    // Allocate the result.
+//    JonesResult result;
+//    result.init();
+//    
+//    Result& resXX = result.result11();
+//    Result& resXY = result.result12();
+//    Result& resYX = result.result21();
+//    Result& resYY = result.result22();
+//    
+//    // Calculate the source fluxes.
+//    Result ikBuf, qkBuf, ukBuf, vkBuf;
+//    const Result& ik = getChild(0).getResultSynced(request, ikBuf);
+//    const Result& qk = getChild(1).getResultSynced(request, qkBuf);
+//    const Result& uk = getChild(2).getResultSynced(request, ukBuf);
+//    const Result& vk = getChild(3).getResultSynced(request, vkBuf);
+//    
+//    // Compute main value.
+//    Matrix uvk_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+//    resXX.setValue(0.5 * (ik.getValue() + qk.getValue()));
+//    resXY.setValue(uvk_2);
+//    resYX.setValue(conj(uvk_2));
+//    resYY.setValue(0.5 * (ik.getValue() - qk.getValue()));
+//    
+//    // Compute perturbed values.
+//    enum PValues
+//    {   PV_I, PV_Q, PV_U, PV_V, N_PValues };
+//    
+//    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk};
+//    PValueSetIterator<N_PValues> pvIter(pvSet);
 
-        pvIter.next();
-    }
+//    while(!pvIter.atEnd())
+//    {
+//        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
+//        {
+//          const Matrix &pvI = pvIter.value(PV_I);
+//          const Matrix &pvQ = pvIter.value(PV_Q);
+//          resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ)); 
+//          resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ)); 
+//        }
+
+//        if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
+//        {
+//            const Matrix &pvU = pvIter.value(PV_U);
+//            const Matrix &pvV = pvIter.value(PV_V);
+//            Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
+//            resXY.setPerturbedValue(pvIter.key(), uvkp_2);
+//            resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
+//        }
+
+//        pvIter.next();
+//    }
 
     return result;
 }
-
-#ifdef EXPR_GRAPH
-string PointCoherence::getLabel()
-{
-    return string("PointCoherence\\nSpatial coherence function of a point"
-        " source\\n" + itsSource->getName());
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

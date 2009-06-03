@@ -20,18 +20,14 @@
 //#
 //# $Id$
 
-#ifndef EXPR_POINTCOHERENCE_H
-#define EXPR_POINTCOHERENCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_POINTCOHERENCE_H
+#define LOFAR_BBSKERNEL_EXPR_POINTCOHERENCE_H
 
 // \file
 // Spatial coherence function of a point source.
 
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/PointSource.h>
-
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
+#include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {
@@ -41,20 +37,28 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class PointCoherence: public JonesExprRep
+class PointCoherence: public ExprStatic<1>
 {
 public:
-    PointCoherence(const PointSource::ConstPointer &source);
-    ~PointCoherence();
+    typedef shared_ptr<PointCoherence>          Ptr;
+    typedef shared_ptr<const PointCoherence>    ConstPtr;
 
-    virtual JonesResult getJResult(const Request &request);
+    enum Inputs
+    {
+        STOKES_VECTOR,
+        N_Inputs
+    };
 
-private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
+    PointCoherence();
 
-    PointSource::ConstPointer    itsSource;
+//    // Compute a result for the given request.
+//    virtual ResultType::ConstPtr evaluateImpl(const Request &request,
+//        const PValueKey &key, bool perturbed) const;
+
+protected:
+    // Compute a result for the given request.
+    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
+        const ValueSet::ConstPtr (&inputs)[PointCoherence::N_Inputs]) const;
 };
 
 // @}

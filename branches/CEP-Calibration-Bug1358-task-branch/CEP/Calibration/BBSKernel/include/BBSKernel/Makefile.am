@@ -2,10 +2,38 @@ pkginclude_Exprdir = $(pkgincludedir)/Expr
 
 #	Expr/DipoleBeam.h
 
+#	Equator.h \
+#	Expr/AzEl.h \
+#	Expr/Diag.h \
+#	Expr/ExternalFunction.h \
+#	Expr/GaussianCoherence.h \
+#	Expr/GaussianSource.h \
+#	Expr/HamakerDipole.h \
+#	Expr/JonesCMul2.h \
+#	Expr/JonesExpr.h \
+#	Expr/JonesInvert.h \
+#	Expr/JonesMul2.h \
+#	Expr/JonesMul3.h \
+#	Expr/JonesNode.h \
+#	Expr/JonesResult.h \
+#	Expr/JonesVisData.h \
+#	Expr/MIM.h \
+#	Expr/PiercePoint.h \
+#	Expr/PValueIterator.h \
+#	Expr/Result.h \
+#	Expr/ResultVec.h \
+#	Expr/Pool.h \
+#	Expr/YatawattaDipole.h
+#  	Expr/JonesCMul3.h \
+#	Expr/JonesMul.h \
+#	Expr/JonesSum.h \
+#	Expr/PointSource.h \
+#	Expr/Source.h
+
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
-	Evaluator.h \
 	Equator.h \
+	Evaluator.h \
 	Exceptions.h \
 	Instrument.h \
 	Measurement.h \
@@ -23,47 +51,31 @@ pkginclude_HEADERS = Package__Version.h \
 	VisSelection.h
 
 pkginclude_Expr_HEADERS	= 	\
-	Expr/AzEl.h \
-	Expr/Diag.h \
+	Expr/Cache.h \
 	Expr/DFTPS.h \
+	Expr/StatUVW.h \
 	Expr/Expr.h \
 	Expr/ExprParm.h \
-	Expr/ExternalFunction.h \
-	Expr/GaussianCoherence.h \
-	Expr/GaussianSource.h \
-	Expr/HamakerDipole.h \
-	Expr/JonesCMul2.h \
-  	Expr/JonesCMul3.h \
-	Expr/JonesExpr.h \
-	Expr/JonesInvert.h \
-	Expr/JonesMul.h \
-	Expr/JonesMul2.h \
-	Expr/JonesMul3.h \
-	Expr/JonesNode.h \
-	Expr/JonesResult.h \
-	Expr/JonesSum.h \
-	Expr/JonesVisData.h \
+	Expr/ExprResult.h \
+	Expr/FlagArray.h \
 	Expr/LMN.h \
 	Expr/Matrix.h \
 	Expr/MatrixComplexArr.h \
 	Expr/MatrixComplexSca.h \
+	Expr/MatrixMul3.h \
 	Expr/MatrixRealArr.h \
 	Expr/MatrixRealSca.h \
 	Expr/MatrixRep.h \
 	Expr/MatrixTmp.h \
-	Expr/MIM.h \
+	Expr/MatrixSum.h \
+	Expr/Mul.h \
 	Expr/PhaseRef.h \
 	Expr/PhaseShift.h \
-	Expr/PiercePoint.h \
 	Expr/PointCoherence.h \
 	Expr/PointSource.h \
-	Expr/PValueIterator.h \
+    Expr/RefCounting.h \
 	Expr/Request.h \
-	Expr/Result.h \
-	Expr/ResultVec.h \
-	Expr/Pool.h \
 	Expr/Source.h \
-	Expr/StatUVW.h \
-	Expr/YatawattaDipole.h
+	Expr/UVW.h
     
 include $(top_srcdir)/Makefile.common

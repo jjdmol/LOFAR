@@ -29,10 +29,13 @@ namespace LOFAR
 namespace BBS
 {
 
-Source::Source(const string& name, const Expr &ra, const Expr &dec)
+Source::Source()
+{
+}
+
+Source::Source(const string &name, const Expr::ConstPtr &position)
     :   itsName(name),
-        itsRa(ra),
-        itsDec(dec)
+        itsPosition(position)
 {
 }
 

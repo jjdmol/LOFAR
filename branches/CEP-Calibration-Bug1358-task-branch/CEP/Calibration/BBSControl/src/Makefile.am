@@ -1,3 +1,5 @@
+#	GlobalSolveController.cc
+
 lib_LTLIBRARIES			= libbbscontrol.la
 
 libbbscontrol_la_SOURCES	= Package__Version.cc  \
@@ -10,7 +12,6 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	CorrectStep.cc \
 	FinalizeCommand.cc \
 	GlobalProcessControl.cc \
-	GlobalSolveController.cc \
 	InitializeCommand.cc \
 	KernelConnection.cc \
 	KernelProcessControl.cc \

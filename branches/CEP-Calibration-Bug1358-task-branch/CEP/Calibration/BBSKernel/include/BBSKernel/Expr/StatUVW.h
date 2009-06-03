@@ -27,7 +27,7 @@
 // UVW coordinates of a station in meters.
 
 #include <BBSKernel/Instrument.h>
-#include <BBSKernel/Expr/Result.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/PhaseRef.h>
 
@@ -58,11 +58,11 @@ public:
 
     void calculate(const Request &request) const;
 
-    const Result &getU(const Request &request) const
+    ExprResult::ConstPtr getU(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsU; }
-    const Result &getV(const Request &request) const
+    ExprResult::ConstPtr getV(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsV; }
-    const Result &getW(const Request &request) const
+    ExprResult::ConstPtr getW(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
 
     const string &getName() const
@@ -93,19 +93,15 @@ private:
         double u, v, w;
     };
 
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
-
     Station                  itsStation;
     casa::MPosition          itsArrayRef;
     PhaseRef::ConstPointer   itsPhaseRef;
     mutable map<Time, Uvw>   itsUvwCache;
 
-    mutable Result           itsU;
-    mutable Result           itsV;
-    mutable Result           itsW;
-    mutable RequestId        itsLastReqId;
+    mutable ExprResult::Ptr itsU;
+    mutable ExprResult::Ptr itsV;
+    mutable ExprResult::Ptr itsW;
+    mutable RequestId       itsLastReqId;
 };
 
 // @}

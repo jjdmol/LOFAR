@@ -1,6 +1,6 @@
-//# LMN.h: LMN-coordinates of a direction on the sky.
+//# Mul.h: Multiplication.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,16 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_LMN_H
-#define LOFAR_BBSKERNEL_EXPR_LMN_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MUL_H
+#define LOFAR_BBSKERNEL_EXPR_MUL_H
 
 // \file
-// LMN-coordinates of a direction on the sky.
+// Multiplication
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-
 
 namespace LOFAR
 {
@@ -39,26 +37,25 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class LMN: public ExprStatic<1>
+class Mul: public ExprStatic<2>
 {
 public:
-    typedef shared_ptr<LMN>         Ptr;
-    typedef shared_ptr<const LMN>   ConstPtr;
+    typedef shared_ptr<Mul>         Ptr;
+    typedef shared_ptr<const Mul>   ConstPtr;
 
     enum Inputs
     {
-        POSITION,
+        LHS,
+        RHS,
         N_Inputs
     };
     
-    LMN(const PhaseRef::ConstPointer &ref);
+    Mul();
 
 private:
     // Compute a result for the given request.
     virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const;
-
-    PhaseRef::ConstPointer  itsRef;
+        const ValueSet::ConstPtr (&inputs)[Mul::N_Inputs]) const;
 };
 
 // @}

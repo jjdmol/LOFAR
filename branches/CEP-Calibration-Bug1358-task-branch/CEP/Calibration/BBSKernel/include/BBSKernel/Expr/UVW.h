@@ -1,6 +1,6 @@
-//# LMN.h: LMN-coordinates of a direction on the sky.
+//# UVW.h: Baseline UVW coordinates in wavelengths.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,16 +20,15 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_LMN_H
-#define LOFAR_BBSKERNEL_EXPR_LMN_H
+#ifndef LOFAR_BBSKERNEL_EXPR_UVW_H
+#define LOFAR_BBSKERNEL_EXPR_UVW_H
 
 // \file
-// LMN-coordinates of a direction on the sky.
+// Baseline UVW coordinates in wavelengths.
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-
+#include <BBSKernel/VisData.h>
 
 namespace LOFAR
 {
@@ -39,31 +38,25 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class LMN: public ExprStatic<1>
+class UVW: public ExprTerminus
 {
 public:
-    typedef shared_ptr<LMN>         Ptr;
-    typedef shared_ptr<const LMN>   ConstPtr;
+    typedef shared_ptr<UVW>         Ptr;
+    typedef shared_ptr<const UVW>   ConstPtr;
 
-    enum Inputs
-    {
-        POSITION,
-        N_Inputs
-    };
-    
-    LMN(const PhaseRef::ConstPointer &ref);
+    UVW(const VisData::Pointer &chunk, const baseline_t &baseline);
 
 private:
     // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const;
+    virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
 
-    PhaseRef::ConstPointer  itsRef;
+    const VisData::Pointer  itsChunk;
+    baseline_t              itsBaseline;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

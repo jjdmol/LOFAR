@@ -20,15 +20,17 @@
 //#
 //# $Id$
 
-#ifndef EXPR_SOURCE_H
-#define EXPR_SOURCE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_SOURCE_H
+#define LOFAR_BBSKERNEL_EXPR_SOURCE_H
 
 // \file
 // Abstract base class for holding a source
 
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
+
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {
@@ -41,26 +43,26 @@ namespace BBS
 class Source
 {
 public:
-    typedef shared_ptr<Source>       Pointer;
-    typedef shared_ptr<const Source> ConstPointer;
+    typedef shared_ptr<Source>          Ptr;
+    typedef shared_ptr<const Source>    ConstPtr;
     
     Source();
-    Source(const string &name, const Expr &ra, const Expr &dec);
-
+    Source(const string &name, const Expr::ConstPtr &position);
     virtual ~Source();
 
     const string &getName() const
-    { return itsName; }
+    {
+        return itsName;
+    }
 
-    const Expr &getRa() const
-    { return itsRa; }
-    const Expr &getDec() const
-    { return itsDec; }
+    const Expr::ConstPtr &getPosition() const
+    {
+        return itsPosition;
+    }
 
 protected:
-    string  itsName;
-    Expr itsRa;
-    Expr itsDec;
+    string          itsName;
+    Expr::ConstPtr  itsPosition;
 };
 
 // @}

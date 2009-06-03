@@ -49,6 +49,7 @@ private:
   MatrixComplexArr(int nx, int ny); // use "allocate" instead
 
 public:
+  static size_t clone_count;
 
   virtual ~MatrixComplexArr();
 

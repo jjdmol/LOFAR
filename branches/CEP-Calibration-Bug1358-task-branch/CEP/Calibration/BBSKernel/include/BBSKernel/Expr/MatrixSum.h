@@ -1,6 +1,7 @@
-//# LMN.h: LMN-coordinates of a direction on the sky.
+//# MatrixSum.h: Compute the (element-wise) sum of a collection of Jones
+//# matrices.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,16 +21,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_LMN_H
-#define LOFAR_BBSKERNEL_EXPR_LMN_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXSUM_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXSUM_H
 
 // \file
-// LMN-coordinates of a direction on the sky.
+// Compute the (element-wise) sum of a collection of Jones matrices.
 
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-
 
 namespace LOFAR
 {
@@ -39,26 +38,18 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class LMN: public ExprStatic<1>
+class MatrixSum: public ExprDynamic
 {
 public:
-    typedef shared_ptr<LMN>         Ptr;
-    typedef shared_ptr<const LMN>   ConstPtr;
+    typedef shared_ptr<MatrixSum>       Ptr;
+    typedef shared_ptr<const MatrixSum> ConstPtr;
 
-    enum Inputs
-    {
-        POSITION,
-        N_Inputs
-    };
-    
-    LMN(const PhaseRef::ConstPointer &ref);
+    MatrixSum();
 
 private:
     // Compute a result for the given request.
     virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const;
-
-    PhaseRef::ConstPointer  itsRef;
+        const vector<ValueSet::ConstPtr> &inputs) const;
 };
 
 // @}

@@ -55,15 +55,25 @@ namespace BBS
 // DFTPS only computes the two exponential terms. PhaseShift computes the phase
 // shift for a baseline for each frequency by combining the results of two
 // DFTPS nodes and applying the above equation.
-class DFTPS: public ExprRep
+class DFTPS: public ExprStatic<1>
 {
 public:
-    DFTPS(const StatUVW::ConstPointer &uvw, const Expr &lmn);
-    virtual ~DFTPS();
+    typedef shared_ptr<DFTPS>       Ptr;
+    typedef shared_ptr<const DFTPS> ConstPtr;
 
-    virtual ResultVec getResultVec(const Request &request);
+    enum Inputs
+    {
+        LMN,
+        N_Inputs
+    };
+
+    DFTPS(const StatUVW::ConstPointer &uvw);
 
 private:
+    // Compute a result for the given request.
+    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
+        const ValueSet::ConstPtr (&inputs)[DFTPS::N_Inputs]) const;
+
     StatUVW::ConstPointer    itsUVW;
 };
 

@@ -24,10 +24,11 @@
 #include <lofar_config.h>
 #include <BBSKernel/Evaluator.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/MatrixComplexArr.h>
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS   
 {
 
 Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
@@ -97,66 +98,72 @@ void Evaluator::process(Mode mode)
     case ASSIGN:
         blProcessor = &Evaluator::blAssign;
         break;
-    case SUBTRACT:        
-        blProcessor = &Evaluator::blSubtract;
-        break;
-    case ADD:        
-        blProcessor = &Evaluator::blAdd;
-        break;
+//    case SUBTRACT:        
+//        blProcessor = &Evaluator::blSubtract;
+//        break;
+//    case ADD:        
+//        blProcessor = &Evaluator::blAdd;
+//        break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
     }            
 
+    // Create a cache.
+//    Cache cache;
+    
     // Create a request.
-    Request request(itsChunk->getDimensions().getGrid());
+//    Request request(itsChunk->getDimensions().getGrid());
+    itsModel->setRequestGrid(itsChunk->getDimensions().getGrid());
+//    itsModel->setRequest(request);
     
     // Precompute.
-    LOG_DEBUG_STR("Precomputing...");
-    itsTimers[PRECOMPUTE].reset();
-    itsTimers[PRECOMPUTE].start();
-    itsModel->precalculate(request);
-    itsTimers[PRECOMPUTE].stop();
-    LOG_DEBUG_STR("Precomputing... done");
+//    LOG_DEBUG_STR("Precomputing...");
+//    itsTimers[PRECOMPUTE].reset();
+//    itsTimers[PRECOMPUTE].start();
+//    itsModel->precalculate(request);
+//    itsTimers[PRECOMPUTE].stop();
+//    LOG_DEBUG_STR("Precomputing... done");
 
     itsTimers[COMPUTE].reset();
     itsTimers[COMPUTE].start();
 #pragma omp parallel for num_threads(itsThreadCount) schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselines.size()); ++i)
     {
+//        LOG_DEBUG_STR("" << itsBaselines[i].first << "-"
+//            << itsBaselines[i].second);
+            
 #ifdef _OPENMP
-        (this->*blProcessor)(omp_get_thread_num(), itsBaselines[i], request);
+        (this->*blProcessor)(omp_get_thread_num(), itsBaselines[i]);
 #else
-        (this->*blProcessor)(0, itsBaselines[i], request);
+        (this->*blProcessor)(0, itsBaselines[i]);
 #endif
     }
     itsTimers[COMPUTE].stop();
-
+    
     LOG_DEBUG("Timings:");
-    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
-        * 1000.0 << " ms");
-    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
-        * 1000.0 << " ms");
+    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE]);
+        //.getElapsed() * 1000.0 << " ms");
+    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE]);
+//        .getElapsed() * 1000.0 << " ms");
+    LOG_DEBUG_STR("CLONE COUNT: " << MatrixComplexArr::clone_count);
+//    cache.printStatistics();
+//    cache.clear();        
 }
 
-void Evaluator::blAssign(uint, const baseline_t &baseline,
-    const Request &request)
+void Evaluator::blAssign(uint, const baseline_t &baseline)
 {
     // Find baseline index.
     const VisDimensions &dims = itsChunk->getDimensions();    
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+    ExprResult::ConstPtr result = itsModel->evaluate(baseline);
+//    LOG_DEBUG_STR("@blAssign ValueSet rank: " << result->value()->rank() << ","
+//        << " size: " << result->value()->size());
+    ValueSet::ConstPtr valueSet = result->getValue();
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
-
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
+    const unsigned int nChannels = dims.getChannelCount();
+    const unsigned int nTimeslots = dims.getTimeslotCount();
 
     for(size_t i = 0; i < 4; ++i)
     {
@@ -171,125 +178,133 @@ void Evaluator::blAssign(uint, const baseline_t &baseline,
         
         View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
             [itsProductMask[i]]]);
+            
+//        ARRAY(complex_t)::const_iterator it = result->value(i).begin();
+//        ASSERT(result->value(i).size() == nChannels * nTimeslots);
+
+//        LOG_DEBUG_STR("@ Matrix: " << valueSet->value(i).nelements() << " ("
+//            << valueSet->value(i).nx() << " x " << valueSet->value(i).nx() << ")");
+//        LOG_DEBUG_STR("@ value: " << valueSet->value(i));
+
+        ASSERT(valueSet->value(i).isComplex() && valueSet->value(i).isArray());
 
         // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        const double *re = 0, *im = 0;
+//        valueSet->value(i).dcomplexStorage(re, im);
 
         // Copy visibilities.
         for(size_t ts = 0; ts < nTimeslots; ++ts)
         {
             for(size_t ch = 0; ch < nChannels; ++ch)
             {
-                vdata[ts][ch] = sample_t(*re, *im);
-                ++re;
-                ++im;
+                vdata[ts][ch] = static_cast<sample_t>(valueSet->value(i).getDComplex(ch, ts));
+                //sample_t(*re++, *im++);
             }
         }
     }
 }
 
-void Evaluator::blSubtract(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
+//void Evaluator::blSubtract(uint, const baseline_t &baseline,
+//    const Request &request)
+//{
+//    // Find baseline index.
+//    const VisDimensions &dims = itsChunk->getDimensions();    
+//    const uint blIndex = dims.getBaselineIndex(baseline);
 
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+//    // Evaluate the model.
+//    JonesResult jresult = itsModel->evaluate(baseline, request);
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
+//    // Put the results into a single array for easier handling.
+//    const Result *modelJRes[4];
+//    modelJRes[0] = &(jresult.getResult11());
+//    modelJRes[1] = &(jresult.getResult12());
+//    modelJRes[2] = &(jresult.getResult21());
+//    modelJRes[3] = &(jresult.getResult22());
 
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
+//    const uint nChannels = dims.getChannelCount();
+//    const uint nTimeslots = dims.getTimeslotCount();
 
-    for(size_t i = 0; i < 4; ++i)
-    {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+//    for(size_t i = 0; i < 4; ++i)
+//    {
+//        if(itsProductMask[i] == -1)
+//        {
+//            continue;
+//        }
+//        
+//        // Get a view on the relevant slice of the chunk.
+//        typedef boost::multi_array<sample_t, 4>::index_range Range;
+//        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
+//        
+//        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
+//            [itsProductMask[i]]]);
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        // Get pointers to the real and imaginary values.
+//        const double *re = 0, *im = 0;
+//        modelJRes[i]->getValue().dcomplexStorage(re, im);
 
-        // Subtract from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] -= sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
-    }
-}
+//        // Subtract from visibilities.
+//        for(size_t ts = 0; ts < nTimeslots; ++ts)
+//        {
+//            for(size_t ch = 0; ch < nChannels; ++ch)
+//            {
+//                vdata[ts][ch] -= sample_t(*re, *im);
+//                ++re;
+//                ++im;
+//            }
+//        }
+//    }
+//}
 
-void Evaluator::blAdd(uint, const baseline_t &baseline,
-    const Request &request)
-{
-    // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
-    const uint blIndex = dims.getBaselineIndex(baseline);
+//void Evaluator::blAdd(uint, const baseline_t &baseline,
+//    const Request &request)
+//{
+//    // Find baseline index.
+//    const VisDimensions &dims = itsChunk->getDimensions();    
+//    const uint blIndex = dims.getBaselineIndex(baseline);
 
-    // Evaluate the model.
-    JonesResult jresult = itsModel->evaluate(baseline, request);
+//    // Evaluate the model.
+//    JonesResult jresult = itsModel->evaluate(baseline, request);
 
-    // Put the results into a single array for easier handling.
-    const Result *modelJRes[4];
-    modelJRes[0] = &(jresult.getResult11());
-    modelJRes[1] = &(jresult.getResult12());
-    modelJRes[2] = &(jresult.getResult21());
-    modelJRes[3] = &(jresult.getResult22());
+//    // Put the results into a single array for easier handling.
+//    const Result *modelJRes[4];
+//    modelJRes[0] = &(jresult.getResult11());
+//    modelJRes[1] = &(jresult.getResult12());
+//    modelJRes[2] = &(jresult.getResult21());
+//    modelJRes[3] = &(jresult.getResult22());
 
-    const uint nChannels = dims.getChannelCount();
-    const uint nTimeslots = dims.getTimeslotCount();
+//    const uint nChannels = dims.getChannelCount();
+//    const uint nTimeslots = dims.getTimeslotCount();
 
-    for(size_t i = 0; i < 4; ++i)
-    {
-        if(itsProductMask[i] == -1)
-        {
-            continue;
-        }
-        
-        // Get a view on the relevant slice of the chunk.
-        typedef boost::multi_array<sample_t, 4>::index_range Range;
-        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
-        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
-            [itsProductMask[i]]]);
+//    for(size_t i = 0; i < 4; ++i)
+//    {
+//        if(itsProductMask[i] == -1)
+//        {
+//            continue;
+//        }
+//        
+//        // Get a view on the relevant slice of the chunk.
+//        typedef boost::multi_array<sample_t, 4>::index_range Range;
+//        typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
+//        
+//        View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
+//            [itsProductMask[i]]]);
 
-        // Get pointers to the real and imaginary values.
-        const double *re = 0, *im = 0;
-        modelJRes[i]->getValue().dcomplexStorage(re, im);
+//        // Get pointers to the real and imaginary values.
+//        const double *re = 0, *im = 0;
+//        modelJRes[i]->getValue().dcomplexStorage(re, im);
 
-        // Add from visibilities.
-        for(size_t ts = 0; ts < nTimeslots; ++ts)
-        {
-            for(size_t ch = 0; ch < nChannels; ++ch)
-            {
-                vdata[ts][ch] += sample_t(*re, *im);
-                ++re;
-                ++im;
-            }
-        }
-    }
-}
+//        // Add from visibilities.
+//        for(size_t ts = 0; ts < nTimeslots; ++ts)
+//        {
+//            for(size_t ch = 0; ch < nChannels; ++ch)
+//            {
+//                vdata[ts][ch] += sample_t(*re, *im);
+//                ++re;
+//                ++im;
+//            }
+//        }
+//    }
+//}
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -20,13 +20,14 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXPRPARM_H
-#define EXPR_EXPRPARM_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
+#define LOFAR_BBSKERNEL_EXPR_EXPRPARM_H
 
 // \file
 // Parameter that can be used in an expression.
 
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/ParmProxy.h>
 
 namespace LOFAR
@@ -37,24 +38,37 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprRep
+class ExprParm: public ExprTerminus
 {
 public:
+    typedef shared_ptr<ExprParm>        Ptr;
+    typedef shared_ptr<const ExprParm>  ConstPtr;
+
     ExprParm(const ParmProxy::ConstPointer &parm);
-    ~ExprParm();
     
     void setPValueFlag();
     bool getPValueFlag() const
     { return itsPValueFlag; }
     void clearPValueFlag();
     
-    // Compute a result for the given request.
-    Result getResult(const Request &request);
+    real_t getPerturbation(uint index) const
+    {
+        return itsParm->getPerturbation(index);
+    }
+
+protected:
+    virtual void updateSolvables(set<PValueKey> &solvables) const;
 
 private:
     ExprParm(const ExprParm &other);
     ExprParm &operator=(const ExprParm &other);
 
+    // Compute a result for the given request.
+    virtual ExprResult::ConstPtr evaluate(const Request &request, Cache &cache,
+        const PValueKey &key = PValueKey()) const;
+
+    virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
+    
     ParmProxy::ConstPointer itsParm;
     bool                    itsPValueFlag;
 };

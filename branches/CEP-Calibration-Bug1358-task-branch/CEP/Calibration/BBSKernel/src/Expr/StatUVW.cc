@@ -37,7 +37,7 @@
 #include <casa/Quanta/MVuvw.h>
 #include <stdint.h>
 
-using namespace casa;
+//using namespace casa;
 
 namespace LOFAR
 {
@@ -51,9 +51,9 @@ StatUVW::StatUVW(const Station &station, const casa::MPosition &arrayRef,
         itsPhaseRef(phaseRef),
         itsLastReqId(InitRequestId)
 {
-    itsU.init();
-    itsV.init();
-    itsW.init();
+    itsU.reset(new ExprResult());
+    itsV.reset(new ExprResult());
+    itsW.reset(new ExprResult());
 }    
 
 StatUVW::~StatUVW()
@@ -63,11 +63,24 @@ StatUVW::~StatUVW()
 void StatUVW::calculate(const Request &request) const
 {
     // Allocate result.
-    size_t nTime = request.getTimeslotCount();
+    size_t nTime = request[TIME]->size();
 
-    double *u = itsU.getValueRW().setDoubleFormat(1, nTime);
-    double *v = itsV.getValueRW().setDoubleFormat(1, nTime);
-    double *w = itsW.getValueRW().setDoubleFormat(1, nTime);
+    Matrix Um, Vm, Wm;
+    double *u = Um.setDoubleFormat(1, nTime);
+    double *v = Vm.setDoubleFormat(1, nTime);
+    double *w = Wm.setDoubleFormat(1, nTime);
+
+    ValueSet::Ptr Ut(new ValueSet());
+    ValueSet::Ptr Vt(new ValueSet());
+    ValueSet::Ptr Wt(new ValueSet());
+
+    Ut->assign(Um);
+    Vt->assign(Vm);
+    Wt->assign(Wm);
+    
+    itsU->setValue(Ut);
+    itsV->setValue(Vt);
+    itsW->setValue(Wt);
 
     // Use cached UVW coordinates if available.
     const Grid &reqGrid = request.getGrid();
@@ -97,22 +110,22 @@ void StatUVW::calculate(const Request &request) const
 
     // Get the station position relative to the array reference position
     // (to keep values small).
-    const MPosition mPos(itsStation.position.getValue()
+    const casa::MPosition mPos(itsStation.position.getValue()
         - itsArrayRef.getValue());
 
     //# Setup coordinate transformation engine.
-    Quantum<double> qEpoch(0.0, "s");
-    MEpoch mEpoch(qEpoch, MEpoch::UTC);
+    casa::Quantum<double> qEpoch(0.0, "s");
+    casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
 
-    MeasFrame frame(itsArrayRef);
+    casa::MeasFrame frame(itsArrayRef);
     frame.set(itsPhaseRef->getPhaseRef());
     frame.set(mEpoch);
 
-    MVBaseline mvBaseline(mPos.getValue());
-    MBaseline mBaseline(mvBaseline, MBaseline::ITRF);
+    casa::MVBaseline mvBaseline(mPos.getValue());
+    casa::MBaseline mBaseline(mvBaseline, casa::MBaseline::ITRF);
     mBaseline.getRefPtr()->set(frame);
 
-    MBaseline::Convert convertor(mBaseline, MBaseline::J2000);
+    casa::MBaseline::Convert convertor(mBaseline, casa::MBaseline::J2000);
 
     //# Compute missing UVW coordinates.
     for(size_t i = 0; i < nTime; ++i)
@@ -126,9 +139,9 @@ void StatUVW::calculate(const Request &request) const
             mEpoch.set(qEpoch);
             frame.set(mEpoch);
 
-            MVuvw uvw2000(convertor().getValue(),
+            casa::MVuvw uvw2000(convertor().getValue(),
                 itsPhaseRef->getPhaseRef().getValue());
-            const Vector<double> &xyz = uvw2000.getValue();
+            const casa::Vector<double> &xyz = uvw2000.getValue();
 
             u[i] = xyz(0);
             v[i] = xyz(1);

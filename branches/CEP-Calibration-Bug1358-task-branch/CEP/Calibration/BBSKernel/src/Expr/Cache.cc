@@ -1,6 +1,6 @@
-//# LMN.h: LMN-coordinates of a direction on the sky.
+//# Cache.cc: Cache for ExprResult instances
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,50 +20,25 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_LMN_H
-#define LOFAR_BBSKERNEL_EXPR_LMN_H
-
-// \file
-// LMN-coordinates of a direction on the sky.
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/PhaseRef.h>
-
+#include <lofar_config.h>
+#include <BBSKernel/Expr/Cache.h>
 
 namespace LOFAR
 {
-namespace BBS
+namespace BBS 
 {
 
-// \ingroup Expr
-// @{
-
-class LMN: public ExprStatic<1>
+Cache::Cache()
+    :   itsQueryCount(0),
+        itsHitCount(0),
+        itsMaxSize(0),
+        itsMemSize(0)
 {
-public:
-    typedef shared_ptr<LMN>         Ptr;
-    typedef shared_ptr<const LMN>   ConstPtr;
+}
 
-    enum Inputs
-    {
-        POSITION,
-        N_Inputs
-    };
-    
-    LMN(const PhaseRef::ConstPointer &ref);
+Cache::~Cache()
+{
+}
 
-private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const;
-
-    PhaseRef::ConstPointer  itsRef;
-};
-
-// @}
-
-} // namespace BBS
-} // namespace LOFAR
-
-#endif
+} //# namespace BBS
+} //# namespace LOFAR

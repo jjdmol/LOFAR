@@ -27,7 +27,8 @@
 // Generate normal equations that tie a model to an observation.
 
 #include <BBSKernel/Model.h>
-#include <BBSKernel/Expr/Result.h>
+//#include <BBSKernel/Expr/Result.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/VisData.h>
 #include <Common/Timer.h>
@@ -74,8 +75,8 @@ private:
     
     // Generate normal equations for a single baseline.
     void blConstruct(uint threadId, const baseline_t &baseline,
-        const Request &request, const Location &cellStart,
-        const Location &cellEnd, const Location &visStart);
+        const Location &cellStart, const Location &cellEnd,
+        const Location &visStart);
 
     void resetTimers();
     void printTimers();
@@ -101,7 +102,8 @@ private:
         vector<double>          inversePert;
         // Pointers to the real and imaginary components of the perturbed
         // values.
-        vector<const double*>   pertRe, pertIm;
+//        vector<const double*>   pertRe, pertIm;
+        vector<ValueSet::ConstPtr>    pertIt;
         // Value of the (approximated) partial derivatives.
         // @{
         vector<double>          partialRe, partialIm;
