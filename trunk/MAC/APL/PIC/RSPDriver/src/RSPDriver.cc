@@ -216,9 +216,6 @@ RSPDriver::RSPDriver(string name) :
 	, m_ppshandle(0)
 #endif
 {
-#ifdef HAVE_SYS_TIMEPPS_H
-	memset(&m_ppsinfo, 0, sizeof(pps_info_t));
-#endif
 	LOG_INFO(Version::getInfo<RSPDriverVersion>("RSPDriver"));
 
 	// first initialize the global settins
@@ -244,6 +241,11 @@ RSPDriver::RSPDriver(string name) :
 		LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
 		exit(EXIT_FAILURE);
 	}
+
+#ifdef HAVE_SYS_TIMEPPS_H
+	memset(&m_ppsinfo, 0, sizeof(pps_info_t));
+	itsPPSdelay = globalParameterSet()->getInt("RSPDriver.PPS_DELAY", 0);
+#endif
 
 	// Register protocols for debugging
 	LOG_DEBUG("Registering protocols");
@@ -1018,91 +1020,92 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	case RSP_GETSPLITTER:			rsp_getSplitter(event,port);		break;
 
     case F_TIMER: {
-      if (&port == &m_boardPorts[0]) {
-        //
-        // If SYNC_MODE == SOFTWARE|FAST then run the scheduler
-        // directly on the software timer.
-        //
-        if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
-            || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)) {
-          (void)clock_tick(m_acceptor); // force clock tick
-        }
-        else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
-          GCFTimerEvent timer;
+		if (&port == &m_boardPorts[0]) {
+			// If SYNC_MODE == SOFTWARE|FAST then run the scheduler
+			// directly on the software timer.
+			if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
+			    || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)) {
+				(void)clock_tick(m_acceptor); // force clock tick
+			}
+			else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
+				GCFTimerEvent timer;
 
 #ifdef HAVE_SYS_TIMEPPS_H
-          const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
-          pps_info_t prevppsinfo = m_ppsinfo;
+				const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
+				pps_info_t prevppsinfo = m_ppsinfo;
 
-          if ( fetchPPS() < 0 ) {
+				if ( fetchPPS() < 0 ) {
+					LOG_WARN_STR("Error fetching PPS: " << strerror(errno));
 
-            LOG_WARN_STR("Error fetching PPS: " << strerror(errno));
-            
-            // print time, ugly
-            char timestr[32];
-            strftime(timestr, 32, "%T", gmtime(&timeout->sec));
-            LOG_INFO(formatString("TICK: time=%s.%06d UTC (not PPS)", timestr, timeout->usec));
+					// print time, ugly
+					char timestr[32];
+					strftime(timestr, 32, "%T", gmtime(&timeout->sec));
+					LOG_INFO(formatString("TICK: time=%s.%06d UTC (not PPS)", timestr, timeout->usec));
 
-            timer.sec  = timeout->sec;
-            timer.usec = timeout->usec;
-            timer.id   = 0;
-            timer.arg  = 0;
+					timer.sec  = timeout->sec;
+					timer.usec = timeout->usec;
+					timer.id   = 0;
+					timer.arg  = 0;
 
-            m_boardPorts[0].setTimer((long)1); // next event after exactly 1 second
-          
-          } else {
+					m_boardPorts[0].setTimer((long)1); // next event after exactly 1 second
+				} 
+				else {	// fetching PPS went ok
+					// print time of day, ugly
+					char	timestr[32];
+					strftime(timestr, 32, "%T", gmtime(&m_ppsinfo.assert_timestamp.tv_sec));
+					LOG_INFO(formatString("TICK: PPS_time=%s.%06d UTC", timestr, m_ppsinfo.assert_timestamp.tv_nsec / 1000));
 
-            // print time of day, ugly
-            char timestr[32];
-            strftime(timestr, 32, "%T", gmtime(&timeout->sec));
-            LOG_INFO(formatString("TICK: time=%s.%06d UTC (timeout)", timestr, timeout->usec));
+					/* construct a timer event */
+					timer.sec  = m_ppsinfo.assert_timestamp.tv_sec;
+					timer.usec = m_ppsinfo.assert_timestamp.tv_nsec / 1000;
+					timer.id   = 0;
+					timer.arg  = 0;
 
-            // print time of day, ugly
-            strftime(timestr, 32, "%T", gmtime(&m_ppsinfo.assert_timestamp.tv_sec));
-            LOG_INFO(formatString("TICK: PPS_time=%s.%06d UTC", timestr, m_ppsinfo.assert_timestamp.tv_nsec / 1000));
-            
-            /* construct a timer event */
-            timer.sec  = m_ppsinfo.assert_timestamp.tv_sec;
-            timer.usec = m_ppsinfo.assert_timestamp.tv_nsec / 1000;
-            timer.id   = 0;
-            timer.arg  = 0;
+					/* check for missed PPS */
+					if (prevppsinfo.assert_sequence + 1 != m_ppsinfo.assert_sequence) {
+						LOG_WARN_STR("Missed " << m_ppsinfo.assert_sequence - prevppsinfo.assert_sequence - 1 << " PPS events.");
+					}         
 
-            /* check for missed PPS */
-            if (prevppsinfo.assert_sequence + 1 != m_ppsinfo.assert_sequence) {
-              LOG_WARN_STR("Missed " << m_ppsinfo.assert_sequence - prevppsinfo.assert_sequence - 1 << " PPS events.");
-            }         
-          }
-          m_boardPorts[0].setTimer(0.95); // next event in just under 1 second
+					// delay the driver some number of microseconds after it receives the PPS tick
+					// this may be needed to synchronized the driver properly to the hardware
+					if (itsPPSdelay) {
+						usleep(itsPPSdelay);
+						// update values of timer event
+						timer.usec += itsPPSdelay;
+						if (timer.usec >= 1000000) {	// crossing second boundary?
+							timer.sec++;
+							timer.usec -= 1000000;
+						}
+
+						// print time of day, ugly
+						strftime(timestr, 32, "%T", gmtime(&timer.sec));
+						LOG_INFO(formatString("TICK: start=%s.%06d UTC", timestr, timer.usec));
+					}
+				} // fetching PPS
+				m_boardPorts[0].setTimer(0.95); // next event in just under 1 second
 #else
-          m_boardPorts[0].setTimer((long)1); // next event in one (software) second
+				m_boardPorts[0].setTimer((long)1); // next event in one (software) second
 #endif
 
-	  // delay the driver some number of microseconds after it receives the PPS tick
-	  // this may be needed to synchronized the driver properly to the hardware
-	  if (GET_CONFIG("RSPDriver.PPS_DELAY", i) > 0) {
-	    usleep(GET_CONFIG("RSPDriver.PPS_DELAY", i));
-	  }
+				/* run the scheduler with the timer event */
+				status = m_scheduler.run(timer, port);
+				Sequencer::getInstance().run(timer, port);
+			} // syncmode = PPS
+		} // port = boardports[0]
+		else if (&port == &m_acceptor) {
+			// print average number of updates
+			cerr << "Updates per second = " << m_update_counter << endl;
 
-          /* run the scheduler with the timer event */
-          status = m_scheduler.run(timer, port);
-	  Sequencer::getInstance().run(timer, port);
-        }
-      }
-      else if (&port == &m_acceptor) {
-        // print average number of updates
-        cerr << "Updates per second = " << m_update_counter << endl;
+			if (m_update_counter > 0) {
+				m_n_updates += m_update_counter;
+				m_elapsed++;
+				cerr << "Average number of updates per second = " << (double)m_n_updates / m_elapsed << endl;
+			}
 
-        if (m_update_counter > 0) {
-          m_n_updates += m_update_counter;
-          m_elapsed++;
-          
-          cerr << "Average number of updates per second = " << (double)m_n_updates / m_elapsed << endl;
-        }
-        
-        m_update_counter = 0;
-      }
-    }
-    break;
+			m_update_counter = 0;
+		}
+	}
+	break;
 
     case F_DISCONNECTED: {
       LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
