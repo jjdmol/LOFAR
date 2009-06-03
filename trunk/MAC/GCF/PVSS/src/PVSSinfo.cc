@@ -37,10 +37,10 @@ namespace LOFAR {
 
 string 	PVSSinfo::_sysName 		= "";
 string 	PVSSinfo::_projName 	= "";
-int8 	PVSSinfo::_lastSysNr 	= 0;
+uint 	PVSSinfo::_lastSysNr 	= 0;
 timeval PVSSinfo::_lastTimestamp= {0, 0};
-uint8 	PVSSinfo::_lastManNum 	= 0;
-uint8 	PVSSinfo::_lastManType 	= 0;
+uint 	PVSSinfo::_lastManNum 	= 0;
+uint 	PVSSinfo::_lastManType 	= 0;
 
 TMACValueType macValueTypes[] = 
 {
@@ -129,7 +129,7 @@ TMACValueType PVSSinfo::getMACTypeId (const string& dpeName)
 {
 	// first find out whether there is a system name specified or not
 	vector<string> splittedDpeName = StringUtil::split(dpeName, ':');
-	int8 		sysNr = getSysId(dpeName);
+	uint 		sysNr = getSysId(dpeName);
 	if (sysNr == 0) {
 		sysNr = PVSSinfo::getLocalSystemId();
 	}
@@ -161,15 +161,15 @@ const string& PVSSinfo::getLocalSystemName()
 //
 // getLocalSystemId()
 //
-int8 PVSSinfo::getLocalSystemId()
+uint PVSSinfo::getLocalSystemId()
 {
-	return ((int) Resources::getSystem());
+	return((int)Resources::getSystem());
 }
 
 //
 // getSystemName(sysnr)
 //
-const string PVSSinfo::getSystemName(int8 sysnr)
+const string PVSSinfo::getSystemName(uint sysnr)
 {
 	CharString sysName;
 	if (Manager::getSystemName(sysnr, sysName) == PVSS_TRUE) {      
@@ -193,18 +193,18 @@ const string& PVSSinfo::getProjectName()
 //
 // getSysId(name)
 //
-int8 PVSSinfo::getSysId(const string& name)
+uint PVSSinfo::getSysId(const string& name)
 {
 	string::size_type index = name.find(':');
 	if (index == string::npos) {
 		index = name.length();
 	}
 	CharString sysName(name.c_str(), index);
-	int	 sysNr;
+	uint	 sysNr;
 	// workaround - start
 	DpIdentifier dpId;
 	Manager::getId(sysName + ":", dpId);
-	sysNr = dpId.getSystem();
+	sysNr = (int)dpId.getSystem();
 	// workaround - end
 	/*
 	DpIdentificationResult res;
@@ -219,7 +219,7 @@ int8 PVSSinfo::getSysId(const string& name)
 //
 // getOwnManNum()
 //
-uint8 PVSSinfo::getOwnManNum()
+uint PVSSinfo::getOwnManNum()
 {
 	return (Resources::getManNum());
 }
@@ -305,7 +305,7 @@ void buildTypeStructTree(const string path, const DpType* pType, const DpElement
 //
 TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName, 
 								  list<TPropertyInfo>& 	propInfos, 
-								  int8 					sysNr)
+								  uint	 				sysNr)
 {
 	propInfos.clear();
 
@@ -314,8 +314,8 @@ TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName,
 	DpType* 	pType;
 	if (Manager::getTypeId(pvssTypeName, typeId, sysNr) == PVSS_FALSE) {
 		string sysName = getSystemName(sysNr);
-		LOG_ERROR(formatString("PVSS could not find type %s on system %s", 
-								typeName.c_str(), sysName.c_str()));
+		LOG_ERROR(formatString("PVSS could not find type %s on system %s(%d)", 
+								typeName.c_str(), sysName.c_str(), sysNr));
 		return(GCF_PVSS_ERROR);
 	}
 
