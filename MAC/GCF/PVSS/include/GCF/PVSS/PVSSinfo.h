@@ -45,23 +45,23 @@ public:
 	static bool isValidPropName(const char* propName);
 	static bool isValidScope   (const char* propName);
 
-    static const string getSystemName(int8 sysnr);
+    static const string getSystemName(uint sysnr);
     static const string& getLocalSystemName();
-    static int8 getLocalSystemId();
-    static int8 getSysId(const string& name);
-    static int8 getLastEventSysId();
+    static uint getLocalSystemId();
+    static uint getSysId(const string& name);
+    static uint getLastEventSysId();
 
     static const string& getProjectName();
 
     static timeval getLastEventTimestamp();
 
-    static uint8 getLastEventManNum();
-    static uint8 getOwnManNum();
-    static uint8 getLastEventManType();
+    static uint getLastEventManNum();
+    static uint getOwnManNum();
+    static uint getLastEventManType();
 
     static TGCFResult getTypeStruct(const string& 			typeName, 
-                                    list<TPropertyInfo>& 	propInfo, 
-                                    int8 					sysNr = getLocalSystemId());
+									list<TPropertyInfo>& 	propInfo, 
+									uint 					sysNr = getLocalSystemId());
 
     static void getAllProperties(const string& typeFilter, const string& dpFitler, 
                                  vector<string>& foundProperties);
@@ -72,10 +72,10 @@ private:
     friend class PVSSservice;
     static string	_sysName;
     static string	_projName;
-    static int8		_lastSysNr;
+    static uint	_lastSysNr;
     static timeval	_lastTimestamp;
-    static uint8	_lastManNum;
-    static uint8	_lastManType;
+    static uint	_lastManNum;
+    static uint	_lastManType;
   
     // Construction methods
     // Don't allow to (con/de)struct an instance of this class
@@ -90,7 +90,7 @@ private:
     // </group>
 };
 
-inline int8 PVSSinfo::getLastEventSysId()
+inline uint PVSSinfo::getLastEventSysId()
 {
   return _lastSysNr;
 }
@@ -100,12 +100,12 @@ inline timeval PVSSinfo::getLastEventTimestamp()
   return _lastTimestamp;
 }
 
-inline uint8 PVSSinfo::getLastEventManNum()
+inline uint PVSSinfo::getLastEventManNum()
 {
   return _lastManNum;
 }
 
-inline uint8 PVSSinfo::getLastEventManType()
+inline uint PVSSinfo::getLastEventManType()
 {
   return _lastManType;
 }

@@ -274,7 +274,7 @@ string RTDBPropertySet::getFullScope () const
 void RTDBPropertySet::_createAllProperties()
 {
 	// Get ID of this PVSS database
-	int8 sysNr = PVSSinfo::getSysId(itsScope);
+	int sysNr = PVSSinfo::getSysId(itsScope);
 	if (sysNr == 0) {
 		sysNr = PVSSinfo::getLocalSystemId();
 	}

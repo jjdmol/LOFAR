@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/PVSS/src
 
-check_PROGRAMS 		= tPVSSservice tPerformance tPVSSconnect tMonitorState
+check_PROGRAMS 		= tPVSSservice tPerformance tPVSSconnect tMonitorState tPVSSinfo
 
 TESTS				= tPVSSservice 
 
@@ -15,6 +15,10 @@ tPerformance_DEPENDENCIES	= ../src/libgcfpvss.la $(LOFAR_DEPEND)
 tPVSSconnect_SOURCES 		= $(BUILT_SOURCES) tPVSSconnect.cc
 tPVSSconnect_LDADD			=  ../src/libgcfpvss.la $(LOFAR_DEPEND)
 tPVSSconnect_DEPENDENCIES	= ../src/libgcfpvss.la $(LOFAR_DEPEND)
+
+tPVSSinfo_SOURCES 			= $(BUILT_SOURCES) tPVSSinfo.cc Response.cc
+tPVSSinfo_LDADD				=  ../src/libgcfpvss.la $(LOFAR_DEPEND)
+tPVSSinfo_DEPENDENCIES		= ../src/libgcfpvss.la $(LOFAR_DEPEND)
 
 tMonitorState_SOURCES 		= $(BUILT_SOURCES) tMonitorState.cc Response.cc
 tMonitorState_LDADD			=  ../src/libgcfpvss.la $(LOFAR_DEPEND)
