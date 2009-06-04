@@ -25,6 +25,20 @@
 
 # This script is used by rubbuild to do the build for a single variant.
 
+# Determine the md5sum to use if not done yet
+# Some systems have md5 instead of md5sum.
+# Note that on some systems which always returns 0.
+if test "$md5pgm" = ""; then
+  md5pgm=`which md5sum 2>&1 | sed -e 's%^[^/].*%%'`
+fi
+if test "$md5pgm" = ""; then
+  md5pgm=`which md5 2>&1 | sed -e 's%^[^/].*%%'`
+fi
+if test "$md5pgm" = ""; then
+  echo "md5sum nor md5 is found"
+  exit 1
+fi
+
 # Get all arguments.
 srcdir=$1
 shift
@@ -186,18 +200,18 @@ do
   initcmd="cd $blddir"
 
   # Determine new md5sum of files affecting the configure.
-  md5sum $srcdir/autoconf_share/variants > $blddir/conf.md5
+  $md5pgm $srcdir/autoconf_share/variants > $blddir/conf.md5
   lfr_host=`uname -n | sed -e "s%\..*%%"`
   if [ -f $srcdir/autoconf_share/variants.$lfr_host ]; then
-    md5sum $srcdir/autoconf_share/variants.$lfr_host >> $blddir/conf.md5
+    $md5pgm $srcdir/autoconf_share/variants.$lfr_host >> $blddir/conf.md5
   fi
   if [ -f $srcdir/$pkg/boot.md5 ]; then
-    md5sum $srcdir/$pkg/boot.md5 >> $blddir/conf.md5
+    $md5pgm $srcdir/$pkg/boot.md5 >> $blddir/conf.md5
   fi
 
   # Create the various parts of the configure and make commands.
   if [ $conf != 0 ]; then
-    # Each configure is started and ended with a special message which can
+    # Each configure is started and ended with a special message which
     # is used by scanbuildlog.
     # The message is not fully composed here, because:
     #  1. the variant name is not known here.
@@ -205,7 +219,7 @@ do
     # Instead variable confmsg1 is created from confmsgst prior to lofarconf.
     confmsgst=':::::: CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
     confmsgend=':::::: FINISHED CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
-    confcmd="(stat=0; chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; stat="'$?; echo $confmsg2; fi; exit $stat)'" $ksep "
+    confcmd="(stat=0; chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then $md5pgm --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && $md5pgm conf.md5 > conf.md5-check; stat="'$?; echo $confmsg2; fi; exit $stat)'" $ksep "
   fi
   buildmsgst=':::::: BUILDING VARIANT $variant FOR PACKAGE $pkg'
   buildmsgend=':::::: FINISHED BUILDING VARIANT $variant FOR PACKAGE $pkg'
