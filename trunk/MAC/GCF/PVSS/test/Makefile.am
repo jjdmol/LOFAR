@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/PVSS/src
 
 check_PROGRAMS 		= tPVSSservice tPerformance tPVSSconnect tMonitorState tPVSSinfo
 
-TESTS				= tPVSSservice 
+TESTS				= tPVSSservice.sh
 
 tPVSSservice_SOURCES 		= $(BUILT_SOURCES) tPVSSservice.cc Response.cc
 tPVSSservice_LDADD			=  ../src/libgcfpvss.la $(LOFAR_DEPEND)
