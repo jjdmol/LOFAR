@@ -2496,8 +2496,8 @@ static void usage(bool exportMode)
   cout << "                          7 = HB 210-270MHz 0x00078400" << endl;
   cout << "       --rcuprsg[=0]             # turn psrg on (or off)" << endl;
   cout << "       --rcureset[=0]            # hold rcu in reset (or take out of reset)" << endl;
-  cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
-  cout << "       --rcudelay=[0..127]       # set the delay for rcu's (steps of 0.25ns)" << endl;
+  cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation (steps of 0.25dB)" << endl;
+  cout << "       --rcudelay=[0..127]       # set the delay for rcu's (steps of 5ns or 6.25ns)" << endl;
   cout << "       --rcuenable[=0]           # enable (or disable) input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --specinv[=0] [--select=<set>] # enable (or disable) spectral inversion" << endl;
