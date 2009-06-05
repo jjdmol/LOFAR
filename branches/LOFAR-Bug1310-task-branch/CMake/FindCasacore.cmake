@@ -189,6 +189,9 @@ else(NOT CASACORE_INCLUDE_DIR)
     casacore_find_library(casa_${component})
   endforeach(component ${find_components})
 
+  # Skip this part (temporarily), because on bgfen neither lapack nor blas
+  # are installed.
+  if(0)
   # Find required external packages.
   # - scimath_f requires lapack/blas (which depend on gfortran)
   list(FIND find_components scimath_f _found)
@@ -197,6 +200,8 @@ else(NOT CASACORE_INCLUDE_DIR)
       casacore_find_library(${package})
     endforeach(package lapack blas)# gfortran)
   endif(_found GREATER -1)
+  endif(0)
+
   # - all casa components require math library
   casacore_find_library(m)
 endif(NOT CASACORE_INCLUDE_DIR)
