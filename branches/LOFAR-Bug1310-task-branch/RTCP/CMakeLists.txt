@@ -36,25 +36,25 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 
 # Several RTCP tools
-add_subdirectory(RTCPTools)
+lofar_add_subdirectory(RTCPTools)
 
 # Several run scripts to start the RTCP components
-#add_subdirectory(Run)
+#lofar_add_subdirectory(Run)
 
 # Fast Collective Network Protocol; used on BlueGene only.
-add_subdirectory(FCNP)
+lofar_add_subdirectory(FCNP)
 
 # Defines interfaces between the different components within the RTCP product
-add_subdirectory(Interface)
+lofar_add_subdirectory(Interface)
 
 # Compute-Node Processing: application running on the BlueGene compute nodes
-add_subdirectory(CNProc)
+lofar_add_subdirectory(CNProc)
 
 # I/O Node Processing: application running on the BlueGene I/O nodes
-#add_subdirectory(IONProc)
+#lofar_add_subdirectory(IONProc)
 
 # Stores output from the correlator in one or more MeasurmentSet files.
-add_subdirectory(Storage)
+lofar_add_subdirectory(Storage)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

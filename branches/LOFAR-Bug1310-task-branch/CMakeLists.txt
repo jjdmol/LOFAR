@@ -31,16 +31,13 @@ include(LofarInit)
 project(LOFAR)
 include(LofarGeneral)
 
-#find_package(FFTW3)# COMPONENTS single threads)
-#return()
-
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(LCS)
-#add_subdirectory(CEP)
-add_subdirectory(RTCP)
-#add_subdirectory(SAS)
+lofar_add_subdirectory(LCS)
+#lofar_add_subdirectory(CEP)
+lofar_add_subdirectory(RTCP)
+#lofar_add_subdirectory(SAS)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

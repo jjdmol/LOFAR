@@ -22,11 +22,11 @@
 ## Set all the assembler specific variables, like filename suffixes, compile
 ## rules, etc. If necessary you can override the assembler specific variables
 ## by setting them before including the generic file.
-## 
+##
 ## See http://www.vtk.org/Wiki/CMake/Assembler for details.
 ## ---------------------------------------------------------------------------
 set(ASM_DIALECT "-BGP")
-set(CMAKE_ASM${ASM_DIALECT}_SOURCE_FILE_EXTENSIONS S)
-set(CMAKE_ASM${ASM_DIALECT}_COMPILE_OBJECT "<CMAKE_ASM${ASM_DIALECT}_COMPILER> <FLAGS> ${CCASFLAGS} -c -o <OBJECT> <SOURCE>")
+set(CMAKE_ASM${ASM_DIALECT}_SOURCE_FILE_EXTENSIONS s;S;asm)
+set(CMAKE_ASM${ASM_DIALECT}_COMPILE_OBJECT "<CMAKE_ASM${ASM_DIALECT}_COMPILER> <FLAGS> -c -o <OBJECT> <SOURCE>")
 include(CMakeASMInformation)
 set(ASM_DIALECT)

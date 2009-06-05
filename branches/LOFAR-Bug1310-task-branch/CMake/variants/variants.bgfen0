@@ -5,7 +5,7 @@
 ##
 ## $Id: variants.dop131 13362 2009-05-29 15:32:43Z loose $
 
-set(CMAKE_SYSTEM_NAME BlueGeneP)
+#set(CMAKE_SYSTEM_NAME BlueGeneP)
 
 # Define compiler suites.
 set(LOFAR_COMPILER_SUITES
@@ -18,11 +18,15 @@ set(LOFAR_BUILD_VARIANTS
   ION
 )
 
+# Options
+option(USE_MPI "Use MPI" ON)
+option(BUILD_STATIC_EXECUTABLES "Build static executables" ON)
+
 # GNU BG/P compiler suite
-set(GNUBGP_COMPILERS GNUBGP_C GNUBGP_CXX)# GNUBGP_ASM)
+set(GNUBGP_COMPILERS GNUBGP_C GNUBGP_CXX GNUBGP_ASM)
 set(GNUBGP_C         /usr/bin/gcc)
 set(GNUBGP_CXX       /usr/bin/g++)
-#set(GNUBGP_ASM       /usr/bin/as)
+set(GNUBGP_ASM       /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc)
 
 set(GNUBGP_C_FLAGS)
 set(GNUBGP_C_FLAGS_DEBUG "-g")
@@ -31,12 +35,21 @@ set(GNUBGP_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
 set(GNUBGP_CXX_FLAGS_DEBUG "-g")
 set(GNUBGP_CXX_FLAGS_OPT "-g -O2")
 set(GNUBGP_EXE_LINKER_FLAGS)
+#  -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin)
 set(GNUBGP_EXE_LINKER_FLAGS_CN)
+#  -L/bgsys/drivers/ppcfloor/comm/lib
+#  -L/bgsys/drivers/ppcfloor/runtime/SPI)
+#  -lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lSPI.cna)
+# -lpthread -lrt -lSPI.cna -lm)
 set(GNUBGP_EXE_LINKER_FLAGS_ION)
 set(GNUBGP_COMPILE_DEFINITIONS 
   -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin
   -DHAVE_BGP
+  -DHAVE_MPI
   -I/bgsys/drivers/ppcfloor/comm/include
   -I/bgsys/drivers/ppcfloor/arch/include)
 set(GNUBGP_COMPILE_DEFINITIONS_CN -DHAVE_BGP_CN)
 set(GNUBGP_COMPILE_DEFINITIONS_ION -DHAVE_BGP_ION)
+
+# Host specific paths to third party packages
+set(CASACORE_ROOT_DIR /cephome/romein/packages/casacore-0.3.0/stage)

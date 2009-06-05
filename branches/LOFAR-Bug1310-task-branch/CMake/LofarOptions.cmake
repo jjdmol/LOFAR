@@ -76,6 +76,10 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     lofar_find_package(Log4Cplus)
   endif(USE_LOG4CPLUS)
 
+  if(USE_MPI)
+    lofar_find_package(MPI)
+  endif(USE_MPI)
+  
   if(USE_PYTHON)
 #    lofar_find_package(Python)
   endif(USE_PYTHON)

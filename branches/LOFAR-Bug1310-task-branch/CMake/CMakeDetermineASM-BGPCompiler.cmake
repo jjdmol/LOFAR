@@ -25,6 +25,6 @@
 ## See http://www.vtk.org/Wiki/CMake/Assembler for details
 ## ---------------------------------------------------------------------------
 set(ASM_DIALECT "-BGP")
-set(CMAKE_ASM${ASM_DIALECT}_COMPILER_INIT ${CCAS})
+set(CMAKE_ASM${ASM_DIALECT}_COMPILER_INIT ${CMAKE_ASM_COMPILER})
 include(CMakeDetermineASMCompiler)
 set(ASM_DIALECT)

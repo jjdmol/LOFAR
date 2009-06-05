@@ -34,8 +34,8 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(AMCBase)
-add_subdirectory(AMCImpl)
+lofar_add_subdirectory(AMCBase)
+lofar_add_subdirectory(AMCImpl)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

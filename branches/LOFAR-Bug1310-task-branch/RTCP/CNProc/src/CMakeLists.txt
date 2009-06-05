@@ -55,7 +55,7 @@ endif(CMAKE_ASM-BGP_COMPILER_WORKS)
 lofar_add_library(cnproc ${cnproc_LIB_SRCS})
 
 message(STATUS "ASM-BGP = ${ASM-BGP}")
-message(STATUS "CMAKE_LINKER = ${CMAKE_LINKER}")
+message(STATUS "CMAKE_ASM-BGP_COMPILER = ${CMAKE_ASM-BGP_COMPILER}")
 message(STATUS "CMAKE_ASM-BGP_LINK_EXECUTABLE = ${CMAKE_ASM-BGP_LINK_EXECUTABLE}")
 
 lofar_add_executable(CN_Processing CN_Processing_main.cc)

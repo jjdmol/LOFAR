@@ -34,8 +34,8 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(ALC)
-add_subdirectory(PLC)
+lofar_add_subdirectory(ALC)
+lofar_add_subdirectory(PLC)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

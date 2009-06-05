@@ -111,8 +111,8 @@
 /* Define if AIPS++ is installed */
 #cmakedefine HAVE_AIPSPP
 
-/* Define if FFTW is installed */
-#cmakedefine HAVE_FFTW
+/* Define if FFTW2 is installed */
+#cmakedefine HAVE_FFTW2
 
 /* Define if FFTW3 is installed */
 #cmakedefine HAVE_FFTW3
