@@ -51,10 +51,7 @@ StatUVW::StatUVW(const Station &station, const casa::MPosition &arrayRef,
         itsPhaseRef(phaseRef),
         itsLastReqId(InitRequestId)
 {
-    itsU.reset(new ExprResult());
-    itsV.reset(new ExprResult());
-    itsW.reset(new ExprResult());
-}    
+}
 
 StatUVW::~StatUVW()
 {
@@ -70,17 +67,12 @@ void StatUVW::calculate(const Request &request) const
     double *v = Vm.setDoubleFormat(1, nTime);
     double *w = Wm.setDoubleFormat(1, nTime);
 
-    ValueSet::Ptr Ut(new ValueSet());
-    ValueSet::Ptr Vt(new ValueSet());
-    ValueSet::Ptr Wt(new ValueSet());
-
-    Ut->assign(Um);
-    Vt->assign(Vm);
-    Wt->assign(Wm);
-    
-    itsU->setValue(Ut);
-    itsV->setValue(Vt);
-    itsW->setValue(Wt);
+    itsU = ExprValueSet((Shape()));
+    itsU.assign(Um);
+    itsV = ExprValueSet((Shape()));
+    itsV.assign(Vm);
+    itsW = ExprValueSet((Shape()));
+    itsW.assign(Wm);
 
     // Use cached UVW coordinates if available.
     const Grid &reqGrid = request.getGrid();
@@ -103,6 +95,7 @@ void StatUVW::calculate(const Request &request) const
     // If all done then return.
     if(nDone == nTime)
     {
+        itsLastReqId = request.getId();
         return;
     }
 

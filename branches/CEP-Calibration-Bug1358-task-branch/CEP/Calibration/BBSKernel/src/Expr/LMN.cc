@@ -31,35 +31,36 @@ namespace BBS
 {
 
 LMN::LMN(const PhaseRef::ConstPointer &ref)
-    :   ExprStatic<LMN::N_Inputs>(),
+    :   ExprStatic<LMN::N_Arguments>(),
         itsRef(ref)
 {
 }
 
-ValueSet::ConstPtr LMN::evaluateImpl(const Request &request,
-    const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const
+Shape LMN::shape(const ExprValueSet (&arguments)[LMN::N_Arguments]) const
 {
-    ValueSet::ConstPtr position = inputs[POSITION];
+    DBGASSERT(arguments[0].shape() == Shape(2));
+    return Shape(3);
+}
 
+void LMN::evaluateImpl(const Request&,
+    const ExprValue (&arguments)[LMN::N_Arguments], ExprValue &result) const
+{
 //    cout << "REF: " << itsRef->getRa() << " " << itsRef->getDec() << endl;
 //    cout << "SOURCE: " << ra->value()(0, 0) << " " << dec->value()(0, 0) << endl;
-    
-    Matrix cosDec(cos(position->value(1)));
-    Matrix deltaRa(position->value(0) - itsRef->getRa());
 
-    ValueSet::Ptr result(new ValueSet(3));
-    result->assign(0, cosDec * sin(deltaRa));
-    result->assign(1, sin(position->value(1)) * itsRef->getCosDec() - cosDec
+    Matrix cosDec(cos(arguments[POSITION](1)));
+    Matrix deltaRa(arguments[POSITION](0) - itsRef->getRa());
+
+//    ValueSet::Ptr result(new ValueSet(3));
+    result.assign(0, cosDec * sin(deltaRa));
+    result.assign(1, sin(arguments[POSITION](1)) * itsRef->getCosDec() - cosDec
         * itsRef->getSinDec() * cos(deltaRa));
-    Matrix n = 1.0 - sqr(result->value(0)) - sqr(result->value(1));
+    Matrix n = 1.0 - sqr(result(0)) - sqr(result(1));
     ASSERT(min(n).getDouble() >= 0.0);
 
-    result->assign(2, sqrt(n));
+    result.assign(2, sqrt(n));
 
-//    cout << "LMN: " << result->value(0)(0, 0) << " " << result->value(1)(0, 0)
-//        << " " << result->value(2)(0, 0) << endl;
-        
-    return result;
+//    LOG_DEBUG_STR("LMN: " << result(0) << " " << result(1) << " " << result(2));
 }
 
 } // namespace BBS

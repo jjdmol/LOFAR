@@ -44,12 +44,11 @@ public:
     typedef shared_ptr<MatrixSum>       Ptr;
     typedef shared_ptr<const MatrixSum> ConstPtr;
 
-    MatrixSum();
-
 private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const vector<ValueSet::ConstPtr> &inputs) const;
+    virtual Shape shape(const vector<ExprValueSet> &arguments) const;
+
+    virtual void evaluateImpl(const Request &request,
+        const vector<ExprValue> &arguments, ExprValue &result) const;
 };
 
 // @}

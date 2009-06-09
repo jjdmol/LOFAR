@@ -38,26 +38,26 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class PhaseShift: public ExprStatic<2>
-{
-public:
-    typedef shared_ptr<PhaseShift>          Ptr;
-    typedef shared_ptr<const PhaseShift>    ConstPtr;
+//class PhaseShift: public ExprStatic<2>
+//{
+//public:
+//    typedef shared_ptr<PhaseShift>          Ptr;
+//    typedef shared_ptr<const PhaseShift>    ConstPtr;
 
-    enum Inputs
-    {
-        UVW,
-        LMN,
-        N_Inputs
-    };
-    
-    PhaseShift();
+//    enum Inputs
+//    {
+//        UVW,
+//        LMN,
+//        N_Inputs
+//    };
 
-private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
-};
+//    PhaseShift();
+
+//private:
+//    // Compute a result for the given request.
+//    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
+//        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
+//};
 
 class PhaseShiftOld: public ExprStatic<2>
 {
@@ -65,19 +65,20 @@ public:
     typedef shared_ptr<PhaseShiftOld>       Ptr;
     typedef shared_ptr<const PhaseShiftOld> ConstPtr;
 
-    enum Inputs
+    enum Arguments
     {
         LHS,
         RHS,
-        N_Inputs
+        N_Arguments
     };
 
-    PhaseShiftOld();
-
 private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[PhaseShiftOld::N_Inputs]) const;
+    virtual Shape shape
+        (const ExprValueSet (&arguments)[PhaseShiftOld::N_Arguments]) const;
+
+    virtual void evaluateImpl(const Request &request,
+        const ExprValue (&arguments)[PhaseShiftOld::N_Arguments],
+        ExprValue &result) const;
 };
 
 // @}

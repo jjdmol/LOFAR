@@ -43,22 +43,19 @@ public:
     typedef shared_ptr<PointCoherence>          Ptr;
     typedef shared_ptr<const PointCoherence>    ConstPtr;
 
-    enum Inputs
+    enum Arguments
     {
-        STOKES_VECTOR,
-        N_Inputs
+        STOKES,
+        N_Arguments
     };
 
-    PointCoherence();
+private:
+    virtual Shape shape
+        (const ExprValueSet (&arguments)[PointCoherence::N_Arguments]) const;
 
-//    // Compute a result for the given request.
-//    virtual ResultType::ConstPtr evaluateImpl(const Request &request,
-//        const PValueKey &key, bool perturbed) const;
-
-protected:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[PointCoherence::N_Inputs]) const;
+    virtual void evaluateImpl(const Request &request,
+        const ExprValue (&arguments)[PointCoherence::N_Arguments],
+        ExprValue &result) const;
 };
 
 // @}

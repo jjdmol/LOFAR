@@ -27,105 +27,10 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-NodeId Expr::theirId = 0;
+ExprId Expr::theirId = 0;
 
-//ARRAY(flag_t) ExprBase::evaluateFlags(const Request &request,
-//    const vector<ConstResultPtr> &inputs) const
-//{
-//    ARRAY(flag_t) flags;
-
-//    vector<ConstResultPtr>::const_iterator inputIt = inputs.begin();
-//    while(inputIt != inputs.end())
-//    {
-//        if((*inputIt)->hasFlags())
-//        {
-//            flags = (*inputIt)->getFlags();
-//        }
-//        ++inputIt;
-//    }
-//    
-//    while(inputIt != inputs.end())
-//    {
-//        if((*inputIt)->hasFlags())
-//        {
-//            flags |= (*inputIt)->getFlags();
-//        }
-//        ++inputIt;
-//    }
-//    
-//    return flags;
-//}
-
-//ExprBase::ConstResultPtr ExprBase::evaluateBase(const Request &request,
-//    const PValueKey &key, bool perturbed, Cache &cache) const
-//{
-////    ASSERT(perturbed == key.valid());
-//    
-//    if(!perturbed || itsSolvables.find(key) == itsSolvables.end())
-//    {
-//        // Have to return main value.
-//        // Check if there is a cached result available for this request.
-//        ConstResultPtr cached = cache.query(getId(), request.getId(),
-//            PValueKey());
-
-//        if(cached)
-//        {
-////            if(perturbed)
-////            {
-////                LOG_DEBUG("Using cached main value for perturbed value.");
-////            }
-////            
-//            return cached;
-//        }
-//    }
-//    else
-//    {
-//        // Have to return perturbed value.
-//        // Check if there is a cached result available for this request.
-//        ConstResultPtr cached = cache.query(getId(), request.getId(), key);
-
-//        if(cached)
-//        {
-////            LOG_DEBUG("Found cached perturbed value.");
-//            return cached;
-//        }
-//    }
-//        
-//    // TODO: Check for NULL inputs.
-//    vector<ConstResultPtr> inputs(itsInputs.size());
-//    for(size_t i = 0; i < itsInputs.size(); ++i)
-//    {
-//        inputs[i] = itsInputs[i]->evaluateBase(request, key, perturbed, cache);
-//    }
-
-//    // TODO: Should we need the flags during processing, we can compute
-//    // then beforehand and pass them to evaluateImpl().
-//    ResultPtr result = const_pointer_cast<ExprResult>(evaluateImpl(request, inputs));
-//    result->setFlags(evaluateFlags(request, inputs));
-//    
-//    if(!perturbed && itsConsumerCount > 1)
-//    {
-//        cache.insert(getId(), request.getId(), PValueKey(), result);
-//    }
-//    else if(itsConsumerCount > 1)
-//    {
-////        LOG_DEBUG_STR("Consumer count: " << itsConsumerCount);
-////        if(perturbed)
-////        {
-//        cache.insert(getId(), request.getId(), key, result);
-////        }
-////        else
-////        {
-////        }
-//    }        
-//    
-//    // No cached result, so compute the value and store it in the buffer
-//    // that was passed in.
-//    return result;
-//}
-    
 } //# namespace BBS
 } //# namespace LOFAR

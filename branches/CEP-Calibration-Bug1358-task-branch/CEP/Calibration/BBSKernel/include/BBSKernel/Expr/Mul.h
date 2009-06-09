@@ -43,19 +43,20 @@ public:
     typedef shared_ptr<Mul>         Ptr;
     typedef shared_ptr<const Mul>   ConstPtr;
 
-    enum Inputs
+    enum Arguments
     {
         LHS,
         RHS,
-        N_Inputs
+        N_Arguments
     };
-    
-    Mul();
 
 private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[Mul::N_Inputs]) const;
+    virtual Shape shape(const ExprValueSet (&arguments)[Mul::N_Arguments])
+        const;
+
+    virtual void evaluateImpl(const Request &request,
+        const ExprValue (&arguments)[Mul::N_Arguments], ExprValue &result)
+        const;
 };
 
 // @}

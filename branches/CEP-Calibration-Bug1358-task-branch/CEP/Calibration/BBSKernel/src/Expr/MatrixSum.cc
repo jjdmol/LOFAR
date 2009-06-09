@@ -30,20 +30,26 @@ namespace LOFAR
 namespace BBS
 {
 
-MatrixSum::MatrixSum()
-    : ExprDynamic()
+Shape MatrixSum::shape(const vector<ExprValueSet> &arguments) const
 {
-}    
+#ifdef LOFAR_DEBUG
+    for(unsigned int i = 0; i < arguments.size(); ++i)
+    {
+        DBGASSERT(arguments[i].shape() == Shape(2, 2));
+    }
+#endif
 
-ValueSet::ConstPtr MatrixSum::evaluateImpl(const Request &request,
-    const vector<ValueSet::ConstPtr> &inputs) const
+    return Shape(2, 2);
+}
+
+void MatrixSum::evaluateImpl(const Request &request,
+        const vector<ExprValue> &arguments, ExprValue &result) const
 {
-    ASSERT(inputs.size() > 0);
-    ASSERT(inputs[0]->rank() == 2 && inputs[0]->size() == 4);
+    ASSERT(arguments.size() > 0);
 
     int nx = request[FREQ]->size();
     int ny = request[TIME]->size();
-    
+
     Matrix el00(makedcomplex(0,0), nx, ny);
     Matrix el01(makedcomplex(0,0), nx, ny);
     Matrix el10(makedcomplex(0,0), nx, ny);
@@ -55,22 +61,18 @@ ValueSet::ConstPtr MatrixSum::evaluateImpl(const Request &request,
 //    Matrix el11 = inputs[0]->value(1, 1).clone();
 
 //    for(size_t i = 1; i < inputs.size(); ++i)
-    for(size_t i = 0; i < inputs.size(); ++i)
+    for(size_t i = 0; i < arguments.size(); ++i)
     {
-        ASSERT(inputs[i]->rank() == 2 && inputs[i]->size() == 4);
-        el00 += inputs[i]->value(0, 0);
-        el01 += inputs[i]->value(0, 1);
-        el10 += inputs[i]->value(1, 0);
-        el11 += inputs[i]->value(1, 1);
+        el00 += arguments[i](0, 0);
+        el01 += arguments[i](0, 1);
+        el10 += arguments[i](1, 0);
+        el11 += arguments[i](1, 1);
     }
-    
-    ValueSet::Ptr result(new ValueSet(2, 2));
-    result->assign(0, 0, el00);
-    result->assign(1, 0, el01);
-    result->assign(0, 1, el10);
-    result->assign(1, 1, el11);
 
-    return result;
+    result.assign(0, 0, el00);
+    result.assign(1, 0, el01);
+    result.assign(0, 1, el10);
+    result.assign(1, 1, el11);
 }
 
 } // namespace BBS

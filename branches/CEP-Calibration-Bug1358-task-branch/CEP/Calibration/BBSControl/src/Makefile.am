@@ -1,4 +1,5 @@
 #	GlobalSolveController.cc
+#	LocalSolveController.cc
 
 lib_LTLIBRARIES			= libbbscontrol.la
 
@@ -15,7 +16,6 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	InitializeCommand.cc \
 	KernelConnection.cc \
 	KernelProcessControl.cc \
-	LocalSolveController.cc \
 	Messages.cc \
 	MultiStep.cc \
 	NextChunkCommand.cc \

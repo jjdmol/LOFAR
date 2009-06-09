@@ -58,11 +58,11 @@ public:
 
     void calculate(const Request &request) const;
 
-    ExprResult::ConstPtr getU(const Request &request) const
+    const ExprValueSet getU(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsU; }
-    ExprResult::ConstPtr getV(const Request &request) const
+    const ExprValueSet getV(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsV; }
-    ExprResult::ConstPtr getW(const Request &request) const
+    const ExprValueSet getW(const Request &request) const
     { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
 
     const string &getName() const
@@ -98,9 +98,9 @@ private:
     PhaseRef::ConstPointer   itsPhaseRef;
     mutable map<Time, Uvw>   itsUvwCache;
 
-    mutable ExprResult::Ptr itsU;
-    mutable ExprResult::Ptr itsV;
-    mutable ExprResult::Ptr itsW;
+    mutable ExprValueSet    itsU;
+    mutable ExprValueSet    itsV;
+    mutable ExprValueSet    itsW;
     mutable RequestId       itsLastReqId;
 };
 

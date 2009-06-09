@@ -42,14 +42,14 @@ public:
     RefCountable();
     explicit RefCountable(const RefCountable &other);
     ~RefCountable();
-    
+
     void upRefCount() const;
     unsigned int downRefCount() const;
     unsigned int getRefCount() const;
 
 private:
     RefCountable &operator=(const RefCountable &other);
-    
+
     mutable unsigned int    itsRefCount;
 };
 
@@ -63,7 +63,9 @@ public:
 
     RefCounted(const RefCounted &other);
     RefCounted &operator=(const RefCounted &rhs);
-    
+
+    void reset(T_IMPL *impl);
+
     unsigned int getRefCount() const;
     bool initialized() const;
 
@@ -84,7 +86,7 @@ private:
 inline RefCountable::RefCountable()
     : itsRefCount(0)
 {
-    LOG_DEBUG("RefCountable()");
+//    LOG_DEBUG("RefCountable()");
 }
 
 inline RefCountable::RefCountable(const RefCountable&)
@@ -97,7 +99,7 @@ inline RefCountable::RefCountable(const RefCountable&)
 
 inline RefCountable::~RefCountable()
 {
-    LOG_DEBUG("RefCountable destructor");
+//    LOG_DEBUG("RefCountable destructor");
     ASSERT(itsRefCount == 0);
 }
 
@@ -137,13 +139,13 @@ inline RefCounted<T_IMPL>::RefCounted(T_IMPL *impl)
 template <typename T_IMPL>
 inline RefCounted<T_IMPL>::RefCounted(const RefCounted &other)
 {
-    cout << "RefCounted copy constructor" << endl;
+//    cout << "RefCounted copy constructor" << endl;
 
     itsImpl = other.itsImpl;
     if(itsImpl)
     {
         itsImpl->upRefCount();
-    }    
+    }
 }
 
 template <typename T_IMPL>
@@ -167,15 +169,33 @@ inline RefCounted<T_IMPL> &RefCounted<T_IMPL>::operator=
         {
             delete itsImpl;
         }
-        
+
         itsImpl = rhs.itsImpl;
         if(itsImpl)
         {
             itsImpl->upRefCount();
         }
     }
-    
+
     return *this;
+}
+
+template <typename T_IMPL>
+inline void RefCounted<T_IMPL>::reset(T_IMPL *impl)
+{
+    if(itsImpl != impl)
+    {
+        if(itsImpl && itsImpl->downRefCount() == 0)
+        {
+            delete itsImpl;
+        }
+
+        itsImpl = impl;
+        if(itsImpl)
+        {
+            itsImpl->upRefCount();
+        }
+    }
 }
 
 template <typename T_IMPL>
@@ -183,7 +203,7 @@ inline bool RefCounted<T_IMPL>::initialized() const
 {
     return itsImpl != 0;
 }
-    
+
 template <typename T_IMPL>
 inline unsigned int RefCounted<T_IMPL>::getRefCount() const
 {
@@ -193,12 +213,14 @@ inline unsigned int RefCounted<T_IMPL>::getRefCount() const
 template <typename T_IMPL>
 inline T_IMPL &RefCounted<T_IMPL>::instance()
 {
+    DBGASSERT(initialized());
     return *itsImpl;
 }
 
 template <typename T_IMPL>
 inline const T_IMPL &RefCounted<T_IMPL>::instance() const
 {
+    DBGASSERT(initialized());
     return *itsImpl;
 }
 

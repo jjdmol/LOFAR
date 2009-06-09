@@ -30,9 +30,12 @@ pkginclude_Exprdir = $(pkgincludedir)/Expr
 #	Expr/PointSource.h \
 #	Expr/Source.h
 
+#	Expr/MatrixMul3.h \
+#	Expr/UVW.h
+#	Equator.h
+
 pkginclude_HEADERS = Package__Version.h \
 	BlobIOExtensions.h \
-	Equator.h \
 	Evaluator.h \
 	Exceptions.h \
 	Instrument.h \
@@ -53,7 +56,6 @@ pkginclude_HEADERS = Package__Version.h \
 pkginclude_Expr_HEADERS	= 	\
 	Expr/Cache.h \
 	Expr/DFTPS.h \
-	Expr/StatUVW.h \
 	Expr/Expr.h \
 	Expr/ExprParm.h \
 	Expr/ExprResult.h \
@@ -62,20 +64,19 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Matrix.h \
 	Expr/MatrixComplexArr.h \
 	Expr/MatrixComplexSca.h \
-	Expr/MatrixMul3.h \
 	Expr/MatrixRealArr.h \
 	Expr/MatrixRealSca.h \
 	Expr/MatrixRep.h \
 	Expr/MatrixTmp.h \
-	Expr/MatrixSum.h \
-	Expr/Mul.h \
 	Expr/PhaseRef.h \
-	Expr/PhaseShift.h \
-	Expr/PointCoherence.h \
 	Expr/PointSource.h \
     Expr/RefCounting.h \
 	Expr/Request.h \
 	Expr/Source.h \
-	Expr/UVW.h
-    
+	Expr/StatUVW.h \
+	Expr/MatrixSum.h \
+	Expr/Mul.h \
+	Expr/PhaseShift.h \
+	Expr/PointCoherence.h
+
 include $(top_srcdir)/Makefile.common

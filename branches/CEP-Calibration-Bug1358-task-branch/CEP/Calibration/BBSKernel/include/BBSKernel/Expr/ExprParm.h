@@ -38,37 +38,25 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class ExprParm: public ExprTerminus
+class ExprParm: public Expr
 {
 public:
     typedef shared_ptr<ExprParm>        Ptr;
     typedef shared_ptr<const ExprParm>  ConstPtr;
 
     ExprParm(const ParmProxy::ConstPointer &parm);
-    
+
     void setPValueFlag();
     bool getPValueFlag() const
     { return itsPValueFlag; }
     void clearPValueFlag();
-    
-    real_t getPerturbation(uint index) const
-    {
-        return itsParm->getPerturbation(index);
-    }
-
-protected:
-    virtual void updateSolvables(set<PValueKey> &solvables) const;
 
 private:
-    ExprParm(const ExprParm &other);
-    ExprParm &operator=(const ExprParm &other);
+    virtual void updateSolvables(set<PValueKey> &solvables) const;
 
-    // Compute a result for the given request.
-    virtual ExprResult::ConstPtr evaluate(const Request &request, Cache &cache,
-        const PValueKey &key = PValueKey()) const;
+    virtual const ExprValueSet evaluate(const Request &request, Cache &cache)
+        const;
 
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
-    
     ParmProxy::ConstPointer itsParm;
     bool                    itsPValueFlag;
 };

@@ -31,32 +31,24 @@ namespace LOFAR
 namespace BBS
 {
 
-Mul::Mul()
-    :   ExprStatic<Mul::N_Inputs>()
+Shape Mul::shape(const ExprValueSet (&arguments)[Mul::N_Arguments])
+    const
 {
-}    
+    DBGASSERT(arguments[LHS].shape() == Shape()
+        && arguments[RHS].shape() == Shape(2, 2));
+    return Shape(2, 2);
+}
 
+void Mul::evaluateImpl(const Request &request,
+    const ExprValue (&arguments)[Mul::N_Arguments], ExprValue &result) const
+{
+    result.assign(0, 0, arguments[LHS]() * arguments[RHS](0, 0));
+    result.assign(0, 1, arguments[LHS]() * arguments[RHS](0, 1));
+    result.assign(1, 0, arguments[LHS]() * arguments[RHS](1, 0));
+    result.assign(1, 1, arguments[LHS]() * arguments[RHS](1, 1));
 
-ValueSet::ConstPtr Mul::evaluateImpl(const Request &request,
-    const ValueSet::ConstPtr (&inputs)[Mul::N_Inputs]) const
-{    
-    ValueSet::ConstPtr lhs = inputs[LHS];
-    ValueSet::ConstPtr rhs = inputs[RHS];
-    
-    // TODO: generalize this.
-    ASSERT(lhs->rank() == 0 && lhs->size() == 1);
-    ASSERT(rhs->rank() == 2 && rhs->shape(0) == 2 && rhs->shape(1) == 2);
-
-    ValueSet::Ptr result(new ValueSet(2, 2));
-    result->assign(0, 0, lhs->value() * rhs->value(0, 0));
-    result->assign(1, 0, lhs->value() * rhs->value(1, 0));
-    result->assign(0, 1, lhs->value() * rhs->value(0, 1));
-    result->assign(1, 1, lhs->value() * rhs->value(1, 1));
-
-//    cout << "LHS: " << lhs->value()(0, 0) << endl;
-//    cout << "RHS: " << rhs->value(0, 0)(0, 0) << endl;
-
-    return result;
+//    LOG_DEBUG_STR("LHS: " << arguments[LHS]().getDComplex());
+//    LOG_DEBUG_STR("RHS: " << arguments[RHS](0, 0).getDComplex() << arguments[RHS](0, 1).getDComplex() << arguments[RHS](1, 0).getDComplex() << arguments[RHS](1, 1).getDComplex());
 }
 
 } // namespace BBS

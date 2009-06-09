@@ -1,4 +1,4 @@
-//# DFTPS.cc: Station part of baseline phase shift. 
+//# DFTPS.cc: Station part of baseline phase shift.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -41,13 +41,19 @@ namespace BBS
 {
 
 DFTPS::DFTPS(const StatUVW::ConstPointer &uvw)
-    : ExprStatic<DFTPS::N_Inputs>(),
+    : ExprStatic<DFTPS::N_Arguments>(),
       itsUVW(uvw)
 {
 }
 
-ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
-    const ValueSet::ConstPtr (&inputs)[DFTPS::N_Inputs]) const
+Shape DFTPS::shape(const ExprValueSet (&arguments)[DFTPS::N_Arguments]) const
+{
+    DBGASSERT(arguments[0].shape() == Shape(3));
+    return Shape(2);
+}
+
+void DFTPS::evaluateImpl(const Request &request,
+    const ExprValue (&arguments)[DFTPS::N_Arguments], ExprValue &result) const
 {
     // It is assumed that the channels are regularly spaced, i.e. the channel
     // frequency can be written as f0 + k * df where f0 is the frequency of
@@ -57,23 +63,23 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
     // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
     //
     // shift = exp(i * 2.0 * pi * (u . l) * (f0 + k * df) / c)
-    //       = exp(i * (2.0 * pi / c) * (u . l) * f0) 
+    //       = exp(i * (2.0 * pi / c) * (u . l) * f0)
     //         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
     //
     // The StationShift node only computes the two exponential terms.
     // Computing the phase shift for each channel is performed by the node that
     // computes the phase shift for a baseline (by combining the result of two
     // StationShift nodes).
-    
+
     // Check precondition (frequency axis must be regular).
     const Grid &reqGrid = request.getGrid();
     ASSERT(dynamic_cast<RegularAxis*>(reqGrid[FREQ].get()) != 0);
 
     // Allocate the result.
-    ValueSet::Ptr result(new ValueSet(2));
+//    ValueSet::Ptr result(new ValueSet(2));
 //    ResultVec resultVec(2);
     bool calcDelta = request[FREQ]->size() > 1;
-    
+
     // Calculate 2.0 * pi / lambda0, where lambda0 = c / f0.
     double df = reqGrid[FREQ]->width(0);
     double f0 = reqGrid[FREQ]->center(0);
@@ -81,18 +87,17 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
     Matrix dwavel(df / f0);
 
     // Get the UVW coordinates.
-    ExprResult::ConstPtr resU = itsUVW->getU(request);
-    ExprResult::ConstPtr resV = itsUVW->getV(request);
-    ExprResult::ConstPtr resW = itsUVW->getW(request);
-    const Matrix &u = resU->getValue()->value();
-    const Matrix &v = resV->getValue()->value();
-    const Matrix &w = resW->getValue()->value();
+    const ExprValueSet resU = itsUVW->getU(request);
+    const ExprValueSet resV = itsUVW->getV(request);
+    const ExprValueSet resW = itsUVW->getW(request);
+    const Matrix &u = resU();
+    const Matrix &v = resV();
+    const Matrix &w = resW();
 
     // Calculate the DFT contribution for this (station, direction) combination.
-    ValueSet::ConstPtr lmn = inputs[LMN];
-    const Matrix &l = lmn->value(0);
-    const Matrix &m = lmn->value(1);
-    const Matrix &n = lmn->value(2);
+    const Matrix &l = arguments[LMN](0);
+    const Matrix &m = arguments[LMN](1);
+    const Matrix &n = arguments[LMN](2);
 
     // Note that both UVW and LMN are required to either scalar or variable in
     // time.
@@ -100,13 +105,14 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
     ASSERT(l.nx() == 1 && m.nx() == 1 && n.nx() == 1);
 
     Matrix phase0 = (u * l + v * m + w * (n - 1.0)) * wavel0;
-    result->assign(0, tocomplex(cos(phase0), sin(phase0)));
+    result.assign(0, tocomplex(cos(phase0), sin(phase0)));
+
 //    resultVec[0].setValue(tocomplex(cos(phase0), sin(phase0)));
-    
+
     if(calcDelta)
     {
         phase0 *= dwavel;
-        result->assign(1, tocomplex(cos(phase0), sin(phase0)));
+        result.assign(1, tocomplex(cos(phase0), sin(phase0)));
 //        resultVec[1].setValue(tocomplex(cos(phase0), sin(phase0)));
     }
 
@@ -115,11 +121,11 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
 //    {
 //        PV_U, PV_V, PV_W, PV_L, PV_M, PV_N, N_PValues
 //    };
-//    
+//
 //    const Result *pvSet[N_PValues] =
 //        {&resU, &resV, &resW, &resL, &resM, &resN};
 //    PValueSetIterator<N_PValues> pvIter(pvSet);
-//    
+//
 //    while(!pvIter.atEnd())
 //    {
 //        const Matrix &pvU = pvIter.value(PV_U);
@@ -128,11 +134,11 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
 //        const Matrix &pvL = pvIter.value(PV_L);
 //        const Matrix &pvM = pvIter.value(PV_M);
 //        const Matrix &pvN = pvIter.value(PV_N);
-//            
+//
 //        phase0 = (pvU * pvL + pvV * pvM + pvW * (pvN - 1.0)) * wavel0;
 //        resultVec[0].setPerturbedValue(pvIter.key(), tocomplex(cos(phase0),
 //            sin(phase0)));
-//            
+//
 //        if(calcDelta)
 //        {
 //            phase0 *= dwavel;
@@ -143,7 +149,7 @@ ValueSet::ConstPtr DFTPS::evaluateImpl(const Request &request,
 //        pvIter.next();
 //    }
 
-    return result;
+//    return result;
 }
 
 

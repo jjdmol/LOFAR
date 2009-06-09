@@ -81,6 +81,8 @@ public:
     Model(const Instrument &instrument, const SourceDB &sourceDb,
         const casa::MDirection &phaseRef);
 
+    ~Model();
+
     void clearExpressions();
 
     void makeFwdExpressions(const ModelConfig &config,
@@ -89,11 +91,11 @@ public:
 //    bool makeInvExpressions(const ModelConfig &config,
 //        const VisData::Pointer &chunk, const vector<baseline_t> &baselines);
 
-    void setPerturbedParms(const ParmGroup &solvables);
-    void clearPerturbedParms();
+//    void setPerturbedParms(const ParmGroup &solvables);
+//    void clearPerturbedParms();
 
-    ParmGroup getParms() const;
-    ParmGroup getPerturbedParms() const;
+//    ParmGroup getParms() const;
+//    ParmGroup getPerturbedParms() const;
 
 //    void precalculate(const Request &request);
 //    JonesResult evaluate(const baseline_t &baseline, const Request &request);
@@ -101,9 +103,9 @@ public:
 //    void setRequest(const Request &request);
     void setRequestGrid(const Grid &grid);
 
-    ExprResult::ConstPtr evaluate(const baseline_t &baseline);
-    map<PValueKey, ExprResult::ConstPtr>
-        evalPerturbed(const baseline_t &baseline);
+    const ExprValueSet evaluate(const baseline_t &baseline);
+//    map<PValueKey, ExprResult::ConstPtr>
+//        evalPerturbed(const baseline_t &baseline);
 
 //    JonesMatrix<complex_t>::ConstPtr evaluate(const baseline_t &baseline,
 //        Cache &cache);
@@ -114,25 +116,25 @@ public:
 private:
     vector<bool> parseComponents(const vector<string> &components) const;
 
-    vector<Expr::Ptr> makeUVWExpr(const VisData::Pointer &chunk,
-        const vector<baseline_t> &baselines);
-    
+//    vector<Expr::Ptr> makeUVWExpr(const VisData::Pointer &chunk,
+//        const vector<baseline_t> &baselines);
+
     ExprParm::Ptr makeExprParm(uint category, const string &name);
 
-    boost::multi_array<Expr::Ptr, 2>
-    makeDirectionDependentGainExpr(const ModelConfig &config,
-        const vector<Source::Ptr> &sources);
-    
+//    boost::multi_array<Expr::Ptr, 2>
+//    makeDirectionDependentGainExpr(const ModelConfig &config,
+//        const vector<Source::Ptr> &sources);
+
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
     Source::Ptr makeSource(const SourceInfo &source);
-    
+
 //    void makeSources(vector<Source::Pointer> &result,
 //        const vector<string> &patterns);
-//    
+//
 //    Source::Pointer makeSource(const SourceInfo &source);
 
     void makeStationUvw();
-    
+
 //    void makeAzElNodes(boost::multi_array<Expr, 2> &result,
 //        const vector<Source::Pointer> &sources) const;
 
@@ -140,7 +142,7 @@ private:
         const vector<Source::Ptr> &sources) const;
 
 //    void makeBandpassNodes(vector<JonesExpr> &result);
-//    
+//
 //    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
 
 //    void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
@@ -160,9 +162,9 @@ private:
 //    Grid                            itsRequestGrid;
     Request                         itsRequest;
     Cache                           itsCache;
-    
+
     vector<StatUVW::ConstPointer>   itsStationUvw;
-    map<baseline_t, Expr::Ptr>      itsExpressions;
+    map<baseline_t, Expr::Ptr>      itsExpr;
 //    map<baseline_t, vector<PValueKey> >                 itsDependencies;
     map<unsigned int, ExprParm::Ptr>                    itsParms;
 };

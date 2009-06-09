@@ -32,7 +32,6 @@
 
 #include <Common/LofarLogger.h>
 
-//#include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Types.h>
 
 #include <BBSKernel/Expr/FlagArray.h>
@@ -47,164 +46,10 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-//typedef uint8   FlagType;
-
-
-//static const size_t MAX_RANK = 2;
-//////typedef size_t Shape[MAX_RANK];
-
-
-//struct Shape
-//{
-//    typedef size_t *iterator;
-//    typedef const size_t *const_iterator;
-//    
-//    size_t  __shape[MAX_RANK];
-
-//    const size_t &operator[](size_t i) const
-//    { return __shape[i]; }
-
-//    size_t &operator[](size_t i)
-//    { return __shape[i]; }
-//    
-//    iterator begin()
-//    { return __shape; }
-//    
-//    iterator end()
-//    { return __shape + MAX_RANK; }
-
-//    const_iterator begin() const
-//    { return __shape; }
-//    
-//    const_iterator end() const
-//    { return __shape + MAX_RANK; }
-
-//    void zero()
-//    { fill(__shape, __shape + MAX_RANK, size_t()); }
-//};
-
-
-//Shape merge(const Shape &lhs, const Shape &rhs)
-//{
-//    // TODO: Use MAX_RANK or itsArray.rank()? (loop unroling?).
-//    // TODO: Use DBGASSERT instead of assert().
-//    // If either shape[i] or itsArray.itsShape[i] are zero, then the OR
-//    // operation is safe. If both are non-zero, they should be equal.
-//    Shape result;
-//    for(size_t i = 0; i < MAX_RANK; ++i)
-//    {
-//        ASSERT(lhs[i] == 0 || rhs[i] == 0 || lhs[i] == rhs[i]);
-//        result[i] = lhs[i] | rhs[i];
-//    }
-//    return result;
-//}
-
-
-////class FlagBufferImpl
-////{
-////    // Must be virtual to recover the type of *this.
-////    virtual FlagBuffer?? opOr(const FlagBuffer(Impl?) &rhs)
-////    
-////};
-
-////class FlagScalar
-////{
-////    FlagBuffer?? opOr(const FlagBuffer(Impl?) &rhs)
-////    {
-////        return rhs.opOr(*this);
-////    }
-////    
-////    opOr(const Scalar &lhs)
-////    opOr(const Matrix &lhs)
-////    
-////private:
-////    FlagType  itsData;
-////};
-
-////class FlagMatrix
-////{
-////public:
-////    operator|=
-////private:
-////    vector<FlagType>    itsData;    
-////};
-
-////FlagMatrix operator|(const FlagScalar &lhs, const FlagMatrix &rhs)
-////{
-////}
-
-
-
-//template <typename T>
-//FlagArray<T>
-//{
-//    FlagArray(const Shape &shape, T value = T())
-//    {
-//        
-//        copy(shape.begin(), shape.end(), itsShape.begin());
-//        itsData.resize(std::accumulate(itsShape.begin(), itsShape.end(), 1u,
-////            std::multiplies<unsigned int>());
-//        
-//    }
-
-//    Shape                   itsShape;
-//    shared_ptr<vector<T> >  itsData;
-//};
-
-//template <typename T>
-//FlagArray<T> operator|(const FlagArray<T> &lhs, const FlagArray<T> &rhs)
-//{
-//    FlagArray<T> result(merge(lhs.shape(), rhs.shape()));
-
-//    FlagArray<T>::const_flat_iterator lhs_it(lhs, shape);
-//    FlagArray<T>::const_flat_iterator rhs_it(rhs, shape);
-//    FlagArray<T>::flat_iterator result_it
-
-//    for(size_t i = 0; i < result.size(); ++i)
-//    {
-//        *result_it = *lhs_it | *rhs_it;
-//        ++lhs_it;
-//        ++rhs_it;
-//        ++result_it;
-//    }
-//}
-
-
-////class FlagBufferIterator
-////{
-////    FlagBufferIterator
-////};
-
-
-////class FlagBuffer
-////{
-////    enum BufferType
-////    {
-////        SCALAR,
-////        MATRIX
-////    };
-////    
-////    FlagBuffer operator|(const FlagBuffer &rhs)
-////    {
-////        myptr->or(rhs)
-////            : suppose myptr Scalar
-////            Scalar::or(const FlagBuffer &rhs)
-////                rhs->or(*this)
-////                : suppose rhs type Matrix
-////                Matrix::or(const Scalar &lhs)
-////                    return lhs | *this;
-////                        : need operator|({Matrix,Scalar}, {Matrix,Scalar})
-////        operator|(
-////    }
-////    
-////    rank
-////    shape
-////};
-
-
-
-// A key that identifies a perturbed value through its associated (parameter id,
-// coefficient id) combination.
+// A key that identifies a (perturbed) value through its associated
+// (parameter id, coefficient id) combination.
+// TODO: Rename to ValueKey / CoeffKey / ParmKey?
+// TODO: Merge parmId/coeffId parts into a single uint64 (faster comparisons?)
 class PValueKey
 {
 public:
@@ -218,6 +63,535 @@ public:
     size_t  parmId, coeffId;
 };
 
+
+// This class represents a 2-D scalar field (the default axes are frequency
+// and time). Multiple instances of the scalar field can be carried along,
+// linked to different (parameter, coefficient) pairs. This can be used
+// to hold e.g. the value of the scalar field perturbed for a (parameter,
+// coefficient) pair, or the value of the partial derivative with respect to a
+// (parameter, coefficient) pair.
+class FieldSetImpl: public RefCountable
+{
+public:
+    typedef map<PValueKey, Matrix>::iterator        iterator;
+    typedef map<PValueKey, Matrix>::const_iterator  const_iterator;
+
+    iterator begin();
+    iterator end();
+    const_iterator begin() const;
+    const_iterator end() const;
+
+    const Matrix &value() const;
+    const Matrix &value(const PValueKey &key, bool &found) const;
+    Matrix &value();
+    Matrix &value(const PValueKey &key);
+
+    void assign(const Matrix &value);
+    void assign(const PValueKey &key, const Matrix &value);
+
+private:
+    Matrix                  itsData;
+    map<PValueKey, Matrix>  itsDepData;
+};
+
+
+// Reference counting proxy class that manages a FieldSetImpl.
+class FieldSet: public RefCounted<FieldSetImpl>
+{
+public:
+    typedef FieldSetImpl::iterator          iterator;
+    typedef FieldSetImpl::const_iterator    const_iterator;
+
+    FieldSet();
+//    // Allocate the underlying FieldSetImpl. The default constructor creates
+//    // an uninitialized FieldSet instance (which is basically unusable until
+//    // initialize() has been called). This is critical because otherwise
+//    // operations like initializing a vector<FieldSet> to a certain size, i.e.:
+//    //
+//    // vector<FieldSet> foo(10);
+//    //
+//    // would result in a vector of FieldSet instances that all point to the same
+//    // underlying FieldSetImpl! To see this, note that the code above is
+//    // equivalent to:
+//    //
+//    // vector<FieldSet> foo(10, FieldSet());
+//    //
+//    // where the second argument to the constructor of vector is effectively
+//    // copied 10 times. This is not the behaviour that one would expect and can
+//    // lead to bugs that are difficult to trace down.
+//    void initialize();
+
+    const_iterator begin() const;
+    const_iterator end() const;
+//    iterator begin();
+//    iterator end();
+
+    const Matrix &value() const;
+    // Returns the field associated with "key", or the unkeyed (main) field if
+    // not found.
+    const Matrix &value(const PValueKey &key) const;
+    // Returns the field associated with "key", or the unkeyed (main) field if
+    // not found. The "found" argument is indicates if a field associated with
+    // "key" was found.
+    const Matrix &value(const PValueKey &key, bool &found) const;
+
+//    Matrix &value();
+//    // Returns a writeable reference to the field associated with "key". If no
+//    // such field exists yet it will be created.
+//    Matrix &value(const PValueKey &key);
+
+    void assign(const Matrix &value);
+    void assign(const PValueKey &key, const Matrix &value);
+};
+
+
+// Class describing the shape (2-D) of the result of an expression.
+class Shape
+{
+public:
+    Shape()
+        :   itsRank(0)
+    {
+        itsShape[0] = itsShape[1] = 0;
+    }
+
+    Shape(unsigned int l0)
+        :   itsRank(1)
+    {
+        itsShape[0] = l0;
+        itsShape[1] = 0;
+    }
+
+    Shape(unsigned int l0, unsigned int l1)
+        :   itsRank(2)
+    {
+        itsShape[0] = l0;
+        itsShape[1] = l1;
+    }
+
+    unsigned int rank() const
+    {
+        return itsRank;
+    }
+
+    unsigned int operator[](unsigned int dim) const
+    {
+        DBGASSERT(dim < rank());
+        return itsShape[dim];
+    }
+
+    bool operator==(const Shape &rhs) const
+    {
+        return (itsRank == rhs.itsRank && itsShape[0] == rhs.itsShape[0]
+            && itsShape[1] == rhs.itsShape[1]);
+    }
+
+private:
+    unsigned int    itsRank;
+    unsigned int    itsShape[2];
+};
+
+// Helper function to compute the number of elements implied by a given Shape.
+inline unsigned int size(const Shape &shape)
+{
+    unsigned int size = 1;
+    for(unsigned int i = 0; i < shape.rank(); ++i)
+    {
+        size *= shape[i];
+    }
+
+    return size;
+}
+
+// Forward declaration.
+class ExprValueSet;
+
+// Proxy class that simplifies operating on ExprValueSet instances. Each element
+// (of type FieldSet) of an ExprValueSet instance can carry along any number of
+// perturbed values (of type Matrix) linked to specific (parameter, coefficient)
+// pairs, or keys.
+//
+// When computing the value of an expression perturbed for a specific key, some
+// elements (FieldSets) may contain a value for that key whereas others may not
+// (in which case the non-perturbed value should be used instead).
+//
+// ExprValue instances provide a view on an ExprValueSet for a specific key.
+// For example, let A be a Jones matrix represented by an ExprValueSet instance
+// with Shape (2, 2). Suppose we want to compute the value of an expression
+// perturbed for key (1, 3). Furthermore, suppose that the diagonal elements of
+// A have a value associated with key (1, 3) whereas the off-diagonal elements
+// do not. In other words, the value of the diagonal elements of A depends on
+// the third coefficient of parameter 1 whereas the off-diagonal elements do not
+// depend on this coefficient. We can create an ExprValue instance and populate
+// it with the perturbed values (lined to key (1, 3)) on the diagonal and the
+// appropriate non-perturbed values on the off-diagonal. Thus we have created an
+// object represents the value of A for key (1, 3). It has the same Shape as A,
+// and can be indexed as an array with that Shape.
+//
+// The isDependent() methods can be used to check if an element of an ExprValue
+// instance points to a linked (perturbed) value or to the non-perturbed value
+// of the corresponding FieldSet. This can be used to avoid unnecessary
+// computation (see for example Mul::evaluateImpl).
+//
+// The point is that an ExprValue instance is much easier to work with and leads
+// to much cleaner code compared to working with an ExprValueSet instance
+// directly.
+class ExprValue
+{
+public:
+    ExprValue()
+    {
+    }
+
+    ExprValue(const Shape &shape)
+        :   itsShape(shape)
+    {
+        const unsigned int size = LOFAR::BBS::size(shape);
+        itsDepMask.resize(size);
+        itsData.resize(size);
+    }
+
+    // Clear the ExprValue instance. This allows an ExprValue instance to be
+    // re-used to avoid excessive (re)allocation.
+    void clear()
+    {
+        fill(itsDepMask.begin(), itsDepMask.end(), false);
+        fill(itsData.begin(), itsData.end(), Matrix());
+    }
+
+    unsigned int size() const
+    {
+        return itsData.size();
+    }
+
+    unsigned int rank() const
+    {
+        return itsShape.rank();
+    }
+
+    const Shape &shape() const
+    {
+        return itsShape;
+    }
+
+    // Methods to check if an element points to a Matrix that was linked to a
+    // key in the corresponding FieldSet (and therefore depends on the
+    // coefficient identified by that key) or that it points to a Matrix that
+    // is independent of that coefficient.
+    // @{
+    bool isDependent() const
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        return itsDepMask[0];
+    }
+
+    bool isDependent(unsigned int i0) const
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        return itsDepMask[i0];
+    }
+
+    bool isDependent(unsigned int i1, unsigned int i0) const
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        return itsDepMask[i1 * itsShape[0] + i0];
+    }
+    // @}
+
+    // Element access.
+    // @{
+    const Matrix &operator()() const
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        return itsData[0];
+    }
+
+    const Matrix &operator()(unsigned int i0) const
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        return itsData[i0];
+    }
+
+    const Matrix &operator()(unsigned int i1, unsigned int i0) const
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        return itsData[i1 * itsShape[0] + i0];
+    }
+
+    void assign(const Matrix &value, bool dependent = true)
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        itsData[0] = value;
+        itsDepMask[0] = dependent;
+    }
+
+    void assign(unsigned int i0, const Matrix &value, bool dependent = true)
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        itsData[i0] = value;
+        itsDepMask[i0] = dependent;
+    }
+
+    void assign(unsigned int i1, unsigned int i0, const Matrix &value,
+        bool dependent = true)
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        itsData[i1 * itsShape[0] + i0] = value;
+        itsDepMask[i1 * itsShape[0] + i0] = dependent;
+    }
+    // @}
+
+private:
+    friend class ExprValueSet;
+
+    // Private methods used by ExprValueSet to populate an ExprValue instance in
+    // a generic way (independent of the rank) by using a flat (1-D) index.
+    const Matrix &flat_access(unsigned int i) const
+    {
+        ASSERT(i < size());
+        return itsData[i];
+    }
+
+    void flat_assign(unsigned int i, const Matrix &value, bool dependent = true)
+    {
+        ASSERT(i < size());
+        itsData[i] = value;
+        itsDepMask[i] = dependent;
+    }
+
+    Shape           itsShape;
+    vector<bool>    itsDepMask;
+    vector<Matrix>  itsData;
+};
+
+
+// This class holds the value of an expression and a perturbed value for each of
+// the solvable coefficients that the expression depends on.
+class ExprValueSet
+{
+public:
+    ExprValueSet()
+    {
+    }
+
+    ExprValueSet(const Shape &shape)
+        :   itsShape(shape)
+    {
+        const unsigned int size = LOFAR::BBS::size(shape);
+        itsSets.reserve(size);
+        for(unsigned int i = 0; i < size; ++i)
+        {
+            itsSets.push_back(FieldSet());
+        }
+    }
+
+    // Resize the ExprValueSet. All the elements will point to newly allocated
+    // FieldSet instances.
+    void resize(const Shape &shape)
+    {
+        itsShape = shape;
+        itsSets.clear();
+
+        const unsigned int size = LOFAR::BBS::size(shape);
+        itsSets.reserve(size);
+        for(unsigned int i = 0; i < size; ++i)
+        {
+            itsSets.push_back(FieldSet());
+        }
+    }
+
+    unsigned int size() const
+    {
+        return itsSets.size();
+    }
+
+    unsigned int rank() const
+    {
+        return itsShape.rank();
+    }
+
+    const Shape &shape() const
+    {
+        return itsShape;
+    }
+
+    // Flags.
+    bool hasFlags() const
+    {
+        return itsFlags.initialized();
+    }
+
+    const FlagArray &flags() const
+    {
+        return itsFlags;
+    }
+
+    void assignFlags(const FlagArray &flags)
+    {
+        itsFlags = flags;
+    }
+
+    // ExprValue access.
+    // @{
+    ExprValue value() const
+    {
+        ExprValue value(shape());
+        for(unsigned int i = 0; i < size(); ++i)
+        {
+            value.flat_assign(i, itsSets[i].value());
+        }
+
+        return value;
+    }
+
+    ExprValue value(const PValueKey &key) const
+    {
+        ExprValue value(shape());
+        for(unsigned int i = 0; i < size(); ++i)
+        {
+            bool dependent;
+            const Matrix &m = itsSets[i].value(key, dependent);
+            value.flat_assign(i, m, dependent);
+        }
+
+        return value;
+    }
+
+    void assign(const ExprValue &value)
+    {
+        ASSERT(value.size() == size());
+        for(unsigned int i = 0; i < value.size(); ++i)
+        {
+            if(!value.flat_access(i).isNull())
+            {
+                itsSets[i].assign(value.flat_access(i));
+            }
+        }
+    }
+
+    void assign(const PValueKey &key, const ExprValue &value)
+    {
+        ASSERT(value.size() == size());
+        for(unsigned int i = 0; i < value.size(); ++i)
+        {
+            if(!value.flat_access(i).isNull())
+            {
+                itsSets[i].assign(key, value.flat_access(i));
+            }
+        }
+    }
+    // @}
+
+    // Non-perturbed value access.
+    // @{
+    const Matrix &operator()() const
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        return itsSets[0].value();
+    }
+
+    const Matrix &operator()(unsigned int i0) const
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        return itsSets[i0].value();
+    }
+
+    const Matrix &operator()(unsigned int i1, unsigned int i0) const
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        return itsSets[i1 * itsShape[0] + i0].value();
+    }
+
+    void assign(const Matrix &value)
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        itsSets[0].assign(value);
+    }
+
+    void assign(unsigned int i0, const Matrix &value)
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        itsSets[i0].assign(value);
+    }
+
+    void assign(unsigned int i1, unsigned int i0, const Matrix &value)
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        return itsSets[i1 * itsShape[0] + i0].assign(value);
+    }
+    // @}
+
+    // Perturbed value access.
+    // @{
+    const Matrix &operator()(const PValueKey &key) const
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        return itsSets[0].value(key);
+    }
+
+    const Matrix &operator()(const PValueKey &key, unsigned int i0) const
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        return itsSets[i0].value(key);
+    }
+
+    const Matrix &operator()(const PValueKey &key, unsigned int i1,
+        unsigned int i0) const
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        return itsSets[i1 * itsShape[0] + i0].value(key);
+    }
+
+    void assign(const PValueKey &key, const Matrix &value)
+    {
+        DBGASSERT(rank() == 0 && size() == 1);
+        itsSets[0].assign(key, value);
+    }
+
+    void assign(const PValueKey &key, unsigned int i0, const Matrix &value)
+    {
+        DBGASSERT(rank() == 1 && i0 < itsShape[0]);
+        itsSets[i0].assign(key, value);
+    }
+
+    void assign(const PValueKey &key, unsigned int i1, unsigned int i0,
+        const Matrix &value)
+    {
+        DBGASSERT(rank() == 2 && i0 < itsShape[0] && i1 < itsShape[1]);
+        itsSets[i1 * itsShape[0] + i0].assign(key, value);
+    }
+    // @}
+
+    // FieldSet access. This is mainly used to "pass-through" the value and all
+    // perturbed values of an element in one go (see for example the
+    // implementation of Zip::evaluate or ExprParm::evaluate). Only flat (1-D)
+    // indexing is provided at the moment (can easily be extended if and when
+    // necessary).
+    // @{
+    const FieldSet &getFieldSet(unsigned int i) const
+    {
+        DBGASSERT(i < size());
+        return itsSets[i];
+    }
+
+    void setFieldSet(unsigned int i, const FieldSet &set)
+    {
+        DBGASSERT(i < size());
+        itsSets[i] = set;
+    }
+    // @}
+
+private:
+    Shape               itsShape;
+    FlagArray           itsFlags;
+    vector<FieldSet>    itsSets;
+};
+
+
+// -------------------------------------------------------------------------- //
+// - Implementation: PValueKey                                              - //
+// -------------------------------------------------------------------------- //
+
 inline PValueKey::PValueKey()
     :   parmId(std::numeric_limits<size_t>::max()),
         coeffId(std::numeric_limits<size_t>::max())
@@ -229,7 +603,7 @@ inline PValueKey::PValueKey(size_t parmId, size_t coeffId)
         coeffId(coeffId)
 {
 }
-    
+
 inline bool PValueKey::valid() const
 {
     return parmId != std::numeric_limits<size_t>::max();
@@ -240,775 +614,140 @@ inline bool PValueKey::operator<(const PValueKey &other) const
     return parmId < other.parmId
         || (parmId == other.parmId && coeffId < other.coeffId);
 }
-    
+
 inline bool PValueKey::operator==(const PValueKey &other) const
 {
     return parmId == other.parmId && coeffId == other.coeffId;
 }
 
 
-class ValueSet
+// -------------------------------------------------------------------------- //
+// - Implementation: FieldSetImpl                                           - //
+// -------------------------------------------------------------------------- //
+
+inline FieldSetImpl::const_iterator FieldSetImpl::begin() const
 {
-public:
-    typedef shared_ptr<ValueSet>          Ptr;
-    typedef shared_ptr<const ValueSet>    ConstPtr;
+    return itsDepData.begin();
+}
 
-    static const unsigned int MAX_RANK = 2;
-    
-    struct Shape
-    {
-        typedef size_t *iterator;
-        typedef const size_t *const_iterator;
-        
-        size_t  __shape[MAX_RANK];
-
-        const size_t &operator[](size_t i) const
-        { return __shape[i]; }
-
-        size_t &operator[](size_t i)
-        { return __shape[i]; }
-        
-        iterator begin()
-        { return __shape; }
-        
-        iterator end()
-        { return __shape + MAX_RANK; }
-
-        const_iterator begin() const
-        { return __shape; }
-        
-        const_iterator end() const
-        { return __shape + MAX_RANK; }
-        
-        size_t size()
-        {
-            return MAX_RANK;
-        }
-
-        void zero()
-        { fill(__shape, __shape + MAX_RANK, size_t()); }
-    };
-    
-    ValueSet()
-        :   itsRank(0),
-            itsValues(1)
-    {
-    }
-    
-    ValueSet(const Shape &shape)
-    {
-        unsigned int size = 1;
-        unsigned int rank = 0;
-        while(rank < MAX_RANK && shape[rank] != 0)
-        {
-            itsShape[rank] = shape[rank];
-            size *= shape[rank];
-            ++rank;
-        }        
-        itsRank = rank;
-        itsValues.resize(size);
-    }
-    
-    ValueSet(unsigned int l0)
-        :   itsRank(1),
-            itsValues(l0)
-    {
-        itsShape[0] = l0;
-    }
-
-    ValueSet(unsigned int l0, unsigned int l1)
-        :   itsRank(2),
-            itsValues(l0 * l1)
-    {
-        itsShape[0] = l0;
-        itsShape[1] = l1;
-    }
-
-    const Matrix &value() const
-    {
-        ASSERT(size() > 0);
-        return itsValues[0];
-    }
-
-    const Matrix &value(unsigned int i0) const
-    {
-        ASSERT(rank() >= 1 && size() > i0);
-        return itsValues[i0];
-    }
-
-    // i1 is the fastest running dimension (columns)
-    const Matrix &value(unsigned int i0, unsigned int i1) const
-    {
-        ASSERT(rank() >= 2 && size() > (i0 * itsShape[1] + i1));
-        return itsValues[i0 * itsShape[1] + i1];
-    }
-    
-    void assign(const Matrix &value, bool isPerturbed = false)
-    {
-        ASSERT(size() > 0);
-        itsValues[0] = value;
-    }
-
-    void assign(unsigned int i0, const Matrix &value, bool isPerturbed = false)
-    {
-        ASSERT(rank() >= 1 && size() > i0);
-        itsValues[i0] = value;
-    }
-
-    void assign(unsigned int i0, unsigned int i1, const Matrix &value,
-        bool isPerturbed = false)
-    {
-        ASSERT(rank() >= 2 && size() > (i0 * itsShape[1] + i1));
-        itsValues[i0 * itsShape[1] + i1] = value;
-    }
-
-    unsigned int rank() const
-    {
-        return itsRank;
-//        return itsShape.size();
-    }
-    
-    unsigned int size() const
-    {
-        return itsValues.size();
-//        return std::accumulate(itsShape.begin(), itsShape.end(), 1u,
-//            std::multiplies<unsigned int>());
-    }
-
-    unsigned int shape(unsigned int dim) const
-    {
-        ASSERT(dim < rank());
-        return itsShape[dim];
-    }
-
-private:
-    unsigned int            itsRank;
-    unsigned int            itsShape[2];
-//    vector<unsigned int>    itsShape;
-
-    vector<Matrix>          itsValues;
-};
-
-
-class ExprResult
+inline FieldSetImpl::const_iterator FieldSetImpl::end() const
 {
-public:
-    typedef shared_ptr<ExprResult>          Ptr;
-    typedef shared_ptr<const ExprResult>    ConstPtr;
+    return itsDepData.end();
+}
 
-    // Flags.
-    bool hasFlags() const
-    {
-        return itsFlags.initialized();
-    }
-    
-    const FlagArray getFlags() const
-    {
-        return itsFlags;
-    }
-
-    void setFlags(const FlagArray &flags)
-    {
-        itsFlags = flags;
-    }
-    
-    // Value.
-    // TODO: Use ref counted proxy objects instead of shared_ptr (more elegant
-    // interface).
-    ValueSet::ConstPtr getValue() const
-    {
-        return itsValue;
-    }
-    
-    void setValue(const ValueSet::ConstPtr &value)
-    {
-        itsValue = value;
-    }
-    
-private:
-    FlagArray           itsFlags;
-    ValueSet::ConstPtr  itsValue;
-//    map<PValueKey, ValueSet::Ptr> itsPValues;
-};
-
-
-class ExprValueBase
+inline FieldSetImpl::iterator FieldSetImpl::begin()
 {
-public:
-    // Flags.
-    bool hasFlags() const
-    {
-        return itsFlags.initialized();
-    }
+    return itsDepData.begin();
+}
 
-    void setFlags(const FlagArray &flags)
-    {
-        itsFlags = flags;
-    }
-
-    const FlagArray getFlags() const
-    {
-        return itsFlags;
-    }
-
-private:
-    FlagArray   itsFlags;
-};
-
-//class Scalar: public ExprValueBase
-//{
-//public:
-//    unsigned int size() const
-//    {
-//        return 1;
-//    }
-
-//    const Matrix &operator()() const
-//    {
-//        return itsValue;
-//    }
-//    
-//    const Matrix &operator()(unsigned int) const
-//    {
-//        return itsValue;
-//    }
-
-//    void assign(const Matrix &value, const PValueKey &key = PValueKey())
-//    {
-//        itsValue[key] = value;
-//    }
-//    
-//private:
-//    Matrix                  itsValue;
-//    map<PValueKey, Matrix>  itsValueMap;
-//};
-
-template <unsigned int LENGTH>
-class Vector;
-
-template <typename T>
-class Proxy;
-
-template <>
-template <unsigned int LENGTH>
-class Proxy<Vector<LENGTH> >
+inline FieldSetImpl::iterator FieldSetImpl::end()
 {
-public:
-    bool isDependent(unsigned int i0) const
-    {
-        return itsDepMask[i0];
-    }
-    
-    const Matrix &operator()(unsigned int i0) const
-    {
-        return itsValue[i0];
-    }
+    return itsDepData.end();
+}
 
-    void assign(unsigned int i0, const Matrix &value, bool dependent)
-    {
-        itsDepMask[i0] = dependent;
-        itsValue[i0] = value;
-    }
-
-private:
-    const Matrix    itsValue[LENGTH];
-    bool            itsDepMask[LENGTH];
-};
-
-template <unsigned int LENGTH>
-class Vector: public ExprValueBase
+inline const Matrix &FieldSetImpl::value() const
 {
-public:
-    typedef Proxy<Vector<LENGTH> >          proxy;
-    typedef const Proxy<Vector<LENGTH> >    const_proxy;
-    
-    unsigned int size() const
-    {
-        return LENGTH;
-    }
+    return itsData;
+}
 
-//    const Matrix &operator()(unsigned int i0) const
-//    {
-//        return itsValue(i);
-//    }
+inline const Matrix &FieldSetImpl::value(const PValueKey &key, bool &found)
+    const
+{
+    map<PValueKey, Matrix>::const_iterator it = itsDepData.find(key);
+    found = (it != itsDepData.end());
+    return (found ? it->second : itsData);
+}
 
-//    const Matrix &operator()(const PValueKey &key, unsigned int i0) const
-//    {
-//        map<PValueKey, Matrix>::const_iterator it = itsValueMap[i0].find(key);
-//        return (it != itsValueMap
-//        ASSERT(it != itsValueMap[i].end());
-//        return it->second;
-//    }
+inline Matrix &FieldSetImpl::value()
+{
+    return itsData;
+}
 
-    const_proxy operator()(const PValueKey &key = PValueKey()) const
-    {
-        proxy result;
-        
-        if(!key.valid())
-        {
-            for(unsigned int i = 0; i < LENGTH; ++i)
-            {
-                result.assign(i, itsValue[i], true);
-            }            
-        }
-        else
-        {
-            for(unsigned int i = 0; i < LENGTH; ++i)
-            {
-                map<PValueKey, Matrix>::const_iterator it =
-                    itsValueMap[i].find(key);
-                    
-                if(it != itsValueMap[i].end())
-                {                
-                    result.assign(i, it->second, true);
-                }
-                else
-                {
-                    result.assign(i, itsValue[i], false);
-                }
-            }
-        }
-        
-        return result;        
-    }
-    
-    void assign(unsigned int i0, const Matrix &value)
-    {
-        itsValue[i0] = value;
-    }
-    
-    void assign(const PValueKey &key, unsigned int i0, const Matrix &value)
-    {
-        itsValueMap[i0][key] = value;
-    }
-    
-private:
-    Matrix                  itsValue[LENGTH];
-    map<PValueKey, Matrix>  itsValueMap[LENGTH];
-};
+inline Matrix &FieldSetImpl::value(const PValueKey &key)
+{
+    return itsDepData[key];
+}
+
+inline void FieldSetImpl::assign(const Matrix &value)
+{
+    itsData = value;
+}
+
+inline void FieldSetImpl::assign(const PValueKey &key, const Matrix &value)
+{
+    itsDepData[key] = value;
+}
 
 
+// -------------------------------------------------------------------------- //
+// - Implementation: FieldSet                                               - //
+// -------------------------------------------------------------------------- //
 
+inline FieldSet::FieldSet()
+    :   RefCounted<FieldSetImpl>(new FieldSetImpl())
+{
+}
 
-//template <typename T>
-//class ExprValueIterator;
-
-
-//template <>
-//template <unsigned int LENGTH>
-//class ExprValueIterator<Vector<LENGTH> >
+//inline void FieldSet::initialize()
 //{
-//public:
-//    typedef Proxy<Vector<LENGTH> >          proxy;
-//    typedef const Proxy<Vector<LENGTH> >    const_proxy;
-//    
-//    ExprValueIterator(const Vector<LENGTH> &iterated)
-//    {
-//        for(unsigned int i = 0; i < LENGTH; ++i)
-//        {
-//            itsValue[i] = iterated(i);
-//            itsIter[i] = iterated.map(i).begin();
-//            itsEnd[i] = iterated.map(i).end();
-//        }
-//        update();
-//    }
-//    
-//    const PValueKey &key() const
-//    {
-//        return itsMinKey;
-//    }
-//    
-//    void operator++()
-//    {
-//        for(unsigned int i = 0; i < LENGTH; ++i)
-//        {
-//            if(itsIter[i] == itsMinKey)
-//            {
-//                ++itsIter[i];
-//            }
-//        }
-//        
-//        update();
-//    }
-//    
-//    const_proxy operator*(unsigned int i0) const
-//    {
-//        return itsProxy;
-//    }    
-//    
-//private:
-//    void update()
-//    {
-//        itsAtEnd = true;
-//        itsMinKey = PValueKey();
-//        for(unsigned int i = 0; i < LENGTH; ++i)
-//        {
-//            if(itsIter[i] != itsEnd[i]
-//                && itsIter[i]->first.parmId < itsMinKey.parmId)
-//            {                
-//                itsMinKey = itsIter[i]->first;
-//                itsAtEnd = false;
-//            }
-//        }
-//        
-//        for(unsigned int i = 0; i < LENGTH; ++i)
-//        {
-//            if(itsIter[i] != itsEnd[i] && itsIter[i]->first == itsMinKey)
-//            {
-//                itsProxy.setValue(i, itsIter->second);
-//                itsProxy.setDepMask(i, true);
-//            }
-//            else
-//            {
-//                itsProxy.setValue(i, itsValue[i]);
-//                itsProxy.setDepMask(i, false);
-//            }
-//        }
-//    }
-//    
-//    const Matrix                            itsValue[LENGTH]
-//    map<PValueKey, Matrix>::const_iterator  itsIter[LENGTH];
-//    map<PValueKey, Matrix>::const_iterator  itsEnd[LENGTH];
-//    PValueKey                               itsMinKey;
-//    proxy                                   itsProxy;
-//    bool                                    itsAtEnd;
-//};
+//    reset(new FieldSetImpl());
+//}
 
-
-
-
-//template <typename T_NUMERIC>
-//class Scalar: public ExprResult
+//inline FieldSet::iterator FieldSet::begin()
 //{
-//public:
-//    typedef shared_ptr<Scalar<T_NUMERIC> >          Ptr;
-//    typedef shared_ptr<const Scalar<T_NUMERIC> >    ConstPtr;
+//    return instance().begin();
+//}
 
-//    typedef T_NUMERIC   NumericType;
-//    
-////    bool isPerturbed() const
-////    {
-////        return itsPerturbedValueFlag;
-////    }
-//    
-//    unsigned int size() const
-//    {
-//        return 1;
-//    }
-
-//    const ARRAY(T_NUMERIC) &value(unsigned int i = 0) const
-//    {
-//        assert(i == 0);
-//        return itsValue;
-//    }
-//    
-//    void assign(const ARRAY(T_NUMERIC) &value, bool isPerturbed = false)
-//    {
-////        itsPerturbedValueFlag = isPerturbed;
-//        itsValue.reference(value);
-//    }
-//    
-//    virtual size_t memory() const
-//    {
-//        return ExprResult::memory() + itsValue.size() * sizeof(T_NUMERIC);
-//    }
-//    
-//private:
-////    bool                itsPerturbedValueFlag;
-//    ARRAY(T_NUMERIC)    itsValue;
-//};
-
-
-//template <typename T_NUMERIC, unsigned int SIZE = 2>
-//class Vector: public ExprResult
+//inline FieldSet::iterator FieldSet::end()
 //{
-//public:
-//    typedef shared_ptr<Vector<T_NUMERIC, SIZE> >        Ptr;
-//    typedef shared_ptr<const Vector<T_NUMERIC, SIZE> >  ConstPtr;
+//    return instance().end();
+//}
 
-//    typedef T_NUMERIC   NumericType;
+inline FieldSet::const_iterator FieldSet::begin() const
+{
+    return instance().begin();
+}
 
-////    bool isPerturbed(unsigned int i) const
-////    {
-////        assert(i < SIZE);
-////        return itsPerturbedValueFlag[i];
-////    }
+inline FieldSet::const_iterator FieldSet::end() const
+{
+    return instance().end();
+}
 
-//    unsigned int size() const
-//    {
-//        return SIZE;
-//    }
-//    
-//    const ARRAY(T_NUMERIC) &value(unsigned int i) const
-//    {
-//        assert(i < SIZE);
-//        return itsValue[i];
-//    }
-//    
-//    void assign(unsigned int i, const ARRAY(T_NUMERIC) &value,
-//        bool isPerturbed = false)
-//    {
-//        assert(i < SIZE);
-////        itsPerturbedValueFlag[i] = isPerturbed;
-//        itsValue[i].reference(value);
-//    }
-//    
-//    virtual size_t memory() const
-//    {
-//        size_t mem = ExprResult::memory();
-//        for(size_t i = 0; i < SIZE; ++i)
-//        {
-//            mem += itsValue[i].size() * sizeof(T_NUMERIC);
-//        }
-//        return mem;
-//    }
+inline const Matrix &FieldSet::value() const
+{
+    return instance().value();
+}
 
-//private:
-////    bool                itsPerturbedValueFlag[SIZE];
-//    ARRAY(T_NUMERIC)    itsValue[SIZE];
-//};
+inline const Matrix &FieldSet::value(const PValueKey &key) const
+{
+    bool tmp;
+    return instance().value(key, tmp);
+}
 
+inline const Matrix &FieldSet::value(const PValueKey &key, bool &found) const
+{
+    return instance().value(key, found);
+}
 
-//template <typename T_NUMERIC>
-//class JonesMatrix: public ExprResult
+//inline Matrix &FieldSet::value()
 //{
-//public:
-//    typedef shared_ptr<JonesMatrix<T_NUMERIC> >         Ptr;
-//    typedef shared_ptr<const JonesMatrix<T_NUMERIC> >   ConstPtr;
+//    return instance().value();
+//}
 
-//    typedef T_NUMERIC   NumericType;
-
-////    bool isPerturbed(unsigned int i, unsigned int j) const
-////    {
-////        assert(i < 2 && j < 2);
-////        return itsPerturbedValueFlag[i * 2 + j];
-////    }
-
-//    unsigned int size() const
-//    {
-//        return 4;
-//    }
-//    
-//    const ARRAY(T_NUMERIC) &value(unsigned int i, unsigned int j) const
-//    {
-//        assert(i < 2 && j < 2);
-//        return itsValue[i * 2 + j];
-//    }
-//    
-//    const ARRAY(T_NUMERIC) &value(unsigned int i) const
-//    {
-//        assert(i < 4);
-//        return itsValue[i];
-//    }
-
-//    void assign(unsigned int i, unsigned int j, const ARRAY(T_NUMERIC) &value,
-//        bool isPerturbed = false)
-//    {
-//        assert(i < 2 && j < 2);
-////        itsPerturbedValueFlag[i] = isPerturbed;
-//        itsValue[i * 2 + j].reference(value);
-//    }
-//    
-//    virtual size_t memory() const
-//    {
-//        return ExprResult::memory()
-//            + sizeof(T_NUMERIC) * (itsValue[0].size() + itsValue[2].size()
-//            + itsValue[3].size() + itsValue[4].size());
-//    }
-//    
-//private:
-////    bool                itsPerturbedValueFlag[2][2];
-//    ARRAY(T_NUMERIC)    itsValue[4];
-//};
-
-
-//// @}
-
-//class AsComplex: public Expr<Scalar<complex_t> >
+//inline Matrix &FieldSet::value(const PValueKey &key)
 //{
-//public:
-//    enum Inputs
-//    {
-//        RE,
-//        IM,
-//        N_Inputs
-//    };
+//    return instance().value(key);
+//}
 
-//    AsComplex()
-//        :   Expr<Scalar<complex_t> >(N_Inputs)
-//    {
-//    }
+inline void FieldSet::assign(const Matrix &value)
+{
+    instance().assign(value);
+}
 
-//    AsComplex(const Expr<Scalar<real_t> >::ConstPtr &re,
-//        const Expr<Scalar<real_t> >::ConstPtr &im)
-//        :   Expr<Scalar<complex_t> >(N_Inputs)
-//    {
-//        connect(RE, re);
-//        connect(IM, im);
-//    }
-
-//    virtual ExprBase::ConstResultPtr evaluateImpl(const Request &request,
-//        const vector<ExprBase::ConstResultPtr> &inputs) const
-////    virtual ResultType::ConstPtr evaluateImpl(const Request &request,
-////        const PValueKey &key, bool perturbed) const
-//    {
-////        Expr<Scalar<real_t> >::ConstPtr inputRe =
-////            static_pointer_cast<const Expr<Scalar<double> > >(getInput(RE));
-////        Expr<Scalar<real_t> >::ConstPtr inputIm =
-////            static_pointer_cast<const Expr<Scalar<double> > >(getInput(IM));
-
-////        Scalar<real_t>::ConstPtr re =
-////            inputRe->evaluate(request, key, perturbed);
-////        Scalar<real_t>::ConstPtr im =
-////            inputIm->evaluate(request, key, perturbed);
-
-//        Scalar<real_t>::ConstPtr re =
-//            static_pointer_cast<const Scalar<double> >(inputs[RE]);
-//        Scalar<real_t>::ConstPtr im =
-//            static_pointer_cast<const Scalar<double> >(inputs[IM]);
-
-//        ResultType::Ptr result(new ResultType());
-//        result->assign(ARRAY(complex_t)(blitz::zip(re->value(), im->value(),
-//            complex_t())));
-
-//        return result;        
-//    }
-
-//protected:
-//    virtual void tryConnection(const ExprBase::ConstPtr &input, unsigned int)
-//        const
-//    {
-//        assertInputType<Scalar<real_t> >(input);
-//    }
-//};
-
-
-//template <typename T>
-//class AsExpr;
-
-//template <>
-//template <typename T_NUMERIC, unsigned int LENGTH>
-//class AsExpr<Vector<T_NUMERIC, LENGTH> >
-//    :   public Expr<Vector<T_NUMERIC, LENGTH> >
-//{
-//    using Expr<Vector<T_NUMERIC, LENGTH> >::getInput;
-
-//public:    
-//    AsExpr()
-//        :   Expr<Vector<T_NUMERIC, LENGTH> >(LENGTH)
-//    {
-//    }
-
-//    virtual ExprBase::ConstResultPtr evaluateImpl(const Request &request,
-//        const vector<ExprBase::ConstResultPtr> &inputs) const
-////    virtual typename Expr<Vector<T_NUMERIC, LENGTH> >::ResultType::ConstPtr
-////    evaluateImpl(const Request &request, const PValueKey &key, bool perturbed)
-////        const
-//    {
-//        typename Expr<Vector<T_NUMERIC, LENGTH> >::ResultType::Ptr
-//            result(new typename Expr<Vector<T_NUMERIC, LENGTH> >::ResultType());
-
-//        for(size_t i = 0; i < LENGTH; ++i)
-//        {
-////            typename Expr<Scalar<T_NUMERIC> >::ConstPtr elementExpr =
-////                static_pointer_cast<const Expr<Scalar<T_NUMERIC> > >
-////                    (getInput(i));
-
-////            typename Scalar<T_NUMERIC>::ConstPtr element =
-////                elementExpr->evaluate(request, key, perturbed);
-
-//            typename Scalar<T_NUMERIC>::ConstPtr element =
-//                static_pointer_cast<const Scalar<T_NUMERIC> >(inputs[i]);
-
-//            result->assign(i, element->value());
-//        }
-//        
-//        return result;        
-//    }
-
-//protected:
-//    virtual void tryConnection(const ExprBase::ConstPtr &input, unsigned int i)
-//        const
-//    {
-//    }
-//};
-
-
-//template <>
-//template <typename T_NUMERIC>
-//class AsExpr<JonesMatrix<T_NUMERIC> >: public Expr<JonesMatrix<T_NUMERIC> >
-//{
-////    using typename Expr<JonesMatrix<T_NUMERIC> >::ResultType;
-////    using ExprBase::assertInputType;
-
-//public:    
-//    enum Inputs
-//    {
-//        ELEMENT00,
-//        ELEMENT01,
-//        ELEMENT10,
-//        ELEMENT11,
-//        N_Inputs
-//    };
-//    
-//    AsExpr()
-//        :   Expr<JonesMatrix<T_NUMERIC> >(N_Inputs)
-//    {
-//    }
-//            
-//    virtual ExprBase::ConstResultPtr evaluateImpl(const Request &request,
-//        const vector<ExprBase::ConstResultPtr> &inputs) const
-////    virtual typename Expr<JonesMatrix<T_NUMERIC> >::ResultType::ConstPtr
-////    evaluateImpl(const Request &request, const PValueKey &key, bool perturbed)
-////        const
-//    {
-////        typename Expr<Scalar<T_NUMERIC> >::ConstPtr input00 =
-////            static_pointer_cast<const Expr<Scalar<T_NUMERIC> > >
-////                (getInput(ELEMENT00));
-////        typename Expr<Scalar<T_NUMERIC> >::ConstPtr input01 =
-////            static_pointer_cast<const Expr<Scalar<T_NUMERIC> > >
-////                (getInput(ELEMENT01));
-////        typename Expr<Scalar<T_NUMERIC> >::ConstPtr input10 =
-////            static_pointer_cast<const Expr<Scalar<T_NUMERIC> > >
-////                (getInput(ELEMENT10));
-////        typename Expr<Scalar<T_NUMERIC> >::ConstPtr input11 =
-////            static_pointer_cast<const Expr<Scalar<T_NUMERIC> > >
-////                (getInput(ELEMENT11));
-
-////        typename Scalar<T_NUMERIC>::ConstPtr element00 =
-////            input00->evaluate(request, key, perturbed);
-////        typename Scalar<T_NUMERIC>::ConstPtr element01 =
-////            input10->evaluate(request, key, perturbed);
-////        typename Scalar<T_NUMERIC>::ConstPtr element10 =
-////            input01->evaluate(request, key, perturbed);
-////        typename Scalar<T_NUMERIC>::ConstPtr element11 =
-////            input11->evaluate(request, key, perturbed);
-
-//        typename Scalar<T_NUMERIC>::ConstPtr element00 =
-//            static_pointer_cast<const Scalar<T_NUMERIC> >(inputs[ELEMENT00]);
-//        typename Scalar<T_NUMERIC>::ConstPtr element01 =
-//            static_pointer_cast<const Scalar<T_NUMERIC> >(inputs[ELEMENT01]);
-//        typename Scalar<T_NUMERIC>::ConstPtr element10 =
-//            static_pointer_cast<const Scalar<T_NUMERIC> >(inputs[ELEMENT10]);
-//        typename Scalar<T_NUMERIC>::ConstPtr element11 =
-//            static_pointer_cast<const Scalar<T_NUMERIC> >(inputs[ELEMENT11]);
-
-//        typename Expr<JonesMatrix<T_NUMERIC> >::ResultType::Ptr
-//            result(new typename Expr<JonesMatrix<T_NUMERIC> >::ResultType());
-//        result->assign(0, 0, element00->value());
-//        result->assign(0, 1, element01->value());
-//        result->assign(1, 0, element10->value());
-//        result->assign(1, 1, element11->value());
-
-//        return result;        
-//    }
-
-//protected:
-//    virtual void tryConnection(const ExprBase::ConstPtr &input, unsigned int i)
-//        const
-//    {
-//    }
-//};
+inline void FieldSet::assign(const PValueKey &key, const Matrix &value)
+{
+    return instance().assign(key, value);
+}
 
 } //# namespace BBS
 } //# namespace LOFAR

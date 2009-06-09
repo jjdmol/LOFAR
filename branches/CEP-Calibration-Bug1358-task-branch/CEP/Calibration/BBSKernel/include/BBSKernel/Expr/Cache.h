@@ -40,106 +40,87 @@ namespace BBS
 // @{
 
 // TODO: fix include conflict with Expr.h.
-typedef size_t NodeId;
+typedef size_t ExprId;
 
-class CacheRecord
+struct CacheRecord
 {
-public:
-//    CacheRecord(NodeId node, RequestId request)
-//        :   node(node),
-//            request(request),
-//            key(std::numeric_limits<size_t>::max(),
-//                std::numeric_limits<size_t>::max())
-//    {
-//    }            
-
-    CacheRecord(NodeId node, RequestId request, const PValueKey &key)
-        :   node(node),
-            request(request),
-            key(key)
+    CacheRecord()
+        :   request(0),
+            value(0)
     {
     }
 
-    bool operator<(const CacheRecord &other) const
+    CacheRecord(RequestId request, const ExprValueSet *value)
+        :   request(request),
+            value(value)
     {
-        return node < other.node || (node == other.node && request < other.request)
-            || (node == other.node && request == other.request && key < other.key);
     }
-    
-private:
-    NodeId      node;
-    RequestId   request;
-    PValueKey   key;
+
+    RequestId           request;
+    const ExprValueSet  *value;
 };
+
 
 class Cache
 {
 public:
     Cache();
-    ~Cache();
 
-//    void insert(NodeId node, RequestId request,
-//        const ExprResult::ConstPtr &result)
-//    {
-//        itsCache.insert(make_pair(CacheRecord(node, request,
-//            PValueKey(std::numeric_limits<size_t>::max(),
-//                std::numeric_limits<size_t>::max())), result));
-//        
-//        itsMaxSize = std::max(itsMaxSize, itsCache.size());
-//    }
-            
-    void insert(NodeId node, RequestId request, const PValueKey &key,
-        const ExprResult::ConstPtr &result)
+    ~Cache()
     {
-        itsCache.insert(make_pair(CacheRecord(node, request, key), result));
+        clear();
+    }
+
+    void insert(ExprId expr, RequestId request, const ExprValueSet &value)
+    {
+        CacheRecord &record = itsCache[expr];
+
+        // If the cache already contains an old result, replace it.
+        if(record.value == 0 || record.request < request)
+        {
+            delete record.value;
+            record.request = request;
+            record.value = new ExprValueSet(value);
+        }
+
 //        itsMemSize += result->memory();
         itsMaxSize = std::max(itsMaxSize, itsCache.size());
     }
 
-//    ExprResult::ConstPtr query(NodeId node, RequestId request) const
-//    {
-//        ++itsQueryCount;
-//        
-//        map<pair<size_t, RequestId>, ExprResult::ConstPtr>::const_iterator it =
-//            itsCache.find(CacheRecord(node, request,
-//                PValueKey(std::numeric_limits<size_t>::max(),
-//                    std::numeric_limits<size_t>::max())));
-//                        
-//        if(it != itsCache.end())
-//        {
-////            LOG_DEBUG_STR("Found result in cache: " << node << ":" << request);
-//            ++itsHitCount;
-//            return it->second;
-//        }
-//                    
-//        return ExprResult::ConstPtr();
-//    }
-    
-    ExprResult::ConstPtr query(NodeId node, RequestId request,
-        const PValueKey &key) const
+    bool query(ExprId expr, RequestId request, ExprValueSet &value) const
     {
         ++itsQueryCount;
-        
-        map<CacheRecord, ExprResult::ConstPtr>::const_iterator it =
-            itsCache.find(CacheRecord(node, request, key));
-        
-        if(it != itsCache.end())
+
+        map<ExprId, CacheRecord>::const_iterator it = itsCache.find(expr);
+        if(it != itsCache.end() && it->second.request == request)
         {
-//            LOG_DEBUG_STR("Found result in cache: " << node << ":" << request);
             ++itsHitCount;
-            return it->second;
+            ASSERT(it->second.value != 0);
+            value = *(it->second.value);
+            return true;
         }
-                    
-        return ExprResult::ConstPtr();
+
+        return false;
     }
 
     void clear()
     {
+        map<ExprId, CacheRecord>::iterator it = itsCache.begin();
+        while(it != itsCache.end())
+        {
+            delete it->second.value;
+            ++it;
+        }
+
         itsCache.clear();
+    }
+
+    void clearStats()
+    {
         itsQueryCount = itsHitCount = itsMaxSize = itsMemSize = 0;
     }
-    
-    void printStatistics()
+
+    void printStats()
     {
         cout << "Cache statistics:" << endl;
         cout << "  max. size: " << itsMaxSize << endl;
@@ -151,9 +132,9 @@ public:
 
 private:
     mutable size_t  itsQueryCount, itsHitCount, itsMaxSize, itsMemSize;
-    
+
     // TODO: Use hashtable?
-    map<CacheRecord, ExprResult::ConstPtr>  itsCache;    
+    map<ExprId, CacheRecord>    itsCache;
 };
 
 // @}

@@ -45,18 +45,21 @@ public:
     typedef shared_ptr<LMN>         Ptr;
     typedef shared_ptr<const LMN>   ConstPtr;
 
-    enum Inputs
+    enum Arguments
     {
         POSITION,
-        N_Inputs
+        N_Arguments
     };
-    
+
     LMN(const PhaseRef::ConstPointer &ref);
 
 private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[LMN::N_Inputs]) const;
+    virtual Shape shape(const ExprValueSet (&arguments)[LMN::N_Arguments])
+        const;
+
+    virtual void evaluateImpl(const Request&,
+        const ExprValue (&arguments)[LMN::N_Arguments], ExprValue &result)
+        const;
 
     PhaseRef::ConstPointer  itsRef;
 };

@@ -28,11 +28,11 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 ExprParm::ExprParm(const ParmProxy::ConstPointer &parm)
-    :   ExprTerminus(),
+    :   Expr(),
         itsParm(parm),
         itsPValueFlag(false)
 {
@@ -50,7 +50,7 @@ void ExprParm::clearPValueFlag()
 
 void ExprParm::updateSolvables(set<PValueKey> &solvables) const
 {
-    if(itsPValueFlag)
+    if(getPValueFlag())
     {
         // TODO: The following is incorrect; need to know the id's of all the
         // _solvable_ coefficients (get the mask?).
@@ -58,166 +58,79 @@ void ExprParm::updateSolvables(set<PValueKey> &solvables) const
         for(size_t i = 0; i < nCoeff; ++i)
         {
             solvables.insert(PValueKey(itsParm->getId(), i));
-        }            
-    }
-}
-
-ValueSet::ConstPtr ExprParm::evaluateImpl(const Request&) const
-{
-    ASSERT(false);
-}
-
-ExprResult::ConstPtr ExprParm::evaluate(const Request &request, Cache &cache,
-    const PValueKey &key) const
-{
-    // Query the cache.
-    if(!key.valid() || itsParm->getId() != key.parmId)
-    {
-        // Have to return main value.
-        // Check if there is a cached result available for this request.
-        ExprResult::ConstPtr cached = cache.query(getId(), request.getId(),
-            PValueKey());
-
-        if(cached)
-        {
-            return cached;
-        }
-    }
-    else
-    {
-        // Have to return perturbed value.
-        // Check if there is a cached result available for this request.
-        ExprResult::ConstPtr cached = cache.query(getId(), request.getId(),
-            key);
-
-        if(cached)
-        {
-            return cached;
         }
     }
 
+    itsSolvables.clear();
+    itsSolvables.insert(itsSolvables.begin(), solvables.begin(), solvables.end());
+}
+
+const ExprValueSet ExprParm::evaluate(const Request &request, Cache &cache)
+    const
+{
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
-    itsParm->getResult(buffers, request.getGrid(), key.valid());
+    itsParm->getResult(buffers, request.getGrid(), getPValueFlag()); //false);
     ASSERT(buffers.size() > 0);
 
-    // Transform into an ExprResult.
-    ExprResult::Ptr result(new ExprResult());
+    // Transform into an ExprValueSet.
+    FieldSet scalar;
 
     bool deleteStorage = false;
     const double *storage = 0;
-        
-    if(key.valid() && itsParm->getId() == key.parmId)
-    {
-        ASSERT(buffers.size() > key.coeffId + 1);
-        const size_t bufIdx = key.coeffId + 1;
 
-        // Copy the perturbed value.
-        storage = buffers[bufIdx].getStorage(deleteStorage);
-        ASSERT(storage);
-        if(buffers[bufIdx].nelements() == 1)
-        {
-            ValueSet::Ptr tmp(new ValueSet());
-            tmp->assign(Matrix(*storage));
-            result->setValue(tmp);
-        }
-        else
-        {
-            const casa::IPosition &shape = buffers[bufIdx].shape();
-            DBGASSERT(static_cast<unsigned int>(shape(0)) == request[FREQ]->size()
-                && static_cast<unsigned int>(shape(1)) == request[TIME]->size());
-            ValueSet::Ptr tmp(new ValueSet());
-            tmp->assign(Matrix(storage, shape(0), shape(1)));
-            result->setValue(tmp);
-        }
-        buffers[bufIdx].freeStorage(storage, deleteStorage);
+    // Copy the main value.
+    storage = buffers[0].getStorage(deleteStorage);
+    ASSERT(storage);
+    if(buffers[0].nelements() == 1)
+    {
+//        LOG_DEBUG_STR("Parm: " << itsParm->getName() << " Value: " << *storage);
+        scalar.assign(Matrix(*storage));
     }
     else
     {
-        // Copy the main value.
-        storage = buffers[0].getStorage(deleteStorage);
-        ASSERT(storage);
-        if(buffers[0].nelements() == 1)
+        const casa::IPosition &shape = buffers[0].shape();
+        DBGASSERT(static_cast<unsigned int>(shape(0)) == request[FREQ]->size()
+            && static_cast<unsigned int>(shape(1)) == request[TIME]->size());
+        scalar.assign(Matrix(storage, shape(0), shape(1)));
+    }
+    buffers[0].freeStorage(storage, deleteStorage);
+
+    // Copy the perturbed values if necessary.
+    // TODO: re-enable flag in request to avoid generating partials even if
+    // some parms are set to solvable?
+    if(getPValueFlag())// && request.getPValueFlag())
+    {
+        // TODO: check correctness when some coefficients are masked
+        // non-solvable.
+        const size_t nCoeff = itsParm->getCoeffCount();
+        ASSERT(buffers.size() == nCoeff + 1);
+
+        for(size_t i = 0; i < nCoeff; ++i)
         {
-            ValueSet::Ptr tmp(new ValueSet());
-            tmp->assign(Matrix(*storage));
-            result->setValue(tmp);
+            storage = buffers[i + 1].getStorage(deleteStorage);
+            ASSERT(storage);
+            if(buffers[i + 1].nelements() == 1)
+            {
+                scalar.assign(PValueKey(itsParm->getId(), i),
+                    Matrix(storage[0]));
+            }
+            else
+            {
+                const casa::IPosition &shape = buffers[i + 1].shape();
+                scalar.assign(PValueKey(itsParm->getId(), i), Matrix(storage,
+                    shape(0), shape(1)));
+            }
+            buffers[i + 1].freeStorage(storage, deleteStorage);
         }
-        else
-        {
-            const casa::IPosition &shape = buffers[0].shape();
-            DBGASSERT(static_cast<unsigned int>(shape(0)) == request[FREQ]->size()
-                && static_cast<unsigned int>(shape(1)) == request[TIME]->size());
-            ValueSet::Ptr tmp(new ValueSet());
-            tmp->assign(Matrix(storage, shape(0), shape(1)));
-            result->setValue(tmp);
-        }
-        buffers[0].freeStorage(storage, deleteStorage);
     }
 
-    if(!key.valid() || getConsumerCount() > 1)
-    {
-        cache.insert(getId(), request.getId(), key, result);
-    }
-    
+    ExprValueSet result((Shape()));
+    result.setFieldSet(0, scalar);
     return result;
 }
 
-//ValueSet::ConstPtr ExprParm::evaluateImpl(const Request &request) const
-//{
-//    // Get the result from the Parm.
-//    vector<casa::Array<double> > buffers;
-//    itsParm->getResult(buffers, request.getGrid(), itsPValueFlag
-//        && request.getPValueFlag());
-//    ASSERT(buffers.size() > 0);
 
-//    // Transform into a Result.
-//    ValueSet::Ptr result(new ValueSet());
-
-//    bool deleteStorage;
-//    const double *storage = 0;
-//    
-//    // Copy the main value.
-//    storage = buffers[0].getStorage(deleteStorage);
-//    ASSERT(storage);
-//    if(buffers[0].nelements() == 1)
-//    {
-//        result->assign(Matrix(storage[0]));
-//    }
-//    else
-//    {
-//        const casa::IPosition &shape = buffers[0].shape();
-//        result->assign(Matrix(storage, shape(0), shape(1)));
-//    }
-//    buffers[0].freeStorage(storage, deleteStorage);
-
-//    // Copy the perturbed values if necessary.
-////    if(itsPValueFlag && request.getPValueFlag())
-////    {
-////        const size_t nCoeff = itsParm->getCoeffCount();
-////        ASSERT(buffers.size() == nCoeff + 1);
-////        
-////        for(size_t i = 0; i < nCoeff; ++i)
-////        {
-////            storage = buffers[i + 1].getStorage(deleteStorage);
-////            ASSERT(storage);
-////            if(buffers[i + 1].nelements() == 1)
-////            {
-////                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
-////                    Matrix(storage[0]));
-////            }
-////            else
-////            {
-////                const casa::IPosition &shape = buffers[i + 1].shape();
-////                result.setPerturbedValue(PValueKey(itsParm->getId(), i),
-////                    Matrix(storage, shape(0), shape(1)));
-////            }
-////            buffers[i + 1].freeStorage(storage, deleteStorage);
-////        }
-////    }
-//    
-//    return result;
-//}
 
 } //# namespace BBS
 } //# namespace LOFAR

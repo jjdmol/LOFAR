@@ -1,4 +1,4 @@
-//# Model.cc: 
+//# Model.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,7 +29,7 @@
 
 #include <BBSKernel/Expr/PointSource.h>
 #include <BBSKernel/Expr/Mul.h>
-#include <BBSKernel/Expr/MatrixMul3.h>
+//#include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/PointCoherence.h>
 //#include <BBSKernel/Expr/GaussianSource.h>
@@ -42,7 +42,7 @@
 //#include <BBSKernel/Expr/YatawattaDipole.h>
 //#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PhaseRef.h>
-#include <BBSKernel/Expr/UVW.h>
+//#include <BBSKernel/Expr/UVW.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 //#include <BBSKernel/Expr/JonesMul.h>
 //#include <BBSKernel/Expr/JonesMul2.h>
@@ -77,10 +77,10 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-Model::Model(const Instrument &instrument, const SourceDB &sourceDb, 
+Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
     const casa::MDirection &phaseRef)
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb)
@@ -92,199 +92,194 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
     makeStationUvw();
 }
 
-void Model::setPerturbedParms(const ParmGroup &perturbed)
+Model::~Model()
 {
-    ASSERT(!itsExpressions.empty());
-
-    ParmGroup::const_iterator pertIt = perturbed.begin();
-    ParmGroup::const_iterator pertItEnd = perturbed.end();
-    while(pertIt != pertItEnd)
-    {
-        map<unsigned int, ExprParm::Ptr>::iterator parmIt =
-            itsParms.find(*pertIt);
-            
-        if(parmIt != itsParms.end())
-        {
-//            ExprParm *parmPtr = static_cast<ExprParm*>(parmIt->second.getPtr());
-//            parmPtr->setPValueFlag();
-            parmIt->second->setPValueFlag();
-        }
-        ++pertIt;
-    }
-
-    map<baseline_t, Expr::Ptr>::const_iterator exprIt = itsExpressions.begin();
-    map<baseline_t, Expr::Ptr>::const_iterator exprItEnd = itsExpressions.end();
-    while(exprIt != exprItEnd)
-    {
-        exprIt->second->updateSolvables();
-        ++exprIt;
-    }
+    itsCache.printStats();
+    itsCache.clear();
 }
 
-////        set<PValueKey> dep;
-////        ASSERT(exprIt->second);
-////        exprIt->second->getPerturbedParms(dep);
-////        itsDependencies.insert(make_pair(exprIt->first, 
-////            vector<PValueKey>(dep.begin(), dep.end())));
-////        
-//////        cout << "Dependencies [" << exprIt->first.first << "-"
-//////            << exprIt->first.second << "]: ";
-
-//////        set<PValueKey>::const_iterator tmpIt = dep.begin();
-//////        set<PValueKey>::const_iterator tmpItEnd = dep.end();
-//////        while(tmpIt != tmpItEnd)
-//////        {
-//////            cout << tmpIt->parmId << ":" << tmpIt->coeffId << " ";
-//////            ++tmpIt;
-//////        }
-//////        cout << endl;
-////        
-
-void Model::clearPerturbedParms()
-{
-    map<unsigned int, ExprParm::Ptr>::iterator it = itsParms.begin();
-    map<unsigned int, ExprParm::Ptr>::iterator itEnd = itsParms.end();
-    while(it != itEnd)
-    {
-//            ExprParm *parmPtr = static_cast<ExprParm*>(parmIt->second.getPtr());
-//            parmPtr->setPValueFlag();
-        it->second->clearPValueFlag();
-        ++it;
-    }
-
-    map<baseline_t, Expr::Ptr>::const_iterator exprIt = itsExpressions.begin();
-    map<baseline_t, Expr::Ptr>::const_iterator exprItEnd = itsExpressions.end();
-    while(exprIt != exprItEnd)
-    {
-        exprIt->second->updateSolvables();
-        ++exprIt;
-    }
-}
-
-ParmGroup Model::getParms() const
-{
-    ParmGroup result;
-    
-    map<unsigned int, ExprParm::Ptr>::const_iterator it = itsParms.begin();
-    map<unsigned int, ExprParm::Ptr>::const_iterator itEnd = itsParms.end();
-    while(it != itEnd)
-    {
-        result.insert(it->first);
-        ++it;
-    }
-
-    return result;
-}
-
-ParmGroup Model::getPerturbedParms() const
-{
-    ParmGroup result;
-    
-    map<unsigned int, ExprParm::Ptr>::const_iterator it = itsParms.begin();
-    map<unsigned int, ExprParm::Ptr>::const_iterator itEnd = itsParms.end();
-    while(it != itEnd)
-    {
-        ASSERT(it->second);
-        if(it->second->getPValueFlag())
-        {
-            result.insert(it->first);
-        }
-
-        ++it;
-    }
-
-    return result;
-}
-
-//void Model::setRequest(const Request &request)
+//void Model::setPerturbedParms(const ParmGroup &perturbed)
 //{
-//    itsRequest = request;
+////    ASSERT(!itsExpr.empty());
+
+////    ParmGroup::const_iterator pertIt = perturbed.begin();
+////    ParmGroup::const_iterator pertItEnd = perturbed.end();
+////    while(pertIt != pertItEnd)
+////    {
+////        map<unsigned int, ExprParm::Ptr>::iterator parmIt =
+////            itsParms.find(*pertIt);
+////
+////        if(parmIt != itsParms.end())
+////        {
+//////            ExprParm *parmPtr = static_cast<ExprParm*>(parmIt->second.getPtr());
+//////            parmPtr->setPValueFlag();
+////            parmIt->second->setPValueFlag();
+////        }
+////        ++pertIt;
+////    }
+
+////    map<baseline_t, Expr::Ptr>::const_iterator exprIt = itsExpr.begin();
+////    map<baseline_t, Expr::Ptr>::const_iterator exprItEnd = itsExpr.end();
+////    while(exprIt != exprItEnd)
+////    {
+////        exprIt->second->updateSolvables();
+////        ++exprIt;
+////    }
 //}
+
+//////        set<PValueKey> dep;
+//////        ASSERT(exprIt->second);
+//////        exprIt->second->getPerturbedParms(dep);
+//////        itsDependencies.insert(make_pair(exprIt->first,
+//////            vector<PValueKey>(dep.begin(), dep.end())));
+//////
+////////        cout << "Dependencies [" << exprIt->first.first << "-"
+////////            << exprIt->first.second << "]: ";
+
+////////        set<PValueKey>::const_iterator tmpIt = dep.begin();
+////////        set<PValueKey>::const_iterator tmpItEnd = dep.end();
+////////        while(tmpIt != tmpItEnd)
+////////        {
+////////            cout << tmpIt->parmId << ":" << tmpIt->coeffId << " ";
+////////            ++tmpIt;
+////////        }
+////////        cout << endl;
+//////
+
+//void Model::clearPerturbedParms()
+//{
+////    map<unsigned int, ExprParm::Ptr>::iterator it = itsParms.begin();
+////    map<unsigned int, ExprParm::Ptr>::iterator itEnd = itsParms.end();
+////    while(it != itEnd)
+////    {
+//////            ExprParm *parmPtr = static_cast<ExprParm*>(parmIt->second.getPtr());
+//////            parmPtr->setPValueFlag();
+////        it->second->clearPValueFlag();
+////        ++it;
+////    }
+
+////    map<baseline_t, Expr::Ptr>::const_iterator exprIt = itsExpr.begin();
+////    map<baseline_t, Expr::Ptr>::const_iterator exprItEnd = itsExpr.end();
+////    while(exprIt != exprItEnd)
+////    {
+////        exprIt->second->updateSolvables();
+////        ++exprIt;
+////    }
+//}
+
+//ParmGroup Model::getParms() const
+//{
+////    ParmGroup result;
+////
+////    map<unsigned int, ExprParm::Ptr>::const_iterator it = itsParms.begin();
+////    map<unsigned int, ExprParm::Ptr>::const_iterator itEnd = itsParms.end();
+////    while(it != itEnd)
+////    {
+////        result.insert(it->first);
+////        ++it;
+////    }
+
+////    return result;
+//}
+
+//ParmGroup Model::getPerturbedParms() const
+//{
+////    ParmGroup result;
+////
+////    map<unsigned int, ExprParm::Ptr>::const_iterator it = itsParms.begin();
+////    map<unsigned int, ExprParm::Ptr>::const_iterator itEnd = itsParms.end();
+////    while(it != itEnd)
+////    {
+////        ASSERT(it->second);
+////        if(it->second->getPValueFlag())
+////        {
+////            result.insert(it->first);
+////        }
+
+////        ++it;
+////    }
+
+////    return result;
+//}
+
+////void Model::setRequest(const Request &request)
+////{
+////    itsRequest = request;
+////}
 
 void Model::setRequestGrid(const Grid &grid)
 {
     itsRequest = Request(grid);
-    itsCache.printStatistics();
+    itsCache.printStats();
+    itsCache.clearStats();
     itsCache.clear();
 }
 
-ExprResult::ConstPtr Model::evaluate(const baseline_t &baseline)
+const ExprValueSet Model::evaluate(const baseline_t &baseline)
 {
-    map<baseline_t, Expr::Ptr>::const_iterator exprIt =
-        itsExpressions.find(baseline);
-    ASSERT(exprIt != itsExpressions.end());
+    map<baseline_t, Expr::Ptr>::const_iterator exprIt = itsExpr.find(baseline);
+    ASSERT(exprIt != itsExpr.end());
 
-    ExprResult::ConstPtr result =
-        (exprIt->second)->evaluate(itsRequest, itsCache);
-    return result;
-}
+    const ExprValueSet model = (exprIt->second)->evaluate(itsRequest, itsCache);
+    ASSERT(model.shape() == Shape(2, 2));
 
-map<PValueKey, ExprResult::ConstPtr>
-Model::evalPerturbed(const baseline_t &baseline)
-{
-    map<baseline_t, Expr::Ptr>::const_iterator exprIt =
-        itsExpressions.find(baseline);
-    ASSERT(exprIt != itsExpressions.end());
-    
-    Expr::Ptr expr = exprIt->second;
+    ExprValueSet result(Shape(2, 2));
+    result.assignFlags(model.flags());
+//    LOG_DEBUG_STR("BL: " << baseline.first << " - " << baseline.second
+//        << " FLAGS: " << value.flags());
 
-    map<PValueKey, ExprResult::ConstPtr> result;
-        
-    // Evaluate main value.
-    ExprResult::ConstPtr mainR = expr->evaluate(itsRequest, itsCache);
-    result[PValueKey()] = mainR;
-    ValueSet::ConstPtr main = mainR->getValue();
+    const ExprValue value = model.value();
+    result.assign(value);
 
-    // Evaluate partial derivatives.
-    set<PValueKey>::const_iterator it = expr->getSolvables().begin();
-    set<PValueKey>::const_iterator itEnd = expr->getSolvables().end();
+//    cout << "Computing partials:";
 
-    while(it != itEnd)
+    Expr::const_solvables_iterator solIt = (exprIt->second)->begin();
+    Expr::const_solvables_iterator solItEnd = (exprIt->second)->end();
+    while(solIt != solItEnd)
     {
-        ExprResult::ConstPtr pertR = expr->evaluate(itsRequest, itsCache, *it);
-        ValueSet::ConstPtr pert = pertR->getValue();
-            
+//        cout << " " << solvables[i].parmId << "|" << solvables[i].coeffId;
+
+        // Get the perturbed value associated with *solIt (the current
+        // solvable).
+        const ExprValue pert = model.value(*solIt);
+
         // Get perturbation.
-        map<unsigned int, ExprParm::Ptr>::const_iterator parmIt =
-            itsParms.find(it->parmId);
-        ASSERT(parmIt != itsParms.end());
-        ASSERT(parmIt->second);
-        
+//        map<unsigned int, ExprParm::Ptr>::const_iterator parmIt =
+//            itsParms.find(it->parmId);
+//        ASSERT(parmIt != itsParms.end());
+//        ASSERT(parmIt->second);
+//        const double inversePert =
+//            1.0 / parmIt->second->getPerturbation(it->coeffId);
+
+        ParmProxy::ConstPointer parm =
+            ParmManager::instance().get(solIt->parmId);
         const double inversePert =
-            1.0 / parmIt->second->getPerturbation(it->coeffId);
+            1.0 / parm->getPerturbation(solIt->coeffId);
 
         // Approximate partial derivative by forward differences.
-        ValueSet::Shape shape = {2, 2};
-        ValueSet::Ptr partial(new ValueSet(shape));
-        partial->assign(0, 0, Matrix((pert->value(0, 0) - main->value(0, 0))
-            * inversePert));
-        partial->assign(0, 1, Matrix((pert->value(0, 1) - main->value(0, 1))
-            * inversePert));
-        partial->assign(1, 0, Matrix((pert->value(1, 0) - main->value(1, 0))
-            * inversePert));
-        partial->assign(1, 1, Matrix((pert->value(1, 1) - main->value(1, 1))
-            * inversePert));
+        ExprValue partial(Shape(2, 2));
+        partial.assign(0, 0, Matrix((pert(0, 0) - value(0, 0)) * inversePert));
+        partial.assign(0, 1, Matrix((pert(0, 1) - value(0, 1)) * inversePert));
+        partial.assign(1, 0, Matrix((pert(1, 0) - value(1, 0)) * inversePert));
+        partial.assign(1, 1, Matrix((pert(1, 1) - value(1, 1)) * inversePert));
 
-//        cout << "main: " << main->value(0, 0) << endl;
-//        cout << "pert: " << pert->value(0, 0) << endl;
-//        cout << "partial: " << partial->value(0, 0) << endl;
-        
-        ExprResult::Ptr tmp(new ExprResult());
-        tmp->setValue(partial);
-        result.insert(make_pair(*it, tmp));
-        
-        ++it;
+//        cout << "main: " << main(0) << endl;
+//        cout << "pert: " << pert(0) << endl;
+//        cout << "partial: " << partial(0) << endl;
+
+        result.assign(*solIt, partial);
+        ++solIt;
     }
-    
+
     return result;
-}    
+}
 
 //JonesMatrix<complex_t>::ConstPtr Model::evaluate(const baseline_t &baseline,
 //    Cache &cache)
 //{
 //    map<baseline_t, Expr<JonesMatrix<complex_t> >::Ptr>::const_iterator exprIt =
-//        itsExpressions.find(baseline);
-//    ASSERT(exprIt != itsExpressions.end());
+//        itsExpr.find(baseline);
+//    ASSERT(exprIt != itsExpr.end());
 
 //    return (exprIt->second)->evaluate(itsRequest, PValueKey(), false, cache);
 //}
@@ -293,17 +288,17 @@ Model::evalPerturbed(const baseline_t &baseline)
 //Model::evalPerturbed(const baseline_t &baseline, Cache &cache)
 //{
 //    map<baseline_t, Expr<JonesMatrix<complex_t> >::Ptr>::const_iterator exprIt =
-//        itsExpressions.find(baseline);
-//    ASSERT(exprIt != itsExpressions.end());
-//    
+//        itsExpr.find(baseline);
+//    ASSERT(exprIt != itsExpr.end());
+//
 //    Expr<JonesMatrix<complex_t> >::Ptr expr = exprIt->second;
 
 //    map<PValueKey, JonesMatrix<complex_t>::ConstPtr> result;
-//    
+//
 //    // Evaluate main value.
 //    JonesMatrix<complex_t>::ConstPtr main = expr->evaluate(itsRequest,
 //        PValueKey(), false, cache);
-//    result[PValueKey()] = main;        
+//    result[PValueKey()] = main;
 
 //    // Evaluate partial derivatives.
 //    set<PValueKey>::const_iterator it = expr->getSolvables().begin();
@@ -315,13 +310,13 @@ Model::evalPerturbed(const baseline_t &baseline)
 //    {
 //        JonesMatrix<complex_t>::ConstPtr pert = expr->evaluate(itsRequest, *it,
 //            true, cache);
-//            
+//
 //        // Get perturbation.
 //        map<unsigned int, ExprParm::Ptr>::const_iterator parmIt =
 //            itsParms.find(it->parmId);
 //        ASSERT(parmIt != itsParms.end());
 //        ASSERT(parmIt->second);
-//        
+//
 //        const double inversePert =
 //            1.0 / parmIt->second->getPerturbation(it->coeffId);
 
@@ -335,14 +330,14 @@ Model::evalPerturbed(const baseline_t &baseline)
 //            * (pert->value(1, 0) - main->value(1, 0))));
 //        partial->assign(1, 1, ARRAY(complex_t)(inversePert
 //            * (pert->value(1, 1) - main->value(1, 1))));
-//        
+//
 //        result.insert(make_pair(*it, partial));
-//        
+//
 //        ++it;
 //    }
-//    
+//
 //    return result;
-//}    
+//}
 
 ExprParm::Ptr Model::makeExprParm(uint category, const string &name)
 {
@@ -355,98 +350,98 @@ ExprParm::Ptr Model::makeExprParm(uint category, const string &name)
     return status.first->second;
 }
 
-vector<Expr::Ptr> Model::makeUVWExpr(const VisData::Pointer &chunk,
-    const vector<baseline_t> &baselines)
-{
-    vector<Expr::Ptr> result;
+//vector<Expr::Ptr> Model::makeUVWExpr(const VisData::Pointer &chunk,
+//    const vector<baseline_t> &baselines)
+//{
+//    vector<Expr::Ptr> result;
 
-    vector<baseline_t>::const_iterator it = baselines.begin();
-    vector<baseline_t>::const_iterator itEnd = baselines.end();
-    while(it != itEnd)
-    {
-        result.push_back(Expr::Ptr(new UVW(chunk, *it)));
-        ++it;
-    }
-    
-    return result;
-}    
+//    vector<baseline_t>::const_iterator it = baselines.begin();
+//    vector<baseline_t>::const_iterator itEnd = baselines.end();
+//    while(it != itEnd)
+//    {
+//        result.push_back(Expr::Ptr(new UVW(chunk, *it)));
+//        ++it;
+//    }
 
-boost::multi_array<Expr::Ptr, 2>
-Model::makeDirectionDependentGainExpr(const ModelConfig &config,
-    const vector<Source::Ptr> &sourceList)
-{
-    string elem1(config.usePhasors ? "Ampl"  : "Real");
-    string elem2(config.usePhasors ? "Phase" : "Imag");
+//    return result;
+//}
 
-    const size_t nStations = itsInstrument.stations.size();
-    const size_t nSources = sourceList.size();
-    
-//    const size_t nSources = 2;
-    boost::multi_array<Expr::Ptr, 2>
-        result(boost::extents[nStations][nSources]);
+//boost::multi_array<Expr::Ptr, 2>
+//Model::makeDirectionDependentGainExpr(const ModelConfig &config,
+//    const vector<Source::Ptr> &sourceList)
+//{
+//    string elem1(config.usePhasors ? "Ampl"  : "Real");
+//    string elem2(config.usePhasors ? "Phase" : "Imag");
 
-    for(size_t i = 0; i < nStations; ++i)
-    {
-        for(size_t j = 0; j < nSources; ++j)
-        {
-            Expr::Ptr J11, J12, J21, J22;
+//    const size_t nStations = itsInstrument.stations.size();
+//    const size_t nSources = sourceList.size();
 
-            string suffix(itsInstrument.stations[i].name + ":"
-//                + (j == 0 ? "CasA" : "CygA"));
-                + sourceList[j]->getName());
+////    const size_t nSources = 2;
+//    boost::multi_array<Expr::Ptr, 2>
+//        result(boost::extents[nStations][nSources]);
 
-            ExprParm::Ptr J11_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J11_elem2 =
-                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem2 + ":" + suffix);
-            ExprParm::Ptr J12_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J12_elem2 =
-                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem2 + ":" + suffix);
-            ExprParm::Ptr J21_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J21_elem2 =
-                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem2 + ":" + suffix);
-            ExprParm::Ptr J22_elem1 =
-                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem1 + ":" + suffix);
-            ExprParm::Ptr J22_elem2 =
-                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem2 + ":" + suffix);
+//    for(size_t i = 0; i < nStations; ++i)
+//    {
+//        for(size_t j = 0; j < nSources; ++j)
+//        {
+//            Expr::Ptr J11, J12, J21, J22;
 
-            ASSERT(!config.usePhasors);
-//            if(config.usePhasors)
+//            string suffix(itsInstrument.stations[i].name + ":"
+////                + (j == 0 ? "CasA" : "CygA"));
+//                + sourceList[j]->getName());
+
+//            ExprParm::Ptr J11_elem1 =
+//                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem1 + ":" + suffix);
+//            ExprParm::Ptr J11_elem2 =
+//                makeExprParm(INSTRUMENT, "Gain:0:0:" + elem2 + ":" + suffix);
+//            ExprParm::Ptr J12_elem1 =
+//                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem1 + ":" + suffix);
+//            ExprParm::Ptr J12_elem2 =
+//                makeExprParm(INSTRUMENT, "Gain:0:1:" + elem2 + ":" + suffix);
+//            ExprParm::Ptr J21_elem1 =
+//                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem1 + ":" + suffix);
+//            ExprParm::Ptr J21_elem2 =
+//                makeExprParm(INSTRUMENT, "Gain:1:0:" + elem2 + ":" + suffix);
+//            ExprParm::Ptr J22_elem1 =
+//                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem1 + ":" + suffix);
+//            ExprParm::Ptr J22_elem2 =
+//                makeExprParm(INSTRUMENT, "Gain:1:1:" + elem2 + ":" + suffix);
+
+//            ASSERT(!config.usePhasors);
+////            if(config.usePhasors)
+////            {
+////                J11 = new ExprAPToComplex(J11_elem1, J11_elem2);
+////                J12 = new ExprAPToComplex(J12_elem1, J12_elem2);
+////                J21 = new ExprAPToComplex(J21_elem1, J21_elem2);
+////                J22 = new ExprAPToComplex(J22_elem1, J22_elem2);
+////            }
+////            else
 //            {
-//                J11 = new ExprAPToComplex(J11_elem1, J11_elem2);
-//                J12 = new ExprAPToComplex(J12_elem1, J12_elem2);
-//                J21 = new ExprAPToComplex(J21_elem1, J21_elem2);
-//                J22 = new ExprAPToComplex(J22_elem1, J22_elem2);
+//                J11.reset(new AsComplex(J11_elem1, J11_elem2));
+//                J12.reset(new AsComplex(J12_elem1, J12_elem2));
+//                J21.reset(new AsComplex(J21_elem1, J21_elem2));
+//                J22.reset(new AsComplex(J22_elem1, J22_elem2));
 //            }
-//            else
-            {
-                J11.reset(new AsComplex(J11_elem1, J11_elem2));
-                J12.reset(new AsComplex(J12_elem1, J12_elem2));
-                J21.reset(new AsComplex(J21_elem1, J21_elem2));
-                J22.reset(new AsComplex(J22_elem1, J22_elem2));
-            }
 
-            ValueSet::Shape shape = {2, 2};
-            Zip::Ptr matrix(new Zip(shape));
-            matrix->connect(J11);
-            matrix->connect(J12);
-            matrix->connect(J21);
-            matrix->connect(J22);
-            
-            result[i][j] = matrix;
-        }
-    }
-    
-    return result;
-}
+//            ValueSet::Shape shape = {2, 2};
+//            Zip::Ptr matrix(new Zip(shape));
+//            matrix->connect(J11);
+//            matrix->connect(J12);
+//            matrix->connect(J21);
+//            matrix->connect(J22);
+
+//            result[i][j] = matrix;
+//        }
+//    }
+
+//    return result;
+//}
 
 
 void Model::makeFwdExpressions(const ModelConfig &config,
     const VisData::Pointer &chunk, const vector<baseline_t> &baselines)
 {
-    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
+    ASSERTSTR(itsExpr.empty(), "Model already initialized; call Model::"
         "clearExpressions() first");
 
     // Create Source objects for all selected sources.
@@ -466,9 +461,9 @@ void Model::makeFwdExpressions(const ModelConfig &config,
     boost::multi_array<Expr::Ptr, 2> stationShift;
     makeStationShiftNodes(stationShift, sourceList);
 
-    boost::multi_array<Expr::Ptr, 2> gainExpr =
-        makeDirectionDependentGainExpr(config, sourceList);
-    
+//    boost::multi_array<Expr::Ptr, 2> gainExpr =
+//        makeDirectionDependentGainExpr(config, sourceList);
+
     // Make an LMN and coherence expression for each source.
 //    vector<Expr::Ptr> lmn;
     vector<Expr::Ptr> coherence;
@@ -478,12 +473,12 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //        LMN::Ptr lmnExpr(new LMN(itsPhaseRef));
 //        lmnExpr->connect(LMN::POSITION, sourceList[i]->getPosition());
 //        lmn.push_back(lmnExpr);
-        
+
         PointSource::ConstPtr point =
             dynamic_pointer_cast<const PointSource>(sourceList[i]);
 
         PointCoherence::Ptr coherenceExpr(new PointCoherence());
-        coherenceExpr->connect(PointCoherence::STOKES_VECTOR,
+        coherenceExpr->connect(PointCoherence::STOKES,
             point->getStokesVector());
         coherence.push_back(coherenceExpr);
     }
@@ -499,7 +494,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //            PhaseShift::Ptr shift(new PhaseShift());
 //            shift->connect(PhaseShift::UVW, uvw[i]);
 //            shift->connect(PhaseShift::LMN, lmn[j]);
-        
+
             // Phase shift (incorporates geometry and fringe stopping).
             PhaseShiftOld::Ptr shift(new PhaseShiftOld());
             shift->connect(PhaseShiftOld::LHS, stationShift[baselines[i].first][j]);
@@ -508,22 +503,22 @@ void Model::makeFwdExpressions(const ModelConfig &config,
             Mul::Ptr mul(new Mul());
             mul->connect(Mul::LHS, shift);
             mul->connect(Mul::RHS, coherence[j]);
-        
-            if(mask[DIRECTIONAL_GAIN])
-            {
-                MatrixMul3::Ptr matmul3(new MatrixMul3());
-                matmul3->connect(MatrixMul3::LEFT, gainExpr[baselines[i].first][j]);
-                matmul3->connect(MatrixMul3::MID, mul);
-                matmul3->connect(MatrixMul3::RIGHT, gainExpr[baselines[i].second][j]);
-                sum->connect(matmul3);
-            }
-            else
+
+//            if(mask[DIRECTIONAL_GAIN])
+//            {
+//                MatrixMul3::Ptr matmul3(new MatrixMul3());
+//                matmul3->connect(MatrixMul3::LEFT, gainExpr[baselines[i].first][j]);
+//                matmul3->connect(MatrixMul3::MID, mul);
+//                matmul3->connect(MatrixMul3::RIGHT, gainExpr[baselines[i].second][j]);
+//                sum->connect(matmul3);
+//            }
+//            else
             {
                 sum->connect(mul);
-            }            
+            }
         }
-        
-        itsExpressions[baselines[i]] = sum;
+
+        itsExpr[baselines[i]] = sum;
     }
 
 //    LMN::Ptr lmnCasA(new LMN(itsPhaseRef));
@@ -580,14 +575,14 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 
 //    // Direction independent (uv-plane) effects.
 //    bool uvEffects = mask[BANDPASS] || mask[GAIN];
-//    
+//
 //    // Create a bandpass node per station.
 //    vector<JonesExpr> bandpass;
 //    if(mask[BANDPASS])
 //    {
 //        makeBandpassNodes(bandpass);
 //    }
-//    
+//
 //    // Create a gain node per station.
 //    vector<JonesExpr> gain;
 //    if(mask[GAIN])
@@ -602,12 +597,12 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //    {
 //        uvJones.resize(nStations);
 //        for(size_t i = 0; i < nStations; ++i)
-//        {   
+//        {
 //            if(mask[BANDPASS])
 //            {
 //                uvJones[i] = bandpass[i];
 //            }
-//                
+//
 //            if(mask[GAIN])
 //            {
 //                uvJones[i] = uvJones[i].isNull() ? gain[i]
@@ -617,10 +612,10 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //            // TODO: Add other uv-plane effects here.
 //        }
 //    }
-//    
+//
 //    // Direction dependent (image-plane) effects.
 //    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
-//    
+//
 //    // Create a station shift node per station-source combination.
 //    boost::multi_array<Expr, 2> stationShift;
 //    makeStationShiftNodes(stationShift, sources);
@@ -631,21 +626,21 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //    {
 //        makeAzElNodes(azel, sources);
 //    }
-//    
+//
 //    // Create a directional gain node per station-source combination.
 //    boost::multi_array<JonesExpr, 2> gainDirectional;
 //    if(mask[DIRECTIONAL_GAIN])
 //    {
 //        makeDirectionalGainNodes(gainDirectional, config, sources);
 //    }
-//    
+//
 //    // Create a dipole beam node per station0-source combination.
 //    boost::multi_array<JonesExpr, 2> dipoleBeam;
 //    if(mask[BEAM])
 //    {
 //        makeDipoleBeamNodes(dipoleBeam, config, azel);
 //    }
-//    
+//
 //    // Create a MIM node per station-source combination.
 //    boost::multi_array<JonesExpr, 2> ionosphere;
 //    if(mask[IONOSPHERE])
@@ -669,7 +664,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //                {
 //                    imgJones[i][j] = gainDirectional[i][j];
 //                }
-//                
+//
 //                if(mask[BEAM])
 //                {
 //                    imgJones[i][j] = imgJones[i][j].isNull() ? dipoleBeam[i][j]
@@ -683,12 +678,12 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //                        : JonesExpr(new JonesMul2(imgJones[i][j],
 //                            ionosphere[i][j]));
 //                }
-//                
+//
 //                // TODO: Add other image-plane effects here.
 //            }
 //        }
 //    }
-//        
+//
 //    // Create an expression tree for each baseline.
 //    for(size_t i = 0; i < baselines.size(); ++i)
 //    {
@@ -698,7 +693,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //        for(size_t j = 0; j < nSources; ++j)
 //        {
 //            JonesExpr coherence;
-//            
+//
 //            map<size_t, JonesExpr>::iterator pointCohIt = pointCoh.find(j);
 //            if(pointCohIt != pointCoh.end())
 //            {
@@ -709,7 +704,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //                GaussianSource::ConstPointer gauss =
 //                    dynamic_pointer_cast<const GaussianSource>(sources[j]);
 //                ASSERT(gauss);
-//                
+//
 //                coherence = new GaussianCoherence(gauss,
 //                    itsStationUvw[baseline.first],
 //                    itsStationUvw[baseline.second]);
@@ -722,7 +717,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //            // Phase shift the source coherence.
 //            ASSERT(!coherence.isNull());
 //            coherence = new JonesMul(shift, coherence);
-//            
+//
 //            // Apply direction dependent (image-plane) effects.
 //            if(imgEffects)
 //            {
@@ -751,14 +746,14 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //                uvJones[baseline.second]);
 //        }
 
-//        itsExpressions[baseline] = sum;
+//        itsExpr[baseline] = sum;
 //    }
 }
 
 //bool Model::makeInvExpressions(const ModelConfig &config,
 //    const VisData::Pointer &chunk, const vector<baseline_t> &baselines)
 //{
-//    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
+//    ASSERTSTR(itsExpr.empty(), "Model already initialized; call Model::"
 //        "clearExpressions() first");
 
 //    const size_t nStations = itsInstrument.stations.size();
@@ -768,14 +763,14 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 
 //    // Direction independent (uv-plane) effects.
 //    bool uvEffects = mask[BANDPASS] || mask[GAIN];
-//    
+//
 //    // Create a bandpass node per station.
 //    vector<JonesExpr> bandpass;
 //    if(mask[BANDPASS])
 //    {
 //        makeBandpassNodes(bandpass);
 //    }
-//    
+//
 //    // Create a gain node per station.
 //    vector<JonesExpr> gain;
 //    if(mask[GAIN])
@@ -790,12 +785,12 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //    if(uvEffects)
 //    {
 //        for(size_t i = 0; i < nStations; ++i)
-//        {   
+//        {
 //            if(mask[BANDPASS])
 //            {
 //                jJones[i] = bandpass[i];
 //            }
-//                
+//
 //            if(mask[GAIN])
 //            {
 //                jJones[i] = jJones[i].isNull() ? gain[i]
@@ -805,7 +800,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //            // TODO: Add other uv-plane effects here.
 //        }
 //    }
-//    
+//
 //    // Direction dependent (image-plane) effects.
 //    bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
 
@@ -835,7 +830,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //        {
 //            makeDirectionalGainNodes(gainDirectional, config, sources);
 //        }
-//        
+//
 //        // Create a dipole beam node per station0-source combination.
 //        boost::multi_array<JonesExpr, 2> dipoleBeam;
 //        if(mask[BEAM])
@@ -859,7 +854,7 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //                    : JonesExpr(new JonesMul2(jJones[i],
 //                        gainDirectional[i][0]));
 //            }
-//            
+//
 //            if(mask[BEAM])
 //            {
 //                jJones[i] = jJones[i].isNull() ? dipoleBeam[i][0]
@@ -875,31 +870,31 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 //            // TODO: Add other image-plane effects here.
 //        }
 //    }
-//        
+//
 //    // Create an inverse J-Jones matrix for each station.
 //    if(uvEffects || imgEffects)
 //    {
 //        for(size_t i = 0; i < nStations; ++i)
 //        {
 //            ASSERT(!jJones[i].isNull());
-//            jJones[i] = new JonesInvert(jJones[i]);   
+//            jJones[i] = new JonesInvert(jJones[i]);
 //        }
 //    }
-//    
+//
 //    // Create an expression tree for each baseline.
 //    for(size_t i = 0; i < baselines.size(); ++i)
 //    {
 //        const baseline_t &baseline = baselines[i];
-//        
+//
 //        JonesExpr vdata(new JonesVisData(chunk, baseline));
-//        
+//
 //        if(uvEffects || imgEffects)
 //        {
 //            vdata = new JonesCMul3(jJones[baseline.first], vdata,
 //                jJones[baseline.second]);
 //        }
-//        
-//        itsExpressions[baseline] = vdata;
+//
+//        itsExpr[baseline] = vdata;
 //    }
 
 //    return true;
@@ -907,14 +902,14 @@ void Model::makeFwdExpressions(const ModelConfig &config,
 
 void Model::clearExpressions()
 {
-    itsExpressions.clear();
+    itsExpr.clear();
 //    itsParms.clear();
 }
 
 //ParmGroup Model::getPerturbedParms() const
 //{
 //    ParmGroup result;
-//    
+//
 //    map<uint, Expr>::const_iterator it = itsParms.begin();
 //    map<uint, Expr>::const_iterator itEnd = itsParms.end();
 //    while(it != itEnd)
@@ -934,14 +929,14 @@ void Model::clearExpressions()
 
 //void Model::precalculate(const Request &request)
 //{
-//    if(itsExpressions.empty())
+//    if(itsExpr.empty())
 //    {
 //        return;
 //    }
-//    
+//
 //    // First clear the levels of all nodes in the tree.
-//    for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
-//        it != itsExpressions.end();
+//    for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
+//        it != itsExpr.end();
 //        ++it)
 //    {
 //        JonesExpr &expr = it->second;
@@ -952,8 +947,8 @@ void Model::clearExpressions()
 //    // Now set the levels of all nodes in the tree.
 //    // The root nodes have level 0; child nodes have level 1 or higher.
 //    int nrLev = -1;
-//    for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
-//        it != itsExpressions.end();
+//    for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
+//        it != itsExpr.end();
 //        ++it)
 //    {
 //        JonesExpr &expr = it->second;
@@ -972,8 +967,8 @@ void Model::clearExpressions()
 //    vector<vector<ExprRep*> > precalcNodes(nrLev);
 //    for(int level = 1; level < nrLev; ++level)
 //    {
-//        for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
-//            it != itsExpressions.end();
+//        for(map<baseline_t, JonesExpr>::iterator it = itsExpr.begin();
+//            it != itsExpr.end();
 //            ++it)
 //        {
 //            JonesExpr &expr = it->second;
@@ -997,7 +992,7 @@ void Model::clearExpressions()
 //        for(size_t level = precalcNodes.size(); --level > 0;)
 //        {
 //            vector<ExprRep*> &nodes = precalcNodes[level];
-//            
+//
 //            if(!nodes.empty())
 //            {
 //#pragma omp for schedule(dynamic)
@@ -1015,8 +1010,8 @@ void Model::clearExpressions()
 //JonesResult Model::evaluate(const baseline_t &baseline,
 //    const Request &request)
 //{
-//    map<baseline_t, JonesExpr>::iterator it = itsExpressions.find(baseline);
-//    ASSERTSTR(it != itsExpressions.end(), "Result requested for unknown"
+//    map<baseline_t, JonesExpr>::iterator it = itsExpr.find(baseline);
+//    ASSERTSTR(it != itsExpr.end(), "Result requested for unknown"
 //        " baseline " << baseline.first << " - " << baseline.second);
 
 //    return it->second.getResult(request);
@@ -1026,7 +1021,7 @@ void Model::clearExpressions()
 vector<bool> Model::parseComponents(const vector<string> &components) const
 {
     vector<bool> mask(N_ModelComponent, false);
-    
+
     for(vector<string>::const_iterator it = components.begin();
         it != components.end();
         ++it)
@@ -1064,7 +1059,7 @@ vector<bool> Model::parseComponents(const vector<string> &components) const
 vector<Source::Ptr> Model::makeSourceList(const vector<string> &patterns)
 {
     vector<Source::Ptr> result;
-    
+
     if(patterns.empty())
     {
         // Create a Source object for all available sources.
@@ -1091,7 +1086,7 @@ vector<Source::Ptr> Model::makeSourceList(const vector<string> &patterns)
                 sources.insert(make_pair(tmp[j].getName(), tmp[j]));
             }
         }
-    
+
         // Create a Source object for each unique source.
         map<string, SourceInfo>::const_iterator srcIt = sources.begin();
         map<string, SourceInfo>::const_iterator srcItEnd = sources.end();
@@ -1106,7 +1101,7 @@ vector<Source::Ptr> Model::makeSourceList(const vector<string> &patterns)
             ++srcIt;
         }
     }
-    
+
     return result;
 }
 
@@ -1114,7 +1109,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 {
 //    LOG_DEBUG_STR("Creating source: " << source.getName() << " ["
 //        << source.getType() << "]);
-    
+
     switch(source.getType())
     {
     case SourceInfo::POINT:
@@ -1126,23 +1121,21 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
 
-            ValueSet::Shape shape0 = {2};
-            Zip::Ptr position(new Zip(shape0));
+            Zip::Ptr position(new Zip(Shape(2)));
             position->connect(ra);
             position->connect(dec);
-                
-            ValueSet::Shape shape1 = {4};
-            Zip::Ptr stokes(new Zip(shape1));
+
+            Zip::Ptr stokes(new Zip(Shape(4)));
             stokes->connect(stokesI);
             stokes->connect(stokesQ);
             stokes->connect(stokesU);
             stokes->connect(stokesV);
-            
+
             return PointSource::Ptr(new PointSource(source.getName(), position,
                 stokes));
         }
         break;
-        
+
 //    case SourceInfo::GAUSSIAN:
 //        {
 //            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
@@ -1159,12 +1152,12 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 //                ra, dec, i, q, u, v, maj, min, phi));
 //        }
 //        break;
-        
+
     default:
         LOG_WARN_STR("Unable to construct source !!: " << source.getName());
         break;
     }
-    
+
     return Source::Ptr();
 }
 
@@ -1209,7 +1202,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //        Expr lmn = new LMN(sources[j], itsPhaseRef);
         LMN::Ptr lmnExpr(new LMN(itsPhaseRef));
         lmnExpr->connect(LMN::POSITION, sources[j]->getPosition());
-    
+
         for(size_t i = 0; i < itsStationUvw.size(); ++i)
         {
             DFTPS::Ptr dftpsExpr(new DFTPS(itsStationUvw[i]));
@@ -1227,7 +1220,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //    for(size_t i = 0; i < nStations; ++i)
 //    {
 //        Expr B11, B22;
-//        
+//
 //        const string &suffix = itsInstrument.stations[i].name;
 
 //        B11 = makeExprParm(INSTRUMENT, "Bandpass:11:" + suffix);
@@ -1248,7 +1241,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //    for(size_t i = 0; i < nStations; ++i)
 //    {
 //        Expr J11, J12, J21, J22;
-//        
+//
 //        const string &suffix = itsInstrument.stations[i].name;
 
 //        Expr J11_elem1 =
@@ -1302,7 +1295,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //        for(size_t j = 0; j < nSources; ++j)
 //        {
 //            Expr J11, J12, J21, J22;
-//            
+//
 //            string suffix(itsInstrument.stations[i].name + ":"
 //                + sources[j]->getName());
 
@@ -1350,7 +1343,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //    ASSERT(config.beamConfig->type() == "HamakerDipole"
 //        || config.beamConfig->type() == "YatawattaDipole");
 //    ASSERT(azel.shape()[0] == itsInstrument.stations.size());
-//    
+//
 //    const size_t nStations = azel.shape()[0];
 //    const size_t nSources = azel.shape()[1];
 
@@ -1362,7 +1355,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //        HamakerDipoleConfig::ConstPointer beamConfig =
 //            dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
 //        ASSERT(beamConfig);
-//        
+//
 //        // Read beam model coefficients.
 //        BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
 
@@ -1416,7 +1409,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //    const ModelConfig &config, const boost::multi_array<Expr, 2> &azel)
 //{
 //    ASSERT(azel.shape()[0] == itsInstrument.stations.size());
-//    
+//
 //    const size_t nStations = azel.shape()[0];
 //    const size_t nSources = azel.shape()[1];
 
@@ -1468,10 +1461,10 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //    // Read file header.
 //    string header, token0, token1, token2, token3, token4, token5;
 //    getline(in, header);
-//    
+//
 //    size_t nElements, nHarmonics, nPowerTime, nPowerFreq;
 //    double freqAvg, freqRange;
-//    
+//
 //    istringstream iss(header);
 //    iss >> token0 >> nElements >> token1 >> nHarmonics >> token2 >> nPowerTime
 //        >> token3 >> nPowerFreq >> token4 >> freqAvg >> token5 >> freqRange;
@@ -1509,20 +1502,20 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr::Ptr, 2> &result,
 //            continue;
 //        }
 
-//        // Parse line. 
+//        // Parse line.
 //        size_t element, harmonic, powerTime, powerFreq;
 //        double re, im;
-//       
+//
 //        iss.clear();
 //        iss.str(line);
 //        iss >> element >> harmonic >> powerTime >> powerFreq >> re >> im;
-//        
+//
 //        if(!iss || element >= nElements || harmonic >= nHarmonics
 //            || powerTime >= nPowerTime || powerFreq >= nPowerFreq)
 //        {
 //            THROW(BBSKernelException, "Error reading file.");
 //        }
-//        
+//
 //        // Store coefficient.
 //        (*coeff)[element][harmonic][powerTime][powerFreq] =
 //            makedcomplex(re, im);

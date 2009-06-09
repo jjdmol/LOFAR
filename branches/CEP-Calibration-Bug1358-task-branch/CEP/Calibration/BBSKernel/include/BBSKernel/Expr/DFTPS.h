@@ -49,7 +49,7 @@ namespace BBS
 // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
 //
 // shift = exp(i * 2.0 * pi * (u . l) * (f0 + k * df) / c)
-//       = exp(i * (2.0 * pi / c) * (u . l) * f0) 
+//       = exp(i * (2.0 * pi / c) * (u . l) * f0)
 //         * exp(i * (2.0 * pi / c) * (u . l) * df) ^ k
 //
 // DFTPS only computes the two exponential terms. PhaseShift computes the phase
@@ -61,18 +61,21 @@ public:
     typedef shared_ptr<DFTPS>       Ptr;
     typedef shared_ptr<const DFTPS> ConstPtr;
 
-    enum Inputs
+    enum Arguments
     {
         LMN,
-        N_Inputs
+        N_Arguments
     };
 
     DFTPS(const StatUVW::ConstPointer &uvw);
 
 private:
-    // Compute a result for the given request.
-    virtual ValueSet::ConstPtr evaluateImpl(const Request &request,
-        const ValueSet::ConstPtr (&inputs)[DFTPS::N_Inputs]) const;
+    virtual Shape shape(const ExprValueSet (&arguments)[DFTPS::N_Arguments])
+        const;
+
+    virtual void evaluateImpl(const Request &request,
+        const ExprValue (&arguments)[DFTPS::N_Arguments], ExprValue &result)
+        const;
 
     StatUVW::ConstPointer    itsUVW;
 };

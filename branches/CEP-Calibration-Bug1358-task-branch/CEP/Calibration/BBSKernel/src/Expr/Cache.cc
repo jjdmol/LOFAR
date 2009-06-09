@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 Cache::Cache()
@@ -33,10 +33,6 @@ Cache::Cache()
         itsHitCount(0),
         itsMaxSize(0),
         itsMemSize(0)
-{
-}
-
-Cache::~Cache()
 {
 }
 

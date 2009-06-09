@@ -32,81 +32,85 @@ namespace LOFAR
 namespace BBS
 {
 
-PhaseShift::PhaseShift()
-    :   ExprStatic<PhaseShift::N_Inputs>()
-{
-}        
+//PhaseShift::PhaseShift()
+//    :   ExprStatic<PhaseShift::N_Inputs>()
+//{
+//}
 
 
-ValueSet::ConstPtr PhaseShift::evaluateImpl(const Request &request,
-    const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const
-{
-    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
-    //
-    // shift = exp(2.0 * pi * i * (u . l) * f / c)
+//ValueSet::ConstPtr PhaseShift::evaluateImpl(const Request &request,
+//    const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const
+//{
+//    // Let (u . l) = u * l + v * m + w * (n - 1.0), then:
+//    //
+//    // shift = exp(2.0 * pi * i * (u . l) * f / c)
 
-    ValueSet::ConstPtr uvw = inputs[UVW];
-    ValueSet::ConstPtr lmn = inputs[LMN];
+//    ValueSet::ConstPtr uvw = inputs[UVW];
+//    ValueSet::ConstPtr lmn = inputs[LMN];
 
-    Matrix phase = casa::C::_2pi
-        * (uvw->value(0) * lmn->value(0)
-        + uvw->value(1) * lmn->value(1)
-        + uvw->value(2) * (lmn->value(2) - 1.0));
-        
-    ValueSet::Ptr result(new ValueSet());
-    result->assign(tocomplex(cos(phase), sin(phase)));
-    return result;
-
-//    ASSERT(request[FREQ]->isRegular());
-//    const real_t l = lmn->value(0)(0, 0);
-//    const real_t m = lmn->value(1)(0, 0);
-//    const real_t n = lmn->value(2)(0, 0) - 1.0;
-//    
-//    ARRAY(real_t) inner(uvw->value(0) * l
-//        + uvw->value(1) * m
-//        + uvw->value(2) * n);
-
-//    const int nFreq = (int) request[FREQ]->size();
-//    const int nTime = (int) request[TIME]->size();
-
-//    const double scale0 = casa::C::_2pi * request[FREQ]->center(0) / casa::C::c;
-//    const double scaleDelta = casa::C::_2pi * request[FREQ]->width(0) / casa::C::c;
-//            
-//    ResultType::Ptr result(new ResultType());
-//    ARRAY(complex_t) shift(nTime, nFreq);
-//    complex_t *data = shift.data();
-//    
-//    for(int t = 0; t < nTime; ++t)
-//    {
-//        const double phase0 = scale0 * inner(0, t);
-//        const double phaseDelta = scaleDelta * inner(0, t);
-//        complex_t curr(cos(phase0), sin(phase0));
-//        const complex_t delta(cos(phaseDelta), sin(phaseDelta));
-
-//        for(int f = 0; f < nFreq; ++f)
-//        {
-//            *data++ = curr;
-//            curr *= delta;
-//        }
-//    }
-//    
-//    result->assign(shift);
+//    Matrix phase = casa::C::_2pi
+//        * (uvw->value(0) * lmn->value(0)
+//        + uvw->value(1) * lmn->value(1)
+//        + uvw->value(2) * (lmn->value(2) - 1.0));
+//
+//    ValueSet::Ptr result(new ValueSet());
+//    result->assign(tocomplex(cos(phase), sin(phase)));
 //    return result;
-}
+
+////    ASSERT(request[FREQ]->isRegular());
+////    const real_t l = lmn->value(0)(0, 0);
+////    const real_t m = lmn->value(1)(0, 0);
+////    const real_t n = lmn->value(2)(0, 0) - 1.0;
+////
+////    ARRAY(real_t) inner(uvw->value(0) * l
+////        + uvw->value(1) * m
+////        + uvw->value(2) * n);
+
+////    const int nFreq = (int) request[FREQ]->size();
+////    const int nTime = (int) request[TIME]->size();
+
+////    const double scale0 = casa::C::_2pi * request[FREQ]->center(0) / casa::C::c;
+////    const double scaleDelta = casa::C::_2pi * request[FREQ]->width(0) / casa::C::c;
+////
+////    ResultType::Ptr result(new ResultType());
+////    ARRAY(complex_t) shift(nTime, nFreq);
+////    complex_t *data = shift.data();
+////
+////    for(int t = 0; t < nTime; ++t)
+////    {
+////        const double phase0 = scale0 * inner(0, t);
+////        const double phaseDelta = scaleDelta * inner(0, t);
+////        complex_t curr(cos(phase0), sin(phase0));
+////        const complex_t delta(cos(phaseDelta), sin(phaseDelta));
+
+////        for(int f = 0; f < nFreq; ++f)
+////        {
+////            *data++ = curr;
+////            curr *= delta;
+////        }
+////    }
+////
+////    result->assign(shift);
+////    return result;
+//}
 
 // -------------------------------------------------------------------------- //
 
-PhaseShiftOld::PhaseShiftOld()
-    :   ExprStatic<PhaseShiftOld::N_Inputs>()
+Shape PhaseShiftOld::shape
+    (const ExprValueSet (&arguments)[PhaseShiftOld::N_Arguments]) const
 {
-}        
+    DBGASSERT(arguments[LHS].shape() == Shape(2)
+        && arguments[RHS].shape() == Shape(2));
+    return Shape();
+}
 
-ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
-    const ValueSet::ConstPtr (&inputs)[PhaseShiftOld::N_Inputs]) const
+void PhaseShiftOld::evaluateImpl(const Request &request,
+    const ExprValue (&arguments)[PhaseShiftOld::N_Arguments], ExprValue &result)
+    const
 {
     int nChannels = request[FREQ]->size();
     int nTimeslots = request[TIME]->size();
-    
+
     // Get N (for the division).
     // Assert it is a scalar value.
 //    ResultVec lmnRes;
@@ -120,13 +124,10 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
     // frequency channels are used.
     bool multFreq = nChannels > 1;
 
-    ValueSet::ConstPtr lhs = inputs[LHS];
-    ValueSet::ConstPtr rhs = inputs[RHS];
-
-    const Matrix &left = lhs->value(0);
-    const Matrix &right = rhs->value(0);
-    const Matrix &leftDelta = lhs->value(1);
-    const Matrix &rightDelta = rhs->value(1);
+    const Matrix &left = arguments[LHS](0);
+    const Matrix &right = arguments[RHS](0);
+    const Matrix &leftDelta = arguments[LHS](1);
+    const Matrix &rightDelta = arguments[RHS](1);
 
     // It is tried to compute the DFT as efficient as possible.
     // Therefore the baseline contribution is split into its antenna parts.
@@ -160,7 +161,7 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
     // complex numbers which can be turned into a cheaper multiplication.
     //  exp(x)/exp(y) = (cos(x) + i.sin(x)) / (cos(y) + i.sin(y))
     //                = (cos(x) + i.sin(x)) * (cos(y) - i.sin(y))
-    
+
     /*
     {
 
@@ -184,13 +185,13 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
         LOG_TRACE_FLOW ("W: " << wr.getValue() - wl.getValue());
     }
     */
-    
+
     Matrix res(makedcomplex(0,0), nChannels, nTimeslots, false);
     for(int iy=0; iy<nTimeslots; ++iy)
     {
         dcomplex tmpl = left.getDComplex(0,iy);
         dcomplex tmpr = right.getDComplex(0,iy);
-        
+
         // We have to divide by N.
         // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
         // in BaseLinPS.
@@ -207,8 +208,10 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
         res.fillRowWithProducts (tmpr * conj(tmpl), factor, iy);
     }
 
-    ValueSet::Ptr result(new ValueSet());
-    result->assign(res);
+//    ValueSet::Ptr result(new ValueSet());
+    result.assign(res);
+//    LOG_DEBUG_STR("SHIFT: " << result().getDComplex(0, 0));
+
 
 //    //  cout << "DFT:" << endl;
 //    //  cout << setprecision(20) << res << endl;
@@ -235,7 +238,7 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
 //        {
 //            const Matrix &pvLeftDelta = pvIter.value(PV_LEFT_DELTA);
 //            const Matrix &pvRightDelta = pvIter.value(PV_RIGHT_DELTA);
-//            
+//
 //            for(int iy=0; iy<nTimeslots; ++iy)
 //            {
 //                dcomplex tmpl = pvLeft.getDComplex(0, iy);
@@ -243,7 +246,7 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
 
 ////            dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
 ////            dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
-//            
+//
 //            // double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
 ////                double tmpnk = 2.0;
 ////                dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);
@@ -263,14 +266,14 @@ ValueSet::ConstPtr PhaseShiftOld::evaluateImpl(const Request &request,
 //                dcomplex tmpr = pvRight.getDComplex(0, iy);
 //                pres.fillRowWithProducts(tmpr * conj(tmpl), 1.0, iy);
 //            }
-//        }            
+//        }
 
 //        result.setPerturbedValue(pvIter.key(), pres);
 ////        result.setPerturbedParm (spinx, perturbedParm);
 //        pvIter.next();
 //    }
-    
-    return result;
+
+//    return result;
 }
 
 } // namespace BBS

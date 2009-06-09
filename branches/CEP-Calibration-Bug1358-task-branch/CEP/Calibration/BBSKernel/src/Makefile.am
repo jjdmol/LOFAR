@@ -30,9 +30,13 @@ lib_LTLIBRARIES = libbbskernel.la
 #	Expr/PointSource.cc \
 #	Expr/Source.cc
 
+#	Expr/MatrixMul3.cc \
+#	Expr/UVW.cc
+#	Equator.cc
+
+
 libbbskernel_la_SOURCES = Package__Version.cc \
 	BlobIOExtensions.cc \
-	Equator.cc \
 	Evaluator.cc \
 	Instrument.cc \
 	MeasurementAIPS.cc \
@@ -48,7 +52,6 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	VisSelection.cc \
 	Expr/Cache.cc \
 	Expr/DFTPS.cc \
-	Expr/StatUVW.cc \
 	Expr/Expr.cc \
 	Expr/ExprParm.cc \
 	Expr/ExprResult.cc \
@@ -57,21 +60,20 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Matrix.cc \
 	Expr/MatrixComplexArr.cc \
 	Expr/MatrixComplexSca.cc \
-	Expr/MatrixMul3.cc \
 	Expr/MatrixRealArr.cc \
 	Expr/MatrixRealSca.cc \
 	Expr/MatrixRep.cc \
 	Expr/MatrixTmp.cc \
-	Expr/MatrixSum.cc \
-	Expr/Mul.cc \
 	Expr/PhaseRef.cc \
-	Expr/PhaseShift.cc \
-	Expr/PointCoherence.cc \
 	Expr/PointSource.cc \
 	Expr/Request.cc \
 	Expr/Source.cc \
-	Expr/UVW.cc
-    
+	Expr/StatUVW.cc \
+	Expr/MatrixSum.cc \
+	Expr/Mul.cc \
+	Expr/PhaseShift.cc \
+	Expr/PointCoherence.cc
+
 bin_PROGRAMS = versionbbskernel
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
