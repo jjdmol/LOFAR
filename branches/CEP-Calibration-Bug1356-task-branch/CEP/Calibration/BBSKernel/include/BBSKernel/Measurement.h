@@ -37,7 +37,8 @@ namespace BBS
     class Measurement
     {
     public:
-        typedef shared_ptr<Measurement> Pointer;
+        typedef shared_ptr<Measurement>         Ptr;
+        typedef shared_ptr<const Measurement>   ConstPtr;
 
         virtual ~Measurement()
         {}
@@ -45,11 +46,11 @@ namespace BBS
         virtual VisDimensions
             getDimensions(const VisSelection &selection) const = 0;
 
-        virtual VisData::Pointer read(const VisSelection &selection,
+        virtual VisData::Ptr read(const VisSelection &selection,
             const string &column = "DATA", bool readUVW = true) const = 0;
 
         virtual void write(const VisSelection &selection,
-            VisData::Pointer buffer, const string &column = "CORRECTED_DATA",
+            VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
             bool writeFlags = true) = 0;
 
         const Instrument &getInstrument() const

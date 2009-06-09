@@ -1,4 +1,4 @@
-//#  Step.cc: 
+//#  Step.cc:
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -80,7 +80,7 @@ namespace LOFAR
       	// We'll have to figure out what kind of SingleStep we must
       	// create. The key "Operation" contains this information.
         try {
-          string oper = 
+          string oper =
             toUpper(parset.getString("Step." + name + ".Operation"));
           LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
           if      (oper == "SOLVE")
@@ -99,7 +99,7 @@ namespace LOFAR
             step.reset(new RefitStep(name, parset, parent));
           else if (oper == "NOISE")
             step.reset(new NoiseStep(name, parset, parent));
-          else THROW (BBSControlException, "Operation \"" << oper << 
+          else THROW (BBSControlException, "Operation \"" << oper <<
                       "\" is not a valid Step operation");
          } catch (APSException& e) {
           THROW (BBSControlException, e.what());
@@ -161,17 +161,17 @@ namespace LOFAR
 
         if(itsModelConfig.beamConfig->type() == "HamakerDipole")
         {
-          HamakerDipoleConfig::ConstPointer config =
+          HamakerDipoleConfig::ConstPtr config =
             dynamic_pointer_cast<const HamakerDipoleConfig>
               (itsModelConfig.beamConfig);
           ASSERT(config);
-              
+
           ps.replace(prefix + "Model.Beam.HamakerDipole.CoeffFile",
                   config->coeffFile);
         }
         else if(itsModelConfig.beamConfig->type() == "YatawattaDipole")
         {
-          YatawattaDipoleConfig::ConstPointer config =
+          YatawattaDipoleConfig::ConstPtr config =
             dynamic_pointer_cast<const YatawattaDipoleConfig>
               (itsModelConfig.beamConfig);
           ASSERT(config);
@@ -183,6 +183,11 @@ namespace LOFAR
         }
       }
 
+      if(itsModelConfig.condNumFlagConfig) {
+        ps.replace(prefix + "Model.ConditionNumberFlagger.Threshold",
+          toString(itsModelConfig.condNumFlagConfig->threshold));
+      }
+
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -192,16 +197,16 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Get the baseline selection for this step.
-      itsBaselines.station1 = 
+      itsBaselines.station1 =
         ps.getStringVector("Baselines.Station1", itsBaselines.station1);
       itsBaselines.station2 =
         ps.getStringVector("Baselines.Station2", itsBaselines.station2);
 
       // Get the correlation selection (ALL, AUTO, or CROSS), and type
       // (e.g., ["XX", "XY", "YX", "YY"]).
-      itsCorrelation.selection = 
+      itsCorrelation.selection =
         ps.getString("Correlation.Selection", itsCorrelation.selection);
-      itsCorrelation.type = 
+      itsCorrelation.type =
         ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
       // Get the model configuration.
@@ -211,13 +216,13 @@ namespace LOFAR
         ps.getStringVector("Model.Sources", itsModelConfig.sources);
       itsModelConfig.components =
         ps.getStringVector("Model.Components", itsModelConfig.components);
-        
+
       if(ps.isDefined("Model.Ionosphere.Rank")) {
-        IonoConfig::Pointer config(new IonoConfig());
+        IonoConfig::Ptr config(new IonoConfig());
         config->rank = ps.getUint32("Model.Ionosphere.Rank");
         itsModelConfig.ionoConfig = config;
       }
-      
+
       if(ps.isDefined("Model.Beam.Type")) {
         string beamType(ps.getString("Model.Beam.Type"));
 
@@ -225,11 +230,11 @@ namespace LOFAR
           itsModelConfig.beamConfig.reset();
         }
         else if(beamType == "HamakerDipole") {
-          HamakerDipoleConfig::ConstPointer parentConfig =
+          HamakerDipoleConfig::ConstPtr parentConfig =
             dynamic_pointer_cast<const HamakerDipoleConfig>
               (itsModelConfig.beamConfig);
-                
-          HamakerDipoleConfig::Pointer config(new HamakerDipoleConfig());
+
+          HamakerDipoleConfig::Ptr config(new HamakerDipoleConfig());
 
           config->coeffFile = ps.getString("Model.Beam.HamakerDipole.CoeffFile",
             parentConfig ? parentConfig->coeffFile : string());
@@ -237,15 +242,15 @@ namespace LOFAR
             THROW(BBSControlException, "Model.Beam.HamakerDipole.CoeffFile"
               " expected but not found.");
           }
-        
+
           itsModelConfig.beamConfig = config;
         }
         else if(beamType == "YatawattaDipole") {
-          YatawattaDipoleConfig::ConstPointer parentConfig =
+          YatawattaDipoleConfig::ConstPtr parentConfig =
             dynamic_pointer_cast<const YatawattaDipoleConfig>
               (itsModelConfig.beamConfig);
-          
-          YatawattaDipoleConfig::Pointer config(new YatawattaDipoleConfig());
+
+          YatawattaDipoleConfig::Ptr config(new YatawattaDipoleConfig());
 
           config->moduleTheta =
             ps.getString("Model.Beam.YatawattaDipole.ModuleTheta",
@@ -269,7 +274,14 @@ namespace LOFAR
           THROW(BBSControlException, "Unknown beam model type " << beamType
             << " encountered.");
         }
-      }        
+      }
+
+      if(ps.isDefined("Model.ConditionNumberFlagger.Threshold")) {
+        CondNumFlagConfig::Ptr config(new CondNumFlagConfig());
+        config->threshold =
+            ps.getDouble("Model.ConditionNumberFlagger.Threshold");
+        itsModelConfig.condNumFlagConfig = config;
+      }
     }
 
 

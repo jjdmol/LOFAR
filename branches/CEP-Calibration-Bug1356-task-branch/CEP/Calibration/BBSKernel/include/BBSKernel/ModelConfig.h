@@ -39,15 +39,29 @@ namespace BBS
 
 // \ingroup BBSKernel
 // @{
-    
+
+class CondNumFlagConfig
+{
+public:
+    typedef shared_ptr<CondNumFlagConfig>       Ptr;
+    typedef shared_ptr<const CondNumFlagConfig> ConstPtr;
+
+    CondNumFlagConfig();
+
+    // Print the contents of \c *this in human readable form into the output
+    // stream \a out.
+    void print(ostream &out) const;
+
+    double threshold;
+};
+
 class IonoConfig
 {
 public:
-    typedef shared_ptr<IonoConfig>        Pointer;
-    typedef shared_ptr<const IonoConfig>  ConstPointer;
+    typedef shared_ptr<IonoConfig>        Ptr;
+    typedef shared_ptr<const IonoConfig>  ConstPtr;
 
     IonoConfig();
-    virtual ~IonoConfig();
 
     // Print the contents of \c *this in human readable form into the output
     // stream \a out.
@@ -59,16 +73,15 @@ public:
 class BeamConfig
 {
 public:
-    typedef shared_ptr<BeamConfig>        Pointer;
-    typedef shared_ptr<const BeamConfig>  ConstPointer;
+    typedef shared_ptr<BeamConfig>        Ptr;
+    typedef shared_ptr<const BeamConfig>  ConstPtr;
 
-    BeamConfig();
     virtual ~BeamConfig();
 
     // Print the contents of \c *this in human readable form into the output
     // stream \a out.
     virtual void print(ostream &out) const = 0;
-    
+
     virtual const string &type() const = 0;
 };
 
@@ -76,12 +89,9 @@ public:
 class HamakerDipoleConfig: public BeamConfig
 {
 public:
-    typedef shared_ptr<HamakerDipoleConfig>       Pointer;
-    typedef shared_ptr<const HamakerDipoleConfig> ConstPointer;
+    typedef shared_ptr<HamakerDipoleConfig>       Ptr;
+    typedef shared_ptr<const HamakerDipoleConfig> ConstPtr;
 
-    HamakerDipoleConfig();
-    ~HamakerDipoleConfig();
-    
     // Print the contents of \c *this in human readable form into the output
     // stream \a out.
     void print(ostream &out) const;
@@ -94,17 +104,14 @@ public:
 class YatawattaDipoleConfig: public BeamConfig
 {
 public:
-    typedef shared_ptr<YatawattaDipoleConfig>       Pointer;
-    typedef shared_ptr<const YatawattaDipoleConfig> ConstPointer;
+    typedef shared_ptr<YatawattaDipoleConfig>       Ptr;
+    typedef shared_ptr<const YatawattaDipoleConfig> ConstPtr;
 
-    YatawattaDipoleConfig();
-    ~YatawattaDipoleConfig();
-    
     // Print the contents of \c *this in human readable form into the output
     // stream \a out.
     void print(ostream &out) const;
     const string &type() const;
-    
+
     string  moduleTheta;
     string  modulePhi;
 };
@@ -114,13 +121,13 @@ class ModelConfig
 {
 public:
     ModelConfig();
-    ~ModelConfig();
-    
-    bool                      usePhasors;
-    vector<string>            sources;
-    vector<string>            components;
-    IonoConfig::ConstPointer  ionoConfig;
-    BeamConfig::ConstPointer  beamConfig;
+
+    bool                        usePhasors;
+    vector<string>              sources;
+    vector<string>              components;
+    IonoConfig::ConstPtr        ionoConfig;
+    BeamConfig::ConstPtr        beamConfig;
+    CondNumFlagConfig::ConstPtr condNumFlagConfig;
 };
 
 ostream &operator<<(ostream&, const ModelConfig&);

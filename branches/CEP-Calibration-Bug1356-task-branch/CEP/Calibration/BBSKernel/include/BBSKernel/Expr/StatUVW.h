@@ -49,11 +49,11 @@ namespace BBS
 class StatUVW
 {
 public:
-    typedef shared_ptr<StatUVW>          Pointer;
-    typedef shared_ptr<const StatUVW>    ConstPointer;
+    typedef shared_ptr<StatUVW>          Ptr;
+    typedef shared_ptr<const StatUVW>    ConstPtr;
 
     StatUVW(const Station &station, const casa::MPosition &arrayRef,
-        const PhaseRef::ConstPointer &phaseRef);
+        const PhaseRef::ConstPtr &phaseRef);
     ~StatUVW();
 
     void calculate(const Request &request) const;
@@ -95,7 +95,7 @@ private:
 
     Station                 itsStation;
     casa::MPosition         itsArrayRef;
-    PhaseRef::ConstPointer  itsPhaseRef;
+    PhaseRef::ConstPtr  itsPhaseRef;
     mutable map<Time, Uvw>  itsUvwCache;
 
     mutable Scalar          itsU;

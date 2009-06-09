@@ -43,7 +43,7 @@ namespace LOFAR
 namespace BBS
 {
 
-AzEl::AzEl(const Station &station, const Source::ConstPointer &source)
+AzEl::AzEl(const Station &station, const Source::ConstPtr &source)
     :   itsStation(station),
         itsSource(source)
 {

@@ -45,8 +45,8 @@ namespace BBS
 class ParmProxy
 {
 public:
-    typedef shared_ptr<ParmProxy>       Pointer;
-    typedef shared_ptr<const ParmProxy> ConstPointer;
+    typedef shared_ptr<ParmProxy>       Ptr;
+    typedef shared_ptr<const ParmProxy> ConstPtr;
 
     ParmProxy(uint id, const string &name, const Parm &parm);
     ~ParmProxy();

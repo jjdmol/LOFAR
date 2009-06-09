@@ -30,7 +30,7 @@ namespace LOFAR
 namespace BBS
 {
 
-LMN::LMN(const PhaseRef::ConstPointer &ref,
+LMN::LMN(const PhaseRef::ConstPtr &ref,
     const Expr<Vector<2> >::ConstPtr &position)
     :   Expr1<Vector<2>, Vector<3> >(position),
         itsRef(ref)

@@ -57,10 +57,10 @@ public:
 
     virtual VisDimensions getDimensions(const VisSelection &selection) const;
 
-    virtual VisData::Pointer read(const VisSelection &selection,
+    virtual VisData::Ptr read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
 
-    virtual void write(const VisSelection &selection, VisData::Pointer buffer,
+    virtual void write(const VisSelection &selection, VisData::Ptr buffer,
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:

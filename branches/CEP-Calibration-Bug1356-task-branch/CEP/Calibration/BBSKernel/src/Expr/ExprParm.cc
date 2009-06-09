@@ -30,7 +30,7 @@ namespace LOFAR
 namespace BBS
 {
 
-ExprParm::ExprParm(const ParmProxy::ConstPointer &parm)
+ExprParm::ExprParm(const ParmProxy::ConstPtr &parm)
     :   Expr<Scalar>(),
         itsParm(parm),
         itsPValueFlag(false)

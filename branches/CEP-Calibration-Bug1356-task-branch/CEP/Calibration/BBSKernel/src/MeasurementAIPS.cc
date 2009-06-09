@@ -133,7 +133,7 @@ MeasurementAIPS::getDimensions(const VisSelection &selection) const
 }
 
 
-VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
+VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     const string &column, bool readUVW) const
 {
     NSTimer readTimer, copyTimer;
@@ -143,7 +143,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
     VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
-    VisData::Pointer buffer(new VisData(visDims));
+    VisData::Ptr buffer(new VisData(visDims));
 
     const VisDimensions &dims = buffer->getDimensions();    
     const size_t nChannels = dims.getChannelCount();
@@ -267,7 +267,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
 
 
 void MeasurementAIPS::write(const VisSelection &selection,
-    VisData::Pointer buffer, const string &column, bool writeFlags)
+    VisData::Ptr buffer, const string &column, bool writeFlags)
 {
     NSTimer readTimer, writeTimer;
 

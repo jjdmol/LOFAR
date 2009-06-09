@@ -31,7 +31,7 @@ namespace LOFAR
 namespace BBS
 {
 
-Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
+Evaluator::Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model,
     uint nThreads)
     :   itsChunk(chunk),
         itsModel(model),

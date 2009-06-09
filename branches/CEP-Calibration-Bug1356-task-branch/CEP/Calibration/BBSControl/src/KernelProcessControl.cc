@@ -476,7 +476,7 @@ namespace LOFAR
 
       // Initialize model.
       try {
-        itsModel->makeFwdExpressions(command.modelConfig(), itsChunk,
+        itsModel->makeForwardExpr(command.modelConfig(), itsChunk,
             baselines);
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
@@ -501,7 +501,7 @@ namespace LOFAR
       evaluator.process(Evaluator::ASSIGN);
 
       // De-initialize model.
-      itsModel->clearExpressions();
+      itsModel->clear();
 
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty()) {
@@ -530,7 +530,7 @@ namespace LOFAR
 //      }
 //
 //      // Initialize model.
-//      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+//      if(!itsModel->makeForwardExpr(command.modelConfig(), baselines)) {
 //        return CommandResult(CommandResult::ERROR, "Unable to initialize"
 //          " model.");
 //      }
@@ -541,7 +541,7 @@ namespace LOFAR
 //      evaluator.process(Evaluator::SUBTRACT);
 
 //      // De-initialize model.
-//      itsModel->clearExpressions();
+//      itsModel->clear();
 
 //      // Optionally write the simulated visibilities.
 //      if(!command.outputColumn().empty()) {
@@ -570,7 +570,7 @@ namespace LOFAR
 //      }
 //
 //      // Initialize model.
-//      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
+//      if(!itsModel->makeForwardExpr(command.modelConfig(), baselines)) {
 //        return CommandResult(CommandResult::ERROR, "Unable to initialize"
 //          " model.");
 //      }
@@ -581,7 +581,7 @@ namespace LOFAR
 //      evaluator.process(Evaluator::ADD);
 
 //      // De-initialize model.
-//      itsModel->clearExpressions();
+//      itsModel->clear();
 
 //      // Optionally write the simulated visibilities.
 //      if(!command.outputColumn().empty()) {
@@ -611,9 +611,7 @@ namespace LOFAR
 
       // Initialize model.
       try {
-        itsModel->makeInvExpressions(command.modelConfig(),
-            command.useCondFlagging(), command.threshold(), itsChunk,
-            baselines);
+        itsModel->makeInverseExpr(command.modelConfig(), itsChunk, baselines);
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
             " model.");
@@ -625,7 +623,7 @@ namespace LOFAR
       evaluator.process(Evaluator::ASSIGN);
 
       // De-initialize model.
-      itsModel->clearExpressions();
+      itsModel->clear();
 
       // Optionally write the simulated visibilities.
       if(!command.outputColumn().empty()) {
@@ -661,7 +659,7 @@ namespace LOFAR
 ////
       // Initialize model.
       try {
-        itsModel->makeFwdExpressions(command.modelConfig(), itsChunk,
+        itsModel->makeForwardExpr(command.modelConfig(), itsChunk,
             baselines);
       } catch(Exception &ex) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
@@ -784,13 +782,13 @@ namespace LOFAR
       catch(Exception &ex)
       {
           // De-initialize model.
-          itsModel->clearExpressions();
+          itsModel->clear();
           return CommandResult(CommandResult::ERROR, "Unable to initialize or"
               " run solve controller.");
       }
 
       // De-initialize model.
-      itsModel->clearExpressions();
+      itsModel->clear();
 
       return CommandResult(CommandResult::OK, "Ok.");
     }

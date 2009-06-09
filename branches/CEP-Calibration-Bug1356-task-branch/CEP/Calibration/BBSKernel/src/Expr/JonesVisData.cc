@@ -31,7 +31,7 @@ namespace LOFAR
 namespace BBS
 {
 
-JonesVisData::JonesVisData(const VisData::Pointer &chunk,
+JonesVisData::JonesVisData(const VisData::Ptr &chunk,
     const baseline_t &baseline)
     : itsChunk(chunk)
 {

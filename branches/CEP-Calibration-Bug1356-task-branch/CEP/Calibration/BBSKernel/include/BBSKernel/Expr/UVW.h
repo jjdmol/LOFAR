@@ -44,13 +44,13 @@ public:
     typedef shared_ptr<UVW>         Ptr;
     typedef shared_ptr<const UVW>   ConstPtr;
 
-    UVW(const VisData::Pointer &chunk, const baseline_t &baseline);
+    UVW(const VisData::Ptr &chunk, const baseline_t &baseline);
 
 private:
     // Compute a result for the given request.
     virtual ValueSet::ConstPtr evaluateImpl(const Request &request) const;
 
-    const VisData::Pointer  itsChunk;
+    const VisData::Ptr  itsChunk;
     baseline_t              itsBaseline;
 };
 

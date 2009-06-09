@@ -55,57 +55,60 @@ namespace LOFAR
     }
 
 
-    void CorrectStep::print(ostream& os) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::print(os);
-      Indent id;
-      os << endl << indent << "Correct: ";
-      {
-        Indent id;
-        os << endl << indent << "Condition number flagging:";
-        {
-          Indent id;
-          os << endl << indent << "Enabled: " << boolalpha << itsUseCondFlagging
-             << noboolalpha;
-          if(itsUseCondFlagging)
-          {
-             os << endl << indent << "Threshold: " << itsThreshold;
-          }
-        }
-      }
-    }
-
     const string& CorrectStep::type() const
     {
       static const string theType("Correct");
       return theType;
     }
 
-    void CorrectStep::write(ParameterSet& ps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::write(ps);
-      const string prefix = "Step." + name() + ".Correct.";
-      ps.replace(prefix + "ConditionNumberFlagging.Enabled",
-                 toString(itsUseCondFlagging));
-      if(itsUseCondFlagging) {
-        ps.replace(prefix + "ConditionNumberFlagging.Threshold",
-                 toString(itsThreshold));
-      }
-      LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
-    }
 
-    void CorrectStep::read(const ParameterSet& ps)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      SingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Correct."));
-      itsUseCondFlagging = pss.getBool("ConditionNumberFlagging.Enabled");
-      if(itsUseCondFlagging) {
-        itsThreshold = pss.getDouble("ConditionNumberFlagging.Threshold");
-      }
-    }
+//    void CorrectStep::print(ostream& os) const
+//    {
+//      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//      SingleStep::print(os);
+//      Indent id;
+//      os << endl << indent << "Correct: ";
+//      {
+//        Indent id;
+//        os << endl << indent << "Condition number flagging:";
+//        {
+//          Indent id;
+//          os << endl << indent << "Enabled: " << boolalpha << itsUseCondFlagging
+//             << noboolalpha;
+//          if(itsUseCondFlagging)
+//          {
+//             os << endl << indent << "Threshold: " << itsThreshold;
+//          }
+//        }
+//      }
+//    }
+
+
+//    void CorrectStep::write(ParameterSet& ps) const
+//    {
+//      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//      SingleStep::write(ps);
+//      const string prefix = "Step." + name() + ".Correct.";
+//      ps.replace(prefix + "ConditionNumberFlagging.Enabled",
+//                 toString(itsUseCondFlagging));
+//      if(itsUseCondFlagging) {
+//        ps.replace(prefix + "ConditionNumberFlagging.Threshold",
+//                 toString(itsThreshold));
+//      }
+//      LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
+//    }
+
+
+//    void CorrectStep::read(const ParameterSet& ps)
+//    {
+//      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//      SingleStep::read(ps);
+//      ParameterSet pss(ps.makeSubset("Correct."));
+//      itsUseCondFlagging = pss.getBool("ConditionNumberFlagging.Enabled");
+//      if(itsUseCondFlagging) {
+//        itsThreshold = pss.getDouble("ConditionNumberFlagging.Threshold");
+//      }
+//    }
 
   } // namespace BBS
 

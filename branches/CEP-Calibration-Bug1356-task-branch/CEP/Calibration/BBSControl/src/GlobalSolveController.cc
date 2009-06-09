@@ -37,11 +37,11 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 GlobalSolveController::GlobalSolveController(const KernelIndex &index,
-    const VisData::Pointer &chunk, const Model::Pointer &model,
+    const VisData::Ptr &chunk, const Model::Ptr &model,
     const shared_ptr<BlobStreamableConnection> &solver)
     :   itsKernelIndex(index),
         itsChunk(chunk),
@@ -53,10 +53,10 @@ GlobalSolveController::GlobalSolveController(const KernelIndex &index,
     ASSERT(itsModel);
     ASSERT(itsSolver);
 }
-        
+
 GlobalSolveController::~GlobalSolveController()
 {
-    itsModel->clearPerturbedParms();
+    itsModel->clearSolvableParms();
 }
 
 void GlobalSolveController::init(const vector<string> &include,
@@ -73,7 +73,7 @@ void GlobalSolveController::init(const vector<string> &include,
     itsPropagateFlag = propagate;
     itsSolGrid = solGrid;
     itsCellChunkSize = cellChunkSize;
-    
+
     // Parse solvable selection.
     itsSolvables = ParmManager::instance().makeSubset(include, exclude,
         itsModel->getParms());
@@ -82,8 +82,8 @@ void GlobalSolveController::init(const vector<string> &include,
     // Assign solution grid to solvables.
     ParmManager::instance().setGrid(itsSolGrid, itsSolvables);
 
-    // Instruct model to generate perturbed values for solvables.
-    itsModel->setPerturbedParms(itsSolvables);
+    // Instruct model to generate partial derivatives for solvables.
+    itsModel->setSolvableParms(itsSolvables);
 
     // Create coefficient index.
     makeCoeffIndex(itsSolvables);
@@ -92,7 +92,7 @@ void GlobalSolveController::init(const vector<string> &include,
     itsEquator.reset(new Equator(itsChunk, itsModel, itsCoeffIndex, itsSolGrid,
         itsSolGrid.nx() * itsCellChunkSize));
     itsEquator->setSelection(baselines, products);
-    
+
     itsInitFlag = true;
 }
 
@@ -109,7 +109,7 @@ void GlobalSolveController::run()
     shared_ptr<MergedCoeffIndexMsg> remoteIndexMsg
         (dynamic_pointer_cast<MergedCoeffIndexMsg>(remoteMsg));
     ASSERTSTR(remoteIndexMsg, "Protocol error: expected MergedCoeffIndexMsg.");
-    
+
     // Construct look-up table from Solver's coefficient index.
     makeCoeffMapping(itsSolvables, remoteIndexMsg->getContents());
 
@@ -129,11 +129,11 @@ void GlobalSolveController::run()
         // Compute end cell of current cell chunk.
         chunkEnd.second = std::min(chunkStart.second + itsCellChunkSize - 1,
             itsSolGrid[TIME]->size() - 1);
-            
+
         // Send initial coefficient values.
         getInitialCoeff(localCoeffMsg.getContents(), chunkStart, chunkEnd);
         itsSolver->sendObject(localCoeffMsg);
-        
+
         // Iterate.
         bool done = false;
         while(!done)
@@ -160,9 +160,9 @@ void GlobalSolveController::run()
             for(size_t i = 0; i < solutions.size(); ++i)
             {
                 done = done && (solutions[i].result != NONREADY);
-            }                
+            }
         }
-  
+
         // Propagate coefficient values to the next cell chunk.
         // TODO: Find a better solution for this.
         if(itsPropagateFlag && cellChunk < nCellChunks - 1)
@@ -189,7 +189,7 @@ void GlobalSolveController::run()
                     setCoeff(values, cell);
                 }
             }
-        }                
+        }
 
         // Move to the next cell chunk.
         chunkStart.second += itsCellChunkSize;
@@ -201,28 +201,28 @@ void GlobalSolveController::run()
 void GlobalSolveController::makeCoeffIndex(const ParmGroup &solvables)
 {
     ASSERT(itsCoeffIndex.getCoeffCount() == 0);
-    
+
     ParmGroup::const_iterator solIt = solvables.begin();
     while(solIt != solvables.end())
     {
-        ParmProxy::Pointer parm = ParmManager::instance().get(*solIt);
+        ParmProxy::Ptr parm = ParmManager::instance().get(*solIt);
         itsCoeffIndex.insert(parm->getName(), parm->getCoeffCount());
         ++solIt;
-    }                
+    }
 }
 
 void GlobalSolveController::makeCoeffMapping(const ParmGroup &solvables,
     const CoeffIndex &index)
 {
     ASSERT(itsSolCoeffMapping.empty());
-    
+
     ParmGroup::const_iterator solIt = solvables.begin();
     while(solIt != solvables.end())
     {
-        ParmProxy::Pointer parm = ParmManager::instance().get(*solIt);
+        ParmProxy::Ptr parm = ParmManager::instance().get(*solIt);
 
         CoeffIndex::const_iterator intervalIt = index.find(parm->getName());
-        ASSERT(intervalIt != index.end());        
+        ASSERT(intervalIt != index.end());
 
         const CoeffInterval &interval = intervalIt->second;
         ASSERT(parm->getCoeffCount() == interval.length);
@@ -231,13 +231,13 @@ void GlobalSolveController::makeCoeffMapping(const ParmGroup &solvables,
         ++solIt;
     }
 }
-	    
+
 void GlobalSolveController::getInitialCoeff(vector<CellCoeff> &result,
     const Location &start, const Location &end) const
 {
     const uint nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
-        
+
     result.resize(nCells);
     vector<CellCoeff>::iterator resultIt = result.begin();
 
@@ -251,16 +251,16 @@ void GlobalSolveController::getInitialCoeff(vector<CellCoeff> &result,
         ++cellIt;
     }
 }
-        
+
 void GlobalSolveController::setSolution(const vector<CellSolution> &solutions,
     const Location &start, const Location &end) const
 {
     for(size_t i = 0; i < solutions.size(); ++i)
     {
-        Location cell(itsSolGrid.getCellLocation(solutions[i].id));        
+        Location cell(itsSolGrid.getCellLocation(solutions[i].id));
         ASSERT(cell.first >= start.first && cell.first <= end.first
             && cell.second >= start.second && cell.second <= end.second);
-            
+
         setCoeff(solutions[i].coeff, cell, itsSolCoeffMapping);
     }
 
@@ -273,7 +273,7 @@ void GlobalSolveController::setSolution(const vector<CellSolution> &solutions,
         << " " << solutions[i].chiSqr;
     }
     LOG_DEBUG(oss.str());
-#endif            
+#endif
 }
 
 void GlobalSolveController::getCoeff(vector<double> &result,
@@ -285,7 +285,7 @@ void GlobalSolveController::getCoeff(vector<double> &result,
     ParmGroup::const_iterator solIt = itsSolvables.begin();
     while(solIt != itsSolvables.end())
     {
-        ParmProxy::Pointer parm(ParmManager::instance().get(*solIt));
+        ParmProxy::Ptr parm(ParmManager::instance().get(*solIt));
         vector<double> coeff(parm->getCoeff(cell));
         coeffIt = copy(coeff.begin(), coeff.end(), coeffIt);
         ++solIt;
@@ -299,15 +299,15 @@ void GlobalSolveController::setCoeff(const vector<double> &coeff,
     ParmGroup::const_iterator solIt = itsSolvables.begin();
     while(solIt != itsSolvables.end())
     {
-        ParmProxy::Pointer parm = ParmManager::instance().get(*solIt);
+        ParmProxy::Ptr parm = ParmManager::instance().get(*solIt);
         const size_t nCoeff = parm->getCoeffCount();
         ASSERT(i + nCoeff <= coeff.size());
 
         parm->setCoeff(cell, &(coeff[i]), nCoeff);
         i += nCoeff;
-        
+
         ++solIt;
-    }        
+    }
 }
 
 void GlobalSolveController::setCoeff(const vector<double> &coeff,
@@ -317,14 +317,14 @@ void GlobalSolveController::setCoeff(const vector<double> &coeff,
     ParmGroup::const_iterator solIt = itsSolvables.begin();
     while(solIt != itsSolvables.end())
     {
-        ParmProxy::Pointer parm = ParmManager::instance().get(*solIt);
+        ParmProxy::Ptr parm = ParmManager::instance().get(*solIt);
         ASSERT((*mapIt) + parm->getCoeffCount() <= coeff.size());
 
         parm->setCoeff(cell, &(coeff[*mapIt]), parm->getCoeffCount());
 
         ++mapIt;
         ++solIt;
-    }        
+    }
 }
 
 } //# namespace BBS

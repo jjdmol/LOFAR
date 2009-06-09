@@ -42,9 +42,9 @@ namespace BBS
 class GaussianCoherence: public JonesExprRep
 {
 public:
-    GaussianCoherence(const GaussianSource::ConstPointer &source,
-        const StatUVW::ConstPointer &station1,
-        const StatUVW::ConstPointer &station2);
+    GaussianCoherence(const GaussianSource::ConstPtr &source,
+        const StatUVW::ConstPtr &station1,
+        const StatUVW::ConstPtr &station2);
     ~GaussianCoherence();
 
     // Calculate the results for the given domain.
@@ -59,8 +59,8 @@ private:
         const Matrix &vBaseline, const Matrix &major, const Matrix &minor,
         const Matrix &phi);
 
-    GaussianSource::ConstPointer    itsSource;
-    StatUVW::ConstPointer           itsStation1, itsStation2;
+    GaussianSource::ConstPtr    itsSource;
+    StatUVW::ConstPtr           itsStation1, itsStation2;
 };
 
 // @}

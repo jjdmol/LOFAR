@@ -56,28 +56,8 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-      // Print the contents of \c *this in human readable form into the output
-      // stream \a os.
-      virtual void print(ostream& os) const;
-
-      // @name Accessor methods
-      // @{
-      bool   useCondFlagging() const { return itsUseCondFlagging; }
-      double threshold()       const { return itsThreshold; }
-      // @}
-
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
-
-    private:
-      // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ParameterSet& ps) const;
-
-      // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ParameterSet& ps);
-
-      bool   itsUseCondFlagging;
-      double itsThreshold;
     };
 
     // @}

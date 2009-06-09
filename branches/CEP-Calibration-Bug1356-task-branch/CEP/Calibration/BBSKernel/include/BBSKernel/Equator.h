@@ -46,7 +46,7 @@ class Equator
 {
 public:
     // Constructor. NB: nThreads is ignored when compiled without OPENMP.
-    Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
+    Equator(const VisData::Ptr &chunk, const Model::Ptr &model,
         const CoeffIndex &index, const Grid &solGrid, uint nMaxCells,
         uint nThreads = 1);
     ~Equator();
@@ -132,9 +132,9 @@ private:
     };
 
     // Observed visibilities.
-    VisData::Pointer                    itsChunk;
+    VisData::Ptr                    itsChunk;
     // Model of the sky and the instrument.
-    Model::Pointer                      itsModel;
+    Model::Ptr                      itsModel;
     // Solution grid.
     Grid                                itsSolGrid;
     // Maximum number of cells in the solution grid that can be processed

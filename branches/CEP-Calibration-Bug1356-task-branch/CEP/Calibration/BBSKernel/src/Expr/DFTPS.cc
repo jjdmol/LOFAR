@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-DFTPS::DFTPS(const StatUVW::ConstPointer &uvw,
+DFTPS::DFTPS(const StatUVW::ConstPtr &uvw,
     const Expr<Vector<3> >::ConstPtr &lmn)
     :   Expr1<Vector<3>, Vector<2> >(lmn),
         itsUVW(uvw)

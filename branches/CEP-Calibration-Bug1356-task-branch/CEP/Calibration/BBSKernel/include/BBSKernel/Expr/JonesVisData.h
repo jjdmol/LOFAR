@@ -44,7 +44,7 @@ public:
     typedef shared_ptr<JonesVisData>    Ptr;
     typedef shared_ptr<JonesVisData>    ConstPtr;
 
-    JonesVisData(const VisData::Pointer &chunk, const baseline_t &baseline);
+    JonesVisData(const VisData::Ptr &chunk, const baseline_t &baseline);
 
     virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
         const;
@@ -69,8 +69,8 @@ private:
         const boost::multi_array<flag_t, 4>::const_array_view<2>::type &src)
         const;
 
-    VisData::Pointer    itsChunk;
-    uint                itsBaselineIndex;
+    VisData::Ptr    itsChunk;
+    uint            itsBaselineIndex;
 };
 
 // @}

@@ -136,7 +136,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<KernelIdMsg>     Pointer;
+      typedef shared_ptr<KernelIdMsg>     Ptr;
 
       KernelIdMsg()
         : KernelMessage()
@@ -170,7 +170,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<ProcessIdMsg>     Pointer;
+      typedef shared_ptr<ProcessIdMsg>     Ptr;
 
       ProcessIdMsg()
         : KernelMessage()
@@ -208,7 +208,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<CoeffIndexMsg>   Pointer;
+      typedef shared_ptr<CoeffIndexMsg>   Ptr;
         
       CoeffIndexMsg()
         : KernelMessage()
@@ -249,7 +249,7 @@ namespace LOFAR
     {
     public:
       typedef SolverMessage super;
-      typedef shared_ptr<MergedCoeffIndexMsg>   Pointer;
+      typedef shared_ptr<MergedCoeffIndexMsg>   Ptr;
         
       MergedCoeffIndexMsg()
       {}
@@ -285,7 +285,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<CoeffMsg>  Pointer;
+      typedef shared_ptr<CoeffMsg>  Ptr;
 
       CoeffMsg()
         : KernelMessage()
@@ -335,7 +335,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<EquationMsg> Pointer;
+      typedef shared_ptr<EquationMsg> Ptr;
 
       EquationMsg()
         : KernelMessage()
@@ -385,7 +385,7 @@ namespace LOFAR
     {
     public:
       typedef SolverMessage super;
-      typedef shared_ptr<SolutionMsg> Pointer;
+      typedef shared_ptr<SolutionMsg> Ptr;
 
       SolutionMsg()
       {}
@@ -430,7 +430,7 @@ namespace LOFAR
     {
     public:
       typedef KernelMessage super;
-      typedef shared_ptr<ChunkDoneMsg> Pointer;
+      typedef shared_ptr<ChunkDoneMsg> Ptr;
 
       ChunkDoneMsg()
         : KernelMessage()

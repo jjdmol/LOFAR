@@ -47,7 +47,7 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 
 void extractMeta(MetaMeasurement &meta, const string &host, const string &path,
-    Measurement::Pointer ms)
+    Measurement::Ptr ms)
 {
     meta.setPhaseCenter(ms->getPhaseCenter());
     
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
             }
 
             MetaMeasurement meta(name);
-            MeasurementAIPS::Pointer measurement
+            MeasurementAIPS::Ptr measurement
                 (new MeasurementAIPS(path.absoluteName()));
             
             extractMeta(meta, host, path.absoluteName(), measurement);

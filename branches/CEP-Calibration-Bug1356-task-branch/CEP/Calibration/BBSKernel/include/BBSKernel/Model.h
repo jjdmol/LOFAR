@@ -63,8 +63,8 @@ class Request;
 class Model
 {
 public:
-    typedef shared_ptr<Model>       Pointer;
-    typedef shared_ptr<const Model> ConstPointer;
+    typedef shared_ptr<Model>       Ptr;
+    typedef shared_ptr<const Model> ConstPtr;
 
     enum ModelComponent
     {
@@ -73,69 +73,60 @@ public:
         DIRECTIONAL_GAIN,
         BEAM,
         IONOSPHERE,
+        COND_NUM_FLAG,
         N_ModelComponent
     };
 
     Model(const Instrument &instrument, const SourceDB &sourceDb,
-        const casa::MDirection &phaseRef);
+        const casa::MDirection &reference);
 
-    void clearExpressions();
-
-    void makeFwdExpressions(const ModelConfig &config,
-        const VisData::Pointer &chunk, const vector<baseline_t> &baselines);
-
-    void makeInvExpressions(const ModelConfig &config, bool flagCond,
-        double thresholdCond, const VisData::Pointer &chunk,
+    void makeForwardExpr(const ModelConfig &config, const VisData::Ptr &chunk,
         const vector<baseline_t> &baselines);
 
-    void setPerturbedParms(const ParmGroup &solvables);
-    void clearPerturbedParms();
+    // TODO: Move flagCond and thresholdCond to ModelConfig.
+    void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
+        const vector<baseline_t> &baselines);
+
+    void clear();
+
+    void setSolvableParms(const ParmGroup &solvables);
+    void clearSolvableParms();
 
     ParmGroup getParms() const;
-    ParmGroup getPerturbedParms() const;
+    ParmGroup getSolvableParms() const;
 
-//    void precalculate(const Request &request);
-//    JonesResult evaluate(const baseline_t &baseline, const Request &request);
-
-//    void setRequest(const Request &request);
     void setRequestGrid(const Grid &grid);
-
     JonesMatrix evaluate(const baseline_t &baseline);
-//    map<PValueKey, ExprResult::ConstPtr>
-//        evalPerturbed(const baseline_t &baseline);
-
-//    JonesMatrix<complex_t>::ConstPtr evaluate(const baseline_t &baseline,
-//        Cache &cache);
-
-//    map<PValueKey, JonesMatrix<complex_t>::ConstPtr>
-//        evalPerturbed(const baseline_t &baseline, Cache &cache);
 
 private:
     vector<bool> parseComponents(const vector<string> &components) const;
 
-//    vector<Expr::Ptr> makeUVWExpr(const VisData::Pointer &chunk,
+//    vector<Expr::Ptr> makeUVWExpr(const VisData::Ptr &chunk,
 //        const vector<baseline_t> &baselines);
 
     ExprParm::Ptr makeExprParm(uint category, const string &name);
 
     boost::multi_array<Expr<JonesMatrix>::Ptr, 2>
     makeDirectionDependentGainExpr(const ModelConfig &config,
+        const vector<unsigned int> &stations,
         const vector<Source::Ptr> &sources);
 
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
 //    Source::Ptr makeSource(const SourceInfo &source);
 
-//    void makeSources(vector<Source::Pointer> &result,
+//    void makeSources(vector<Source::Ptr> &result,
 //        const vector<string> &patterns);
 //
     Source::Ptr makeSource(const SourceInfo &source);
 
-    void makeStationUvw();
+    void makeStationUVW();
 
 //    void makeAzElNodes(boost::multi_array<Expr, 2> &result,
-//        const vector<Source::Pointer> &sources) const;
+//        const vector<Source::Ptr> &sources) const;
 
-    void makeStationShiftNodes(boost::multi_array<Expr<Vector<2> >::Ptr, 2> &result,
+    void makeStationShiftNodes
+        (boost::multi_array<Expr<Vector<2> >::Ptr, 2> &result,
+        const vector<unsigned int> &stations,
         const vector<Source::Ptr> &sources) const;
 
 //    void makeBandpassNodes(vector<JonesExpr> &result);
@@ -143,7 +134,7 @@ private:
 //    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
 
 //    void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
-//        const ModelConfig &config, const vector<Source::Pointer> &sources);
+//        const ModelConfig &config, const vector<Source::Ptr> &sources);
 
 //    void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
 //        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
@@ -153,17 +144,29 @@ private:
 
 //    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
-    Instrument                      itsInstrument;
-    SourceDB                        itsSourceDb;
-    PhaseRef::ConstPointer          itsPhaseRef;
-//    Grid                            itsRequestGrid;
-    Request                         itsRequest;
-    Cache                           itsCache;
+    vector<unsigned int> stationsUsed(const vector<baseline_t> &baselines)
+        const;
 
-    vector<StatUVW::ConstPointer>   itsStationUvw;
-    map<baseline_t, Expr<JonesMatrix>::Ptr>             itsExpressions;
-//    map<baseline_t, vector<PValueKey> >                 itsDependencies;
-    map<unsigned int, ExprParm::Ptr>                    itsParms;
+//    size_t getStationCount() const
+//    {
+//        return itsInstrument.stations.size();
+//    }
+
+//    const Station &getStation(unsigned int idx) const
+//    {
+//        DBGASSERT(idx < getStationCount());
+//        return itsInstrument.stations[idx];
+//    }
+
+    SourceDB        itsSourceDb;
+    Instrument      itsInstrument;
+    PhaseRef::Ptr   itsPhaseRef;
+    Request         itsRequest;
+    Cache           itsCache;
+
+    vector<StatUVW::ConstPtr>               itsStationUVW;
+    map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
+    map<unsigned int, ExprParm::Ptr>        itsParms;
 };
 
 } //# namespace BBS

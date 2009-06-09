@@ -43,9 +43,9 @@ namespace BBS
 using LOFAR::exp;
 using LOFAR::conj;
 
-GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPointer &source,
-    const StatUVW::ConstPointer &station1,
-    const StatUVW::ConstPointer &station2)
+GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPtr &source,
+    const StatUVW::ConstPtr &station1,
+    const StatUVW::ConstPtr &station2)
     :   itsSource(source),
         itsStation1(station1),
         itsStation2(station2)

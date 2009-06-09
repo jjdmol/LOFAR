@@ -78,7 +78,7 @@ FlagArrayImpl *FlagArrayImplScalar::opBitWiseOr(const FlagArrayImplMatrix &lhs,
 
     FlagArrayImplMatrix *result =
         lhsTmp ? const_cast<FlagArrayImplMatrix*>(&lhs)
-        : new FlagArrayImplMatrix(lhs.shape(1), lhs.shape(0));
+        : new FlagArrayImplMatrix(lhs.shape(0), lhs.shape(1));
 
     FlagArrayImplMatrix::const_iterator lhs_it = lhs.begin();
     FlagArrayImplMatrix::const_iterator lhs_end = lhs.end();
@@ -117,7 +117,7 @@ FlagArrayImpl *FlagArrayImplScalar::opBitWiseAnd(const FlagArrayImplMatrix &lhs,
 
     FlagArrayImplMatrix *result =
         lhsTmp ? const_cast<FlagArrayImplMatrix*>(&lhs)
-        : new FlagArrayImplMatrix(lhs.shape(1), lhs.shape(0));
+        : new FlagArrayImplMatrix(lhs.shape(0), lhs.shape(1));
 
     FlagArrayImplMatrix::const_iterator lhs_it = lhs.begin();
     FlagArrayImplMatrix::const_iterator lhs_end = lhs.end();
@@ -133,7 +133,7 @@ FlagArrayImpl *FlagArrayImplScalar::opBitWiseAnd(const FlagArrayImplMatrix &lhs,
 }
 
 // -------------------------------------------------------------------------- //
-// - Implementation: FlagArrayImplScalar                                    - //
+// - Implementation: FlagArrayImplMatrix                                    - //
 // -------------------------------------------------------------------------- //
 
 FlagArrayImpl *FlagArrayImplMatrix::opBitWiseOr(const FlagArrayImplScalar &lhs,
@@ -144,7 +144,7 @@ FlagArrayImpl *FlagArrayImplMatrix::opBitWiseOr(const FlagArrayImplScalar &lhs,
 
     FlagArrayImplMatrix *result =
         rhsTmp ? const_cast<FlagArrayImplMatrix*>(this)
-        : new FlagArrayImplMatrix(shape(1), shape(0));
+        : new FlagArrayImplMatrix(shape(0), shape(1));
 
     FlagArrayImplMatrix::const_iterator rhs_it = begin();
     FlagArrayImplMatrix::const_iterator rhs_end = end();
@@ -169,7 +169,7 @@ FlagArrayImpl *FlagArrayImplMatrix::opBitWiseOr(const FlagArrayImplMatrix &lhs,
     FlagArrayImplMatrix *result =
         lhsTmp ? const_cast<FlagArrayImplMatrix*>(&lhs)
         : (rhsTmp ? const_cast<FlagArrayImplMatrix*>(this)
-        : new FlagArrayImplMatrix(shape(1), shape(0)));
+        : new FlagArrayImplMatrix(shape(0), shape(1)));
 
     // TODO: Optimization opportunity: result_it could be the same as lhs_it
     // or rhs_it.
@@ -196,7 +196,7 @@ FlagArrayImpl *FlagArrayImplMatrix::opBitWiseAnd(const FlagArrayImplScalar &lhs,
 
     FlagArrayImplMatrix *result =
         rhsTmp ? const_cast<FlagArrayImplMatrix*>(this)
-        : new FlagArrayImplMatrix(shape(1), shape(0));
+        : new FlagArrayImplMatrix(shape(0), shape(1));
 
     FlagArrayImplMatrix::const_iterator rhs_it = begin();
     FlagArrayImplMatrix::const_iterator rhs_end = end();
@@ -222,7 +222,7 @@ FlagArrayImpl *FlagArrayImplMatrix::opBitWiseAnd(const FlagArrayImplMatrix &lhs,
     FlagArrayImplMatrix *result =
         lhsTmp ? const_cast<FlagArrayImplMatrix*>(&lhs)
         : (rhsTmp ? const_cast<FlagArrayImplMatrix*>(this)
-        : new FlagArrayImplMatrix(shape(1), shape(0)));
+        : new FlagArrayImplMatrix(shape(0), shape(1)));
 
     // TODO: Optimization opportunity: result_it could be the same as lhs_it
     // or rhs_it.

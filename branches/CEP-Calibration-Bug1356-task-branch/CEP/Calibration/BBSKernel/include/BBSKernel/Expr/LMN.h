@@ -45,7 +45,7 @@ public:
     typedef shared_ptr<LMN>         Ptr;
     typedef shared_ptr<const LMN>   ConstPtr;
 
-    LMN(const PhaseRef::ConstPointer &ref,
+    LMN(const PhaseRef::ConstPtr &ref,
         const Expr<Vector<2> >::ConstPtr &position);
 
 private:
@@ -53,7 +53,7 @@ private:
     virtual const Vector<3>::proxy evaluateImpl(const Request &request,
         const Vector<2>::proxy &position) const;
 
-    PhaseRef::ConstPointer  itsRef;
+    PhaseRef::ConstPtr  itsRef;
 };
 
 // @}

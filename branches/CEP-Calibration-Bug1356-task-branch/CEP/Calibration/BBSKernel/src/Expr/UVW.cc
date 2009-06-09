@@ -29,7 +29,7 @@ namespace LOFAR
 namespace BBS 
 {
 
-UVW::UVW(const VisData::Pointer &chunk,
+UVW::UVW(const VisData::Ptr &chunk,
     const baseline_t &baseline)
     :   ExprTerminus(),
         itsChunk(chunk),

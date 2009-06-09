@@ -41,7 +41,7 @@ NoiseGenerator::~NoiseGenerator()
 {
 }
 
-void NoiseGenerator::attachChunk(VisData::Pointer chunk)
+void NoiseGenerator::attachChunk(VisData::Ptr chunk)
 {
     // Check preconditions.
     ASSERT(chunk);

@@ -115,10 +115,10 @@ public:
     // "key" was found.
     const Matrix &value(const PValueKey &key, bool &found) const;
 
-    Matrix &value();
-    // Returns a writeable reference to the field associated with "key". If no
-    // such field exists yet it will be created.
-    Matrix &value(const PValueKey &key);
+//    Matrix &value();
+//    // Returns a writeable reference to the field associated with "key". If no
+//    // such field exists yet it will be created.
+//    Matrix &value(const PValueKey &key);
 
     void assign(const Matrix &value);
     void assign(const PValueKey &key, const Matrix &value);
@@ -634,15 +634,15 @@ inline const Matrix &FieldSet::value(const PValueKey &key, bool &found) const
     return instance().value(key, found);
 }
 
-inline Matrix &FieldSet::value()
-{
-    return instance().value();
-}
+//inline Matrix &FieldSet::value()
+//{
+//    return instance().value();
+//}
 
-inline Matrix &FieldSet::value(const PValueKey &key)
-{
-    return instance().value(key);
-}
+//inline Matrix &FieldSet::value(const PValueKey &key)
+//{
+//    return instance().value(key);
+//}
 
 inline void FieldSet::assign(const Matrix &value)
 {

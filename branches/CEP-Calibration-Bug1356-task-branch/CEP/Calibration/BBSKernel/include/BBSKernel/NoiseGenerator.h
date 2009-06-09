@@ -49,7 +49,7 @@ public:
 
     // Attach/detach the chunk of data to process.
     // <group>
-    void attachChunk(VisData::Pointer chunk);
+    void attachChunk(VisData::Ptr chunk);
     void detachChunk();
     // </group>
 
@@ -66,7 +66,7 @@ private:
     
     double              itsMean, itsSigma;
     GeneratorT          itsGenerator;
-    VisData::Pointer    itsChunk;
+    VisData::Ptr    itsChunk;
 };
 
 // @}

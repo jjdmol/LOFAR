@@ -58,17 +58,17 @@ typedef set<uint> ParmGroup;
 class ParmManagerImpl
 {
 public:
-    typedef shared_ptr<ParmManagerImpl>         Pointer;
-    typedef shared_ptr<const ParmManagerImpl>   ConstPointer;
+    typedef shared_ptr<ParmManagerImpl>         Ptr;
+    typedef shared_ptr<const ParmManagerImpl>   ConstPtr;
 
     void initCategory(uint category, const ParmDB &db);
 
-    ParmProxy::Pointer get(uint category, const string &name);
-    ParmProxy::Pointer get(uint category, const string &name, ParmGroup &group);
+    ParmProxy::Ptr get(uint category, const string &name);
+    ParmProxy::Ptr get(uint category, const string &name, ParmGroup &group);
     
-    ParmProxy::Pointer get(uint id)
+    ParmProxy::Ptr get(uint id)
     { return itsParms[id]; }
-    ParmProxy::ConstPointer get(uint id) const
+    ParmProxy::ConstPtr get(uint id) const
     { return itsParms[id]; }
     
     void setDomain(const Box &domain);
@@ -97,7 +97,7 @@ private:
     ParmCache                       itsParmCache;
     map<uint, ParmDB>               itsCategories;
     map<string, pair<uint, uint> >  itsParmMap;
-    vector<ParmProxy::Pointer>      itsParms;
+    vector<ParmProxy::Ptr>      itsParms;
 };
 
 typedef Singleton<ParmManagerImpl>  ParmManager;

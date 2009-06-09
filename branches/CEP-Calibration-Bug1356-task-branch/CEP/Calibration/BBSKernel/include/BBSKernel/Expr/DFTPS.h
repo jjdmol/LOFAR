@@ -61,14 +61,14 @@ public:
     typedef shared_ptr<DFTPS>       Ptr;
     typedef shared_ptr<const DFTPS> ConstPtr;
 
-    DFTPS(const StatUVW::ConstPointer &uvw,
+    DFTPS(const StatUVW::ConstPtr &uvw,
         const Expr<Vector<3> >::ConstPtr &lmn);
 
 private:
     virtual const Vector<2>::proxy evaluateImpl(const Request &request,
         const Vector<3>::proxy &lmn) const;
 
-    StatUVW::ConstPointer    itsUVW;
+    StatUVW::ConstPtr    itsUVW;
 };
 
 // @}

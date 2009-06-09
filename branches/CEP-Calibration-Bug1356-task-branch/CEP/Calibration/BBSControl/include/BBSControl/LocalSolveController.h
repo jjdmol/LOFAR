@@ -47,8 +47,8 @@ namespace BBS
 class LocalSolveController
 {
 public:
-    LocalSolveController(const VisData::Pointer &chunk,
-        const Model::Pointer &model, const SolverOptions &options);
+    LocalSolveController(const VisData::Ptr &chunk,
+        const Model::Ptr &model, const SolverOptions &options);
     ~LocalSolveController();
     
     void init(const vector<string> &include, const vector<string> &exclude,
@@ -71,8 +71,8 @@ private:
     void setCoeff(const vector<double> &coeff, const Location &cell,
         const vector<uint> &mapping) const;
 
-    VisData::Pointer    itsChunk;
-    Model::Pointer      itsModel;
+    VisData::Ptr    itsChunk;
+    Model::Ptr      itsModel;
     Solver              itsSolver;
 
     bool                itsInitFlag;

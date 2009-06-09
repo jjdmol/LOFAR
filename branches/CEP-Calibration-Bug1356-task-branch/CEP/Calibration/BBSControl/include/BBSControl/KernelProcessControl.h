@@ -133,7 +133,7 @@ private:
     KernelIndex                             itsKernelIndex;
     
     // Measurement.
-    Measurement::Pointer                    itsMeasurement;
+    Measurement::Ptr                    itsMeasurement;
     string                                  itsInputColumn;
     
     // Global time axis.
@@ -142,10 +142,10 @@ private:
     // Chunk.
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;
-    VisData::Pointer                        itsChunk;
+    VisData::Ptr                        itsChunk;
 
     // Model
-    Model::Pointer                          itsModel;
+    Model::Ptr                          itsModel;
 
     // Source Database
     shared_ptr<SourceDB>                    itsSourceDb;

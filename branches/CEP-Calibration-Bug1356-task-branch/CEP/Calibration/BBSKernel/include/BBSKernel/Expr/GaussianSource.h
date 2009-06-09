@@ -41,8 +41,8 @@ namespace BBS
 class GaussianSource: public Source
 {
 public:
-    typedef shared_ptr<GaussianSource>       Pointer;
-    typedef shared_ptr<const GaussianSource> ConstPointer;
+    typedef shared_ptr<GaussianSource>       Ptr;
+    typedef shared_ptr<const GaussianSource> ConstPtr;
 
     GaussianSource(const string &name, const Expr &ra, const Expr &dec,
         const Expr &I, const Expr &Q, const Expr &U, const Expr &V,

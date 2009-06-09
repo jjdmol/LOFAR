@@ -53,7 +53,7 @@ void ParmManagerImpl::initCategory(uint category, const ParmDB &db)
     itsCategories.insert(make_pair(category, db));
 }
 
-ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
+ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name)
 {
     map<uint, ParmDB>::iterator catIt = itsCategories.find(category);
     ASSERTSTR(catIt != itsCategories.end(), "Attempt to get a parameter from"
@@ -78,7 +78,7 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
         // This is the first reference to this parameter.
         const ParmId internalId = itsParmSet.addParm(parmDb, name);
         Parm parm(itsParmCache, internalId);
-        itsParms.push_back(ParmProxy::Pointer(new ParmProxy(parmId, name,
+        itsParms.push_back(ParmProxy::Ptr(new ParmProxy(parmId, name,
             parm)));
         itsParmCache.cacheValues();
     }
@@ -86,10 +86,10 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
     return itsParms[parmId];
 }
 
-ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name,
+ParmProxy::Ptr ParmManagerImpl::get(uint category, const string &name,
     ParmGroup &group)
 {
-    ParmProxy::Pointer proxy(get(category, name));
+    ParmProxy::Ptr proxy(get(category, name));
     group.insert(proxy->getId());
     return proxy;
 }
@@ -101,7 +101,7 @@ void ParmManagerImpl::setDomain(const Box &domain)
 
 void ParmManagerImpl::setGrid(const Grid &grid)
 {
-    vector<ParmProxy::Pointer>::const_iterator it = itsParms.begin();
+    vector<ParmProxy::Ptr>::const_iterator it = itsParms.begin();
     while(it != itsParms.end())
     {
         (*it)->setGrid(grid);

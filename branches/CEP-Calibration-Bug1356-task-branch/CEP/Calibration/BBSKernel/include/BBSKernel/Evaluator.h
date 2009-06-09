@@ -53,7 +53,7 @@ public:
     };
     
     // Constructor. NB: nThreads is ignored when compiled without OPENMP.
-    Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
+    Evaluator(const VisData::Ptr &chunk, const Model::Ptr &model,
         uint nThreads = 1);
     ~Evaluator();
 
@@ -80,8 +80,8 @@ private:
 //    void blAdd(uint threadId, const baseline_t &baseline,
 //        const Request &request);
 
-    VisData::Pointer    itsChunk;
-    Model::Pointer      itsModel;
+    VisData::Ptr    itsChunk;
+    Model::Ptr      itsModel;
     uint                itsThreadCount;
     
     vector<baseline_t>  itsBaselines;

@@ -45,7 +45,7 @@ namespace BBS
 {
 
 StatUVW::StatUVW(const Station &station, const casa::MPosition &arrayRef,
-    const PhaseRef::ConstPointer &phaseRef)
+    const PhaseRef::ConstPtr &phaseRef)
     :   itsStation(station),
         itsArrayRef(arrayRef),
         itsPhaseRef(phaseRef),

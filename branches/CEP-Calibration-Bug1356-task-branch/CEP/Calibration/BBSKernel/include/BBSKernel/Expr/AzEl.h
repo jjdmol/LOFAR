@@ -49,7 +49,7 @@ class Matrix;
 class AzEl: public ExprRep
 {
 public:
-    AzEl(const Station &station, const Source::ConstPointer &source);
+    AzEl(const Station &station, const Source::ConstPtr &source);
     
     ResultVec getResultVec(const Request &request);
     
@@ -60,7 +60,7 @@ private:
         const Matrix &in_dec, Matrix &out_az, Matrix &out_el);
 
     Station                 itsStation;
-    Source::ConstPointer    itsSource;
+    Source::ConstPtr    itsSource;
 };
 
 // @}

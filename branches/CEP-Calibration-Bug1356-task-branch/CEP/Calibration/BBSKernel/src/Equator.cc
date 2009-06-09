@@ -35,7 +35,7 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
+Equator::Equator(const VisData::Ptr &chunk, const Model::Ptr &model,
         const CoeffIndex &index, const Grid &grid, uint nMaxCells,
         uint nThreads)
     :   itsChunk(chunk),
@@ -499,13 +499,12 @@ void Equator::makeGridMapping()
 
 void Equator::makeCoeffMapping(const CoeffIndex &index)
 {
-    ParmGroup pertParms = itsModel->getPerturbedParms();
-    ParmGroup::const_iterator pertIt = pertParms.begin();
-    ParmGroup::const_iterator pertItEnd = pertParms.end();
+    ParmGroup solvables = itsModel->getSolvableParms();
+    ParmGroup::const_iterator solIt = solvables.begin();
 
-    while(pertIt != pertItEnd)
+    while(solIt != solvables.end())
     {
-        ParmProxy::Pointer parm = ParmManager::instance().get(*pertIt);
+        ParmProxy::Ptr parm = ParmManager::instance().get(*solIt);
 
         CoeffIndex::const_iterator indexIt = index.find(parm->getName());
         ASSERT(indexIt != index.end());
@@ -516,7 +515,7 @@ void Equator::makeCoeffMapping(const CoeffIndex &index)
             itsCoeffMap[PValueKey(parm->getId(), i)] = interval.start + i;
         }
 
-        ++pertIt;
+        ++solIt;
     }
 }
 

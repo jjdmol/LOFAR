@@ -46,7 +46,7 @@ public:
 
 //    using Expr0<Scalar>::ExprValueType;
 
-    ExprParm(const ParmProxy::ConstPointer &parm);
+    ExprParm(const ParmProxy::ConstPtr &parm);
 
     void setPValueFlag();
     bool getPValueFlag() const
@@ -69,7 +69,7 @@ private:
 
     virtual const Scalar evaluate(const Request &request, Cache &cache) const;
 
-    ParmProxy::ConstPointer itsParm;
+    ParmProxy::ConstPtr itsParm;
     bool                    itsPValueFlag;
 };
 

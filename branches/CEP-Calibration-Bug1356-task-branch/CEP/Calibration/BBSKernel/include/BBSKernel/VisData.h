@@ -43,7 +43,8 @@ using std::pair;
 class VisData
 {
 public:
-    typedef shared_ptr<VisData>     Pointer;
+    typedef shared_ptr<VisData>         Ptr;
+    typedef shared_ptr<const VisData>   ConstPtr;
 
     enum TimeslotFlag
     {

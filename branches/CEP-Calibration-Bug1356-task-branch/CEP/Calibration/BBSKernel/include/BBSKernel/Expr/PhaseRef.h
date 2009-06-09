@@ -41,8 +41,8 @@ namespace BBS
 class PhaseRef
 {
 public:
-    typedef shared_ptr<PhaseRef>         Pointer;
-    typedef shared_ptr<const PhaseRef>   ConstPointer;
+    typedef shared_ptr<PhaseRef>         Ptr;
+    typedef shared_ptr<const PhaseRef>   ConstPtr;
 
     PhaseRef();
     PhaseRef(const casa::MDirection &phaseRef);

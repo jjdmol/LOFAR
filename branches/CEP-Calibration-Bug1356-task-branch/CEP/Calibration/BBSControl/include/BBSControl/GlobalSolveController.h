@@ -49,7 +49,7 @@ class GlobalSolveController
 {
 public:
     GlobalSolveController(const KernelIndex &index,
-        const VisData::Pointer &chunk, const Model::Pointer &model,
+        const VisData::Ptr &chunk, const Model::Ptr &model,
         const shared_ptr<BlobStreamableConnection> &solver);
     ~GlobalSolveController();
     
@@ -74,8 +74,8 @@ private:
         const vector<uint> &mapping) const;
 
     KernelIndex                                itsKernelIndex;
-    VisData::Pointer                        itsChunk;
-    Model::Pointer                          itsModel;
+    VisData::Ptr                        itsChunk;
+    Model::Ptr                          itsModel;
     shared_ptr<BlobStreamableConnection>    itsSolver;
 
     bool                                    itsInitFlag;

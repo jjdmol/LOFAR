@@ -27,46 +27,37 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using LOFAR::operator<<;
 
-IonoConfig::IonoConfig():rank(0)
+CondNumFlagConfig::CondNumFlagConfig()
+    :   threshold(1.0)
 {
 }
 
+void CondNumFlagConfig::print(ostream &out) const
+{
+    out << "Condition number flagging:" << endl;
+    Indent id;
+    out << indent << "Threshold: " << threshold;
+}
 
-IonoConfig::~IonoConfig()
+IonoConfig::IonoConfig()
+    :   rank(0)
 {
 }
 
 void IonoConfig::print(ostream &out) const
 {
-    out << "Iono:" << endl;
+    out << "Ionosphere:" << endl;
     Indent id;
-    out << indent << "Rank: " << rank ;
+    out << indent << "Rank: " << rank;
 }
-
-
-BeamConfig::BeamConfig()
-{
-}
-
 
 BeamConfig::~BeamConfig()
 {
 }
-
-HamakerDipoleConfig::HamakerDipoleConfig()
-    : BeamConfig()
-{
-}
-
-
-HamakerDipoleConfig::~HamakerDipoleConfig()
-{
-}
-
 
 void HamakerDipoleConfig::print(ostream &out) const
 {
@@ -76,23 +67,11 @@ void HamakerDipoleConfig::print(ostream &out) const
         << indent << "Coefficient file: " << coeffFile;
 }
 
-
 const string &HamakerDipoleConfig::type() const
 {
     static string typeName("HamakerDipole");
     return typeName;
 }
-
-
-YatawattaDipoleConfig::YatawattaDipoleConfig()
-{
-}
-
-
-YatawattaDipoleConfig::~YatawattaDipoleConfig()
-{
-}
-
 
 void YatawattaDipoleConfig::print(ostream &out) const
 {
@@ -103,24 +82,16 @@ void YatawattaDipoleConfig::print(ostream &out) const
         << indent << "Module phi: " << modulePhi;
 }
 
-
 const string &YatawattaDipoleConfig::type() const
 {
     static string typeName("YatawattaDipole");
     return typeName;
 }
 
-
 ModelConfig::ModelConfig()
-    : usePhasors(false)
+    :   usePhasors(false)
 {
 }
-
-
-ModelConfig::~ModelConfig()
-{
-}
-
 
 ostream& operator<<(ostream &out, const ModelConfig &obj)
 {
@@ -133,20 +104,26 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << indent << "Sources: " << obj.sources << endl
         << indent << "Components: " << obj.components;
 
-    if(obj.beamConfig)
-    {
-        out << endl << indent;
-        obj.beamConfig->print(out);
-    }
     if(obj.ionoConfig)
     {
         out << endl << indent;
         obj.ionoConfig->print(out);
     }
 
-    return out;
-}    
+    if(obj.beamConfig)
+    {
+        out << endl << indent;
+        obj.beamConfig->print(out);
+    }
 
+    if(obj.condNumFlagConfig)
+    {
+        out << endl << indent;
+        obj.condNumFlagConfig->print(out);
+    }
+
+    return out;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR
