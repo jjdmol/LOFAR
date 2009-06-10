@@ -28,35 +28,18 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(LOFAR)
+project(GCF)
 include(LofarGeneral)
 
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(LCS)
-#add_subdirectory(CEP)
-#add_subdirectory(RTCP)
-add_subdirectory(SAS)
-add_subdirectory(MAC)
+lofar_add_subdirectory(TM)     # Task Management
+lofar_add_subdirectory(PVSS)   # Low-level interface to PVSS database
+lofar_add_subdirectory(RTDB)   # Real-Time Database layer.
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
-get_directory_property(def DEFINITIONS)
-message(STATUS "COMPILE_DEFINITIONS = ${def}")
-
-if(0)
-  get_cmake_property(cache_vars CACHE_VARIABLES)
-  message(STATUS "vvvvvvvv Cache variables vvvvvvvv")
-  foreach(var ${cache_vars})
-    message(STATUS "[cached] ${var} = ${${var}}")
-  endforeach(var ${cache_vars})
-  message(STATUS "^^^^^^^^ Cache variables ^^^^^^^^")
-  message(STATUS "vvvvvvvv Variables vvvvvvvv")
-  include(AllVariables)
-  all_variables()
-  message(STATUS "^^^^^^^^ Variables ^^^^^^^^")
-endif(0)

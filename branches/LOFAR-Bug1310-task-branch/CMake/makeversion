@@ -64,11 +64,12 @@ fi
 # If the include directory exists, find the include path from the package's
 # CMakeLists.txt. Otherwise header files are in src and <package> is the
 # include path.
-incpath=$pkg
-incdir=`sed -n 's,^[ \t]*add_subdirectory[ \t]*([ \t]*\(include/[^/)]\+\).*$,\1,ip' CMakeLists.txt`
+incdir=`sed -n 's,^[ \t]*add_subdirectory[ \t]*([ \t]*\(include/[^)]\+\).*$,\1,ip' CMakeLists.txt`
 if test "$incdir" = ""; then
-  incdir="src"
+  echo "Could not derive include directory from $pkg/CMakeLists.txt"
+  exit 1
 fi
+incpath="${incdir##include/}"
 
 # Check if source and include directory exist. If not, then it is probably not
 # a package directory.

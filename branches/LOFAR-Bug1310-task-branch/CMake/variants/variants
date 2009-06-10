@@ -49,28 +49,9 @@ set(LOFAR_SEARCH_PATH
   "/usr"
 )
 
-# List of options that may be set for the LOFAR build.
-set(LOFAR_OPTIONS
-  BUILD_STATIC_EXECUTABLES
-  BUILD_SHARED_LIBS
-  BUILD_TESTING
-#  ENABLE_TESTING
-  USE_AIPSPP
-  USE_BACKTRACE
-#  USE_BOOST
-  USE_LOG4CPLUS
-  USE_LOG4CXX
-  USE_PYTHON
-  USE_SSE
-  USE_SHMEM
-  USE_SOCKETS
-  USE_THREADS
-  USE_ZOID
-)
-
-# Define default values for all LOFAR build options. These options may
-# be overridden for a given compiler suite. For example:
-# option(USE_BOOST_GNU "Use Boost for GNU" OFF)
+# Define default values for all LOFAR build options. 
+# NOT IMPLEMENTED YET: These options may be overridden for a given compiler
+# suite. For example: option(USE_BOOST_GNU "Use Boost for GNU" OFF)
 option(BUILD_STATIC_EXECUTABLES "Build static executables" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 #option(BUILD_TESTING     "Build the testing tree" OFF)
@@ -80,24 +61,10 @@ option(USE_BOOST         "Use Boost"     ON)
 #option(USE_CASACORE      "Use Casacore"  OFF)
 option(USE_LOG4CPLUS     "Use Log4Cplus" ON)
 option(USE_LOG4CXX       "Use Log4Cxx"   OFF)
+option(USE_MPI           "Use MPI"       OFF)
 option(USE_PYTHON        "Use Python"    ON)
 option(USE_SSE           "Use SSE"       OFF)
 option(USE_SHMEM         "Use shmem"     ON)
 option(USE_SOCKETS       "Use Sockets"   OFF)
 option(USE_THREADS       "Use threads"   ON)
 option(USE_ZOID          "Use ZOID"      OFF)
-
-if(0)
-  set(DEBUG_VARIANT               "${standard} ${debug}")
-  set(DEBUGOPT_VARIANT            "${standard} ${debugopt}")
-  set(BGL_VARIANT)
-  set(BGP_VARIANT)
-  set(FAKEBGL_VARIANT)
-  set(MPICH_VARIANT)
-  set(MPICH-OPT_VARIANT)
-  set(MPICH-PROF_VARIANT)
-  set(NOLOG4CPLUS_VARIANT)
-  set(OPT_VARIANT)
-  set(PROFOPT_VARIANT)
-  set(standard "dummy")
-endif(0)

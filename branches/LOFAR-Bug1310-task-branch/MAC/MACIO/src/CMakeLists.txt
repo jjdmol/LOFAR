@@ -18,45 +18,29 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-cmake_minimum_required(VERSION 2.6)
+include(LofarPackageVersion)
 
 ## ---------------------------------------------------------------------------
-## Preamble: set compilers
+## Add MAC protocols (generates a .ph and .cc file from a .prot file)
 ## ---------------------------------------------------------------------------
-include(LofarInit)
+include(MACAddProtocol)
+mac_add_protocol(LOG_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
+mac_add_protocol(KVT_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
+mac_add_protocol(SB_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
 
 ## ---------------------------------------------------------------------------
-## Project characteristics
+## Add libraries to be generated
 ## ---------------------------------------------------------------------------
-project(LOFAR)
-include(LofarGeneral)
+lofar_add_library(log_protocol LOG_Protocol.cc)
+lofar_add_library(kvt_protocol KVT_Protocol.cc)
+lofar_add_library(macio 
+  Package__Version.cc
+  GCF_Event.cc
+  EventPort.cc
+  ProtocolDefs.cc
+  SB_Protocol.cc)
 
 ## ---------------------------------------------------------------------------
-## Subdirectories
+## Add executables to be generated
 ## ---------------------------------------------------------------------------
-add_subdirectory(LCS)
-#add_subdirectory(CEP)
-#add_subdirectory(RTCP)
-add_subdirectory(SAS)
-add_subdirectory(MAC)
-
-## ---------------------------------------------------------------------------
-## Generate configuration header file.
-## ---------------------------------------------------------------------------
-include(LofarConfig)
-
-get_directory_property(def DEFINITIONS)
-message(STATUS "COMPILE_DEFINITIONS = ${def}")
-
-if(0)
-  get_cmake_property(cache_vars CACHE_VARIABLES)
-  message(STATUS "vvvvvvvv Cache variables vvvvvvvv")
-  foreach(var ${cache_vars})
-    message(STATUS "[cached] ${var} = ${${var}}")
-  endforeach(var ${cache_vars})
-  message(STATUS "^^^^^^^^ Cache variables ^^^^^^^^")
-  message(STATUS "vvvvvvvv Variables vvvvvvvv")
-  include(AllVariables)
-  all_variables()
-  message(STATUS "^^^^^^^^ Variables ^^^^^^^^")
-endif(0)
+lofar_add_executable(versionmacio versionmacio.cc)

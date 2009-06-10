@@ -26,12 +26,12 @@
 # Defines the following macros:
 #   join_arguments(var)
 #   list_append_if(condition var value1..valuen)
-#   find_handle_result(package, find_result, message)
+#   lofar_add_executable(name)
+#   lofar_add_library(name)
+#   lofar_add_subdirectory(name)
+#   lofar_add_test(name)
 #   lofar_get_date(date)
 #   lofar_get_hostname(name)
-#   lofar_add_library(name)
-#   lofar_add_executable(name)
-#   lofar_add_test(name)
 # ----------------------------------------------------------------------------
 
 if(NOT DEFINED LOFAR_MACROS_INCLUDED)
@@ -67,26 +67,24 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
 
   # --------------------------------------------------------------------------
-  # lofar_get_date(date)
+  # lofar_add_executable(name)
   #
-  # Return the current date and time in the variable DATE.
-  # --------------------------------------------------------------------------
-  macro(lofar_get_date _date)
-    execute_process(COMMAND date
-      OUTPUT_VARIABLE ${_date}
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endmacro(lofar_get_date _date)
-
-  # --------------------------------------------------------------------------
-  # lofar_get_hostname(name)
+  # Add an executable like add_executable() does.
+  # Furthermore:
+  # - Set the link dependencies of this executable on other LOFAR libraries
+  #   using the information in ${PROJECT_NAME}_LIBRARIES.
+  # - Add a dependency of the current project on this executable.
   #
-  # Return the machine name (hostname) in the variable _hostname.
+  # Note: since the libraries of the current project already have all their
+  # link dependencies setup correctly (using lofar_add_library()), executables
+  # only need to link to the libraries of the current project.
   # --------------------------------------------------------------------------
-  macro(lofar_get_hostname _hostname)
-    execute_process(COMMAND hostname -s
-      OUTPUT_VARIABLE ${_hostname}
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endmacro(lofar_get_hostname _hostname)
+  macro(lofar_add_executable _name)
+    add_executable(${_name} ${ARGN})
+    get_property(_libs GLOBAL PROPERTY ${PROJECT_NAME}_LIBRARIES)
+    target_link_libraries(${_name} ${_libs})
+    add_dependencies(${PROJECT_NAME} ${_name})
+  endmacro(lofar_add_executable _name)
 
 
   # --------------------------------------------------------------------------
@@ -145,26 +143,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     endif(EXISTS ${_fullname})
   endmacro(lofar_add_subdirectory _name)
 
-  # --------------------------------------------------------------------------
-  # lofar_add_executable(name)
-  #
-  # Add an executable like add_executable() does.
-  # Furthermore:
-  # - Set the link dependencies of this executable on other LOFAR libraries
-  #   using the information in ${PROJECT_NAME}_LIBRARIES.
-  # - Add a dependency of the current project on this executable.
-  #
-  # Note: since the libraries of the current project already have all their
-  # link dependencies setup correctly (using lofar_add_library()), executables
-  # only need to link to the libraries of the current project.
-  # --------------------------------------------------------------------------
-  macro(lofar_add_executable _name)
-    add_executable(${_name} ${ARGN})
-    get_property(_libs GLOBAL PROPERTY ${PROJECT_NAME}_LIBRARIES)
-    target_link_libraries(${_name} ${_libs})
-    add_dependencies(${PROJECT_NAME} ${_name})
-  endmacro(lofar_add_executable _name)
-
 
   # --------------------------------------------------------------------------
   # lofar_add_test(name)
@@ -184,6 +162,34 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
 
   # --------------------------------------------------------------------------
+  # lofar_get_date(date)
+  #
+  # Return the current date and time in the variable DATE.
+  # --------------------------------------------------------------------------
+  macro(lofar_get_date _date)
+    execute_process(COMMAND date
+      OUTPUT_VARIABLE ${_date}
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endmacro(lofar_get_date _date)
+
+  # --------------------------------------------------------------------------
+  # lofar_get_hostname(name)
+  #
+  # Return the machine name (hostname) in the variable _hostname.
+  # --------------------------------------------------------------------------
+  macro(lofar_get_hostname _hostname)
+    execute_process(COMMAND hostname -s
+      OUTPUT_VARIABLE ${_hostname}
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endmacro(lofar_get_hostname _hostname)
+
+
+  ## -------------------------------------------------------------------------
+  ##       STUFF BELOW THIS LINE IS NOT BEING USED (AT THE MOMENT)
+  ## -------------------------------------------------------------------------
+  if(0)
+
+  # --------------------------------------------------------------------------
   # lofar_add_bin_program(name)
   # --------------------------------------------------------------------------
   macro(lofar_add_bin_program _name)
@@ -200,5 +206,6 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     install(TARGETS ${_name} DESTINATION sbin)
   endmacro(lofar_add_sbin_program _name)
 
+  endif(0)
 
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)
