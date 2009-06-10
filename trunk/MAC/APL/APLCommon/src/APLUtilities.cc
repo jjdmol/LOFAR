@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <climits>
 #include <unistd.h>
 
 #include "APL/APLCommon/APLUtilities.h"

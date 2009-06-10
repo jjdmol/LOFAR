@@ -247,7 +247,7 @@ string	createPropertySetName(const string&		propSetMask,
 							  const string&		realDPname)
 {
 	string	psName(propSetMask);		// editable copy
-	uint	pos;
+	string::size_type	pos;
 	// when name contains @ring@_@station@ cut out this marker and prepend hostname
 	// stationname+:  -> LOFAR_ObsSW_@ring@_@station@_CalCtrl_xxx --> CS010:LOFAR_ObsSW_CalCtrl_xxx
 	if ((pos = psName.find("@ring@_@station@_")) != string::npos) {
