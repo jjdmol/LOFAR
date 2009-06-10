@@ -332,22 +332,22 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     print command
     os.system(command)
 
-def createHBADelaysFile(resultDir, stationName, dataDir):
+def createHBADeltasFile(resultDir, stationName, dataDir):
     """
-    Copies the right HBADelays.conf file for this station
+    Copies the right HBADeltas.conf file for this station
     """
-    # Copy file <stationname>-hbadelays.conf> to
-    # /opt/lofar/etc/HBADelays.conf
+    # Copy file <stationname>-hbadeltas.conf> to
+    # /opt/lofar/etc/HBADeltas.conf
     
     # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.lower() + "-hbadelays.conf"
+    srcFile = dataDir + "/" + stationName.lower() + "-hbadeltas.conf"
     if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating HBADelays.conf"
-        print "Will create HBADelays_default.conf instead"
-        srcFile = dataDir + "/HBADelays_default.conf"
-        destFile= resultDir + "/HBADelays_default.conf"
+        print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
+        print "Will create HBADeltas_default.conf instead"
+        srcFile = dataDir + "/HBADeltas_default.conf"
+        destFile= resultDir + "/HBADeltas_default.conf"
     else:
-        destFile = resultDir + "/HBADelays.conf"
+        destFile = resultDir + "/HBADeltas.conf"
 
     command = "cp -f "+srcFile+ " " + destFile
     print command
@@ -390,7 +390,7 @@ if (sys.argv[1] == "localhost"):
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
             createCableDelaysFile  (resultDir, stationName, dataDir)
-            createHBADelaysFile    (resultDir, stationName, dataDir)
+            createHBADeltasFile    (resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -424,7 +424,7 @@ else:
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
-        createHBADelaysFile    (resultDir, stationName, dataDir)
+        createHBADeltasFile    (resultDir, stationName, dataDir)
 
 if len(warnings) > 0:
     print "The following warnings occured:"
