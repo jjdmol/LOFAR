@@ -2,13 +2,17 @@
 #
 # $Id: $
 #
-# Syntax: createFiles outputdir all | stationname [stationame ...])
+# Syntax: createFiles localhost or
+#         createFiles <resultdir> <datadir> <stationname>
 #
-# outputdir is teh root directory for the outputfiles:
+# - localhost will create the files for the current host
+# - resultdir is the root directory for the outputfiles:
 #     <stationname>/etc/<files>
+# - datadir is the root dir for the metadata files (e.g., /opt/lofar/etc)
+# - stationname is the name of the station for which to produce the files.
+#   Using 'all' as stationname will create files for all stations in file
+#   StationInfo.dat
 #
-# Using 'all' as stationname will create files for all stations in file
-# StationInfo
 #
 
 import re, sys, os
@@ -296,12 +300,15 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     # Copy file <stationname>-antennaarrays.conf> to
     # /opt/lofar/etc/AntennaArray.conf
-    srcFile = dataDir + "/" + stationName + "-antennaarrays.conf"
+    srcFile = dataDir + "/" + stationName.lower() + "-antennaarrays.conf"
     if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating AntennaArray.conf"
-        return
-    
-    destFile = resultDir + "/AntennaArrays.conf"
+        print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
+        print "Will create AntennaArrays_default.conf instead"
+        srcFile = dataDir + "/AntennaArrays_default.conf"
+        destFile= resultDir + "/AntennaArrays_default.conf"
+    else:
+        destFile = resultDir + "/AntennaArrays.conf"
+
     command = "cp -f "+srcFile+ " " + destFile
     print command
     os.system(command)
@@ -315,12 +322,33 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     # /opt/lofar/etc/CableDelays.conf
     
     # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName + "-cabledelays.conf"
+    srcFile = dataDir + "/" + stationName.lower() + "-cabledelays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
         return
     
     destFile = resultDir + "/CableDelays.conf"
+    command = "cp -f "+srcFile+ " " + destFile
+    print command
+    os.system(command)
+
+def createHBADelaysFile(resultDir, stationName, dataDir):
+    """
+    Copies the right HBADelays.conf file for this station
+    """
+    # Copy file <stationname>-hbadelays.conf> to
+    # /opt/lofar/etc/HBADelays.conf
+    
+    # stationName is in lowercase!
+    srcFile = dataDir + "/" + stationName.lower() + "-hbadelays.conf"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating HBADelays.conf"
+        print "Will create HBADelays_default.conf instead"
+        srcFile = dataDir + "/HBADelays_default.conf"
+        destFile= resultDir + "/HBADelays_default.conf"
+    else:
+        destFile = resultDir + "/HBADelays.conf"
+
     command = "cp -f "+srcFile+ " " + destFile
     print command
     os.system(command)
@@ -361,7 +389,8 @@ if (sys.argv[1] == "localhost"):
             createTBBDriverFile    (resultDir, stationName, dataDir)
             createRemoteStationFile(resultDir, stationName, dataDir)
             createAntennaArraysFile(resultDir, stationName, dataDir)
-            createCableDelaysFile(resultDir, stationName, dataDir)
+            createCableDelaysFile  (resultDir, stationName, dataDir)
+            createHBADelaysFile    (resultDir, stationName, dataDir)
     else:
         print "Cannot determine node name from HOSTNAME"
         sys.exit(1)
@@ -394,8 +423,9 @@ else:
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
-        createCableDelaysFile(resultDir, stationName, dataDir)
-        
+        createCableDelaysFile  (resultDir, stationName, dataDir)
+        createHBADelaysFile    (resultDir, stationName, dataDir)
+
 if len(warnings) > 0:
     print "The following warnings occured:"
     print warnings
