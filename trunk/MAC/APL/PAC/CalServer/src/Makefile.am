@@ -24,8 +24,7 @@ EXTRA_DIST = $(BUILT_SOURCES)
 sysconf_DATA = \
 	CalServer.conf \
 	DipoleModel.conf \
-	SourceCatalog.conf \
-	AntennaArrays_default.conf
+	SourceCatalog.conf
 
 %.conf: %.conf.in
 	cp $< $@
