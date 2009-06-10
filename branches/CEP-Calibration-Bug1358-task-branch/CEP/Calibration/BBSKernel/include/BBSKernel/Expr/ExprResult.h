@@ -103,23 +103,6 @@ public:
     typedef FieldSetImpl::const_iterator    const_iterator;
 
     FieldSet();
-//    // Allocate the underlying FieldSetImpl. The default constructor creates
-//    // an uninitialized FieldSet instance (which is basically unusable until
-//    // initialize() has been called). This is critical because otherwise
-//    // operations like initializing a vector<FieldSet> to a certain size, i.e.:
-//    //
-//    // vector<FieldSet> foo(10);
-//    //
-//    // would result in a vector of FieldSet instances that all point to the same
-//    // underlying FieldSetImpl! To see this, note that the code above is
-//    // equivalent to:
-//    //
-//    // vector<FieldSet> foo(10, FieldSet());
-//    //
-//    // where the second argument to the constructor of vector is effectively
-//    // copied 10 times. This is not the behaviour that one would expect and can
-//    // lead to bugs that are difficult to trace down.
-//    void initialize();
 
     const_iterator begin() const;
     const_iterator end() const;
