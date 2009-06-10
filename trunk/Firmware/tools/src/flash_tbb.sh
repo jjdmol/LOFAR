@@ -14,6 +14,18 @@ SyntaxError()
 	exit 1
 }
 
+killRSPDriver()
+{
+    # Find all RSPDriver processes and kill these with sudo kill
+    RSP_pid=( $(ps -ea | grep RSPDriver | awk '{print $1}') )
+    if [ ${#RSP_pid[*]} > 0 ]; then 
+      for pid in ${RSP_pid[*]}; do
+	echo "RSPDriver (process ${pid}) will be killed"
+        sudo kill $pid
+      done
+    fi
+}
+
 page=-1
 m_file=""
 t_file=""
@@ -61,10 +73,14 @@ read -p "Is this ok [y/n]" answer
 
 if [[ "$answer" =~ "([yY])" ]]; then   
    if [ -e $m_file -a -e $t_file ]; then
+     killRSPDriver
      for ((ind=0; ind < $tbboards; ind++)) do
-        tbbctl --writeimage=$ind,$page,3.2,$t_file,$m_file
+        tbbctl --eraseimage=$ind,$page
+        tbbctl --writeimage=$ind,$page,3.2,$t_file,$m_file,0
      done
      tbbctl --config=$page
+     echo
+
    else 
      echo "Could not find one of the hex files"
    fi
