@@ -20,8 +20,7 @@ EXTRA_DIST 				= $(BUILT_SOURCES)
 
 sysconf_DATA 			= BeamServer.conf \
 						  beamctl.conf \
-						  HBADeltas.conf \
-						  HBADelays.conf 
+						  HBADeltas.conf
 
 lib_LTLIBRARIES 		= libabsdevel.la
 libabsdevel_la_SOURCES 	= Package__Version.cc \
