@@ -381,7 +381,8 @@ void GCFScheduler::handleEventQueue()
 			LOG_TRACE_STAT_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " removed from queue");
 			if (status != GCFEvent::NEXT_STATE) {
-				delete theQueueEntry->event;
+				delete [] (char*)(theQueueEntry->event);
+				theQueueEntry->event = 0;
 			}
 			delete theQueueEntry;
 		}
