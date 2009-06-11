@@ -33,7 +33,10 @@ namespace LOFAR {
 
 GCFEvent::~GCFEvent() 
 { 
+//	LOG_DEBUG(formatString("~GCFEvent: _buffer=%08X, _upperbound=%d", _buffer, _upperbound));
+
 	if (_buffer)  {
+//		LOG_DEBUG("CALLING DELETE");
 		delete [] _buffer; 
 	}
 }
@@ -67,9 +70,15 @@ GCFEvent* GCFEvent::clone() const
 	char* 	theClone = new char[mySize];
 	memcpy(theClone, (const char*)this, mySize);
 
-	LOG_TRACE_CALC_STR("The clone is " << mySize << " bytes");
+	if (_buffer) {
+		((GCFEvent*)theClone)->_buffer 	  = 0;
+		((GCFEvent*)theClone)->_upperbound = 0;
+		((GCFEvent*)theClone)->resizeBuf(_upperbound);
+		memcpy(((GCFEvent*)theClone)->_buffer, _buffer, _upperbound);
+	}
+	LOG_TRACE_CALC_STR("The clone is " << mySize << "+" << _upperbound << " bytes");
 
-	return ((GCFEvent*) theClone);
+	return ((GCFEvent*)theClone);
 }
 
 void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint32 sizeofMemberType)
