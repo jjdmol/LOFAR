@@ -13,6 +13,6 @@ staticmeta_DATA += $(srcdir)/*.test
 staticmeta_DATA += $(srcdir)/*.dat
 staticmeta_DATA += $(srcdir)/AntennaArrays/*.conf
 staticmeta_DATA += $(srcdir)/CableDelays/*.conf
-staticmeta_DATA += $(srcdir)/HBADelays/*.conf
+staticmeta_DATA += $(srcdir)/HBADeltas/*.conf
 
 include $(top_srcdir)/Makefile.common
