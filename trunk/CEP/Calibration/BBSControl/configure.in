@@ -46,6 +46,8 @@ lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 include/Makefile
 include/BBSControl/Makefile
