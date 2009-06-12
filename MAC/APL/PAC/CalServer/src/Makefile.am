@@ -16,8 +16,7 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	CalServer.conf \
 	DipoleModel.conf \
-	SourceCatalog.conf \
-	AntennaArrays_default.conf
+	SourceCatalog.conf 
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
