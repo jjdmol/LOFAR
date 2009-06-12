@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tcombinevds > tcombinevds.log 2>&1
+./runctest.sh tcombinevds > tcombinevds.log 2>&1

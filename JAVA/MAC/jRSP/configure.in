@@ -62,6 +62,8 @@ lofar_INTERNAL(MAC/APL/GUI/RSP, RSP,,1, RSP/RSPport.h,,)
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 include/Makefile
 include/jRSP/Makefile

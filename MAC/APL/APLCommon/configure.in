@@ -64,6 +64,8 @@ lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, "boost_date_time boost_regex")
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 include/Makefile
 include/APL/APLCommon/Makefile

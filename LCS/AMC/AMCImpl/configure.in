@@ -60,6 +60,8 @@ lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase,,1,AMCBase/Converter.h,,)
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 Makefile
 include/Makefile

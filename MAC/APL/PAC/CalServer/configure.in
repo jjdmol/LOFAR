@@ -70,6 +70,8 @@ lofar_EXTERNAL(BLITZ, 1, blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-dept
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 	Makefile
 	src/Makefile

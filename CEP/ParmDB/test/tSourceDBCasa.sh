@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tSourceDBCasa > tSourceDBCasa.log 2>&1
+./runctest.sh tSourceDBCasa > tSourceDBCasa.log 2>&1

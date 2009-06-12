@@ -58,6 +58,8 @@ lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 dnl
 dnl Output Makefiles
 dnl
+AC_CONFIG_FILES([test/runctest.sh:$lofar_sharedir/runctest.sh.in],
+                [chmod +x test/runctest.sh])
 AC_OUTPUT(
 src/Makefile
 test/Makefile

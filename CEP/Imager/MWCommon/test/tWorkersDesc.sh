@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tWorkersDesc > tWorkersDesc.log 2>&1
+./runctest.sh tWorkersDesc > tWorkersDesc.log 2>&1
