@@ -4,7 +4,7 @@ import socket
 import time
 import struct
 
-VERSION = '1.0.2' # version of this script    
+VERSION = '1.0.3' # version of this script    
 
 ## to use other commands, see playground on the bottom of this file
 
@@ -19,29 +19,33 @@ doCheckFans = 0
 doCheckDoors = 0
 doChangeSettings = 0   # fill in table below
 
-#HOST = '192.168.178.111'   # Home TempControl
-#HOST = '10.151.19.2'   # CS010c TempControl
-#HOST = '10.151.134.3'   # RS106c TempControl
-HOST = '10.151.162.3'  # RS302c TempControl
-#HOST = '10.151.66.3'  # CS030c TempControl
-#HOST = '10.151.161.3'  # CS301c TempControl
-#HOST = '10.87.2.239'   # ASTRON TempControl on desk PD
+#HOST = '192.168.178.111' # EC @Home
+#HOST = '10.151.19.2'     # CS010c EC
+#HOST = '10.151.134.3'    # RS106c EC
+HOST = '10.151.162.3'     # RS302c EC
+#HOST = '10.151.66.3'     # CS030c EC
+#HOST = '10.151.161.3'    # CS301c EC
+#HOST = '10.87.2.239'     # EC on desk PD
 
 # settings for (cab0, cab1, cab2, cab3)
 # for LOFAR NL stations cab2 is not available
 # cab0 = rack with receiver 0, cab3 = always control rack
+ControlMode  = (0   , 0   , 0   , 1   )
+ControlSpan  = (1.00, 1.00, 1.00, 1.00)
+MaxDayChange = (5.00, 5.00, 5.00, 5.00)
+SeekTime     = (60  , 60  , 60  , 60  )
+SeekChange   = (5.00, 5.00, 5.00, 5.00)
 MinTemp      = (0.00, 0.00, 0.00, 10.0)
 MaxTemp      = (35.0, 35.0, 35.0, 30.0)
-MinMinTemp   = (0.00, 0.00, 0.00, 8.0)
+MinMinTemp   = (0.00, 0.00, 0.00, 8.0 )
 MaxMaxTemp   = (40.0, 40.0, 40.0, 35.0)
 MaxHum       = (90.0, 90.0, 90.0, 80.0)
 MaxMaxHum    = (95.0, 95.0, 95.0, 85.0)
-ControlSpan  = (2.00, 2.00, 2.00, 2.00)
-MaxDayChange = (1.00, 1.00, 1.00, 1.00)
 #==================================================================
 
 PORT = 10000            # Gateway port
 ecSck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+stop = False
 
 # === TCP PROTOCOL from controller ===
 EC_NONE             = 0
@@ -51,27 +55,26 @@ EC_CTRL_TEMP        = 3
 EC_VERSION          = 5
 EC_SET_MODE         = 10
 EC_SET_TEMP         = 15
-
 EC_SET_48           = 20
 EC_RESET_48         = 22
 EC_SET_230          = 25
 EC_RESET_230        = 27   
-
 EC_SET_DOOR_CTRL    = 50
 EC_SET_HUM_CTRL     = 52
-
 EC_SET_MAX_TEMP     = 100
 EC_SET_MIN_TEMP     = 101
 EC_SET_MAXMAX_TEMP  = 102
 EC_SET_MINMIN_TEMP  = 103
 EC_SET_MAX_HUM      = 105
 EC_SET_MAXMAX_HUM   = 106
+EC_SET_CTRL_MODE    = 109
 EC_SET_CTRL_SPAN    = 110
 EC_SET_MAX_CHANGE   = 111
-
+EC_SET_SEEK_TIME    = 112
+EC_SET_SEEK_CHANGE  = 113
 EC_SET_SECOND       = 115
 EC_SET_FANS         = 116
-
+EC_RESTART          = 210
 
 MODE_OFF     = 0
 MODE_ON      = 1
@@ -150,6 +153,16 @@ def waitForUpdate():
     while ((time.gmtime()[5] % 10) != 3):
         time.sleep(0.5)
     time.sleep(1.0)
+#---------------------------------------
+def restart():
+    if (version >= 107):
+        sendCmd(EC_RESTART)
+        (cmdId, status, PL) = recvAck()
+        print 'EC restart'
+        stop = True
+    else:
+        print 'restart not possible in this EC version'
+    return 1
 #---------------------------------------
 def setMode(cab=-1, mode=MODE_AUTO):
     sendCmd(EC_SET_MODE, cab, mode)
@@ -231,6 +244,16 @@ def setHumControl(cab=-1, state=1):
     (cmdId, status, PL) = recvAck()
     printInfo('SetHumidityControl cab %d to %d' %(cab, state))
 #---------------------------------------
+def setHeater(state=0):
+    if (state == 0):
+        sendCmd(EC_SET_MINMIN_TEMP, 3, int(8.0*100))
+        (cmdId, status, payload) = recvAck()
+        printInfo("heater turned off\n")
+    else:
+        sendCmd(EC_SET_MINMIN_TEMP, 3, int(30.0*100))
+        (cmdId, status, payload) = recvAck()
+        printInfo('heater turned on\n')
+#---------------------------------------
 def getVersion():
     sendCmd(EC_VERSION)
     (cmdId, status, PL) = recvAck()
@@ -246,6 +269,7 @@ def getStatus():
            '.  .  3  4','.  .  .  .','.  2  3  4','1  2  3  4')
     
     door = ('CLOSED','FRONT_OPEN','BACK_OPEN','ALL_OPEN')
+    fanstate = ('BAD | BAD ','GOOD| BAD ','BAD | GOOD','GOOD| GOOD')
     onoff = ('OFF','ON')
     badok = ('BAD','OK')
 
@@ -265,6 +289,7 @@ def getStatus():
     lines.append('temperature |')
     lines.append('humidity    |')
     lines.append('fans        |')
+    lines.append('fans state  |')
     lines.append('doors       |')
     lines.append('heater      |')
 
@@ -276,11 +301,12 @@ def getStatus():
         lines[4] += '%11.2f |' %(PL2[(cab*7)+2]/100.)
         lines[5] += '%11.2f |' %(PL2[(cab*7)+3]/100.)
         lines[6] += '%11s |' %(fan[(PL2[(cab*7)+4]&0x0f)])
-        lines[7] += '%11s |' %(door[(PL2[(cab*7)+5]&0x03)])
+        lines[7] += '%11s |' %(fanstate[(PL2[(cab*7)+4]>>6)])
+        lines[8] += '%11s |' %(door[(PL2[(cab*7)+5]&0x03)])
         if (cab != 3):
-           lines[8] += '%11s |' %('none')
+           lines[9] += '%11s |' %('none')
         else:
-           lines[8] += '%11s |' %(onoff[PL2[(cab*7)+6]])
+           lines[9] += '%11s |' %(onoff[PL2[(cab*7)+6]])
 
     lines.append('power 48V state = %s' %(onoff[(PL2[28] & 1)]))
     lines.append('power LCU state = %s' %(onoff[(PL2[28] >> 1)]))
@@ -291,9 +317,12 @@ def getStatus():
     for line in lines:
         printInfo(line)
     printInfo(' ')
-    # print data to df if selected
+    # print data to file if selected
     if (printDataToFile == 1):
-        df = open("data.txt", mode='a')
+        tm = time.gmtime()
+        filename = 'ec%d%02d%02d.dat' %(tm.tm_year, tm.tm_mon, tm.tm_mday)
+        df = open(filename, mode='a')
+        df.write('%f' %(time.time()))
         for cab in cabs:
             df.write(' %3.2f %3.2f %3.2f' %\
                     (PL1[cab]/100., PL2[(cab*7)+2]/100., PL2[(cab*7)+3]/100.))
@@ -319,26 +348,32 @@ def getSettings():
     # fill lines with data    
     lines = []
     lines.append('                 |')
+    lines.append('control mode     |')
+    lines.append('control span     |')
+    lines.append('max day change   |')
+    lines.append('seek time        |')
+    lines.append('max seek change  |')
     lines.append('min control temp |')
     lines.append('max control temp |')
     lines.append('minmin temp      |')
     lines.append('maxmax temp      |')
     lines.append('max humidity     |')
     lines.append('maxmax humidity  |')
-    lines.append('max day change   |')
-    lines.append('control span     |')
+
 
     for cab in cabs:
         lines[0] += '    cab-%1d |' %(cab)
-        lines[1] += '%9.2f |' %(PL[(cab*8)+0]/100.)
-        lines[2] += '%9.2f |' %(PL[(cab*8)+1]/100.)
-        lines[3] += '%9.2f |' %(PL[(cab*8)+2]/100.)
-        lines[4] += '%9.2f |' %(PL[(cab*8)+3]/100.)
-        lines[5] += '%9.2f |' %(PL[(cab*8)+4]/100.)
-        lines[6] += '%9.2f |' %(PL[(cab*8)+5]/100.)
-        lines[7] += '%9.2f |' %(PL[(cab*8)+6]/100.)
-        lines[8] += '%9.2f |' %(PL[(cab*8)+7]/100.)
-
+        lines[1] += '%9d |' %(PL[(cab*11)+8])
+        lines[2] += '%9.2f |' %(PL[(cab*11)+7]/100.)
+        lines[3] += '%9.2f |' %(PL[(cab*11)+6]/100.)
+        lines[4] += '%9d |' %(PL[(cab*11)+9])
+        lines[5] += '%9.2f |' %(PL[(cab*11)+10]/100.)
+        lines[6] += '%9.2f |' %(PL[(cab*11)+0]/100.)
+        lines[7] += '%9.2f |' %(PL[(cab*11)+1]/100.)
+        lines[8] += '%9.2f |' %(PL[(cab*11)+2]/100.)
+        lines[9] += '%9.2f |' %(PL[(cab*11)+3]/100.)
+        lines[10] += '%9.2f |' %(PL[(cab*11)+4]/100.)
+        lines[11] += '%9.2f |' %(PL[(cab*11)+5]/100.)
     # print lines to screen or file, see printInfo
     printInfo('=== Station settings ===')
     for line in lines:
@@ -347,6 +382,16 @@ def getSettings():
 #---------------------------------------
 def setSettings():
     for i in range(4):
+        sendCmd(EC_SET_CTRL_MODE, i, int(ControlMode[i]))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_CTRL_SPAN, i, int(ControlSpan[i]*100))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_MAX_CHANGE, i, int(MaxDayChange[i]*100))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_SEEK_TIME, i, int(SeekTime[i]))
+        (cmdId, status, payload) = recvAck()
+        sendCmd(EC_SET_SEEK_CHANGE, i, int(SeekChange[i]*100))
+        (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_MIN_TEMP, i, int(MinTemp[i]*100))
         (cmdId, status, payload) = recvAck()
         sendCmd(EC_SET_MAX_TEMP, i, int(MaxTemp[i]*100))
@@ -474,14 +519,13 @@ def checkRelayPanel():
     resetPower(230)
     waitForUpdate()
     waitForUpdate()
+
     # heater test
-    sendCmd(EC_SET_MINMIN_TEMP, 3, int(30.0*100))
-    (cmdId, status, payload) = recvAck()
+    setHeater(1)
     printInfo("heater test")
     waitForUpdate()
     waitForUpdate()
-    sendCmd(EC_SET_MINMIN_TEMP, 3, int(8.0*100))
-    (cmdId, status, payload) = recvAck()
+    setHeater(0)
     printInfo('Relay panel check done\n')
    
 
@@ -491,6 +535,7 @@ def checkRelayPanel():
 ## do not delete next lines
 connectToHost()
 time.sleep(1.0)
+## synchronize EC and PC
 setSecond(int(time.gmtime()[5]))
 # version is used to check if function is available in firmware
 version = getVersion()  
@@ -520,13 +565,13 @@ if (doChangeSettings == 1):
 ## mode = MODE_OFF, MODE_ON, MODE_AUTO, MODE_MANUAL, MODE_STARTUP
 #setMode(cab=-1, mode=MODE_MANUAL)
 
-## set cab to given temp, only posible in manual mode
+## set cab to given temp, only posible in MODE_MANUAL
 #setTemperature(cab=-1,temp=25.0)
 
 ## set cab to auto
 #setMode(cab=-1, mode=MODE_AUTO)
 
-## turn on fans of cab
+## turn on fans of cab, only possible in MODE_ON
 ## fans=bitfield(0000,0010,0011,0100,0110,0111,1100,1110,1111)
 ## lsb = fan1
 #setFans(cab=-1,fans=0x0c)
@@ -543,7 +588,12 @@ if (doChangeSettings == 1):
 #setPower(48,0)
 #setPower(LCU,0)
 
-stop = False
+## turn on(1)/off(0) heater
+#setHeater(0)
+
+## restart works from EC version 1.0.7
+#restart()
+
 while (not stop):
     waitForUpdate()
     printInfo('====== %s ====================' %(time.asctime()) )
