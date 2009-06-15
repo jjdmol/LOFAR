@@ -2,7 +2,7 @@ TEX_SOURCES =	spm.tex
 
 BIB_SOURCES =	spm.bib
 
-FIG_SOURCES =	
+FIG_SOURCES =	figures/correlation-triangle.fig
 
 JGR_SOURCES =	
 
