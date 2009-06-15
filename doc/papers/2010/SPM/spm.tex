@@ -62,15 +62,16 @@ The Netherlands}
 % dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
-The Low Frequency Array (LOFAR) stations~\cite{Butcher:04,deVos:09}, for
-instance, will produce some tens of petabits per day; the dishes from the
-Australian SKA Pathfinder (ASKAP) will even produce over six exabits per day.
+The stations of the \emph{Low Frequency Array
+(LOFAR)\/}~\cite{Butcher:04,deVos:09}, for instance, will produce some tens of
+petabits per day; the dishes from the Australian SKA Pathfinder (ASKAP) will
+even produce over six exabits per day.
 To extract the sky signal from the system noise, the \emph{correlator\/}
 correlates the signals by multiplying the samples of each pair of receivers.
 Additionally, the correlator integrates correlations over time, to reduce
 the amount of data.
 
-Typically, custom-built hardware is used to correlate the signals.
+Traditionally, custom-built hardware is used to correlate the signals.
 A recent development is to use a supercomputer~\cite{Romein:06,Romein:09b}.
 Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
@@ -86,7 +87,7 @@ During the past ten years, the high-performance computing community has
 steadily adopted clusters of Graphics Processor Units (GPUs) as a viable
 alternative to supercomputers, due to their unparalleled growth in
 computational performance, increasing flexibility, increasing programmability,
-relatively high power efficiency, and low purchase costs.
+high power efficiency, and low purchase costs.
 High-end GPUs are highly parallel and contain hundreds of processor cores.
 However, their usefulness is often limited to applications that do not require
 double-precision floating-point arithmetics, since there is no need for
@@ -95,12 +96,24 @@ Hence, the support for double-precision arithmetic is typically poor.
 Fortunately, many signal-processing applications do not require double
 precision.
 
-In this article, we explain how modern multi-core architectures can be fully
+The IBM Cell Broadband Engine~\cite{Gschwind:06}, well known from the
+PlayStation~3, is another example of a processor that combines GPU and CPU
+qualities into one design.
+The Cell BE consists of an ``ordinary'' PowerPC core and eight powerful
+\emph{Synergistic Processing Elements (SPEs)}, co-processors that provide
+the bulk of the processing power.
+The SPEs are vector processors with fast, local memories, and are capable
+of transferring data from and to main memory by means of DMA.
+Programming the SPEs requires more effort than programming an ordinary CPU,
+but various studies showed that the Cell BE performs very well on
+signal-processing tasks like FFTs~\cite{?}.
+
+In this article, we explain how modern multi-core architectures can be
 exploited for signal-processing purposes.
 Additionally, we give insights into their architectural limitations, and how
 to best cope with them.
-We treat five different, popular multi-core architectures: the IBM Cell
-Broadband Engine, GPUs from Nvidia and ATI, the IBM Blue Gene/P, and
+We treat five different, popular multi-core architectures: the IBM Cell BE,
+GPUs from Nvidia and ATI, the IBM Blue Gene/P, and
 the Intel Core i7 processors.
 We discuss their similarities and differences, and how the architectural
 differences affect optimization choices and the eventual performance of a
@@ -114,8 +127,42 @@ programming effort to obtain good performance, even if high-level programming
 support is not available.
 
 
-\section{Novel trends in modern radio astronomy}
-    - LOFAR, SKA
+\section{Trends in radio astronomy}
+
+During the past decade, new types of radio-telescope concepts emerged that
+rely less on concrete, steel, and extreme cooling techniques, but more on
+signal-processing techniques.
+For example, LOFAR~\cite{Butcher:04,deVos:09} is a distributed sensor network
+that combines the signals of tens of thousands of simple receiver elements.
+%Unlike traditional telescopes, that typically use custom-built hardware to
+%process data, LOFAR uses programmable FPGAs for on-the-field station
+%processing and a Blue Gene/P supercomputer to process data centrally, in real
+%time.
+Also, Aperture Array tiles like Embrace~\cite{?} and Focal Plane Arrays
+like Apertif~\cite{?} are novel multi-receiver concepts that require huge
+amounts of processing power to combine the data from the receiving elements.
+Unlike single-pixel feeds from traditional dish-based telescopes, these
+concepts combine the advantages of higher sensitivity, higher resolution,
+and multiple, concurrent observation directions.
+
+The signal-processing hardware technology used to process telescope data
+changes rapidly.
+Only a decade ago, correlators required special-purpose ASICs to keep up with
+the high data rates and processing requirements.
+The advent of sufficiently fast FPGAs significantly lowered the developments
+times and costs of newer-generation correlators, and increased the flexibility
+substantially.
+LOFAR requires even more flexibility to support many different processing
+pipelines for various observation modes, and uses a Blue Gene/P supercomputer
+to perform real-time, central processing.
+
+GPUs seem to be a viable complement to the aforementioned processing platforms.
+GPUs provide more processing power and are more power-efficient than CPUs,
+while GPUs are more flexible and easier to program than FPGAs.
+Since GPUs of different vendors are mutually quite different, we did an
+extensive performance comparison between the architectures of popular GPUs 
+for signal-processing purposes, particularly, for correlation
+purposes~\cite{Nieuwpoort:09}.
 
 
 \section{Correlating signals}
@@ -125,11 +172,11 @@ support is not available.
 \includegraphics[width=12cm]{figures/processing-overview.pdf}
 \end{center}
 \vspace{-0.5cm}
-\caption{An extremely simplified view of LOFAR processing.}
+\caption{An simplified view of LOFAR processing.}
 \label{fig-processing-overview}
 \end{figure*}
 
-We call a set of receivers that are grouped closely
+Following LOFAR terminology, we call a set of receivers that are grouped closely
 together a \emph{station}. The data streams from the different
 stations must be filtered, delays in the signal path must be
 compensated for, and the data streams from different stations must be
@@ -160,20 +207,31 @@ written in a single formula:
 $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,t,p_1} * Z_{s_2,t,p_2}^\ast$ 
 
 
+\lstdefinelanguage{pseudo}
+{
+    keywords=
+    {
+	CONJ,
+	COMPLEX,
+	DO,
+	FLOAT,
+	FOR
+    },
+    basicstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{m}\fontshape{sl}\fontsize{7}{8pt}\selectfont},
+    keywordstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{b}\fontshape{sl}\fontsize{7}{8pt}\selectfont},
+    commentstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{m}\fontshape{n}\fontsize{7}{8pt}\selectfont},
+    sensitive=true
+}
 \begin{figure*}[t]
-\lstset{language=C,basicstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{m}\fontshape{n}\fontsize{7}{10pt}\selectfont}} 
+\lstset{language=pseudo}
 \begin{lstlisting}{}
-for (ch=0; ch<nrChannels; ch++)
-  for (station2=0; station2<nrStations; station2++)
-    for (station1=0; station1<=station2; station1++)
-      for (polarization1 = 0; polarization1 < nrPolarizations; polarization1++)
-        for (polarization2 = 0; polarization2 < nrPolarizations; polarization2++) {
-          complex float sum = 0 + i*0;
-          for (time=0; time < integrationTime; time++)
-            sum += samples[ch][station1][time][polarization1] * ~samples[ch][station2][time][polarization2];
-          baseline = computeBaseline(station1, station2);
-          correlation[baseline][ch][polarization1][polarization2] = sum;
-        }
+FOR Channel IN 1 .. NrChannels DO
+  FOR Station2 IN 1 .. NrStations DO
+    FOR Station1 IN 1 .. Station2 DO
+      COMPLEX FLOAT Sum = 0 + 0*I;
+      FOR Time IN 1 .. IntegrationTime DO
+	Sum += Samples[Channel][Station1][Time] * CONJ(Samples[Channel][Station2][Time])
+      Correlation[Baseline(Station1, Station2)][Channel] = Sum;
 \end{lstlisting}
 \vspace{-0.5cm}
 \caption{Pseudo code for the correlation algorithm.}
@@ -215,6 +273,55 @@ architectures with multiple cores.  We focus on the differences
 between the systems that are relevant for signal processing
 applications.
 
+%TODO: zet kolommen in de volgorde van behandeling
+\begin{table*}
+\begin{center}
+\begin{small}
+\begin{tabular}{|l|rrrrrr|}
+\hline
+& GTX~280 & RV770 & Cell BE & BG/P & Core i7 920 & Larrabee \\
+\hline
+peak performance (GFLOPS) & 936 & 1,200 & 205(SPEs) + 25.6(PPU) & 13.6 & 85 & ? \\
+clock (GHz) & 1,3 & 0.75 & 3.2 & 0.85 & 2.67 & ? \\
+\#cores & 240 & 800 & 8 & 4 & 4 & $\mathcal{O}$(10) \\
+\#threads/core & & & 1 & 1 & 2 & 4 \\
+L1 cache size/core (KiB) & & & 256 (I+D) & 32(I) + 32(D) & 32(I) + 32(D) & \\
+L2 cache size/core (KiB) & & & & 2 (prefetcher) & 256 (I+D) & \\
+L3 cache size/chip (MiB) & & & & 8 & 8 & \\
+(device) memory size (GiB) & 4 & &  & 2 or 4 & & \\
+peak memory bandwidth (GiB/s) & 102 & 115.2 & & & & \\
+\#registers/core & & & 128 & 32 & 16 & 32 \\
+\#floats/register (= vector size) & 1 & 1  & 4 & 2 & 4 & 16 \\
+manufacturing process (nm) & 65 & & & 90 & 45 & \\
+Thermal Design Power (Watt) & 236 & 160 & & & 130 & \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+\end{table*}
+
+
+Except for the Blue Gene/P (and to some extent the Core~i7), the architectures
+provide no support for operations on complex values.
+This can be circumvented by using separate arrays for real values and for
+imaginary values.
+
+
+\subsection{General Purpose multi-core CPU (Intel Core i7 920)}
+
+
+As a reference, we implemented the correlator on a multi-core general-purpose
+architecture.
+We use a quad core Intel Core~i7 920 CPU (code name Nehalem) at 2.67~GHz. 
+There is 32~KB of on-chip L1 data cache per core, 256~KB L2 cache per core, and 8~MB
+of shared L3 cache.  
+The thermal design power (TDP) is 130~Watts.
+The theoretical
+peak performance of the system is 85~gflops, in single precision.
+The parallelism comes from four cores with two-way hyperthreading, and a vector length of four floats,
+provided by the SSE4 instruction set.  
+
+
 \subsection{General Purpose multi-core CPU}
 
 As a reference, we implemented the correlator on a multi-core general
@@ -247,8 +354,9 @@ required.
 
 \subsection{IBM Blue Gene/P}
 
-The IBM Blue Gene/P~(BG/P)~\cite{bgp} is the architecture that is
-currently used for the LOFAR correlator~\cite{sc09}.  Four PowerPC
+The IBM Blue Gene/P~(BG/P)~\cite{IBM:08} is the architecture that is
+currently used for the LOFAR correlator~\cite{Romein:06,Romein:09b}.
+Four PowerPC
 processors are integrated on each Blue Gene/P chip.  The BG/P is an
 energy efficient supercomputer. This is accomplished by using many
 small, low-power chips, at a low clock frequency.  The supercomputer
@@ -284,7 +392,7 @@ memory.
 
 The ATI 4870 GPU has the largest number of cores of all architectures
 we evaluate (800).  However, the architecture has several important
-drawbacks for data-intensive applications.  First, there is no way to
+drawbacks for data-intensive applications.  \textbf{FIXME} First, there is no way to
 synchronize threads. With other architectures, we can improve the
 cache hit ratio significantly by letting threads that access the same
 samples run in lock step, increasing data reuse.  Second, the
@@ -294,7 +402,7 @@ bandwidth is not enough to keep all cores busy.  Third, we found that
 overlapping communication with computation by performing asynchronous
 data transfers between the host and the device has a large impact on
 kernel performance. We observed kernel slowdowns of \emph{a factor of
-  three} due to transfers in the background.  Fourth, the architecture
+three} due to transfers in the background.  Fourth, the architecture
 does not provide random write access to device memory, but only to
 \emph{host} memory. However, for our application which is mostly
 read-performance bound, this does not have a large impact.
@@ -360,17 +468,36 @@ execute on the odd pipe.  We use a QS21 Cell blade with two
 system have a total theoretical single-precision peak performance of
 205 gflops.
 
+
 \subsection{Larrabee}
 
-Intel's Larrabee~\cite{larrabee} (to be released) is another promising
-architecture.  Larrabee will be a hybrid between a GPU and a
-multi-core CPU.  It will be compatible with the x86 architecture, but
-will have 4-way simultaneous multi-threading, 512-bit wide vector
-units, shuffle and multiply-add instructions, and special texturing
-hardware. Larrabee will use in-order execution, and will have coherent
-caches.  Unlike current GPUs, but similar to the \mbox{Cell/B.E.},
-Larrabee will have a ring bus for communication between cores and for 
-memory transactions.
+Intel recently disclosed some details about the upcoming Larrabee processor,
+a fully programmable GPU based on the well-known x86 instruction set.
+Although performance details are unknown, it is interesting to compare the
+Larrabee to the aforementioned architectures, and to see how a correlator
+should be implemented to obtain optimal performance.
+
+The processing power comes from Larrabee's relatively long vector size:
+a vector holds 16~elements, where the other architectures have vectors lengths
+of at most~4.
+The long vector size forces us to reconsider our parallelization strategy.
+There are several options to perform 16~simultaneous FMAs.
+One option is to operate on 16~samples with consecutive time stamps.
+A minor drawback is that the data must be ``horizontally'' added to integrate,
+but this can be done outside the main loop.
+Another option is to operate on samples from 16~consecutive frequencies.
+An advantage of this may be that the input is in the right order (i.e.,
+the 16~values can be read from consecutive memory locations) if a Poly-Phase
+Filter precedes the correlator: the FFT outputs consecutive frequencies into
+consecutive memory locations.
+Both 
+
+Another option is to correlate samples from different stations as illustrated
+by Figure~\ref{fig:4x4-correlation}.
+This method minimizes memory loads, but requires additional shuffling of data.
+Unfortunately, the most efficient method can only be determined empirically,
+when the hardware is available.
+
 
 \subsection{Essential properties and differences}
 
@@ -395,7 +522,36 @@ communication             & DMA between SPEs               & independent thread 
 \end{table*}
 
 
-\section {optimizing the correlator algorithm}
+\section{Optimizing the correlator}
+
+On many-core architectures, memory bandwidth is a scarce resource, hence it is
+important to minimize the number of memory accesses.
+An unoptimized correlator would read the samples from two stations and
+multiply them, requiring two memory reads for one complex multiplication.
+The correlator can be optimized by reusing a sample that is read from memory
+as often as possible, by using it for multiple correlations (see
+Figure~\ref{fig:correlator-triangle}).
+For example, the samples from stations 8, 9, 10, and 11 can be correlated
+with the samples from stations 4, 5, 6, and 7 (the red square in the figure),
+using each fetched sample for four complex multiplications.
+This way, eight memory accesses are required for sixteen complex
+multiplications, reducing the amount of memory operations already by a factor
+of four.
+Correlating even higher numbers of stations at one go would reduce the
+memory bandwidth usage further, but the maximum number of stations that can
+be correlated this way is quite limited by the size of the register file.
+The accumulated correlations are best kept in registers, and the number of
+required registers grows rapidly with the number of station inputs.
+The example above already requires sixteen complex accumulators.
+Additional registers are needed to load samples from memory.
+To obtain good performance, it is important to tune the tile size to the
+architecture.
+
+Caches and memory prefetch units can also improve the performance.
+However, a cache-size dependent tradeoff must be made.
+%On the one hand, correlating and integrating over long periods of time
+%is good for pipelined FPU operation, on the other hand, the 
+
 
 %- optimaliseren van het algorithme: tiles, etc
 
@@ -422,8 +578,9 @@ stations at the same time. Each square represents the XX, XY,
 YX, and YY correlations of the stations as indicated by row and
 column number. The figure is triangular, because we compute
 the correlation of each pair of stations only once. The squares labeled \emph{A} are
-autocorrelations, which could be treated specially since they require less
-computations. The triangle is divided into larger tiles, in this case 
+autocorrelations, which can be treated specially since they require only half
+the amount of computations.
+The triangle is divided into larger tiles, in this case 
 2x3 tiles (the dark gray boxes), but arbitrary sizes are possible.
 A tile is correlated as a unit. For example, the lower
 right-hand-side rectangle correlates stations 9 and 10 with stations
