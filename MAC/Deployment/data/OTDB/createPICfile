@@ -83,10 +83,13 @@ for line in filledLine.findall(open(RingFile).read()):
 ringStations = []
 stations = []
 for line in filledLine.findall(open(StationFile).read()):
-    if (len(line.split()) > 10):
+#    print "line: =",line
+    if (line.strip() and len(line.split()) == 12):
         (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
-        ringStations.append(ringDict[stnType]+"_"+name)
-        stations.append(name)
+        if (height != "0"):
+            ringStations.append(ringDict[stnType]+"_"+name)
+            stations.append(name)
+            
 #print "ringStations =", ringStations
 #print "stations =", stations
     
@@ -112,9 +115,10 @@ print "21 LOFAR_PermSW.status.state"
 # construct the rings with stations and the clusters with their nodes
 # ???	???  	C	P	???	???_PIC_@???@
 ringStationMask=""
-central=re.compile("^\w+[ \t]+[^ \t]+[ \t]+C[ \t]+P[ \t]+[YN][ \t]+([A-Za-z_]+_(?:PIC|PermSW)_@.*)", \
+central=re.compile("^\w+[ \t]+[^ \t]+[ \t]+M[ \t]+[YN][ \t]+([A-Za-z_]+_(?:PIC|PermSW)_@.*)", \
                         re.IGNORECASE | re.MULTILINE)
 for line in central.findall(open(PVSSbasefile).read()):
+#    print "line =",line
     if line.find("@station@") >= 0:
         ringStationMask=line.replace("LOFAR_","")
         for RS in ringStations:
@@ -134,7 +138,7 @@ for line in central.findall(open(PVSSbasefile).read()):
                 print "21 "+line.replace("@cluster@_@node@", cluster+"_"+nodename)+".status.state"
             # for all nodes
         # for all clusters
-        # also add the control 'cluster' at this place
+        # also add= the control 'cluster' at this place
         for node in controlList:
             print "21 "+line.replace("@cluster@_@node@", "Control_"+node)+".status.state"
     # ---
@@ -151,44 +155,44 @@ for line in central.findall(open(PVSSbasefile).read()):
 # for all expandable lines
 
 # Permanent software on MCU
-software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+C[ \t]+P[ \t]+[YN][ \t]+([A-Za-z_]+_PermSW_[^@].*)", \
+software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+M[ \t]+[YN][ \t]+([A-Za-z_]+_PermSW_[^@].*)", \
 					re.IGNORECASE | re.MULTILINE)
 for line in software.findall(open(PVSSbasefile).read()):
 	print "21 MCU001:%s.status.state" % line
 
 # generate the hardware on each station
 for line in filledLine.findall(open(StationFile).read()):
-    if (len(line.split()) < 10):
-        continue
+#    print "line: =",line
+    if (line.strip() and len(line.split()) == 12):
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+        if ( height == "0" ):
+            continue
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
-
-    # Find all expandable hardware elements on a station. The line syntax is:
-    # ???	???  	S	P	???	???_PIC_@...@
-    # we are only interested in the @...@ part.
-    station=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t]+[YN][ \t]+[A-Za-z_]+_PIC_(@.*)", \
+        # Find all expandable hardware elements on a station. The line syntax is:
+        # ???	???  	S	P	???	???_PIC_@...@
+        # we are only interested in the @...@ part.
+        station=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+[YN][ \t]+[A-Za-z_]+_PIC_(@.*)", \
                         re.IGNORECASE | re.MULTILINE)
-    for line in station.findall(open(PVSSbasefile).read()):
-        prefix="@station@:LOFAR_PIC_".replace("@station@", name)
-        if line.find("@rcu@") >= 0:
-            expandRCUMarker(prefix+line, int(nrRSP))
-        elif line.find("@RSPBoard@") >= 0:
-            expandRSPBoardMarker(prefix+line, int(nrRSP))
-        elif line.find("@TBBoard@") >= 0:
-            expandTBBoardMarker(prefix+line, int(nrTBB))
-        elif line.find("@subrack@") >= 0:
-            expandSubrackMarker(prefix+line, int(nrRSP))
-        elif line.find("@cabinet@") >= 0:
-            expandCabinetMarker(prefix+line, int(nrRSP))
-    #   for all expandable lines
+        for line in station.findall(open(PVSSbasefile).read()):
+            prefix="@station@:LOFAR_PIC_".replace("@station@", name)
+            if line.find("@rcu@") >= 0:
+                expandRCUMarker(prefix+line, int(nrRSP))
+            elif line.find("@RSPBoard@") >= 0:
+                expandRSPBoardMarker(prefix+line, int(nrRSP))
+            elif line.find("@TBBoard@") >= 0:
+                expandTBBoardMarker(prefix+line, int(nrTBB))
+            elif line.find("@subrack@") >= 0:
+                expandSubrackMarker(prefix+line, int(nrRSP))
+            elif line.find("@cabinet@") >= 0:
+                expandCabinetMarker(prefix+line, int(nrRSP))
+        #   for all expandable lines
 
-    # Permanent software on the stations
-    software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t]+[YN][ \t]+([A-Za-z_]+_PermSW_.*)", \
+        # Permanent software on the stations
+        software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+[YN][ \t]+([A-Za-z_]+_PermSW_.*)", \
                         re.IGNORECASE | re.MULTILINE)
-    for line in software.findall(open(PVSSbasefile).read()):
-        if line.find("@") < 0:
-            print "21 %s:%s.status.state" % (name, line)
+        for line in software.findall(open(PVSSbasefile).read()):
+            if line.find("@") < 0:
+                print "21 %s:%s.status.state" % (name, line)
     
 #for all stations
-
 
