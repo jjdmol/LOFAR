@@ -56,6 +56,7 @@ const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRI
 #include <MACIO/ProtocolDefs.h>
 #include <Common/LofarTypes.h>
 #include <string>
+#include <cstring>
 
 namespace LOFAR
 {

@@ -1,97 +1,62 @@
-## ------------------------------------------------------------------------------
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+cmake_minimum_required(VERSION 2.6)
+
+## ---------------------------------------------------------------------------
+## Preamble: set compilers
+## ---------------------------------------------------------------------------
+include(LofarInit)
+
+## ---------------------------------------------------------------------------
 ## Project characteristics
+## ---------------------------------------------------------------------------
+project(RTCP)
+include(LofarGeneral)
 
-project (RTCP)
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
 
-cmake_minimum_required (VERSION 2.6)
+# Several RTCP tools
+lofar_add_subdirectory(RTCPTools)
 
-## ------------------------------------------------------------------------------
-## Set CMAKE_MODULE_PATH to load custom CMake modules
+# Several run scripts to start the RTCP components
+#lofar_add_subdirectory(Run)
 
-if (NOT LOFAR_ROOT)
-find_path (LOFAR_ROOT cmake/modules/CMakeSettings.cmake
-  PATHS 
-  ${LCS_SOURCE_DIR}
-  ${LCS_SOURCE_DIR}/..
-  ${LCS_SOURCE_DIR}/../..
-  ${LCS_SOURCE_DIR}/../../..
-  $ENV{LOFARSOFT}
-  )
+# Fast Collective Network Protocol; used on BlueGene only.
+lofar_add_subdirectory(FCNP)
 
-if (LOFAR_ROOT)
-  include (${LOFAR_ROOT}/cmake/CMakeSettings.cmake)
-else (LOFAR_ROOT)
-  message (FATAL_ERROR "Unable to locate additional CMake scripts!")
-endif (LOFAR_ROOT)
-endif (NOT LOFAR_ROOT)
+# Defines interfaces between the different components within the RTCP product
+lofar_add_subdirectory(Interface)
 
-## ------------------------------------------------------------------------------
-## Additional CMake modules
+# Compute-Node Processing: application running on the BlueGene compute nodes
+lofar_add_subdirectory(CNProc)
 
-include (CheckIncludeFiles)
-include (CheckLibraryExists)
-include (CheckTypeSize)
-include (CTest)
-enable_testing()
+# I/O Node Processing: application running on the BlueGene I/O nodes
+#lofar_add_subdirectory(IONProc)
 
-## Custom modules
+# Stores output from the correlator in one or more MeasurmentSet files.
+lofar_add_subdirectory(Storage)
 
-#include (MakePackageVersion)
-
-## ------------------------------------------------------------------------------
-## Check system libraries
-
-## ------------------------------------------------------------------------------
-## Search for external libraries
-
-## ------------------------------------------------------------------------------
-## Check for required tools
-
-## ------------------------------------------------------------------------------
-## Module header files
-
-
-## ------------------------------------------------------------------------------
-## Directories to be included in the build
-
-## --- Interface ------------------------------------
-
-find_path (HAVE_INTERFACE CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP/Interface)
-if (HAVE_INTERFACE)
-  set (HAVE_INTERFACE TRUE CACHE BOOL "Have package Interface?" FORCE)
-  add_subdirectory (Interface)
-endif (HAVE_INTERFACE)  
-
-## --- FCNP -----------------------------------------
-
-find_path (HAVE_FCNP CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP/FCNP)
-if (HAVE_FCNP)
-  set (HAVE_FCNP TRUE CACHE BOOL "Have package FCNP?" FORCE)
-  add_subdirectory (FCNP)
-endif (HAVE_FCNP)  
-
-## --- Storage --------------------------------------
-
-find_path (HAVE_STORAGE CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP/Storage)
-if (HAVE_STORAGE)
-  set (HAVE_STORAGE TRUE CACHE BOOL "Have package Storage?" FORCE)
-  add_subdirectory (Storage)
-endif (HAVE_STORAGE)  
-
-## --- IONProc --------------------------------------
-
-find_path (HAVE_IONPROC CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP/IONProc)
-if (HAVE_IONPROC)
-  set (HAVE_IONPROC TRUE CACHE BOOL "Have package IONProc?" FORCE)
-  add_subdirectory (IONProc)
-endif (HAVE_IONPROC)  
-
-## --- CNProc ---------------------------------------
-
-find_path (HAVE_CNPROC CMakeLists.txt ${LOFAR_SOURCE_DIR}/RTCP/CNProc)
-if (HAVE_CNPROC)
-  set (HAVE_CNPROC TRUE CACHE BOOL "Have package CNProc?" FORCE)
-  add_subdirectory (CNProc)
-endif (HAVE_CNPROC)  
-
-#add_subdirectory (CS1_Tools)
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)

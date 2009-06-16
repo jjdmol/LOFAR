@@ -1,41 +1,43 @@
-## --- Macro(s) -------------------------------------
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-MACRO (TARGETLINKLIBRARIES_AMCIMPL_SRC _PROG)
-  target_link_libraries (${_PROG} 
-                	 amcimpl
-			 amcbase
-			 transport
-			 blob
-			 common
-			 ${CASACORE_LIBRARIES}
-	        	 ${LOG4CPLUS_LIBRARIES}
-			 ${BACKTRACE_LIBRARIES}
-			 ${SHMEM_LIBRARIES} )
-ENDMACRO (TARGETLINKLIBRARIES_AMCIMPL_SRC)
+include(LofarPackageVersion)
 
-## ------------------------------------------------------------------------------
-## Build the library
+set(amcimpl_LIB_SRCS
+  Package__Version.cc
+  ConverterImpl.cc
+  ConverterProcess.cc
+  ConverterServer.cc
+)
 
-file (GLOB libamcimpl_SOURCES ConverterImpl.cc
-			      ConverterProcess.cc
-			      ConverterServer.cc )
+set(amcimpl_PROGRAMS
+  versionamcimpl
+  AMCServer
+  WGS84toITRF)
 
-add_library (amcimpl ${libamcimpl_SOURCES})
+## Suppress warnings from the Casacore Measures component.
+#set_source_files_properties(${amcimpl_LIB_SRCS} ${amcimpl_PROGRAMS}
+#  PROPERTIES COMPILE_FLAGS "-Wno-ignored-qualifiers")
 
-## ------------------------------------------------------------------------------
-## Build Programs
+lofar_add_library(amcimpl ${amcimpl_LIB_SRCS})
 
-add_executable (AMCServer AMCServer.cc)
-TARGETLINKLIBRARIES_AMCIMPL_SRC (AMCServer)
-
-add_executable (WGS84toITRF WGS84toITRF.cc)
-TARGETLINKLIBRARIES_AMCIMPL_SRC (WGS84toITRF)
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS amcimpl
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
+foreach(prog ${amcimpl_PROGRAMS})
+  lofar_add_executable(${prog} ${prog}.cc)
+endforeach(prog ${amcimpl_PROGRAMS})

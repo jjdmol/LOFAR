@@ -1,92 +1,29 @@
-cmake_minimum_required (VERSION 2.6)
+include(LofarCTest)
 
-include(LOFARTest)
-include_directories ( ${LOFAR_SOURCE_DIR}/LCS/Transport/test )
+lofar_add_test(Example Example.cc DH_Example.cc)
+lofar_add_test(ExampleMem ExampleMem.cc DH_Example.cc DH_ExampleExtra.cc)
+lofar_add_test(ExampleBlMem ExampleBlMem.cc DH_Example.cc DH_ExampleExtra.cc)
+lofar_add_test(ExampleNonBlocking ExampleNonBlocking.cc DH_Example.cc)
+lofar_add_test(ExampleVarBuf ExampleVarBuf.cc DH_VarBuf.cc)
+lofar_add_test(TestBidirectional TestBidirectional.cc DH_Example.cc)
+lofar_add_test(ExampleSocket ExampleSocket.cc DH_Socket.cc)
+#lofar_add_test(ExampleEthernet ExampleEthernet.cc DH_Ethernet.cc)
+#lofar_add_test(tServer tServer.cc DH_Socket.cc)
+#lofar_add_test(tClient tClient.cc DH_Socket.cc)
+#lofar_add_test(tCSConnection tCSConnection.cc)
 
-## ------------------------------------------------------------------------------
-## Sourses
-
-file (GLOB Example_SRCS            Example.cc DH_Example.cc )
-file (GLOB ExampleMem_SRCS         ExampleMem.cc DH_Example.cc DH_ExampleExtra.cc )
-file (GLOB ExampleBlMem_SRCS       ExampleBlMem.cc DH_Example.cc DH_ExampleExtra.cc )
-file (GLOB ExampleNonBlocking_SRCS ExampleBlMem.cc DH_Example.cc DH_ExampleExtra.cc )
-file (GLOB ExampleVarBuf_SRCS      ExampleVarBuf.cc DH_VarBuf.cc )
-file (GLOB ExampleShMem_SRCS       ExampleShMem.cc DH_Example.cc DH_ExampleExtra.cc )
-file (GLOB ExampleMPI_SRCS         ExampleMPI.cc DH_Example.cc DH_ExampleExtra.cc )
-file (GLOB TestBidirectional_SRCS  TestBidirectional.cc DH_Example.cc )
-file (GLOB ExampleSocket_SRCS      ExampleSocket.cc DH_Socket.cc )
-file (GLOB ExampleEthernet_SRCS    ExampleEthernet.cc DH_Ethernet.cc )
-file (GLOB tServer_SRCS            tServer.cc DH_Socket.cc )
-file (GLOB tClient_SRCS            tClient.cc DH_Socket.cc )
-file (GLOB tCSConnection_SRCS      tCSConnection.cc )
-
-## --- Macro(s) -------------------------------------
-
-MACRO (TARGETLINKLIBRARIES_TRANSPORT_TEST _PROG)
-  target_link_libraries (${_PROG} 
-                         transport
-			 blob
-			 common
-			 ${LOG4CPLUS_LIBRARIES}
-			 ${BACKTRACE_LIBRARIES}
-			 ${SHMEM_LIBRARIES} )
-ENDMACRO (TARGETLINKLIBRARIES_TRANSPORT_TEST)
-
-
-## --- Programs to be built -------------------------
-
-set (CHECKPROGS
-     Example
-     TestBidirectional
-     ExampleMem
-     ExampleBlMem
-     ExampleNonBlocking
-     ExampleVarBuf
-     ExampleShMem
-     ExampleMPI
-     ExampleSocket
-     ExampleEthernet
-     tServer
-     tClient
-     tCSConnection
-)
-
-foreach (prog ${CHECKPROGS})
-  add_executable (${prog} ${${prog}_SRCS})
-  TARGETLINKLIBRARIES_TRANSPORT_TEST (${prog})
-endforeach (prog ${CHECKPROGS})
-
-## --- Programs to be run ---------------------------
-
-set (CHECKTOOLPROGS
-     Example
-     TestBidirectional
-     ExampleMem
-     ExampleBlMem
-     ExampleNonBlocking
-     ExampleVarBuf
-     ExampleSocket
-)
-
-foreach (prog ${CHECKTOOLPROGS})
-  add_test(${prog} ${CMAKE_CURRENT_SOURCE_DIR}/${prog}_test.sh) 
-  set (TEST_PROGRAMS "${TEST_PROGRAMS};${prog}" CACHE STRING "Test programs" FORCE)
-endforeach (prog ${CHECKTOOLPROGS})
-
-## --- ExampleShMem ---------------------------------
-
-if ( MPI_FOUND )
-  add_test (ExampleShMem ${CMAKE_CURRENT_SOURCE_DIR}/ExampleShMem_test.sh)
-  set (TEST_PROGRAMS "${TEST_PROGRAMS};ExampleShMem" CACHE STRING "Test programs" FORCE)
-else ( MPI_FOUND )
-  message (STATUS "Warning: ExampleShMem.run skipped: probably MPI is not configured in!")
-endif ( MPI_FOUND ) 
-
-## --- ExampleMPI -----------------------------------
-
-if ( MPI_FOUND )
-  add_test (ExampleMPI ${CMAKE_CURRENT_SOURCE_DIR}/ExampleMPI_test.sh)
-  set (TEST_PROGRAMS "${TEST_PROGRAMS};ExampleMPI" CACHE STRING "Test programs" FORCE) 
-else ( MPI_FOUND )
-  message (STATUS "Warning: ExampleMPI.run skipped: probably MPI is not configured in!")
-endif ( MPI_FOUND ) 
+if(HAVE_MPI)
+  lofar_add_test(ExampleMPI ExampleMPI.cc DH_Example.cc DH_ExampleExtra.cc)
+  if(HAVE_SHMEM)
+    set(shmem_COMPILE_FLAGS
+      -DHAVE_MMAP=0
+      -DMORECORE=shmbrk
+      -DMORECORE_CONTIGUOUS=0
+      -DMORECORE_CANNOT_TRIM=1
+      -DSHMEM_ALLOC)
+    join_arguments(shmem_COMPILE_FLAGS)
+    set_source_files_properties(ExampleShMem.cc 
+      PROPERTIES COMPILE_FLAGS ${shmem_COMPILE_FLAGS})
+    lofar_add_test(ExampleShMem ExampleShMem.cc DH_Example.cc DH_ExampleExtra.cc)
+  endif(HAVE_SHMEM)
+endif(HAVE_MPI)

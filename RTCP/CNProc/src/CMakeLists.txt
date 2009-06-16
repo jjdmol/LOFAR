@@ -1,105 +1,63 @@
-find_path (HAVE_LINK_CNPROC CNProc ${CMAKE_CURRENT_SOURCE_DIR})
-if (HAVE_LINK_CNPROC)
-  set (HAVE_LINK_CNPROC TRUE CACHE BOOL "Have link CNProc?" FORCE)
-  execute_process(COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/CNProc )
-endif (HAVE_LINK_CNPROC)
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-execute_process(COMMAND ln -s ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/CNProc )
+include(LofarPackageVersion)
 
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
-## ------------------------------------------------------------------------------
-## Include files
+# Add current source directory to -I path. This is needed because CNProc uses
+# angle brackets for internal header files, instead of quotes.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-file (GLOB libinterface_HEADERS BandPass.h
-				LocationInfo.h
-				CorrelatorAsm.h
-				FFT_Asm.h
-				FIR_Asm.h
-				InputData.h
-				TransposedData.h
-				FIR.h
-				PPF.h
-				AsyncTranspose.h
-				BeamFormer.h
-				BeamFormerAsm.h
-				Correlator.h
-				CN_Processing.h
-				FCNP_ClientStream.h
-				AsyncCommunication.h
-				PencilBeams.h
-				Stokes.h)
- 
-enable_language(ASM-BGP)
+set(cnproc_LIB_SRCS
+  Package__Version.cc
+  AsyncCommunication.cc
+  AsyncTranspose.cc
+  BandPass.cc
+  BeamFormer.cc
+  CN_Processing.cc
+  Correlator.cc
+  FCNP_ClientStream.cc
+  FIR.cc
+  LocationInfo.cc
+  PencilBeams.cc
+  PPF.cc
+  Stokes.cc)
 
-if (CMAKE_ASM-BGP_COMPILER_WORKS)
-  file(GLOB amsSrcs BeamFormerAsm.S
-		    BeamFormerAsm3St6Bm.inc
-		    BeamFormerAsm6St3Bm.inc
-		    CorrelatorAsm.S
-                    FIR_Asm.S
-		    FFT_Asm.S)
-endif (CMAKE_ASM-BGP_COMPILER_WORKS)  
+if(CMAKE_ASM-BGP_COMPILER_WORKS)
+#  set(CMAKE_ASM-BGP_LINK_EXECUTABLE "<CMAKE_LINKER> <FLAGS> <CMAKE_ASM${ASM_DIALECT}_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>")
+  list(APPEND cnproc_LIB_SRCS
+    CorrelatorAsm.S
+    FIR_Asm.S
+    FFT_Asm.S)
+endif(CMAKE_ASM-BGP_COMPILER_WORKS)
 
-## ------------------------------------------------------------------------------
-## Build the library
+lofar_add_library(cnproc ${cnproc_LIB_SRCS})
 
-file (GLOB libcnproc_SOURCES BandPass.cc
-			     LocationInfo.cc
-			     FIR.cc
-			     AsyncTranspose.cc
-			     BeamFormer.cc
-			     PPF.cc
-			     Correlator.cc
-			     CN_Processing.cc
-			     FCNP_ClientStream.cc
-			     AsyncCommunication.cc
-			     PencilBeams.cc
-			     Stokes.cc
-			     ${amsSrcs})
+message(STATUS "ASM-BGP = ${ASM-BGP}")
+message(STATUS "CMAKE_ASM-BGP_COMPILER = ${CMAKE_ASM-BGP_COMPILER}")
+message(STATUS "CMAKE_ASM-BGP_LINK_EXECUTABLE = ${CMAKE_ASM-BGP_LINK_EXECUTABLE}")
 
-add_library (cnproc ${libcnproc_SOURCES})
+lofar_add_executable(CN_Processing CN_Processing_main.cc)
+lofar_add_executable(versioncnproc versioncnproc.cc)
 
-## linker instructions
-target_link_libraries (  cnproc 
-			 interface
-			 stream
-			 fcnp_cn
-			 fcnp_ion
-			 applcommon
-                         common
-			 ${Boost_LIBRARIES}
-			 ${CASA_LIBRARIES}
-			 ${BACKTRACE_LIBRARIES}
-			 ${WITH-LIBS}
-			 )
-
-add_executable(CN_Processing CN_Processing_main.cc)
-
-target_link_libraries (CN_Processing
-                       cnproc
-                      )
-
-SET (CMAKE_ASM-BGP_LINK_EXECUTABLE "${ASM-BGP} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-
-set_target_properties(CN_Processing
-                      PROPERTIES LINK_FLAGS "-static -g -O2 -W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin"
-                                 LINKER_LANGUAGE ASM-BGP
-)
-
-#set_target_properties(CN_Processing
-#                      LINK_SEARCH_END_STATIC TRUE
-#)
-
-#set_target_properties(CN_Processing
-#                      LINK_TYPE STATIC
-#)
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS cnproc CN_Processing
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  )

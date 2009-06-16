@@ -1,31 +1,33 @@
-find_path (HAVE_LINK_FCNP FCNP ${CMAKE_CURRENT_SOURCE_DIR})
-if (HAVE_LINK_FCNP)
-  set (HAVE_LINK_FCNP TRUE CACHE BOOL "Have link FCNP?" FORCE)
-  execute_process(COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/FCNP )
-endif (HAVE_LINK_FCNP)
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-execute_process(COMMAND ln -s ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/FCNP )
+include(LofarPackageVersion)
 
-## ------------------------------------------------------------------------------
-## Build the library
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
-file (GLOB libfcnp_ion_SOURCES fcnp_ion.cc)
-add_library (fcnp_ion ${libfcnp_ion_SOURCES})
+# Add libraries
+lofar_add_library(fcnp_cn Package__Version.cc fcnp_cn.cc)
+lofar_add_library(libfcnp_ion Package__Version.cc fcnp_ion.cc)
 
-file (GLOB libfcnp_cn_SOURCES fcnp_cn.cc)
-add_library (fcnp_cn ${libfcnp_cn_SOURCES})
-
-## ------------------------------------------------------------------------------
-## Installation
-
-install (
-  TARGETS fcnp_ion
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
-
-install (
-  TARGETS fcnp_cn
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  )
+# Add executable
+lofar_add_executable(versionfcnp versionfcnp.cc)

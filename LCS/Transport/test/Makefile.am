@@ -58,15 +58,15 @@ LDADD			  = ../src/libtransport.la
 DEPENDENCIES		  = ../src/libtransport.la $(LOFAR_DEPEND)
 
 TESTSCRIPTS = \
-	Example_test.sh			\
-	TestBidirectional_test.sh	\
-	ExampleMem_test.sh		\
-	ExampleBlMem_test.sh		\
-	ExampleNonBlocking_test.sh	\
-	ExampleShMem_test.sh		\
-	ExampleMPI_test.sh		\
-	ExampleVarBuf_test.sh		\
-	ExampleSocket_test.sh
+	Example.sh		\
+	TestBidirectional.sh	\
+	ExampleMem.sh		\
+	ExampleBlMem.sh		\
+	ExampleNonBlocking.sh	\
+	ExampleShMem.sh		\
+	ExampleMPI.sh		\
+	ExampleVarBuf.sh	\
+	ExampleSocket.sh
 
 TESTS = $(TESTSCRIPTS)
 
