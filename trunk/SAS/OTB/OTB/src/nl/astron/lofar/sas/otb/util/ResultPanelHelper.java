@@ -24,6 +24,7 @@ package nl.astron.lofar.sas.otb.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -70,12 +71,12 @@ public class ResultPanelHelper {
         itsPanelMap.put("*",itsVector);
 
         //ParmDB
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
-        itsPanelMap.put("ParmDB",itsVector);
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("ParmDBValues",itsVector);
+//        itsVector = new Vector<String>();
+//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
+//        itsPanelMap.put("ParmDB",itsVector);
+//        itsVector = new Vector<String>();
+//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+//        itsPanelMap.put("ParmDBValues",itsVector);
         
         // Observation
         itsVector = new Vector<String>();
@@ -96,10 +97,10 @@ public class ResultPanelHelper {
         addParSetAndLogPanels();
 
         //Imager
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-        itsPanelMap.put("Imager",itsVector);
-        addParSetAndLogPanels();
+//        itsVector = new Vector<String>();
+//        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+//        itsPanelMap.put("Imager",itsVector);
+//        addParSetAndLogPanels();
     }
     
     
@@ -122,6 +123,8 @@ public class ResultPanelHelper {
      * Returns the possible panels for this Key
      *
      * @param aKey  the key that you want the panellist for
+     *              if aKey = "*" it returns all default panels
+     *              if aKey = ""  all NON default panels are returned
      * @return the Vector that contains all panels for this key
      */
     public Vector getPanels(String aKey) {
@@ -129,13 +132,23 @@ public class ResultPanelHelper {
         Iterator i = itsPanelMap.keySet().iterator();
         while(i.hasNext()){
             String key = (String)i.next();
-            if(aKey.equals(key)){
+            if(aKey.equals(key) || (aKey.equals("") && !aKey.equals("*"))){
                 returnVector = itsPanelMap.get(key);
             }
         }
         return returnVector;
     }
-    
+
+    /**
+     * Returns all keys kept in this class
+     *
+     * @returns all keys
+     */
+    public Set<String> getKeys() {
+
+        return itsPanelMap.keySet();
+
+    }
     /**
      * Look if a key available at all.
      *

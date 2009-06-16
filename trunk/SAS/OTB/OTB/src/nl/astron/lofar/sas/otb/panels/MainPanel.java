@@ -557,7 +557,7 @@ public class MainPanel extends javax.swing.JPanel
                                   }
                                }                               
                            }
-                           ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                           ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", true, true);
                            if (aP != null) {
                               itsMainFrame.showPanel(aP.getFriendlyName());
                            }
@@ -586,7 +586,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             } else if (aButton.equals("View")) {
-                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", true, true);
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
@@ -629,7 +629,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             } else if (aButton.equals("View")) {
-                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", false, true);
+                ResultBrowserPanel aP=(ResultBrowserPanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ResultBrowserPanel", true, true);
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
@@ -701,7 +701,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             } else if (aButton.equals("Modify")) {
-                TemplateMaintenancePanel aP =(TemplateMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateMaintenancePanel", false, true);
+                TemplateMaintenancePanel aP =(TemplateMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.TemplateMaintenancePanel", true, true);
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
@@ -801,7 +801,7 @@ public class MainPanel extends javax.swing.JPanel
                                 itsMainFrame.setChanged(this.getFriendlyName(),true);
                                 checkChanged();
                             }
-                            ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
+                            ComponentMaintenancePanel aP=(ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", true, true);
                             if (aP != null) {
                                 itsMainFrame.showPanel(aP.getFriendlyName());
                             }
@@ -817,7 +817,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
             } else if (aButton.equals("Modify")) {
-                ComponentMaintenancePanel aP = (ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", false, true);
+                ComponentMaintenancePanel aP = (ComponentMaintenancePanel)itsMainFrame.registerPlugin("nl.astron.lofar.sas.otb.panels.ComponentMaintenancePanel", true, true);
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
