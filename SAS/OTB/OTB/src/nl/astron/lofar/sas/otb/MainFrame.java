@@ -29,7 +29,6 @@ import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
-import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.exceptions.*;
 import nl.astron.lofar.sas.otb.panels.*;

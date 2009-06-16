@@ -28,12 +28,15 @@ import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.JTabbedPane;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -47,7 +50,11 @@ import nl.astron.lofar.sas.otb.util.jParmDBnode;
 import nl.astron.lofar.sas.otb.util.treemanagers.ParmDBTreeManager;
 import nl.astron.lofar.sas.otb.util.treemanagers.ResultTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
+import nl.astron.lofar.sas.otbcomponents.VerticalButtonPanel;
+import nl.astron.lofar.sas.otbcomponents.NodeViewPanel;
+import nl.astron.lofar.sas.otbcomponents.ParameterViewPanel;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
+import nl.astron.lofar.sas.otbcomponents.TreePanel;
 
 
 /**
@@ -78,16 +85,47 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     /** Creates new form BeanForm */
     public ResultBrowserPanel() {
         initComponents();
-        initialize();
     }
     public void initialize() {
-        
+        userAccount = itsMainFrame.getUserAccount();
         treePanel.setTitle("Observation Tree");
+
+
         buttonPanel1.addButton("Query Panel");
         buttonPanel1.addButton("Schedule");
         buttonPanel1.addButton("Exit");
-        
+
+
+        buttonPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPanelActionPerformed(evt);
+            }
+        });
+
+
+        // determine userpanels from the Panelhelper
+        Set<String> allKeys = itsPanelHelper.getKeys();
+        Iterator iter = allKeys.iterator();
+        while ( iter.hasNext()) {
+            String aKey = iter.next().toString();
+            if (!aKey.equals("*")) {
+                buttonPanel.addButton(aKey);
+            }
+        }
+
+        try {
+            itsTreeType = OtdbRmi.getRemoteTypes().getTreeType(OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeID, false).type);
+        } catch (RemoteException ex) {
+            logger.debug("Error getting treetype");
+        }
+
+        if (userAccount.isObserver() && !itsTreeType.equalsIgnoreCase("hardware")) {
+            return;
+        }
+
+
         //Sample code to have ParmDB in the tree.
+        // only for treeview panel
         
         parmDBTreelistener = new TreeModelListener(){
             public void treeStructureChanged(TreeModelEvent e){}
@@ -136,18 +174,31 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         }
         itsMainFrame=mainframe;
         itsTreeID=itsMainFrame.getSharedVars().getTreeID();
+
+        initialize();
+
+        jSplitPane.setDividerLocation(150);
+        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                treePanelValueChanged(evt);
+            }
+        });
+
         
         // check access
-        UserAccount userAccount = itsMainFrame.getUserAccount();
-        if(userAccount.isAdministrator()) {
-            // enable/disable certain controls
+        if(userAccount.isAdministrator() || itsTreeType.equalsIgnoreCase("hardware")) {
+            jSplitPane.setLeftComponent(treePanel);
+        } else if(userAccount.isAstronomer()) {
+            jSplitPane.setLeftComponent(treePanel);
+        } else if(userAccount.isInstrumentScientist()) {
+            jSplitPane.setLeftComponent(treePanel);
+        } else if (userAccount.isObserver()&& !itsTreeType.equalsIgnoreCase("hardware")) {
+            jSplitPane.setLeftComponent(buttonPanel);
         }
-        if(userAccount.isAstronomer()) {
-            // enable/disable certain controls
-        }
-        if(userAccount.isInstrumentScientist()) {
-            // enable/disable certain controls
-        }
+
+        jSplitPane.setRightComponent(jTabbedPane1);
+
+        add(jSplitPane, java.awt.BorderLayout.CENTER);
         
         // initialize the tree
         setNewRootNode();
@@ -171,7 +222,14 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     public void checkChanged() {
         if (this.hasChanged()) {
-            this.setNewRootNode();
+            if (userAccount.isObserver() && !itsTreeType.equalsIgnoreCase("hardware")) {
+                if (itsLastSelectedPath != null && itsLastSelectedPath.getPathCount()>0) {
+                   this.setNewRootNode();
+                   treePanel.setSelectionPath(itsLastSelectedPath);
+                } else {
+                    this.setNewRootNode();
+                }
+            }
             this.setChanged(false);
         }
     }
@@ -183,31 +241,59 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     
     public void setNewRootNode() {
         
+        if (!userAccount.isObserver() || itsTreeType.equalsIgnoreCase("hardware")) {
         
-        itsMainFrame.setHourglassCursor();
-        try {
-            ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
-            treeManager.addTreeModelListener(parmDBTreelistener);
-            // and create a new root
-            treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
-            itsMainFrame.setNormalCursor();
-        } catch (Exception e) {
-            logger.debug("Exception during setNewRootNode: " + e);
+            try {
+                ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
+                treeManager.addTreeModelListener(parmDBTreelistener);
+                itsMainFrame.setHourglassCursor();
+
+                // and create a new root
+                treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
+                itsMainFrame.setNormalCursor();
+            } catch (Exception e) {
+                logger.debug("Exception during setNewRootNode: " + e);
+            }
         }
     }
-    
-    private void changeTreeSelection(TreeNode aNode) {
-        // save selected panel
-        int savedSelection=jTabbedPane1.getSelectedIndex();
-        logger.debug("ChangeSelection for node: " + aNode.getName());
-        itsSelectedNode=aNode;
-        jOTDBparam aParam = null;
-        
+
+
+    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {
+        logger.debug("treeSelectionEvent: " + evt);
+        if (evt != null && evt.getNewLeadSelectionPath() != null &&
+                evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
+
+            TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
+
+            changeTreeSelection(treeNode);
+        }
+    }
+
+    private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {
+        logger.debug("actionPerformed: " + evt);
+        logger.debug("Trigger: "+evt.getActionCommand());
+        try {
+            Vector aL = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, "%"+evt.getActionCommand());
+            logger.debug("nr nodes found: " + aL.size());
+            logger.debug("nodes: " + aL);
+            if (aL.size()> 0) {
+              changeSelection((jOTDBnode)aL.elementAt(0));
+              itsSelectedButton = evt.getActionCommand();
+            } else {
+                logger.error("No panels for this choice");
+            }
+        } catch(Exception e) {
+            logger.fatal("Exception during getItemList.",e);
+        }
+    }
+
+    private void changeSelection(TreeNode aNode) {
+        itsMainFrame.setHourglassCursor();
         jTabbedPane1.removeAll();
-        
+
         // Check if the nodename uses specific panels and create them
         Vector aPanelList=null;
-        
+
         if(aNode.getUserObject() instanceof jOTDBnode){
             if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.getName()))) {
                 aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.getName()));
@@ -217,11 +303,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         }else if(aNode.getUserObject() instanceof jParmDBnode){
             aPanelList=itsPanelHelper.getPanels("ParmDBValues");
         }
-        
+
         if (aNode.isLeaf()) {
         } else {
         }
-        
+
         // Loop through all the panels and fill the tabPanel with them
         Iterator it = aPanelList.iterator();
         while (it.hasNext()) {
@@ -240,12 +326,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                     p = (JPanel) Class.forName(aPanelName).newInstance();
                 } catch (ClassNotFoundException ex) {
                     logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
                     return;
                 } catch (InstantiationException ex) {
                     logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
                     return;
                 } catch (IllegalAccessException ex) {
                     logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
                     return;
                 }
                 if (p!=null) {
@@ -261,12 +350,94 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         viewPanel.setMainFrame(itsMainFrame);
                         viewPanel.setContent(aNode.getUserObject());
                     }
-                    
+
                 }
             } else {
                 logger.debug("Skipping panel for: "+aPanelName);
             }
         }
+        itsMainFrame.setNormalCursor();
+    }
+
+    private void changeSelection(jOTDBnode aNode) {
+        itsMainFrame.setHourglassCursor();
+        jTabbedPane1.removeAll();
+
+        // Check if the nodename uses specific panels and create them
+        Vector aPanelList=null;
+
+        if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.name))) {
+            aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.name));
+        } else {
+            aPanelList=itsPanelHelper.getPanels("*");
+        }
+
+
+        // Loop through all the panels and fill the tabPanel with them
+        Iterator it = aPanelList.iterator();
+        while (it.hasNext()) {
+            boolean skip = false;
+            JPanel p=null;
+            String aPanelName= it.next().toString();
+            // Check if the wanted panel is the Node or Parameter Panel. if so only add depending on leaf
+            if ((aPanelName.contains("NodeViewPanel") && aNode.leaf) |
+                    (aPanelName.contains("ParameterViewPanel") && !aNode.leaf)|
+                    (aPanelName.contains("ParSetViewPanel") && aNode.leaf)) {
+                skip = true;
+            }
+            if (!skip) {
+                logger.debug("Getting panel for: "+aPanelName);
+                try {
+                    p = (JPanel) Class.forName(aPanelName).newInstance();
+                } catch (ClassNotFoundException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
+                    return;
+                } catch (InstantiationException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
+                    return;
+                } catch (IllegalAccessException ex) {
+                    logger.debug("Error during getPanel: "+ ex);
+                    itsMainFrame.setNormalCursor();
+                    return;
+                }
+                if (p!=null) {
+                    IViewPanel viewPanel = (IViewPanel)p;
+                    if(viewPanel.isSingleton()){
+                        IViewPanel singletonPanel = (IViewPanel)viewPanel.getInstance();
+                        p = null;
+                        jTabbedPane1.addTab(singletonPanel.getShortName(),null,viewPanel.getInstance(),"");
+                        singletonPanel.setMainFrame(itsMainFrame);
+                        singletonPanel.setContent(aNode);
+                    }else{
+                        jTabbedPane1.addTab(viewPanel.getShortName(),null,p,"");
+                        viewPanel.setMainFrame(itsMainFrame);
+                        viewPanel.setContent(aNode);
+                    }
+
+                }
+            } else {
+                logger.debug("Skipping panel for: "+aPanelName);
+            }
+        }
+        itsMainFrame.setNormalCursor();
+    }
+
+    private void changeTreeSelection(TreeNode aNode) {
+
+        if (userAccount.isObserver() && !itsTreeType.equalsIgnoreCase("hardware")) {
+            return;
+        }
+
+        // save selected panel
+        int savedSelection=jTabbedPane1.getSelectedIndex();
+        logger.debug("ChangeSelection for node: " + aNode.getName());
+        jOTDBparam aParam = null;
+
+        changeSelection(aNode);
+
+        
         if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {
             jTabbedPane1.setSelectedIndex(savedSelection);
         } else if (jTabbedPane1.getComponentCount() > 0) {
@@ -312,12 +483,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
         jSplitPane = new javax.swing.JSplitPane();
-        treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -326,54 +496,12 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 buttonPanel1ActionPerformed(evt);
             }
         });
-
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
         jSplitPane.setDividerLocation(250);
-        treePanel.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
-            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
-                treePanelValueChanged(evt);
-            }
-        });
-        treePanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                treePanelMousePressed(evt);
-            }
-        });
-
-        jSplitPane.setLeftComponent(treePanel);
-
-        jTabbedPane1.setMinimumSize(new java.awt.Dimension(600, 480));
-        jSplitPane.setRightComponent(jTabbedPane1);
-
         add(jSplitPane, java.awt.BorderLayout.CENTER);
-
     }// </editor-fold>//GEN-END:initComponents
-    
-    private void treePanelMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_treePanelMousePressed
-        logger.debug("treeMouseEvent: " + evt.getButton());
-        if (evt == null) {
-            return;
-        }
-        //check if right button was clicked
-        if(SwingUtilities.isRightMouseButton(evt)) {
-            logger.debug("Right Mouse Button clicked"+evt.getSource().toString());
-            createPopupMenu(evt);
             
-        }
-    }//GEN-LAST:event_treePanelMousePressed
-    
-    private void treePanelValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treePanelValueChanged
-        logger.debug("treeSelectionEvent: " + evt);
-        if (evt != null && evt.getNewLeadSelectionPath() != null &&
-                evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
-            
-            TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
-            
-            changeTreeSelection(treeNode);
-        }
-    }//GEN-LAST:event_treePanelValueChanged
-    
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         
@@ -388,21 +516,32 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 }
             }
         } else if(evt.getActionCommand().equals("Exit")) {
-            ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
-            treeManager.removeTreeModelListener(parmDBTreelistener);
-            
+            if (!userAccount.isObserver() || itsTreeType.equalsIgnoreCase("hardware")){
+                ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
+                treeManager.removeTreeModelListener(parmDBTreelistener);
+            }
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
             
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
+    private UserAccount userAccount = null;
     private MainFrame itsMainFrame;
     private boolean changed=false;
-    private TreeNode itsSelectedNode = null;
     private TreeInfoDialog treeInfoDialog = null;
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
+    private String itsTreeType="";
+    private String itsSelectedButton="";
+
+    TreePath itsLastSelectedPath = null;
+    private JTabbedPane jTabbedPane1 = new javax.swing.JTabbedPane();
+    private NodeViewPanel nodeViewPanel1 = new nl.astron.lofar.sas.otbcomponents.NodeViewPanel();
+    private ParameterViewPanel parameterViewPanel1 = new nl.astron.lofar.sas.otbcomponents.ParameterViewPanel();
+    private TreePanel treePanel = new nl.astron.lofar.sas.otbcomponents.TreePanel();
+    private VerticalButtonPanel buttonPanel = new nl.astron.lofar.sas.otbcomponents.VerticalButtonPanel();
+
     
     private ResultPanelHelper itsPanelHelper=ResultPanelHelper.getResultPanelHelper();
     
@@ -413,8 +552,6 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JSplitPane jSplitPane;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private nl.astron.lofar.sas.otbcomponents.TreePanel treePanel;
     // End of variables declaration//GEN-END:variables
     
     /**

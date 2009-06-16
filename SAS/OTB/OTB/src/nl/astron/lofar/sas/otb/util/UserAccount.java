@@ -28,7 +28,7 @@ import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
 /**
  * @created 17-01-2006, 16:18
  *
- * @author blaakmeer
+ * @author coolen
  *
  * @version $Id$
  *
@@ -66,7 +66,11 @@ public class UserAccount {
       */
     public boolean isAdministrator() {
         // access the OTDB and check if the rolemask includes the Administrator role
-        return true;
+        if (itsUserName.equalsIgnoreCase("observer")) {
+            return false;
+        } else {
+            return true;
+        }
     }
     
     /** Checks if the specified role is an instrument scientist
@@ -75,7 +79,12 @@ public class UserAccount {
       */
     public boolean isInstrumentScientist() {
         // access the OTDB and check if the rolemask includes the InstrumentScientist role
-        return true;
+        // for now this is default
+        if (itsUserName.equalsIgnoreCase("observer")) {
+            return false;
+        } else {
+            return true;
+        }
     }
     
     /** Checks if the specified role is an astronomer
@@ -84,9 +93,28 @@ public class UserAccount {
       */
     public boolean isAstronomer() {
         // access the OTDB and check if the rolemask includes the Astronomer role
-        return true;
+        if (itsUserName.equalsIgnoreCase("observer")) {
+            return false;
+        } else {
+            return true;
+        }
+
     }
     
+    /** Checks if the specified role is an administrator
+      *
+      * @return true if the roleMask includes the Administrator role
+      */
+    public boolean isObserver() {
+        // access the OTDB and check if the rolemask includes the Administrator role
+        // for now if userName == observer
+        if (itsUserName.equalsIgnoreCase("observer")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /** Give back the name of the current user
      *
      * @return the name of the current user
