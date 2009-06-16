@@ -266,6 +266,17 @@ the arithmetic intensity is extremely low.
 
 
 
+Prior to correlation, an FX correlator must reorder the data that comes from
+the receivers:
+each input carries the signals of from many frequency subbands from a single
+receiver, but the correlator correlates 
+Depending on the data rate, switching the data can be a real challenge.
+The data reordering phase is outside the scope of this paper, but a correlator
+implementation cannot ignore this issue.
+The LOFAR Blue Gene/P correlator uses the fast 3-D~torus for this purpose;
+other multi-core architectures need external switches.
+
+
 \section{Many-core architectures}
 
 In this section, we briefly explain key properties of six different
@@ -309,67 +320,43 @@ imaginary values.
 
 \subsection{General Purpose multi-core CPU (Intel Core i7 920)}
 
-
 As a reference, we implemented the correlator on a multi-core general-purpose
 architecture.
-We use a quad core Intel Core~i7 920 CPU (code name Nehalem) at 2.67~GHz. 
-There is 32~KB of on-chip L1 data cache per core, 256~KB L2 cache per core, and 8~MB
-of shared L3 cache.  
-The thermal design power (TDP) is 130~Watts.
-The theoretical
-peak performance of the system is 85~gflops, in single precision.
+The theoretical peak performance of the system is 85~gflops, in single
+precision.
 The parallelism comes from four cores with two-way hyperthreading, and a vector length of four floats,
 provided by the SSE4 instruction set.  
 
-
-\subsection{General Purpose multi-core CPU}
-
-As a reference, we implemented the correlator on a multi-core general
-purpose architecture, a quad core Intel Core~i7 CPU.  There is 32~KB
-of on-chip L1 data cache per core, 256~KB L2 cache per core, and 8~MB
-of shared L3 cache.  The theoretical peak performance of the system is
-85~gflops, in single precision.  The parallelism comes from four cores
-with two-way hyperthreading, and a vector length of four floats,
-provided by the SSE4 instruction set.
-
-The architecture has several important drawbacks for our application.
-First, there is no fused multiply-add instruction.  Since the
-correlator performs mostly multiplies and adds, this can cause a
-performance penalty. The processor does have multiple pipelines, and
-the multiply and add instructions are executed in different pipelines,
+SSE4 does not provide fused multiply-add instructions, but the Core~i7 issues
+vector-multiply and vector-add instructions concurrently in different pipelines,
 allowing eight flops per cycle per core.
-
-Another problem is that SSE's shuffle instructions to move data around
-in vector registers are more limited than for instance on the
-\mbox{Cell/B.E.} processor. This complicates an efficient
-implementation.  For the future Intel Larrabee GPU, and for the next
-generation of Intel processors, both a fused multiply-add instruction
-and improved shuffle support has been announced.  The number of SSE
-registers is small (sixteen 128-bit registers), allowing only little
-data reuse.  This is a problem for the correlator, since the tile size
-is limited by the number of registers.  A smaller tile size means less
-opportunity for data reuse, increasing the memory bandwidth that is
-required.
+One problem of SSE4 that complicates an efficient correlator is the limited
+support for shuffling data within vector registers, unlike the Cell~BE, for
+instance, that can shuffle any byte to any position.
+Also, the number of vector registers is small (sixteen four-word registers).
+Therefore, the is not much opportunity to reuse data in registers; reuse
+has to come from the L1~data cache.
+Consequently, the correlator uses a small tile size.
 
 
 \subsection{IBM Blue Gene/P}
 
 The IBM Blue Gene/P~(BG/P)~\cite{IBM:08} is the architecture that is
 currently used for the LOFAR correlator~\cite{Romein:06,Romein:09b}.
-Four PowerPC
-processors are integrated on each Blue Gene/P chip.  The BG/P is an
-energy efficient supercomputer. This is accomplished by using many
-small, low-power chips, at a low clock frequency.  The supercomputer
-also has excellent I/O capabilities, there are five specialized
-networks for communication.
+Four PowerPC processors are integrated on each Blue Gene/P chip.
+The BG/P is an energy efficient supercomputer.
+This is accomplished by using many small, low-power chips, at a low clock
+frequency.
+The supercomputer also has excellent I/O capabilities, there are five
+specialized networks for communication.
 
 We found that the BG/P is extremely suitable for our application,
-since it is highly optimized for processing of complex numbers.  The
-BG/P performs \emph{all} floating point operations in double
-precision, which is overkill for our application.  In contrast to all
-other architectures we evaluate, the problem is compute bound instead
-of I/O bound, thanks to the BG/P's high memory bandwidth per
-operation. It is 3--10 times higher than for the other architectures.
+since it is highly optimized for processing of complex numbers.
+The BG/P performs \emph{all} floating point operations in double
+precision, which is overkill for our application.
+In contrast to all other architectures we evaluate, the problem is compute
+bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
+operation, which is 3--10 times higher than for the other architectures.
 The BG/P has 32 vector registers of width 2.  Therefore, 64 floating
 point numbers (with double precision) can be kept in registers
 simultaneously. This is the same amount as on the general purpose
