@@ -2,6 +2,7 @@
 #include <lofar_config.h>
 
 #include <FIR.h>
+#include <cstring>
 
 #include <math.h>
 #include <iostream>

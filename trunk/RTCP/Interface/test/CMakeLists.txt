@@ -1,48 +1,24 @@
-cmake_minimum_required (VERSION 2.6)
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include(LOFARTest)
-include_directories ( ${LOFAR_SOURCE_DIR}/RTCP/Interface/test )
+include(LofarCTest)
 
-add_definitions (-DHAVE_PKVERSION)
-
-## ------------------------------------------------------------------------------
-## Sourses
-
-file (GLOB tSparseSet_SRCS         tSparseSet.cc )
-file (GLOB tRSPTimeStamp_SRCS      tRSPTimeStamp.cc )
-
-## --- Macro(s) -------------------------------------
-
-MACRO (TARGETLINKLIBRARIES_INTERFACE_TEST _PROG)
-  target_link_libraries (${_PROG} 
-                         interface
-			 common
-			 ${BACKTRACE_LIBRARIES}
-			 ${LOG4CPLUS_LIBRARIES}
-			 ${SHMEM_LIBRARIES} )
-ENDMACRO (TARGETLINKLIBRARIES_INTERFACE_TEST)
-
-
-## --- Programs to be built -------------------------
-
-set (CHECKPROGS
-     tSparseSet
-     tRSPTimeStamp
-)
-
-foreach (prog ${CHECKPROGS})
-  add_executable (${prog} ${${prog}_SRCS})
-  TARGETLINKLIBRARIES_INTERFACE_TEST (${prog})
-endforeach (prog ${CHECKPROGS})
-
-## --- Programs to be run ---------------------------
-
-set (CHECKTOOLPROGS
-     tSparseSet
-     tRSPTimeStamp
-)
-
-foreach (prog ${CHECKTOOLPROGS})
-  add_test(${prog} ${prog}) 
-  set (TEST_PROGRAMS "${TEST_PROGRAMS};${prog}" CACHE STRING "Test programs" FORCE)
-endforeach (prog ${CHECKTOOLPROGS})
+lofar_add_test(tSparseSet tSparseSet.cc)
+lofar_add_test(tRSPTimeStamp tRSPTimeStamp.cc)

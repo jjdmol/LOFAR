@@ -6,15 +6,15 @@ check_PROGRAMS	      =	tBlobHeader tBlobString tBlobStream tBlobArray \
 CHECKTOOLPROGS	      =	$(check_PROGRAMS)
 
 TESTSCRIPTS = \
-          tBlobHeader_test.sh \
-          tBlobString_test.sh \
-          tBlobStream_test.sh \
-	  tBlobArray_test.sh \
-	  tBlobSTL_test.sh \
-	  tBlobCasa_test.sh \
-	  tBlobField_test.sh \
-	  tBlobAipsIO_test.sh \
-	  tKeyValueMap_test.sh 
+          tBlobHeader.sh \
+          tBlobString.sh \
+          tBlobStream.sh \
+	  tBlobArray.sh \
+	  tBlobSTL.sh \
+	  tBlobCasa.sh \
+	  tBlobField.sh \
+	  tBlobAipsIO.sh \
+	  tKeyValueMap.sh 
 
 TESTS	= $(TESTSCRIPTS)
 

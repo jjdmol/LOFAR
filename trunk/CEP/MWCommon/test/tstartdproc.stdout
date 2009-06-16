@@ -1,0 +1,22 @@
+
+prog1 -arg a b
+localhost
+node1#/usr/local/xyx0
+node2#/usr/local/xyx1
+node1#/usr/local/xyx2
+
+mpirun -np 4 -machinefile tstartdproc_tmp.out2 prog1 -arg a b
+localhost
+node1
+node2
+node1
+
+socketrun 1 tstartdproc_tmp.out3 3851  prog1 -arg a b
+ssh localhost prog1 socket localhost 3851 4 0 localhost -arg a b
+ssh node1 prog1 socket localhost 3851 4 1 /usr/local/xyx0 -arg a b
+ssh node2 prog1 socket localhost 3851 4 2 /usr/local/xyx1 -arg a b
+ssh node1 prog1 socket localhost 3851 4 3 /usr/local/xyx2 -arg a b
+localhost
+node1#/usr/local/xyx0
+node2#/usr/local/xyx1
+node1#/usr/local/xyx2

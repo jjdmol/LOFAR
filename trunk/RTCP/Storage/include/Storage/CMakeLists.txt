@@ -1,16 +1,12 @@
-## ------------------------------------------------------------------------------
-## Include files
+# List of header files that will be installed.
+set(inst_HEADERS
+  Package__Version.h)
 
-file (GLOB libstorage_HEADERS InputThread.h
-			      SubbandWriter.h
-			      MSWriter.h
-			      MSWriterCasa.h
-			      MSWriterNull.h
-			      MSWriterFile.h)
-   
-## ------------------------------------------------------------------------------
-## Installation
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
-install (FILES ${libstorage_HEADERS}
-  DESTINATION include/Storage
-  )
+# Install header files.
+install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
+

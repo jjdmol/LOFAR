@@ -1,0 +1,8 @@
+macro(join_arguments var)
+  set(_var)
+  foreach(_v ${${var}})
+    set(_var "${_var} ${_v}")
+  endforeach(_v ${${var}})
+  string(STRIP ${_var} _var)
+  set(${var} ${_var})
+endmacro(join_arguments)

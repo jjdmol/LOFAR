@@ -1,25 +1,43 @@
-## ------------------------------------------------------------------------------
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+cmake_minimum_required(VERSION 2.6)
+
+## ---------------------------------------------------------------------------
+## Preamble: set compilers
+## ---------------------------------------------------------------------------
+include(LofarInit)
+
+## ---------------------------------------------------------------------------
 ## Project characteristics
+## ---------------------------------------------------------------------------
+project(AMC)
+include(LofarGeneral)
 
-project (AMC)
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+lofar_add_subdirectory(AMCBase)
+lofar_add_subdirectory(AMCImpl)
 
-cmake_minimum_required (VERSION 2.6)
-
-## ------------------------------------------------------------------------------
-## Directories to be included in the build
-
-## --- AMCBASE --------------------------------------
-
-find_path (HAVE_AMCBASE CMakeLists.txt ${LOFAR_SOURCE_DIR}/LCS/AMC/AMCBase)
-
-if (HAVE_AMCBASE)
-  set (HAVE_AMCBASE TRUE CACHE BOOL "Have package AMCBase?" FORCE)
-  add_subdirectory (AMCBase)
-endif (HAVE_AMCBASE)  
-
-## --- AMCIMPL -------------------------------------
-find_path (HAVE_AMCIMPL CMakeLists.txt ${LOFAR_SOURCE_DIR}/LCS/AMC/AMCImpl)
-if (HAVE_AMCIMPL)
-  set (HAVE_AMCIMPL TRUE CACHE BOOL "Have package AMCImpl?" FORCE)
-  add_subdirectory (AMCImpl)
-endif (HAVE_AMCIMPL)  
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)

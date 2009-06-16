@@ -32,7 +32,7 @@ using namespace LOFAR::MACIO;
 static	EchoPingEvent		pingEvent;
 static	EventPort*			echoPort;
 
-int main (int32	argc, char*argv[]) 
+int main (int	argc, char*argv[]) 
 {
 	bool	syncMode;
 	switch (argc) {

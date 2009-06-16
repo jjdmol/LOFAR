@@ -1,28 +1,47 @@
-## ------------------------------------------------------------------------------
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+cmake_minimum_required(VERSION 2.6)
+
+## ---------------------------------------------------------------------------
+## Preamble: set compilers
+## ---------------------------------------------------------------------------
+include(LofarInit)
+
+## ---------------------------------------------------------------------------
 ## Project characteristics
+## ---------------------------------------------------------------------------
+project(Transport)
+include(LofarGeneral)
 
-project (Transport)
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 2.3 DEPENDS Blob)
 
-cmake_minimum_required (VERSION 2.6)
+## ---------------------------------------------------------------------------
+## Generate configuration header file.
+## ---------------------------------------------------------------------------
+include(LofarConfig)
 
-## ------------------------------------------------------------------------------
-## Enable test?
-
-option (TRANSPORT_ENABLE_TESTING "Enable building and executing test programs?" NO  )
-
-## ------------------------------------------------------------------------------
-## Directories to be included in the build
-
-include_directories (${Transport_BINARY_DIR}/include)
-
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake
-               ${Transport_BINARY_DIR}/include/config.h)
-configure_file(${Transport_SOURCE_DIR}/lofar_config.h.cmake
-               ${Transport_BINARY_DIR}/include/lofar_config.h)
-	       
-add_subdirectory (include)
-add_subdirectory (src)
-
-if (TRANSPORT_ENABLE_TESTING)
-  add_subdirectory (test)
-endif (TRANSPORT_ENABLE_TESTING)  
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(include/Transport)
+add_subdirectory(src)
+add_subdirectory(test EXCLUDE_FROM_ALL)
