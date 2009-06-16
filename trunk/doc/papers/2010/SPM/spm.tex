@@ -269,7 +269,7 @@ the arithmetic intensity is extremely low.
 Prior to correlation, an FX correlator must reorder the data that comes from
 the receivers:
 each input carries the signals of from many frequency subbands from a single
-receiver, but the correlator correlates 
+receiver, but the correlator needs data from a single frequency of all inputs.
 Depending on the data rate, switching the data can be a real challenge.
 The data reordering phase is outside the scope of this paper, but a correlator
 implementation cannot ignore this issue.
@@ -399,10 +399,16 @@ read-performance bound, this does not have a large impact.
 
 NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single precision
 and 30 double precision ALUs.  Current NVIDIA GPUs thus have fewer
-cores than ATI GPUs, but the individual cores are faster. The memory
-architecture is also quite different. NVIDIA GPUs still use GDDR3
-memory, while ATI already uses GDDR5 with the 4870~GPU.  The
-theoretical peak performance is 933 gflops.
+cores than ATI GPUs, but the individual cores are faster.
+%The memory architecture is also quite different.
+%NVIDIA GPUs still use GDDR3 memory, while ATI already uses GDDR5 with the
+%4870~GPU.
+The theoretical peak performance is 933 gflops.
+
+The GTX~280 uses a two-level hierarchy to group cores.
+There are 15~independent \emph{multiprocessors\/} that each have 16~cores.
+A multiprocessor shares a large (16,384) register file, a 16~KiB cache
+
 
 The number of registers is large: there are 16384 32-bit floating
 point registers per multiprocessor. There also is 16~KB of shared
