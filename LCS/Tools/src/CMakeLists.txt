@@ -28,14 +28,21 @@ install(TARGETS
 
 install(PROGRAMS
   checkrun
+  countalllines
+  countlines
+  countpurecode
+  countpurecodecomm
+  fillreview
   finddep
   lofarcvsmv
   lofarcvsx
+  makecov
   makedoc
   makedep.sh
   makeClass.py
   makePackage.py
   makeTest.py
+  processgcov
   DESTINATION sbin)
 
 install(FILES

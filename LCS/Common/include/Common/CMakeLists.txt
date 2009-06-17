@@ -36,6 +36,7 @@ set(inst_HEADERS
   hexdump.h
   i4complex.h
   KVpair.h
+  Lock.h
   lofar_algorithm.h
   lofar_bitset.h
   LofarConstants.h
@@ -73,6 +74,7 @@ set(inst_HEADERS
   ParameterSetImpl.h
   PrettyUnits.h
   Process.h
+  ReadLine.h
   RunOnNode.h
   Semaphore.h
   Singleton.h

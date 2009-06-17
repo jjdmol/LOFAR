@@ -39,6 +39,7 @@ lofar_add_package(${PROJECT_NAME} 3.1)
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Boost)
+lofar_find_package(Readline)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

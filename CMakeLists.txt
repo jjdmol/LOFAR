@@ -37,8 +37,8 @@ include(LofarGeneral)
 add_subdirectory(LCS)
 #add_subdirectory(CEP)
 #add_subdirectory(RTCP)
-add_subdirectory(SAS)
-add_subdirectory(MAC)
+#add_subdirectory(SAS)
+#add_subdirectory(MAC)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

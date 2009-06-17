@@ -26,7 +26,7 @@
 # Define root here.
 # This is a placeholder, so do NOT change the line.
 # The actual value is filled in by make install (see Makefile.am).
-set a_root=@CMAKE_INSTALL_PREFIX@
+set a_root=@prefix@        # lfr_root=@CMAKE_INSTALL_PREFIX@
 
 # Get python version.
 set a_pyv=`python -V |& cat --`
