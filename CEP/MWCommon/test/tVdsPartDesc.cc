@@ -24,6 +24,7 @@ void check (const VdsPartDesc& vds, uint nTimes=0)
   ASSERT (vds.getName() == "/usr/local/xyx");
   ASSERT (vds.getFileName() == "/usr/local/abcd");
   ASSERT (vds.getFileSys() == "node1:/usr");
+  ASSERT (vds.getClusterDescName() == "/usr/local/cdesc.dat");
   ASSERT (vds.getStartTime() == 0.5);
   ASSERT (vds.getEndTime() == 1);
   ASSERT (vds.getStepTime() == 0.25);
@@ -60,6 +61,7 @@ void doIt()
   vds.setName ("/usr/local/abcd", "node1:/usr");
   ASSERT (vds.getFileName().empty());
   vds.setFileName ("/usr/local/abcd");
+  vds.setClusterDescName ("/usr/local/cdesc.dat");
   vds.changeBaseName ("xyx");
   vds.setTimes (0.5, 1, 0.25);
   vds.addBand (2, 20, 100);

@@ -12,7 +12,7 @@
 # It can use sockets or MPI.
 # The VdsDesc and ClusterDesc files are used to determine on which nodes
 # the various processes need to be started.
-# Possible arguments can be given after the program namw. They are given as
+# Possible arguments can be given after the program name. They are given as
 # arguments to the distributed programs.
 
 
@@ -22,11 +22,14 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
 modxx=single
+wait=1
 dsn=
 cdn=
 hfn=
+dirs=
 fdp=
 master=localhost
+startmaster=1
 extra=
 dry=0
 logfile=
@@ -57,6 +60,13 @@ do
   elif [ "$1" = "-nohfn" ]; then
     shift
     hfn=
+  elif [ "$1" = "-dirs" ]; then
+    shift
+    dirs="$1"
+    shift
+  elif [ "$1" = "-nodirs" ]; then
+    shift
+    dirs=
   elif [ "$1" = "-fdp" ]; then
     shift
     fdp="$1"
@@ -78,6 +88,12 @@ do
     shift
     modxx="$1"
     shift
+  elif [ "$1" = "-wait" ]; then
+    shift
+    wait=1
+  elif [ "$1" = "-nowait" ]; then
+    shift
+    wait=0
   elif [ "$1" = "-masterhost" ]; then
     shift
     master="$1"
@@ -85,6 +101,12 @@ do
   elif [ "$1" = "-nomasterhost" ]; then
     shift
     master=
+  elif [ "$1" = "-startmaster" ]; then
+    shift
+    startmaster=1
+  elif [ "$1" = "-nostartmaster" ]; then
+    shift
+    startmaster=0
   elif [ "$1" = "-extrahosts" ]; then
     shift
     extra="$1"
@@ -110,18 +132,24 @@ done
 
 if [ $help = 1 ]; then
   echo ''
-  echo 'startdistproc starts a distributed process to process the given dataset.'
+  echo 'startdistproc starts distributed processes to process a given dataset.'
   echo 'The mode tells if it is started through MPI, sockets, or as a single process.'
   echo ''
   echo 'Run as:'
-  echo ' startdistproc -dsn datasetname -cdn clusterdescname [-mode mode]'
+  echo ' startdistproc -cdn clusterdescname [-dsn datasetname]"
+  echo "              [-dirs directories] [-mode mode]'
   echo '              [-hfn hostfilename] [-fdp finddproc-path]'
   echo '              [-logfile logfilename] [-[no]dry]'
   echo '              [-extrahosts "host1 host2 ..."] [-noextrahosts]'
-  echo '              [-masterhost host] program [arg1 arg2 ...]'
+  echo '              [-masterhost host] [-startmaster] program [arg1 arg2 ...]'
   echo ''
-  echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
   echo '  -cdn clusterdescname  The name of the file describing the cluster.'
+  echo '  -dsn datasetname      The name of the file describing the distributed dataset.'
+  echo '  -dirs directories     Directories to use if -dsn is not given.'
+  echo '                        Each directory can be preceeded by host: (a la scp).'
+  echo '                        This is useful if a distributed dataset has'
+  echo '                        to be created for which no VDS file exists yet.'
+  echo '                        -dsn and dirs cannot be given both.'
   echo '  -hfn hostfilename     The name of the generated hostfile.'
   echo '                        It defaults to /tmp/machinefile_$$'
   echo '  -fdp finddproc-path   Path where to find finddistproc.'
@@ -137,9 +165,16 @@ if [ $help = 1 ]; then
   echo '  -masterhost host      The name of the host the master runs on.'
   echo '                        The default is localhost.'
   echo '                        -nomasterhost means that no master process is started.'
+  echo '  -startmaster          Start the master process (which is the default).'
+  echo '                        -nostartmaster can be used to indicate that the'
+  echo '                        master process is running already. In that case'
+  echo '                        only a socket connection mode can be used.'
   echo '  -extrahosts hosts     The hosts to be used for extra processes (e.g. solvers).'
   echo '                        Multiple hosts have to be separated by whitespace'
   echo '                        and enclosed in quotes.'
+  echo '  program               name of the program to start.'
+  echo '  arg1 arg2 ..          Optional extra arguments which are passed to'
+  echo '                        the program to start.'
   echo '  -h -help --help       This help text.'
   exit 0
 fi
@@ -148,17 +183,23 @@ if [ "$program" = "" ]; then
   echo "Error: no program name given  ('startdistproc -h' gives help)"
   exit 1
 fi
-if test "$dsn" = ""; then
-  echo "Error: no dataset name given (use -dsn)"
+if test "$dsn" = ""  -a  "$dirs" = ""; then
+  echo "Error: dataset name nor directories given (use -dsn or -dirs)"
+  exit 1
+fi
+if test "$dsn" != ""  -a  "$dirs" != ""; then
+  echo "Error: dataset name and directories given both (use -dsn or -dirs)"
   exit 1
 fi
 if test "$cdn" = ""; then
   echo "Error: no clusterdesc name given (use -cdn)"
   exit 1
 fi
-if test ! -f "$dsn"; then
-  echo "Error: dataset $dsn not found"
-  exit 1
+if test $startmaster = 0; then
+  if test $modxx = "mpi"  -a  $modxx = "single"; then
+    echo "Error: -nostartmaster cannot be used with mode=mpi or single"
+    exit 1
+  fi
 fi
 if test ! -f "$cdn"; then
   echo "Error: clusterdesc $cdn not found"
@@ -172,7 +213,21 @@ if test "$fdp" != ""; then
 fi
 
 # Prepend the hosts with the master and extra hosts.
-${fdp}finddproc $dsn $cdn $master $extra > $hfn || exit 1
+# Only give a master if it needs to be started.
+masterh=$master
+if test $startmaster = 0; then
+  masterh=
+fi
+# If a dataset name is given, find out where to process it.
+if test "$dsn" != ""; then
+  if test ! -f "$dsn"; then
+    echo "Error: dataset $dsn not found"
+    exit 1
+  fi
+  ${fdp}finddproc $dsn $cdn $masterh $extra > $hfn || exit 1
+else
+  ${fdp}finddproc -dirs "$dirs" $cdn $masterh $extra > $hfn || exit 1
+fi  
 np=`wc -l $hfn | awk '{print $1}'`
 
 # Run the program as needed.
@@ -189,6 +244,7 @@ elif test "$modxx" = "single"; then
     $program "$@" || exit 1
   fi
 else
-  echo "socketrun $dry $hfn $modxx $logfile $program" "$@"
-  $pgmpath/socketrun $dry $hfn $modxx "$logfile" $program "$@" || exit 1
+  echo "socketrun $dry $hfn '$master' $modxx $wait $logfile $program" "$@"
+  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait "$logfile" $program "$@" || exit 1
 fi
+#rm -f $hfn
