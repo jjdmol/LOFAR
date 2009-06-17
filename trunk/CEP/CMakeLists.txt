@@ -35,11 +35,11 @@ include(LofarGeneral)
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(MWCommon)
-add_subdirectory(MS)
-add_subdirectory(ParmDB)
-add_subdirectory(Calibration)
-add_subdirectory(DP3)
-add_subdirectory(Imager)
+#add_subdirectory(MS)
+#add_subdirectory(ParmDB)
+#add_subdirectory(Calibration)
+#add_subdirectory(DP3)
+#add_subdirectory(Imager)
 #add_subdirectory(Pipeline)
 #add_subdirectory(pyparmdb)
 

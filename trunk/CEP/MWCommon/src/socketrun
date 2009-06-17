@@ -8,16 +8,57 @@
 # $Id$
 
 
-# This script starts a distributed process to process a datasets.
+# This script starts a distributed process to process a dataset.
 # The processes will use sockets for communication.
+# The processed are started in the MPI-style; a machinefile tells on which
+# hosts to start a process; they also get a rank (0..n).
 #
-# run as:  socketrun dry hfn port logfile program [arg1 arg2 ...]
+# This script is a helper script for startdistproc, but it could be used
+# stand-alone as well.
+#
+# run as: socketrun dry hfn masterhost port wait logfile program [arg1 arg2 ...]
+#
+#   dry!=0      means that the command is only printed, not executed.
+#   hfn         is the name of an MPI-style machinefile. Each line in it
+#               looks like:  host#part,filesys,partvds
+#                host     name of the host to start a process on
+#                part     name of the dataset part to process on the host
+#                filesys  the file system the dataset part is on
+#                partvds  name of the VDS-file of the dataset part
+#   masterhost  the host the master process is running on; if empty, the first
+#               host in the machine file is the master host.
+#   port        the port the master host process is using and where the workers
+#               can connect to.
+#               Note that it is up to implementation to use a masterhost/port.
+#               E.g. mwimager only starts distributed processes, but they do
+#               not communicate, so there is no master.
+#   wait=1      means that socketrun waits for all processes to end.
+#   logfile     name of the log file to use; It will be suffixed with '-rank'
+#               where rank is the process rank.
+#   program     name of the program to start.
+#   arg-i       extra arguments directly passed to the program started.
+#
+# The processes are started with the following fixed arguments:
+#   socket      a string with the value 'socket'.
+#   masterhost  name of the master host
+#   port        port on master host
+#   np          number of processes started
+#   rank        process rank (0..np-1)
+#   part        name of dataset part to process
+#   filesys     file system dataset part is on
+#   partvds     name of VDS-file describing dataset part
+# Thereafter the variable arguments (passed to socketrun) are given.
+
 
 dry=$1
 shift
 hfn=$1
 shift
+masterhost=$1
+shift
 port=$1
+shift
+wait=$1
 shift
 logfile=$1
 shift
@@ -27,34 +68,48 @@ shift
 np=`wc -l $hfn | awk '{print $1}'`
 
 # The first host is the master one.
-masterhost=
 pidlist=
 rank=0
 for inline in `cat $hfn`
 do
-  host=`echo $inline | sed -e 's%#.*%%'`
-  part=`echo $inline | sed -e 's%.*#%%'`
+  host=`echo $inline | awk -F'#' '{print $1'}`
+  rest=`echo $inline | awk -F'#' '{print $2'}`
+  part=`echo $rest | awk -F',' '{print $1'}`
+  fsys=`echo $rest | awk -F',' '{print $2'}`
+  partvds=`echo $rest | awk -F',' '{print $3'}`
+  if test "$part" = ""; then
+    part=.
+  fi
+  if test "$fsys" = ""; then
+    fsys=.
+  fi
+  if test "$partvds" = ""; then
+    partvds=.
+  fi
   if test "$masterhost" = ""; then
     masterhost=$host
   fi
-  echo "ssh $host $program socket $masterhost $port $np $rank $part" "$@"
+  echo "ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys $partvds " "$@" " &"
   if test $dry = 0; then
     if test "$logfile" = ""; then
-      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" &
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys $partvds "$@" &
     else
-      ssh -x -n $host $program socket $masterhost $port $np $rank $part "$@" > $logfile-$rank 2>&1 &
+      ssh -x -n $host $program socket $masterhost $port $np $rank $part $fsys $partvds "$@" > $logfile-$rank 2>&1 &
     fi
     pidlist="$pidlist $!"
   fi
   rank=`expr $rank + 1`
 done
 
+# If needed, wait for the processes to end.
 status=0
-for pid in $pidlist
-do
-  if ! wait $pid; then
-    status=1
-  fi
-done
+if test "$wait" = 1; then
+  for pid in $pidlist
+  do
+    if ! wait $pid; then
+      status=1
+    fi
+  done
+fi
 
 exit $status
