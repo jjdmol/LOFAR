@@ -3,7 +3,7 @@ check_PROGRAMS		= tMSSplit
 # programs to run through supplied checktools
 CHECKTOOLPROGS		= tMSSplit
 
-TESTS			= tMSSplit_test.sh tcombinevds.sh tmakems.sh
+TESTS			= tMSSplit.sh tcombinevds.sh tmakems.sh
 
 tMSSplit_SOURCES	= tMSSplit.cc
 tMSSplit_DEPENDENCIES	= $(LOFAR_DEPEND)
