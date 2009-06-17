@@ -20,3 +20,4 @@ BG/P software stack is zoveel beter geworden (mede dank zij de ideen van zoid), 
    - low power
 
  
+- waarom real time?
