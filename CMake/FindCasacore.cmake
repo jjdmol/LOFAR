@@ -208,8 +208,8 @@ endif(NOT CASACORE_INCLUDE_DIR)
 
 # Set HAVE_CASACORE; and HAVE_AIPSPP (for backward compatibility with AIPS++).
 if(CASACORE_FOUND)
-  set(HAVE_CASACORE TRUE CACHE BOOL "Define if Casacore is installed")
-  set(HAVE_AIPSPP TRUE CACHE BOOL "Define if AIPS++/Casacore is installed")
+  set(HAVE_CASACORE TRUE CACHE INTERNAL "Define if Casacore is installed")
+  set(HAVE_AIPSPP TRUE CACHE INTERNAL "Define if AIPS++/Casacore is installed")
 endif(CASACORE_FOUND)
 
 # Compose diagnostic message if not all necessary components were found.

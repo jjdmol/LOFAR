@@ -34,6 +34,7 @@ if(NOT LOG4CPLUS_FOUND)
 
   find_path(LOG4CPLUS_INCLUDE_DIR log4cplus/logger.h)
   find_library(LOG4CPLUS_LIBRARY log4cplus)
+  mark_as_advanced(LOG4CPLUS_INCLUDE_DIR LOG4CPLUS_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
   set(custom_msg "Could NOT find Log4cplus in ${CMAKE_PREFIX_PATH}")

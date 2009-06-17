@@ -57,24 +57,18 @@ function(lofar_find_package _package)
     # Use the Find${_package}.cmake module.
     find_package(${ARGV})
 
-    # Define an all-uppercase variable for each mixed-case variable we're
-    # interested in. This is a clumsy hack for modules like FindBoost.cmake
-    foreach(_var INCLUDE_DIRS LIBRARIES DEFINITIONS ROOT_DIR FOUND)
-      if(DEFINED ${_package}_${_var})
-        set(${_PKG}_${_var} ${${_package}_${_var}})
-      endif(DEFINED ${_package}_${_var})
-    endforeach(_var INCLUDE_DIRS LIBRARIES DEFINITIONS ROOT_DIR FOUND)
-
-    # Add include directories and libraries, if package was found.
+    # Add include directories and libraries, if package was found;
+    # set HAVE_<PACKAGE> variable in the cache.
     if(${_PKG}_FOUND)
-      set(${_PKG}_FOUND ${${_PKG}_FOUND} PARENT_SCOPE)
-      set(HAVE_${_PKG} TRUE CACHE BOOL "Have ${_package}")
+      if(NOT DEFINED HAVE_${_PKG})
+        set(HAVE_${_PKG} TRUE CACHE INTERNAL "Have ${_package}?")
+      endif(NOT DEFINED HAVE_${_PKG})
       include_directories(${${_PKG}_INCLUDE_DIRS})
-      ## Using link_libraries() would avoid the need to collect libs in
-      ## LOFAR_LIBRARIES, but this command has been deprecated.
-      # link_libraries(${${_PKG}_LIBRARIES}) 
       set(LOFAR_LIBRARIES ${LOFAR_LIBRARIES} ${${_PKG}_LIBRARIES} PARENT_SCOPE)
+    else(${_PKG}_FOUND)
+      set(HAVE_${_PKG} FALSE CACHE INTERNAL "Have ${_package}?")
     endif(${_PKG}_FOUND)
+    set(${_PKG}_FOUND ${${_PKG}_FOUND} PARENT_SCOPE)
 
   endif(NOT ${_PKG}_FOUND)
 
