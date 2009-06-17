@@ -24,7 +24,7 @@
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   message(STATUS "Generating lofar_config.h ...")
   configure_file(
-    ${CMAKE_SOURCE_DIR}/lofar_config.h.cmake
+    ${LOFAR_ROOT}/lofar_config.h.cmake
     ${CMAKE_BINARY_DIR}/include/lofar_config.h)
 endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
