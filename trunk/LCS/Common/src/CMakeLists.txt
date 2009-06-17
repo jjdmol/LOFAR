@@ -28,6 +28,7 @@ set(common_LIB_SRCS
   FileLocator.cc
   hexdump.cc
   KVpair.cc
+  Lock.cc
   lofar_bitset.cc
   LofarLogCout.cc
   LofarLogger.cc
@@ -37,6 +38,7 @@ set(common_LIB_SRCS
   ParameterValue.cc
   PrettyUnits.cc
   Process.cc
+  ReadLine.cc
   RunOnNode.cc
   Stopwatch.cc
   StreamUtil.cc
