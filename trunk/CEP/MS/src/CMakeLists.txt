@@ -22,9 +22,7 @@ include(LofarPackageVersion)
 
 set(ms_LIB_SRCS
   Package__Version.cc
-  DH_MSMake.cc
   MSCreate.cc
-  MSDesc.cc
   VdsMaker.cc)
 
 set(ms_PROGRAMS
@@ -32,8 +30,6 @@ set(ms_PROGRAMS
   MSSplit
   makevds
   combinevds
-  makemsdesc
-  readmsdesc
   makems
   msplay)
 
@@ -43,4 +39,8 @@ foreach(prog ${ms_PROGRAMS})
   lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${ms_PROGRAMS})
 
-install(PROGRAMS mssplit DESTINATION bin)
+install(PROGRAMS
+  mssplit
+  makemsdistr
+  makemsdistr-part
+  DESTINATION bin)
