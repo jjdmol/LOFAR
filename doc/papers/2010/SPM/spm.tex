@@ -1,6 +1,32 @@
 \documentclass{article}
 
+
+polarisaties weg halen.
+Wel uitleggen dat ze er zijn, maar voor de filters en de correlator
+zijn het gewoon onafhankelijke receivers. Dit maakt de pseudo code + optimalisaties veel compacter.
+
+baselines weg halen ( gebruik in pseudo code in store(sum) )
+
+
+
+complexe getallen zijn belangrijk voor signal processing.
+Niet alle arch ondersteunen dit even goed.
+
+3 gevallen:
+
+1) geen vectoren: geen probleem, je kunt het dan gewoon uitschrijven.
+2) BG/P: ingebouwde supprot voor complexe operaties
+3) geen support: dan moet je de data shuffelen binnen de vectoren.
+    De ene arch kan dit beter dan de andere.
+
+
+
 % opencl uitzoeken
+%  - hoe gaat opencl om met random writes?
+
+
+% uitzoeken: andere toepassingen van correleren: geofysica? radar? wifi 802.11n, wimax???
+
 
 
 % zoek parallelisme: onafhankelijke berekeningen
@@ -129,6 +155,12 @@ support is not available.
 
 \section{Trends in radio astronomy}
 
+- signal processing neemt een dominantere rol (meer antennes, etc)
+- voorbeelden. pathfinders voor SKA. 
+- computationally intensive, SKA even more
+
+
+
 During the past decade, new types of radio-telescope concepts emerged that
 rely less on concrete, steel, and extreme cooling techniques, but more on
 signal-processing techniques.
@@ -145,8 +177,29 @@ Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
 
+@@@ later even kijken: computing advances maken nieuwe signal processing technieken en telescopen / instrumenten mogelijk.
+
+
+
+@@@
+It is important that the authors take a tutorial 
+oriented style and more carefully introduce the 
+application context, including radio-astronomy 
+basics, instruments that they use (including 
+installation roadmap).  The algorithm is quite 
+simple and so the strength of the paper lies in 
+the thoroughness of the analysis, and the 
+aforementioned tutorial background.
+@@@
+
+SKA + pathfinders: EMBRACE, LOFAR, ASKAP, meerKAT
+
+
+
+
+
 The signal-processing hardware technology used to process telescope data
-changes rapidly.
+also changes rapidly.
 Only a decade ago, correlators required special-purpose ASICs to keep up with
 the high data rates and processing requirements.
 The advent of sufficiently fast FPGAs significantly lowered the developments
@@ -165,7 +218,19 @@ for signal-processing purposes, particularly, for correlation
 purposes~\cite{Nieuwpoort:09}.
 
 
+
+
 \section{Correlating signals}
+
+stations weg, heb het alleen over receivers. Een stations is dan ook gewoon een receiver
+
+
+XF vs FX
+
+lofar is FX. Met een groter aantal inputs is FX efficienter?
+
+transpose
+
 
 \begin{figure*}[t]
 \begin{center}
@@ -181,9 +246,15 @@ together a \emph{station}. The data streams from the different
 stations must be filtered, delays in the signal path must be
 compensated for, and the data streams from different stations must be
 cross-correlated. The correlation process performs a data reduction by
-integrating samples over time. In this paper, we use the LOFAR
+integrating samples over time. 
+
+
+@@@ moet veel eerder komen, in intro al. @@@
+In this paper, we use the LOFAR
 telescope as an example, but the results apply equally well
-to other instruments. An overview of the processing needed for the
+to other instruments. 
+
+An overview of the processing needed for the
 standard imaging pipeline of LOFAR is shown in
 Figure~\ref{fig-processing-overview}. The pipeline runs from left to right.
 The thickness of the lines indicates the size of the data streams.
@@ -191,52 +262,25 @@ In this paper, we focus on the
 correlator step (the gray box in
 Figure~\ref{fig-processing-overview}), because its costs grow
 quadratically with the number of stations. All other steps have a
-lower time complexity. We choose 64 as the number of stations, since
-that is a realistic number for LOFAR.  Future instruments will likely
-have even more stations. We call the combination of two stations a
+lower time complexity. 
+
+% naar metingen sectie
+%We choose 64 as the number of stations, since
+%that is a realistic number for LOFAR.  Future instruments will likely
+%have even more stations. 
+
+We call the combination of two stations a
 \emph{baseline}.  The total number of baselines is $(nrStations \times
 (nrStations + 1)) / 2$, since we need each pair of correlations only
 once. This includes the autocorrelations (the correlation of a station with itself),
 since we need this later in the pipeline for calibration purposes.
-Although the autocorrelations can be computed with fewer instructions, we 
-ignore this here, since the number of autocorrelations is small, and grows
-linearly with the number of stations, while the number of normal correlations
-grows quadratically.
+The autocorrelations can be computed with half the number of instructions.
 The correlator algorithm itself is straightforward, and can be
 written in a single formula:
 $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,t,p_1} * Z_{s_2,t,p_2}^\ast$ 
 
 
-\lstdefinelanguage{pseudo}
-{
-    keywords=
-    {
-	CONJ,
-	COMPLEX,
-	DO,
-	FLOAT,
-	FOR
-    },
-    basicstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{m}\fontshape{sl}\fontsize{7}{8pt}\selectfont},
-    keywordstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{b}\fontshape{sl}\fontsize{7}{8pt}\selectfont},
-    commentstyle={\fontencoding{T1}\fontfamily{pcr}\fontseries{m}\fontshape{n}\fontsize{7}{8pt}\selectfont},
-    sensitive=true
-}
-\begin{figure*}[t]
-\lstset{language=pseudo}
-\begin{lstlisting}{}
-FOR Channel IN 1 .. NrChannels DO
-  FOR Station2 IN 1 .. NrStations DO
-    FOR Station1 IN 1 .. Station2 DO
-      COMPLEX FLOAT Sum = 0 + 0*I;
-      FOR Time IN 1 .. IntegrationTime DO
-	Sum += Samples[Channel][Station1][Time] * CONJ(Samples[Channel][Station2][Time])
-      Correlation[Baseline(Station1, Station2)][Channel] = Sum;
-\end{lstlisting}
-\vspace{-0.5cm}
-\caption{Pseudo code for the correlation algorithm.}
-\label{correlator-code}
-\end{figure*}
+@@@ pseudo code weg.
 
 Pseudo code for the algorithm is shown in Figure~\ref{correlator-code}.
 A sample is a ($2 \times 32-bit$) complex number that represents the
