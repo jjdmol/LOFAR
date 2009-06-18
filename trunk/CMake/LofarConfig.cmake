@@ -27,9 +27,3 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     ${LOFAR_ROOT}/lofar_config.h.cmake
     ${CMAKE_BINARY_DIR}/include/lofar_config.h)
 endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Set LOFAR Logger package name to the current project
-string(REGEX REPLACE "^${LOFAR_ROOT}" "" _pkg "${PROJECT_SOURCE_DIR}")
-string(REGEX REPLACE "^/" "" _pkg "${_pkg}")
-string(REPLACE "/" "." _pkg "${_pkg}")
-add_definitions(-DLOFARLOGGER_PACKAGE="${_pkg}")

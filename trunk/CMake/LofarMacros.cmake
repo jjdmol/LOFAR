@@ -130,34 +130,48 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # Note: This macro is intended to be used to include a LOFAR package.
   # --------------------------------------------------------------------------
   macro(lofar_add_subdirectory _name)
-    message(STATUS "lofar_add_subdirectory(${_name})")
     get_filename_component(_fullname ${_name} ABSOLUTE)
     if(EXISTS ${_fullname})
-      message(STATUS "Directory ${_name} exists")
       option(BUILD_${_name} "Build package ${_name}?" TRUE)
       mark_as_advanced(BUILD_${_name})
       if(BUILD_${_name})
         add_subdirectory(${_name})
       endif(BUILD_${_name})
-    else()
-      message(STATUS "Directory ${_name} DOES NOT exist")
     endif(EXISTS ${_fullname})
   endmacro(lofar_add_subdirectory _name)
 
 
   # --------------------------------------------------------------------------
-  # lofar_add_test(name)
+  # lofar_add_test(name [source ...] [DEPENDS depend ...])
   #
   # Add a test like add_test() does.
   # Furthermore:
-  # - Instructs CMake how to compile and link the test program using
-  #   lofar_add_executable().
+  # - If one or more sources are specfied:
+  #     instructs CMake how to compile and link the test program;
+  #   else if one or more dependencies are specified:
+  #     create a custom target that depends on these targets.
+  # - If there's a shell script <name>.sh, add it to the list of tests;
+  #   otherwise just add the executable <name>.
   # - Adds a dependency for this test on the global target 'check', so that
   #   it will be compiled, linked and run when you do a 'make check'.
   # --------------------------------------------------------------------------
   macro(lofar_add_test _name)
-    lofar_add_executable(${_name} EXCLUDE_FROM_ALL ${ARGN})
-    add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+    string(REGEX REPLACE ";?DEPENDS.*" "" _srcs "${ARGN}")
+    string(REGEX MATCH "DEPENDS;.*" _deps "${ARGN}")
+    string(REGEX REPLACE "^DEPENDS;" "" _deps "${_deps}")
+    if(_srcs MATCHES "^.+$")
+      lofar_add_executable(${_name} EXCLUDE_FROM_ALL ${_srcs})
+    else()
+      add_custom_target(${_name})
+    endif(_srcs MATCHES "^.+$")
+    if(_deps MATCHES "^.+$")
+      add_dependencies(${_name} ${_deps})
+    endif(_deps MATCHES "^.+$")
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+      add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+    else()
+      add_test(${_name} ${_name})
+    endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
     add_dependencies(check ${_name})
   endmacro(lofar_add_test _name)
 

@@ -92,6 +92,12 @@ function(lofar_add_package _name)
     include_directories(${_dirs})
   endforeach(_dep ${_dependencies})
 
+  # Set LOFAR Logger package name to the current project
+  string(REGEX REPLACE "^${LOFAR_ROOT}" "" _pkg "${${_name}_SOURCE_DIR}")
+  string(REGEX REPLACE "^/" "" _pkg "${_pkg}")
+  string(REPLACE "/" "." _pkg "${_pkg}")
+  add_definitions(-DLOFARLOGGER_PACKAGE="${_pkg}")
+
   # Export variables to the parent scope
   set(LOFAR_PACKAGE_NAME ${_name} PARENT_SCOPE)
   set(${_name}_VERSION ${_version} PARENT_SCOPE)
