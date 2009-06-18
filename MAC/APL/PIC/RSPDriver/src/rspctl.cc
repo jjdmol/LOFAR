@@ -1762,7 +1762,7 @@ void StatisticsCommand::send()
 
     substats.timestamp = Timestamp(0,0);
     substats.rcumask = getRCUMask();
-    substats.period = 1;
+    substats.period = 2;
     substats.type = m_type;
     substats.reduction = SUM;
 

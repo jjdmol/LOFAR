@@ -47,17 +47,17 @@ namespace LOFAR {
 Sequencer* Sequencer::m_instance = 0;
 
 Sequencer::Sequencer()
-  : GCFFsm((State)&Sequencer::idle_state), m_active(false), m_sequence(NONE)
+  : GCFFsm((State)&Sequencer::idle_state), m_active(false), m_sequence(NONE), itsFinalState(false)
 {
 }
 
 Sequencer& Sequencer::getInstance()
 {
-  if (0 == m_instance) {
-    m_instance = new Sequencer;
-  }
+	if (0 == m_instance) {
+		m_instance = new Sequencer;
+	}
 
-  return *m_instance;
+	return *m_instance;
 }
 
 Sequencer::~Sequencer()
@@ -66,68 +66,65 @@ Sequencer::~Sequencer()
 
 void Sequencer::run(GCFEvent& event, GCFPortInterface& port)
 {
-  this->doEvent(event, port);
+	this->doEvent(event, port);
 }
 
 bool Sequencer::isActive() const
 {
-  return m_active;
+	return m_active;
 }
 
 GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_INIT:
-    {
-    }
-    break;
-      
-    case F_ENTRY:
-    {
-      LOG_DEBUG("Entering Sequencer::idle_state");
-      m_active = false;
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      if (!GET_CONFIG("RSPDriver.DISABLE_INIT", i)) {
-	if (SETCLOCK == m_sequence) {
-	  Cache::getInstance().reset();
-	  TRAN(Sequencer::rsupreclear_state);
-	} else if (RSPCLEAR == m_sequence) {
-	  TRAN(Sequencer::rsuclear_state);
+	switch (event.signal) {
+	case F_INIT: {
 	}
-      }
-    }
-    break;
+	break;
 
-    case F_EXIT:
-    {
-      LOG_DEBUG("Leaving Sequencer::idle_state");
-      m_active = true;
-    }
-    break;
+	case F_ENTRY: {
+		LOG_DEBUG("Entering Sequencer::idle_state");
+		m_active = false;
+	}
+	break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_TIMER: {
+		if (!GET_CONFIG("RSPDriver.DISABLE_INIT", i)) {
+			if (SETCLOCK == m_sequence) {
+				Cache::getInstance().reset();
+				TRAN(Sequencer::rsupreclear_state);
+			} else if (RSPCLEAR == m_sequence) {
+				TRAN(Sequencer::rsuclear_state);
+			}
+		}
+	}
+	break;
 
-  return GCFEvent::HANDLED;
+	case F_EXIT: {
+		LOG_DEBUG("Leaving Sequencer::idle_state");
+		m_active = true;
+		itsFinalState = false;
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
+	}
+
+	return GCFEvent::HANDLED;
 }
 
+//
+// rsupreclear_state(event, port)
+//
 GCFEvent::TResult Sequencer::rsupreclear_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::rsuclear_state");
 
       // Change the regsiter to set the clear flag
@@ -145,16 +142,14 @@ GCFEvent::TResult Sequencer::rsupreclear_state(GCFEvent& event, GCFPortInterface
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (m_timer++ > RSUCLEAR_WAIT && Cache::getInstance().getState().rsuclear().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::clearclock_state);
       }
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::rsuclear_state");
     }
     break;
@@ -167,14 +162,15 @@ GCFEvent::TResult Sequencer::rsupreclear_state(GCFEvent& event, GCFPortInterface
   return GCFEvent::HANDLED;
 }
 
+//
+// clearclock_state(event, port)
+//
 GCFEvent::TResult Sequencer::clearclock_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::clearclock_state");
       Cache::getInstance().getState().tdclear().reset();
       Cache::getInstance().getState().tdclear().write();
@@ -182,16 +178,14 @@ GCFEvent::TResult Sequencer::clearclock_state(GCFEvent& event, GCFPortInterface&
     }
     break;
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (Cache::getInstance().getState().tdclear().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::writeclock_state);
       }
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::clearclock_state");
     }
     break;
@@ -204,30 +198,29 @@ GCFEvent::TResult Sequencer::clearclock_state(GCFEvent& event, GCFPortInterface&
   return GCFEvent::HANDLED;
 }
 
+//
+// writeclock_state(event, port)
+//
 GCFEvent::TResult Sequencer::writeclock_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::writeclock_state");
       Cache::getInstance().getState().tdwrite().reset();
       Cache::getInstance().getState().tdwrite().write();
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (Cache::getInstance().getState().tdwrite().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::readclock_state);
       }
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::writeclock_state");
     }
     break;
@@ -240,14 +233,15 @@ GCFEvent::TResult Sequencer::writeclock_state(GCFEvent& event, GCFPortInterface&
   return GCFEvent::HANDLED;
 }
 
+//
+// readclock_state(event, port)
+//
 GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::readclock_state");
       Cache::getInstance().getState().tdread().reset();
       Cache::getInstance().getState().tdread().read();
@@ -256,8 +250,7 @@ GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& 
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (Cache::getInstance().getState().tdread().getMatchCount(RegisterState::READ_ERROR) > 0) {
 	if (m_timer++ > TDREAD_TIMEOUT) {
 	  LOG_WARN("Failed to verify setting of clock. Retrying...");
@@ -273,8 +266,7 @@ GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& 
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::readclock_state");
     }
     break;
@@ -287,63 +279,61 @@ GCFEvent::TResult Sequencer::readclock_state(GCFEvent& event, GCFPortInterface& 
   return GCFEvent::HANDLED;
 }
 
+//
+// rcudisable_state(event, port)
+//
 GCFEvent::TResult Sequencer::rcudisable_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      LOG_DEBUG("Entering Sequencer::rcudisable_state");
+	switch (event.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG("Entering Sequencer::rcudisable_state");
+		enableRCUs(false);
+		m_timer = 0;
+	}
+	break;
 
-      RCUSettings::Control control;
-      control.setEnable(0);
+	case F_TIMER: {
+		if (m_timer++ > WRITE_TIMEOUT
+			&& Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
+			LOG_WARN("Failed to disable receivers. Retrying...");
+			itsFinalState = false;
+			TRAN(Sequencer::clearclock_state);
+		} else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
+			if (itsFinalState) {
+				stopSequence();
+				TRAN(Sequencer::idle_state);
+			}
+			else {
+				TRAN(Sequencer::rsuclear_state);
+			}
+		}
+	}
+	break;
 
-      Cache::getInstance().getFront().getRCUSettings()() = control;
-      Cache::getInstance().getBack().getRCUSettings()() = control;
+	case F_EXIT: {
+		LOG_DEBUG("Leaving Sequencer::rcudisable_state");
+	}
+	break;
 
-      Cache::getInstance().getState().rcusettings().reset();
-      Cache::getInstance().getState().rcusettings().write();
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
 
-      m_timer = 0;
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
-	LOG_WARN("Failed to disable receivers. Retrying...");
-	TRAN(Sequencer::clearclock_state);
-      } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
-	TRAN(Sequencer::rsuclear_state);
-      }
-    }
-    break;
-
-    case F_EXIT:
-    {
-      LOG_DEBUG("Leaving Sequencer::rcudisable_state");
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
+	return GCFEvent::HANDLED;
 }
 
+//
+// writeclock_state(event, port)
+//
 GCFEvent::TResult Sequencer::rsuclear_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::rsuclear_state");
 
       // Change the regsiter to set the clear flag
@@ -361,16 +351,14 @@ GCFEvent::TResult Sequencer::rsuclear_state(GCFEvent& event, GCFPortInterface& /
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (m_timer++ > RSUCLEAR_WAIT && Cache::getInstance().getState().rsuclear().isMatchAll(RegisterState::IDLE)) {
 	TRAN(Sequencer::setblocksync_state);
       }
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::rsuclear_state");
     }
     break;
@@ -383,14 +371,15 @@ GCFEvent::TResult Sequencer::rsuclear_state(GCFEvent& event, GCFPortInterface& /
   return GCFEvent::HANDLED;
 }
 
+//
+// setblocksync_state(event, port)
+//
 GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       LOG_DEBUG("Entering Sequencer::setblocksync_state");
       Cache::getInstance().getState().bs().reset();
       Cache::getInstance().getState().bs().write();
@@ -398,8 +387,7 @@ GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterfac
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       if (   m_timer++ > WRITE_TIMEOUT
 	  && Cache::getInstance().getState().bs().getMatchCount(RegisterState::WRITE) > 0) {
 	LOG_WARN("Failed to set BS (blocksync) register. Retrying...");
@@ -411,8 +399,7 @@ GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterfac
     }
     break;
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       LOG_DEBUG("Leaving Sequencer::setblocksync_state");
     }
     break;
@@ -425,55 +412,54 @@ GCFEvent::TResult Sequencer::setblocksync_state(GCFEvent& event, GCFPortInterfac
   return GCFEvent::HANDLED;
 }
 
+//
+// radwrite_state(event, port)
+//
 GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      LOG_DEBUG("Entering Sequencer::radwrit_state");
-      Cache::getInstance().getState().rad().reset();
-      Cache::getInstance().getState().rad().write();
+	switch (event.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG("Entering Sequencer::radwrit_state");
+		Cache::getInstance().getState().rad().reset();
+		Cache::getInstance().getState().rad().write();
 
-      m_timer = 0;
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      if (   m_timer++ > WRITE_TIMEOUT 
-	  && Cache::getInstance().getState().rad().getMatchCount(RegisterState::WRITE) > 0) {
-	LOG_WARN("Failed to write RAD settings register. Retrying...");
-	TRAN(Sequencer::rsuclear_state);
-      } else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
-	TRAN(Sequencer::rcuenable_state);
-      }
-    }
-    break;
+		m_timer = 0;
+	}
+	break;
 
-    case F_EXIT:
-    {
-      LOG_DEBUG("Leaving Sequencer::radwrite_state");
-    }
-    break;
+	case F_TIMER: {
+		if (m_timer++ > WRITE_TIMEOUT 
+			&& Cache::getInstance().getState().rad().getMatchCount(RegisterState::WRITE) > 0) {
+			LOG_WARN("Failed to write RAD settings register. Retrying...");
+			TRAN(Sequencer::rsuclear_state);
+		} else if (Cache::getInstance().getState().rad().isMatchAll(RegisterState::IDLE)) {
+			TRAN(Sequencer::rcuenable_state);
+		}
+	}
+	break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_EXIT: {
+		LOG_DEBUG("Leaving Sequencer::radwrite_state");
+		}
+	break;
 
-  return GCFEvent::HANDLED;
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return GCFEvent::HANDLED;
 }
 
 //
 // enableRCUs [private]
 //
-void Sequencer::enableRCUs()
+void Sequencer::enableRCUs(bool	on)
 {
 	RCUSettings::Control control;
-	control.setEnable(1);
+	control.setEnable(on ? 1 : 0);
 
 	Cache::getInstance().getFront().getRCUSettings()() = control;
 	Cache::getInstance().getBack().getRCUSettings()() = control;
@@ -482,6 +468,9 @@ void Sequencer::enableRCUs()
 	Cache::getInstance().getState().rcusettings().write();
 }
 
+//
+// rcuenable_state(event, port)
+//
 GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -503,7 +492,7 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
 
 		waitForOddSecond = false;
 		LOG_INFO("Entry at even second, enabling RCUs immediately");
-		enableRCUs();
+		enableRCUs(true);
 	}
 	break;
 
@@ -515,7 +504,7 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
 			}
 			waitForOddSecond = false;
 			LOG_INFO("Enabling RCUs delayed till even second");
-			enableRCUs();
+			enableRCUs(true);
 			break;
 		}
 
@@ -543,46 +532,45 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
 	return GCFEvent::HANDLED;
 }
 
+//
+// cdoenable_state(event, port)
+//
 GCFEvent::TResult Sequencer::cdoenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      LOG_DEBUG("Entering Sequencer::rcuenable_state");
+	switch (event.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG("Entering Sequencer::cdoenable_state");
 
-      Cache::getInstance().getState().cdo().reset();
-      Cache::getInstance().getState().cdo().write();
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
-	LOG_WARN("Failed to enable receivers. Retrying...");
-	TRAN(Sequencer::rsuclear_state);
-      } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
-	stopSequence();
-	TRAN(Sequencer::idle_state);
-      }
-    }
-    break;
+		Cache::getInstance().getState().cdo().reset();
+		Cache::getInstance().getState().cdo().write();
+	}
+	break;
 
-    case F_EXIT:
-    {
-      LOG_DEBUG("Leaving Sequencer::rcuenable_state");
-    }
-    break;
+	case F_TIMER: {
+		if (m_timer++ > WRITE_TIMEOUT
+			&& Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
+			LOG_WARN("Failed to enable receivers. Retrying...");
+			TRAN(Sequencer::rsuclear_state);
+		} else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
+			itsFinalState = true;
+			TRAN(Sequencer::rcudisable_state);
+		}
+	}
+	break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_EXIT: {
+		LOG_DEBUG("Leaving Sequencer::cdoenable_state");
+	}
+	break;
 
-  return GCFEvent::HANDLED;
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return GCFEvent::HANDLED;
 }
 
   } // namespace RSP

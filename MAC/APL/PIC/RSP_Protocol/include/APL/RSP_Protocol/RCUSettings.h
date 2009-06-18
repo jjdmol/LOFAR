@@ -206,8 +206,9 @@ public:
 		uint8 getVersion() const { return (m_value & VERSION_MASK) >> (20 + 8); }
 
 		// Get RCU handler and RCU protocol settings separately
-		bool isHandlerModified()  { return (0 != (m_modified & RCU_HANDLER_MASK));  }
-		bool isProtocolModified() { return (0 != (m_modified & RCU_PROTOCOL_MASK)); }
+		bool isHandlerModified()  { return (m_modified & RCU_HANDLER_MASK);  }
+		bool isProtocolModified() { return (m_modified & RCU_PROTOCOL_MASK); }
+		bool isEnableModified()   { return (m_modified & ENABLE_MASK); }
 
 		// Reset value and modified mask.
 		void reset() {

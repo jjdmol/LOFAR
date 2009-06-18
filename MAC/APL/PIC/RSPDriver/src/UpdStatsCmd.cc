@@ -66,6 +66,8 @@ void UpdStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdStatsCmd::complete(CacheBuffer& cache)
 {
+//	LOG_INFO("UpdStatsCmd::complete");
+
   RSPUpdstatsEvent ack;
 
   ack.timestamp = getTimestamp();
@@ -114,16 +116,19 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
 
 const Timestamp& UpdStatsCmd::getTimestamp() const
 {
+//	LOG_INFO("UpdStatsCmd::getTimeStamp");
   return m_event->timestamp;
 }
 
 void UpdStatsCmd::setTimestamp(const Timestamp& timestamp)
 {
+//	LOG_INFO_STR("UpdStatsCmd::setTimeStamp:" << timestamp);
   m_event->timestamp = timestamp;
 }
 
 bool UpdStatsCmd::validate() const
 {
+//	LOG_INFO("UpdStatsCmd::validate");
   return ((m_event->rcumask.count() <= m_n_devices)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }

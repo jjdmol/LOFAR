@@ -70,6 +70,7 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 	CableSettings*	cableSettings = CableSettings::instance();
 	float			delayStep	  = 1000.0 / cache.getClock();
 
+//  LOG_INFO("SetRCUCmd::apply");
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			// make change
@@ -108,7 +109,8 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetRCUCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetRCUCmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("SetRCUCmd completed at time=" << getTimestamp());
+	ack(Cache::getInstance().getFront());
 }
 
 const Timestamp& SetRCUCmd::getTimestamp() const

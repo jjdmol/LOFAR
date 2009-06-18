@@ -1121,9 +1121,12 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       }
       else {
         /* cancel all commands for this port */
+		LOG_INFO("Asking scheduler to cancel this port");
         (void)m_scheduler.cancel(port);
 
+		LOG_INFO("Removing port from active list");
         m_client_list.remove(&port);
+		LOG_INFO("Adding port to the inactive list");
         m_dead_clients.push_back(&port);
       }
     }
@@ -1445,28 +1448,50 @@ void RSPDriver::rsp_unsubsubbands(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 {
-  Ptr<SetRCUCmd> command = new SetRCUCmd(event, port, Command::WRITE);
+	Ptr<SetRCUCmd> command = new SetRCUCmd(event, port, Command::WRITE);
 
-  if (!command->validate()) {
-    LOG_ERROR("SETRCU: invalid parameter");
-    
-    RSPSetrcuackEvent ack;
-    ack.timestamp = Timestamp(0,0);
-    ack.status = RSP_FAILURE;
-    port.send(ack);
-    return;
-  }
+	if (!command->validate()) {
+		LOG_ERROR("SETRCU: invalid parameter");
 
-  // if timestamp == Timestamp(0,0) apply changes immediately
-  if (Timestamp(0,0) == command->getTimestamp()) {
-    LOG_INFO("applying RCU control immediately");
-    command->apply(Cache::getInstance().getFront(), true);
-    command->apply(Cache::getInstance().getBack(), false);
-  }
-  else {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
-  command->ack(Cache::getInstance().getFront());
+		RSPSetrcuackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+
+	// Enabling RCU's is only allowed on even seconds (= apply to cache on odd second)
+	// Should we enable the RCU's?
+	Timestamp	currentTime = Timestamp::now();
+	if (command->control().isEnableModified() && command->control().getEnable()) {
+		// should we wait one second? [A] no time is specified, [B] a time is specified
+		if (command->getTimestamp() == Timestamp(0,0)) { // [A]
+			if (currentTime.sec() % 2 == 0) {
+				command->setTimestamp(Timestamp(currentTime.sec() + 2, 0)); // 2: cache swap + pps on RSPboard
+//				command->willBeDelayed();
+				LOG_INFO("Delaying RCUenable command for 1 second");
+			}
+		}
+		else { // [B]
+			long seconds = command->getTimestamp().sec();
+			if (seconds % 2 == 0) {
+				command->setTimestamp(Timestamp(seconds + 2, 0));
+//				command->willBeDelayed();
+				LOG_INFO("Delaying RCUenable command for 1 second!");
+			}
+		}	
+	}
+
+	// if timestamp == Timestamp(0,0) or now apply changes immediately
+	if (command->getTimestamp() == Timestamp(0,0) || command->getTimestamp() == currentTime) {
+		LOG_INFO("Applying RCU control immediately");
+		command->apply(Cache::getInstance().getFront(), true);
+		command->apply(Cache::getInstance().getBack(), false);
+		command->ack(Cache::getInstance().getFront());
+	}
+	else {
+		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	}
 }
 
 //
