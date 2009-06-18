@@ -189,6 +189,7 @@ void CalServer::remove_client(GCFPortInterface* port)
 			// stop subarray if it is still there.
 			SubArray* subarray = m_subarrays.getByName(iter->first);
 			if (subarray) {
+				_disableRCUs(subarray);
 				m_subarrays.schedule_remove(subarray);
 			}
 
@@ -274,6 +275,8 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		RSPGetconfigackEvent ack(e);
 		m_n_rspboards = ack.n_rspboards;
 		m_n_rcus = ack.n_rcus;
+		// resize and clear itsRCUcounters.
+		itsRCUcounts.assign(m_n_rcus, 0);
 
 		// get initial clock setting
 		RSPGetclockEvent getclock;
@@ -346,6 +349,8 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 //
 GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("enabled: " << eventName(e) << "@" << port.getName());
+
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
@@ -567,6 +572,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		invalidmask.flip();
 
 		// check dimensions of the various arrays for compatibility
+		// m_accs: subbands x pol x pol x antennas x antennas
 		if (m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
 			|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
 			|| m_accs.getFront().getACC().extent(thirdDim)  != positions.extent(secondDim)
@@ -633,6 +639,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone() 
 							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
 			m_rspdriver.send(specInvCmd);
+
+			_enableRCUs(subarray);
 		}
 	}
 	port.send(ack); // send ack
@@ -648,11 +656,13 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	// prepare and send a response
-	CALStopEvent stop(e);
-	CALStopackEvent ack;
-	ack.name = stop.name;
+	CALStopEvent	stop(e);
+	CALStopackEvent	ack;
+	ack.name   = stop.name;
 	ack.status = CAL_Protocol::CAL_SUCCESS;		// return success: don't bother client with our admin
 	port.send(ack);
+
+	_disableRCUs(m_subarrays.getByName(stop.name));	// switch off unused RCUs
 
 	m_subarrays.schedule_remove(stop.name);	// stop calibration
 
@@ -696,7 +706,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 
 		// don't register subarray in cal_subscribe
 		// it has already been registerd in cal_start
-		LOG_INFO_STR("Subscription succeeded: " << subscribe.name);
+		LOG_DEBUG_STR("Subscription succeeded: " << subscribe.name);
 	} 
 	else {
 		ack.status = ERR_NO_SUBARRAY;
@@ -705,7 +715,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 		// doesn't work with gcc-3.4 ack.subarray = SubArray();
 		(void)new((void*)&ack.subarray) SubArray();
 
-		LOG_INFO_STR("Subarray not found: " << subscribe.name);
+		LOG_WARN_STR("Subarray not found: " << subscribe.name);
 	}
 
 	port.send(ack);
@@ -739,7 +749,7 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
 	} 
 	else {
 		ack.status = ERR_NO_SUBARRAY;
-		LOG_INFO_STR("Subscription failed. Subbarray not found: " << unsubscribe.name);
+		LOG_WARN_STR("Subscription failed. Subbarray not found: " << unsubscribe.name);
 	}
 
 	port.send(ack);
@@ -768,6 +778,69 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 
 	return (status);
 }
+
+//
+// _enableRCUs(subarray*)
+//
+void CalServer::_enableRCUs(SubArray*	subarray)
+{
+	// increment the usecount of the receivers
+	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
+	SubArray::RCUmask_t	rcus2switchOn;
+	rcus2switchOn.reset();
+	for (int r = 0; r < m_n_rcus; r++) {
+		if (rcuMask.test(r)) {	
+			if(++itsRCUcounts[r] == 1) {
+				rcus2switchOn.set(r);
+			} // new count is 1
+		} // rcu in mask
+	} // for all rcus
+
+	// anything to enable? Tell the RSPDriver.
+	if (rcus2switchOn.any()) {
+		RSPSetrcuEvent	enableCmd;
+		enableCmd.timestamp = Timestamp(0,0);
+		enableCmd.rcumask = rcus2switchOn;
+		enableCmd.settings().resize(1);
+		enableCmd.settings()(0).setEnable(true);
+		sleep (1);
+		LOG_INFO_STR("Enabling some rcu's because they are used for the first time");
+		m_rspdriver.send(enableCmd);
+	}
+}
+
+//
+// _disableRCUs(subarray*)
+//
+void CalServer::_disableRCUs(SubArray*	subarray)
+{
+	if (!subarray) {
+		return;
+	}
+	// decrement the usecount of the receivers and build mask of receiver that may be disabled.
+	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
+	SubArray::RCUmask_t	rcus2switchOff;
+	rcus2switchOff.reset();
+	for (int r = 0; r < m_n_rcus; r++) {
+		if (rcuMask.test(r)) {	
+			if (--itsRCUcounts[r] == 0) {
+				rcus2switchOff.set(r);
+			} // count reaches 0
+		} // rcu in mask
+	} // for all rcus
+
+	// anything to disable? Tell the RSPDriver.
+	if (rcus2switchOff.any()) {
+		RSPSetrcuEvent	disableCmd;
+		disableCmd.timestamp = Timestamp(0,0);
+		disableCmd.rcumask = rcus2switchOff;
+		disableCmd.settings().resize(1);
+		disableCmd.settings()(0).setEnable(false);
+		sleep (1);
+		LOG_INFO_STR("Disabling some rcu's because they are not used anymore");
+		m_rspdriver.send(disableCmd);
+	}
+} 
 
 #if 0
 GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port)

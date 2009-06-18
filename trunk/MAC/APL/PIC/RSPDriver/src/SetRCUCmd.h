@@ -76,6 +76,11 @@ namespace LOFAR {
        */
       virtual bool validate() const;
 
+	// Get control class of related event
+	RCUSettings::Control	control() { return m_event->settings()(0);	}
+
+	void willBeDelayed()	{ delayedResponse(true); }
+
     private:
       SetRCUCmd();
 

@@ -64,6 +64,7 @@ ACMProxy::~ACMProxy()
 
 GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("ACMProxy::initial: " << eventName(e) << "@" << port.getName());
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch(e.signal) {
@@ -145,6 +146,7 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 
 GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("ACMProxy::idle: " << eventName(e) << "@" << port.getName());
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
@@ -232,6 +234,7 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
  */
 GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("ACMProxy::initializing: " << eventName(e) << "@" << port.getName());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal) {
@@ -309,6 +312,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 
 GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("ACMProxy::receiving: " << eventName(e) << "@" << port.getName());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal) {
@@ -412,6 +416,8 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 
 GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 {
+	LOG_DEBUG_STR("ACMProxy::unsubscribing: " << eventName(e) << "@" << port.getName());
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal) {
@@ -460,6 +466,7 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 
 void ACMProxy::finalize(bool success)
 {
+	LOG_DEBUG("finalize");
   if (m_accs.getBack().isWriteLocked()) {
     if (success) {
 		m_accs.getBack().validate(); // make valid

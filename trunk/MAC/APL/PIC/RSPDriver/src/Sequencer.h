@@ -79,19 +79,20 @@ namespace LOFAR {
 	GCFEvent::TResult cdoenable_state(GCFEvent& event, GCFPortInterface& port);
 	/*@}*/
 
-      private:
+private:
 	/**
 	 * Default construction prohibited (singleton pattern).
 	 */
 	Sequencer();
-	void enableRCUs();
+	void enableRCUs(bool);
 
 	static Sequencer* m_instance;
 
 	bool     m_active;   /* m_active == (state != idle) */
 	Sequence m_sequence; /* currently executing sequence */
 
-	int m_timer; /* timer used to delay some actions */
+	int 	m_timer; /* timer used to delay some actions */
+	bool	itsFinalState;	// final state of sequence (used by rcudisable_state)
       };
   };
 };

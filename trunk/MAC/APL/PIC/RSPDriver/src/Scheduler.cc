@@ -99,7 +99,7 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 		if (timeout->usec >= 1e6-1000) {
 			topofsecond++; // round to next whole second
 		}
-		if (timeout->usec > 1000 && timeout->usec < 1e6 - 1000) {
+		if (timeout->usec > 2000 && timeout->usec < 1e6 - 2000) {
 			LOG_WARN_STR("Scheduler time too far off from top off second: usec=" << timeout->usec);
 		}
 		setCurrentTime(topofsecond, 0);
@@ -265,7 +265,7 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 	if (scheduled_time.sec() < m_current_time.sec() + SCHEDULING_DELAY) {
 		if (scheduled_time.sec() > 0)  { // filter Timestamp(0,0) case
 			LOG_WARN(formatString("command missed deadline by %d seconds",
-			m_current_time.sec() - scheduled_time.sec()));
+						m_current_time.sec() - scheduled_time.sec()));
 		}
 
 		scheduled_time = m_current_time + (long)SCHEDULING_DELAY;
@@ -323,6 +323,8 @@ Timestamp Scheduler::getCurrentTime() const
 //
 void Scheduler::scheduleCommands()
 {
+//	LOG_INFO("Scheduler::scheduleCommands");
+
 	int scheduling_offset = 0;
 
 	// All commands with a timestamp equal to the
@@ -390,6 +392,8 @@ void Scheduler::scheduleCommands()
 //
 void Scheduler::processCommands()
 {
+//	LOG_INFO("Scheduler::processCommands");
+
 	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
 	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
 
@@ -418,6 +422,8 @@ void Scheduler::processCommands()
 //
 void Scheduler::initiateSync(GCFEvent& event)
 {
+//	LOG_INFO("Scheduler::initiateSync");
+
 	m_sync_completed.clear();
 
 	// Send the first syncaction for each board the timer
@@ -465,6 +471,8 @@ void Scheduler::resetSync(GCFPortInterface& port)
 //
 void Scheduler::completeSync()
 {
+//	LOG_INFO("Scheduler::completeSync");
+
 	// print current state for all registers
 	ostringstream logStream;
 	Cache::getInstance().getState().print(logStream);
@@ -490,8 +498,11 @@ void Scheduler::completeSync()
 //
 void Scheduler::completeCommands()
 {
+//	LOG_INFO("Scheduler::completeCommands");
+
 	while (!m_done_queue.empty()) {
 		Ptr<Command> command = m_done_queue.top();
+		m_done_queue.pop();
 
 		command->complete(Cache::getInstance().getFront());
 
@@ -517,7 +528,7 @@ void Scheduler::completeCommands()
 			command->setTimestamp(newtime);
 		}
 
-		m_done_queue.pop();
+//		m_done_queue.pop();
 	}
 
 	// move the delayed response queue now to the done queue. They will be called in the next second
