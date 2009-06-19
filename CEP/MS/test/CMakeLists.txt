@@ -21,5 +21,5 @@
 include(LofarCTest)
 
 lofar_add_test(tMSSplit tMSSplit.cc)
-add_test(tcombinevds ${CMAKE_CURRENT_SOURCE_DIR}/tcombinevds.sh)
-add_test(tmakems ${CMAKE_CURRENT_SOURCE_DIR}/tmakems.sh)
+lofar_add_test(tcombinevds DEPENDS combinevds)
+lofar_add_test(tmakems DEPENDS makems)

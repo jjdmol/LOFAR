@@ -21,7 +21,6 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   Package__Version.h
-  MSDesc.h
   VdsMaker.h)
 
 # Create symbolic link to include directory.

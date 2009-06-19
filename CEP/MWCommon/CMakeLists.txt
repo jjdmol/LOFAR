@@ -38,6 +38,7 @@ lofar_add_package(${PROJECT_NAME} 0.1 DEPENDS Common Blob)
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore COMPONENTS casa REQUIRED)
 
 ## ---------------------------------------------------------------------------
