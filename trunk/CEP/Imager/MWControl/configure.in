@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(CEP/Imager/MWCommon,MWCommon,,1,MWCommon/MWConnection.h,,)
+lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/MWConnection.h,,)
 lofar_INTERNAL(CEP/Calibration/BBSKernel,BBSKernel,,1,BBSKernel/Measurement.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 

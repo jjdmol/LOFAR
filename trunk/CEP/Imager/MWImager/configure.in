@@ -52,7 +52,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(CEP/Imager/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
+lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
 dnl lofar_INTERNAL(CEP/MS,MS,,1,MS/VdsMaker.h,bbms,)
 
 dnl
