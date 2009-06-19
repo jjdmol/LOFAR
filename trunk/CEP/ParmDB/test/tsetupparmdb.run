@@ -8,7 +8,7 @@ fi
 # Add src directory to PATH (to find parmdb).
 PATH=../src:$PATH
 export PATH
-which parmdb
+which parmdb_main
 
 # Create directories to create the parmdb-s in.
 # They must match the FileName in in_ms*.vds.

@@ -34,6 +34,9 @@ set(inst_HEADERS
   ParmDBCasa.h
   ParmDBLocker.h
   Parm.h
+  ParmFacadeRep.h
+  ParmFacadeLocal.h
+  ParmFacadeDistr.h
   ParmFacade.h
   SourceInfo.h
   SourceDB.h
