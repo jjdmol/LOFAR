@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="< "
-../src/parmdb tmakesourcedb_tmp.stdout > /dev/null <<EOF
+../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
 EOF
@@ -9,7 +9,7 @@ cat tmakesourcedb_tmp.stdout
 
 echo ""
 ../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category='1',Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi"
-../src/parmdb tmakesourcedb_tmp.stdout > /dev/null <<EOF
+../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
 EOF
@@ -17,7 +17,7 @@ cat tmakesourcedb_tmp.stdout
 
 echo ""
 ../src/makesourcedb in=tmakesourcedb.in_2 out=tmakesourcedb_tmp.sdb append=0 format="category='3', patch='patch1' Name Type Rah ram ras Decd decm decs I, Q, U, V, SpInx='1.5', Major, Minor, Phi"
-../src/parmdb tmakesourcedb_tmp.stdout > /dev/null <<EOF
+../src/parmdb_main tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
 EOF

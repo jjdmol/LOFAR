@@ -32,7 +32,7 @@ project(ParmDB)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common Blob)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common Blob MWCommon)
 
 ## ---------------------------------------------------------------------------
 ## External packages

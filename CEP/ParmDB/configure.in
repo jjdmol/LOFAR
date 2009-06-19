@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(CEP/Imager/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
+lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_AIPSPP(1,"-ltables -lcasa")
