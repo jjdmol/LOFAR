@@ -34,7 +34,7 @@ lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypes.h)
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h)
 lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h)
-lofar_INTERNAL(CEP/Imager/MWCommon,MWCommon,,1,MWCommon/VdsDesc.h)
+lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/VdsDesc.h)
 lofar_INTERNAL(CEP/Calibration/BBSKernel,BBSKernel,,1,BBSKernel/Equator.h)
 
 lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
