@@ -26,6 +26,5 @@ lofar_add_test(tVdsDesc tVdsDesc.cc)
 lofar_add_test(tVdsPartDesc tVdsPartDesc.cc)
 lofar_add_test(tWorkersDesc tWorkersDesc.cc)
 lofar_add_test(tSocketConnection tSocketConnection.cc)
-
-add_test(tfinddproc ${CMAKE_CURRENT_SOURCE_DIR}/tfinddproc.sh)
-add_test(tstartdproc ${CMAKE_CURRENT_SOURCE_DIR}/tstartdproc.sh)
+lofar_add_test(tfinddproc DEPENDS finddproc)
+lofar_add_test(tstartdproc)# DEPENDS startdistproc)

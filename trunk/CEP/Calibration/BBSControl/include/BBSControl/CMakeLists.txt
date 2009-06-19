@@ -21,11 +21,11 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   Package__Version.h
+  AddStep.h
   BlobStreamableConnection.h
-  BlobStreamableVector.h
+  CalSession.h
+  CalSessionTransactors.h
   Command.h
-  CommandExecutor.h
-  CommandQueue.h
   CommandResult.h
   CommandVisitor.h
   CorrectStep.h
@@ -44,7 +44,6 @@ set(inst_HEADERS
   PredictStep.h
   RecoverCommand.h
   RefitStep.h
-  SenderId.h
   ShiftStep.h
   SingleStep.h
   SolverProcessControl.h

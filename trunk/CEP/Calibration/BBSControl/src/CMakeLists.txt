@@ -22,10 +22,11 @@ include(LofarPackageVersion)
 
 set(bbscontrol_LIB_SRCS
   Package__Version.cc
+  AddStep.cc
   BlobStreamableConnection.cc
+  CalSession.cc
+  CalSessionTransactors.cc
   Command.cc
-  CommandExecutor.cc
-  CommandQueue.cc
   CommandResult.cc
   CorrectStep.cc
   FinalizeCommand.cc
@@ -40,10 +41,8 @@ set(bbscontrol_LIB_SRCS
   NextChunkCommand.cc
   NoiseStep.cc
   PredictStep.cc
-  QueryBuilder/AddCommand.cc
   RecoverCommand.cc
   RefitStep.cc
-  SenderId.cc
   ShiftStep.cc
   SingleStep.cc
   SolverProcessControl.cc
@@ -67,3 +66,8 @@ lofar_add_library(bbscontrol ${bbscontrol_LIB_SRCS})
 foreach(prog ${bbscontrol_PROGRAMS})
   lofar_add_executable(${prog} ${prog}.cc)
 endforeach(prog ${bbscontrol_PROGRAMS})
+
+install(PROGRAMS
+  calibrate
+  calibrate-part
+  DESTINATION bin)
