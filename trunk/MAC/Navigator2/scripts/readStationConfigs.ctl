@@ -32,7 +32,7 @@
   * This will be used to fill: Antenna deltaX deltaY and deltaH fields for LBA and HBA
   * antenna configurations. 
   *
-  * Allowed for now are :  LBA-HBA
+  * Allowed for now are :  LBA-HBA When LBA is missing LBAX will be used (if available)
   *
   * The files contain fieldcenter coordinates in OL-NB-Height
   * and Antenna positions in OL-NB-Height Offsets from the fieldCenter.
@@ -48,6 +48,9 @@ main()
 { 
 
   bool showDebug = true;
+  bool foundLBA  = false;
+  
+  bool bDebug    = false;
   int nr_ofAnt   = 0,
       index      = 1,
       OL         = 1,                // ArrayIndexnumber of dda_splittedLinesAntConfFile
@@ -62,7 +65,7 @@ main()
   } else if ( isdir ("c:/data/CS20_CS010/data/configs/") ) {
     strDataDir = "c:/data/CS20_CS010/data/configs/";
   } else {
-    DebugN("Could not find datadair to work with, leaving and no antenne data read.");
+    DebugN("Could not find datadir to work with, leaving and no antenne data read.");
     return;
   }
     
@@ -92,16 +95,25 @@ main()
     
     // read fieldcenter
     sscanf(dynStr_fileContent[index++],"%*d %*s %f %f %f",centerOL,centerNB,centerH);
-    //DebugN("Reading  Config for center OL,NB,H:" + centerOL + " " + centerNB + " " + centerH);
+    if (bDebug) DebugN("Reading  Config for center OL,NB,H:" + centerOL + " " + centerNB + " " + centerH);
 
     // read nr of antennas
     sscanf(dynStr_fileContent[index++],"%d",nr_ofAnt);
-    //DebugN("Nr of Antenna's in this Config: "+nr_ofAnt);
+    if (bDebug) DebugN("Nr of Antenna's in this Config: "+nr_ofAnt);
    
     // Select on allowed configurations
-    if ((strpos(strCurConfig,"LBA") > -1 && strlen(strCurConfig) == 3) || 
-         (strpos(strCurConfig,"HBA") > -1 && strlen(strCurConfig) == 3)) {
+    if (strCurConfig == "LBA" || 
+        strCurConfig == "HBA" ||
+        (strCurConfig == "LBAX" && !foundLBA)
+         ) {
       DebugN("--> will be read");
+      bool splitArray=false;   //LBAXarray is 48 lines, 1st col(x3) contains 0-47  2ndco(x3) contain 48-96 
+      if (strCurConfig == "LBA") foundLBA=true;
+      if (strCurConfig == "LBAX") {
+        strCurConfig="LBA";
+        splitArray=true;
+      }
+      
 
       for (int ix = index; ix < nr_ofAnt + index; ix++ )
       {
@@ -109,24 +121,41 @@ main()
         float deltaOL;
         float deltaNB;
         float deltaH;
+        float deltaOL2;
+        float deltaNB2;
+        float deltaH2;
       
         // read new line of delta's
-        sscanf(dynStr_fileContent[ix],"%lf %lf %lf",deltaOL,deltaNB,deltaH);
-        //DebugN("OL :"+deltaOL+ " NB: "+ deltaNB+ " H: "+deltaH);
-        //DebugN("ix: " + ix + " index: " + index);
+        if (splitArray) {
+          sscanf(dynStr_fileContent[ix],"%lf %lf %lf %lf %lf %lf",deltaOL,deltaNB,deltaH,deltaOL2,deltaNB2,deltaH2);
+        } else {
+          sscanf(dynStr_fileContent[ix],"%lf %lf %lf",deltaOL,deltaNB,deltaH);
+        }    
+        if (bDebug) DebugN("OL :"+deltaOL+ " NB: "+ deltaNB+ " H: "+deltaH);
+        if (bDebug) DebugN("ix: " + ix + " index: " + index);
+        if (bDebug) DebugN("Filling array at index: "+ (ix+1-index));
         antConfFileOL[(ix+1-index)] = deltaOL;
         antConfFileNB[(ix+1-index)] = deltaNB;
         antConfFileH[(ix+1-index)]  = deltaH;
+        if (splitArray) {
+          if (bDebug) DebugN("OL2 :"+deltaOL2+ " NB2: "+ deltaNB2+ " H2: "+deltaH2);
+          if (bDebug) DebugN("Filling array at index: "+ (ix+1-index+48));
+          antConfFileOL[(ix+1-index+48)] = deltaOL2;
+          antConfFileNB[(ix+1-index+48)] = deltaNB2;
+          antConfFileH[(ix+1-index+48)]  = deltaH2;
+        }
       }
       
-      //DebugN("antConfFileOL: "+antConfFileOL);
+      if (bDebug) DebugN("antConfFileOL: "+antConfFileOL);
       
       // All the reading has been done.
       dpSet("remoteStation."+strCurConfig+".centerOL",centerOL,
             "remoteStation."+strCurConfig+".centerNB",centerNB,
             "remoteStation."+strCurConfig+".centerH",centerH);
       
-      for (int i=1; i<= nr_ofAnt;i++) {
+      int ix=nr_ofAnt;
+      if (splitArray) ix *= 2;
+      for (int i=1; i<= ix;i++) {
         string ant=(i-1);
         dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
               strCurConfig+ant+".deltaY",antConfFileNB[i],
@@ -143,7 +172,7 @@ main()
   //	
   
   dynStr_fileContent = lto_getFile_asDynStr(strRemoteStationConfFile);
-  //DebugN("fileContent: "+dynStr_fileContent);
+  if (bDebug) DebugN("fileContent: "+dynStr_fileContent);
   
   for (index=1;index <= dynlen(dynStr_fileContent);index++) {
     if (strpos(dynStr_fileContent[index],"RS.STATION_ID")>-1) {
