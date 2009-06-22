@@ -46,12 +46,7 @@ for R in xrange(3):
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
-  import sys,os
-
-  # allow ../util to be found, a bit of a hack
-  sys.path += [os.path.dirname(__file__)+"/.."]
-
-  from util.Commands import SyncCommand
+  import sys
 
   # parse the command line
   parser = OptionParser()
@@ -65,25 +60,11 @@ if __name__ == "__main__":
 			action = "store",
 			type = "string",
   			help = "use a certain partition" )
-  parser.add_option( "-k", "--kill",
-  			dest = "kill",
-			action = "store_true",
-			default = False,
-  			help = "kill any jobs running on the partition" )
-  parser.add_option( "-f", "--free",
-  			dest = "free",
-			action = "store_true",
-			default = False,
-  			help = "free the partition" )
-  parser.add_option( "-a", "--allocate",
-  			dest = "allocate",
-			action = "store_true",
-			default = False,
-  			help = "allocate the partition" )
+
   # parse arguments
   (options, args) = parser.parse_args()
 
-  if not options.list and not options.partition:
+  if not options.list:
     parser.print_help()
     sys.exit(0)
 
@@ -96,19 +77,3 @@ if __name__ == "__main__":
       # print a list of all known partitions
       for name in sorted(PartitionPsets.keys()):
         print name
-
-  if options.partition:
-    if options.kill:
-      # kill anything running on the partition
-      print "Killing all jobs on %s..." % options.partition
-      SyncCommand( "bgjobs | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % options.partition )
-
-    if options.free:
-      # free the given partition
-      print "Freeing %s..." % options.partition
-      SyncCommand( "mpirun -partition %s -free wait" % options.partition )
-
-    if options.allocate:
-      # allocate the given partition by running /bin/true
-      print "Allocating %s..." % options.partition
-      SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % options.partition, "/dev/null" )

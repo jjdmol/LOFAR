@@ -4,7 +4,12 @@ import os
 from Partitions import PartitionPsets
 from Stations import Stations
 
-__all__ = ["owner","runningJob","stationInfo","allStationInfo","receivingStation","stationInPartition"]
+# allow ../util to be found, a bit of a hack
+sys.path += [os.path.dirname(__file__)+"/.."]
+
+from util.Commands import SyncCommand
+
+__all__ = ["owner","runningJob","stationInfo","allStationInfo","receivingStation","stationInPartition","killJobs","freePartition","allocatePartition"]
 
 """
   Reports about the status of the BlueGene. An interface to the bg* scripts, and to check
@@ -18,7 +23,7 @@ PARTITION = "R00-M0-N00-256"
 BGBUSY = "/usr/local/bin/bgbusy"
 BGJOBS = "/usr/local/bin/bgjobs"
 
-def owner( partition = PARTITION ):
+def owner( partition ):
   """ Returns the name of the owner of the partition, or None if the partition is not allocated. """
 
   cmd = "%s" % (BGBUSY,)
@@ -36,7 +41,7 @@ def owner( partition = PARTITION ):
   # partition is not allocated
   return None
 
-def runningJob( partition = PARTITION ):
+def runningJob( partition ):
   """ Returns a (jobId,name) tuple of the job running on the partition, or None if no job is running. """
 
   cmd = "%s" % (BGJOBS,)
@@ -48,10 +53,10 @@ def runningJob( partition = PARTITION ):
       continue
 
     if part == partition: 
-      # partition found 
+      # job found 
       return (job,executable)
   
-  # partition is not allocated
+  # partition is not allocated or has no job running
   return None
 
 def stationInfo( ip ):
@@ -108,7 +113,7 @@ def stationInfo( ip ):
   # return all stations found
   return list(stations)
 
-def allStationInfo( partition = PARTITION ):
+def allStationInfo( partition ):
   """ Returns information about all stations sending data to this partition. """
  
   stations = sum( (stationInfo(pset) for pset in PartitionPsets[partition]), [] )
@@ -119,9 +124,18 @@ def allInputs( station ):
   """ Generates a list of name,ip,port tuples for all inputs for a certain station. """
 
   for name,input in sum( ([(s.name,i)] for s in station for i in s.inputs), [] ):
+    # skip non-network inputs
     if input == "null:":
       continue
 
+    if input.startswith( "file:" ):
+      continue
+
+    # strip tcp:
+    if input.startswith( "tcp:" ):
+      input = input[4:]
+
+    # only process ip:port combinations
     if ":" in input:
       ip,port = input.split(":")
       yield (name,ip,port)
@@ -154,7 +168,7 @@ def receivingStation( station ):
 
   return (not notfound, notfound)	
 
-def stationInPartition( station, partition = PARTITION ):
+def stationInPartition( station, partition ):
   """ Returns a list of stations that are not received within the given partition.
   
       Returns (True,[]) if the station is received correctly.
@@ -168,6 +182,19 @@ def stationInPartition( station, partition = PARTITION ):
       notfound.append( (name,"%s:%s" % (ip,port)) )
     
   return (not notfound, notfound)	
+
+def killJobs( partition ):
+  # kill anything running on the partition
+  return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGBUSY,(partition,)) ).isSuccess()
+
+
+def freePartition( partition ):
+  # free the given partition
+  return SyncCommand( "mpirun -partition %s -free wait" % (partition,) ).isSuccess()
+
+def allocatePartition( partition ):
+  # allocate the given partition by running Hello World
+  return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), "/dev/null" ).isSuccess()
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
@@ -189,6 +216,24 @@ if __name__ == "__main__":
 			type = "string",
 			default = [],
   			help = "check whether a certain station is being received" )
+  parser.add_option( "-k", "--kill",
+  			dest = "kill",
+			action = "append",
+			type = "string",
+			default = [],
+  			help = "kill all jobs running on the partition" )
+  parser.add_option( "-a", "--allocate",
+  			dest = "allocate",
+			action = "append",
+			type = "string",
+			default = [],
+  			help = "allocate the partition" )
+  parser.add_option( "-f", "--free",
+  			dest = "free",
+			action = "append",
+			type = "string",
+			default = [],
+  			help = "free the partition" )
 
   hwgroup = OptionGroup(parser, "Hardware" )
   hwgroup.add_option( "-S", "--stations",
@@ -204,12 +249,22 @@ if __name__ == "__main__":
 
   # parse arguments
   (options, args) = parser.parse_args()
+  errorOccurred = False
 
   assert options.partition in PartitionPsets
 
-  if not options.status and not options.checkStation:
+  if not options.status and not options.checkStation and not options.kill and not options.allocate and not options.free:
     parser.print_help()
     sys.exit(0)
+
+  if options.kill:
+    errorOccured = errorOccurred or killJobs( options.partition )
+
+  if options.free:
+    errorOccured = errorOccurred or freePartition( options.partition )
+
+  if options.allocate:
+    errorOccured = errorOccurred or allocatePartition( options.partition )
 
   if options.status:
     expected_owner = os.environ["USER"]
@@ -245,7 +300,6 @@ if __name__ == "__main__":
   expected_owner = os.environ["USER"]
   real_owner = owner( options.partition )
 
-  errorOccurred = False
   for stationName in options.checkStation:
     if stationName not in Stations:
       # unknown station
