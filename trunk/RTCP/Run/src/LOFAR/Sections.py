@@ -3,6 +3,7 @@
 from util.Commands import SyncCommand,AsyncCommand,mpikill
 from Locations import Locations
 import os
+import BGstatus
 
 DEBUG=False
 
@@ -34,6 +35,9 @@ class Section:
     for c in self.commands:
       c.wait()
 
+  def check(self):
+    pass
+
 class SectionSet(list):
   def run(self):
     for s in self:
@@ -56,6 +60,11 @@ class SectionSet(list):
     for s in self:
       debug( "Waiting for %s." % (s,) )
       s.wait()
+
+  def check(self):
+    for s in self:
+      debug( "Checking %s for validity." % (s,) )
+      s.check()
 
 class CNProcSection(Section):
   def run(self):
@@ -86,6 +95,19 @@ class CNProcSection(Section):
 
     self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfile, killcmd=mpikill ) )
 
+  def check(self):
+    # we have to own the partition
+    owner = BGstatus.owner( self.parset.partition )
+    me = os.environ["USER"]
+
+    assert owner is not None, "Partition %s is not allocated." % ( self.parset.partition, )
+    assert owner == me, "Partition %s owned by %s, but you are %s." % ( self.parset.partition, owner, me )
+
+    # no job needs to be running on the partition
+    job = BGstatus.runningJob( self.parset.partition )
+
+    assert job is None, "Partition %s already running job %s (%s)." % ( self.parset.partition, job[0], job[1] )
+
 class IONProcSection(Section):
   def run(self):
     ionodes = self.parset.psets
@@ -98,6 +120,14 @@ class IONProcSection(Section):
       logfile = "%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)
 
       self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfile ) )
+
+  def check(self):
+    # I/O nodes need to be reachable
+    ionodes = self.parset.psets
+
+    for node in ionodes:
+      c = SyncCommand( "ping %s -c 1 -w 2 -q" % (node,), outfile="/dev/null" )
+      assert c.isSuccess(), "Cannot reach I/O node %s" % (node,)
 
 class StorageSection(Section):
   def run(self):

@@ -186,6 +186,8 @@ class Parset(util.Parset.Parset):
       """ Fills a mask, by default the Observation.MSNameMask. """
 
       assert "Observation.ObsID" in self, "Observation ID not generated yet."
+      if mask is None:
+        assert "Observation.MSNameMask" in self, "Observation.MSNameMask not defined in parset."
 
       mask = mask or self["Observation.MSNameMask"]
 
@@ -228,3 +230,4 @@ class Parset(util.Parset.Parset):
       # verify stations
       for s in self.stations:
         assert "PIC.Core.%s.phaseCenter" % (s.name,) in self, "Phase center of station '%s' not present in parset." % (s.name,)
+

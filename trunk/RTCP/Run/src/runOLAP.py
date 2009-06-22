@@ -47,7 +47,7 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
   # parse final settings (derive some extra keys)
   parset.finalise()
 
-  # final check to see whether parset is sane
+  # sanity check on parset
   parset.check()
 
   # write parset to disk
@@ -65,6 +65,9 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
     sections += [Sections.IONProcSection( parset )]
   if start_storage:
     sections += [Sections.StorageSection( parset )]
+
+  # sanity check on sections
+  sections.check()
 
   # ----- Run all sections
   try:
