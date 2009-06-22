@@ -37,13 +37,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-ReadHBACmd::ReadHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+ReadHBACmd::ReadHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("ReadHBA", port, oper)
 {
 	m_event = new RSPReadhbaEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 ReadHBACmd::~ReadHBACmd()

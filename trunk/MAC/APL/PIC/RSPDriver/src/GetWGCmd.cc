@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetWGCmd::GetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetWGCmd::GetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetWG", port, oper)
 {
   m_event = new RSPGetwgEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetWGCmd::~GetWGCmd()

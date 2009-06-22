@@ -39,15 +39,14 @@ using namespace RTC;
 //
 // UpdRCUCmd(event, port, oper)
 //
-UpdRCUCmd::UpdRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdRCUCmd::UpdRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubRCU", port, oper)
 {
   // Constructor of UpdRCUCmd is only called on a SubRCUEvent
   // convert event to Subrcu event
   m_event = new RSPSubrcuEvent(event);
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 //

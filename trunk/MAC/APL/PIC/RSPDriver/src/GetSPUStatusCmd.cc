@@ -39,13 +39,10 @@ namespace LOFAR {
 //
 // GetSPUStatusCmd(event, port, oper)
 //
-GetSPUStatusCmd::GetSPUStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetSPUStatusCmd::GetSPUStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetSPUStatus", port, oper)
 {
 	itsEvent = new RSPGetspustatusEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 //

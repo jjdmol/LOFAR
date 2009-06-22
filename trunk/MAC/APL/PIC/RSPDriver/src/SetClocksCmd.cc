@@ -37,13 +37,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-SetClocksCmd::SetClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetClocksCmd::SetClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetClock", port, oper)
 {
   m_event = new RSPSetclockEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 SetClocksCmd::~SetClocksCmd()

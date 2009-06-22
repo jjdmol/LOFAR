@@ -37,13 +37,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetRCUCmd::GetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetRCUCmd::GetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetRCU", port, oper)
 {
 	m_event = new RSPGetrcuEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 	delayedResponse(true);	// it will take some time
 }
 

@@ -32,7 +32,6 @@ RSPDriver_SOURCES	= \
 	RSPDriver.cc \
 	Scheduler.cc \
 	Sequencer.cc \
-	Command.cc \
 	Cache.cc \
 	StationSettings.cc \
 	RCUCables.cc \

@@ -36,17 +36,14 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetStats", port, oper)
 {
   m_event = new RSPGetstatsEvent(event);
 
   m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
 		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
     * StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL;
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetStatsCmd::~GetStatsCmd()

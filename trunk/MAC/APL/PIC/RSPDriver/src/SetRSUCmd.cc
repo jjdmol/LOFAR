@@ -37,15 +37,12 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-SetRSUCmd::SetRSUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetRSUCmd::SetRSUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetRSU", port, oper)
 {
   m_event = new RSPSetrsuEvent(event);
 
   LOG_INFO(formatString("RSUcontrol=0x%02x", m_event->settings()(0).getRaw()));
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 SetRSUCmd::~SetRSUCmd()

@@ -73,7 +73,7 @@ public:
 	// Enter a new command into the scheduler in response
 	// to receiving a command event from on of the RSPDriver
 	// client processes.
-	RTC::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
+	void enter(Ptr<Command> command, QueueID queue = LATER);
 
 	/*@{*/
 	// Set/get the current time (from the update triggering timeout event).
@@ -106,7 +106,7 @@ private:
 	pqueue	m_periodic_queue;			// commands to be executed peiodically
 	pqueue	m_now_queue;				// filled every second from later and periodic queue
 	pqueue	m_done_queue;				// commands that wait for cache switching
-	pqueue	itsDelayedResponseQueue;	// commands taht wait for two cache switchings
+	pqueue	itsDelayedResponseQueue;	// commands that wait for two cache switchings
 
 	std::map< GCFPortInterface*, std::vector<SyncAction*> > m_syncactions;
 	std::map< GCFPortInterface*, bool >  					m_sync_completed;

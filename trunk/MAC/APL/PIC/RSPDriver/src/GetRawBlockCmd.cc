@@ -40,13 +40,10 @@ namespace LOFAR {
 //
 // GetRawBlockCmd(event, port, oper)
 //
-GetRawBlockCmd::GetRawBlockCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetRawBlockCmd::GetRawBlockCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetRawBlock", port, oper)
 {
 	itsEvent = new RSPGetblockEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 //

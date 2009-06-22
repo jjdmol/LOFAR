@@ -73,13 +73,10 @@ static int SERDES_ON_CMD_LEN = sizeof(SERDES_ON_CMD);
 //
 // SetSPlitterCmd(event, port, oper)
 //
-SetSplitterCmd::SetSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetSplitterCmd::SetSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetSPlitter", port, oper)
 {
 	itsEvent = new RSPSetsplitterEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 //

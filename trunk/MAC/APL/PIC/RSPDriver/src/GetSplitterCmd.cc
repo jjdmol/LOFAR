@@ -77,13 +77,10 @@ static int SERDES_OFF_RESP_LEN = sizeof(SERDES_OFF_RESP);
 //
 // GetSplitterCmd(event, port, oper)
 //
-GetSplitterCmd::GetSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetSplitterCmd::GetSplitterCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetSplitter", port, oper)
 {
 	itsEvent = new RSPGetsplitterEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 //

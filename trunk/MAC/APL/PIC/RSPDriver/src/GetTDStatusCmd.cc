@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetTDStatusCmd::GetTDStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetTDStatusCmd::GetTDStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetTDStatus", port, oper)
 {
   m_event = new RSPGettdstatusEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetTDStatusCmd::~GetTDStatusCmd()
@@ -60,10 +57,8 @@ void GetTDStatusCmd::ack(CacheBuffer& cache)
   ack.tdstatus.board().resize(m_event->rspmask.count());
 
   int result_rsp = 0;
-  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
-  {
-    if (m_event->rspmask[cache_rsp])
-    {
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
+    if (m_event->rspmask[cache_rsp]) {
       ack.tdstatus.board()(result_rsp) = cache.getTDStatus().board()(cache_rsp);
       result_rsp++;
     }

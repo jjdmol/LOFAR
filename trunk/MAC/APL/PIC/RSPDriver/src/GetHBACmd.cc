@@ -37,13 +37,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetHBACmd::GetHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetHBACmd::GetHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetHBA", port, oper)
 {
   m_event = new RSPGethbaEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetHBACmd::~GetHBACmd()

@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetSubbandsCmd::GetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetSubbandsCmd::GetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetSubbands", port, oper)
 {
   m_event = new RSPGetsubbandsEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetSubbandsCmd::~GetSubbandsCmd()

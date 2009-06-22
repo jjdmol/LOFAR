@@ -64,9 +64,6 @@ public:
 	// Range check the parameters of the event.
 	virtual bool validate() const;
 
-	// Return true if value should be read from cache.
-	bool readFromCache() const;
-
 	// Send failure ack.
 	void ack_fail();
 

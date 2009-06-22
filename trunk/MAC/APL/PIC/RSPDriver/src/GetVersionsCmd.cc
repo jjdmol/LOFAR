@@ -35,13 +35,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetVersionsCmd::GetVersionsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetVersionsCmd::GetVersionsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetVersion", port, oper)
 {
   m_event = new RSPGetversionEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetVersionsCmd::~GetVersionsCmd()

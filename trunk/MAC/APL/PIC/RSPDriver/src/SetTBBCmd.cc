@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-SetTBBCmd::SetTBBCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetTBBCmd::SetTBBCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetTBB", port, oper)
 {
   m_event = new RSPSettbbEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 SetTBBCmd::~SetTBBCmd()

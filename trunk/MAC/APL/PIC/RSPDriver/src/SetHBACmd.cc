@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-SetHBACmd::SetHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetHBACmd::SetHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetHBA", port, oper)
 {
   m_event = new RSPSethbaEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 SetHBACmd::~SetHBACmd()
