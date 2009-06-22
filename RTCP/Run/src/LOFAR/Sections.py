@@ -3,13 +3,8 @@
 from util.Commands import SyncCommand,AsyncCommand,mpikill
 from Locations import Locations
 import os
-import BGstatus
-
-DEBUG=False
-
-def debug( str ):
-  if DEBUG:
-    print "%s" % (str,)
+import BGcontrol
+from Logger import debug,info
 
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
@@ -41,29 +36,29 @@ class Section:
 class SectionSet(list):
   def run(self):
     for s in self:
-      debug( "Starting %s." % (s,) )
+      info( "Starting %s." % (s,) )
       s.run()
 
   def postProcess(self):
     for s in self:
-      debug( "Post processing %s." % (s,) )
+      info( "Post processing %s." % (s,) )
       s.postProcess()
 
   def abort(self,soft=True):
     for s in self:
-      debug( "Killing %s [%s]." % (s,["hard","soft"][bool(soft)]) )
+      info( "Killing %s [%s]." % (s,["hard","soft"][bool(soft)]) )
       s.abort(soft)
 
     self.wait()
 
   def wait(self):
     for s in self:
-      debug( "Waiting for %s." % (s,) )
+      info( "Waiting for %s." % (s,) )
       s.wait()
 
   def check(self):
     for s in self:
-      debug( "Checking %s for validity." % (s,) )
+      info( "Checking %s for validity." % (s,) )
       s.check()
 
 class CNProcSection(Section):
@@ -97,14 +92,14 @@ class CNProcSection(Section):
 
   def check(self):
     # we have to own the partition
-    owner = BGstatus.owner( self.parset.partition )
+    owner = BGcontrol.owner( self.parset.partition )
     me = os.environ["USER"]
 
     assert owner is not None, "Partition %s is not allocated." % ( self.parset.partition, )
     assert owner == me, "Partition %s owned by %s, but you are %s." % ( self.parset.partition, owner, me )
 
     # no job needs to be running on the partition
-    job = BGstatus.runningJob( self.parset.partition )
+    job = BGcontrol.runningJob( self.parset.partition )
 
     assert job is None, "Partition %s already running job %s (%s)." % ( self.parset.partition, job[0], job[1] )
 
