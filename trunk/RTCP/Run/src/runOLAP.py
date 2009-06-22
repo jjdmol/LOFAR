@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from LOFAR.ObservationID import ObservationID
+from LOFAR import Logger
+from LOFAR import ObservationID
+from LOFAR.Logger import debug,info,warning,error,fatal
 from LOFAR import Sections
 from LOFAR.Parset import Parset
 from LOFAR.Stations import Stations
@@ -9,12 +11,7 @@ from util.dateutil import format
 from LOFAR.Locations import Locations,isDevelopment
 import sys
 
-DEBUG = False
 DRYRUN = False
-
-def debug( str ):
-  if DEBUG:
-    print "%s" % (str,)
 
 def print_exception( str ):
   import traceback
@@ -86,7 +83,7 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
   # let the sections clean up 
   sections.postProcess()
 
-  debug( "Done." )
+  info( "Done." )
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
@@ -216,11 +213,13 @@ if __name__ == "__main__":
     sys.exit(1)
 
   if options.verbose:
-    Commands.DEBUG = True
+    Commands.debug = debug
+    Logger.DEBUG = True
 
   if not options.quiet:
     DEBUG = True
     Sections.DEBUG = True
+    Logger.VERBOSE = True
 
   if options.dryrun:
     DRYRUN = True
@@ -231,10 +230,10 @@ if __name__ == "__main__":
   parset = Parset()
   for f in args:
     try:
-      debug( "Reading parset %s..." % (f,) )
+      info( "Reading parset %s..." % (f,) )
       parset.readFromFile( Locations.resolvePath( f ) )
     except IOError,e:
-      print >>sys.stderr,"ERROR: Cannot read parset file: %s" % (e,)
+      error("ERROR: Cannot read parset file: %s" % (e,))
 
   # override parset with command-line values
   if options.partition is not None:
@@ -274,7 +273,7 @@ if __name__ == "__main__":
     parset.setStations( stationList )
 
   parset.setStartRunTime( options.starttime, options.runtime )
-  debug( "INFO: Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
+  info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
 
   if options.option is not None:  
     for opt in options.option: 
@@ -283,16 +282,16 @@ if __name__ == "__main__":
 
         parset[k] = v
       except ValueError,e:
-        print >>sys.stderr,"ERROR: Cannot parse option %s: %s" % (opt,e,)
+        error("ERROR: Cannot parse option %s: %s" % (opt,e,))
 
   # reserve an observation id
   try:
-    obsid = ObservationID.generateID( parset )
+    obsid = ObservationID.ObservationID.generateID( parset )
   except IOError,e:
-    print_exception("FATAL: Could not generate observation ID: %s" % (e,))
+    print_exception("Could not generate observation ID: %s" % (e,))
     sys.exit(1)  
 
-  debug( "INFO: Observation ID %s" % (obsid,) )
+  info( "Observation ID %s" % (obsid,) )
 
   # resolve all paths now that parset is set up
   for opt in dirgroup.option_list:
@@ -301,7 +300,7 @@ if __name__ == "__main__":
 
   # create log directory if it does not exist
   if not os.path.exists(Locations.files["logdir"]):
-    debug( "Creating log directory %s" % ( Locations.files["logdir"], ) )
+    warning( "Creating log directory %s" % ( Locations.files["logdir"], ) )
 
     if not DRYRUN:
       os.mkdir( Locations.files["logdir"] )

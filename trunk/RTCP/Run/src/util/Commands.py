@@ -3,12 +3,12 @@ import fcntl
 from subprocess import Popen,STDOUT,call
 from Hosts import ropen
 
-DEBUG = False
 DRYRUN = False
 
 def debug( str ):
-  if DEBUG:
-    print "%s" % (str,)
+  """ Override with custom logging function. """
+
+  pass
 
 def mpikill( pid, signal ):
   SyncCommand( "mpikill -s %s %s" % (signal,pid) )
@@ -36,7 +36,8 @@ class AsyncCommand(object):
         if outfile is None:
           stdout = None
         else:
-          stdout = ropen( outfile, "w" )
+          # Line buffer stdout to get lower latency logging info.
+          stdout = ropen( outfile, "w", 1 )
 
         if infile is None:
           stdin = None

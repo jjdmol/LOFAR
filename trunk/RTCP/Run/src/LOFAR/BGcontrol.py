@@ -3,6 +3,7 @@
 import os
 from Partitions import PartitionPsets
 from Stations import Stations
+import sys
 
 # allow ../util to be found, a bit of a hack
 sys.path += [os.path.dirname(__file__)+"/.."]
@@ -184,16 +185,16 @@ def stationInPartition( station, partition ):
   return (not notfound, notfound)	
 
 def killJobs( partition ):
-  # kill anything running on the partition
-  return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGBUSY,(partition,)) ).isSuccess()
+  """ Kill anything running on the partition. """
+  return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGJOBS,partition,) ).isSuccess()
 
 
 def freePartition( partition ):
-  # free the given partition
+  """ Free the given partition. """
   return SyncCommand( "mpirun -partition %s -free wait" % (partition,) ).isSuccess()
 
 def allocatePartition( partition ):
-  # allocate the given partition by running Hello World
+  """ Allocate the given partition by running Hello World. """
   return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), "/dev/null" ).isSuccess()
 
 if __name__ == "__main__":
@@ -205,6 +206,11 @@ if __name__ == "__main__":
 
   # parse the command line
   parser = OptionParser()
+  parser.add_option( "-q", "--quiet",
+  			dest = "quiet",
+			action = "store_true",
+			default = False,
+  			help = "output less" )
   parser.add_option( "-s", "--status",
   			dest = "status",
 			action = "store_true",
@@ -216,24 +222,24 @@ if __name__ == "__main__":
 			type = "string",
 			default = [],
   			help = "check whether a certain station is being received" )
-  parser.add_option( "-k", "--kill",
+
+  congroup = OptionGroup(parser, "Control" )
+  congroup.add_option( "-k", "--kill",
   			dest = "kill",
-			action = "append",
-			type = "string",
-			default = [],
+			action = "store_true",
+			default = False,
   			help = "kill all jobs running on the partition" )
-  parser.add_option( "-a", "--allocate",
+  congroup.add_option( "-a", "--allocate",
   			dest = "allocate",
-			action = "append",
-			type = "string",
-			default = [],
+			action = "store_true",
+			default = False,
   			help = "allocate the partition" )
-  parser.add_option( "-f", "--free",
+  congroup.add_option( "-f", "--free",
   			dest = "free",
-			action = "append",
-			type = "string",
-			default = [],
+			action = "store_true",
+			default = False,
   			help = "free the partition" )
+  parser.add_option_group( congroup )
 
   hwgroup = OptionGroup(parser, "Hardware" )
   hwgroup.add_option( "-S", "--stations",
@@ -257,14 +263,17 @@ if __name__ == "__main__":
     parser.print_help()
     sys.exit(0)
 
-  if options.kill:
-    errorOccured = errorOccurred or killJobs( options.partition )
+  if options.kill and not errorOccurred:
+    if not options.quiet: print "Killing jobs on %s..." % ( options.partition, )
+    errorOccured = killJobs( options.partition )
 
-  if options.free:
-    errorOccured = errorOccurred or freePartition( options.partition )
+  if options.free and not errorOccurred:
+    if not options.quiet: print "Freeing %s..." % ( options.partition, )
+    errorOccured = freePartition( options.partition )
 
-  if options.allocate:
-    errorOccured = errorOccurred or allocatePartition( options.partition )
+  if options.allocate and not errorOccurred:
+    if not options.quiet: print "Allocating %s..." % ( options.partition, )
+    errorOccured = allocatePartition( options.partition )
 
   if options.status:
     expected_owner = os.environ["USER"]

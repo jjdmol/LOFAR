@@ -230,4 +230,3 @@ class Parset(util.Parset.Parset):
       # verify stations
       for s in self.stations:
         assert "PIC.Core.%s.phaseCenter" % (s.name,) in self, "Phase center of station '%s' not present in parset." % (s.name,)
-
