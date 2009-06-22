@@ -299,6 +299,13 @@ a) HBA client access
   value, hence for read the --data option is used as expected result.
 
 b) HBA server access
+  To manage the HBA server addresses use:
+  
+  test/hbatest/hba_read_all.sh            # to read all servers in a HBA tile
+  test/hbatest/hba_new_address.sh         # to change a HBA server address
+  
+  These shell scripts use tc/hba_server.py. More examples:
+  
   To read the delay settings for polarization X and Y of HBA server 2 on the 
   HBA tile of RCU[64]=X (power via X) and RCU[65]=Y (control via Y) do:
   
@@ -321,6 +328,7 @@ b) HBA server access
  python verify.py --brd rsp8 --fp blp0 -v 21 --te tc/hba_server.py
                   --server 127 --server_access uc --server_function sb
 		              --server_reg address --data #
+		              
 		  
 c) Read version nummers of station hardware, firmware and software:
   - The RSP board version and BP and AP firmware versions: 'rspctl --version'.
