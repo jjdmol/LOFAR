@@ -1121,12 +1121,9 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       }
       else {
         /* cancel all commands for this port */
-		LOG_INFO("Asking scheduler to cancel this port");
         (void)m_scheduler.cancel(port);
 
-		LOG_INFO("Removing port from active list");
         m_client_list.remove(&port);
-		LOG_INFO("Adding port to the inactive list");
         m_dead_clients.push_back(&port);
       }
     }
@@ -1257,8 +1254,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   {
     Ptr<SetWeightsCmd> command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
 
-    if (0 == timestep)
-    {
+    if (0 == timestep) {
       command->ack(Cache::getInstance().getFront());
     }
     
@@ -1273,16 +1269,13 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
     // and the timestamp == Timestamp(0,0)
     // then apply the weights immediately
     //
-    if ((1 == sw_event->weights().extent(firstDim))
-        && (Timestamp(0,0) == sw_event->timestamp))
-    {
+    if ((sw_event->weights().extent(firstDim) == 1) && (sw_event->timestamp == Timestamp(0,0))) {
       LOG_INFO("applying beamforming weights immediately");
       command->apply(Cache::getInstance().getFront(), true);
       command->apply(Cache::getInstance().getBack(), false);
     }
-    else
-    {
-      (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+    else {
+      m_scheduler.enter(Ptr<Command>(&(*command)));
     }
   }
 
@@ -1297,8 +1290,7 @@ void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetWeightsCmd> command = new GetWeightsCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETWEIGHTS: invalid parameter");
     
     RSPGetweightsackEvent ack;
@@ -1308,17 +1300,8 @@ void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 
@@ -1349,7 +1332,7 @@ void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
   }
   else
   {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -1374,17 +1357,8 @@ void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1407,15 +1381,14 @@ void RSPDriver::rsp_subsubbands(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+  m_scheduler.enter(Ptr<Command>(&(*command)),
                           Scheduler::PERIODIC);
 }
 
@@ -1431,12 +1404,10 @@ void RSPDriver::rsp_unsubsubbands(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBSUBBANDS: failed to remove subscription");
   }
 
@@ -1490,7 +1461,7 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 		command->ack(Cache::getInstance().getFront());
 	}
 	else {
-		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+		m_scheduler.enter(Ptr<Command>(&(*command)));
 	}
 }
 
@@ -1512,15 +1483,8 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache())) {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1548,7 +1512,7 @@ void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
   ack.handle = (memptr_t)&(*command);
   port.send(ack);
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+  m_scheduler.enter(Ptr<Command>(&(*command)),
                           Scheduler::PERIODIC);
 }
 
@@ -1581,8 +1545,7 @@ void RSPDriver::rsp_sethba(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetHBACmd> command = new SetHBACmd(event, port, Command::WRITE);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SETHBA: invalid parameter");
     
     RSPSethbaackEvent ack;
@@ -1593,8 +1556,7 @@ void RSPDriver::rsp_sethba(GCFEvent& event, GCFPortInterface& port)
   }
 
   // if timestamp == Timestamp(0,0) apply changes immediately
-  if (Timestamp(0,0) == command->getTimestamp())
-  {
+  if (Timestamp(0,0) == command->getTimestamp()) {
     LOG_INFO("applying HBA control immediately");
 
     HBAProtocolWrite::m_on_off ^= 1; // switch on->off or off->on
@@ -1602,9 +1564,8 @@ void RSPDriver::rsp_sethba(GCFEvent& event, GCFPortInterface& port)
     command->apply(Cache::getInstance().getFront(), true);
     command->apply(Cache::getInstance().getBack(), false);
   }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  else {
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -1616,8 +1577,7 @@ void RSPDriver::rsp_gethba(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetHBACmd> command = new GetHBACmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETHBA: invalid parameter");
     
     RSPGethbaackEvent ack;
@@ -1629,17 +1589,8 @@ void RSPDriver::rsp_gethba(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1661,14 +1612,8 @@ void RSPDriver::rsp_readhba(GCFEvent& event, GCFPortInterface& port)
 		return;
 	}
 
-	// if null timestamp get value from the cache and acknowledge immediately
-	if ( (Timestamp(0,0) == command->getTimestamp()) && (true == command->readFromCache())) {
-		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-		command->ack(Cache::getInstance().getFront());
-	}
-	else {
-		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
-	}
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1680,8 +1625,7 @@ void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
   Ptr<UpdHBACmd> command = new UpdHBACmd(event, port, Command::READ);
   RSPSubhbaackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBHBA: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -1691,16 +1635,14 @@ void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1715,12 +1657,10 @@ void RSPDriver::rsp_unsubhba(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBHBA: failed to remove subscription");
   }
 
@@ -1734,8 +1674,7 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetRSUCmd> command = new SetRSUCmd(event, port, Command::WRITE);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SETRSU: invalid parameter");
     
     RSPSetrsuackEvent ack;
@@ -1750,9 +1689,8 @@ void RSPDriver::rsp_setrsu(GCFEvent& event, GCFPortInterface& port)
     LOG_INFO("applying RSU control to front buffer");
     command->apply(Cache::getInstance().getFront(), true);
   }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  else {
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -1764,8 +1702,7 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetWGCmd> command = new SetWGCmd(event, port, Command::WRITE);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SETWG: invalid parameter");
     
     RSPSetwgackEvent ack;
@@ -1776,15 +1713,13 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
   }
 
   // if timestamp == Timestamp(0,0) then apply the changes immediately
-  if (Timestamp(0,0) == command->getTimestamp())
-  {
+  if (Timestamp(0,0) == command->getTimestamp()) {
     LOG_INFO("applying WG settings immediately");
     command->apply(Cache::getInstance().getFront(), true);
     command->apply(Cache::getInstance().getBack(), false);
   }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  else {
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -1796,8 +1731,7 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetWGCmd> command = new GetWGCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETWG: invalid parameter");
     
     RSPGetwgackEvent ack;
@@ -1807,17 +1741,8 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1829,8 +1754,7 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
   Ptr<UpdStatusCmd> command = new UpdStatusCmd(event, port, Command::READ);
   RSPSubstatusackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBSTATUS: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -1840,16 +1764,14 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1864,12 +1786,10 @@ void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
   }
 
@@ -1883,23 +1803,13 @@ void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetStatusCmd> command = new GetStatusCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     command->ack_fail();
     return;
   }
 
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ((Timestamp(0,0) == command->getTimestamp())
-      && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1911,8 +1821,7 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
   Ptr<UpdStatsCmd> command = new UpdStatsCmd(event, port, Command::READ);
   RSPSubstatsackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBSTATS: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -1922,16 +1831,14 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -1946,12 +1853,10 @@ void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBSTATS: failed to remove subscription");
   }
 
@@ -1965,23 +1870,13 @@ void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetStatsCmd> command = new GetStatsCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     command->ack_fail();
     return;
   }
 
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ((Timestamp(0,0) == command->getTimestamp())
-      && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -1993,8 +1888,7 @@ void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
   Ptr<UpdXCStatsCmd> command = new UpdXCStatsCmd(event, port, Command::READ);
   RSPSubxcstatsackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBXCSTATS: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -2004,16 +1898,14 @@ void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2028,12 +1920,10 @@ void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBXCSTATS: failed to remove subscription");
   }
 
@@ -2047,23 +1937,13 @@ void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetXCStatsCmd> command = new GetXCStatsCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     command->ack_fail();
     return;
   }
 
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ((Timestamp(0,0) == command->getTimestamp())
-      && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2073,8 +1953,7 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetVersionsCmd> command = new GetVersionsCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETVERSIONS: invalid parameter");
     
     RSPGetversionackEvent ack;
@@ -2084,17 +1963,8 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+    m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2119,8 +1989,7 @@ void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SETCLOCK: invalid parameter");
     
     RSPSetclockackEvent ack;
@@ -2131,15 +2000,13 @@ void RSPDriver::rsp_setclock(GCFEvent& event, GCFPortInterface& port)
   }
 
   // if timestamp == Timestamp(0,0) apply changes immediately
-  if (Timestamp(0,0) == command->getTimestamp())
-  {
+  if (Timestamp(0,0) == command->getTimestamp()) {
     LOG_INFO("applying Clock control immediately");
     command->apply(Cache::getInstance().getFront(), true);
     command->apply(Cache::getInstance().getBack(), false);
   }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  else {
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -2151,8 +2018,7 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETCLOCK: invalid parameter");
     
     RSPGetclockackEvent ack;
@@ -2162,17 +2028,8 @@ void RSPDriver::rsp_getclock(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2184,8 +2041,7 @@ void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
 
   RSPSubclockackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBCLOCK: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -2195,16 +2051,14 @@ void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2219,12 +2073,10 @@ void RSPDriver::rsp_unsubclock(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBCLOCK: failed to remove subscription");
   }
 
@@ -2240,8 +2092,7 @@ void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
   Ptr<UpdTDStatusCmd> command = new UpdTDStatusCmd(event, port, Command::READ);
   RSPSubtdstatusackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBSTATUS: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -2251,16 +2102,14 @@ void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2275,12 +2124,10 @@ void RSPDriver::rsp_unsubtdstatus(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
   }
 
@@ -2294,23 +2141,13 @@ void RSPDriver::rsp_gettdstatus(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetTDStatusCmd> command = new GetTDStatusCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     command->ack_fail();
     return;
   }
 
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ((Timestamp(0,0) == command->getTimestamp())
-      && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2320,8 +2157,7 @@ void RSPDriver::rsp_getregisterstate(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetRegisterStateCmd> command = new GetRegisterStateCmd(event, port, Command::READ);
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("GETREGISTERSTATE: invalid parameter");
     
     RSPGetregisterstateackEvent ack;
@@ -2331,17 +2167,8 @@ void RSPDriver::rsp_getregisterstate(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache()))
-  {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2353,8 +2180,7 @@ void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
 
   RSPSubregisterstateackEvent ack;
 
-  if (!command->validate())
-  {
+  if (!command->validate()) {
     LOG_ERROR("SUBREGISTERSTATE: invalid parameter");
     
     ack.timestamp = m_scheduler.getCurrentTime();
@@ -2364,16 +2190,14 @@ void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
     port.send(ack);
     return;
   }
-  else
-  {
+  else {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = RSP_SUCCESS;
     ack.handle = (memptr_t)&(*command);
     port.send(ack);
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
-                          Scheduler::PERIODIC);
+  m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2388,12 +2212,10 @@ void RSPDriver::rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface& port)
   ack.status = RSP_FAILURE;
   ack.handle = unsub.handle;
 
-  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
-  {
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
     ack.status = RSP_SUCCESS;
   }
-  else
-  {
+  else {
     LOG_ERROR("UNSUBREGISTERSTATE: failed to remove subscription");
   }
 
@@ -2423,9 +2245,8 @@ void RSPDriver::rsp_setbypass(GCFEvent& event, GCFPortInterface& port)
     command->apply(Cache::getInstance().getFront(), true);
     command->apply(Cache::getInstance().getBack(), false);
   }
-  else
-  {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  else {
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -2449,15 +2270,8 @@ void RSPDriver::rsp_getbypass(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache())) {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2484,7 +2298,7 @@ void RSPDriver::rsp_settbb(GCFEvent& event, GCFPortInterface& port)
     command->apply(Cache::getInstance().getBack(), false);
   }
   else {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+    m_scheduler.enter(Ptr<Command>(&(*command)));
   }
   command->ack(Cache::getInstance().getFront());
 }
@@ -2508,15 +2322,8 @@ void RSPDriver::rsp_gettbb(GCFEvent& event, GCFPortInterface& port)
     return;
   }
   
-  // if null timestamp get value from the cache and acknowledge immediately
-  if ( (Timestamp(0,0) == command->getTimestamp())
-       && (true == command->readFromCache())) {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-    command->ack(Cache::getInstance().getFront());
-  }
-  else {
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
-  }
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2531,14 +2338,8 @@ void RSPDriver::rsp_getspustatus(GCFEvent& event, GCFPortInterface& port)
 		return;
 	}
 
-	// if null timestamp get value from the cache and acknowledge immediately
-	if ((command->getTimestamp() == Timestamp(0,0)) && command->readFromCache()) {
-		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-		command->ack(Cache::getInstance().getFront());
-	}
-	else {
-		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
-	}
+	// pass command to the scheduler
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2563,7 +2364,7 @@ void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port)
 //	LOG_INFO(formatString("@@@Scheduling GetRawBlockCmd(%d,%x,%d,%d)", e.boardID, e.address, e.offset, e.dataLen));
 
 	// command is ok, schedule it.
-	(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 
 }
 
@@ -2589,7 +2390,7 @@ void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port)
 //	LOG_INFO(formatString("@@@Scheduling SetRawBlockCmd(%d,%x,%d,%d)", e.boardID, e.address, e.offset, e.dataLen));
 
 	// command is ok, schedule it.
-	(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2612,7 +2413,7 @@ void RSPDriver::rsp_setSplitter(GCFEvent& event, GCFPortInterface& port)
 	LOG_INFO("@@@Scheduling SetSplitterCmd");
 
 	// command is ok, schedule it.
-	(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2635,7 +2436,7 @@ void RSPDriver::rsp_getSplitter(GCFEvent& event, GCFPortInterface& port)
 	LOG_INFO("@@@Scheduling GetSplitterCmd");
 
 	// command is ok, schedule it.
-	(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 

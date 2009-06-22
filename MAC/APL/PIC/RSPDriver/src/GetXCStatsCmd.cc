@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetTDStatus", port, oper)
 {
   m_event = new RSPGetxcstatsEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetXCStatsCmd::~GetXCStatsCmd()

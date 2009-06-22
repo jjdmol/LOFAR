@@ -79,7 +79,7 @@ namespace LOFAR {
       /**
        * Return true if value should be read from cache.
        */
-      bool readFromCache() const;
+      virtual bool readFromCache() const;
 
     private:
       GetSubbandsCmd();

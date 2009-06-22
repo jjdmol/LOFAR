@@ -37,13 +37,13 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 UpdClocksCmd::UpdClocksCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
-  m_event(0), m_current_clock(0)
+	Command("SubClock", port, oper),
+	m_event(0), 
+	m_current_clock(0)
 {
   m_event = new RSPSubclockEvent(event);
 
-  setOperation(oper);
   setPeriod(1);
-  setPort(port);
 }
 
 UpdClocksCmd::~UpdClocksCmd()

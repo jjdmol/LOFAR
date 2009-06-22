@@ -36,13 +36,12 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-UpdRegisterStateCmd::UpdRegisterStateCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdRegisterStateCmd::UpdRegisterStateCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubRegisterState", port, oper)
 {
-  m_event = new RSPSubclockEvent(event);
+  m_event = new RSPSubregisterstateEvent(event);
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 UpdRegisterStateCmd::~UpdRegisterStateCmd()

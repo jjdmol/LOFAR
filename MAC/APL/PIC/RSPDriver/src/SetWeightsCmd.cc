@@ -37,17 +37,14 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& port,
-			     Operation oper, int timestep)
+			     Operation oper, int timestep) :
+	Command("SetWeights", port, oper)
 {
   RSPSetweightsEvent* event = new RSPSetweightsEvent();
   m_event = event;
   
   event->timestamp = sw_event.timestamp + (long)timestep;
   event->rcumask   = sw_event.rcumask;
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 SetWeightsCmd::~SetWeightsCmd()

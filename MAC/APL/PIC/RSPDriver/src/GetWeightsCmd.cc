@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetWeightsCmd::GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetWeightsCmd::GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetWeights", port, oper)
 {
   m_event = new RSPGetweightsEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetWeightsCmd::~GetWeightsCmd()

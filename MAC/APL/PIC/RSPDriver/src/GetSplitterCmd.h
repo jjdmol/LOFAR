@@ -64,6 +64,10 @@ public:
 	// Validate the event that underlies the command.
 	virtual bool validate() const;
 
+	// Only for READ commands. Decides if the answer may be read from the curretnt cache
+	// or that we have to wait for another PPS pulse.
+	virtual bool readFromCache() const { return (false); }
+
 private:
 	GetSplitterCmd();
 

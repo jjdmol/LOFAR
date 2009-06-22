@@ -36,13 +36,12 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-UpdStatusCmd::UpdStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdStatusCmd::UpdStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubStatus", port, oper)
 {
   m_event = new RSPSubstatusEvent(event);
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 UpdStatusCmd::~UpdStatusCmd()

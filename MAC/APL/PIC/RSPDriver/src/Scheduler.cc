@@ -257,14 +257,26 @@ void Scheduler::addSyncAction(SyncAction* action)
 //
 // enter(command, queue)
 //
-Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
+void Scheduler::enter(Ptr<Command> command, QueueID queue)
 {
 	Timestamp scheduled_time = command->getTimestamp();
+
+	// process read commmand immediately if that is possible,
+	if ((command->getOperation() == Command::READ) && 
+		(scheduled_time == Timestamp(0,0)) && 
+		(command->readFromCache()) &&
+		(queue != Scheduler::PERIODIC)) {
+		LOG_INFO_STR("Applying command " << command->name() << " immediately");
+		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+		command->ack(Cache::getInstance().getFront());
+		return;
+	}
 
 	/* determine at which time the command can actually be carried out */
 	if (scheduled_time.sec() < m_current_time.sec() + SCHEDULING_DELAY) {
 		if (scheduled_time.sec() > 0)  { // filter Timestamp(0,0) case
-			LOG_WARN(formatString("command missed deadline by %d seconds",
+			LOG_WARN(formatString("command %s missed deadline by %d seconds",
+						command->name().c_str(),
 						m_current_time.sec() - scheduled_time.sec()));
 		}
 
@@ -283,10 +295,12 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 	// push the command on the appropriate queue
 	switch (queue) {
 	case LATER:
+		LOG_INFO_STR("Pushing command " << command->name() << " on the 'later' queue");
 		m_later_queue.push(command);
 		break;
 
 	case PERIODIC:
+		LOG_INFO_STR("Pushing command " << command->name() << " on the 'periodic' queue");
 		m_periodic_queue.push(command);
 		break;
 
@@ -295,8 +309,6 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 		exit(EXIT_FAILURE);
 		break;
 	}
-
-	return Timestamp(0,0); // this return value should not be used anymore
 }
 
 //
@@ -394,8 +406,9 @@ void Scheduler::processCommands()
 {
 //	LOG_INFO("Scheduler::processCommands");
 
+	// revision 6175 (230805) introduced these double lines. Typo???
 	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
-	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
+//	Cache::getInstance().getFront().setTimestamp(getCurrentTime());
 
 	while (!m_now_queue.empty()) {
 		Ptr<Command> command = m_now_queue.top();
@@ -408,7 +421,7 @@ void Scheduler::processCommands()
 		// move from the now queue to the done queue
 		m_now_queue.pop();
 		if (command->delayedResponse()) {
-			LOG_INFO("Placing command on the delayed response queue");
+			LOG_INFO_STR("Placing command " << command->name() << " on the delayed response queue");
 			itsDelayedResponseQueue.push(command);
 		}
 		else {

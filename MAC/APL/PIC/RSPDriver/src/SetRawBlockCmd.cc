@@ -40,13 +40,10 @@ namespace LOFAR {
 //
 // SetRawBlockCmd(event, port, oper)
 //
-SetRawBlockCmd::SetRawBlockCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetRawBlockCmd::SetRawBlockCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SetRawBlock", port, oper)
 {
 	itsEvent = new RSPSetblockEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 //
@@ -131,14 +128,6 @@ void SetRawBlockCmd::setTimestamp(const Timestamp& timestamp)
 bool SetRawBlockCmd::validate() const
 {
 	return (true);
-}
-
-//
-// readFromCache()
-//
-bool SetRawBlockCmd::readFromCache() const
-{
-	return (false);
 }
 
 //

@@ -39,15 +39,14 @@ using namespace RTC;
 //
 // UpdHBACmd(event, port, oper)
 //
-UpdHBACmd::UpdHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdHBACmd::UpdHBACmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubHBA", port, oper)
 {
   // Constructor of UpdHBACmd is only called on a SubHBAEvent
   // convert event to Subhba event
   m_event = new RSPSubhbaEvent(event);
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 //

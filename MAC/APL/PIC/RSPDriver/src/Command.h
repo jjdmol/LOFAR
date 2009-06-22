@@ -48,36 +48,14 @@ public:
 	// Constructors for a Command object.
 	// Currently the tv_usec part is always set to 0 irrespective
 	// of the value passed in.
-	Command();
+	Command() : 
+		m_period(0), m_port(0), m_operation(READ), itsIsDelayed(false), itsName("???")  { }
+
+	Command(const string&	name, GCFPortInterface&	port, Operation	oper) : 
+		m_period(0), m_port(&port), m_operation(oper), itsIsDelayed(false), itsName(name) { }
 
 	// Destructor for Command.
-	virtual ~Command();
-
-	/*@{*/
-	// Accessor methods for the period field.
-	// The period (in seconds) with which this command should
-	// be executed. The command will be executed every 'period' seconds.
-	void  setPeriod(uint16 period);
-	int16 getPeriod();
-	/*@}*/
-
-	/*@{*/
-	// Set/get the type of operation READ/WRITE.
-	void setOperation(Operation oper);
-	Operation getOperation() const;
-	/*@}*/
-
-	/*@{*/
-	// Accessor methods for the port member.
-	void setPort(GCFPortInterface& port);
-	GCFPortInterface* getPort();
-	/*@}*/
-
-	/*@{*/
-	// Accessor methods for the port member.
-	void delayedResponse(bool		delayIt) { itsIsDelayed = delayIt; }
-	bool delayedResponse() const			 { return (itsIsDelayed);   }
-	/*@}*/
+	virtual ~Command() { }
 
 	// Acknowledge the command by sending the appropriate
 	// response on m_port.
@@ -100,15 +78,52 @@ public:
 	// @return true if they are ok.
 	virtual bool validate() const = 0;
 
+	// Only for READ commands. Decides if the answer may be read from the curretnt cache
+	// or that we have to wait for another PPS pulse.
+	virtual bool readFromCache() const { return (true); }
+
 	// Compare operator to order commands in the queue
-	bool operator<(const Command& other);
+	bool operator<(const Command& right) { return (this->getTimestamp() < right.getTimestamp()); }
+
+	/*@{*/
+	// Accessor methods for the period field.
+	// The period (in seconds) with which this command should
+	// be executed. The command will be executed every 'period' seconds.
+	void  setPeriod(uint16 period) { m_period = period; }
+	int16 getPeriod() const 	   { return m_period; }
+	/*@}*/
+
+	/*@{*/
+	// Set/get the type of operation READ/WRITE.
+	void 	  setOperation(Operation oper)	{ m_operation = oper; }
+	Operation getOperation() const 			{ return m_operation; }
+	/*@}*/
+
+	/*@{*/
+	// Accessor methods for the port member.
+	void 			  setPort(GCFPortInterface& port) { m_port = &port; }
+	GCFPortInterface* getPort() 					  { return m_port; }
+	/*@}*/
+
+	/*@{*/
+	// Accessor methods for the delayed flag
+	void delayedResponse(bool	delayIt) { itsIsDelayed = delayIt; }
+	bool delayedResponse() const		 { return (itsIsDelayed);   }
+	/*@}*/
+
+	/*@{*/
+	// Accessor methods for the name
+	void		  name(const  string&	aName)	{ itsName = aName; }
+	const string& name() const	 			{ return (itsName);  }
+	/*@}*/
 
 private:
-	uint16             m_period;
-	GCFEvent*          m_event;
-	GCFPortInterface*  m_port;
-	Operation          m_operation;
-	bool			   itsIsDelayed;
+	uint16				m_period;
+	GCFEvent*			m_event;
+	GCFPortInterface*	m_port;
+	Operation			m_operation;
+	bool				itsIsDelayed;
+	string				itsName;
 };
 
 // Comparison function to order a priority_queue of Ptr<Command>* pointers

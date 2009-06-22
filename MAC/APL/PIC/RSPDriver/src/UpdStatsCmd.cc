@@ -36,7 +36,8 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubStats", port, oper)
 {
   m_event = new RSPSubstatsEvent(event);
 
@@ -44,9 +45,7 @@ UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
     * StationSettings::instance()->nrRspBoards() * MEPHeader::N_POL;
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 UpdStatsCmd::~UpdStatsCmd()

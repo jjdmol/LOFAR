@@ -36,13 +36,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetStatusCmd::GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetStatusCmd::GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetStatus", port, oper)
 {
   m_event = new RSPGetstatusEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetStatusCmd::~GetStatusCmd()

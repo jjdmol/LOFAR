@@ -36,13 +36,12 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-UpdXCStatsCmd::UpdXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdXCStatsCmd::UpdXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubXCStats", port, oper)
 {
   m_event = new RSPSubxcstatsEvent(event);
 
-  setOperation(oper);
   setPeriod(m_event->period);
-  setPort(port);
 }
 
 UpdXCStatsCmd::~UpdXCStatsCmd()

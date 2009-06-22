@@ -39,14 +39,13 @@ using namespace RTC;
 //
 // UpdSubbandsCmd(event, port, oper)
 //
-UpdSubbandsCmd::UpdSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdSubbandsCmd::UpdSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("SubSubbands", port, oper)
 {
 	// convert event to SubSubbands event
 	m_event = new RSPSubsubbandsEvent(event);
 
-	setOperation(oper);
 	setPeriod(m_event->period);
-	setPort(port);
 }
 
 //

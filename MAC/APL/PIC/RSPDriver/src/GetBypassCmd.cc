@@ -37,13 +37,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetBypassCmd::GetBypassCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetBypassCmd::GetBypassCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetBypass", port, oper)
 {
 	m_event = new RSPGetbypassEvent(event);
-
-	setOperation(oper);
-	setPeriod(0);
-	setPort(port);
 }
 
 GetBypassCmd::~GetBypassCmd()

@@ -38,13 +38,10 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
-GetRegisterStateCmd::GetRegisterStateCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetRegisterStateCmd::GetRegisterStateCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
+	Command("GetRegisterState", port, oper)
 {
   m_event = new RSPGetclockEvent(event);
-
-  setOperation(oper);
-  setPeriod(0);
-  setPort(port);
 }
 
 GetRegisterStateCmd::~GetRegisterStateCmd()
