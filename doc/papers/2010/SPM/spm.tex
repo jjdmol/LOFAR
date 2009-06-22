@@ -1,13 +1,14 @@
 \documentclass{article}
 
+% stations weg, heb het alleen over receivers. Een stations is dan ook gewoon een receiver
+
 
 %% polarisaties weg halen.
 %% Wel uitleggen dat ze er zijn, maar voor de filters en de correlator
 %% zijn het gewoon onafhankelijke receivers. Dit maakt de pseudo code + optimalisaties veel compacter.
-
-%% baselines weg halen ( gebruik in pseudo code in store(sum) )
-
-
+% @@@ Rob: dit klopt helemaal niet. Voor de polarisaties moet je namelijk ALLE combinaties uitrekenen.
+% DUS zowel XY als YX. Voor stations doe je dit niet. We kunnen polarisaties dus niet weg laten.
+% Daarom kwam John ook op een AI van 0.5 uit IPV 1.
 
 %% complexe getallen zijn belangrijk voor signal processing.
 %% Niet alle arch ondersteunen dit even goed.
@@ -103,7 +104,7 @@ Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
 inflexible, expensive to design, and has a long development time.
 Solutions that use a supercomputer are much more flexible, but are less
-efficient, consume more power, and are expensive to purchase.
+efficient, consume more power, and are expensive to purchase and maintain.
 Future instruments, like the Square Kilometre Array (SKA), need several orders
 of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
@@ -115,12 +116,12 @@ alternative to supercomputers, due to their unparalleled growth in
 computational performance, increasing flexibility, increasing programmability,
 high power efficiency, and low purchase costs.
 High-end GPUs are highly parallel and contain hundreds of processor cores.
-However, their usefulness is often limited to applications that do not require
-double-precision floating-point arithmetics, since there is no need for
-double-precision calculations to play games.
-Hence, the support for double-precision arithmetic is typically poor.
-Fortunately, many signal-processing applications do not require double
-precision.
+%% However, their usefulness is often limited to applications that do not require
+%% double-precision floating-point arithmetics, since there is no need for
+%% double-precision calculations to play games.
+%% Hence, the support for double-precision arithmetic is typically poor.
+%% Fortunately, many signal-processing applications do not require double
+%% precision.
 
 The IBM Cell Broadband Engine~\cite{Gschwind:06}, well known from the
 PlayStation~3, is another example of a processor that combines GPU and CPU
@@ -145,19 +146,24 @@ We discuss their similarities and differences, and how the architectural
 differences affect optimization choices and the eventual performance of a
 correlator.
 We strongly focus on correlators, but many of the findings, claims, and
-optimizations hold for other signal-processing algorithms as well, both in the
-area of radio astronomy and abroad.
+optimizations hold for other signal-processing algorithms as well, both in and outside the
+area of radio astronomy.
 We discuss the programmability of each of the architectures, but this paper
 should be of special interest to those who are willing to put some extra
 programming effort to obtain good performance, even if high-level programming
 support is not available.
 
 
+In this paper, we use the LOFAR
+telescope as an example, but the results apply equally well
+to other instruments. 
+
+
 \section{Trends in radio astronomy}
 
-- signal processing neemt een dominantere rol (meer antennes, etc)
-- voorbeelden. pathfinders voor SKA. 
-- computationally intensive, SKA even more
+%- signal processing neemt een dominantere rol (meer antennes, etc)
+%- voorbeelden. pathfinders voor SKA. 
+%- computationally intensive, SKA even more
 
 
 
@@ -177,22 +183,22 @@ Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
 
-@@@ later even kijken: computing advances maken nieuwe signal processing technieken en telescopen / instrumenten mogelijk.
+%@@@ later even kijken: computing advances maken nieuwe signal processing technieken en telescopen / instrumenten mogelijk.
 
 
 
-@@@
-It is important that the authors take a tutorial 
-oriented style and more carefully introduce the 
-application context, including radio-astronomy 
-basics, instruments that they use (including 
-installation roadmap).  The algorithm is quite 
-simple and so the strength of the paper lies in 
-the thoroughness of the analysis, and the 
-aforementioned tutorial background.
-@@@
+%% @@@
+%% It is important that the authors take a tutorial 
+%% oriented style and more carefully introduce the 
+%% application context, including radio-astronomy 
+%% basics, instruments that they use (including 
+%% installation roadmap).  The algorithm is quite 
+%% simple and so the strength of the paper lies in 
+%% the thoroughness of the analysis, and the 
+%% aforementioned tutorial background.
+%% @@@
 
-SKA + pathfinders: EMBRACE, LOFAR, ASKAP, meerKAT
+%% SKA + pathfinders: EMBRACE, LOFAR, ASKAP, meerKAT
 
 
 
@@ -217,19 +223,16 @@ extensive performance comparison between the architectures of popular GPUs
 for signal-processing purposes, particularly, for correlation
 purposes~\cite{Nieuwpoort:09}.
 
+%@@@ Cell
 
 
 
 \section{Correlating signals}
 
-stations weg, heb het alleen over receivers. Een stations is dan ook gewoon een receiver
 
 
-XF vs FX
-
-lofar is FX. Met een groter aantal inputs is FX efficienter?
-
-transpose
+%XF vs FX. lofar is FX. Met een groter aantal inputs is FX efficienter?
+%transpose
 
 
 \begin{figure*}[t]
@@ -240,75 +243,60 @@ transpose
 \caption{An simplified view of LOFAR processing.}
 \label{fig-processing-overview}
 \end{figure*}
+%The pipeline runs from left to right. @@@ maak pijlen in fig
 
-Following LOFAR terminology, we call a set of receivers that are grouped closely
-together a \emph{station}. The data streams from the different
-stations must be filtered, delays in the signal path must be
-compensated for, and the data streams from different stations must be
-cross-correlated. The correlation process performs a data reduction by
-integrating samples over time. 
-
-
-@@@ moet veel eerder komen, in intro al. @@@
-In this paper, we use the LOFAR
-telescope as an example, but the results apply equally well
-to other instruments. 
-
-An overview of the processing needed for the
-standard imaging pipeline of LOFAR is shown in
-Figure~\ref{fig-processing-overview}. The pipeline runs from left to right.
-The thickness of the lines indicates the size of the data streams.
-In this paper, we focus on the
-correlator step (the gray box in
+An overview of the processing needed for the standard imaging pipeline
+of LOFAR is shown in Figure~\ref{fig-processing-overview}.  The
+thickness of the lines indicates the size of the data streams.  The
+data streams from the different receivers must be filtered, delays in
+the signal path must be compensated for, and the data streams from
+different receivers must be cross-correlated. The correlation process
+performs a data reduction by integrating samples over time.  In this
+paper, we focus on the correlator step (the gray box in
 Figure~\ref{fig-processing-overview}), because its costs grow
-quadratically with the number of stations. All other steps have a
-lower time complexity. 
+quadratically with the number of receivers. All other steps have a
+lower time complexity.  
 
-% naar metingen sectie
-%We choose 64 as the number of stations, since
-%that is a realistic number for LOFAR.  Future instruments will likely
-%have even more stations. 
+The data streams from the receivers contain samples, which are complex
+numbers that represent the amplitude and phase of a signal at a
+particular time. Single precision floating point is accurate enough
+for our purposes.  The receivers are dual-polarized; they take
+separate samples from orthogonal (X and Y) directions.
+% meer zeggen over precisie? 4, 8, en 16 bit modes voor LOFAR, SKA zelfs 2 bit.
 
-We call the combination of two stations a
-\emph{baseline}.  The total number of baselines is $(nrStations \times
-(nrStations + 1)) / 2$, since we need each pair of correlations only
-once. This includes the autocorrelations (the correlation of a station with itself),
-since we need this later in the pipeline for calibration purposes.
-The autocorrelations can be computed with half the number of instructions.
-The correlator algorithm itself is straightforward, and can be
-written in a single formula:
+The received signals from sky sources are so weak, that the antennas 
+mainly receive noise. To see if there is statistical coherence
+in the noise, simultaneous samples of each pair of receivers are correlated, 
+by multiplying the sample of one receiver with the complex
+conjugate (i.e., the imaginary part is negated) of the sample of the other receiver.
+To reduce the output size, the products are integrated, by accumulating all products. 
+Both polarizations of a station A are correlated with both polarizations 
+of a station B, yielding correlations in XX, XY, YX, and YY
+directions. Receivers are also autocorrelated, i.e., with
+themselves. 
+The correlator thus is mostly multiplying and adding complex numbers.
+The correlator algorithm itself thus is straightforward, and can be
+written in a single formula: \\
 $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,t,p_1} * Z_{s_2,t,p_2}^\ast$ 
 
-
-@@@ pseudo code weg.
-
-Pseudo code for the algorithm is shown in Figure~\ref{correlator-code}.
-A sample is a ($2 \times 32-bit$) complex number that represents the
-amplitude and phase of a signal at a particular time. The receivers
-are polarized; they take separate samples from orthogonal (X and Y)
-directions. The received signals from sky sources are so weak, that the antennas 
-mainly receive noise. To see if there is statistical coherence
-in the noise, simultaneous samples of each pair of stations are correlated, 
-by multiplying the sample of one station with the complex
-conjugate (i.e., the imaginary part is negated) of the sample of the other station.
-To reduce the output size, the products are integrated, by accumulating all products. 
-Stations are also autocorrelated, i.e., with
-themselves. Both polarizations of a station A are correlated with both polarizations 
-of a station B, yielding correlations in XX, XY, YX, and YY
-directions.
-The correlator is mostly multiplying and adding complex numbers.
+The total number of correlations we have to compute is $(nrReceivers \times
+(nrReceivers + 1)) / 2$, since we need each pair of correlations only
+once. This includes the autocorrelations (the correlation of a receiver with itself),
+since we need this later in the pipeline for calibration purposes.
+The autocorrelations can be computed with half the number of instructions.
 
 We can implement the correlation operation very efficiently, with only
 four fma instructions, doing eight floating-point operations in
-total. For each pair of stations, we have to do this four times, once
+total. For each pair of receivers, we have to do this four times, once
 for each combination of polarizations. Thus, in total we need 32
-operations and load 8 floats (32 bytes) from memory, resulting in \emph{exactly
-  one FLOP/byte}.  The number of operations that is performed per byte
-that has to be loaded from main memory is called the \emph{arithmetic
-  intensity}~\cite{system-performance}. For the correlation algorithm,
+operations. To perform these operations, we have to load the samples two receivers from memory.
+The samples each consist of
+four single precision floating point numbers: a real and imaginary part, and two polarizations.
+Therefore, we need to load 8 floats or 32 bytes in total.
+This results in \emph{exactly one FLOP/byte}.  The number of operations that is performed per byte
+that has to be loaded from main memory is called the \emph{arithmetic intensity}~\cite{system-performance}. 
+For the correlation algorithm,
 the arithmetic intensity is extremely low.
-
-
 
 Prior to correlation, an FX correlator must reorder the data that comes from
 the receivers:
@@ -529,7 +517,7 @@ Filter precedes the correlator: the FFT outputs consecutive frequencies into
 consecutive memory locations.
 Both 
 
-Another option is to correlate samples from different stations as illustrated
+Another option is to correlate samples from different receivers as illustrated
 by Figure~\ref{fig:4x4-correlation}.
 This method minimizes memory loads, but requires additional shuffling of data.
 Unfortunately, the most efficient method can only be determined empirically,
@@ -563,22 +551,22 @@ communication             & DMA between SPEs               & independent thread 
 
 On many-core architectures, memory bandwidth is a scarce resource, hence it is
 important to minimize the number of memory accesses.
-An unoptimized correlator would read the samples from two stations and
+An unoptimized correlator would read the samples from two receivers and
 multiply them, requiring two memory reads for one complex multiplication.
 The correlator can be optimized by reusing a sample that is read from memory
 as often as possible, by using it for multiple correlations (see
 Figure~\ref{fig:correlator-triangle}).
-For example, the samples from stations 8, 9, 10, and 11 can be correlated
-with the samples from stations 4, 5, 6, and 7 (the red square in the figure),
+For example, the samples from receivers 8, 9, 10, and 11 can be correlated
+with the samples from receivers 4, 5, 6, and 7 (the red square in the figure),
 using each fetched sample for four complex multiplications.
 This way, eight memory accesses are required for sixteen complex
 multiplications, reducing the amount of memory operations already by a factor
 of four.
-Correlating even higher numbers of stations at one go would reduce the
-memory bandwidth usage further, but the maximum number of stations that can
+Correlating even higher numbers of receivers at one go would reduce the
+memory bandwidth usage further, but the maximum number of receivers that can
 be correlated this way is quite limited by the size of the register file.
 The accumulated correlations are best kept in registers, and the number of
-required registers grows rapidly with the number of station inputs.
+required registers grows rapidly with the number of receiver inputs.
 The example above already requires sixteen complex accumulators.
 Additional registers are needed to load samples from memory.
 To obtain good performance, it is important to tune the tile size to the
@@ -606,21 +594,21 @@ However, a cache-size dependent tradeoff must be made.
 An important optimization that we implemented is the reduction
 of memory loads by the correlator. 
 A sample can be used multiple times by correlating it
-with the samples from multiple other stations in the same loop iteration.
-For example, a sample from station A in the X polarization
+with the samples from multiple other receivers in the same loop iteration.
+For example, a sample from receiver A in the X polarization
 that is loaded into a register pair can be correlated with the X and
-Y polarizations of stations B, C and D, using it six times. 
+Y polarizations of receivers B, C and D, using it six times. 
 Figure~\ref{fig-correlation} shows how we correlate multiple
-stations at the same time. Each square represents the XX, XY,
-YX, and YY correlations of the stations as indicated by row and
+receivers at the same time. Each square represents the XX, XY,
+YX, and YY correlations of the receivers as indicated by row and
 column number. The figure is triangular, because we compute
-the correlation of each pair of stations only once. The squares labeled \emph{A} are
+the correlation of each pair of receivers only once. The squares labeled \emph{A} are
 autocorrelations, which can be treated specially since they require only half
 the amount of computations.
 The triangle is divided into larger tiles, in this case 
 2x3 tiles (the dark gray boxes), but arbitrary sizes are possible.
 A tile is correlated as a unit. For example, the lower
-right-hand-side rectangle correlates stations 9 and 10 with stations
+right-hand-side rectangle correlates receivers 9 and 10 with receivers
 0, 1, and 2.
 
 It is important to tune the tile size to the architecture. We want to
@@ -682,6 +670,11 @@ It is important to realize that the
 correlator itself is \emph{trivially parallel}, since tens of thousands of
 frequency channels can be processed independently.  This allows us to
 efficiently exploit many-core hardware.
+
+% naar metingen sectie
+%We choose 64 as the number of receivers, since
+%that is a realistic number for LOFAR.  Future instruments will likely
+%have even more receivers. 
 
 
 \subsection{Intel}
