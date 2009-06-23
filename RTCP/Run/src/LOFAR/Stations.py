@@ -225,5 +225,5 @@ if __name__ == "__main__":
   # print the inputs of a single station
   if options.station:
     for s in Stations[options.station]:
-      print s.name," ".join(s.inputs)
+      print s.name,s.ionode," ".join(s.inputs)
 
