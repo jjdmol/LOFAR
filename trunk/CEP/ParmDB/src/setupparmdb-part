@@ -51,8 +51,8 @@ stepfreq=${10}
 steptime=${11}
 
 
-# Initialize lofar environment (not needed).
-# . $lroot/lofarinit.sh
+# Initialize lofar environment (to find parmdb).
+. $lroot/lofarinit.sh
 
 # Check if a parmdb name is given (otherwise the MS gets deleted hereafter).
 if test "$pdb" = ""; then
