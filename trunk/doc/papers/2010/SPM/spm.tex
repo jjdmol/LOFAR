@@ -2,7 +2,6 @@
 
 % stations weg, heb het alleen over receivers. Een stations is dan ook gewoon een receiver
 
-
 %% polarisaties weg halen.
 %% Wel uitleggen dat ze er zijn, maar voor de filters en de correlator
 %% zijn het gewoon onafhankelijke receivers. Dit maakt de pseudo code + optimalisaties veel compacter.
@@ -11,15 +10,6 @@
 % Daarom kwam John ook op een AI van 0.5 uit IPV 1.
 
 
-%% complexe getallen zijn belangrijk voor signal processing.
-%% Niet alle arch ondersteunen dit even goed.
-
-%% 3 gevallen:
-
-%% 1) geen vectoren: geen probleem, je kunt het dan gewoon uitschrijven.
-%% 2) BG/P: ingebouwde supprot voor complexe operaties
-%% 3) geen support: dan moet je de data shuffelen binnen de vectoren.
-%%     De ene arch kan dit beter dan de andere.
 
 
 
@@ -54,8 +44,6 @@
 %%     - algo specifiek (reduceer mem loads)
 %%     - architectuur-specifieke optimalisaties (cache gedrag, delays, floating point instructions)
 
-%% manycores ondersteunen complex niet erg goed. Alleen BG/P wel.
-%% Vaak de reals en de imags in aparte arrays stoppen.
 
 \usepackage{spconf}
 \usepackage{graphicx}
@@ -64,12 +52,11 @@
 \title{How to Build a Correlator on Many-Core Hardware}
 
 \name{Rob V. van Nieuwpoort and John W. Romein}
-%\texttt{\{nieuwpoort,romein\}@astron.nl}}
 
 \address{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
-Oude Hoogeveensedijk 4 \\
-7991 PD\ \ Dwingeloo \\
-The Netherlands}
+Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
+\texttt{\{nieuwpoort,romein\}@astron.nl}
+}
 
 
 \begin{document}
@@ -319,43 +306,75 @@ the arithmetic intensity is extremely low.
 
 \section{Many-core architectures}
 
+%TODO: zet kolommen in de volgorde van behandeling
+\begin{table*}[t]
+\begin{center}
+{\small
+\begin{tabular}{|l|l|l|l|l|l|}                                                   
+\hline
+Architecture                                 & Intel Core i7 & IBM Blue Gene/P& ATI 4870 &  NVIDIA Tesla C1060 & STI Cell/B.E. \\
+\hline
+\textbf{gflops per chip}                     & \textbf{85}   & \textbf{13.6}  & \textbf{1200}  & \textbf{936}  & \textbf{204.8}\\
+Clock frequency (GHz)                        & 2.67          & 0.850          & 0.75           & 1.296         & 3.2           \\
+cores x FPUs per core = \textbf{total FPUs}  & 4x4 = \textbf{16} & 4x2 = \textbf{8} & 160x5 = \textbf{800} & 30x8 = \textbf{240} & 8x4 = \textbf{32} \\
+%operations per cycle per FPU                & 2             &   2            & 2              & 2             & 2             \\
+%\hline
+registers per core x register width          & 16x4          & 64x2           & 1024x4        & 2048x1         & 128x4         \\
+%\hline
+%total L1 data cache size per chip (KB)      & 32            & 128            & undisclosed   & undisclosed    & 2048          \\
+%total L1 cache bandwidth (GB/s)             & undisclosed   & 54.4           & 480           & undisclosed    & 409.6         \\
+total device RAM bandwidth (GB/s)            & n.a.          & n.a.           & 115.2         & 102            & n.a.          \\
+\textbf{total host RAM bandwidth (GB/s)}     & \textbf{25.6} & \textbf{13.6}  & \textbf{8.0}  & \textbf{8.0}   & \textbf{25.8} \\
+%\hline
+Process Technology (nm)                      & 45            & 90             & 55            & 65             & 65            \\
+TDP (W)                                      & 130           & 24             & 160           & 236            & 70            \\
+%\textbf{gflops / Watt (based on TDP)}       & \textbf{0.65} & \textbf{0.57}  & \textbf{7.50} & \textbf{3.97}  & \textbf{2.93} \\
+%\hline
+%\textbf{gflops/device bandwidth (gflops / GB/s)}& n.a.       &  n.a.          & \textbf{10.4} & \textbf{9.2}   & n.a.         \\
+%\textbf{gflops/host bandwidth (gflops / GB/s)} & \textbf{3.3}& \textbf{1.0}   & \textbf{150}  & \textbf{117}   & \textbf{7.9} \\
+\hline
+\end{tabular}
+} %\small
+\end{center}
+\vspace{-0.5cm}
+\caption{Properties of the different many-core platforms.}
+\label{architecture-properties}
+\end{table*}
+
+%TODO: zet kolommen in de volgorde van behandeling
+%% \begin{table*}
+%% \begin{center}
+%% \begin{small}
+%% \begin{tabular}{|l|rrrrrr|}
+%% \hline
+%% & GTX~280 & RV770 & Cell BE & BG/P & Core i7 920 & Larrabee \\
+%% \hline
+%% peak performance (GFLOPS) & 936 & 1,200 & 205(SPEs) + 25.6(PPU) & 13.6 & 85 & ? \\
+%% clock (GHz) & 1,3 & 0.75 & 3.2 & 0.85 & 2.67 & ? \\
+%% \#cores & 240 & 800 & 8 & 4 & 4 & $\mathcal{O}$(10) \\
+%% \#threads/core & & & 1 & 1 & 2 & 4 \\
+%% L1 cache size/core (KiB) & & & 256 (I+D) & 32(I) + 32(D) & 32(I) + 32(D) & \\
+%% L2 cache size/core (KiB) & & & & 2 (prefetcher) & 256 (I+D) & \\
+%% L3 cache size/chip (MiB) & & & & 8 & 8 & \\
+%% (device) memory size (GiB) & 4 & &  & 2 or 4 & & \\
+%% peak memory bandwidth (GiB/s) & 102 & 115.2 & & & & \\
+%% \#registers/core & & & 128 & 32 & 16 & 32 \\
+%% \#floats/register (= vector size) & 1 & 1  & 4 & 2 & 4 & 16 \\
+%% manufacturing process (nm) & 65 & & & 90 & 45 & \\
+%% Thermal Design Power (Watt) & 236 & 160 & & & 130 & \\
+%% \hline
+%% \end{tabular}
+%% \end{small}
+%% \end{center}
+%% \end{table*}
+
 In this section, we briefly explain key properties of six different
 architectures with multiple cores.  We focus on the differences
 between the systems that are relevant for signal processing
-applications.
-
-%TODO: zet kolommen in de volgorde van behandeling
-\begin{table*}
-\begin{center}
-\begin{small}
-\begin{tabular}{|l|rrrrrr|}
-\hline
-& GTX~280 & RV770 & Cell BE & BG/P & Core i7 920 & Larrabee \\
-\hline
-peak performance (GFLOPS) & 936 & 1,200 & 205(SPEs) + 25.6(PPU) & 13.6 & 85 & ? \\
-clock (GHz) & 1,3 & 0.75 & 3.2 & 0.85 & 2.67 & ? \\
-\#cores & 240 & 800 & 8 & 4 & 4 & $\mathcal{O}$(10) \\
-\#threads/core & & & 1 & 1 & 2 & 4 \\
-L1 cache size/core (KiB) & & & 256 (I+D) & 32(I) + 32(D) & 32(I) + 32(D) & \\
-L2 cache size/core (KiB) & & & & 2 (prefetcher) & 256 (I+D) & \\
-L3 cache size/chip (MiB) & & & & 8 & 8 & \\
-(device) memory size (GiB) & 4 & &  & 2 or 4 & & \\
-peak memory bandwidth (GiB/s) & 102 & 115.2 & & & & \\
-\#registers/core & & & 128 & 32 & 16 & 32 \\
-\#floats/register (= vector size) & 1 & 1  & 4 & 2 & 4 & 16 \\
-manufacturing process (nm) & 65 & & & 90 & 45 & \\
-Thermal Design Power (Watt) & 236 & 160 & & & 130 & \\
-\hline
-\end{tabular}
-\end{small}
-\end{center}
-\end{table*}
-
-
-Except for the Blue Gene/P (and to some extent the Core~i7), the architectures
-provide no support for operations on complex values.
-This can be circumvented by using separate arrays for real values and for
-imaginary values.
+applications. Table~\ref{architecture-properties} shows the most
+important properties of the different many-core architectures. Below,
+we discuss the architectures in more detail, and end the section with
+a summary of the most important similarities and differences for signal processing applications.
 
 
 \subsection{General Purpose multi-core CPU (Intel Core i7 920)}
@@ -419,13 +438,10 @@ memory.
 
 The ATI 4870 GPU has the largest number of cores of all architectures
 we evaluate (800).  However, the architecture has several important
-drawbacks for data-intensive applications.  \textbf{FIXME} First, there is no way to
-synchronize threads. With other architectures, we can improve the
-cache hit ratio significantly by letting threads that access the same
-samples run in lock step, increasing data reuse.  Second, the
+drawbacks for data-intensive applications.  First, the
 host-to-device bandwidth is too low. In practice, the achieved
 PCI-express bandwidth is far from the theoretical limit. The achieved
-bandwidth is not enough to keep all cores busy.  Third, we found that
+bandwidth is not enough to keep all cores busy.  Second, we found that
 overlapping communication with computation by performing asynchronous
 data transfers between the host and the device has a large impact on
 kernel performance. We observed kernel slowdowns of \emph{a factor of
@@ -502,34 +518,6 @@ system have a total theoretical single-precision peak performance of
 205 gflops.
 
 
-\subsection{Larrabee}
-
-Intel recently disclosed some details about the upcoming Larrabee processor,
-a fully programmable GPU based on the well-known x86 instruction set.
-Although performance details are unknown, it is interesting to compare the
-Larrabee to the aforementioned architectures, and to see how a correlator
-should be implemented to obtain optimal performance.
-
-The processing power comes from Larrabee's relatively long vector size:
-a vector holds 16~elements, where the other architectures have vectors lengths
-of at most~4.
-The long vector size forces us to reconsider our parallelization strategy.
-There are several options to perform 16~simultaneous FMAs.
-One option is to operate on 16~samples with consecutive time stamps.
-A minor drawback is that the data must be ``horizontally'' added to integrate,
-but this can be done outside the main loop.
-Another option is to operate on samples from 16~consecutive frequencies.
-An advantage of this may be that the input is in the right order (i.e.,
-the 16~values can be read from consecutive memory locations) if a Poly-Phase
-Filter precedes the correlator: the FFT outputs consecutive frequencies into
-consecutive memory locations.
-Both 
-
-Another option is to correlate samples from different receivers as illustrated
-by Figure~\ref{fig:4x4-correlation}.
-This method minimizes memory loads, but requires additional shuffling of data.
-Unfortunately, the most efficient method can only be determined empirically,
-when the hardware is available.
 
 
 \subsection{Essential properties and differences}
@@ -553,6 +541,44 @@ communication             & DMA between SPEs               & independent thread 
 \caption{Differences between many-core memory architectures.}
 \label{memory-properties}
 \end{table*}
+
+Support for dealing with complex numbers is important for signal
+processing applications. Explicit support for complex operations is
+preferrable, both in terms of programmability and performance.  If it
+is not available, we can circumvent this by using separate arrays for
+real values and for imaginary values.  Except for the Blue Gene/P (and
+to some extent the Core~i7), none of the architectures do not support
+complex operations.
+
+The different architectures require two different approaches of dealing with this problem. First, if an
+architecture does not use explicit SIMD (vector) parallelism, the complex
+operations can simply be expressed in terms of normal floating point
+operations. This puts an extra burden on the programmer, but achieves
+good performance. The NVIDIA GPUs work this way.
+Second, if an architecture does use vector parallelism, we can either
+store the real and complex parts inside a single vector, or have
+seperate vectors for the two parts.  In both cases, support for
+shuffling data inside the vector registers is essential. In this
+context, the Cell/B.E. excels.  Its vectors contain four floats, which
+can be shuffled around in arbitrary patterns. Moreover, this is done
+in a different pipeline than the arithmetic itself, allowing the
+programmer to overlap shuffling and computations effectively.  On ATI
+GPUs, this works in a similar way.  The SSE instruction set in the
+Intel core~i7, however, does not support arbitrary shuffling patterns.  This
+has a large impact on the way the code is vectorized, and requires a
+different SIMDization strategy. In the case of the
+correlator, this led to suboptimal performance.
+
+%% complexe getallen zijn belangrijk voor signal processing.
+%% Niet alle arch ondersteunen dit even goed.
+
+%% 3 gevallen:
+
+%% 1) geen vectoren: geen probleem, je kunt het dan gewoon uitschrijven.
+%% 2) BG/P: ingebouwde support voor complexe operaties
+%% 3) geen support: dan moet je de data shuffelen binnen de vectoren.
+%%     De ene arch kan dit beter dan de andere.
+
 
 
 \section{Optimizing the correlator}
@@ -690,11 +716,39 @@ efficiently exploit many-core hardware.
 \subsection{NVIDIA}
 \subsection{ATI}
 \subsection{Cell}
-\subsection{Larrabee}
 
- 
+
 \section{Programmability}
 
+
+\subsection{Aplying our techniques: a case study with the Intel Larrabee}
+
+Intel recently disclosed some details about the upcoming Larrabee processor,
+a fully programmable GPU based on the well-known x86 instruction set.
+Although performance details are unknown, it is interesting to compare the
+Larrabee to the aforementioned architectures, and to see how a correlator
+should be implemented to obtain optimal performance.
+
+The processing power comes from Larrabee's relatively long vector size:
+a vector holds 16~elements, where the other architectures have vectors lengths
+of at most~4.
+The long vector size forces us to reconsider our parallelization strategy.
+There are several options to perform 16~simultaneous FMAs.
+One option is to operate on 16~samples with consecutive time stamps.
+A minor drawback is that the data must be ``horizontally'' added to integrate,
+but this can be done outside the main loop.
+Another option is to operate on samples from 16~consecutive frequencies.
+An advantage of this may be that the input is in the right order (i.e.,
+the 16~values can be read from consecutive memory locations) if a Poly-Phase
+Filter precedes the correlator: the FFT outputs consecutive frequencies into
+consecutive memory locations.
+Both 
+
+Another option is to correlate samples from different receivers as illustrated
+by Figure~\ref{fig:4x4-correlation}.
+This method minimizes memory loads, but requires additional shuffling of data.
+Unfortunately, the most efficient method can only be determined empirically,
+when the hardware is available.
 
 \section{Conclusions}
 
