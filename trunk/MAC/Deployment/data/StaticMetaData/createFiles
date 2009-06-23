@@ -325,9 +325,12 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     srcFile = dataDir + "/" + stationName.lower() + "-cabledelays.conf"
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
-        return
+        print "Will create CableDelays_default.conf instead"
+        srcFile = dataDir + "/CableDelays_default.conf"
+        destFile= resultDir + "/CableDelays_default.conf"
+    else:
+        destFile = resultDir + "/CableDelays.conf"
     
-    destFile = resultDir + "/CableDelays.conf"
     command = "cp -f "+srcFile+ " " + destFile
     print command
     os.system(command)
