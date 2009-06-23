@@ -544,30 +544,30 @@ communication             & DMA between SPEs               & independent thread 
 
 Support for dealing with complex numbers is important for signal
 processing applications. Explicit support for complex operations is
-preferrable, both in terms of programmability and performance.  If it
+preferable, both in terms of programmability and performance.  If it
 is not available, we can circumvent this by using separate arrays for
 real values and for imaginary values.  Except for the Blue Gene/P (and
 to some extent the Core~i7), none of the architectures do not support
 complex operations.
 
-The different architectures require two different approaches of dealing with this problem. First, if an
-architecture does not use explicit SIMD (vector) parallelism, the complex
-operations can simply be expressed in terms of normal floating point
-operations. This puts an extra burden on the programmer, but achieves
-good performance. The NVIDIA GPUs work this way.
-Second, if an architecture does use vector parallelism, we can either
-store the real and complex parts inside a single vector, or have
-seperate vectors for the two parts.  In both cases, support for
-shuffling data inside the vector registers is essential. We found that
-the architectures differ considerably in this respect.
-The Cell/B.E. excels; its vectors contain four floats, which
+The different architectures require two different approaches of
+dealing with this problem. First, if an architecture does not use
+explicit SIMD (vector) parallelism, the complex operations can simply
+be expressed in terms of normal floating point operations. This puts
+an extra burden on the programmer, but achieves good performance. The
+NVIDIA GPUs work this way.  Second, if an architecture does use vector
+parallelism, we can either store the real and complex parts inside a
+single vector, or have separate vectors for the two parts.  In both
+cases, support for shuffling data inside the vector registers is
+essential. We found that the architectures differ considerably in this
+respect.  The Cell/B.E. excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, this is done
 in a different pipeline than the arithmetic itself, allowing the
 programmer to overlap shuffling and computations effectively.  On ATI
 GPUs, this works in a similar way.  The SSE instruction set in the
-Intel core~i7, however, does not support arbitrary shuffling patterns.  This
-has a large impact on the way the code is vectorized, and requires a
-different SIMDization strategy. In the case of the
+Intel core~i7, however, does not support arbitrary shuffling patterns.
+This has a large impact on the way the code is vectorized, and
+requires a different SIMDization strategy. In the case of the
 correlator, this led to suboptimal performance.
 
 %% complexe getallen zijn belangrijk voor signal processing.
