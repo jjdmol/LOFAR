@@ -89,82 +89,84 @@ main()
     // read ConfigurationName
     string str;
     sscanf(dynStr_fileContent[index++],"%s",str);
-    strCurConfig=strtoupper(str);
-    Debug("readStationConfigs.ctl:main|Reading  Config for: "+strCurConfig);
+    if (strlen(str) > 0 && str[0] != " " && str[0] != "#") {
+      strCurConfig=strtoupper(str);
+      Debug("readStationConfigs.ctl:main|Reading  Config for: "+strCurConfig);
 
     
-    // read fieldcenter
-    sscanf(dynStr_fileContent[index++],"%*d %*s %f %f %f",centerOL,centerNB,centerH);
-    if (bDebug) DebugN("Reading  Config for center OL,NB,H:" + centerOL + " " + centerNB + " " + centerH);
+      // read fieldcenter
+      sscanf(dynStr_fileContent[index++],"%*d %*s %f %f %f",centerOL,centerNB,centerH);
+      if (bDebug) DebugN("Reading  Config for center OL,NB,H:" + centerOL + " " + centerNB + " " + centerH);
 
-    // read nr of antennas
-    sscanf(dynStr_fileContent[index++],"%d",nr_ofAnt);
-    if (bDebug) DebugN("Nr of Antenna's in this Config: "+nr_ofAnt);
+      // read nr of antennas
+      sscanf(dynStr_fileContent[index++],"%d",nr_ofAnt);
+      if (bDebug) DebugN("Nr of Antenna's in this Config: "+nr_ofAnt);
    
-    // Select on allowed configurations
-    if (strCurConfig == "LBA" || 
-        strCurConfig == "HBA" ||
-        (strCurConfig == "LBAX" && !foundLBA)
-         ) {
-      DebugN("--> will be read");
-      bool splitArray=false;   //LBAXarray is 48 lines, 1st col(x3) contains 0-47  2ndco(x3) contain 48-96 
-      if (strCurConfig == "LBA") foundLBA=true;
-      if (strCurConfig == "LBAX") {
-        strCurConfig="LBA";
-        splitArray=true;
-      }
+      // Select on allowed configurations
+      if (strCurConfig == "LBA" || 
+          strCurConfig == "HBA" ||
+          (strCurConfig == "LBAX" && !foundLBA)
+          ) {
+        DebugN("--> will be read");
+        bool splitArray=false;   //LBAXarray is 48 lines, 1st col(x3) contains 0-47  2ndco(x3) contain 48-96 
+        if (strCurConfig == "LBA") foundLBA=true;
+        if (strCurConfig == "LBAX") {
+          strCurConfig="LBA";
+          splitArray=true;
+        }
       
 
-      for (int ix = index; ix < nr_ofAnt + index; ix++ )
-      {
+        for (int ix = index; ix < nr_ofAnt + index; ix++ )
+        {
        
-        float deltaOL;
-        float deltaNB;
-        float deltaH;
-        float deltaOL2;
-        float deltaNB2;
-        float deltaH2;
+          float deltaOL;
+          float deltaNB;
+          float deltaH;
+          float deltaOL2;
+          float deltaNB2;
+          float deltaH2;
       
-        // read new line of delta's
-        if (splitArray) {
-          sscanf(dynStr_fileContent[ix],"%lf %lf %lf %lf %lf %lf",deltaOL,deltaNB,deltaH,deltaOL2,deltaNB2,deltaH2);
-        } else {
-          sscanf(dynStr_fileContent[ix],"%lf %lf %lf",deltaOL,deltaNB,deltaH);
-        }    
-        if (bDebug) DebugN("OL :"+deltaOL+ " NB: "+ deltaNB+ " H: "+deltaH);
-        if (bDebug) DebugN("ix: " + ix + " index: " + index);
-        if (bDebug) DebugN("Filling array at index: "+ (ix+1-index));
-        antConfFileOL[(ix+1-index)] = deltaOL;
-        antConfFileNB[(ix+1-index)] = deltaNB;
-        antConfFileH[(ix+1-index)]  = deltaH;
-        if (splitArray) {
-          if (bDebug) DebugN("OL2 :"+deltaOL2+ " NB2: "+ deltaNB2+ " H2: "+deltaH2);
-          if (bDebug) DebugN("Filling array at index: "+ (ix+1-index+48));
-          antConfFileOL[(ix+1-index+48)] = deltaOL2;
-          antConfFileNB[(ix+1-index+48)] = deltaNB2;
-          antConfFileH[(ix+1-index+48)]  = deltaH2;
+          // read new line of delta's
+          if (splitArray) {
+            sscanf(dynStr_fileContent[ix],"%lf %lf %lf %lf %lf %lf",deltaOL,deltaNB,deltaH,deltaOL2,deltaNB2,deltaH2);
+          } else {
+            sscanf(dynStr_fileContent[ix],"%lf %lf %lf",deltaOL,deltaNB,deltaH);
+          }    
+          if (bDebug) DebugN("OL :"+deltaOL+ " NB: "+ deltaNB+ " H: "+deltaH);
+          if (bDebug) DebugN("ix: " + ix + " index: " + index);
+          if (bDebug) DebugN("Filling array at index: "+ (ix+1-index));
+          antConfFileOL[(ix+1-index)] = deltaOL;
+          antConfFileNB[(ix+1-index)] = deltaNB;
+          antConfFileH[(ix+1-index)]  = deltaH;
+          if (splitArray) {
+            if (bDebug) DebugN("OL2 :"+deltaOL2+ " NB2: "+ deltaNB2+ " H2: "+deltaH2);
+            if (bDebug) DebugN("Filling array at index: "+ (ix+1-index+48));
+            antConfFileOL[(ix+1-index+48)] = deltaOL2;
+            antConfFileNB[(ix+1-index+48)] = deltaNB2;
+            antConfFileH[(ix+1-index+48)]  = deltaH2;
+          }
         }
+      
+        if (bDebug) DebugN("antConfFileOL: "+antConfFileOL);
+      
+        // All the reading has been done.
+        dpSet("remoteStation."+strCurConfig+".centerOL",centerOL,
+              "remoteStation."+strCurConfig+".centerNB",centerNB,
+              "remoteStation."+strCurConfig+".centerH",centerH);
+      
+        int ix=nr_ofAnt;
+        if (splitArray) ix *= 2;
+        for (int i=1; i<= ix;i++) {
+          string ant=(i-1);
+          dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
+                strCurConfig+ant+".deltaY",antConfFileNB[i],
+                strCurConfig+ant+".deltaH",antConfFileH[i]);
+        }
+      } else {
+        DebugN("--> will be skipped");
       }
-      
-      if (bDebug) DebugN("antConfFileOL: "+antConfFileOL);
-      
-      // All the reading has been done.
-      dpSet("remoteStation."+strCurConfig+".centerOL",centerOL,
-            "remoteStation."+strCurConfig+".centerNB",centerNB,
-            "remoteStation."+strCurConfig+".centerH",centerH);
-      
-      int ix=nr_ofAnt;
-      if (splitArray) ix *= 2;
-      for (int i=1; i<= ix;i++) {
-        string ant=(i-1);
-        dpSet(strCurConfig+ant+".deltaX",antConfFileOL[i],
-              strCurConfig+ant+".deltaY",antConfFileNB[i],
-              strCurConfig+ant+".deltaH",antConfFileH[i]);
-      }
-    } else {
-      DebugN("--> will be skipped");
+      index +=nr_ofAnt+1;
     }
-    index +=nr_ofAnt+1;
   }
   
   //
