@@ -13,6 +13,10 @@ class Section:
     self.parset = parset
     self.commands = []
 
+    self.logoutputs = []
+    if Locations.nodes["logserver"]:
+      self.logoutputs.append( "tcp:%s" % (Locations.nodes["logserver"],) )
+
   def __str__(self):
     return self.__class__.__name__
 
@@ -63,7 +67,7 @@ class SectionSet(list):
 
 class CNProcSection(Section):
   def run(self):
-    logfile = "%s/run.CNProc.%s.log" % (Locations.files["logdir"],self.parset.partition)
+    logfiles = ["%s/run.CNProc.%s.log" % (Locations.files["logdir"],self.parset.partition)] + self.logoutputs
 
     # CNProc is started on the Blue Gene, which has BG/P mpirun 1.65
     # NOTE: This mpirun needs either stdin or stdout to be line buffered,
@@ -88,7 +92,7 @@ class CNProcSection(Section):
       "-args %s" % (Locations.files["parset"],),
     ]
 
-    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfile, killcmd=mpikill ) )
+    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
 
   def check(self):
     # we have to own the partition
@@ -121,9 +125,9 @@ class IONProcSection(Section):
          self.pidfiles[node],
          Locations.files["ionproc"],Locations.files["parset"] )
 
-      logfile = "%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)
+      logfiles = ["%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)] + self.logoutputs
 
-      self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfile ) )
+      self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfiles ) )
 
   def abort( self, soft = True ):
     signal = [9,2][bool(soft)]
@@ -140,12 +144,12 @@ class IONProcSection(Section):
     ionodes = self.parset.psets
 
     for node in ionodes:
-      c = SyncCommand( "ping %s -c 1 -w 2 -q" % (node,), outfile="/dev/null" )
+      c = SyncCommand( "ping %s -c 1 -w 2 -q" % (node,), ["/dev/null"] )
       assert c.isSuccess(), "Cannot reach I/O node %s" % (node,)
 
 class StorageSection(Section):
   def run(self):
-    self.logfile = "%s/run.Storage.%s.log" % (Locations.files["logdir"],self.parset.partition)
+    logfiles = ["%s/run.Storage.%s.log" % (Locations.files["logdir"],self.parset.partition)] + self.logoutputs
 
     # the PID of mpirun
     self.pidfile = "%s/Storage-%s.pid" % (Locations.files["rundir"],self.parset.partition)
@@ -155,7 +159,7 @@ class StorageSection(Section):
 
     # create the target directories
     for n in Locations.nodes["storage"]:
-      self.commands.append( SyncCommand( "ssh %s mkdir %s" % (n,os.path.dirname(self.parset.parseMask()),), self.logfile ) )
+      self.commands.append( SyncCommand( "ssh %s mkdir %s" % (n,os.path.dirname(self.parset.parseMask()),), logfiles ) )
 
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
     mpiparams = [
@@ -180,7 +184,7 @@ class StorageSection(Section):
       "%s" % (Locations.files["parset"],),
     ]
 
-    self.commands.append( AsyncCommand( "ssh %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), self.logfile ) )
+    self.commands.append( AsyncCommand( "ssh %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, soft = True ):
     signal = [9,2][bool(soft)]

@@ -42,12 +42,14 @@ class Locations:
 	"cnproc":  "${BASEDIR}/bin/CN_Processing.cnk",
 	"ionproc": "${BASEDIR}/bin/IONProc.ppc",
 	"storage": "${BASEDIR}/bin/Storage.x86_64",
-
       } )
       
       self.nodes.update( {
         # which storage nodes to use
 	"storage": ["list001","list002"],
+
+        # default log server address
+        "logserver": "tcp:127.0.0.1:24500"
       } )
     else:
       self.files.update( {
@@ -59,6 +61,9 @@ class Locations:
 
       self.nodes.update( {
 	"storage": ["list003","list004"],
+
+        # no external log server
+        "logserver": "",
       } )
 
     self.files.update( {
@@ -69,8 +74,8 @@ class Locations:
 	"parset":  "${RUNDIR}/RTCP.parset", 
 
         # where to store logs and start the executables
-	"logdir":  "${BASEDIR}/log",
-	"rundir":  "${LOGDIR}",
+	"logdir":  "listfen:/log/L${YEAR}_${MSNUMBER}",
+	"rundir":  "${BASEDIR}",
 
         # locations of the observation id counter and tables
 	"mslist":       "listfen:/log/MSList",
@@ -86,7 +91,10 @@ class Locations:
     self.files[name] = path 
 
   def resolvePath(self,path,parset=None):
-    """ Resolve a path by replacing ${BASEDIR} by self["basedir"], etc. """
+    """ Resolve a path by replacing ${BASEDIR} by self["basedir"], etc.
+
+        For replacements, the paths in self.files are used, and optionally
+        the masks allowed by parset.parseMask, such as ${OBSID}. """
 
     allNames = [("${%s}" % (name.upper(),),value) for name,value in self.files.iteritems()]
 

@@ -1,7 +1,9 @@
 import os
 import fcntl
+import socket
 from subprocess import Popen,STDOUT,call
 from Hosts import ropen
+from tee import Tee
 
 DRYRUN = False
 
@@ -18,26 +20,40 @@ class AsyncCommand(object):
     Executes an external command in the background
     """
 
-    def __init__(self, cmd, outfile=None, infile=None, killcmd=os.kill ):
+    def __init__(self, cmd, outfiles=[], infile=None, killcmd=os.kill ):
         """ Run command `cmd', with I/O optionally redirected.
 
-            cmd:     command to execute.
-            outfile: filename for output, or None.
-            infile:  filename for input, or None.
-            killcmd: function used to abort, called as killcmd( pid, signal ). """
+            cmd:      command to execute.
+            outfiles: filenames for output, or [] to use stdout.
+            infile:   filename for input, or None to use stdin.
+            killcmd:  function used to abort, called as killcmd( pid, signal ). """
 
         if DRYRUN:
           self.cmd = "echo %s" % (cmd,)
         else:
           self.cmd = cmd
 
-        debug("RUN %s: %s > %s" % (self.__class__.__name__,cmd,outfile))
+        debug("RUN %s: %s > %s" % (self.__class__.__name__,cmd,", ".join(outfiles)))
 
-        if outfile is None:
+        if outfiles == []:
           stdout = None
         else:
-          # Line buffer stdout to get lower latency logging info.
-          stdout = ropen( outfile, "w", 1 )
+          # open all outputs, remember them to prevent the files
+          # from being closed at the end of __init__
+          self.outputs = [ropen( o, "w", 1 ) for o in outfiles]
+
+          if len(self.outputs) == 1:
+            # one output, no need to multiplex
+            stdout = self.outputs[0]
+          else:
+            # create a pipe to multiplex everything through
+            r,w = os.pipe()
+
+            # feed all file descriptors to Tee
+            Tee( r, [o.fileno() for o in self.outputs] )
+
+            # keep the pipe input
+            stdout = w
 
         if infile is None:
           stdin = None
@@ -51,6 +67,12 @@ class AsyncCommand(object):
         self.killcmd = killcmd
         self.popen = Popen( self.cmd.split(), stdin=stdin, stdout=stdout, stderr=STDOUT )
         self.run()
+
+    def mergeOutputs( outputs ):
+      """ Merges outputs (a list of strings) into one file descriptor. """
+
+
+      return w
 
     def run(self):
         """ Will be called when the command has just been started. """
@@ -71,7 +93,12 @@ class AsyncCommand(object):
           # already wait()ed before
           return
 
-        self.success = self.popen.wait() == 0
+        try:
+          self.success = self.popen.wait() == 0
+        except OSError:
+          # process died prematurely or never started?
+          self.success = False
+
         self.done = True
         self.reaped = True
 

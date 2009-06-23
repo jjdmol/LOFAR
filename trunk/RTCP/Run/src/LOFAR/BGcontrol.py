@@ -195,7 +195,7 @@ def freePartition( partition ):
 
 def allocatePartition( partition ):
   """ Allocate the given partition by running Hello World. """
-  return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), "/dev/null" ).isSuccess()
+  return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), ["/dev/null"] ).isSuccess()
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
