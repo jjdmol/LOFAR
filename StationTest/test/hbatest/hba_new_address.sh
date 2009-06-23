@@ -28,7 +28,7 @@ if [ -z $oldAddr ]; then
 fi
 
 echo ""
-echo "Try to read the old HBA server address" $newAddr "to check that it is present in the HBA tile."
+echo "Try to read the old HBA server address" $newAddr "to check that it is present in the HBA tile (should go PASSED)."
 python $PYTHONPATH/../verify.py --brd rsp$rspNr --fp blp$blpNr -v $vb --te $PYTHONPATH/../tc/hba_server.py --server $oldAddr --server_access uc --server_function gb --server_reg address --data $oldAddr
 
 
@@ -37,7 +37,7 @@ echo -n "Give the new address for HBA server: "
 read newAddr
 
 echo ""
-echo "Try to read the new HBA server address" $newAddr "to check that it is not already present in the HBA tile."
+echo "Try to read the new HBA server address" $newAddr "to check that it is not already present in the HBA tile (should go FAILED)."
 python $PYTHONPATH/../verify.py --brd rsp$rspNr --fp blp$blpNr -v $vb --te $PYTHONPATH/../tc/hba_server.py --server $newAddr --server_access uc --server_function gb --server_reg address --data $newAddr
 
 echo    ""
