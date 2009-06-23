@@ -379,29 +379,29 @@ a summary of the most important similarities and differences for signal processi
 
 \subsection{General Purpose multi-core CPU (Intel Core i7 920)}
 
-As a reference, we implemented the correlator on a multi-core general-purpose
-architecture.
-The theoretical peak performance of the system is 85~gflops, in single
-precision.
-The parallelism comes from four cores with two-way hyperthreading, and a vector length of four floats,
-provided by the SSE4 instruction set.  
+As a reference, we implemented the correlator on a multi-core
+general-purpose architecture, in this case an Intel core~i7.  The theoretical peak performance of the
+system is 85~gflops, in single precision.  The parallelism comes from
+four cores with two-way hyperthreading, and a vector length of four
+floats, provided by the SSE4 instruction set.
 
-SSE4 does not provide fused multiply-add instructions, but the Core~i7 issues
-vector-multiply and vector-add instructions concurrently in different pipelines,
-allowing eight flops per cycle per core.
-One problem of SSE4 that complicates an efficient correlator is the limited
-support for shuffling data within vector registers, unlike the Cell~BE, for
-instance, that can shuffle any byte to any position.
-Also, the number of vector registers is small (sixteen four-word registers).
-Therefore, the is not much opportunity to reuse data in registers; reuse
-has to come from the L1~data cache.
-Consequently, the correlator uses a small tile size.
-
+SSE4 does not provide fused multiply-add instructions, but the Core~i7
+issues vector-multiply and vector-add instructions concurrently in
+different pipelines, allowing eight flops per cycle per core.  One
+problem of SSE4 that complicates an efficient correlator is the
+limited support for shuffling data within vector registers, unlike the
+Cell~BE, for instance, that can shuffle any byte to any position.
+Also, the number of vector registers is small (sixteen four-word
+registers).  Therefore, the is not much opportunity to reuse data in
+registers; reuse has to come from the L1~data cache. 
+% Consequently,
+%the correlator uses a small tile size.
+% ROB: not explained yet
 
 \subsection{IBM Blue Gene/P}
 
 The IBM Blue Gene/P~(BG/P)~\cite{IBM:08} is the architecture that is
-currently used for the LOFAR correlator~\cite{Romein:06,Romein:09b}.
+currently used for the LOFAR production correlator~\cite{Romein:09b}.
 Four PowerPC processors are integrated on each Blue Gene/P chip.
 The BG/P is an energy efficient supercomputer.
 This is accomplished by using many small, low-power chips, at a low clock
@@ -417,9 +417,9 @@ In contrast to all other architectures we evaluate, the problem is compute
 bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
 operation, which is 3--10 times higher than for the other architectures.
 The BG/P has 32 vector registers of width 2.  Therefore, 64 floating
-point numbers (with double precision) can be kept in registers
-simultaneously. This is the same amount as on the general purpose
-Intel chip, but an important difference is that the BG/P has 32
+point numbers can be kept in registers
+simultaneously. Although this is the same amount as on the general purpose
+Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
 
@@ -427,17 +427,16 @@ vector size reduces the amount of shuffle instructions needed.
 \subsection{ATI GPU}
 
 The most high-end GPU provided by ATI (recently acquired by AMD) is
-the 4870~\cite{amd-manual}.  The 4870 chip contains 800 scalar 32-bit
-streaming processors.  The theoretical peak performance is
+the 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total, 
+and has a theoretical peak performance of
 1.2~teraflops. The board uses a PCI-express~2.0 interface
-for communication with the host system.  Ten cores
-share 16 KB of local memory and separate L1 texture cache.  The L2
-cache is shared. The The application can specify if a read should be
-cached or not.  The SIMD cores can exchange data using 16 KB of global
-memory.
+for communication with the host system.
+The application can specify if a read should be
+cached by the texture cache or not, while the streaming processors have 16 KB of shared
+memory that is completely managed by the application.
 
-The ATI 4870 GPU has the largest number of cores of all architectures
-we evaluate (800).  However, the architecture has several important
+The ATI 4870 GPU has the largest number of FPUs of all architectures
+we evaluate.  However, the architecture has several important
 drawbacks for data-intensive applications.  First, the
 host-to-device bandwidth is too low. In practice, the achieved
 PCI-express bandwidth is far from the theoretical limit. The achieved
@@ -445,7 +444,7 @@ bandwidth is not enough to keep all cores busy.  Second, we found that
 overlapping communication with computation by performing asynchronous
 data transfers between the host and the device has a large impact on
 kernel performance. We observed kernel slowdowns of \emph{a factor of
-three} due to transfers in the background.  Fourth, the architecture
+three} due to transfers in the background.  Third, the architecture
 does not provide random write access to device memory, but only to
 \emph{host} memory. However, for our application which is mostly
 read-performance bound, this does not have a large impact.
@@ -454,31 +453,22 @@ read-performance bound, this does not have a large impact.
 \subsection{NVIDIA GPU}
 
 NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single precision
-and 30 double precision ALUs.  Current NVIDIA GPUs thus have fewer
+and 30 double precision FPUs. The GTX~280 uses a two-level hierarchy to group cores.
+There are 30~independent \emph{multiprocessors\/} that each have 8~cores.
+Current NVIDIA GPUs have fewer
 cores than ATI GPUs, but the individual cores are faster.
-%The memory architecture is also quite different.
-%NVIDIA GPUs still use GDDR3 memory, while ATI already uses GDDR5 with the
-%4870~GPU.
 The theoretical peak performance is 933 gflops.
-
-The GTX~280 uses a two-level hierarchy to group cores.
-There are 15~independent \emph{multiprocessors\/} that each have 16~cores.
-A multiprocessor shares a large (16,384) register file, a 16~KiB cache
-
-
 The number of registers is large: there are 16384 32-bit floating
 point registers per multiprocessor. There also is 16~KB of shared
 memory per multiprocessor.  This memory is shared between all threads
-on a multiprocessor, but not globally.  There is a total amount of 64
-KB of constant memory on the chip.  Finally, texture caching hardware
-is available.  The application has some control over the caching
-hardware.  It is possible to specify which area of device memory must
-be cached, while the shared memory is completely managed by the
-application.
+on a multiprocessor, but not globally.  Finally, texture caching
+hardware is available.  The application can specify which area of
+device memory must be cached, while the shared memory is completely
+managed by the application.
 
-On NVIDIA GPUs, it is possible to synchronize the threads within a
+On both GPU archtectures, it is possible to synchronize the threads within a
 multiprocessor.  With our application, we exploit this to increase the
-cache hit ratio. This improves performance considerably.  When
+cache hit ratio. On NVIDIA hardware, this improves performance considerably.  When
 accessing device memory, it is important to make sure that
 simultaneous memory accesses by different threads are \emph{coalesced}
 into a single memory transaction.  In contrast to ATI hardware, NVIDIA
@@ -512,7 +502,7 @@ which are 128-bit (4 floats) wide.  The SPU can dispatch two
 instructions in each clock cycle using the two pipelines designated
 \emph{even} and \emph{odd}. Most of the arithmetic instructions
 execute on the even pipe, while most of the memory instructions
-execute on the odd pipe.  We use a QS21 Cell blade with two
+execute on the odd pipe.  For the performance evaluation, we use a QS21 Cell blade with two
 \mbox{Cell/B.E.} processors.  The 8 SPEs of a single chip in the
 system have a total theoretical single-precision peak performance of
 205 gflops.
@@ -564,7 +554,7 @@ respect.  The Cell/B.E. excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, this is done
 in a different pipeline than the arithmetic itself, allowing the
 programmer to overlap shuffling and computations effectively.  On ATI
-GPUs, this works in a similar way.  The SSE instruction set in the
+GPUs, this works in a similar way.  The SSE4 instruction set in the
 Intel core~i7, however, does not support arbitrary shuffling patterns.
 This has a large impact on the way the code is vectorized, and
 requires a different SIMDization strategy. In the case of the
@@ -677,7 +667,7 @@ bandwidth. The memory aspects of the algorithm are twofold.
 There is an algorithmic part, the tile size, which is limited
 by the number of registers. The second aspect is architectural in nature: the cache
 sizes, cache hierarchy and hit ratio. Together, these two aspects dictate the
-memory bandwidth that is needed to keep the ALUs busy.
+memory bandwidth that is needed to keep the FPUs busy.
 
 \begin{table}
 \begin{center}
