@@ -10,6 +10,7 @@
 % DUS zowel XY als YX. Voor stations doe je dit niet. We kunnen polarisaties dus niet weg laten.
 % Daarom kwam John ook op een AI van 0.5 uit IPV 1.
 
+
 %% complexe getallen zijn belangrijk voor signal processing.
 %% Niet alle arch ondersteunen dit even goed.
 
@@ -240,10 +241,9 @@ purposes~\cite{Nieuwpoort:09}.
 \includegraphics[width=12cm]{figures/processing-overview.pdf}
 \end{center}
 \vspace{-0.5cm}
-\caption{An simplified view of LOFAR processing.}
+\caption{A simplified view of LOFAR processing.}
 \label{fig-processing-overview}
 \end{figure*}
-%The pipeline runs from left to right. @@@ maak pijlen in fig
 
 An overview of the processing needed for the standard imaging pipeline
 of LOFAR is shown in Figure~\ref{fig-processing-overview}.  The
@@ -253,28 +253,46 @@ the signal path must be compensated for, and the data streams from
 different receivers must be cross-correlated. The correlation process
 performs a data reduction by integrating samples over time.  In this
 paper, we focus on the correlator step (the gray box in
-Figure~\ref{fig-processing-overview}), because its costs grow
-quadratically with the number of receivers. All other steps have a
+Figure~\ref{fig-processing-overview}), because it must deal with the full data streams
+from all receivers. Moreover, its costs grow
+quadratically with the number of receivers, while all other steps have a
 lower time complexity.  
 
 The data streams from the receivers contain samples, which are complex
 numbers that represent the amplitude and phase of a signal at a
-particular time. Single precision floating point is accurate enough
-for our purposes.  The receivers are dual-polarized; they take
-separate samples from orthogonal (X and Y) directions.
-% meer zeggen over precisie? 4, 8, en 16 bit modes voor LOFAR, SKA zelfs 2 bit.
+particular time.  The receivers are dual-polarized; they take separate
+samples from orthogonal (X and Y) directions.  The LOFAR receivers
+support 4, 8 and 16 bit integer samples, where the normal mode of
+operation uses the 16 bit samples. The smaller samples are important
+for observations that require larger frequency bands (but with less accuracy).
+The future SKA telescope will
+likely use 2 bit samples.  Before filtering and correlating, the
+samples are converted to single precision floating point.  This is
+accurate enough for our purposes. From the perspective of the
+correlator, samples thus consist of four 32-bit floating point
+numbers: two polarizations, each with a real and an imaginary part.
+
+Prior to correlation, an FX correlator must reorder the data that comes from
+the receivers:
+each input carries the signals of from many frequency subbands from a single
+receiver, but the correlator needs data from a single frequency of all inputs.
+Depending on the data rate, switching the data can be a real challenge.
+The data reordering phase is outside the scope of this paper, but a correlator
+implementation cannot ignore this issue.
+The LOFAR Blue Gene/P correlator uses the fast 3-D~torus for this purpose;
+other multi-core architectures need external switches.
 
 The received signals from sky sources are so weak, that the antennas 
 mainly receive noise. To see if there is statistical coherence
 in the noise, simultaneous samples of each pair of receivers are correlated, 
 by multiplying the sample of one receiver with the complex
 conjugate (i.e., the imaginary part is negated) of the sample of the other receiver.
-To reduce the output size, the products are integrated, by accumulating all products. 
+To reduce the output size, the correlations are integrated, by accumulating all products. 
+Therefore, the correlator is mostly multiplying and adding complex numbers.
 Both polarizations of a station A are correlated with both polarizations 
 of a station B, yielding correlations in XX, XY, YX, and YY
 directions. Receivers are also autocorrelated, i.e., with
 themselves. 
-The correlator thus is mostly multiplying and adding complex numbers.
 The correlator algorithm itself thus is straightforward, and can be
 written in a single formula: \\
 $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,t,p_1} * Z_{s_2,t,p_2}^\ast$ 
@@ -286,27 +304,17 @@ since we need this later in the pipeline for calibration purposes.
 The autocorrelations can be computed with half the number of instructions.
 
 We can implement the correlation operation very efficiently, with only
-four fma instructions, doing eight floating-point operations in
+four fused-multily-add (fma) instructions, doing eight floating-point operations in
 total. For each pair of receivers, we have to do this four times, once
 for each combination of polarizations. Thus, in total we need 32
-operations. To perform these operations, we have to load the samples two receivers from memory.
-The samples each consist of
-four single precision floating point numbers: a real and imaginary part, and two polarizations.
+operations. To perform these operations, we have to load the samples generated by two different receivers from memory.
+As explained above, the samples each consist of four single precision floating point numbers (a real and imaginary part, and two polarizations).
 Therefore, we need to load 8 floats or 32 bytes in total.
 This results in \emph{exactly one FLOP/byte}.  The number of operations that is performed per byte
 that has to be loaded from main memory is called the \emph{arithmetic intensity}~\cite{system-performance}. 
 For the correlation algorithm,
 the arithmetic intensity is extremely low.
 
-Prior to correlation, an FX correlator must reorder the data that comes from
-the receivers:
-each input carries the signals of from many frequency subbands from a single
-receiver, but the correlator needs data from a single frequency of all inputs.
-Depending on the data rate, switching the data can be a real challenge.
-The data reordering phase is outside the scope of this paper, but a correlator
-implementation cannot ignore this issue.
-The LOFAR Blue Gene/P correlator uses the fast 3-D~torus for this purpose;
-other multi-core architectures need external switches.
 
 
 \section{Many-core architectures}
