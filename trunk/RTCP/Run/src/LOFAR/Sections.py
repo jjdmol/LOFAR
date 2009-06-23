@@ -105,16 +105,35 @@ class CNProcSection(Section):
 
 class IONProcSection(Section):
   def run(self):
-    ionodes = self.parset.psets
+    self.pidfiles = {}
 
-    # change working directory to the rundir, and execute IONProc
-    cmd = "bash -c '(cd %s; %s %s)'" % (Locations.files["rundir"],Locations.files["ionproc"],Locations.files["parset"])
+    ionodes = self.parset.psets
 
     for node in ionodes:
       nodenr = node.split(".")[-1]
+
+      # the PID of the IONProcs
+      self.pidfiles[node] = "%s/IONProc-%s-%s.pid" % (Locations.files["rundir"],self.parset.partition,nodenr)
+
+      # change working directory to the rundir, remember the pid of the shell, and execute IONProc
+      cmd = "cd %s; echo $$ > %s; exec %s %s" % (
+         Locations.files["rundir"],
+         self.pidfiles[node],
+         Locations.files["ionproc"],Locations.files["parset"] )
+
       logfile = "%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)
 
       self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfile ) )
+
+  def abort( self, soft = True ):
+    signal = [9,2][bool(soft)]
+    if soft:
+      # kill mpirun using the pid we stored locally
+      for node,pidfile in self.pidfiles.iteritems():
+        SyncCommand( "ssh %s kill -%s `cat %s`" % (node,signal,pidfile) )
+    else:
+      # kill commands locally
+      Section.abort( self, False )
 
   def check(self):
     # I/O nodes need to be reachable
