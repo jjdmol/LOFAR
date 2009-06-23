@@ -80,9 +80,10 @@ if test "$with_pvss" != "no"; then
 			[lfr_lib_pvss=no])[
   fi
 
-  if test "$lfr_lib_pvssd" != "no" ; then
+  if test "$lfr_lib_pvss" != "no" ; then
     lfr_lib_linux_pvss=$lfr_lib_pvss/../api/lib.linux
-    PVSS_LDFLAGS="-L$lfr_lib_pvss"
+    lfr_lib_linux_pvss=`cd $lfr_lib_linux_pvss && pwd`    # make path absolute
+    PVSS_LDFLAGS="-L$lfr_lib_pvss -Wl,-rpath,$lfr_lib_pvss"
 ##    PVSS_OBJS="$lfr_lib_linux_pvss/DpConfig.o $lfr_lib_linux_pvss/DpConfigManager.o"
 ##    PVSS_LIBS="$PVSS_OBJS -lManager$PVSS_VERSION -lMessages$PVSS_VERSION -lDatapoint$PVSS_VERSION -lBasics$PVSS_VERSION -lbcm$PVSS_VERSION -ldl -lwklin -lPVSSUtil_RH90"
     PVSS_LIBS="$PVSS_OBJS -lManager$PVSS_VERSION -lMessages$PVSS_VERSION -lDatapoint$PVSS_VERSION -lBasics$PVSS_VERSION -lbcm$PVSS_VERSION -ldl"
