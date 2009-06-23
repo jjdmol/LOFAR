@@ -12,7 +12,7 @@ def parse( str ):
 
   if str[0] == "+":
     # +HH:MM:SS or +seconds, use it as offset from now()
-    return datetime.datetime.now() + datetime.timedelta( parseDuration( str[1:] ) )
+    return datetime.datetime.now() + datetime.timedelta( 0, parseDuration( str[1:] ) )
   elif "-" in str:
     # assume YYYY-MM-DD HH:MM:SS, but time elements are optional
     try:
@@ -35,7 +35,6 @@ def parse( str ):
 
 def parseDuration( str ):
   """ Accept: a number of seconds, HH:MM:SS. Returns: an integer. """
-
   str = str.strip()
 
   def toSeconds( h, m = 0, s = 0 ):
