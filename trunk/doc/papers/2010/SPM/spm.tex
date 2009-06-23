@@ -558,8 +558,9 @@ good performance. The NVIDIA GPUs work this way.
 Second, if an architecture does use vector parallelism, we can either
 store the real and complex parts inside a single vector, or have
 seperate vectors for the two parts.  In both cases, support for
-shuffling data inside the vector registers is essential. In this
-context, the Cell/B.E. excels.  Its vectors contain four floats, which
+shuffling data inside the vector registers is essential. We found that
+the architectures differ considerably in this respect.
+The Cell/B.E. excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, this is done
 in a different pipeline than the arithmetic itself, allowing the
 programmer to overlap shuffling and computations effectively.  On ATI
