@@ -11,9 +11,6 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   baseDP=g_currentDatapoint;
   
-  int mainpanel_horSize; 
-  int mainpanel_vertSize;
-       
   strPanelName    = \"antennaField\";
   strModuleName   = myModuleName();  
   
@@ -21,8 +18,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   if ( panelSize( \"\" , mainpanel_horSize , mainpanel_vertSize) != 0 ) {
     LOG_FATAL(\"Station.pnl:initialize|Error: couldn't define the size of the mainPanel : \" + strPanelName);
   } else {
-    mainpanel_midX = floor( mainpanel_horSize/2 );
-    mainpanel_midY = floor( mainpanel_vertSize/2 );
+    calcViewboxSize();
   
     // Replace the X & Y grid lines to the calculated center 
     Yaxis.foreCol(\"STD_windows_available\");
@@ -128,6 +124,10 @@ int mainpanel_midX;
 int mainpanel_midY;
 dyn_string refNames;
 dyn_string arrays;
+int mainpanel_horSize; 
+int mainpanel_vertSize;
+int symbolSize=44;
+float zoomFactor=1;
 
 float centerOL;
 float centerNB;
@@ -147,6 +147,10 @@ void clearRefNames() {
   dynClear(refNames);
 }
 
+void calcViewboxSize() {
+    mainpanel_midX = floor( (mainpanel_horSize/2)-(symbolSize/2) );
+    mainpanel_midY = floor( (mainpanel_vertSize/2)-(symbolSize/2) );
+}
 
 void redraw(string mode) {
   
@@ -185,8 +189,8 @@ void redraw(string mode) {
   LOG_DEBUG(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
   LOG_DEBUG(\"Station.pnl:redraw|maxYOffsetValue: \"+maxYOffsetValue);
   
-  expandFactorX = floor((mainpanel_midX-30) / maxXOffsetValue);
-  expandFactorY = floor((mainpanel_midY-30) / maxYOffsetValue);
+  expandFactorX = (floor((mainpanel_midX-symbolSize) / maxXOffsetValue))*zoomFactor;
+  expandFactorY = (floor((mainpanel_midY-symbolSize) / maxYOffsetValue))*zoomFactor;
   
   LOG_DEBUG(\"Station.pnl:redraw|expandFactorX: \"+expandFactorX);
   LOG_DEBUG(\"Station.pnl:redraw|expandFactorY: \"+expandFactorY);
@@ -351,13 +355,13 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,
 0 ""
 1
 LANG:1 13 Select Array:
-1 76 5 "" 2190
+1 103 5 "" 2190
 0
-1 77 5 "" 2188
+1 104 5 "" 2188
 0
-1 78 5 "86" 1
+1 105 5 "86" 1
 0
-1 79 5 "" 2192
+1 106 5 "" 2192
 0
 19 53
 "arrayList"
@@ -400,53 +404,154 @@ E "main(int button)
   updateField();
 }" 0
 
+13 80
+"zoomOut"
+""
+1 560 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 558 8 578 28
+
+T 
+1
+LANG:1 1 -
+"main()
+{
+  zoomFactor/=2.0;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);   
+}" 0
+ E E E
+13 107
+"zoomIn"
+""
+1 528 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 636 8 656 28
+
+T 
+1
+LANG:1 1 +
+"main()
+{
+  zoomFactor*=2.0;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);  
+}" 0
+ E E E
+2 108
+"PRIMITIVE_TEXT2"
+""
+1 587 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 587 10 626 27
+0 2 2 "0s" 0 0 0 192 0 0  587 10 1
+1
+LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 4 Zoom
+13 109
+"originalSize"
+""
+1 660 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 658 8 711 28
+
+T 
+1
+LANG:1 4 100%
+"main()
+{
+  zoomFactor=1;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);  
+}" 0
+ E E E
 0
 LAYER, 1 
 1
 LANG:1 6 Layer2
-1 54 2 "" 40
+1 81 2 "" 40
 0
-1 55 2 "" 41
+1 82 2 "" 41
 0
-1 56 2 "" 42
+1 83 2 "" 42
 0
-1 57 2 "" 43
+1 84 2 "" 43
 0
-1 58 2 "" 44
+1 85 2 "" 44
 0
-1 59 2 "" 45
+1 86 2 "" 45
 0
-1 60 2 "" 46
+1 87 2 "" 46
 0
-1 61 2 "" 47
+1 88 2 "" 47
 0
-1 62 2 "" 48
+1 89 2 "" 48
 0
-1 63 2 "" 49
+1 90 2 "" 49
 0
-1 64 2 "" 50
+1 91 2 "" 50
 0
-1 65 2 "" 51
+1 92 2 "" 51
 0
-1 66 2 "" 52
+1 93 2 "" 52
 0
-1 67 2 "" 53
+1 94 2 "" 53
 0
-1 68 2 "" 54
+1 95 2 "" 54
 0
-1 69 2 "" 55
+1 96 2 "" 55
 0
-1 70 2 "" 56
+1 97 2 "" 56
 0
-1 71 2 "" 57
+1 98 2 "" 57
 0
-1 72 2 "" 58
+1 99 2 "" 58
 0
-1 73 2 "" 59
+1 100 2 "" 59
 0
-1 74 2 "" 60
+1 101 2 "" 60
 0
-1 75 2 "" 61
+1 102 2 "" 61
 0
 0
 LAYER, 2 
