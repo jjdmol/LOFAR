@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(amcbase_LIB_SRCS
+lofar_add_library(amcbase
   Package__Version.cc
   BlobIO.cc
   ConverterClient.cc
@@ -33,12 +33,4 @@ set(amcbase_LIB_SRCS
   Epoch.cc
   Position.cc)
 
-set(amcbase_PROGRAMS
-  versionamcbase
-)
-
-lofar_add_library(amcbase ${amcbase_LIB_SRCS})
-
-foreach(prog ${amcbase_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${amcbase_PROGRAMS})
+lofar_add_bin_program(versionamcbase versionamcbase.cc)

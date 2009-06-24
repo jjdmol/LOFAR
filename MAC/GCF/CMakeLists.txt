@@ -32,6 +32,13 @@ project(GCF)
 include(LofarGeneral)
 
 ## ---------------------------------------------------------------------------
+## Create directory GCF in the binary include directory; it will hold symbolic
+## links to the different subcomponents of GCF.
+## ---------------------------------------------------------------------------
+execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
+  ${CMAKE_BINARY_DIR}/include/GCF)
+
+## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 lofar_add_subdirectory(TM)     # Task Management

@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(plc_LIB_SRCS
+lofar_add_library(plc
   Package__Version.cc
   DH_ProcControl.cc
   PCCmd.cc
@@ -31,11 +31,4 @@ set(plc_LIB_SRCS
   ProcCtrlRemote.cc
   ACCmain.cc)
 
-set(plc_PROGRAMS
-  versionplc)
-
-lofar_add_library(plc ${plc_LIB_SRCS})
-
-foreach(prog ${plc_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${plc_PROGRAMS})
+lofar_add_bin_program(versionplc versionplc.cc)

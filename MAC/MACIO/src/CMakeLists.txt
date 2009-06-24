@@ -24,9 +24,9 @@ include(LofarPackageVersion)
 ## Add MAC protocols (generates a .ph and .cc file from a .prot file)
 ## ---------------------------------------------------------------------------
 include(MACAddProtocol)
-mac_add_protocol(LOG_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
-mac_add_protocol(KVT_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
-mac_add_protocol(SB_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
+mac_add_protocol(LOG_Protocol "${PROJECT_SOURCE_DIR}/autogen")
+mac_add_protocol(KVT_Protocol "${PROJECT_SOURCE_DIR}/autogen")
+mac_add_protocol(SB_Protocol  "${PROJECT_SOURCE_DIR}/autogen")
 
 ## ---------------------------------------------------------------------------
 ## Add libraries to be generated

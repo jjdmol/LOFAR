@@ -26,8 +26,10 @@
 # Defines the following macros:
 #   join_arguments(var)
 #   list_append_if(condition var value1..valuen)
+#   lofar_add_bin_program(name)
 #   lofar_add_executable(name)
 #   lofar_add_library(name)
+#   lofar_add_sbin_program(name)
 #   lofar_add_subdirectory(name)
 #   lofar_add_test(name)
 #   lofar_get_date(date)
@@ -54,6 +56,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     set(${var} ${_var})
   endmacro(join_arguments)
 
+
   # --------------------------------------------------------------------------
   # list_append_if(condition var value1..valuen)
   #
@@ -64,6 +67,18 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       list(APPEND ${_list} ${ARGN})
     endif(${_cond})
   endmacro(list_append_if _cond _list)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_add_bin_program(name)
+  #
+  # Add <name> to the list of programs that need to be compiled, linked and
+  # installed into the <prefix>/bin directory.
+  # --------------------------------------------------------------------------
+  macro(lofar_add_bin_program _name)
+    lofar_add_executable(${_name} ${ARGN})
+    install(TARGETS ${_name} DESTINATION bin)
+  endmacro(lofar_add_bin_program _name)
 
 
   # --------------------------------------------------------------------------
@@ -90,7 +105,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   # --------------------------------------------------------------------------
   # lofar_add_library(name)
   #
-  # Adds a library like add_library() does. 
+  # Add a library like add_library() does. 
   # Furthermore:
   # - add the library to the list of libraries for the current project
   #   (global property ${PROJECT_NAME}_LIBRARIES). 
@@ -115,6 +130,18 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
     install(TARGETS ${_name} DESTINATION ${LOFAR_LIBDIR})
     add_dependencies(${PROJECT_NAME} ${_name})
   endmacro(lofar_add_library _name)
+
+
+  # --------------------------------------------------------------------------
+  # lofar_add_sbin_program(name)
+  #
+  # Add <name> to the list of programs that need to be compiled, linked and
+  # installed into the <prefix>/sbin directory.
+  # --------------------------------------------------------------------------
+  macro(lofar_add_sbin_program _name)
+    lofar_add_executable(${_name} ${ARGN})
+    install(TARGETS ${_name} DESTINATION sbin)
+  endmacro(lofar_add_sbin_program _name)
 
 
   # --------------------------------------------------------------------------
@@ -156,23 +183,25 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
   #   it will be compiled, linked and run when you do a 'make check'.
   # --------------------------------------------------------------------------
   macro(lofar_add_test _name)
-    string(REGEX REPLACE ";?DEPENDS.*" "" _srcs "${ARGN}")
-    string(REGEX MATCH "DEPENDS;.*" _deps "${ARGN}")
-    string(REGEX REPLACE "^DEPENDS;" "" _deps "${_deps}")
-    if(_srcs MATCHES "^.+$")
-      lofar_add_executable(${_name} EXCLUDE_FROM_ALL ${_srcs})
-    else()
-      add_custom_target(${_name})
-    endif(_srcs MATCHES "^.+$")
-    if(_deps MATCHES "^.+$")
-      add_dependencies(${_name} ${_deps})
-    endif(_deps MATCHES "^.+$")
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
-      add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
-    else()
-      add_test(${_name} ${_name})
-    endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
-    add_dependencies(check ${_name})
+    if(BUILD_TESTING)
+      string(REGEX REPLACE ";?DEPENDS.*" "" _srcs "${ARGN}")
+      string(REGEX MATCH "DEPENDS;.*" _deps "${ARGN}")
+      string(REGEX REPLACE "^DEPENDS;" "" _deps "${_deps}")
+      if(_srcs MATCHES "^.+$")
+        lofar_add_executable(${_name} ${_srcs})
+      else()
+        add_custom_target(${_name})
+      endif(_srcs MATCHES "^.+$")
+      if(_deps MATCHES "^.+$")
+        add_dependencies(${_name} ${_deps})
+      endif(_deps MATCHES "^.+$")
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+        add_test(${_name} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+      else()
+        add_test(${_name} ${_name})
+      endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.sh)
+      add_dependencies(check ${_name})
+    endif(BUILD_TESTING)
   endmacro(lofar_add_test _name)
 
 
@@ -187,6 +216,7 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endmacro(lofar_get_date _date)
 
+
   # --------------------------------------------------------------------------
   # lofar_get_hostname(name)
   #
@@ -197,30 +227,5 @@ if(NOT DEFINED LOFAR_MACROS_INCLUDED)
       OUTPUT_VARIABLE ${_hostname}
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endmacro(lofar_get_hostname _hostname)
-
-
-  ## -------------------------------------------------------------------------
-  ##       STUFF BELOW THIS LINE IS NOT BEING USED (AT THE MOMENT)
-  ## -------------------------------------------------------------------------
-  if(0)
-
-  # --------------------------------------------------------------------------
-  # lofar_add_bin_program(name)
-  # --------------------------------------------------------------------------
-  macro(lofar_add_bin_program _name)
-    lofar_add_executable(${_name})
-    install(TARGETS ${_name} DESTINATION bin)
-  endmacro(lofar_add_bin_program _name)
-
-
-  # --------------------------------------------------------------------------
-  # lofar_add_sbin_program(name)
-  # --------------------------------------------------------------------------
-  macro(lofar_add_sbin_program _name)
-    lofar_add_executable(${_name})
-    install(TARGETS ${_name} DESTINATION sbin)
-  endmacro(lofar_add_sbin_program _name)
-
-  endif(0)
 
 endif(NOT DEFINED LOFAR_MACROS_INCLUDED)

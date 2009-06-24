@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(stream_LIB_SRCS
+lofar_add_library(stream
   Package__Version.cc
   FileDescriptorBasedStream.cc
   FileStream.cc
@@ -29,12 +29,4 @@ set(stream_LIB_SRCS
   Stream.cc
   SystemCallException.cc)
 
-set(stream_PROGRAMS
-  versionstream
-)
-
-lofar_add_library(stream ${stream_LIB_SRCS})
-
-foreach(prog ${stream_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${stream_PROGRAMS})
+lofar_add_bin_program(versionstream versionstream.cc)

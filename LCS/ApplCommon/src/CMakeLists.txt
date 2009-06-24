@@ -20,16 +20,9 @@
 
 include(LofarPackageVersion)
 
-set(applcommon_LIB_SRCS
+lofar_add_library(applcommon
   Package__Version.cc
   Observation.cc)
 
-set(applcommon_PROGRAMS
-  versionapplcommon)
-
-lofar_add_library(applcommon ${applcommon_LIB_SRCS})
-
-foreach(prog ${stream_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${stream_PROGRAMS})
+lofar_add_bin_program(versionapplcommon versionapplcommon.cc)
 

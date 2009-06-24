@@ -51,7 +51,7 @@ set(parmdb_PROGRAMS
 lofar_add_library(parmdb ${parmdb_LIB_SRCS})
 
 foreach(prog ${parmdb_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${parmdb_PROGRAMS})
 
 install(PROGRAMS

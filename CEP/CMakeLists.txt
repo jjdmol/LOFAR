@@ -34,14 +34,14 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(MWCommon)
-add_subdirectory(MS)
-add_subdirectory(ParmDB)
-add_subdirectory(Calibration)
-#add_subdirectory(DP3)
-#add_subdirectory(Imager)
-#add_subdirectory(Pipeline)
-#add_subdirectory(pyparmdb)
+lofar_add_subdirectory(MWCommon)
+lofar_add_subdirectory(MS)
+lofar_add_subdirectory(ParmDB)
+lofar_add_subdirectory(Calibration)
+lofar_add_subdirectory(DP3)
+lofar_add_subdirectory(Imager)
+lofar_add_subdirectory(Pipeline)
+#lofar_add_subdirectory(pyparmdb)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

@@ -64,7 +64,7 @@ set(bbscontrol_PROGRAMS
 lofar_add_library(bbscontrol ${bbscontrol_LIB_SRCS})
 
 foreach(prog ${bbscontrol_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${bbscontrol_PROGRAMS})
 
 install(PROGRAMS

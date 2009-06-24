@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(transport_LIB_SRCS
+lofar_add_library(transport
   Package__Version.cc
   BGLConnection.cc
   Connection.cc
@@ -35,16 +35,7 @@ set(transport_LIB_SRCS
   TH_MPI.cc
   TH_ShMem.cc
   TH_Socket.cc
-  TransportHolder.cc
-)
+  TransportHolder.cc)
 
-set(transport_PROGRAMS
-  versiontransport
-)
-
-lofar_add_library(transport ${transport_LIB_SRCS})
-
-foreach(prog ${transport_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${transport_PROGRAMS})
+lofar_add_bin_program(versiontransport versiontransport.cc)
 

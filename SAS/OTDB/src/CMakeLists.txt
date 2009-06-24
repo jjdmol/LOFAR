@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(otdb_LIB_SRCS
+lofar_add_library(otdb
   Package__Version.cc
   OTDBconnection.cc
   misc.cc
@@ -36,6 +36,4 @@ set(otdb_LIB_SRCS
   TreeValue.cc
   loadCompFile.cc)
 
-lofar_add_library(otdb ${otdb_LIB_SRCS})
-
-lofar_add_executable(versionotdb versionotdb.cc)
+lofar_add_bin_program(versionotdb versionotdb.cc)

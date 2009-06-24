@@ -39,5 +39,5 @@ set(amcimpl_PROGRAMS
 lofar_add_library(amcimpl ${amcimpl_LIB_SRCS})
 
 foreach(prog ${amcimpl_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${amcimpl_PROGRAMS})

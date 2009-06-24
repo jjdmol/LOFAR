@@ -34,8 +34,8 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(MWControl)
-#add_subdirectory(MWImager)
+lofar_add_subdirectory(MWControl)
+lofar_add_subdirectory(MWImager)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

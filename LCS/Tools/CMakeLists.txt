@@ -31,6 +31,9 @@ include(LofarInit)
 project(Tools)
 include(LofarGeneral)
 
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 1.3)
+
 ## ---------------------------------------------------------------------------
 ## Generate configuration-specific header file
 ## ---------------------------------------------------------------------------

@@ -85,5 +85,5 @@ endif(HAVE_SHMEM)
 lofar_add_library(common ${common_LIB_SRCS})
 
 foreach(prog ${common_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${common_PROGRAMS})

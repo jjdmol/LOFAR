@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(mwcontrol_LIB_SRCS
+lofar_add_library(mwcontrol
   Package__Version.cc
   MWGlobalSpec.cc
   MWLocalSpec.cc
@@ -33,6 +33,4 @@ set(mwcontrol_LIB_SRCS
   SolverBBS.cc
   SolverProxy.cc)
 
-lofar_add_library(mwcontrol ${mwcontrol_LIB_SRCS})
-
-lofar_add_executable(versionmwcontrol versionmwcontrol.cc)
+lofar_add_bin_program(versionmwcontrol versionmwcontrol.cc)
