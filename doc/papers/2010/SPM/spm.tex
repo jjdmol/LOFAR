@@ -586,41 +586,12 @@ that share a cache should be tailored accordingly. On GPUs, for
 example, this can be done by \emph{coalescing} memory accesses.  This
 means that different concurrent threads read subsequent memory
 locations.  This can be counter-intuitive, since traditionally, it was
-better to have linear memory access patterns within a thread.
-In the next section, we explain the techniques described above by applying them to the correlator application.
+better to have linear memory access patterns within a thread.  In the
+next section, we explain the techniques described above by applying
+them to the correlator application.
 
 
 \section{Optimizing the correlator}
-
-An unoptimized correlator would read the samples from two receivers and
-multiply them, requiring two memory reads for one complex multiplication.
-The correlator can be optimized by reusing a sample that is read from memory
-as often as possible, by using it for multiple correlations (see
-Figure~\ref{fig:correlator-triangle}).
-For example, the samples from receivers 8, 9, 10, and 11 can be correlated
-with the samples from receivers 4, 5, 6, and 7 (the red square in the figure),
-using each fetched sample for four complex multiplications.
-This way, eight memory accesses are required for sixteen complex
-multiplications, reducing the amount of memory operations already by a factor
-of four.
-Correlating even higher numbers of receivers at one go would reduce the
-memory bandwidth usage further, but the maximum number of receivers that can
-be correlated this way is quite limited by the size of the register file.
-The accumulated correlations are best kept in registers, and the number of
-required registers grows rapidly with the number of receiver inputs.
-The example above already requires sixteen complex accumulators.
-Additional registers are needed to load samples from memory.
-To obtain good performance, it is important to tune the tile size to the
-architecture.
-
-Caches and memory prefetch units can also improve the performance.
-However, a cache-size dependent tradeoff must be made.
-%On the one hand, correlating and integrating over long periods of time
-%is good for pipelined FPU operation, on the other hand, the 
-
-
-%- optimaliseren van het algorithme: tiles, etc
-
 % TODO add text about mapping from alg to arch
 
 \begin{figure}[t]
@@ -632,80 +603,65 @@ However, a cache-size dependent tradeoff must be made.
 \label{fig-correlation}
 \end{figure}
 
-An important optimization that we implemented is the reduction
-of memory loads by the correlator. 
-A sample can be used multiple times by correlating it
-with the samples from multiple other receivers in the same loop iteration.
-For example, a sample from receiver A in the X polarization
-that is loaded into a register pair can be correlated with the X and
-Y polarizations of receivers B, C and D, using it six times. 
-Figure~\ref{fig-correlation} shows how we correlate multiple
-receivers at the same time. Each square represents the XX, XY,
-YX, and YY correlations of the receivers as indicated by row and
-column number. The figure is triangular, because we compute
+Although in reality the receivers are dual-polarized, and the samples are complex numbers, 
+we use single-polarized real samples in the following example for simplicity.
+An unoptimized correlator would read the samples from two receivers and
+multiply them, requiring two memory loads for one multiplication.
+The correlator can be optimized by reusing a sample that is read from memory
+as often as possible, by using it for multiple correlations (see
+Figure~\ref{fig-correlation}).
+The figure is triangular, because we compute
 the correlation of each pair of receivers only once. The squares labeled \emph{A} are
-autocorrelations, which can be treated specially since they require only half
-the amount of computations.
-The triangle is divided into larger tiles, in this case 
-2x3 tiles (the dark gray boxes), but arbitrary sizes are possible.
-A tile is correlated as a unit. For example, the lower
-right-hand-side rectangle correlates receivers 9 and 10 with receivers
-0, 1, and 2.
+autocorrelations.
 
-It is important to tune the tile size to the architecture. We want to
-make the tile size as large as possible, while still fitting in the
-register file. This offers the highest level of data reuse.  
-If we have a $w \times h$ tile size, the number of operations is given by $flops = 32wh$.
-The number of bytes that has to loaded from memory is $16(w+h)$.
-The minimum number of registers that is required is $4 (1 + min(w,h)) + 8 w h$.
-This is the total number of registers, including accumulators, while reusing
-registers if a value is no longer needed (hence the $min$ operation). However,
-this formula does not count additional registers that could be needed for data prefetching,
-address calculations and loop counters.
-The number of registers is expressed in single-precision float registers. If an architecture has vector
-registers, the result can be divided by the vector length.
-Table~\ref{tile-size-table} shows the properties of different tile sizes. 
+For example, the samples from receivers 8, 9, 10, and 11 can be correlated
+with the samples from receivers 4, 5, 6, and 7 (the red square in the figure),
+reusing each fetched sample four times.
+This way, eight samples are read from memory for 16
+multiplications, reducing the amount of memory operations already by a factor
+of four.
+Correlating even higher numbers of receivers simultaneously would reduce the
+memory bandwidth usage further, but the maximum number of receivers that can
+be correlated this way is limited by the number of registers that an architecture has.
+The accumulated correlations are also best kept in registers, and the number of
+required registers grows rapidly with the number of receiver inputs.
+The example above already requires 16 accumulators.
+Additional registers are needed to load samples from memory (8 in this case).
+To obtain good performance, it is important to tune the tile size to the
+architecture.
 
-Despite the division of the correlation triangle in tiles, there
-still is opportunity for additional data reuse \emph{between} tiles. 
-The tiles
+%Caches and memory prefetch units can also improve the performance.
+%However, a cache-size dependent tradeoff must be made.
+%On the one hand, correlating and integrating over long periods of time
+%is good for pipelined FPU operation, on the other hand, the 
+
+Even when dividing the correlation triangle in tiles there still is
+opportunity for additional data reuse \emph{between} tiles.  The tiles
 within a row or column in the triangle still need the same samples.
-In
-addition to registers, caches can thus also be used to increase data
-reuse.  Since we know exactly what data can be reused at what moment, we
-found it is important to have direct influence on the caches and the thread scheduler.  This
-way, we can make sure that tiles in same row or column are calculated
-at the same time by different threads. 
-Because the algorithm is
-extremely data intensive, the resulting optimized implementation on
-many-cores is typically limited by the architecture's memory
-bandwidth. The memory aspects of the algorithm are twofold.
-There is an algorithmic part, the tile size, which is limited
-by the number of registers. The second aspect is architectural in nature: the cache
-sizes, cache hierarchy and hit ratio. Together, these two aspects dictate the
-memory bandwidth that is needed to keep the FPUs busy.
+In addition to registers, caches can thus also be used to increase
+data reuse. 
 
-\begin{table}
-\begin{center}
-{\small
-\begin{tabular}{l|r|r|r|r}
-tile & floating point & memory loads & arithmetic     &  minimum nr.           \\
-size & operations     & (bytes)      & intensity      &  registers (floats)    \\
-\hline
-1x1  &  32            &   32         &   1.00         &  16                    \\
-1x2  &  64            &   48         &   1.33         &  24                    \\
-2x2  & 128            &   64         &   2.00         &  44                    \\
-3x2  & 192            &   80         &   2.40         &  60                    \\
-3x3  & 288            &   96         &   3.00         &  88                    \\
-4x3  & 384            &  112         &   3.43         & 112                    \\
-4x4  & 512            &  128         &   4.00         & 148                    \\
-\end{tabular}
-} %\small
-\end{center}
-\vspace{-0.5cm}
-\caption{Properties of different tile sizes.}
-\label{tile-size-table}
-\end{table}
+%% \begin{table}
+%% \begin{center}
+%% {\small
+%% \begin{tabular}{l|r|r|r|r}
+%% tile & floating point & memory loads & arithmetic     &  minimum nr.           \\
+%% size & operations     & (bytes)      & intensity      &  registers (floats)    \\
+%% \hline
+%% 1x1  &  32            &   32         &   1.00         &  16                    \\
+%% 1x2  &  64            &   48         &   1.33         &  24                    \\
+%% 2x2  & 128            &   64         &   2.00         &  44                    \\
+%% 3x2  & 192            &   80         &   2.40         &  60                    \\
+%% 3x3  & 288            &   96         &   3.00         &  88                    \\
+%% 4x3  & 384            &  112         &   3.43         & 112                    \\
+%% 4x4  & 512            &  128         &   4.00         & 148                    \\
+%% \end{tabular}
+%% } %\small
+%% \end{center}
+%% \vspace{-0.5cm}
+%% \caption{Properties of different tile sizes.}
+%% \label{tile-size-table}
+%% \end{table}
 
 It is important to realize that the
 correlator itself is \emph{trivially parallel}, since tens of thousands of
