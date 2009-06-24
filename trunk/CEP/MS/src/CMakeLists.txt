@@ -36,7 +36,7 @@ set(ms_PROGRAMS
 lofar_add_library(ms ${ms_LIB_SRCS})
 
 foreach(prog ${ms_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${ms_PROGRAMS})
 
 install(PROGRAMS

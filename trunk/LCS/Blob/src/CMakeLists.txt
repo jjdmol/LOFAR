@@ -20,15 +20,19 @@
 
 include(LofarPackageVersion)
 
-## ----------------------------------------------------------------------------
-## Process input files for Flex and Bison
-## ----------------------------------------------------------------------------
+# Process input files for Flex and Bison
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
 bison_target(KeyParse KeyParse.yy 
   ${CMAKE_CURRENT_BINARY_DIR}/KeyParse.cc
   COMPILE_FLAGS "-y -pKeyParse")
+
+flex_target(KeyTokenize KeyTokenize.ll 
+  ${CMAKE_CURRENT_BINARY_DIR}/KeyTokenize.cc
+  COMPILE_FLAGS "-PKeyTokenize")
+
+add_flex_bison_dependency(KeyTokenize KeyParse)
 
 # Create symbolic link from KeyParse.h -> KeyParse.hh, because KeyParser.cc
 # #include's KeyParse.h.
@@ -41,13 +45,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # will output the files they generate.
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-flex_target(KeyTokenize KeyTokenize.ll 
-  ${CMAKE_CURRENT_BINARY_DIR}/KeyTokenize.cc
-  COMPILE_FLAGS "-PKeyTokenize")
-
-add_flex_bison_dependency(KeyTokenize KeyParse)
-
-set(blob_LIB_SRCS
+lofar_add_library(blob
   Package__Version.cc
   BlobAipsIO.cc
   BlobArray.cc
@@ -71,12 +69,4 @@ set(blob_LIB_SRCS
   KeyValue.cc
   KeyValueMap.cc)
 
-set(blob_PROGRAMS
-  versionblob
-)
-
-lofar_add_library(blob ${blob_LIB_SRCS})
-
-foreach(prog ${blob_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${blob_PROGRAMS})
+lofar_add_bin_program(versionblob versionblob.cc)

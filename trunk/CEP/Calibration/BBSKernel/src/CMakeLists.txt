@@ -84,5 +84,5 @@ set(bbskernel_PROGRAMS
 lofar_add_library(bbskernel ${bbskernel_LIB_SRCS})
 
 foreach(prog ${bbskernel_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
+  lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${bbskernel_PROGRAMS})

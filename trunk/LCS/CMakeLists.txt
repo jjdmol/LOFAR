@@ -42,6 +42,7 @@ lofar_add_subdirectory(Transport)     # Low-level transport library
 lofar_add_subdirectory(ACC)           # Application Configuration & Control
 lofar_add_subdirectory(AMC)           # Astronomical Measures Conversions
 lofar_add_subdirectory(ApplCommon)    # Application common stuff
+
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------

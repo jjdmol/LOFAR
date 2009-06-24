@@ -22,6 +22,7 @@
 set(inst_HEADERS
   Package__Version.h
   GCF_Control.h
+  GCF_Scheduler.h
   GCF_DevicePort.h
   GCF_ETHRawPort.h
   GCF_Fsm.h
@@ -43,3 +44,5 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Install header files.
 install(FILES ${inst_HEADERS} DESTINATION include/GCF/TM)
 
+set(${PROJECT_NAME}_INCLUDE_PATH_SUFFIX GCF/TM
+  CACHE INTERNAL "Include path suffix for package \"${PROJECT_NAME}\"")

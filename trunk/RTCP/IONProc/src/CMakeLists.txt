@@ -1,95 +1,36 @@
-find_path (HAVE_LINK_IONPROC IONProc ${CMAKE_CURRENT_SOURCE_DIR})
-if (HAVE_LINK_IONPROC)
-  set (HAVE_LINK_IONPROC TRUE CACHE BOOL "Have link IONProc?" FORCE)
-  execute_process(COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/IONProc )
-endif (HAVE_LINK_IONPROC)
-
-execute_process(COMMAND ln -s ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/IONProc )
-
-
-## ------------------------------------------------------------------------------
-## Include files
-
-file (GLOB libinterface_HEADERS BeamletBuffer.h
-				CN_Personality.h
-				InputSection.h
-				InputThread.h
-				InputThreadAsm.h
-				ION_Allocator.h
-				LockedRanges.h
-				LogThread.h
-				OutputThread.h
-				OutputSection.h
-				ReaderWriterSynchronization.h
-				RSP.h
-				Scheduling.h
-				SlidingPointer.h
-				WallClockTime.h
-				WH_DelayCompensation.h
-				Lock.h
-				FCNP_ServerStream.h)
- 
-enable_language(ASM-BGP)
-
-if (CMAKE_ASM-BGP_COMPILER_WORKS)
-  set(amsSrcs InputThreadAsm.S)
-endif (CMAKE_ASM-BGP_COMPILER_WORKS)  
 
 ## ------------------------------------------------------------------------------
 ## Build the library
 
-file (GLOB libionproc_SOURCES BeamletBuffer.cc
-			      CN_Personality.cc
-			      InputSection.cc
-			      InputThread.cc
-			      ION_Allocator.cc
-			      LogThread.cc
-			      OutputThread.cc
-			      OutputSection.cc
-			      ReaderWriterSynchronization.cc
-			      Scheduling.cc
-			      WH_DelayCompensation.cc
-			      FCNP_ServerStream.cc
-			      Lock.cc
-			      ${amsSrcs})
+file (GLOB liblofar_impl_SOURCES *.cc)
 
-add_library (ionproc ${libionproc_SOURCES})
+add_library (lofar_impl SHARED ${liblofar_impl_SOURCES})
 
-## linker instructions
-target_link_libraries (  ionproc 
-                         amcimpl
-			 amcbase
-			 plc
-			 transport
-			 blob
-			 interface
-			 stream
-			 fcnp_cn
-			 fcnp_ion
-			 applcommon
-                         common
-			 ${Boost_LIBRARIES}
-			 ${CASA_LIBRARIES}
-			 ${BACKTRACE_LIBRARIES}
-			 )
+target_link_libraries (lofar_impl
+  amcimpl
+  amcbase
+  cepframe
+  cs1_interface
+  tinycep
+  plc
+  transport
+  applcommon
+  blob
+  aps
+  common
+  )
 
-set_target_properties (ionproc
+set_target_properties (lofar_impl
   PROPERTIES
-  LINK_FLAGS "-lpthread"
+  LINK_FLAGS "-fPIC --whole-archive"
 )
-
-add_executable(IONProc ION_main.cc)
-
-target_link_libraries (IONProc
-                       ionproc
-                      )
 
 ## ------------------------------------------------------------------------------
 ## Installation
 
 install (
-  TARGETS ionproc IONProc
+  TARGETS lofar_impl
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
   )
+

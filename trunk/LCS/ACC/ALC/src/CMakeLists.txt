@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(alc_LIB_SRCS
+lofar_add_library(alc
   Package__Version.cc
   ACCmd.cc
   DH_ApplControl.cc
@@ -30,12 +30,4 @@ set(alc_LIB_SRCS
   ACAsyncClient.cc
   ApplControlServer.cc)
 
-set(alc_PROGRAMS
-  versionalc
-)
-
-lofar_add_library(alc ${alc_LIB_SRCS})
-
-foreach(prog ${alc_PROGRAMS})
-  lofar_add_executable(${prog} ${prog}.cc)
-endforeach(prog ${alc_PROGRAMS})
+lofar_add_bin_program(versionalc versionalc.cc)

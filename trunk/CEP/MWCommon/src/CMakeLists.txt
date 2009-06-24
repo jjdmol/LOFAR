@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(mwcommon_LIB_SRCS
+lofar_add_library(mwcommon
   Package__Version.cc
   ClusterDesc.cc
   ControllerBase.cc
@@ -55,10 +55,8 @@ set(mwcommon_LIB_SRCS
   WorkerProxy.cc
   WorkersDesc.cc)
 
-lofar_add_library(mwcommon ${mwcommon_LIB_SRCS})
-
-lofar_add_executable(versionmwcommon versionmwcommon.cc)
-lofar_add_executable(finddproc finddproc.cc)
+lofar_add_bin_program(versionmwcommon versionmwcommon.cc)
+lofar_add_bin_program(finddproc finddproc.cc)
 
 install(PROGRAMS
   startdistproc
