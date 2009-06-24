@@ -923,7 +923,8 @@ create_dp_file()
 		echo "dummy" | awk -v nrHBAs=$NRHBAS -v nrLBAs=$NRLBAS -v nrRSPs=$NRRSPBOARDS '{
 			for (antNr = 0; antNr < nrLBAs; antNr++) {  # assume nrLBAs >= nrHBAs
 				RSPboard=antNr/4
-				Subrack=RSPboard/4if [ "${dbtype}" != "$2" ]; then
+				Subrack=RSPboard/4
+#if [ "${dbtype}" != "$2" ]; then
 				Cabinet=Subrack/2
 				if (antNr < nrHBAs) {
 					printf "HBA%d.RCUX	Antenna	\"LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.HBAEnable\"	0x101\n", 
