@@ -506,6 +506,7 @@ system have a total theoretical single-precision peak performance of
 
 \subsection{Essential properties and differences}
 
+% TODO refer to this table
 \begin{table*}[t]
 \begin{center}
 {\small
@@ -640,28 +641,6 @@ opportunity for additional data reuse \emph{between} tiles.  The tiles
 within a row or column in the triangle still need the same samples.
 In addition to registers, caches can thus also be used to increase
 data reuse. 
-
-%% \begin{table}
-%% \begin{center}
-%% {\small
-%% \begin{tabular}{l|r|r|r|r}
-%% tile & floating point & memory loads & arithmetic     &  minimum nr.           \\
-%% size & operations     & (bytes)      & intensity      &  registers (floats)    \\
-%% \hline
-%% 1x1  &  32            &   32         &   1.00         &  16                    \\
-%% 1x2  &  64            &   48         &   1.33         &  24                    \\
-%% 2x2  & 128            &   64         &   2.00         &  44                    \\
-%% 3x2  & 192            &   80         &   2.40         &  60                    \\
-%% 3x3  & 288            &   96         &   3.00         &  88                    \\
-%% 4x3  & 384            &  112         &   3.43         & 112                    \\
-%% 4x4  & 512            &  128         &   4.00         & 148                    \\
-%% \end{tabular}
-%% } %\small
-%% \end{center}
-%% \vspace{-0.5cm}
-%% \caption{Properties of different tile sizes.}
-%% \label{tile-size-table}
-%% \end{table}
 
 It is important to realize that the
 correlator itself is \emph{trivially parallel}, since tens of thousands of
