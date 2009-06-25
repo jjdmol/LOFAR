@@ -28,6 +28,27 @@
 #include <ostream>
 #include <sstream>
 
+// This macro tests the command line arguments and prints the version if a single
+// argument with value -v or -vv is given. -v gives a short version info, -vv a full one.
+// pkg is the name of the package where the application resides. It is not a string!!
+// Instead Version is appended to it to form a template parameter.
+// For example:
+// @code
+//      TEST_SHOW_VERSION (argc, argv, ParmDB);
+// @endcode
+#define TEST_SHOW_VERSION(argc, argv, pkg) \
+  if (argc == 2) { \
+    std::string opt (argv[1]); \
+    if (opt == "-v") { \
+      LOFAR::Version::show<pkg##Version>(cout, argv[0], "top"); \
+      return 0; \
+    } else if (opt == "-vv") { \
+      LOFAR::Version::show<pkg##Version>(cout, argv[0], "full"); \
+      return 0; \
+    } \
+  }
+
+
 namespace LOFAR {
 
   // Class to get info like version and revision of the package and the
@@ -63,11 +84,11 @@ namespace LOFAR {
     // Get the global revision number in repository.
     const std::string& revision() const
       { return itsRevision; }
-    // Ge the revision number of the package, thus the last revision something
+    // Get the revision number of the package, thus the last revision something
     // was checked in for this package version.
     const std::string& packageRevision() const
       { return itsPackageRevision; }
-    // Get the number of files in the ackage whch wre different from the
+    // Get the number of files in the package which were different from the
     // repository when building the package.
     const std::string& nrChangedFiles() const
       { return itsNrChangedFiles; }
@@ -109,7 +130,7 @@ namespace LOFAR {
     // - other: show each package briefly (name, version, revision, nrchanged)
     // Use like:
     // @code
-    //  Version::show<BlobVersion> ("", "applname", std::cout);
+    //  Version::show<BlobVersion> (os, "applname");
     // @endcode
     template<typename T>
     static void show (std::ostream& os,
