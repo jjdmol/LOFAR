@@ -77,7 +77,7 @@ Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 % dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
-The stations of the \emph{Low Frequency Array
+The \emph{Low Frequency Array
 (LOFAR)\/}~\cite{Butcher:04,deVos:09}, for instance, will produce some tens of
 petabits per day; the dishes from the Australian SKA Pathfinder (ASKAP) will
 even produce over six exabits per day.
@@ -145,7 +145,7 @@ correlator.  We strongly focus on correlators, but many of the
 findings, claims, and optimizations hold for other signal-processing
 algorithms as well, both in and outside the area of radio astronomy.
 We discuss the programmability of each of the architectures, but this
-paper should be of special interest to those who are willing to put
+paper should be of special interest to those who are willing to invest
 some extra programming effort to obtain good performance, even if
 high-level programming support is not available.
 
@@ -201,7 +201,7 @@ significantly lowered the developments times and costs of
 newer-generation correlators, and increased the flexibility
 substantially. LOFAR requires even more flexibility to support many
 different processing pipelines for various observation modes, and uses
-FPGAs for on-the-field station processing and a Blue Gene/P
+FPGAs for on-the-field processing and a Blue Gene/P
 supercomputer to perform real-time, central processing.
 We describe LOFAR in more detail below.
 
@@ -217,35 +217,102 @@ We describe LOFAR in more detail below.
 
 \subsection{The LOFAR telescope}
 
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=60mm]{figures/LBA-field.jpg}
+\end{center}
+\caption{A field with LOFAR antennas.}
+\label{fig:lba-field}
+\end{figure}
 
-@@@
-LOFAR started as a new and innovative effort to force a breakthrough
-in sensitivity for astronomical observations at radio-frequencies
-below 250 MHz. The basic technology of radio telescopes had not
-changed since the 1960's: large mechanical dish antennas collect
-signals before a receiver detects and analyses them. Half the cost of
-these telescopes lies in the steel and moving structure. A telescope
-100x larger than existing instruments would therefore be
-unaffordable. New technology was required to make the next step in
-sensitivity needed to unravel the secrets of the early universe and
-the physical processes in the centers of active galactic nuclei.
+\begin{figure*}
+\begin{minipage}[b]{11cm}
+\includegraphics[width=11cm]{figures/lofar-overview.pdf}
+\caption{A simplified overview of the LOFAR processing.}
+\label{fig:lofar-overview}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{56mm}
+\includegraphics[width=\columnwidth]{figures/map.jpg}
+\caption{Possible LOFAR layout.}
+\label{fig:map}
+\end{minipage}
+\end{figure*}
 
-LOFAR is the first telescope of this new sort, using an array of
-simple omni-directional antennas instead of mechanical signal
-processing with a dish antenna. The electronic signals from the
+LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency
+  \textbf{AR}ray}, an aperture array radio telescope operating in the
+10 to 250~MHz frequency range.  It is the first of a new generation of
+radio telescopes, that breaks with the concepts of traditional
+telescopes in several ways.  Rather than using large, expensive
+dishes, LOFAR uses many thousands of simple antennas that have no
+movable parts~\cite{Butcher:04,deVos:09}, see
+Figure~\ref{fig:lba-field}.  Essentially, it is a distributed sensor
+network that monitors the sky and combines all signals centrally.
+This concept requires much more signal processing, but the 
+costs of silicon are much lower that the costs of steel that would
+be needed for dishes. Moreover, LOFAR can observe the sky in many
+directions concurrently and switch directions instantaneously.  In
+several ways, LOFAR will be the largest telescope of the world.
+
+Another novelty is the elaborate
+use of \emph{software\/} to process the telescope data in real time.
+The signals from the
 antennas are digitised, transported to a central digital processor,
 and combined in software to emulate a conventional antenna. The cost
 is dominated by the cost of electronics and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
-to be built. So LOFAR is an IT-telescope. The antennas are simple
-enough but there are a lot of them - 25000 in the full LOFAR
+to be built. So LOFAR is an IT-telescope. 
+
+The antennas are simple, but there are a lot of them: 25000 in the full LOFAR
 design. To make radio pictures of the sky with adequate sharpness,
 these antennas are to be arranged in clusters that are spread out over
-an area of ultimately 350 km in diameter. (In phase 1 that is
-currently funded 15000 antenna's and maximum baselines of 100 km will
-be built). Data transport requirements are in the range of many
+an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
+In the current phase, 15000 
+antenna's and maximum baselines of 100 km will
+be built. Data transport requirements are in the range of many
 Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
-@@@
+
+LOFAR will enable exciting new science cases.  First, we expect to see
+the \emph{Epoch of Reionization\/} (EoR), the time that the first star
+galaxies and quasars were formed. Second, LOFAR offers a unique
+possibility in particle astrophysics for studying the origin of
+high-energy \emph{cosmic rays}.  Third, LOFAR's ability to
+continuously monitor a large fraction of the sky makes it uniquely
+suited to find new \emph{pulsars} and to study \emph{transient
+  sources}.  Since LOFAR has no moving parts, it can instantaneously
+switch focus to some galactic event.  Fourth, \emph{Deep Extragalactic
+  Surveys\/} will be carried out to find the most distant radio
+galaxies and study star-forming galaxies.  Fifth, LOFAR will be
+capable of observing the so far unexplored radio waves emitted by
+\emph{cosmic magnetic fields}.  For a more extensive description of
+the astronomical aspects of the LOFAR system, see De Bruyn
+et.~al.~\cite{Bruyn:02}.
+
+A global overview of the LOFAR instrument is given in
+Figure~\ref{fig:lofar-overview}. The thickness of the lines indicates
+the size of the data streams.  Initial processing is done in the
+field, using FPGA technology.  Typical operations that are performed
+there include analog-to-digital conversion, filtering, frequency
+selection, and combination of the signals from the different
+receivers.  Next, the data is transported to the central processing
+location in Groningen via a Wide-Area Network (WAN), using owned and
+leased light paths.
+
+Currently, the real-time central processing of LOFAR data is done on
+an IBM Blue Gene/P supercomputer.  There, we filter the data, and
+perform phase shift and bandpass corrections, and beam forming.
+Finally, the signals from all stations are cross-correlated.  The
+correlation process performs a data reduction by integrating samples
+over time.  Finally, the data is forwarded to a storage cluster, where
+results can be kept for several days.  After an observation has
+finished, further processing is done off-line, on commodity cluster
+hardware.  In this paper, we focus on the correlator step (the
+highlighted part in the red box in
+Figure~\ref{fig:lofar-overview}), because it must deal with the
+full data streams from all receivers. Moreover, its costs grow
+quadratically with the number of receivers, while all other steps have
+a lower time complexity.
+
 
 \section{Correlating signals}
 
@@ -255,27 +322,15 @@ Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
 %transpose
 
 
-\begin{figure*}[t]
-\begin{center}
-\includegraphics[width=12cm]{figures/processing-overview.pdf}
-\end{center}
-\vspace{-0.5cm}
-\caption{A simplified view of LOFAR processing.}
-\label{fig-processing-overview}
-\end{figure*}
+%% \begin{figure*}[t]
+%% \begin{center}
+%% \includegraphics[width=12cm]{figures/processing-overview.pdf}
+%% \end{center}
+%% \vspace{-0.5cm}
+%% \caption{A simplified view of LOFAR processing.}
+%% \label{fig-processing-overview}
+%% \end{figure*}
 
-An overview of the processing needed for the standard imaging pipeline
-of LOFAR is shown in Figure~\ref{fig-processing-overview}.  The
-thickness of the lines indicates the size of the data streams.  The
-data streams from the different receivers must be filtered, delays in
-the signal path must be compensated for, and the data streams from
-different receivers must be cross-correlated. The correlation process
-performs a data reduction by integrating samples over time.  In this
-paper, we focus on the correlator step (the gray box in
-Figure~\ref{fig-processing-overview}), because it must deal with the full data streams
-from all receivers. Moreover, its costs grow
-quadratically with the number of receivers, while all other steps have a
-lower time complexity.  
 
 The data streams from the receivers contain samples, which are complex
 numbers that represent the amplitude and phase of a signal at a
