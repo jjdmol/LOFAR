@@ -73,7 +73,7 @@ void SetTBBCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetTBBCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetTBBCmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("SetTBBCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetTBBCmd::getTimestamp() const

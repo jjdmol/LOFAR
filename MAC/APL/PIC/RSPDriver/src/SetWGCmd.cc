@@ -74,7 +74,7 @@ void SetWGCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetWGCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetWGCmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("SetWGCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetWGCmd::getTimestamp() const

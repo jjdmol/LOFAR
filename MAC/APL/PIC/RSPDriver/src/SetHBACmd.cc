@@ -28,6 +28,7 @@
 #include <blitz/array.h>
 
 #include "StationSettings.h"
+#include "HBAProtocolWrite.h"
 #include "SetHBACmd.h"
 
 using namespace blitz;
@@ -59,22 +60,35 @@ void SetHBACmd::ack(CacheBuffer& /*cache*/)
 
 void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
 {
+	// someone else using the I2C bus?
+	I2Cuser	busUser = cache.getI2Cuser();
+	LOG_INFO_STR("SetHBA::apply : " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
+	if (busUser != NONE && busUser != HBA) {
+		postponeExecution(true);
+		return;
+	}
+	cache.setI2Cuser(HBA);		// claim the I2C bus.
+	postponeExecution(false);
+
+	if (setModFlag) {
+		HBAProtocolWrite::m_on_off ^= 1; // toggle led status
+	}
+
 	int event_rcu = 0; // rcu number in m_event->settings()
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask.test(cache_rcu)) { // check if rcu is selected
-      cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
-      if (setModFlag) {
-        cache.getCache().getState().hbaprotocol().write(cache_rcu);
-				// cache.getCache().getState().hbaprotocol().write(cache_rcu); // waarom deze 2e keer ??
-      }
+			cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
+			if (setModFlag) {
+				cache.getCache().getState().hbaprotocol().write(cache_rcu);
+			}
 			event_rcu++;
-    }
-  }
+		}
+	}
 }
 
 void SetHBACmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetHBACmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("SetHBACmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetHBACmd::getTimestamp() const

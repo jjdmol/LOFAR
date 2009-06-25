@@ -53,15 +53,23 @@ SetRCUCmd::~SetRCUCmd()
 void SetRCUCmd::ack(CacheBuffer& /*cache*/)
 {
 	RSPSetrcuackEvent ack;
-
 	ack.timestamp = getTimestamp();
 	ack.status = RSP_SUCCESS;
-
 	getPort()->send(ack);
 }
 
 void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
+	// someone else using the I2C bus?
+	I2Cuser	busUser = cache.getI2Cuser();
+	LOG_INFO_STR("SetRCU::apply : " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
+	if (busUser != NONE && busUser != RCU) {
+		postponeExecution(true);
+		return;
+	}
+	cache.setI2Cuser(RCU);		// claim the I2C bus.
+	postponeExecution(false);
+
 	bool			newMode 	  = m_event->settings()(0).isModeModified();
 	uint32			mode 		  = m_event->settings()(0).getMode();
 	CableSettings*	cableSettings = CableSettings::instance();
@@ -104,10 +112,9 @@ void SetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 	} // for
 }
 
-void SetRCUCmd::complete(CacheBuffer& /*cache*/)
+void SetRCUCmd::complete(CacheBuffer& cache)
 {
-//  LOG_INFO_STR("SetRCUCmd completed at time=" << getTimestamp());
-	ack(Cache::getInstance().getFront());
+	ack(cache);
 }
 
 const Timestamp& SetRCUCmd::getTimestamp() const

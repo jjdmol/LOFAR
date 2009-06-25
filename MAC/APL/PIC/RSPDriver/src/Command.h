@@ -49,10 +49,10 @@ public:
 	// Currently the tv_usec part is always set to 0 irrespective
 	// of the value passed in.
 	Command() : 
-		m_period(0), m_port(0), m_operation(READ), itsIsDelayed(false), itsName("???")  { }
+		m_period(0), m_port(0), m_operation(READ), itsIsDelayed(false), itsIsPostponed(false), itsName("???")  { }
 
 	Command(const string&	name, GCFPortInterface&	port, Operation	oper) : 
-		m_period(0), m_port(&port), m_operation(oper), itsIsDelayed(false), itsName(name) { }
+		m_period(0), m_port(&port), m_operation(oper), itsIsDelayed(false), itsIsPostponed(false), itsName(name) { }
 
 	// Destructor for Command.
 	virtual ~Command() { }
@@ -112,6 +112,12 @@ public:
 	/*@}*/
 
 	/*@{*/
+	// Accessor methods for the postpone flag
+	void postponeExecution(bool	postponeIt) { itsIsPostponed = postponeIt; }
+	bool postponeExecution() const			{ return (itsIsPostponed);   }
+	/*@}*/
+
+	/*@{*/
 	// Accessor methods for the name
 	void		  name(const  string&	aName)	{ itsName = aName; }
 	const string& name() const	 			{ return (itsName);  }
@@ -123,6 +129,7 @@ private:
 	GCFPortInterface*	m_port;
 	Operation			m_operation;
 	bool				itsIsDelayed;
+	bool				itsIsPostponed;
 	string				itsName;
 };
 

@@ -256,107 +256,11 @@ void CacheBuffer::reset(void)
 	for (int rsp = 0; rsp < MAX_N_RSPBOARDS; rsp++) {
 		itsSdsReadBuffer[rsp].clear();
 	}
+
+	// clear I2C flag
+	itsI2Cuser = NONE;
 }
 
-RTC::Timestamp CacheBuffer::getTimestamp() const
-{
-  return m_timestamp;
-}
-
-BeamletWeights& CacheBuffer::getBeamletWeights()
-{
-  return m_beamletweights;
-}
-
-SubbandSelection& CacheBuffer::getSubbandSelection()
-{
-  return m_subbandselection;
-}
-
-RCUSettings& CacheBuffer::getRCUSettings()
-{
-  return m_rcusettings;
-}
-
-HBASettings& CacheBuffer::getHBASettings()
-{
-  return m_hbasettings;
-}
-
-HBASettings& CacheBuffer::getHBAReadings()
-{
-  return m_hbareadings;
-}
-
-RSUSettings& CacheBuffer::getRSUSettings()
-{
-  return m_rsusettings;
-}
-
-WGSettings& CacheBuffer::getWGSettings()
-{
-  return m_wgsettings;
-}
-
-SystemStatus& CacheBuffer::getSystemStatus()
-{
-  return m_systemstatus;
-}
-
-Statistics& CacheBuffer::getSubbandStats()
-{
-  return m_subbandstats;
-}
-
-Statistics& CacheBuffer::getBeamletStats()
-{
-  return m_beamletstats;
-}
-
-XCStatistics& CacheBuffer::getXCStats()
-{
-  return m_xcstats;
-}
-
-Versions& CacheBuffer::getVersions()
-{
-  return m_versions;
-}
-
-uint32& CacheBuffer::getClock()
-{
-  return m_clock;
-}
-
-TDStatus& CacheBuffer::getTDStatus()
-{
-  return m_tdstatus;
-}
-
-SPUStatus& CacheBuffer::getSPUStatus()
-{
-  return m_spustatus;
-}
-
-TBBSettings& CacheBuffer::getTBBSettings()
-{
-  return m_tbbsettings;
-}
-
-BypassSettings& CacheBuffer::getBypassSettings()
-{
-  return m_bypasssettings;
-}
-
-RawDataBlock_t&	CacheBuffer::getRawDataBlock()
-{
-	return (itsRawDataBlock);
-}
-
-SerdesBuffer&	CacheBuffer::getSdsWriteBuffer()
-{
-	return (itsSdsWriteBuffer);
-}
 
 SerdesBuffer&	CacheBuffer::getSdsReadBuffer(int	rspBoardNr)
 {
@@ -423,12 +327,17 @@ void Cache::swapBuffers()
 	m_back  = tmp;
 }
 
-CacheBuffer& Cache::getFront()
+void Cache::resetI2Cuser()
 {
-	return *m_front;
-}
+	I2Cuser	busUser = NONE;
+	if ((m_front->getI2Cuser() == HBA) && (!m_allstate.hbaprotocol().isMatchAll(RegisterState::CHECK))) {
+		busUser = HBA;
+	}
+	else if ((m_front->getI2Cuser() == RCU) && (!m_allstate.rcuprotocol().isMatchAll(RegisterState::CHECK))) {
+		busUser = RCU;
+	}
+	m_front->setI2Cuser(busUser);
+	m_back->setI2Cuser (busUser);
+	LOG_INFO_STR("new I2Cuser = " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
 
-CacheBuffer& Cache::getBack()
-{
-	return *m_back;
 }

@@ -73,7 +73,7 @@ public:
 	// Enter a new command into the scheduler in response
 	// to receiving a command event from on of the RSPDriver
 	// client processes.
-	void enter(Ptr<Command> command, QueueID queue = LATER);
+	void enter(Ptr<Command> command, QueueID queue = LATER, bool immediateApplyAllowed = true);
 
 	/*@{*/
 	// Set/get the current time (from the update triggering timeout event).

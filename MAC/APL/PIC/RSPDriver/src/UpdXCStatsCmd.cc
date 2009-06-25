@@ -61,7 +61,7 @@ void UpdXCStatsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 
 void UpdXCStatsCmd::complete(CacheBuffer& cache)
 {
-  LOG_INFO_STR("UpdXCStatsCmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("UpdXCStatsCmd completed at time=" << getTimestamp());
 
   RSPUpdxcstatsEvent ack;
 

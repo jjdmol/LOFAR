@@ -50,61 +50,55 @@ GetHBACmd::~GetHBACmd()
 
 void GetHBACmd::ack(CacheBuffer& cache)
 {
-  RSPGethbaackEvent ack;
+	RSPGethbaackEvent ack;
+	ack.timestamp = getTimestamp();
+	ack.status = RSP_SUCCESS;
+	ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
+	int result_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			if (cache_rcu < StationSettings::instance()->nrRcus()) {
+				ack.settings()(result_rcu, Range::all()) = cache.getHBASettings()()(cache_rcu, Range::all());
+			}
+			else {
+				LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
+				StationSettings::instance()->nrRcus()));
+			}
 
-  ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);
-  
-  int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      if (cache_rcu < StationSettings::instance()->nrRcus())
-      {
-	ack.settings()(result_rcu, Range::all()) = cache.getHBASettings()()(cache_rcu, Range::all());
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
-		StationSettings::instance()->nrRcus()));
-      }
-      
-      result_rcu++;
-    }
-  }
-  
-  getPort()->send(ack);
+			result_rcu++;
+		}
+	}
+
+	getPort()->send(ack);
 }
 
 void GetHBACmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
-  /* intentionally left empty */
+	/* intentionally left empty */
 }
 
 void GetHBACmd::complete(CacheBuffer& cache)
 {
-  ack(cache);
+	ack(cache);
 }
 
 const RTC::Timestamp& GetHBACmd::getTimestamp() const
 {
-  return m_event->timestamp;
+	return (m_event->timestamp);
 }
 
 void GetHBACmd::setTimestamp(const RTC::Timestamp& timestamp)
 {
-  m_event->timestamp = timestamp;
+	m_event->timestamp = timestamp;
 }
 
 bool GetHBACmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus()));
+	return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus()));
 }
 
 bool GetHBACmd::readFromCache() const
 {
-  return m_event->cache;
+	return (m_event->cache);
 }

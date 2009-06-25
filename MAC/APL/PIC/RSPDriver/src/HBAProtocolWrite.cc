@@ -390,32 +390,28 @@ void HBAProtocolWrite::sendrequest_status()
 
 GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
-    LOG_WARN("HBAProtocolWrite::handleack:: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
-  
-  EPAWriteackEvent ack(event);
+	if (EPA_WRITEACK != event.signal) {
+		LOG_WARN("HBAProtocolWrite::handleack:: unexpected ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
+	EPAWriteackEvent ack(event);
 
-LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
-    LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");
-    Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);
-    Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL + 1);
-    return GCFEvent::NOT_HANDLED;
-  }
+	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
-  if (1 == (getCurrentIndex() % N_WRITES)) {
+	LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
+	if (!ack.hdr.isValidAck(m_hdr)) {
+		LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");
+		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);
+		Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL + 1);
+		return GCFEvent::NOT_HANDLED;
+	}
 
-    // Mark modification as applied when write of RCU result register has completed
-    Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL);
-    Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL + 1);
+	if ((getCurrentIndex() % N_WRITES) == 1) { 
+		// Mark modification as applied when write of RCU result register has completed
+		Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL);
+		Cache::getInstance().getState().hbaprotocol().schedule_read(global_blp * MEPHeader::N_POL + 1);
+	}
 
-  }
-  
-  return GCFEvent::HANDLED;
+	return GCFEvent::HANDLED;
 }
