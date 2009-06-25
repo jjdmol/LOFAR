@@ -43,6 +43,12 @@ typedef struct {
 	uint8		data [RSP_RAW_BLOCK_SIZE];
 } RawDataBlock_t;
 
+typedef enum {
+	NONE = 0,
+	HBA,
+	RCU
+} I2Cuser;
+
 class CacheBuffer
 {
 public:
@@ -58,27 +64,30 @@ public:
 
 	/*@{*/
 	// Data access methods.
-	RTC::Timestamp                   getTimestamp() const;
-	RSP_Protocol::BeamletWeights&    getBeamletWeights();
-	RSP_Protocol::SubbandSelection&  getSubbandSelection();
-	RSP_Protocol::RCUSettings&       getRCUSettings();
-	RSP_Protocol::HBASettings&       getHBASettings();
-	RSP_Protocol::HBASettings&       getHBAReadings();
-	RSP_Protocol::RSUSettings&       getRSUSettings();
-	RSP_Protocol::WGSettings&        getWGSettings();
-	RSP_Protocol::SystemStatus&      getSystemStatus();
-	RSP_Protocol::Statistics&        getSubbandStats();
-	RSP_Protocol::Statistics&        getBeamletStats();
-	RSP_Protocol::XCStatistics&      getXCStats();
-	RSP_Protocol::Versions&          getVersions();
-	uint32&                          getClock();
-	RSP_Protocol::TDStatus&          getTDStatus();
-	RSP_Protocol::SPUStatus&         getSPUStatus();
-	RSP_Protocol::TBBSettings&       getTBBSettings();
-	RSP_Protocol::BypassSettings&    getBypassSettings();
-	RawDataBlock_t&					 getRawDataBlock();
-	SerdesBuffer&					 getSdsWriteBuffer();
-	SerdesBuffer&					 getSdsReadBuffer(int rspBoardNr);
+	RTC::Timestamp 			getTimestamp() const 	{ return m_timestamp; } 
+	BeamletWeights& 		getBeamletWeights() 	{ return m_beamletweights; } 
+	SubbandSelection& 		getSubbandSelection() 	{ return m_subbandselection; } 
+	RCUSettings& 			getRCUSettings() 		{ return m_rcusettings; } 
+	HBASettings& 			getHBASettings() 		{ return m_hbasettings; } 
+	HBASettings& 			getHBAReadings() 		{ return m_hbareadings; } 
+	RSUSettings& 			getRSUSettings() 		{ return m_rsusettings; } 
+	WGSettings& 			getWGSettings() 		{ return m_wgsettings; } 
+	SystemStatus& 			getSystemStatus() 		{ return m_systemstatus; } 
+	Statistics& 			getSubbandStats() 		{ return m_subbandstats; } 
+	Statistics& 			getBeamletStats() 		{ return m_beamletstats; } 
+	XCStatistics& 			getXCStats() 			{ return m_xcstats; } 
+	Versions& 				getVersions() 			{ return m_versions; } 
+	uint32& 				getClock() 				{ return m_clock; } 
+	TDStatus& 				getTDStatus() 			{ return m_tdstatus; } 
+	SPUStatus& 				getSPUStatus() 			{ return m_spustatus; } 
+	TBBSettings& 			getTBBSettings() 		{ return m_tbbsettings; } 
+	BypassSettings& 		getBypassSettings()		{ return m_bypasssettings; } 
+	RawDataBlock_t&			getRawDataBlock() 		{ return (itsRawDataBlock); } 
+	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); } 
+	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
+
+	I2Cuser getI2Cuser() { return (itsI2Cuser); }
+	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
 	/*@}*/
 
 	// update timestamp
@@ -102,27 +111,28 @@ private:
 	CacheBuffer(); // prevent default construction
 
 	// --- datamembers ---
-	RTC::Timestamp                 m_timestamp;
-	RSP_Protocol::BeamletWeights   m_beamletweights;
-	RSP_Protocol::SubbandSelection m_subbandselection;
-	RSP_Protocol::RCUSettings      m_rcusettings;
-	RSP_Protocol::HBASettings      m_hbasettings;
-	RSP_Protocol::HBASettings      m_hbareadings;
-	RSP_Protocol::RSUSettings      m_rsusettings;
-	RSP_Protocol::WGSettings       m_wgsettings;
-	RSP_Protocol::Statistics       m_subbandstats;
-	RSP_Protocol::Statistics       m_beamletstats;
-	RSP_Protocol::XCStatistics     m_xcstats;
-	RSP_Protocol::SystemStatus     m_systemstatus;
-	RSP_Protocol::Versions         m_versions;
-	uint32                         m_clock;
-	RSP_Protocol::TDStatus         m_tdstatus;
-	RSP_Protocol::SPUStatus        m_spustatus;
-	RSP_Protocol::TBBSettings      m_tbbsettings;
-	RSP_Protocol::BypassSettings   m_bypasssettings;
-	RawDataBlock_t				   itsRawDataBlock;
-	SerdesBuffer				   itsSdsWriteBuffer;
-	SerdesBuffer				   itsSdsReadBuffer[MAX_N_RSPBOARDS];
+	RTC::Timestamp					m_timestamp;
+	I2Cuser							itsI2Cuser;
+	RSP_Protocol::BeamletWeights	m_beamletweights;
+	RSP_Protocol::SubbandSelection	m_subbandselection;
+	RSP_Protocol::RCUSettings		m_rcusettings;
+	RSP_Protocol::HBASettings		m_hbasettings;
+	RSP_Protocol::HBASettings		m_hbareadings;
+	RSP_Protocol::RSUSettings		m_rsusettings;
+	RSP_Protocol::WGSettings		m_wgsettings;
+	RSP_Protocol::Statistics		m_subbandstats;
+	RSP_Protocol::Statistics		m_beamletstats;
+	RSP_Protocol::XCStatistics		m_xcstats;
+	RSP_Protocol::SystemStatus		m_systemstatus;
+	RSP_Protocol::Versions			m_versions;
+	uint32							m_clock;
+	RSP_Protocol::TDStatus			m_tdstatus;
+	RSP_Protocol::SPUStatus			m_spustatus;
+	RSP_Protocol::TBBSettings		m_tbbsettings;
+	RSP_Protocol::BypassSettings	m_bypasssettings;
+	RawDataBlock_t					itsRawDataBlock;
+	SerdesBuffer					itsSdsWriteBuffer;
+	SerdesBuffer					itsSdsReadBuffer[MAX_N_RSPBOARDS];
 
 	Cache* m_cache;		// pointer to container
 };
@@ -139,13 +149,14 @@ public:
 
 	// Reset cache front and back buffers.
 	void reset(void);
+	void resetI2Cuser(void);
 
 	// Swap the front and back buffers.
 	void swapBuffers();
 
 	// Get front/back buffers.
-	CacheBuffer& getFront();
-	CacheBuffer& getBack();
+	CacheBuffer& getFront() { return (*m_front); }
+	CacheBuffer& getBack()  { return (*m_back);  }
 
 	// Get register states.
 	AllRegisterState& getState() { return m_allstate; }

@@ -76,7 +76,7 @@ void SetRSUCmd::apply(CacheBuffer& cache, bool setModFlag)
 
 void SetRSUCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetRSUCmd completed at time=" << getTimestamp());
+//  LOG_INFO_STR("SetRSUCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetRSUCmd::getTimestamp() const

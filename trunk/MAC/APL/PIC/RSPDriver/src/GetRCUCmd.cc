@@ -80,14 +80,22 @@ void GetRCUCmd::ack(CacheBuffer& cache)
 
 void GetRCUCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
+	// someone else using the I2C bus?
+	I2Cuser		busUser = cache.getI2Cuser();
+	LOG_INFO_STR("GetRCU::apply : " << ((busUser == NONE) ? "NONE" : ((busUser == HBA) ? "HBA" : "RCU")));
+	if ((cache.getI2Cuser() != NONE) && (cache.getI2Cuser() != RCU)) {
+		postponeExecution(true);
+		return;
+	}
+	cache.setI2Cuser(RCU);		// claim the I2C bus.
+	postponeExecution(false);
+
 	// Mark the rcuread state-registers of the rcus we want to read. RCUProtocolWrite will do the rest.
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (setModFlag && m_event->rcumask.test(cache_rcu)) {
 			cache.getCache().getState().rcuread().write(cache_rcu);
 		} 
 	} // for
-
-  /* intentionally left empty */
 }
 
 void GetRCUCmd::complete(CacheBuffer& cache)

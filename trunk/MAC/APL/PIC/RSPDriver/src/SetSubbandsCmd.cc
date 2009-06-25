@@ -101,7 +101,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
 void SetSubbandsCmd::complete(CacheBuffer& /*cache*/)
 {
-	LOG_INFO_STR("SetSubbandsCmd completed at time=" << getTimestamp());
+//	LOG_INFO_STR("SetSubbandsCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetSubbandsCmd::getTimestamp() const

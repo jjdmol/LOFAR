@@ -172,7 +172,7 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 bool Scheduler::syncHasCompleted()
 {
 	for (map< GCFPortInterface*, bool >::iterator it = m_sync_completed.begin();
-			it != m_sync_completed.end(); it++) {
+												  it != m_sync_completed.end(); it++) {
 		if (!(*it).second) { 
 			return(false);
 		}
@@ -257,19 +257,31 @@ void Scheduler::addSyncAction(SyncAction* action)
 //
 // enter(command, queue)
 //
-void Scheduler::enter(Ptr<Command> command, QueueID queue)
+void Scheduler::enter(Ptr<Command> command, QueueID queue, bool immediateApplyAllowed)
 {
 	Timestamp scheduled_time = command->getTimestamp();
 
-	// process read commmand immediately if that is possible,
+	// process READ commmand immediately if that is possible,
 	if ((command->getOperation() == Command::READ) && 
 		(scheduled_time == Timestamp(0,0)) && 
 		(command->readFromCache()) &&
 		(queue != Scheduler::PERIODIC)) {
 		LOG_INFO_STR("Applying command " << command->name() << " immediately");
 		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-		command->ack(Cache::getInstance().getFront());
+		command->ack		 (Cache::getInstance().getFront());
 		return;
+	}
+
+	// process WRITE commmand immediately if that is possible,
+	if ((command->getOperation() == Command::WRITE) && (queue != Scheduler::PERIODIC)) {
+		if ((scheduled_time == Timestamp(0,0)) && (immediateApplyAllowed)) {
+			LOG_INFO_STR("Applying command " << command->name() << " immediately");
+			command->apply(Cache::getInstance().getFront(), true);
+			command->apply(Cache::getInstance().getBack(), false);
+			command->ack  (Cache::getInstance().getFront());
+			return;
+		}
+		command->ack(Cache::getInstance().getFront()); // each SetXxxCmd needs an ack.
 	}
 
 	/* determine at which time the command can actually be carried out */
@@ -295,12 +307,12 @@ void Scheduler::enter(Ptr<Command> command, QueueID queue)
 	// push the command on the appropriate queue
 	switch (queue) {
 	case LATER:
-		LOG_INFO_STR("Pushing command " << command->name() << " on the 'later' queue");
+		LOG_DEBUG_STR("Pushing command " << command->name() << " on the 'later' queue");
 		m_later_queue.push(command);
 		break;
 
 	case PERIODIC:
-		LOG_INFO_STR("Pushing command " << command->name() << " on the 'periodic' queue");
+		LOG_DEBUG_STR("Pushing command " << command->name() << " on the 'periodic' queue");
 		m_periodic_queue.push(command);
 		break;
 
@@ -348,7 +360,7 @@ void Scheduler::scheduleCommands()
 		// write commands need to be scheduled on sync period ahead of time
 		// to be effective in the hardware at the specified timestamp
 		scheduling_offset = 0;
-		if (Command::WRITE == command->getOperation()) {
+		if (command->getOperation() == Command::WRITE) {
 			scheduling_offset = SYNC_INTERVAL_INT;
 		}
 
@@ -378,7 +390,7 @@ void Scheduler::scheduleCommands()
 		// read commands need to be scheduled on sync period ahead of time
 		// to be effective in the hardware at the specified timestamp
 		scheduling_offset = 0;
-		if (Command::WRITE == command->getOperation()) {
+		if (command->getOperation() == Command::WRITE) {
 			scheduling_offset = SYNC_INTERVAL_INT;
 		}
 
@@ -420,12 +432,19 @@ void Scheduler::processCommands()
 
 		// move from the now queue to the done queue
 		m_now_queue.pop();
-		if (command->delayedResponse()) {
-			LOG_INFO_STR("Placing command " << command->name() << " on the delayed response queue");
-			itsDelayedResponseQueue.push(command);
+		if (command->postponeExecution()) {
+			LOG_INFO_STR("Command " << command->name() << " asked for postponed execution");
+			command->setTimestamp(m_current_time + (long)SCHEDULING_DELAY);
+			m_later_queue.push(command);
 		}
 		else {
-			m_done_queue.push(command);
+			if (command->delayedResponse()) {
+				LOG_INFO_STR("Placing command " << command->name() << " on the delayed response queue");
+				itsDelayedResponseQueue.push(command);
+			}
+			else {
+				m_done_queue.push(command);
+			}
 		}
 	}
 }
@@ -491,6 +510,12 @@ void Scheduler::completeSync()
 	Cache::getInstance().getState().print(logStream);
 	LOG_DEBUG_STR(logStream);
 
+	struct timeval	now;
+	char 			timestr[32];
+	(void)gettimeofday(&now, 0);
+	strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
+	LOG_INFO(formatString("TACK: I/O=%s.%06d UTC", timestr, now.tv_usec));
+
 	// swap the buffers
 	// new data from the boards which was in the back buffers
 	// will end up in the front buffers.
@@ -504,6 +529,12 @@ void Scheduler::completeSync()
 
 	// schedule next update for all registers
 	Cache::getInstance().getState().schedule(); // if IDLE transition to READ or CHECK
+
+	Cache::getInstance().resetI2Cuser();
+
+	(void)gettimeofday(&now, 0);
+	strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
+	LOG_INFO(formatString("TACK: ready=%s.%06d UTC", timestr, now.tv_usec));
 }
 
 //

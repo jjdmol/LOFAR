@@ -92,12 +92,8 @@ SetSplitterCmd::~SetSplitterCmd()
 //
 void SetSplitterCmd::ack(CacheBuffer& /*cache*/)
 {
-	RSPSetsplitterackEvent ack;
-
-	ack.timestamp = getTimestamp();
-	ack.status = RSP_SUCCESS;
-
-	getPort()->send(ack);
+	// moved code to the complete function so that the response is
+	// sent back after it was applied.
 }
 
 //
@@ -119,7 +115,7 @@ void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 
 	// mark registers that the serdes registers should be written.
 	if (setModFlag) {
-		for (int b= 0; b < MAX_N_RSPBOARDS; b++) {
+		for (int b = 0; b < MAX_N_RSPBOARDS; b++) {
 			if (SerdesBuf.hasRSP(b)) {
 				cache.getCache().getState().sbwState().write(b);
 			}
@@ -130,9 +126,12 @@ void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 //
 // complete(cache)
 //
-void SetSplitterCmd::complete(CacheBuffer& cache)
+void SetSplitterCmd::complete(CacheBuffer& /*cache*/)
 {
-	ack(cache);
+	RSPSetsplitterackEvent ack;
+	ack.timestamp = getTimestamp();
+	ack.status = RSP_SUCCESS;
+	getPort()->send(ack);
 }
 
 //
