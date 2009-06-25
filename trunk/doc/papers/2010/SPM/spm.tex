@@ -964,11 +964,89 @@ that of the BG/P, we still achieve excellent performance, thanks to
 the high data reuse factor.
 
 
+\section{Comparison and Evaluation}
+\label{sec:perf-compare}
+
+\begin{table*}[t]
+\begin{center}
+{\small
+\begin{tabular}{l|l|l|l|l}
+Intel Core i7 920            & IBM Blue Gene/P                  & ATI 4870                     & NVIDIA Tesla C1060           & STI  Cell/B.E.                \\
+\hline
++ well-known                 & + L2 prefetch unit works well    & + largest number of cores    & + random write access        & + explicit cache              \\
+                             & + high memory bandwidth          & + swizzling support          & + Cuda is high-level         & + random write access         \\
+                             &                                  &                              &                              & + shuffle capabilities        \\
+                             &                                  &                              &                              & + power efficiency            \\
+                             &                                  &                              &                              &                               \\
+- few registers              & - everything double precision    & - low PCI-e bandwidth        & - low PCI-e bandwidth        & - multiple parallelism levels \\
+- no fma                     & - expensive                      & - transfer slows down kernel &                              & - no increment in odd pipe    \\
+- limited shuffling          &                                  & - no random write access     &                              &                               \\
+                             &                                  & - bad Brook+ performance     &                              &                               \\
+                             &                                  & - CAL is low-level           &                              &                               \\
+                             &                                  & - not well documented        &                              &                               \\
+\end{tabular}
+} %\small
+\end{center}
+\vspace{-0.5cm}
+\caption{Strengths and weaknesses of the different platforms for signal processing applications.}
+\label{architecture-results-table}
+\end{table*}
+
+Figure~\ref{performance-graph} shows the performance on all
+architectures we evaluated. The NVIDIA GPU achieves the highest
+\emph{absolute} performance. Nevertheless, the GPU \emph{efficiencies}
+are much lower than on the other platforms.  The \mbox{Cell/B.E.}
+achieves the highest efficiency of all many-core architectures, close
+to that of the BG/P. Although the theoretical peak performance of the
+\mbox{Cell/B.E.} is 4.6 times lower than the NVIDIA chip, the absolute
+performance is only slightly less.  If both chips in the QS21 blade
+are used, the \mbox{Cell/B.E.} also has the highest absolute
+performance. For the GPUs, it is possible to use more than one chip as
+well.  This can be done in the form of multiple PCI-e cards, or with
+two chips on a single card, as is done with the ATI 4870x2
+device. However, we found that this does not help, since the
+performance is already limited by the low PCI-e throughput, and the
+chips have to share this resource.
+The graph indeed shows that the
+host-to-device I/O has a large impact on the GPU performance, even when using one chip.  With
+the \mbox{Cell/B.E.}, the I/O (from main memory to the Local Store) only has a very small impact.
+
+In Table~\ref{architecture-results-table} we summarize the
+architectural strengths and weaknesses that we identified.  Although
+we focus on the correlator application in this paper, the
+results are applicable to applications with low flop/byte ratios in
+general.
+
 
 \section{Programmability}
 
+The performance gap between assembly and a high-level programming language 
+is quite different for the different platforms. It also
+depends on how much the compiler is helped by manually unrolling
+loops, eliminating common sub-expressions, the use of register variables,
+etc., up to a level that the C code becomes almost as low-level as assembly
+code. The difference varies between only a few percent to a factor of 10. 
 
-\subsection{Aplying the techniques: a case study with the Intel Larrabee}
+For the BG/P, the performance from compiled C++ code was by far not
+sufficient.  The assembly version hides load and instruction
+latencies, issues concurrent floating point, integer, and load/store
+instructions, and uses the L2 prefetch buffers in the most optimal
+way.  The resulting code is approximately 10 times faster than C++
+code.  For both the Cell/B.E. and the Intel core~i7, we found that
+high-level code in C or C++ in combination with the use of intrinsics
+to manually describe the SIMD parallelism yields acceptable
+performance compared to optimized assembly code.  Thus, the programmer
+specifies which instructions have to be used, but can typically leave
+the instruction scheduling and register allocation to the compiler.
+On NVIDIA hardware, the high-level Cuda model delivers excellent
+performance, as long as the programmer helps by using SIMD data types
+for loads and stores, and separate local variables for values that
+should be kept in registers. With ATI hardware, this is different.  We
+found that the high-level Brook+ model does not achieve acceptable
+performance compared to hand-written CAL code.  Manually written assembly 
+is more than three times faster. Also, the Brook+ documentation is insufficient.
+
+\section{Aplying the techniques: a case study with the Intel Larrabee}
 
 Intel recently disclosed some details about the upcoming Larrabee processor,
 a fully programmable GPU based on the well-known x86 instruction set.
@@ -992,7 +1070,7 @@ consecutive memory locations.
 Both 
 
 Another option is to correlate samples from different receivers as illustrated
-by Figure~\ref{fig:4x4-correlation}.
+by Figure~\ref{fig-correlation}.
 This method minimizes memory loads, but requires additional shuffling of data.
 Unfortunately, the most efficient method can only be determined empirically,
 when the hardware is available.
