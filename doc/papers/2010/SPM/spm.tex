@@ -77,15 +77,16 @@ Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 % dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
-The \emph{Low Frequency Array
-(LOFAR)\/}~\cite{Butcher:04,deVos:09}, for instance, will produce some tens of
-petabits per day; the dishes from the Australian SKA Pathfinder (ASKAP) will
+The Low Frequency Array, for instance, will produce some tens of
+petabits per day, and the Australian SKA Pathfinder will
 even produce over six exabits per day.
-These modern radio telescopes use many seperate receivers as building blocks.
+These modern radio telescopes use many separate receivers as building blocks, and
+combine their signals to simulate a single large and sensitive instrument.
 To extract the sky signal from the system noise, the \emph{correlator\/}
-correlates the signals by multiplying the samples of each pair of receivers.
-Additionally, the correlator integrates correlations over time, to reduce
-the amount of data.
+correlates the signals from different receivers, and integrates the correlations over time, to reduce
+the amount of data. The correlation is an important problem in radio astronomy,
+since the data volumes are so large, and the computational demand grows quadratically
+with the number of receivers.
 
 Traditionally, custom-built hardware is used to correlate the signals.
 A recent development is to use a supercomputer~\cite{Romein:06,Romein:09b}.
@@ -105,11 +106,11 @@ achieve performance increases by increasing the clock frequency, but
 by adding more compute cores and exploiting parallelism.  Intel's
 recent core~i7 processor is a good example of this. It has four
 compute cores, but eight concurrent threads can be used thanks to the
-hyperthreading technique. In addition, the cores can expoilt SIMD
-paralellism with the SSE4 instruction set.
+hyperthreading technique. In addition, the cores can exploit vector
+parallelism with the SSE instruction set.
 
-During the past ten years, the high-performance computing community has
-steadily adopted clusters of Graphics Processor Units (GPUs) as a viable
+Furthermore, the high-performance computing community is
+steadily adopting clusters of Graphics Processor Units (GPUs) as a viable
 alternative to supercomputers, due to their unparalleled growth in
 computational performance, increasing flexibility, increasing programmability,
 high power efficiency, and low purchase costs.
@@ -125,11 +126,9 @@ The IBM Cell Broadband Engine~\cite{Gschwind:06}, well known from the
 PlayStation~3, is another example of a processor that combines GPU and CPU
 qualities into one design.
 The Cell/B.E. consists of an ``ordinary'' PowerPC core and eight powerful
-\emph{Synergistic Processing Elements (SPEs)}, co-processors that provide
+vector processors with fast, local memories that provide
 the bulk of the processing power.
-The SPEs are vector processors with fast, local memories, and are capable
-of transferring data from and to main memory by means of DMA.
-Programming the SPEs requires more effort than programming an ordinary CPU,
+Programming the Cell/B.E. requires more effort than programming an ordinary CPU,
 but various studies showed that the Cell/B.E. performs very well on
 signal-processing tasks like FFTs~\cite{fftc}.
 
@@ -137,8 +136,8 @@ In this article, we explain how modern multi-core architectures can be
 exploited for signal-processing purposes.  Additionally, we give
 insights into their architectural limitations, and how to best cope
 with them.  We treat five different, popular architectures with
-multiple cores: the IBM Cell/B.E., GPUs from Nvidia and ATI, the IBM
-Blue Gene/P supercomputer, and the Intel Core i7 processors.  We discuss their
+multiple cores: the IBM Cell/B.E., GPUs from both NVIDIA and ATI, the Intel Core i7 processor, and
+the IBM Blue Gene/P supercomputer.  We discuss their
 similarities and differences, and how the architectural differences
 affect optimization choices and the eventual performance of a
 correlator.  We strongly focus on correlators, but many of the
@@ -150,10 +149,10 @@ some extra programming effort to obtain good performance, even if
 high-level programming support is not available.
 
 In this paper, we use the LOFAR telescope as a running example, and
-compare with the production correlator on the Blue Gene/P. This way,
-we can demonstrate how many-cores can be used in practice for a real
+use the production correlator on the Blue Gene/P as a comparison. This way,
+we can demonstrate how many-core architectures can be used in practice for a real
 application. Nevertheless, the results apply equally well to other
-instruments.
+instruments and applications.
 
 
 \section{Trends in radio astronomy}
