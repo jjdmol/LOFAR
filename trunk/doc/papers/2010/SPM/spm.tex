@@ -173,6 +173,8 @@ instruments.
 %- voorbeelden. pathfinders voor SKA. 
 %- computationally intensive, SKA even more
 
+%@@@ later even kijken: computing advances maken nieuwe signal processing technieken en telescopen / instrumenten mogelijk.
+
 
 
 During the past decade, new types of radio-telescope concepts emerged that
@@ -180,16 +182,16 @@ rely less on concrete, steel, and extreme cooling techniques, but more on
 signal-processing techniques.
 For example, LOFAR~\cite{Butcher:04,deVos:09} is a distributed sensor network
 that combines the signals of tens of thousands of simple receiver elements.
-Also, Aperture Array tiles like Embrace~\cite{?} and Focal Plane Arrays
-like Apertif~\cite{?} are novel multi-receiver concepts that require huge
+Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat}, 
+ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}. Both are
+pathfinders for the future SKA (Square Kilometre Array)~\cite{ska} telescope, which
+will be orders of magnitude larger.
+Also, Aperture Array tiles like Embrace~\cite{embrace} and Focal Plane Arrays
+like Apertif~\cite{apertif} are novel multi-receiver concepts that require huge
 amounts of processing power to combine the data from the receiving elements.
 Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
-
-%@@@ later even kijken: computing advances maken nieuwe signal processing technieken en telescopen / instrumenten mogelijk.
-
-%% SKA + pathfinders: EMBRACE, LOFAR, ASKAP, meerKAT
 
 The signal-processing hardware technology used to process telescope
 data also changes rapidly.  Only a decade ago, correlators required
@@ -197,22 +199,23 @@ special-purpose ASICs to keep up with the high data rates and
 processing requirements.  The advent of sufficiently fast FPGAs
 significantly lowered the developments times and costs of
 newer-generation correlators, and increased the flexibility
-substantially.  LOFAR requires even more flexibility to support many
+substantially. LOFAR requires even more flexibility to support many
 different processing pipelines for various observation modes, and uses
 FPGAs for on-the-field station processing and a Blue Gene/P
 supercomputer to perform real-time, central processing.
+We describe LOFAR in more detail below.
 
-Recent many-core architectures seem to be a viable complement to the aforementioned processing platforms.
-GPUs provide more processing power and are more power-efficient than CPUs,
-while GPUs are more flexible and easier to program than FPGAs.
-Since GPUs of different vendors are mutually quite different, we did an
-extensive performance comparison between the architectures of popular GPUs 
-for signal-processing purposes, particularly, for correlation
-purposes~\cite{Nieuwpoort:09}.
-
+% @@@ dit past hier niet
+%% Recent many-core architectures seem to be a viable complement to the aforementioned processing platforms.
+%% GPUs provide more processing power and are more power-efficient than CPUs,
+%% while GPUs are more flexible and easier to program than FPGAs.
+%% Since GPUs of different vendors are mutually quite different, we did an
+%% extensive performance comparison between the architectures of popular GPUs 
+%% for signal-processing purposes, particularly, for correlation
+%% purposes~\cite{Nieuwpoort:09}.
 %@@@ Cell
 
-
+\subsection{The LOFAR telescope}
 
 
 @@@
