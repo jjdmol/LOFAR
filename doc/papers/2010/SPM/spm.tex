@@ -49,7 +49,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 
-\title{How to Build a Correlator on Many-Core Hardware}
+\title{How to Build a Correlator with Many-Core Hardware}
 
 \name{Rob V. van Nieuwpoort and John W. Romein}
 
@@ -81,6 +81,7 @@ The stations of the \emph{Low Frequency Array
 (LOFAR)\/}~\cite{Butcher:04,deVos:09}, for instance, will produce some tens of
 petabits per day; the dishes from the Australian SKA Pathfinder (ASKAP) will
 even produce over six exabits per day.
+These modern radio telescopes use many seperate receivers as building blocks.
 To extract the sky signal from the system noise, the \emph{correlator\/}
 correlates the signals by multiplying the samples of each pair of receivers.
 Additionally, the correlator integrates correlations over time, to reduce
@@ -96,7 +97,16 @@ efficient, consume more power, and are expensive to purchase and maintain.
 Future instruments, like the Square Kilometre Array (SKA), need several orders
 of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
-current supercomputer technology.
+current supercomputer technology. Therefore, it is important to investigate
+alternative hardware solutions, in particular the many-core architectures.
+
+A recent development is that general-purpose architectures no longer
+achieve performance increases by increasing the clock frequency, but
+by adding more compute cores and exploiting parallelism.  Intel's
+recent core~i7 processor is a good example of this. It has four
+compute cores, but eight concurrent threads can be used thanks to the
+hyperthreading technique. In addition, the cores can expoilt SIMD
+paralellism with the SSE4 instruction set.
 
 During the past ten years, the high-performance computing community has
 steadily adopted clusters of Graphics Processor Units (GPUs) as a viable
@@ -114,37 +124,36 @@ High-end GPUs are highly parallel and contain hundreds of processor cores.
 The IBM Cell Broadband Engine~\cite{Gschwind:06}, well known from the
 PlayStation~3, is another example of a processor that combines GPU and CPU
 qualities into one design.
-The Cell BE consists of an ``ordinary'' PowerPC core and eight powerful
+The Cell/B.E. consists of an ``ordinary'' PowerPC core and eight powerful
 \emph{Synergistic Processing Elements (SPEs)}, co-processors that provide
 the bulk of the processing power.
 The SPEs are vector processors with fast, local memories, and are capable
 of transferring data from and to main memory by means of DMA.
 Programming the SPEs requires more effort than programming an ordinary CPU,
-but various studies showed that the Cell BE performs very well on
-signal-processing tasks like FFTs~\cite{?}.
+but various studies showed that the Cell/B.E. performs very well on
+signal-processing tasks like FFTs~\cite{fftc}.
 
 In this article, we explain how modern multi-core architectures can be
-exploited for signal-processing purposes.
-Additionally, we give insights into their architectural limitations, and how
-to best cope with them.
-We treat five different, popular multi-core architectures: the IBM Cell BE,
-GPUs from Nvidia and ATI, the IBM Blue Gene/P, and
-the Intel Core i7 processors.
-We discuss their similarities and differences, and how the architectural
-differences affect optimization choices and the eventual performance of a
-correlator.
-We strongly focus on correlators, but many of the findings, claims, and
-optimizations hold for other signal-processing algorithms as well, both in and outside the
-area of radio astronomy.
-We discuss the programmability of each of the architectures, but this paper
-should be of special interest to those who are willing to put some extra
-programming effort to obtain good performance, even if high-level programming
-support is not available.
+exploited for signal-processing purposes.  Additionally, we give
+insights into their architectural limitations, and how to best cope
+with them.  We treat five different, popular architectures with
+multiple cores: the IBM Cell/B.E., GPUs from Nvidia and ATI, the IBM
+Blue Gene/P supercomputer, and the Intel Core i7 processors.  We discuss their
+similarities and differences, and how the architectural differences
+affect optimization choices and the eventual performance of a
+correlator.  We strongly focus on correlators, but many of the
+findings, claims, and optimizations hold for other signal-processing
+algorithms as well, both in and outside the area of radio astronomy.
+We discuss the programmability of each of the architectures, but this
+paper should be of special interest to those who are willing to put
+some extra programming effort to obtain good performance, even if
+high-level programming support is not available.
 
-
-In this paper, we use the LOFAR
-telescope as an example, but the results apply equally well
-to other instruments. 
+In this paper, we use the LOFAR telescope as a running example, and
+compare with the production correlator on the Blue Gene/P. This way,
+we can demonstrate how many-cores can be used in practice for a real
+application. Nevertheless, the results apply equally well to other
+instruments.
 
 
 \section{Trends in radio astronomy}
@@ -205,6 +214,36 @@ purposes~\cite{Nieuwpoort:09}.
 
 
 
+
+@@@
+LOFAR started as a new and innovative effort to force a breakthrough
+in sensitivity for astronomical observations at radio-frequencies
+below 250 MHz. The basic technology of radio telescopes had not
+changed since the 1960's: large mechanical dish antennas collect
+signals before a receiver detects and analyses them. Half the cost of
+these telescopes lies in the steel and moving structure. A telescope
+100x larger than existing instruments would therefore be
+unaffordable. New technology was required to make the next step in
+sensitivity needed to unravel the secrets of the early universe and
+the physical processes in the centers of active galactic nuclei.
+
+LOFAR is the first telescope of this new sort, using an array of
+simple omni-directional antennas instead of mechanical signal
+processing with a dish antenna. The electronic signals from the
+antennas are digitised, transported to a central digital processor,
+and combined in software to emulate a conventional antenna. The cost
+is dominated by the cost of electronics and will follow Moore's law,
+becoming cheaper with time and allowing increasingly large telescopes
+to be built. So LOFAR is an IT-telescope. The antennas are simple
+enough but there are a lot of them - 25000 in the full LOFAR
+design. To make radio pictures of the sky with adequate sharpness,
+these antennas are to be arranged in clusters that are spread out over
+an area of ultimately 350 km in diameter. (In phase 1 that is
+currently funded 15000 antenna's and maximum baselines of 100 km will
+be built). Data transport requirements are in the range of many
+Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
+@@@
+
 \section{Correlating signals}
 
 
@@ -249,8 +288,8 @@ accurate enough for our purposes. From the perspective of the
 correlator, samples thus consist of four 32-bit floating point
 numbers: two polarizations, each with a real and an imaginary part.
 
-Prior to correlation, an FX correlator must reorder the data that comes from
-the receivers:
+Prior to correlation, the data that comes from
+the receivers must be reordered:
 each input carries the signals of from many frequency subbands from a single
 receiver, but the correlator needs data from a single frequency of all inputs.
 Depending on the data rate, switching the data can be a real challenge.
@@ -384,7 +423,7 @@ issues vector-multiply and vector-add instructions concurrently in
 different pipelines, allowing eight flops per cycle per core.  One
 problem of SSE4 that complicates an efficient correlator is the
 limited support for shuffling data within vector registers, unlike the
-Cell~BE, for instance, that can shuffle any byte to any position.
+Cell/B.E., for instance, that can shuffle any byte to any position.
 Also, the number of vector registers is small (sixteen four-word
 registers).  Therefore, the is not much opportunity to reuse data in
 registers; reuse has to come from the L1~data cache. 
