@@ -25,6 +25,12 @@ FileStream::FileStream(const char *name, int mode)
 }
 
 
+FileStream::FileStream(const char *name, int flags, int mode)
+{
+  if ((fd = open(name, flags, mode)) < 0) 
+    throw SystemCallException("open", errno, THROW_ARGS);
+}
+
 FileStream::~FileStream()
 {
 }
