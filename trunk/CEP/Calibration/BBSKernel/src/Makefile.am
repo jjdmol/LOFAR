@@ -1,14 +1,9 @@
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/DipoleBeam.cc
-
 libbbskernel_la_SOURCES = Package__Version.cc \
-	BlobIOExtensions.cc \
 	Evaluator.cc \
 	Equator.cc \
-	Instrument.cc \
 	MeasurementAIPS.cc \
-	MetaMeasurement.cc \
 	Model.cc \
 	ModelConfig.cc \
 	ParmManager.cc \
@@ -57,15 +52,11 @@ libbbskernel_la_SOURCES = Package__Version.cc \
     Expr/Source.cc \
     Expr/StatUVW.cc \
     Expr/YatawattaDipole.cc
-    
-bin_PROGRAMS = versionbbskernel metams
+
+bin_PROGRAMS = versionbbskernel
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
 versionbbskernel_LDADD        = libbbskernel.la
 versionbbskernel_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
-
-metams_SOURCES      = metams.cc
-metams_LDADD        = libbbskernel.la
-metams_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

@@ -26,12 +26,8 @@
 #include <Common/lofar_string.h>
 #include <measures/Measures/MPosition.h>
 
-
 namespace LOFAR
 {
-    class BlobIStream;
-    class BlobOStream;
-
 namespace BBS
 {
     struct Station
@@ -47,14 +43,7 @@ namespace BBS
         vector<Station>     stations;
     };
 
-    // BlobStream I/O.
-    BlobOStream &operator<<(BlobOStream &out, const Station &obj);
-    BlobIStream &operator>>(BlobIStream &in, Station &obj);
-    BlobOStream &operator<<(BlobOStream &out, const Instrument &obj);
-    BlobIStream &operator>>(BlobIStream &in, Instrument &obj);
-
 } // namespace BBS
 } // namespace LOFAR
 
 #endif
-

@@ -1,4 +1,4 @@
-//# MeasurementAIPS.h: 
+//# MeasurementAIPS.h: I/O for AIPS++ Measurement Sets.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -48,12 +48,10 @@ class VisSelection;
 class MeasurementAIPS: public Measurement
 {
 public:
-    MeasurementAIPS(string filename,
-        uint observationId = 0,
-        uint dataDescriptionId = 0,
-        uint fieldId = 0);
-
-    ~MeasurementAIPS();
+    MeasurementAIPS(const string &filename,
+        unsigned int idObservation = 0,
+        unsigned int idField = 0,
+        unsigned int idDataDescription = 0);
 
     virtual VisDimensions getDimensions(const VisSelection &selection) const;
 
@@ -64,13 +62,9 @@ public:
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
-    void initInstrumentInfo(const casa::ROMSAntennaColumns &antenna,
-        const casa::ROMSObservationColumns &observation, uint id);
-    void initFreqTimeInfo(const casa::ROMSSpWindowColumns &window, uint id);
-    void initBaselineInfo();
-    void initPolarizationInfo(const casa::ROMSPolarizationColumns &polarization,
-        uint id);
-    void initFieldInfo(const casa::ROMSFieldColumns &field, uint id);
+    void initInstrument();
+    void initPhaseCenter();
+    void initDimensions();
 
     casa::Table getTableSelection(const casa::Table &table,
         const VisSelection &selection) const;
@@ -79,7 +73,13 @@ private:
         const casa::Slicer slicer) const;
 
     casa::MeasurementSet    itsMS;
+    casa::Table             itsMainTableView;
+
     bool                    itsFreqAxisReversed;
+
+    unsigned int            itsIdObservation;
+    unsigned int            itsIdField;
+    unsigned int            itsIdDataDescription;
 };
 
 } //# namespace BBS
