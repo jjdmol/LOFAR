@@ -42,7 +42,7 @@ class MeasurementSetFormat : public Format
     LittleEndian
   };
 
-  MeasurementSetFormat(const Parset *);
+  MeasurementSetFormat(const Parset *, const uint32 alignment = 1);
   ~MeasurementSetFormat();
 
   void addSubband(unsigned subband);
@@ -63,6 +63,7 @@ class MeasurementSetFormat : public Format
 
   casa::MeasurementSet* itsMS;
 /*   casa::Table* itsMS; */
+  uint32 itsAlignment;
 
   void createMSTables(unsigned subband);
   void createMSMetaFile(unsigned subband);
