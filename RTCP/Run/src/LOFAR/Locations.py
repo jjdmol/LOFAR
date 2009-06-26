@@ -71,7 +71,8 @@ class Locations:
         "home":    homeDir(),
 
         # the parset that will be written by us and read by the sections
-	"parset":  "${RUNDIR}/RTCP.parset", 
+        # the observation ID is included to allow parallel observations
+	"parset":  "${RUNDIR}/RTCP-${MSNUMBER}.parset", 
 
         # where to store logs and start the executables
 	"logdir":  "listfen:/log/L${YEAR}_${MSNUMBER}",
