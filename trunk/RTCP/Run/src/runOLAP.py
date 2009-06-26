@@ -48,8 +48,9 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
   # sanity check on parset
   parset.check()
 
-  # write parset to disk
+  # write parset to disk (both rundir and logdir)
   parset.writeToFile( Locations.files["parset"] )
+  parset.writeToFile( "%s/%s" % (Locations.files["logdir"],"RTCP.parset") )
 
   # TODO: remove this dependency hack, as everything is in one parset now
   os.system( "touch %s/OLAP.parset" % (Locations.files["rundir"]) )
@@ -128,7 +129,7 @@ if __name__ == "__main__":
   psgroup.add_option( "-s", "--starttime",
   			dest = "starttime",
 			type = "string",
-                        default = "+00:00:10",
+                        default = "+00:00:15",
   			help = "set the start time (syntax: timestamp, [YYYY-MM-DD] HH:MM[:SS], +seconds or +HH:MM[:SS]) [%default]" )
 
   psgroup.add_option( "-r", "--runtime",
@@ -305,7 +306,7 @@ if __name__ == "__main__":
 
   info( "Observation ID %s" % (obsid,) )
 
-  # resolve all paths now that parset is set up
+  # resolve all paths now that parset is set up and the observation ID is known
   for opt in dirgroup.option_list:
     Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
   Locations.resolveAllPaths( parset ) 
