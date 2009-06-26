@@ -8,6 +8,7 @@
 #include <Interface/MultiDimArray.h>
 #include <Interface/SparseSet.h>
 #include <Interface/Allocator.h>
+#include <Interface/Align.h>
 #include <Common/DataConvert.h>
 
 #include <boost/noncopyable.hpp>
@@ -44,7 +45,7 @@ class StreamableData {
     virtual void allocate( Allocator &allocator = heapAllocator ) = 0;
 
     virtual void read(Stream*, const bool withSequenceNumber);
-    virtual void write(Stream*, const bool withSequenceNumber);
+    virtual void write(Stream*, const bool withSequenceNumber, const unsigned align = 0);
 
     bool isIntegratable() const
     { return integratable; }
@@ -71,7 +72,7 @@ template <typename T, unsigned DIM> class SampleData: public StreamableData, boo
     virtual ~SampleData();
 
     virtual size_t requiredSize() const;
-    virtual void allocate( Allocator &allocator = heapAllocator );
+    virtual void allocate( Allocator &allocator = heapAllocator);
 
     MultiDimArray<T,DIM> samples;
     SparseSet<unsigned>  *flags;
@@ -103,16 +104,37 @@ inline void StreamableData::read( Stream *str, const bool withSequenceNumber )
   readData( str );
 }
 
-inline void StreamableData::write( Stream *str, const bool withSequenceNumber )
+inline void StreamableData::write( Stream *str, const bool withSequenceNumber, const unsigned align )
 {
   if( withSequenceNumber ) {
 #if !defined WORDS_BIGENDIAN
-    uint32_t sn = sequenceNumber;
+    if (align > 1) {
+      void *sn_buf;
+      uint32_t sn = sequenceNumber;
 
-    dataConvert( LittleEndian, &sn, 1 );
-    str->write( &sn, sizeof sn );
+      posix_memalign(&sn_buf, align, align);
+
+      dataConvert( LittleEndian, &sn, 1 );
+      memcpy(sn_buf, &sn, sizeof(uint32_t));
+
+      str->write( sn_buf, align );
+    } else {
+      uint32_t sn = sequenceNumber;
+
+      dataConvert( LittleEndian, &sn, 1 );
+      str->write( &sn, sizeof sn );
+    }
 #else
-    str->write( &sequenceNumber, sizeof sequenceNumber );
+    if (align > 1) {
+      void *sn_buf;
+      posix_memalign(&sn_buf, align, align);
+      memcpy(sn_buf, &sequenceNumber, sizeof(sequenceNumber));
+
+      str->write( sn_buf, align );
+    } else {
+      str->write( &sequenceNumber, sizeof sequenceNumber );
+    }
+
 #endif
   }
 
