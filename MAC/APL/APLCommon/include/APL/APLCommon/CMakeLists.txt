@@ -19,44 +19,29 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # List of header files that will be installed.
-set (inst_HEADERS
+set(inst_HEADERS
   Package__Version.h
-  BlobAipsIO.h
-  BlobArray.h
-  BlobArray.tcc
-  BlobArrayHeader.h
-  BlobException.h
-  BlobField.h
-  BlobField.tcc
-  BlobFieldSet.h
-  BlobHeader.h
-  BlobIBufChar.h
-  BlobIBuffer.h
-  BlobIBufStream.h
-  BlobIBufString.h
-  BlobIBufVector.h
-  BlobIStream.h
-  BlobOBufChar.h
-  BlobOBuffer.h
-  BlobOBufNull.h
-  BlobOBufStream.h
-  BlobOBufString.h
-  BlobOBufVector.h
-  BlobOStream.h
-  BlobSTL.h
-  BlobSTL.tcc
-  BlobStreamable.h
-  BlobString.h
-  BlobStringTraits.h
-  BlobStringType.h
-  KeyParser.h
-  KeyValue.h
-  KeyValueMap.h)
+  AntennaMapper.h
+  APLCommonExceptions.h
+  APL_Defines.h
+  APLUtilities.h
+  bitsetUtil.tcc
+  ControllerDefines.h
+  CTState.h
+  ControllerInfo.h
+  ControllerAdmin.h
+  ChildControl.h
+  ParentControl.h)
+
+# Add definition of include path suffix definition, because the header files
+# reside in a non-standard location. 
+set(${PROJECT_NAME}_INCLUDE_PATH_SUFFIX APL/APLCommon
+  CACHE INTERNAL "Include path suffix for package \"${PROJECT_NAME}\"")
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+  ${CMAKE_BINARY_DIR}/include/APL/APLCommon)
 
 # Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
+install(FILES ${inst_HEADERS} DESTINATION include/APL/APLCommon)

@@ -49,4 +49,4 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 add_subdirectory(include/AMCBase)
 add_subdirectory(src)
-add_subdirectory(test EXCLUDE_FROM_ALL)
+add_subdirectory(test)

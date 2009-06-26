@@ -28,18 +28,17 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(Common)
+project(APLCommon)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 3.1)
+lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common ApplCommon GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost)
-lofar_find_package(Readline)
+lofar_find_package(Boost REQUIRED COMPONENTS regex)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -49,6 +48,6 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(include/Common)
+add_subdirectory(include/APL/APLCommon)
 add_subdirectory(src)
 add_subdirectory(test)
