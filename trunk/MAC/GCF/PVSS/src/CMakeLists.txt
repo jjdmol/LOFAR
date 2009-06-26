@@ -21,7 +21,11 @@
 include(LofarPackageVersion)
 
 # Extra preprocessor definitions
-add_definitions("-DUSES_NEW_IOSTREAMS -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"")
+add_definitions(-DUSES_NEW_IOSTREAMS -DLOFARLOGGER_SUBPACKAGE="PVSS")
+
+# Add current source directory to -I path. This is needed because GCFPVSS uses
+# angle brackets for internal header files, instead of quotes.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_library(gcfpvss
   Package__Version.cc
