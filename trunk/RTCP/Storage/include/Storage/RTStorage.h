@@ -10,6 +10,10 @@
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 
+// signal CorrelatedData.h that we know that we're going to write big
+// edian on little endian hardware
+#define WRITE_BIG_ON_LITTLE_ENDIAN
+
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PipelineOutput.h>
@@ -17,8 +21,6 @@
 
 #include <Storage/Format.h>
 #include <Storage/InputThread.h>
-
-
 
 namespace LOFAR {
   namespace RTCP { 
@@ -32,10 +34,6 @@ namespace LOFAR {
       void preprocess();
       void process();
       void postprocess();
-      
-
-      // stores indexes of subbands that have packets waiting to be written
-      Queue<unsigned> *myToWriteQueue;
 
    private:
       const Parset *itsPS;
@@ -48,8 +46,12 @@ namespace LOFAR {
       unsigned     itsNrSubbands;
       unsigned     itsNrSubbandsPerStorage;
       unsigned     itsMyNrSubbands;
+      uint32       itsAlignment;       // alignment of userbuffers and
+				       // writes, for O_DIRECT
+      
 
       NSTimer itsWriteTimer;
+      double  bytesWritten;
 
       std::vector<Stream *>      itsInputStreams;
       std::vector<bool>          itsIsNullStream;
