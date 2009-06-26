@@ -18,45 +18,17 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# List of header files that will be installed.
-set (inst_HEADERS
-  Package__Version.h
-  BlobAipsIO.h
-  BlobArray.h
-  BlobArray.tcc
-  BlobArrayHeader.h
-  BlobException.h
-  BlobField.h
-  BlobField.tcc
-  BlobFieldSet.h
-  BlobHeader.h
-  BlobIBufChar.h
-  BlobIBuffer.h
-  BlobIBufStream.h
-  BlobIBufString.h
-  BlobIBufVector.h
-  BlobIStream.h
-  BlobOBufChar.h
-  BlobOBuffer.h
-  BlobOBufNull.h
-  BlobOBufStream.h
-  BlobOBufString.h
-  BlobOBufVector.h
-  BlobOStream.h
-  BlobSTL.h
-  BlobSTL.tcc
-  BlobStreamable.h
-  BlobString.h
-  BlobStringTraits.h
-  BlobStringType.h
-  KeyParser.h
-  KeyValue.h
-  KeyValueMap.h)
+include(LofarCTest)
 
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+# Add the directory where the generated C++ headers are stored to the -I path.
+include_directories(${PROJECT_BINARY_DIR}/src)
 
-# Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
+lofar_add_test(tControllerDefines tControllerDefines.cc)
+lofar_add_test(tAPLUtilities tAPLUtilities.cc)
+lofar_add_test(tbitsetUtil tbitsetUtil.cc)
+lofar_add_test(tOutOfBand tOutOfBand.cc)
+lofar_add_test(tAntennaMapper tAntennaMapper.cc)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/ResourceAllocatorTest.log_prop.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ResourceAllocatorTest.log_prop)
