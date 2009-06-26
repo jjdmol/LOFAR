@@ -28,17 +28,16 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(GCFPVSS)
+project(GCFRTDB)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFTM)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common GCFPVSS GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(PVSS REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -48,6 +47,6 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(include/GCF/PVSS)
+add_subdirectory(include/GCF/RTDB)
 add_subdirectory(src)
 add_subdirectory(test)

@@ -22,8 +22,8 @@ include(LofarCTest)
 
 include(MACAddProtocol)
 
-mac_add_protocol(Echo_Protocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
-mac_add_protocol(testprotocol "${${PROJECT_NAME}_SOURCE_DIR}/autogen")
+mac_add_protocol(Echo_Protocol "${PROJECT_SOURCE_DIR}/autogen")
+mac_add_protocol(testprotocol "${PROJECT_SOURCE_DIR}/autogen")
 
 # Add current binary directory to -I path, so that the generated C++ header
 # files can be found.

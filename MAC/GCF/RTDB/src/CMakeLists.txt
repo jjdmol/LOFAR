@@ -18,35 +18,20 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# List of header files that will be installed.
-set(inst_HEADERS
-  Package__Version.h
-  GCF_PValue.h
-  GCF_Defines.h
-  GCF_PVChar.h
-  GCF_PVBlob.h
-  GCF_PVBool.h
-  GCF_PVDateTime.h
-  GCF_PVDouble.h
-  GCF_PVDynArr.h
-  GCF_PVInteger.h
-  GCF_PVString.h
-  GCF_PVTypes.h
-  GCF_PVUnsigned.h
-  PVSSinfo.h
-  PVSSresponse.h
-  PVSSresult.h
-  PVSSservice.h)
+include(LofarPackageVersion)
 
-# Add definition of include path suffix definition, because the header files
-# reside in a non-standard location. 
-set(${PROJECT_NAME}_INCLUDE_PATH_SUFFIX GCF/PVSS
-  CACHE INTERNAL "Include path suffix for package \"${PROJECT_NAME}\"")
+# Extra preprocessor definitions
+add_definitions(-DUSES_NEW_IOSTREAMS)
 
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/GCF/PVSS)
+# Add MAC protocols (generates a .ph and .cc file from a .prot file)
+include(MACAddProtocol)
+mac_add_protocol(DP_Protocol "${MACIO_SOURCE_DIR}/autogen")
 
-# Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/GCF/PVSS)
+lofar_add_library(gcfrtdb
+  Package__Version.cc
+  DP_Protocol.cc
+  RTDB_PropertySet.cc
+  DPservice.cc
+  DPanswer.cc)
+
+lofar_add_bin_program(versiongcfrtdb versiongcfrtdb.cc)
