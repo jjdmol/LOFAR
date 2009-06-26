@@ -1,4 +1,4 @@
-//# JonesVisData.cc: 
+//# JonesVisData.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -60,9 +60,9 @@ JonesResult JonesVisData::getJResult(const Request &request)
     ASSERT(start.first + nChannels <= visGrid.shape().first);
     ASSERT(start.second + nTimeslots <= visGrid.shape().second);
 
-    LOG_DEBUG_STR("Offset: (" << start.first << "," << start.second
-        << ") Size: " << nChannels << "x" << nTimeslots);
-        
+//    LOG_DEBUG_STR("Offset: (" << start.first << "," << start.second
+//        << ") Size: " << nChannels << "x" << nTimeslots);
+
     // NB: index_ranges are exclusive.
     typedef boost::multi_array<sample_t, 4>::index_range Range;
     Range freqRange(start.first, start.first + nChannels);

@@ -1,16 +1,12 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/DipoleBeam.h
-
 pkginclude_HEADERS = Package__Version.h \
-	BlobIOExtensions.h \
 	Evaluator.h \
 	Equator.h \
 	Exceptions.h \
 	Instrument.h \
 	Measurement.h \
 	MeasurementAIPS.h \
-	MetaMeasurement.h \
 	Model.h \
 	ModelConfig.h \
 	ParmManager.h \
@@ -65,5 +61,5 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Source.h \
 	Expr/StatUVW.h \
 	Expr/YatawattaDipole.h
-    
+
 include $(top_srcdir)/Makefile.common
