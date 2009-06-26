@@ -47,7 +47,6 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
-#include <BBSControl/NoiseStep.h>
 
 #include <Common/ParameterSet.h>
 
@@ -103,7 +102,7 @@ namespace LOFAR
       try {
         const ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
-        
+
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
@@ -112,14 +111,14 @@ namespace LOFAR
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "5432")));
-            
+
         // Initialize a TCP listen socket that will accept incoming kernel
         // connections.
         int32 backlog = ps->getInt32("ConnectionBacklog", 10);
 
         // Set socket name.
         itsSocket.setName("Solver");
-        
+
         // Get range of ports to test from parset, or default to [6500, 6599].
         vector<uint> range = ps->getUintVector("PortRange", vector<uint>());
         uint portLow = range.size() > 0 ? range[0] : 6500;
@@ -145,9 +144,9 @@ namespace LOFAR
             " the range [" << portLow << "," << portHigh << "]");
           return false;
         }
-        
+
         LOG_INFO_STR("Listening on port: " << port);
-        
+
         // Poll until Control is ready to accept workers.
         LOG_INFO_STR("Waiting for Control...");
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
@@ -159,7 +158,7 @@ namespace LOFAR
           LOG_ERROR("Registration denied.");
           return false;
         }
-        
+
         LOG_INFO_STR("Registration OK.");
         setState(RUN);
       }
@@ -184,7 +183,7 @@ namespace LOFAR
             return false;
             break;
           }
-          
+
           case WAIT: {
             // Wait for a command. Note that this call falls through whenever
             // a new command is inserted.
@@ -209,7 +208,7 @@ namespace LOFAR
 
               // Report the result to the global controller.
               itsCalSession->postResult(command.first, result);
-      
+
               // If an error occurred, log a descriptive message and exit.
               if(result.is(CommandResult::ERROR)) {
                 LOG_ERROR_STR("Error executing " << command.second->type()
@@ -231,7 +230,7 @@ namespace LOFAR
             }
             break;
           }
-        } // switch(itsState)        
+        } // switch(itsState)
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
@@ -326,13 +325,13 @@ namespace LOFAR
           THROW(SolverControlException, "Protocol error. Expected a"
             " ProcessIdMsg");
         }
-          
+
         if(!itsCalSession->isKernel(msg->getProcessId())) {
           connection.reset();
           THROW(SolverControlException, "Process " << msg->getProcessId()
             << "is not a registered kernel process; disconnected");
         }
-  
+
         KernelIndex index = itsCalSession->getIndex(msg->getProcessId());
 
         try {
@@ -407,7 +406,7 @@ namespace LOFAR
     CommandResult SolverProcessControl::visit(const SolveStep &command)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      
+
       // Initialize a solve task for each calibration group.
       setSolveTasks(command.calibrationGroups(), command.solverOptions());
 
@@ -430,7 +429,7 @@ namespace LOFAR
           done = itsSolveTasks[i].run() && done;
         }
       }
-      
+
       return CommandResult(CommandResult::OK, "Ok.");
     }
 
@@ -445,13 +444,6 @@ namespace LOFAR
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         return unsupported(command);
     }
-
-    CommandResult SolverProcessControl::visit(const NoiseStep &command)
-    {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return unsupported(command);
-    }
-
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
@@ -491,7 +483,7 @@ namespace LOFAR
 
       // Sanity check
       if (itsKernels.size() < accumulate(groups.begin(), groups.end(), 0U)) {
-        THROW (SolverControlException, 
+        THROW (SolverControlException,
                "Sum of kernels in subgroups exceeds total number of kernels");
       }
 

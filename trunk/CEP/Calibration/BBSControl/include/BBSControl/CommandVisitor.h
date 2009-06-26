@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBSCONTROL_COMMANDVISITOR_H
 #define LOFAR_BBSCONTROL_COMMANDVISITOR_H
 
-// \file 
+// \file
 // Abstract visitor class for the Command class
 
 #include <BBSControl/CommandResult.h>
@@ -46,7 +46,6 @@ namespace LOFAR
     class SolveStep;
     class ShiftStep;
     class RefitStep;
-    class NoiseStep;
 
     // \addtogroup BBSControl
     // @{
@@ -78,7 +77,6 @@ namespace LOFAR
       virtual CommandResult visit(const SolveStep &command) = 0;
       virtual CommandResult visit(const ShiftStep &command) = 0;
       virtual CommandResult visit(const RefitStep &command) = 0;
-      virtual CommandResult visit(const NoiseStep &command) = 0;
     };
 
     //# Pure virtual destructor has to be defined...
