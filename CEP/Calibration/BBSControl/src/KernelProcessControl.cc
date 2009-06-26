@@ -1,4 +1,4 @@
-//#  KernelProcessControl.cc: 
+//#  KernelProcessControl.cc:
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -46,7 +46,6 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
-#include <BBSControl/NoiseStep.h>
 
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
@@ -73,12 +72,12 @@
 #include <BBSKernel/Equator.h>
 #include <BBSKernel/Solver.h>
 
-namespace LOFAR 
+namespace LOFAR
 {
-  namespace BBS 
+  namespace BBS
   {
     using LOFAR::operator<<;
-    
+
     // Forces registration with Object Factory.
     namespace
     {
@@ -149,7 +148,7 @@ namespace LOFAR
           LOG_ERROR_STR("Failed to open sky model parameter database: "
             << skyDb);
           return false;
-        }        
+        }
 
         try {
           // Open instrument model parameter database.
@@ -170,7 +169,7 @@ namespace LOFAR
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "5432")));
-            
+
         // Poll until Control is ready to accept workers.
         while(itsCalSession->getState() == CalSession::WAITING_FOR_CONTROL) {
           sleep(3);
@@ -182,7 +181,7 @@ namespace LOFAR
           LOG_ERROR("Registration denied.");
           return false;
         }
-        
+
         LOG_INFO_STR("Registration OK.");
         setState(RUN);
       }
@@ -206,7 +205,7 @@ namespace LOFAR
             return false;
             break;
           }
-          
+
           case WAIT: {
             // Wait for a command. Note that this call falls through whenever
             // a new command is inserted.
@@ -220,11 +219,11 @@ namespace LOFAR
           case RUN: {
             pair<CommandId, shared_ptr<Command> > command =
                 itsCalSession->getCommand();
-            
+
             if(command.second) {
               LOG_DEBUG_STR("Executing a " << command.second->type()
                 << "command.");
-                
+
               // Try to execute the command.
               CommandResult result = command.second->accept(*this);
 
@@ -252,13 +251,13 @@ namespace LOFAR
             }
             break;
           }
-        } // switch(itsState)        
+        } // switch(itsState)
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
-      
+
       return true;
     }
 
@@ -322,10 +321,10 @@ namespace LOFAR
     CommandResult KernelProcessControl::visit(const InitializeCommand &command)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      
+
       // Get the index of this kernel process.
       itsKernelIndex = itsCalSession->getIndex();
-      
+
       // Construct global time axis.
       itsGlobalTimeAxis = itsCalSession->getGlobalTimeAxis();
       ASSERT(itsGlobalTimeAxis);
@@ -336,7 +335,7 @@ namespace LOFAR
         ProcessId solverId =
           itsCalSession->getWorkerByIndex(CalSession::SOLVER, 0);
         const size_t port = itsCalSession->getPort(solverId);
-            
+
         LOG_DEBUG_STR("Defining connection: solver@" << solverId.hostname
           << ":" << port);
 
@@ -346,7 +345,7 @@ namespace LOFAR
         itsSolver.reset(new BlobStreamableConnection(solverId.hostname,
           tmp.str(), Socket::TCP));
 
-        if(!itsSolver->connect()) {        
+        if(!itsSolver->connect()) {
           return CommandResult(CommandResult::ERROR, "Unable to connect to"
             " solver.");
         }
@@ -365,12 +364,12 @@ namespace LOFAR
       if(!command.getStations().empty()) {
         itsChunkSelection.setStations(command.getStations());
       }
-      
+
       Correlation correlation = command.getCorrelation();
       if(!correlation.type.empty()) {
         itsChunkSelection.setPolarizations(correlation.type);
       }
-      
+
       if(correlation.selection == "AUTO") {
         itsChunkSelection.setBaselineFilter(VisSelection::AUTO);
       }
@@ -411,7 +410,7 @@ namespace LOFAR
       // (even though locally visibility data is available for only a small part
       // of this domain).
       ParmManager::instance().setDomain(itsDomain);
-      
+
       // Update chunk selection.
       itsChunkSelection.clear(VisSelection::TIME_START);
       itsChunkSelection.clear(VisSelection::TIME_END);
@@ -467,19 +466,19 @@ namespace LOFAR
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
-      
+
       if(!(parseBaselineSelection(baselines, command)
         && parseProductSelection(products, command))) {
         return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
           " selection.");
-      }        
-          
+      }
+
       // Initialize model.
       if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
           " model.");
       }
-          
+
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
@@ -507,19 +506,19 @@ namespace LOFAR
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
-      
+
       if(!(parseBaselineSelection(baselines, command)
           && parseProductSelection(products, command))) {
         return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
           " selection.");
-      }        
-          
+      }
+
       // Initialize model.
       if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
           " model.");
       }
-          
+
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
@@ -547,19 +546,19 @@ namespace LOFAR
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
-      
+
       if(!(parseBaselineSelection(baselines, command)
           && parseProductSelection(products, command))) {
         return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
           " selection.");
-      }        
-          
+      }
+
       // Initialize model.
       if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
           " model.");
       }
-          
+
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
@@ -587,20 +586,20 @@ namespace LOFAR
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
-      
+
       if(!(parseBaselineSelection(baselines, command)
           && parseProductSelection(products, command))) {
         return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
           " selection.");
-      }        
-          
+      }
+
       // Initialize model.
       if(!itsModel->makeInvExpressions(command.modelConfig(), itsChunk,
           baselines)) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
           " model.");
       }
-          
+
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
@@ -621,26 +620,26 @@ namespace LOFAR
     CommandResult KernelProcessControl::visit(const SolveStep &command)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      
+
       ASSERTSTR(itsChunk, "No visibility data available.");
       ASSERTSTR(itsModel, "No model available.");
 
       // Parse visibility selection.
       vector<baseline_t> baselines;
       vector<string> products;
-      
+
       if(!(parseBaselineSelection(baselines, command)
           && parseProductSelection(products, command))) {
         return CommandResult(CommandResult::ERROR, "Unable to parse"
           " visibility selection.");
       }
-          
+
       // Initialize model.
       if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
         return CommandResult(CommandResult::ERROR, "Unable to initialize"
           " model.");
       }
-      
+
       try
       {
         if(command.calibrationGroups().empty())
@@ -705,7 +704,7 @@ namespace LOFAR
           // calibration group that this kernel is part of.
           const size_t first = groupId > 0 ? groupIndex[groupId - 1] : 0;
           const size_t last = groupIndex[groupId] - 1;
-          
+
           // Get frequency range of the calibration group.
           ProcessId firstKernel =
               itsCalSession->getWorkerByIndex(CalSession::KERNEL, first);
@@ -715,7 +714,7 @@ namespace LOFAR
               itsCalSession->getWorkerByIndex(CalSession::KERNEL, last);
           const double freqEnd =
               itsCalSession->getGrid(lastKernel)[0]->range().second;
-              
+
           LOG_DEBUG_STR("Group freq range: [" << setprecision(15) << freqBegin
               << "," << freqEnd << "]");
           Axis::ShPtr freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin,
@@ -779,13 +778,6 @@ namespace LOFAR
       return unsupported(command);
     }
 
-    CommandResult KernelProcessControl::visit(const NoiseStep &command)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      return unsupported(command);
-    }
-
-
     //##--------   P r i v a t e   m e t h o d s   --------##//
     CommandResult KernelProcessControl::unsupported(const Command &command)
       const
@@ -834,17 +826,17 @@ namespace LOFAR
               " the same length.");
             return false;
         }
-        
+
         // Filter available baselines.
         set<baseline_t> selection;
-        
+
         if(station1.empty())
         {
             // If no station groups are speficied, select all the baselines
             // available in the chunk that match the baseline filter.
             const VisDimensions &dims = itsChunk->getDimensions();
             const vector<baseline_t> &baselines = dims.getBaselines();
-            
+
             vector<baseline_t>::const_iterator baselIt = baselines.begin();
             vector<baseline_t>::const_iterator baselItEnd = baselines.end();
             while(baselIt != baselItEnd)
@@ -935,7 +927,7 @@ namespace LOFAR
                 " observation.");
             return false;
         }
-        
+
         result.resize(selection.size());
         copy(selection.begin(), selection.end(), result.begin());
         return true;

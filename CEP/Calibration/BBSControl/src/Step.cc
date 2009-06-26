@@ -1,4 +1,4 @@
-//#  Step.cc: 
+//#  Step.cc:
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,6 @@
 
 #include <BBSControl/Step.h>
 #include <BBSControl/CorrectStep.h>
-#include <BBSControl/NoiseStep.h>
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/RefitStep.h>
 #include <BBSControl/ShiftStep.h>
@@ -80,7 +79,7 @@ namespace LOFAR
       	// We'll have to figure out what kind of SingleStep we must
       	// create. The key "Operation" contains this information.
         try {
-          string oper = 
+          string oper =
             toUpper(parset.getString("Step." + name + ".Operation"));
           LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
           if      (oper == "SOLVE")
@@ -97,9 +96,7 @@ namespace LOFAR
             step.reset(new ShiftStep(name, parset, parent));
           else if (oper == "REFIT")
             step.reset(new RefitStep(name, parset, parent));
-          else if (oper == "NOISE")
-            step.reset(new NoiseStep(name, parset, parent));
-          else THROW (BBSControlException, "Operation \"" << oper << 
+          else THROW (BBSControlException, "Operation \"" << oper <<
                       "\" is not a valid Step operation");
          } catch (APSException& e) {
           THROW (BBSControlException, e.what());
@@ -165,7 +162,7 @@ namespace LOFAR
             dynamic_pointer_cast<const HamakerDipoleConfig>
               (itsModelConfig.beamConfig);
           ASSERT(config);
-              
+
           ps.replace(prefix + "Model.Beam.HamakerDipole.CoeffFile",
                   config->coeffFile);
         }
@@ -192,16 +189,16 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Get the baseline selection for this step.
-      itsBaselines.station1 = 
+      itsBaselines.station1 =
         ps.getStringVector("Baselines.Station1", itsBaselines.station1);
       itsBaselines.station2 =
         ps.getStringVector("Baselines.Station2", itsBaselines.station2);
 
       // Get the correlation selection (ALL, AUTO, or CROSS), and type
       // (e.g., ["XX", "XY", "YX", "YY"]).
-      itsCorrelation.selection = 
+      itsCorrelation.selection =
         ps.getString("Correlation.Selection", itsCorrelation.selection);
-      itsCorrelation.type = 
+      itsCorrelation.type =
         ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
       // Get the model configuration.
@@ -211,13 +208,13 @@ namespace LOFAR
         ps.getStringVector("Model.Sources", itsModelConfig.sources);
       itsModelConfig.components =
         ps.getStringVector("Model.Components", itsModelConfig.components);
-        
+
       if(ps.isDefined("Model.Ionosphere.Rank")) {
         IonoConfig::Pointer config(new IonoConfig());
         config->rank = ps.getUint32("Model.Ionosphere.Rank");
         itsModelConfig.ionoConfig = config;
       }
-      
+
       if(ps.isDefined("Model.Beam.Type")) {
         string beamType(ps.getString("Model.Beam.Type"));
 
@@ -228,7 +225,7 @@ namespace LOFAR
           HamakerDipoleConfig::ConstPointer parentConfig =
             dynamic_pointer_cast<const HamakerDipoleConfig>
               (itsModelConfig.beamConfig);
-                
+
           HamakerDipoleConfig::Pointer config(new HamakerDipoleConfig());
 
           config->coeffFile = ps.getString("Model.Beam.HamakerDipole.CoeffFile",
@@ -237,14 +234,14 @@ namespace LOFAR
             THROW(BBSControlException, "Model.Beam.HamakerDipole.CoeffFile"
               " expected but not found.");
           }
-        
+
           itsModelConfig.beamConfig = config;
         }
         else if(beamType == "YatawattaDipole") {
           YatawattaDipoleConfig::ConstPointer parentConfig =
             dynamic_pointer_cast<const YatawattaDipoleConfig>
               (itsModelConfig.beamConfig);
-          
+
           YatawattaDipoleConfig::Pointer config(new YatawattaDipoleConfig());
 
           config->moduleTheta =
@@ -269,7 +266,7 @@ namespace LOFAR
           THROW(BBSControlException, "Unknown beam model type " << beamType
             << " encountered.");
         }
-      }        
+      }
     }
 
 

@@ -88,9 +88,8 @@ namespace LOFAR
       virtual CommandResult visit(const SolveStep &command);
       virtual CommandResult visit(const ShiftStep &command);
       virtual CommandResult visit(const RefitStep &command);
-      virtual CommandResult visit(const NoiseStep &command);
       // @}
-      
+
     private:
       enum State
       {
@@ -103,7 +102,7 @@ namespace LOFAR
 
       // Returns a CommandResult with a descriptive message.
       CommandResult unsupported(const Command &command) const;
-      
+
       // Set run state to \a state
       void setState(State state);
 
@@ -129,7 +128,7 @@ namespace LOFAR
 
       // Vector of kernels.
       vector<KernelConnection>  itsKernels;
-      
+
       // Container of solve tasks. Each task is executed by a different kernel
       // group.
       vector<SolveTask>         itsSolveTasks;

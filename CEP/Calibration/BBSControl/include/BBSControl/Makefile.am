@@ -18,7 +18,6 @@ pkginclude_HEADERS = Package__Version.h  \
 	MessageHandlers.h \
 	MultiStep.h \
 	NextChunkCommand.h \
-	NoiseStep.h \
 	PredictStep.h \
 	RecoverCommand.h \
 	RefitStep.h \
