@@ -20,11 +20,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   } else {
     calcViewboxSize();
   
-    // Replace the X & Y grid lines to the calculated center 
-    Yaxis.foreCol(\"STD_windows_available\");
-    Xaxis.foreCol(\"STD_windows_available\");
-    Yaxis.position(mainpanel_midX , mainpanel_horSize );
-    Xaxis.position(0              , mainpanel_midY    );
+
     
     // get all dps from the type AntennaPattern
     // each DP represents a different type of Antennas
@@ -128,6 +124,10 @@ int mainpanel_horSize;
 int mainpanel_vertSize;
 int symbolSize=44;
 float zoomFactor=1;
+int   shiftValue=25;
+int   shiftFactorX=0;
+int   shiftFactorY=0;
+
 
 float centerOL;
 float centerNB;
@@ -189,8 +189,8 @@ void redraw(string mode) {
   LOG_DEBUG(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
   LOG_DEBUG(\"Station.pnl:redraw|maxYOffsetValue: \"+maxYOffsetValue);
   
-  expandFactorX = (floor((mainpanel_midX-symbolSize) / maxXOffsetValue))*zoomFactor;
-  expandFactorY = (floor((mainpanel_midY-symbolSize) / maxYOffsetValue))*zoomFactor;
+  expandFactorX = (floor(mainpanel_midX / maxXOffsetValue))*zoomFactor;
+  expandFactorY = (floor(mainpanel_midY / maxYOffsetValue))*zoomFactor;
   
   LOG_DEBUG(\"Station.pnl:redraw|expandFactorX: \"+expandFactorX);
   LOG_DEBUG(\"Station.pnl:redraw|expandFactorY: \"+expandFactorY);
@@ -207,6 +207,15 @@ void redraw(string mode) {
   // set the hardware selectable items
   // For this panel the Antenna's in a choosen layout should be selectable 
   
+  // Replace the X & Y grid lines to the calculated center 
+  Yaxis.foreCol(\"STD_windows_available\");
+  Xaxis.foreCol(\"STD_windows_available\");
+  int xval=mainpanel_midX+shiftFactorX;
+  int yval=mainpanel_midY+shiftFactorY;
+  
+  Yaxis.position(xval , mainpanel_horSize );
+  Xaxis.position(0              , yval    );
+  
   //  now start adding symbols to panel
   int ref =   1;
   for (int i = 1; i <= dynlen(antennaOffsetsOL); i++ ) {
@@ -220,8 +229,8 @@ void redraw(string mode) {
       dynAppend(g_RCUList,XRCU);
       dynAppend(g_RCUList,YRCU);
       refNames[ref]=\"ant\"+(ref);
-      xPos_AddSymbol = mainpanel_midX + (antennaOffsetsOL[i] * expandFactorX);
-      yPos_AddSymbol = mainpanel_midY - (antennaOffsetsNB[i] * expandFactorY);
+      xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsOL[i] * expandFactorX);
+      yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsNB[i] * expandFactorY);
       
     
       if (  addSymbol(  strModuleName,                   // Stay in this module
@@ -338,7 +347,7 @@ E E 0 1 1 0 1 E  0 100 1499 100
 2 26
 "PRIMITIVE_TEXT1"
 ""
-1 796 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 796 5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 E E E
@@ -348,25 +357,25 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 796 12 869 26
-0 2 2 "0s" 0 0 0 192 0 0  796 12 1
+E E 0 1 1 2 1 E U  1 E 796 5 869 19
+0 2 2 "0s" 0 0 0 192 0 0  796 5 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 13 Select Array:
-1 103 5 "" 2190
+1 132 5 "" 2190
 0
-1 104 5 "" 2188
+1 133 5 "" 2188
 0
-1 105 5 "86" 1
+1 134 5 "86" 1
 0
-1 106 5 "" 2192
+1 135 5 "" 2192
 0
 19 53
 "arrayList"
 ""
-1 889 9 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 889 1 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -378,7 +387,7 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 887 7 951 51
+ 887 -1 951 43
 2
 T 
 1
@@ -407,7 +416,7 @@ E "main(int button)
 13 80
 "zoomOut"
 ""
-1 560 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 872 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -419,7 +428,7 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 558 8 578 28
+ 870 38 890 58
 
 T 
 1
@@ -434,7 +443,7 @@ LANG:1 1 -
 13 107
 "zoomIn"
 ""
-1 528 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 794 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -446,7 +455,7 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 636 8 656 28
+ 902 38 922 58
 
 T 
 1
@@ -461,7 +470,7 @@ LANG:1 1 +
 2 108
 "PRIMITIVE_TEXT2"
 ""
-1 587 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 800 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -471,19 +480,19 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 587 10 626 27
-0 2 2 "0s" 0 0 0 192 0 0  587 10 1
+E E 0 1 1 2 1 E U  1 E 800 41 831 55
+0 2 2 "0s" 0 0 0 192 0 0  800 41 1
 1
-LANG:1 102 -*-MS Shell Dlg-bold-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 4 Zoom
-13 109
-"originalSize"
+13 136
+"shift_down"
 ""
-1 660 10 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 578 59 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
-19 0 0 0 0 0
+20 0 0 0 0 0
 E E E
 0
 1
@@ -493,11 +502,191 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 658 8 711 28
+ 886 87 906 107
 
-T 
+P 
+4294967295
+"136.gif"
 1
-LANG:1 4 100%
+LANG:1 12 PUSH_BUTTON1
+"main()
+{
+  shiftFactorY+=shiftValue;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);
+}" 0
+ E E E
+13 137
+"shift_up"
+""
+1 888 57 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 55 906 75
+
+P 
+4294967295
+"137.gif"
+1
+LANG:1 12 PUSH_BUTTON1
+"main()
+{
+  shiftFactorY-=shiftValue;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);
+}" 0
+ E E E
+13 138
+"shift_left"
+""
+1 872 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 870 71 890 91
+
+P 
+4294967295
+"pictures/left_en.gif"
+1
+LANG:1 12 PUSH_BUTTON1
+"main()
+{
+  shiftFactorX-=shiftValue;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);  
+}" 0
+ E E E
+13 139
+"shift_right"
+""
+1 904 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 902 71 922 91
+
+P 
+4294967295
+"pictures/right_en.gif"
+1
+LANG:1 12 PUSH_BUTTON1
+"main()
+{
+  shiftFactorX+=shiftValue;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);  
+}" 0
+ E E E
+13 140
+"PUSH_BUTTON5"
+""
+1 888 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 71 906 91
+
+P 
+4294967295
+"pictures/point_en.GIF"
+1
+LANG:1 12 PUSH_BUTTON1
+"main()
+{
+  shiftFactorX=0;
+  shiftFactorY=0;
+  string t=arrayList.text(arrayList.number());
+  redraw(t);
+}" 0
+ E E E
+14 141
+"shift_value"
+""
+1 940 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 31 Give the shift value to be used
+
+1
+"textChangedCB" "main(string newText)
+{
+  int val=0;
+  getValue(\"\",\"text\",val);
+  if (shiftValue+val > mainpanel_midX || 
+      shiftValue+val > mainpanel_midY) {
+    setValue(\"\",\"text\",shiftValue);
+  } else {
+    shiftValue+=val;
+  }
+}"
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 938 69 991 90
+3 "0d" 0 0 0 1 0 -1  E "main()
+{
+  setValue(\"\",\"text\",shiftValue);
+}" 0
+ E
+13 143
+"originalSize"
+""
+1 888 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 26 set zoomsize to 100% again
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 886 38 906 58
+
+P 
+4294967295
+"pictures/point_en.GIF"
+1
+LANG:1 12 PUSH_BUTTON1
 "main()
 {
   zoomFactor=1;
@@ -505,53 +694,73 @@ LANG:1 4 100%
   redraw(t);  
 }" 0
  E E E
+2 144
+"PRIMITIVE_TEXT4"
+""
+1 931 58 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 931 58 993 72
+0 2 2 "0s" 0 0 0 192 0 0  931 58 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 11 ShiftFactor
 0
 LAYER, 1 
 1
 LANG:1 6 Layer2
-1 81 2 "" 40
+1 110 2 "" 40
 0
-1 82 2 "" 41
+1 111 2 "" 41
 0
-1 83 2 "" 42
+1 112 2 "" 42
 0
-1 84 2 "" 43
+1 113 2 "" 43
 0
-1 85 2 "" 44
+1 114 2 "" 44
 0
-1 86 2 "" 45
+1 115 2 "" 45
 0
-1 87 2 "" 46
+1 116 2 "" 46
 0
-1 88 2 "" 47
+1 117 2 "" 47
 0
-1 89 2 "" 48
+1 118 2 "" 48
 0
-1 90 2 "" 49
+1 119 2 "" 49
 0
-1 91 2 "" 50
+1 120 2 "" 50
 0
-1 92 2 "" 51
+1 121 2 "" 51
 0
-1 93 2 "" 52
+1 122 2 "" 52
 0
-1 94 2 "" 53
+1 123 2 "" 53
 0
-1 95 2 "" 54
+1 124 2 "" 54
 0
-1 96 2 "" 55
+1 125 2 "" 55
 0
-1 97 2 "" 56
+1 126 2 "" 56
 0
-1 98 2 "" 57
+1 127 2 "" 57
 0
-1 99 2 "" 58
+1 128 2 "" 58
 0
-1 100 2 "" 59
+1 129 2 "" 59
 0
-1 101 2 "" 60
+1 130 2 "" 60
 0
-1 102 2 "" 61
+1 131 2 "" 61
 0
 0
 LAYER, 2 
