@@ -181,16 +181,17 @@ rely less on concrete, steel, and extreme cooling techniques, but more on
 signal-processing techniques.
 For example, LOFAR~\cite{Butcher:04,deVos:09} is a distributed sensor network
 that combines the signals of tens of thousands of simple receiver elements.
-Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat}, 
+Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat} and
 ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}. Both are
 pathfinders for the future SKA (Square Kilometre Array)~\cite{ska} telescope, which
 will be orders of magnitude larger.
 Also, Aperture Array tiles like Embrace~\cite{embrace} and Focal Plane Arrays
-like Apertif~\cite{apertif} are novel multi-receiver concepts that require huge
-amounts of processing power to combine the data from the receiving elements.
+like Apertif~\cite{apertif} are novel multi-receiver concepts.
 Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
+What the noveal instruments all have in common is that they require huge
+amounts of processing power to combine the data from the receiving elements.
 
 The signal-processing hardware technology used to process telescope
 data also changes rapidly.  Only a decade ago, correlators required
@@ -240,15 +241,15 @@ We describe LOFAR in more detail below.
 
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency
   \textbf{AR}ray}, an aperture array radio telescope operating in the
-10 to 250~MHz frequency range.  It is the first of a new generation of
+10 to 250~MHz frequency range~\cite{Butcher:04,deVos:09}.  It is the first of a new generation of
 radio telescopes, that breaks with the concepts of traditional
 telescopes in several ways.  Rather than using large, expensive
 dishes, LOFAR uses many thousands of simple antennas that have no
-movable parts~\cite{Butcher:04,deVos:09}, see
+movable parts, see
 Figure~\ref{fig:lba-field}.  Essentially, it is a distributed sensor
 network that monitors the sky and combines all signals centrally.
 This concept requires much more signal processing, but the 
-costs of silicon are much lower that the costs of steel that would
+costs of the silicon for the processing are much lower that the costs of steel that would
 be needed for dishes. Moreover, LOFAR can observe the sky in many
 directions concurrently and switch directions instantaneously.  In
 several ways, LOFAR will be the largest telescope of the world.
@@ -256,11 +257,13 @@ several ways, LOFAR will be the largest telescope of the world.
 Another novelty is the elaborate
 use of \emph{software\/} to process the telescope data in real time.
 The signals from the
-antennas are digitised, transported to a central digital processor,
-and combined in software to emulate a conventional antenna. The cost
+antennas are digitised, transported to a central location,
+and combined in software to emulate a conventional antenna. 
+LOFAR thus is an IT-telescope. 
+The cost
 is dominated by the cost of electronics and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
-to be built. So LOFAR is an IT-telescope. 
+to be built. 
 
 The antennas are simple, but there are a lot of them: 25000 in the full LOFAR
 design. To make radio pictures of the sky with adequate sharpness,
@@ -287,7 +290,7 @@ capable of observing the so far unexplored radio waves emitted by
 the astronomical aspects of the LOFAR system, see De Bruyn
 et.~al.~\cite{Bruyn:02}.
 
-A global overview of the LOFAR instrument is given in
+A global overview of the LOFAR processing is given in
 Figure~\ref{fig:lofar-overview}. The thickness of the lines indicates
 the size of the data streams.  Initial processing is done in the
 field, using FPGA technology.  Typical operations that are performed
