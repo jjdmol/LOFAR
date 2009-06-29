@@ -45,7 +45,7 @@ trap 'rm -f version.*.tmp; \
       trap - 0; \
       exit' 0 1 2 3 15
 
-# Get the package name (also in lower and uppercase).
+# Get the package name.
 fpkg=`pwd`
 pkg=`basename $fpkg`
 
@@ -54,7 +54,7 @@ if [ "$pkg" = Tools  -o  "$pkg" = pytools ]; then
   exit 0
 fi
 
-# Take the package from the CMakeLists.txt file.
+# If present, use the package name from the CMakeLists.txt file.
 # It looks like: project (GCFProtocols ...)
 tpkg=`sed -n 's,^[ \t]*project[ \t]*([ \t]*\([^ \t)]\+\).*$,\1,ip' CMakeLists.txt`
 if test "$tpkg" != ""; then
@@ -65,11 +65,11 @@ fi
 # CMakeLists.txt. Otherwise header files are in src and <package> is the
 # include path.
 incdir=`sed -n 's,^[ \t]*add_subdirectory[ \t]*([ \t]*\(include/[^)]\+\).*$,\1,ip' CMakeLists.txt`
-if test "$incdir" = ""; then
-  echo "Could not derive include directory from $pkg/CMakeLists.txt"
-  exit 1
-fi
 incpath="${incdir##include/}"
+if test "$incdir" = ""; then
+  incdir=src
+  incpath=$pkg
+fi
 
 # Check if source and include directory exist. If not, then it is probably not
 # a package directory.
