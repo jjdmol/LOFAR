@@ -418,8 +418,8 @@ registers per core x register width          & 16x4          & 64x2           & 
 total device RAM bandwidth (GB/s)            & n.a.          & n.a.           & 115.2         & 102            & n.a.          \\
 \textbf{total host RAM bandwidth (GB/s)}     & \textbf{25.6} & \textbf{13.6}  & \textbf{8.0}  & \textbf{8.0}   & \textbf{25.8} \\
 %\hline
-Process Technology (nm)                      & 45            & 90             & 55            & 65             & 65            \\
-TDP (W)                                      & 130           & 24             & 160           & 236            & 70            \\
+%Process Technology (nm)                      & 45            & 90             & 55            & 65             & 65            \\
+%TDP (W)                                      & 130           & 24             & 160           & 236            & 70            \\
 %\textbf{gflops / Watt (based on TDP)}       & \textbf{0.65} & \textbf{0.57}  & \textbf{7.50} & \textbf{3.97}  & \textbf{2.93} \\
 %\hline
 %\textbf{gflops/device bandwidth (gflops / GB/s)}& n.a.       &  n.a.          & \textbf{10.4} & \textbf{9.2}   & n.a.         \\
@@ -460,7 +460,7 @@ TDP (W)                                      & 130           & 24             & 
 %% \end{center}
 %% \end{table*}
 
-In this section, we briefly explain key properties of six different
+In this section, we briefly explain key properties of five different
 architectures with multiple cores.  We focus on the differences
 between the systems that are relevant for signal processing
 applications. Table~\ref{architecture-properties} shows the most
@@ -478,12 +478,12 @@ precision.  The parallelism comes from four cores with two-way
 hyperthreading, and a vector length of four floats, provided by the
 SSE4 instruction set.
 
-SSE4 does not provide fused multiply-add instructions, but the Core~i7
-issues vector-multiply and vector-add instructions concurrently in
-different pipelines, allowing eight flops per cycle per core.  One
-problem of SSE4 that complicates an efficient correlator is the
-limited support for shuffling data within vector registers, unlike the
-Cell/B.E., for instance, that can shuffle any byte to any position.
+%% SSE4 does not provide fused multiply-add instructions, but the Core~i7
+%% issues vector-multiply and vector-add instructions concurrently in
+%% different pipelines, allowing eight flops per cycle per core.  
+A problem with SSE4 is the
+limited support for shuffling data within vector registers. This is unlike the
+Cell/B.E. and ATI GPUs, that can shuffle values in all possible combinations.
 Also, the number of vector registers is small (sixteen four-word
 registers).  Therefore, the is not much opportunity to reuse data in
 registers; reuse has to come from the L1~data cache. 
@@ -506,15 +506,15 @@ We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
 The BG/P performs \emph{all} floating point operations in double
 precision, which is overkill for our application.
-In contrast to all other architectures we evaluate, the problem is compute
-bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
-operation, which is 3--10 times higher than for the other architectures.
 The BG/P has 32 vector registers of width 2.  Therefore, 64 floating
 point numbers can be kept in registers
 simultaneously. Although this is the same amount as on the general purpose
 Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
+In contrast to all other architectures we evaluate, the problem is compute
+bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
+operation, which is 3--10 times higher than for the other architectures.
 
 
 \subsection{ATI GPU}
@@ -524,9 +524,10 @@ the 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total
 and has a theoretical peak performance of
 1.2~teraflops. The board uses a PCI-express~2.0 interface
 for communication with the host system.
-The application can specify if a read should be
-cached by the texture cache or not, while the streaming processors have 16 KB of shared
-memory that is completely managed by the application.
+The streaming processors have 16 KB of shared
+memory that is completely managed by the application. It is also
+possible to specify if a read should be
+cached by the texture cache or not.
 
 The ATI 4870 GPU has the largest number of FPUs of all architectures
 we evaluate.  However, the architecture has several important
@@ -546,7 +547,7 @@ read-performance bound, this does not have a large impact.
 \subsection{NVIDIA GPU}
 
 NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single precision
-and 30 double precision FPUs. The GTX~280 uses a two-level hierarchy to group cores.
+and 30 double precision FPUs~\cite{cuda-manual}. The GTX~280 uses a two-level hierarchy to group cores.
 There are 30~independent \emph{multiprocessors\/} that each have 8~cores.
 Current NVIDIA GPUs have fewer
 cores than ATI GPUs, but the individual cores are faster.
@@ -581,13 +582,12 @@ heterogeneous many-core processor, designed by Sony, Toshiba and IBM
 Element (PPE), acting as a main processor, and eight Synergistic
 Processing Elements (SPEs) that provide the real processing power.
 The cores, the main memory, and the external I/O are connected by a
-high-bandwidth Element Interconnection Bus (EIB).  The main memory has
-a high-bandwidth, and uses XDR (Rambus).  The PPE's main role is to
+high-bandwidth element interconnection bus.  The main memory has
+a relatively high bandwidth.  The PPE's main role is to
 run the operating system and to coordinate the SPEs.  An SPE contains
-a RISC-core (the Synergistic Processing Unit (SPU)), a 256KB Local
-Store (LS), and a memory flow controller.
+a RISC-core, a 256KB Local Store (LS), and a memory flow controller.
 
-The LS is an extremely fast local memory (SRAM) for both code and data
+The LS is an extremely fast local memory for both code and data
 and is managed entirely by the application with explicit DMA
 transfers.  The LS can be considered the SPU's L1 cache.  The
 \mbox{Cell/B.E.} has a large number of registers: each SPU has 128,
@@ -609,15 +609,16 @@ system have a total theoretical single-precision peak performance of
 \begin{table*}[t]
 \begin{center}
 {\small
-\begin{tabular}{l|l|l}
+\begin{tabular}{|l|l|l|}
+\hline
 feature                   & Cell/B.E.                      & GPUs \\
 \hline
 access times              & uniform                        & non-uniform \\
 cache sharing level       & single thread (SPE)            & all threads in a multiprocessor \\
 access to off-chip memory & only through DMA               & supported \\
 memory access overlapping & asynchronous DMA               & hardware-managed thread preemption \\
-communication             & DMA between SPEs               & independent thread blocks + \\
-                          &                                & shared memory within a block \\
+communication             & DMA between SPEs               & independent thread blocks + shared memory within a block \\
+\hline
 \end{tabular}
 } %\small
 \end{center}
@@ -631,15 +632,15 @@ processing applications. Explicit support for complex operations is
 preferable, both in terms of programmability and performance.  If it
 is not available, we can circumvent this by using separate arrays for
 real values and for imaginary values.  Except for the Blue Gene/P (and
-to some extent the Core~i7), none of the architectures do not support
+to some extent the Core~i7), none of the architectures support
 complex operations.
 
 The different architectures require two different approaches of
-dealing with this problem. First, if an architecture does not use
+dealing with this problem. If an architecture does not use
 explicit SIMD (vector) parallelism, the complex operations can simply
 be expressed in terms of normal floating point operations. This puts
 an extra burden on the programmer, but achieves good performance. The
-NVIDIA GPUs work this way.  Second, if an architecture does use vector
+NVIDIA GPUs work this way.  However, if an architecture does use vector
 parallelism, we can either store the real and complex parts inside a
 single vector, or have separate vectors for the two parts.  In both
 cases, support for shuffling data inside the vector registers is
@@ -652,7 +653,7 @@ GPUs, this works in a similar way.  The SSE4 instruction set in the
 Intel core~i7, however, does not support arbitrary shuffling patterns.
 This has a large impact on the way the code is vectorized, and
 requires a different SIMDization strategy. In the case of the
-correlator, this led to suboptimal performance.
+correlator, this results in suboptimal performance.
 
 %% complexe getallen zijn belangrijk voor signal processing.
 %% Niet alle arch ondersteunen dit even goed.
@@ -665,33 +666,34 @@ correlator, this led to suboptimal performance.
 %%     De ene arch kan dit beter dan de andere.
 
 On many-core architectures, the memory bandwidth is shared between the
-cores.  This has shifted the balance between between compute
-operations and memory loads.  The available memory bandwidth per
-operation has decreased considerably.  For the many-core architecures
+cores.  This has shifted the balance between between computational
+and memory performance.  The available memory bandwidth per
+operation has decreased dramatically.  For the many-core architecures
 we use here, the bandwidth per operation is 3--10 times lower than on
 the BG/P, for instance.  Therefore, we must treat memory bandwidth as
 a scarce resource, and it is important to minimize the number of
-memory accesses.  In fact, we found that on many-core architectures,
+memory accesses.  In fact, the most important lesson of this paper is that on many-core architectures,
 optimizing the memory properties of the algoritms is more important
 than focussing on reducing the number of compute cycles that is used,
 as is traditionally done on systems with only a few or just one core.
 
 Optimizing the memory behavior of an algorithm has two different
-aspects.  First, the number of accesses per operation should be
-reduces as much as possible, sometimes even at the cost of more
+aspects.  First, the \emph{number} of memory accesses per operation should be
+reduced as much as possible, sometimes even at the cost of more
 compute cycles.  Second, it is important to think about the memory
-access patterns. Typically, several cores share one or more cache
+\emph{access patterns}. Typically, several cores share one or more cache
 levels. Therefore, the access patterns of several different threads
 that share a cache should be tailored accordingly. On GPUs, for
 example, this can be done by \emph{coalescing} memory accesses.  This
 means that different concurrent threads read subsequent memory
-locations.  This can be counter-intuitive, since traditionally, it was
-better to have linear memory access patterns within a thread.  In the
+locations.  This can be counter intuitive, since traditionally, it was
+better to have linear memory access patterns within a thread. Table~\ref{memory-properties} summarizes
+the differences in memory architectures of the different platforms. In the
 next section, we explain the techniques described above by applying
 them to the correlator application.
 
 
-\section{Optimizing the correlator}
+\section{Implementing and optimizing the correlator}
 \label{sec:optimizing}
 
 % TODO add text about mapping from alg to arch
