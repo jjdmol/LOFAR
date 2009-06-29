@@ -153,6 +153,7 @@ void changeInfo(string aSelection) {
         
       int pos=dynContains(datapointList,g_currentDatapoint);
         
+      
       if (pos==1) {
         previousDatapoint=\"\";
         fastJump_previous.enabled(false);
@@ -164,10 +165,20 @@ void changeInfo(string aSelection) {
         fastJump_previous.enabled(true);
         fastJump_next.enabled(false);
       } else {
-        previousDatapoint=datapointList[pos-1];
-        nextDatapoint = datapointList[pos+1];
-        fastJump_previous.enabled(true);
-        fastJump_next.enabled(true);
+        if (pos-1 > 0) {
+          previousDatapoint=datapointList[pos-1];
+          fastJump_previous.enabled(true);
+        } else {
+          previousDatapoint=\"\";
+          fastJump_previous.enabled(false);
+        }
+        if (pos+1 <= dynlen(datapointList)) {
+          nextDatapoint = datapointList[pos+1];
+          fastJump_next.enabled(true);
+        } else {
+          nextDatapoint=\"\";
+          fastJump_next.enabled(false);
+        }
       }
       fastJump_previous.toolTipText(previousDatapoint);
       fastJump_next.toolTipText(nextDatapoint);
