@@ -339,23 +339,23 @@ numbers that represent the amplitude and phase of a signal at a
 particular time.  The receivers are dual-polarized; they take separate
 samples from orthogonal (X and Y) directions.  The LOFAR receivers
 support 4, 8 and 16 bit integer samples, where the normal mode of
-operation uses the 16 bit samples. The smaller samples are important
-for observations that require larger frequency bands (but with less accuracy).
+operation uses the 16 bit samples. The smaller 4 and 8 bit samples are important
+for observations that require larger frequency bands, but with less accuracy.
 The future SKA telescope will
 likely use 2 bit samples.  Before filtering and correlating, the
 samples are converted to single precision floating point.  This is
 accurate enough for our purposes. From the perspective of the
-correlator, samples thus consist of four 32-bit floating point
+correlator, samples thus consist of \emph{four} 32-bit floating point
 numbers: two polarizations, each with a real and an imaginary part.
 
 Prior to correlation, the data that comes from
 the receivers must be reordered:
-each input carries the signals of from many frequency subbands from a single
+each input carries the signals of many frequency bands from a single
 receiver, but the correlator needs data from a single frequency of all inputs.
 Depending on the data rate, switching the data can be a real challenge.
 The data reordering phase is outside the scope of this paper, but a correlator
 implementation cannot ignore this issue.
-The LOFAR Blue Gene/P correlator uses the fast 3-D~torus for this purpose;
+The LOFAR Blue Gene/P correlator uses the fast 3D~torus for this purpose;
 other multi-core architectures need external switches.
 
 The received signals from sky sources are so weak, that the antennas 
@@ -367,8 +367,7 @@ To reduce the output size, the correlations are integrated, by accumulating all 
 Therefore, the correlator is mostly multiplying and adding complex numbers.
 Both polarizations of a station A are correlated with both polarizations 
 of a station B, yielding correlations in XX, XY, YX, and YY
-directions. Receivers are also autocorrelated, i.e., with
-themselves. 
+directions.
 The correlator algorithm itself thus is straightforward, and can be
 written in a single formula: \\
 $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,t,p_1} * Z_{s_2,t,p_2}^\ast$ 
@@ -376,7 +375,7 @@ $C_{s_1,s_2\geq s_1,p_1\in\{X,Y\},p_2\in\{X,Y\}} = \displaystyle\sum_{t} Z_{s_1,
 The total number of correlations we have to compute is $(nrReceivers \times
 (nrReceivers + 1)) / 2$, since we need each pair of correlations only
 once. This includes the autocorrelations (the correlation of a receiver with itself),
-since we need this later in the pipeline for calibration purposes.
+since we need them later in the pipeline for calibration purposes.
 The autocorrelations can be computed with half the number of instructions.
 
 We can implement the correlation operation very efficiently, with only
@@ -393,7 +392,8 @@ operations that is performed per byte that has to be loaded from main
 memory is called the \emph{arithmetic
   intensity}~\cite{system-performance}.  For the correlation
 algorithm, the arithmetic intensity is extremely low.
-
+We will describe the implementation and optimization of the correlator on the
+many-core sytems in more detail in Section~\ref{sec:optimizing}, but first, we explain the architectures themselves. 
 
 
 \section{Many-core architectures}
@@ -692,6 +692,8 @@ them to the correlator application.
 
 
 \section{Optimizing the correlator}
+\label{sec:optimizing}
+
 % TODO add text about mapping from alg to arch
 
 \begin{figure}[t]
