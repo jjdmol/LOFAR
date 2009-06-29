@@ -7,6 +7,7 @@
 rm -f tbb_memory*.log
 rm -f tbb_memory*.diff
 
+
 if [ -e /opt/lofar/etc/RemoteStation.conf ]; then
   let tbboards=`sed -n  's/^\s*RS\.N_TBBOARDS\s*=\s*\([0-9][0-9]*\).*$/\1/p' /opt/lofar/etc/RemoteStation.conf`
 else
@@ -26,6 +27,7 @@ for ((ind=0; ind < $tbboards; ind++)) do
               echo "TBB memory ($ind) test went OK"
             else
               echo "TBB memory ($ind) test went wrong"
+              cp tbb_memory$ind.log tbb_memory.log
             fi
       done
 
