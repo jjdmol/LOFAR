@@ -506,7 +506,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 
 P 
 4294967295
-""
+"pictures/down_en.gif"
 1
 LANG:1 12 PUSH_BUTTON1
 "main()
@@ -535,7 +535,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 
 P 
 4294967295
-""
+"pictures/up_en.gif"
 1
 LANG:1 12 PUSH_BUTTON1
 "main()
