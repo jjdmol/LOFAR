@@ -53,4 +53,4 @@ RESULTFILE=OTDBDatapoints.out
 rm -f ${RESULTFILE}
 echo "Creating PIC file..."
 ./createPICfile | PVSS2SAS >${RESULTFILE}
-load_PICtree $1 sas001 {RESULTFILE}
+load_PICtree $1 sas001 ${RESULTFILE}
