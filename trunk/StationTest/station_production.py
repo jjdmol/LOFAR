@@ -130,8 +130,8 @@ else:
   sr.appendLog(11,res,1,1,1)
   sr.appendLog(11,'Result:')
   sr.appendFile(11,'tbb_memory.log')
-  #sr.appendLog(11,'Expected:')
-  #sr.appendFile(11,'gold/tbb_memory.gold')
+  sr.appendLog(11,'Expected:')
+  sr.appendFile(11,'gold/tbb_memory.gold')
   sr.setResult('FAILED')
    
 ################################################################################
@@ -187,15 +187,15 @@ sr.setId('RCU-HBA modem - ')
 sr.appendLog(21,'')
 sr.appendLog(21,'### Verify the control modem on the RCU')
 sr.appendLog(21,'')
-res = cli.command('python verify.py --brd %s --fpga blp0,blp1,blp2,blp3 --rep 1 -v 11 --te tc/hba_client.py --client_acces w --client_reg led --data 01' %(RspBrd,)) 
+res = cli.command('python verify.py --brd %s --fpga blp0,blp1,blp2,blp3 --rep 1 -v 11 --te tc/hba_client.py --client_access r --client_reg version --data 10' %(RspBrd,)) 
 if res.find('wrong')==-1:
   sr.appendLog(11,'>>> RCU-HBA modem test went OK')
-  sr.appendFile(21,'tc/modem.log')
+  sr.appendFile(21,'tc/hba_client.log')
 else:
   sr.appendLog(11,'>>> RCU-HBA modem went wrong')
   sr.appendLog(11,'CLI:')
   sr.appendLog(11,res,1,1,1)
-  sr.appendFile(11,'tc/modem.log')
+  sr.appendFile(11,'tc/hba_client.log')
   sr.setResult('FAILED')
 
 ################################################################################
