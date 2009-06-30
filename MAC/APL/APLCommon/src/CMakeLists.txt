@@ -28,13 +28,6 @@ include(MACAddProtocol)
 mac_add_protocol(Controller_Protocol "${MACIO_SOURCE_DIR}/autogen")
 mac_add_protocol(StartDaemon_Protocol "${MACIO_SOURCE_DIR}/autogen")
 
-# Add current source directory to -I path. This is needed because APLCOMMON uses
-# angle brackets for internal header files, instead of quotes.
-#include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-# Add the directory where the generated C++ headers are stored to the -I path.
-#include_directories(${CMAKE_BINARY_DIR}/include/MAC)
-
 lofar_add_library(aplcommon
   Package__Version.cc
   StartDaemon_Protocol.cc

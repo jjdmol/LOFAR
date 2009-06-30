@@ -18,7 +18,6 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include(LofarCTest)
+lofar_add_bin_program(KeyValueLogger KeyValueLoggerMain.cc KeyValueLogger.cc)
 
-lofar_add_test(APExample APExample.cc APCmdImpl.cc)
-lofar_add_test(APTest APTest.cc APCmdImpl.cc)
+install(FILES KeyValueLogger.conf DESTINATION etc)
