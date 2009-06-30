@@ -18,6 +18,12 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-lofar_add_bin_program(CTStartDaemon CTStartDaemonMain.cc CTStartDaemon.cc)
-install(PROGRAMS startController.sh DESTINATION bin)
-install(FILES CTStartDaemon.conf DESTINATION etc)
+# Add current source directory to -I path. This is needed because OnlineControl
+# uses angle brackets for internal header files, instead of quotes.
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+lofar_add_bin_program(OnlineControl
+  OnlineControlMain.cc
+  OnlineControl.cc
+  CEPApplMgr.cc)

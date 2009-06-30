@@ -18,6 +18,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-lofar_add_bin_program(CTStartDaemon CTStartDaemonMain.cc CTStartDaemon.cc)
-install(PROGRAMS startController.sh DESTINATION bin)
-install(FILES CTStartDaemon.conf DESTINATION etc)
+include(LofarCTest)
+
+# Add current binary directory to -I path, so that the generated C++ header
+# files can be found.
+#include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+lofar_add_test(APExample APExample.cc APCmdImpl.cc)
+lofar_add_test(APTest APTest.cc APCmdImpl.cc)
