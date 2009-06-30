@@ -20,15 +20,24 @@
 #
 #  $Id$
 
-## ----------------------------------------------------------------------------
-## Includes
-## ----------------------------------------------------------------------------
 include(LofarSearchPath)
 include(FindPackageHandleStandardArgs)
 
-## ----------------------------------------------------------------------------
-## function lofar_find_package
-## ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# function lofar_find_package(package)
+#
+# Find a package like find_package() does.
+# It uses the LOFAR search path (defined in the variants file), preprended
+# with <PKG>_PREFIX_PATH (if defined) as CMAKE_PREFIX_PATH.
+#
+# Furthermore:
+# - Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
+# - Add include directories that are defined <PKG>_INCLUDE_DIRS.
+# - Add <PKG>_LIBRARIES to the list of LOFAR_LIBRARIES, needed for linking.
+# - Add cache variable HAVE_<PKG>, which indicates whether the package was 
+#   found. It can be used with #cmakedefine.
+# Note: <PKG> equals <package> in uppercase.
+# ----------------------------------------------------------------------------
 function(lofar_find_package _package)
 
   string(TOLOWER ${_package} _pkg)
@@ -37,12 +46,8 @@ function(lofar_find_package _package)
   if(NOT ${_PKG}_FOUND)
 
     # Set CMAKE_PREFIX_PATH; used by the find_xxx() commands for searching.
-    if(DEFINED ${_PKG}_PREFIX_PATH)
-      set(CMAKE_PREFIX_PATH ${${_PKG}_PREFIX_PATH})
-    else(DEFINED ${_PKG}_PREFIX_PATH)
-      lofar_search_path(_prefix_path ${_pkg})
-      set(CMAKE_PREFIX_PATH ${_prefix_path})
-    endif(DEFINED ${_PKG}_PREFIX_PATH)
+    lofar_search_path(_prefix_path ${_pkg})
+    set(CMAKE_PREFIX_PATH ${${_PKG}_PREFIX_PATH} ${_prefix_path})
 
     # If package has been disabled explicitly, but is required, raise an
     # error.

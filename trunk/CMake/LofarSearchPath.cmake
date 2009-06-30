@@ -23,9 +23,13 @@
 
 include(LofarVariants)
 
-# Return search path to use when searching for package '_pkg' as '_path'.
+# ----------------------------------------------------------------------------
+# macro lofar_search_path(path package)
+#
+# Return search path to use when searching for <package> as <path>.
 # Replace placeholders in LOFAR_SEARCH_PATH with actual values. Note that 
 # we need to quote the variables, because they may be undefined.
+# ----------------------------------------------------------------------------
 macro(lofar_search_path _path _pkg)
   set(${_path})
   string(TOLOWER "${LOFAR_COMPILER_SUITE}" comp)
@@ -40,11 +44,3 @@ macro(lofar_search_path _path _pkg)
   endforeach(_dir in ${LOFAR_SEARCH_PATH})
   list(REMOVE_DUPLICATES ${_path})
 endmacro(lofar_search_path _path _pkg)
-
-# Set the search path to use when searching for package '_pkg', by setting the
-# CMake variable CMAKE_PREFIX_PATH.
-macro(lofar_set_search_path _pkg)
-  lofar_search_path(_path ${_pkg})
-  set(CMAKE_PREFIX_PATH ${_path})
-endmacro(lofar_set_search_path _pkg)
-

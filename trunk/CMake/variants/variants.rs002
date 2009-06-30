@@ -21,3 +21,5 @@ set(GNUNEW_COMPILE_DEFINITIONS_OPT)
 # Preset rs002 specific options
 option(USE_BACKTRACE     "Use backtrace" OFF)
 
+# Where to find Postgres libraries
+set(PQXX_PREFIX_PATH /usr/local/pgsql)
