@@ -404,7 +404,17 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType	aTreeID,
 	LOG_TRACE_FLOW_STR("TM:getItemList(" << aTreeID << "," << topNode 
 										 << "," << depth << ")");
 
-	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
+	OTDBtree	theTree;
+	try { 
+		theTree = itsConn->getTreeInfo(aTreeID);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getTreeInfo in getItemList:") + ex.what();
+		LOG_FATAL(itsError);
+		vector<OTDBnode>	emptyVector;
+		return (emptyVector);
+	}
+
 	switch (theTree.type) {
 	case TThardware:
 		return getPICitemList(aTreeID, topNode, depth);
