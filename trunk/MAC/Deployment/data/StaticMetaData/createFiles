@@ -305,7 +305,7 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
         print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
         print "Will create AntennaArrays_default.conf instead"
         srcFile = dataDir + "/AntennaArrays_default.conf"
-        destFile= resultDir + "/AntennaArrays_default.conf"
+        destFile= resultDir + "/AntennaArrays.conf"
     else:
         destFile = resultDir + "/AntennaArrays.conf"
 
@@ -327,7 +327,7 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
         print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
         print "Will create CableDelays_default.conf instead"
         srcFile = dataDir + "/CableDelays_default.conf"
-        destFile= resultDir + "/CableDelays_default.conf"
+        destFile= resultDir + "/CableDelays.conf"
     else:
         destFile = resultDir + "/CableDelays.conf"
     
@@ -348,7 +348,7 @@ def createHBADeltasFile(resultDir, stationName, dataDir):
         print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
         print "Will create HBADeltas_default.conf instead"
         srcFile = dataDir + "/HBADeltas_default.conf"
-        destFile= resultDir + "/HBADeltas_default.conf"
+        destFile= resultDir + "/HBADeltas.conf"
     else:
         destFile = resultDir + "/HBADeltas.conf"
 
