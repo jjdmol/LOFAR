@@ -18,6 +18,10 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-lofar_add_bin_program(CTStartDaemon CTStartDaemonMain.cc CTStartDaemon.cc)
-install(PROGRAMS startController.sh DESTINATION bin)
-install(FILES CTStartDaemon.conf DESTINATION etc)
+lofar_add_bin_program(BGPlogProcessor 
+  BGPlogProcessorMain.cc
+  BGPlogProcessor.cc)
+
+install(FILES 
+  BGPlogProcessor.conf 
+  DESTINATION etc)
