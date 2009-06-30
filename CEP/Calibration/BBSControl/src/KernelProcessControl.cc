@@ -136,6 +136,7 @@ namespace LOFAR
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open observation part: " << path);
+          return false;
         }
 
         try {
