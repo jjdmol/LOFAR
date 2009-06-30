@@ -10,12 +10,9 @@
 % Daarom kwam John ook op een AI van 0.5 uit IPV 1.
 
 
-
-
-
 % opencl uitzoeken
 %  - hoe gaat opencl om met random writes?
-
+% RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
 
 % uitzoeken: andere toepassingen van correleren: geofysica? radar? wifi 802.11n, wimax???
 
@@ -768,7 +765,7 @@ have even more receivers. The performance results are shown in Figure~\ref{perfo
 \end{figure*}
 
 
-\subsection{Intel CPU}
+\subsection{Intel CPUs}
 
 We use the SSE4 instruction set to exploit vector parallelism.  Due to
 the limited shuffle instructions, computing the correlations of the
@@ -783,7 +780,7 @@ Hyperthreading increases performance by 6\%.  The most efficient
 version uses a tile size of $2 \times 2$.  Larger tile sizes are inefficient
 due to the small number of SSE4 registers. 
 
-\subsection{BG/P supercomputer}
+\subsection{The BG/P supercomputer}
 
 The LOFAR production correlator is implemented on the Blue Gene/P platform.
 We use it as the reference for performance comparisons.
@@ -799,7 +796,7 @@ The problem is compute bound, and not I/O bound, thanks to the
 high memory bandwidth per flop.
 %For more information, we refer to~\cite{sc09}.
 
-\subsection{ATI GPU}
+\subsection{ATI GPUs}
 
 ATI offers two separate programming models, at different abstraction
 levels.  The low-level programming model is called the ``Compute
@@ -842,7 +839,7 @@ decreases significantly if transfers are performed concurrently.
 Due to the low I/O performance, we achieve only 14\% of the theoretical peak.
 
 
-\subsection{NVIDIA GPU}
+\subsection{NVIDIA GPUs}
 
 NVIDIA's programming model is called Cuda~\cite{cuda-manual}.
 Cuda is relatively high-level, and achieves good performance.
@@ -884,7 +881,7 @@ hardware and our data-intensive kernel, we do see significant
 performance gains by using asynchronous I/O.
 
 
-\subsection{Cell/B.E.}
+\subsection{The Cell Broadband Engine}
 
 The basic \mbox{Cell/B.E.} programming is based on multi-threading:
 the PPE spawns threads that execute asynchronously on SPEs.
@@ -1042,8 +1039,47 @@ This method minimizes memory loads, but requires additional shuffling of data.
 Unfortunately, the most efficient method can only be determined empirically,
 when the hardware is available.
 
-\section{Conclusions}
 
+\section{Conclusions}
+\label{conclusions}
+Current and future telescopes have high computational and I/O demands.
+Therefore, we evaluated the performance of the extremely
+data-intensive correlator algorithm on today's many-core
+architectures. This research is an important pathfinder for future
+radio-astronomy instruments. We also presented general insights on how to use many-core
+platforms for signal processing applications.
+
+The many-core architectures have a significantly lower memory
+bandwidth \emph{per operation} compared to traditional architectures.
+Minimizing the number of memory loads per operation is of key
+importance.  We do this by extensively optimizing algorithms for each
+architecture.  This includes making optimal use of caches and
+registers.  A high memory bandwidth per flop is not strictly
+necessary, as long as the architecture (and the algorithm) allows efficient data reuse.
+This can be achieved through caches, local stores and registers.
+
+Only two architectures perform well with our correlator application.  The BG/P
+supercomputer achieves high efficiencies thanks to the high memory
+bandwidth per FLOP.  The \mbox{Cell/B.E.} also performs excellently,
+even though its memory bandwidth per operation is eight times lower.
+We achieve this by exploiting the application-managed cache and the
+large number of registers, optimally reusing all sample data.
+The GPUs achieve low efficiencies, party due to the low device memory bandwidth per core,
+but mostly due to the low PCI-express bandwidth.
+
+It is clear that application-level control of cache behavior (either
+through explicit DMA or thread synchronization) has a substantial
+performance benefit, and is of key importance for signal processing
+applications.  The results also demonstrated that, for signal
+processing applications, the recent trend of increasing the number of
+cores does not work if I/O is not scaled accordingly.
+
+
+\section*{Acknowledgments}
+This work was performed in the context of the NWO STARE
+AstroStream project.  We gratefully acknowledge NVIDIA, and in
+particular Dr. David Luebke, for providing freely some of the GPU
+cards used in this work. 
 
 \bibliographystyle{IEEEbib}
 \bibliography{spm}
