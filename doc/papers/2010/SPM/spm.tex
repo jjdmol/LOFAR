@@ -14,9 +14,6 @@
 %  - hoe gaat opencl om met random writes?
 % RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
 
-% uitzoeken: andere toepassingen van correleren: geofysica? radar? wifi 802.11n, wimax???
-
-
 
 % zoek parallelisme: onafhankelijke berekeningen
 % voor de correlator geldt dat de berekiningen onafhankelijk zijn, maar IO niet!
@@ -111,8 +108,10 @@ correlates the signals from different receivers, and integrates the correlations
 the amount of data. The correlation is an important problem in radio astronomy,
 since the data volumes are so large, and the computational demand grows quadratically
 with the number of receivers.
+Correlators are not limited to the field of astronomy, but are also used for example in geophysics\cite{correlator-geophysics}, 
+radar systems~\cite{correlator-radar}, and wireless networking~\cite{correlator-wireless}.
 
-Traditionally, custom-built hardware is used to correlate the signals.
+Traditionally, custom-built hardware is used to correlate radio astronomy signals.
 A recent development is to use a supercomputer~\cite{Romein:06}.
 Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
