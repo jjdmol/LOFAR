@@ -58,6 +58,7 @@ lofar_INTERNAL(SAS/OTDB,OTDB,,1,OTDB/OTDBnode.h,,)
 lofar_EXTERNAL(boost,1,boost/date_time/date.hpp, boost_date_time)
 lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
 lofar_EXTERNAL(pqxx,2.5.0,pqxx/pqxx, pqxx)
+lofar_EXTERNAL(readline,0,readline/readline.h,,,,,,"-lncurses")
 dnl lofar_EXTERNAL(pq,,libpq-fe.h,)
 dnl
 dnl Output Makefiles
