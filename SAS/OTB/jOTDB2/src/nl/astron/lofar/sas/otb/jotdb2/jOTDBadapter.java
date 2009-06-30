@@ -25,8 +25,13 @@ package nl.astron.lofar.sas.otb.jotdb2;
 import java.util.Vector;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
+import org.apache.log4j.Logger;
 
 public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface {
+
+   // Create a Log4J logger instance
+   static Logger logger = Logger.getLogger(jTreeMaintenanceAdapter.class);
+
     // Constructor
     public jOTDBadapter (jOTDBconnection adaptee) throws RemoteException   {
         this.adaptee = adaptee;
@@ -38,8 +43,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aB=adaptee.isConnected ();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI isConnected error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI isConnected error",ex);
             throw anEx;            
         }
         return aB;  
@@ -51,8 +56,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aB = adaptee.connect ();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI connect error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI connect error",ex);
             throw anEx;            
         }
         return aB;
@@ -64,8 +69,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aT = adaptee.getTreeInfo (atreeID,isMomID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getTreeInfo error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeInfo error",ex);
             throw anEx;            
         }
         return aT;  
@@ -80,8 +85,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
 	try {
             aV = adaptee.getStateList (treeID, isMomID, beginDate, endDate);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getStateList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getStateList error",ex);
             throw anEx;            
         }
         return aV;  
@@ -93,8 +98,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aV = adaptee.getTreeList (treeType, classifiType);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getTreeList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeList error",ex);
             throw anEx;            
         }
         return aV;            
@@ -105,8 +110,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aS = adaptee.errorMsg ();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI errorMsg error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI errorMsg error",ex);
             throw anEx;            
         }
         return aS;             
@@ -117,8 +122,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             anI = adaptee.getAuthToken ();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getAuthToken error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getAuthToken error",ex);
             throw anEx;            
         }
         return anI;              
@@ -129,8 +134,8 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         try {
             aS = adaptee.getDBName ();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getDBName error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getDBName error",ex);
             throw anEx;            
         }
         return aS;             

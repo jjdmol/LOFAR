@@ -24,9 +24,14 @@ package nl.astron.lofar.sas.otb.jotdb2;
 import java.util.Vector;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
+import org.apache.log4j.Logger;
 
 public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTreeMaintenanceInterface
 {
+
+   // Create a Log4J logger instance
+   static Logger logger = Logger.getLogger(jTreeMaintenanceAdapter.class);
+
    // Constructor
    public jTreeMaintenanceAdapter (jTreeMaintenance adaptee) throws RemoteException
      {
@@ -45,8 +50,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.loadMasterFile(filename);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI loadMasterFile error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI loadMasterFile error",ex);
             throw anEx;            
         }
         return anI;            
@@ -60,8 +65,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.loadComponentFile(filename);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI loadComponentFile error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI loadComponentFile error",ex);
             throw anEx;            
         }
         return anI;              
@@ -73,8 +78,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aV = adaptee.getComponentList(name,topOnly);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getComponentList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getComponentList error",ex);
             throw anEx;            
         }
         return aV;            
@@ -86,8 +91,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aN = adaptee.getComponentNode(aNodeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getComponentNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getComponentNode error",ex);
             throw anEx;            
         }
         return aN;              
@@ -99,8 +104,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aP = adaptee.getComponentParams(aNodeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getComponentsParam error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getComponentsParam error",ex);
             throw anEx;            
         }
         return aP;             
@@ -112,8 +117,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.saveComponentNode(aNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI saveComponentNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI saveComponentNode error",ex);
             throw anEx;            
         }
         return aB;            
@@ -125,8 +130,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.isTopComponent(aNodeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI isTopComponent error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI isTopComponent error",ex);
             throw anEx;            
         }
         return aB;              
@@ -138,8 +143,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.deleteComponentNode(aNodeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI deleteComponentNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI deleteComponentNode error",ex);
             throw anEx;            
         }
         return aB;              
@@ -151,8 +156,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aS = adaptee.getFullComponentName(aNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getFullComponentName error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getFullComponentName error",ex);
             throw anEx;            
         }
         return aS;              
@@ -168,8 +173,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.buildTemplateTree (topNodeID, aClassif);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI buildTemplateTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI buildTemplateTree error",ex);
             throw anEx;            
         }
         return anI;
@@ -182,8 +187,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.newTemplateTree();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI newTemplateTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI newTemplateTree error",ex);
             throw anEx;            
         }
         return anI;              
@@ -196,8 +201,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.copyTemplateTree (aTreeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI copyTemplateTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI copyTemplateTree error",ex);
             throw anEx;            
         }
         return anI;              
@@ -209,8 +214,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aN = adaptee.getNode (aTreeID, aNodeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getNode error",ex);
             throw anEx;            
         }
         return aN;              
@@ -222,8 +227,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aP = adaptee.getParam(aTreeID,aParamID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getParam error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getParam error",ex);
             throw anEx;            
         }
         return aP;  
@@ -236,8 +241,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aP = adaptee.getParam(aNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getParam(OTDBnode) error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getParam(OTDBnode) error",ex);
             throw anEx;            
         }
         return aP;          
@@ -249,8 +254,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.saveParam(aParam);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI saveParam error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI saveParam error",ex);
             throw anEx;            
         }
         return aB;            
@@ -262,8 +267,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aV = adaptee.getItemList (aTreeID, topNode, depth);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getItemList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getItemList error",ex);
             throw anEx;            
         }
         return aV;
@@ -275,8 +280,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aV = adaptee.getItemList (aTreeID, aNameFragment);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getItemList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getItemList error",ex);
             throw anEx;            
         }
         return aV;            
@@ -289,8 +294,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.dupNode (aTreeID, orgNodeID, newIndex);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI dupNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI dupNode error",ex);
             throw anEx;            
         }
         return anI;            
@@ -303,8 +308,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.addComponent(compID,treeID,parentID, newName);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI addComponent error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI addComponent error",ex);
             throw anEx;            
         }
         return anI;            
@@ -316,8 +321,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.saveNode (aNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI saveNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI saveNode error",ex);
             throw anEx;            
         }
         return aB;            
@@ -329,8 +334,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.saveNodeList (aNodeList);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI saveNodeList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI saveNodeList error",ex);
             throw anEx;            
         }
         return aB;
@@ -342,8 +347,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.deleteNode (aNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI deleteNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI deleteNode error",ex);
             throw anEx;            
         }
         return aB;            
@@ -354,8 +359,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.deleteNodeList (aNodeList);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI deleteNodeList error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI deleteNodeList error",ex);
             throw anEx;            
         }
         return aB;            
@@ -367,8 +372,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.checkTreeConstraints (aTreeID, topNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI checkTreeConstraints error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI checkTreeConstraints error",ex);
             throw anEx;            
         }
         return aB;            
@@ -382,8 +387,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             anI = adaptee.instanciateTree (baseTree);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI instantiateTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI instantiateTree error",ex);
             throw anEx;            
         }
         return anI;
@@ -395,8 +400,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.pruneTree (aTreeID, pruningLevel);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI pruneTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI pruneTree error",ex);
             throw anEx;            
         }
         return aB;            
@@ -409,8 +414,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.exportTree(aTreeID,topItem,filename,outputFormat,folded);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI exportTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI exportTree error",ex);
             throw anEx;            
         }
         return aB;            
@@ -423,8 +428,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.deleteTree (aTreeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI deleteTree error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI deleteTree error",ex);
             throw anEx;            
         }
         return aB;            
@@ -436,8 +441,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aN = adaptee.getTopNode (aTreeID);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getTopNode error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTopNode error",ex);
             throw anEx;            
         }
         return aN;            
@@ -448,8 +453,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.setMomInfo(aTreeID, momID, campaign);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI setMomInfo error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI setMomInfo error",ex);
             throw anEx;            
         }
         return aB;            
@@ -461,8 +466,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.setClassification (aTreeID, aClassification);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI setClassification error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI setClassification error",ex);
             throw anEx;            
         }
         return aB;            
@@ -476,8 +481,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.setTreeState (aTreeID, aState);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI setTreeState error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI setTreeState error",ex);
             throw anEx;            
         }
         return aB;
@@ -490,8 +495,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aB = adaptee.setDescription( aTreeID,aDescription);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI setDescription error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI setDescription error",ex);
             throw anEx;            
         }
         return aB;            
@@ -502,9 +507,9 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         boolean aB=false;
         try {
             aB = adaptee.setSchedule(aTreeID,aStartTime,aStopTime);
-                    } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI setSchedule error");
-            anEx.initCause(ex);
+        } catch (Exception ex) {
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI setSchedule error",ex);
             throw anEx;            
         }
         return aB;
@@ -517,8 +522,8 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
         try {
             aS = adaptee.errorMsg();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI errorMsg error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI errorMsg error",ex);
             throw anEx;            
         }
         return aS;            
