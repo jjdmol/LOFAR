@@ -46,6 +46,10 @@
 \usepackage{graphicx}
 \usepackage{listings}
 
+
+\newcommand{\longversion}[1]{}
+\newcommand{\shortversion}[1]{#1}
+
 \title{How to Build a Correlator with Many-Core Hardware}
 
 \name{Rob V. van Nieuwpoort and John W. Romein}
@@ -86,7 +90,7 @@ since the data volumes are so large, and the computational demand grows quadrati
 with the number of receivers.
 
 Traditionally, custom-built hardware is used to correlate the signals.
-A recent development is to use a supercomputer~\cite{Romein:06,Romein:09b}.
+A recent development is to use a supercomputer~\cite{Romein:06}.
 Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
 inflexible, expensive to design, and has a long development time.
@@ -119,7 +123,7 @@ High-end GPUs are highly parallel and contain hundreds of processor cores.
 %% Fortunately, many signal-processing applications do not require double
 %% precision.
 
-The IBM Cell Broadband Engine~\cite{Gschwind:06}, well known from the
+The IBM Cell Broadband Engine~\cite{cell}, well known from the
 PlayStation~3, is another example of a processor that combines GPU and CPU
 qualities into one design.
 The Cell/B.E. consists of an ``ordinary'' PowerPC core and eight powerful
@@ -176,7 +180,7 @@ instruments and applications.
 During the past decade, new types of radio-telescope concepts emerged that
 rely less on concrete, steel, and extreme cooling techniques, but more on
 signal-processing techniques.
-For example, LOFAR~\cite{Butcher:04,deVos:09} is a distributed sensor network
+For example, LOFAR~\cite{Butcher:04} is a distributed sensor network
 that combines the signals of tens of thousands of simple receiver elements.
 Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat} and
 ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}. Both are
@@ -238,7 +242,7 @@ We describe LOFAR in more detail below.
 
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency
   \textbf{AR}ray}, an aperture array radio telescope operating in the
-10 to 250~MHz frequency range~\cite{Butcher:04,deVos:09}.  It is the first of a new generation of
+10 to 250~MHz frequency range~\cite{Butcher:04}.  It is the first of a new generation of
 radio telescopes, that breaks with the concepts of traditional
 telescopes in several ways.  Rather than using large, expensive
 dishes, LOFAR uses many thousands of simple antennas that have no
@@ -398,7 +402,7 @@ many-core sytems in more detail in Section~\ref{sec:optimizing}, but first, we e
 %TODO: zet kolommen in de volgorde van behandeling
 \begin{table*}[t]
 \begin{center}
-{\small
+{\footnotesize
 \begin{tabular}{|l|l|l|l|l|l|}                                                   
 \hline
 Architecture                                 & Intel Core i7 & IBM Blue Gene/P& ATI 4870 &  NVIDIA Tesla C1060 & STI Cell/B.E. \\
@@ -491,7 +495,7 @@ registers; reuse has to come from the L1~data cache.
 \subsection{IBM Blue Gene/P supercomputer}
 
 The IBM Blue Gene/P~(BG/P)~\cite{IBM:08} is the architecture that is
-currently used for the LOFAR production correlator~\cite{Romein:09b}.
+currently used for the LOFAR production correlator.
 Four PowerPC processors are integrated on each Blue Gene/P chip.
 The BG/P is an energy efficient supercomputer.
 This is accomplished by using many small, low-power chips, at a low clock
@@ -602,10 +606,9 @@ system have a total theoretical single-precision peak performance of
 
 \subsection{Essential properties and differences}
 
-% TODO refer to this table
 \begin{table*}[t]
 \begin{center}
-{\small
+{\footnotesize
 \begin{tabular}{|l|l|l|}
 \hline
 feature                   & Cell/B.E.                      & GPUs \\
@@ -755,14 +758,14 @@ We choose 64 as the number of receivers (each consisting of hundreds of antennas
 that is a realistic number for LOFAR.  Future instruments will likely
 have even more receivers. The performance results are shown in Figure~\ref{performance-graph}.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \begin{center}
-\includegraphics[width=12cm]{figures/performance-graph-v2.pdf}
+\includegraphics[width=\columnwidth]{figures/performance-graph-v2.pdf}
 \end{center}
 \vspace{-0.5cm}
 \caption{Achieved performance on the different platforms.}
 \label{performance-graph}
-\end{figure*}
+\end{figure}
 
 
 \subsection{Intel CPUs}
@@ -937,18 +940,15 @@ the high data reuse factor.
 
 \begin{table*}[t]
 \begin{center}
-{\small
+{\footnotesize
 \begin{tabular}{l|l|l|l|l}
 Intel Core i7 920            & IBM Blue Gene/P                  & ATI 4870                     & NVIDIA Tesla C1060           & STI  Cell/B.E.                \\
 \hline
 + well-known                 & + L2 prefetch unit               & + largest number of cores    & + random write access        & + explicit cache              \\
-                             & + high memory bandwidth          & + swizzling support          & + Cuda is high-level         & + random write access         \\
-                             &                                  &                              &                              & + shuffle capabilities        \\
-                             &                                  &                              &                              & + power efficiency            \\
-                             &                                  &                              &                              &                               \\
-- few registers              & - double precision only   & - low PCI-e bandwidth        & - low PCI-e bandwidth        & - multiple parallelism levels \\
-- no fma instruction                    & - expensive                      & - transfer slows down kernel &                              & - no increment in odd pipe    \\
-- limited shuffling          &                                  & - no random write access     &                              &                               \\
+- few registers              & + high memory bandwidth          & + swizzling support          & + Cuda is high-level         & + random write access         \\
+- no fma instruction         & - double precision only          & - low PCI-e bandwidth        & - low PCI-e bandwidth        & + shuffle capabilities        \\
+- limited shuffling          & - expensive                      & - transfer slows down kernel &                              & + power efficiency            \\
+                             &                                  & - no random write access     &                              & - multiple parallelism levels \\
                              &                                  & - bad Brook+ performance     &                              &                               \\
                              &                                  & - CAL is low-level           &                              &                               \\
                              &                                  & - not well documented        &                              &                               \\
@@ -1009,7 +1009,7 @@ found that the high-level Brook+ model does not achieve acceptable
 performance compared to hand-written CAL code.  Manually written assembly 
 is more than three times faster. Also, the Brook+ documentation is insufficient.
 
-
+\longversion{
 \section{Aplying the techniques: a case study with the Intel Larrabee}
 
 Intel recently disclosed some details about the upcoming Larrabee processor,
@@ -1038,7 +1038,7 @@ by Figure~\ref{fig-correlation}.
 This method minimizes memory loads, but requires additional shuffling of data.
 Unfortunately, the most efficient method can only be determined empirically,
 when the hardware is available.
-
+} % end of \longversion
 
 \section{Conclusions}
 \label{conclusions}
