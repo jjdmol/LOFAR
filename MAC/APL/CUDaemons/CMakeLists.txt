@@ -28,22 +28,18 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(MACIO)
+project(CUDaemons)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common)
+# Do not split the following line, otherwise makeversion will fail!
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common ApplCommon APLCommon GCFTM MACIO)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost)
-
-## ---------------------------------------------------------------------------
-## Add directory containing the generated MAC protocol headers to -I path.
-## ---------------------------------------------------------------------------
-include_directories(${CMAKE_BINARY_DIR}/include/MAC)
+lofar_find_package(Log4Cplus REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -53,6 +49,5 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(include/MACIO)
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)    # Tests currently do not compile!
