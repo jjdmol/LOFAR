@@ -24,9 +24,14 @@ package nl.astron.lofar.sas.otb.jotdb2;
 import java.util.Vector;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
+import org.apache.log4j.Logger;
 
 public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValueInterface
 {
+
+   // Create a Log4J logger instance
+   static Logger logger = Logger.getLogger(jTreeMaintenanceAdapter.class);
+
    // Constructor
    public jTreeValueAdapter (jTreeValue adaptee) throws RemoteException
      {
@@ -43,8 +48,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aB = adaptee.addKVT( key, value, time) ;
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI addKVT error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI addKVT error",ex);
             throw anEx;            
         }
         return aB;            
@@ -55,8 +60,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aB = adaptee.addKVT(aKVT);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI addKVT error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI addKVT error",ex);
             throw anEx;            
         }
         return aB;
@@ -67,8 +72,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aB = adaptee.addKVTlist(aValueList);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI addKVTlist error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI addKVTlist error",ex);
             throw anEx;            
         }
         return aB;            
@@ -92,8 +97,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aV = adaptee.searchInPeriod (topNode, depth, beginDate, endDate, mostRecentlyOnly);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI searchInPeriod error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI searchInPeriod error",ex);
             throw anEx;            
         }
         return aV;            
@@ -104,8 +109,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aV = adaptee.getSchedulableItems(topNode);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getSchedulableItems error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getSchedulableItems error",ex);
             throw anEx;            
         }
         return aV;            
@@ -116,8 +121,8 @@ public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValue
         try {
             aS = errorMsg();
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI errorMsg error");
-            anEx.initCause(ex);
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI errorMsg error",ex);
             throw anEx;            
         }
         return aS;

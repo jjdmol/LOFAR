@@ -25,9 +25,13 @@ package nl.astron.lofar.sas.otb.jotdb2;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import org.apache.log4j.Logger;
 
 public class jConverterAdapter extends UnicastRemoteObject implements jConverterInterface
 {
+   // Create a Log4J logger instance
+   static Logger logger = Logger.getLogger(jTreeMaintenanceAdapter.class);
+
    // Constructor
    public jConverterAdapter (jConverter adaptee) throws RemoteException
      {
@@ -36,137 +40,197 @@ public class jConverterAdapter extends UnicastRemoteObject implements jConverter
    
     public short getClassif (String aConv) throws RemoteException
     {
+        short aS;
         try {
-            return adaptee.getClassif (aConv);
+            aS=adaptee.getClassif (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getClassif(String) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public String getClassif (short aConv) throws RemoteException
     {
+        String aS="";
         try {
-            return adaptee.getClassif (aConv);
+            aS =  adaptee.getClassif (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getClassif(short) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public HashMap<Short,String> getClassif() throws RemoteException
     {
+        HashMap<Short,String> aM=null;
         try {
-            return adaptee.getClassif();
+            aM = adaptee.getClassif();
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getClassif() error",ex);
+            throw anEx;
         }
+        return aM;
     }
     
     public short getParamType (String aConv) throws RemoteException
     {
+        short aS;
         try {
-            return adaptee.getParamType (aConv);
+            aS = adaptee.getParamType (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getParamType(String) error",ex);
+            throw anEx;
         }
+        return aS;
     }
 
     public String getParamType (short aConv) throws RemoteException
     {
+        String aS="";
         try {
-            return adaptee.getParamType (aConv);
+            aS = adaptee.getParamType (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getParamType(short) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public HashMap<Short,String> getParamType() throws RemoteException
     {
+        HashMap<Short,String> aM=null;
         try {
-            return adaptee.getParamType();
+            aM = adaptee.getParamType();
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getParamType() error",ex);
+            throw anEx;
         }
+        return aM;
     }
 
     public short getTreeState (String aConv) throws RemoteException
     {
+        short aS;
         try {
-            return adaptee.getTreeState (aConv);
+            aS = adaptee.getTreeState (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeState(String) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public String getTreeState (short aConv) throws RemoteException
     {
+        String aS="";
         try {
-            return adaptee.getTreeState (aConv);
+            aS = adaptee.getTreeState (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeState(short) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public HashMap<Short,String> getTreeState() throws RemoteException
     {
+        HashMap<Short,String> aM=null;
         try {
-            return adaptee.getTreeState();
+            aM  = adaptee.getTreeState();
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeState() error",ex);
+            throw anEx;
         }
+        return aM;
     }
 
     public short getTreeType (String aConv) throws RemoteException
     {
+        short aS;
         try {
-            return adaptee.getTreeType (aConv);
+            aS =  adaptee.getTreeType (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeType(String) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public String getTreeType (short aConv) throws RemoteException
     {
+        String aS="";
         try {
-            return adaptee.getTreeType (aConv);
+            aS = adaptee.getTreeType (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeType(short) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public HashMap<Short,String> getTreeType() throws RemoteException
     {
+        HashMap<Short,String> aM=null;
         try {
-            return adaptee.getTreeType();
+            aM = adaptee.getTreeType();
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getTreeType() error",ex);
+            throw anEx;
         }
+        return aM;
     }
 
     public short getUnit (String aConv) throws RemoteException
     {
+        short aS;
         try {
-            return adaptee.getUnit (aConv);
+            aS = adaptee.getUnit (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getUnit(String) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public String getUnit (short aConv) throws RemoteException
     {
+        String aS="";
         try {
-            return adaptee.getUnit (aConv);
+            aS = adaptee.getUnit (aConv);
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getUnit(short) error",ex);
+            throw anEx;
         }
+        return aS;
     }
     
     public HashMap<Short,String> getUnit() throws RemoteException
     {
+        HashMap<Short,String> aM=null;
         try {
-            return adaptee.getUnit();
+            aM = adaptee.getUnit();
         } catch (RemoteException ex) {
-            throw ex;
+            logger.error(ex);
+            RemoteException anEx=new RemoteException("JNI getUnit() error",ex);
+            throw anEx;
         }
+        return aM;
     }
 
    
