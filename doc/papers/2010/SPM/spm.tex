@@ -15,7 +15,18 @@
 % RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
 
 
-% zoek parallelisme: onafhankelijke berekeningen
+%% @@@
+%% It is important that the authors take a tutorial 
+%% oriented style and more carefully introduce the 
+%% application context, including radio-astronomy 
+%% basics, instruments that they use (including 
+%% installation roadmap).  The algorithm is quite 
+%% simple and so the strength of the paper lies in 
+%% the thoroughness of the analysis, and the 
+%% aforementioned tutorial background.
+%% @@@
+
+% @@@ TODO zoek parallelisme: onafhankelijke berekeningen
 % voor de correlator geldt dat de berekiningen onafhankelijk zijn, maar IO niet!
 % met many cores is de I/O vaak de bottleneck
 
@@ -180,16 +191,6 @@ instruments and applications.
 
 \section{Trends in radio astronomy}
 
-%% @@@
-%% It is important that the authors take a tutorial 
-%% oriented style and more carefully introduce the 
-%% application context, including radio-astronomy 
-%% basics, instruments that they use (including 
-%% installation roadmap).  The algorithm is quite 
-%% simple and so the strength of the paper lies in 
-%% the thoroughness of the analysis, and the 
-%% aforementioned tutorial background.
-%% @@@
 
 %- signal processing neemt een dominantere rol (meer antennes, etc)
 %- voorbeelden. pathfinders voor SKA. 
@@ -421,7 +422,6 @@ many-core sytems in more detail in Section~\ref{sec:optimizing}, but first, we e
 
 \section{Many-core architectures}
 
-%TODO: zet kolommen in de volgorde van behandeling
 \begin{table*}[t]
 \begin{center}
 {\footnotesize
@@ -456,7 +456,6 @@ total device RAM bandwidth (GB/s)            & n.a.          & n.a.           & 
 \label{architecture-properties}
 \end{table*}
 
-%TODO: zet kolommen in de volgorde van behandeling
 %% \begin{table*}
 %% \begin{center}
 %% \begin{small}
@@ -717,8 +716,6 @@ them to the correlator application.
 
 \section{Implementation and optimization}
 \label{sec:optimizing}
-
-% TODO add text about mapping from alg to arch
 
 \begin{figure}[t]
 \begin{center}
