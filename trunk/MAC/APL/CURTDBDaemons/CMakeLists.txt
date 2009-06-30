@@ -32,13 +32,14 @@ project(CURTDBDaemons)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS APLCommon ApplCommon Common GCFPVSS GCFRTDB GCFTM MACIO OTDB RTDBCommon)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common ApplCommon MACIO GCFTM GCFRTDB RTDBCommon APLCommon OTDB)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)
+lofar_find_package(PQXX REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
