@@ -749,6 +749,27 @@ MatrixRep* MatrixComplexArr::cos()
   return this;
 }
 
+MatrixRep* MatrixComplexArr::log()
+{
+#if defined TIMER
+  static NSTimer timer("log CA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    dcomplex value = LOFAR::log(makedcomplex(itsReal[i], itsImag[i]));
+    itsReal[i] = real(value);
+    itsImag[i] = imag(value);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
 MatrixRep* MatrixComplexArr::exp()
 {
 #if defined TIMER

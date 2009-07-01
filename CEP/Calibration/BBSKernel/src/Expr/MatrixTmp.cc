@@ -91,6 +91,10 @@ MatrixTmp cos (const MatrixTmp& arg)
 {
   return arg.itsRep->cos();
 }
+MatrixTmp log (const MatrixTmp& arg)
+{
+  return arg.itsRep->log();
+}
 MatrixTmp exp (const MatrixTmp& arg)
 {
   return arg.itsRep->exp();

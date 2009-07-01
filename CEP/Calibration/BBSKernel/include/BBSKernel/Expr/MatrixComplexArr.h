@@ -118,6 +118,7 @@ private:
 
   virtual MatrixRep* sin();
   virtual MatrixRep* cos();
+  virtual MatrixRep* log();
   virtual MatrixRep* exp();
   virtual MatrixRep* sqr();
   virtual MatrixRep* sqrt();

@@ -267,6 +267,12 @@ MatrixRep* MatrixComplexSca::cos()
   return this;
 }
 
+MatrixRep* MatrixComplexSca::log()
+{
+  itsValue = LOFAR::log(itsValue);
+  return this;
+}
+
 MatrixRep* MatrixComplexSca::exp()
 {
   itsValue = LOFAR::exp(itsValue);
