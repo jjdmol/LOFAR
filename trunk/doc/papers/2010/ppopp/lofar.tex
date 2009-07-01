@@ -424,7 +424,7 @@ duplicated, and lost packets.
 At each station, four of the FPGAs send data to their associated I/O~node,
 each FPGA to a different UDP port.
 The I/O~node runs four ``input'' threads, one thread per socket.
-Multiple threads are necessary, since a single core is too slow to receive all
+Multiple threads are necessary, since we have to utilize multiple cores; a single core is too slow to receive all
 data.
 Together, the threads receive a total of 48,828~packets per second.
 
@@ -461,7 +461,7 @@ is used to trigger the sending of a new block of data.
 A block of data containing samples from time $t_1$ to $t_2$ are sent some 
 hundreds of milliseconds (the WAN delay plus a safe margin) after $t_2$,
 whether or not all data were actually received from the station.
-This ruthless method assures real-time continuation of the correlator and
+This assures real-time continuation of the correlator and
 provides fault-tolerance against a failing station or WAN link.
 In practice, this method causes hardly any data loss.
 When processing off-line, the input is read from file or TCP socket rather
@@ -549,11 +549,11 @@ data without delays.
 Therefore, the thread that sends data from the circular buffer to the
 compute nodes runs at the highest priority, and is scheduled as soon as the
 wall-clock time triggers.
-The thread that reads results from the compute nodes is almost equally
+The thread that reads results from the compute nodes is almost as
 important, since compute nodes will not accept new work before the previous
 results were read by the I/O~node.
 Other threads, such as the threads that read UDP data, and the threads that
-send data from the output queues are also important, but if they would ever
+send data from the output queues are less important: if they would ever
 fail to meet a real-time deadline, only a small amount of data is lost.
 In practice, under normal circumstances, this rarely happens
 (see Section~\ref{sec:ION-performance}).
@@ -684,48 +684,55 @@ are required.
 \subsection{Signal processing}
 \label{sec:signal-processing}
 
-After the data exchange, a compute core possesses the samples of one subband,
+After the data exchange, a compute core has the samples of one subband
 from all stations.
-The data are processed through a number of filters, as briefly described below.
-More details on the filters (except bandpass correction and beam forming)
-can be found elsewhere~\cite{Romein:06}.
+The data are processed in a number of steps, as briefly described below.
+More details on these steps can be found elsewhere~\cite{Romein:06}.
 
-The subband data are first filtered by a \emph{Poly-Phase Filter bank\/} (PPF) that
-splits a frequency subband into narrow frequency channels, trading time
-resolution for frequency resolution.
-The high frequency resolution allows for removal of narrow-band RFI later in
-the pipeline.
-The PPF itself consists of a number of 16-tap Finite Impulse Response (FIR)
-filters, the outputs of which are Fourier Transformed.
-Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
-filter supports any reasonable power-of-two number of channels for different
-observation modes.
-The FIR filters and a 256-point FFT are implemented in assembly, for optimal
-performance.
-For other FFT sizes, we use the Blue Gene ``Vienna'' version of
-FFTW~\cite{Lorenz:05}.
-This demonstrates the flexibility of a software solution: our software
-automatically designs a filter bank with the desired properties and
-number of channels at run time, generating the FIR filter constants on
-the fly.
 
-As a side effect, the PPF implicitly converts 4-bit, 8-bit, or 16-bit
-little-endian integer samples to 32-bit big-endian floating point numbers,
-since the Blue Gene is much better at floating-point processing than integer
-processing.
-Unfortunately, the FPU has no hardware support for integer-to-floating-point
-conversions (unlike floating-point-to-integer conversions).
-We use a look-up table to convert 4-bit and 8-bit numbers, and a reasonably
-efficient series of integer and floating-point instructions to convert 16-bit
-numbers.
-Since the conversion increases the data size, the PPF runs \emph{after\/} the
+\subsubsection{Data conversion}
+First, we convert the 4-bit, 8-bit, or 16-bit little-endian integer
+samples to 32-bit big-endian floating point numbers.  We do this
+because the Blue Gene is much better at floating-point processing than
+integer processing.  Unfortunately, there is no hardware support
+for integer to floating-point conversions.  We therefore use a lookup
+table to convert 4-bit and 8-bit numbers, and an efficient assembly
+implementation to convert 16-bit numbers.
+Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
 
-%The next step is to artificially ``delay'' the stream of station samples,
-%to compensate for the fact that a celestial wave hits stations at different
-%times~\cite[Sec.~2.1]{Romein:06}.
 
-\begin{figure}[t]
+\subsubsection{The Poly-Phase Filter bank}
+Next, the subband data are processed by a Poly-Phase Filter
+bank (PPF) that splits a frequency subband into a number of
+narrower frequency channels.  In this step, we can trade time
+resolution for frequency resolution: we split a subband in $N$
+separate channels, but with an $N$-times lower sampling rate per channel.  With
+the higher frequency resolution, we can remove RFI artifacts with a
+higher accuracy later later in the pipeline.
+Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
+filter supports any reasonable power-of-two number of channels for different
+observation modes. The PPF consists of two parts. 
+
+First, the data is filtered using Finite Impulse Response (FIR)
+filters. A FIR filter simply multiplies a sample with a weight factor, and
+also adds a number of weighted samples from the past.  Since we have
+to support different numbers of channels, our software automatically designs
+a filter bank with the desired properties and number of channels at
+run time, generating the FIR filter weights on the fly. This again
+demonstrates the flexibility of a software solution.  The
+implementation of the filter is done in assembly.
+
+Second, the filtered data are Fourier Transformed. We use the Blue
+Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this. Since the
+most common observation mode uses 256 channels, we optimized this case
+a bit further, and manually wrote a more efficient assembly
+implementation for the 256-point FFT.
+
+
+\subsubsection{Delay compensation}
+
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=4cm]{delay.pdf}
 \end{center}
@@ -733,66 +740,88 @@ data exchange.
 \label{fig:delay}
 \end{figure}
 
-The next step is \emph{delay compensation}.
-Due to the finite speed of electromagnetic waves, the wavefront from a celestial source hits
-stations at different times (see Figure~\ref{fig:delay}).
-The time difference depends on the direction of the observed source and on the
-station positions, and is continuously altered by the rotation of the earth.
-Before the signals can be correlated, all station streams are aligned,
-by artificially delaying the streams of station samples.
-For example, the bulk of a delay of 22\us is achieved by shifting four 5.12\us
-samples.
-This shift was already done on the I/O~node, by moving the read pointer
-of the circular buffer (see Section~\ref{sec:input-handling}).
-Here, on the compute nodes, the remaining error (1.52\us) is corrected by
-rotating the phase of the signal.
-The phase rotation itself costs a complex multiplication per sample.
-Since the rotation depends on the frequency, the correction is done after 
-the PPF: the correction is more accurate on narrow frequency channels.
-The delays are computed exactly for the begin time and end time of a chunk,
-and interpolated in frequency and time for each individual sample, with
-another complex multiplication.
+Due to the finite speed
+of electromagnetic waves, the wavefront from a celestial source hits
+stations at different times (see Figure~\ref{fig:delay}).  The time
+difference depends on the direction of the observed source and on the
+station positions, and is continuously altered by the rotation of the
+earth.  Before the signals can be correlated, all station streams have
+to be aligned.
 
-The \emph{bandpass correction} step compensates for an artefact
-introduced by a station filter bank (a PPF on the FPGAs that created the subbands).
-Without correction, some channels contain more power than others.
+Since delays can be larger than the sample period, we perform delay
+compensation in two steps.  First, we correct for integer multiples of
+the sample period by simply delaying the streams of station samples.
+This shift was already done on the I/O~node, by moving the read
+pointer of the circular buffer (see Section~\ref{sec:input-handling}).
+
+Second, the remaining error is corrected by rotating the phase of the
+signal.  The phase rotation itself costs a complex multiplication per
+sample.  
+%Since the phase rotation depends on the frequency, the correction
+%is done after the PPF: the correction is more accurate on narrow
+%frequency channels.  
+The delays are computed for the begin
+time and end time of a chunk, and interpolated in frequency and time
+for each individual sample, with another complex multiplication.
+
+
+\subsubsection{Bandpass correction}
+
+The bandpass correction step compensates for an artefact
+introduced by a filter back that runs on the FPGAs in the stations.
+This filter bank performed the initial division of the antenna signals into subbands.
+Without correction, some channels have a stronger signal than others.
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
 A station cannot correct for this artefact itself, since it is only visible
 in channels, not in subbands.
-Another document describes how the correction factors are
-computed~\cite{Romein:08}.
+We describe how the correction factors are computed in~\cite{Romein:08}.
+
+
+\subsubsection{Finalizing the asynchronous transpose}
 
 Up to this point, processing the chunks from different stations can be done
 independently, but from here on, the data from all stations are required.
 This means that the asynchronous data exchange ends here.
 
+
+\subsubsection{Beam forming}
+
 The next step, called \emph{beam forming}, is optional, and adds the samples
 from a group of co-located stations, so that the group forms a virtual
 ``superstation'' with more sensitivity.
-This step will typically be used in European observations.
-From the perspective of an international station, the baselines to the core
-stations are nearly identical.
-Treating the baselines separately makes no sense and increases the correlator
-output unnecessarily.
-Therefore, the core stations will be grouped.
-Other uses of grouped, beam-formed stations are foreseen.
-
-This \emph{coherent\/} way of beam forming is a special case of the beam
-forming algorithms that are also used for pulsar and transient observations.
-With coherent beam forming, the (phase-corrected) complex samples from
-different stations are added.
-The applied phase correction determines the observation direction.
-\emph{Incoherent\/} beam forming is performed by adding the powers (amplitudes)
-of the samples.
-Since the phase information is lost, this mode sees a much larger part of the
-sky, and is used to search for unknown pulsars.
-Both modes are implemented but not optimized yet, therefore we do not include
+By applying an additional phase rotation (a complex multiplication), 
+beam forming can also be used to select observation directions, or to
+observe a large parts of the sky simultaneously.
+The first is used for known pulsar and transient observations, while the latter can be 
+used when searching for unknown pulsars, for instance.
+The different beam forming modes are implemented, but not optimized yet.
+Therefore we only mention them here to show the flexibility of a software solution, but do not include
 them in the performance measurements of Section~\ref{sec:performance}.
 
+
+%This step will typically be used in European observations.
+%From the perspective of an international station, the baselines to the core
+%stations are nearly identical.
+%Treating the baselines separately makes no sense and increases the correlator
+%output unnecessarily.
+%Other uses of grouped, beam-formed stations are foreseen.
+%% The \emph{coherent\/} way of beam forming is a special case of the beam
+%% forming algorithms that are also used for pulsar and transient observations.
+%% With coherent beam forming, the (phase-corrected) complex samples from
+%% different stations are added.
+%% The applied phase correction determines the observation direction.
+%% \emph{Incoherent\/} beam forming is performed by adding the powers (amplitudes)
+%% of the samples.
+%% Since the phase information is lost, this mode sees a much larger part of the
+%% sky, and is used to search for unknown pulsars.
+
+
+
+\subsubsection{Correlation}
+
 In the standard imaging mode, the samples from individual or grouped stations
-are \emph{correlated}.
-Computationally, this is the most time-consuming operation.
+are correlated.
 The received signals from sky sources are so weak, that the antennas mainly
 receive noise.
 To see if there is statistical coherence in the noise, simultaneous samples of
@@ -802,28 +831,37 @@ To reduce the output size, the products are integrated, by accumulating all
 products.
 We accumulate 768~correlations at 763~Hz, so that the integration time is
 approximately one second, the size of a chunk.
-Correlation is done for each pair of stations, and for each channel separately.
-Since the correlation of station~A and~B is the complex conjugate of the
-correlation of station~B and~A, only one pair is computed.
-Stations are also autocorrelated, i.e., with themselves.
-Both polarizations of station~A are correlated with both polarizations of
-station~B, yielding correlations in XX, XY, YX, and YY directions.
-The result, a correlation, contains the combined contribution of all visible
-sky sources.
-These are disambiguated during the imaging step in the off-line processing
-pipeline.
+The correlator is the most time-consuming operation in the signal
+processing path, because its cost grows quadratically with the number of stations.
+All other steps have a lower time complexity.
 
-We support concurrent pulsar and imaging observations, even on the same data.
-This is not only computationally more efficient (the computations in the
-shared components of the pipelines are done only once), more astronomical
-science can be done with a single observation.
-Additionally, in the future these pipelines can mutually benefit from each
-other.
-For example, the correlations from the standard imaging pipeline can be used
-to calibrate the station samples in real time in a feedback loop, so that the
-pulsar pipeline can beam-form calibrated samples.
-This would not be possible without correlating the data, and would be
-particularly useful to compensate for station clock drifts, for example.
+%Correlation is done for each pair of stations, and for each channel separately.
+%Since the correlation of station~A and~B is the complex conjugate of the
+%correlation of station~B and~A, only one pair is computed.
+%Stations are also autocorrelated, i.e., with themselves.
+%Both polarizations of station~A are correlated with both polarizations of
+%station~B, yielding correlations in XX, XY, YX, and YY directions.
+%The result, a correlation, contains the combined contribution of all visible
+%sky sources.
+%These are disambiguated during the imaging step in the off-line processing
+%pipeline.
+
+
+\subsubsection{Flexibility}
+
+We support concurrent pulsar and imaging observations, even on the
+same data.  This is computationally more efficient since the
+computations in the shared components of the pipelines are done only
+once. Moreover, more astronomical science can now be done with a
+single observation.  Additionally, in the future these pipelines can
+mutually benefit from each other.  For example, the correlations from
+the standard imaging pipeline can be used to calibrate the station
+samples in real time in a feedback loop.
+
+%, so that the
+%pulsar pipeline can beam-form calibrated samples.
+%This would not be possible without correlating the data, and would be
+%particularly useful to compensate for station clock drifts, for example.
 
 
 \subsection{Optimizations}
@@ -1033,7 +1071,7 @@ the correlations are independently computed.
 \section{Performance Evaluation}
 \label{sec:performance}
 
-Since only a small number of LOFAR stations has already been constructed
+Since only a small number of LOFAR stations have been constructed
 (the majority will become operational later this year), we will provide 
 performance measurements with externally generated artificial data.
 We use one Blue Gene/P rack to generate UDP data, another rack for the
@@ -1588,7 +1626,7 @@ European Regional Development Fund (EFRO), and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
 performed in the context of the NWO STARE AstroStream project.
 
-\newpage
+%\newpage
 
 \bibliographystyle{plain}
 \bibliography{lofar}
