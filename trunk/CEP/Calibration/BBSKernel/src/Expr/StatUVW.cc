@@ -54,7 +54,7 @@ StatUVW::StatUVW(const Station &station, const casa::MPosition &arrayRef,
     itsU.init();
     itsV.init();
     itsW.init();
-}    
+}
 
 StatUVW::~StatUVW()
 {
@@ -90,6 +90,7 @@ void StatUVW::calculate(const Request &request) const
     // If all done then return.
     if(nDone == nTime)
     {
+        itsLastReqId = request.getId();
         return;
     }
 
