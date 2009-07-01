@@ -15,10 +15,11 @@ BeamServer.DISABLE_INDI=1
 
 #
 # Prevent HBA delays to be send to the RSPDriver.
-#	normal HBA_INTERVAL >= 10(interval 5secs), for testing use (2, 4, 6 or 8)secs
+#	normal HBA_INTERVAL >= 10(interval 5secs), for testing use 
+#       (4, 6 or 8) secs. Note: 4 sec is absolute minimum!
 #
 BeamServer.DISABLE_SETHBA=0
-BeamServer.HBA_INTERVAL=2
+BeamServer.HBA_INTERVAL=10
 
 #
 # Gain of the beamformer
