@@ -150,6 +150,7 @@ public:
 
   virtual MatrixRep* sin() = 0;
   virtual MatrixRep* cos() = 0;
+  virtual MatrixRep* log() = 0;
   virtual MatrixRep* exp() = 0;
   virtual MatrixRep* sqr() = 0;
   virtual MatrixRep* sqrt() = 0;

@@ -185,48 +185,48 @@ void Matrix::operator+= (const Matrix& right)
 {
   MatrixRep* res = itsRep->add (*right.itsRep, False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator+= (const MatrixTmp& right)
 {
   MatrixRep* res = itsRep->add (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator-= (const Matrix& right)
 {
   MatrixRep* res = itsRep->subtract (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator-= (const MatrixTmp& right)
 {
   MatrixRep* res = itsRep->subtract (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator*= (const Matrix& right)
 {
   MatrixRep* res = itsRep->multiply (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator*= (const MatrixTmp& right)
 {
   MatrixRep* res = itsRep->multiply (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator/= (const Matrix& right)
 {
   MatrixRep* res = itsRep->divide (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 void Matrix::operator/= (const MatrixTmp& right)
 {
   MatrixRep* res = itsRep->divide (*right.rep(), False);
   ASSERTSTR (res == itsRep, "Mismatching types");
-}   
+}
 
 MatrixTmp Matrix::operator+ (const Matrix& right) const
 {
     return MatrixTmp(*this) + right;
     //return MatrixTmp(rep()->add(*right.rep(), false));
-}   
+}
 MatrixTmp Matrix::operator+ (const MatrixTmp& right) const
 {
     return (MatrixTmp&)right + *this;
@@ -235,7 +235,7 @@ MatrixTmp Matrix::operator+ (const MatrixTmp& right) const
 MatrixTmp Matrix::operator- (const Matrix& right) const
 {
     return MatrixTmp(*this) - right;
-}   
+}
 MatrixTmp Matrix::operator- (const MatrixTmp& right) const
 {
     return MatrixTmp(*this) - right;
@@ -244,7 +244,7 @@ MatrixTmp Matrix::operator- (const MatrixTmp& right) const
 MatrixTmp Matrix::operator* (const Matrix& right) const
 {
     return MatrixTmp(*this) * right;
-}   
+}
 MatrixTmp Matrix::operator* (const MatrixTmp& right) const
 {
     return (MatrixTmp&)right * *this;
@@ -291,6 +291,10 @@ MatrixTmp sin (const Matrix& arg)
 MatrixTmp cos(const Matrix& arg)
 {
     return cos(MatrixTmp(arg));
+}
+MatrixTmp log(const Matrix& arg)
+{
+    return log(MatrixTmp(arg));
 }
 MatrixTmp exp(const Matrix& arg)
 {
