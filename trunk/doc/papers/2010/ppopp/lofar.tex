@@ -163,6 +163,47 @@ Finally, we discuss, conclude, and describe future work in
 Section~\ref{sec:conclusions}.
 
 
+
+\section{Related work}
+\label{sec:related-work}
+
+%LOFAR is not the only radio telescope of which the data are processed in software. In fact,
+%in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
+%and processed it on IBM 360 mainframes. However, as the volume of the data increased, the mainframes were no longer capable of processing the data in an acceptable amount of time, and custom hardware had to be used instead.
+
+%Due to the massive increase in processing power since the 1960s, software processing of telescope
+%data is once again feasible. Several efforts to do so have been started. However, to the best of our knowledge,
+%LOFAR is the only system capable of processing high data rates from a large number of stations at
+%real time.
+
+The idea to implement a correlator in software has been adopted by
+others as well.  However, the LOFAR correlator is the only system
+capable of processing a large number of inputs at high data rates in
+real time.  Other systems handle only a few inputs, handle limited
+data rates, or do not run in real time.
+
+Deller et al.~\cite{Deller:07} have developed the DiFX distributed
+software correlator, which is to be deployed on a cluster of PCs.
+Due to the use of commodity hardware, both their communication and
+computational capabilities are substantially lower than those available in
+our Blue Gene/P.
+%As a result, they cannot handle the width and number of input streams that we
+%process in LOFAR.
+The real-time data processing of the Murchison Widefield Array (MWA) telescope
+is implemented partially in software.
+However, their correlator, computationally the most demanding part of the
+processing pipeline, is not implemented in software, but on 
+FPGAs~\cite{Ord:08}.
+Finally, the Joint Institute for VLBI in Europe (JIVE) develops a new software
+correlator for e-VLBI observations, but is not capable of processing telescope
+data in real time~\cite{Kruithof:08}, even though the title of their paper suggests
+otherwise.
+
+In another paper, we compare the efficiency of five many-core
+architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
+and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
+
+
 \section{The LOFAR Telescope}
 \label{sec:overview}
 
@@ -1368,45 +1409,6 @@ Also, the prototype pulsar pipeline software successfully detected several
 known pulsars~\cite{Hessels:09}.
 
 
-\section{Related work}
-\label{sec:related-work}
-
-%LOFAR is not the only radio telescope of which the data are processed in software. In fact,
-%in the 1960s, several observatories~\cite{Bare:67,Moran:67} recorded their input on high-speed tapes
-%and processed it on IBM 360 mainframes. However, as the volume of the data increased, the mainframes were no longer capable of processing the data in an acceptable amount of time, and custom hardware had to be used instead.
-
-%Due to the massive increase in processing power since the 1960s, software processing of telescope
-%data is once again feasible. Several efforts to do so have been started. However, to the best of our knowledge,
-%LOFAR is the only system capable of processing high data rates from a large number of stations at
-%real time.
-
-The idea to implement a correlator in software has been adopted by others as
-well.
-However, the LOFAR correlator is the only system capable of processing a large
-number of inputs at high data rates in real time.
-Other systems handle only a few inputs, handle limited data rates, or do not
-run in real time.
-
-Deller et al.~\cite{Deller:07} have developed the DiFX distributed
-software correlator, which is to be deployed on a cluster of PCs.
-Due to the use of commodity hardware, both their communication and
-computational capabilities are substantially lower than those available in
-our Blue Gene/P.
-%As a result, they cannot handle the width and number of input streams that we
-%process in LOFAR.
-The real-time data processing of the Murchison Widefield Array (MWA) telescope
-is implemented partially in software.
-However, their correlator, computationally the most demanding part of the
-processing pipeline, is not implemented in software, but on 
-FPGAs~\cite{Ord:08}.
-Finally, the Joint Institute for VLBI in Europe (JIVE) develops a new software
-correlator for e-VLBI observations, but is not capable of processing telescope
-data in real time~\cite{Kruithof:08}, even though the title of their paper suggests
-otherwise.
-
-In another paper, we compare the efficiency of five many-core
-architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
-and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
 %\section{Discussion}
 
