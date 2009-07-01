@@ -294,19 +294,19 @@ More information can be found elsewhere~\cite{IBM:08}.
 
 Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
 processing power (including I/O~nodes).
-The system is built using SoC (System-on-a-Chip) technology that integrates
-all processing and networking functionality on a single die.
+%The system is built using SoC (System-on-a-Chip) technology that integrates
+%all processing and networking functionality on a single die.
 One chip contains four PowerPC~450 cores, running at a modest 850~MHz clock
 speed to reduce power consumption and increase package density.
 Each core has two Floating-Point Units (FPU) that provide support for
 operations on complex numbers.
 A core can sustain two fused multiply-adds per cycle.
 The four cores share 2~GiB of main memory.
-Although a node can run in \emph{SMP mode}, we run the application in
-\emph{virtual node mode}, where the processor and memory of a node are split
-into four independent, virtual machines.
-This simplifies programming, since this allows single-threaded processing
-on the compute cores.  % TODO: tree is shared resource; mention?
+%% Although a node can run in \emph{SMP mode}, we run the application in
+%% \emph{virtual node mode}, where the processor and memory of a node are split
+%% into four independent, virtual machines.
+%% This simplifies programming, since this allows single-threaded processing
+%% on the compute cores.  % TODO: tree is shared resource; mention?
 The compute nodes run a fast, simple, single-process kernel
 \emph{(Compute Node Kernel, CNK)},
 
@@ -323,8 +323,8 @@ Unlike the BG/L, the torus uses DMA to offload the CPUs and allows
 asynchronous communication.
 The \emph{collective network\/} is used for MPI collective operations,
 but also for external communication.
-A \emph{global interrupt network\/} provides support for fast barriers.
-Additional networks exist for initialization, diagnostics, and debugging.
+%A \emph{global interrupt network\/} provides support for fast barriers.
+Additional networks exist for fast barriers, initialization, diagnostics, and debugging.
 
 Each compute node is connected to an I/O~node via the collective network
 (see Figure~\ref{fig:pset}).
