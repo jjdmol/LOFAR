@@ -41,17 +41,11 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(APLCommon)
-lofar_add_subdirectory(RTCCommon)
-lofar_add_subdirectory(RTDBCommon)
-lofar_add_subdirectory(CUDaemons)
-lofar_add_subdirectory(CURTDBDaemons)
-lofar_add_subdirectory(PIC)
-lofar_add_subdirectory(PAC)
-lofar_add_subdirectory(CEPCU)
-lofar_add_subdirectory(MainCU)
-lofar_add_subdirectory(StationCU)
-lofar_add_subdirectory(TestCtlr)
+lofar_add_subdirectory(RSP_Protocol)
+lofar_add_subdirectory(TBB_Protocol)
+lofar_add_subdirectory(RSPDriver)
+lofar_add_subdirectory(TBBDriver)
+lofar_add_subdirectory(SHMInfoServer)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

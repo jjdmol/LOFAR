@@ -28,33 +28,30 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(APL)
+project(TBB_Protocol)
 include(LofarGeneral)
 
-## ---------------------------------------------------------------------------
-## Create directory APL in the binary include directory; it will hold symbolic
-## links to the different subcomponents of APL.
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
-  ${CMAKE_BINARY_DIR}/include/APL)
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
 
 ## ---------------------------------------------------------------------------
-## Subdirectories
+## External packages
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(APLCommon)
-lofar_add_subdirectory(RTCCommon)
-lofar_add_subdirectory(RTDBCommon)
-lofar_add_subdirectory(CUDaemons)
-lofar_add_subdirectory(CURTDBDaemons)
-lofar_add_subdirectory(PIC)
-lofar_add_subdirectory(PAC)
-lofar_add_subdirectory(CEPCU)
-lofar_add_subdirectory(MainCU)
-lofar_add_subdirectory(StationCU)
-lofar_add_subdirectory(TestCtlr)
+include(LofarFindPackage)
+
+## ---------------------------------------------------------------------------
+## Create extra symbolic link, thanks to inconsistent naming conventions!
+## ---------------------------------------------------------------------------
+#execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+#  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
+#  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(src)
