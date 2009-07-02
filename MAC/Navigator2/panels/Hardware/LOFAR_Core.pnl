@@ -11,7 +11,6 @@ PANEL,-1 -1 1075 737 N "_3DFace" 0
 }
 
 void prepareHardwareList() {
-  dynAppend(g_stationList,\"CS001\");   //////// OLD!!!! should be removed later  
   dynAppend(g_stationList,\"CS002\");  
   dynAppend(g_stationList,\"CS003\");  
   dynAppend(g_stationList,\"CS004\");  
@@ -20,7 +19,7 @@ void prepareHardwareList() {
   dynAppend(g_stationList,\"CS007\");  
   dynAppend(g_stationList,\"CS010\");   //////// OLD!!!! should be removed later  
   dynAppend(g_stationList,\"CS012\");  
-  dynAppend(g_stationList,\"CS016\");  
+  dynAppend(g_stationList,\"CS016\");  /// this is the \"new\" CS016, and is not build yet!! 
   dynAppend(g_stationList,\"CS026\");  
   dynAppend(g_stationList,\"CS027\");  
   dynAppend(g_stationList,\"CS030\");  
@@ -167,12 +166,6 @@ E E 0 1 1 0 1 E 1 0 1.021505376344086 0 0 2  0 0  "pictures/LOFAR20_Core.jpg" 13
 0
 1 45 31 "" 1
 0
-1 46 32 "" 2
-0
-1 47 32 "1" 1
-0
-1 48 32 "" 1
-0
 1 49 33 "" 2
 0
 1 50 33 "1" 1
@@ -266,10 +259,6 @@ LANG:1 6 Layer8
 "objects\\Hardware\\Station_small.pnl" 457 486 T 53 0.7424242424242424 0 0.7407407407407407 171.7121212121212 209
 1
 "$Station""CS032"
-3 32 "PANEL_REF33"
-"objects\\Hardware\\Station_small.pnl" 457 486 T 54 0.7424242424242424 0 0.7407407407407407 178.1779915092959 77.1415586739259
-1
-"$Station""CS001"
 3 33 "PANEL_REF34"
 "objects\\Hardware\\Station_small.pnl" 457 486 T 55 0.7424242424242424 0 0.7407407407407407 208.1779915092959 17.14155867392589
 1
