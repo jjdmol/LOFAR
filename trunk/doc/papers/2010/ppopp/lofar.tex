@@ -1,3 +1,5 @@
+% @@@ TODO als ruimtegebrek, stuk over de stations kan korter.
+
 \documentclass{sig-alternate}
 %\documentclass{acm_proc_article-sp}
 
@@ -95,13 +97,15 @@ physics~\cite{Bruyn:02}. The different goals and observation types require
 several different processing pipelines, however.
 
 Another novelty is the elaborate use of \emph{software\/} to process
-the telescope data in real time.
+the telescope data in real time. 
 Previous generations of telescopes depended on custom-made hardware
 because of the high data rates and processing requirements.
 However, the desire for a flexible and reconfigurable instrument with
 different processing pipelines for different observation types demands a
 software solution.
 The availability of sufficiently powerful supercomputers allows this.
+We have to perform all processing in real time,
+since the data streams simply are too large to store.
 
 \begin{figure*}
 \begin{minipage}[b]{11cm}
@@ -176,6 +180,40 @@ Section~\ref{sec:conclusions}.
 %LOFAR is the only system capable of processing high data rates from a large number of stations at
 %real time.
 
+In earlier work~\cite{Romein:06}, we presented an initial prototype
+implementation of the LOFAR processing on our previous platform, the
+Blue Gene/L.  The work presented in this paper differs in several
+important ways.  First, we have now implemented the complete I/O path
+from the LOFAR stations in the field to the Blue Gene/P, the internal
+data transpose, and finally to the storage cluster. In contrast, in~\cite{Romein:06}
+we focused only on computing, and not on I/O.
+Second, we now have a fully functional \emph{real time} processing pipeline
+for the most important standard imaging mode, and prototypes for other
+pipelines, showing the flexibility of our design.  Finally, for the
+first time, we perform a scalability analysis, proving that we can in
+fact support the requirements of the full LOFAR instrument, both in
+terms of computing and I/O, in real time.
+
+On our previous platform, the BG/L, we were dissatisfied with
+the I/O model and its performance.  This led to a joint effort to
+redesign the entire network software infrastructure, and resulted in a
+new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
+only yield better performance, but it is much more flexible, since it
+allows application code to be run on the I/O~nodes.  The standard BG/P
+software infrastructure is a major improvement over the BG/L, since it
+now incorporates several of ZOID's key ideas (e.g., that of running
+application code on the I/O~nodes).  Therefore, we do not have to use
+ZOID on the BG/P anymore.  Nevertheless, the performance of the
+collective network that we use to send LOFAR data from the I/O~nodes
+to the compute~nodes still is unsatisfactory.  We therefore developed
+our own high-performance low-overhead protocol, called FCNP.  We
+describe FCNP in~\cite{Romein:09a}, but summarize the relevant features in
+Section~\ref{sec:input-handling}.
+
+%Zoid werk op ZeptoOS, kan torus niet 
+%gebruiken op compute nodes, is essentieel voor ons (voor transpose).
+% Rob: te veel detail hier denk ik.
+
 The idea to implement a correlator in software has been adopted by
 others as well.  However, the LOFAR correlator is the only system
 capable of processing a large number of inputs at high data rates in
@@ -200,8 +238,9 @@ data in real time~\cite{Kruithof:08}, even though the title of their paper sugge
 otherwise.
 
 In another paper, we compare the efficiency of five many-core
-architectures (GPUs from Nvidia and ATI, the IBM Cell BE, the Blue Gene/P,
+architectures (GPUs from Nvidia and ATI, the Cell/B.E., the Blue Gene/P,
 and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
+
 
 
 \section{The LOFAR Telescope}
@@ -321,6 +360,16 @@ Hence, we do not discuss the pulsar modes in this paper.
 However, the presence of multiple observation modes demonstrates the
 flexibility of a \emph{software\/} solution.
 More observation modes will be implemented in the future.
+
+@@@ waarom BG/P?
+
+- een stukje over waarom we de BG/P hebben gekozen, en niet bv een cluster
+
+   - transpose (torus)
+   - uitstekende support voor complex
+   - high relative mem bandwidth
+   - low power
+
 
 
 \section{The Blue Gene/P}
@@ -792,7 +841,7 @@ to be aligned.
 Since delays can be larger than the sample period, we perform delay
 compensation in two steps.  First, we correct for integer multiples of
 the sample period by simply delaying the streams of station samples.
-This shift was already done on the I/O~node, by moving the read
+This shift is performed on the I/O~node, by moving the read
 pointer of the circular buffer (see Section~\ref{sec:input-handling}).
 
 Second, the remaining error is corrected by rotating the phase of the
