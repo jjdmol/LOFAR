@@ -28,33 +28,26 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(APL)
+project(RTCCommon)
 include(LofarGeneral)
 
-## ---------------------------------------------------------------------------
-## Create directory APL in the binary include directory; it will hold symbolic
-## links to the different subcomponents of APL.
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
-  ${CMAKE_BINARY_DIR}/include/APL)
+include(LofarAddPackage)
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common)
 
 ## ---------------------------------------------------------------------------
-## Subdirectories
+## External packages
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(APLCommon)
-lofar_add_subdirectory(RTCCommon)
-lofar_add_subdirectory(RTDBCommon)
-lofar_add_subdirectory(CUDaemons)
-lofar_add_subdirectory(CURTDBDaemons)
-lofar_add_subdirectory(PAC)
-lofar_add_subdirectory(PIC)
-lofar_add_subdirectory(CEPCU)
-lofar_add_subdirectory(MainCU)
-lofar_add_subdirectory(StationCU)
-lofar_add_subdirectory(TestCtlr)
+include(LofarFindPackage)
+lofar_find_package(Blitz REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(include/APL/RTCCommon)
+add_subdirectory(src)
+add_subdirectory(test)

@@ -7,10 +7,7 @@
 	TODO: regression tests
 */
 
-#if HAVE_CONFIG_H
-//# include "config.h"
 #include <lofar_config.h>
-#endif
 
 #include <errno.h>
 #if HAVE_SYS_TYPES_H
