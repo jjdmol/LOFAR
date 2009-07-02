@@ -167,7 +167,7 @@ fact support the requirements of the full LOFAR instrument, both in
 terms of computing and I/O, in real time. In fact, we even surpass the
 requirements.
 
-The remainder of this paper is structured as follows.
+This paper is structured as follows.
 We mention related work in Section~\ref{sec:related-work}.
 In Section~\ref{sec:overview}, we give an overview of the LOFAR telescope.
 Then, in Section~\ref{sec:BG/P}, we describe the hardware characteristics of
@@ -321,8 +321,8 @@ Since observing the sky in all frequencies and all directions at the same time
 would result in an unmanageable output data rate, the observer selects a
 limited number of directions and frequencies, called \emph{subbands}.
 
-The station data are transported to the central processing location in
-Groningen via a Wide-Area Network (WAN), using owned and leased light paths.
+The station data are transported to the central processing location 
+via a Wide-Area Network (WAN), using dedicated light paths.
 We use UDP for data transport, since we can easily tolerate some data loss.
 We do not use a reliable protocol such as TCP, because this significantly
 complicates the programming of the FPGAs, due to buffering, flow control,
@@ -412,11 +412,11 @@ operations on complex numbers.
 The compute nodes run a fast, simple, single-process kernel
 \emph{(Compute Node Kernel, CNK)},
 
-\begin{figure}[b]
-\includegraphics[width=\columnwidth]{pset.pdf}
-\caption{A pset.}
-\label{fig:pset}
-\end{figure}
+%% \begin{figure}[b]
+%% \includegraphics[width=\columnwidth]{pset.pdf}
+%% \caption{A pset.}
+%% \label{fig:pset}
+%% \end{figure}
 
 The BG/P contains several networks.
 A fast \emph{3-dimensional torus\/} connects all compute nodes and is used
@@ -428,8 +428,8 @@ but also for external communication.
 %A \emph{global interrupt network\/} provides support for fast barriers.
 Additional networks exist for fast barriers, initialization, diagnostics, and debugging.
 
-Each compute node is connected to an I/O~node via the collective network
-(see Figure~\ref{fig:pset}).
+Each compute node is connected to an I/O~node via the collective network.
+%(see Figure~\ref{fig:pset}).
 An I/O~node uses the same hardware as a compute node, but has its 10 Gb/s Ethernet
 interface connected and runs another operating system (a modified Linux kernel).
 %Since our application demands high bandwidths, our system is configured with
@@ -510,7 +510,7 @@ Both tasks are described in detail below.
 \subsection{The input section}
 \label{sec:input-handling}
 
-The FPGAs at a LOFAR station send UDP packets with sampled data over a
+The LOFAR stations send UDP packets with sampled data over a
 dedicated Wide-Area Network to a BG/P I/O~node.
 The data are received by the \emph{input section}.
 To simplify the implementation of the correlator, there is a one-to-one
@@ -687,7 +687,7 @@ Figure~\ref{fig:cn-processing}.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{round-robin.pdf}
-\caption{Round-robin processing of work over compute-node cores.}
+\caption{Round-robin work distribution.}
 \label{fig:round-robin}
 \end{figure}
 
@@ -882,7 +882,7 @@ The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
 A station cannot correct for this artefact itself, since it is only visible
 in channels, not in subbands.
-We describe how the correction factors are computed in~\cite{Romein:08}.
+%We describe how the correction factors are computed in~\cite{Romein:08}.
 
 
 \subsubsection{Finalizing the asynchronous transpose}
@@ -1469,7 +1469,7 @@ ignored in the remainder of the processing pipeline.
 
 \begin{figure}[ht]
 \includegraphics[width=\columnwidth]{all-sky-image.jpg}
-\caption{An all-sky image created with prototype LOFAR antennas.}
+\caption{An all-sky image created with LOFAR antennas.}
 \label{fig:all-sky-image}
 \end{figure}
 
