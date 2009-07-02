@@ -258,6 +258,7 @@ SdbFormat getFormat (const string& format)
   while (i < end) {
     if ((format[i] >= 'a'  &&  format[i] <= 'z')  ||
         (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
+        (format[i] >= '0'  &&  format[i] <= '9')  ||
         format[i] == '_') {
       ++i;    // part of name
     } else {
@@ -295,6 +296,7 @@ SdbFormat getFormat (const string& format)
       char sep = ' ';
       if (!((format[i] >= 'a'  &&  format[i] <= 'z')  ||
             (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
+            (format[i] >= '0'  &&  format[i] <= '9')  ||
             format[i] == '_')) {
         sep = format[i];
         i = ltrim(format, i+1, end);
