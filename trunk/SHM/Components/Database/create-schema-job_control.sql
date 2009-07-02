@@ -29,4 +29,6 @@ CREATE TABLE job_control.log (
     job_id          BIGINT                        ,
     job_ticket_no   BIGINT                        ,
     source          INET                          NOT NULL
+    -- constraints
+    PRIMARY KEY(timestamp)
 );
