@@ -419,7 +419,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 		string		versionStr;
 		string		DPEname;
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
-			if (ack.status_mask[tbb] & TBB_SUCCESS) {
+			if (ack.status_mask[tbb] == TBB_SUCCESS) {
 				// TBB board version
 				versionStr = formatString("%d.%d", ack.tpswversion[tbb] / 10, ack.tpswversion[tbb] % 10);
 				itsTBBs[tbb]->setValue(PN_TBB_SW_VERSION, GCFPVString(versionStr), 0.0, false);
@@ -454,7 +454,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 			itsTBBs[tbb]->flush();
 			
 			// set right color
-			setObjectState(getName(), itsTBBs[tbb]->getFullScope(), (ack.status_mask[tbb] & TBB_SUCCESS) ? 
+			setObjectState(getName(), itsTBBs[tbb]->getFullScope(), (ack.status_mask[tbb] == TBB_SUCCESS) ? 
 							RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 		}
 
@@ -521,7 +521,7 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 		TBBSizeAckEvent		ack(event);
 		// move the information to the database.
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
-			if (ack.status_mask[tbb] & TBB_SUCCESS) {
+			if (ack.status_mask[tbb] == TBB_SUCCESS) {
 				LOG_INFO_STR("RAMSIZE board " << tbb << ": " << ack.npages[tbb] << " pages = " << 2048.0*(double)ack.npages[tbb] << " bytes");
 				itsTBBs[tbb]->setValue(PN_TBB_RAM_SIZE, GCFPVString(byteSize(2048.0*(double)ack.npages[tbb])));
 			}
@@ -591,7 +591,7 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 		// move the information to the database.
 		LOG_DEBUG_STR("ack.status_mask=" << ack.status_mask << ", board = " << ack.board);
 		
-		if (ack.status_mask & TBB_SUCCESS) {
+		if (ack.status_mask == TBB_SUCCESS) {
 			vector<GCFPValue*>		imageVersions;
 			vector<GCFPValue*>		writeDates;
 			vector<GCFPValue*>		TPfilenames;
@@ -679,7 +679,7 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 		string		versionStr;
 		string		DPEname;
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
-			if (ack.status_mask[tbb] & TBB_SUCCESS) {
+			if (ack.status_mask[tbb] == TBB_SUCCESS) {
 				// board voltages
 				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE12, GCFPVDouble(double(ack.V12[tbb])*(2.5/192.0)), 0.0, false);
 				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE25, GCFPVDouble(double(ack.V25[tbb])*(3.3/192.0)), 0.0, false);
