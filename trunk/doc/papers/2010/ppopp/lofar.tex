@@ -1,5 +1,3 @@
-% @@@ TODO als ruimtegebrek, stuk over de stations kan korter.
-
 \documentclass{sig-alternate}
 %\documentclass{acm_proc_article-sp}
 
@@ -338,7 +336,24 @@ bad data.
 This paper focuses on the real-time, central processing of LOFAR data on
 an IBM Blue Gene/P supercomputer, and in particular on the standard-imaging
 mode.
-We filter the data, and split the subbands in narrower frequency bands called
+We chose the BG/P as the central processing platform,
+instead of, for instance, a cluster with a fast local interconnect, for
+several reasons.  First, the BG/P is a power efficient supercomputer.
+Electrical power costs form a large part of the operational costs for
+the LOFAR instrument.  At the time of purchase, the BG/P was the highest
+ranking system on the green500 list for energy
+efficient supercomputers (see www.green500.org). In addition, the BG/P has excellent hardware
+support for complex numbers, a feature that is of key
+importance for signal processing applications, but is lacking in
+general purpose architectures. 
+Moreover, the BG/P has a very high
+relative memory bandwidth. This leads to superior performance for our
+data intensive applications, compared to other platforms~\cite{Nieuwpoort:09}.
+Finally, the BG/P provides a high-speed 3D-torus network that can
+effectively implement a data-transpose that is crucial for our
+application, at the bandwidth we require (see Section~\ref{all-to-all}). 
+
+Our pipeline on the BG/P filters the data, and splits the subbands in narrower frequency bands called
 \emph{channels}, which allow for more accurate RFI removal.
 In addition, we perform phase shift and bandpass corrections.
 Finally, the signals from all stations are optionally beam-formed,
@@ -361,14 +376,6 @@ However, the presence of multiple observation modes demonstrates the
 flexibility of a \emph{software\/} solution.
 More observation modes will be implemented in the future.
 
-@@@ waarom BG/P?
-
-- een stukje over waarom we de BG/P hebben gekozen, en niet bv een cluster
-
-   - transpose (torus)
-   - uitstekende support voor complex
-   - high relative mem bandwidth
-   - low power
 
 
 
@@ -717,6 +724,7 @@ BG/P, it unnecessarily increases torus communication.
 
 
 \subsection{All-to-All data exchange}
+\label{all-to-all}
 
 The compute nodes perform several operations on the data, as shown in
 Figure~\ref{fig:cn-processing}.
@@ -790,6 +798,9 @@ table to convert 4-bit and 8-bit numbers, and an efficient assembly
 implementation to convert 16-bit numbers.
 Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
+Since the samples have an accuracy of at most 16-bit, single precision floating
+point is enough for our purposes. Future telescopes, such as
+the SKA, will likely use even less bits per sample.
 
 
 \subsubsection{The Poly-Phase Filter bank}
@@ -1161,18 +1172,22 @@ the correlations are independently computed.
 \section{Performance Evaluation}
 \label{sec:performance}
 
-Since only a small number of LOFAR stations have been constructed
-(the majority will become operational later this year), we will provide 
+Since only a small number of LOFAR stations have been constructed (the
+majority will become operational later this year), we will provide
 performance measurements with externally generated artificial data.
 We use one Blue Gene/P rack to generate UDP data, another rack for the
-correlator, and the remaining half rack to receive and dump the correlated
-data.
-The simulation is realistic, since the correlator runs exactly
-the way it would run with real station data.
+correlator, and the remaining half rack to receive and dump the
+correlated data.  The signal processing pipeline performance does not
+depend on the input data: the exact same operations are always
+performed, regardless of the data values.  The experiments thus are
+\emph{completely realistic}, since the correlator runs exactly the way it
+would run with real station data.
+
 The storage section, however, does not write the data to disk, since we do
 not have enough storage nodes available yet, but this does not influence the
 performance measurements of the correlator.
 With one rack, we can process up to 64~stations, one per I/O~node.
+% @@@ TODO change above tekst if the storage section works.
 
 \begin{table}[ht]
 \begin{center}
