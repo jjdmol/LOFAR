@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 1075 799 N "_3DFace" 0
+PANEL,-1 -1 1075 795 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -15,7 +15,7 @@ void prepareHardwareList() {
   dynAppend(g_stationList,\"Core\");
   dynAppend(g_stationList,\"RS106\");  
   dynAppend(g_stationList,\"RS208\");
-    dynAppend(g_stationList,\"RS306\");  
+  dynAppend(g_stationList,\"RS306\");  
   dynAppend(g_stationList,\"RS307\");  
   dynAppend(g_stationList,\"RS503\");  
 }
