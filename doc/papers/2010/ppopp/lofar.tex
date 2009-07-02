@@ -150,7 +150,25 @@ for communication between I/O~nodes and compute nodes, since we were not able
 to achieve the required internal input and output data rates with the standard
 network system software.
 
+In earlier work~\cite{Romein:06}, we presented an initial prototype
+implementation of the LOFAR processing on our previous platform, the
+Blue Gene/L.  The work presented in this paper differs in several
+important ways.  First, we have now implemented the complete I/O path:
+from the LOFAR stations in the field to the Blue Gene/P, the transfer
+from the IO~nodes to the compute nodes, the internal
+data transpose, and finally the transfer 
+to the storage cluster. In contrast, in~\cite{Romein:06}
+we focused only on computing, and not on I/O.
+Second, we now have a fully functional \emph{real time} processing pipeline
+for the most important standard imaging mode, and prototypes for other
+pipelines, showing the flexibility of our design.  Finally, for the
+first time, we perform a scalability analysis, proving that we can in
+fact support the requirements of the full LOFAR instrument, both in
+terms of computing and I/O, in real time. In fact, we even surpass the
+requirements.
+
 The remainder of this paper is structured as follows.
+We mention related work in Section~\ref{sec:related-work}.
 In Section~\ref{sec:overview}, we give an overview of the LOFAR telescope.
 Then, in Section~\ref{sec:BG/P}, we describe the hardware characteristics of
 the BG/P.
@@ -160,7 +178,6 @@ Next, we explain how we process the telescope data on the BG/P,
 Section~\ref{sec:performance} extensively discusses performance results.
 In Section~\ref{sec:results}, we briefly illustrate the astronomical results
 of the correlator output.
-We mention related work in Section~\ref{sec:related-work}.
 Finally, we discuss, conclude, and describe future work in
 Section~\ref{sec:conclusions}.
 
@@ -178,26 +195,13 @@ Section~\ref{sec:conclusions}.
 %LOFAR is the only system capable of processing high data rates from a large number of stations at
 %real time.
 
-In earlier work~\cite{Romein:06}, we presented an initial prototype
-implementation of the LOFAR processing on our previous platform, the
-Blue Gene/L.  The work presented in this paper differs in several
-important ways.  First, we have now implemented the complete I/O path
-from the LOFAR stations in the field to the Blue Gene/P, the internal
-data transpose, and finally to the storage cluster. In contrast, in~\cite{Romein:06}
-we focused only on computing, and not on I/O.
-Second, we now have a fully functional \emph{real time} processing pipeline
-for the most important standard imaging mode, and prototypes for other
-pipelines, showing the flexibility of our design.  Finally, for the
-first time, we perform a scalability analysis, proving that we can in
-fact support the requirements of the full LOFAR instrument, both in
-terms of computing and I/O, in real time.
-
 On our previous platform, the BG/L, we were dissatisfied with
 the I/O model and its performance.  This led to a joint effort to
 redesign the entire network software infrastructure, and resulted in a
 new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
 only yield better performance, but it is much more flexible, since it
-allows application code to be run on the I/O~nodes.  The standard BG/P
+allows application code to be run on the I/O~nodes.  
+The standard BG/P
 software infrastructure is a major improvement over the BG/L, since it
 now incorporates several of ZOID's key ideas (e.g., that of running
 application code on the I/O~nodes).  Therefore, we do not have to use
@@ -275,7 +279,7 @@ range and High-Band Antennas (HBA) for the 110--250~MHz band.
 FM radio transmissions make the in-between range unsuitable for observations.
 Figure~\ref{fig:lba-field} shows a field with LBAs. Each
 LBA consists of one dipole per polarization, while each HBA is
-organized as a tile, wherein 16 antenna elements are combined. All
+organized as a tile combining 16 antenna elements. All
 antennas are dual polarized.
 
 LOFAR's antennas are structured in a hierarchical way to limit the
@@ -288,22 +292,21 @@ computational requirements. Therefore, multiple antennas are grouped
 to form a \emph{station}.
 The signals of the receivers are combined locally, within the station, using FPGAs.
 
-Geographically, LOFAR consists of a compact core area and a number of
+Geographically, LOFAR consists of a compact core area that contains
+about 50\% of the stations, and a number of
 remote stations (See Figure~\ref{fig:map}).  The heart of LOFAR will
 be installed in the Northern part of the Netherlands.  The stations
 are roughly distributed along five log-spiral arms with a diameter of
 hundreds of kilometers. 
 %The station fields are centrally condensed,
 %following a logarithmic distribution.  
-About 50\% of the stations are
-located in the 2~km-wide central core.
 Additionally, eight to fifteen European stations will or have been built,
 extending the maximum distance to roughly 1000~km.
 The longer baselines (distance between two stations) allows observations with high angular resolution,
 but limits the Field-of-View; therefore the European stations will not be
 used for all observations.
-In the past several years we have deployed a number of prototype antennas,
-while the roll-out of the final stations is currently in progress.
+%In the past several years we have deployed a number of prototype antennas,
+The roll-out of the stations is currently in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
 A station also features a cabinet where initial processing is done, using
@@ -391,15 +394,16 @@ Below, we describe the key features of the Blue Gene/P.
 More information can be found elsewhere~\cite{IBM:08}.
 
 Our system contains 10,880 processor cores that provide 37.0 TFLOPS peak
-processing power (including I/O~nodes).
+processing power.
+% (including I/O~nodes).
 %The system is built using SoC (System-on-a-Chip) technology that integrates
 %all processing and networking functionality on a single die.
 One chip contains four PowerPC~450 cores, running at a modest 850~MHz clock
 speed to reduce power consumption and increase package density.
 Each core has two Floating-Point Units (FPU) that provide support for
 operations on complex numbers.
-A core can sustain two fused multiply-adds per cycle.
-The four cores share 2~GiB of main memory.
+%A core can sustain two fused multiply-adds per cycle.
+%The four cores share 2~GiB of main memory.
 %% Although a node can run in \emph{SMP mode}, we run the application in
 %% \emph{virtual node mode}, where the processor and memory of a node are split
 %% into four independent, virtual machines.
@@ -428,15 +432,16 @@ Each compute node is connected to an I/O~node via the collective network
 (see Figure~\ref{fig:pset}).
 An I/O~node uses the same hardware as a compute node, but has its 10 Gb/s Ethernet
 interface connected and runs another operating system (a modified Linux kernel).
-Since our application demands high bandwidths, our system is configured with
-the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
-The group of one I/O~node and the compute nodes that are connected to it,
+%Since our application demands high bandwidths, our system is configured with
+%the maximum number of 1~I/O~node per 16~compute nodes (64~cores).
+The group of one I/O~node and the compute nodes that are connected to it (16 in our case),
 is called a \emph{pset}.
 Our system has 160~psets in total, 64 per rack.
 Normally, the I/O~node is used as a black box that provides transparent
-communication from the compute nodes to external systems: all I/O-related
-system calls on the compute nodes are forwarded to a daemon that runs
-on the I/O~node and performs the real operation.
+communication from the compute nodes to external systems.
+%: all I/O-related
+%system calls on the compute nodes are forwarded to a daemon that runs
+%on the I/O~node and performs the real operation.
 In Section~\ref{sec:IONProc}, we show that it is much more
 efficient to run part of the application software on the I/O~node.
 
@@ -799,9 +804,9 @@ table to convert 4-bit and 8-bit numbers, and an efficient assembly
 implementation to convert 16-bit numbers.
 Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
-Since the samples have an accuracy of at most 16-bit, single precision floating
+Since the samples are at most 16-bit wide, single precision floating
 point is enough for our purposes. Future telescopes, such as
-the SKA, will likely use even less bits per sample.
+the SKA, will likely use even fewer bits per sample.
 
 
 \subsubsection{The Poly-Phase Filter bank}
@@ -836,7 +841,7 @@ implementation for the 256-point FFT.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=4cm]{delay.pdf}
+\includegraphics[width=3cm]{delay.pdf}
 \end{center}
 \caption{The left antenna receives the wave later.}
 \label{fig:delay}
@@ -882,14 +887,14 @@ We describe how the correction factors are computed in~\cite{Romein:08}.
 
 \subsubsection{Finalizing the asynchronous transpose}
 
-Up to this point, processing the chunks from different stations can be done
+Up to this point, processing chunks from different stations can be done
 independently, but from here on, the data from all stations are required.
-This means that the asynchronous data exchange ends here.
+Therefore, the asynchronous exchange ends here.
 
 
 \subsubsection{Beam forming}
 
-The next step, called \emph{beam forming}, is optional, and adds the samples
+The beam forming step is optional, and adds the samples
 from a group of co-located stations, so that the group forms a virtual
 ``superstation'' with more sensitivity.
 By applying an additional phase rotation (a complex multiplication), 
@@ -952,13 +957,13 @@ All other steps have a lower time complexity.
 \subsubsection{Flexibility}
 
 We support concurrent pulsar and imaging observations, even on the
-same data.  This is computationally more efficient since the
+same data.  This is more efficient since the
 computations in the shared components of the pipelines are done only
-once. Moreover, more astronomical science can now be done with a
+once. Moreover, more astronomical science can be done with a
 single observation.  Additionally, in the future these pipelines can
-mutually benefit from each other.  For example, the correlations from
-the standard imaging pipeline can be used to calibrate the station
-samples in real time in a feedback loop.
+benefit from each other.  For example, the results from
+the standard imaging pipeline can be used to calibrate the instrument
+in real time.
 
 %, so that the
 %pulsar pipeline can beam-form calibrated samples.
@@ -1192,6 +1197,7 @@ With one rack, we can process up to 64~stations, one per I/O~node.
 
 \begin{table}[ht]
 \begin{center}
+\begin{small}
 \begin{tabular}{|l|rrr|}
 \hline
 Observation mode	 & \textsf{A}	& \textsf{B}	& \textsf{C}	\\
@@ -1212,6 +1218,7 @@ available compute time	 & 16.1	     & 8.05     & 4.03     \\
 \multicolumn{1}{|r|}{per subband (s)}	 & & & \\
 \hline
 \end{tabular}
+\end{small}
 \end{center}
 \caption{Characteristics of three realistic, challenging observation modes.}
 \label{tab:observation-characteristics}
@@ -1502,7 +1509,7 @@ known pulsars~\cite{Hessels:09}.
 % + omgeving t.o.v. BG/L verbeterd
 % + het werkt!
 
-\section{Discussion, conclusions, \\ and future work}
+\section{Conclusions and future work}
 \label{sec:conclusions}
 
 In general, we are rather satisfied with the capabilities of the Blue Gene/P
@@ -1678,11 +1685,12 @@ real-time calibration, and possibly real-time RFI removal.
 
 
 \section*{Acknowledgments}
+\begin{small}
 We thank Ger van Diepen, Martin Gels, Marcel Loose, and Ruud Overeem
 for their contributions to the LOFAR software, and many other colleagues
 for their work on the LOFAR telescope.
 We also thank Kamil Iskra and Kazutomo Yoshii from Argonne National Laboratory
-for their work on the Blue Gene system software.
+for their work on the BG/P system software.
 Bruce Elmegreen, Todd Inglett, Tom Liebsch, and Andrew Taufener from IBM
 provided the support to optimally use the BG/P.
 
@@ -1692,7 +1700,7 @@ infrastructure.  Additional funding is provided by the European Union,
 European Regional Development Fund (EFRO), and by the
 ``Samenwerkingsverband Noord-Nederland,'' EZ/KOMPAS. Part of this work was
 performed in the context of the NWO STARE AstroStream project.
-
+\end{small}
 %\newpage
 
 \bibliographystyle{plain}
