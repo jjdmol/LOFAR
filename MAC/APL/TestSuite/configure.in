@@ -59,8 +59,8 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 include/Makefile
-include/TestSuite/Makefile
+include/Suite/Makefile
 src/Makefile
 Makefile
-TestSuite.spec
+Suite.spec
 )
