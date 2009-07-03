@@ -28,7 +28,7 @@
 #include "Beam.h"
 #include "Beamlet.h"
 
-#include <Suite/suite.h>
+#include <TestSuite/suite.h>
 
 #include <iostream>
 #include <blitz/array.h>

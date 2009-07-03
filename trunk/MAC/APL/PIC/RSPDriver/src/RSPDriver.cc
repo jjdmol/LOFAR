@@ -216,7 +216,7 @@ RSPDriver::RSPDriver(string name) :
 	, m_ppshandle(0)
 #endif
 {
-	LOG_INFO(Version::getInfo<RSPDriverVersion>("RSPDriver"));
+	LOG_INFO(Version::getInfo<RSP_DriverVersion>("RSPDriver"));
 
 	// first initialize the global settins
 	LOG_DEBUG("Setting up station settings");

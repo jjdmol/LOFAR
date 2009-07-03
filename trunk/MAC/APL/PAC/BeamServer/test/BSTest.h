@@ -25,7 +25,7 @@
 #ifndef BSTEST_H_
 #define BSTEST_H_
 
-#include <Suite/suite.h>
+#include <TestSuite/suite.h>
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)

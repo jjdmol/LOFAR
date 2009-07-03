@@ -25,7 +25,7 @@
 #ifndef RSPTEST_H_
 #define RSPTEST_H_
 
-#include <Suite/test.h>
+#include <TestSuite/test.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>

@@ -24,7 +24,7 @@
 #define EPATEST_H_
 
 #include <APL/BS_Protocol/BS_Protocol.ph>
-#include <Suite/test.h>
+#include <TestSuite/test.h>
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>

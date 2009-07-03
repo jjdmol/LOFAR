@@ -27,8 +27,8 @@
 #ifndef TBBTESTSUITE_H_
 #define TBBTESTSUITE_H_
 
-#include <Suite/test.h>
-#include <Suite/suite.h>
+#include <TestSuite/test.h>
+#include <TestSuite/suite.h>
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
