@@ -4,8 +4,8 @@
 # - Verify options
 rspId = tc.rspId
 
-# - Construct settings word from arg_data
-cdo_ctrl = arg_data
+# - Construct settings word from arg_data list
+cdo_ctrl = arg_data[0]
 
 
 #############################################################################
