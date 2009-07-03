@@ -32,8 +32,8 @@ lofar_add_test(tRCUCables
   ${PROJECT_SOURCE_DIR}/src/RCUCables.cc
   ${PROJECT_SOURCE_DIR}/src/CableAttenuation.cc)
 
-#lofar_add_sbin_program(EPAStub EPAStub.cc)    # requires MAC/Test/Suite
-#lofar_add_sbin_program(RSPTest RSPTest.cc)    # requires MAC/Test/Suite
+lofar_add_sbin_program(EPAStub EPAStub.cc)
+lofar_add_sbin_program(RSPTest RSPTest.cc)
 
 install(PROGRAMS
   beamtest

@@ -25,7 +25,7 @@
 #ifndef EPASTUB_H_
 #define EPASTUB_H_
 
-#include <Suite/test.h>
+#include <TestSuite/test.h>
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {

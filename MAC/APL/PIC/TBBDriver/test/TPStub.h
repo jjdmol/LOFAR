@@ -25,7 +25,7 @@
 #ifndef TPSTUB_H_
 #define TPSTUB_H_
 
-#include <Suite/test.h>
+#include <TestSuite/test.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 

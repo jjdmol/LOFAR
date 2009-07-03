@@ -28,7 +28,7 @@
 
 #include <MACIO/MACServiceInfo.h>
 
-#include <Suite/suite.h>
+#include <TestSuite/suite.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 

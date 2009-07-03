@@ -28,7 +28,7 @@
 #include "Beam.h"
 #include <APL/BS_Protocol/Pointing.h>
 
-#include <Suite/suite.h>
+#include <TestSuite/suite.h>
 
 #include <iostream>
 #include <blitz/array.h>

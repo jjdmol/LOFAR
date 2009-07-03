@@ -33,7 +33,7 @@ include(LofarGeneral)
 
 include(LofarAddPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common ApplCommon GCFTM MACIO RTCCommon RSP_Protocol)
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common ApplCommon GCFTM MACIO RTCCommon RSP_Protocol TestSuite)
 
 ## ---------------------------------------------------------------------------
 ## External packages
