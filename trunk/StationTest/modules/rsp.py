@@ -1249,7 +1249,7 @@ def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21):
   return latency
 
   
-def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
+def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21):
   """Write control field in CDO settings register
   
   Input:
@@ -1273,7 +1273,7 @@ def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
     write_mem(tc, msg, 'cdo', 'settings', [ctrl], ['rsp'], rspId, width, c_cdo_settings_ctrl_offset, bc)
 
     
-def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
+def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21):
   """Read control field in CDO settings register
   
   Input:
@@ -1284,7 +1284,7 @@ def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
   Return: void
   """
   # Read entire CDO settings register
-  read_mem(tc, msg, 'rsr', 'status', c_cdo_settings_size, ['rsp'], rspId, 'h', 1, 0)
+  read_mem(tc, msg, 'cdo', 'settings', c_cdo_settings_size, ['rsp'], rspId, 'h', 1, 0)
   # Get and report only the CTRL field
   width = 2   # ctrl field is 2 bytes wide
   msg.setOffset(c_cdo_settings_ctrl_offset)
