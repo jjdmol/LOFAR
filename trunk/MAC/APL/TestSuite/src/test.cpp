@@ -30,7 +30,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <TestSuite/test.h>
+#include <Suite/test.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
