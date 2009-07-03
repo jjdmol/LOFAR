@@ -160,7 +160,6 @@ if __name__ == "__main__":
   hwgroup.add_option( "-P", "--partition",
   			dest = "partition",
 			type = "string",
-			default = "R00-M0-N00-256",
   			help = "name of the BlueGene partition [%default]" )
   hwgroup.add_option( "-D", "--storagenode",
   			dest = "storagenode",
@@ -195,7 +194,7 @@ if __name__ == "__main__":
   dirgroup.add_option( "--logdir",
   			dest = "logdir",
 			default = Locations.files["logdir"],
-			help = "log directory [%default]" )
+			help = "log directory (syntax: [host:]path) [%default]" )
   dirgroup.add_option( "--rundir",
   			dest = "rundir",
 			default = Locations.files["rundir"],
@@ -246,8 +245,15 @@ if __name__ == "__main__":
       error("ERROR: Cannot read parset file: %s" % (e,))
 
   # override parset with command-line values
-  if options.partition is not None:
-    parset.setPartition( options.partition )
+  if options.partition is None:
+    options.partition = parset.distillPartition()
+
+    if options.partition:
+      info( "Distilled partition %s from parset." % (options.partition,) )
+    else:
+      warning( "No BlueGene partition selected on command line or in parset." )
+
+  parset.setPartition( options.partition )
 
   # set storage nodes
   if options.storagenode is not None:
@@ -261,33 +267,42 @@ if __name__ == "__main__":
   Locations.nodes["logserver"] = options.logserver
 
   # set stations
-  if options.stations is not None:
-    # join multiple station options with + to let them be parsed together
-    stationList = Stations.parse( "+".join(options.stations) )
+  if options.stations is None:
+    options.stations = parset.distillStations()
 
-    if options.tcpinput:
-      # turn all inputs into tcp:*
-      def tcpify( input ):
-        if input.startswith("tcp:") or input.startswith("file:"):
-          return input
-        elif input.startswith("udp:"):
-          return "tcp:"+input[4:]
-        else:
-          return "tcp:"+input
+    if options.stations:
+      info( "Distilled stations %s from parset." % (",".join(options.stations),) )
+    else:
+      warning( "No stations or inputs selected on command line or in parset. " )
 
-      for s in stationList:
-        s.inputs = map( tcpify, s.inputs )
+  # join multiple station options with + to let them be parsed together
+  stationList = Stations.parse( "+".join(options.stations) )
 
-    if options.nullinput:
-      # turn all inputs into null:
-      for s in stationList:
-        s.inputs = ["null:"] * len(s.inputs)
+  if options.tcpinput:
+    # turn all inputs into tcp:*
+    def tcpify( input ):
+      if input.startswith("tcp:") or input.startswith("file:"):
+        return input
+      elif input.startswith("udp:"):
+        return "tcp:"+input[4:]
+      else:
+        return "tcp:"+input
 
-    parset.setStations( stationList )
+    for s in stationList:
+      s.inputs = map( tcpify, s.inputs )
 
+  if options.nullinput:
+    # turn all inputs into null:
+    for s in stationList:
+      s.inputs = ["null:"] * len(s.inputs)
+
+  parset.setStations( stationList )
+
+  # set runtime
   parset.setStartRunTime( options.starttime, options.runtime )
   info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
 
+  # parse specific parset values from the command line
   if options.option is not None:  
     for opt in options.option: 
       try:
@@ -295,7 +310,7 @@ if __name__ == "__main__":
 
         parset[k] = v
       except ValueError,e:
-        error("ERROR: Cannot parse option %s: %s" % (opt,e,))
+        error("Cannot parse option %s: %s" % (opt,e,))
 
   # reserve an observation id
   try:
@@ -311,12 +326,13 @@ if __name__ == "__main__":
     Locations.setFilename( opt.dest, getattr( options, opt.dest ) )
   Locations.resolveAllPaths( parset ) 
 
-  # create log directory if it does not exist
-  if not rexists(Locations.files["logdir"]):
-    warning( "Creating log directory %s" % ( Locations.files["logdir"], ) )
+  # create log and directory if it does not exist
+  for d in ["logdir","rundir"]:
+    if not rexists(Locations.files[d]):
+      warning( "Creating %s directory %s" % ( d, Locations.files[d], ) )
 
-    if not DRYRUN:
-      rmkdir( Locations.files["logdir"] )
+      if not DRYRUN:
+        rmkdir( Locations.files[d] )
 
   # run the observation
   runObservation( parset, not options.nocnproc, not options.noionproc, not options.nostorage )

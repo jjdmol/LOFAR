@@ -134,7 +134,7 @@ def defineStations( s ):
     "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
     "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
     "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.22', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
   } )
 
   # Simulated stations for experimentation.
@@ -146,13 +146,15 @@ def defineStations( s ):
      # Rack R00
      ip = "10.170.0.%s" % (suffix,)
 
-     # sXX_1: 1 full station (1 RSP board), starting from 10.170.0.XX, input received from station
+     # sXX_1, sXX: 1 full station (1 RSP board), starting from 10.170.0.XX, input received from station
      inputs = ["0.0.0.0:4346"]
      s["s%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
+     s["s%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
-     # SXX_1: 1 full station (4 RSP boards), starting from 10.170.0.XX, input received from station
+     # SXX_1, SXX: 1 full station (4 RSP boards), starting from 10.170.0.XX, input received from station
      inputs = ["0.0.0.0:%s" % (port,) for port in [4346,4347,4348,4349]]
      s["S%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
+     s["S%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
      # Rack R01
      ip = "10.170.1.%s" % (suffix,)
@@ -176,6 +178,8 @@ def defineStations( s ):
   # Special stations, one-time stations, etc.
   s.update( {
    "Pulsar": [Station('Pulsar', '10.170.0.30', ['tcp:0.0.0.0:4346'])],
+   "twoears":  [Station('CS302HBA0', '10.170.0.21', ['0.0.0.0:4346']),
+                Station('CS302HBA1', '10.170.0.22', ['0.0.0.0:4347'])],
   } )
 
   # Standard configurations
