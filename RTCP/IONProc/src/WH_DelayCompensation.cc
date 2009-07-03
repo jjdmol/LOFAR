@@ -181,6 +181,8 @@ namespace LOFAR
       }
       
       delete converter;
+
+      LOG_DEBUG( "delay compensation thread stopped." );
     }
 
     void WH_DelayCompensation::getNextDelays( Matrix<Direction> &directions, Matrix<double> &delays )
@@ -250,7 +252,7 @@ namespace LOFAR
 	  const double angle2 = beamDir[1] + pencilCoord[1];
 
 	  // store beam
-          itsBeamDirections[beam*itsNrBeams + pencil] = Direction(angle1, angle2, dirType);
+          itsBeamDirections[beam*itsNrPencilBeams + pencil] = Direction(angle1, angle2, dirType);
 	}
       }
     }
