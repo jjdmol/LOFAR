@@ -44,6 +44,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 lofar_add_subdirectory(APLCommon)
 lofar_add_subdirectory(RTCCommon)
 lofar_add_subdirectory(RTDBCommon)
+lofar_add_subdirectory(TestSuite)
 lofar_add_subdirectory(CUDaemons)
 lofar_add_subdirectory(CURTDBDaemons)
 lofar_add_subdirectory(PIC)

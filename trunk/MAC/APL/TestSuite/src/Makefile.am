@@ -1,4 +1,4 @@
-pkgincludedir = $(includedir)/Suite
+#pkgincludedir = $(includedir)/Suite
 
 NOINSTHDRS = 
 
@@ -8,7 +8,7 @@ pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
 DOCHDRS	=	$(pkginclude_HEADERS)
       
-lib_LTLIBRARIES         = libsuite.la
+lib_LTLIBRARIES         = libtestsuite.la
 
 libaplcommon_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \
@@ -17,7 +17,7 @@ libaplcommon_la_CPPFLAGS= \
 	-fmessage-length=0 \
         -fdiagnostics-show-location=once
 
-libsuite_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
+libtestsuite_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
         suite.cpp \
         test.cpp
 
@@ -28,11 +28,11 @@ EXTRA_DIST =
 clean-local:
 	rm -f *.ph
 
-bin_PROGRAMS = versionsuite
+bin_PROGRAMS = versiontestsuite
 
-versionsuite_SOURCES      = versionsuite.cc
-versionsuite_LDADD        = libsuite.la
-versionsuite_DEPENDENCIES = libsuite.la $(LOFAR_DEPEND)
+versiontestsuite_SOURCES      = versiontestsuite.cc
+versiontestsuite_LDADD        = libtestsuite.la
+versiontestsuite_DEPENDENCIES = libtestsuite.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
