@@ -20,7 +20,6 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  Package__Version.h
   GCF_Control.h
   GCF_Scheduler.h
   GCF_DevicePort.h

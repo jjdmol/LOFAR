@@ -1,6 +1,5 @@
 # List of header files that will be installed.
 set (inst_HEADERS
-  Package__Version.h
   FileDescriptorBasedStream.h
   FileStream.h
   NullStream.h
