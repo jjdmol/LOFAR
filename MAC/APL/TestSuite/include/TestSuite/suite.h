@@ -33,7 +33,7 @@
 #ifndef SUITE_H
 #define SUITE_H
 
-#include <Suite/test.h>   // includes <string>, <iosfwd>
+#include <TestSuite/test.h>   // includes <string>, <iosfwd>
 #include <Common/lofar_vector.h>
 
 using std::vector;

@@ -62,7 +62,7 @@ lofar_GENERAL
 lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
-dnl lofar_INTERNAL(MAC/Test/Suite, Suite, , 1, Suite/suite.h,,)
+dnl lofar_INTERNAL(MAC/APL/TestSuite, TestSuite, , 1, TestSuite/suite.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, , 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 lofar_INTERNAL(MAC/APL/PAC/CAL_Protocol, CAL_Protocol, , 1, APL/CAL_Protocol/CAL_Protocol.ph,,)
 lofar_INTERNAL(MAC/APL/PAC/BS_Protocol, BS_Protocol, , 1, APL/BS_Protocol/BS_Protocol.ph,,)
