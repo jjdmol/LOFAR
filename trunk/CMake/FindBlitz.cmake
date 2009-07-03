@@ -1,4 +1,4 @@
-# $Id$
+# $Id: FindBLITZ.cmake 13414 2009-06-16 22:15:37Z loose $
 #
 # Copyright (C) 2008-2009
 # ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,29 +18,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Try to find libpqxx: the official C++ client API for PostgreSQL
+# Try to find Blitz: a C++ template class library for scientific computing
 #
 # This will define:
 #  
-#  PQXX_FOUND        - system has PQXX
-#  PQXX_INCLUDE_DIR  - the PQXX include directory (cached)
-#  PQXX_INCLUDE_DIRS - the PQXX include directories 
-#                      (identical to PQXX_INCLUDE_DIR)
-#  PQXX_LIBRARY      - the PQXX library (cached)
-#  PQXX_LIBRARIES    - the PQXX libraries
-#                      (identical to PQXX_LIBRARY)
+#  BLITZ_FOUND        - system has Blitz
+#  BLITZ_INCLUDE_DIR  - the Blitz include directory (cached)
+#  BLITZ_INCLUDE_DIRS - the Blitz include directories 
+#                       (identical to BLITZ_INCLUDE_DIR)
+#  BLITZ_LIBRARY      - the Blitz library (cached)
+#  BLITZ_LIBRARIES    - the Blitz libraries
+#                       (identical to BLITZ_LIBRARY)
 
-if(NOT PQXX_FOUND)
+if(NOT BLITZ_FOUND)
 
-  find_path(PQXX_INCLUDE_DIR pqxx/pqxx)
-  find_library(PQXX_LIBRARY pqxx)
-  find_library(PQ_LIBRARY pq)
+  find_path(BLITZ_INCLUDE_DIR blitz/blitz.h)
+  find_library(BLITZ_LIBRARY blitz)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(PQXX DEFAULT_MSG
-    PQXX_LIBRARY PQ_LIBRARY PQXX_INCLUDE_DIR)
+  find_package_handle_standard_args(Blitz DEFAULT_MSG
+    BLITZ_LIBRARY BLITZ_INCLUDE_DIR)
 
-  set(PQXX_INCLUDE_DIRS ${PQXX_INCLUDE_DIR})
-  set(PQXX_LIBRARIES ${PQXX_LIBRARY} ${PQ_LIBRARY})
+  set(BLITZ_INCLUDE_DIRS ${BLITZ_INCLUDE_DIR})
+  set(BLITZ_LIBRARIES ${BLITZ_LIBRARY})
 
-endif(NOT PQXX_FOUND)
+endif(NOT BLITZ_FOUND)
