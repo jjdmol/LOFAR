@@ -20,7 +20,6 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-  Package__Version.h
   gnuplot_i.h
   MarshallBlitz.h
   Observer.h
