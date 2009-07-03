@@ -73,7 +73,7 @@
      inkscape:cx="197.20346"
      inkscape:cy="94.554645"
      inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-y="49"
      inkscape:current-layer="g11" /><g
      id="g11"
      inkscape:groupmode="layer"
@@ -128,6 +128,7 @@
      id="tspan683">0</tspan></text>
 
 
+
 </g><g
    id="g685"><text
    transform="matrix(1,0,0,-1,89,236.1)"
@@ -137,6 +138,7 @@
      y="0"
      sodipodi:role="line"
      id="tspan689">50</tspan></text>
+
 
 
 </g><g
@@ -150,6 +152,7 @@
      id="tspan695">100</tspan></text>
 
 
+
 </g><g
    id="g697"><text
    transform="matrix(1,0,0,-1,84.5,269.4)"
@@ -159,6 +162,7 @@
      y="0"
      sodipodi:role="line"
      id="tspan701">150</tspan></text>
+
 
 
 </g><g
@@ -172,6 +176,7 @@
      id="tspan707">200</tspan></text>
 
 
+
 </g><g
    id="g709"><text
    transform="matrix(1,0,0,-1,84.5,302.7)"
@@ -181,6 +186,7 @@
      y="0"
      sodipodi:role="line"
      id="tspan713">250</tspan></text>
+
 
 
 </g><g
@@ -194,6 +200,7 @@
      id="tspan719">300</tspan></text>
 
 
+
 </g><g
    id="g721"><text
    transform="matrix(1,0,0,-1,84.5,336.1)"
@@ -203,6 +210,7 @@
      y="0"
      sodipodi:role="line"
      id="tspan725">350</tspan></text>
+
 
 
 </g><g
@@ -216,6 +224,7 @@
      id="tspan731">400</tspan></text>
 
 
+
 </g><g
    id="g733"><text
    transform="matrix(1,0,0,-1,84.5,369.4)"
@@ -225,6 +234,7 @@
      y="0"
      sodipodi:role="line"
      id="tspan737">450</tspan></text>
+
 
 
 </g><path
@@ -371,6 +381,7 @@
      y="748.38745" /></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
@@ -390,6 +401,7 @@
      style="text-align:center;text-anchor:middle">CPU</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
@@ -401,6 +413,7 @@
      id="tspan4255"
      x="135.25229"
      y="-208.5316">BG/P</tspan></text>
+
 
 
 <text
@@ -422,6 +435,7 @@
      style="text-align:center;text-anchor:middle">GPU</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
@@ -441,6 +455,7 @@
      style="text-align:center;text-anchor:middle">GPU</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
@@ -452,6 +467,7 @@
      id="tspan4275"
      x="259.98663"
      y="-208.59705">Cell/B.E.</tspan></text>
+
 
 
 <text
@@ -473,6 +489,7 @@
      style="text-align:center;text-anchor:middle">(full blade)</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial"
@@ -483,7 +500,8 @@
      sodipodi:role="line"
      id="tspan4283"
      x="206.99222"
-     y="-359.42169">no communication</tspan></text>
+     y="-359.42169">no data transfers</tspan></text>
+
 
 
 <text
@@ -496,7 +514,8 @@
      sodipodi:role="line"
      id="tspan4287"
      x="208.90379"
-     y="-348.16208">with communication</tspan></text>
+     y="-348.16208">with data transfers</tspan></text>
+
 
 
 <text
@@ -511,6 +530,7 @@
      x="254.78238"
      y="77.734238"
      style="font-size:9px">performance (gflops)</tspan></text>
+
 
 
 <text
@@ -528,6 +548,7 @@
    id="tspan4482">for that architecture</tspan></tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -541,6 +562,7 @@
      y="-241.75894"
      id="tspan4488"
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">67%</tspan></text>
+
 
 
 <text
@@ -558,6 +580,7 @@
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">96%</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -571,6 +594,7 @@
      y="-360.34775"
      id="tspan4500"
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">34%</tspan></text>
+
 
 
 <text
@@ -588,6 +612,7 @@
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">14%</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -601,6 +626,7 @@
      y="-323.60812"
      id="tspan4512"
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">31%</tspan></text>
+
 
 
 <text
@@ -618,6 +644,7 @@
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">26%</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -631,6 +658,7 @@
      y="-291.51932"
      id="tspan4524"
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">97%</tspan></text>
+
 
 
 <text
@@ -648,6 +676,7 @@
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">92%</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -663,6 +692,7 @@
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">96%</tspan></text>
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial;-inkscape-font-specification:Arial Bold"
@@ -676,6 +706,7 @@
      y="-348.68823"
      id="tspan4542"
      style="font-size:8px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial Bold">91%</tspan></text>
+
 
 
 </g></svg>

@@ -262,6 +262,7 @@ antenna's with a maximum distance of 100 km will
 be built. Data transport requirements are in the range of many
 Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
 
+\longversion{
 LOFAR will enable exciting new science cases.  First, we expect to see
 the \emph{Epoch of Reionization\/} (EoR), the time that the first star
 galaxies and quasars were formed. Second, LOFAR offers a unique
@@ -277,6 +278,7 @@ capable of observing the so far unexplored radio waves emitted by
 \emph{cosmic magnetic fields}.  For a more extensive description of
 the astronomical aspects of the LOFAR system, see De Bruyn
 et.~al.~\cite{Bruyn:02}.
+}
 
 A global overview of the LOFAR processing is given in
 Figure~\ref{fig:lofar-overview}. The thickness of the lines indicates
@@ -451,7 +453,7 @@ we discuss the architectures in more detail, and end the section with
 a summary of the most important similarities and differences for signal processing applications.
 
 
-\noindent \\ \emph{General Purpose multi-core CPU (Intel Core i7)}
+\noindent \\ \emph{General Purpose multi-core CPUs (Intel Core i7)}
 
 \noindent As a reference, we implemented the correlator on a multi-core
 general-purpose architecture, in this case an Intel core~i7.  The
@@ -475,7 +477,7 @@ The supercomputer also has excellent I/O capabilities, there are five
 specialized networks for communication.
 
 
-\noindent \\ \emph{ATI GPU}
+\noindent \\ \emph{ATI GPUs}
 
 \noindent The most high-end GPU provided by ATI (recently acquired by AMD) is
 the 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total, 
@@ -489,7 +491,7 @@ cached by the texture cache or not.
 
 
 
-\noindent \\ \emph{NVIDIA GPU}
+\noindent \\ \emph{NVIDIA GPUs}
 
 \noindent NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single precision
 and 30 double precision FPUs~\cite{cuda-manual}. The GTX~280 uses a two-level hierarchy to group cores.
@@ -767,18 +769,11 @@ within a row or column in the triangle still need the same samples.
 In addition to registers, caches can thus also be used to increase
 data reuse. 
 
-It is important to realize that the
-correlator itself is \emph{trivially parallel}, since the tens of thousands of
-frequency channels that LOFAR uses can be processed independently.  This allows us to
-efficiently exploit many-core hardware.
+%It is important to realize that the
+%correlator itself is \emph{trivially parallel}, since the tens of thousands of
+%frequency channels that LOFAR uses can be processed independently.  This allows us to
+%efficiently exploit many-core hardware.
 
-We will now describe the implementation of the correlator on
-the different architectures. 
-We evaluate the performance in detail. For comparison reasons, we use the performance
-\emph{per chip} for each architecture.
-We choose 64 as the number of receivers (each consisting of hundreds of antennas), since
-that is a realistic number for LOFAR.  Future instruments will likely
-have even more receivers. The performance results are shown in Figure~\ref{performance-graph}.
 
 \begin{figure}[t]
 \begin{center}
@@ -792,35 +787,39 @@ have even more receivers. The performance results are shown in Figure~\ref{perfo
 \subsection{Architecture-specific optimizations}
 \label{sec:architecture-optimizations}
 
-\subsubsection{Intel CPUs}
-@@@
-A problem with SSE4 is the
-limited support for shuffling data within vector registers. This is unlike the
-Cell/B.E. and ATI GPUs, that can shuffle values in all possible combinations.
-Also, the number of vector registers is small (sixteen four-word
-registers).  Therefore, the is not much opportunity to reuse data in
-registers; reuse has to come from the L1~data cache. 
-% Consequently,
-%the correlator uses a small tile size.
-% ROB: not explained yet
-@@@
+We will now describe the implementation of the correlator on
+the different architectures. 
+We evaluate the performance in detail. For comparison reasons, we use the performance
+\emph{per chip} for each architecture.
+We choose 64 as the number of receivers (each consisting of hundreds of antennas), since
+that is a realistic number for LOFAR.  Future instruments will likely
+have even more receivers. The performance results are shown in Figure~\ref{performance-graph}.
 
-We use the SSE4 instruction set to exploit vector parallelism.  Due to
-the limited shuffle instructions, computing the correlations of the
-four polarizations within a vector is inefficient. We achieve only a
-speedup of a factor of 2.8 compared to a version without SSE4.  We
-found that, unlike on the other platforms, computing four samples with
-subsequent time stamps in a vector works better.  The use of SSE4
-improves the performance by a factor of 3.6 in this case.  In
-addition, we use multiple threads to utilize all four cores.  To
-benefit from hyperthreading, we need twice as many threads as cores.  
-Hyperthreading increases performance by 6\%.  The most efficient
-version uses a tile size of $2 \times 2$.  Larger tile sizes are inefficient
-due to the small number of SSE4 registers. 
+\subsubsection{Intel CPUs}
+
+We use the SSE4 instruction set to exploit vector parallelism.  
+Unlike the Cell/B.E. and ATI GPUs, a
+problem with SSE4 is the limited support for shuffling data within
+vector registers.  Computing the
+correlations of the four polarizations within a vector is
+inefficient. We achieve only a speedup of a factor of 2.8 compared to
+a version without SSE4.  We found that, unlike on the other platforms,
+computing four samples with subsequent time stamps in a vector works
+better.  The use of SSE4 improves the performance by a factor of 3.6
+in this case.  In addition, we use multiple threads to utilize all
+four cores.  To benefit from hyperthreading, we need twice as many
+threads as cores.  Hyperthreading increases performance by 6\%.  Also,
+the number of vector registers is small (16 four-word registers).
+Therefore, the is not much opportunity to reuse data in registers,
+limiting the tile size to $2 \times 2$; reuse has to come from the
+L1~data cache.
+
+
 
 \subsubsection{The BG/P supercomputer}
 
-@@@
+The LOFAR production correlator is implemented on the Blue Gene/P platform.
+We use it as the reference for performance comparisons.
 We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
 The BG/P performs \emph{all} floating point operations in double
@@ -831,53 +830,22 @@ simultaneously. Although this is the same amount as on the general purpose
 Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
+Nevertheless, we have to use the same small $2 \times 2$ tile size.
 In contrast to all other architectures we evaluate, the problem is compute
 bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
 operation, which is 3--10 times higher than for the other architectures.
-@@@
 
-
-The LOFAR production correlator is implemented on the Blue Gene/P platform.
-We use it as the reference for performance comparisons.
-The (assembly) code hides load and
-instruction latencies, issues concurrent floating point, integer, and
-load/store instructions, and uses the L2 prefetch buffers in the most
-optimal way. 
-Like on the Intel CPU, we have to use a cell size of $2 \times 2$ due to
-the small number of registers.
-The performance we achieve with this version is 13.1 gflops per chip,
-96\% of the theoretical peak performance. 
-The problem is compute bound, and not I/O bound, thanks to the
-high memory bandwidth per flop.
-%For more information, we refer to~\cite{sc09}.
 
 \subsubsection{ATI GPUs}
 
-@@@
-The ATI architecture has several important
-drawbacks for data-intensive applications.  First, the
-host-to-device bandwidth is too low. In practice, the achieved
-PCI-express bandwidth is far from the theoretical limit. The achieved
-bandwidth is not enough to keep all cores busy.  Second, we found that
-overlapping communication with computation by performing asynchronous
-data transfers between the host and the device has a large impact on
-kernel performance. We observed kernel slowdowns of \emph{a factor of
-three} due to transfers in the background.  Third, the architecture
-does not provide random write access to device memory, but only to
-\emph{host} memory. However, for our application which is mostly
-read-performance bound, this does not have a large impact.
-@@@
 
 ATI offers two separate programming models, at different abstraction
 levels.  The low-level programming model is called the ``Compute
 Abstraction Layer'' (CAL).  CAL provides communication primitives and
 an assembly language, allowing fine-tuning of device
-performance. For high-level programming, ATI adopted \emph{Brook},
-which was originally developed at Stanford~\cite{brook}. ATI's
-extended version is called \emph{Brook+}~\cite{amd-manual}.  We
+performance. For high-level programming, ATI provides Brook+~\cite{amd-manual}.  We
 implemented the correlator both with Brook+ and with CAL.
-
-With both Brook+ and CAL, the programmer has to do the vectorization,
+In both cases, the programmer has to do the vectorization,
 unlike with NVIDIA GPUs.  CAL provides a feature called
 \emph{swizzling}, which is used to select parts of vector registers in
 arithmetic operations.  We found this improves readability of the code
@@ -886,69 +854,54 @@ programming tools still are insufficient. The high-level Brook+ model does
 not achieve acceptable performance for our application. The low-level
 CAL model does, but it is difficult to use.
 
-The architecture also does not provide random write access to device
+The ATI architecture has several important
+drawbacks for data-intensive applications.  First, the
+host-to-device bandwidth is a bottleneck.  Second, we found that
+overlapping communication with computation by performing asynchronous
+data transfers between the host and the device has a large impact on
+kernel performance. We observed kernel slowdowns of more than \emph{a factor of
+two} due to transfers in the background. This can clearly be seen in Figure~\ref{performance-graph}.
+Third, the architecture also does not provide random write access to device
 memory. The kernel output can be written to at most 8 output registers
 (each 4 floats wide).  This effectively limits the
 tile size to $2\times2$.  Random write access to \emph{host} memory is
 provided.  The correlator reduces the data by a large amount, and the
 results are never reused by the kernel. Therefore, they can be
 directly streamed to host memory.
-
 The best performing implementation uses a tile size of 4x3, thanks to
-the large number of registers.  The kernel itself achieves 297 gflops,
-which is 25\% of the theoretical peak performance. The performance is limited by
-the device memory bandwidth.
-
-If we also take the host-to-device transfers into account, performance
-becomes much worse.  We found that the host-to-device throughput is
-only 4.62 GB/s in practice, although the theoretical PCI-e bus
-bandwidth is 8 GB/s.  The transfer can be done asynchronously,
-overlapping the computation with host-to-device communication.
-However, we discovered that the performance of the compute kernel
-decreases significantly if transfers are performed concurrently.
+the large number of registers.  
 Due to the low I/O performance, we achieve only 14\% of the theoretical peak.
 
 
 \subsubsection{NVIDIA GPUs}
 
-@@@
-On both GPU archtectures, it is possible to synchronize the threads within a
-multiprocessor.  With our application, we exploit this to increase the
-cache hit ratio. On NVIDIA hardware, this improves performance considerably.  When
+NVIDIA's programming model is called Cuda~\cite{cuda-manual}.
+Cuda is relatively high-level, and achieves good performance.
+An advantage of NVIDIA hardware, in contrast to ATI, is that the application does not have to do 
+vectorization. This is thanks to the fact that all cores have their own address generation units. 
+All data parallelism is expressed by using threads.
+When
 accessing device memory, it is important to make sure that
 simultaneous memory accesses by different threads are \emph{coalesced}
 into a single memory transaction.  In contrast to ATI hardware, NVIDIA
 GPUs support random write access to device memory. This allows a
 programming model that is much closer to traditional models, greatly
-simplifying software development.  The NVIDIA GPUs suffer from a
-similar problem as the ATI GPUs: the host-to-device bandwidth is
-equally low.
-@@@
-
-NVIDIA's programming model is called Cuda~\cite{cuda-manual}.
-Cuda is relatively high-level, and achieves good performance.
-However, the programmer still has to think about many details such as
-memory coalescing, the texture cache, etc.
-An advantage of NVIDIA hardware and Cuda is that the application does not have to do 
-vectorization. This is thanks to the fact that all cores have their own address generation units. 
-All data parallelism is expressed by using threads.
-
-Since random write access to
-device memory is supported (unlike with the ATI hardware), we can
-simply store the output correlations to device memory.  We use the
-texture cache to speed-up access to the sample data. We do not use it for the
-output data, since that is written only once, and never read back by the kernel. 
+simplifying software development.
+We use the
+texture cache to speed-up access to the sample data. 
 With Cuda, threads
 within a thread block can be synchronized.  We exploit this feature to let
 the threads that access the same samples run in lock step.  This way,
 we pay a small synchronization overhead, but we can increase the cache hit
 ratio significantly.  We found that this optimization improved performance by a factor of 2.
 
+\longversion{
 We also investigated the use of the per-multiprocessor shared memory as an
 application-managed cache.  Others report good results with this
 approach~\cite{gpu-cache}.  However, we found that, for our
 application, the use of shared memory only led to performance
 degradation.
+}
 
 The best performing
 implementation uses a tile size of 3x2.
@@ -956,28 +909,25 @@ The optimal tile size is influenced by the way the available registers are used.
 The register file is a shared resource. A smaller tile size means less register usage, 
 which allows the use of more concurrent threads, hiding load delays.
 On NVIDIA hardware, we found that the using a relatively small tile size and many threads increases performance.
-
 The kernel itself, without host-to-device communication achieves 31\%
 of the theoretical peak performance.  If we include communication, the
 performance drops to 26\% of the peak. Just like with the ATI
 hardware, this is caused by the low PCI-e bandwidth.  With NVIDIA
-hardware and our data-intensive kernel, we do see significant
-performance gains by using asynchronous I/O.
+hardware we do see significant performance gains by using asynchronous I/O.
 
 
 \subsubsection{The Cell Broadband Engine}
 
 The basic \mbox{Cell/B.E.} programming is based on multi-threading:
-the PPE spawns threads that execute asynchronously on SPEs.
-The SPEs can
-communicate with other SPEs and the PPE, using mechanisms like signals and mailboxes
-for synchronization and small amounts of data, or DMA transfers for
-larger data.  With the \mbox{Cell/B.E.} it is important to exploit all levels of parallelism.
-Applications deal with task and data parallelism across multiple SPEs, vector parallelism
-inside the SPEs, and double or triple-buffering for DMA
-transfers~\cite{cell}.  The \mbox{Cell/B.E.} can be
-programmed in C or C++, while using intrinsics to exploit vector
-parallelism.
+the PPE spawns threads that execute asynchronously on SPEs.  With the
+\mbox{Cell/B.E.} it is important to exploit all levels of parallelism.
+Applications deal with task and data parallelism across multiple SPEs,
+vector parallelism inside the SPEs, and double or triple-buffering for
+DMA transfers~\cite{cell}.  Acceptable performance can be achieved by
+programming the \mbox{Cell/B.E.}  in C or C++, while using intrinsics
+to manually express vector parallelism.  Thus, the programmer
+specifies which instructions have to be used, but can typically leave
+the instruction scheduling and register allocation to the compiler.
 
 The large number of registers allows a big tile size of 
 $4\times3$, leading to a lot of data reuse.
@@ -985,9 +935,9 @@ We exploit the vector parallelism of the \mbox{Cell/B.E.} by computing the four
 polarization combinations in parallel.  We found that this performs
 better than vectorizing over the integration time.  This is thanks to the \mbox{Cell/B.E.}'s
 excellent support for shuffling data around in the vector registers.
-The shuffle instruction is executed
-in the odd pipeline, while the arithmetic is executed in the even
-pipeline, allowing them to overlap.
+%The shuffle instruction is executed
+%in the odd pipeline, while the arithmetic is executed in the even
+%pipeline, allowing them to overlap.
 
 A distinctive property of the architecture is that cache transfers are
 explicitly managed by the application, using DMA. This is unlike other 
@@ -999,14 +949,11 @@ Because of this, we have to load and store the correlations to main
 memory several times, since the sub-results have to
 be accumulated.  
 We overlap communication with computation, by using multiple buffers.
-For the sample data we use double buffering.
-Since the correlations are both read and written, we use triple buffering in this case.
 Thanks to the explicit cache,
 the correlator implementation fetches each sample from main memory
 \emph{only exactly once}. 
 Although issuing explicit DMA commands complicates programming,
-for our application this is not problematic.
-
+we found that this is not problematic for signal processing applications.
 Due to the high
 memory bandwidth and the ability to reuse data, we achieve 92\% of the peak
 performance on one chip.  If we use both chips in the cell blade, we still achieve
@@ -1016,7 +963,7 @@ that of the BG/P, we still achieve excellent performance, thanks to
 the high data reuse factor.
 
 
-\section{Comparison and Evaluation}
+\subsection{Comparison and Evaluation}
 \label{sec:perf-compare}
 
 \begin{table*}[t]
@@ -1054,17 +1001,13 @@ performance. For the GPUs, it is possible to use more than one chip as
 well, for instance with the ATI 4870x2 device. However, we found that this does not help, since the
 performance is already limited by the low PCI-e throughput, and the
 chips have to share this resource.
-The graph indeed shows that the
-host-to-device I/O has a large impact on the GPU performance, even when using one chip.  With
-the \mbox{Cell/B.E.}, the I/O (from main memory to the Local Store) only has a very small impact.
-
 In Table~\ref{architecture-results-table} we summarize the
 architectural strengths and weaknesses that we identified.  Although
 we focus on the correlator application in this paper, the
 results are applicable to signal processing applications in
 general.
 
-
+\longversion{
 \section{Programmability of the platforms}
 
 The performance gap between assembly and a high-level programming language 
@@ -1089,6 +1032,7 @@ should be kept in registers. With ATI hardware, this is different.  We
 found that the high-level Brook+ model does not achieve acceptable
 performance compared to hand-written CAL code.  Manually written assembly 
 is more than three times faster. Also, the Brook+ documentation is insufficient.
+}
 
 \longversion{
 \section{Aplying the techniques: a case study with the Intel Larrabee}
