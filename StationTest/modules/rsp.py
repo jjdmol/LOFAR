@@ -31,7 +31,10 @@
   def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21)
   def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21)
   def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21)
-  
+
+  def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
+  def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
+    
   def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'])
   def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'])
 """
@@ -148,6 +151,9 @@ c_ei_mep_err_offset          = 5
 c_ei_mep_err_size            = 6
 c_ei_mep_err_ringcrc         = 7
 c_ei_mep_err_timeout         = 8
+
+c_cdo_settings_size          = 30   # nof bytes in CDO settings register
+c_cdo_settings_ctrl_offset   = 6    # byte index of the first byte of the ctrl field in CDO settings register
 
 ################################################################################
 # Derived constants (from constants.tcl)
@@ -429,8 +435,8 @@ def read_mem(tc, msg, pid, regid, nof, blpId=['blp0'], rspId=['rsp0'], sign='+',
   - nof    = Nof bytes to read from the memory
   - blpId  = List of one ['blp#']
   - rspId  = List of one ['rsp#']
-  - width  = Nof bytes per data word
   - sign   = 'h' for hex string, '+' for unsigned word list, '-' for signed word list
+  - width  = Nof bytes per data word
   - offset = Offset in nof bytes
   Return:
   -          list of read words
@@ -1242,7 +1248,55 @@ def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21):
     latency.append(lat)
   return latency
 
+  
+def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21)
+  """Write control field in CDO settings register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - ctrl   = CDO control word [15:0]
+  - rspId  = List of ['rsp#']
+  - applev = Append logging level
+  Return: void
+  """
+  tc.appendLog(applev, '>>> RSP-%s, write the CTRL field in CDO settings register:' % rspId)
+  tc.appendLog(applev, '      bit(0)    : CDO enable            = %d' % ((ctrl &   1           ) >> 0))
+  tc.appendLog(applev, '      bit(2:1)  : Lane select           = %d' % ((ctrl & ((2**2 -1)<<1)) >> 1))
+  tc.appendLog(applev, '      bit(3)    : Fiber balance enable  = %d' % ((ctrl & ( 1       <<3)) >> 3))
+  tc.appendLog(applev, '      bit(4)    : ARP enable            = %d' % ((ctrl & ( 1       <<4)) >> 4))
+  tc.appendLog(applev, '      bit(15:5) : Not used              = %d' % ((ctrl & ((2**11-1)<<5)) >> 5))
+  
+  width = 2   # ctrl field is 2 bytes wide
+  bc = 0      # access bp, so no BLP broadcast on RSP
+  for ri in rspId:
+    write_mem(tc, msg, 'cdo', 'settings', [ctrl], ['rsp'], rspId, width, c_cdo_settings_ctrl_offset, bc)
 
+    
+def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21)
+  """Read control field in CDO settings register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append logging level
+  Return: void
+  """
+  # Read entire CDO settings register
+  read_mem(tc, msg, 'rsr', 'status', c_cdo_settings_size, ['rsp'], rspId, 'h', 1, 0)
+  # Get and report only the CTRL field
+  width = 2   # ctrl field is 2 bytes wide
+  msg.setOffset(c_cdo_settings_ctrl_offset)
+  ctrl = msg.readUnsigned(width)
+  tc.appendLog(applev, '>>> RSP-%s, read the CTRL field in CDO settings register:' % rspId)
+  tc.appendLog(applev, '      bit(0)    : CDO enable            = %d' % ((ctrl &   1           ) >> 0))
+  tc.appendLog(applev, '      bit(2:1)  : Lane select           = %d' % ((ctrl & ((2**2 -1)<<1)) >> 1))
+  tc.appendLog(applev, '      bit(3)    : Fiber balance enable  = %d' % ((ctrl & ( 1       <<3)) >> 3))
+  tc.appendLog(applev, '      bit(4)    : ARP enable            = %d' % ((ctrl & ( 1       <<4)) >> 4))
+  tc.appendLog(applev, '      bit(15:5) : Not used              = %d' % ((ctrl & ((2**11-1)<<5)) >> 5))
+    
+        
 def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0']):
   """Write subband to beamlet mapping to SS register
   
