@@ -768,7 +768,6 @@ Expr Model::makeSpectralIndex(const SourceInfo &source)
     unsigned int degree =
         static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
             "SpectralIndexDegree:" + source.getName()));
-    LOG_DEBUG_STR("Degree: " << degree);
 
     Expr reference = makeExprParm(SKY, "ReferenceFrequency:"
         + source.getName());
