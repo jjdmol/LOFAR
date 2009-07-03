@@ -56,8 +56,7 @@ double ParmManagerImpl::getDefaultValue(uint category, const string &name,
 
     ParmValueSet valueSet = parmDb.getDefValue(name, ParmValue(value));
     ASSERT(valueSet.empty() && valueSet.getType() == ParmValue::Scalar);
-    const casa::Array<double> &values =
-        valueSet.getFirstParmValue().getValues();
+    const casa::Array<double> &values = valueSet.getDefParmValue().getValues();
     ASSERT(values.size() == 1);
     return values(casa::IPosition(values.ndim(), 0));
 }
