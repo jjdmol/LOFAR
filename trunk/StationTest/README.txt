@@ -232,6 +232,7 @@ b) The following test scripts are available in tc/, they are more or less plain,
    manual translations from TCL test cases:
 
   - empty.py     = empty, can be used to try verify.py
+  - cdo_ctrl.py  = Read or write the CTRL field in the CDO settings register
   - prsg.py      = TC 5.10, capture RCU PSRG data
   - serdes.py    = TC 3.8, serdes ring test
   - status.py    = TC 11.1, read RSP status register
