@@ -26,9 +26,6 @@
 #include <BBSKernel/Expr/JonesNode.h>
 #include <BBSKernel/Instrument.h>
 
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
 
 namespace LOFAR
 {
@@ -62,9 +59,6 @@ private:
         double y, double z, double alpha, double ref_x,
         double ref_y, double ref_z);
 
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
     Station                 itsRefStation;
 
 };

@@ -226,12 +226,6 @@ Result PhaseShift::getResult (const Request& request)
     return result;
 }
 
-#ifdef EXPR_GRAPH
-std::string PhaseShift::getLabel()
-{
-    return std::string("PhaseShift\\nPhase delay due to baseline geometry.");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

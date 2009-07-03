@@ -44,9 +44,8 @@ public:
     typedef shared_ptr<const PointSource>    ConstPointer;
 
     PointSource(const string& name, const Expr &ra, const Expr &dec,
-        const Expr &I, const Expr &Q, const Expr &U, const Expr &V);
-
-    virtual ~PointSource();
+        const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
+        const Expr &si);
 
     const Expr &getI() const
     { return itsI; }
@@ -56,12 +55,15 @@ public:
     { return itsU; }
     const Expr &getV() const
     { return itsV; }
+    const Expr &getSpectralIndex() const
+    { return itsSpectralIndex; }
 
 private:
-    Expr itsI;
-    Expr itsQ;
-    Expr itsU;
-    Expr itsV;
+    Expr    itsI;
+    Expr    itsQ;
+    Expr    itsU;
+    Expr    itsV;
+    Expr    itsSpectralIndex;
 };
 
 // @}

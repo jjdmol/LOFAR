@@ -93,9 +93,6 @@ private:
         double u, v, w;
     };
 
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
 
     Station                  itsStation;
     casa::MPosition          itsArrayRef;

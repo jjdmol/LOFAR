@@ -95,16 +95,18 @@ public:
 
 private:
     vector<bool> parseComponents(const vector<string> &components) const;
-    
+
     Expr makeExprParm(uint category, const string &name);
-    
+
     void makeSources(vector<Source::Pointer> &result,
         const vector<string> &patterns);
-    
+
     Source::Pointer makeSource(const SourceInfo &source);
 
+    Expr makeSpectralIndex(const SourceInfo &source);
+
     void makeStationUvw();
-    
+
     void makeAzElNodes(boost::multi_array<Expr, 2> &result,
         const vector<Source::Pointer> &sources) const;
 
@@ -112,7 +114,7 @@ private:
         const vector<Source::Pointer> &sources) const;
 
     void makeBandpassNodes(vector<JonesExpr> &result);
-    
+
     void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
 
     void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,

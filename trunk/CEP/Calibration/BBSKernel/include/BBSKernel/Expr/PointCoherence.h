@@ -29,9 +29,6 @@
 #include <BBSKernel/Expr/JonesExpr.h>
 #include <BBSKernel/Expr/PointSource.h>
 
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
 
 namespace LOFAR
 {
@@ -45,16 +42,8 @@ class PointCoherence: public JonesExprRep
 {
 public:
     PointCoherence(const PointSource::ConstPointer &source);
-    ~PointCoherence();
 
     virtual JonesResult getJResult(const Request &request);
-
-private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
-
-    PointSource::ConstPointer    itsSource;
 };
 
 // @}

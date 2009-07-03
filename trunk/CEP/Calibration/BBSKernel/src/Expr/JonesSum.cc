@@ -52,7 +52,7 @@ JonesResult JonesSum::getJResult(const Request &request)
 
     JonesResult result;
     result.init();
-    
+
     Result &result11 = result.result11();
     Result &result12 = result.result12();
     Result &result21 = result.result21();
@@ -97,42 +97,36 @@ void JonesSum::mergePValues(const Result &in, Result &out)
         if(outIter.key() == inIter.key())
         {
             outIter.value() += inIter.value();
-            inIter.next(); 
+            inIter.next();
             outIter.next();
         }
         else if(outIter.key() < inIter.key())
         {
             outIter.value() += in.getValue();
-            outIter.next(); 
+            outIter.next();
         }
         else
-        {            
+        {
             out.setPerturbedValue(inIter.key(), out.getValue()
                 + inIter.value());
             inIter.next();
         }
     }
-    
+
     while(!inIter.atEnd())
     {
         out.setPerturbedValue(inIter.key(), out.getValue()
             + inIter.value());
         inIter.next();
     }
-    
+
     while(!outIter.atEnd())
     {
         outIter.value() += in.getValue();
-        outIter.next(); 
+        outIter.next();
     }
 }
 
-#ifdef EXPR_GRAPH
-std::string JonesSum::getLabel()
-{
-    return std::string("JonesSum\\nSum of Jones matrices");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

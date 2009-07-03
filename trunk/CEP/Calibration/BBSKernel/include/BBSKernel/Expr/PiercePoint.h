@@ -27,9 +27,6 @@
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ResultVec.h>
 
-#ifdef EXPR_GRAPH
-#include <Common/lofar_string.h>
-#endif
 
 namespace LOFAR
 {
@@ -52,9 +49,6 @@ private:
         const Matrix &in_el, Matrix &out_x, Matrix &out_y, Matrix &out_z,
         Matrix &out_alpha);
 
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
     Station                 itsStation;
     double itsLong; //longitude of station

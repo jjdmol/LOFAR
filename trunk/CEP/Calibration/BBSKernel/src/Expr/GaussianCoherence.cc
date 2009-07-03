@@ -46,42 +46,39 @@ using LOFAR::conj;
 GaussianCoherence::GaussianCoherence(const GaussianSource::ConstPointer &source,
     const StatUVW::ConstPointer &station1,
     const StatUVW::ConstPointer &station2)
-    :   itsSource(source),
-        itsStation1(station1),
+    :   itsStation1(station1),
         itsStation2(station2)
 {
-	addChild(itsSource->getI());
-	addChild(itsSource->getQ());
-	addChild(itsSource->getU());
-	addChild(itsSource->getV());
-	addChild(itsSource->getMajor());
-	addChild(itsSource->getMinor());
-	addChild(itsSource->getPhi());
-}
-
-GaussianCoherence::~GaussianCoherence()
-{
+	addChild(source->getI());
+	addChild(source->getQ());
+	addChild(source->getU());
+	addChild(source->getV());
+    addChild(source->getSpectralIndex());
+	addChild(source->getMajor());
+	addChild(source->getMinor());
+	addChild(source->getPhi());
 }
 
 JonesResult GaussianCoherence::getJResult(const Request &request)
 {
     enum ChildExprIndex
     {
-        IN_I, IN_Q, IN_U, IN_V, IN_MAJOR, IN_MINOR, IN_PHI
+        IN_I, IN_Q, IN_U, IN_V, IN_SI, IN_MAJOR, IN_MINOR, IN_PHI
     };
 
     // Evaluate source parameters.
     // Note: The result of any parameter is either scalar or it is 2D and
     // conforms to the size of the request.
-    Result ikBuf, qkBuf, ukBuf, vkBuf, majorBuf, minorBuf, phiBuf;
+    Result ikBuf, qkBuf, ukBuf, vkBuf, siBuf, majorBuf, minorBuf, phiBuf;
     const Result &ik = getChild(IN_I).getResultSynced(request, ikBuf);
     const Result &qk = getChild(IN_Q).getResultSynced(request, qkBuf);
     const Result &uk = getChild(IN_U).getResultSynced(request, ukBuf);
     const Result &vk = getChild(IN_V).getResultSynced(request, vkBuf);
+    const Result &si = getChild(IN_SI).getResultSynced(request, siBuf);
     const Result &major = getChild(IN_MAJOR).getResultSynced(request, majorBuf);
     const Result &minor = getChild(IN_MINOR).getResultSynced(request, minorBuf);
     const Result &phi = getChild(IN_PHI).getResultSynced(request, phiBuf);
-    
+
     // Assume major, minor, phi are scalar.
     DBGASSERT(!major.getValue().isArray());
     DBGASSERT(!minor.getValue().isArray());
@@ -115,7 +112,7 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
     Result &resXY = result.result12();
     Result &resYX = result.result21();
     Result &resYY = result.result22();
-    
+
     // Compute baseline uv-coordinates (1D in time).
     Matrix uBaseline = uStation2.getValue() - uStation1.getValue();
     Matrix vBaseline = vStation2.getValue() - vStation1.getValue();
@@ -125,25 +122,29 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
         major.getValue(), minor.getValue(), phi.getValue());
 
     // Compute main result.
-    Matrix uv_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
+    Matrix uv_2 = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
 
-    resXX.setValue((0.5 * (ik.getValue() + qk.getValue())) * coherence);
+    resXX.setValue(si.getValue() * coherence * (ik.getValue() + qk.getValue())
+        * 0.5);
     resXY.setValue(uv_2 * coherence);
     resYX.setValue(conj(uv_2) * coherence);
-    resYY.setValue((0.5 * (ik.getValue() - qk.getValue())) * coherence);
-    
+    resYY.setValue(si.getValue() * coherence * (ik.getValue() - qk.getValue())
+        * 0.5);
+
     // Compute the perturbed values.
     enum PValues
     {
-        PV_I, PV_Q, PV_U, PV_V, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
+        PV_I, PV_Q, PV_U, PV_V, PV_SI, PV_MAJOR, PV_MINOR, PV_PHI, N_PValues
     };
-    
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &major, &minor, &phi};
+
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &si, &major, &minor,
+        &phi};
     PValueSetIterator<N_PValues> pvIter(pvSet);
-    
+
     while(!pvIter.atEnd())
     {
-        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q);
+        bool evalIQ = pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q)
+            || pvIter.hasPValue(PV_SI);
         bool evalUV = pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V);
         bool evalCoh = pvIter.hasPValue(PV_MAJOR) || pvIter.hasPValue(PV_MINOR)
             || pvIter.hasPValue(PV_PHI);
@@ -153,23 +154,26 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
 
         if(evalUV)
         {
-            pvUV_2 = 0.5 * tocomplex(pvIter.value(PV_U), pvIter.value(PV_V));
+            pvUV_2 = tocomplex(pvIter.value(PV_U), pvIter.value(PV_V)) * 0.5;
         }
-        
+
         if(evalCoh)
         {
             pvCoh = computeCoherence(request, uBaseline, vBaseline,
                 pvIter.value(PV_MAJOR), pvIter.value(PV_MINOR),
                 pvIter.value(PV_PHI));
         }
-        
+
         if(evalIQ || evalCoh)
         {
             const Matrix &pvI = pvIter.value(PV_I);
             const Matrix &pvQ = pvIter.value(PV_Q);
-        
-            resXX.setPerturbedValue(pvIter.key(), (0.5 * (pvI + pvQ)) * pvCoh);
-            resYY.setPerturbedValue(pvIter.key(), (0.5 * (pvI - pvQ)) * pvCoh);
+            const Matrix &pvSI = pvIter.value(PV_SI);
+
+            resXX.setPerturbedValue(pvIter.key(), pvSI * pvCoh * (pvI + pvQ)
+                * 0.5);
+            resYY.setPerturbedValue(pvIter.key(), pvSI * pvCoh * (pvI - pvQ)
+                * 0.5);
         }
 
         if(evalUV || evalCoh)
@@ -179,8 +183,8 @@ JonesResult GaussianCoherence::getJResult(const Request &request)
         }
 
         pvIter.next();
-    }        
-    
+    }
+
     return result;
 }
 
@@ -200,11 +204,11 @@ Matrix GaussianCoherence::computeCoherence(const Request &request,
     // Allocate the result matrix (2D).
     const uint nChannels = request.getChannelCount();
     const uint nTimeslots = request.getTimeslotCount();
-    
+
     Matrix result;
     double *valuep = result.setDoubleFormat(nChannels, nTimeslots);
 
-    // Compute unnormalized spatial coherence (2D).
+    // Compute non-normalized spatial coherence (2D).
     Axis::ShPtr freqAxis(request.getGrid()[FREQ]);
     for(uint t = 0; t < nTimeslots; ++t)
     {
@@ -218,15 +222,6 @@ Matrix GaussianCoherence::computeCoherence(const Request &request,
 
     return result;
 }
-
-#ifdef EXPR_GRAPH
-std::string GaussianCoherence::getLabel()
-{
-    return std::string("GaussianCoherence\\nSpatial coherence function of"
-        " an elliptical gaussian source\\n" + itsSource->getName() + " ("
-        + itsSource->getGroupName() + ")");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

@@ -261,14 +261,12 @@ void MeasurementAIPS::write(const VisSelection &selection,
     ASSERT(itsMS.isWritable());
 
     // Add column if it does not exist.
-    // TODO: Check why the AIPS++ imager does not recognize these columns.
     if(!itsMS.tableDesc().isColumn(column))
     {
         LOG_INFO_STR("Adding column \"" << column << "\".");
 
         // Added column should get the same shape as the other data columns in
         // the MS.
-        // TODO: Check if this is the
         ArrayColumnDesc<Complex> columnDescriptor(column,
             IPosition(2, itsDimensions.getPolarizationCount(),
                 itsDimensions.getChannelCount()),
@@ -339,8 +337,8 @@ void MeasurementAIPS::write(const VisSelection &selection,
         ASSERTSTR(nRows <= dims.getBaselineCount(), "Measurement contains"
             " multiple samples with the same timestamp for a single baseline.");
 
-        // TODO: Should use TIME_CENTROID here (centroid of exposure)?
-        // NOTE: TIME_CENTROID may be different for each baseline!
+        // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. The
+        // TIME_CENTROID may be different for each baseline!
         ROScalarColumn<Double> c_time(tab_tslot, "TIME");
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
         ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
@@ -512,17 +510,11 @@ void MeasurementAIPS::initDimensions()
 
     // Extract time axis based on TIME column (mid-point of integration
     // interval).
-    // TODO: Should use TIME_CENTROID here (centroid of exposure)?
-    // NOTE: UVW is given of the TIME_CENTROID, not for TIME!
-    // NOTE: TIME_CENTROID may be different for each baseline!
+    // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. UVW is
+    // given of the TIME_CENTROID, not for TIME! NB. The TIME_CENTROID may be
+    // different for each baseline!
 
     // Find all unique integration cells.
-//    Block<String> sortColumns(2);
-//    sortColumns[0] = "TIME";
-//    sortColumns[1] = "INTERVAL";
-//    Table tab_sorted = itsMainTableView.sort(sortColumns, Sort::Ascending,
-//        Sort::QuickSort + Sort::NoDuplicates);
-
     Table tab_sorted = itsMainTableView.sort("TIME", Sort::Ascending,
         Sort::QuickSort + Sort::NoDuplicates);
 
@@ -753,12 +745,8 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
         nChannels));
 
     // Initialize time axis.
+
     // Find all unique integration cells.
-//    Block<String> sortTimeColumns(2);
-//    sortTimeColumns[0] = "TIME";
-//    sortTimeColumns[1] = "INTERVAL";
-//    Table tab_sorted = tab_selection.sort(sortTimeColumns, Sort::Ascending,
-//        Sort::QuickSort + Sort::NoDuplicates);
     Table tab_sorted = tab_selection.sort("TIME", Sort::Ascending,
         Sort::QuickSort + Sort::NoDuplicates);
 

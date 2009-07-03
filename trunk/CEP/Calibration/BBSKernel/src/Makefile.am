@@ -50,6 +50,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Result.cc \
 	Expr/ResultVec.cc \
     Expr/Source.cc \
+    Expr/SpectralIndex.cc \
     Expr/StatUVW.cc \
     Expr/YatawattaDipole.cc
 

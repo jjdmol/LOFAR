@@ -58,9 +58,6 @@ public:
   virtual JonesResult getJResult (const Request&);
 
 private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
 
   Expr itsExpr11;
   Expr itsExpr12;

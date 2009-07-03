@@ -59,6 +59,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ResultVec.h \
 	Expr/Pool.h \
 	Expr/Source.h \
+	Expr/SpectralIndex.h \
 	Expr/StatUVW.h \
 	Expr/YatawattaDipole.h
 
