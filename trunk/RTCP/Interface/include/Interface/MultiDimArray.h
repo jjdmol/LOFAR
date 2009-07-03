@@ -7,6 +7,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
@@ -215,6 +216,35 @@ template <typename T> class Cube : public MultiDimArray<T, 3>
     }
 };
 
+// output function for full MultiDimArrays
+template <typename T, unsigned DIM> inline std::ostream &operator<<( std::ostream& str, const MultiDimArray<T,DIM> &array )
+{
+  str << "[ ";
+  for( size_t i = 0; i < array.size(); i++ ) {
+    if( i > 0 ) {
+      str << ", ";
+    }
+    str << array[i];
+  }
+  str << " ]";
+
+  return str;
+}
+
+// output function for subdimensions of MultiDimArrays
+template <typename T, unsigned DIM, typename TPtr> inline std::ostream &operator<<( std::ostream& str, const typename boost::detail::multi_array::const_sub_array<T,DIM,TPtr> &array )
+{
+  str << "[ ";
+  for( size_t i = 0; i < array.size(); i++ ) {
+    if( i > 0 ) {
+      str << ", ";
+    }
+    str << array[i];
+  }
+  str << " ]";
+
+  return str;
+}
 
 } // namespace RTCP
 } // namespace LOFAR
