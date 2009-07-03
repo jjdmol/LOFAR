@@ -28,5 +28,5 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/MACScheduler.conf)
 
 install(FILES
-  MACScheduler.conf
+  ${CMAKE_CURRENT_BINARY_DIR}/MACScheduler.conf
   DESTINATION etc)

@@ -41,10 +41,6 @@ lofar_add_library(gnuplot_i gnuplot_i.cc)
 
 lofar_add_bin_program(versionrtccommon versionrtccommon.cc)
 
-install(PROGRAMS
-  swlevel
-  DESTINATION bin)
-
 install(FILES
   rc.status
   DESTINATION etc)
