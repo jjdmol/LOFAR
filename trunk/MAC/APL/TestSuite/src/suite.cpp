@@ -29,7 +29,7 @@
 //#
 //#  $Id$
 
-#include <Suite/suite.h>
+#include <TestSuite/suite.h>
 #include <Common/lofar_iostream.h>
 #include <assert.h>
 

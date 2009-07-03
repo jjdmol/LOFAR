@@ -364,7 +364,7 @@ order shown below.
 \code
 LOFAR/LCS/Common
 LOFAR/LCS/Transport
-LOFAR/MAC/Test/Suite
+LOFAR/MAC/APL/TestSuite
 LOFAR/MAC/GCF/GCFCommon
 LOFAR/MAC/GCF/TM
 LOFAR/MAC/GCF/Protocols
