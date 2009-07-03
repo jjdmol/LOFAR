@@ -17,6 +17,25 @@ class Parset(util.Parset.Parset):
 	self.partition = ""
 	self.psets = []
 
+    def distillStations(self):
+        """ Distill station names to use from the parset file and return them. """
+
+        def stripQuotes(s):
+          return s.strip("'").rstrip("'")
+
+        if "OLAP.storageStationNames" not in self:
+          return ""
+
+        return map( stripQuotes, self.getStringVector( "OLAP.storageStationNames" ) )
+
+    def distillPartition(self):
+        """ Distill partition to use from the parset file and return it. """
+
+        if "OLAP.CNProc.partition" not in self:
+          return ""
+
+        return self["OLAP.CNProc.partition"]
+
     def finalise(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
@@ -43,7 +62,7 @@ class Parset(util.Parset.Parset):
 
 
 	# output flow configuration
-        self.setdefault('OLAP.storageStationNames', [s.name for s in self.stations])
+        self['OLAP.storageStationNames'] = [s.name for s in self.stations]
 
 	# subband configuration
 	if self.isDefined("Observation.subbandList"):
@@ -63,7 +82,7 @@ class Parset(util.Parset.Parset):
 	  self.setdefault('Observation.nrBeams', index)
 	
 	# Pset configuration
-	self.setdefault('OLAP.CNProc.partition', self.partition)
+	self['OLAP.CNProc.partition'] = self.partition
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
