@@ -71,10 +71,10 @@ Ra:sun  type=scalar
     values:  1e-09  shape=[1, 1]
     pert=1e-06 pert_rel=n
 SpInx:cygnus  type=scalar
-    values:  1  shape=[1, 1]
+    values:  0.5  shape=[1, 1]
     pert=1e-06 pert_rel=y
 SpInx:sun  type=scalar
-    values:  1  shape=[1, 1]
+    values:  0.5  shape=[1, 1]
     pert=1e-06 pert_rel=y
 U:cygnus  type=scalar
     values:  0  shape=[1, 1]
@@ -164,7 +164,16 @@ V:lena  type=scalar
 V:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-24 parms and 24 values found
+a0:b:cygnus  type=scalar
+    values:  3  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+a0:b:lena  type=scalar
+    values:  3  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+a0:b:sun  type=scalar
+    values:  3  shape=[1, 1]
+    pert=1e-06 pert_rel=y
+27 parms and 27 values found
 >>>
 Successful readonly open of default-locked table tmakesourcedb_tmp.sdb/SOURCES/PATCHES: 5 columns, 1 rows
 patch nrow = 1

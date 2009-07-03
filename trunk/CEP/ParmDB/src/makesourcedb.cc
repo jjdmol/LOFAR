@@ -54,14 +54,26 @@
 // If the format string contains only one character, the default format is used
 // with that one character as separator.
 //
-// It is possible to define fixed values in the format string by giving a
-// value to a field. For example:
-//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi, Category='2'"
-// It means that Category is not a field in the input file, but the given
-// value (which must be enclosed in single or double quotes) is used for all
-// patches and/or sources in the input file. So this example will make all
-// the patches/sources Cat2.
+// It is possible to define default values in the format string by giving a
+// value to a field. The default value will be used if the field in the
+// input file is empty (see below). The value must be enclosed in single
+// or double quotes. For example:
+//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx='1'
+// If no default value is given for empty field values, an appropriate default
+// is used (which is usually 0).
 //
+// In a similar way it is possible to define fixed values by predeeding the
+// value with the string 'fixed'. For example:
+//     "Name,Type,Ra,Dec,I,Q,U,V,SpInx,Major,Minor,Phi, Category=fixed'2'"
+// It means that Category is not a field in the input file, but the given
+// value is used for all patches and/or sources in the input file.
+// So this example will make all the patches/sources Cat2.
+//
+// It is possible to ignore a column in the input file by giving an empty name
+// or the name 'dummy' in the format string. For example:
+//     "Name,Type,Ra,Dec,,dummy,I,Q,U,V
+// will ignore the two columns in the input file between Dec and I.
+
 // Each line in the input file represents a patch or source.
 // Lines starting with a # (possibly preceeded by whitespace) are ignored.
 // The order of the fields in the input file must (of course) match the
@@ -73,7 +85,6 @@
 // empty field must be represented by "" (or '').
 // An input line can contain less values than there are fields in the format
 // string. Missing values are empty.
-// Usually an appropriate default value is used for empty values.
 //
 // An input line can define a patch or a source.
 // A patch is defined by having an empty source name, otherwise it is a source.
@@ -166,7 +177,8 @@ vector<string> theFieldNames = fillKnown();
 enum FieldType {
   KNOWNFIELD = 1,
   FIXEDVALUE = 2,
-  SKIPFIELD  = 4
+  SKIPFIELD  = 4,
+  DEFAULTVALUE=8
 };
 
 struct SdbFormat
@@ -259,7 +271,7 @@ SdbFormat getFormat (const string& format)
     if ((format[i] >= 'a'  &&  format[i] <= 'z')  ||
         (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
         (format[i] >= '0'  &&  format[i] <= '9')  ||
-        format[i] == '_') {
+        format[i] == '_'  ||  format[i] == ':') {
       ++i;    // part of name
     } else {
       // End of name
@@ -276,11 +288,17 @@ SdbFormat getFormat (const string& format)
           sdbf.fieldNrs[namepos->second] = nr;
         }
       }
-      // See if a fixed value is given.
+      // See if a default or fixed value is given.
       string fixedValue;
       i = ltrim(format, i, end);
       if (i < end  &&  format[i] == '=') {
         i = ltrim(format, i+1, end);
+        // See if it is a fixed value.
+        bool isDefault = True;
+        if (i+5 < end   &&  toLower(format.substr(i,5)) == "fixed") {
+          isDefault = False;
+          i += 5;
+        }
         ASSERTSTR (i<end, "No value given after " << name << '=');
         ASSERTSTR (format[i] == '"'  ||  format[i] == '\'',
                    "value after " << name << "= must start with a quote");
@@ -290,14 +308,18 @@ SdbFormat getFormat (const string& format)
                    "No closing value quote given after " << name << '=');
         fixedValue = format.substr(i+1, pos-i-1);
         i = ltrim(format, pos+1, end);
-        fieldType |= FIXEDVALUE;
+        if (isDefault) {
+          fieldType |= DEFAULTVALUE;
+        } else {
+          fieldType |= FIXEDVALUE;
+        }
       }
       // Now look for a separator.
       char sep = ' ';
       if (!((format[i] >= 'a'  &&  format[i] <= 'z')  ||
             (format[i] >= 'A'  &&  format[i] <= 'Z')  ||
             (format[i] >= '0'  &&  format[i] <= '9')  ||
-            format[i] == '_')) {
+            format[i] == '_'  ||  format[i] == ':')) {
         sep = format[i];
         i = ltrim(format, i+1, end);
       }
@@ -560,10 +582,11 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
       if (pos == string::npos) {
         pos = end;
       }
-      if ((sdbf.types[i] & SKIPFIELD) != SKIPFIELD) {
-        value = line.substr(st, rtrim(line, st, pos) - st);
-      }
+      value = line.substr(st, rtrim(line, st, pos) - st);
       st = ltrim (line, pos+1, end);
+    }
+    if (value.empty()  &&  (sdbf.types[i] & DEFAULTVALUE) == DEFAULTVALUE) {
+      value = sdbf.values[i];
     }
     values.push_back (value);
     if ((sdbf.types[i] & SKIPFIELD) != SKIPFIELD) {
@@ -572,7 +595,7 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
       }
     }
   }
-  // Now handle the standard values.
+  // Now handle the standard fields.
   string srcName = getValue(values, sdbf.fieldNrs[NameNr]);
   SourceInfo::Type srctype = string2type (getValue(values, sdbf.fieldNrs[TypeNr]));
   double ra = string2pos (values, sdbf.fieldNrs[RaNr],
