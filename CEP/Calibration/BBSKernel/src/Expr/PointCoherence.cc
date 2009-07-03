@@ -35,17 +35,12 @@ namespace BBS
 {
 
 PointCoherence::PointCoherence(const PointSource::ConstPointer &source)
-    :   itsSource(source)
 {
-    addChild (itsSource->getI());
-    addChild (itsSource->getQ());
-    addChild (itsSource->getU());
-    addChild (itsSource->getV());
-}
-
-
-PointCoherence::~PointCoherence()
-{
+    addChild(source->getI());
+    addChild(source->getQ());
+    addChild(source->getU());
+    addChild(source->getV());
+    addChild(source->getSpectralIndex());
 }
 
 
@@ -54,48 +49,51 @@ JonesResult PointCoherence::getJResult(const Request &request)
     // Allocate the result.
     JonesResult result;
     result.init();
-    
+
     Result& resXX = result.result11();
     Result& resXY = result.result12();
     Result& resYX = result.result21();
     Result& resYY = result.result22();
-    
+
     // Calculate the source fluxes.
-    Result ikBuf, qkBuf, ukBuf, vkBuf;
+    Result ikBuf, qkBuf, ukBuf, vkBuf, siBuf;
     const Result& ik = getChild(0).getResultSynced(request, ikBuf);
     const Result& qk = getChild(1).getResultSynced(request, qkBuf);
     const Result& uk = getChild(2).getResultSynced(request, ukBuf);
     const Result& vk = getChild(3).getResultSynced(request, vkBuf);
-    
+    const Result& si = getChild(4).getResultSynced(request, siBuf);
+
     // Compute main value.
-    Matrix uvk_2 = 0.5 * tocomplex(uk.getValue(), vk.getValue());
-    resXX.setValue(0.5 * (ik.getValue() + qk.getValue()));
+    Matrix uvk_2 = tocomplex(uk.getValue(), vk.getValue()) * 0.5;
+    resXX.setValue(si.getValue() * (ik.getValue() + qk.getValue()) * 0.5);
     resXY.setValue(uvk_2);
     resYX.setValue(conj(uvk_2));
-    resYY.setValue(0.5 * (ik.getValue() - qk.getValue()));
-    
+    resYY.setValue(si.getValue() * (ik.getValue() - qk.getValue()) * 0.5);
+
     // Compute perturbed values.
     enum PValues
-    {   PV_I, PV_Q, PV_U, PV_V, N_PValues };
-    
-    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk};
+    { PV_I, PV_Q, PV_U, PV_V, PV_SI, N_PValues };
+
+    const Result *pvSet[N_PValues] = {&ik, &qk, &uk, &vk, &si};
     PValueSetIterator<N_PValues> pvIter(pvSet);
 
     while(!pvIter.atEnd())
     {
-        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q))
+        if(pvIter.hasPValue(PV_I) || pvIter.hasPValue(PV_Q)
+            || pvIter.hasPValue(PV_SI))
         {
           const Matrix &pvI = pvIter.value(PV_I);
           const Matrix &pvQ = pvIter.value(PV_Q);
-          resXX.setPerturbedValue(pvIter.key(), 0.5 * (pvI + pvQ)); 
-          resYY.setPerturbedValue(pvIter.key(), 0.5 * (pvI - pvQ)); 
+          const Matrix &pvSI = pvIter.value(PV_SI);
+          resXX.setPerturbedValue(pvIter.key(), pvSI * (pvI + pvQ) * 0.5);
+          resYY.setPerturbedValue(pvIter.key(), pvSI * (pvI - pvQ) * 0.5);
         }
 
         if(pvIter.hasPValue(PV_U) || pvIter.hasPValue(PV_V))
         {
             const Matrix &pvU = pvIter.value(PV_U);
             const Matrix &pvV = pvIter.value(PV_V);
-            Matrix uvkp_2 = 0.5 * tocomplex(pvU, pvV);
+            Matrix uvkp_2 = tocomplex(pvU, pvV) * 0.5;
             resXY.setPerturbedValue(pvIter.key(), uvkp_2);
             resYX.setPerturbedValue(pvIter.key(), conj(uvkp_2));
         }
@@ -105,14 +103,6 @@ JonesResult PointCoherence::getJResult(const Request &request)
 
     return result;
 }
-
-#ifdef EXPR_GRAPH
-string PointCoherence::getLabel()
-{
-    return string("PointCoherence\\nSpatial coherence function of a point"
-        " source\\n" + itsSource->getName());
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

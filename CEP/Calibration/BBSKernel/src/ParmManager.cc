@@ -32,15 +32,11 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 ParmManagerImpl::ParmManagerImpl()
     : itsParmCache(itsParmSet)
-{
-}
-
-ParmManagerImpl::~ParmManagerImpl()
 {
 }
 
@@ -53,12 +49,22 @@ void ParmManagerImpl::initCategory(uint category, const ParmDB &db)
     itsCategories.insert(make_pair(category, db));
 }
 
+double ParmManagerImpl::getDefaultValue(uint category, const string &name,
+    double value)
+{
+    ParmDB &parmDb = getParmDbForCategory(category);
+
+    ParmValueSet valueSet = parmDb.getDefValue(name, ParmValue(value));
+    ASSERT(valueSet.empty() && valueSet.getType() == ParmValue::Scalar);
+    const casa::Array<double> &values =
+        valueSet.getFirstParmValue().getValues();
+    ASSERT(values.size() == 1);
+    return values(casa::IPosition(values.ndim(), 0));
+}
+
 ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name)
 {
-    map<uint, ParmDB>::iterator catIt = itsCategories.find(category);
-    ASSERTSTR(catIt != itsCategories.end(), "Attempt to get a parameter from"
-        " an unknown category.");
-    ParmDB &parmDb = catIt->second;
+    ParmDB &parmDb = getParmDbForCategory(category);
 
     pair<map<string, pair<uint, uint> >::const_iterator, bool> status =
         itsParmMap.insert(make_pair(name,
@@ -93,7 +99,7 @@ ParmProxy::Pointer ParmManagerImpl::get(uint category, const string &name,
     group.insert(proxy->getId());
     return proxy;
 }
-            
+
 void ParmManagerImpl::setDomain(const Box &domain)
 {
     itsParmCache.reset(domain);
@@ -119,9 +125,14 @@ void ParmManagerImpl::setGrid(const Grid &grid, const ParmGroup &group)
     }
 }
 
+void ParmManagerImpl::flush()
+{
+    itsParmCache.flush();
+}
+
 ParmGroup ParmManagerImpl::makeSubset(const vector<string> &include,
     const vector<string> &exclude, const ParmGroup &group) const
-{    
+{
     vector<casa::Regex> includeRegex(include.size());
     vector<casa::Regex> excludeRegex(exclude.size());
 
@@ -162,7 +173,7 @@ ParmGroup ParmManagerImpl::makeSubset(const vector<string> &include,
             ++it;
         }
     }
-        
+
     return result;
 }
 
@@ -171,7 +182,7 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
     const
 {
     casa::String name(candidate);
-    
+
     bool flag = false;
     vector<casa::Regex>::const_iterator inc_it = include.begin();
     while(inc_it != include.end())
@@ -196,14 +207,25 @@ bool ParmManagerImpl::isIncluded(const string &candidate,
             }
             ++exc_it;
         }
-    }            
+    }
 
     return flag;
 }
 
-void ParmManagerImpl::flush()
+const ParmDB &ParmManagerImpl::getParmDbForCategory(uint category) const
 {
-    itsParmCache.flush();
+    map<uint, ParmDB>::const_iterator catIt = itsCategories.find(category);
+    ASSERTSTR(catIt != itsCategories.end(), "No ParmDB instance bound to"
+        " category: " << category);
+    return catIt->second;
+}
+
+ParmDB &ParmManagerImpl::getParmDbForCategory(uint category)
+{
+    map<uint, ParmDB>::iterator catIt = itsCategories.find(category);
+    ASSERTSTR(catIt != itsCategories.end(), "No ParmDB instance bound to"
+        " category: " << category);
+    return catIt->second;
 }
 
 } //# namespace BBS

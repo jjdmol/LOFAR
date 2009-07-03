@@ -32,10 +32,6 @@
 #include <BBSKernel/Expr/ResultVec.h>
 #include <vector>
 
-#ifdef EXPR_GRAPH
-    #include <string>
-    #include <iostream>
-#endif
 
 namespace LOFAR
 {
@@ -52,12 +48,12 @@ class Expr;
 // This class is the (abstract) base class for an expression. The classes
 // derived from it implement an expression which must be evaluated for
 // a given request.
-// 
+//
 // There are a few virtual methods which must or can be implemented in derived
 // classes. They are:
 // <ul>
 //  <li> \b getResult calculates the main value and the
-//       perturbed values of the solvable parameters. 
+//       perturbed values of the solvable parameters.
 //       The default implementation uses getResultValue for all of them.
 //       Sometimes a derived class can do it in a better way by reusing
 //       intermediate results. In that case it might be better implement
@@ -107,6 +103,11 @@ public:
       return itsNParents;
   }
 
+  size_t getChildCount() const
+  {
+      return itsChildren.size();
+  }
+
   // Recursively set the lowest and highest level of the node as used
   // in the tree.
   // Return the number of levels used so far.
@@ -146,17 +147,13 @@ public:
                       ResultVec& result)
     { return itsReqId == request.getId()  ?
     *itsResVec : calcResultVec(request,result); }
-  
+
   virtual ResultVec getResultVec (const Request&);
   // </group>
 
   // Precalculate the result and store it in the cache.
   virtual void precalculate (const Request&);
 
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-  void writeExpressionGraph(std::ostream &os);
-#endif
 
 protected:
   // Add a child to this node.
@@ -178,7 +175,8 @@ private:
   // </group>
 
   // Let a derived class calculate the resulting value.
-  virtual Matrix getResultValue (const std::vector<const Matrix*>&);
+  virtual Matrix getResultValue (const Request &,
+    const std::vector<const Matrix*>&);
 
 
   int           itsCount;      //# Reference count
@@ -232,12 +230,18 @@ public:
   { return itsRep; }
   const ExprRep *getPtr() const
   { return itsRep; }
-  
+
   //# -- DELEGATED METHODS --
   // Get the current number of parents
   int getParentCount() const
   {
       return itsRep->getParentCount();
+  }
+
+  // Get the current number of children
+  size_t getChildCount() const
+  {
+      return itsRep->getChildCount();
   }
 
   // Recursively set the lowest and highest level of the node as used
@@ -253,7 +257,7 @@ public:
   // At which level is the node done?
   int levelDone() const
     { return itsRep->levelDone(); }
-  
+
   // Get the nodes at the given level.
   // By default only nodes with multiple parents are retrieved.
   // It is used to find the nodes with results to be cached.
@@ -281,12 +285,6 @@ public:
     { return itsRep->getResultVecSynced (request, result); }
   // </group>
 
-#ifdef EXPR_GRAPH
-  void writeExpressionGraph(std::ostream &os)
-  {
-      itsRep->writeExpressionGraph(os);
-  }
-#endif
 
 protected:
   ExprRep* itsRep;
@@ -302,9 +300,6 @@ public:
   virtual Result getResult (const Request&);
 
 private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
 
   Expr itsReal;
   Expr itsImag;
@@ -320,9 +315,6 @@ public:
   virtual Result getResult (const Request&);
 
 private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
 
   Expr itsAmpl;
   Expr itsPhase;
@@ -337,9 +329,6 @@ public:
     virtual Result getResult(const Request &request);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
     Expr itsPhase;
 };

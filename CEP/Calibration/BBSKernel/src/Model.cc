@@ -1,4 +1,4 @@
-//# Model.cc: 
+//# Model.cc:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -53,6 +53,7 @@
 #include <BBSKernel/Expr/JonesCMul3.h>
 #include <BBSKernel/Expr/Request.h>
 #include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/SpectralIndex.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
@@ -73,10 +74,10 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-Model::Model(const Instrument &instrument, const SourceDB &sourceDb, 
+Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
     const casa::MDirection &phaseRef)
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb)
@@ -91,8 +92,7 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
 bool Model::makeFwdExpressions(const ModelConfig &config,
     const vector<baseline_t> &baselines)
 {
-    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
-        "clearExpressions() first");
+    clearExpressions();
 
     // Parse user supplied model component selection.
     vector<bool> mask(parseComponents(config.components));
@@ -130,14 +130,14 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
 
     // Direction independent (uv-plane) effects.
     bool uvEffects = mask[BANDPASS] || mask[GAIN];
-    
+
     // Create a bandpass node per station.
     vector<JonesExpr> bandpass;
     if(mask[BANDPASS])
     {
         makeBandpassNodes(bandpass);
     }
-    
+
     // Create a gain node per station.
     vector<JonesExpr> gain;
     if(mask[GAIN])
@@ -152,12 +152,12 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     {
         uvJones.resize(nStations);
         for(size_t i = 0; i < nStations; ++i)
-        {   
+        {
             if(mask[BANDPASS])
             {
                 uvJones[i] = bandpass[i];
             }
-                
+
             if(mask[GAIN])
             {
                 uvJones[i] = uvJones[i].isNull() ? gain[i]
@@ -167,10 +167,10 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
             // TODO: Add other uv-plane effects here.
         }
     }
-    
+
     // Direction dependent (image-plane) effects.
     bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
-    
+
     // Create a station shift node per station-source combination.
     boost::multi_array<Expr, 2> stationShift;
     makeStationShiftNodes(stationShift, sources);
@@ -181,21 +181,21 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
     {
         makeAzElNodes(azel, sources);
     }
-    
+
     // Create a directional gain node per station-source combination.
     boost::multi_array<JonesExpr, 2> gainDirectional;
     if(mask[DIRECTIONAL_GAIN])
     {
         makeDirectionalGainNodes(gainDirectional, config, sources);
     }
-    
+
     // Create a dipole beam node per station0-source combination.
     boost::multi_array<JonesExpr, 2> dipoleBeam;
     if(mask[BEAM])
     {
         makeDipoleBeamNodes(dipoleBeam, config, azel);
     }
-    
+
     // Create a MIM node per station-source combination.
     boost::multi_array<JonesExpr, 2> ionosphere;
     if(mask[IONOSPHERE])
@@ -219,7 +219,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                 {
                     imgJones[i][j] = gainDirectional[i][j];
                 }
-                
+
                 if(mask[BEAM])
                 {
                     imgJones[i][j] = imgJones[i][j].isNull() ? dipoleBeam[i][j]
@@ -233,12 +233,12 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                         : JonesExpr(new JonesMul2(imgJones[i][j],
                             ionosphere[i][j]));
                 }
-                
+
                 // TODO: Add other image-plane effects here.
             }
         }
     }
-        
+
     // Create an expression tree for each baseline.
     for(size_t i = 0; i < baselines.size(); ++i)
     {
@@ -248,7 +248,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
         for(size_t j = 0; j < nSources; ++j)
         {
             JonesExpr coherence;
-            
+
             map<size_t, JonesExpr>::iterator pointCohIt = pointCoh.find(j);
             if(pointCohIt != pointCoh.end())
             {
@@ -259,7 +259,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
                 GaussianSource::ConstPointer gauss =
                     dynamic_pointer_cast<const GaussianSource>(sources[j]);
                 ASSERT(gauss);
-                
+
                 coherence = new GaussianCoherence(gauss,
                     itsStationUvw[baseline.first],
                     itsStationUvw[baseline.second]);
@@ -272,7 +272,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
             // Phase shift the source coherence.
             ASSERT(!coherence.isNull());
             coherence = new JonesMul(shift, coherence);
-            
+
             // Apply direction dependent (image-plane) effects.
             if(imgEffects)
             {
@@ -310,8 +310,7 @@ bool Model::makeFwdExpressions(const ModelConfig &config,
 bool Model::makeInvExpressions(const ModelConfig &config,
     const VisData::Pointer &chunk, const vector<baseline_t> &baselines)
 {
-    ASSERTSTR(itsExpressions.empty(), "Model already initialized; call Model::"
-        "clearExpressions() first");
+    clearExpressions();
 
     const size_t nStations = itsInstrument.stations.size();
 
@@ -320,14 +319,14 @@ bool Model::makeInvExpressions(const ModelConfig &config,
 
     // Direction independent (uv-plane) effects.
     bool uvEffects = mask[BANDPASS] || mask[GAIN];
-    
+
     // Create a bandpass node per station.
     vector<JonesExpr> bandpass;
     if(mask[BANDPASS])
     {
         makeBandpassNodes(bandpass);
     }
-    
+
     // Create a gain node per station.
     vector<JonesExpr> gain;
     if(mask[GAIN])
@@ -342,12 +341,12 @@ bool Model::makeInvExpressions(const ModelConfig &config,
     if(uvEffects)
     {
         for(size_t i = 0; i < nStations; ++i)
-        {   
+        {
             if(mask[BANDPASS])
             {
                 jJones[i] = bandpass[i];
             }
-                
+
             if(mask[GAIN])
             {
                 jJones[i] = jJones[i].isNull() ? gain[i]
@@ -357,7 +356,7 @@ bool Model::makeInvExpressions(const ModelConfig &config,
             // TODO: Add other uv-plane effects here.
         }
     }
-    
+
     // Direction dependent (image-plane) effects.
     bool imgEffects = mask[DIRECTIONAL_GAIN] || mask[BEAM] || mask[IONOSPHERE];
 
@@ -387,7 +386,7 @@ bool Model::makeInvExpressions(const ModelConfig &config,
         {
             makeDirectionalGainNodes(gainDirectional, config, sources);
         }
-        
+
         // Create a dipole beam node per station0-source combination.
         boost::multi_array<JonesExpr, 2> dipoleBeam;
         if(mask[BEAM])
@@ -411,7 +410,7 @@ bool Model::makeInvExpressions(const ModelConfig &config,
                     : JonesExpr(new JonesMul2(jJones[i],
                         gainDirectional[i][0]));
             }
-            
+
             if(mask[BEAM])
             {
                 jJones[i] = jJones[i].isNull() ? dipoleBeam[i][0]
@@ -427,30 +426,30 @@ bool Model::makeInvExpressions(const ModelConfig &config,
             // TODO: Add other image-plane effects here.
         }
     }
-        
+
     // Create an inverse J-Jones matrix for each station.
     if(uvEffects || imgEffects)
     {
         for(size_t i = 0; i < nStations; ++i)
         {
             ASSERT(!jJones[i].isNull());
-            jJones[i] = new JonesInvert(jJones[i]);   
+            jJones[i] = new JonesInvert(jJones[i]);
         }
     }
-    
+
     // Create an expression tree for each baseline.
     for(size_t i = 0; i < baselines.size(); ++i)
     {
         const baseline_t &baseline = baselines[i];
-        
+
         JonesExpr vdata(new JonesVisData(chunk, baseline));
-        
+
         if(uvEffects || imgEffects)
         {
             vdata = new JonesCMul3(jJones[baseline.first], vdata,
                 jJones[baseline.second]);
         }
-        
+
         itsExpressions[baseline] = vdata;
     }
 
@@ -496,7 +495,7 @@ void Model::clearPerturbedParms()
 ParmGroup Model::getPerturbedParms() const
 {
     ParmGroup result;
-    
+
     map<uint, Expr>::const_iterator it = itsParms.begin();
     map<uint, Expr>::const_iterator itEnd = itsParms.end();
     while(it != itEnd)
@@ -517,7 +516,7 @@ ParmGroup Model::getPerturbedParms() const
 ParmGroup Model::getParms() const
 {
     ParmGroup result;
-    
+
     map<uint, Expr>::const_iterator it = itsParms.begin();
     map<uint, Expr>::const_iterator itEnd = itsParms.end();
     while(it != itEnd)
@@ -535,7 +534,7 @@ void Model::precalculate(const Request &request)
     {
         return;
     }
-    
+
     // First clear the levels of all nodes in the tree.
     for(map<baseline_t, JonesExpr>::iterator it = itsExpressions.begin();
         it != itsExpressions.end();
@@ -594,7 +593,7 @@ void Model::precalculate(const Request &request)
         for(size_t level = precalcNodes.size(); --level > 0;)
         {
             vector<ExprRep*> &nodes = precalcNodes[level];
-            
+
             if(!nodes.empty())
             {
 #pragma omp for schedule(dynamic)
@@ -623,7 +622,7 @@ JonesResult Model::evaluate(const baseline_t &baseline,
 vector<bool> Model::parseComponents(const vector<string> &components) const
 {
     vector<bool> mask(N_ModelComponent, false);
-    
+
     for(vector<string>::const_iterator it = components.begin();
         it != components.end();
         ++it)
@@ -699,7 +698,7 @@ void Model::makeSources(vector<Source::Pointer> &result,
                 sources.insert(make_pair(tmp[j].getName(), tmp[j]));
             }
         }
-    
+
         // Create a Source node for each unique source.
         map<string, SourceInfo>::const_iterator srcIt = sources.begin();
         map<string, SourceInfo>::const_iterator srcItEnd = sources.end();
@@ -720,46 +719,71 @@ Source::Pointer Model::makeSource(const SourceInfo &source)
 {
 //    LOG_DEBUG_STR("Creating source: " << source.getName() << " ["
 //        << source.getType() << "]);
-    
+
     switch(source.getType())
     {
     case SourceInfo::POINT:
         {
-            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
-            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
-            Expr i(makeExprParm(SKY, "I:" + source.getName()));
-            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
-            Expr u(makeExprParm(SKY, "U:" + source.getName()));
-            Expr v(makeExprParm(SKY, "V:" + source.getName()));
+            Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
+            Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
+            Expr i = makeExprParm(SKY, "I:" + source.getName());
+            Expr q = makeExprParm(SKY, "Q:" + source.getName());
+            Expr u = makeExprParm(SKY, "U:" + source.getName());
+            Expr v = makeExprParm(SKY, "V:" + source.getName());
+            Expr spectral = makeSpectralIndex(source);
 
             return PointSource::Pointer(new PointSource(source.getName(),
-                ra, dec, i, q, u, v));
+                ra, dec, i, q, u, v, spectral));
         }
         break;
-        
+
     case SourceInfo::GAUSSIAN:
         {
-            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
-            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
-            Expr i(makeExprParm(SKY, "I:" + source.getName()));
-            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
-            Expr u(makeExprParm(SKY, "U:" + source.getName()));
-            Expr v(makeExprParm(SKY, "V:" + source.getName()));
-            Expr maj(makeExprParm(SKY, "Major:" + source.getName()));
-            Expr min(makeExprParm(SKY, "Minor:" + source.getName()));
-            Expr phi(makeExprParm(SKY, "Phi:" + source.getName()));
+            Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
+            Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
+            Expr i = makeExprParm(SKY, "I:" + source.getName());
+            Expr q = makeExprParm(SKY, "Q:" + source.getName());
+            Expr u = makeExprParm(SKY, "U:" + source.getName());
+            Expr v = makeExprParm(SKY, "V:" + source.getName());
+            Expr maj = makeExprParm(SKY, "Major:" + source.getName());
+            Expr min = makeExprParm(SKY, "Minor:" + source.getName());
+            Expr phi = makeExprParm(SKY, "Phi:" + source.getName());
+            Expr spectral = makeSpectralIndex(source);
 
             return GaussianSource::Pointer(new GaussianSource(source.getName(),
-                ra, dec, i, q, u, v, maj, min, phi));
+                ra, dec, i, q, u, v, spectral, maj, min, phi));
         }
         break;
-        
+
     default:
         LOG_WARN_STR("Unable to construct source !!: " << source.getName());
         break;
     }
-    
+
     return Source::Pointer();
+}
+
+Expr Model::makeSpectralIndex(const SourceInfo &source)
+{
+    unsigned int degree =
+        static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
+            "SpectralIndexDegree:" + source.getName()));
+    LOG_DEBUG_STR("Degree: " << degree);
+
+    Expr reference = makeExprParm(SKY, "ReferenceFrequency:"
+        + source.getName());
+
+    vector<Expr> coefficients;
+    coefficients.reserve(degree + 1);
+    for(unsigned int i = 0; i <= degree; ++i)
+    {
+        ostringstream name;
+        name << "SpectralIndex:" << i << ":" << source.getName();
+        coefficients.push_back(makeExprParm(SKY, name.str()));
+    }
+
+    return Expr(new SpectralIndex(reference, coefficients.begin(),
+        coefficients.end()));
 }
 
 void Model::makeStationUvw()
@@ -801,7 +825,7 @@ void Model::makeStationShiftNodes(boost::multi_array<Expr, 2> &result,
     for(size_t j = 0; j < sources.size(); ++j)
     {
         Expr lmn = new LMN(sources[j], itsPhaseRef);
-    
+
         for(size_t i = 0; i < itsStationUvw.size(); ++i)
         {
             result[i][j] = new DFTPS(itsStationUvw[i], lmn);
@@ -817,7 +841,7 @@ void Model::makeBandpassNodes(vector<JonesExpr> &result)
     for(size_t i = 0; i < nStations; ++i)
     {
         Expr B11, B22;
-        
+
         const string &suffix = itsInstrument.stations[i].name;
 
         B11 = makeExprParm(INSTRUMENT, "Bandpass:11:" + suffix);
@@ -838,7 +862,7 @@ void Model::makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config)
     for(size_t i = 0; i < nStations; ++i)
     {
         Expr J11, J12, J21, J22;
-        
+
         const string &suffix = itsInstrument.stations[i].name;
 
         Expr J11_elem1 =
@@ -892,7 +916,7 @@ void Model::makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
         for(size_t j = 0; j < nSources; ++j)
         {
             Expr J11, J12, J21, J22;
-            
+
             string suffix(itsInstrument.stations[i].name + ":"
                 + sources[j]->getName());
 
@@ -940,7 +964,7 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
     ASSERT(config.beamConfig->type() == "HamakerDipole"
         || config.beamConfig->type() == "YatawattaDipole");
     ASSERT(azel.shape()[0] == itsInstrument.stations.size());
-    
+
     const size_t nStations = azel.shape()[0];
     const size_t nSources = azel.shape()[1];
 
@@ -952,7 +976,7 @@ void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
         HamakerDipoleConfig::ConstPointer beamConfig =
             dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
         ASSERT(beamConfig);
-        
+
         // Read beam model coefficients.
         BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
 
@@ -1006,7 +1030,7 @@ void Model::makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
     const ModelConfig &config, const boost::multi_array<Expr, 2> &azel)
 {
     ASSERT(azel.shape()[0] == itsInstrument.stations.size());
-    
+
     const size_t nStations = azel.shape()[0];
     const size_t nSources = azel.shape()[1];
 
@@ -1058,10 +1082,10 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
     // Read file header.
     string header, token0, token1, token2, token3, token4, token5;
     getline(in, header);
-    
+
     size_t nElements, nHarmonics, nPowerTime, nPowerFreq;
     double freqAvg, freqRange;
-    
+
     istringstream iss(header);
     iss >> token0 >> nElements >> token1 >> nHarmonics >> token2 >> nPowerTime
         >> token3 >> nPowerFreq >> token4 >> freqAvg >> token5 >> freqRange;
@@ -1099,20 +1123,20 @@ BeamCoeff Model::readBeamCoeffFile(const string &filename) const
             continue;
         }
 
-        // Parse line. 
+        // Parse line.
         size_t element, harmonic, powerTime, powerFreq;
         double re, im;
-       
+
         iss.clear();
         iss.str(line);
         iss >> element >> harmonic >> powerTime >> powerFreq >> re >> im;
-        
+
         if(!iss || element >= nElements || harmonic >= nHarmonics
             || powerTime >= nPowerTime || powerFreq >= nPowerFreq)
         {
             THROW(BBSKernelException, "Error reading file.");
         }
-        
+
         // Store coefficient.
         (*coeff)[element][harmonic][powerTime][powerFreq] =
             makedcomplex(re, im);

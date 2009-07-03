@@ -198,13 +198,6 @@ double MIM::calculate_mim_function(const vector<double> &parms, double x,
 
 }
 
-#ifdef EXPR_GRAPH
-std::string MIM::getLabel()
-{
-    return std::string("MIM\\nIonospheric disturbance of a source/station"
-        " combination.");
-}
-#endif
   
 } //# namespace BBS
 } //# namespace LOFAR

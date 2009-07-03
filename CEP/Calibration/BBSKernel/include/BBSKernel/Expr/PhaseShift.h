@@ -48,9 +48,6 @@ public:
     virtual Result getResult(const Request &request);
 
 private:
-    #ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-    #endif
 
     Expr itsLeft;
     Expr itsRight;

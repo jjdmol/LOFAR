@@ -56,7 +56,7 @@ ExprRep::~ExprRep()
       ASSERT(childRep);
       childRep->decrNParents();
   }
-  
+
   delete itsResult;
   delete itsResVec;
 }
@@ -73,10 +73,10 @@ void ExprRep::removeChild(Expr child)
 {
     std::vector<Expr>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child);
     ASSERT(it != itsChildren.end());
-    
+
     ExprRep *childRep = child.itsRep;
     ASSERT(childRep);
-    
+
     childRep->decrNParents();
     itsChildren.erase(it);
 }
@@ -177,7 +177,7 @@ const Result& ExprRep::calcResult (const Request& request,
   return *itsResult;
 }
 
-Matrix ExprRep::getResultValue (const vector<const Matrix*>&)
+Matrix ExprRep::getResultValue (const Request &, const vector<const Matrix*>&)
 {
   THROW (LOFAR::Exception,
      "Expr::getResult(Value) not implemented in derived class");
@@ -201,7 +201,7 @@ Result ExprRep::getResult (const Request& request)
   }
 
   // Calculate the resulting main value.
-  result.setValue (getResultValue(mat));
+  result.setValue (getResultValue(request, mat));
 
   // Calculate the perturbed values.
   PValueSetIteratorDynamic pvIter(res);
@@ -210,9 +210,9 @@ Result ExprRep::getResult (const Request& request)
   {
     for (size_t i=0; i<nrchild; ++i) {
       mat[i] = &(pvIter.value(i));
-    }      
+    }
 
-    result.setPerturbedValue(pvIter.key(), getResultValue(mat));
+    result.setPerturbedValue(pvIter.key(), getResultValue(request, mat));
     pvIter.next();
   }
 
@@ -258,25 +258,6 @@ ResultVec ExprRep::getResultVec (const Request& request)
   return res;
 }
 
-#ifdef EXPR_GRAPH
-std::string ExprRep::getLabel()
-{
-    return std::string("ExprRep base class");
-}
-
-void ExprRep::writeExpressionGraph(std::ostream &os)
-{
-    os << "id" << std::hex << this << " [label=\"" << getLabel() << "\"];" << std::endl;
-
-    std::vector<Expr>::iterator it;
-    for(it = itsChildren.begin(); it != itsChildren.end(); ++it)
-    {
-          os << "id" << std::hex << it->rep() << " -> " << "id" << std::hex
-            << this << ";" << std::endl;
-          it->writeExpressionGraph(os);
-    }
-}
-#endif
 
 
 Expr::Expr (const Expr& that)
@@ -321,11 +302,11 @@ Result ExprToComplex::getResult (const Request& request)
   Result result;
   result.init();
   result.setValue(tocomplex(real.getValue(), imag.getValue()));
-  
+
   // Compute perturbed values.
   const Result *pvSet[2] = {&real, &imag};
   PValueSetIterator<2> pvIter(pvSet);
-  
+
   while(!pvIter.atEnd())
   {
     result.setPerturbedValue(pvIter.key(), tocomplex(pvIter.value(0),
@@ -336,12 +317,6 @@ Result ExprToComplex::getResult (const Request& request)
   return result;
 }
 
-#ifdef EXPR_GRAPH
-std::string ExprToComplex::getLabel()
-{
-    return std::string("ExprToComplex\\nreal / imaginary");
-}
-#endif
 
 ExprAPToComplex::ExprAPToComplex (const Expr& ampl,
                     const Expr& phase)
@@ -371,7 +346,7 @@ Result ExprAPToComplex::getResult (const Request& request)
   // Compute perturbed values.
   const Result *pvSet[2] = {&ampl, &phase};
   PValueSetIterator<2> pvIter(pvSet);
-  
+
   while(!pvIter.atEnd())
   {
     if(pvIter.hasPValue(1)) {
@@ -394,12 +369,6 @@ Result ExprAPToComplex::getResult (const Request& request)
   return result;
 }
 
-#ifdef EXPR_GRAPH
-std::string ExprAPToComplex::getLabel()
-{
-    return std::string("ExprToComplex\\namplitude / phase");
-}
-#endif
 
 ExprPhaseToComplex::ExprPhaseToComplex(const Expr &phase)
     : itsPhase(phase)
@@ -418,7 +387,7 @@ Result ExprPhaseToComplex::getResult(const Request &request)
 
     // Allocate result.
     Result result;
-    result.init();    
+    result.init();
 
     // Compute main value.
     result.setValue(tocomplex(cos(phase.getValue()), sin(phase.getValue())));
@@ -438,12 +407,6 @@ Result ExprPhaseToComplex::getResult(const Request &request)
     return result;
 }
 
-#ifdef EXPR_GRAPH
-std::string ExprPhaseToComplex::getLabel()
-{
-    return std::string("ExprPhaseToComplex\\nphase");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

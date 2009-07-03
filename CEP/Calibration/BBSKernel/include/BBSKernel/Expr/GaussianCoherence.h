@@ -45,21 +45,15 @@ public:
     GaussianCoherence(const GaussianSource::ConstPointer &source,
         const StatUVW::ConstPointer &station1,
         const StatUVW::ConstPointer &station2);
-    ~GaussianCoherence();
 
     // Calculate the results for the given domain.
     virtual JonesResult getJResult(const Request &request);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
-
     Matrix computeCoherence(const Request &request, const Matrix &uBaseline,
         const Matrix &vBaseline, const Matrix &major, const Matrix &minor,
         const Matrix &phi);
 
-    GaussianSource::ConstPointer    itsSource;
     StatUVW::ConstPointer           itsStation1, itsStation2;
 };
 

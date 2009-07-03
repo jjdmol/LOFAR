@@ -113,13 +113,6 @@ ResultVec LMN::getResultVec(const Request &request)
     return result;
 }
 
-#ifdef EXPR_GRAPH
-string LMN::getLabel()
-{
-    return string("LMN\\nLMN-coordinates of a direction on the sky\\n"
-        + itsSource->getName());
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

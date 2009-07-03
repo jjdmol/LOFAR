@@ -163,12 +163,6 @@ void PiercePoint::evaluate(const Request &request, const Matrix &in_az,
 }
 
 
-#ifdef EXPR_GRAPH
-std::string MeqPP::getLabel()
-{
-    return std::string("MeqPP\\n PiercePoint through the ionosphere of a source station combination.");
-}
-#endif
 
 } //# namespace BBS
 } //# namespace LOFAR

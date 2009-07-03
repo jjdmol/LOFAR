@@ -52,9 +52,6 @@ public:
     ResultVec getResultVec(const Request &request);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual string getLabel();
-#endif
 
     Source::Pointer          itsSource;
     PhaseRef::ConstPointer   itsPhaseRef;

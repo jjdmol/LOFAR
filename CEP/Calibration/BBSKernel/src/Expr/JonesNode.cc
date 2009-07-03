@@ -59,12 +59,6 @@ JonesResult JonesNode::getJResult (const Request& request)
   return res;
 }
 
-#ifdef EXPR_GRAPH
-std::string JonesNode::getLabel()
-{
-    return std::string("JonesNode\\n2x2 Jones matrix");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

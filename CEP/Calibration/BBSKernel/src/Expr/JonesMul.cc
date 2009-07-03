@@ -131,12 +131,6 @@ JonesResult JonesMul::getJResult(const Request &request)
     return result;
 }
 
-#ifdef EXPR_GRAPH
-virtual std::string JonesMul::getLabel()
-{
-    return std::string("JonesMul\\nMultiply an Expr with a JonesExpr");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

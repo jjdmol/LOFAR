@@ -43,10 +43,8 @@ class Source
 public:
     typedef shared_ptr<Source>       Pointer;
     typedef shared_ptr<const Source> ConstPointer;
-    
-    Source();
-    Source(const string &name, const Expr &ra, const Expr &dec);
 
+    Source(const string &name, const Expr &ra, const Expr &dec);
     virtual ~Source();
 
     const string &getName() const
@@ -59,8 +57,8 @@ public:
 
 protected:
     string  itsName;
-    Expr itsRa;
-    Expr itsDec;
+    Expr    itsRa;
+    Expr    itsDec;
 };
 
 // @}

@@ -55,9 +55,6 @@ private:
         const Matrix &in_el, Matrix &out_E_theta, Matrix &out_E_phi, 
         double height, double length, double slant, double orientation);
 
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
     double      itsHeight, itsLength, itsSlant, itsOrientation;
 };

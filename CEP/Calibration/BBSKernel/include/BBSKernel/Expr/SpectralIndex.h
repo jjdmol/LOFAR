@@ -1,6 +1,7 @@
-//# JonesMul.h: Calculate c * A, where c is an Expr and A is a JonesExpr.
+//# SpectralIndex.h: Frequency dependent scale factor for the base flux given
+//# for a specific reference frequency.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,15 +21,14 @@
 //#
 //# $Id$
 
-#ifndef EXPR_JONESMUL_H
-#define EXPR_JONESMUL_H
+#ifndef LOFAR_BBS_EXPR_SPECTRALINDEX_H
+#define LOFAR_BBS_EXPR_SPECTRALINDEX_H
 
 // \file
-// Calculate c * A, where c is an Expr and A is a JonesExpr.
+// Frequency dependent scale factor for the base flux given for a specific
+// reference frequency.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/JonesResult.h>
 
 namespace LOFAR
 {
@@ -38,25 +38,30 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-// Calculate c * A, where c is an Expr and A is a JonesExpr.
-class JonesMul: public JonesExprRep
+class SpectralIndex: public ExprRep
 {
 public:
-    JonesMul(const Expr &left, const JonesExpr &right);
-    ~JonesMul();
+    template <typename T_Iterator>
+    SpectralIndex(const Expr &refFreq, T_Iterator first, T_Iterator last);
 
-    // Get the result of the expression for the given domain.
-    JonesResult getJResult(const Request &request);
-
-private:
-
-    Expr        itsLeft;
-    JonesExpr   itsRight;
+    virtual Matrix getResultValue(const Request &request,
+        const std::vector<const Matrix*> &args);
 };
+
+template <typename T_Iterator>
+SpectralIndex::SpectralIndex(const Expr &refFreq, T_Iterator first,
+    T_Iterator last)
+{
+    addChild(refFreq);
+    while(first != last)
+    {
+        addChild(*first++);
+    }
+}
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif
