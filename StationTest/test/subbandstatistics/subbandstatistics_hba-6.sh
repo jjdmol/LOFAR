@@ -1,6 +1,6 @@
 #!/bin/sh
-# 1.0 subband statistics HBA test 
-# 15-05-09, M.J Norden
+# 1.1 subband statistics HBA test 
+# 29-06-09, M.J Norden
 # HBA input with antennas
 
 
@@ -11,6 +11,8 @@ rspctl --specinv=0
 rspctl --rcuprsg=0
 rspctl --wg=0
 rspctl --rcumode=6 
+sleep 2
+rspctl --rcuenable=1
 sleep 2
 
 echo ==========================
