@@ -137,7 +137,9 @@ class PencilCoordinates
     PencilCoordinates& operator+=( const PencilCoordinates &rhs );
     PencilCoordinates& operator+=( const PencilCoord3D &rhs );
 
-  private:
+    friend std::ostream& operator<<( std::ostream &os, const PencilCoordinates &c );
+
+private:
     std::vector<PencilCoord3D>  itsCoordinates;
 };
 
@@ -215,6 +217,11 @@ inline PencilCoord3D& operator*( const PencilCoord3D &lhs, const double a )
 inline std::ostream& operator<<(std::ostream& os, const PencilCoord3D &c)
 {
   return os << "(" << c.itsXYZ[0] << "," << c.itsXYZ[1] << "," << c.itsXYZ[2] << ")";
+}
+
+inline std::ostream& operator<<(std::ostream &os, const PencilCoordinates &c )
+{
+  return os << c.itsCoordinates;
 }
 
 }
