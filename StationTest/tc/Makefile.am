@@ -1,5 +1,6 @@
 testdir		 =  $(prefix)/stationtest/tc
 test_SCRIPTS = 	bist.py \
+				cdo_ctrl.py \
 				empty.py \
 				hba_client.py \
 				hba_server.py \
