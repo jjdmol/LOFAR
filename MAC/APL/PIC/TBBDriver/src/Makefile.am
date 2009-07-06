@@ -127,7 +127,7 @@ noinst_HEADERS = \
 # libtbbdriver_la_LIBADD     = shmem/libshmem.la
 # endif
 
-bin_PROGRAMS = versiontbbdriver \
+bin_PROGRAMS = versiontbb_driver \
 	TBBDriver \
 	tbbctl
 
@@ -142,9 +142,9 @@ TBBDriver_SOURCES 		= TBBDriver.h TBBDriver.cc
 TBBDriver_LDADD 		= libtbbdriver.la libtp_protocol.la
 TBBDriver_DEPENDENCIES  = libtbbdriver.la libtp_protocol.la $(LOFAR_DEPEND)
 
-versiontbbdriver_SOURCES      = versiontbbdriver.cc
-versiontbbdriver_LDADD        = libtbbdriver.la
-versiontbbdriver_DEPENDENCIES = libtbbdriver.la $(LOFAR_DEPEND)
+versiontbb_driver_SOURCES      = versiontbb_driver.cc
+versiontbb_driver_LDADD        = libtbbdriver.la
+versiontbb_driver_DEPENDENCIES = libtbbdriver.la $(LOFAR_DEPEND)
 
 
 glishdir = $(libexecdir)/glish

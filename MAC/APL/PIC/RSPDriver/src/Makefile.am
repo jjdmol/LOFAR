@@ -26,7 +26,7 @@ lib_LTLIBRARIES		= libepa.la
 libepa_la_SOURCES	= Package__Version.cc RawEvent.h RawEvent.cc
 
 sbin_PROGRAMS 		= geni2c
-bin_PROGRAMS 		= RSPDriver rspctl versionrspdriver
+bin_PROGRAMS 		= RSPDriver rspctl versionrsp_driver
 
 RSPDriver_SOURCES	= \
 	RSPDriver.cc \
@@ -220,8 +220,8 @@ rspctl_LDADD					= -lgnuplot_i
 
 geni2c_SOURCES					= geni2c.cc
 
-versionrspdriver_SOURCES		= versionrspdriver.cc
-versionrspdriver_LDADD			= libepa.la
-versionrspdriver_DEPENDENCIES	= libepa.la $(LOFAR_DEPEND)
+versionrsp_driver_SOURCES		= versionrsp_driver.cc
+versionrsp_driver_LDADD			= libepa.la
+versionrsp_driver_DEPENDENCIES	= libepa.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
