@@ -328,11 +328,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
     // tell CN to process data
     command.write(stream);
 
-    // create and send all metadata in one "large" message
-    Vector<SubbandMetaData> metaData( itsNrPsets, 16, heapAllocator );
-    for( unsigned i = 0; i < itsNrPsets; i++ ) {
-      metaData[i] = SubbandMetaData( itsNrPencilBeams );
-    }
+    // create and send all metadata in one "large" message, since initiating a message
+    // has significant overhead in FCNP.
+    SubbandMetaData metaData( itsNrPsets, itsNrPencilBeams, 16 );
     
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
       unsigned subband  = itsNSubbandsPerPset * pset + subbandBase;
@@ -343,7 +341,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 
         if( itsNeedDelays ) {
           for( unsigned p = 0; p < itsNrPencilBeams; p++ ) {
-            struct SubbandMetaData::beamInfo &beamInfo = metaData[pset].beams[p];
+            struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(pset)[p];
 
 	    beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
 	    beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
@@ -358,14 +356,12 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 	  }  
         }  
 
-        metaData[pset].alignmentShift() = itsBBuffers[rspBoard]->alignmentShift(beam);
-        metaData[pset].setFlags(itsFlags[rspBoard][beam]);
+        metaData.alignmentShift( pset ) = itsBBuffers[rspBoard]->alignmentShift(beam);
+        metaData.setFlags( pset, itsFlags[rspBoard][beam]);
       }
     }
 
-    for( unsigned pset = 0; pset < itsNrPsets; pset++ ) {
-      metaData[pset].write( stream );
-    }
+    metaData.write( stream );
 
     // now send all subband data
     for (unsigned pset = 0; pset < itsNrPsets; pset ++) {
@@ -374,6 +370,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::toComputeNodes()
 	unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
 	unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
 	unsigned beam     = itsSubbandToBeamMapping[subband];
+
 	itsBBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
       }
     }
@@ -396,7 +393,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
   unsigned	   nrSubbands		    = itsPS->nrSubbands();
 
   if (!fileHeaderWritten) {
-    if (nrSubbands > 54)
+    if (nrSubbands > 62)
       THROW(IONProcException, "too many subbands for raw data format");
 
     struct FileHeader {
@@ -407,9 +404,9 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
       uint32	nrSamplesPerBeamlet;
       char	station[20];
       double	sampleRate;	// typically 156250 or 195312.5
-      double	subbandFrequencies[54];
+      double	subbandFrequencies[62];
       double	beamDirections[8][2];
-      int16     subbandToBeamMapping[54];
+      int16     subbandToBeamMapping[62];
       int32     pad;
       
     } fileHeader;  
@@ -455,8 +452,8 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::dumpRawData()
 
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
     blockHeader.coarseDelayApplied[beam]	 = itsSamplesDelay[beam];
-    blockHeader.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam];
-    blockHeader.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam];
+    blockHeader.fineDelayRemainingAtBegin[beam]	 = itsFineDelaysAtBegin[beam][0];
+    blockHeader.fineDelayRemainingAfterEnd[beam] = itsFineDelaysAfterEnd[beam][0];
     blockHeader.time[beam]			 = itsDelayedStamps[beam];
 
     // FIXME: the current BlockHeader format does not provide space for

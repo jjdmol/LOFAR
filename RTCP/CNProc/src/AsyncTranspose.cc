@@ -56,8 +56,7 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::postAllReceive
         size_t size;
       } toRead[itsNrCommunications] = {
         { transposedData->samples[i].origin(), transposedData->samples[i].num_elements() * sizeof(SAMPLE_TYPE) },
-        { &transposedData->metaData[i].itsMarshalledData, sizeof(SubbandMetaData::marshallData) },
-        { &transposedData->metaData[i].beams.front(), itsNrPencilBeams * sizeof(SubbandMetaData::beamInfo) }
+        { &transposedData->metaData.subbandInfo(i), transposedData->metaData.itsSubbandInfoSize }
       };
 
       // read it
@@ -120,8 +119,7 @@ template <typename SAMPLE_TYPE> void AsyncTranspose<SAMPLE_TYPE>::asyncSend(cons
     const size_t size;
   } toWrite[itsNrCommunications] = {
     { inputData->samples[outputPsetNr].origin(), inputData->samples[outputPsetNr].num_elements() * sizeof(SAMPLE_TYPE) },
-    { &inputData->metaData[outputPsetNr].itsMarshalledData, sizeof(SubbandMetaData::marshallData) },
-    { &inputData->metaData[outputPsetNr].beams.front(), itsNrPencilBeams * sizeof(SubbandMetaData::beamInfo) }
+    { &inputData->metaData.subbandInfo(outputPsetNr), inputData->metaData.itsSubbandInfoSize },
   };
 
   // write it

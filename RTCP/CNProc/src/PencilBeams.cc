@@ -112,17 +112,17 @@ static const unsigned NRBEAMS = 3;
 #define ADDFUNC(nr)  _add_ ## nr ## _single_precision_vectors
 
 // the number of samples to do in one go, such that the
-// caches are optimally used. itsNrSamplesPerIntegration needs
-// to be a multiple of this.
-// Also, TIMESTEPSIZE needs to be a multiple of 16, as the assembly code requires it
+// caches are optimally used. 
+//
+// TIMESTEPSIZE and itsNrSamplesPerIntegration need to be a multiple of 16, as the assembly code requires it
 static const unsigned TIMESTEPSIZE = 128;
 
 void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData *out )
 {
   ASSERT( TIMESTEPSIZE % 16 == 0 );
 
-  if( itsNrSamplesPerIntegration % TIMESTEPSIZE > 0 ) {
-    THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of " << TIMESTEPSIZE );
+  if( itsNrSamplesPerIntegration % 16 > 0 ) {
+    THROW(CNProcException, "nrSamplesPerIntegration (" << itsNrSamplesPerIntegration << ") needs to be a multiple of 16" );
   }
 
   const double averagingFactor = 1.0 / itsNrValidStations;
@@ -150,6 +150,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 
     unsigned processBeams = NRBEAMS;
     unsigned processStations = NRSTATIONS;
+    unsigned processTime = TIMESTEPSIZE;
 
     // Iterate over the same portions of the input data as many times as possible to 
     // fully exploit the caches.
@@ -157,7 +158,9 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
     for( unsigned stat = 0; stat < itsNrStations; stat += processStations ) {
       processStations = std::min( NRSTATIONS, itsNrStations - stat );
 
-      for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += TIMESTEPSIZE ) {
+      for( unsigned time = 0; time < itsNrSamplesPerIntegration; time += processTime ) {
+        processTime = std::min( TIMESTEPSIZE, itsNrSamplesPerIntegration - time );
+
         // central beam (#0) has no weights, we can simply add the stations
 
 	switch( processStations ) {
@@ -171,7 +174,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
 #define STATION(nr)	(reinterpret_cast<const float*>(in->samples[ch][stat+nr][time].origin()))
 
 // shorthand for the add functions
-#define ADDGENERIC(nr,...)	ADDFUNC(nr)( OUTPUT, __VA_ARGS__, TIMESTEPSIZE * NR_POLARIZATIONS * 2 )
+#define ADDGENERIC(nr,...)	ADDFUNC(nr)( OUTPUT, __VA_ARGS__, processTime * NR_POLARIZATIONS * 2 )
 
 // adds stations, and the subtotal if needed (if stat!=0)
 #define ADD(nr,nrplusone,...)	do {							\
@@ -223,7 +226,7 @@ void PencilBeams::computeComplexVoltages( const FilteredData *in, PencilBeamData
             &weights[stat][beam],
             (&weights[1][0] - &weights[0][0]) * sizeof weights[0][0],
 
-            TIMESTEPSIZE,
+            processTime,
             stat == 0,
             processStations,
             processBeams
@@ -248,14 +251,14 @@ void PencilBeams::computeDelays( const FilteredData *filteredData )
 
   for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
     // we already compensated for the delay for the central beam
-    const SubbandMetaData::beamInfo &centralBeamInfo = filteredData->metaData[stat].beams[0];
+    const SubbandMetaData::beamInfo &centralBeamInfo = filteredData->metaData.beams(stat)[0];
     const double compensatedDelay = (centralBeamInfo.delayAfterEnd - centralBeamInfo.delayAtBegin) * 0.5;
 
     itsDelays[stat][0] = 0.0;
 
     // non-central beams
     for( unsigned pencil = 1; pencil < itsNrPencilBeams; pencil++ ) {
-      const SubbandMetaData::beamInfo &beamInfo = filteredData->metaData[stat].beams[pencil];
+      const SubbandMetaData::beamInfo &beamInfo = filteredData->metaData.beams(stat)[pencil];
 
       // subtract the delay that was already compensated for
       itsDelays[stat][pencil] = (beamInfo.delayAfterEnd - beamInfo.delayAtBegin) * 0.5 - compensatedDelay;

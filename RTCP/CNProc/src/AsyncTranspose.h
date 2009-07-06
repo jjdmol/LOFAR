@@ -71,7 +71,7 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
   const LocationInfo &itsLocationInfo;
 
   // The number of communicates (writes/reads) needed to transport one sub band.
-  static const unsigned itsNrCommunications = 3;
+  static const unsigned itsNrCommunications = 2;
 
   // The maps that contain the handles to the asynchronous reads.
   // The maps are indexed by the inputPset index.
