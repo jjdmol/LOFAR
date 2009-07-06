@@ -63,6 +63,8 @@ class Stations(dict):
 def defineStations( s ):
   # Actual, physical stations. """
 
+  defaultInputs = ['0.0.0.0:%s' % (4346+i) for i in xrange(4)]
+
   s.update( {
     # CS001
     "CS001_lba0":  [Station('CS001LBA_LBA0',  '10.170.0.1',  ['0.0.0.0:4346'])],
@@ -82,7 +84,7 @@ def defineStations( s ):
     "CS001_hba3":  [Station('CS001HBA_HBA3', '10.170.0.18', ['0.0.0.0:4349'])],
     "CS001_hba":   "CS001_hba0 + CS001_hba1 + CS001_hba2 + CS001_hba3",
 
-    "CS001":       [Station('CS001', '10.170.0.1', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
+    "CS001":       [Station('CS001', '10.170.0.1', defaultInputs)],
 
     # CS010
     "CS010_lba0":  [Station('CS010LBA_LBA0',  '10.170.0.5',  ['0.0.0.0:4346'])],
@@ -128,13 +130,21 @@ def defineStations( s ):
     "CS016_hba3":  [Station('CS016_HBA3', '10.170.0.26', ['0.0.0.0:4349'])],
     "CS016_hba":   "CS016_hba0 + CS016_hba1 + CS016_hba2 + CS016_hba3",
 
-    "CS016":       [Station('CS016', '10.170.0.9', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
+    "CS016":       [Station('CS016', '10.170.0.9', defaultInputs)],
 
     # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.21', ['0.0.0.0:4346', '0.0.0.0:4347', '0.0.0.0:4348', '0.0.0.0:4349'])],
+    "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', defaultInputs)],
+    "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', defaultInputs)],
+    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', defaultInputs)],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.21', defaultInputs)],
+
+    # RS307
+    "RS307LBA":   [Station('RS307LBA',  '10.170.0.189', defaultInputs)],
+    "RS307HBA":   [Station('RS307HBA',  '10.170.0.189', defaultInputs)],
+
+    # RS503
+    "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultInputs)],
+    "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultInputs)],
   } )
 
   # Simulated stations for experimentation.
