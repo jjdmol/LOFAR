@@ -37,30 +37,39 @@ Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 \maketitle
 
 \begin{abstract}
-A recent development in radio astronomy is to replace traditional dishes
-with many small antennas. The signals are combined to form one large,
-virtual telescope.  The enormous data streams are cross-correlated to
-filter out noise.  A recent trend is to correlate in software instead of dedicated hardware. Examples
-include e-VLBI and LOFAR.
-In this paper, we explain how to implement and optimize a correlator 
- on multi-core CPUs
-and many-core architectures, such as NVIDIA and ATI GPUs,
-and the \mbox{Cell/B.E.}  The correlator is a streaming, real-time
+Radio telescopes typcially consists of multiple receivers, of which the signals
+are cross-correlated to filter out noise.
+A recent trend is to correlate in software instead of dedicated hardware,
+taking advantage of the flexibility that software solutions offer.
+Examples include e-VLBI and LOFAR.
+However, the data rates are usually high and the processing requirements
+challenging.
+%Many-core processors potentially provide the required processing power.
+Many-core processors are promising devices to provide the required processing
+power, at least in theory.
+
+In this paper, we explain how to implement and optimize a correlator on
+multi-core CPUs and many-core architectures, such as NVIDIA and ATI GPUs,
+and the IBM \mbox{Cell/B.E.}  The correlator is a streaming, real-time
 application, and is much more I/O intensive than applications that are
 typically implemented on many-core hardware today.  We compare with
 the LOFAR production correlator on an IBM Blue Gene/P supercomputer.
 We identify several important architectural problems which cause
 architectures to perform suboptimally, and also deal with programmability. 
-Our findings are applicable to signal processing applications in general.
 
 The results show that the processing power and memory bandwidth of
 current GPUs are highly imbalanced.  While
 the production correlator on the Blue Gene/P achieves a superb 96\% of the
-theoretical peak performance, this is only 14\% on ATI GPUs, and 26\%
-on NVIDIA GPUs. The \mbox{Cell/B.E.} processor, in contrast, achieves an
-excellent 92\%. The research presented is an
-important pathfinder for next-generation telescopes.
+theoretical floating-point peak performance, this is only 14\% on ATI GPUs,
+and 26\% on NVIDIA GPUs.
+The \mbox{Cell/B.E.} processor, in contrast, achieves an
+excellent 92\%.
+The research presented is an important pathfinder for next-generation
+telescopes.
+Many of our findings are not only applicable to telescope correlators, but can
+be used to develop signal-processing applications in general.
 \end{abstract}
+
 
 \section{Introduction}
 % wat gaat de lezer leren van dit paper?
@@ -73,18 +82,22 @@ important pathfinder for next-generation telescopes.
 % dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
-The Low Frequency Array, for instance, will produce some tens of
-petabits per day, and the Australian SKA Pathfinder will
+The \emph{Low-Frequency Array\/} (LOFAR), for instance, will produce some tens
+of petabits per day, and the \emph{Australian SKA Pathfinder\/} (ASKAP) will
 even produce over six exabits per day.
-These modern radio telescopes use many separate receivers as building blocks, and
-combine their signals to simulate a single large and sensitive instrument.
+These modern radio telescopes use many separate receivers as building blocks,
+and combine their signals to simulate a single large and sensitive instrument.
+
 To extract the sky signal from the system noise, the \emph{correlator\/}
-correlates the signals from different receivers, and integrates the correlations over time, to reduce
-the amount of data. The correlation is an important problem in radio astronomy,
-since the data volumes are so large, and the computational demand grows quadratically
-with the number of receivers.
-Correlators are not limited to the field of astronomy, but are also used for example in geophysics\cite{correlator-geophysics}, 
-radar systems~\cite{correlator-radar}, and wireless networking~\cite{correlator-wireless}.
+correlates the signals from different receivers, and integrates the
+correlations over time, to reduce the amount of data.
+The correlator is a challenging problem in radio astronomy,
+since the data volumes are large, and the computational demands grow
+quadratically with the number of receivers.
+Correlators are not limited to the field of astronomy, but are also used for
+example in geophysics\cite{correlator-geophysics},
+radar systems~\cite{correlator-radar}, and
+wireless networking~\cite{correlator-wireless}.
 
 Traditionally, custom-built hardware is used to correlate radio astronomy signals.
 A recent development is to use a supercomputer~\cite{Romein:06}.
