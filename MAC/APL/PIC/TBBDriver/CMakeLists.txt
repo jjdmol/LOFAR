@@ -28,23 +28,19 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(TBB_Protocol)
+project(TBB_Driver)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
+# Do not split the following line, otherwise makeversion will fail!
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common TestSuite GCFTM MACIO RTCCommon TBB_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-
-## ---------------------------------------------------------------------------
-## Need extra symbolic link, thanks to inconsistent naming conventions!
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
+lofar_find_package(Boost REQUIRED)
+lofar_find_package(Blitz REQUIRED)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -55,3 +51,4 @@ include(LofarConfig)
 ## Subdirectories
 ## ---------------------------------------------------------------------------
 add_subdirectory(src)
+add_subdirectory(test)

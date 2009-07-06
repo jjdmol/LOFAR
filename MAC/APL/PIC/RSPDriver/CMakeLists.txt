@@ -33,12 +33,21 @@ include(LofarGeneral)
 
 include(LofarAddPackage)
 # Do not split the following line, otherwise makeversion will fail!
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common ApplCommon GCFTM MACIO RTCCommon RSP_Protocol TestSuite)
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common TestSuite GCFTM MACIO RTCCommon RSP_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED)
+lofar_find_package(Blitz REQUIRED)
+
+## ---------------------------------------------------------------------------
+## Create extra symbolic link, thanks to inconsistent naming conventions!
+## ---------------------------------------------------------------------------
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
+  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
