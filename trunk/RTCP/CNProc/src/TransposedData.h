@@ -22,9 +22,7 @@ template <typename SAMPLE_TYPE> class TransposedData: public SampleData<SAMPLE_T
 
     TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc, const unsigned nrPencilBeams);
 
-    virtual void allocate( Allocator &allocator = heapAllocator );
-
-    Vector<SubbandMetaData> metaData; //[itsNrStations]
+    SubbandMetaData             metaData; // with one subband for every station
   private:
     const unsigned		itsNrStations;
     const unsigned		itsNrPencilBeams;
@@ -35,20 +33,11 @@ template <typename SAMPLE_TYPE> class TransposedData: public SampleData<SAMPLE_T
 template <typename SAMPLE_TYPE> inline TransposedData<SAMPLE_TYPE>::TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc, const unsigned nrPencilBeams)
 :
   SuperType(false,boost::extents[nrStations][nrSamplesToCNProc][NR_POLARIZATIONS],0),
+  metaData(nrStations,nrPencilBeams,32),
   itsNrStations(nrStations),
   itsNrPencilBeams(nrPencilBeams),
   itsNrSamplesToCNProc(nrSamplesToCNProc)
 {
-}
-
-template <typename SAMPLE_TYPE> inline void TransposedData<SAMPLE_TYPE>::allocate( Allocator &allocator )
-{
-  SuperType::allocate( allocator );
-  metaData.resize(itsNrStations, 32);
-
-  for( unsigned i = 0; i < itsNrStations; i++ ) {
-    metaData[i] = SubbandMetaData( itsNrPencilBeams );
-  }
 }
 
 } // namespace RTCP

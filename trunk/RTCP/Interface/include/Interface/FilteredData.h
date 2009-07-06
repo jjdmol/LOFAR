@@ -20,9 +20,7 @@ class FilteredData: public SampleData<fcomplex,4>
 
     FilteredData(const unsigned nrStations, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, const unsigned nrPencilBeams);
 
-    virtual void allocate( Allocator &allocator = heapAllocator );
-
-    Vector<SubbandMetaData>     metaData; //[itsNrStations]
+    SubbandMetaData             metaData; // with one subband for every station
 
   protected:
     const unsigned              itsNrStations;
@@ -41,7 +39,7 @@ inline FilteredData::FilteredData(const unsigned nrStations, const unsigned nrCh
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
   SuperType::SampleData(false,boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations),
-  metaData(nrStations,32),
+  metaData(nrStations,nrPencilBeams,32),
   itsNrStations(nrStations),
   itsNrPencilBeams(nrPencilBeams),
   itsNrChannels(nrChannels),
@@ -49,31 +47,17 @@ inline FilteredData::FilteredData(const unsigned nrStations, const unsigned nrCh
 {
 }
 
-inline void FilteredData::allocate( Allocator &allocator )
-{
-  SuperType::allocate( allocator );
-  metaData.resize( itsNrStations, 32 );
-  
-  for( unsigned i = 0; i < itsNrStations; i++ ) {
-    metaData[i] = SubbandMetaData( itsNrPencilBeams );
-  }
-}
-
 
 inline void FilteredData::readData(Stream *str)
 {
-  for( unsigned subband = 0; subband < itsNrStations; subband++ ) {
-    metaData[subband].read( str );
-  }
+  metaData.read( str );
   SuperType::readData(str);
 }
 
 
 inline void FilteredData::writeData(Stream *str)
 {
-  for( unsigned subband = 0; subband < itsNrStations; subband++ ) {
-    metaData[subband].write( str );
-  }
+  metaData.write( str );
   SuperType::writeData(str);
 }
 

@@ -25,8 +25,6 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 
     InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc, const unsigned nrPencilBeams);
 
-    virtual void allocate( Allocator &allocator = heapAllocator );
-
     // used for asynchronous transpose
     void readMetaData(Stream *str);
     void readOne(Stream *str, unsigned subbandPosition);
@@ -39,7 +37,7 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
     const unsigned	    itsNrPencilBeams;
 
   public:
-    Vector<SubbandMetaData> metaData; //[outputPsets.size()]
+    SubbandMetaData metaData; // with one subband for every outputPset
 };
 
 
@@ -47,27 +45,15 @@ template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const u
 :
   SuperType( false, boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0 ),
   itsNrSubbands(nrSubbands),
-  itsNrPencilBeams(nrPencilBeams)
+  itsNrPencilBeams(nrPencilBeams),
+  metaData(nrSubbands,nrPencilBeams,32)
 {
-}
-
-template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::allocate( Allocator &allocator )
-{
-  SuperType::allocate( allocator );
-  metaData.resize( itsNrSubbands, 32 );
-
-  for( unsigned i = 0; i < itsNrSubbands; i++ ) {
-    metaData[i] = SubbandMetaData( itsNrPencilBeams );
-  }
 }
 
 // used for asynchronous transpose
 template <typename SAMPLE_TYPE> inline void InputData<SAMPLE_TYPE>::readMetaData(Stream *str)
 {
-  // read all metadata
-  for( unsigned subband = 0; subband < itsNrSubbands; subband++ ) {
-    metaData[subband].read( str );
-  }
+  metaData.read( str );
 }
 
 // used for asynchronous transpose

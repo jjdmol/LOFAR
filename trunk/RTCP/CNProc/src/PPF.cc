@@ -180,7 +180,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
   computeFlagsTimer.start();
 
   filteredData->flags[stat].reset();
-  SparseSet<unsigned> flags = transposedData->metaData[stat].getFlags();
+  SparseSet<unsigned> flags = transposedData->metaData.getFlags( stat );
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
@@ -246,7 +246,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   _bgl_mutex_lock(mutex);
 #endif
 
-  const unsigned alignmentShift = transposedData->metaData[stat].alignmentShift();
+  const unsigned alignmentShift = transposedData->metaData.alignmentShift( stat );
 
 #if 0
   LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
@@ -293,7 +293,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
 	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
 	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData[stat].beams[0].delayAtBegin, transposedData->metaData[stat].beams[0].delayAfterEnd);
+	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, transposedData->metaData.beams(stat)[0].delayAtBegin, transposedData->metaData.beams(stat)[0].delayAfterEnd);
 
 	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
 	}
@@ -332,12 +332,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
-  computePhaseShifts(phaseShifts, transposedData->metaData[stat].beams[0].delayAtBegin, transposedData->metaData[stat].beams[0].delayAfterEnd, baseFrequency);
+  computePhaseShifts(phaseShifts, transposedData->metaData.beams(stat)[0].delayAtBegin, transposedData->metaData.beams(stat)[0].delayAfterEnd, baseFrequency);
 
   // forward (pencil) beam forming information
-  for( unsigned p = 0; p < filteredData->metaData[stat].beams.size(); p++ ) {
-    filteredData->metaData[stat].beams[p] = transposedData->metaData[stat].beams[p];
-  }
+  memcpy( &filteredData->metaData.subbandInfo(stat), &transposedData->metaData.subbandInfo(stat), transposedData->metaData.itsSubbandInfoSize );
 
   const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
   SparseSet<unsigned>::const_iterator it = ranges.begin();

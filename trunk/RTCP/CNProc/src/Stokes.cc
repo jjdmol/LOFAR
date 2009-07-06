@@ -3,6 +3,7 @@
 
 #include <Stokes.h>
 #include <Interface/MultiDimArray.h>
+#include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
 namespace LOFAR {
@@ -41,8 +42,8 @@ static inline void addStokes( struct stokes &stokes, const fcomplex &polX, const
     stokes.Q += powerX - powerY;
     stokes.U += real(polX * conj(polY)); // proper stokes.U is twice this
     stokes.V += imag(polX * conj(polY)); // proper stokes.V is twice this
+    stokes.nrValidSamples++;
   }
-  stokes.nrValidSamples++;
 }
 
 
@@ -103,27 +104,20 @@ void Stokes::computeCoherentStokes( const MultiDimArray<fcomplex,4> &in, const S
   }
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time += integrationSteps ) {
+    for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
       for( unsigned beam = 0; beam < nrBeams; beam++ ) {
         struct stokes stokes = { 0, 0, 0, 0, 0 };
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-            if( inflags[beam].test( time+fractime ) ) {
-              continue;
-            }
-
-	    addStokes( stokes, in[ch][beam][time+fractime][0], in[ch][beam][time+fractime][1], allStokes );
+	    addStokes( stokes, in[ch][beam][inTime+fractime][0], in[ch][beam][inTime+fractime][1], allStokes );
         }
 
-        /* hack: if no valid samples, insert zeroes */
-        if( stokes.nrValidSamples == 0 ) { stokes.nrValidSamples = 1; }
-
-        #define dest out->samples[ch][beam][time / integrationSteps]
-        dest[0] = stokes.I / stokes.nrValidSamples;
+        #define dest out->samples[ch][beam][outTime]
+        dest[0] = stokes.I;
         if( allStokes ) {
-          dest[1] = stokes.Q / stokes.nrValidSamples;
-          dest[2] = stokes.U / stokes.nrValidSamples;
-          dest[3] = stokes.V / stokes.nrValidSamples;
+          dest[1] = stokes.Q;
+          dest[2] = stokes.U;
+          dest[3] = stokes.V;
         }
         #undef dest
       }
@@ -137,6 +131,7 @@ void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const
   const bool allStokes = itsNrStokes == 4;
   const unsigned upperBound = static_cast<unsigned>(itsNrSamplesPerIntegration * Stokes::MAX_FLAGGED_PERCENTAGE);
   bool validStation[nrStations];
+  unsigned nrValidStations = 0;
 
   out->flags[0].reset();
 
@@ -146,17 +141,23 @@ void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const
       validStation[stat] = false;
     } else {
       validStation[stat] = true;
+      nrValidStations++;
 
       // conservative flagging: flag anything that is flagged in one of the stations
       out->flags[0] |= inflags[stat];
     }
   }
 
+  /* hack: if no valid samples, insert zeroes */
+  if( nrValidStations == 0 ) {
+    nrValidStations = 1;
+  }
+
   // shorten the flags over the integration length
   out->flags[0] /= integrationSteps;
 
   for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
-    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time += integrationSteps ) {
+    for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamplesPerIntegration; inTime += integrationSteps, outTime++ ) {
       struct stokes stokes = { 0, 0, 0, 0, 0 };
 
       for( unsigned stat = 0; stat < nrStations; stat++ ) {
@@ -165,23 +166,16 @@ void Stokes::computeIncoherentStokes( const MultiDimArray<fcomplex,4> &in, const
 	}
 
         for( unsigned fractime = 0; fractime < integrationSteps; fractime++ ) {
-            if( inflags[stat].test( time+fractime ) ) {
-              continue;
-            }
-
-	    addStokes( stokes, in[ch][stat][time+fractime][0], in[ch][stat][time+fractime][1], allStokes );
+	    addStokes( stokes, in[ch][stat][inTime+fractime][0], in[ch][stat][inTime+fractime][1], allStokes );
         }
       }
 
-      /* hack: if no valid samples, insert zeroes */
-      if( stokes.nrValidSamples == 0 ) { stokes.nrValidSamples = 1; }
-
-      #define dest out->samples[ch][0][time / integrationSteps]
-      dest[0] = stokes.I / stokes.nrValidSamples;
+      #define dest out->samples[ch][0][outTime]
+      dest[0] = stokes.I / nrValidStations;
       if( allStokes ) {
-        dest[1] = stokes.Q / stokes.nrValidSamples;
-        dest[2] = stokes.U / stokes.nrValidSamples;
-        dest[3] = stokes.V / stokes.nrValidSamples;
+        dest[1] = stokes.Q / nrValidStations;
+        dest[2] = stokes.U / nrValidStations;
+        dest[3] = stokes.V / nrValidStations;
       }
       #undef dest
     }
