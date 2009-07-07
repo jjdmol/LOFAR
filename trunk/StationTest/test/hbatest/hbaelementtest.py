@@ -65,9 +65,10 @@ def main() :
 	sub_time=[]
 	sub_file=[]
 	dir_name = './hbadatatest/' #Work directory will be cleaned
-	os.mkdir(dir_name)
+        if not(os.path.exists(dir_name)):
+	    os.mkdir(dir_name)
   	rmfile = '*.log'
-	hba_elements=16
+	hba_elements=2
         factor=1000
  	ctrl_string='='
 	# read in arguments
@@ -96,6 +97,7 @@ def main() :
 	# capture reference data (all HBA elements off)
         rm_files(dir_name,'*')
         os.popen("rspctl --rcumode=5 2>/dev/null")
+        os.popen("rspctl --enable 2>/dev/null")
         for ind in range(hba_elements) :
 		ctrl_string=ctrl_string + '2,'
 	strlength=len(ctrl_string)
