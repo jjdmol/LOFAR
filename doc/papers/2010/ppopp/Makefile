@@ -5,7 +5,7 @@ BIB_SOURCES =	lofar.bib
 FIG_SOURCES =	colinear.fig correlation-triangle.fig delay.fig processing.fig\
 		pset.fig
 
-JGR_SOURCES =	cn-performance.jgr ion-performance.jgr
+JGR_SOURCES =	bandpass.jgr cn-performance.jgr ion-performance.jgr
 
 JPG_SOURCES =	fringe.jpg LBA-field.jpg map.jpg
 
