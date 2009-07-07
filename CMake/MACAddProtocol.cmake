@@ -46,8 +46,13 @@ macro(mac_add_protocol _protocol _templ_dir)
   # Determine the destination directory for the generated C++ header file. 
   # This directory is chosen such that other MAC packages only have to
   # add <binary-root>/include/MAC to their -I path.
-  string(REGEX REPLACE "${LOFAR_ROOT}" "${CMAKE_BINARY_DIR}/include" 
-    _dest_dir ${${PROJECT_NAME}_SOURCE_DIR})
+  if(DEFINED ${PROJECT_NAME}_INCLUDE_PATH_SUFFIX)
+    set(_dest_dir
+      ${CMAKE_BINARY_DIR}/include/MAC/${${PROJECT_NAME}_INCLUDE_PATH_SUFFIX})
+  else()
+    string(REGEX REPLACE "${LOFAR_ROOT}" "${CMAKE_BINARY_DIR}/include" 
+      _dest_dir ${${PROJECT_NAME}_SOURCE_DIR})
+  endif(DEFINED ${PROJECT_NAME}_INCLUDE_PATH_SUFFIX)
 
   # Define the command to generate the C++ header and source files. The header
   # file will be copied to the correct destination directory.
