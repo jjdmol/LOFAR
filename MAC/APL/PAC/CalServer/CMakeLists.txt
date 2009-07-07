@@ -28,24 +28,31 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(RSP_Protocol)
+project(Cal_Server)
 include(LofarGeneral)
 
 include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO RTCCommon)
+# Do not split the following line, otherwise makeversion will fail!
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase ApplCommon MACIO GCFTM TestSuite RTCCommon RSP_Protocol CAL_Protocol)
 
 ## ---------------------------------------------------------------------------
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Blitz REQUIRED)
+lofar_find_package(CPPLapack REQUIRED)
 
 ## ---------------------------------------------------------------------------
-## Need extra symbolic link, thanks to inconsistent naming conventions!
+## Create extra symbolic link, thanks to inconsistent naming conventions!
 ## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
+#execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+#  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
+#  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
+
+## ---------------------------------------------------------------------------
+## Project-specific compiler definitions.
+## ---------------------------------------------------------------------------
+add_definitions(-DUSE_CAL_THREAD)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
@@ -55,6 +62,5 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-add_subdirectory(include/APL/RSP_Protocol)
 add_subdirectory(src)
 add_subdirectory(test)
