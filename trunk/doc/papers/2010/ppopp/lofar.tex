@@ -68,7 +68,7 @@ of the entire telescope.
 
 \section{Introduction}
 
-\begin{figure}[ht]
+\begin{figure}[t]
 \begin{center}
 \includegraphics[width=70mm]{LBA-field.jpg}
 \end{center}
@@ -123,7 +123,8 @@ The most common mode of operation for LOFAR is the
 \emph{standard imaging pipeline}, which is used to generate sky images.
 This mode filters and correlates the data sent by the stations.
 This paper describes the implementation and
-performance characteristics of the real-time part of this pipeline.
+performance characteristics of the real-time part of this pipeline on an IBM Blue Gene/P (BG/P)
+supercomputer.
 We present a highly-optimized implementation that achieves very high
 computational performance: the correlator sustains 96\% of the theoretical
 floating-point peak performance during the computational phase.
@@ -140,7 +141,7 @@ types.
 
 The receivers produce hundreds of gigabits of data per second.
 To handle the high data rate,
-we use the Blue Gene/P (BG/P) in an unconventional way: we run
+we use the BG/P in an unconventional way: we run
 \emph{application\/} software on the so-called I/O~nodes to pre-process and
 post-process data that are further handled on the compute nodes.
 This yields an efficient system and substantially saved us on
@@ -971,7 +972,7 @@ in real time.
 %particularly useful to compensate for station clock drifts, for example.
 
 
-\subsection{Optimizations}
+\subsubsection{Optimizations}
 
 For optimal performance, time-critical code is written in assembly,
 because the performance from compiled C++ code was by far not sufficient.
@@ -1453,9 +1454,12 @@ signal quality, such as real-time flagging and real-time calibration.
 \label{fig:fringe}
 \end{figure}
 
+@@@ let op, echte data!
+software wordt dagelijks gebruikt voor observaties with the currently available stations
+
 A graphical representation of the correlator output is depicted in
 Figure~\ref{fig:fringe}.
-The figure shows the cross-correlations from two stations during a 9-hour
+The figure shows the cross-correlations from two of the stations used during a 9-hour
 observation.
 The horizontal axis varies in time;
 the vertical axis represents the 256~channels of one frequency subband.
