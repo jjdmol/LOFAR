@@ -27,8 +27,7 @@
 #  READLINE_INCLUDE_DIRS - the Readline include directories
 #                           (identical to READLINE_INCLUDE_DIR)
 #  READLINE_LIBRARY      - the Readline library (cached)
-#  READLINE_LIBRARIES    - the Readline libraries
-#                           (identical to READLINE_LIBRARY)
+#  READLINE_LIBRARIES    - the Readline library plus the libraries it depends on
 
 if(NOT READLINE_FOUND)
 
