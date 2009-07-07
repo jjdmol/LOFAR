@@ -339,25 +339,26 @@ Throughout the entire processing chain, we maintain which
 data is marked as invalid, so that eventual images are not distorted by
 bad data.  
 
-This paper focuses on the real-time, central processing of LOFAR data on
-an IBM Blue Gene/P supercomputer, and in particular on the standard-imaging
-mode.
-We chose the BG/P as the central processing platform,
-instead of, for instance, a cluster with a fast local interconnect, for
-several reasons.  First, the BG/P is a power efficient supercomputer.
+This paper focuses on the real-time, central processing of LOFAR data
+on an IBM Blue Gene/P supercomputer, and in particular on the
+standard-imaging mode.  We chose the BG/P as the central processing
+platform, instead of, for instance, a cluster with a fast local
+interconnect, for several reasons.
+First, the BG/P has excellent hardware
+support for complex numbers, a feature that is of key
+importance for signal-processing applications, but is lacking in
+general-purpose architectures. 
+Moreover, the BG/P has a very high
+memory bandwidth per operation. This leads to superior performance for our
+data-intensive applications, compared to other platforms~\cite{Nieuwpoort:09}.
+In addition, the BG/P provides a high-speed 3D-torus network that can
+effectively implement a data-transpose that is crucial for our
+application, at the bandwidth we require (see Section~\ref{all-to-all}). 
+Finally, the BG/P is a power-efficient supercomputer.
 Electrical power costs form a large part of the operational costs for
 the LOFAR instrument.  At the time of purchase, the BG/P was the highest
 ranking system on the green500 list for energy
-efficient supercomputers (see www.green500.org). In addition, the BG/P has excellent hardware
-support for complex numbers, a feature that is of key
-importance for signal processing applications, but is lacking in
-general purpose architectures. 
-Moreover, the BG/P has a very high
-relative memory bandwidth. This leads to superior performance for our
-data intensive applications, compared to other platforms~\cite{Nieuwpoort:09}.
-Finally, the BG/P provides a high-speed 3D-torus network that can
-effectively implement a data-transpose that is crucial for our
-application, at the bandwidth we require (see Section~\ref{all-to-all}). 
+efficient supercomputers (see www.green500.org). 
 
 Our pipeline on the BG/P filters the data, and splits the subbands in narrower frequency bands called
 \emph{channels}, which allow for more accurate RFI removal.
@@ -783,7 +784,8 @@ the data transfer from the I/O~nodes to the compute nodes, and with
 the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
-are required. 
+are required. As will be explained in the next section, this is before the beam forming 
+and correlation steps.
 
 
 \subsection{Signal processing}
@@ -791,8 +793,9 @@ are required.
 
 After the data exchange, a compute core has the samples of one subband
 from all stations.
-The data are processed in a number of steps, as briefly described below.
-More details on these steps can be found elsewhere~\cite{Romein:06}.
+The data are processed in a number of steps, as shown in Figure~\ref{fig:cn-processing}.
+We briefly describe the steps below, and more details can be found elsewhere~\cite{Romein:06}.
+We finish the section with some remarks on flexibility and optimizations.
 
 
 \subsubsection{Data conversion}
@@ -806,8 +809,8 @@ implementation to convert 16-bit numbers.
 Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
 Since the samples are at most 16-bit wide, single precision floating
-point is enough for our purposes. Future telescopes, such as
-the SKA, will likely use even fewer bits per sample.
+point is enough for our purposes. Future telescopes will likely use
+even fewer bits per sample (but higher bandwidths).
 
 
 \subsubsection{The Poly-Phase Filter bank}
@@ -838,7 +841,7 @@ a bit further, and manually wrote a more efficient assembly
 implementation for the 256-point FFT.
 
 
-\subsubsection{Delay compensation}
+\subsubsection{Phase shift correction}
 
 \begin{figure}[ht]
 \begin{center}
@@ -875,22 +878,22 @@ for each individual sample, with another complex multiplication.
 
 \subsubsection{Bandpass correction}
 
-The bandpass correction step compensates for an artefact
+The bandpass correction step compensates for an artifact
 introduced by a filter back that runs on the FPGAs in the stations.
 This filter bank performed the initial division of the antenna signals into subbands.
 Without correction, some channels have a stronger signal than others.
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
-A station cannot correct for this artefact itself, since it is only visible
+A station cannot correct for this artifact itself, since it is only visible
 in channels, not in subbands.
 %We describe how the correction factors are computed in~\cite{Romein:08}.
 
 
 \subsubsection{Finalizing the asynchronous transpose}
 
-Up to this point, processing chunks from different stations can be done
+Up to this point in the pipeline, processing chunks from different stations can be done
 independently, but from here on, the data from all stations are required.
-Therefore, the asynchronous exchange ends here.
+Therefore, the asynchronous exchange ends here, before the beam forming.
 
 
 \subsubsection{Beam forming}
@@ -928,7 +931,7 @@ them in the performance measurements of Section~\ref{sec:performance}.
 
 \subsubsection{Correlation}
 
-In the standard imaging mode, the samples from individual or grouped stations
+Next, the samples from individual or grouped stations
 are correlated.
 The received signals from sky sources are so weak, that the antennas mainly
 receive noise.
