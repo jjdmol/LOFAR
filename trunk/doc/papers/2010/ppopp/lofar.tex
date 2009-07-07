@@ -139,7 +139,7 @@ The pipelines share common components, shortening their development time.
 The software also supports multiple concurrent observations, even of different
 types.
 
-The receivers produce hundreds of gigabits of data per second.
+The receivers produce hundreds of gigabits per second.
 To handle the high data rate,
 we use the BG/P in an unconventional way: we run
 \emph{application\/} software on the so-called I/O~nodes to pre-process and
@@ -155,7 +155,7 @@ In earlier work~\cite{Romein:06}, we presented an initial prototype
 implementation of the LOFAR processing on our previous platform, the
 Blue Gene/L.  The work presented in this paper differs in several
 important ways.  First, we have now implemented the complete I/O path:
-from the LOFAR stations in the field to the Blue Gene/P, the transfer
+from the LOFAR stations in the field to the Blue Gene/P, 
 from the IO~nodes to the compute nodes, the internal
 data transpose, and finally the transfer 
 to the storage cluster. In contrast, in~\cite{Romein:06}
@@ -163,8 +163,8 @@ we focused only on computing, and not on I/O.
 Second, we now have a fully functional \emph{real time} processing pipeline
 for the most important standard imaging mode, and prototypes for other
 pipelines, showing the flexibility of our design.  Finally, for the
-first time, we perform a scalability analysis, proving that we can in
-fact support the requirements of the full LOFAR instrument, both in
+first time, we perform a scalability analysis, proving that we can 
+support the requirements of the full LOFAR instrument, both in
 terms of computing and I/O, in real time. In fact, we even surpass the
 requirements.
 
@@ -753,6 +753,7 @@ The torus provides high bandwidth and switches packets efficiently.
 \begin{center}
 \includegraphics[width=25mm]{colinear.pdf}
 \end{center}
+\vspace{-0.5cm}
 \caption{The bandwidth between colinear nodes is lower than between
 non-colinear nodes.}
 \label{fig:colinear}
@@ -778,14 +779,14 @@ On the BG/L, the data exchange was implemented synchronously, using
 \texttt{MPI\_Alltoallv()}.
 The BG/P, in contrast, uses DMA for the torus, allowing asynchronous
 communication.
-We re-implemented the data exchange using asynchronous point-to-point
+We re-implemented the exchange using asynchronous point-to-point
 communication, that overlaps the communication over the torus network with 
-the data transfer from the I/O~nodes to the compute nodes, and with
+the transfer from the I/O~nodes to the compute nodes, and with
 the next four processing steps.
 As soon as a chunk of data from one station has arrived, the core starts
 processing them, up to the point that the data from \emph{all\/} stations
-are required. As will be explained in the next section, this is before the beam forming 
-and correlation steps.
+are required. As we will explain in the next section, this is before the beam forming 
+step.
 
 
 \subsection{Signal processing}
@@ -845,8 +846,9 @@ implementation for the 256-point FFT.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=3cm]{delay.pdf}
+\includegraphics[width=2.5cm]{delay.pdf}
 \end{center}
+\vspace{-0.5cm}
 \caption{The left antenna receives the wave later.}
 \label{fig:delay}
 \end{figure}
@@ -899,7 +901,7 @@ Therefore, the asynchronous exchange ends here, before the beam forming.
 \subsubsection{Beam forming}
 
 The beam forming step is optional, and adds the samples
-from a group of co-located stations, so that the group forms a virtual
+from a group of stations that are close together, so that the group forms a virtual
 ``superstation'' with more sensitivity.
 By applying an additional phase rotation (a complex multiplication), 
 beam forming can also be used to select observation directions, or to
@@ -1005,15 +1007,15 @@ cache hierarchy.
 An example of an optimization that we implemented is the reduction of
 memory references by the correlator~\cite{Romein:06}.
 This is achieved by keeping correlations that are being integrated
-in registers, and by reusing samples that are loaded from memory as many times
+in registers, and by reusing samples that are loaded from memory as often
 as possible.
 A sample can be used multiple times by correlating it with the samples from
-multiple other stations in the same loop iteration.
+multiple other stations in the same step.
 For example, a sample from station~A in the X~polarization that is loaded into
 a register pair can be correlated with the X~and Y~polarizations of
 stations~B and~C, using it 4 times.
-In fact, it is used 8~times, since a complex multiply/accumulate requires two
-instructions.
+%In fact, it is used 8~times, since a complex multiply/accumulate requires two
+%instructions.
 Figure~\ref{fig:correlation-triangle} shows how we correlate multiple
 stations at the same time.
 Each square represents the XX, XY, YX, and YY correlations of the stations
@@ -1230,8 +1232,7 @@ available compute time	 & 16.1	     & 8.05     & 4.03     \\
 
 We show the performance results of the application by means of three
 challenging observation modes which are likely to be commonly used.
-The characteristics of these modes are listed in
-Table~\ref{tab:observation-characteristics}.
+Table~\ref{tab:observation-characteristics} lists the characteristics of these modes.
 Mode~\textsf{A} is the standard mode, where the stations send 16-bit samples.
 In this mode, the FPGAs can send at most 248~subbands.
 The 248~subbands are evenly divided over 62~psets, so that each pset processes
