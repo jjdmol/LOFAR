@@ -40,13 +40,6 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS MACIO)
 include(LofarFindPackage)
 
 ## ---------------------------------------------------------------------------
-## Need extra symbolic link, thanks to inconsistent naming conventions!
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
-
-## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)

@@ -40,13 +40,6 @@ lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common AMCBase MACIO RTCCommon RSP
 include(LofarFindPackage)
 
 ## ---------------------------------------------------------------------------
-## Need extra symbolic link, thanks to inconsistent naming conventions!
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/PAC/${PROJECT_NAME}
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
-
-## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
