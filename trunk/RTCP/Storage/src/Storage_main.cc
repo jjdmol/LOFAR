@@ -11,6 +11,7 @@
 
 #include <Common/lofar_iostream.h> 
 #include <Common/LofarLogger.h>
+#include <Common/Exceptions.h>
 #include <Common/LofarLocators.h>
 #include <Interface/Parset.h>
 #include <Interface/Exceptions.h>
@@ -52,7 +53,13 @@ static void child(int argc, char *argv[], int rank, int size)
     
     ParameterSet parameterSet(argv[1]);
     Parset parset(&parameterSet);
-    parset.adoptFile("OLAP.parset");
+
+    // OLAP.parset is depricated, as everything is now in the parset given on the command line
+    try {
+      parset.adoptFile("OLAP.parset");
+    } catch( APSException &ex ) {
+      LOG_WARN_STR("could not read OLAP.parset: " << ex);
+    }
 
     SubbandWriter subbandWriter(&parset, rank, size);
 

@@ -34,6 +34,7 @@
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/Lock.h>
+#include <Common/Exceptions.h>
 //#include <TH_ZoidServer.h>
 #if !defined HAVE_PKVERSION
 #include <Package__Version.h>
@@ -395,7 +396,13 @@ void *master_thread(void *)
     ParameterSet parameterSet(global_argv[1]);
     Parset parset(&parameterSet);
 
-    parset.adoptFile("OLAP.parset");
+    // OLAP.parset is depricated, as everything will be in the parset given on the command line
+    try {
+      parset.adoptFile("OLAP.parset");
+    } catch( APSException &ex ) {
+      LOG_WARN_STR("could not read OLAP.parset: " << ex);
+    }
+
     checkParset(parset);
 
     nrRuns = static_cast<unsigned>(ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime()));
