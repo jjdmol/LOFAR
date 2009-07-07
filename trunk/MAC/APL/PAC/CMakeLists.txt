@@ -28,33 +28,19 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(RSP_Protocol)
+project(PAC)
 include(LofarGeneral)
 
-include(LofarAddPackage)
-lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO RTCCommon)
-
 ## ---------------------------------------------------------------------------
-## External packages
+## Subdirectories
 ## ---------------------------------------------------------------------------
-include(LofarFindPackage)
-lofar_find_package(Blitz REQUIRED)
-
-## ---------------------------------------------------------------------------
-## Need extra symbolic link, thanks to inconsistent naming conventions!
-## ---------------------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/PIC/${PROJECT_NAME}
-  ${CMAKE_BINARY_DIR}/include/MAC/APL/${PROJECT_NAME})
+lofar_add_subdirectory(CAL_Protocol)
+lofar_add_subdirectory(BS_Protocol)
+lofar_add_subdirectory(CalServer)
+lofar_add_subdirectory(BeamServer)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
-## ---------------------------------------------------------------------------
-## Subdirectories
-## ---------------------------------------------------------------------------
-add_subdirectory(include/APL/RSP_Protocol)
-add_subdirectory(src)
-add_subdirectory(test)
