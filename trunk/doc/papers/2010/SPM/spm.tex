@@ -1,18 +1,8 @@
 \documentclass{article}
 
-%% polarisaties weg halen.
-%% Wel uitleggen dat ze er zijn, maar voor de filters en de correlator
-%% zijn het gewoon onafhankelijke receivers. Dit maakt de pseudo code + optimalisaties veel compacter.
-% @@@ Rob: dit klopt helemaal niet. Voor de polarisaties moet je namelijk ALLE combinaties uitrekenen.
-% DUS zowel XY als YX. Voor stations doe je dit niet. We kunnen polarisaties dus niet weg laten.
-% Daarom kwam John ook op een AI van 0.5 uit IPV 1.
-
-
 % opencl uitzoeken
 %  - hoe gaat opencl om met random writes?
 % RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
-
-
 
 \usepackage{spconf}
 \usepackage{graphicx}
@@ -49,8 +39,8 @@ Many-core processors are promising devices to provide the required processing
 power, at least in theory.
 
 In this paper, we explain how to implement and optimize a correlator on
-multi-core CPUs and many-core architectures, such as NVIDIA and ATI GPUs,
-and the IBM \mbox{Cell/B.E.}  The correlator is a streaming, real-time
+multi-core CPUs and many-core architectures, such as the Intel core i7, NVIDIA and ATI GPUs,
+and the \mbox{Cell/B.E.}  The correlator is a streaming, real-time
 application, and is much more I/O intensive than applications that are
 typically implemented on many-core hardware today.  We compare with
 the LOFAR production correlator on an IBM Blue Gene/P supercomputer.
