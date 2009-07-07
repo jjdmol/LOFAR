@@ -44,10 +44,10 @@ and the \mbox{Cell/B.E.}  The correlator is a streaming, real-time
 application, and is much more I/O intensive than applications that are
 typically implemented on many-core hardware today.  We compare with
 the LOFAR production correlator on an IBM Blue Gene/P supercomputer.
-We identify several important architectural problems which cause
+We discuss several important architectural problems which cause
 architectures to perform suboptimally, and also deal with programmability. 
 
-The results show that the processing power and memory bandwidth of
+We show that the processing power and memory bandwidth of
 current GPUs are highly imbalanced.  While
 the production correlator on the Blue Gene/P achieves a superb 96\% of the
 theoretical floating-point peak performance, this is only 14\% on ATI GPUs,
@@ -1110,6 +1110,9 @@ cores does not work if I/O is not scaled accordingly.
 %% cards used in this work. 
 
 \bibliographystyle{IEEEbib}
+
+\begin{small}
 \bibliography{spm}
+\end{small}
 
 \end{document}
