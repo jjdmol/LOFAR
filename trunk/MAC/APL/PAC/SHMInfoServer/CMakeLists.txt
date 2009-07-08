@@ -28,19 +28,31 @@ include(LofarInit)
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
-project(PIC)
+project(SHMInfo_Server)
 include(LofarGeneral)
 
+include(LofarAddPackage)
+# Do not split the following line, otherwise makeversion will fail!
+lofar_add_package(${PROJECT_NAME} 6.0 DEPENDS Common MACIO GCFTM GCFRTDB GCFPVSS RTCCommon RTDBCommon RSP_Protocol CAL_Protocol)
+
 ## ---------------------------------------------------------------------------
-## Subdirectories
+## External packages
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(RSP_Protocol)
-lofar_add_subdirectory(TBB_Protocol)
-lofar_add_subdirectory(RSPDriver)
-lofar_add_subdirectory(TBBDriver)
+include(LofarFindPackage)
+lofar_find_package(Blitz REQUIRED)
+
+## ---------------------------------------------------------------------------
+## Project-specific compiler definitions.
+## ---------------------------------------------------------------------------
+add_definitions(-DUSES_NEW_IOSTREAM)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
 
+## ---------------------------------------------------------------------------
+## Subdirectories
+## ---------------------------------------------------------------------------
+add_subdirectory(src)
+add_subdirectory(test)

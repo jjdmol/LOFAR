@@ -24,7 +24,7 @@ libshminfoserver_la_SOURCES	= Package__Version.cc \
 	XCStatistics.cc \
 	RspStatus.cc
 
-bin_PROGRAMS   		= versionshminfoserver SHMInfoServer
+bin_PROGRAMS   		= versionshminfo_server SHMInfoServer
   
 SHMInfoServer_SOURCES		  = SHMInfoServerMain.cc
 SHMInfoServer_LDADD		    = libshminfoserver.la $(LOFAR_DEPEND)
@@ -42,9 +42,9 @@ sysconf_DATA=
 clean-local:
 	rm -f *.ph
 	
-versionshminfoserver_SOURCES      = versionshminfoserver.cc
-versionshminfoserver_LDADD        = libshminfoserver.la
-versionshminfoserver_DEPENDENCIES = libshminfoserver.la $(LOFAR_DEPEND)
+versionshminfo_server_SOURCES      = versionshminfo_server.cc
+versionshminfo_server_LDADD        = libshminfoserver.la
+versionshminfo_server_DEPENDENCIES = libshminfoserver.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
