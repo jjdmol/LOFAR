@@ -77,7 +77,7 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 	// adopt commandline switches
 	parseOptions(argc, argv);
 
-	LOG_INFO(Version::getInfo<BeamServerVersion>("BeamServer"));
+	LOG_INFO(Version::getInfo<Beam_ServerVersion>("BeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);

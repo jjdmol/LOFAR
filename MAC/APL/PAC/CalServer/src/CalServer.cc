@@ -127,7 +127,7 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 	pthread_mutex_init(&m_globallock, 0);
 #endif
 
-	LOG_INFO(Version::getInfo<CalServerVersion>("CalServer"));
+	LOG_INFO(Version::getInfo<Cal_ServerVersion>("CalServer"));
 
 	// adopt commandline switches
 	parseOptions (argc, argv);

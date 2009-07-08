@@ -57,7 +57,7 @@ libcaldevel_la_SOURCES = Package__Version.cc  \
 	SubArraySubscription.h \
 	SubArraySubscription.cc 
 
-bin_PROGRAMS = versioncalserver \
+bin_PROGRAMS = versioncal_server \
 	CalServer \
 	calinfo
 
@@ -87,8 +87,8 @@ CalServer_DEPENDENCIES = \
 clean-local:
 	rm -f *.ph
 
-versioncalserver_SOURCES      = versioncalserver.cc
-versioncalserver_LDADD        = libcaldevel.la
-versioncalserver_DEPENDENCIES = libcaldevel.la $(LOFAR_DEPEND)
+versioncal_server_SOURCES      = versioncal_server.cc
+versioncal_server_LDADD        = libcaldevel.la
+versioncal_server_DEPENDENCIES = libcaldevel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

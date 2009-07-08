@@ -30,7 +30,7 @@ libabsdevel_la_SOURCES 	= Package__Version.cc \
 						  Beamlets.h \
 						  Beamlets.cc
 
-bin_PROGRAMS 			= versionbeamserver BeamServer beamctl
+bin_PROGRAMS 			= versionbeam_server BeamServer beamctl
 
 BeamServer_SOURCES 		= BeamServerMain.cc BeamServer.h BeamServerConstants.h BeamServer.cc
 BeamServer_LDADD 		= libabsdevel.la
@@ -56,8 +56,8 @@ beamctl_SOURCES 		= beamctl.h beamctl.cc
 clean-local:
 	rm -f *.ph
 
-versionbeamserver_SOURCES      = versionbeamserver.cc
-versionbeamserver_LDADD        = libabsdevel.la
-versionbeamserver_DEPENDENCIES = libabsdevel.la $(LOFAR_DEPEND)
+versionbeam_server_SOURCES      = versionbeam_server.cc
+versionbeam_server_LDADD        = libabsdevel.la
+versionbeam_server_DEPENDENCIES = libabsdevel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
