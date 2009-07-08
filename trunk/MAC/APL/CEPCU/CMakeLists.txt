@@ -39,7 +39,7 @@ lofar_add_package(${PROJECT_NAME} 3.1 DEPENDS Common ApplCommon ALC PLC MACIO GC
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED date_time)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
