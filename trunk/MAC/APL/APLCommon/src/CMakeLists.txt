@@ -20,9 +20,6 @@
 
 include(LofarPackageVersion)
 
-# Extra preprocessor definitions
-#add_definitions(-DBOOST_DISABLE_THREADS)
-
 # Add MAC protocols (generates a .ph and .cc file from a .prot file)
 include(MACAddProtocol)
 mac_add_protocol(Controller_Protocol "${MACIO_SOURCE_DIR}/autogen")

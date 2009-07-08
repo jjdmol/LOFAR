@@ -42,6 +42,11 @@ include(LofarFindPackage)
 lofar_find_package(Log4Cplus REQUIRED)
 
 ## ---------------------------------------------------------------------------
+## Project-specific compiler definitions.
+## ---------------------------------------------------------------------------
+add_definitions(-DBOOST_DISABLE_THREADS)
+
+## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
