@@ -1,5 +1,5 @@
 CAL_Protocol
 BS_Protocol
-CalServer
-BeamServer
+Cal_Server
+Beam_Server
 SHMInfoServer
