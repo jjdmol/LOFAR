@@ -20,9 +20,6 @@
 
 include(LofarPackageVersion)
 
-# Extra preprocessor definitions
-#add_definitions(-DBOOST_DISABLE_THREADS)
-
 # Create symbolic link in binary include directory to current directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}

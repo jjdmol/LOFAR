@@ -36,9 +36,9 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 lofar_add_subdirectory(CAL_Protocol)
 lofar_add_subdirectory(BS_Protocol)
-lofar_add_subdirectory(CalServer)
-lofar_add_subdirectory(BeamServer)
-lofar_add_subdirectory(SHMInfoServer)
+lofar_add_subdirectory(Cal_Server)
+lofar_add_subdirectory(Beam_Server)
+lofar_add_subdirectory(SHMInfo_Server)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

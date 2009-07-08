@@ -42,6 +42,11 @@ lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 lofar_find_package(PQXX REQUIRED)
 
 ## ---------------------------------------------------------------------------
+## Project-specific compiler definitions.
+## ---------------------------------------------------------------------------
+add_definitions(-DBOOST_DISABLE_THREADS)
+
+## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)

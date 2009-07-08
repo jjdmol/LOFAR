@@ -41,6 +41,11 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS regex)
 
 ## ---------------------------------------------------------------------------
+## Project-specific compiler definitions.
+## ---------------------------------------------------------------------------
+add_definitions(-DBOOST_DISABLE_THREADS)
+
+## ---------------------------------------------------------------------------
 ## Generate configuration header file.
 ## ---------------------------------------------------------------------------
 include(LofarConfig)
