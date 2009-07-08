@@ -39,7 +39,7 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common OTDB MACIO GCFTM GCFPVSS GC
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED date_time)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 
 ## ---------------------------------------------------------------------------
 ## Project-specific compiler definitions.
