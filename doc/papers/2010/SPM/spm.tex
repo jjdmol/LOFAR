@@ -29,7 +29,7 @@ Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 \begin{abstract}
 Radio telescopes typcially consists of multiple receivers, of which the signals
 are cross-correlated to filter out noise.
-A recent trend is to correlate in software instead of dedicated hardware,
+A recent trend is to correlate in software instead of custom-built hardware,
 taking advantage of the flexibility that software solutions offer.
 Examples include e-VLBI and LOFAR.
 However, the data rates are usually high and the processing requirements
@@ -39,8 +39,8 @@ Many-core processors are promising devices to provide the required processing
 power, at least in theory.
 
 In this paper, we explain how to implement and optimize a correlator on
-multi-core CPUs and many-core architectures, such as the Intel core i7, NVIDIA and ATI GPUs,
-and the \mbox{Cell/B.E.}  The correlator is a streaming, real-time
+multi-core CPUs and many-core architectures, such as the Intel Core i7, NVIDIA and ATI GPUs,
+and the \mbox{Cell/B.E.}  The correlator is a streaming, possibly real-time
 application, and is much more I/O intensive than applications that are
 typically implemented on many-core hardware today.  We compare with
 the LOFAR production correlator on an IBM Blue Gene/P supercomputer.
@@ -49,7 +49,7 @@ architectures to perform suboptimally, and also deal with programmability.
 
 We show that the processing power and memory bandwidth of
 current GPUs are highly imbalanced.  While
-the production correlator on the Blue Gene/P achieves a superb 96\% of the
+the correlator on the Blue Gene/P achieves a superb 96\% of the
 theoretical floating-point peak performance, this is only 14\% on ATI GPUs,
 and 26\% on NVIDIA GPUs.
 The \mbox{Cell/B.E.} processor, in contrast, achieves an
@@ -73,10 +73,10 @@ be used to develop signal-processing applications in general.
 
 Radio telescopes produce enormous amounts of data.
 The \emph{Low-Frequency Array\/} (LOFAR), for instance, will produce some tens
-of petabits per day, and the \emph{Australian SKA Pathfinder\/} (ASKAP) will
-even produce over six exabits per day.
+of petabits per day~\cite{Butcher:04}, and the \emph{Australian SKA Pathfinder\/} (ASKAP) will
+even produce over six exabits per day~\ref{askap}.
 These modern radio telescopes use many separate receivers as building blocks,
-and combine their signals to simulate a single large and sensitive instrument.
+and combine their signals to form a single large and sensitive instrument.
 
 To extract the sky signal from the system noise, the \emph{correlator\/}
 correlates the signals from different receivers, and integrates the
@@ -84,28 +84,28 @@ correlations over time, to reduce the amount of data.
 The correlator is a challenging problem in radio astronomy,
 since the data volumes are large, and the computational demands grow
 quadratically with the number of receivers.
-Correlators are not limited to the field of astronomy, but are also used for
-example in geophysics\cite{correlator-geophysics},
+Correlators are not limited to the field of astronomy, but are also used 
+in geophysics\cite{correlator-geophysics},
 radar systems~\cite{correlator-radar}, and
-wireless networking~\cite{correlator-wireless}.
+wireless networking~\cite{correlator-wireless}, etc.
 
-Traditionally, custom-built hardware is used to correlate radio astronomy signals.
+Traditionally, custom-built hardware is used to correlate telescope signals.
 A recent development is to use a supercomputer~\cite{Romein:06}.
 Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
 inflexible, expensive to design, and has a long development time.
 Solutions that use a supercomputer are much more flexible, but are less
-efficient, consume more power, and are expensive to purchase and maintain.
+efficient, consume more power.%, and are expensive to purchase and maintain.
 Future instruments, like the Square Kilometre Array (SKA), need several orders
 of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
 current supercomputer technology. Therefore, it is important to investigate
 alternative hardware solutions, in particular the many-core architectures.
 
-A recent development is that general-purpose architectures no longer
-achieve performance increases by increasing the clock frequency, but
+General-purpose architectures no longer
+achieve performance improvements by increasing the clock frequency, but
 by adding more compute cores and exploiting parallelism.  Intel's
-recent core~i7 processor is a good example of this. It has four
+recent Core~i7 processor is a good example of this. It has four
 compute cores, but eight concurrent threads can be used thanks to the
 hyperthreading technique. In addition, the cores can exploit vector
 parallelism with the SSE instruction set.
@@ -143,7 +143,7 @@ similarities and differences, and how the architectural differences
 affect optimization choices and the eventual performance of a
 correlator.  We strongly focus on correlators, but many of the
 findings, claims, and optimizations hold for other signal-processing
-algorithms as well, both in and outside the area of radio astronomy.
+algorithms as well, both inside and outside the area of radio astronomy.
 We discuss the programmability of each of the architectures, but this
 paper should be of special interest to those who are willing to invest
 some extra programming effort to obtain good performance, even if
@@ -181,7 +181,7 @@ like Apertif~\cite{apertif} are novel multi-receiver concepts.
 Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
-What the noveal instruments all have in common is that they require huge
+What the novel instruments all have in common is that they require huge
 amounts of processing power to combine the data from the receiving elements.
 
 The signal-processing hardware technology used to process telescope
@@ -249,18 +249,18 @@ Another novelty is the elaborate
 use of \emph{software\/} to process the telescope data in real time.
 The signals from the
 antennas are digitised, transported to a central location,
-and combined in software to emulate a conventional antenna. 
+and combined in software to emulate a conventional instrument. 
 LOFAR thus is an IT-telescope. 
 The cost
 is dominated by the cost of electronics and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
 to be built. 
 
-The antennas are simple, but there are a lot of them: 25000 in the full LOFAR
-design. To make radio pictures of the sky with adequate sharpness,
+The antennas are simple, but there are a lot of them: 44000 in the full LOFAR
+design. To make radio pictures of the sky with adequate resolution,
 these antennas are to be arranged in clusters that are spread out over
 an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
-In the current phase, 15000 
+In the current phase, 31000
 antenna's with a maximum distance of 100 km will
 be built. Data transport requirements are in the range of many
 Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
@@ -459,7 +459,7 @@ a summary of the most important similarities and differences for signal processi
 \noindent \\ \emph{General Purpose multi-core CPUs (Intel Core i7)}
 
 \noindent As a reference, we implemented the correlator on a multi-core
-general-purpose architecture, in this case an Intel core~i7.  The
+general-purpose architecture, in this case an Intel Core~i7.  The
 theoretical peak performance of the system is 85~gflops, in single
 precision.  The parallelism comes from four cores with two-way
 hyperthreading, and a vector length of four floats, provided by the
@@ -686,12 +686,11 @@ since it assumes perfect overlap of communication and computation.
 
 Support for dealing with complex numbers is important for signal
 processing applications. Explicit support for complex operations is
-preferable, both in terms of programmability and performance.  If it
-is not available, we can circumvent this by using separate arrays for
-real values and for imaginary values.  Except for the Blue Gene/P (and
-to some extent the Core~i7), none of the architectures support
-complex operations.
-
+preferable, both in terms of programmability and performance. 
+%If it is not available, we can circumvent this by using separate arrays for
+%real values and for imaginary values.  Except for the Blue Gene/P (and
+%to some extent the Core~i7), none of the architectures support
+%complex operations.
 The different architectures require two different approaches of
 dealing with this problem. If an architecture does not use
 explicit SIMD (vector) parallelism, the complex operations can simply
@@ -701,13 +700,14 @@ NVIDIA GPUs work this way.  However, if an architecture does use vector
 parallelism, we can either store the real and complex parts inside a
 single vector, or have separate vectors for the two parts.  In both
 cases, support for shuffling data inside the vector registers is
-essential. We found that the architectures differ considerably in this
+essential, since complex multiplications operate on both the real and imaginary parts.
+We found that the architectures differ considerably in this
 respect.  The Cell/B.E. excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, this is done
 in a different pipeline than the arithmetic itself, allowing the
 programmer to overlap shuffling and computations effectively.  On ATI
 GPUs, this works in a similar way.  The SSE4 instruction set in the
-Intel core~i7, however, does not support arbitrary shuffling patterns.
+Intel Core~i7, however, does not support arbitrary shuffling patterns.
 This has a large impact on the way the code is vectorized, and
 requires a different SIMDization strategy. 
 
@@ -821,7 +821,7 @@ L1~data cache.
 
 \subsubsection{The BG/P supercomputer}
 
-The LOFAR production correlator is implemented on the Blue Gene/P platform.
+The LOFAR correlator is implemented on the Blue Gene/P platform.
 We use it as the reference for performance comparisons.
 We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
@@ -1022,7 +1022,7 @@ code. The difference varies between only a few percent to a factor of 10.
 
 For the BG/P, the performance from compiled C++ code was by far not
 sufficient. The assembly code is approximately 10 times faster.
-For both the Cell/B.E. and the Intel core~i7, we found that
+For both the Cell/B.E. and the Intel Core~i7, we found that
 high-level code in C or C++ in combination with the use of intrinsics
 to manually describe the SIMD parallelism yields acceptable
 performance compared to optimized assembly code.  Thus, the programmer
