@@ -17,7 +17,7 @@ import operator
 import os
 import time
 import sys
-import time
+import math
 
 # Read directory with the files to processs	
 def open_dir(dirname) :
@@ -96,9 +96,9 @@ def main() :
         if not(os.path.exists(dir_name)):
 	    os.mkdir(dir_name)
   	rmfile = '*.log'
-	hba_elements=2
+	hba_elements=16
         factor=1000
-        sleeptime=1
+        sleeptime=10
  	ctrl_string='='
 	# read in arguments
         if len(sys.argv) < 2 :
@@ -157,28 +157,33 @@ def main() :
         for element in range(hba_elements) :
                 #First capture when the control word is 128 of one of the elements
                 ctrl_word=128
-                meet_data1=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
-                ctrl_word=253
-                meet_data2=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
+                meet_data=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
 
+                #Find the factor
+		
+                #Write results to file
+                for rcuind in range(num_rcu) :
+                        f_log1fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+			if meet_data[rcuind] < factor*ref_data[rcuind] :        
+				if rcuind == 0 :
+					tilenumb=0
+				else:
+					tilenumb=int(rcuind/2)
+                                f_log1.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+		
                 #Second capture when the control word is 253 of one of the elements
-
-
-		for rcuind in range(num_rcu) :
-                        f_log1fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data1[rcuind]/ref_data[rcuind])) + '\n')  
-			if meet_data1[rcuind] < factor*ref_data[rcuind] :        
+                ctrl_word=253
+                meet_data=capture_data(dir_name,num_rcu,hba_elements,ctrl_word,sleeptime,subband_nr,element)
+                 
+                #Write results to file
+                for rcuind in range(num_rcu) :
+                        f_log2fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
+			if meet_data[rcuind] < factor*ref_data[rcuind] :        
 				if rcuind == 0 :
 					tilenumb=0
 				else:
 					tilenumb=int(rcuind/2)
-                                f_log1.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data1[rcuind]/ref_data[rcuind])) + '\n')  
-                        f_log2fac.write(str(element+1) + ' ' + str(rcuind) + ' ' + str(round(meet_data2[rcuind]/ref_data[rcuind])) + '\n')  
-			if meet_data2[rcuind] < factor*ref_data[rcuind] :        
-				if rcuind == 0 :
-					tilenumb=0
-				else:
-					tilenumb=int(rcuind/2)
-                                f_log2.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data2[rcuind]/ref_data[rcuind])) + '\n')  
+                                f_log2.write('Element ' + str(element+1) + ', Tile ' + str(tilenumb) + ' in RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]/ref_data[rcuind])) + '\n')  
 
         f_log1.close
 	f_log1fac.close
