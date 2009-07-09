@@ -35,7 +35,8 @@ if(NOT PQXX_FOUND)
   find_path(PQXX_INCLUDE_DIR pqxx/pqxx)
   find_library(PQXX_LIBRARY pqxx)
   find_library(PQ_LIBRARY pq)
-
+  mark_as_advanced(PQXX_INCLUDE_DIR PQXX_LIBRARY PQ_LIBRARY)
+  
   include(FindPackageHandleStandardArgs)
   find_package_handle_standard_args(PQXX DEFAULT_MSG
     PQXX_LIBRARY PQ_LIBRARY PQXX_INCLUDE_DIR)

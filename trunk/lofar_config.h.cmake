@@ -13,6 +13,12 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H 1
 
+/* Define to 1 if you have the <net/ethernet.h> header file. */
+#cmakedefine HAVE_NET_ETHERNET_H 1
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#cmakedefine HAVE_NETINET_IN_H 1
+
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine HAVE_SIGNAL_H 1
 
@@ -83,6 +89,9 @@
 
 /* Define if BG/L MPICH is installed */
 #cmakedefine HAVE_BGLMPICH 1
+
+/* Define if Blitz is installed */
+#cmakedefine HAVE_BLITZ 1
 
 /* Define if BOOST is installed */
 #cmakedefine HAVE_BOOST 1

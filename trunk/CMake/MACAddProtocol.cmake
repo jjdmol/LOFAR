@@ -34,6 +34,7 @@ macro(mac_add_protocol _protocol _templ_dir)
 
   # Search for the autogen program
   find_program(AUTOGEN_EXECUTABLE autogen)
+  mark_as_advanced(AUTOGEN_EXECUTABLE)
   if(NOT AUTOGEN_EXECUTABLE)
     message(FATAL_ERROR 
       "Could not find autogen - the Automated Program Generator")

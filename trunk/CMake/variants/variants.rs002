@@ -23,3 +23,6 @@ option(USE_BACKTRACE     "Use backtrace" OFF)
 
 # Where to find Postgres libraries
 set(PQXX_PREFIX_PATH /usr/local/pgsql)
+
+# Search Lapack in /usr first, because Lapack library in /usr/local is broken!
+set(CPPLAPACK_PREFIX_PATH /usr)
