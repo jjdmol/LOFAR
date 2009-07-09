@@ -53,6 +53,7 @@ dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_AIPSPP(0,"-lcasa")
+lofar_BLITZ(0)
 
 dnl
 dnl Output Makefiles

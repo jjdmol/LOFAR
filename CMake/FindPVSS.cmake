@@ -74,6 +74,7 @@ if(NOT PVSS_FOUND)
     NAMES VersInfo.mk
     PATHS ENV PVSSHOME
     PATH_SUFFIXES api)
+  mark_as_advanced(PVSS_VERSINFO_MK)
   if(NOT PVSS_VERSINFO_MK)
     set(pvss_version "V37_304")
   else()
@@ -102,6 +103,9 @@ if(NOT PVSS_FOUND)
     list(APPEND pvss_check_list PVSS_${lib}_LIBRARY)
   endforeach(lib Manager Messages Datapoint Basics bcm)
 
+  # Mark all variables in pvss_check_list as advanced
+  mark_as_advanced(${pvss_check_list})
+  
   # Handle the QUIETLY and REQUIRED arguments and set PVSS_FOUND to TRUE if
   # all elements of pvss_check_list are TRUE.
   include(FindPackageHandleStandardArgs)

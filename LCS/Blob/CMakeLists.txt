@@ -39,6 +39,7 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common)
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa)
+lofar_find_package(Blitz)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.
