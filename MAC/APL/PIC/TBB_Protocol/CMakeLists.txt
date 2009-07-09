@@ -47,4 +47,5 @@ include(LofarConfig)
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
+add_subdirectory(include/APL/TBB_Protocol)
 add_subdirectory(src)
