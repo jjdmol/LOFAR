@@ -18,8 +18,13 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# List of header files that will be installed.
-set(inst_HEADERS
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+
+# Install header files.
+install(FILES 
   Allocator.h
   Backtrace.h
   CheckConfig.h
@@ -86,13 +91,15 @@ set(inst_HEADERS
   TypeNames.h
   TypeNames.tcc
   Version.h
+  DESTINATION include/${PROJECT_NAME})
+
+install(FILES 
   Net/FdSet.h
-  Net/Socket.h)
+  Net/Socket.h
+  DESTINATION include/${PROJECT_NAME}/Net)
 
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
-
-# Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
+install(FILES
+  shmem/segbasemap.h
+  shmem/dlmalloc.h
+  shmem/shmem_alloc.h
+  DESTINATION include/${PROJECT_NAME}/shmem)
