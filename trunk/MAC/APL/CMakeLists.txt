@@ -41,18 +41,18 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
 ## ---------------------------------------------------------------------------
 ## Subdirectories
 ## ---------------------------------------------------------------------------
-lofar_add_subdirectory(APLCommon)
-lofar_add_subdirectory(RTCCommon)
-lofar_add_subdirectory(RTDBCommon)
-lofar_add_subdirectory(TestSuite)
-lofar_add_subdirectory(CUDaemons)
-lofar_add_subdirectory(CURTDBDaemons)
-lofar_add_subdirectory(PIC)
-lofar_add_subdirectory(PAC)
-lofar_add_subdirectory(CEPCU)
-lofar_add_subdirectory(MainCU)
-lofar_add_subdirectory(StationCU)
-lofar_add_subdirectory(TestCtlr)
+lofar_add_subdirectory(APLCommon)     # Common tasks and functions
+lofar_add_subdirectory(RTCCommon)     # Real Time Control functions
+lofar_add_subdirectory(RTDBCommon)    # RealTimeDataBase common software
+lofar_add_subdirectory(TestSuite)     # 
+lofar_add_subdirectory(CUDaemons)     # Control Unit Daemons
+lofar_add_subdirectory(CURTDBDaemons) # Control Unit RTDB Daemons
+lofar_add_subdirectory(PIC)           # Physical Instrument Components (?)
+lofar_add_subdirectory(PAC)           # ???
+lofar_add_subdirectory(CEPCU)         # CEP-related MAC controllers
+lofar_add_subdirectory(MainCU)        # Main Control Unit
+lofar_add_subdirectory(StationCU)     # Station Control Unit software
+lofar_add_subdirectory(TestCtlr)      # Testprograms for MAC controllers
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

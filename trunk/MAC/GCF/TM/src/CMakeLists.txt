@@ -52,3 +52,7 @@ lofar_add_library(gcftm
   ServiceBroker/ServiceBrokerTask.cc)
 
 lofar_add_bin_program(versiongcftm versiongcftm.cc)
+
+install(FILES
+  mac.log_prop
+  DESTINATION etc)

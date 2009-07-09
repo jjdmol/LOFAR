@@ -36,8 +36,10 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 lofar_add_subdirectory(MACIO)       # MAC I/O related functions
 lofar_add_subdirectory(GCF)         # Generic Control Framework
-lofar_add_subdirectory(APL)
-#lofar_add_subdirectory(Deployment)
+lofar_add_subdirectory(APL)         # Application subdirectory
+lofar_add_subdirectory(Deployment)  # Deployment related functions
+lofar_add_subdirectory(Navigator2)
+lofar_add_subdirectory(Tools)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

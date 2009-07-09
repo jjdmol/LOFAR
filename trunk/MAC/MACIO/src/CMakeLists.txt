@@ -43,4 +43,4 @@ lofar_add_library(macio
 ## ---------------------------------------------------------------------------
 ## Add executables to be generated
 ## ---------------------------------------------------------------------------
-lofar_add_executable(versionmacio versionmacio.cc)
+lofar_add_bin_program(versionmacio versionmacio.cc)
