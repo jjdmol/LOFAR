@@ -1,0 +1,31 @@
+#
+# TODO - List of things to do:
+#
+# Define ${PROJECT_NAME}_LINK_LIBRARIES in LofarAddPackage.cmake, which can
+# then be used by lofar_add_library() and lofar_add_executable() in 
+# LofarMacros.cmake.
+#
+# Rename LOFAR_LIBRARIES to something like LOFAR_EXTRA_LIBRARIES, or
+# LOFAR_EXTERNAL_LIBRARIES, or LOFAR_EXTRA_LINK_LIBRARIES. This affects
+# LofarFindPackage as well as LofarMacros.cmake.
+#
+# Define ${PROJECT_NAME}_INCLUDE_PATH_SUFFIX in LofarAddPackage.cmake.
+# The user can then override the default value. There will be no need for
+# caching anymore (as far as I can see).
+#
+# Create a symlink to each header file, instead of each directory containing 
+# header files. 
+# Advantages: 
+# - you must explicitly mention each header file that is part of the
+#   package's interface.
+# - Generated files (like the MAC protocol files) can be put in the 
+#   $bindir/include directory instead of $bindir/include/MAC directory.
+# Disadvantages: 
+# - a lot of symlinks.
+# This could all be done using a macro like lofar_add_headers(). This macro
+# would then create the directory 
+# ${CMAKE_BINARY_DIR}/include/${${PROJECT_NAME}_INCLUDE_PATH_SUFFIX}, when the 
+# first symlink is created. Another options is to let LofarAddPackage handle
+# this, but then a non-default include path suffix should be set before
+# lofar_add_package() is called.
+
