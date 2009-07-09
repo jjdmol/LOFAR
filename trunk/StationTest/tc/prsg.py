@@ -7,8 +7,8 @@
 # Constants
 
 nof_reflets_ap  = rsp.c_nof_reflets_ap
-nof_beamlets    = rsp.c_nof_beamlets_ap   # maximum capable by RSP gateware
-nof_beamlets    = 216                     # sufficient nof beamlets for 32 MHz BW
+nof_beamlets    = rsp.c_nof_beamlets      # maximum capable by RSP gateware
+nof_beamlets    = 216                     # sufficient for 32 MHz
 nof_beamlets_ap = rsp.c_nof_beamlets_ap           # including reflets
 nof_beamlets_ap = nof_reflets_ap + nof_beamlets   # including reflets
 
@@ -71,6 +71,7 @@ rsp.write_diag_bypass(tc, msg, bypass, blpId, rspId)
 ################################################################################
 # Set RCU in PRSG mode
 rsp.rspctl(tc, '--rcuprsg')
+rsp.rspctl(tc, '--rcuenable=1')
 
 ################################################################################
 # Run the test
