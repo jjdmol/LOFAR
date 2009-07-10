@@ -1,8 +1,17 @@
 \documentclass{article}
 
+%ICS referentie
+
 % opencl uitzoeken
 %  - hoe gaat opencl om met random writes?
 % RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
+
+
+%langere vectoren is slecht , zie larrabee
+
+% code als voorbeeld op het web
+
+Butcher:04 -> devos09
 
 \usepackage{spconf}
 \usepackage{graphicx}
@@ -109,6 +118,7 @@ recent Core~i7 processor is a good example of this. It has four
 compute cores, but eight concurrent threads can be used thanks to the
 hyperthreading technique. In addition, the cores can exploit vector
 parallelism with the SSE instruction set.
+@@@ leg uit wat hyperthreading is
 
 Furthermore, the high-performance computing community is
 steadily adopting clusters of Graphics Processor Units (GPUs) as a viable
@@ -787,8 +797,12 @@ data reuse.
 \label{performance-graph}
 \end{figure}
 
+
+
 \subsection{Architecture-specific optimizations}
 \label{sec:architecture-optimizations}
+
+@@@ tutorial style! geen "we did xxx''!
 
 We will now describe the implementation of the correlator on
 the different architectures. 
@@ -813,7 +827,7 @@ in this case.  In addition, we use multiple threads to utilize all
 four cores.  To benefit from hyperthreading, we need twice as many
 threads as cores.  Hyperthreading increases performance by 6\%.  Also,
 the number of vector registers is small (16 four-word registers).
-Therefore, the is not much opportunity to reuse data in registers,
+Therefore, there is not much opportunity to reuse data in registers,
 limiting the tile size to $2 \times 2$; reuse has to come from the
 L1~data cache.
 
@@ -827,20 +841,25 @@ We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
 The BG/P performs \emph{all} floating point operations in double
 precision, which is overkill for our application.
+@@@
 The BG/P has 32 vector registers of width 2.  Therefore, 64 floating
 point numbers can be kept in registers
 simultaneously. Although this is the same amount as on the general purpose
 Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
+
 Nevertheless, we have to use the same small $2 \times 2$ tile size.
+The 2x2 performs best@@@
+
 In contrast to all other architectures we evaluate, the problem is compute
 bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
 operation, which is 3--10 times higher than for the other architectures.
+@@@@ weg?
 
+@@@ tile sizes in table, misscien de +/- table
 
 \subsubsection{ATI GPUs}
-
 
 ATI offers two separate programming models, at different abstraction
 levels.  The low-level programming model is called the ``Compute
@@ -871,6 +890,7 @@ tile size to $2\times2$.  Random write access to \emph{host} memory is
 provided.  The correlator reduces the data by a large amount, and the
 results are never reused by the kernel. Therefore, they can be
 directly streamed to host memory.
+@@@ geen random -> programmabilioty@@@
 The best performing implementation uses a tile size of 4x3, thanks to
 the large number of registers.  
 Due to the low I/O performance, we achieve only 14\% of the theoretical peak.
@@ -893,7 +913,7 @@ simplifying software development.
 We use the
 texture cache to speed-up access to the sample data. 
 With Cuda, threads
-within a thread block can be synchronized.  We exploit this feature to let
+within a thread block can be synchronized.@@@barrier  We exploit this feature to let
 the threads that access the same samples run in lock step.  This way,
 we pay a small synchronization overhead, but we can increase the cache hit
 ratio significantly.  We found that this optimization improved performance by a factor of 2.
@@ -911,22 +931,22 @@ implementation uses a tile size of 3x2.
 The optimal tile size is influenced by the way the available registers are used.
 The register file is a shared resource. A smaller tile size means less register usage, 
 which allows the use of more concurrent threads, hiding load delays.
-On NVIDIA hardware, we found that the using a relatively small tile size and many threads increases performance.
+On NVIDIA hardware, we found that using a relatively small tile size and many threads increases performance.
 The kernel itself, without host-to-device communication achieves 31\%
 of the theoretical peak performance.  If we include communication, the
 performance drops to 26\% of the peak. Just like with the ATI
 hardware, this is caused by the low PCI-e bandwidth.  With NVIDIA
-hardware we do see significant performance gains by using asynchronous I/O.
+hardware we do see significant performance gains by using asynchronous host-to-device I/O.
 
 
 \subsubsection{The Cell Broadband Engine}
 
-The basic \mbox{Cell/B.E.} programming is based on multi-threading:
+\mbox{Cell/B.E.} programming is based on multi-threading:
 the PPE spawns threads that execute asynchronously on SPEs.  With the
 \mbox{Cell/B.E.} it is important to exploit all levels of parallelism.
 Applications deal with task and data parallelism across multiple SPEs,
 vector parallelism inside the SPEs, and double or triple-buffering for
-DMA transfers~\cite{cell}.  Acceptable performance can be achieved by
+asynchronous DMA transfers~\cite{cell}.  Acceptable performance can be achieved by
 programming the \mbox{Cell/B.E.}  in C or C++, while using intrinsics
 to manually express vector parallelism.  Thus, the programmer
 specifies which instructions have to be used, but can typically leave
@@ -983,6 +1003,12 @@ Intel Core i7 920            & IBM Blue Gene/P                  & ATI 4870      
                              &                                  & - bad Brook+ performance     &                              &                               \\
                              &                                  & - CAL is low-level           &                              &                               \\
                              &                                  & - not well documented        &                              &                               \\
+                                 + fast interconnects
+
+cell +/- explicit cache (perf / programmability)
+
+- -> --
+
 \end{tabular}
 } %\small
 \end{center}
@@ -1005,10 +1031,14 @@ well, for instance with the ATI 4870x2 device. However, we found that this does 
 performance is already limited by the low PCI-e throughput, and the
 chips have to share this resource.
 In Table~\ref{architecture-results-table} we summarize the
-architectural strengths and weaknesses that we identified.  Although
-we focus on the correlator application in this paper, the
-results are applicable to signal processing applications in
-general.
+architectural strengths and weaknesses that we identified.  
+
+%Although
+%we focus on the correlator application in this paper, the
+%results are applicable to signal processing applications in
+%general.
+
+@@@ larrabee / lange vectoren
 
 \longversion{
 \section{Programmability of the platforms}
@@ -1073,20 +1103,24 @@ when the hardware is available.
 Current and future telescopes have high computational and I/O demands.
 Therefore, we evaluated the performance of the extremely
 data-intensive correlator algorithm on today's many-core
-architectures. This research is an important pathfinder for future
+architectures. This research is an important pathfinder for future @@@ !tutorial
 radio-astronomy instruments. We also presented general insights on how to use many-core
-platforms for signal processing applications.
+platforms for signal-processing applications.
 
 The many-core architectures have a significantly lower memory
 bandwidth \emph{per operation} compared to traditional architectures.
 Minimizing the number of memory loads per operation is of key
-importance.  We do this by extensively optimizing algorithms for each
+importance to obtain good performance.  We do this by extensively optimizing algorithms for each
 architecture.  This includes making optimal use of caches and
 registers.  A high memory bandwidth per flop is not strictly
 necessary, as long as the architecture (and the algorithm) allows efficient data reuse.
 This can be achieved through caches, local stores and registers.
 
-Only two architectures perform well with our correlator application.  The BG/P
+@@@
+heel verschillende perf chararcteristics. GPUs unbalanced, data-intensive streaming: 
+klein deel van peak, in tegenstelling tot andere apps.
+onbalans tussen rekenkracht en I/O host + device.
+@@@Only two architectures perform well with our correlator application.  The BG/P
 supercomputer achieves high efficiencies thanks to the high memory
 bandwidth per FLOP.  The \mbox{Cell/B.E.} also performs excellently,
 even though its memory bandwidth per operation is eight times lower.
@@ -1094,13 +1128,18 @@ We achieve this by exploiting the application-managed cache and the
 large number of registers, optimally reusing all sample data.
 The GPUs achieve low efficiencies, party due to the low device memory bandwidth per core,
 but mostly due to the low PCI-express bandwidth.
+@@@
+The results also demonstrated that, for signal-processing 
+applications, the recent trend of increasing the number of
+cores does not work if I/O is not scaled accordingly.
 
+
+@@@ 2 alineas omhoog
 It is clear that application-level control of cache behavior (either
 through explicit DMA or thread synchronization) has a substantial
-performance benefit, and is of key importance for signal processing
-applications.  The results also demonstrated that, for signal
-processing applications, the recent trend of increasing the number of
-cores does not work if I/O is not scaled accordingly.
+performance benefit, and is of key importance good performance of signal-processing
+applications.  
+
 
 
 %% \section*{Acknowledgments}
