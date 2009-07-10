@@ -142,8 +142,8 @@ set(_check_list)
 # Search for all required libraries.
 set(FFTW2_LIBRARIES)
 foreach(_lib ${_libraries})
-  string(TOUPPER ${_lib} _LIB)
-  find_library(${_LIB}_LIBRARY NAMES ${_prec}${_lib} ${_lib})
+  string(TOUPPER "${_lib}2" _LIB)
+  find_library(${_LIB}_LIBRARY NAMES ${_lib} ${_prec}${_lib})
   list(APPEND FFTW2_LIBRARIES ${${_LIB}_LIBRARY})
   list(APPEND _check_list ${_LIB}_LIBRARY)
 endforeach(_lib ${_libraries})
@@ -161,7 +161,7 @@ find_package_handle_standard_args(FFTW2 DEFAULT_MSG ${_check_list})
 # them to check if a second call to FindFFTW has conflicting options.
 if(FFTW2_FOUND)
   set(FFTW2_PRECISION ${_fftw_precision} CACHE INTERNAL
-    "FFTW precision")
+    "FFTW2 precision")
   set(FFTW2_PARALLELIZATION ${_fftw_parallelization} CACHE INTERNAL
-    "FFTW parallelization")
+    "FFTW2 parallelization")
 endif(FFTW2_FOUND)

@@ -49,7 +49,6 @@ set(_usage_msg
 # Usage: get_fftw3_component(<category> <default-value> [value] ...)
 # -----------------------------------------------------------------------------
 macro(get_fftw3_component _kind _default_value)
-  message(STATUS "_kind = ${_kind}")
   set(_values ${ARGN})
   set(_fftw3_${_kind})
   foreach(_val ${_values})
@@ -68,9 +67,7 @@ macro(get_fftw3_component _kind _default_value)
     set(_fftw3_${_kind} "${_default_value}")
   endif(NOT _fftw3_${_kind})
   string(TOUPPER "FFTW3_${_kind}" _cached_value)
-  message(STATUS "_cached_value = ${_cached_value}")
   if(DEFINED ${_cached_value})
-    message(STATUS "\"${_fftw3_${_kind}}\" STREQUAL \"${${_cached_value}}\"")
     if(NOT "${_fftw3_${_kind}}" STREQUAL "${${_cached_value}}")
       message(FATAL_ERROR
         "FindFFTW3: previous call used ${_kind} `${${_cached_value}}', "
@@ -94,7 +91,6 @@ macro(get_fftw3_precision)
   else()
     set(_precision_tag)
   endif(_precision MATCHES single)
-  message(STATUS "precision = ${precision}")
 endmacro(get_fftw3_precision)
 
 # -----------------------------------------------------------------------------
@@ -104,7 +100,6 @@ endmacro(get_fftw3_precision)
 # -----------------------------------------------------------------------------
 macro(get_fftw3_parallelization)
   get_fftw3_component(parallelization off threads)
-  message(STATUS "parallelization = ${parallelization}")
 endmacro(get_fftw3_parallelization)
 
 # =============================================================================
@@ -127,9 +122,6 @@ endif(_fftw3_parallelization)
 # Keep a list of variable names that we need to pass on to
 # find_package_handle_standard_args().
 set(_check_list)
-
-message(STATUS "_headerfile = ${_headerfile}")
-message(STATUS "_libraries = ${_libraries}")
 
 # Search for all required libraries.
 foreach(_lib ${_libraries})
