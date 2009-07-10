@@ -52,4 +52,6 @@ set(GNUBGP_COMPILE_DEFINITIONS_CN -DHAVE_BGP_CN)
 set(GNUBGP_COMPILE_DEFINITIONS_ION -DHAVE_BGP_ION)
 
 # Host specific paths to third party packages
-set(CASACORE_ROOT_DIR /cephome/romein/packages/casacore-0.3.0/stage)
+set(CASACORE_PREFIX_PATH /cephome/romein/packages/casacore-0.3.0/stage)
+set(MASS_PREFIX_PATH /opt/mass)
+set(FFTW2_PREFIX_PATH /cephome/romein/packages/fftw-2.1.5-single-precision)
