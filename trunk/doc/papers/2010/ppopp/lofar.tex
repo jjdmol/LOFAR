@@ -184,7 +184,7 @@ Section~\ref{sec:conclusions}.
 
 
 
-\section{Related work}
+\section{Related Work}
 \label{sec:related-work}
 
 %LOFAR is not the only radio telescope of which the data are processed in software. In fact,
@@ -197,8 +197,8 @@ Section~\ref{sec:conclusions}.
 %real time.
 
 On our previous platform, the BG/L, we were dissatisfied with
-the I/O model and its performance.  This led to a joint effort to
-redesign the entire network software infrastructure, and resulted in a
+the I/O model and its performance.  This led to a joint effort with 
+Argonne national lab to redesign the entire network software infrastructure, and resulted in a
 new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
 only yield better performance, but it is much more flexible, since it
 allows application code to be run on the I/O~nodes.  
@@ -206,7 +206,7 @@ The standard BG/P
 software infrastructure is a major improvement over the BG/L, since it
 now incorporates several of ZOID's key ideas (e.g., that of running
 application code on the I/O~nodes).  Therefore, we do not have to use
-ZOID on the BG/P anymore.  Nevertheless, the performance of the
+ZOID on the BG/P anymore.  Nevertheless, the achieved performance of the
 collective network that we use to send LOFAR data from the I/O~nodes
 to the compute~nodes still is unsatisfactory.  We therefore developed
 our own high-performance low-overhead protocol, called FCNP.  We
@@ -215,6 +215,7 @@ Section~\ref{sec:input-handling}.
 
 %Zoid werk op ZeptoOS, kan torus niet 
 %gebruiken op compute nodes, is essentieel voor ons (voor transpose).
+% applicatie kan ZOID crashen. Met fcnp kan dat niet
 % Rob: te veel detail hier denk ik.
 
 The idea to implement a correlator in software has been adopted by
@@ -310,8 +311,7 @@ used for all observations.
 The roll-out of the stations is currently in progress.
 
 Each station is equipped with 48--96 LBAs and 48--96 HBA tiles. 
-A station also features a cabinet where initial processing is done, using
-FPGA technology.
+A station also features a cabinet where initial processing is done.
 Typical operations that are performed here include analog-to-digital
 conversion, filtering, frequency selection, and combination of the signals
 from the different receivers.
@@ -326,7 +326,7 @@ The station data are transported to the central processing location
 via a Wide-Area Network (WAN), using dedicated light paths.
 We use UDP for data transport, since we can easily tolerate some data loss.
 We do not use a reliable protocol such as TCP, because this significantly
-complicates the programming of the FPGAs, due to buffering, flow control,
+complicates the programming of the station FPGAs, due to buffering, flow control,
 retransmission, and real-time issues.
 
 The UDP packets contain samples, where a sample is a complex number
@@ -356,8 +356,8 @@ effectively implement a data-transpose that is crucial for our
 application, at the bandwidth we require (see Section~\ref{all-to-all}). 
 Finally, the BG/P is a power-efficient supercomputer.
 Electrical power costs form a large part of the operational costs for
-the LOFAR instrument.  At the time of purchase, the BG/P was the highest
-ranking system on the green500 list for energy
+the LOFAR instrument.  At the time of purchase, the BG/P was the highest-ranking 
+system on the green500 list for energy
 efficient supercomputers (see www.green500.org). 
 
 Our pipeline on the BG/P filters the data, and splits the subbands in narrower frequency bands called
@@ -375,8 +375,8 @@ commodity cluster hardware.
 Despite considerable computational challenges, the scope of this paper does not cover
 the off-line processing.
 
-A prototype of a set of other observation modes, used to find and observe
-pulsars, is functional, but is not optimized for performance yet.
+Prototypes of other observation modes, used to find and observe
+pulsars, are functional, but are not optimized for performance yet.
 Hence, we do not discuss the pulsar modes in this paper.
 However, the presence of multiple observation modes demonstrates the
 flexibility of a \emph{software\/} solution.
@@ -481,7 +481,7 @@ The storage application collects the data from the I/O~nodes and writes the
 data to disk.
 
 
-\section{I/O-node processing}
+\section{I/O-node Processing}
 \label{sec:IONProc}
 
 \begin{figure}[t]
@@ -509,7 +509,7 @@ on the configuration.
 Both tasks are described in detail below.
 
 
-\subsection{The input section}
+\subsection{The Input Section}
 \label{sec:input-handling}
 
 The LOFAR stations send UDP packets with sampled data over a
@@ -576,7 +576,7 @@ trigger, but we synchronize the threads that read and write the circular
 buffer differently to prevent them from overtaking each other.
 
 
-\subsection{The output section}
+\subsection{The Output Section}
 
 The bulk of the signal processing is done on the compute nodes, on which we
 elaborate in Section~\ref{sec:CNProc}.
@@ -671,7 +671,7 @@ In practice, under normal circumstances, this rarely happens
 
 
 
-\section{Compute-node processing}
+\section{Compute-node Processing}
 \label{sec:CNProc}
 
 The bulk of the signal-processing computations take place on the compute nodes.
@@ -731,7 +731,7 @@ inability to asynchronously communicate data using a DMA engine; on the
 BG/P, it unnecessarily increases torus communication.
 
 
-\subsection{All-to-All data exchange}
+\subsection{All-to-All Data Exchange}
 \label{all-to-all}
 
 The compute nodes perform several operations on the data, as shown in
@@ -789,17 +789,17 @@ are required. As we will explain in the next section, this is before the beam fo
 step.
 
 
-\subsection{Signal processing}
+\subsection{Signal Processing}
 \label{sec:signal-processing}
 
 After the data exchange, a compute core has the samples of one subband
 from all stations.
 The data are processed in a number of steps, as shown in Figure~\ref{fig:cn-processing}.
-We briefly describe the steps below, and more details can be found elsewhere~\cite{Romein:06}.
+We briefly describe the steps below; more details can be found elsewhere~\cite{Romein:06}.
 We finish the section with some remarks on flexibility and optimizations.
 
 
-\subsubsection{Data conversion}
+\subsubsection{Data Conversion}
 First, we convert the 4-bit, 8-bit, or 16-bit little-endian integer
 samples to 32-bit big-endian floating point numbers.  We do this
 because the Blue Gene is much better at floating-point processing than
@@ -810,31 +810,31 @@ implementation to convert 16-bit numbers.
 Since the conversion increases the data size, we perform it \emph{after\/} the
 data exchange.
 Since the samples are at most 16-bit wide, single precision floating
-point is enough for our purposes. Future telescopes will likely use
-even fewer bits per sample (but higher bandwidths).
+point is enough for our purposes. Other telescopes use typically 2--4 bits
+per sample.
 
 
-\subsubsection{The Poly-Phase Filter bank}
+\subsubsection{The Poly-Phase Filter Bank}
 Next, the subband data are processed by a Poly-Phase Filter
 bank (PPF) that splits a frequency subband into a number of
-narrower frequency channels.  In this step, we can trade time
-resolution for frequency resolution: we split a subband in $N$
+narrower frequency channels.  In this step, we trade time
+resolution for frequency resolution: we split a subband into $N$
 separate channels, but with an $N$-times lower sampling rate per channel.  With
 the higher frequency resolution, we can remove RFI artifacts with a
 higher accuracy later later in the pipeline.
 Typically, a 195~KHz subband is split into 256~channels of 763~Hz, but the
 filter supports any reasonable power-of-two number of channels for different
-observation modes. The PPF consists of two parts. 
+observation modes. 
 
+The PPF consists of two parts. 
 First, the data is filtered using Finite Impulse Response (FIR)
-filters. A FIR filter simply multiplies a sample with a weight factor, and
+filters. A FIR filter simply multiplies a sample with a real weight factor, and
 also adds a number of weighted samples from the past.  Since we have
 to support different numbers of channels, our software automatically designs
 a filter bank with the desired properties and number of channels at
 run time, generating the FIR filter weights on the fly. This again
-demonstrates the flexibility of a software solution.  The
+demonstrates the flexibility of a software solution.  For performance reasons, the
 implementation of the filter is done in assembly.
-
 Second, the filtered data are Fourier Transformed. We use the Blue
 Gene ``Vienna'' version of FFTW~\cite{Lorenz:05} to do this. Since the
 most common observation mode uses 256 channels, we optimized this case
@@ -842,15 +842,30 @@ a bit further, and manually wrote a more efficient assembly
 implementation for the 256-point FFT.
 
 
-\subsubsection{Phase shift correction}
+\subsubsection{Phase Shift Correction}
+
+%% \begin{figure}[ht]
+%% \begin{center}
+%% \includegraphics[width=2.5cm]{delay.pdf}
+%% \end{center}
+%% \vspace{-0.5cm}
+%% \caption{The left antenna receives the wave later.}
+%% \label{fig:delay}
+%% \end{figure}
+
 
 \begin{figure}[ht]
-\begin{center}
-\includegraphics[width=2.5cm]{delay.pdf}
-\end{center}
-\vspace{-0.5cm}
+\begin{minipage}[b]{4cm}
+\includegraphics[width=3cm]{delay.pdf}
 \caption{The left antenna receives the wave later.}
 \label{fig:delay}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{4cm}
+\includegraphics[width=3cm]{bandpass.pdf}
+\caption{Not all channels have equal signal power.}
+\label{fig:bandpass}
+\end{minipage}
 \end{figure}
 
 Due to the finite speed
@@ -878,12 +893,11 @@ time and end time of a chunk, and interpolated in frequency and time
 for each individual sample, with another complex multiplication.
 
 
-\subsubsection{Bandpass correction}
-
+\subsubsection{Bandpass Correction}
 The bandpass correction step compensates for an artifact
 introduced by a filter back that runs on the FPGAs in the stations.
 This filter bank performed the initial division of the antenna signals into subbands.
-Without correction, some channels have a stronger signal than others.
+Without correction, some channels have a stronger signal than others (see Figure~\ref{fig:bandpass}).
 The correction is performed by multiplying each complex sample by a real,
 channel-dependent value that is computed in advance.
 A station cannot correct for this artifact itself, since it is only visible
@@ -891,14 +905,14 @@ in channels, not in subbands.
 %We describe how the correction factors are computed in~\cite{Romein:08}.
 
 
-\subsubsection{Finalizing the asynchronous transpose}
+\subsubsection{Finalizing the Asynchronous Transpose}
 
 Up to this point in the pipeline, processing chunks from different stations can be done
 independently, but from here on, the data from all stations are required.
 Therefore, the asynchronous exchange ends here, before the beam forming.
 
 
-\subsubsection{Beam forming}
+\subsubsection{Beam Forming}
 
 The beam forming step is optional, and adds the samples
 from a group of stations that are close together, so that the group forms a virtual
@@ -933,7 +947,7 @@ them in the performance measurements of Section~\ref{sec:performance}.
 
 \subsubsection{Correlation}
 
-Next, the samples from individual or grouped stations
+Finally, the samples from individual or grouped stations
 are correlated.
 The received signals from sky sources are so weak, that the antennas mainly
 receive noise.
@@ -968,7 +982,7 @@ computations in the shared components of the pipelines are done only
 once. Moreover, more astronomical science can be done with a
 single observation.  Additionally, in the future these pipelines can
 benefit from each other.  For example, the results from
-the standard imaging pipeline can be used to calibrate the instrument
+the standard imaging pipeline can be used to calibrate the data in the pulsar pipeline
 in real time.
 
 %, so that the
@@ -1181,7 +1195,7 @@ the correlations are independently computed.
 
 
 
-\section{Performance Evaluation}
+\section{Performance Analysis}
 \label{sec:performance}
 
 Since only a small number of LOFAR stations have been constructed (the
@@ -1449,7 +1463,7 @@ simultaneously, or to do additional signal processing that improves the
 signal quality, such as real-time flagging and real-time calibration.
 
 
-\section{Astronomical results}
+\section{Astronomical Results}
 \label{sec:results}
 
 \begin{figure}[ht]
@@ -1516,7 +1530,7 @@ known pulsars~\cite{Hessels:09}.
 % + omgeving t.o.v. BG/L verbeterd
 % + het werkt!
 
-\section{Conclusions and future work}
+\section{Conclusions and Future Work}
 \label{sec:conclusions}
 
 In general, we are rather satisfied with the capabilities of the Blue Gene/P
