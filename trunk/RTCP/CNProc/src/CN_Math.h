@@ -13,9 +13,12 @@ extern "C"
 
 #else
 
-inline static dcomplex cosisin(double x)
+namespace LOFAR
 {
-  return makedcomplex(std::cos(x), std::sin(x));
+  inline static dcomplex cosisin(double x)
+  {
+    return makedcomplex(std::cos(x), std::sin(x));
+  }
 }
 
 #endif

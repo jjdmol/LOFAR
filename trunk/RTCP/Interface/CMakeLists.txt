@@ -38,7 +38,7 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common Stream ApplCommon)
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
-lofar_find_package(Boost COMPONENTS date_time REQUIRED)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 
 ## ---------------------------------------------------------------------------
 ## Generate configuration header file.

@@ -38,6 +38,7 @@ lofar_add_package(${PROJECT_NAME} 1.0 DEPENDS Common Stream Interface FCNP)
 ## External packages
 ## ---------------------------------------------------------------------------
 include(LofarFindPackage)
+lofar_find_package(MASS)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(FFTW3)
 if(NOT FFTW3_F0UND)
@@ -46,8 +47,6 @@ if(NOT FFTW3_F0UND)
     message(SEND_ERROR "Should have FFTW3 or FFTW2 installed.")
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_F0UND)
-
-#lofar_find_package(Mass)
 
 ## ---------------------------------------------------------------------------
 ## Enable BGP specific assembler
