@@ -1,52 +1,24 @@
-cmake_minimum_required (VERSION 2.6)
+#  $Id$
+#
+#  Copyright (C) 2008-2009
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include(LOFARTest)
-include_directories ( ${LOFAR_SOURCE_DIR}/RTCP/CNProc/test )
+include(LofarCTest)
 
-enable_language(ASM-BGP)
-
-if (CMAKE_ASM-BGP_COMPILER_WORKS)
-  file(GLOB amsSrcs ../src/CorrelatorAsm.S
-                    ../src/FFT_Asm.S
-		    ../src/FIR_Asm.S)
-endif (CMAKE_ASM-BGP_COMPILER_WORKS) 
-
-## ------------------------------------------------------------------------------
-## Sources
-
-file (GLOB tCN_Processing_SRCS         tBeamForming.cc
-				       tCN_Processing.cc
-				       ../src/BandPass.cc
-				       ../src/CN_Processing.cc
-				       ../src/Correlator.cc
-				       ../src/FIR.cc
-				       ../src/BeamFormer.cc
-				       ../src/LocationInfo.cc
-				       ../src/PPF.cc
-				       ../src/Transpose.cc
-				       ../src/PencilBeams.cc
-				       ../src/Stokes.cc
-				       ../src/AsyncCommunication.cc
-				       ../src/AsyncTranspose.cc
-				       ${amsSrcs} )
-				       
-## --- Macro(s) -------------------------------------
-
-MACRO (TARGETLINKLIBRARIES_CNPROC_TEST _PROG)
-  target_link_libraries (${_PROG} 
-                         cnproc )
-ENDMACRO (TARGETLINKLIBRARIES_CNPROC_TEST)
-
-## --- Programs to be built -------------------------
-
-set (CHECKPROGS
-     tBeamForming
-     tCN_Processing
-)
-
-foreach (prog ${CHECKPROGS})
-  add_executable (${prog} ${${prog}_SRCS})
-  TARGETLINKLIBRARIES_CNPROC_TEST (${prog})
-  set_target_properties(${prog} PROPERTIES LINK_FLAGS "-static")
-endforeach (prog ${CHECKPROGS})				       
-
+lofar_add_test(tCN_Processing tCN_Processing.cc)
+lofar_add_test(tBeamForming tBeamForming.cc)

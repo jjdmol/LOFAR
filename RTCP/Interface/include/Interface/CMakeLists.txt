@@ -9,7 +9,6 @@ set(inst_HEADERS
   CN_Mode.h
   CorrelatedData.h
   Config.h
-  DataHolder.h
   FilteredData.h
   MultiDimArray.h
   Parset.h
@@ -21,7 +20,9 @@ set(inst_HEADERS
   Exceptions.h
   StreamableData.h
   PencilBeamData.h
-  StokesData.h)
+  PencilCoordinates.h
+  StokesData.h
+  PipelineOutput.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

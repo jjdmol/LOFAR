@@ -20,16 +20,14 @@
 
 include(LofarPackageVersion)
 
-set(interface_LIB_SRCS
+lofar_add_library(interface
   Package__Version.cc
   Allocator.cc
   CN_Configuration.cc
   CN_Mapping.cc
   Parset.cc
+  PencilCoordinates.cc
   RSPTimeStamp.cc
-  DataHolder.cc
   CN_Mode.cc)
 
-lofar_add_library(interface ${interface_LIB_SRCS})
-
-lofar_add_executable(versioninterface versioninterface.cc)
+lofar_add_bin_program(versioninterface versioninterface.cc)
