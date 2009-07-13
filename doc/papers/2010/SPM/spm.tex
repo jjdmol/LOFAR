@@ -1,6 +1,7 @@
 \documentclass{article}
 
 % @@@ ICS referentie fix pages
+% @@@ cite gridding cell/gpu work
 
 % opencl uitzoeken
 %  - hoe gaat opencl om met random writes?
@@ -34,37 +35,34 @@ Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 \maketitle
 
 \begin{abstract}
-Radio telescopes typcially consists of multiple receivers, of which the signals
-are cross-correlated to filter out noise.
-A recent trend is to correlate in software instead of custom-built hardware,
-taking advantage of the flexibility that software solutions offer.
-Examples include e-VLBI and LOFAR.
-However, the data rates are usually high and the processing requirements
-challenging.
-%Many-core processors potentially provide the required processing power.
-Many-core processors are promising devices to provide the required processing
-power, at least in theory.
+Radio telescopes typically consists of multiple receivers, of which
+the signals are cross-correlated to filter out noise.  A recent trend
+is to correlate in software instead of custom-built hardware, taking
+advantage of the flexibility that software solutions offer.  Examples
+include e-VLBI and LOFAR.  However, the data rates are usually high
+and the processing requirements challenging.  Many-core processors are
+promising devices to provide the required processing power, at least
+in theory.
 
-In this paper, we explain how to implement and optimize a correlator on
-multi-core CPUs and many-core architectures, such as the Intel Core i7, NVIDIA and ATI GPUs,
-and the \mbox{Cell/B.E.}  The correlator is a streaming, possibly real-time
-application, and is much more I/O intensive than applications that are
-typically implemented on many-core hardware today.  We compare with
-the LOFAR production correlator on an IBM Blue Gene/P supercomputer.
-We discuss several important architectural problems which cause
-architectures to perform suboptimally, and also deal with programmability. 
+In this paper, we explain how to implement and optimize
+signal-processing applications on multi-core CPUs and many-core
+architectures, such as the Intel Core i7, NVIDIA and ATI GPUs, and the
+\mbox{Cell/B.E.}  We use correlation as a running example. The
+correlator is a streaming, possibly real-time application, and is much
+more I/O intensive than applications that are typically implemented on
+many-core hardware today.  We compare with the LOFAR production
+correlator on an IBM Blue Gene/P supercomputer.  We discuss several
+important architectural problems which cause architectures to perform
+suboptimally, and also deal with programmability.
 
-We show that the processing power and memory bandwidth of
-current GPUs are highly imbalanced.  While
-the correlator on the Blue Gene/P achieves a superb 96\% of the
-theoretical floating-point peak performance, this is only 14\% on ATI GPUs,
-and 26\% on NVIDIA GPUs.
-The \mbox{Cell/B.E.} processor, in contrast, achieves an
-excellent 92\%.
-The research presented is an important pathfinder for next-generation
-telescopes.
-Many of our findings are not only applicable to telescope correlators, but can
-be used to develop signal-processing applications in general.
+The correlator on the Blue Gene/P achieves a superb 96\% of the
+theoretical peak performance.  We show that the processing power and
+memory bandwidth of current GPUs are highly imbalanced. Because of
+this, the correlator achieves only 14\% of the peak on ATI GPUs, and
+26\% on NVIDIA GPUs.  The \mbox{Cell/B.E.} processor, in contrast,
+achieves an excellent 92\%.  Many of the insights we discuss here are not only
+applicable to telescope correlators, are valuable when developing
+signal-processing applications in general.
 \end{abstract}
 
 
@@ -207,9 +205,11 @@ We describe LOFAR in more detail below.
 \subsection{The LOFAR telescope}
 
 \begin{figure}[t]
+\vspace{-0.4cm}
 \begin{center}
 \includegraphics[width=60mm]{figures/LBA-field.jpg}
 \end{center}
+\vspace{-0.5cm}
 \caption{A field with LOFAR antennas.}
 \label{fig:lba-field}
 \end{figure}
