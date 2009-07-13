@@ -107,11 +107,11 @@ Future instruments, like the Square Kilometre Array (SKA), need several orders
 of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
 current supercomputer technology. Therefore, it is important to investigate
-alternative hardware solutions, in particular the many-core architectures.
+alternative hardware solutions.
 
 General-purpose architectures no longer
 achieve performance improvements by increasing the clock frequency, but
-by adding more compute cores and exploiting parallelism.  Intel's
+by adding more compute cores and by exploiting parallelism.  Intel's
 recent Core~i7 processor is a good example of this. It has four
 compute cores, but eight concurrent threads can be used thanks to the
 hyperthreading technique. Using two threads per core allows the hardware to overlap
@@ -131,10 +131,8 @@ High-end GPUs are highly parallel and contain hundreds of processor cores.
 %% Hence, the support for double-precision arithmetic is typically poor.
 %% Fortunately, many signal-processing applications do not require double
 %% precision.
-
-The IBM Cell Broadband Engine~\cite{cell}, well known from the
-PlayStation~3, is another example of a processor that combines GPU and CPU
-qualities into one design.
+An example of a processor that combines GPU and CPU
+qualities into one design is the Cell Broadband Engine~\cite{cell}.
 The Cell/B.E. consists of an ``ordinary'' PowerPC core and eight powerful
 vector processors with fast, local memories that provide
 the bulk of the processing power.
@@ -159,12 +157,10 @@ some extra programming effort to obtain good performance, even if
 high-level programming support is not available.
 We describe the implementation of the correlator on many-core
 platforms in more detail in~\cite{Nieuwpoort:09}.
-
 In this paper, we use the LOFAR telescope as a running example, and
-use the production correlator on the Blue Gene/P as a comparison. This way,
-we can demonstrate how many-core architectures can be used in practice for a real
-application. Nevertheless, the results apply equally well to other
-instruments and applications.
+use its production correlator on the Blue Gene/P as a comparison. This way,
+we demonstrate how many-core architectures can be used in practice for a real
+application.
 
 
 \section{Trends in radio astronomy}
@@ -178,7 +174,7 @@ Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat} and
 ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}. Both are
 pathfinders for the future SKA (Square Kilometre Array)~\cite{ska} telescope, which
 will be orders of magnitude larger.
-Also, Aperture Array tiles like Embrace~\cite{embrace} and Focal Plane Arrays
+Also, aperture array tiles like Embrace~\cite{embrace} and focal plane arrays
 like Apertif~\cite{apertif} are novel multi-receiver concepts.
 Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
@@ -232,8 +228,7 @@ We describe LOFAR in more detail below.
 \end{minipage}
 \end{figure*}
 
-LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency
-  \textbf{AR}ray}, an aperture array radio telescope operating in the
+LOFAR is an aperture array radio telescope operating in the
 10 to 250~MHz frequency range~\cite{deVos:09}.  It is the first of a new generation of
 radio telescopes, that breaks with the concepts of traditional
 telescopes in several ways.  Rather than using large, expensive
@@ -247,6 +242,16 @@ be needed for dishes. Moreover, LOFAR can observe the sky in many
 directions concurrently and switch directions instantaneously.  In
 several ways, LOFAR will be the largest telescope of the world.
 
+The antennas are simple, but there are a lot of them: 44000 in the full LOFAR
+design. To make radio pictures of the sky with adequate resolution,
+these antennas are to be arranged in clusters that are spread out over
+an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
+In the current phase, 31000
+antenna's with a maximum distance of 100 km will
+be built. Data transport requirements are in the range of many
+Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
+In the rest of this paper, we call a cluster of antenna's a receiver.
+
 Another novelty is the elaborate
 use of \emph{software\/} to process the telescope data in real time.
 The signals from the
@@ -258,14 +263,6 @@ is dominated by the cost of electronics and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
 to be built. 
 
-The antennas are simple, but there are a lot of them: 44000 in the full LOFAR
-design. To make radio pictures of the sky with adequate resolution,
-these antennas are to be arranged in clusters that are spread out over
-an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
-In the current phase, 31000
-antenna's with a maximum distance of 100 km will
-be built. Data transport requirements are in the range of many
-Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
 
 \longversion{
 LOFAR will enable exciting new science cases.  First, we expect to see
@@ -648,14 +645,14 @@ check, and calculates what the expected maximal performance is that can be
 achieved on a particular platform.
 
 The number of operations that is performed per byte that has to be
-loaded from memory (the flop/byte ratio) is called the \emph{arithmetic intensity}, or
+transfered (the flop/byte ratio) is called the \emph{arithmetic intensity}, or
 $AI$~\cite{system-performance}.  Performance is bound by the product
-of the memory bandwidth and the $AI$: \\
-$\mathit{perf_{max}}$ = $AI \times memoryBandwidth$. \\
+of the bandwidth and the $AI$: \\
+$\mathit{perf_{max}}$ = $AI \times bandwidth$. \\
 Several important assumptions are made
-with this method. First, it assumes that the memory bandwidth is
+with this method. First, it assumes that the bandwidth is
 independent of the access pattern.  Second, it assumes a complete
-overlap of communication and communication, i.e., all memory latencies
+overlap of communication and communication, i.e., all latencies
 are completely hidden.  Finally, the method does not take caches into
 account. Nevertheless, the $\mathit{perf_{max}}$ gives a rough idea of
 the performance than can be achieved.
@@ -665,8 +662,7 @@ We do it for the NVIDIA GPU here, but the results for the ATI hardware is simila
 With the GPUs, there are several communication steps that influence
 the performance. First, the data has to be transferred from the host to
 the device memory.  Next, the data is read from the device memory into
-registers. Although the GPUs offer high internal memory bandwidths,
-the host-to-device bandwidth is limited by the low
+registers. The host-to-device bandwidth is limited by the low
 PCI-express throughput, 5.6 GB/s in this case. We can easily show that this is a bottleneck
 by computing the $AI$ for full system, using the host-to-device transfers. (The AI can also be computed for
 the device memory.)
