@@ -801,9 +801,10 @@ For comparison reasons, we use the performance
 We choose 64 as the number of receivers (each in turn consisting of hundreds of antennas), since
 that is a realistic number for LOFAR.  The performance results are shown in Figure~\ref{performance-graph}.
 
-\subsubsection{Intel CPUs}
 
-The SSE4 instruction set can be used to exploit vector parallelism.  
+\noindent \\ \emph{Intel CPUs}
+
+\noindent The SSE4 instruction set can be used to exploit vector parallelism.  
 Unlike the Cell/B.E. and ATI GPUs, a
 problem with SSE4 is the limited support for shuffling data within
 vector registers.  Computing the
@@ -822,9 +823,9 @@ L1~data cache.
 
 
 
-\subsubsection{The BG/P supercomputer}
+\noindent \\ \emph{The BG/P supercomputer}
 
-The LOFAR correlator is implemented on the Blue Gene/P platform.
+\noindent The LOFAR correlator is implemented on the Blue Gene/P platform.
 We use it as the reference for performance comparisons.
 We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
@@ -841,9 +842,9 @@ operation, which is 3--10 times higher than for the other architectures.
 
 % @@@ tile sizes in table, misscien de +/- table
 
-\subsubsection{ATI GPUs}
+\noindent \\ \emph{ATI GPUs}
 
-The ATI architecture has several important
+\noindent The ATI architecture has several important
 drawbacks for data-intensive applications.  First, the
 host-to-device bandwidth is a bottleneck.  Second, we found that
 overlapping communication with computation by performing asynchronous
@@ -879,9 +880,9 @@ not achieve acceptable performance for our application. The low-level
 CAL model does, but it is difficult to use.
 
 
-\subsubsection{NVIDIA GPUs}
+\noindent \\ \emph{NVIDIA GPUs}
 
-NVIDIA's programming model is called Cuda~\cite{cuda-manual}.
+\noindent NVIDIA's programming model is called Cuda~\cite{cuda-manual}.
 Cuda is relatively high-level, and achieves good performance.
 An advantage of NVIDIA hardware, in contrast to ATI, is that the application does not have to do 
 vectorization. This is thanks to the fact that all cores have their own address generation units. 
@@ -920,9 +921,9 @@ hardware, this is caused by the low PCI-e bandwidth.  With NVIDIA
 hardware we do see significant performance gains by using asynchronous host-to-device I/O.
 
 
-\subsubsection{The Cell Broadband Engine}
+\noindent \\ \emph{The Cell Broadband Engine}
 
-\mbox{Cell/B.E.} programming is based on multi-threading:
+\noindent \mbox{Cell/B.E.} programming is based on multi-threading:
 the PPE spawns threads that execute asynchronously on SPEs.  With the
 \mbox{Cell/B.E.} it is important to exploit all levels of parallelism.
 Applications deal with task and data parallelism across multiple SPEs,
