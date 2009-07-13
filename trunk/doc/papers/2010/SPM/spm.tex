@@ -1,14 +1,10 @@
 \documentclass{article}
 
-% @@@ ICS referentie fix pages
-% @@@ cite gridding cell/gpu work
-
 % opencl uitzoeken
 %  - hoe gaat opencl om met random writes?
 % RANDOM WRITES ZIJN GEWOON TOEGESTAAN.
 
-
-%langere vectoren is slecht , zie larrabee
+% langere vectoren is slecht , zie larrabee
 
 % code als voorbeeld op het web
 
@@ -111,11 +107,7 @@ General-purpose architectures no longer
 achieve performance improvements by increasing the clock frequency, but
 by adding more compute cores and by exploiting parallelism.  Intel's
 recent Core~i7 processor is a good example of this. It has four
-compute cores, but eight concurrent threads can be used thanks to the
-hyperthreading technique. Using two threads per core allows the hardware to overlap
-load delays and pipeline stalls with useful work from the other thread. 
-In addition, the cores can exploit vector
-parallelism with the SSE instruction set.
+compute cores and can exploit vector parallelism with the SSE instruction set.
 
 Furthermore, the high-performance computing community is
 steadily adopting clusters of Graphics Processor Units (GPUs) as a viable
@@ -463,9 +455,12 @@ differences for signal processing applications.
 \noindent As a reference, we implemented the correlator on a multi-core
 general-purpose architecture, in this case an Intel Core~i7.  The
 theoretical peak performance of the system is 85~gflops, in single
-precision.  The parallelism comes from four cores with two-way
-hyperthreading, and a vector length of four floats, provided by the
-SSE4 instruction set.
+precision.  The parallelism comes from four cores with 
+hyperthreading.
+Using two threads per core allows the hardware to overlap
+load delays and pipeline stalls with useful work from the other thread.
+The SSE4 instruction set provides SIMD parallelism with a vector length of four floats.
+
 %% SSE4 does not provide fused multiply-add instructions, but the Core~i7
 %% issues vector-multiply and vector-add instructions concurrently in
 %% different pipelines, allowing eight flops per cycle per core.  
@@ -473,13 +468,13 @@ SSE4 instruction set.
 \noindent \\ \emph{IBM Blue Gene/P supercomputer}
 
 \noindent The IBM Blue Gene/P~(BG/P)~\cite{IBM:08} is the architecture that is
-currently used for the LOFAR production correlator.
-Four PowerPC processors are integrated on each BG/P chip.
-The BG/P is an energy efficient supercomputer.
+currently used for the LOFAR correlator.
+Four PowerPC processor cores are integrated on each BG/P chip.
+The BG/P is an energy-efficient supercomputer.
 This is accomplished by using many small, low-power chips, at a low clock
 frequency.
-The supercomputer also has excellent I/O capabilities, there are five
-specialized networks for communication.
+%The supercomputer also has excellent I/O capabilities, there are five
+%specialized networks for communication.
 
 
 \noindent \\ \emph{ATI GPUs}
@@ -489,28 +484,30 @@ the 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total
 and has a theoretical peak performance of
 1.2~teraflops. The board uses a PCI-express~2.0 interface
 for communication with the host system.
-The streaming processors have 16 KB of shared
+Each streaming processor has 16 KB of shared
 memory that is completely managed by the application. It is also
 possible to specify if a read should be
 cached by the texture cache or not.
-
+On both ATI and NVIDIA GPUs, the application should run many more threads
+than the number of cores. This allows the hardware to overlap memory load delays with useful
+work from other threads.
 
 
 \noindent \\ \emph{NVIDIA GPUs}
 
-\noindent NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single precision
-and 30 double precision FPUs~\cite{cuda-manual}. The GTX~280 uses a two-level hierarchy to group cores.
-There are 30~independent \emph{multiprocessors\/} that each have 8~cores.
-Current NVIDIA GPUs have fewer
-cores than ATI GPUs, but the individual cores are faster.
-The theoretical peak performance is 933 gflops.
-The number of registers is large: there are 16384 32-bit floating
-point registers per multiprocessor. There also is 16~KB of shared
-memory per multiprocessor.  This memory is shared between all threads
-on a multiprocessor, but not globally.  Finally, texture caching
-hardware is available.  The application can specify which area of
-device memory must be cached, while the shared memory is completely
-managed by the application.
+\noindent NVIDIA's Tesla C1060 contains a GTX~280 GPU with 240 single
+precision and 30 double precision FPUs~\cite{cuda-manual}. The GTX~280
+uses a two-level hierarchy to group cores.  There are 30~independent
+\emph{multiprocessors\/} that each have 8~cores.  Current NVIDIA GPUs
+have fewer cores than ATI GPUs, but the individual cores are faster.
+The theoretical peak performance is 933 gflops.  The number of
+registers is large: there are 16384 32-bit floating point registers
+per multiprocessor. There also is 16~KB of shared memory per
+multiprocessor.  This memory is shared between all threads on a
+multiprocessor, but not globally.  Finally, texture-caching hardware
+is available.  The application can specify which area of device memory
+must be cached, while the shared memory is completely managed by the
+application.
 
 
 
@@ -521,35 +518,44 @@ heterogeneous many-core processor, designed by Sony, Toshiba and IBM
 (STI).  The \mbox{Cell/B.E.} has nine cores: the Power Processing
 Element (PPE), acting as a main processor, and eight Synergistic
 Processing Elements (SPEs) that provide the real processing power.
-The cores, the main memory, and the external I/O are connected by a
-high-bandwidth element interconnection bus.  The main memory has
-a relatively high bandwidth.  The PPE's main role is to
-run the operating system and to coordinate the SPEs.  An SPE contains
-a RISC-core, a 256KB Local Store (LS), and a memory flow controller.
-
+%The cores, the main memory, and the external I/O are connected by a
+%high-bandwidth element interconnection bus.
+%The PPE's main role is to
+%run an operating system and to coordinate the SPEs.  
+An SPE contains
+a RISC-core, a 256KB Local Store (LS), and a DMA controller.
 The LS is an extremely fast local memory for both code and data
-and is managed entirely by the application with explicit DMA
-transfers.  The LS can be considered the SPU's L1 cache.  The
+and is managed \emph{entirely by the application} with explicit DMA
+transfers.  The LS can be considered the SPU's (explicit) L1 cache.  The
 \mbox{Cell/B.E.} has a large number of registers: each SPU has 128,
-which are 128-bit (4 floats) wide.  The SPU can dispatch two
+which are 128-bit (4 floats) wide.
+\longversion{
+ The SPU can dispatch two
 instructions in each clock cycle using the two pipelines designated
 \emph{even} and \emph{odd}. Most of the arithmetic instructions
 execute on the even pipe, while most of the memory instructions
 execute on the odd pipe.  For the performance evaluation, we use a QS21 Cell blade with two
-\mbox{Cell/B.E.} processors.  The 8 SPEs of a single chip in the
+\mbox{Cell/B.E.} processors.
+}
+The 8 SPEs of a single chip in the
 system have a total theoretical single-precision peak performance of
 205 gflops.
 
 
-\section{Mapping signal processing algorithms on many-core hardware}
+\section{Mapping signal-processing algorithms on many-core hardware}
 
 Many-core architectures derive their performance from parallelism.
 Several different forms of parallelism can be identified:
 multi-threading (with or without shared memory), overlapping of I/O
-and computations, multiple pipelines, and vector parallelism. Most
-many-core architectures combine several of these methods.  Therefore,
-it is clear that algorithms have to be adapted to efficiently exploit
+and computations, instruction-level parallelism, and vector parallelism. Most
+many-core architectures combine several of these methods.  
+Unfortunately, an application has to handle all levels of parallelism to
+obtain good performance.
+Therefore, it is clear that algorithms have to be adapted to efficiently exploit
 many-core hardware.
+Additional parallelism is obtained by using multiple processor chips.
+In this paper, however, we restrict ourselves to single chips for simplicity.
+
 
 
 \subsection{Finding parallelism}
@@ -575,7 +581,7 @@ strategies.
 On many-core architectures, the memory bandwidth is shared between the
 cores.  This has shifted the balance between between computational and
 memory performance.  The available memory bandwidth per operation has
-decreased dramatically.  For the many-core architectures we use here,
+decreased dramatically compared to traditional processors.  For the many-core architectures we use here,
 the bandwidth per operation is 3--10 times lower than on the BG/P, for
 instance.  Therefore, we must treat memory bandwidth as a scarce
 resource, and it is important to minimize the number of memory
@@ -613,7 +619,7 @@ In the first phase, we identify algorithm-specific, but
 architecture-independent optimizations. 
 In this phase, it is of key importance to understand that, although a
 set of \emph{operations} in an algorithm can be independent, the \emph{data
-  accesses} may not be.  This is essential, even though it may not be a
+  accesses} may not be.  This is essential for good performance, even though it may not be a
 factor in the correctness of the algorithm. The \emph{number} of memory accesses per operation should
 be reduced as much as possible, sometimes even at the cost of more
 compute cycles. An example is a case
@@ -630,12 +636,12 @@ more cache levels. Therefore, the access patterns of several different
 threads that share a cache should be tailored accordingly. On GPUs,
 for example, this can be done by \emph{coalescing} memory accesses.
 This means that different concurrent threads read subsequent memory
-locations.  This can be counter intuitive, since traditionally, it was
+locations.  This can be counter-intuitive, since traditionally, it was
 preferable to have linear memory access patterns within a
 thread. Table~\ref{memory-properties} summarizes the differences in
 memory architectures of the different platforms.
 Other techniques that are performed in this phase include optimizing cache
-behavior, avoiding load delays and pipeline stalls, exploiting special floating point instructions, etc.
+behavior, avoiding load delays and pipeline stalls, exploiting special floating-point instructions, etc.
 We explain several examples of this in more detail in Section~\ref{sec:architecture-optimizations}.
 
 
@@ -670,7 +676,7 @@ PCI-express throughput, 5.6 GB/s in this case. We can easily show that this is a
 by computing the $AI$ for full system, using the host-to-device transfers. (The AI can also be computed for
 the device memory.)
  
-For the correlator, the number of flops in the computation is the
+As explained in Section~\ref{sec:correlating}, for the correlator, the number of flops in the computation is the
 number of receiver combinations times 32 operations, while the number
 of bytes that have to be loaded in total is 16 bytes times the number
 of receivers.  As explained in Section~\ref{sec:correlating}, the
@@ -698,7 +704,7 @@ explicit SIMD (vector) parallelism, the complex operations can simply
 be expressed in terms of normal floating point operations. This puts
 an extra burden on the programmer, but achieves good performance. The
 NVIDIA GPUs work this way.  However, if an architecture does use vector
-parallelism, we can either store the real and complex parts inside a
+parallelism, we can either store the real and complex parts alternatingly inside a
 single vector, or have separate vectors for the two parts.  In both
 cases, support for shuffling data inside the vector registers is
 essential, since complex multiplications operate on both the real and imaginary parts.
@@ -758,7 +764,7 @@ be correlated this way is limited by the number of registers that an architectur
 The accumulated correlations are also best kept in registers, and the number of
 required registers grows rapidly with the number of receiver inputs.
 The example above already requires 16 accumulators.
-Additional registers are needed to load samples from memory (8 in this case).
+Additional registers are needed to load samples from memory.
 To obtain good performance, it is important to tune the tile size to the
 architecture.
 
