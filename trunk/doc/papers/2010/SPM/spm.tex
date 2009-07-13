@@ -154,7 +154,8 @@ paper should be of special interest to those who are willing to invest
 some extra programming effort to obtain good performance, even if
 high-level programming support is not available.
 We describe the implementation of the correlator on many-core
-platforms in more detail in~\cite{Nieuwpoort:09}.
+platforms in more detail in~\cite{Nieuwpoort:09}, and the implementation of 
+an imaging algorithm on many-core hardware in~\cite{gridding}. 
 In this paper, we use the LOFAR telescope as a running example, and
 use its production correlator on the Blue Gene/P as a comparison. This way,
 we demonstrate how many-core architectures can be used in practice for a real
@@ -295,12 +296,13 @@ leased light paths.
 Currently, the real-time central processing of LOFAR data is done on
 an IBM Blue Gene/P supercomputer.  There, we filter the data, and
 perform phase shift and bandpass corrections, and beam forming.
-Finally, the signals from all stations are cross-correlated.  The
+Next, the signals from all stations are cross-correlated.  The
 correlation process performs a data reduction by integrating samples
 over time.  Finally, the data is forwarded to a storage cluster, where
 results can be kept for several days.  After an observation has
-finished, further processing is done off-line, on commodity cluster
-hardware.  In this paper, we focus on the correlator step (the
+finished, further processing, such as flagging, calibration and imaging is done off-line, on commodity cluster
+hardware.  
+In this paper, we focus on the correlator step (the
 highlighted part in the red box in
 Figure~\ref{fig:lofar-overview}), because it must deal with the
 full data streams from all receivers. Moreover, its costs grow
@@ -332,14 +334,16 @@ particular time.  The receivers are dual-polarized; they take separate
 samples from orthogonal (X and Y) directions.  The LOFAR receivers
 support 4, 8 and 16 bit integer samples, where the normal mode of
 operation uses the 16 bit samples. The smaller 4 and 8 bit samples are important
-for observations that require larger frequency bands, but with less accuracy.
-The future SKA telescope will
-likely use 2 bit samples.  Before filtering and correlating, the
-samples are converted to single precision floating point.  This is
+for observations that require larger sky coverage, but with less accuracy.
+Before filtering and correlating, the
+samples are converted to single-precision floating point.  This is
 accurate enough for our purposes. From the perspective of the
 correlator, samples thus consist of \emph{four} 32-bit floating point
 numbers: two polarizations, each with a real and an imaginary part.
 
+LOFAR uses an FX correlator: it first filters the different frequencies, and
+then correlates the signals. This is more efficient for larger numbers of receivers.
+\longversion{
 Prior to correlation, the data that comes from
 the receivers must be reordered:
 each input carries the signals of many frequency bands from a single
@@ -349,13 +353,13 @@ The data reordering phase is outside the scope of this paper, but a correlator
 implementation cannot ignore this issue.
 The LOFAR Blue Gene/P correlator uses the fast 3D~torus for this purpose;
 other multi-core architectures need external switches.
-
+}
 The received signals from sky sources are so weak, that the antennas 
 mainly receive noise. To see if there is statistical coherence
 in the noise, simultaneous samples of each pair of receivers are correlated, 
 by multiplying the sample of one receiver with the complex
 conjugate (i.e., the imaginary part is negated) of the sample of the other receiver.
-To reduce the output size, the correlations are integrated, by accumulating all products. 
+To reduce the output size, the correlations are integrated over time, by accumulating all products. 
 Therefore, the correlator is mostly multiplying and adding complex numbers.
 Both polarizations of a station A are correlated with both polarizations 
 of a station B, yielding correlations in XX, XY, YX, and YY
@@ -447,12 +451,11 @@ total device RAM bandwidth (GB/s)            & n.a.          & n.a.           & 
 %% \end{table*}
 
 In this section, we briefly explain key properties of five different
-architectures with multiple cores.  We focus on the differences
-between the systems that are relevant for signal processing
-applications. Table~\ref{architecture-properties} shows the most
-important properties of the different many-core architectures. Below,
-we discuss the architectures in more detail, and end the section with
-a summary of the most important similarities and differences for signal processing applications.
+architectures with multiple cores. Table~\ref{architecture-properties}
+shows the most important properties of the different many-core
+architectures. Below, we discuss the architectures in more detail, and
+end the section with a summary of the most important similarities and
+differences for signal processing applications.
 
 
 \noindent \\ \emph{General Purpose multi-core CPUs (Intel Core i7)}

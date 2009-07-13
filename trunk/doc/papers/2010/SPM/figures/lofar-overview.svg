@@ -79,9 +79,9 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.166449"
-     inkscape:cx="360.06717"
-     inkscape:cy="131.50903"
+     inkscape:zoom="2.7418477"
+     inkscape:cx="95.836788"
+     inkscape:cy="130.75125"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -206,8 +206,8 @@
          id="tspan3322"
          style="text-align:center;text-anchor:middle">(BG/P)</tspan></text>
     <path
-       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:5.74969721;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.74969771, 5.74969771;stroke-dashoffset:0;stroke-opacity:1"
-       d="M -55.509653,311.32362 L -25.129246,311.32362"
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:10.55000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:10.55000019,10.55000019;stroke-dashoffset:0;stroke-opacity:1"
+       d="M -55.472012,311.68832 L -13.131202,311.68832"
        id="path3275"
        sodipodi:nodetypes="cc" />
     <text
@@ -231,16 +231,6 @@
          y="327.89941"
          id="tspan3285"
          style="text-align:center;text-anchor:middle">(FPGAs)</tspan></text>
-    <path
-       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:5.74969721;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.74969771, 5.74969771;stroke-dashoffset:0;stroke-opacity:1"
-       d="M -55.683998,365.08214 L -25.303592,365.08214"
-       id="path3354"
-       sodipodi:nodetypes="cc" />
-    <path
-       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:5.74969721;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.74969771, 5.74969771;stroke-dashoffset:0;stroke-opacity:1"
-       d="M -55.993535,471.69054 L -25.613129,471.69054"
-       id="path3402"
-       sodipodi:nodetypes="cc" />
     <path
        style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:5.74969721;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.74969771, 5.74969771;stroke-dashoffset:0;stroke-opacity:1"
        d="M 43.792621,363.08283 C nan,nan nan,nan 81.1544,388.41099"
@@ -503,6 +493,16 @@
        style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:5.74969721;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:5.74969771, 5.74969771;stroke-dashoffset:0;stroke-opacity:1"
        d="M 44.491219,362.01993 L 79.487602,390.72782"
        id="path3229"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:10.55000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:10.55000019, 10.55000019;stroke-dashoffset:0;stroke-opacity:1"
+       d="M -55.07239,363.87715 L -12.73158,363.87715"
+       id="path3225"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:10.55000019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:10.55000019, 10.55000019;stroke-dashoffset:0;stroke-opacity:1"
+       d="M -55.07239,468.9158 L -12.73158,468.9158"
+       id="path3227"
        sodipodi:nodetypes="cc" />
   </g>
 </svg>
