@@ -77,7 +77,7 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 	// adopt commandline switches
 	parseOptions(argc, argv);
 
-	LOG_INFO(Version::getInfo<Beam_ServerVersion>("BeamServer"));
+	LOG_INFO(Version::getInfo<BeamServerVersion>("BeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);
@@ -746,13 +746,20 @@ void BeamServer::getAllHBADeltas(string filename)
 		return;
 	}
 
-	getline(itsFile, itsName); // read name
-	LOG_DEBUG_STR("HBADeltas Name = " << itsName);
-	if ("" == itsName) {
-		itsFile.close();
-		return;
+	// The file may have comment lines at the top, starting with '#'
+	// These must be skipped
+	itsName = "#";
+	while (itsName[0] == "#") {
+	  
+	  getline(itsFile, itsName); // read name
+	  LOG_DEBUG_STR("HBADeltas Name = " << itsName);
+	  if ("" == itsName) {
+	    itsFile.close();
+	    return;
+	  }
 	}
 
+	// Now comment lines are skipped, so we can read the full array.
 	itsFile >> itsTileRelPos; // read HBA deltas array
 	LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
 }
@@ -776,13 +783,19 @@ void BeamServer::getAllHBAElementDelays(string filename)
 		return;
 	}
 
-	getline(itsFile, itsName); // read name
-	LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
-	if ("" == itsName) {
-		itsFile.close();
-		return;
+	// The file may have comment lines at the top, starting with '#'
+	// These must be skipped
+	itsName = "#";
+	while (itsName[0] == "#") {
+	  getline(itsFile, itsName); // read name
+	  LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
+	  if ("" == itsName) {
+	    itsFile.close();
+	    return;
+	  }
 	}
 
+	// Now comment lines are skipped, so we can read the full array.
 	itsFile >> itsElementDelays; // read HBA element delays array
 	//itsElementDelays *= 1E-9; // convert from nSec to Secs
 	LOG_DEBUG_STR("HBA ElementDelays = " << itsElementDelays);
