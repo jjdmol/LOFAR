@@ -69,14 +69,6 @@ of the entire telescope.
 
 \section{Introduction}
 
-\begin{figure}[t]
-\begin{center}
-\includegraphics[width=70mm]{LBA-field.jpg}
-\end{center}
-\caption{A field with low-band antennas (dipoles).}
-\label{fig:lba-field}
-\end{figure}
-
 LOFAR is an acronym for \emph{\textbf{LO}w \textbf{F}requency \textbf{AR}ray},
 an aperture array radio telescope operating in the 10 to 250~MHz frequency
 range.
@@ -94,6 +86,15 @@ In several ways, LOFAR will be the largest telescope of the world,
 and will enable groundbreaking research in several areas of astronomy and particle
 physics~\cite{Bruyn:02}. The different goals and observation types require
 several different processing pipelines, however.
+
+\begin{figure}[t]
+\vspace{-0.4cm}
+\begin{center}
+\includegraphics[width=70mm]{LBA-field.jpg}
+\end{center}
+\caption{A field with low-band antennas (dipoles).}
+\label{fig:lba-field}
+\end{figure}
 
 Another novelty is the elaborate use of \emph{software\/} to process
 the telescope data in real time. 
@@ -152,7 +153,8 @@ for communication between I/O~nodes and compute nodes, since we were not able
 to achieve the required internal input and output data rates with the standard
 network software.
 
-In earlier work~\cite{Romein:06}, we presented an initial prototype
+% @@@ TODO, change back to ``we''
+In earlier work, Romein et al.~\cite{Romein:06}, presented an initial prototype
 implementation of the LOFAR processing on our previous platform, the
 Blue Gene/L.  The work presented in this paper differs in several
 important ways.  First, we have now implemented the complete I/O path:
