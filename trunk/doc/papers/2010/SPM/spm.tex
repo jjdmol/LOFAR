@@ -376,7 +376,7 @@ once. This includes the autocorrelations (the correlation of a receiver with its
 since we need them later in the pipeline for calibration purposes.
 The autocorrelations can be computed with less of instructions.
 We can implement the correlation operation very efficiently, with only
-four fused-multily-add (fma) instructions, doing eight floating-point
+four fused-multiply-add (fma) instructions, doing eight floating-point
 operations in total. For each pair of receivers, we have to do this
 four times, once for each combination of polarizations. Thus, in total
 we need 32 operations. To perform these operations, we have to load
@@ -385,7 +385,7 @@ explained above, the samples each consist of four single precision
 floating point numbers.  Therefore, we need to load 8 floats or 32 bytes in
 total.  This results in \emph{exactly one FLOP/byte}. 
 We will describe the implementation and optimization of the correlator on the
-many-core sytems in more detail in Section~\ref{sec:optimizing}, but first, we explain the architectures themselves. 
+many-core systems in more detail in Section~\ref{sec:optimizing}, but first, we explain the architectures themselves. 
 
 
 \section{Many-core architectures}
@@ -595,7 +595,7 @@ instance.  Therefore, we must treat memory bandwidth as a scarce
 resource, and it is important to minimize the number of memory
 accesses.  In fact, one of the most important lessons of this paper is that on
 many-core architectures, optimizing the memory properties of the
-algorithms is more important than focussing on reducing the number of
+algorithms is more important than focusing on reducing the number of
 compute cycles that is used, as is traditionally done on systems with
 only a few or just one core.
 
@@ -670,7 +670,7 @@ check, and calculates what the expected maximal performance is that can be
 achieved on a particular platform.
 
 The number of operations that is performed per byte that has to be
-transfered (the flop/byte ratio) is called the \emph{arithmetic intensity}, or
+transferred (the flop/byte ratio) is called the \emph{arithmetic intensity}, or
 $AI$~\cite{system-performance}.  Performance is bound by the product
 of the bandwidth and the $AI$: 
 $\mathit{perf_{max}}$ = $AI \times bandwidth$. 
@@ -849,7 +849,7 @@ We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
 The BG/P performs \emph{all} floating point operations in double
 precision, which is overkill for our application.
-Although the BG/P kan keep the same number of values in register as the 
+Although the BG/P can keep the same number of values in register as the 
 Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
@@ -877,7 +877,7 @@ memory, but only to \emph{host} memory.
 The correlator reduces the data by a large amount, and the
 results are never reused by the kernel. Therefore, they can be
 directly streamed to host memory. Nevertheless, in general, the absence of random
-write access to device memory significantly reduces the programmability, and probibits the use
+write access to device memory significantly reduces the programmability, and prohibits the use
 of traditional programming models.
 ATI offers two separate programming models, at different abstraction
 levels~\cite{amd-manual}.  The low-level programming model is called CAL.  
@@ -920,7 +920,7 @@ the threads that access the same samples run in lock step.  This way,
 we pay a small synchronization overhead, but we can increase the cache hit
 ratio significantly.  We found that this optimization improved performance by a factor of 2.
 This optimization is a good example that shows that, on GPUs, it is important to optimize
-memory behaviour, even at the cost of additional instructions and synchronization overhead.
+memory behavior, even at the cost of additional instructions and synchronization overhead.
 
 \longversion{
 We also investigated the use of the per-multiprocessor shared memory as an
@@ -1059,7 +1059,7 @@ is more than three times faster. Also, the Brook+ documentation is insufficient.
 }
 
 \longversion{
-\section{Aplying the techniques: a case study with the Intel Larrabee}
+\section{Applying the techniques: a case study with the Intel Larrabee}
 
 Intel recently disclosed some details about the upcoming Larrabee processor,
 a fully programmable GPU based on the well-known x86 instruction set.
