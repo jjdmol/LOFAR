@@ -37,8 +37,7 @@ is to correlate in software instead of custom-built hardware, taking
 advantage of the flexibility that software solutions offer.  Examples
 include e-VLBI and LOFAR.  However, the data rates are usually high
 and the processing requirements challenging.  Many-core processors are
-promising devices to provide the required processing power, at least
-in theory.
+promising devices to provide the required processing power.
 
 In this paper, we explain how to implement and optimize
 signal-processing applications on multi-core CPUs and many-core
@@ -73,21 +72,21 @@ signal-processing applications in general.
 % dit paper geeft inzicht in de verschillen tussen architecturen, en inzicht over welke factoren belangrijk zijn om de mapping goed te doen.
 
 Radio telescopes produce enormous amounts of data.
-The \emph{Low-Frequency Array\/} (LOFAR), for instance, will produce some tens
-of petabits per day~\cite{deVos:09}, and the \emph{Australian SKA Pathfinder\/} (ASKAP) will
-even produce over six exabits per day~\ref{askap}.
+The \emph{Low-Frequency Array\/} (LOFAR)~\cite{deVos:09}, for instance, will produce some tens
+of petabits per day, and the \emph{Australian SKA Pathfinder\/} will
+even produce over six exabits per day~\cite{askap}.
 These modern radio telescopes use many separate receivers as building blocks,
 and combine their signals to form a single large and sensitive instrument.
 
 To extract the sky signal from the system noise, the \emph{correlator\/}
 correlates the signals from different receivers, and integrates the
 correlations over time, to reduce the amount of data.
-The correlator is a challenging problem in radio astronomy,
+This is a challenging problem in radio astronomy,
 since the data volumes are large, and the computational demands grow
 quadratically with the number of receivers.
-Correlators are not limited to the field of astronomy, but are also used 
-in geophysics\cite{correlator-geophysics},
-radar systems~\cite{correlator-radar}, and
+Correlators are not limited to astronomy, but are also used 
+in geophysics~\cite{correlator-geophysics},
+radar systems~\cite{correlator-radar}, 
 wireless networking~\cite{correlator-wireless}, etc.
 
 Traditionally, custom-built hardware is used to correlate telescope signals.
@@ -96,7 +95,7 @@ Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
 inflexible, expensive to design, and has a long development time.
 Solutions that use a supercomputer are much more flexible, but are less
-efficient, consume more power.%, and are expensive to purchase and maintain.
+efficient, and consume more power. %, and are expensive to purchase and maintain.
 Future instruments, like the Square Kilometre Array (SKA), need several orders
 of magnitude more computational resources.
 It is likely that the requirements of the SKA cannot be met by using
@@ -107,14 +106,13 @@ General-purpose architectures no longer
 achieve performance improvements by increasing the clock frequency, but
 by adding more compute cores and by exploiting parallelism.  Intel's
 recent Core~i7 processor is a good example of this. It has four
-compute cores and can exploit vector parallelism with the SSE instruction set.
-
+cores and supports additional vector parallelism.
 Furthermore, the high-performance computing community is
 steadily adopting clusters of Graphics Processor Units (GPUs) as a viable
 alternative to supercomputers, due to their unparalleled growth in
-computational performance, increasing flexibility, increasing programmability,
+computational performance, increasing flexibility and programmability,
 high power efficiency, and low purchase costs.
-High-end GPUs are highly parallel and contain hundreds of processor cores.
+GPUs are highly parallel and contain hundreds of processor cores.
 %% However, their usefulness is often limited to applications that do not require
 %% double-precision floating-point arithmetics, since there is no need for
 %% double-precision calculations to play games.
@@ -123,31 +121,30 @@ High-end GPUs are highly parallel and contain hundreds of processor cores.
 %% precision.
 An example of a processor that combines GPU and CPU
 qualities into one design is the Cell Broadband Engine~\cite{cell}.
-The Cell/B.E. consists of an ``ordinary'' PowerPC core and eight powerful
-vector processors with fast, local memories that provide
-the bulk of the processing power.
-Programming the Cell/B.E. requires more effort than programming an ordinary CPU,
-but various studies showed that the Cell/B.E. performs very well on
+The \mbox{Cell/B.E.} consists of an ``ordinary'' PowerPC core and eight powerful
+vector processors that provide the bulk of the processing power.
+Programming the \mbox{Cell/B.E.} requires more effort than programming an ordinary CPU,
+but various studies showed that the \mbox{Cell/B.E.} performs well on
 signal-processing tasks like FFTs~\cite{fftc}.
 
 In this article, we explain how modern multi-core architectures can be
 exploited for signal-processing purposes.  Additionally, we give
 insights into their architectural limitations, and how to best cope
 with them.  We treat five different, popular architectures with
-multiple cores: the IBM Cell/B.E., GPUs from both NVIDIA and ATI, the Intel Core i7 processor, and
+multiple cores: the \mbox{Cell/B.E.}, GPUs from both NVIDIA and ATI, the Intel Core i7 processor, and
 the IBM Blue Gene/P supercomputer.  We discuss their
 similarities and differences, and how the architectural differences
 affect optimization choices and the eventual performance of a
-correlator.  We strongly focus on correlators, but many of the
+correlator. We also discuss the programmability of the architectures.
+We focus on correlators, but many of the
 findings, claims, and optimizations hold for other signal-processing
 algorithms as well, both inside and outside the area of radio astronomy.
-We discuss the programmability of each of the architectures, but this
-paper should be of special interest to those who are willing to invest
-some extra programming effort to obtain good performance, even if
-high-level programming support is not available.
-We describe the implementation of the correlator on many-core
-platforms in more detail in~\cite{Nieuwpoort:09}, and the implementation of 
-an imaging algorithm on many-core hardware in~\cite{gridding}. 
+%, but this
+%paper should be of special interest to those who are willing to invest
+%some extra programming effort to obtain good performance, even if
+%high-level programming support is not available.
+We describe the correlator and an imaging algorithm on many-core
+platforms in more detail elsewhere~\cite{Nieuwpoort:09,gridding}. 
 In this paper, we use the LOFAR telescope as a running example, and
 use its production correlator on the Blue Gene/P as a comparison. This way,
 we demonstrate how many-core architectures can be used in practice for a real
@@ -159,14 +156,14 @@ application.
 During the past decade, new types of radio-telescope concepts emerged that
 rely less on concrete, steel, and extreme cooling techniques, but more on
 signal-processing techniques.
-For example, LOFAR~\cite{deVos:09} is a distributed sensor network
-that combines the signals of tens of thousands of simple receiver elements.
-Other examples are MeerKAT (Karoo Array Telescope)~\cite{meerkat} and
-ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}. Both are
-pathfinders for the future SKA (Square Kilometre Array)~\cite{ska} telescope, which
+For example, LOFAR~\cite{deVos:09}, MeerKAT (Karoo Array Telescope)~\cite{meerkat} and
+ASKAP (Australian Square Kilometre Array Pathfinder)~\cite{askap}
+are distributed sensor networks
+that combines the signals of many receiver elements.
+All three are pathfinders for the future SKA (Square Kilometre Array)~\cite{ska} telescope, which
 will be orders of magnitude larger.
-Also, aperture array tiles like Embrace~\cite{embrace} and focal plane arrays
-like Apertif~\cite{apertif} are novel multi-receiver concepts.
+%Also, aperture array tiles like Embrace~\cite{embrace} and focal plane arrays
+%like Apertif~\cite{apertif} are novel multi-receiver concepts.
 Unlike single-pixel feeds from traditional dish-based telescopes, these
 concepts combine the advantages of higher sensitivity, higher resolution,
 and multiple, concurrent observation directions.
@@ -197,7 +194,7 @@ We describe LOFAR in more detail below.
 
 \subsection{The LOFAR telescope}
 
-\begin{figure}[t]
+\begin{figure}[h]
 \vspace{-0.4cm}
 \begin{center}
 \includegraphics[width=60mm]{figures/LBA-field.jpg}
@@ -207,7 +204,7 @@ We describe LOFAR in more detail below.
 \label{fig:lba-field}
 \end{figure}
 
-\begin{figure*}
+\begin{figure*}[t]
 \begin{minipage}[b]{11cm}
 \includegraphics[width=11cm]{figures/lofar-overview.pdf}
 \caption{A simplified overview of the LOFAR processing.}
@@ -709,7 +706,7 @@ single vector, or have separate vectors for the two parts.  In both
 cases, support for shuffling data inside the vector registers is
 essential, since complex multiplications operate on both the real and imaginary parts.
 We found that the architectures differ considerably in this
-respect.  The Cell/B.E. excels; its vectors contain four floats, which
+respect.  The \mbox{Cell/B.E.} excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, this is done
 in a different pipeline than the arithmetic itself, allowing the
 programmer to overlap shuffling and computations effectively.  On ATI
@@ -810,7 +807,7 @@ that is a realistic number for LOFAR.  The performance results are shown in Figu
 \noindent \\ \emph{Intel CPUs}
 
 \noindent The SSE4 instruction set can be used to exploit vector parallelism.  
-Unlike the Cell/B.E. and ATI GPUs, a
+Unlike the \mbox{Cell/B.E.} and ATI GPUs, a
 problem with SSE4 is the limited support for shuffling data within
 vector registers.  Computing the
 correlations of the four polarizations within a vector is
@@ -865,7 +862,7 @@ results are never reused by the kernel. Therefore, they can be
 directly streamed to host memory. Nevertheless, in general, the absence of random
 write access to device memory significantly reduces the programmability, and probibits the use
 of traditional programming models.
-The best performing implementation uses a tile size of 4x3, thanks to
+The best-performing implementation uses a tile size of 4x3, thanks to
 the large number of registers.  
 Due to the low I/O performance, we achieve only 14\% of the theoretical peak.
 
@@ -953,7 +950,7 @@ Thanks to the explicit cache,
 the correlator implementation fetches each sample from main memory
 \emph{only exactly once}. 
 Although issuing explicit DMA commands complicates programming,
-we found that this is not problematic for signal processing applications.
+we found that this usually is not problematic for signal processing applications.
 The large number of registers allows a big tile size of 
 $4\times3$, leading to a lot of data reuse.
 We exploit the vector parallelism of the \mbox{Cell/B.E.} by computing the four
@@ -1031,7 +1028,7 @@ code. The difference varies between only a few percent to a factor of 10.
 
 For the BG/P, the performance from compiled C++ code was by far not
 sufficient. The assembly code is approximately 10 times faster.
-For both the Cell/B.E. and the Intel Core~i7, we found that
+For both the \mbox{Cell/B.E.} and the Intel Core~i7, we found that
 high-level code in C or C++ in combination with the use of intrinsics
 to manually describe the SIMD parallelism yields acceptable
 performance compared to optimized assembly code.  Thus, the programmer
@@ -1082,16 +1079,16 @@ when the hardware is available.
 \label{conclusions}
 Current and future telescopes require large amounts of signal processing, 
 and have high computational and I/O demands.
-Therefore, we evaluated the extremely
-data-intensive correlator algorithm on today's many-core
-architectures. 
 We presented general insights on how to use many-core
 platforms for signal-processing applications, looking at the aspects of
 performance, optimization and programmability.
+As an example, we evaluated the extremely
+data-intensive correlator algorithm on today's many-core
+architectures. 
 
 The many-core architectures have a significantly lower memory
 bandwidth \emph{per operation} compared to traditional architectures.
-This requires completely different algorithm implementation strategies:
+This requires completely different algorithm implementation and optimization strategies:
 minimizing the number of memory loads per operation is of key
 importance to obtain good performance.  A high memory bandwidth per
 operation is not strictly necessary, as long as the architecture (and the
@@ -1115,9 +1112,9 @@ The \mbox{Cell/B.E.} performs excellently on signal-processing
 applications, even though its memory bandwidth per operation is eight
 times lower than the BG/P.  Applications can exploit the
 application-managed cache and the large number of registers. For the
-correlator, this results in optimal reuse of all sample data.  The
-results also demonstrated that, for signal-processing applications,
-the recent trend of increasing the number of cores does not work if
+correlator, this results in optimal reuse of all sample data.  Nevertheless,
+it is clear that, for signal-processing applications,
+the recent trend of increasing the number of cores will not work indefinitely if
 I/O is not scaled accordingly.
 
 
