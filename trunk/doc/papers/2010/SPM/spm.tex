@@ -8,6 +8,8 @@
 
 % code als voorbeeld op het web
 
+% tile sizes in table, misscien de +/- table
+
 \newcommand{\longversion}[1]{}
 \newcommand{\shortversion}[1]{#1}
 
@@ -179,10 +181,11 @@ All three are pathfinders for the future SKA (Square Kilometre Array)~\cite{ska}
 will be orders of magnitude larger.
 %Also, aperture array tiles like Embrace~\cite{embrace} and focal plane arrays
 %like Apertif~\cite{apertif} are novel multi-receiver concepts.
-Unlike single-pixel feeds from traditional dish-based telescopes, these
-concepts combine the advantages of higher sensitivity, higher resolution,
-and multiple, concurrent observation directions.
-What the novel instruments all have in common is that they require huge
+%Unlike single-pixel feeds from traditional dish-based telescopes, 
+These
+instruments combine the advantages of higher sensitivity, higher resolution,
+and multiple concurrent observation directions.
+But, they require huge
 amounts of processing power to combine the data from the receiving elements.
 
 The signal-processing hardware technology used to process telescope
@@ -246,25 +249,24 @@ costs of the silicon for the processing are much lower that the costs of steel t
 be needed for dishes. Moreover, LOFAR can observe the sky in many
 directions concurrently and switch directions instantaneously.  In
 several ways, LOFAR will be the largest telescope of the world.
-
-The antennas are simple, but there are a lot of them: 44000 in the full LOFAR
+The antennas are simple, but there are a lot of them: 44.000 in the full LOFAR
 design. To make radio pictures of the sky with adequate resolution,
-these antennas are to be arranged in clusters that are spread out over
+these antennas are to be arranged in clusters.
+In the rest of this paper, we call a cluster of antenna's \emph{a receiver}.
+The receivers will be spread out over
 an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
-In the current phase, 31000
-antenna's with a maximum distance of 100 km will
+In the current phase, 31.000 antenna's with a maximum distance of 100 km will
 be built. Data transport requirements are in the range of many
 Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
-In the rest of this paper, we call a cluster of antenna's a receiver.
 
 Another novelty is the elaborate
 use of \emph{software\/} to process the telescope data in real time.
-The signals from the
-antennas are digitised, transported to a central location,
-and combined in software to emulate a conventional instrument. 
+%The signals from the
+%antennas are digitised, transported to a central location,
+%and combined in software to emulate a conventional instrument. 
 LOFAR thus is an IT-telescope. 
 The cost
-is dominated by the cost of electronics and will follow Moore's law,
+is dominated by the cost of computing and will follow Moore's law,
 becoming cheaper with time and allowing increasingly large telescopes
 to be built. 
 \longversion{
@@ -290,9 +292,8 @@ the size of the data streams.  Initial processing is done in the
 field, using FPGA technology.  Typical operations that are performed
 there include analog-to-digital conversion, filtering, frequency
 selection, and combination of the signals from the different
-receivers.  Next, the data is transported to the central processing
-location in Groningen via a Wide-Area Network (WAN), using owned and
-leased light paths.
+antenna's.  Next, the data is transported to the central processing
+location in Groningen via dedicated optical wide-area networks.
 
 Currently, the real-time central processing of LOFAR data is done on
 a BG/P supercomputer.  There, we filter the data, and
@@ -607,12 +608,12 @@ feature                   & Cell/B.E.                      & GPUs \\
 \hline
 access times              & uniform                        & non-uniform \\
 \hline
-cache sharing level       & single thread                  & all threads in a \\
-                          & (SPE)                          & multiprocessor \\
+cache sharing level       & single thread (SPE)            & all threads in a \\
+                          &                                & multiprocessor \\
 \hline
 access to off-chip mem.   & through DMA only               & supported \\
 \hline
-mem. access overlapping & asynchronous DMA               & hardware-managed \\
+mem. access overlapping   & asynchronous DMA               & hardware-managed \\
                           &                                & thread preemption \\
 \hline
 communication             & DMA between SPEs               & independent thread  \\
@@ -852,18 +853,17 @@ Although the BG/P kan keep the same number of values in register as the
 Intel chip, an important difference is that the BG/P has 32
 registers of width 2, compared to Intel's 16 of width 4.  The smaller
 vector size reduces the amount of shuffle instructions needed.
-The (small) $2 \times 2$ tile size performs best.
+%The (small) $2 \times 2$ tile size performs best.
 In contrast to all other architectures we evaluate, the problem is compute
 bound instead of I/O bound, thanks to the BG/P's high memory bandwidth per
 operation, which is 3--10 times higher than for the other architectures.
 
-% @@@ tile sizes in table, misscien de +/- table
 
 \noindent \\ \emph{ATI GPUs}
 
 \noindent The ATI architecture has several important
 drawbacks for data-intensive applications.  First, the
-host-to-device bandwidth is a bottleneck.  Second, we found that
+host-to-device bandwidth is a bottleneck.  Second, 
 overlapping communication with computation does not work well.
 We observed kernel slowdowns of more than \emph{a factor of
 two} due to asynchronous transfers in the background. This can clearly be seen in Figure~\ref{performance-graph}.
@@ -880,11 +880,11 @@ directly streamed to host memory. Nevertheless, in general, the absence of rando
 write access to device memory significantly reduces the programmability, and probibits the use
 of traditional programming models.
 ATI offers two separate programming models, at different abstraction
-levels~\cite{amd-manual}.  The low-level programming model is called the ``Compute
-Abstraction Layer'' (CAL).  CAL provides communication primitives and
+levels~\cite{amd-manual}.  The low-level programming model is called CAL.  
+It provides communication primitives and
 an assembly language, allowing fine-tuning of device
 performance. For high-level programming, ATI provides Brook+.  We
-implemented the correlator both with Brook+ and with CAL.
+implemented the correlator with both models.
 In both cases, the programmer has to do the vectorization,
 unlike with NVIDIA GPUs.  CAL provides a feature called
 \emph{swizzling}, which is used to select parts of vector registers in
