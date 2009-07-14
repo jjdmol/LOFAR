@@ -583,7 +583,7 @@ algorithms is more important than focussing on reducing the number of
 compute cycles that is used, as is traditionally done on systems with
 only a few or just one core.
 
-\begin{table*}[t]
+\begin{table}[t]
 \begin{center}
 {\footnotesize
 \begin{tabular}{|l|l|l|}
@@ -591,18 +591,26 @@ only a few or just one core.
 feature                   & Cell/B.E.                      & GPUs \\
 \hline
 access times              & uniform                        & non-uniform \\
-cache sharing level       & single thread (SPE)            & all threads in a multiprocessor \\
-access to off-chip memory & only through DMA               & supported \\
-memory access overlapping & asynchronous DMA               & hardware-managed thread preemption \\
-communication             & DMA between SPEs               & independent thread blocks + shared memory within a block \\
+\hline
+cache sharing level       & single thread                  & all threads in a \\
+                          & (SPE)                          & multiprocessor \\
+\hline
+access to off-chip mem.   & through DMA only               & supported \\
+\hline
+mem. access overlapping & asynchronous DMA               & hardware-managed \\
+                          &                                & thread preemption \\
+\hline
+communication             & DMA between SPEs               & independent thread  \\
+                          &                                & blocks \& shared   \\
+                          &                                & mem. within a block \\
 \hline
 \end{tabular}
 } %\small
 \end{center}
 \vspace{-0.5cm}
-\caption{Differences between many-core memory architectures.}
+\caption{Differences between memory architectures.}
 \label{memory-properties}
-\end{table*}
+\end{table}
 
 So, the second step of mapping a signal processing algorithm to a many-core architecture
 is optimizing the memory behavior. We can split this step into two phases:
@@ -731,38 +739,33 @@ correlator for all different architectures.
 \label{fig-correlation}
 \end{figure}
 
-Although in reality the receivers are dual-polarized, and the samples are complex numbers, 
-we use single-polarized real samples in the following example for simplicity.
+%Although in reality the receivers are dual-polarized, and the samples are complex numbers, 
+%we use single-polarized real samples in the following example for simplicity.
 An unoptimized correlator would read the samples from two receivers and
-multiply them, requiring two memory loads for one multiplication.
-The correlator can be optimized by reusing a sample that is read from memory
+multiply them, requiring two sample loads for one multiplication.
+We can optimize this by reusing a sample 
 as often as possible, by using it for multiple correlations (see
 Figure~\ref{fig-correlation}).
 The figure is triangular, because we compute
 the correlation of each pair of receivers only once. The squares labeled \emph{A} are
 autocorrelations.
-
 For example, the samples from receivers 8, 9, 10, and 11 can be correlated
 with the samples from receivers 4, 5, 6, and 7 (the red square in the figure),
 reusing each fetched sample four times.
 This way, eight samples are read from memory for sixteen
-multiplications, reducing the amount of memory operations by a factor
+correlations, reducing the amount of memory operations by a factor
 of four.
-Correlating even higher numbers of receivers simultaneously would reduce the
-memory bandwidth usage further, but the maximum number of receivers that can
-be correlated this way is limited by the number of registers that an architecture has.
-The accumulated correlations are also best kept in registers, and the number of
+The maximum number of receivers that can
+be simultaneously correlated this way is limited by the number of registers that an architecture has.
+The samples and accumulated correlations are best kept in registers, and the number of
 required registers grows rapidly with the number of receiver inputs.
 The example above already requires 16 accumulators.
-Additional registers are needed to load samples from memory.
 To obtain good performance, it is important to tune the tile size to the
 architecture.
-
 %Caches and memory prefetch units can also improve the performance.
 %However, a cache-size dependent tradeoff must be made.
 %On the one hand, correlating and integrating over long periods of time
 %is good for pipelined FPU operation, on the other hand, the 
-
 There still is
 opportunity for additional data reuse \emph{between} tiles.  The tiles
 within a row or column in the triangle still need the same samples.
@@ -777,7 +780,7 @@ data reuse.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=\columnwidth]{figures/performance-graph-v2.pdf}
+\includegraphics[width=0.8\columnwidth]{figures/performance-graph-v2.pdf}
 \end{center}
 \vspace{-0.5cm}
 \caption{Achieved performance on the different platforms.}
