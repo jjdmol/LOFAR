@@ -16,30 +16,30 @@
 \usepackage{graphicx}
 \usepackage{listings}
 
-% for normal spacing
-\usepackage{spconf}
+%% for normal spacing
+%\usepackage{spconf}
 
-% for double spacing
-%\usepackage[left=3cm,top=3cm,right=3cm]{geometry} 
-%\usepackage{setspace}
-%\doublespacing
+%% for double spacing
+\usepackage[left=2cm,top=3cm,right=2cm]{geometry} 
+\usepackage{setspace}
+\doublespacing
 
 
 \title{How to Build a Correlator with Many-Core Hardware}
 
-% for normal spacing
-\name{Rob V. van Nieuwpoort and John W. Romein}
-\address{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
-Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
-\texttt{\{nieuwpoort,romein\}@astron.nl}
-}
-
-% for double spacing
-%\author{Rob V. van Nieuwpoort and John W. Romein \\ 
-%Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
+%% for normal spacing
+%\name{Rob V. van Nieuwpoort and John W. Romein}
+%\address{Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
 %Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
 %\texttt{\{nieuwpoort,romein\}@astron.nl}
 %}
+
+%% for double spacing
+\author{Rob V. van Nieuwpoort and John W. Romein \\ 
+Stichting ASTRON (Netherlands Institute for Radio Astronomy) \\
+Oude Hoogeveensedijk 4, 7991 PD\ \ Dwingeloo, The Netherlands \\
+\texttt{\{nieuwpoort,romein\}@astron.nl}
+}
 
 
 
@@ -400,7 +400,8 @@ many-core systems in more detail in Section~\ref{sec:optimizing}, but first, we 
 
 \begin{table*}[t]
 \begin{center}
-{\footnotesize
+%{\footnotesize % for normal layout
+{\scriptsize % for double spaced
 \begin{tabular}{|l|l|l|l|l|l|}                                                   
 \hline
 Architecture                                 & Intel Core i7 & IBM Blue Gene/P& ATI 4870 &  NVIDIA Tesla C1060 & STI Cell/B.E. \\
@@ -829,7 +830,8 @@ data reuse.
 
 \begin{figure}[t]
 \begin{center}
-\includegraphics[width=0.8\columnwidth]{figures/performance-graph-v2.pdf}
+%\includegraphics[width=0.8\columnwidth]{figures/performance-graph-v2.pdf} % for normal layout
+\includegraphics[width=0.5\columnwidth]{figures/performance-graph-v2.pdf} % for double spacing
 \end{center}
 \vspace{-0.5cm}
 \caption{Achieved performance on the different platforms.}
@@ -1022,7 +1024,8 @@ the high data reuse factor.
 
 \begin{table*}[t]
 \begin{center}
-{\footnotesize
+%{\footnotesize % for normal layout
+{\scriptsize % for double spaced
 \begin{tabular}{l|l|l|l|l}
 Intel Core i7 920     & IBM Blue Gene/P          & ATI 4870                      & NVIDIA Tesla C1060     & STI  Cell/B.E.                      \\
 \hline
