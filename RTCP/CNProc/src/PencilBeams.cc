@@ -252,7 +252,7 @@ void PencilBeams::computeDelays( const FilteredData *filteredData )
   for( unsigned stat = 0; stat < itsNrStations; stat++ ) {
     // we already compensated for the delay for the central beam
     const SubbandMetaData::beamInfo &centralBeamInfo = filteredData->metaData.beams(stat)[0];
-    const double compensatedDelay = (centralBeamInfo.delayAfterEnd - centralBeamInfo.delayAtBegin) * 0.5;
+    const double compensatedDelay = (centralBeamInfo.delayAfterEnd + centralBeamInfo.delayAtBegin) * 0.5;
 
     itsDelays[stat][0] = 0.0;
 
@@ -261,7 +261,7 @@ void PencilBeams::computeDelays( const FilteredData *filteredData )
       const SubbandMetaData::beamInfo &beamInfo = filteredData->metaData.beams(stat)[pencil];
 
       // subtract the delay that was already compensated for
-      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd - beamInfo.delayAtBegin) * 0.5 - compensatedDelay;
+      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd + beamInfo.delayAtBegin) * 0.5 - compensatedDelay;
     }
   }
 }
