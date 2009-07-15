@@ -748,17 +748,19 @@ void BeamServer::getAllHBADeltas(string filename)
 
 	// The file may have comment lines at the top, starting with '#'
 	// These must be skipped
-	itsName = "#";
-	while (itsName[0] == "#") {
-	  
-	  getline(itsFile, itsName); // read name
-	  LOG_DEBUG_STR("HBADeltas Name = " << itsName);
-	  if ("" == itsName) {
-	    itsFile.close();
-	    return;
-	  }
+	getline(itsFile, itsName); // read name or comment
+	while (itsName[0] == '#') {
+		LOG_DEBUG_STR("HBADeltas comment = " << itsName);
+		getline(itsFile, itsName); // read name or comment
 	}
-
+	
+	if ("" == itsName) {
+		itsFile.close();
+		return;
+	}
+	
+	LOG_DEBUG_STR("HBADeltas name = " << itsName);
+	
 	// Now comment lines are skipped, so we can read the full array.
 	itsFile >> itsTileRelPos; // read HBA deltas array
 	LOG_DEBUG_STR("HBADeltas = " << itsTileRelPos);
@@ -785,16 +787,19 @@ void BeamServer::getAllHBAElementDelays(string filename)
 
 	// The file may have comment lines at the top, starting with '#'
 	// These must be skipped
-	itsName = "#";
-	while (itsName[0] == "#") {
-	  getline(itsFile, itsName); // read name
-	  LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
-	  if ("" == itsName) {
-	    itsFile.close();
-	    return;
-	  }
+	getline(itsFile, itsName); // read name or comment
+	while (itsName[0] == '#') {
+		LOG_DEBUG_STR("HBA ElementDelays comment = " << itsName);
+		getline(itsFile, itsName); // read name or comment
+	}
+	
+	if ("" == itsName) {
+		itsFile.close();
+		return;
 	}
 
+	LOG_DEBUG_STR("HBA ElementDelays Name = " << itsName);
+	
 	// Now comment lines are skipped, so we can read the full array.
 	itsFile >> itsElementDelays; // read HBA element delays array
 	//itsElementDelays *= 1E-9; // convert from nSec to Secs
