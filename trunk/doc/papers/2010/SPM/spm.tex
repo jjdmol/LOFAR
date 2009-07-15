@@ -106,7 +106,7 @@ in geophysics~\cite{correlator-geophysics},
 radar systems~\cite{correlator-radar}, 
 wireless networking~\cite{correlator-wireless}, etc.
 
-Traditionally, custom-built hardware is used to correlate telescope signals.
+Traditionally, custom-built hardware, and later FPGAs were used to correlate telescope signals.
 A recent development is to use a supercomputer~\cite{Romein:06}.
 Both approaches have important advantages and disadvantages.
 Custom-built hardware is efficient and consumes modest amounts of power, but is
@@ -156,16 +156,22 @@ correlator. We also discuss the programmability of the architectures.
 We focus on correlators, but many of the
 findings, claims, and optimizations hold for other signal-processing
 algorithms as well, both inside and outside the area of radio astronomy.
+For instance, we discuss another signal-processing algorithm, radio-astronomy imaging, on many-core
+hardware elsewhere~\cite{gridding}. 
 %, but this
 %paper should be of special interest to those who are willing to invest
 %some extra programming effort to obtain good performance, even if
 %high-level programming support is not available.
-We describe the correlator and an imaging algorithm on many-core
-platforms in more detail elsewhere~\cite{Nieuwpoort:09,gridding}. 
 In this paper, we use the LOFAR telescope as a running example, and
 use its production correlator on the BG/P as a comparison. This way,
 we demonstrate how many-core architectures can be used in practice for a real
 application.
+For educational purposes, we made the correlator implementations for all architectures available online.
+They exemplify the different optimization choices for the different architectures.
+The code may be reused under the GNU public license.
+%\emph{Note to the reviewers: we will do so soon, but the code needs additional documentation to be instructive.}
+We describe and analyse the correlator on many-core
+platforms in much more detail in~\cite{Nieuwpoort:09}. 
 
 
 \section{Trends in radio astronomy}
@@ -255,9 +261,10 @@ these antennas are to be arranged in clusters.
 In the rest of this paper, we call a cluster of antenna's \emph{a receiver}.
 The receivers will be spread out over
 an area of ultimately 350 km in diameter. This is shown in Figure~\ref{fig:map}.
-In the current phase, 31.000 antenna's with a maximum distance of 100 km will
-be built. Data transport requirements are in the range of many
-Tera-bits/sec and the processing power needed is tens of Tera-FLOPS.
+%In the current phase, 31.000 antenna's with a maximum distance of 100 km will
+%be built. 
+Data transport requirements are in the range of many
+tera-bits/sec and the processing power needed is tens of tera-ops.
 
 Another novelty is the elaborate
 use of \emph{software\/} to process the telescope data in real time.
@@ -295,14 +302,14 @@ selection, and combination of the signals from the different
 antenna's.  Next, the data is transported to the central processing
 location in Groningen via dedicated optical wide-area networks.
 
-Currently, the real-time central processing of LOFAR data is done on
+The real-time central processing of LOFAR data is done on
 a BG/P supercomputer.  There, we filter the data, and
-perform phase shift and bandpass corrections, and beam forming.
+perform phase shift and bandpass corrections.
 Next, the signals from all stations are cross-correlated.  The
 correlation process performs a data reduction by integrating samples
 over time.  Finally, the data is forwarded to a storage cluster, where
 results can be kept for several days.  After an observation has
-finished, further processing, such as flagging, calibration, and imaging is done off-line, on commodity cluster
+finished, further processing, such as RFI removal, calibration, and imaging is done off-line, on commodity cluster
 hardware.  
 In this paper, we focus on the correlator step (the
 highlighted part in the red box in
@@ -330,21 +337,22 @@ a lower time complexity.
 %% \end{figure*}
 
 
-The data streams from the receivers contain samples, which are complex
-numbers that represent the amplitude and phase of a signal.  
-The receivers are dual-polarized; they take separate
-samples from orthogonal (X and Y) directions.  The LOFAR receivers
+%The data streams from the receivers contain samples, which are complex
+%numbers that represent the amplitude and phase of a signal.  
+LOFAR's receivers are dual-polarized; they take separate
+samples from orthogonal (X and Y) directions.  The receivers
 support 4, 8 and 16 bit integer samples, where the normal mode of
 operation uses the 16 bit samples. The smaller samples are important
 for observations that require larger sky coverage, but with less accuracy.
 Before filtering and correlating, the
-samples are converted to single-precision floating point.  This is
+samples are converted to single-precision floating point, since all
+architectures support this well.  This is
 accurate enough for our purposes. From the perspective of the
 correlator, samples thus consist of \emph{four} 32-bit floating point
 numbers: two polarizations, each with a real and an imaginary part.
 
 LOFAR uses an FX correlator: it first filters the different frequencies, and
-then correlates the signals. This is more efficient for larger numbers of receivers.
+then correlates the signals. This is more efficient than an XF correlator for larger numbers of receivers.
 \longversion{
 Prior to correlation, the data that comes from
 the receivers must be reordered:
@@ -360,7 +368,7 @@ The received signals from sky sources are so weak, that the antennas
 mainly receive noise. To see if there is statistical coherence
 in the noise, simultaneous samples of each pair of receivers are correlated, 
 by multiplying the sample of one receiver with the complex
-conjugate (i.e., the imaginary part is negated) of the sample of the other receiver.
+conjugate of the sample of the other receiver.
 To reduce the output size, the correlations are integrated over time, by accumulating all products. 
 Therefore, the correlator is mostly multiplying and adding complex numbers.
 Both polarizations of a station A are correlated with both polarizations 
@@ -381,8 +389,8 @@ operations in total. For each pair of receivers, we have to do this
 four times, once for each combination of polarizations. Thus, in total
 we need 32 operations. To perform these operations, we have to load
 the samples generated by two different receivers from memory.  As
-explained above, the samples each consist of four single precision
-floating point numbers.  Therefore, we need to load 8 floats or 32 bytes in
+explained above, the samples each consist of four single-precision
+floating-point numbers.  Therefore, we need to load 8 floats or 32 bytes in
 total.  This results in \emph{exactly one FLOP/byte}. 
 We will describe the implementation and optimization of the correlator on the
 many-core systems in more detail in Section~\ref{sec:optimizing}, but first, we explain the architectures themselves. 
@@ -450,12 +458,11 @@ total device RAM bandwidth (GB/s)            & n.a.          & n.a.           & 
 %% \end{center}
 %% \end{table*}
 
-In this section, we briefly explain key properties of five different
-architectures with multiple cores. Table~\ref{architecture-properties}
+In this section, we explain key properties of five different
+architectures with multiple cores, and the most important differences between them. 
+Table~\ref{architecture-properties}
 shows the most important properties of the different many-core
-architectures. Below, we discuss the architectures in more detail, and
-end the section with a summary of the most important similarities and
-differences for signal processing applications.
+architectures. 
 
 
 \noindent \\ \emph{General Purpose multi-core CPUs (Intel Core i7)}
@@ -467,7 +474,7 @@ precision.  The parallelism comes from four cores with
 hyperthreading.
 Using two threads per core allows the hardware to overlap
 load delays and pipeline stalls with useful work from the other thread.
-The SSE4 instruction set provides SIMD parallelism with a vector length of four floats.
+The SSE4 instruction set provides SIMD (Single Instruction, Multiple Data) parallelism with a vector length of four floats.
 
 %% SSE4 does not provide fused multiply-add instructions, but the Core~i7
 %% issues vector-multiply and vector-add instructions concurrently in
@@ -478,6 +485,7 @@ The SSE4 instruction set provides SIMD parallelism with a vector length of four 
 \noindent The IBM Blue Gene/P~\cite{IBM:08} is the architecture that is
 currently used for the LOFAR correlator.
 Four PowerPC processor cores are integrated on each BG/P chip.
+Each core is extended with two floating-point units, that provide the bulk of the processing power.
 The BG/P is an energy-efficient supercomputer.
 This is accomplished by using many small, low-power chips, at a low clock
 frequency.
@@ -488,14 +496,15 @@ frequency.
 \noindent \\ \emph{ATI GPUs}
 
 \noindent The most high-end GPU provided by ATI is
-the 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total, 
+the Radeon 4870~\cite{amd-manual}.  The chip contains 160 cores, with 800 FPUs in total, 
 and has a theoretical peak performance of
 1.2~teraflops. The board uses a PCI-express~2.0 interface
 for communication with the host system.
-Each streaming processor has 16 KB of shared
-memory that is completely managed by the application. It is also
-possible to specify if a read should be
+The GPU has 1 GB of device memory on-board.
+It is possible to specify if a read should be
 cached by the texture cache or not.
+Each streaming processor also has 16 KB of shared
+memory that is completely managed by the application. 
 On both ATI and NVIDIA GPUs, the application should run many more threads
 than the number of cores. This allows the hardware to overlap memory load delays with useful
 work from other threads.
@@ -509,10 +518,10 @@ uses a two-level hierarchy to group cores.  There are 30~independent
 \emph{multiprocessors\/} that each have 8~cores.  Current NVIDIA GPUs
 have fewer cores than ATI GPUs, but the individual cores are faster.
 The theoretical peak performance is 933 gflops.  The number of
-registers is large: there are 16384 32-bit floating point registers
-per multiprocessor. There also is 16~KB of shared memory per
-multiprocessor.  This memory is shared between all threads on a
-multiprocessor, but not globally.  Finally, texture-caching hardware
+registers is large: each multiprocessor has 16384 32-bit floating point registers,
+that are shared between all threads that run on it.
+There also is 16~KB of shared memory per
+multiprocessor.  Finally, texture-caching hardware
 is available.  The application can specify which area of device memory
 must be cached, while the shared memory is completely managed by the
 application.
@@ -523,7 +532,7 @@ application.
 
 \noindent The \mbox{Cell/B.E.}~\cite{cell} is a
 heterogeneous many-core processor, designed by Sony, Toshiba and IBM
-(STI).  The \mbox{Cell/B.E.} has nine cores: the Power Processing
+(STI).  The \mbox{Cell/B.E.} has nine cores: one Power Processing
 Element (PPE), acting as a main processor, and eight Synergistic
 Processing Elements (SPEs) that provide the real processing power.
 %The cores, the main memory, and the external I/O are connected by a
@@ -531,10 +540,10 @@ Processing Elements (SPEs) that provide the real processing power.
 %The PPE's main role is to
 %run an operating system and to coordinate the SPEs.  
 An SPE contains
-a RISC-core, a 256KB Local Store (LS), and a DMA controller.
+a RISC core, a 256KB Local Store (LS), and a DMA controller.
 The LS is an extremely fast local memory for both code and data
 and is managed \emph{entirely by the application} with explicit DMA
-transfers.  The LS can be considered the SPU's (explicit) L1 cache.  The
+transfers to and from main memory.  The LS can be considered the SPU's (explicit) L1 cache.  The
 \mbox{Cell/B.E.} has a large number of registers: each SPU has 128,
 which are 128-bit (4 floats) wide.
 \longversion{
@@ -557,11 +566,11 @@ Several different forms of parallelism can be identified:
 multi-threading (with or without shared memory), overlapping of I/O
 and computations, instruction-level parallelism, and vector parallelism. Most
 many-core architectures combine several of these methods.  
-Unfortunately, an application has to handle all levels of parallelism to
+Unfortunately, an application has to handle all available levels of parallelism to
 obtain good performance.
 Therefore, it is clear that algorithms have to be adapted to efficiently exploit
 many-core hardware.
-Additional parallelism is obtained by using multiple processor chips.
+Additional parallelism can be obtained by using multiple processor chips.
 In this paper, however, we restrict ourselves to single chips for simplicity.
 
 
@@ -628,7 +637,7 @@ communication             & DMA between SPEs               & independent thread 
 \label{memory-properties}
 \end{table}
 
-So, the second step of mapping a signal processing algorithm to a many-core architecture
+So, the second step of mapping a signal-processing algorithm to a many-core architecture
 is optimizing the memory behavior. We can split this step into two phases:
 an algorithm phase and an architectural phase.
 In the first phase, we identify algorithm-specific, but
@@ -644,7 +653,6 @@ same data.  For the correlator, the most important insight here
 is a technique to exploit date reuse opportunities, reducing the number of memory
 loads. We explain this in detail in Section~\ref{sec:tiling}.
 
-
 The second phase deals with architecture-specific optimizations.
 In this phase, we do not reduce the \emph{number} of memory loads, but think about the
 memory \emph{access patterns}. Typically, several cores share one or
@@ -653,7 +661,7 @@ threads that share a cache should be tailored accordingly. On GPUs,
 for example, this can be done by \emph{coalescing} memory accesses.
 This means that different concurrent threads read subsequent memory
 locations.  This can be counter-intuitive, since traditionally, it was
-preferable to have linear memory access patterns within a
+more efficient to have linear memory access patterns within a
 thread. Table~\ref{memory-properties} summarizes the differences in
 memory architectures of the different platforms.
 Other techniques that are performed in this phase include optimizing cache
@@ -668,8 +676,7 @@ analysis~\cite{system-performance,roofline}, can provide more insight
 on the memory properties of an algorithm. It also gives us a reality
 check, and calculates what the expected maximal performance is that can be
 achieved on a particular platform.
-
-The number of operations that is performed per byte that has to be
+The number of operations that is performed per byte that have to be
 transferred (the flop/byte ratio) is called the \emph{arithmetic intensity}, or
 $AI$~\cite{system-performance}.  Performance is bound by the product
 of the bandwidth and the $AI$: 
@@ -679,7 +686,7 @@ with this method. First, it assumes that the bandwidth is
 independent of the access pattern.  Second, it assumes a complete
 overlap of communication and communication, i.e., all latencies
 are completely hidden.  Finally, the method does not take caches into
-account. Nevertheless, the $\mathit{perf_{max}}$ gives a rough idea of
+account. Nevertheless, it gives a rough idea of
 the performance than can be achieved.
 
 It is insightful to apply this method to the correlator on the GPUs.
@@ -703,34 +710,56 @@ antennas), so the $AI$ is 65 in our case.  Therefore, the performance
 bound on NVIDIA hardware is $65 \times 5.6 = 363$ gflops. This is only
 39\% of the theoretical peak.  Note that this even is optimistic,
 since it assumes perfect overlap of communication and computation.
-
+%The efficiency can improve if additional processing is performed on the GPU 
+%(e.g., a filter step before the correlator) and intermediate data is kept in device memory.
 
 \subsection{Complex numbers}
 
-Support for dealing with complex numbers is important for signal
-processing applications. Explicit support for complex operations is
-preferable, both in terms of programmability and performance. 
+\longversion{
+Programming languages like C99 and FORTRAN have native support for complex
+numbers, which is useful for signal-processing applications.
+Arrays of complex numbers can easily be declared like
+\texttt{complex float array[16];}.
+This declaration enforces real and imaginary values at alternating memory
+locations.
+Unfortunately, not all architectures have efficient support for complex
+multiply and division operations on vector elements that are declared this
+way, since these operations require real and imaginary values to be shuffled.
+Moreover, the real and imaginary parts of a product are computed differently.
+
+The Blue Gene/P is the only architecture that efficiently supports all complex
+operations, while the SSE4 instructions of the Core i7 provide limited support.
+To obtain good performance on the other architectures, it may be necessary
+to split the complex array into separate arrays for real and imaginary values.
+This increases the programming effort, since all complex operations must be
+programmed in terms of real operations.
+Both formats are commonly used; a library like FFTW3 supports both of them.
+}
+
+Support for complex numbers is important for signal processing. 
+Explicit hardware support for complex operations is
+preferable, both for programmability and performance. 
 %If it is not available, we can circumvent this by using separate arrays for
 %real values and for imaginary values.  
 Except for the BG/P, none of the architectures support this.
 The different architectures require two different approaches of
 dealing with this problem. If an architecture does not use
-explicit SIMD (vector) parallelism, the complex operations can simply
+explicit vector parallelism, the complex operations can simply
 be expressed in terms of normal floating point operations. This puts
 an extra burden on the programmer, but achieves good performance. The
-NVIDIA GPUs work this way.  However, if an architecture does use vector
+NVIDIA GPUs work this way.  If an architecture does use vector
 parallelism, we can either store the real and complex parts alternatingly inside a
 single vector, or have separate vectors for the two parts.  In both
 cases, support for shuffling data inside the vector registers is
 essential, since complex multiplications operate on both the real and imaginary parts.
-We found that the architectures differ considerably in this
+The architectures differ considerably in this
 respect.  The \mbox{Cell/B.E.} excels; its vectors contain four floats, which
 can be shuffled around in arbitrary patterns. Moreover, 
 shuffling and computations can be overlapped effectively.  On ATI
-GPUs, this works in a similar way.  The SSE4 instruction set in the
-Intel Core~i7, however, does not support arbitrary shuffling patterns.
-This has a large impact on the way the code is vectorized, and
-requires a different SIMDization strategy. 
+GPUs, this works similarly.  The SSE4 instructions in the
+Intel CPUs do not support arbitrary shuffling patterns.
+This has a large impact on the way the code is vectorized.
+%, and requires a different SIMDization strategy. 
 
 
 
@@ -788,6 +817,10 @@ within a row or column in the triangle still need the same samples.
 In addition to registers, caches can thus also be used to increase
 data reuse. 
 
+%The efficiency of the cache, however, depends highly on the chosen 
+%integration time, and on the cache-replacement algorithm 
+%(Least-Recently Used works much better here than Round Robin).
+
 %It is important to realize that the
 %correlator itself is \emph{trivially parallel}, since the tens of thousands of
 %frequency channels that LOFAR uses can be processed independently.  This allows us to
@@ -841,13 +874,12 @@ limiting the tile size to $2 \times 2$; reuse has to come from the
 L1~cache.
 
 
-
 \noindent \\ \emph{The BG/P supercomputer}
 
 \noindent 
 We found that the BG/P is extremely suitable for our application,
 since it is highly optimized for processing of complex numbers.
-The BG/P performs \emph{all} floating point operations in double
+However, the BG/P performs \emph{all} floating point operations in double
 precision, which is overkill for our application.
 Although the BG/P can keep the same number of values in register as the 
 Intel chip, an important difference is that the BG/P has 32
@@ -890,7 +922,7 @@ unlike with NVIDIA GPUs.  CAL provides a feature called
 \emph{swizzling}, which is used to select parts of vector registers in
 arithmetic operations.  We found this improves readability of the code. 
 However, the
-programming tools still are insufficient. The high-level Brook+ model does
+programming tools still are unsatisfactory. The high-level Brook+ model does
 not achieve acceptable performance. The low-level
 CAL model does, but it is difficult to use.
 The best-performing implementation uses a tile size of 4x3, thanks to
@@ -930,7 +962,7 @@ application, the use of shared memory only led to performance
 degradation.
 }
 
-Registers are a shared resource. Using less registers in a kernel
+Registers are a shared resource. Using fewer registers in a kernel
 allows the use of more concurrent threads, hiding load delays.
 We found that using a relatively small tile size (3x2) and many threads increases performance.
 The kernel itself, without host-to-device communication achieves 31\%
@@ -963,7 +995,7 @@ architectures, where caches work transparently.
 %% be accumulated.  
 Communication can be overlapped with computation, by using multiple buffers.
 Although issuing explicit DMA commands complicates programming,
-we found that this usually is not problematic for signal processing applications.
+we found that this usually is not problematic for signal-processing applications.
 Thanks to the explicit cache,
 the correlator implementation fetches each sample from main memory
 \emph{only exactly once}. 
@@ -1004,7 +1036,7 @@ Intel Core i7 920     & IBM Blue Gene/P          & ATI 4870                     
 } %\small
 \end{center}
 \vspace{-0.5cm}
-\caption{Strengths and weaknesses of the different platforms for signal processing applications.}
+\caption{Strengths and weaknesses of the different platforms for signal-processing applications.}
 \label{architecture-results-table}
 \end{table*}
 
@@ -1092,7 +1124,7 @@ when the hardware is available.
 
 \section{Conclusions}
 \label{conclusions}
-Current and future telescopes require large amounts of signal processing, 
+Radio telescopes require large amounts of signal processing, 
 and have high computational and I/O demands.
 We presented general insights on how to use many-core
 platforms for signal-processing applications, looking at the aspects of
