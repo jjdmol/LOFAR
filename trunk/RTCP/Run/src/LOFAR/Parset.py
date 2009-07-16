@@ -248,4 +248,5 @@ class Parset(util.Parset.Parset):
 
       # verify stations
       for s in self.stations:
-        assert "PIC.Core.%s.phaseCenter" % (s.name,) in self, "Phase center of station '%s' not present in parset." % (s.name,)
+        stationName = s.name.split("_")[0] # remove specific antenna or array name (_hba0 etc) if present
+        assert "PIC.Core.%s.phaseCenter" % (stationName,) in self, "Phase center of station '%s' not present in parset." % (stationName,)
