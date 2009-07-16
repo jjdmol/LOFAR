@@ -48,12 +48,25 @@ class SectionSet(list):
       info( "Post processing %s." % (s,) )
       s.postProcess()
 
-  def abort(self,soft=True):
-    for s in self:
+  def abort(self):
+    def kill(s, soft):
       info( "Killing %s [%s]." % (s,["hard","soft"][bool(soft)]) )
       s.abort(soft)
 
-    self.wait()
+    for s in self:
+      try:
+        kill( s, True )
+      except KeyboardInterrupt:
+        try:
+          kill( s, False )
+        except KeyboardInterrupt:
+          warn( "Could not kill %s" % (s,) )
+
+      try:
+        info( "Waiting for %s." % (s,) )
+        s.wait()
+      except KeyboardInterrupt:
+        warn( "Interrupted while waiting for %s to finish" % (s,) )
 
   def wait(self):
     for s in self:
