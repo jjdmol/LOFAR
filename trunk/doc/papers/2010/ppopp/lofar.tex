@@ -80,7 +80,7 @@ Essentially, it is a distributed sensor network that monitors the sky
 and combines all signals centrally.
 This concept requires much more signal processing, but the additional costs
 of silicon are easily offset by cost savings in steel that would be needed for dishes.
-Moreover, LOFAR can observe the sky in many directions concurrently and
+Moreover, LOFAR can observe the sky in many directions simultaneously and
 switch directions instantaneously. 
 In several ways, LOFAR will be the largest telescope of the world, 
 and will enable groundbreaking research in several areas of astronomy and particle
@@ -138,7 +138,7 @@ Several \emph{pulsar pipelines\/} are being developed as well, that either
 search large sky regions to find unknown pulsars or, once found, sensitively
 observe their characteristics.
 The pipelines share common components, shortening their development time. 
-The software also supports multiple concurrent observations, even of different
+The software also supports multiple simultaneous observations, even of different
 types.
 
 The receivers produce hundreds of gigabits per second.
@@ -199,28 +199,6 @@ Section~\ref{sec:conclusions}.
 %LOFAR is the only system capable of processing high data rates from a large number of stations at
 %real time.
 
-On our previous platform, the BG/L, we were dissatisfied with
-the I/O model and its performance.  This led to a joint effort with 
-Argonne national lab to redesign the entire network software infrastructure, and resulted in a
-new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
-only yield better performance, but it is much more flexible, since it
-allows application code to be run on the I/O~nodes.  
-The standard BG/P
-software infrastructure is a major improvement over the BG/L, since it
-now incorporates several of ZOID's key ideas (e.g., that of running
-application code on the I/O~nodes).  Therefore, we do not have to use
-ZOID on the BG/P anymore.  Nevertheless, the achieved performance of the
-collective network that we use to send LOFAR data from the I/O~nodes
-to the compute~nodes still is unsatisfactory.  We therefore developed
-our own high-performance low-overhead protocol, called FCNP.  We
-describe FCNP in~\cite{Romein:09a}, but summarize the relevant features in
-Section~\ref{sec:input-handling}.
-
-%Zoid werk op ZeptoOS, kan torus niet 
-%gebruiken op compute nodes, is essentieel voor ons (voor transpose).
-% applicatie kan ZOID crashen. Met fcnp kan dat niet
-% Rob: te veel detail hier denk ik.
-
 The idea to implement a correlator in software has been adopted by
 others as well.  However, the LOFAR correlator is the only system
 capable of processing a large number of inputs at high data rates in
@@ -244,8 +222,30 @@ correlator for e-VLBI observations, but is not capable of processing telescope
 data in real time~\cite{Kruithof:08}, even though the title of their paper suggests
 otherwise.
 
+On our previous platform, the BG/L, we were dissatisfied with
+the I/O model and its performance.  This led to a joint effort with 
+Argonne national lab to redesign the entire network software infrastructure, and resulted in a
+new environment called {\em ZOID\/}~\cite{Iskra:08}.  ZOID does not
+only yield better performance, but it is much more flexible, since it
+allows application code to be run on the I/O~nodes.  
+The standard BG/P
+software infrastructure is a major improvement over the BG/L, since it
+now incorporates several of ZOID's key ideas (e.g., that of running
+application code on the I/O~nodes).  Therefore, we do not have to use
+ZOID on the BG/P anymore.  Nevertheless, the achieved performance of the
+collective network that we use to send LOFAR data from the I/O~nodes
+to the compute~nodes still is unsatisfactory.  We therefore developed
+our own high-performance low-overhead protocol, called FCNP.  We
+describe FCNP in~\cite{Romein:09a}, but summarize the relevant features in
+Section~\ref{sec:input-handling}.
+
+%ZOID werk op ZeptoOS, kan torus niet 
+%gebruiken op compute nodes, is essentieel voor ons (voor transpose).
+% applicatie kan ZOID crashen. Met fcnp kan dat niet
+% Rob: te veel detail hier denk ik.
+
 In another paper, we compare the efficiency of five many-core
-architectures (GPUs from Nvidia and ATI, the Cell/B.E., the Blue Gene/P,
+architectures (GPUs from NVIDIA and ATI, the Cell/B.E., the Blue Gene/P,
 and the Intel Core~i7) for correlation purposes~\cite{Nieuwpoort:09}.
 
 
@@ -257,7 +257,7 @@ LOFAR is driven by the astronomical community, that needs a new instrument
 to study an extensive amount of new science cases.
 Five key science projects have been defined.
 First, we expect to see the \emph{Epoch of Reionization\/} (EoR), the time
-that the first star galaxies and quasars were formed.
+when the first star galaxies and quasars were formed.
 %The 1.42~GHz emission line of hydrogen is expected to be
 %red-shifted into the LOFAR sensitivity range.
 Second, LOFAR offers a unique possibility in particle astrophysics for
@@ -305,7 +305,7 @@ are roughly distributed along five log-spiral arms with a diameter of
 hundreds of kilometers. 
 %The station fields are centrally condensed,
 %following a logarithmic distribution.  
-Additionally, eight to fifteen European stations will or have been built,
+Additionally, eight to fifteen European stations will be or have been built,
 extending the maximum distance to roughly 1000~km.
 The longer baselines (distance between two stations) allows observations with high angular resolution,
 but limits the Field-of-View; therefore the European stations will not be
@@ -319,7 +319,7 @@ Typical operations that are performed here include analog-to-digital
 conversion, filtering, frequency selection, and combination of the signals
 from the different receivers.
 One of the distinctive properties of LOFAR is that the receivers are
-omni-directional, and that multiple, concurrent observation directions are
+omni-directional, and that multiple, simultaneous observation directions are
 supported.
 Since observing the sky in all frequencies and all directions at the same time
 would result in an unmanageable output data rate, the observer selects a
@@ -597,13 +597,13 @@ a storage node, using TCP.
 
 The queue improves real-time behavior and increases fault tolerance, since
 it handles data on a best-effort basis.
-If, for any reason, the data are not sent quickly enough to the storage node
-(e.g., due to a disk or network failure), the queue fills up and subsequent
+If, for any reason, the data are not sent quickly enough to the storage node, the queue fills up and subsequent
 data are simply discarded until space is available.
+This way, we can tolerate disk and network failures.
 This mechanism is important to keep the correlator running in real
 time: it is much better to lose a small part of the data than to stall the
 entire correlator and lose \emph{all\/} data.
-In practice, under normal circumstances, no data are lost here.
+Under normal circumstances, no data are lost here.
 
 
 \begin{figure*}[ht]
@@ -640,7 +640,7 @@ However, the I/O~nodes run a Linux kernel that typically uses a page size of
 
 To avoid the interrupts, we use a modified ZeptoOS (Linux-based)
 kernel\cite{Yoshii:09}.
-It allows a process to map 1.5~GiB (out of 2~GiB) of physical memory in its
+It allows a process to pin 1.5~GiB (out of 2~GiB) of physical memory in its
 virtual memory map, using six fixed mappings of 256~MiB that are never evicted
 from the TLB.
 Hence, this memory does not generate TLB misses.
@@ -701,7 +701,7 @@ one frequency subband and approximately one second of time.
 Such a chunk is the unit of data that is sent to the compute node for further
 processing.
 Since processing a chunk typically takes much longer than one second,
-the chunks are round-robin distributed over a group of processor cores,
+the chunks are distributed round robin over a group of processor cores,
 as illustrated by Figure~\ref{fig:round-robin}.
 Subsequent chunks are processed by different processor cores.
 A core must finish its work before it is time to process the next chunk.
@@ -715,7 +715,7 @@ In reality, scheduling is more complex.
 The subbands that must be processed are first (more or less) evenly divided
 over the psets.
 Typically, a pset is responsible for a fixed set of four to sixteen subbands.
-Then, the subbands are round-robin scheduled over the 64~cores \emph{within the
+Then, the subbands are scheduled round robin over the 64~cores \emph{within the
 pset}.
 For example, if a pset processes six subbands, every second, the next six
 cores are scheduled and each of the cores will process one subband.
@@ -876,8 +876,8 @@ of electromagnetic waves, the wavefront from a celestial source hits
 stations at different times (see Figure~\ref{fig:delay}).  The time
 difference depends on the direction of the observed source and on the
 station positions, and is continuously altered by the rotation of the
-earth.  Before the signals can be correlated, all station streams have
-to be aligned.
+earth.  Therefore, all station streams have
+to be aligned before the signals can be correlated.
 
 Since delays can be larger than the sample period, we perform delay
 compensation in two steps.  First, we correct for integer multiples of
@@ -886,7 +886,7 @@ This shift is performed on the I/O~node, by moving the read
 pointer of the circular buffer (see Section~\ref{sec:input-handling}).
 
 Second, the remaining error is corrected by rotating the phase of the
-signal.  The phase rotation itself costs a complex multiplication per
+signal.  The phase rotation itself requires a complex multiplication per
 sample.  
 %Since the phase rotation depends on the frequency, the correction
 %is done after the PPF: the correction is more accurate on narrow
@@ -979,7 +979,7 @@ All other steps have a lower time complexity.
 
 \subsubsection{Flexibility}
 
-We support concurrent pulsar and imaging observations, even on the
+We support simultaneous pulsar and imaging observations, even on the
 same data.  This is more efficient since the
 computations in the shared components of the pipelines are done only
 once. Moreover, more astronomical science can be done with a
@@ -997,7 +997,7 @@ in real time.
 \subsubsection{Optimizations}
 
 For optimal performance, time-critical code is written in assembly,
-because the performance from compiled C++ code was by far not sufficient.
+because the performance from compiled C++ code was completely inadequate.
 We maintain equivalent C++ reference code for testing and portability.
 The assembly version hides load and instruction latencies, issues concurrent
 floating point, integer, and load/store instructions,
@@ -1017,7 +1017,7 @@ cache hierarchy.
 \begin{center}
 \includegraphics[width=40mm]{correlation-triangle.pdf}
 \end{center}
-\caption{The correlation triangle is divided into as many $2\times2$ tiles as possible.}
+\caption{The correlation triangle is divided into $2\times2$ tiles.}
 \label{fig:correlation-triangle}
 \end{figure}
 
@@ -1330,7 +1330,7 @@ Figure~\ref{fig:ion-performance-obs-mode} shows the performance breakdown
 for the three challenging observation modes.
 In the standard 16-bit sample mode, the stations can produce at most
 248~subbands (observation mode \textsf{A}).
-Hence, the output data rate (the lower two bars) is twice as low as in the
+Hence, the output data rate (the lower two bars) is half as high as in the
 8-bit mode of scenario \textsf{B}.
 Also, copying 16-bit samples into the circular buffer is somewhat more
 efficient, due to L3-cache effects.
@@ -1369,7 +1369,7 @@ The data loss due to missed UDP packets is low: only between 1 per $10^6$ and
 These numbers include the data loss caused by the (software) generators and by
 the 10~GbE network switches.
 The data loss is negligible to other places where data can be lost,
-(e.g., the flagger sometimes rejects tens of percents of the data due to RFI),
+(e.g., we sometimes have to reject tens of percents of the data due to RFI),
 and does not hurt the astronomical signal quality.
 
 With the I/O-related optimizations, we obtain sufficient bandwidth to
@@ -1481,7 +1481,7 @@ A graphical representation of the correlator output is depicted in
 Figure~\ref{fig:fringe}.
 The figure shows the cross-correlations from two of the stations used during a 9-hour
 observation.
-The horizontal axis varies in time;
+The horizontal axis represents time;
 the vertical axis represents the 256~channels of one frequency subband.
 Each pixel corresponds to a (complex) correlation, where the color represents
 the phase of the signal; the intensity matches the amplitude (power).
@@ -1546,7 +1546,7 @@ bandwidth, its switching capabilities, and a DMA controller.
 We also think that the programming environment of the Blue Gene/P is a
 considerable improvement over its predecessor,
 and are pleased with the open programming interfaces.
-The power efficiency of the Blue Gene/P is good.
+The power efficiency of the Blue Gene/P is good, thanks relatively low clock frequency of the processors.
 The Cell BE is more energy efficient~\cite{Nieuwpoort:09}, but does not
 incorporate a high-speed interconnect.
 

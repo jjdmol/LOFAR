@@ -41,8 +41,8 @@
        id="perspective209" />
   </defs>
   <sodipodi:namedview
-     inkscape:window-height="949"
-     inkscape:window-width="1280"
+     inkscape:window-height="1125"
+     inkscape:window-width="1920"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      guidetolerance="10.0"
@@ -98,7 +98,7 @@
      transform="translate(-131.50346,1176.3669)" />
   <rect
      id="rect10"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -106,7 +106,7 @@
      x="12990.969" />
   <rect
      id="rect48"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -214,7 +214,7 @@
      xml:space="preserve">core 5</text>
   <rect
      id="rect2793"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -222,7 +222,7 @@
      x="13599.271" />
   <rect
      id="rect2795"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -257,7 +257,7 @@
      xml:space="preserve">second 0, subband 1</text>
   <rect
      id="rect2805"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -265,7 +265,7 @@
      x="14158.422" />
   <rect
      id="rect2807"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -300,7 +300,7 @@
      xml:space="preserve">second 0, subband 2</text>
   <rect
      id="rect2891"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -308,7 +308,7 @@
      x="19394.322" />
   <rect
      id="rect2893"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -343,7 +343,7 @@
      xml:space="preserve">second 1, subband 0</text>
   <rect
      id="rect2903"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -351,7 +351,7 @@
      x="20002.627" />
   <rect
      id="rect2905"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -386,7 +386,7 @@
      xml:space="preserve">second 1, subband 1</text>
   <rect
      id="rect2915"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -394,7 +394,7 @@
      x="20641.846" />
   <rect
      id="rect2917"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -434,7 +434,7 @@
      transform="translate(12821.021,1647.4614)" />
   <rect
      id="rect2987"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -469,7 +469,7 @@
      xml:space="preserve">second 3, sb 0</text>
   <rect
      id="rect2999"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -504,7 +504,7 @@
      xml:space="preserve">second 3, sb 1</text>
   <rect
      id="rect3011"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -539,7 +539,7 @@
      xml:space="preserve">second 3, sb 2</text>
   <rect
      id="rect3035"
-     style="fill:#deffde;stroke:#00d100;stroke-width:41.10651398;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:41.10651398000000256;stroke-linecap:butt;stroke-linejoin:miter"
      rx="194.08125"
      height="1218.8934"
      width="2356.7009"
@@ -574,7 +574,7 @@
      xml:space="preserve">se</text>
   <rect
      id="rect3047"
-     style="fill:#deffde;stroke:#00d100;stroke-width:30.61574745;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:30.61574745000000064;stroke-linecap:butt;stroke-linejoin:miter"
      rx="106.74072"
      height="1229.3843"
      width="1296.1373"
@@ -609,7 +609,7 @@
      xml:space="preserve">s</text>
   <rect
      id="rect3059"
-     style="fill:#deffde;stroke:#00d100;stroke-width:28.2469635;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:28.24696349999999967;stroke-linecap:butt;stroke-linejoin:miter"
      rx="90.687607"
      height="1231.7531"
      width="1101.2067"
@@ -645,7 +645,7 @@
      sodipodi:nodetypes="cc" />
   <rect
      id="rect3853"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -653,7 +653,7 @@
      x="25742.855" />
   <rect
      id="rect3855"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -688,7 +688,7 @@
      xml:space="preserve">second 2, subband 0</text>
   <rect
      id="rect3865"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -696,7 +696,7 @@
      x="26351.158" />
   <rect
      id="rect3867"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -731,7 +731,7 @@
      xml:space="preserve">second 2, subband 1</text>
   <rect
      id="rect3877"
-     style="fill:#ffe0e0;stroke:#ff0000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#aa0000;stroke:#550000;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
@@ -739,7 +739,7 @@
      x="26910.309" />
   <rect
      id="rect3879"
-     style="fill:#deffde;stroke:#00d100;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
+     style="fill:#008000;stroke:#225500;stroke-width:60;stroke-linecap:butt;stroke-linejoin:miter"
      rx="420"
      height="1200"
      width="5100"
