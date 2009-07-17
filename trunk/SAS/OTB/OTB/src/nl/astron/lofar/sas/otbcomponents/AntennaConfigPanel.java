@@ -41,6 +41,10 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private jOTDBnode itsBandFilter;
     private jOTDBnode itsLongBaselines;
     private jOTDBnode itsStationList;
+
+    // Clockmode
+    private jOTDBnode itsClockMode;
+
     
     private Vector<String>    itsUsedCoreStations      = new Vector<String>();
     private Vector<String>    itsUsedRemoteStations    = new Vector<String>();
@@ -219,6 +223,13 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
             saveNode(itsLongBaselines);
         }
 
+        //clock
+        if (itsClockMode != null && !inputClockMode.getSelectedItem().toString().equals(itsClockMode.limits)) {
+            itsClockMode.limits = inputClockMode.getSelectedItem().toString();
+            saveNode(itsClockMode);
+        }
+
+
         // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
         initPanel();
 
@@ -268,6 +279,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
       } else {
         inputLongBaselines.setSelected(false);
       }
+      inputClockMode.setSelectedItem(itsClockMode.limits);
+
 
       setStationLists(itsStationList.limits);
       checkSettings();
@@ -330,6 +343,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
+      this.inputClockMode.setEnabled(enabled);
     }
 
     /** returns a [a,b,c] string that contain all used stations
@@ -485,6 +499,14 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 } else {
                     this.inputLongBaselines.setSelected(false);                    
                 }
+            } else if (aKeyName.equals("clockMode")) {
+                inputClockMode.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputClockMode,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputClockMode.setSelectedItem(aNode.limits);
+                }
+                itsClockMode=aNode;
+
             }
         } else if(parentName.contains("VirtualInstrument")){        
             // Observation Beamformer parameters
@@ -671,6 +693,8 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
         input110190 = new javax.swing.JRadioButton();
         input170230 = new javax.swing.JRadioButton();
         input210250 = new javax.swing.JRadioButton();
+        labelClockMode = new javax.swing.JLabel();
+        inputClockMode = new javax.swing.JComboBox();
         jPanel2 = new javax.swing.JPanel();
         remoteStationSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StationSelectionPanel();
         europeStationSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StationSelectionPanel();
@@ -759,7 +783,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
 
         AntennaFilterGroup.add(input3080);
         input3080.setSelected(true);
-        input3080.setText("30-80 (160 MHz)");
+        input3080.setText("30-80 (200 MHz)");
         input3080.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 input3080ActionPerformed(evt);
@@ -893,20 +917,26 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addComponent(input210250))
         );
 
+        labelClockMode.setText("Clock Mode:");
+
+        inputClockMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputLBAAntennas)
-                    .addComponent(panelLBASelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(inputLBAAntennas, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panelLBASelection, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 6, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(inputHBAAntennas)
-                    .addComponent(panelHBASelection1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(panelHBASelection1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -919,7 +949,11 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(panelLBASelection, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panelHBASelection1, javax.swing.GroupLayout.DEFAULT_SIZE, 274, Short.MAX_VALUE))
-                .addContainerGap(342, Short.MAX_VALUE))
+                .addGap(33, 33, 33)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelClockMode)
+                    .addComponent(inputClockMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(367, Short.MAX_VALUE))
         );
 
         add(jPanel1, java.awt.BorderLayout.WEST);
@@ -947,7 +981,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
                 .addComponent(remoteStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(31, 31, 31)
                 .addComponent(europeStationSelectionPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(35, Short.MAX_VALUE))
+                .addContainerGap(113, Short.MAX_VALUE))
         );
 
         add(jPanel2, java.awt.BorderLayout.LINE_END);
@@ -1118,6 +1152,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private javax.swing.JRadioButton input170230;
     private javax.swing.JRadioButton input210250;
     private javax.swing.JRadioButton input3080;
+    private javax.swing.JComboBox inputClockMode;
     private javax.swing.JRadioButton inputHBAAntennas;
     private javax.swing.JRadioButton inputInnerCircle;
     private javax.swing.JRadioButton inputLBAAntennas;
@@ -1133,6 +1168,7 @@ public class AntennaConfigPanel extends javax.swing.JPanel implements IViewPanel
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JLabel labelClockMode;
     private javax.swing.JPanel panelHBASelection1;
     private javax.swing.JPanel panelLBASelection;
     private nl.astron.lofar.sas.otbcomponents.RemoteStationLayout remoteStationLayout;
