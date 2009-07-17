@@ -213,28 +213,19 @@
                           <Group type="102" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="labelMSNameMask" min="-2" pref="103" max="-2" attributes="1"/>
-                                          <Component id="labelReceiverList" min="-2" pref="89" max="-2" attributes="0"/>
-                                      </Group>
+                                  <Component id="labelMSNameMask" min="-2" pref="103" max="-2" attributes="1"/>
+                                  <Component id="labelReceiverList" min="-2" pref="89" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Group type="102" attributes="1">
+                                      <EmptySpace min="-2" pref="68" max="-2" attributes="0"/>
+                                      <Component id="labelNrSlotsInFrame" min="-2" max="-2" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Group type="102" attributes="1">
-                                              <Component id="inputClockMode" min="-2" max="-2" attributes="1"/>
-                                              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
-                                              <Component id="labelNrSlotsInFrame" min="-2" max="-2" attributes="1"/>
-                                              <EmptySpace max="-2" attributes="0"/>
-                                              <Component id="inputNrSlotsInFrame" max="32767" attributes="1"/>
-                                          </Group>
-                                          <Component id="inputMSNameMask" alignment="0" pref="743" max="32767" attributes="1"/>
-                                          <Component id="inputReceiverList" alignment="0" max="32767" attributes="1"/>
-                                      </Group>
+                                      <Component id="inputNrSlotsInFrame" max="32767" attributes="1"/>
                                   </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="labelClockMode" max="32767" attributes="1"/>
-                                      <EmptySpace min="-2" pref="1573" max="-2" attributes="0"/>
-                                  </Group>
+                                  <Component id="inputMSNameMask" alignment="0" pref="743" max="32767" attributes="1"/>
+                                  <Component id="inputReceiverList" alignment="0" max="32767" attributes="1"/>
                               </Group>
                           </Group>
                       </Group>
@@ -248,8 +239,6 @@
                               </Group>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputClockMode" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="labelNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
@@ -273,26 +262,6 @@
                       <Events>
                         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputMSNameMaskFocusGained"/>
                       </Events>
-                    </Component>
-                    <Component class="javax.swing.JComboBox" name="inputClockMode">
-                      <Properties>
-                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                          <StringArray count="4">
-                            <StringItem index="0" value="Item 1"/>
-                            <StringItem index="1" value="Item 2"/>
-                            <StringItem index="2" value="Item 3"/>
-                            <StringItem index="3" value="Item 4"/>
-                          </StringArray>
-                        </Property>
-                      </Properties>
-                      <Events>
-                        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputClockModeFocusGained"/>
-                      </Events>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="labelClockMode">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Clock Mode:"/>
-                      </Properties>
                     </Component>
                     <Component class="javax.swing.JLabel" name="labelNrSlotsInFrame">
                       <Properties>

@@ -311,13 +311,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     inputMSNameMask.setText(aNode.limits);
                 }
-            } else if (aKeyName.equals("clockMode")) {        
-                inputClockMode.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputClockMode,aParam.limits);
-                if (!aNode.limits.equals("")) {
-                    inputClockMode.setSelectedItem(aNode.limits);
-                }
-                itsClockMode=aNode;
             } else if (aKeyName.equals("receiverList")) {
                 inputReceiverList.setToolTipText(aParam.description);
                 itsReceiverList=aNode;
@@ -477,7 +470,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
       // Observation Specific parameters
       inputMSNameMask.setText(itsMSNameMask.limits);
-      inputClockMode.setSelectedItem(itsClockMode.limits);
       inputReceiverList.setText(itsReceiverList.limits);
       inputNrSlotsInFrame.setText(itsNrSlotsInFrame.limits);
       inputDescription.setText("");
@@ -666,7 +658,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
-        this.inputClockMode.setEnabled(enabled);
         this.inputDescription.setEnabled(enabled);
         this.inputMSNameMask.setEnabled(enabled);
         this.inputReceiverList.setEnabled(enabled);
@@ -820,10 +811,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (itsNrSlotsInFrame != null && !inputNrSlotsInFrame.getText().equals(itsNrSlotsInFrame.limits)) {
             itsNrSlotsInFrame.limits = inputNrSlotsInFrame.getText();
             saveNode(itsNrSlotsInFrame);
-        }
-        if (itsClockMode != null && !inputClockMode.getSelectedItem().toString().equals(itsClockMode.limits)) {
-            itsClockMode.limits = inputClockMode.getSelectedItem().toString();
-            saveNode(itsClockMode);
         }
         if (itsNrBeams != null && !Integer.toString(beamConfigurationPanel.getTableModel().getRowCount()).equals(itsNrBeams.limits)) {
             itsNrBeams.limits = Integer.toString(beamConfigurationPanel.getTableModel().getRowCount());
@@ -1017,8 +1004,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel10 = new javax.swing.JPanel();
         labelMSNameMask = new javax.swing.JLabel();
         inputMSNameMask = new javax.swing.JTextField();
-        inputClockMode = new javax.swing.JComboBox();
-        labelClockMode = new javax.swing.JLabel();
         labelNrSlotsInFrame = new javax.swing.JLabel();
         inputNrSlotsInFrame = new javax.swing.JTextField();
         inputReceiverList = new javax.swing.JTextField();
@@ -1094,15 +1079,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        inputClockMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        inputClockMode.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputClockModeFocusGained(evt);
-            }
-        });
-
-        labelClockMode.setText("Clock Mode:");
-
         labelNrSlotsInFrame.setText("# Slots In Frame");
 
         inputNrSlotsInFrame.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -1127,23 +1103,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 103, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(labelReceiverList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(jPanel10Layout.createSequentialGroup()
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 103, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(labelReceiverList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(68, 68, 68)
+                        .add(labelNrSlotsInFrame)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(jPanel10Layout.createSequentialGroup()
-                                .add(inputClockMode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .add(12, 12, 12)
-                                .add(labelNrSlotsInFrame)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(inputNrSlotsInFrame))
-                            .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 743, Short.MAX_VALUE)
-                            .add(inputReceiverList)))
-                    .add(jPanel10Layout.createSequentialGroup()
-                        .add(labelClockMode, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(1573, 1573, 1573))))
+                        .add(inputNrSlotsInFrame))
+                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 743, Short.MAX_VALUE)
+                    .add(inputReceiverList)))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1153,8 +1123,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelClockMode)
-                    .add(inputClockMode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(labelNrSlotsInFrame)
                     .add(inputNrSlotsInFrame, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(18, 18, 18)
@@ -1418,10 +1386,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         deleteBeamButton.setEnabled(true);
     }//GEN-LAST:event_beamConfigurationPanelMouseClicked
 
-    private void inputClockModeFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputClockModeFocusGained
-        changeDescription(itsClockMode);
-    }//GEN-LAST:event_inputClockModeFocusGained
-
     private void inputMSNameMaskFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputMSNameMaskFocusGained
         changeDescription(itsMSNameMask);
     }//GEN-LAST:event_inputMSNameMaskFocusGained
@@ -1505,7 +1469,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     
     // Observation Specific parameters
     private jOTDBnode itsMSNameMask;
-    private jOTDBnode itsClockMode;
     private jOTDBnode itsReceiverList;
     private jOTDBnode itsNrSlotsInFrame;
     private jOTDBnode itsNrBeams;
@@ -1551,7 +1514,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JButton deleteBeamformerButton;
     private javax.swing.JScrollPane descriptionScrollPane;
     private javax.swing.JButton editBeamButton;
-    private javax.swing.JComboBox inputClockMode;
     private javax.swing.JTextArea inputDescription;
     private javax.swing.JTextField inputMSNameMask;
     private javax.swing.JTextField inputNrSlotsInFrame;
@@ -1571,7 +1533,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JToolBar jToolBar1;
-    private javax.swing.JLabel labelClockMode;
     private javax.swing.JLabel labelMSNameMask;
     private javax.swing.JLabel labelNrSlotsInFrame;
     private javax.swing.JLabel labelReceiverList;
