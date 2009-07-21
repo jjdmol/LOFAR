@@ -30,7 +30,7 @@ namespace LOFAR
 namespace BBS
 {
 
-const JonesMatrix MatrixSum::evaluate(const Request &request, Cache &cache)
+const JonesMatrix MatrixSum::evaluateExpr(const Request &request, Cache &cache)
     const
 {
     // TODO: Use unsigned integer type for Matrix size.
@@ -38,7 +38,7 @@ const JonesMatrix MatrixSum::evaluate(const Request &request, Cache &cache)
     int ny = request[TIME]->size();
 
     // Allocate Jones matrix elements and initialize the main value to 0 + 0i.
-    FieldSet element[2][2];
+    ValueSet element[2][2];
     element[0][0].assign(Matrix(makedcomplex(0.0, 0.0), nx, ny));
     element[0][1].assign(Matrix(makedcomplex(0.0, 0.0), nx, ny));
     element[1][0].assign(Matrix(makedcomplex(0.0, 0.0), nx, ny));
@@ -63,16 +63,16 @@ const JonesMatrix MatrixSum::evaluate(const Request &request, Cache &cache)
         }
 
         // Update perturbed values.
-        merge(term.getFieldSet(0, 0), element[0][0]);
-        merge(term.getFieldSet(0, 1), element[0][1]);
-        merge(term.getFieldSet(1, 0), element[1][0]);
-        merge(term.getFieldSet(1, 1), element[1][1]);
+        merge(term.getValueSet(0, 0), element[0][0]);
+        merge(term.getValueSet(0, 1), element[0][1]);
+        merge(term.getValueSet(1, 0), element[1][0]);
+        merge(term.getValueSet(1, 1), element[1][1]);
 
         // Update main value (location is important!!).
-        element[0][0].value() += term.getFieldSet(0, 0).value();
-        element[0][1].value() += term.getFieldSet(0, 1).value();
-        element[1][0].value() += term.getFieldSet(1, 0).value();
-        element[1][1].value() += term.getFieldSet(1, 1).value();
+        element[0][0].value() += term.getValueSet(0, 0).value();
+        element[0][1].value() += term.getValueSet(0, 1).value();
+        element[1][0].value() += term.getValueSet(1, 0).value();
+        element[1][1].value() += term.getValueSet(1, 1).value();
     }
 
     JonesMatrix result;
@@ -80,21 +80,21 @@ const JonesMatrix MatrixSum::evaluate(const Request &request, Cache &cache)
     {
         result.setFlags(flags);
     }
-    result.setFieldSet(0, 0, element[0][0]);
-    result.setFieldSet(0, 1, element[0][1]);
-    result.setFieldSet(1, 0, element[1][0]);
-    result.setFieldSet(1, 1, element[1][1]);
+    result.setValueSet(0, 0, element[0][0]);
+    result.setValueSet(0, 1, element[0][1]);
+    result.setValueSet(1, 0, element[1][0]);
+    result.setValueSet(1, 1, element[1][1]);
 
     return result;
 }
 
-void MatrixSum::merge(const FieldSet &in, FieldSet &out) const
+void MatrixSum::merge(const ValueSet &in, ValueSet &out) const
 {
-    FieldSet::const_iterator inIter = in.begin();
-    FieldSet::const_iterator inEnd = in.end();
+    ValueSet::const_iterator inIter = in.begin();
+    ValueSet::const_iterator inEnd = in.end();
 
-    FieldSet::iterator outIter = out.begin();
-    FieldSet::iterator outEnd = out.end();
+    ValueSet::iterator outIter = out.begin();
+    ValueSet::iterator outEnd = out.end();
 
     while(inIter != inEnd && outIter != outEnd)
     {

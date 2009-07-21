@@ -1,6 +1,6 @@
-//# AzEl.h: Azimuth and elevation for a direction (ra, dec) on the sky.
+//# StationUVW.h: Station UVW coordinates.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,15 +20,16 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_AZEL_H
-#define LOFAR_BBSKERNEL_EXPR_AZEL_H
+#ifndef LOFAR_BBS_EXPR_STATIONUVW_H
+#define LOFAR_BBS_EXPR_STATIONUVW_H
 
 // \file
-// Azimuth and elevation for a direction (ra, dec) on the sky.
+// Station UVW coordinates.
 
 #include <BBSKernel/Expr/Expr.h>
 
 #include <measures/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -38,27 +39,38 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-// AzEl computes azimuth and elevation coordinates for a direction (ra, dec) on
-// the sky as seen from a specific location (ITRF) on earth.
-class AzEl: public BasicUnaryExpr<Vector<2>, Vector<2> >
+class StationUVW: public Expr<Vector<3> >
 {
 public:
-    typedef shared_ptr<AzEl>        Ptr;
-    typedef shared_ptr<const AzEl>  ConstPtr;
+    typedef shared_ptr<StationUVW>          Ptr;
+    typedef shared_ptr<const StationUVW>    ConstPtr;
 
-    AzEl(const casa::MPosition &position,
-        const Expr<Vector<2> >::ConstPtr &direction);
+    StationUVW(const casa::MPosition &position, const casa::MPosition &array,
+        const casa::MDirection &reference);
+
+protected:
+    virtual unsigned int nArguments() const
+    {
+        return 0;
+    }
+
+    virtual ExprBase::ConstPtr argument(unsigned int) const
+    {
+        ASSERTSTR(false, "StationUVW has no arguments.");
+    }
 
 private:
-    virtual const Vector<2>::view evaluateImpl(const Request &request,
-        const Vector<2>::view &direction) const;
+    virtual const Vector<3> evaluateExpr(const Request &request, Cache &cache)
+        const;
 
-    casa::MPosition itsPosition;
+    casa::MPosition     itsPosition;
+    casa::MPosition     itsArrayPosition;
+    casa::MDirection    itsPhaseReference;
 };
 
 // @}
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

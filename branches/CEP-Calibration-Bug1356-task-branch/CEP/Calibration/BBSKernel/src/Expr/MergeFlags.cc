@@ -1,4 +1,6 @@
-//# Mul.h: Multiplication.
+//# MergeFlags.cc: Merge flags of the right hand side with the left hand side.
+//# The data is not merged. Only the data of the left hand side is passed
+//# through.
 //#
 //# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +22,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_MUL_H
-#define LOFAR_BBSKERNEL_EXPR_MUL_H
-
-// \file
-// Multiplication
-
-#include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
+#include <lofar_config.h>
+#include <BBSKernel/Expr/MergeFlags.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \ingroup Expr
-// @{
-
-class Mul: public BasicBinaryExpr<Scalar, JonesMatrix, JonesMatrix>
-{
-public:
-    typedef shared_ptr<Mul>         Ptr;
-    typedef shared_ptr<const Mul>   ConstPtr;
-
-    Mul(const Expr<Scalar>::ConstPtr &lhs,
-        const Expr<JonesMatrix>::ConstPtr &rhs);
-
-private:
-    // Compute a result for the given request.
-    virtual const JonesMatrix::view evaluateImpl(const Request &request,
-        const Scalar::view &lhs, const JonesMatrix::view &rhs) const;
-};
-
-// @}
-
-} // namespace BBS
-} // namespace LOFAR
-
-#endif
+} //# namespace BBS
+} //# namespace LOFAR

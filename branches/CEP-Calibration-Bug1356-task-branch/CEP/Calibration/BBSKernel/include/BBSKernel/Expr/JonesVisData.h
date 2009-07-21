@@ -46,21 +46,21 @@ public:
 
     JonesVisData(const VisData::Ptr &chunk, const baseline_t &baseline);
 
-    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
-        const;
-
 protected:
-    virtual unsigned int getArgumentCount() const
+    virtual unsigned int nArguments() const
     {
         return 0;
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int) const
+    virtual ExprBase::ConstPtr argument(unsigned int) const
     {
         ASSERT(false);
     }
 
 private:
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
+        const;
+
     void copyData(double *re, double *im,
         const boost::multi_array<sample_t, 4>::const_array_view<2>::type &src)
         const;

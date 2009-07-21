@@ -28,7 +28,6 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
@@ -40,97 +39,233 @@ namespace BBS
 // \ingroup BBSKernel
 // @{
 
-class CondNumFlagConfig
+class HamakerDipoleConfig
 {
 public:
-    typedef shared_ptr<CondNumFlagConfig>       Ptr;
-    typedef shared_ptr<const CondNumFlagConfig> ConstPtr;
+    HamakerDipoleConfig();
+    HamakerDipoleConfig(const string &file);
 
-    CondNumFlagConfig();
+    const string &getCoeffFile() const;
 
-    // Print the contents of \c *this in human readable form into the output
-    // stream \a out.
-    void print(ostream &out) const;
-
-    double threshold;
+private:
+    string  itsCoeffFile;
 };
 
-class IonoConfig
+class YatawattaDipoleConfig
 {
 public:
-    typedef shared_ptr<IonoConfig>        Ptr;
-    typedef shared_ptr<const IonoConfig>  ConstPtr;
+    YatawattaDipoleConfig();
+    YatawattaDipoleConfig(const string &theta, const string &phi);
 
-    IonoConfig();
+    const string &getModuleTheta() const;
+    const string &getModulePhi() const;
 
-    // Print the contents of \c *this in human readable form into the output
-    // stream \a out.
-    void print(ostream &out) const;
-
-    uint32 rank;
+private:
+    string  itsModuleTheta;
+    string  itsModulePhi;
 };
 
-class BeamConfig
+class IonosphereConfig
 {
 public:
-    typedef shared_ptr<BeamConfig>        Ptr;
-    typedef shared_ptr<const BeamConfig>  ConstPtr;
+    IonosphereConfig();
+    IonosphereConfig(unsigned int degree);
 
-    virtual ~BeamConfig();
+    unsigned int getDegree() const;
 
-    // Print the contents of \c *this in human readable form into the output
-    // stream \a out.
-    virtual void print(ostream &out) const = 0;
-
-    virtual const string &type() const = 0;
+private:
+    unsigned int itsDegree;
 };
 
-
-class HamakerDipoleConfig: public BeamConfig
+class FlaggerConfig
 {
 public:
-    typedef shared_ptr<HamakerDipoleConfig>       Ptr;
-    typedef shared_ptr<const HamakerDipoleConfig> ConstPtr;
+    FlaggerConfig();
+    FlaggerConfig(double threshold);
 
-    // Print the contents of \c *this in human readable form into the output
-    // stream \a out.
-    void print(ostream &out) const;
-    const string &type() const;
+    double getThreshold() const;
 
-    string  coeffFile;
+private:
+    double itsThreshold;
 };
-
-
-class YatawattaDipoleConfig: public BeamConfig
-{
-public:
-    typedef shared_ptr<YatawattaDipoleConfig>       Ptr;
-    typedef shared_ptr<const YatawattaDipoleConfig> ConstPtr;
-
-    // Print the contents of \c *this in human readable form into the output
-    // stream \a out.
-    void print(ostream &out) const;
-    const string &type() const;
-
-    string  moduleTheta;
-    string  modulePhi;
-};
-
 
 class ModelConfig
 {
 public:
+    enum BeamType
+    {
+        UNKNOWN_BEAM_TYPE,
+        HAMAKER_DIPOLE,
+        YATAWATTA_DIPOLE
+    };
+
     ModelConfig();
 
-    bool                        usePhasors;
-    vector<string>              sources;
-    vector<string>              components;
-    IonoConfig::ConstPtr        ionoConfig;
-    BeamConfig::ConstPtr        beamConfig;
-    CondNumFlagConfig::ConstPtr condNumFlagConfig;
+    bool usePhasors() const
+    {
+        return itsModelOptions[PHASORS];
+    }
+
+    bool useBandpass() const
+    {
+        return itsModelOptions[BANDPASS];
+    }
+
+    bool useIsotropicGain() const
+    {
+        return itsModelOptions[ISOTROPIC_GAIN];
+    }
+
+    bool useAnisotropicGain() const
+    {
+        return itsModelOptions[ANISOTROPIC_GAIN];
+    }
+
+    bool useBeam() const
+    {
+        return itsModelOptions[BEAM];
+    }
+
+    BeamType getBeamType() const
+    {
+        return itsBeamType;
+    }
+
+    void getBeamConfig(HamakerDipoleConfig &config) const
+    {
+        config = itsConfigBeamHamakerDipole;
+    }
+
+    void getBeamConfig(YatawattaDipoleConfig &config) const
+    {
+        config = itsConfigBeamYatawattaDipole;
+    }
+
+    bool useIonosphere() const
+    {
+        return itsModelOptions[IONOSPHERE];
+    }
+
+    void getIonosphereConfig(IonosphereConfig &config) const
+    {
+        config = itsConfigIonosphere;
+    }
+
+    bool useFlagger() const
+    {
+        return itsModelOptions[FLAGGER];
+    }
+
+    void getFlaggerConfig(FlaggerConfig &config) const
+    {
+        config = itsConfigFlagger;
+    }
+
+    void setPhasors(bool value = true)
+    {
+        itsModelOptions[PHASORS] = value;
+    }
+
+    void setBandpass(bool value = true)
+    {
+        itsModelOptions[BANDPASS] = value;
+    }
+
+    void setIsotropicGain(bool value = true)
+    {
+        itsModelOptions[ISOTROPIC_GAIN] = value;
+    }
+
+    void setAnisotropicGain(bool value = true)
+    {
+        itsModelOptions[ANISOTROPIC_GAIN] = value;
+    }
+
+    void setBeamConfig(const HamakerDipoleConfig &config)
+    {
+        itsModelOptions[BEAM] = true;
+        itsBeamType = HAMAKER_DIPOLE;
+        itsConfigBeamHamakerDipole = config;
+    }
+
+    void setBeamConfig(const YatawattaDipoleConfig &config)
+    {
+        itsModelOptions[BEAM] = true;
+        itsBeamType = YATAWATTA_DIPOLE;
+        itsConfigBeamYatawattaDipole = config;
+    }
+
+    void clearBeamConfig()
+    {
+        itsConfigBeamHamakerDipole = HamakerDipoleConfig();
+        itsConfigBeamYatawattaDipole = YatawattaDipoleConfig();
+        itsBeamType = UNKNOWN_BEAM_TYPE;
+        itsModelOptions[BEAM] = false;
+    }
+
+    void setIonosphereConfig(const IonosphereConfig &config)
+    {
+        itsModelOptions[IONOSPHERE] = true;
+        itsConfigIonosphere = config;
+    }
+
+    void clearIonosphereConfig()
+    {
+        itsConfigIonosphere = IonosphereConfig();
+        itsModelOptions[IONOSPHERE] = false;
+    }
+
+    void setFlaggerConfig(const FlaggerConfig &config)
+    {
+        itsModelOptions[FLAGGER] = true;
+        itsConfigFlagger = config;
+    }
+
+    void clearFlaggerConfig()
+    {
+        itsConfigFlagger = FlaggerConfig();
+        itsModelOptions[FLAGGER] = false;
+    }
+
+    void setSources(const vector<string> &sources)
+    {
+        itsSources = sources;
+    }
+
+    const vector<string> &getSources() const
+    {
+        return itsSources;
+    }
+
+private:
+    enum ModelOptions
+    {
+        PHASORS,
+        BANDPASS,
+        ISOTROPIC_GAIN,
+        ANISOTROPIC_GAIN,
+        BEAM,
+        IONOSPHERE,
+        FLAGGER,
+        N_ModelOptions
+    };
+
+    bool                    itsModelOptions[N_ModelOptions];
+    vector<string>          itsSources;
+
+    BeamType                itsBeamType;
+    HamakerDipoleConfig     itsConfigBeamHamakerDipole;
+    YatawattaDipoleConfig   itsConfigBeamYatawattaDipole;
+
+    IonosphereConfig        itsConfigIonosphere;
+    FlaggerConfig           itsConfigFlagger;
 };
 
-ostream &operator<<(ostream&, const ModelConfig&);
+ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj);
+ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj);
+ostream &operator<<(ostream &out, const FlaggerConfig &obj);
+ostream &operator<<(ostream &out, const IonosphereConfig &obj);
+ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}
 

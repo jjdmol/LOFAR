@@ -33,31 +33,31 @@ namespace BBS
 
 Mul::Mul(const Expr<Scalar>::ConstPtr &lhs,
     const Expr<JonesMatrix>::ConstPtr &rhs)
-    :   Expr2<Scalar, JonesMatrix, JonesMatrix>(lhs, rhs)
+    :   BasicBinaryExpr<Scalar, JonesMatrix, JonesMatrix>(lhs, rhs)
 {
 }
 
-const JonesMatrix::proxy Mul::evaluateImpl(const Request &request,
-    const Scalar::proxy &lhs, const JonesMatrix::proxy &rhs) const
+const JonesMatrix::view Mul::evaluateImpl(const Request &request,
+    const Scalar::view &lhs, const JonesMatrix::view &rhs) const
 {
-    JonesMatrix::proxy result;
+    JonesMatrix::view result;
 
-    if(lhs.isDependent() || rhs.isDependent(0, 0))
+    if(lhs.dirty() || rhs.dirty(0, 0))
     {
         result.assign(0, 0, lhs() * rhs(0, 0));
     }
 
-    if(lhs.isDependent() || rhs.isDependent(0, 1))
+    if(lhs.dirty() || rhs.dirty(0, 1))
     {
         result.assign(0, 1, lhs() * rhs(0, 1));
     }
 
-    if(lhs.isDependent() || rhs.isDependent(1, 0))
+    if(lhs.dirty() || rhs.dirty(1, 0))
     {
         result.assign(1, 0, lhs() * rhs(1, 0));
     }
 
-    if(lhs.isDependent() || rhs.isDependent(1, 1))
+    if(lhs.dirty() || rhs.dirty(1, 1))
     {
         result.assign(1, 1, lhs() * rhs(1, 1));
     }

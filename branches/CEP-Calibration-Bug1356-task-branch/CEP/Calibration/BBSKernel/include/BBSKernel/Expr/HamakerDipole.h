@@ -76,7 +76,7 @@ public:
 
     void evaluate(const Request &request, const Matrix &in_az,
         const Matrix &in_el, const Matrix &in_orientation,
-        Matrix &out_E11, Matrix &out_E12, 
+        Matrix &out_E11, Matrix &out_E12,
         Matrix &out_E21, Matrix &out_E22);
 
 #ifdef EXPR_GRAPH

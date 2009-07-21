@@ -58,16 +58,13 @@ public:
         itsExpr.push_back(expr);
     }
 
-    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
-        const;
-
 protected:
-    virtual unsigned int getArgumentCount() const
+    virtual unsigned int nArguments() const
     {
         return itsExpr.size();
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    virtual ExprBase::ConstPtr argument(unsigned int i) const
     {
         ASSERT(i < itsExpr.size());
         ASSERT(itsExpr[i]);
@@ -75,7 +72,10 @@ protected:
     }
 
 private:
-    void merge(const FieldSet &in, FieldSet &out) const;
+    virtual const JonesMatrix evaluateExpr(const Request &request, Cache &cache)
+        const;
+
+    void merge(const ValueSet &in, ValueSet &out) const;
 
     vector<Expr<JonesMatrix>::ConstPtr> itsExpr;
 };

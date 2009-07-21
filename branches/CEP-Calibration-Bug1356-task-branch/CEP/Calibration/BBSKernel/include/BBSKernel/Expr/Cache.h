@@ -81,14 +81,14 @@ public:
     {
     }
 
-    CacheRecord(RequestId request, ExprValueBase *result)
+    CacheRecord(RequestId request, ExprValue *result)
         :   request(request),
             result(result)
     {
     }
 
     RequestId       request;
-    ExprValueBase   *result;
+    ExprValue   *result;
 };
 
 class Cache

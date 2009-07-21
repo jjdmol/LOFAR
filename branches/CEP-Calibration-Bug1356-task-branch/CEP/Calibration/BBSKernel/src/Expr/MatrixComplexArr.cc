@@ -77,7 +77,7 @@ MatrixRep* MatrixComplexArr::clone() const
 //#endif
 
   clone_count += nelements();
-  
+
   MatrixComplexArr* v = MatrixComplexArr::allocate(nx(), ny());
 
 //#if defined __SSE2__
@@ -240,6 +240,14 @@ MatrixRep* MatrixComplexArr::multiply (MatrixRep& right,
 MatrixRep* MatrixComplexArr::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
+}
+MatrixRep* MatrixComplexArr::min (MatrixRep& right)
+{
+   return MatrixRep::min(right);
+}
+MatrixRep* MatrixComplexArr::max (MatrixRep& right)
+{
+   return MatrixRep::max(right);
 }
 
 void MatrixComplexArr::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
@@ -709,6 +717,27 @@ MatrixRep* MatrixComplexArr::negate()
 #endif
 
   return this;
+}
+
+MatrixRep* MatrixComplexArr::abs()
+{
+#if defined TIMER
+  static NSTimer timer("abs CA", true);
+  timer.start();
+#endif
+
+  MatrixRealArr* v = MatrixRealArr::allocate(nx(), ny());
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    v->itsValue[i] = LOFAR::abs(makedcomplex(itsReal[i], itsImag[i]));
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return v;
 }
 
 MatrixRep* MatrixComplexArr::sin()

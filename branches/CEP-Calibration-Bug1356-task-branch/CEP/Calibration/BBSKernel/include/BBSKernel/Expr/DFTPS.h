@@ -27,7 +27,6 @@
 // Station part of baseline phase shift.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/StatUVW.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -55,20 +54,18 @@ namespace BBS
 // DFTPS only computes the two exponential terms. PhaseShift computes the phase
 // shift for a baseline for each frequency by combining the results of two
 // DFTPS nodes and applying the above equation.
-class DFTPS: public Expr1<Vector<3>, Vector<2> >
+class DFTPS: public BasicBinaryExpr<Vector<3>, Vector<3>, Vector<2> >
 {
 public:
     typedef shared_ptr<DFTPS>       Ptr;
     typedef shared_ptr<const DFTPS> ConstPtr;
 
-    DFTPS(const StatUVW::ConstPtr &uvw,
+    DFTPS(const Expr<Vector<3> >::ConstPtr &uvw,
         const Expr<Vector<3> >::ConstPtr &lmn);
 
 private:
-    virtual const Vector<2>::proxy evaluateImpl(const Request &request,
-        const Vector<3>::proxy &lmn) const;
-
-    StatUVW::ConstPtr    itsUVW;
+    virtual const Vector<2>::view evaluateImpl(const Request &request,
+        const Vector<3>::view &uvw, const Vector<3>::view &lmn) const;
 };
 
 // @}

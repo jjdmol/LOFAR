@@ -111,6 +111,8 @@ public:
   virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp) = 0;
   virtual MatrixRep* posdiff  (MatrixRep& right);
   virtual MatrixRep* tocomplex(MatrixRep& right);
+  virtual MatrixRep* min      (MatrixRep& right);
+  virtual MatrixRep* max      (MatrixRep& right);
 
   virtual MatrixRep* addRep (MatrixRealSca& left, bool rightTmp) = 0;
   virtual MatrixRep* addRep (MatrixRealArr& left, bool rightTmp) = 0;
@@ -146,8 +148,15 @@ public:
   virtual MatrixRep* tocomplexRep (MatrixRealSca& left);
   virtual MatrixRep* tocomplexRep (MatrixRealArr& left);
 
+  virtual MatrixRep* minRep (MatrixRealSca& left);
+  virtual MatrixRep* minRep (MatrixRealArr& left);
+
+  virtual MatrixRep* maxRep (MatrixRealSca& left);
+  virtual MatrixRep* maxRep (MatrixRealArr& left);
+
   virtual MatrixRep* negate() = 0;
 
+  virtual MatrixRep* abs() = 0;
   virtual MatrixRep* sin() = 0;
   virtual MatrixRep* cos() = 0;
   virtual MatrixRep* exp() = 0;

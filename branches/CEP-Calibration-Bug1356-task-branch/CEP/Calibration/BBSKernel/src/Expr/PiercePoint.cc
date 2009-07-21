@@ -1,4 +1,4 @@
-//# PiercePoint.cc: Pierce point for a direction (ra,dec) on the sky.
+//# PiercePoint.cc: Pierce point for a direction (az, el) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,12 +23,8 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/PiercePoint.h>
-#include <BBSKernel/Expr/PValueIterator.h>
-#include <BBSKernel/Expr/Request.h>
-#include <Common/LofarLogger.h>
 
 #include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MPosition.h>
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasConvert.h>
 
@@ -37,139 +33,105 @@ namespace LOFAR
 namespace BBS
 {
 
-PiercePoint::PiercePoint(const Station &station, const Expr &direction)
-    : itsStation(station)
+const double PiercePoint::theirIonosphereHeight = 400000.0;
+
+PiercePoint::PiercePoint(const casa::MPosition &position,
+    const Expr<Vector<2> >::ConstPtr &direction)
+    :   BasicUnaryExpr<Vector<2>, Vector<4> >(direction),
+        itsPosition(casa::MPosition::Convert(position, casa::MPosition::ITRF)())
 {
-    // TODO: Get height as parameter?
-    addChild(direction); 
-    // get antenna position (ITRF).
-    const casa::MVPosition &ant_pos = itsStation.position.getValue();
+    // Get antenna position (ITRF).
+    const casa::MVPosition &ant_pos = itsPosition.getValue();
     const double x_ant = ant_pos(0);
     const double y_ant = ant_pos(1);
     const double z_ant = ant_pos(2);
-    
-    // get lon, lat, h
+
+    // Get lon, lat, height.
     casa::Vector<casa::Double> ang;
-    casa::MPosition::Convert loc2(itsStation.position, casa::MPosition::WGS84);
+    casa::MPosition::Convert loc2(itsPosition, casa::MPosition::WGS84);
     casa::MPosition locwgs84(loc2());
-    ang= locwgs84.getAngle().getValue();
-    itsLong = ang(0);
+    ang = locwgs84.getAngle().getValue();
+    itsLon = ang(0);
     itsLat = ang(1);
     itsHeight = locwgs84.getValue().getLength().getValue();
-    // height above surface, use it to calculate earth_radius at position of itsStation
-    double inproduct_xyz=std::sqrt(x_ant*x_ant
-				   +y_ant*y_ant
-				   +z_ant*z_ant);
+
+    // Use height above surface to calculate earth_radius at position of the
+    // station.
+    double inproduct_xyz = std::sqrt(x_ant * x_ant + y_ant * y_ant
+        + z_ant * z_ant);
     itsEarthRadius = inproduct_xyz - itsHeight;
-
 }
 
-ResultVec PiercePoint::getResultVec(const Request &request)
+const Vector<4>::view PiercePoint::evaluateImpl(const Request &request,
+    const Vector<2>::view &azel) const
 {
-    // Check preconditions.
-    ASSERTSTR(request.getTimeslotCount() > 0, "Need time values.");
+    const size_t nTime = request[TIME]->size();
 
-    // Evaluate children.
-    ResultVec tmpAzel;
-    const ResultVec &azel = getChild(0).getResultVecSynced(request, tmpAzel);
-
-    // Create result.
-    ResultVec result(4);
-
-    // Compute main value.
-    evaluate(request, azel[0].getValue(), azel[1].getValue(),
-        result[0].getValueRW(), result[1].getValueRW(), result[2].getValueRW(),
-        result[3].getValueRW());
-    
-    // Compute perturbed values.  
-    enum PValues
-    { PV_AZ, PV_EL, N_PValues };
-    
-    const Result *pvSet[N_PValues] = {&(azel[0]), &(azel[1])};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
-    
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvAz = pvIter.value(PV_AZ);
-        const Matrix &pvEl = pvIter.value(PV_EL);
-
-        evaluate(request, pvAz, pvEl,
-            result[0].getPerturbedValueRW(pvIter.key()),
-            result[1].getPerturbedValueRW(pvIter.key()),
-            result[2].getPerturbedValueRW(pvIter.key()),
-            result[3].getPerturbedValueRW(pvIter.key()));
-
-        pvIter.next();
-    }
-    
-    return result;
-}
-
-void PiercePoint::evaluate(const Request &request, const Matrix &in_az,
-    const Matrix &in_el, Matrix &out_x, Matrix &out_y, Matrix &out_z,
-    Matrix &out_alpha)
-{
-    const size_t nTimeslots = request.getTimeslotCount();
-    
-    //get long lat needed for rotation
-    double sinlon = std::sin(itsLong);
-    double coslon = std::cos(itsLong);
+    // Get long lat needed for rotation.
+    double sinlon = std::sin(itsLon);
+    double coslon = std::cos(itsLon);
     double sinlat = std::sin(itsLat);
     double coslat = std::cos(itsLat);
 
-    
-
-    
-    const casa::MVPosition &ant_pos = itsStation.position.getValue();
+    // Get station position in ITRF.
+    const casa::MVPosition &ant_pos = itsPosition.getValue();
     const double x_ant = ant_pos(0);
     const double y_ant = ant_pos(1);
     const double z_ant = ant_pos(2);
-     
 
-    // Result is only time variable.
-    double *x = out_x.setDoubleFormat(1, nTimeslots);
-    double *y = out_y.setDoubleFormat(1, nTimeslots);
-    double *z = out_z.setDoubleFormat(1, nTimeslots);
+    // Allocate space for the result.
+    // TODO: This is a hack! The Matrix class does not support 1xN or Nx1
+    // "matrices".
+    Matrix out_x, out_y, out_z, out_alpha;
+    double *x = out_x.setDoubleFormat(1, nTime);
+    double *y = out_y.setDoubleFormat(1, nTime);
+    double *z = out_z.setDoubleFormat(1, nTime);
+    // Use lon,lat,height instead?? or convert at MeqMIM??
+    double *alpha = out_alpha.setDoubleFormat(1, nTime);
 
-    //use lon,lat,height instead?? or convert at MeqMIM??
-    double *alpha = out_alpha.setDoubleFormat(1, nTimeslots);
-
-
-
-
-    for(size_t i = 0; i < nTimeslots; ++i)
+    for(size_t i = 0; i < nTime; ++i)
     {
+        const double az = azel(0).getDouble(0, i);
+        const double el = azel(1).getDouble(0, i);
 
-      //calculate alpha, thi sis de angle of the line of sight with the phase screen (i.e. alpha' in the document)
-      *alpha = std::asin(std::cos(in_el.getDouble(0,i))*(itsEarthRadius+itsHeight)
-            /(itsEarthRadius+iono_height));
-      double sinaz=std::sin(in_az.getDouble(0,i));
-      double cosaz=std::cos(in_az.getDouble(0,i));
-      double sinel=std::sin(in_el.getDouble(0,i));
-      double cosel=std::cos(in_el.getDouble(0,i));
-      //direction in local coordinates
-      double dir_vector[3]={sinaz*cosel,cosaz*cosel,sinel};
-      //now convert
-      double xdir = -1*sinlon*dir_vector[0]-sinlat*coslon*dir_vector[1]+coslat*coslon*dir_vector[2];
-      double ydir = coslon*dir_vector[0]-sinlat*sinlon*dir_vector[1]+coslat*sinlon*dir_vector[2];
-      double zdir = coslat*dir_vector[1]+sinlat*dir_vector[2];
-	    
+        // Calculate alpha, this is the angle of the line of sight with the phase
+        // screen (i.e. alpha' in the document).
+        *alpha = std::asin(std::cos(el) * (itsEarthRadius + itsHeight)
+            / (itsEarthRadius + theirIonosphereHeight));
 
-      *x=x_ant+xdir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
-      *y=y_ant+ydir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
-      *z=z_ant+zdir*(itsEarthRadius+iono_height)*std::sin(0.5*casa::C::pi-in_el.getDouble(0,i)-*alpha)/cosel;
-      ++x;++y;++z;++alpha;
+        // Direction in local coordinates.
+        double sinaz=std::sin(az);
+        double cosaz=std::cos(az);
+        double sinel=std::sin(el);
+        double cosel=std::cos(el);
+        double dir_vector[3] = {sinaz * cosel, cosaz * cosel, sinel};
+
+        // Now convert.
+        double xdir = -sinlon * dir_vector[0] - sinlat * coslon * dir_vector[1]
+            + coslat * coslon * dir_vector[2];
+        double ydir = coslon * dir_vector[0] - sinlat * sinlon * dir_vector[1]
+            + coslat * sinlon * dir_vector[2];
+        double zdir = coslat * dir_vector[1] + sinlat * dir_vector[2];
+
+        double scale = (itsEarthRadius + theirIonosphereHeight)
+            * std::sin(0.5 * casa::C::pi - el - *alpha) / cosel;
+
+        *x = x_ant + xdir * scale;
+        *y = y_ant + ydir * scale;
+        *z = z_ant + zdir * scale;
+
+        ++x; ++y; ++z; ++alpha;
     }
-}
 
+    // Create result.
+    Vector<4>::view result;
+    result.assign(0, out_x);
+    result.assign(1, out_y);
+    result.assign(2, out_z);
+    result.assign(3, out_alpha);
 
-#ifdef EXPR_GRAPH
-std::string MeqPP::getLabel()
-{
-    return std::string("MeqPP\\n PiercePoint through the ionosphere of a source station combination.");
+    return result;
 }
-#endif
 
 } //# namespace BBS
 } //# namespace LOFAR
-

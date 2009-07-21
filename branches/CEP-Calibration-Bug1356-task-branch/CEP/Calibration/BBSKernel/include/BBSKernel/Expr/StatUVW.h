@@ -59,11 +59,11 @@ public:
     void calculate(const Request &request) const;
 
     const Scalar getU(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsU; }
+    { if(request.id() != itsLastReqId) calculate(request); return itsU; }
     const Scalar getV(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsV; }
+    { if(request.id() != itsLastReqId) calculate(request); return itsV; }
     const Scalar getW(const Request &request) const
-    { if(request.getId() != itsLastReqId) calculate(request); return itsW; }
+    { if(request.id() != itsLastReqId) calculate(request); return itsW; }
 
     const string &getName() const
     { return itsStation.name; }

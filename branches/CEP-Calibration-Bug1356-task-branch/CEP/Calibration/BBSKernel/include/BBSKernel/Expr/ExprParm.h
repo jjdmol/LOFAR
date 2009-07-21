@@ -44,8 +44,6 @@ public:
     typedef shared_ptr<ExprParm>        Ptr;
     typedef shared_ptr<const ExprParm>  ConstPtr;
 
-//    using Expr0<Scalar>::ExprValueType;
-
     ExprParm(const ParmProxy::ConstPtr &parm);
 
     void setPValueFlag();
@@ -54,12 +52,12 @@ public:
     void clearPValueFlag();
 
 protected:
-    virtual unsigned int getArgumentCount() const
+    virtual unsigned int nArguments() const
     {
         return 0;
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int) const
+    virtual ExprBase::ConstPtr argument(unsigned int) const
     {
         ASSERT(false);
     }
@@ -67,10 +65,11 @@ protected:
 private:
     virtual void updateSolvables(set<PValueKey> &solvables) const;
 
-    virtual const Scalar evaluate(const Request &request, Cache &cache) const;
+    virtual const Scalar evaluateExpr(const Request &request, Cache &cache)
+        const;
 
     ParmProxy::ConstPtr itsParm;
-    bool                    itsPValueFlag;
+    bool                itsPValueFlag;
 };
 
 // @}

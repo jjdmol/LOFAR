@@ -64,7 +64,7 @@ void ExprParm::updateSolvables(set<PValueKey> &solvables) const
     itsSolvables.insert(itsSolvables.begin(), solvables.begin(), solvables.end());
 }
 
-const Scalar ExprParm::evaluate(const Request &request, Cache &cache) const
+const Scalar ExprParm::evaluateExpr(const Request &request, Cache &cache) const
 {
     // Get the result from the Parm.
     vector<casa::Array<double> > buffers;
@@ -72,7 +72,7 @@ const Scalar ExprParm::evaluate(const Request &request, Cache &cache) const
     ASSERT(buffers.size() > 0);
 
     // Transform into an ExprResult.
-    FieldSet result;
+    ValueSet result;
 
     bool deleteStorage = false;
     const double *storage = 0;
@@ -129,7 +129,7 @@ const Scalar ExprParm::evaluate(const Request &request, Cache &cache) const
 //        tmp.setFlags(FlagArray(3u));
 //    }
 //
-    scalar.setFieldSet(result);
+    scalar.setValueSet(result);
     return scalar;
 }
 

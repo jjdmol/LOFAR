@@ -23,40 +23,53 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/LMN.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
+#include <Common/lofar_math.h>
+
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+using LOFAR::sin;
+using LOFAR::cos;
 
-LMN::LMN(const PhaseRef::ConstPtr &ref,
-    const Expr<Vector<2> >::ConstPtr &position)
-    :   Expr1<Vector<2>, Vector<3> >(position),
-        itsRef(ref)
+LMN::LMN(const casa::MDirection &reference,
+    const Expr<Vector<2> >::ConstPtr &direction)
+    :   BasicUnaryExpr<Vector<2>, Vector<3> >(direction),
+        itsPhaseReference(casa::MDirection::Convert(reference,
+            casa::MDirection::J2000)())
 {
+//    itsPhaseReference = ;
 }
 
-const Vector<3>::proxy LMN::evaluateImpl(const Request &request,
-    const Vector<2>::proxy &position) const
+const Vector<3>::view LMN::evaluateImpl(const Request &request,
+    const Vector<2>::view &direction) const
 {
 //    cout << "REF: " << itsRef->getRa() << " " << itsRef->getDec() << endl;
 //    cout << "SOURCE: " << ra->value()(0, 0) << " " << dec->value()(0, 0) << endl;
 
-    Matrix cosDec(cos(position(1)));
-    Matrix deltaRa(position(0) - itsRef->getRa());
+    casa::Quantum<casa::Vector<casa::Double> > angles =
+        itsPhaseReference.getAngle();
+    const double refRa = angles.getBaseValue()(0);
+    const double refDec = angles.getBaseValue()(1);
+    const double refCosDec = cos(refDec);
+    const double refSinDec = sin(refDec);
 
-    Vector<3>::proxy result;
+    Matrix cosDec(cos(direction(1)));
+    Matrix deltaRa(direction(0) - refRa);
+
+    Vector<3>::view result;
     result.assign(0, cosDec * sin(deltaRa));
-    result.assign(1, sin(position(1)) * itsRef->getCosDec() - cosDec
-        * itsRef->getSinDec() * cos(deltaRa));
+    result.assign(1, sin(direction(1)) * refCosDec - cosDec * refSinDec
+        * cos(deltaRa));
     Matrix n = 1.0 - sqr(result(0)) - sqr(result(1));
     ASSERT(min(n).getDouble() >= 0.0);
-
     result.assign(2, sqrt(n));
 
-//    cout << "LMN: " << result->value(0)(0, 0) << " " << result->value(1)(0, 0)
-//        << " " << result->value(2)(0, 0) << endl;
+//    cout << "LMN: " << result->result(0)(0, 0) << " " << result->result(1)(0, 0)
+//        << " " << result->result(2)(0, 0) << endl;
 
     return result;
 }

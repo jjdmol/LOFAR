@@ -29,13 +29,12 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_set.h>
 
-#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Request.h>
+#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/Cache.h>
 
 // TODO: Reduction functions like MatrixSum
 // TODO: Element-wise functions like MatrixSum
-// TODO: Rename Expr{1,2,3} to UnaryExpr, BinaryExpr, TernaryExpr?
 
 namespace LOFAR
 {
@@ -47,7 +46,6 @@ namespace BBS
 
 // Expression identifier (used for caching).
 typedef size_t ExprId;
-
 
 // Helper function to compute the bitwise or of all the FlagArray instances
 // in the range [it, end).
@@ -82,14 +80,14 @@ FlagArray mergeFlags(T_ITER it, T_ITER end)
     return result;
 }
 
-
+// Expression base class.
 class ExprBase
 {
 public:
     typedef shared_ptr<ExprBase>                Ptr;
     typedef shared_ptr<const ExprBase>          ConstPtr;
 
-    typedef vector<PValueKey>::const_iterator   const_solvables_iterator;
+    typedef vector<PValueKey>::const_iterator   const_solvable_iterator;
 
     ExprBase()
         :   itsConsumerCount(0),
@@ -101,61 +99,79 @@ public:
     {
     }
 
-    ExprId getId() const
+    // Return the unique id of this expression.
+    ExprId id() const
     {
         return itsId;
     }
 
-    // Recurse the expression tree to determine which solvable parameters
-    // (coefficients) each sub-expression depends on. This information is cached
-    // internally.
+    // Recurse the expression tree to determine which solvable coefficients this
+    // expression depends on. This information is cached internally.
     void updateSolvables() const
     {
         set<PValueKey> solvables;
         updateSolvables(solvables);
     }
 
-    const_solvables_iterator begin() const
+    // Get iterators to iterate the solvable coefficients this expression
+    // depends on.
+    //
+    // @{
+    const_solvable_iterator begin() const
     {
         return itsSolvables.begin();
     }
 
-    const_solvables_iterator end() const
+    const_solvable_iterator end() const
     {
         return itsSolvables.end();
     }
-
-    // Provide a description of this node in human readable form.
-//    virtual string getDescription() const = 0;
-
-//  TODO: Create hook for visitors, like:
-//    virtual void accept(ExprVisitor &visitor, size_t level = 0) const = 0;
+    // @}
 
 protected:
-    void connect(const ExprBase::ConstPtr &expr) const
+    // Connect/disconnect expressions to/from this expression. The connected
+    // expressions constitute this expression's arguments.
+    //
+    // Currently, these methods only keep track of the number of consumers of
+    // the result of an expression. This number is used to decide whether or not
+    // to cache a result.
+    //
+    // @{
+    void connect(const ExprBase::ConstPtr &arg) const
     {
-        expr->incConsumerCount();
+        arg->incConsumerCount();
     }
 
-    void disconnect(const ExprBase::ConstPtr &expr) const
+    void disconnect(const ExprBase::ConstPtr &arg) const
     {
-        expr->decConsumerCount();
+        arg->decConsumerCount();
     }
 
-    unsigned int getConsumerCount() const
+    unsigned int nConsumers() const
     {
         return itsConsumerCount;
     }
+    // @}
 
-    virtual unsigned int getArgumentCount() const = 0;
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const = 0;
+    // Provide access to the arguments of an expression. Because the type of the
+    // arguments must be kept, they are stored in the derived classes (where the
+    // type is known). However, there the base class has methods (such as
+    // updateSolvables()) that need access to the arguments (as
+    // ExprBase::ConstPtr objects).
+    //
+    // @{
+    virtual unsigned int nArguments() const = 0;
+    virtual ExprBase::ConstPtr argument(unsigned int i) const = 0;
+    // @}
 
+    // Recurse the expression tree to determine which solvable coefficients this
+    // Expr depends on. This information is cached internally.
     virtual void updateSolvables(set<PValueKey> &solvables) const
     {
         set<PValueKey> tmp;
-        for(unsigned int i = 0; i < getArgumentCount(); ++i)
+        for(unsigned int i = 0; i < nArguments(); ++i)
         {
-            getArgument(i)->updateSolvables(tmp);
+            argument(i)->updateSolvables(tmp);
         }
 
         itsSolvables.clear();
@@ -173,20 +189,8 @@ private:
     ExprBase(const ExprBase &);
     ExprBase &operator=(const ExprBase &);
 
-    // Dependencies between nodes are uni-directional and point from the node
-    // that produces a result to the node(s) that consume(s) (uses) the result.
-    //
-    // Consumer nodes are resposible for calling incConsumerCount() on the
-    // producer node to signal their interest in its result. Care should be
-    // taken to balance this with a call to decConsumerCount() when the
-    // dependency is no longer needed.
-    //
-    // Currently, a node only keeps track of the _number_ of nodes that depend
-    // on its result. This information is used to decide if a node should cache
-    // its result. If a list of references to consumer nodes would be needed
-    // in the future, these methods can be extended accordingly.
-    //
-    // NB. These methods ARE NOT thread safe.
+    // Change the number of consumers (i.e. expressions that depend on the
+    // result of this expression).
     // @{
     void incConsumerCount() const
     {
@@ -201,16 +205,16 @@ private:
 
     // The number of registered consumers. This attribute is mutable such that
     // an expression tree can be constructed without requiring non-const access
-    // to the constituent nodes (derivatives of ExprBase). The consumer count is
-    // used to decide if it makes sense to cache a result. As caching is an
-    // implementation detail, anything related to it should not be detectable
-    // outside the Expr hierarchy.
+    // to the constituent nodes (derivatives of ExprBase).
+    //
+    // The consumer count is used to decide whether or not to cache a result. As
+    // caching is an implementation detail, anything related to it should not be
+    // detectable outside the ExprBase hierarchy.
     mutable unsigned int        itsConsumerCount;
 
     ExprId                      itsId;
     static ExprId               theirId;
 };
-
 
 template <typename T_EXPR_VALUE>
 class Expr: public ExprBase
@@ -221,204 +225,248 @@ public:
 
     typedef T_EXPR_VALUE    ExprValueType;
 
-    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
-        const = 0;
-};
-
-
-template <typename T_ARG0, typename T_EXPR_VALUE>
-class Expr1: public Expr<T_EXPR_VALUE>
-{
-public:
-    typedef shared_ptr<Expr1>       Ptr;
-    typedef shared_ptr<const Expr1> ConstPtr;
-
-    typedef T_ARG0  Arg0Type;
-
-    using ExprBase::connect;
-    using ExprBase::disconnect;
-    using ExprBase::begin;
-    using ExprBase::end;
-
-    using ExprBase::getId;
-    using ExprBase::getConsumerCount;
-
-    Expr1(const typename Expr<T_ARG0>::ConstPtr &expr0)
-        :   Expr<T_EXPR_VALUE>(),
-            itsExpr0(expr0)
-    {
-        connect(itsExpr0);
-    }
-
-    ~Expr1()
-    {
-        disconnect(itsExpr0);
-    }
+    using ExprBase::id;
+    using ExprBase::nConsumers;
 
     virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
         const
     {
         T_EXPR_VALUE result;
 
-        if(!cache.query(getId(), request.getId(), result))
+        // Query the cache.
+        if(nConsumers() < 1 || !cache.query(id(), request.id(), result))
         {
-            // Evaluate flags.
-            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
-            result.setFlags(evaluateFlags(request, arg0.flags()));
+            // Compute the result.
+            result = evaluateExpr(request, cache);
 
-            // Compute main value.
-            result.assign(evaluateImpl(request, arg0.value()));
-
-            // Compute perturbed values.
-            ExprBase::const_solvables_iterator it = begin();
-            while(it != end())
+            // Insert into cache (only if it will be re-used later on).
+            if(nConsumers() > 1)
             {
-                result.assign(*it, evaluateImpl(request, arg0.value(*it)));
-                ++it;
-            }
-
-            if(getConsumerCount() > 1)
-            {
-                cache.insert(getId(), request.getId(), result);
+                cache.insert(id(), request.id(), result);
             }
         }
 
         return result;
     }
 
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache) const = 0;
+};
+
+template <typename T_ARG0, typename T_EXPR_VALUE>
+class UnaryExpr: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<UnaryExpr>       Ptr;
+    typedef shared_ptr<const UnaryExpr> ConstPtr;
+
+    typedef T_ARG0  Arg0Type;
+
+    using ExprBase::connect;
+    using ExprBase::disconnect;
+
+    UnaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0)
+        :   itsArg0(arg0)
+    {
+        connect(itsArg0);
+    }
+
+    ~UnaryExpr()
+    {
+        disconnect(itsArg0);
+    }
+
 protected:
-    virtual unsigned int getArgumentCount() const
+    virtual unsigned int nArguments() const
     {
         return 1;
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    virtual ExprBase::ConstPtr argument(unsigned int i) const
     {
-        ASSERT(i == 0);
-        return itsExpr0;
+        ASSERTSTR(i == 0, "Invalid argument index specified.");
+        return itsArg0;
     }
 
-    virtual const FlagArray evaluateFlags(const Request&, const FlagArray &arg0)
-        const
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const
     {
-        return arg0;
+        return itsArg0;
     }
-
-    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
-        (const Request &request, const typename T_ARG0::proxy &arg0) const = 0;
 
 private:
-    typename Expr<T_ARG0>::ConstPtr itsExpr0;
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
 };
 
-
-template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
-class Expr2: public Expr<T_EXPR_VALUE>
+template <typename T_ARG0, typename T_EXPR_VALUE>
+class BasicUnaryExpr: public UnaryExpr<T_ARG0, T_EXPR_VALUE>
 {
 public:
-    typedef shared_ptr<Expr2>       Ptr;
-    typedef shared_ptr<const Expr2> ConstPtr;
+    typedef shared_ptr<BasicUnaryExpr>          Ptr;
+    typedef shared_ptr<const BasicUnaryExpr>    ConstPtr;
+
+    using ExprBase::begin;
+    using ExprBase::end;
+    using UnaryExpr<T_ARG0, T_EXPR_VALUE>::argument0;
+
+    BasicUnaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0)
+        :   UnaryExpr<T_ARG0, T_EXPR_VALUE>(arg0)
+    {
+    }
+
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache) const
+    {
+        T_EXPR_VALUE result;
+
+        // Evaluate arguments.
+        const T_ARG0 arg0 = argument0()->evaluate(request, cache);
+
+        // Evaluate flags.
+        result.setFlags(arg0.flags());
+
+        // Compute main value.
+        result.assign(evaluateImpl(request, arg0.value()));
+
+        // Compute perturbed values.
+        ExprBase::const_solvable_iterator it = begin();
+        while(it != end())
+        {
+            result.assign(*it, evaluateImpl(request, arg0.value(*it)));
+            ++it;
+        }
+
+        return result;
+    }
+
+protected:
+    virtual const typename T_EXPR_VALUE::view evaluateImpl
+        (const Request &request, const typename T_ARG0::view &arg0) const = 0;
+};
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+class BinaryExpr: public Expr<T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<BinaryExpr>          Ptr;
+    typedef shared_ptr<const BinaryExpr>    ConstPtr;
 
     typedef T_ARG0  Arg0Type;
     typedef T_ARG1  Arg1Type;
 
     using ExprBase::connect;
     using ExprBase::disconnect;
+
+    BinaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1)
+        :   itsArg0(arg0),
+            itsArg1(arg1)
+    {
+        connect(itsArg0);
+        connect(itsArg1);
+    }
+
+    ~BinaryExpr()
+    {
+        disconnect(itsArg0);
+        disconnect(itsArg1);
+    }
+
+protected:
+    virtual unsigned int nArguments() const
+    {
+        return 2;
+    }
+
+    virtual ExprBase::ConstPtr argument(unsigned int i) const
+    {
+        switch(i)
+        {
+            case 0:
+                return itsArg0;
+            case 1:
+                return itsArg1;
+            default:
+                ASSERTSTR(false, "Invalid argument index specified.");
+        }
+    }
+
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const
+    {
+        return itsArg0;
+    }
+
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const
+    {
+        return itsArg1;
+    }
+
+private:
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
+};
+
+template <typename T_ARG0, typename T_ARG1, typename T_EXPR_VALUE>
+class BasicBinaryExpr: public BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<BasicBinaryExpr>         Ptr;
+    typedef shared_ptr<const BasicBinaryExpr>   ConstPtr;
+
     using ExprBase::begin;
     using ExprBase::end;
+    using BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::argument0;
+    using BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>::argument1;
 
-    using ExprBase::getId;
-    using ExprBase::getConsumerCount;
-
-    Expr2(const typename Expr<T_ARG0>::ConstPtr &expr0,
-        const typename Expr<T_ARG1>::ConstPtr &expr1)
-        :   Expr<T_EXPR_VALUE>(),
-            itsExpr0(expr0),
-            itsExpr1(expr1)
+    BasicBinaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1)
+        :   BinaryExpr<T_ARG0, T_ARG1, T_EXPR_VALUE>(arg0, arg1)
     {
-        connect(itsExpr0);
-        connect(itsExpr1);
     }
 
-    ~Expr2()
-    {
-        disconnect(itsExpr0);
-        disconnect(itsExpr1);
-    }
-
-    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
-        const
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache) const
     {
         // Allocate result.
         T_EXPR_VALUE result;
 
-        if(!cache.query(getId(), request.getId(), result))
+        // Evaluate arguments.
+        const T_ARG0 arg0 = argument0()->evaluate(request, cache);
+        const T_ARG1 arg1 = argument1()->evaluate(request, cache);
+
+        // Evaluate flags.
+        FlagArray flags[2];
+        flags[0] = arg0.flags();
+        flags[1] = arg1.flags();
+        result.setFlags(mergeFlags(flags, flags + 2));
+
+        // Compute main value.
+        result.assign(evaluateImpl(request, arg0.value(), arg1.value()));
+
+        // Compute perturbed values.
+        ExprBase::const_solvable_iterator it = begin();
+        while(it != end())
         {
-            // Evaluate flags.
-            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
-            const T_ARG1 arg1 = itsExpr1->evaluate(request, cache);
-
-            FlagArray flags[2];
-            flags[0] = arg0.flags();
-            flags[1] = arg1.flags();
-            result.setFlags(evaluateFlags(request, flags));
-
-            // Compute main value.
-            result.assign(evaluateImpl(request, arg0.value(), arg1.value()));
-
-            // Compute perturbed values.
-            ExprBase::const_solvables_iterator it = begin();
-            while(it != end())
-            {
-                result.assign(*it, evaluateImpl(request, arg0.value(*it),
-                    arg1.value(*it)));
-                ++it;
-            }
-
-            if(getConsumerCount() > 1)
-            {
-                cache.insert(getId(), request.getId(), result);
-            }
+            result.assign(*it, evaluateImpl(request, arg0.value(*it),
+                arg1.value(*it)));
+            ++it;
         }
 
         return result;
     }
 
 protected:
-    virtual unsigned int getArgumentCount() const
-    {
-        return 2;
-    }
-
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
-    {
-        ASSERT(i < 2);
-        return i == 0 ? static_pointer_cast<const ExprBase>(itsExpr0)
-            : static_pointer_cast<const ExprBase>(itsExpr1);
-    }
-
-    virtual const FlagArray evaluateFlags(const Request&,
-        const FlagArray (&flags)[2]) const
-    {
-        return mergeFlags(flags, flags + 2);
-    }
-
-    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
-        (const Request &request, const typename T_ARG0::proxy &arg0,
-        const typename T_ARG1::proxy &arg1) const = 0;
-
-private:
-    typename Expr<T_ARG0>::ConstPtr itsExpr0;
-    typename Expr<T_ARG1>::ConstPtr itsExpr1;
+    virtual const typename T_EXPR_VALUE::view evaluateImpl
+        (const Request &request, const typename T_ARG0::view &arg0,
+        const typename T_ARG1::view &arg1) const = 0;
 };
 
-
-template <typename T_ARG0, typename T_ARG1, typename T_ARG2, typename T_EXPR_VALUE>
-class Expr3: public Expr<T_EXPR_VALUE>
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+class TernaryExpr: public Expr<T_EXPR_VALUE>
 {
 public:
-    typedef shared_ptr<Expr3>       Ptr;
-    typedef shared_ptr<const Expr3> ConstPtr;
+    typedef shared_ptr<TernaryExpr>         Ptr;
+    typedef shared_ptr<const TernaryExpr>   ConstPtr;
 
     typedef T_ARG0  Arg0Type;
     typedef T_ARG1  Arg1Type;
@@ -426,304 +474,128 @@ public:
 
     using ExprBase::connect;
     using ExprBase::disconnect;
-    using ExprBase::begin;
-    using ExprBase::end;
 
-    using ExprBase::getId;
-    using ExprBase::getConsumerCount;
-
-    Expr3(const typename Expr<T_ARG0>::ConstPtr &expr0,
-        const typename Expr<T_ARG1>::ConstPtr &expr1,
-        const typename Expr<T_ARG2>::ConstPtr &expr2)
-        :   Expr<T_EXPR_VALUE>(),
-            itsExpr0(expr0),
-            itsExpr1(expr1),
-            itsExpr2(expr2)
+    TernaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2)
+        :   itsArg0(arg0),
+            itsArg1(arg1),
+            itsArg2(arg2)
     {
-        connect(itsExpr0);
-        connect(itsExpr1);
-        connect(itsExpr2);
+        connect(itsArg0);
+        connect(itsArg1);
+        connect(itsArg2);
     }
 
-    ~Expr3()
+    ~TernaryExpr()
     {
-        disconnect(itsExpr0);
-        disconnect(itsExpr1);
-        disconnect(itsExpr2);
-    }
-
-    virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache)
-        const
-    {
-        // Allocate result.
-        T_EXPR_VALUE result;
-
-        if(!cache.query(getId(), request.getId(), result))
-        {
-            // Evaluate arguments.
-            const T_ARG0 arg0 = itsExpr0->evaluate(request, cache);
-            const T_ARG1 arg1 = itsExpr1->evaluate(request, cache);
-            const T_ARG2 arg2 = itsExpr2->evaluate(request, cache);
-
-            // Evaluate flags.
-            FlagArray flags[3];
-            flags[0] = arg0.flags();
-            flags[1] = arg1.flags();
-            flags[2] = arg2.flags();
-            result.setFlags(evaluateFlags(request, flags));
-
-            // Compute main value.
-            result.assign(evaluateImpl(request, arg0.value(), arg1.value(),
-                arg2.value()));
-
-            // Compute perturbed values.
-            ExprBase::const_solvables_iterator it = begin();
-            while(it != end())
-            {
-                result.assign(*it, evaluateImpl(request, arg0.value(*it),
-                    arg1.value(*it), arg2.value(*it)));
-                ++it;
-            }
-
-            if(getConsumerCount() > 1)
-            {
-                cache.insert(getId(), request.getId(), result);
-            }
-        }
-
-        return result;
+        disconnect(itsArg0);
+        disconnect(itsArg1);
+        disconnect(itsArg2);
     }
 
 protected:
-    virtual unsigned int getArgumentCount() const
+    virtual unsigned int nArguments() const
     {
         return 3;
     }
 
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
+    virtual ExprBase::ConstPtr argument(unsigned int i) const
     {
         switch(i)
         {
             case 0:
-                return itsExpr0;
+                return itsArg0;
             case 1:
-                return itsExpr1;
+                return itsArg1;
             case 2:
-                return itsExpr2;
+                return itsArg2;
             default:
-                ASSERT(false);
+                ASSERTSTR(false, "Invalid argument index specified.");
         }
     }
 
-    virtual const FlagArray evaluateFlags(const Request&,
-        const FlagArray (&flags)[3]) const
+    const typename Expr<T_ARG0>::ConstPtr &argument0() const
     {
-        return mergeFlags(flags, flags + 3);
+        return itsArg0;
     }
 
-    virtual const typename T_EXPR_VALUE::proxy evaluateImpl
-        (const Request &request, const typename T_ARG0::proxy &arg0,
-        const typename T_ARG1::proxy &arg1, const typename T_ARG1::proxy &arg2)
+    const typename Expr<T_ARG1>::ConstPtr &argument1() const
+    {
+        return itsArg1;
+    }
+
+    const typename Expr<T_ARG2>::ConstPtr &argument2() const
+    {
+        return itsArg2;
+    }
+
+private:
+    typename Expr<T_ARG0>::ConstPtr itsArg0;
+    typename Expr<T_ARG1>::ConstPtr itsArg1;
+    typename Expr<T_ARG2>::ConstPtr itsArg2;
+};
+
+template <typename T_ARG0, typename T_ARG1, typename T_ARG2,
+    typename T_EXPR_VALUE>
+class BasicTernaryExpr: public TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>
+{
+public:
+    typedef shared_ptr<BasicTernaryExpr>        Ptr;
+    typedef shared_ptr<const BasicTernaryExpr>  ConstPtr;
+
+    using ExprBase::begin;
+    using ExprBase::end;
+    using TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::argument0;
+    using TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::argument1;
+    using TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>::argument2;
+
+    BasicTernaryExpr(const typename Expr<T_ARG0>::ConstPtr &arg0,
+        const typename Expr<T_ARG1>::ConstPtr &arg1,
+        const typename Expr<T_ARG2>::ConstPtr &arg2)
+        :   TernaryExpr<T_ARG0, T_ARG1, T_ARG2, T_EXPR_VALUE>(arg0, arg1, arg2)
+    {
+    }
+
+    virtual const T_EXPR_VALUE evaluateExpr(const Request &request,
+        Cache &cache) const
+    {
+        // Allocate result.
+        T_EXPR_VALUE result;
+
+        // Evaluate arguments.
+        const T_ARG0 arg0 = argument0()->evaluate(request, cache);
+        const T_ARG1 arg1 = argument1()->evaluate(request, cache);
+        const T_ARG2 arg2 = argument2()->evaluate(request, cache);
+
+        // Evaluate flags.
+        FlagArray flags[3];
+        flags[0] = arg0.flags();
+        flags[1] = arg1.flags();
+        flags[2] = arg2.flags();
+        result.setFlags(mergeFlags(flags, flags + 3));
+
+        // Compute main value.
+        result.assign(evaluateImpl(request, arg0.value(), arg1.value(),
+            arg2.value()));
+
+        // Compute perturbed values.
+        ExprBase::const_solvable_iterator it = begin();
+        while(it != end())
+        {
+            result.assign(*it, evaluateImpl(request, arg0.value(*it),
+                arg1.value(*it), arg2.value(*it)));
+            ++it;
+        }
+
+        return result;
+    }
+
+protected:
+    virtual const typename T_EXPR_VALUE::view evaluateImpl
+        (const Request &request, const typename T_ARG0::view &arg0,
+        const typename T_ARG1::view &arg1, const typename T_ARG1::view &arg2)
         const = 0;
-
-private:
-    typename Expr<T_ARG0>::ConstPtr itsExpr0;
-    typename Expr<T_ARG1>::ConstPtr itsExpr1;
-    typename Expr<T_ARG2>::ConstPtr itsExpr2;
-};
-
-
-template <typename T_EXPR_VALUE>
-class AsExpr;
-
-
-// Adaptor class to bundle multiple Expr<Scalar> into a single Expr<Vector<N> >.
-template <>
-template <unsigned int LENGTH>
-class AsExpr<Vector<LENGTH> >: public Expr<Vector<LENGTH> >
-{
-public:
-    typedef shared_ptr<AsExpr>  Ptr;
-    typedef shared_ptr<AsExpr>  ConstPtr;
-
-    using ExprBase::connect;
-    using ExprBase::disconnect;
-
-    ~AsExpr()
-    {
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            disconnect(itsExpr[i]);
-        }
-    }
-
-    void connect(unsigned int i0, const typename Expr<Scalar>::ConstPtr &expr)
-    {
-        connect(expr);
-        itsExpr[i0] = expr;
-    }
-
-    virtual const Vector<LENGTH> evaluate(const Request &request, Cache &cache)
-        const
-    {
-        // Allocate result.
-        Vector<LENGTH> result;
-
-        // Evaluate arguments (pass through).
-        Scalar args[LENGTH];
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            args[i] = itsExpr[i]->evaluate(request, cache);
-            result.setFieldSet(i, args[i].getFieldSet());
-        }
-
-        // Evaluate flags.
-        FlagArray flags[LENGTH];
-        for(unsigned int i = 0; i < LENGTH; ++i)
-        {
-            flags[i] = args[i].flags();
-        }
-        result.setFlags(mergeFlags(flags, flags + LENGTH));
-
-        return result;
-    }
-
-protected:
-    virtual unsigned int getArgumentCount() const
-    {
-        return LENGTH;
-    }
-
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
-    {
-        ASSERT(i < LENGTH);
-        return itsExpr[i];
-    }
-
-private:
-    typename Expr<Scalar>::ConstPtr itsExpr[LENGTH];
-};
-
-
-// Adaptor class to bundle multiple Expr<Scalar> into a single
-// Expr<JonesMatrix>.
-template <>
-class AsExpr<JonesMatrix>: public Expr<JonesMatrix>
-{
-public:
-    typedef shared_ptr<AsExpr>  Ptr;
-    typedef shared_ptr<AsExpr>  ConstPtr;
-
-    using ExprBase::connect;
-    using ExprBase::disconnect;
-
-    ~AsExpr()
-    {
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            disconnect(itsExpr[i]);
-        }
-    }
-
-    void connect(unsigned int i1, unsigned int i0,
-        const Expr<Scalar>::ConstPtr &expr)
-    {
-        DBGASSERT(i1 < 2 && i0 < 2);
-        connect(expr);
-        itsExpr[i1 * 2 + i0] = expr;
-    }
-
-    virtual const JonesMatrix evaluate(const Request &request, Cache &cache)
-        const
-    {
-        // Allocate result.
-        JonesMatrix result;
-
-        // Evaluate arguments (pass through).
-        Scalar args[4];
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            args[i] = itsExpr[i]->evaluate(request, cache);
-            result.setFieldSet(i, args[i].getFieldSet());
-        }
-
-        // Evaluate flags.
-        FlagArray flags[4];
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            flags[i] = args[i].flags();
-        }
-        result.setFlags(mergeFlags(flags, flags + 4));
-
-        return result;
-    }
-
-protected:
-    virtual unsigned int getArgumentCount() const
-    {
-        return 4;
-    }
-
-    virtual const ExprBase::ConstPtr getArgument(unsigned int i) const
-    {
-        ASSERT(i < 4);
-        return itsExpr[i];
-    }
-
-private:
-    Expr<Scalar>::ConstPtr  itsExpr[4];
-};
-
-
-// Adaptor class to bundle two real Expr<Scalar> into a single complex
-// Expr<Scalar>, where the two input Expr represent the real and imaginary part
-// respectively.
-class AsComplex: public Expr2<Scalar, Scalar, Scalar>
-{
-public:
-    typedef shared_ptr<AsComplex>       Ptr;
-    typedef shared_ptr<const AsComplex> ConstPtr;
-
-    AsComplex(const Expr<Scalar>::ConstPtr &re,
-        const Expr<Scalar>::ConstPtr &im)
-        : Expr2<Scalar, Scalar, Scalar>(re, im)
-    {
-    }
-
-private:
-    virtual const Scalar::proxy evaluateImpl(const Request&,
-        const Scalar::proxy &re, const Scalar::proxy &im) const
-    {
-        Scalar::proxy result;
-        result.assign(tocomplex(re(), im()));
-        return result;
-    }
-};
-
-
-// Adaptor class to bundle two real Expr<Scalar> into a single complex
-// Expr<Scalar>, where the two input Expr represent the complex modulus
-// (amplitude)and the complex argument (phase) respectively.
-class AsPolar: public Expr2<Scalar, Scalar, Scalar>
-{
-public:
-    typedef shared_ptr<AsPolar>         Ptr;
-    typedef shared_ptr<const AsPolar>   ConstPtr;
-
-    AsPolar(const Expr<Scalar>::ConstPtr &modulus,
-        const Expr<Scalar>::ConstPtr &argument)
-        : Expr2<Scalar, Scalar, Scalar>(modulus, argument)
-    {
-    }
-
-private:
-    virtual const Scalar::proxy evaluateImpl(const Request&,
-        const Scalar::proxy &mod, const Scalar::proxy &arg) const
-    {
-        Scalar::proxy result;
-        result.assign(tocomplex(mod() * cos(arg()), mod() * sin(arg())));
-        return result;
-    }
 };
 
 // @}

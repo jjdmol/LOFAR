@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/ModelConfig.h>
 #include <Common/StreamUtil.h>
+#include <Common/lofar_algorithm.h>
 #include <Common/lofar_iomanip.h>
 
 namespace LOFAR
@@ -31,97 +32,168 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-CondNumFlagConfig::CondNumFlagConfig()
-    :   threshold(1.0)
+HamakerDipoleConfig::HamakerDipoleConfig()
 {
 }
 
-void CondNumFlagConfig::print(ostream &out) const
-{
-    out << "Condition number flagging:" << endl;
-    Indent id;
-    out << indent << "Threshold: " << threshold;
-}
-
-IonoConfig::IonoConfig()
-    :   rank(0)
+HamakerDipoleConfig::HamakerDipoleConfig(const string &file)
+    :   itsCoeffFile(file)
 {
 }
 
-void IonoConfig::print(ostream &out) const
+const string &HamakerDipoleConfig::getCoeffFile() const
 {
-    out << "Ionosphere:" << endl;
-    Indent id;
-    out << indent << "Rank: " << rank;
+    return itsCoeffFile;
 }
 
-BeamConfig::~BeamConfig()
+YatawattaDipoleConfig::YatawattaDipoleConfig()
 {
 }
 
-void HamakerDipoleConfig::print(ostream &out) const
+YatawattaDipoleConfig::YatawattaDipoleConfig(const string &theta,
+    const string &phi)
+    :   itsModuleTheta(theta),
+        itsModulePhi(phi)
 {
-    out << "Beam:" << endl;
-    Indent id;
-    out << indent << "Type: " << type() << endl
-        << indent << "Coefficient file: " << coeffFile;
 }
 
-const string &HamakerDipoleConfig::type() const
+const string &YatawattaDipoleConfig::getModuleTheta() const
 {
-    static string typeName("HamakerDipole");
-    return typeName;
+    return itsModuleTheta;
 }
 
-void YatawattaDipoleConfig::print(ostream &out) const
+const string &YatawattaDipoleConfig::getModulePhi() const
 {
-    out << "Beam:" << endl;
-    Indent id;
-    out << indent << "Type: " << type() << endl
-        << indent << "Module theta: " << moduleTheta << endl
-        << indent << "Module phi: " << modulePhi;
+    return itsModulePhi;
 }
 
-const string &YatawattaDipoleConfig::type() const
+IonosphereConfig::IonosphereConfig()
+    :   itsDegree(0)
 {
-    static string typeName("YatawattaDipole");
-    return typeName;
+}
+
+IonosphereConfig::IonosphereConfig(unsigned int degree)
+    :   itsDegree(degree)
+{
+}
+
+unsigned int IonosphereConfig::getDegree() const
+{
+    return itsDegree;
+}
+
+FlaggerConfig::FlaggerConfig()
+    :   itsThreshold(1.0)
+{
+}
+
+FlaggerConfig::FlaggerConfig(double threshold)
+    :   itsThreshold(threshold)
+{
+}
+
+double FlaggerConfig::getThreshold() const
+{
+    return itsThreshold;
 }
 
 ModelConfig::ModelConfig()
-    :   usePhasors(false)
 {
+    fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
+}
+
+ostream &operator<<(ostream &out, const HamakerDipoleConfig &obj)
+{
+    out << indent << "Type: HamakerDipole" << endl
+        << indent << "Coefficient file: " << obj.getCoeffFile();
+    return out;
+}
+
+ostream &operator<<(ostream &out, const YatawattaDipoleConfig &obj)
+{
+    out << indent << "Type: YatawattaDipole" << endl
+        << indent << "Module theta: " << obj.getModuleTheta() << endl
+        << indent << "Module phi: " << obj.getModulePhi();
+    return out;
+}
+
+ostream &operator<<(ostream &out, const FlaggerConfig &obj)
+{
+    out << indent << "Threshold: " << obj.getThreshold();
+    return out;
+}
+
+ostream &operator<<(ostream &out, const IonosphereConfig &obj)
+{
+    out << indent << "Degree: " << obj.getDegree();
+    return out;
 }
 
 ostream& operator<<(ostream &out, const ModelConfig &obj)
 {
-    out << "Model configuration:" << endl;
+    out << "Model configuration:";
+
     Indent id;
-    out << indent << "Use phasors: "
-        << boolalpha
-        << obj.usePhasors
-        << noboolalpha << endl
-        << indent << "Sources: " << obj.sources << endl
-        << indent << "Components: " << obj.components;
+    out << endl << indent << "Phasors enabled: " << boolalpha
+        << obj.usePhasors() << noboolalpha;
+    out << endl << indent << "Bandpass enabled: " << boolalpha
+        << obj.useBandpass() << noboolalpha;
+    out << endl << indent << "Isotropic gain enabled: " << boolalpha
+        << obj.useIsotropicGain() << noboolalpha;
+    out << endl << indent << "Anisotropic gain enabled: " << boolalpha
+        << obj.useAnisotropicGain() << noboolalpha;
 
-    if(obj.ionoConfig)
+    out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
+        << noboolalpha;
+    if(obj.useBeam())
     {
-        out << endl << indent;
-        obj.ionoConfig->print(out);
+        Indent id;
+
+        switch(obj.getBeamType())
+        {
+        case ModelConfig::HAMAKER_DIPOLE:
+            {
+                HamakerDipoleConfig config;
+                obj.getBeamConfig(config);
+                out << endl << config;
+                break;
+            }
+        case ModelConfig::YATAWATTA_DIPOLE:
+            {
+                YatawattaDipoleConfig config;
+                obj.getBeamConfig(config);
+                out << endl << config;
+                break;
+            }
+        default:
+            out << endl << indent << "Type: <unknown>";
+        }
     }
 
-    if(obj.beamConfig)
+    out << endl << indent << "Ionosphere enabled: " << boolalpha
+        << obj.useIonosphere() << noboolalpha;
+    if(obj.useIonosphere())
     {
-        out << endl << indent;
-        obj.beamConfig->print(out);
+        IonosphereConfig config;
+        obj.getIonosphereConfig(config);
+
+        Indent id;
+        out << endl << config;
     }
 
-    if(obj.condNumFlagConfig)
+    out << endl << indent << "Flagger enabled: " << boolalpha
+        << obj.useFlagger() << noboolalpha;
+    if(obj.useFlagger())
     {
-        out << endl << indent;
-        obj.condNumFlagConfig->print(out);
+        FlaggerConfig config;
+        obj.getFlaggerConfig(config);
+
+        Indent id;
+        out << endl << config;
     }
 
+    out << endl << indent << "Sources: " << obj.getSources();
+//        << indent << "Components: " << obj.components;
     return out;
 }
 

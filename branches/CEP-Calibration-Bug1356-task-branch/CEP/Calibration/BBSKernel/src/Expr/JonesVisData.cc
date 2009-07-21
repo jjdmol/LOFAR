@@ -39,8 +39,8 @@ JonesVisData::JonesVisData(const VisData::Ptr &chunk,
     itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
-const JonesMatrix JonesVisData::evaluate(const Request &request, Cache &cache)
-    const
+const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
+    Cache &cache) const
 {
     const VisDimensions &dims = itsChunk->getDimensions();
     const Grid &visGrid = dims.getGrid();
@@ -150,7 +150,7 @@ const JonesMatrix JonesVisData::evaluate(const Request &request, Cache &cache)
             [FRange(start.second, start.second + nTimeslots)]
             [FRange(start.first, start.first + nChannels)][3]]);
 
-    JonesMatrix::proxy proxy;
+    JonesMatrix::view proxy;
     proxy.assign(0, 0, m11);
     proxy.assign(0, 1, m12);
     proxy.assign(1, 0, m21);

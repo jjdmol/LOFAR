@@ -27,9 +27,8 @@
 // LMN-coordinates of a direction on the sky.
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
-#include <BBSKernel/Expr/PhaseRef.h>
 
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -39,21 +38,21 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class LMN: public Expr1<Vector<2>, Vector<3> >
+class LMN: public BasicUnaryExpr<Vector<2>, Vector<3> >
 {
 public:
     typedef shared_ptr<LMN>         Ptr;
     typedef shared_ptr<const LMN>   ConstPtr;
 
-    LMN(const PhaseRef::ConstPtr &ref,
-        const Expr<Vector<2> >::ConstPtr &position);
+    LMN(const casa::MDirection &reference,
+        const Expr<Vector<2> >::ConstPtr &direction);
 
 private:
     // Compute a result for the given request.
-    virtual const Vector<3>::proxy evaluateImpl(const Request &request,
-        const Vector<2>::proxy &position) const;
+    virtual const Vector<3>::view evaluateImpl(const Request &request,
+        const Vector<2>::view &direction) const;
 
-    PhaseRef::ConstPtr  itsRef;
+    casa::MDirection    itsPhaseReference;
 };
 
 // @}

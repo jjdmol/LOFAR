@@ -31,22 +31,22 @@ namespace BBS
 {
 
 PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes)
-    :   Expr1<Vector<4>, JonesMatrix>(stokes)
+    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(stokes)
 {
 }
 
-const JonesMatrix::proxy PointCoherence::evaluateImpl(const Request &request,
-    const Vector<4>::proxy &stokes) const
+const JonesMatrix::view PointCoherence::evaluateImpl(const Request &request,
+    const Vector<4>::view &stokes) const
 {
-    JonesMatrix::proxy result;
+    JonesMatrix::view result;
 
-    if(stokes.isDependent(0) || stokes.isDependent(1))
+    if(stokes.dirty(0) || stokes.dirty(1))
     {
         result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
         result.assign(1, 1, 0.5 * (stokes(0) + stokes(1)));
     }
 
-    if(stokes.isDependent(2) || stokes.isDependent(3))
+    if(stokes.dirty(2) || stokes.dirty(3))
     {
         Matrix uv = 0.5 * tocomplex(stokes(2), stokes(3));
         result.assign(0, 1, uv);

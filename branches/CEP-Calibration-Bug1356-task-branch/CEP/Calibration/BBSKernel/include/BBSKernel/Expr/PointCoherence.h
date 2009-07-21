@@ -37,7 +37,7 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class PointCoherence: public Expr1<Vector<4>, JonesMatrix>
+class PointCoherence: public BasicUnaryExpr<Vector<4>, JonesMatrix>
 {
 public:
     typedef shared_ptr<PointCoherence>          Ptr;
@@ -47,8 +47,8 @@ public:
 
 private:
     // Compute a result for the given request.
-    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
-        const Vector<4>::proxy &stokes) const;
+    virtual const JonesMatrix::view evaluateImpl(const Request &request,
+        const Vector<4>::view &stokes) const;
 };
 
 // @}

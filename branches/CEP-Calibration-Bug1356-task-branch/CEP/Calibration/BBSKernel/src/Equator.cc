@@ -302,8 +302,8 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         context.timers[ThreadContext::BUILD_INDEX].start();
         unsigned int nSolvables = 0;
 
-        FieldSet::const_iterator it = result.getFieldSet(prod).begin();
-        FieldSet::const_iterator itEnd = result.getFieldSet(prod).end();
+        ValueSet::const_iterator it = result.getValueSet(prod).begin();
+        ValueSet::const_iterator itEnd = result.getValueSet(prod).end();
         while(it != itEnd)
         {
             // Get a reference to the data.
@@ -324,7 +324,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         }
 
         unsigned int eqIndex = 0;
-        const Matrix model = result.getFieldSet(prod).value();
+        const Matrix model = result.getValueSet(prod).value();
 
         // Loop over all selected cells and generate equations, adding them
         // to the associated solver.

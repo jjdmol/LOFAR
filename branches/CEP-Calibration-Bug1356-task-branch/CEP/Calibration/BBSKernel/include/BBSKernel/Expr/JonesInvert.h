@@ -36,22 +36,22 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class JonesInvert : public Expr1<JonesMatrix, JonesMatrix>
+class JonesInvert: public BasicUnaryExpr<JonesMatrix, JonesMatrix>
 {
 public:
     typedef shared_ptr<JonesInvert> Ptr;
     typedef shared_ptr<JonesInvert> ConstPtr;
 
     JonesInvert(const Expr<JonesMatrix>::ConstPtr &expr)
-        :   Expr1<JonesMatrix, JonesMatrix>(expr)
+        :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr)
     {
     }
 
 private:
-    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
-        const JonesMatrix::proxy &arg0) const
+    virtual const JonesMatrix::view evaluateImpl(const Request &request,
+        const JonesMatrix::view &arg0) const
     {
-        JonesMatrix::proxy result;
+        JonesMatrix::view result;
 
         Matrix invDet(1. / (arg0(0, 0) * arg0(1, 1) - arg0(0, 1) * arg0(1, 0)));
         result.assign(0, 0, arg0(1, 1) * invDet);

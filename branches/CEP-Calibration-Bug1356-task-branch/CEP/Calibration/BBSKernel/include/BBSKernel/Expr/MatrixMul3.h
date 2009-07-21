@@ -39,7 +39,7 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class MatrixMul3: public Expr3<JonesMatrix, JonesMatrix, JonesMatrix,
+class MatrixMul3: public BasicTernaryExpr<JonesMatrix, JonesMatrix, JonesMatrix,
     JonesMatrix>
 {
 public:
@@ -51,9 +51,9 @@ public:
         const Expr<JonesMatrix>::ConstPtr &right);
 
 private:
-    virtual const JonesMatrix::proxy evaluateImpl(const Request &request,
-        const JonesMatrix::proxy &left, const JonesMatrix::proxy &mid,
-        const JonesMatrix::proxy &right) const;
+    virtual const JonesMatrix::view evaluateImpl(const Request &request,
+        const JonesMatrix::view &left, const JonesMatrix::view &mid,
+        const JonesMatrix::view &right) const;
 };
 
 // @}

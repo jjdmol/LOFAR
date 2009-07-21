@@ -69,6 +69,14 @@ MatrixRep* MatrixComplexSca::divide (MatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MatrixRep* MatrixComplexSca::min (MatrixRep& right)
+{
+  return MatrixRep::min(right);
+}
+MatrixRep* MatrixComplexSca::max (MatrixRep& right)
+{
+  return MatrixRep::max(right);
+}
 
 void MatrixComplexSca::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
 {
@@ -253,6 +261,11 @@ MatrixRep* MatrixComplexSca::negate()
 {
   itsValue = -1. * itsValue;
   return this;
+}
+
+MatrixRep* MatrixComplexSca::abs()
+{
+  return new MatrixRealSca(LOFAR::abs(itsValue));
 }
 
 MatrixRep* MatrixComplexSca::sin()

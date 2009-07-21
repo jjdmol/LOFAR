@@ -33,50 +33,50 @@ namespace BBS
 MatrixMul3::MatrixMul3(const Expr<JonesMatrix>::ConstPtr &left,
     const Expr<JonesMatrix>::ConstPtr &mid,
     const Expr<JonesMatrix>::ConstPtr &right)
-    :   Expr3<JonesMatrix, JonesMatrix, JonesMatrix, JonesMatrix>(left, mid,
-        right)
+    :   BasicTernaryExpr<JonesMatrix, JonesMatrix, JonesMatrix, JonesMatrix>
+            (left, mid, right)
 {
 }
 
-const JonesMatrix::proxy MatrixMul3::evaluateImpl(const Request &request,
-    const JonesMatrix::proxy &left, const JonesMatrix::proxy &mid,
-    const JonesMatrix::proxy &right) const
+const JonesMatrix::view MatrixMul3::evaluateImpl(const Request &request,
+    const JonesMatrix::view &left, const JonesMatrix::view &mid,
+    const JonesMatrix::view &right) const
 {
     // Determine dependencies.
     // TODO: Should this be cached?
     bool eval00, eval01, eval10, eval11;
     eval00 = eval01 = eval10 = eval11 = false;
 
-    if(mid.isDependent(0, 0) || mid.isDependent(0, 1) || mid.isDependent(1, 0)
-        || mid.isDependent(1, 1))
+    if(mid.dirty(0, 0) || mid.dirty(0, 1) || mid.dirty(1, 0)
+        || mid.dirty(1, 1))
     {
         eval00 = eval01 = eval10 = eval11 = true;
     }
     else
     {
-        if(left.isDependent(0, 0) || left.isDependent(0, 1))
+        if(left.dirty(0, 0) || left.dirty(0, 1))
         {
             eval00 = eval01 = true;
         }
 
-        if(left.isDependent(1, 0) || left.isDependent(1, 1))
+        if(left.dirty(1, 0) || left.dirty(1, 1))
         {
             eval10 = eval11 = true;
         }
 
-        if(right.isDependent(0, 0) || right.isDependent(0, 1))
+        if(right.dirty(0, 0) || right.dirty(0, 1))
         {
             eval00 = eval10 = true;
         }
 
-        if(right.isDependent(1, 0) || right.isDependent(1, 1))
+        if(right.dirty(1, 0) || right.dirty(1, 1))
         {
             eval01 = eval11 = true;
         }
     }
 
     // Create the result.
-    JonesMatrix::proxy result;
+    JonesMatrix::view result;
 
     if(eval00 || eval01)
     {
@@ -121,7 +121,7 @@ const JonesMatrix::proxy MatrixMul3::evaluateImpl(const Request &request,
 //    Matrix tmp11(left(1, 0) * mid(0, 1) + left(1, 1) * mid(1, 1));
 
 //    // Compute (LEFT * MID) * RIGHT^H.
-//    JonesMatrix::proxy result;
+//    JonesMatrix::view result;
 //    result.assign(0, 0, tmp00 * conj(right(0, 0)) + tmp01 * conj(right(0, 1)));
 //    result.assign(0, 1, tmp00 * conj(right(1, 0)) + tmp01 * conj(right(1, 1)));
 //    result.assign(1, 0, tmp10 * conj(right(0, 0)) + tmp11 * conj(right(0, 1)));

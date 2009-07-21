@@ -44,36 +44,30 @@ class Request
 {
 public:
     Request();
-    
+
     Request(const Grid &grid, bool evalPValues = false);
     ~Request();
-    
-    RequestId getId() const
+
+    RequestId id() const
     { return itsId; }
 
     Box getBoundingBox() const
     { return itsGrid.getBoundingBox(); }
-    
+
     const Axis::ShPtr &operator[](size_t n) const
     { return itsGrid[n]; }
-
-//    size_t getChannelCount() const
-//    { return itsGrid[FREQ]->size(); }
-
-//    size_t getTimeslotCount() const
-//    { return itsGrid[TIME]->size(); }
 
     const Grid &getGrid() const
     { return itsGrid; }
 
     bool getPValueFlag() const
     { return itsPValueFlag; }
-    
+
 private:
     size_t              itsId;
     Grid                itsGrid;
     bool                itsPValueFlag;
-    
+
     static RequestId    theirId;
 };
 

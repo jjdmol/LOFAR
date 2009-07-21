@@ -70,17 +70,17 @@ void StatUVW::calculate(const Request &request) const
     double *v = Vm.setDoubleFormat(1, nTime);
     double *w = Wm.setDoubleFormat(1, nTime);
 
-    FieldSet Ut;
-    FieldSet Vt;
-    FieldSet Wt;
+    ValueSet Ut;
+    ValueSet Vt;
+    ValueSet Wt;
 
     Ut.assign(Um);
     Vt.assign(Vm);
     Wt.assign(Wm);
 
-    itsU.setFieldSet(Ut);
-    itsV.setFieldSet(Vt);
-    itsW.setFieldSet(Wt);
+    itsU.setValueSet(Ut);
+    itsV.setValueSet(Vt);
+    itsW.setValueSet(Wt);
 
     // Use cached UVW coordinates if available.
     const Grid &reqGrid = request.getGrid();
@@ -148,7 +148,7 @@ void StatUVW::calculate(const Request &request) const
         }
     }
 
-    itsLastReqId = request.getId();
+    itsLastReqId = request.id();
 }
 
 } // namespace BBS

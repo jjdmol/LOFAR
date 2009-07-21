@@ -50,7 +50,7 @@ namespace BBS
 //        LMN,
 //        N_Inputs
 //    };
-//    
+//
 //    PhaseShift();
 
 //private:
@@ -59,7 +59,7 @@ namespace BBS
 //        const ValueSet::ConstPtr (&inputs)[PhaseShift::N_Inputs]) const;
 //};
 
-class PhaseShiftOld: public Expr2<Vector<2>, Vector<2>, Scalar>
+class PhaseShiftOld: public BasicBinaryExpr<Vector<2>, Vector<2>, Scalar>
 {
 public:
     typedef shared_ptr<PhaseShiftOld>       Ptr;
@@ -69,8 +69,8 @@ public:
         const Expr<Vector<2> >::ConstPtr &rhs);
 
 private:
-    virtual const Scalar::proxy evaluateImpl(const Request &request,
-        const Vector<2>::proxy &lhs, const Vector<2>::proxy &rhs) const;
+    virtual const Scalar::view evaluateImpl(const Request &request,
+        const Vector<2>::view &lhs, const Vector<2>::view &rhs) const;
 };
 
 // @}

@@ -67,7 +67,10 @@ public:
 // to hold e.g. the value of the scalar field perturbed for a (parameter,
 // coefficient) pair, or the value of the partial derivative with respect to a
 // (parameter, coefficient) pair.
-class FieldSetImpl: public RefCountable
+// TODO: Use hashed container instead of map<> to optimize key look-up. However,
+// need iteration in sorted order (?).
+// TODO: Rename to ValueSetImpl?
+class ValueSetImpl: public RefCountable
 {
 public:
     typedef map<PValueKey, Matrix>::iterator        iterator;
@@ -92,19 +95,19 @@ private:
 };
 
 
-// Reference counting proxy class that manages a FieldSetImpl.
-class FieldSet: public RefCounted<FieldSetImpl>
+// Reference counting proxy class that manages a ValueSetImpl.
+class ValueSet: public RefCounted<ValueSetImpl>
 {
 public:
-    typedef FieldSetImpl::iterator          iterator;
-    typedef FieldSetImpl::const_iterator    const_iterator;
+    typedef ValueSetImpl::iterator          iterator;
+    typedef ValueSetImpl::const_iterator    const_iterator;
 
-    FieldSet();
+    ValueSet();
 
-    const_iterator begin() const;
-    const_iterator end() const;
     iterator begin();
     iterator end();
+    const_iterator begin() const;
+    const_iterator end() const;
 
     const Matrix &value() const;
     // Returns the field associated with "key", or the unkeyed (main) field if
@@ -115,10 +118,10 @@ public:
     // "key" was found.
     const Matrix &value(const PValueKey &key, bool &found) const;
 
-//    Matrix &value();
-//    // Returns a writeable reference to the field associated with "key". If no
-//    // such field exists yet it will be created.
-//    Matrix &value(const PValueKey &key);
+    Matrix &value();
+    // Returns a writeable reference to the field associated with "key". If no
+    // such field exists yet it will be created.
+    Matrix &value(const PValueKey &key);
 
     void assign(const Matrix &value);
     void assign(const PValueKey &key, const Matrix &value);
@@ -134,96 +137,165 @@ class JonesMatrix;
 
 
 template <typename T>
-class Proxy;
+class ExprValueView;
 
 template <>
-class Proxy<Scalar>
+class ExprValueView<Scalar>
 {
 public:
-    bool isDependent() const
+    ExprValueView()
+        :   itsDirtyFlag(false)
     {
-        return itsDepMask;
     }
 
     // TODO: Rename this to e.g. "value()"? (To avoid constructs like "arg0()").
     const Matrix &operator()() const
     {
-        return itsData;
+        return itsValue;
     }
 
-    void assign(const Matrix &value, bool dependent = true)
+//    operator const Matrix &() const
+//    {
+//        return itsValue;
+//    }
+
+//    operator Matrix &()
+//    {
+//        return itsValue;
+//    }
+
+    bool valid() const
     {
-        itsDepMask = dependent;
-        itsData = value;
+        return !itsValue.isNull();
     }
+
+    bool dirty() const
+    {
+        return itsDirtyFlag;
+    }
+
+    void assign(const Matrix &value, bool dirty = true)
+    {
+        itsValue = value;
+        itsDirtyFlag = dirty;
+    }
+
+//    void setDirtyFlag(bool dirty)
+//    {
+//        itsDirtyFlag = dirty;
+//    }
 
 private:
-    Matrix          itsData;
-    bool            itsDepMask;
+    Matrix          itsValue;
+    bool            itsDirtyFlag;
 };
 
 template <>
 template <unsigned int LENGTH>
-class Proxy<Vector<LENGTH> >
+class ExprValueView<Vector<LENGTH> >
 {
 public:
-    bool isDependent(unsigned int i0) const
+    ExprValueView()
     {
-        return itsDepMask[i0];
+        fill(itsDirtyFlag, itsDirtyFlag + LENGTH, false);
     }
 
     const Matrix &operator()(unsigned int i0) const
     {
-        return itsData[i0];
+        return itsValue[i0];
     }
 
-    void assign(unsigned int i0, const Matrix &value, bool dependent = true)
+//    Matrix &operator()(unsigned int i0)
+//    {
+//        return itsValue[i0];
+//    }
+
+    bool valid(unsigned int i0) const
     {
-        itsDepMask[i0] = dependent;
-        itsData[i0] = value;
+        return !itsValue[i0].isNull();
     }
+
+    bool dirty(unsigned int i0) const
+    {
+        return itsDirtyFlag[i0];
+    }
+
+    void assign(unsigned int i0, const Matrix &value, bool dirty = true)
+    {
+        itsValue[i0] = value;
+        itsDirtyFlag[i0] = dirty;
+    }
+
+//    void setDirtyFlag(bool dirty)
+//    {
+//        itsDirtyFlag = dirty;
+//    }
 
 private:
-    Matrix          itsData[LENGTH];
-    bool            itsDepMask[LENGTH];
+    Matrix          itsValue[LENGTH];
+    bool            itsDirtyFlag[LENGTH];
 };
 
 template <>
-class Proxy<JonesMatrix>
+class ExprValueView<JonesMatrix>
 {
 public:
-    bool isDependent(unsigned int i1, unsigned int i0) const
+    ExprValueView()
     {
-        return itsDepMask[i1][i0];
+        fill(itsDirtyFlag, itsDirtyFlag + 4, false);
+    }
+//    bool isDependent(unsigned int i0, unsigned int i1) const
+//    {
+//        return itsDepMask[i0][i1];
+//    }
+
+    const Matrix &operator()(unsigned int i0, unsigned int i1) const
+    {
+        return itsValue[i0 * 2 + i1];
     }
 
-    const Matrix &operator()(unsigned int i1, unsigned int i0) const
+//    Matrix &operator()(unsigned int i0, unsigned int i1)
+//    {
+//        return itsValue[i0][i1];
+//    }
+
+    bool valid(unsigned int i0, unsigned int i1) const
     {
-        return itsData[i1][i0];
+        return !itsValue[i0 * 2 + i1].isNull();
     }
 
-    void assign(unsigned int i1, unsigned int i0, const Matrix &value,
-        bool dependent = true)
+    void assign(unsigned int i0, unsigned int i1, const Matrix &value,
+        bool dirty = true)
     {
-        itsDepMask[i1][i0] = dependent;
-        itsData[i1][i0] = value;
+        itsValue[i0 * 2 + i1] = value;
+        itsDirtyFlag[i0 * 2 + i1] = dirty;
     }
+
+    bool dirty(unsigned int i0, unsigned int i1) const
+    {
+        return itsDirtyFlag[i0 * 2 + i1];
+    }
+
+//    void setDirtyFlag(unsigned int i0, unsigned int i1, bool dirty)
+//    {
+//        itsDirtyFlag[i0][i1] = dirty;
+//    }
 
 private:
-    Matrix          itsData[2][2];
-    bool            itsDepMask[2][2];
+    Matrix          itsValue[4];
+    bool            itsDirtyFlag[4];
 };
 
 
-// Base class that represents the result of an expression. The base class only
-// holds the flags, the data is held by the specialisations (Scalar, Vector,
-// JonesMatrix).
+// Abstract base class that represents the result of an expression. The base
+// class only holds the flags, the data is held by derived classes (Scalar,
+// Vector, JonesMatrix).
 //
-// TODO: Rename?
-class ExprValueBase
+// TODO: Rename to ExprValue/ExprResult/Result?
+class ExprValue
 {
 public:
-    virtual ~ExprValueBase()
+    virtual ~ExprValue()
     {
     }
 
@@ -237,87 +309,101 @@ public:
         itsFlags = flags;
     }
 
-    const FlagArray flags() const
+    const FlagArray &flags() const
     {
         return itsFlags;
     }
+
+    virtual unsigned int size() const = 0;
+    virtual const ValueSet getValueSet(unsigned int i0) const = 0;
+    virtual void setValueSet(unsigned int i0, const ValueSet &set) = 0;
 
 private:
     FlagArray   itsFlags;
 };
 
 
-class Scalar: public ExprValueBase
+class Scalar: public ExprValue
 {
 public:
-    typedef Proxy<Scalar>   proxy;
+    typedef ExprValueView<Scalar>   view;
 
-    const proxy value(const PValueKey &key = PValueKey()) const
+    view value(const PValueKey &key = PValueKey()) const
     {
-        proxy result;
+        view result;
 
         if(!key.valid())
         {
-            result.assign(itsFieldSet.value());
+            result.assign(itsValueSet.value());
         }
         else
         {
-            bool dependent = false;
-            const Matrix &value = itsFieldSet.value(key, dependent);
-            result.assign(value, dependent);
+            bool found;
+            const Matrix &value = itsValueSet.value(key, found);
+            result.assign(value, found);
         }
 
         return result;
     }
 
-    void assign(const proxy &value)
+    void assign(const view &value)
     {
-        if(!value().isNull())
+        if(value.dirty())
         {
-            itsFieldSet.assign(value());
+            itsValueSet.assign(value());
         }
     }
 
-    void assign(const PValueKey &key, const proxy &value)
+    void assign(const PValueKey &key, const view &value)
     {
-        if(!value().isNull())
+        if(value.dirty())
         {
-            itsFieldSet.assign(key, value());
+            itsValueSet.assign(key, value());
         }
     }
 
-    const FieldSet getFieldSet() const
+    void assign(const Matrix &value)
     {
-        return itsFieldSet;
+        itsValueSet.assign(value);
     }
 
-    void setFieldSet(const FieldSet &set)
+    void assign(const PValueKey &key, const Matrix &value)
     {
-        itsFieldSet = set;
+        itsValueSet.assign(key, value);
+    }
+
+    const ValueSet getValueSet() const
+    {
+        return itsValueSet;
+    }
+
+    void setValueSet(const ValueSet &set)
+    {
+        itsValueSet = set;
     }
 
     // @{
-    // Flat FieldSet indexing support.
+    // Flat ValueSet indexing support.
     unsigned int size() const
     {
         return 1;
     }
 
-    const FieldSet getFieldSet(unsigned int i) const
+    const ValueSet getValueSet(unsigned int i0) const
     {
-        DBGASSERT(i == 0);
-        return itsFieldSet;
+        DBGASSERT(i0 == 0);
+        return itsValueSet;
     }
 
-    void setFieldSet(unsigned int i, const FieldSet &set)
+    void setValueSet(unsigned int i0, const ValueSet &set)
     {
-        DBGASSERT(i == 0);
-        itsFieldSet = set;
+        DBGASSERT(i0 == 0);
+        itsValueSet = set;
     }
     // @}
 
 private:
-    FieldSet    itsFieldSet;
+    ValueSet    itsValueSet;
 };
 
 
@@ -329,172 +415,199 @@ private:
 // In this case, instead of Vector<2> one would need to write Vector<>, which
 // does not improve much.
 template <unsigned int LENGTH>
-class Vector: public ExprValueBase
+class Vector: public ExprValue
 {
 public:
-    typedef Proxy<Vector<LENGTH> >          proxy;
+    typedef ExprValueView<Vector<LENGTH> >          view;
 
-    const proxy value(const PValueKey &key = PValueKey()) const
+    view value(const PValueKey &key = PValueKey()) const
     {
-        proxy result;
+        view result;
 
         if(!key.valid())
         {
             for(unsigned int i = 0; i < LENGTH; ++i)
             {
-                result.assign(i, itsFieldSet[i].value());
+                result.assign(i, itsValueSet[i].value());
             }
         }
         else
         {
             for(unsigned int i = 0; i < LENGTH; ++i)
             {
-                bool dependent = false;
-                const Matrix &value = itsFieldSet[i].value(key, dependent);
-                result.assign(i, value, dependent);
+                bool found;
+                const Matrix &value = itsValueSet[i].value(key, found);
+                result.assign(i, value, found);
             }
         }
 
         return result;
     }
 
-    void assign(const proxy &value)
+    void assign(const view &value)
     {
         for(unsigned int i = 0; i < LENGTH; ++i)
         {
-            if(!value(i).isNull())
+            if(value.dirty(i))
             {
-                itsFieldSet[i].assign(value(i));
+                itsValueSet[i].assign(value(i));
             }
         }
     }
 
-    void assign(const PValueKey &key, const proxy &value)
+    void assign(const PValueKey &key, const view &value)
     {
         for(unsigned int i = 0; i < LENGTH; ++i)
         {
-            if(!value(i).isNull())
+            if(value.dirty(i))
             {
-                itsFieldSet[i].assign(key, value(i));
+                itsValueSet[i].assign(key, value(i));
             }
         }
+    }
+
+    void assign(unsigned int i0, const Matrix &value)
+    {
+        DBGASSERT(i0 < LENGTH);
+        itsValueSet[i0].assign(value);
+    }
+
+    void assign(unsigned int i0, const PValueKey &key, const Matrix &value)
+    {
+        DBGASSERT(i0 < LENGTH);
+        itsValueSet[i0].assign(key, value);
     }
 
     // @{
-    // Flat FieldSet indexing support.
+    // Flat ValueSet indexing support.
     unsigned int size() const
     {
         return LENGTH;
     }
 
-    const FieldSet getFieldSet(unsigned int i) const
+    const ValueSet getValueSet(unsigned int i0) const
     {
-        DBGASSERT(i < LENGTH);
-        return itsFieldSet[i];
+        DBGASSERT(i0 < LENGTH);
+        return itsValueSet[i0];
     }
 
-    void setFieldSet(unsigned int i, const FieldSet &set)
+    void setValueSet(unsigned int i0, const ValueSet &set)
     {
-        DBGASSERT(i < LENGTH);
-        itsFieldSet[i] = set;
+        DBGASSERT(i0 < LENGTH);
+        itsValueSet[i0] = set;
     }
     // @}
 
 private:
-    FieldSet    itsFieldSet[LENGTH];
+    ValueSet    itsValueSet[LENGTH];
 };
 
 
-class JonesMatrix: public ExprValueBase
+class JonesMatrix: public ExprValue
 {
 public:
-    typedef Proxy<JonesMatrix>  proxy;
+    typedef ExprValueView<JonesMatrix>  view;
 
-    const proxy value(const PValueKey &key = PValueKey()) const
+    view value(const PValueKey &key = PValueKey()) const
     {
-        proxy result;
+        view result;
 
         if(!key.valid())
         {
-            result.assign(0, 0, itsFieldSet[0][0].value());
-            result.assign(0, 1, itsFieldSet[0][1].value());
-            result.assign(1, 0, itsFieldSet[1][0].value());
-            result.assign(1, 1, itsFieldSet[1][1].value());
+            result.assign(0, 0, itsValueSet[0].value());
+            result.assign(0, 1, itsValueSet[1].value());
+            result.assign(1, 0, itsValueSet[2].value());
+            result.assign(1, 1, itsValueSet[3].value());
         }
         else
         {
-            bool dependent = false;
-            const Matrix &tmp00 = itsFieldSet[0][0].value(key, dependent);
-            result.assign(0, 0, tmp00, dependent);
-            const Matrix &tmp01 = itsFieldSet[0][1].value(key, dependent);
-            result.assign(0, 1, tmp01, dependent);
-            const Matrix &tmp10 = itsFieldSet[1][0].value(key, dependent);
-            result.assign(1, 0, tmp10, dependent);
-            const Matrix &tmp11 = itsFieldSet[1][1].value(key, dependent);
-            result.assign(1, 1, tmp11, dependent);
+            bool found;
+            const Matrix &tmp00 = itsValueSet[0].value(key, found);
+            result.assign(0, 0, tmp00, found);
+            const Matrix &tmp01 = itsValueSet[1].value(key, found);
+            result.assign(0, 1, tmp01, found);
+            const Matrix &tmp10 = itsValueSet[2].value(key, found);
+            result.assign(1, 0, tmp10, found);
+            const Matrix &tmp11 = itsValueSet[3].value(key, found);
+            result.assign(1, 1, tmp11, found);
         }
 
         return result;
     }
 
-    void assign(const proxy &value)
+    void assign(const view &value)
     {
-        if(!value(0, 0).isNull())
-            itsFieldSet[0][0].assign(value(0, 0));
-        if(!value(0, 1).isNull())
-            itsFieldSet[0][1].assign(value(0, 1));
-        if(!value(1, 0).isNull())
-            itsFieldSet[1][0].assign(value(1, 0));
-        if(!value(1, 1).isNull())
-            itsFieldSet[1][1].assign(value(1, 1));
+        if(value.dirty(0, 0))
+            itsValueSet[0].assign(value(0, 0));
+        if(value.dirty(0, 1))
+            itsValueSet[1].assign(value(0, 1));
+        if(value.dirty(1, 0))
+            itsValueSet[2].assign(value(1, 0));
+        if(value.dirty(1, 1))
+            itsValueSet[3].assign(value(1, 1));
     }
 
-    void assign(const PValueKey &key, const proxy &value)
+    void assign(const PValueKey &key, const view &value)
     {
-        if(!value(0, 0).isNull())
-            itsFieldSet[0][0].assign(key, value(0, 0));
-        if(!value(0, 1).isNull())
-            itsFieldSet[0][1].assign(key, value(0, 1));
-        if(!value(1, 0).isNull())
-            itsFieldSet[1][0].assign(key, value(1, 0));
-        if(!value(1, 1).isNull())
-            itsFieldSet[1][1].assign(key, value(1, 1));
+        if(value.dirty(0, 0))
+            itsValueSet[0].assign(key, value(0, 0));
+        if(value.dirty(0, 1))
+            itsValueSet[1].assign(key, value(0, 1));
+        if(value.dirty(1, 0))
+            itsValueSet[2].assign(key, value(1, 0));
+        if(value.dirty(1, 1))
+            itsValueSet[3].assign(key, value(1, 1));
     }
 
-    const FieldSet getFieldSet(unsigned int i1, unsigned int i0) const
+    void assign(unsigned int i0, unsigned int i1, const Matrix &value)
     {
-        DBGASSERT(i1 < 2 && i0 < 2);
-        return itsFieldSet[i1][i0];
+        DBGASSERT(i0 < 2 && i1 < 2);
+        itsValueSet[i0 * 2 + i1].assign(value);
     }
 
-    void setFieldSet(unsigned int i1, unsigned int i0, const FieldSet &set)
+    void assign(unsigned int i0, unsigned int i1, const PValueKey &key,
+        const Matrix &value)
     {
-        DBGASSERT(i1 < 2 && i0 < 2);
-        itsFieldSet[i1][i0] = set;
+        DBGASSERT(i0 < 2 && i1 < 2);
+        itsValueSet[i0 * 2 + i1].assign(key, value);
     }
 
-    // Flat FieldSet indexing support.
+    const ValueSet getValueSet(unsigned int i0, unsigned int i1) const
+    {
+        DBGASSERT(i0 < 2 && i1 < 2);
+        return itsValueSet[i0 * 2 + i1];
+    }
+
+    void setValueSet(unsigned int i0, unsigned int i1, const ValueSet &set)
+    {
+        DBGASSERT(i0 < 2 && i1 < 2);
+        itsValueSet[i0 * 2 + i1] = set;
+    }
+
+    // Flat ValueSet indexing support.
     // @{
     unsigned int size() const
     {
         return 4;
     }
 
-    const FieldSet getFieldSet(unsigned int i) const
+    const ValueSet getValueSet(unsigned int i0) const
     {
-        DBGASSERT(i < 4);
-        return itsFieldSet[i / 2][i % 2];
+        DBGASSERT(i0 < 4);
+//        return itsValueSet[i / 2][i % 2];
+        return itsValueSet[i0];
     }
 
-    void setFieldSet(unsigned int i, const FieldSet &set)
+    void setValueSet(unsigned int i0, const ValueSet &set)
     {
-        DBGASSERT(i < 4);
-        itsFieldSet[i / 2][i % 2] = set;
+        DBGASSERT(i0 < 4);
+//        itsValueSet[i / 2][i % 2] = set;
+        itsValueSet[i0] = set;
     }
     // @}
 
 private:
-    FieldSet    itsFieldSet[2][2];
+    ValueSet    itsValueSet[4];
 };
 
 
@@ -532,35 +645,35 @@ inline bool PValueKey::operator==(const PValueKey &other) const
 
 
 // -------------------------------------------------------------------------- //
-// - Implementation: FieldSetImpl                                           - //
+// - Implementation: ValueSetImpl                                           - //
 // -------------------------------------------------------------------------- //
 
-inline FieldSetImpl::const_iterator FieldSetImpl::begin() const
+inline ValueSetImpl::const_iterator ValueSetImpl::begin() const
 {
     return itsDepData.begin();
 }
 
-inline FieldSetImpl::const_iterator FieldSetImpl::end() const
+inline ValueSetImpl::const_iterator ValueSetImpl::end() const
 {
     return itsDepData.end();
 }
 
-inline FieldSetImpl::iterator FieldSetImpl::begin()
+inline ValueSetImpl::iterator ValueSetImpl::begin()
 {
     return itsDepData.begin();
 }
 
-inline FieldSetImpl::iterator FieldSetImpl::end()
+inline ValueSetImpl::iterator ValueSetImpl::end()
 {
     return itsDepData.end();
 }
 
-inline const Matrix &FieldSetImpl::value() const
+inline const Matrix &ValueSetImpl::value() const
 {
     return itsData;
 }
 
-inline const Matrix &FieldSetImpl::value(const PValueKey &key, bool &found)
+inline const Matrix &ValueSetImpl::value(const PValueKey &key, bool &found)
     const
 {
     map<PValueKey, Matrix>::const_iterator it = itsDepData.find(key);
@@ -568,88 +681,88 @@ inline const Matrix &FieldSetImpl::value(const PValueKey &key, bool &found)
     return (found ? it->second : itsData);
 }
 
-inline Matrix &FieldSetImpl::value()
+inline Matrix &ValueSetImpl::value()
 {
     return itsData;
 }
 
-inline Matrix &FieldSetImpl::value(const PValueKey &key)
+inline Matrix &ValueSetImpl::value(const PValueKey &key)
 {
     return itsDepData[key];
 }
 
-inline void FieldSetImpl::assign(const Matrix &value)
+inline void ValueSetImpl::assign(const Matrix &value)
 {
     itsData = value;
 }
 
-inline void FieldSetImpl::assign(const PValueKey &key, const Matrix &value)
+inline void ValueSetImpl::assign(const PValueKey &key, const Matrix &value)
 {
     itsDepData[key] = value;
 }
 
 
 // -------------------------------------------------------------------------- //
-// - Implementation: FieldSet                                               - //
+// - Implementation: ValueSet                                               - //
 // -------------------------------------------------------------------------- //
 
-inline FieldSet::FieldSet()
-    :   RefCounted<FieldSetImpl>(new FieldSetImpl())
+inline ValueSet::ValueSet()
+    :   RefCounted<ValueSetImpl>(new ValueSetImpl())
 {
 }
 
-inline FieldSet::iterator FieldSet::begin()
-{
-    return instance().begin();
-}
-
-inline FieldSet::iterator FieldSet::end()
-{
-    return instance().end();
-}
-
-inline FieldSet::const_iterator FieldSet::begin() const
+inline ValueSet::iterator ValueSet::begin()
 {
     return instance().begin();
 }
 
-inline FieldSet::const_iterator FieldSet::end() const
+inline ValueSet::iterator ValueSet::end()
 {
     return instance().end();
 }
 
-inline const Matrix &FieldSet::value() const
+inline ValueSet::const_iterator ValueSet::begin() const
+{
+    return instance().begin();
+}
+
+inline ValueSet::const_iterator ValueSet::end() const
+{
+    return instance().end();
+}
+
+inline const Matrix &ValueSet::value() const
 {
     return instance().value();
 }
 
-inline const Matrix &FieldSet::value(const PValueKey &key) const
+inline const Matrix &ValueSet::value(const PValueKey &key) const
 {
     bool tmp;
     return instance().value(key, tmp);
 }
 
-inline const Matrix &FieldSet::value(const PValueKey &key, bool &found) const
+inline const Matrix &ValueSet::value(const PValueKey &key, bool &found) const
 {
     return instance().value(key, found);
 }
 
-//inline Matrix &FieldSet::value()
-//{
-//    return instance().value();
-//}
+inline Matrix &ValueSet::value()
+{
+    return instance().value();
+}
 
-//inline Matrix &FieldSet::value(const PValueKey &key)
-//{
-//    return instance().value(key);
-//}
+inline Matrix &ValueSet::value(const PValueKey &key)
+{
+    return instance().value(key);
+}
 
-inline void FieldSet::assign(const Matrix &value)
+inline void ValueSet::assign(const Matrix &value)
 {
     instance().assign(value);
 }
 
-inline void FieldSet::assign(const PValueKey &key, const Matrix &value)
+inline void ValueSet::assign(const PValueKey &key, const Matrix &value)
 {
     return instance().assign(key, value);
 }

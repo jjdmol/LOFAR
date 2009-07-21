@@ -1,6 +1,6 @@
-//# AzEl.h: Azimuth and elevation for a direction (ra, dec) on the sky.
+//# MatrixMul2.h: Compute A * B, where A and B are JonesMatrices.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2009
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,15 +20,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_AZEL_H
-#define LOFAR_BBSKERNEL_EXPR_AZEL_H
+#ifndef LOFAR_BBSKERNEL_EXPR_MATRIXMUL2_H
+#define LOFAR_BBSKERNEL_EXPR_MATRIXMUL2_H
 
 // \file
-// Azimuth and elevation for a direction (ra, dec) on the sky.
+// Compute A * B, where A and B are JonesMatrices.
 
 #include <BBSKernel/Expr/Expr.h>
-
-#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {
@@ -38,22 +36,18 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-// AzEl computes azimuth and elevation coordinates for a direction (ra, dec) on
-// the sky as seen from a specific location (ITRF) on earth.
-class AzEl: public BasicUnaryExpr<Vector<2>, Vector<2> >
+class MatrixMul2: public BasicBinaryExpr<JonesMatrix, JonesMatrix, JonesMatrix>
 {
 public:
-    typedef shared_ptr<AzEl>        Ptr;
-    typedef shared_ptr<const AzEl>  ConstPtr;
+    typedef shared_ptr<MatrixMul2>          Ptr;
+    typedef shared_ptr<const MatrixMul2>    ConstPtr;
 
-    AzEl(const casa::MPosition &position,
-        const Expr<Vector<2> >::ConstPtr &direction);
+    MatrixMul2(const Expr<JonesMatrix>::ConstPtr &lhs,
+        const Expr<JonesMatrix>::ConstPtr &rhs);
 
 private:
-    virtual const Vector<2>::view evaluateImpl(const Request &request,
-        const Vector<2>::view &direction) const;
-
-    casa::MPosition itsPosition;
+    virtual const JonesMatrix::view evaluateImpl(const Request &request,
+        const JonesMatrix::view &lhs, const JonesMatrix::view &rhs) const;
 };
 
 // @}

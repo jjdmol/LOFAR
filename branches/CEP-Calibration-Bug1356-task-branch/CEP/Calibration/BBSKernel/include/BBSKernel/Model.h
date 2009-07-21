@@ -36,19 +36,17 @@
 #include <BBSKernel/VisData.h>
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/PhaseRef.h>
 #include <BBSKernel/Expr/Source.h>
 #include <BBSKernel/Expr/Cache.h>
 
-#include <BBSKernel/Expr/StatUVW.h>
+#include <BBSKernel/Expr/StationUVW.h>
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/SourceDB.h>
 
-#include <boost/multi_array.hpp>
-
+#include <casa/Arrays.h>
 
 namespace LOFAR
 {
@@ -66,105 +64,77 @@ public:
     typedef shared_ptr<Model>       Ptr;
     typedef shared_ptr<const Model> ConstPtr;
 
-    enum ModelComponent
-    {
-        BANDPASS,
-        GAIN,
-        DIRECTIONAL_GAIN,
-        BEAM,
-        IONOSPHERE,
-        COND_NUM_FLAG,
-        N_ModelComponent
-    };
-
     Model(const Instrument &instrument, const SourceDB &sourceDb,
         const casa::MDirection &reference);
+
+    void clear();
 
     void makeForwardExpr(const ModelConfig &config, const VisData::Ptr &chunk,
         const vector<baseline_t> &baselines);
 
-    // TODO: Move flagCond and thresholdCond to ModelConfig.
     void makeInverseExpr(const ModelConfig &config, const VisData::Ptr &chunk,
         const vector<baseline_t> &baselines);
-
-    void clear();
-
-    void setSolvableParms(const ParmGroup &solvables);
-    void clearSolvableParms();
-
-    ParmGroup getParms() const;
-    ParmGroup getSolvableParms() const;
 
     void setRequestGrid(const Grid &grid);
     JonesMatrix evaluate(const baseline_t &baseline);
 
-private:
-    vector<bool> parseComponents(const vector<string> &components) const;
+    ParmGroup getParms() const;
 
-//    vector<Expr::Ptr> makeUVWExpr(const VisData::Ptr &chunk,
-//        const vector<baseline_t> &baselines);
+    ParmGroup getSolvableParms() const;
+    void setSolvableParms(const ParmGroup &solvables);
+    void clearSolvableParms();
+
+private:
+    vector<unsigned int>
+        makeUsedStationList(const vector<baseline_t> &baselines) const;
 
     ExprParm::Ptr makeExprParm(uint category, const string &name);
 
-    boost::multi_array<Expr<JonesMatrix>::Ptr, 2>
-    makeDirectionDependentGainExpr(const ModelConfig &config,
-        const vector<unsigned int> &stations,
-        const vector<Source::Ptr> &sources);
-
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
-//    Source::Ptr makeSource(const SourceInfo &source);
-
-//    void makeSources(vector<Source::Ptr> &result,
-//        const vector<string> &patterns);
-//
     Source::Ptr makeSource(const SourceInfo &source);
 
     void makeStationUVW();
 
-//    void makeAzElNodes(boost::multi_array<Expr, 2> &result,
-//        const vector<Source::Ptr> &sources) const;
+    casa::Matrix<Expr<Vector<2> >::Ptr>
+        makeStationShiftExpr(const vector<unsigned int> &stations,
+            const vector<Source::Ptr> &sources) const;
 
-    void makeStationShiftNodes
-        (boost::multi_array<Expr<Vector<2> >::Ptr, 2> &result,
-        const vector<unsigned int> &stations,
-        const vector<Source::Ptr> &sources) const;
+    casa::Vector<Expr<JonesMatrix>::Ptr>
+        makeBandpassExpr(const vector<unsigned int> &stations);
 
-//    void makeBandpassNodes(vector<JonesExpr> &result);
-//
-//    void makeGainNodes(vector<JonesExpr> &result, const ModelConfig &config);
+    casa::Vector<Expr<JonesMatrix>::Ptr>
+        makeIsotropicGainExpr(const ModelConfig &config,
+            const vector<unsigned int> &stations);
 
-//    void makeDirectionalGainNodes(boost::multi_array<JonesExpr, 2> &result,
-//        const ModelConfig &config, const vector<Source::Ptr> &sources);
+    casa::Matrix<Expr<JonesMatrix>::Ptr>
+        makeAnisotropicGainExpr(const ModelConfig &config,
+            const vector<unsigned int> &stations,
+            const vector<Source::Ptr> &sources);
+
+    casa::Matrix<Expr<Vector<2> >::Ptr>
+        makeAzElExpr(const vector<unsigned int> &stations,
+            const vector<Source::Ptr> &sources) const;
 
 //    void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
 //        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
 
-//    void makeIonosphereNodes(boost::multi_array<JonesExpr, 2> &result,
-//        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
+    casa::Matrix<Expr<JonesMatrix>::Ptr>
+        makeIonosphereNodes(const ModelConfig &config,
+            const vector<unsigned int> &stations,
+            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
+
+    Expr<JonesMatrix>::Ptr corrupt(Expr<JonesMatrix>::Ptr &accumulator,
+        Expr<JonesMatrix>::Ptr &effect);
 
 //    BeamCoeff readBeamCoeffFile(const string &filename) const;
 
-    vector<unsigned int> stationsUsed(const vector<baseline_t> &baselines)
-        const;
+    Instrument          itsInstrument;
+    SourceDB            itsSourceDb;
+    casa::MDirection    itsPhaseReference;
+    Request             itsRequest;
+    Cache               itsCache;
 
-//    size_t getStationCount() const
-//    {
-//        return itsInstrument.stations.size();
-//    }
-
-//    const Station &getStation(unsigned int idx) const
-//    {
-//        DBGASSERT(idx < getStationCount());
-//        return itsInstrument.stations[idx];
-//    }
-
-    SourceDB        itsSourceDb;
-    Instrument      itsInstrument;
-    PhaseRef::Ptr   itsPhaseRef;
-    Request         itsRequest;
-    Cache           itsCache;
-
-    vector<StatUVW::ConstPtr>               itsStationUVW;
+    vector<StationUVW::ConstPtr>            itsStationUVW;
     map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
 };

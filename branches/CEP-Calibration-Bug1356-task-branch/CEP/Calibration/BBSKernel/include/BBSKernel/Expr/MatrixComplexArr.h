@@ -88,6 +88,13 @@ public:
   virtual MatrixRep* multiply (MatrixRep& right, bool rightTmp);
   virtual MatrixRep* divide   (MatrixRep& right, bool rightTmp);
 
+  // Put here to avoid incorrect g++ warning about these function being hidden
+  // by the functions of the same name without arguments (i.e. min() and max()).
+  // @{
+  virtual MatrixRep* min      (MatrixRep& right);
+  virtual MatrixRep* max      (MatrixRep& right);
+  // @}
+
   virtual void dcomplexStorage(const double *&realPtr, const double *&imagPtr) const;
   virtual double getDouble (int x, int y) const;
   virtual dcomplex getDComplex (int x, int y) const;
@@ -117,6 +124,7 @@ private:
 
   virtual MatrixRep* negate();
 
+  virtual MatrixRep* abs();
   virtual MatrixRep* sin();
   virtual MatrixRep* cos();
   virtual MatrixRep* exp();

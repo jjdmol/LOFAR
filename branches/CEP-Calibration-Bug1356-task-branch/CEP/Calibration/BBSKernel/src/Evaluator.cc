@@ -157,7 +157,7 @@ void Evaluator::blAssign(uint, const baseline_t &baseline)
     // a call to virtual FlagArray::operator() is made for each sample.
     const FlagArray modelFlags =
         (result.hasFlags() ? result.flags() : FlagArray((FlagType())));
-    const JonesMatrix::proxy model = result.value();
+    const JonesMatrix::view model = result.value();
 
     // Merge flags and copy visibilities.
     for(unsigned int i = 0; i < 2; ++i)

@@ -1,4 +1,4 @@
-//# AzEl.cc: Azimuth and elevation for a direction (ra,dec) on the sky.
+//# AzEl.cc: Azimuth and elevation for a direction (ra, dec) on the sky.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,128 +23,87 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/AzEl.h>
-#include <BBSKernel/Expr/Request.h>
-#include <BBSKernel/Expr/PValueIterator.h>
-
 #include <Common/LofarLogger.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/Quantum.h>
-
-using namespace casa;
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-AzEl::AzEl(const Station &station, const Source::ConstPtr &source)
-    :   itsStation(station),
-        itsSource(source)
+AzEl::AzEl(const casa::MPosition &position,
+    const Expr<Vector<2> >::ConstPtr &direction)
+    :   BasicUnaryExpr<Vector<2>, Vector<2> >(direction),
+        itsPosition(casa::MPosition::Convert(position, casa::MPosition::ITRF)())
 {
-    addChild(source->getRa());
-    addChild(source->getDec());
 }
 
-
-ResultVec AzEl::getResultVec(const Request& request)
+const Vector<2>::view AzEl::evaluateImpl(const Request &request,
+        const Vector<2>::view &direction) const
 {
     // Check preconditions.
-    ASSERTSTR(request.getTimeslotCount() > 0, "Need time values.");
+    ASSERTSTR(!direction(0).isArray() && !direction(1).isArray(), "Variable"
+        " source directions not supported (yet).");
+    ASSERTSTR(!direction(0).isComplex() && !direction(1).isComplex(), "Source"
+        " directions should be real valued.");
 
-    // Evaluate children.
-    Result tmpRa, tmpDec;
-    const Result &resRa = getChild(0).getResultSynced(request, tmpRa);
-    const Result &resDec = getChild(1).getResultSynced(request, tmpDec);
-    const Matrix &ra = resRa.getValue();
-    const Matrix &dec = resDec.getValue();
-    
-    // Check preconditions.
-    ASSERTSTR(!ra.isArray() && !dec.isArray(), "Variable source positions are"
-        " not supported yet.");
+    casa::Quantum<casa::Double> qEpoch(0.0, "s");
+    casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
 
-    // Create result.
-    ResultVec result(2);
+    // Create and initialize a frame.
+    casa::MeasFrame frame;
+    frame.set(itsPosition);
+    frame.set(mEpoch);
 
-    // Compute main value.
-    evaluate(request, ra, dec, result[0].getValueRW(), result[1].getValueRW());
-    
-    // Compute the perturbed values.
-    enum PValues
+    // Create conversion engine.
+    casa::MDirection mDirection(casa::MVDirection(direction(0).getDouble(),
+        direction(1).getDouble()),
+        casa::MDirection::Ref(casa::MDirection::J2000));
+
+    casa::MDirection::Convert converter = casa::MDirection::Convert(mDirection,
+        casa::MDirection::Ref(casa::MDirection::AZEL, frame));
+
+    // Allocate space for the result.
+    // TODO: This is a hack! The Matrix class does not support 1xN or Nx1
+    // "matrices".
+    const size_t nTime = request[TIME]->size();
+
+    Matrix az, el;
+    double *az_p = az.setDoubleFormat(1, nTime);
+    double *el_p = el.setDoubleFormat(1, nTime);
+
+    // Compute (az, el) coordinates.
+    for(size_t i = 0; i < nTime; ++i)
     {
-        PV_RA, PV_DEC, N_PValues
-    };
-    
-    const Result *pvSet[N_PValues] = {&resRa, &resDec};
-    PValueSetIterator<N_PValues> pvIter(pvSet);
-    
-    while(!pvIter.atEnd())
-    {
-        const Matrix &pvRa = pvIter.value(PV_RA);
-        const Matrix &pvDec = pvIter.value(PV_DEC);
+        // Update reference frame.
+        const double time = request[TIME]->center(i);
 
-        evaluate(request, pvRa, pvDec,
-            result[0].getPerturbedValueRW(pvIter.key()),
-            result[1].getPerturbedValueRW(pvIter.key()));
+        qEpoch.setValue(time);
+        mEpoch.set(qEpoch);
+        frame.set(mEpoch);
 
-        pvIter.next();
+        // Compute azimuth and elevation.
+        casa::MVDirection mvAzel(converter().getValue());
+        const casa::Vector<casa::Double> azel =
+            mvAzel.getAngle("rad").getValue();
+        *az_p++ = azel(0);
+        *el_p++ = azel(1);
     }
-    
+
+
+    Vector<2>::view result;
+    result.assign(0, az);
+    result.assign(1, el);
+
     return result;
 }
 
-
-void AzEl::evaluate(const Request& request, const Matrix &in_ra,
-    const Matrix &in_dec, Matrix &out_az, Matrix &out_el)
-{
-    Quantum<double> qepoch(0, "s");
-    MEpoch epoch(qepoch, MEpoch::UTC);    
-        
-    // Create and initialize a frame.
-    MeasFrame frame;
-    frame.set(itsStation.position);
-    frame.set(epoch);
-
-    // Create conversion engine.
-    MDirection dir(MVDirection(in_ra.getDouble(0, 0), in_dec.getDouble(0, 0)),
-        MDirection::Ref(MDirection::J2000));    
-    MDirection::Convert converter = MDirection::Convert(dir,
-        MDirection::Ref(MDirection::AZEL, frame));
-        
-    // Result is only time variable.
-    const size_t nTimeslots = request.getTimeslotCount();
-    double *az = out_az.setDoubleFormat(1, nTimeslots);
-    double *el = out_el.setDoubleFormat(1, nTimeslots);
-    
-    Axis::ShPtr timeAxis(request.getGrid()[TIME]);
-    for(size_t i = 0; i < nTimeslots; ++i)
-    {
-        // Update reference frame.
-        qepoch.setValue(timeAxis->center(i));
-        epoch.set(qepoch);
-        frame.set(epoch);
-        
-        // Compute azimuth and elevation.
-        MDirection azel(converter());
-        Vector<Double> vec_azel = azel.getValue().getAngle("rad").getValue();
-        *az = vec_azel(0);
-        *el = vec_azel(1);
-        ++az; ++el;
-    }
-}
-
-#if 0
-std::string AzEl::getLabel()
-{
-    return std::string("AzEl\\nAzimuth and elevation of a source.");
-}
-#endif
-
 } //# namespace BBS
 } //# namespace LOFAR
-

@@ -39,7 +39,7 @@ namespace LOFAR
 {
     class BlobOStream;
     class BlobIStream;
-    
+
     namespace BBS
     {
         class MatrixTmp;
@@ -67,7 +67,7 @@ public:
   explicit Matrix (double value);
   explicit Matrix (dcomplex value);
   // @}
-  
+
   // Create a Matrix of given size.
   // If the init flag is true, the matrix is initialized to the given value.
   // Otherwise the value only indicates the type of matrix to be created.
@@ -209,6 +209,11 @@ public:
   friend MatrixTmp posdiff (const Matrix&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const Matrix&, const Matrix&);
   friend MatrixTmp tocomplex (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp min (const Matrix&, const Matrix&);
+  friend MatrixTmp min (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp max (const Matrix&, const Matrix&);
+  friend MatrixTmp max (const Matrix&, const MatrixTmp&);
+  friend MatrixTmp abs (const Matrix&);
   friend MatrixTmp sin (const Matrix&);
   friend MatrixTmp cos (const Matrix&);
   friend MatrixTmp exp (const Matrix&);

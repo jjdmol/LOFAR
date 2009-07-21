@@ -150,6 +150,12 @@ public:
   friend MatrixTmp posdiff (const MatrixTmp&, const MatrixTmp&);
   friend MatrixTmp tocomplex (const MatrixTmp&, const Matrix&);
   friend MatrixTmp tocomplex (const MatrixTmp&, const MatrixTmp&);
+  friend MatrixTmp min (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp min (const MatrixTmp&, const MatrixTmp&);
+  friend MatrixTmp max (const MatrixTmp&, const Matrix&);
+  friend MatrixTmp max (const MatrixTmp&, const MatrixTmp&);
+
+  friend MatrixTmp abs (const MatrixTmp&);
   friend MatrixTmp sin (const MatrixTmp&);
   friend MatrixTmp cos (const MatrixTmp&);
   friend MatrixTmp exp (const MatrixTmp&);
