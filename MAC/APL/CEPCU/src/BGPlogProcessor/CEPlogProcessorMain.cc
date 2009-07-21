@@ -1,4 +1,4 @@
-//#  BGPlogProcessorMain.cc: Deamon to dispatch the BG/P logging to PVSS
+//#  CEPlogProcessorMain.cc: Deamon to dispatch the BG/P logging to PVSS
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <GCF/TM/GCF_Scheduler.h>
-#include "BGPlogProcessor.h"
+#include "CEPlogProcessor.h"
 
 using namespace LOFAR;
 using namespace GCF::TM;
@@ -39,9 +39,9 @@ using namespace LOFAR::APL;
 int main (int argc, char* argv[]) 
 {
 	try {
-		GCFScheduler::instance()->init(argc, argv, "BGPlogProcessor");
+		GCFScheduler::instance()->init(argc, argv, "CEPlogProcessor");
 
-		BGPlogProcessor		loggerTask("BGPlogger");
+		CEPlogProcessor		loggerTask("CEPlogger");
 		loggerTask.start(); // make initial transition
 
 		GCFScheduler::instance()->run();
