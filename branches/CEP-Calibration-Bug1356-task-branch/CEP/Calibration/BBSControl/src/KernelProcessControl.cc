@@ -461,6 +461,8 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
+      LOG_DEBUG_STR("Command: " << command);
+
       ASSERTSTR(itsChunk, "No visibility data available.");
       ASSERTSTR(itsModel, "No model available.");
 
@@ -516,25 +518,29 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      ASSERTSTR(itsChunk, "No visibility data available.");
-      ASSERTSTR(itsModel, "No model available.");
+//      LOG_DEBUG_STR("Command: " << command);
+
+//      ASSERTSTR(itsChunk, "No visibility data available.");
+//      ASSERTSTR(itsModel, "No model available.");
 
 //      // Parse visibility selection.
 //      vector<baseline_t> baselines;
 //      vector<string> products;
-//
+
 //      if(!(parseBaselineSelection(baselines, command)
-//          && parseProductSelection(products, command))) {
+//        && parseProductSelection(products, command))) {
 //        return CommandResult(CommandResult::ERROR, "Unable to parse visibility"
 //          " selection.");
 //      }
-//
+
 //      // Initialize model.
-//      if(!itsModel->makeForwardExpr(command.modelConfig(), baselines)) {
+//      try {
+//        itsModel->makeForwardExpr(command.modelConfig(), itsChunk, baselines);
+//      } catch(Exception &ex) {
 //        return CommandResult(CommandResult::ERROR, "Unable to initialize"
-//          " model.");
+//            " model.");
 //      }
-//
+
 //      // Compute simulated visibilities.
 //      Evaluator evaluator(itsChunk, itsModel);
 //      evaluator.setSelection(baselines, products);
@@ -546,7 +552,7 @@ namespace LOFAR
 //      // Optionally write the simulated visibilities.
 //      if(!command.outputColumn().empty()) {
 //        itsMeasurement->write(itsChunkSelection, itsChunk,
-//          command.outputColumn(), false);
+//          command.outputColumn(), command.writeFlags());
 //      }
 
       return CommandResult(CommandResult::OK, "Ok.");
