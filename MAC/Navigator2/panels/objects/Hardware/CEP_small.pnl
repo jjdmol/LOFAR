@@ -82,7 +82,7 @@ LANG:1 0
 7 2
 "CEP_highLight"
 ""
-1 139.8188321154402 33.39678283495407 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+1 146.5111684746329 40.0955111994552 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
  "main()
 {
   rClick();
@@ -129,7 +129,7 @@ void CEPCallback(string dp1, bool aTrig) {
 7 1
 "childStateBorder"
 ""
-1 55.3014423076923 56.29792800023452 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 59.05594951923077 60.05600268152512 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  "main()
 {
   rClick();
