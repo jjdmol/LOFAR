@@ -29,7 +29,7 @@ par  nrPolarisations         I    pint   -      10    100    '1|2;2'            
 par  nrSlotsInFrame	     I    int    -      10    100    48                                        - '???'
 
 # new way of selection the receivers and the antennaArray at once
-par  antennaSet		         I    ptext  -      10    0      'LBA inner|LBA middle|LBA outer|HBA;-'    - 'Which part of the antennas should be used'
+par  antennaSet		         I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE|LBA_X|LBA_Y|HBA_ONE|HBA_TWO|HBA_BOTH;-'    - 'Which part of the antennas should be used'
 par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
 
 # clock related info
