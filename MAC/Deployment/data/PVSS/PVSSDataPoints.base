@@ -43,8 +43,8 @@ ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
 Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-Adder				-		C	Y	@adder@
-InputBuffer			-		C	Y	@inputbuffer@
+Adder				ADD		C	Y	@adder@
+InputBuffer			IPB		C	Y	@inputbuffer@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
 BGPRack				-		C	N	LOFAR_PIC_@bgp@
