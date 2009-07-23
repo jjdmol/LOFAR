@@ -9,6 +9,12 @@
 # M/C/S		Main/CEP/ Station database
 # Datapoint	Name of datapoint or placeholder for multiple points.
 #
+# !!!!! ATTENTION !!!!!
+# When adding a new @name@ to this list, you also need to add it to: LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
+# and the handling of the point also needs to be added to create_db_files
+#
+#
+#
 # DPtype	 		Prefix 		M/C/S	leaf	DataPoint
 #----------------------------------------------------------------------------
 LOFAR				-		M	N	LOFAR
