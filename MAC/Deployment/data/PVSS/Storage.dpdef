@@ -1,0 +1,6 @@
+# Storage
+time	string
+rank	int
+count	int
+dropped	int
+
