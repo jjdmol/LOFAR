@@ -30,6 +30,9 @@
 #include "tPVSSinfo.h"
 #include "Response.h"
 
+#define TEST_PROP_NAME(propname) \
+	cout << "name (" propname ") = " << (PVSSinfo::isValidPropName(propname) ? "OK" : "INVALID") << endl;
+
 namespace LOFAR {
   namespace GCF {
   using namespace TM;
@@ -82,7 +85,14 @@ GCFEvent::TResult tPVSSinfo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 			cout << "getSystemName(Id) : " << PVSSinfo::getSystemName(PVSSinfo::getLocalSystemId()) << endl;
 			cout << "getSystemId(Name) : " << (int)PVSSinfo::getSysId(PVSSinfo::getLocalSystemName()) << endl;
 			cout << "getProjectName    : " << PVSSinfo::getProjectName() << endl;
-			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl;
+			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl << endl;
+			TEST_PROP_NAME("MCU001:LOFAR_XYZ.abc");
+			TEST_PROP_NAME("LOFAR_XYZ.abc");
+			TEST_PROP_NAME("LOFAR_XYZ.__abc");
+			TEST_PROP_NAME(".LOFAR_XYZ.abc");
+			TEST_PROP_NAME("LOFAR_XYZ.abc.");
+			TEST_PROP_NAME("LOFAR__XYZ.abc");
+			TEST_PROP_NAME("LOFAR_XYZ!abc");
 		}
 		catch (Exception& except) {
 			cout << "One of the PVSS-calls went wrong" << endl;

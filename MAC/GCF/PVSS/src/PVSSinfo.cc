@@ -388,41 +388,51 @@ void buildTypeStructTree(const string 			path,
 //
 bool PVSSinfo::isValidPropName(const char* propName)
 {
-  bool valid(true);
-  ASSERT(propName);
-  char doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
-  unsigned int length = strlen(propName);
-  if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP ) {
-    valid = false;
-  }
-  else if (strstr(propName, doubleSep) != 0) {
-    valid = false;
-  }
-  else {
-    char refInd[] = "__";
-    char* refIndPos = strstr(propName, refInd);
-    if (refIndPos != 0) {
-      if (refIndPos > propName) {
-        if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {
-          // ref indication may only found at begin or after a GCF_PROP_NAME_SEP
-          valid = false;
-        }
-      }
-      if (valid && strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
-        // ref indication may not used in struct name
-        valid = false;
-      }
-    }
-    for (unsigned short i = 0; valid && i < length; i++) {
-      if (refIndPos > 0 && ((propName + i) == refIndPos)) {
-        i += 2; // skip the ref indicator
-      }
-      if (!isalnum(propName[i]) && propName[i] != GCF_PROP_NAME_SEP) {
-        valid = false;
-      }
-    }
-  }
-  return valid;
+	ASSERT(propName);
+
+	char			doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
+	unsigned int	length = strlen(propName);
+
+	// Invalid: .***   ***.  and  ***..***
+	if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP ) {
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): dot at edge of name");
+		return (false);
+	}
+	if (strstr(propName, doubleSep) != 0) {
+		LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double dot");
+		return (false);
+	}
+
+	// ref indication may only found at begin or after a GCF_PROP_NAME_SEP
+	char	refInd[] = "__";
+	char*	refIndPos = strstr(propName, refInd);
+	if (refIndPos != 0) {									// we found it
+		if (refIndPos > propName) {							// not at begin
+			if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {	// not at a dot
+				LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore not after dot");
+				return (false);
+			}
+		}
+		// ref indication may not used in struct name: ***__***.*** is not valid
+		if (strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore in DP-part");
+			return (false);
+		}
+	}
+
+	// only allow dots, :  and __ in the name.
+	for (unsigned short i = 0; i < length; i++) {
+		if (refIndPos > 0 && ((propName + i) == refIndPos)) {
+			i += 2; // skip the ref indicator
+		}
+		if (!isalnum(propName[i]) && (propName[i] != GCF_PROP_NAME_SEP) && 
+									 (propName[i] != GCF_SYS_NAME_SEP) &&
+									 (propName[i] != GCF_SCOPE_NAME_SEP)) {
+			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): illegal character at pos " << i << ":" << propName[i]);
+			return (false);
+		}
+	}
+	return (true);
 }
 
 //
@@ -430,29 +440,30 @@ bool PVSSinfo::isValidPropName(const char* propName)
 //
 bool PVSSinfo::isValidScope(const char* scopeName)
 {
-  bool valid(true);
-  ASSERT(scopeName);
-  char doubleSep[] = {GCF_SCOPE_NAME_SEP, GCF_SCOPE_NAME_SEP, 0};
-  unsigned int length = strlen(scopeName);
-  char* sysNameSep = strchr(scopeName, ':');
-  if (sysNameSep > 0) {
-    length -= (sysNameSep + 1 - scopeName);
-    scopeName = sysNameSep + 1;
-  }
-  if (scopeName[0] == GCF_SCOPE_NAME_SEP || scopeName[length - 1] == GCF_SCOPE_NAME_SEP ) {
-    valid = false;
-  }
-  else if (strstr(scopeName, doubleSep) != 0) {
-    valid = false;
-  }
-  else {
-    for(unsigned short i = 0; valid && i < length; i++) {
-      if (!isalnum(scopeName[i]) && scopeName[i] != GCF_SCOPE_NAME_SEP) {
-        valid = false;
-      }
-    }
-  }
-  return valid;
+	return (isValidPropName(scopeName));
+#if 0
+	ASSERT(scopeName);
+
+	char			doubleSep[] = {GCF_SCOPE_NAME_SEP, GCF_SCOPE_NAME_SEP, 0};
+	unsigned int	length 		= strlen(scopeName);
+	char*			sysNameSep	= strchr(scopeName, ':');
+	if (sysNameSep > 0) {
+		length -= (sysNameSep + 1 - scopeName);
+		scopeName = sysNameSep + 1;
+	}
+	if (scopeName[0] == GCF_SCOPE_NAME_SEP || scopeName[length - 1] == GCF_SCOPE_NAME_SEP ) {
+		return (false);
+	}
+	if (strstr(scopeName, doubleSep) != 0) {
+		return (false);
+	}
+	for(unsigned short i = 0; i < length; i++) {
+		if (!isalnum(scopeName[i]) && scopeName[i] != GCF_SCOPE_NAME_SEP) {
+			return (false);
+		}
+	}
+	return (true);
+#endif
 }
 
 
