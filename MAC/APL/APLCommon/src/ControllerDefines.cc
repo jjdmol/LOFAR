@@ -243,6 +243,7 @@ string observationParset(int	obsID)
 //	@rcu@
 //  @inputbuffer@
 //  @adder@
+//  @storage@
 //
 string	createPropertySetName(const string&		propSetMask,
 							  const string&		controllerName,
@@ -299,6 +300,9 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@adder@")) != string::npos) {
 		psName.replace(pos, 7, string("Adder%d"));
+	}
+	if ((pos = psName.find("@storage@")) != string::npos) {
+		psName.replace(pos, 9, string("Storage%d"));
 	}
 		
 	return (psName);
