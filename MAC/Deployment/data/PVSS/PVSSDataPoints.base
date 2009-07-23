@@ -51,7 +51,7 @@ Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
 Adder				ADD		C	Y	@adder@
 InputBuffer			IPB		C	Y	@inputbuffer@
-Storage				-		C	Y	@storage@
+Storage				STR		C	Y	@storage@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
 BGPRack				-		C	N	LOFAR_PIC_@bgp@
