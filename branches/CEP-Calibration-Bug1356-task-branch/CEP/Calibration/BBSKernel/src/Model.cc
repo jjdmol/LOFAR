@@ -89,10 +89,10 @@ Model::Model(const Instrument &instrument, const SourceDB &sourceDb,
     const casa::MDirection &reference)
     :   itsInstrument(instrument),
         itsSourceDb(sourceDb),
-        itsPhaseReference(reference),
+        itsPhaseReference(reference)
 {
-    // Make station UVW expression for all stations.
-    makeStationUVW();
+//    // Make station UVW expression for all stations.
+//    makeStationUVW();
 }
 
 void Model::clear()
@@ -189,9 +189,13 @@ void Model::makeForwardExpr(const ModelConfig &config,
     const bool useAnisotropicTransform = config.useAnisotropicGain()
         || config.useBeam() || config.useIonosphere();
 
-    // Create a station shift node per (station, source) combination.
+    // Create a UVW expression per station.
+    casa::Vector<Expr<Vector<3> >::Ptr> exprStationUVW =
+        makeStationUVWExpr(stations);
+
+    // Create a station shift expression per (station, source) combination.
     casa::Matrix<Expr<Vector<2> >::Ptr> exprStationShift =
-        makeStationShiftExpr(stations, sources);
+        makeStationShiftExpr(exprStationUVW, sources);
 
     // Create an anisotropic gain expression per (station, source) combination.
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprAnisotropicGain;
@@ -513,7 +517,7 @@ void Model::setRequestGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
-JonesMatrix Model::evaluate(const baseline_t &baseline)
+const JonesMatrix Model::evaluate(const baseline_t &baseline)
 {
     map<baseline_t, Expr<JonesMatrix>::Ptr>::const_iterator exprIt =
         itsExpr.find(baseline);
@@ -978,21 +982,36 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
     return Source::Ptr();
 }
 
-void Model::makeStationUVW()
+//void Model::makeStationUVW()
+//{
+//    itsStationUVW.resize(itsInstrument.stations.size());
+//    for(size_t i = 0; i < itsStationUVW.size(); ++i)
+//    {
+////        itsStationUVW[i].reset(new StatUVW(itsInstrument.stations[i],
+////            itsInstrument.position, itsPhaseRef));
+//        itsStationUVW[i].reset
+//            (new StationUVW(itsInstrument.stations[i].position,
+//                itsInstrument.position, itsPhaseReference));
+//    }
+//}
+
+casa::Vector<Expr<Vector<3> >::Ptr>
+Model::makeStationUVWExpr(const vector<unsigned int> &stations) const
 {
-    itsStationUVW.resize(itsInstrument.stations.size());
-    for(size_t i = 0; i < itsStationUVW.size(); ++i)
+    casa::Vector<Expr<Vector<3> >::Ptr> expr(stations.size());
+    for(unsigned int i = 0; i < stations.size(); ++i)
     {
-//        itsStationUVW[i].reset(new StatUVW(itsInstrument.stations[i],
-//            itsInstrument.position, itsPhaseRef));
-        itsStationUVW[i].reset
-            (new StationUVW(itsInstrument.stations[i].position,
-                itsInstrument.position, itsPhaseReference));
+        const casa::MPosition &position =
+            itsInstrument.stations[stations[i]].position;
+        expr[i] = Expr<Vector<3> >::Ptr(new StationUVW(position,
+            itsInstrument.position, itsPhaseReference));
     }
+
+    return expr;
 }
 
 casa::Matrix<Expr<Vector<2> >::Ptr>
-Model::makeStationShiftExpr(const vector<unsigned int> &stations,
+Model::makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
     const vector<Source::Ptr> &sources) const
 {
     casa::Vector<LMN::Ptr> exprLMN(sources.size());
@@ -1002,14 +1021,12 @@ Model::makeStationShiftExpr(const vector<unsigned int> &stations,
             sources[i]->getPosition()));
     }
 
-    casa::Matrix<Expr<Vector<2> >::Ptr> expr(sources.size(), stations.size());
-    for(unsigned int i = 0; i < stations.size(); ++i)
+    casa::Matrix<Expr<Vector<2> >::Ptr> expr(sources.size(), uvw.size());
+    for(unsigned int i = 0; i < uvw.size(); ++i)
     {
-        const unsigned int station = stations[i];
         for(unsigned int j = 0; j < sources.size(); ++j)
         {
-            expr(j, i) = Expr<Vector<2> >::Ptr(new DFTPS(itsStationUVW[station],
-                exprLMN(j)));
+            expr(j, i) = Expr<Vector<2> >::Ptr(new DFTPS(uvw(i), exprLMN(j)));
         }
     }
 

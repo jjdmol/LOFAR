@@ -76,7 +76,7 @@ public:
         const vector<baseline_t> &baselines);
 
     void setRequestGrid(const Grid &grid);
-    JonesMatrix evaluate(const baseline_t &baseline);
+    const JonesMatrix evaluate(const baseline_t &baseline);
 
     ParmGroup getParms() const;
 
@@ -93,10 +93,13 @@ private:
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
     Source::Ptr makeSource(const SourceInfo &source);
 
-    void makeStationUVW();
+//    void makeStationUVW();
 
+    casa::Vector<Expr<Vector<3> >::Ptr>
+        makeStationUVWExpr(const vector<unsigned int> &stations) const;
+//const vector<unsigned int> &stations,
     casa::Matrix<Expr<Vector<2> >::Ptr>
-        makeStationShiftExpr(const vector<unsigned int> &stations,
+        makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
             const vector<Source::Ptr> &sources) const;
 
     casa::Vector<Expr<JonesMatrix>::Ptr>
@@ -134,7 +137,7 @@ private:
     Request             itsRequest;
     Cache               itsCache;
 
-    vector<StationUVW::ConstPtr>            itsStationUVW;
+//    vector<StationUVW::ConstPtr>            itsStationUVW;
     map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
 };
