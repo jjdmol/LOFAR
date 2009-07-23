@@ -241,6 +241,13 @@ string observationParset(int	obsID)
 //	@RSPboard@
 //	@TBboard@
 //	@rcu@
+//      @bgp@
+//      @midplane@
+//      @ionode@
+//      @osrack@
+//      @ossubcluster@
+//      @storagenode@
+//      @offlinenode@
 //  @inputbuffer@
 //  @adder@
 //  @storage@
@@ -294,6 +301,27 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@rcu@")) != string::npos) {
 		psName.replace(pos, 5, string("RCU%d"));
+	}
+	if ((pos = psName.find("@bgp@")) != string::npos) {
+		psName.replace(pos, 5, string("BGP%d"));
+	}
+	if ((pos = psName.find("@midplane@")) != string::npos) {
+		psName.replace(pos, 10, string("Midplane%d"));
+	}
+	if ((pos = psName.find("@ionode@")) != string::npos) {
+		psName.replace(pos, 8, string("IONode%d"));
+	}
+	if ((pos = psName.find("@osrack@")) != string::npos) {
+		psName.replace(pos, 8, string("OSRack%d"));
+	}
+	if ((pos = psName.find("@ossubcluster@")) != string::npos) {
+		psName.replace(pos, 14, string("OSSubcluster%d"));
+	}
+	if ((pos = psName.find("@storagenode@")) != string::npos) {
+		psName.replace(pos, 13, string("StorageNode%d"));
+	}
+	if ((pos = psName.find("@offlinenode@")) != string::npos) {
+		psName.replace(pos, 13, string("OfflineNode%d"));
 	}
 	if ((pos = psName.find("@inputbuffer@")) != string::npos) {
 		psName.replace(pos, 13, string("InputBuffer%d"));
