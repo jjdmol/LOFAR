@@ -450,51 +450,80 @@ void Equator::makeGridMapping()
 {
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
 
-    // Compute overlap between the solution grid and the current chunk.
-    Box overlap = itsSolGrid.getBoundingBox() & visGrid.getBoundingBox();
-    ASSERTSTR(!overlap.empty(), "No overlap between the solution grid and the"
-        " current chunk.");
+    const pair<Interval, vector<Interval> > mapFreq =
+        makeAxisMapping(itsSolGrid[FREQ], visGrid[FREQ]);
 
-    // Find the first and last cell that intersects the current chunk.
-    itsStartCell = itsSolGrid.locate(overlap.lower());
-    itsEndCell = itsSolGrid.locate(overlap.upper(), false);
+    const pair<Interval, vector<Interval> > mapTime =
+        makeAxisMapping(itsSolGrid[TIME], visGrid[TIME]);
 
-    // The end cell is _inclusive_ by convention.
-    const size_t nFreqCells = itsEndCell.first - itsStartCell.first + 1;
-    const size_t nTimeCells = itsEndCell.second - itsStartCell.second + 1;
+    ASSERTSTR(!mapFreq.second.empty() && !mapTime.second.empty(), "No overlap"
+        " between the solution grid and the current chunk.");
 
-    // Map cells to inclusive sample intervals (frequency axis).
-    Axis::ShPtr visAxis = visGrid[FREQ];
-    Axis::ShPtr solAxis = itsSolGrid[FREQ];
+    // Store the indices of the first and last cell of the solution grid that
+    // intersect the visibility grid.
+    itsStartCell = Location(mapFreq.first.start, mapTime.first.start);
+    itsEndCell = Location(mapFreq.first.end, mapTime.first.end);
 
+    // Store the mappings from cells of the solution grid to cell intervals in
+    // the visibility grid.
+    itsFreqIntervals = mapFreq.second;
+    itsTimeIntervals = mapTime.second;
+}
+
+pair<Equator::Interval, vector<Equator::Interval> >
+Equator::makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to) const
+{
+    Interval domain;
+    vector<Interval> mapping;
+
+    const double overlapStart = std::max(from->start(), to->start());
+    const double overlapEnd = std::min(from->end(), to->end());
+
+    if(overlapStart >= overlapEnd || casa::near(overlapStart, overlapEnd))
+    {
+        return make_pair(domain, mapping);
+    }
+
+    domain.start = from->locate(overlapStart);
+    domain.end = from->locate(overlapEnd, false, domain.start);
+
+    LOG_DEBUG_STR("Domain: [" << domain.start << "," << domain.end << "]");
+
+    // Intervals are inclusive by convention.
+    const size_t nCells = domain.end - domain.start + 1;
+    ASSERT(nCells >= 1);
+    mapping.reserve(nCells);
+
+    // Special case for the first domain cell: lower and possibly upper boundary
+    // may be located outside of the overlap between the "from" and "to" axis.
     Interval interval;
-    itsFreqIntervals.resize(nFreqCells);
-    for(size_t i = 0; i < nFreqCells; ++i)
+    interval.start = to->locate(std::max(from->lower(domain.start),
+        overlapStart));
+    interval.end = to->locate(std::min(from->upper(domain.start), overlapEnd),
+        false, interval.start);
+    mapping.push_back(interval);
+
+    for(size_t i = 1; i < nCells - 1; ++i)
     {
-        interval.start =
-            visAxis->locate(std::max(solAxis->lower(itsStartCell.first + i),
-                overlap.lowerX()));
-        interval.end =
-            visAxis->locate(std::min(solAxis->upper(itsStartCell.first + i),
-                overlap.upperX()), false);
-        itsFreqIntervals[i] = interval;
+        interval.start = to->locate(from->lower(domain.start + i), true,
+            interval.end);
+        interval.end = to->locate(from->upper(domain.start + i), false,
+            interval.end);
+        mapping.push_back(interval);
     }
 
-    // Map cells to inclusive sample intervals (time axis).
-    visAxis = visGrid[TIME];
-    solAxis = itsSolGrid[TIME];
-
-    itsTimeIntervals.resize(nTimeCells);
-    for(size_t i = 0; i < nTimeCells; ++i)
+    if(nCells > 1)
     {
-        interval.start =
-            visAxis->locate(std::max(solAxis->lower(itsStartCell.second + i),
-                overlap.lowerY()));
-        interval.end =
-            visAxis->locate(std::min(solAxis->upper(itsStartCell.second + i),
-                overlap.upperY()), false);
-        itsTimeIntervals[i] = interval;
+        // Special case for the last domain cell: upper boundary may be located
+        // outside of the overlap between the "from" and "to" axis.
+        interval.start = to->locate(from->lower(domain.end), true,
+            interval.end);
+        interval.end = to->locate(std::min(from->upper(domain.end), overlapEnd),
+            false, interval.end);
+        mapping.push_back(interval);
     }
+
+    return make_pair(domain, mapping);
 }
 
 void Equator::makeCoeffMapping(const CoeffIndex &index)

@@ -61,9 +61,29 @@ public:
         const Location &end);
 
 private:
+    // Nested struct that represents an interval of cells along an axis. Used to
+    // create the mapping from cells in the solution grid to intervals of cells
+    // in the observation grid.
+    struct Interval
+    {
+        Interval()
+            :   start(0),
+                end(0)
+        {
+        }
+
+        uint    start, end;
+    };
+
     // Create a mapping for each axis that maps from cells in the solution grid
     // to cell intervals in the observation (chunk) grid.
     void makeGridMapping();
+
+    // Create a mapping from cells of axis "from" to the cell intervals on axis
+    // "to". Additionally, the interval of cells of axis "from" that intersect
+    // axis "to" (the domain) is returned.
+    pair<Interval, vector<Interval> > makeAxisMapping(const Axis::ShPtr &from,
+        const Axis::ShPtr &to) const;
 
     // Create a mapping that maps each (parmId, coeffId) combination to an
     // index.
@@ -117,24 +137,10 @@ private:
         NSTimer                 timers[N_ThreadTimer];
     };
 
-    // Nested struct that represents an interval of cells along an axis. Used to
-    // create the mapping from cells in the solution grid to intervals of cells
-    // in the observation grid.
-    struct Interval
-    {
-        Interval()
-            :   start(0),
-                end(0)
-        {
-        }
-
-        uint    start, end;
-    };
-
     // Observed visibilities.
-    VisData::Ptr                    itsChunk;
+    VisData::Ptr                        itsChunk;
     // Model of the sky and the instrument.
-    Model::Ptr                      itsModel;
+    Model::Ptr                          itsModel;
     // Solution grid.
     Grid                                itsSolGrid;
     // Maximum number of cells in the solution grid that can be processed
