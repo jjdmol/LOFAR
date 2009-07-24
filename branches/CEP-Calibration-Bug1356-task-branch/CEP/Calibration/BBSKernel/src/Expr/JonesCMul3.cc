@@ -648,12 +648,6 @@ JonesResult JonesCMul3::getJResult(const Request& request)
     return result;
 }
 
-#ifdef EXPR_GRAPH
-std::string JonesCMul3::getLabel()
-{
-    return std::string("JonesCMul3\\nJones expression A * B * (C*)");
-}
-#endif
 
 } // namespace BBS
 } // namespace LOFAR

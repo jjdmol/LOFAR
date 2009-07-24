@@ -268,6 +268,12 @@ MatrixRep* MatrixRealSca::cos()
   return this;
 }
 
+MatrixRep* MatrixRealSca::log()
+{
+  itsValue = std::log(itsValue);
+  return this;
+}
+
 MatrixRep* MatrixRealSca::exp()
 {
   itsValue = std::exp(itsValue);

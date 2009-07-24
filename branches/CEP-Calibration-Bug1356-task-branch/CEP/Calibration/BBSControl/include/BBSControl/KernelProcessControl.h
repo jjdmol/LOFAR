@@ -97,7 +97,6 @@ public:
     virtual CommandResult visit(const SolveStep &command);
     virtual CommandResult visit(const ShiftStep &command);
     virtual CommandResult visit(const RefitStep &command);
-    virtual CommandResult visit(const NoiseStep &command);
     // @}
 
 private:
@@ -128,17 +127,17 @@ private:
 
     // Calibration session information.
     scoped_ptr<CalSession>                  itsCalSession;
-    
+
     // 0-based index of this kernel process.
     KernelIndex                             itsKernelIndex;
-    
+
     // Measurement.
     Measurement::Ptr                    itsMeasurement;
     string                                  itsInputColumn;
-    
+
     // Global time axis.
     Axis::ShPtr                             itsGlobalTimeAxis;
-    
+
     // Chunk.
     Box                                     itsDomain;
     VisSelection                            itsChunkSelection;

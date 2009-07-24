@@ -33,7 +33,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 PQInitSession::PQInitSession(const string &key, int32 &id)
@@ -42,7 +42,7 @@ PQInitSession::PQInitSession(const string &key, int32 &id)
         itsId(id)
 {
 }
-        
+
 void PQInitSession::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -68,7 +68,7 @@ PQSetState::PQSetState(int32 id, const ProcessId &pid, CalSession::State state,
         itsStatus(status)
 {
 }
-        
+
 void PQSetState::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -108,7 +108,7 @@ void PQGetState::operator()(argument_type &transaction)
 void PQGetState::on_commit()
 {
     itsStatus = itsQueryResult[0]["_status"].as<int32>();
-    
+
     if(itsStatus == 0)
     {
         int32 state = itsQueryResult[0]["_state"].as<int32>();
@@ -130,12 +130,12 @@ PQInitWorkerRegister::PQInitWorkerRegister(int32 id, const ProcessId &pid,
         itsVdsDesc(vds),
         itsUseSolver(useSolver)
 {
-}    
+}
 
 void PQInitWorkerRegister::operator()(argument_type &transaction)
 {
     ostringstream query;
-        
+
     const vector<CEP::VdsPartDesc> &parts = itsVdsDesc.getParts();
     for(size_t i = 0; i < parts.size(); ++i)
     {
@@ -149,7 +149,7 @@ void PQInitWorkerRegister::operator()(argument_type &transaction)
         LOG_DEBUG_STR("Query: " << query.str());
         transaction.exec(query.str());
     }
-    
+
     if(itsUseSolver)
     {
         query.str("");
@@ -199,7 +199,7 @@ PQRegisterAsKernel::PQRegisterAsKernel(int32 id, const ProcessId &pid,
         itsGrid(grid),
         itsStatus(status)
 {
-}    
+}
 
 void PQRegisterAsKernel::operator()(argument_type &transaction)
 {
@@ -238,7 +238,7 @@ PQRegisterAsSolver::PQRegisterAsSolver(int32 id, const ProcessId &pid,
         itsPort(port),
         itsStatus(status)
 {
-}    
+}
 
 void PQRegisterAsSolver::operator()(argument_type &transaction)
 {
@@ -268,7 +268,7 @@ PQGetWorkerRegister::PQGetWorkerRegister(int32 id, vector<size_t> &count,
 {
     ASSERT(itsCount.size() == CalSession::N_WorkerType);
 }
-        
+
 void PQGetWorkerRegister::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -281,7 +281,7 @@ void PQGetWorkerRegister::operator()(argument_type &transaction)
 void PQGetWorkerRegister::on_commit()
 {
     fill(itsCount.begin(), itsCount.end(), 0);
-    
+
     pqxx::result::const_iterator rowIt = itsQueryResult.begin();
     const pqxx::result::const_iterator rowItEnd = itsQueryResult.end();
     while(rowIt != rowItEnd)
@@ -292,7 +292,7 @@ void PQGetWorkerRegister::on_commit()
         {
             THROW(TranslationException, "Invalid worker type: " << type);
         }
-        CalSession::WorkerType workerType = 
+        CalSession::WorkerType workerType =
             static_cast<CalSession::WorkerType>(type);
 
         // Update slot counter.
@@ -329,7 +329,7 @@ void PQGetWorkerRegister::on_commit()
             // Get measurement part.
             worker.filesys = rowIt["filesys"].as<string>();
             worker.path = rowIt["path"].as<string>();
-            
+
             // Unpack frequency axis.
             pqxx::binarystring freqLower(rowIt["axis_freq_lower"]);
             pqxx::binarystring freqUpper(rowIt["axis_freq_upper"]);
@@ -337,7 +337,7 @@ void PQGetWorkerRegister::on_commit()
                 unpack_vector<double>(freqLower),
                 unpack_vector<double>(freqUpper),
                 true));
-            
+
             // Unpack time axis.
             pqxx::binarystring timeLower(rowIt["axis_time_lower"]);
             pqxx::binarystring timeUpper(rowIt["axis_time_upper"]);
@@ -345,7 +345,7 @@ void PQGetWorkerRegister::on_commit()
                 unpack_vector<double>(timeLower),
                 unpack_vector<double>(timeUpper),
                 true));
-            
+
             worker.grid = Grid(freqAxis, timeAxis);
         }
         else
@@ -362,7 +362,7 @@ void PQGetWorkerRegister::on_commit()
 
         itsWorkers.push_back(worker);
         LOG_DEBUG_STR("Found worker... Type: " << type);
-        
+
         ++rowIt;
     }
 }
@@ -422,7 +422,7 @@ void PQPostCommand::operator()(argument_type &transaction)
         << itsId
         << ",'" << transaction.esc(itsProcessId.hostname) << "'"
         << "," << itsProcessId.pid;
-        
+
     if(itsAddressee != CalSession::N_WorkerType)
     {
         query << "," << static_cast<int32>(itsAddressee);
@@ -475,7 +475,7 @@ PQPostResult::PQPostResult(int32 id, const ProcessId &pid,
         itsCommandResult(cmdResult),
         itsStatus(status)
 {
-}        
+}
 
 void PQPostResult::operator()(argument_type &transaction)
 {
@@ -507,7 +507,7 @@ PQGetCommand::PQGetCommand(int32 id, const ProcessId &pid, int32 &status,
         itsCommand(cmd)
 {
 }
-    
+
 void PQGetCommand::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -530,7 +530,7 @@ void PQGetCommand::on_commit()
         itsCommand = make_pair(CommandId(-1), shared_ptr<Command>());
         return;
     }
-    
+
     string type = itsQueryResult[0]["_type"].as<string>();
 
     // Get the command-id.
@@ -563,7 +563,7 @@ void PQGetCommand::on_commit()
             THROW(TranslationException, "Failed to create a '" << type << "'"
                 << " command object");
         }
-        
+
         cmd->read(ps);
         itsCommand = make_pair(id, cmd);
     }
@@ -579,7 +579,7 @@ PQGetCommandStatus::PQGetCommandStatus(const CommandId &id, int32 &status,
         itsCommandStatus(commandStatus)
 {
 }
-        
+
 void PQGetCommandStatus::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -623,7 +623,7 @@ PQGetResults::PQGetResults(const CommandId &id,
         itsResults(results)
 {
 }
-    
+
 void PQGetResults::operator()(argument_type &transaction)
 {
     ostringstream query;
@@ -636,7 +636,7 @@ void PQGetResults::operator()(argument_type &transaction)
 void PQGetResults::on_commit()
 {
     itsResults.clear();
-    
+
     pqxx::result::const_iterator rowIt = itsQueryResult.begin();
     const pqxx::result::const_iterator rowItEnd = itsQueryResult.end();
     while(rowIt != rowItEnd)
@@ -657,7 +657,7 @@ void PQGetResults::on_commit()
 
         itsResults.push_back(res);
         ++rowIt;
-    }                
+    }
 }
 
 } //# namespace BBS

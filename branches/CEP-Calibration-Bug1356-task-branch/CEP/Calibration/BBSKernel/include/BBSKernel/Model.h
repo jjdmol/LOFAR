@@ -20,7 +20,6 @@
 //#
 //# $Id$
 
-
 #ifndef LOFAR_BBS_BBSKERNEL_MODEL_H
 #define LOFAR_BBS_BBSKERNEL_MODEL_H
 
@@ -92,12 +91,13 @@ private:
 
     vector<Source::Ptr> makeSourceList(const vector<string> &patterns);
     Source::Ptr makeSource(const SourceInfo &source);
+    Expr<Scalar>::Ptr makeSpectralIndex(const SourceInfo &source);
 
 //    void makeStationUVW();
 
     casa::Vector<Expr<Vector<3> >::Ptr>
         makeStationUVWExpr(const vector<unsigned int> &stations) const;
-//const vector<unsigned int> &stations,
+
     casa::Matrix<Expr<Vector<2> >::Ptr>
         makeStationShiftExpr(const casa::Vector<Expr<Vector<3> >::Ptr> &uvw,
             const vector<Source::Ptr> &sources) const;

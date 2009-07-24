@@ -46,6 +46,7 @@
 //#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PhaseRef.h>
 //#include <BBSKernel/Expr/UVW.h>
+#include <BBSKernel/Expr/SpectralIndex.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/Threshold.h>
@@ -62,6 +63,7 @@
 //#include <BBSKernel/Expr/JonesCMul3.h>
 #include <BBSKernel/Expr/Request.h>
 //#include <BBSKernel/Expr/JonesExpr.h>
+#include <BBSKernel/Expr/SpectralIndex.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
@@ -141,7 +143,8 @@ void Model::makeForwardExpr(const ModelConfig &config,
             dynamic_pointer_cast<const PointSource>(sources[i]);
 
         exprCoherence(i) =
-            PointCoherence::Ptr(new PointCoherence(point->getStokesVector()));
+            PointCoherence::Ptr(new PointCoherence(point->getStokesVector(),
+                point->getSpectralIndex()));
     }
 
     // Isotropic (direction independent) transform.
@@ -941,6 +944,7 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             ExprParm::Ptr stokesQ = makeExprParm(SKY, "Q:" + source.getName());
             ExprParm::Ptr stokesU = makeExprParm(SKY, "U:" + source.getName());
             ExprParm::Ptr stokesV = makeExprParm(SKY, "V:" + source.getName());
+            Expr<Scalar>::Ptr spectral = makeSpectralIndex(source);
 
             AsExpr<Vector<2> >::Ptr position(new AsExpr<Vector<2> >());
             position->connect(0, ra);
@@ -953,21 +957,22 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
             stokes->connect(3, stokesV);
 
             return PointSource::Ptr(new PointSource(source.getName(), position,
-                stokes));
+                stokes, spectral));
         }
         break;
 
 //    case SourceInfo::GAUSSIAN:
 //        {
-//            Expr ra(makeExprParm(SKY, "Ra:" + source.getName()));
-//            Expr dec(makeExprParm(SKY, "Dec:" + source.getName()));
-//            Expr i(makeExprParm(SKY, "I:" + source.getName()));
-//            Expr q(makeExprParm(SKY, "Q:" + source.getName()));
-//            Expr u(makeExprParm(SKY, "U:" + source.getName()));
-//            Expr v(makeExprParm(SKY, "V:" + source.getName()));
-//            Expr maj(makeExprParm(SKY, "Major:" + source.getName()));
-//            Expr min(makeExprParm(SKY, "Minor:" + source.getName()));
-//            Expr phi(makeExprParm(SKY, "Phi:" + source.getName()));
+//            Expr ra = makeExprParm(SKY, "Ra:" + source.getName());
+//            Expr dec = makeExprParm(SKY, "Dec:" + source.getName());
+//            Expr i = makeExprParm(SKY, "I:" + source.getName());
+//            Expr q = makeExprParm(SKY, "Q:" + source.getName());
+//            Expr u = makeExprParm(SKY, "U:" + source.getName());
+//            Expr v = makeExprParm(SKY, "V:" + source.getName());
+//            Expr maj = makeExprParm(SKY, "Major:" + source.getName());
+//            Expr min = makeExprParm(SKY, "Minor:" + source.getName());
+//            Expr phi = makeExprParm(SKY, "Phi:" + source.getName());
+//            Expr spectral = makeSpectralIndex(source);
 
 //            return GaussianSource::Ptr(new GaussianSource(source.getName(),
 //                ra, dec, i, q, u, v, maj, min, phi));
@@ -994,6 +999,28 @@ Source::Ptr Model::makeSource(const SourceInfo &source)
 //                itsInstrument.position, itsPhaseReference));
 //    }
 //}
+
+Expr<Scalar>::Ptr Model::makeSpectralIndex(const SourceInfo &source)
+{
+    unsigned int degree =
+        static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
+            "SpectralIndexDegree:" + source.getName()));
+
+    ExprParm::Ptr reference = makeExprParm(SKY, "ReferenceFrequency:"
+        + source.getName());
+
+    vector<Expr<Scalar>::Ptr> coeff;
+    coeff.reserve(degree + 1);
+    for(unsigned int i = 0; i <= degree; ++i)
+    {
+        ostringstream name;
+        name << "SpectralIndex:" << i << ":" << source.getName();
+        coeff.push_back(makeExprParm(SKY, name.str()));
+    }
+
+    return Expr<Scalar>::Ptr(new SpectralIndex(reference, coeff.begin(),
+        coeff.end()));
+}
 
 casa::Vector<Expr<Vector<3> >::Ptr>
 Model::makeStationUVWExpr(const vector<unsigned int> &stations) const

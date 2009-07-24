@@ -48,7 +48,6 @@ public:
         const Expr<Vector<2> >::ConstPtr &direction);
 
 private:
-    // Compute a result for the given request.
     virtual const Vector<3>::view evaluateImpl(const Request &request,
         const Vector<2>::view &direction) const;
 

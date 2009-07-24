@@ -30,7 +30,6 @@
 #include <Common/lofar_smartptr.h>
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/ExprResult.h>
 
 namespace LOFAR
 {
@@ -45,7 +44,7 @@ class Source
 public:
     typedef shared_ptr<Source>          Ptr;
     typedef shared_ptr<const Source>    ConstPtr;
-    
+
     Source();
     Source(const string &name, const Expr<Vector<2> >::ConstPtr &position);
     virtual ~Source();

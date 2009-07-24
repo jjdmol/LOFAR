@@ -49,9 +49,6 @@ public:
     JonesResult getJResult (const Request&);
 
 private:
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
     JonesExpr itsLeft, itsMid, itsRight;
 };

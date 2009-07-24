@@ -69,65 +69,53 @@
 #include <Common/lofar_iomanip.h>
 
 using namespace casa;
-using namespace std;
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
-MeasurementAIPS::MeasurementAIPS(string filename,
-        uint observationId,
-        uint dataDescriptionId,
-        uint fieldId)
+MeasurementAIPS::MeasurementAIPS(const string &filename,
+    unsigned int idObservation, unsigned int idField,
+    unsigned int idDataDescription)
+    :   itsMS(filename),
+        itsFreqAxisReversed(false),
+        itsIdObservation(idObservation),
+        itsIdField(idField),
+        itsIdDataDescription(idDataDescription)
 {
-    itsFreqAxisReversed = false;
-    itsMS = MeasurementSet(filename);
+    // Get information about the telescope (instrument).
+    initInstrument();
 
-    ROMSAntennaColumns antenna(itsMS.antenna());
-    ROMSDataDescColumns description(itsMS.dataDescription());
-    ROMSFieldColumns field(itsMS.field());
-    ROMSObservationColumns observation(itsMS.observation());
-    ROMSPolarizationColumns polarization(itsMS.polarization());
-    ROMSSpWindowColumns window(itsMS.spectralWindow());
+    // Get the phase center of the selected field.
+    initPhaseCenter();
 
-    initInstrumentInfo(antenna, observation, observationId);
-    initFieldInfo(field, fieldId);
+    // Select a single measurement from the measurement set.
+    // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID) as
+    // the key to select a single measurement. This may not be strict enough,
+    // i.e. different measurements may still have the same key.
+    itsMainTableView =
+        itsMS(itsMS.col("OBSERVATION_ID") == static_cast<Int>(idObservation)
+        && itsMS.col("FIELD_ID") == static_cast<Int>(idField)
+        && itsMS.col("DATA_DESC_ID") == static_cast<Int>(idDataDescription));
 
-    // Read polarization id and spectral window id.
-    ASSERT(description.nrow() > dataDescriptionId);
-    ASSERT(!description.flagRow()(dataDescriptionId));
-    Int polarizationId = description.polarizationId()(dataDescriptionId);
-    Int windowId = description.spectralWindowId()(dataDescriptionId);
+    // Get the dimensions (time, frequency, baselines, polarization products)
+    // of the measurement.
+    initDimensions();
 
-    initPolarizationInfo(polarization, polarizationId);
-    initFreqTimeInfo(window, windowId);
-
-    // Select all rows that match the specified observation.
-    itsMS = itsMS(itsMS.col("OBSERVATION_ID") == static_cast<Int>(observationId)
-        && itsMS.col("DATA_DESC_ID") == static_cast<Int>(dataDescriptionId)
-        && itsMS.col("FIELD_ID") == static_cast<Int>(fieldId));
-
-    initBaselineInfo();
-    
-    LOG_DEBUG_STR("Measurement " << observationId << " contains "
-        << itsMS.nrow() << " row(s).");
-    LOG_DEBUG_STR("Measurement dimensions: " << endl << itsDimensions); 
+    LOG_DEBUG_STR("Measurement " << idObservation << " contains "
+        << itsMainTableView.nrow() << " row(s).");
+    LOG_DEBUG_STR("Measurement dimensions: " << endl << itsDimensions);
 }
 
 
-MeasurementAIPS::~MeasurementAIPS()
-{
-    itsMS = MeasurementSet();
-}
-
-
-VisDimensions
-MeasurementAIPS::getDimensions(const VisSelection &selection) const
+VisDimensions MeasurementAIPS::getDimensions(const VisSelection &selection)
+    const
 {
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMS, selection);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
+    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
+        " rows.");
 
     return getDimensionsImpl(tab_selection, slicer);
 }
@@ -139,13 +127,14 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     NSTimer readTimer, copyTimer;
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMS, selection);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
+    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
+        " rows.");
 
     VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
     VisData::Ptr buffer(new VisData(visDims));
 
-    const VisDimensions &dims = buffer->getDimensions();    
+    const VisDimensions &dims = buffer->getDimensions();
     const size_t nChannels = dims.getChannelCount();
     const size_t nPolarizations = dims.getPolarizationCount();
 
@@ -154,11 +143,13 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range!");
+        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range.");
 
         // Get next timeslot.
         tab_tslot = tslotIterator.table();
         size_t nRows = tab_tslot.nrow();
+        ASSERTSTR(nRows <= dims.getBaselineCount(), "Measurement contains"
+            " multiple samples with the same timestamp for a single baseline.");
 
         // Declare all the columns we want to read.
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
@@ -186,8 +177,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
         ASSERT(aips_antenna1.shape().isEqual(IPosition(1, nRows)));
         ASSERT(aips_antenna2.shape().isEqual(IPosition(1, nRows)));
         ASSERT(aips_flag_row.shape().isEqual(IPosition(1, nRows)));
-        ASSERT(!readUVW
-            || aips_uvw.shape().isEqual(IPosition(2, 3, nRows)));
+        ASSERT(!readUVW || aips_uvw.shape().isEqual(IPosition(2, 3, nRows)));
         IPosition shape = IPosition(3, nPolarizations, nChannels, nRows);
         ASSERT(aips_data.shape().isEqual(shape));
         ASSERT(aips_flag.shape().isEqual(shape));
@@ -228,7 +218,7 @@ VisData::Ptr MeasurementAIPS::read(const VisSelection &selection,
         {
             // Get time sequence for this baseline.
             size_t basel = dims.getBaselineIndex(baseline_t(aips_antenna1[i],
-                    aips_antenna2[i]));
+                aips_antenna2[i]));
 
             // Flag timeslot as available.
             buffer->tslot_flag[basel][tslot] = 0;
@@ -275,15 +265,10 @@ void MeasurementAIPS::write(const VisSelection &selection,
     itsMS.reopenRW();
     ASSERT(itsMS.isWritable());
 
-    ASSERTSTR(itsMS.tableDesc().isColumn(column), "Attempt to write to non-"
-        "existent column '" << column << "'.");
-
-/*
     // Add column if it does not exist.
-    // TODO: Check why the AIPS++ imager does not recognize these columns.
     if(!itsMS.tableDesc().isColumn(column))
     {
-        LOG_INFO_STR("Adding column '" << column << "'.");
+        LOG_INFO_STR("Adding column \"" << column << "\".");
 
         // Added column should get the same shape as the other data columns in
         // the MS.
@@ -292,29 +277,46 @@ void MeasurementAIPS::write(const VisSelection &selection,
                 itsDimensions.getChannelCount()),
             ColumnDesc::FixedShape);
 
-        TiledColumnStMan storageManager("Tiled_" + column,
-            IPosition(3, itsDimensions.getPolarizationCount(),
-                itsDimensions.getChannelCount(), 1));
+        // Create storage manager. Tile size specification taken from the
+        // MSCreate class in the CEP/MS package.
+        TiledColumnStMan storageManager("Tiled_" + column, IPosition(3,
+            itsDimensions.getPolarizationCount(),
+            itsDimensions.getChannelCount(),
+            std::max(size_t(1), 4096 / itsDimensions.getChannelCount())));
 
         itsMS.addColumn(columnDescriptor, storageManager);
         itsMS.flush();
+
+        // Re-create the view on the selected measurement. Otherwise,
+        // itsMainTableView has no knowledge of the added column.
+        //
+        // TODO: At the moment we use (OBSERVATION_ID, FIELD_ID, DATA_DESC_ID)
+        // as the key to select a single measurement. This may not be strict
+        // enough, i.e. different measurements may still have the same key.
+        itsMainTableView =
+            itsMS(itsMS.col("OBSERVATION_ID")
+                == static_cast<Int>(itsIdObservation)
+            && itsMS.col("FIELD_ID")
+                == static_cast<Int>(itsIdField)
+            && itsMS.col("DATA_DESC_ID")
+                == static_cast<Int>(itsIdDataDescription));
     }
-*/
     LOG_DEBUG_STR("Writing to column: " << column);
 
     Slicer slicer = getCellSlicer(selection);
-    Table tab_selection = getTableSelection(itsMS, selection);
-    ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
+    Table tab_selection = getTableSelection(itsMainTableView, selection);
+    ASSERTSTR(tab_selection.nrow() > 0, "Data selection did not match any"
+        " rows.");
 
     const VisDimensions &dims = buffer->getDimensions();
     const size_t nChannels = dims.getChannelCount();
     const size_t nPolarizations = dims.getPolarizationCount();
     const Grid &grid = dims.getGrid();
 
-    // Allocate temporary buffers to be able to reverse frequency
-    // channels. NOTE: Some performance can be gained by creating
-    // a specialized implementation for the case where the channels
-    // are in ascending order to avoid the extra copy.
+    // Allocate temporary buffers to be able to reverse frequency channels.
+    // TODO: Some performance can be gained by creating a specialized
+    // implementation for the case where the channels are in ascending order to
+    // avoid the extra copy.
     bool ascending[] = {!itsFreqAxisReversed, true};
     boost::multi_array<sample_t, 2>::size_type order_data[] = {1, 0};
     boost::multi_array<sample_t, 2>
@@ -332,14 +334,16 @@ void MeasurementAIPS::write(const VisSelection &selection,
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range!");
+        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range.");
 
         // Extract next timeslot.
         tab_tslot = tslotIterator.table();
         size_t nRows = tab_tslot.nrow();
+        ASSERTSTR(nRows <= dims.getBaselineCount(), "Measurement contains"
+            " multiple samples with the same timestamp for a single baseline.");
 
-        // TODO: Should use TIME_CENTROID here (centroid of exposure)?
-        // NOTE: TIME_CENTROID may be different for each baseline!
+        // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. The
+        // TIME_CENTROID may be different for each baseline!
         ROScalarColumn<Double> c_time(tab_tslot, "TIME");
         ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
         ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
@@ -370,7 +374,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
 
                 // Copy flags and optionally reverse.
                 flagBuffer = buffer->vis_flag[basel][tslot];
-                
+
                 // Write visibility flags.
                 Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
                     reinterpret_cast<Bool*>(flagBuffer.data()), SHARE);
@@ -379,7 +383,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
 
             // Copy visibilities and optionally reverse.
 			visBuffer = buffer->vis_data[basel][tslot];
-            
+
 			// Write visibilities.
             Array<Complex> vis_data(IPosition(2, nPolarizations, nChannels),
                 reinterpret_cast<Complex*>(visBuffer.data()), SHARE);
@@ -406,59 +410,83 @@ void MeasurementAIPS::write(const VisSelection &selection,
 }
 
 
-void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
-    const ROMSObservationColumns &observation, uint id)
+void MeasurementAIPS::initInstrument()
 {
     // Get station names and positions in ITRF coordinates.
-    ASSERT(observation.nrow() > id);
-    ASSERT(!observation.flagRow()(id));
+    ROMSAntennaColumns antenna(itsMS.antenna());
+    ROMSObservationColumns observation(itsMS.observation());
 
-    itsInstrument.name = observation.telescopeName()(id);
-    itsInstrument.stations.resize(antenna.nrow());
+    ASSERT(observation.nrow() > itsIdObservation);
+    ASSERT(!observation.flagRow()(itsIdObservation));
 
-    MVPosition stationCentroid;
-    for(size_t i = 0; i < static_cast<size_t>(antenna.nrow()); ++i)
+    itsInstrument.name = observation.telescopeName()(itsIdObservation);
+    itsInstrument.stations.reserve(antenna.nrow());
+
+    MVPosition centroid;
+    for(unsigned int i = 0; i < static_cast<unsigned int>(antenna.nrow()); ++i)
     {
-        // Store station name and update index.
-        itsInstrument.stations[i].name = antenna.name()(i);
+        // Get station name and ITRF position.
+        Station station;
+        station.name = antenna.name()(i);
+        station.position = MPosition::Convert(antenna.positionMeas()(i),
+            MPosition::ITRF)();
 
-        // Store station position.
-        MPosition position = antenna.positionMeas()(i);
-        itsInstrument.stations[i].position =
-            MPosition::Convert(position, MPosition::ITRF)();
+        // Store station information.
+        itsInstrument.stations.push_back(station);
 
-        // Update centroid.
-        stationCentroid += itsInstrument.stations[i].position.getValue();
+        // Update ITRF centroid.
+        centroid += station.position.getValue();
     }
 
     // Get the instrument position in ITRF coordinates, or use the centroid
     // of the station positions if the instrument position is unknown.
-    MPosition instrumentPosition;
-    if(MeasTable::Observatory(instrumentPosition, itsInstrument.name))
+    MPosition position;
+    if(MeasTable::Observatory(position, itsInstrument.name))
     {
-        itsInstrument.position =
-            MPosition::Convert(instrumentPosition, MPosition::ITRF)();
+        itsInstrument.position = MPosition::Convert(position,
+            MPosition::ITRF)();
     }
     else
     {
         LOG_WARN("Instrument position unknown; will use centroid of stations.");
-        stationCentroid *= (1.0
-            / static_cast<double>(itsInstrument.stations.size()));
-        itsInstrument.position = MPosition(stationCentroid, MPosition::ITRF);
+        ASSERT(antenna.nrow() != 0);
+        centroid *= 1.0 / static_cast<double>(antenna.nrow());
+        itsInstrument.position = MPosition(centroid, MPosition::ITRF);
     }
 }
 
 
-void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
-    uint id)
+void MeasurementAIPS::initPhaseCenter()
 {
-    ASSERT(window.nrow() > id);
-    ASSERT(!window.flagRow()(id));
+    // Get phase center as RA and DEC (J2000).
+    ROMSFieldColumns field(itsMS.field());
+    ASSERT(field.nrow() > itsIdField);
+    ASSERT(!field.flagRow()(itsIdField));
 
-    size_t nChannels = window.numChan()(id);
+    itsPhaseCenter = MDirection::Convert(field.phaseDirMeas(itsIdField),
+        MDirection::J2000)();
+}
 
-    Vector<Double> frequency = window.chanFreq()(id);
-    Vector<Double> width = window.chanWidth()(id);
+
+void MeasurementAIPS::initDimensions()
+{
+    // Read polarization id and spectral window id.
+    ROMSDataDescColumns desc(itsMS.dataDescription());
+    ASSERT(desc.nrow() > itsIdDataDescription);
+    ASSERT(!desc.flagRow()(itsIdDataDescription));
+
+    const unsigned int idPolarization =
+        desc.polarizationId()(itsIdDataDescription);
+    const unsigned int idWindow = desc.spectralWindowId()(itsIdDataDescription);
+
+    // Get spectral information.
+    ROMSSpWindowColumns window(itsMS.spectralWindow());
+    ASSERT(window.nrow() > idWindow);
+    ASSERT(!window.flagRow()(idWindow));
+
+    const unsigned int nChannels = window.numChan()(idWindow);
+    Vector<Double> frequency = window.chanFreq()(idWindow);
+    Vector<Double> width = window.chanWidth()(idWindow);
 
     ASSERT(frequency.nelements() == nChannels);
     ASSERT(width.nelements() == nChannels);
@@ -481,21 +509,19 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
         itsFreqAxisReversed = true;
     }
 
-    Axis::ShPtr freqAxis(new RegularAxis(lower,
-        (upper - lower) / nChannels, nChannels));
+    // Construct frequency axis.
+    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nChannels,
+        nChannels));
 
-    // Extract time grid based on TIME column (mid-point of integration
+    // Extract time axis based on TIME column (mid-point of integration
     // interval).
-    // TODO: Should use TIME_CENTROID here (centroid of exposure)?
-    // NOTE: UVW is given of the TIME_CENTROID, not for TIME!
-    // NOTE: TIME_CENTROID may be different for each baseline!
+    // TODO: Should use TIME_CENTROID here (centroid of exposure)? NB. UVW is
+    // given of the TIME_CENTROID, not for TIME! NB. The TIME_CENTROID may be
+    // different for each baseline!
 
     // Find all unique integration cells.
-    Block<String> sortColumns(2);
-    sortColumns[0] = "TIME";
-    sortColumns[1] = "INTERVAL";
-    Table tab_sorted = itsMS.sort(sortColumns, Sort::Ascending, Sort::QuickSort
-        + Sort::NoDuplicates);
+    Table tab_sorted = itsMainTableView.sort("TIME", Sort::Ascending,
+        Sort::QuickSort + Sort::NoDuplicates);
 
     // Read TIME and INTERVAL column.
     ROScalarColumn<Double> c_time(tab_sorted, "TIME");
@@ -509,20 +535,17 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
+    // Construct time axis.
     Axis::ShPtr timeAxis(new OrderedAxis(timeCopy, intervalCopy));
     itsDimensions.setGrid(Grid(freqAxis, timeAxis));
-}
 
-
-void MeasurementAIPS::initBaselineInfo()
-{
     // Find all unique baselines.
     Block<String> sortColumns(2);
     sortColumns[0] = "ANTENNA1";
     sortColumns[1] = "ANTENNA2";
-    Table tab_baselines = itsMS.sort(sortColumns, Sort::Ascending,
+    Table tab_baselines = itsMainTableView.sort(sortColumns, Sort::Ascending,
         Sort::QuickSort + Sort::NoDuplicates);
-    uInt nBaselines = tab_baselines.nrow();
+    const unsigned int nBaselines = tab_baselines.nrow();
 
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");
@@ -530,61 +553,29 @@ void MeasurementAIPS::initBaselineInfo()
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
-    vector<baseline_t> baselines(nBaselines);
-    for(uInt i = 0; i < nBaselines; ++i)
+    vector<baseline_t> baselines;
+    baselines.reserve(nBaselines);
+    for(unsigned int i = 0; i < nBaselines; ++i)
     {
-        baselines[i] = baseline_t(antenna1[i], antenna2[i]);
-    }    
-
-    itsDimensions.setBaselines(baselines);
-}
-
-
-void MeasurementAIPS::initPolarizationInfo
-    (const ROMSPolarizationColumns &polarization, uint id)
-{
-    ASSERT(polarization.nrow() > id);
-    ASSERT(!polarization.flagRow()(id));
-
-    Vector<Int> products = polarization.corrType()(id);
-
-    vector<string> pols(products.nelements());
-    for(size_t i = 0; i < products.nelements(); ++i)
-    {
-        pols[i] = Stokes::name(Stokes::type(products(i)));
+        baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
     }
-    
-    itsDimensions.setPolarizations(pols);
+    itsDimensions.setBaselines(baselines);
+
+    // Initialize polarization product axis.
+    ROMSPolarizationColumns polarization(itsMS.polarization());
+    ASSERT(polarization.nrow() > idPolarization);
+    ASSERT(!polarization.flagRow()(idPolarization));
+
+    Vector<Int> products = polarization.corrType()(idPolarization);
+
+    vector<string> names;
+    names.reserve(products.nelements());
+    for(unsigned int i = 0; i < products.nelements(); ++i)
+    {
+        names.push_back(Stokes::name(Stokes::type(products(i))));
+    }
+    itsDimensions.setPolarizations(names);
 }
-
-
-void MeasurementAIPS::initFieldInfo(const ROMSFieldColumns &field, uint id)
-{
-    /*
-      Get phase center as RA and DEC (J2000).
-
-      From AIPS++ note 229 (MeasurementSet definition version 2.0):
-      ---
-      FIELD: Field positions for each source
-      Notes:
-      The FIELD table defines a field position on the sky. For interferometers,
-      this is the correlated field position. For single dishes, this is the
-      nominal pointing direction.
-      ---
-
-      In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
-      MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-      This should be equivalent to:
-      MDirection phaseRef = mssubc.phaseDirMeas(0);
-      as used in the code below.
-    */
-    
-    ASSERT(field.nrow() > id);
-    ASSERT(!field.flagRow()(id));
-    itsPhaseCenter =
-        MDirection::Convert(field.phaseDirMeas(id),MDirection::J2000)();
-}
-
 
 
 // NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
@@ -642,7 +633,7 @@ Table MeasurementAIPS::getTableSelection(const Table &table,
             THROW(BBSKernelException, "Encountered an invalid station"
                " selection criterium.");
         }
-        
+
         if(stationSelection.empty())
         {
             LOG_WARN_STR("Station selection criteria did not maych any"
@@ -715,7 +706,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 
     IPosition start(2, 0, startChannel);
 	IPosition end(2, itsDimensions.getPolarizationCount() - 1, endChannel);
-    
+
     if(itsFreqAxisReversed)
     {
         // Adjust range if channels are in reverse order.
@@ -734,36 +725,34 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
 {
     VisDimensions dims;
 
-    IPosition shape = slicer.length();
-    size_t nPolarizations = shape[0];
-    size_t nChannels = shape[1];
-
-    const Grid &rootGrid = itsDimensions.getGrid();
+    const Grid &grid = itsDimensions.getGrid();
 
     // Initialize frequency axis.
-    double lower, upper;    
+    double lower, upper;
     if(itsFreqAxisReversed)
     {
         // Correct range if channels are in reverse order.
         const size_t lastChannelIndex = itsDimensions.getChannelCount() - 1;
-        lower = rootGrid[FREQ]->lower(lastChannelIndex - slicer.end()[1]);
-        upper = rootGrid[FREQ]->upper(lastChannelIndex - slicer.start()[1]);
+        lower = grid[FREQ]->lower(lastChannelIndex - slicer.end()[1]);
+        upper = grid[FREQ]->upper(lastChannelIndex - slicer.start()[1]);
     }
     else
     {
-        lower = rootGrid[FREQ]->lower(slicer.start()[1]);
-        upper = rootGrid[FREQ]->upper(slicer.end()[1]);
-    }    
+        lower = grid[FREQ]->lower(slicer.start()[1]);
+        upper = grid[FREQ]->upper(slicer.end()[1]);
+    }
 
-    Axis::ShPtr freqAxis(new RegularAxis(lower,
-        (upper - lower) / nChannels, nChannels));
+    // Get number of channels in the selection.
+    const unsigned int nChannels = slicer.length()[1];
+
+    // Construct frequency axis.
+    Axis::ShPtr freqAxis(new RegularAxis(lower, (upper - lower) / nChannels,
+        nChannels));
 
     // Initialize time axis.
+
     // Find all unique integration cells.
-    Block<String> sortTimeColumns(2);
-    sortTimeColumns[0] = "TIME";
-    sortTimeColumns[1] = "INTERVAL";    
-    Table tab_sorted = tab_selection.sort(sortTimeColumns, Sort::Ascending,
+    Table tab_sorted = tab_selection.sort("TIME", Sort::Ascending,
         Sort::QuickSort + Sort::NoDuplicates);
 
     // Read TIME and INTERVAL column.
@@ -774,24 +763,26 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
 
     // Convert to vector<double>.
     vector<double> timeCopy;
-    vector<double> intervalCopy;    
+    vector<double> intervalCopy;
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
+    // Construct time axis.
     Axis::ShPtr timeAxis(new OrderedAxis(timeCopy, intervalCopy));
     dims.setGrid(Grid(freqAxis, timeAxis));
-    
+
     // Find all unique baselines.
     Block<String> sortBaselineColumns(2);
     sortBaselineColumns[0] = "ANTENNA1";
     sortBaselineColumns[1] = "ANTENNA2";
     Table tab_baselines = tab_selection.sort(sortBaselineColumns,
         Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
-    uInt nBaselines = tab_baselines.nrow();
+    const unsigned int nBaselines = tab_baselines.nrow();
 
     LOG_DEBUG_STR("Selection contains " << nBaselines << " baseline(s), "
         << timeAxis->size() << " timeslot(s), " << freqAxis->size()
-        << " channel(s), and " << nPolarizations << " polarization(s).");
+        << " channel(s), and " << itsDimensions.getPolarizationCount()
+        << " polarization(s).");
 
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");
@@ -799,16 +790,17 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
 
-    vector<baseline_t> baselines(nBaselines);
-    for(uInt i = 0; i < nBaselines; ++i)
+    vector<baseline_t> baselines;
+    baselines.reserve(nBaselines);
+    for(unsigned int i = 0; i < nBaselines; ++i)
     {
-        baselines[i] = baseline_t(antenna1[i], antenna2[i]);
-    }    
+        baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
+    }
     dims.setBaselines(baselines);
 
     // Initialize polarization axis.
     dims.setPolarizations(itsDimensions.getPolarizations());
-        
+
     return dims;
 }
 

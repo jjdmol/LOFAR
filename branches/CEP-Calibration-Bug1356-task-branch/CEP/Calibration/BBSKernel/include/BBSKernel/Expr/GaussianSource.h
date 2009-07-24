@@ -46,9 +46,7 @@ public:
 
     GaussianSource(const string &name, const Expr &ra, const Expr &dec,
         const Expr &I, const Expr &Q, const Expr &U, const Expr &V,
-        const Expr &major, const Expr &minor, const Expr &phi);
-
-    virtual ~GaussianSource();
+        const Expr &si, const Expr &major, const Expr &minor, const Expr &phi);
 
     const Expr &getI() const
     { return itsI; }
@@ -58,6 +56,8 @@ public:
     { return itsU; }
     const Expr &getV() const
     { return itsV; }
+    const Expr &getSpectralIndex() const
+    { return itsSpectralIndex; }
     const Expr &getMajor() const
     { return itsMajor; }
     const Expr &getMinor() const
@@ -66,13 +66,14 @@ public:
     { return itsPhi; }
 
 private:
-    Expr itsI;
-    Expr itsQ;
-    Expr itsU;
-    Expr itsV;
-    Expr itsMajor;
-    Expr itsMinor;
-    Expr itsPhi;
+    Expr    itsI;
+    Expr    itsQ;
+    Expr    itsU;
+    Expr    itsV;
+    Expr    itsMajor;
+    Expr    itsMinor;
+    Expr    itsPhi;
+    Expr    itsSpectralIndex;
 };
 
 // @}

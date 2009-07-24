@@ -1,7 +1,5 @@
 pkginclude_Exprdir = $(pkgincludedir)/Expr
 
-#	Expr/DipoleBeam.h
-
 #	Equator.h \
 #	Expr/Diag.h \
 #	Expr/ExternalFunction.h \
@@ -28,14 +26,12 @@ pkginclude_Exprdir = $(pkgincludedir)/Expr
 #	Expr/UVW.h
 
 pkginclude_HEADERS = Package__Version.h \
-	BlobIOExtensions.h \
 	Equator.h \
 	Evaluator.h \
 	Exceptions.h \
 	Instrument.h \
 	Measurement.h \
 	MeasurementAIPS.h \
-	MetaMeasurement.h \
 	Model.h \
 	ModelConfig.h \
 	ParmManager.h \
@@ -81,7 +77,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/RefCounting.h \
 	Expr/Request.h \
 	Expr/Source.h \
-	Expr/StatUVW.h \
+	Expr/SpectralIndex.h \
 	Expr/StationUVW.h \
 	Expr/Threshold.h
 

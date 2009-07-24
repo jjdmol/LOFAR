@@ -216,6 +216,7 @@ public:
   friend MatrixTmp abs (const Matrix&);
   friend MatrixTmp sin (const Matrix&);
   friend MatrixTmp cos (const Matrix&);
+  friend MatrixTmp log (const Matrix&);
   friend MatrixTmp exp (const Matrix&);
   friend MatrixTmp sqr (const Matrix&);
   friend MatrixTmp sqrt(const Matrix&);

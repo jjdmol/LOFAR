@@ -41,7 +41,8 @@ namespace BBS
         typedef shared_ptr<const Measurement>   ConstPtr;
 
         virtual ~Measurement()
-        {}
+        {
+        }
 
         virtual VisDimensions
             getDimensions(const VisSelection &selection) const = 0;

@@ -46,7 +46,6 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
-#include <BBSControl/NoiseStep.h>
 
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
@@ -137,6 +136,7 @@ namespace LOFAR
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open observation part: " << path);
+          return false;
         }
 
         try {
@@ -485,18 +485,6 @@ namespace LOFAR
             " model.");
       }
 
-//      vector<string> include;
-//      vector<string> exclude;
-//      include.push_back("*");
-
-//      ParmGroup solvables = ParmManager::instance().makeSubset(include, exclude,
-//        itsModel->getParms());
-//      ASSERT(!solvables.empty());
-
-//      // Instruct model to generate perturbed values for solvables.
-//      itsModel->setPerturbedParms(solvables);
-//      itsModel->clearPerturbedParms();
-
       // Compute simulated visibilities.
       Evaluator evaluator(itsChunk, itsModel);
       evaluator.setSelection(baselines, products);
@@ -519,9 +507,6 @@ namespace LOFAR
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
 //      LOG_DEBUG_STR("Command: " << command);
-
-//      ASSERTSTR(itsChunk, "No visibility data available.");
-//      ASSERTSTR(itsModel, "No model available.");
 
 //      // Parse visibility selection.
 //      vector<baseline_t> baselines;
@@ -656,13 +641,7 @@ namespace LOFAR
         return CommandResult(CommandResult::ERROR, "Unable to parse"
           " visibility selection.");
       }
-////
-////      // Initialize model.
-////      if(!itsModel->makeFwdExpressions(command.modelConfig(), baselines)) {
-////        return CommandResult(CommandResult::ERROR, "Unable to initialize"
-////          " model.");
-////      }
-////
+
       // Initialize model.
       try {
         itsModel->makeForwardExpr(command.modelConfig(), itsChunk,
@@ -810,13 +789,6 @@ namespace LOFAR
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       return unsupported(command);
     }
-
-    CommandResult KernelProcessControl::visit(const NoiseStep &command)
-    {
-      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      return unsupported(command);
-    }
-
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
     CommandResult KernelProcessControl::unsupported(const Command &command)

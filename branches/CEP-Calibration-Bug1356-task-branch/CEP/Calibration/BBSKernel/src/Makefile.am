@@ -1,8 +1,6 @@
 #AM_CXXFLAGS = -Wno-ignored-qualifiers -Werror
 lib_LTLIBRARIES = libbbskernel.la
 
-#	Expr/DipoleBeam.cc
-
 #	Equator.cc \
 #	Expr/Diag.cc \
 #	Expr/ExternalFunction.cc \
@@ -29,12 +27,9 @@ lib_LTLIBRARIES = libbbskernel.la
 #	Expr/UVW.cc
 
 libbbskernel_la_SOURCES = Package__Version.cc \
-	BlobIOExtensions.cc \
 	Equator.cc \
 	Evaluator.cc \
-	Instrument.cc \
 	MeasurementAIPS.cc \
-	MetaMeasurement.cc \
 	Model.cc \
 	ModelConfig.cc \
 	ParmManager.cc \
@@ -75,7 +70,7 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/PointSource.cc \
 	Expr/Request.cc \
 	Expr/Source.cc \
-	Expr/StatUVW.cc \
+	Expr/SpectralIndex.cc \
 	Expr/StationUVW.cc
 
 bin_PROGRAMS = versionbbskernel

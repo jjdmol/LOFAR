@@ -57,8 +57,8 @@ const JonesMatrix JonesVisData::evaluateExpr(const Request &request,
     ASSERT(start.first + nChannels <= visGrid.shape().first);
     ASSERT(start.second + nTimeslots <= visGrid.shape().second);
 
-    LOG_DEBUG_STR("Offset: (" << start.first << "," << start.second
-        << ") Size: " << nChannels << "x" << nTimeslots);
+//    LOG_DEBUG_STR("Offset: (" << start.first << "," << start.second
+//        << ") Size: " << nChannels << "x" << nTimeslots);
 
     // NB: index_ranges are exclusive.
     typedef boost::multi_array<sample_t, 4>::index_range DRange;

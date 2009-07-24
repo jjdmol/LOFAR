@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tMeqParm > tMeqParm.log 2>&1
+./runctest.sh tMeqParm > tMeqParm.log 2>&1

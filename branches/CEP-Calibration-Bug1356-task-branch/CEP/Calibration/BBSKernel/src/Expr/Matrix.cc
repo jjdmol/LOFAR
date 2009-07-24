@@ -312,6 +312,10 @@ MatrixTmp cos(const Matrix& arg)
 {
     return cos(MatrixTmp(arg));
 }
+MatrixTmp log(const Matrix& arg)
+{
+    return log(MatrixTmp(arg));
+}
 MatrixTmp exp(const Matrix& arg)
 {
     return exp(MatrixTmp(arg));

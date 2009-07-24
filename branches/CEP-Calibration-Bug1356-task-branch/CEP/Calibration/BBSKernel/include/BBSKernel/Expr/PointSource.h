@@ -43,15 +43,22 @@ public:
     typedef shared_ptr<const PointSource>   ConstPtr;
 
     PointSource(const string &name, const Expr<Vector<2> >::ConstPtr &position,
-        const Expr<Vector<4> >::ConstPtr &stokes);
+        const Expr<Vector<4> >::ConstPtr &stokes,
+        const Expr<Scalar>::ConstPtr &spectral);
 
     const Expr<Vector<4> >::ConstPtr &getStokesVector() const
     {
         return itsStokesVector;
     }
 
+    const Expr<Scalar>::ConstPtr &getSpectralIndex() const
+    {
+        return itsSpectralIndex;
+    }
+
 private:
     Expr<Vector<4> >::ConstPtr  itsStokesVector;
+    Expr<Scalar>::ConstPtr      itsSpectralIndex;
 };
 
 // @}

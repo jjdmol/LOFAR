@@ -95,7 +95,7 @@ private:
 
     Station                 itsStation;
     casa::MPosition         itsArrayRef;
-    PhaseRef::ConstPtr  itsPhaseRef;
+    PhaseRef::ConstPtr      itsPhaseRef;
     mutable map<Time, Uvw>  itsUvwCache;
 
     mutable Scalar          itsU;

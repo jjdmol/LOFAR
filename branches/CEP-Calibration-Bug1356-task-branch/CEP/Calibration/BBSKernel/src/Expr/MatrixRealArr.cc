@@ -850,6 +850,25 @@ MatrixRep* MatrixRealArr::cos()
   return this;
 }
 
+MatrixRep* MatrixRealArr::log()
+{
+#if defined TIMER
+  static NSTimer timer("log RA", true);
+  timer.start();
+#endif
+
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    itsValue[i] = std::log(itsValue[i]);
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return this;
+}
+
 MatrixRep* MatrixRealArr::exp()
 {
 #if defined TIMER

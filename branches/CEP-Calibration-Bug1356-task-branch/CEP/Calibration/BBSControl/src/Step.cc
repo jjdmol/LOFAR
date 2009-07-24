@@ -24,7 +24,6 @@
 
 #include <BBSControl/Step.h>
 #include <BBSControl/CorrectStep.h>
-#include <BBSControl/NoiseStep.h>
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/RefitStep.h>
 #include <BBSControl/ShiftStep.h>
@@ -97,8 +96,6 @@ namespace LOFAR
             step.reset(new ShiftStep(name, parset, parent));
           else if (oper == "REFIT")
             step.reset(new RefitStep(name, parset, parent));
-          else if (oper == "NOISE")
-            step.reset(new NoiseStep(name, parset, parent));
           else THROW (BBSControlException, "Operation \"" << oper <<
                       "\" is not a valid Step operation");
          } catch (APSException& e) {

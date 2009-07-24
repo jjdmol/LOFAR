@@ -23,27 +23,27 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Expr/PointCoherence.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes)
-    :   BasicUnaryExpr<Vector<4>, JonesMatrix>(stokes)
+PointCoherence::PointCoherence(const Expr<Vector<4> >::ConstPtr &stokes,
+    const Expr<Scalar>::ConstPtr &spectral)
+    :   BasicBinaryExpr<Vector<4>, Scalar, JonesMatrix>(stokes, spectral)
 {
 }
 
 const JonesMatrix::view PointCoherence::evaluateImpl(const Request &request,
-    const Vector<4>::view &stokes) const
+    const Vector<4>::view &stokes, const Scalar::view &spectral) const
 {
     JonesMatrix::view result;
 
-    if(stokes.dirty(0) || stokes.dirty(1))
+    if(spectral.dirty() || stokes.dirty(0) || stokes.dirty(1))
     {
-        result.assign(0, 0, 0.5 * (stokes(0) + stokes(1)));
-        result.assign(1, 1, 0.5 * (stokes(0) + stokes(1)));
+        result.assign(0, 0, spectral() * 0.5 * (stokes(0) + stokes(1)));
+        result.assign(1, 1, spectral() * 0.5 * (stokes(0) + stokes(1)));
     }
 
     if(stokes.dirty(2) || stokes.dirty(3))

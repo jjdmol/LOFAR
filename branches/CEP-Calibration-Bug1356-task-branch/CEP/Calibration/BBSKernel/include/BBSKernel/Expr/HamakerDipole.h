@@ -79,9 +79,6 @@ public:
         Matrix &out_E11, Matrix &out_E12,
         Matrix &out_E21, Matrix &out_E22);
 
-#ifdef EXPR_GRAPH
-    virtual std::string getLabel();
-#endif
 
 private:
     BeamCoeff   itsBeamCoeff;

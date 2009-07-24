@@ -216,13 +216,6 @@ void HamakerDipole::evaluate(const Request &request,
 }
 
 
-#ifdef EXPR_GRAPH
-std::string HamakerDipole::getLabel()
-{
-    return std::string("HamakerDipole\\nDipole voltage beam based on"
-        " numerical simulation");
-}
-#endif
 
 } //# namespace BBS
 } //# namespace LOFAR

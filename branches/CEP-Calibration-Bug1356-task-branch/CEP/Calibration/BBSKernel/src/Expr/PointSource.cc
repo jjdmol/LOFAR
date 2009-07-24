@@ -30,11 +30,13 @@ namespace BBS
 
 PointSource::PointSource(const string &name,
     const Expr<Vector<2> >::ConstPtr &position,
-    const Expr<Vector<4> >::ConstPtr &stokes)
+    const Expr<Vector<4> >::ConstPtr &stokes,
+    const Expr<Scalar>::ConstPtr &spectral)
     :   Source(name, position),
-        itsStokesVector(stokes)
+        itsStokesVector(stokes),
+        itsSpectralIndex(spectral)
 {
-}        
+}
 
 } // namespace BBS
 } // namespace LOFAR

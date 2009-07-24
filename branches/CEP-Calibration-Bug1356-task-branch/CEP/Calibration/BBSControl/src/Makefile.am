@@ -19,7 +19,6 @@ libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	Messages.cc \
 	MultiStep.cc \
 	NextChunkCommand.cc \
-	NoiseStep.cc \
 	PredictStep.cc \
 	RecoverCommand.cc \
 	RefitStep.cc \

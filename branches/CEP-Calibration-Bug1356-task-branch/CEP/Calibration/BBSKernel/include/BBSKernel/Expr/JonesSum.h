@@ -54,9 +54,6 @@ public:
 
 private:
   void mergePValues(const Result &in, Result &out);
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
 
   std::vector<JonesExpr> itsExpr;
 };

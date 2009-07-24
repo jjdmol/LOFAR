@@ -63,21 +63,24 @@ public:
 
     void initCategory(uint category, const ParmDB &db);
 
+    double getDefaultValue(uint category, const string &name,
+        double value = 0.0);
+
     ParmProxy::Ptr get(uint category, const string &name);
     ParmProxy::Ptr get(uint category, const string &name, ParmGroup &group);
-    
+
     ParmProxy::Ptr get(uint id)
     { return itsParms[id]; }
     ParmProxy::ConstPtr get(uint id) const
     { return itsParms[id]; }
-    
+
     void setDomain(const Box &domain);
 
     void setGrid(const Grid &grid);
     void setGrid(const Grid &grid, const ParmGroup &group);
 
     void flush();
-    
+
     ParmGroup makeSubset(const vector<string> &include,
         const vector<string> &exclude,
         const ParmGroup &group = ParmGroup()) const;
@@ -86,13 +89,15 @@ private:
     ParmManagerImpl();
     ParmManagerImpl(const ParmManagerImpl &other);
     ParmManagerImpl &operator=(const ParmManagerImpl &other);
-    ~ParmManagerImpl();
-    
+
     friend class Singleton<ParmManagerImpl>;
 
     bool isIncluded(const string &candidate, const vector<casa::Regex> &include,
         const vector<casa::Regex> &exclude) const;
-    
+
+    const ParmDB &getParmDbForCategory(uint category) const;
+    ParmDB &getParmDbForCategory(uint category);
+
     ParmSet                         itsParmSet;
     ParmCache                       itsParmCache;
     map<uint, ParmDB>               itsCategories;
