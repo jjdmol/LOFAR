@@ -30,7 +30,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 using LOFAR::operator<<;
 
@@ -39,7 +39,7 @@ Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
         uint nThreads)
     :   itsChunk(chunk),
         itsModel(model),
-        itsSolGrid(grid),   
+        itsSolGrid(grid),
         itsMaxCellCount(nMaxCells),
         itsThreadCount(nThreads)
 {
@@ -53,13 +53,13 @@ Equator::Equator(const VisData::Pointer &chunk, const Model::Pointer &model,
 
     // By default, select all the baselines and polarizations products
     // available.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
-    
+
     // Create a mapping for each axis that maps from cells in the solution grid
     // to cell intervals in the observation (chunk) grid.
     makeGridMapping();
-    
+
     // Create a mapping that maps each (parmId, coeffId) combination to an
     // index.
     makeCoeffMapping(index);
@@ -76,7 +76,7 @@ void Equator::setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products)
 {
     itsBaselines = baselines;
-    
+
     // Determine product mask.
     const VisDimensions &dims = itsChunk->getDimensions();
 
@@ -146,7 +146,7 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
          std::min(end.second, itsEndCell.second));
     const size_t nCells =
         (end.first - start.first + 1) * (end.second - start.second + 1);
-    
+
     LOG_DEBUG_STR("Cells to process (solution grid relative): [("
         << reqStart.first << "," << reqStart.second << "),(" << reqEnd.first
         << "," << reqEnd.second << ")]");
@@ -165,17 +165,17 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         ++index;
         ++cellIt;
     }
-    
+
     // Transform to chunk relative coordinates.
     reqStart.first -= itsStartCell.first;
     reqStart.second -= itsStartCell.second;
     reqEnd.first -= itsStartCell.first;
     reqEnd.second -= itsStartCell.second;
-    
+
     LOG_DEBUG_STR("Cells to process (chunk relative): [(" << reqStart.first
         << "," << reqStart.second << "),(" << reqEnd.first << ","
         << reqEnd.second << ")]");
-      
+
     // Get frequency / time grid information.
     const Location visStart(itsFreqIntervals[reqStart.first].start,
         itsTimeIntervals[reqStart.second].start);
@@ -189,7 +189,7 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     // Create request.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
     Request request(visGrid.subset(visStart, visEnd), true);
-    
+
     LOG_DEBUG_STR("Request dimensions: " << itsBaselines.size() << "b x "
         << request.getTimeslotCount() << "t x " << request.getChannelCount()
         << "c x " << 4 - count(&(itsProductMask[0]), &(itsProductMask[4]), -1)
@@ -201,7 +201,7 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
     itsModel->precalculate(request);
     itsTimers[PRECOMPUTE].stop();
     LOG_DEBUG_STR("Precomputing... done");
-    
+
 #ifdef _OPENMP
     // Reset casa::LSQFit instances for each non-main thread.
     for(size_t i = 1; i < itsThreadCount; ++i)
@@ -232,13 +232,13 @@ void Equator::process(vector<CellEquation> &result, const Location &start,
         // Merge thread private equations into a single result.
         // TODO: Re-implement the following in O(log(N)) steps.
         itsTimers[MERGE].start();
-        
+
         ThreadContext &main = itsContexts[0];
 
       	for(size_t i = 1; i < itsContexts.size(); ++i)
     	  {
             ThreadContext &thread = itsContexts[i];
-            
+
             for(size_t j = 0; j < nCells; ++j)
             {
                 main.eq[j]->merge(*thread.eq[j]);
@@ -265,7 +265,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 
     // Find baseline index.
     // NB. VisDimensions::getBaselineIndex() could throw an exception.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
@@ -292,12 +292,12 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         {
             continue;
         }
-        
+
         const size_t extProd = itsProductMask[i];
-        
+
         // Get the result for this polarization product (model visibilities).
         const Result &modelRes = *modelJRes[i];
-        
+
         // Get pointers to the main value.
         const double *modelVisRe, *modelVisIm;
         modelRes.getValue().dcomplexStorage(modelVisRe, modelVisIm);
@@ -342,7 +342,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
         }
 //        cout << endl;
         context.timers[ThreadContext::BUILD_INDEX].stop();
-        
+
         // If no perturbed values were found, continue.
         if(nCoeff == 0)
         {
@@ -362,9 +362,9 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 
             size_t visOffset = (tsInterval.start - visStart.second)
                 * nChannels + (chInterval.start - visStart.first);
-                
+
             casa::LSQFit *eq = context.eq[eqIndex];
-                
+
             for(size_t ts = tsInterval.start; ts <= tsInterval.end; ++ts)
             {
                 // Skip timeslot if flagged.
@@ -390,15 +390,15 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                         const double modelIm = modelVisIm[visOffset];
 
                         // Approximate partial derivatives (forward differences)
-                        // TODO: Remove this transpose.                            
+                        // TODO: Remove this transpose.
                         context.timers[ThreadContext::DERIVATIVES].start();
                         for(size_t i = 0; i < nCoeff; ++i)
                         {
-                            context.partialRe[i] = 
+                            context.partialRe[i] =
                                 (context.pertRe[i][visOffset] - modelRe)
                                     * context.inversePert[i];
-                               
-                            context.partialIm[i] = 
+
+                            context.partialIm[i] =
                                 (context.pertIm[i][visOffset] - modelIm)
                                     * context.inversePert[i];
                         }
@@ -410,7 +410,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                             &(context.partialRe[0]),
                             1.0,
                             real(obsVis) - modelRe);
-                            
+
                         eq->makeNorm(nCoeff,
                             &(context.index[0]),
                             &(context.partialIm[0]),
@@ -421,12 +421,12 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
                     // Move to next channel.
                     ++visOffset;
                 } // for(size_t ch = chStart; ch < chEnd; ++ch)
-                    
+
                 // Move to next timeslot.
                 visOffset +=
                     nChannels - (chInterval.end - chInterval.start + 1);
-            } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
-        
+            } // for(size_t ts = tsStart; ts < tsEnd; ++ts)
+
             // Move to next cell.
             ++eqIndex;
             ++cellIt;
@@ -439,7 +439,7 @@ void Equator::blConstruct(uint threadId, const baseline_t &baseline,
 void Equator::makeContexts()
 {
     ASSERTSTR(itsCoeffMap.size() > 0, "Call Equator::makeCoeffIndex() first.");
-    
+
     // Pre-allocate thread private casa::LSQFit instances and initialize an
     // array of pointers to it for thread 1 and upwards.
     itsContexts.resize(itsThreadCount);
@@ -447,7 +447,7 @@ void Equator::makeContexts()
     {
         itsContexts[i].resize(itsCoeffMap.size(), itsMaxCellCount);
     }
-    
+
 #ifdef _OPENMP
     if(itsThreadCount > 1)
     {
@@ -468,53 +468,81 @@ void Equator::makeContexts()
 
 void Equator::makeGridMapping()
 {
+    // Get reference to visibility grid.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
 
-    // Compute overlap between the solution grid and the current chunk.
-    Box overlap = itsSolGrid.getBoundingBox() & visGrid.getBoundingBox();
-    ASSERTSTR(!overlap.empty(), "No overlap between the solution grid and the"
-        " current chunk.");
+    // Compute a mapping from cells of the solution grid to cell intervals in
+    // the visibility grid.
+    const pair<Interval, vector<Interval> > mapFreq =
+        makeAxisMapping(itsSolGrid[FREQ], visGrid[FREQ]);
 
-    // Find the first and last cell that intersects the current chunk.
-    itsStartCell = itsSolGrid.locate(overlap.lower());
-    itsEndCell = itsSolGrid.locate(overlap.upper(), false);
+    const pair<Interval, vector<Interval> > mapTime =
+        makeAxisMapping(itsSolGrid[TIME], visGrid[TIME]);
 
-    // The end cell is _inclusive_ by convention.
-    const size_t nFreqCells = itsEndCell.first - itsStartCell.first + 1;
-    const size_t nTimeCells = itsEndCell.second - itsStartCell.second + 1;
+    ASSERTSTR(!mapFreq.second.empty() && !mapTime.second.empty(), "No overlap"
+        " between the solution grid and the current chunk.");
 
-    // Map cells to inclusive sample intervals (frequency axis).
-    Axis::ShPtr visAxis = visGrid[FREQ];
-    Axis::ShPtr solAxis = itsSolGrid[FREQ];
-    
+    // Store the indices of the first and last cell of the solution grid that
+    // intersect the visibility grid.
+    itsStartCell = Location(mapFreq.first.start, mapTime.first.start);
+    itsEndCell = Location(mapFreq.first.end, mapTime.first.end);
+
+    // Store the mapping for each axis.
+    itsFreqIntervals = mapFreq.second;
+    itsTimeIntervals = mapTime.second;
+}
+
+pair<Equator::Interval, vector<Equator::Interval> >
+Equator::makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to) const
+{
+    Interval domain;
+    vector<Interval> mapping;
+
+    const double overlapStart = std::max(from->start(), to->start());
+    const double overlapEnd = std::min(from->end(), to->end());
+
+    if(overlapStart >= overlapEnd || casa::near(overlapStart, overlapEnd))
+    {
+        return make_pair(domain, mapping);
+    }
+
+    domain.start = from->locate(overlapStart);
+    domain.end = from->locate(overlapEnd, false, domain.start);
+
+    // Intervals are inclusive by convention.
+    const size_t nCells = domain.end - domain.start + 1;
+    ASSERT(nCells >= 1);
+    mapping.reserve(nCells);
+
+    // Special case for the first domain cell: lower and possibly upper boundary
+    // may be located outside of the overlap between the "from" and "to" axis.
     Interval interval;
-    itsFreqIntervals.resize(nFreqCells);
-    for(size_t i = 0; i < nFreqCells; ++i)
+    interval.start = to->locate(std::max(from->lower(domain.start),
+        overlapStart));
+    interval.end = to->locate(std::min(from->upper(domain.start), overlapEnd),
+        false, interval.start);
+    mapping.push_back(interval);
+
+    for(size_t i = 1; i < nCells - 1; ++i)
     {
-        interval.start =
-            visAxis->locate(std::max(solAxis->lower(itsStartCell.first + i),
-                overlap.lowerX()));
-        interval.end =
-            visAxis->locate(std::min(solAxis->upper(itsStartCell.first + i),
-                overlap.upperX()), false);
-        itsFreqIntervals[i] = interval;
+        interval.start = to->locate(from->lower(domain.start + i), true,
+            interval.end);
+        interval.end = to->locate(from->upper(domain.start + i), false,
+            interval.end);
+        mapping.push_back(interval);
     }
-    
-    // Map cells to inclusive sample intervals (time axis).
-    visAxis = visGrid[TIME];
-    solAxis = itsSolGrid[TIME];
-    
-    itsTimeIntervals.resize(nTimeCells);
-    for(size_t i = 0; i < nTimeCells; ++i)
+    if(nCells > 1)
     {
-        interval.start =
-            visAxis->locate(std::max(solAxis->lower(itsStartCell.second + i),
-                overlap.lowerY()));
-        interval.end =
-            visAxis->locate(std::min(solAxis->upper(itsStartCell.second + i),
-                overlap.upperY()), false);
-        itsTimeIntervals[i] = interval;
+        // Special case for the last domain cell: upper boundary may be located
+        // outside of the overlap between the "from" and "to" axis.
+        interval.start = to->locate(from->lower(domain.end), true,
+            interval.end);
+        interval.end = to->locate(std::min(from->upper(domain.end), overlapEnd),
+            false, interval.end);
+        mapping.push_back(interval);
     }
+
+    return make_pair(domain, mapping);
 }
 
 void Equator::makeCoeffMapping(const CoeffIndex &index)
@@ -526,19 +554,19 @@ void Equator::makeCoeffMapping(const CoeffIndex &index)
     while(pertIt != pertItEnd)
     {
         ParmProxy::Pointer parm = ParmManager::instance().get(*pertIt);
-        
+
         CoeffIndex::const_iterator indexIt = index.find(parm->getName());
         ASSERT(indexIt != index.end());
-        
+
         const CoeffInterval &interval = indexIt->second;
         for(uint i = 0; i < interval.length; ++i)
         {
             itsCoeffMap[PValueKey(parm->getId(), i)] = interval.start + i;
         }
-        
+
         ++pertIt;
     }
-}    
+}
 
 void Equator::resetTimers()
 {
@@ -546,7 +574,7 @@ void Equator::resetTimers()
     {
         itsTimers[i].reset();
     }
-    
+
     for(size_t i = 0; i < itsContexts.size(); ++i)
     {
         itsContexts[i].count = 0;
@@ -561,7 +589,7 @@ void Equator::resetTimers()
 void Equator::printTimers()
 {
     LOG_DEBUG("Timings:");
-    
+
     unsigned long long count = 0;
     for(size_t i = 0; i < itsContexts.size(); ++i)
     {
@@ -570,7 +598,7 @@ void Equator::printTimers()
     LOG_DEBUG_STR("Processing speed: " << (count
         / itsTimers[PROCESS].getElapsed()) << " vis/s");
 
-    LOG_DEBUG_STR("Total #visibilities (unflagged): " << fixed << count); 
+    LOG_DEBUG_STR("Total #visibilities (unflagged): " << fixed << count);
     LOG_DEBUG_STR("Total time: " << itsTimers[PROCESS].getElapsed() << " s");
     LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
         * 1000.0 << " ms");
@@ -590,7 +618,7 @@ void Equator::printTimers()
             sum += itsContexts[j].timers[i].getElapsed() * 1000.0;
             count += itsContexts[j].timers[i].getCount();
         }
-    
+
         if(count == 0)
         {
             LOG_DEBUG_STR("> > " << ThreadContext::timerNames[i]
@@ -646,7 +674,7 @@ void Equator::ThreadContext::clear(bool clearEq)
     {
         eq.clear();
     }
-    
+
     index.clear();
     pertRe.clear();
     pertIm.clear();
@@ -656,4 +684,3 @@ void Equator::ThreadContext::clear(bool clearEq)
 
 } //# namespace BBS
 } //# namespace LOFAR
-
