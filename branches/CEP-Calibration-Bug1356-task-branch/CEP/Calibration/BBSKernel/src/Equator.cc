@@ -448,8 +448,11 @@ void Equator::makeContexts()
 
 void Equator::makeGridMapping()
 {
+    // Get reference to visibility grid.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
 
+    // Compute a mapping from cells of the solution grid to cell intervals in
+    // the visibility grid.
     const pair<Interval, vector<Interval> > mapFreq =
         makeAxisMapping(itsSolGrid[FREQ], visGrid[FREQ]);
 
@@ -464,8 +467,7 @@ void Equator::makeGridMapping()
     itsStartCell = Location(mapFreq.first.start, mapTime.first.start);
     itsEndCell = Location(mapFreq.first.end, mapTime.first.end);
 
-    // Store the mappings from cells of the solution grid to cell intervals in
-    // the visibility grid.
+    // Store the mapping for each axis.
     itsFreqIntervals = mapFreq.second;
     itsTimeIntervals = mapTime.second;
 }
@@ -486,8 +488,6 @@ Equator::makeAxisMapping(const Axis::ShPtr &from, const Axis::ShPtr &to) const
 
     domain.start = from->locate(overlapStart);
     domain.end = from->locate(overlapEnd, false, domain.start);
-
-    LOG_DEBUG_STR("Domain: [" << domain.start << "," << domain.end << "]");
 
     // Intervals are inclusive by convention.
     const size_t nCells = domain.end - domain.start + 1;
