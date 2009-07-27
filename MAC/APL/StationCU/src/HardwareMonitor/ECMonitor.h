@@ -54,26 +54,26 @@ public:
 
 private:
 	// During the initial state all connections with the other programs are made.
-   GCFEvent::TResult initial_state   		 (GCFEvent& e, GCFPortInterface& p);
-   GCFEvent::TResult connect2EC     		 (GCFEvent& e, GCFPortInterface& p);
-   GCFEvent::TResult createPropertySets	 (GCFEvent& e, GCFPortInterface& p);
-   
-   GCFEvent::TResult askSettings           (GCFEvent& e, GCFPortInterface& p);
-   GCFEvent::TResult askStatus       		 (GCFEvent& e, GCFPortInterface& p);
-   GCFEvent::TResult waitForNextCycle		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult initial_state   		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult connect2EC     		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult createPropertySets	 (GCFEvent& e, GCFPortInterface& p);
+	
+	GCFEvent::TResult askSettings           (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult askStatus       		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult waitForNextCycle		 (GCFEvent& e, GCFPortInterface& p);
 
-   GCFEvent::TResult finish_state  		 (GCFEvent& e, GCFPortInterface& p);
-   
-   
+	GCFEvent::TResult finish_state  		 (GCFEvent& e, GCFPortInterface& p);
+	
+	
 
 	// avoid defaultconstruction and copying
 	ECMonitor();
 	ECMonitor(const ECMonitor&);
-   ECMonitor& operator=(const ECMonitor&);
+	ECMonitor& operator=(const ECMonitor&);
 
-   void _disconnectedHandler(GCFPortInterface& port);
-   
-   string ctrlMode(int16 mode);
+	void _disconnectedHandler(GCFPortInterface& port);
+	
+	string ctrlMode(int16 mode);
 	
 	// Data members
 	RTDBPropertySet*			itsOwnPropertySet;
@@ -84,9 +84,11 @@ private:
 
 	uint32						itsPollInterval;
 	
-	uint32						itsNrCabs;
+	int							itsNrCabs;
 	
-	RTDBPropertySet*	      itsStation;
+	int							itsNrSystemCabs;
+	
+	RTDBPropertySet*			itsStation;
 	
 	vector<RTDBPropertySet*>	itsCabs;
 };
@@ -95,9 +97,9 @@ private:
 class RawEvent
 {
 public:
-   static GCFEvent::TResult dispatch(GCFTask& task, GCFPortInterface& port);
+	static GCFEvent::TResult dispatch(GCFTask& task, GCFPortInterface& port);
 };
 
-  };//StationCU
+	};//StationCU
 };//LOFAR
 #endif

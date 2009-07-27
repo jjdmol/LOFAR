@@ -20,35 +20,10 @@ prelude = << PRELUDE_END
    static const int16 EC_STATUS        = 1; 
    static const int16 EC_SETTINGS      = 2;
    static const int16 EC_CTRL_TEMP     = 3; 
-                                            
-   static const int16 EC_SET_OFF       = 10;
-   static const int16 EC_SET_ON        = 11;
-   static const int16 EC_SET_AUTO      = 12;
-   static const int16 EC_SET_MANUAL    = 13;
-   static const int16 EC_SET_TEMP      = 15;
-                                            
-   static const int16 EC_SET_48_ON     = 20;
-   static const int16 EC_SET_48_OFF    = 21;
-   static const int16 EC_RESET_48      = 22;
-   static const int16 EC_SET_230_ON    = 25;
-   static const int16 EC_SET_230_OFF   = 26;
-   static const int16 EC_RESET_230     = 27;
-   
-   static const int16 EC_SET_DOOR_ON   = 50;
-   static const int16 EC_SET_DOOR_OFF  = 51;
-   static const int16 EC_SET_HUM_ON    = 52;
-   static const int16 EC_SET_HUM_OFF   = 53;
-   
-   // the following command are for the engineer only     
-   static const int16 EC_SET_MAX_TEMP     = 100;
-   static const int16 EC_SET_MIN_TEMP     = 101;
-   static const int16 EC_SET_MAXMAX_TEMP  = 102;
-   static const int16 EC_SET_MINMIN_TEMP  = 103;
-   static const int16 EC_SET_MAX_HUM      = 105;
-   static const int16 EC_SET_MAXMAX_HUM   = 106;
-   
-   static const int16 EC_SET_CTRL_SPAN    = 110;
-   static const int16 EC_SET_MAX_CHANGE   = 111;
+   static const int16 EC_VERSION       = 5;
+   static const int16 EC_STATION_INFO  = 6;
+   static const int16 EC_METEO_INFO    = 7;
+   static const int16 EC_METEO_STATUS  = 8;
    
    //-- EC cab state code's ----------------------------------------------------
    static const int16 CAB_OK                 = 0x0000;
