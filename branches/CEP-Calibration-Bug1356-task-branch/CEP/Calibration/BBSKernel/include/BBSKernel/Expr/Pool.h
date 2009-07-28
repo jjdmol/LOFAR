@@ -9,7 +9,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // The Pool class is a very fast, stack-based allocator where objects can

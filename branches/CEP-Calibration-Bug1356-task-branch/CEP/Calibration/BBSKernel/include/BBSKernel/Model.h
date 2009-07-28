@@ -56,7 +56,7 @@ class Instrument;
 class PhaseRef;
 class Request;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class Model

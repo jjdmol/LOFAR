@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // Calculate c * A, where c is an Expr and A is a JonesExpr.

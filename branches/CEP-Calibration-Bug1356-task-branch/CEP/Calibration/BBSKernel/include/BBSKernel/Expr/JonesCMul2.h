@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // Calculate A * B^H (the conjugate transpose of B).

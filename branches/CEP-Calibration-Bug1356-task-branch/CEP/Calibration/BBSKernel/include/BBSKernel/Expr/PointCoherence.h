@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class PointCoherence: public BasicBinaryExpr<Vector<4>, Scalar, JonesMatrix>

@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // TODO: Generalize to other ExprValue types?

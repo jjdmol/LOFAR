@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class LMN: public BasicUnaryExpr<Vector<2>, Vector<3> >

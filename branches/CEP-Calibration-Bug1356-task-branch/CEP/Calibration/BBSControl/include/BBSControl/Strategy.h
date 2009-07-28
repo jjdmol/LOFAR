@@ -44,7 +44,7 @@ namespace LOFAR
     class Step;
     class StrategyIterator;
 
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     class Strategy

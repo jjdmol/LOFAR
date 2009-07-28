@@ -31,7 +31,7 @@
 
 namespace LOFAR
 {
-  // \ingroup BBSControl
+  // \addtogroup BBSControl
   // @{
 
   // Specialization of writeVector for vector of string. We need this, because

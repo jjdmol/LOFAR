@@ -45,7 +45,7 @@ namespace BBS
 {
 class VisSelection;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class MeasurementAIPS: public Measurement

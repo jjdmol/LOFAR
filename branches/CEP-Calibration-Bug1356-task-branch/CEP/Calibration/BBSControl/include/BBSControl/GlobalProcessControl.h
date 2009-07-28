@@ -39,7 +39,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Implementation of the ProcessControl interface for the global BBS

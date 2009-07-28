@@ -42,7 +42,7 @@ namespace BBS
 {
 using LOFAR::dcomplex;
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 //# Forward Declarations

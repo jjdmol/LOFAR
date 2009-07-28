@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class PiercePoint: public BasicUnaryExpr<Vector<2>, Vector<4> >

@@ -50,7 +50,7 @@ namespace BBS
 class Box;
 class Grid;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 typedef set<uint> ParmGroup;

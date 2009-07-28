@@ -35,7 +35,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Top-level exception class for the BBSControl package.

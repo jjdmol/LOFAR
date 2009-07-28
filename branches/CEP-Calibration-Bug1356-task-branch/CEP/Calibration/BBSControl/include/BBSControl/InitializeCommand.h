@@ -39,7 +39,7 @@ namespace LOFAR
   {
     class Strategy;
     
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Concrete \c initialize command. This command is sent by the global

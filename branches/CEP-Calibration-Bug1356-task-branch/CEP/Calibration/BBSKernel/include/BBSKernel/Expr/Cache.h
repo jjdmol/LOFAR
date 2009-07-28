@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // TODO: fix include conflict with Expr.h.

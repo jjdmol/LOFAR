@@ -37,7 +37,7 @@ namespace LOFAR
     class SolutionMsg;
     class ChunkDoneMsg;
 
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Abstract %Visitor classes KernelMessageHandler and SolverMessageHandler

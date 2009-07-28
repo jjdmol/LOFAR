@@ -35,7 +35,7 @@ namespace LOFAR
   namespace BBS
   {
 
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Class representing the result of the execution of a command by the

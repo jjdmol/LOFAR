@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 // Configuration options specific to Hamaker's dipole beam model.

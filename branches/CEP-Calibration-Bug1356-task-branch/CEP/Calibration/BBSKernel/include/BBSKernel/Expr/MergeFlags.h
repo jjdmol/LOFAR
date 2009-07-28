@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 template <typename T_ARG0, typename T_ARG1>

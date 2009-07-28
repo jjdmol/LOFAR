@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // This class is the (abstract) base class for a Jones expression.

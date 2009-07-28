@@ -32,7 +32,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class YatawattaDipole: public BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>

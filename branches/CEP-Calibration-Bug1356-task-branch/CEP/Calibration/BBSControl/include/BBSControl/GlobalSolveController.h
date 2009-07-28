@@ -42,7 +42,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSControl
+// \addtogroup BBSControl
 // @{
 
 class GlobalSolveController

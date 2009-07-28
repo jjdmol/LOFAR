@@ -32,7 +32,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Concrete \c next-chunk command. This command is sent by the global

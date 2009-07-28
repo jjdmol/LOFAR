@@ -43,7 +43,7 @@ namespace LOFAR
 
   namespace BBS
   {
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // This is the so-called \e component class in the Step composite

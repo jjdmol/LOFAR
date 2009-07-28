@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // DFTPS computes the station part of the phase related to a direction (l, m, n)

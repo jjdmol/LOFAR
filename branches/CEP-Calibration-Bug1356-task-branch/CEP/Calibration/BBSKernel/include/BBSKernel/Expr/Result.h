@@ -39,7 +39,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // A key that identifies a perturbed value through its associated (parameter id,

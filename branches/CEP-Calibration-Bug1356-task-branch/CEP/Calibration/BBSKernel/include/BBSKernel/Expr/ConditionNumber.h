@@ -42,7 +42,7 @@ namespace BBS
 //using LOFAR::min;
 //using LOFAR::max;
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class ConditionNumber: public UnaryExpr<JonesMatrix, Scalar>

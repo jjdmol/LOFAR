@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 template <typename T_EXPR_VALUE>

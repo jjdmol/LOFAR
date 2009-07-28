@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class MatrixMul3: public BasicTernaryExpr<JonesMatrix, JonesMatrix, JonesMatrix,

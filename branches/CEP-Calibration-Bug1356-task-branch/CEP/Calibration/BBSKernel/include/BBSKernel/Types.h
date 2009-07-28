@@ -36,7 +36,7 @@ namespace BBS
 {
 using std::pair;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 typedef double                  real_t;

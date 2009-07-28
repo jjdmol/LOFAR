@@ -33,7 +33,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class MatrixMul2: public BasicBinaryExpr<JonesMatrix, JonesMatrix, JonesMatrix>

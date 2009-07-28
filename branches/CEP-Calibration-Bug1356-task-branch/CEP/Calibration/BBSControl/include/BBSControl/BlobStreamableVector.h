@@ -41,7 +41,7 @@ namespace BBS
 {
     using LOFAR::operator<<;
     
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     // Helper class to send a vector of BlobStreamable objects (or derivatives) through a DH_BlobStreamable.

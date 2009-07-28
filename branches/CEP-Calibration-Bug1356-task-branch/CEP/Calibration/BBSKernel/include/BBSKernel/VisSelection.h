@@ -37,7 +37,7 @@ namespace BBS
 {
 using std::pair;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class VisSelection

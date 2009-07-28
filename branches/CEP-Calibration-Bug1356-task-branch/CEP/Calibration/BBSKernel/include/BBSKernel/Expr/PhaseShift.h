@@ -35,7 +35,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 //class PhaseShift: public ExprStatic<2>

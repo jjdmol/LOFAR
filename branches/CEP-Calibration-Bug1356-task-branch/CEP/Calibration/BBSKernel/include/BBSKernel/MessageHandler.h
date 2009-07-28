@@ -33,7 +33,7 @@ class EquationMsg;
 class SolutionMsg;
 class ChunkDoneMsg;
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 // Abstract %Visitor class MessageHandler declares handle() operations

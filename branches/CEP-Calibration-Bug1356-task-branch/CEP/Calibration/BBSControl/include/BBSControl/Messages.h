@@ -44,7 +44,7 @@ namespace LOFAR
     class KernelMessageHandler;
     class SolverMessageHandler;
 
-    // \ingroup BBSControl
+    // \addtogroup BBSControl
     // @{
 
     //## --------  A b s t r a c t   b a s e   c l a s s e s   -------- ##//

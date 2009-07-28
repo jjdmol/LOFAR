@@ -39,7 +39,7 @@ class BlobOStream;
 namespace BBS
 {
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class CoeffInterval

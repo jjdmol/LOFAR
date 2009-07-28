@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBSKernel
+// \addtogroup BBSKernel
 // @{
 
 class Evaluator

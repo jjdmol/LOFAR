@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 class StationUVW: public Expr<Vector<3> >

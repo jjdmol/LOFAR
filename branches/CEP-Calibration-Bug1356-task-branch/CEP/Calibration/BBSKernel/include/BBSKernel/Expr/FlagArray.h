@@ -38,7 +38,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup Expr
+// \addtogroup Expr
 // @{
 
 // Typedef that can be used to globally change the numeric type used for flags.
@@ -282,6 +282,7 @@ private:
     FlagType            *itsData;
 };
 
+// @}
 
 // -------------------------------------------------------------------------- //
 // - Implementation: FlagArrayImpl                                          - //
@@ -675,8 +676,6 @@ FlagArrayImpl *FlagArrayImplMatrix::opBitWiseAnd(const FlagArrayImpl &rhs,
 {
     return rhs.opBitWiseAnd(*this, lhsTmp, rhsTmp);
 }
-
-// @}
 
 } //# namespace BBS
 } //# namespace LOFAR
