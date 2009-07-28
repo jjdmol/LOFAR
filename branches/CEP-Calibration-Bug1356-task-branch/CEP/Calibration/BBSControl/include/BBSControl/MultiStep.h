@@ -34,7 +34,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // This is the so-called \e composite class in the composite pattern (see

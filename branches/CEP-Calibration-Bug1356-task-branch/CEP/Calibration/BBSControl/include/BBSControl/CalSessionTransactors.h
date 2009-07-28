@@ -58,7 +58,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBSControl
+// \ingroup BBSControl
 // @{
 
 class PQInitSession: public pqxx::transactor<>

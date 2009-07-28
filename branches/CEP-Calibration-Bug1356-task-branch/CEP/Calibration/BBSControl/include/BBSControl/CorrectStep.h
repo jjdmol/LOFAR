@@ -33,7 +33,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // This is a so-called \e leaf class in the Step composite pattern (see

@@ -6,7 +6,6 @@ lib_LTLIBRARIES = libbbskernel.la
 #	Expr/ExternalFunction.cc \
 #	Expr/GaussianCoherence.cc \
 #	Expr/GaussianSource.cc \
-#	Expr/HamakerDipole.cc \
 #	Expr/JonesCMul2.cc \
 #	Expr/JonesExpr.cc \
 #	Expr/JonesMul2.cc \
@@ -15,7 +14,6 @@ lib_LTLIBRARIES = libbbskernel.la
 #	Expr/JonesVisData.cc \
 #	Expr/Result.cc \
 #	Expr/ResultVec.cc \
-#	Expr/YatawattaDipole.cc
 #	Expr/JonesCMul3.cc \
 #	Expr/JonesMul.cc \
 #	Expr/JonesSum.cc \
@@ -46,7 +44,9 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Expr.cc \
 	Expr/ExprParm.cc \
 	Expr/ExprResult.cc \
+	Expr/ExternalFunction.cc \
 	Expr/FlagArray.cc \
+	Expr/HamakerDipole.cc \
 	Expr/JonesInvert.cc \
 	Expr/JonesVisData.cc \
 	Expr/LMN.cc \
@@ -71,7 +71,8 @@ libbbskernel_la_SOURCES = Package__Version.cc \
 	Expr/Request.cc \
 	Expr/Source.cc \
 	Expr/SpectralIndex.cc \
-	Expr/StationUVW.cc
+	Expr/StationUVW.cc \
+	Expr/YatawattaDipole.cc
 
 bin_PROGRAMS = versionbbskernel
 

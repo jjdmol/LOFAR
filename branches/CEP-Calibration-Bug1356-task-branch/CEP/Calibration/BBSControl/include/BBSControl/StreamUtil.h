@@ -31,6 +31,9 @@
 
 namespace LOFAR
 {
+  // \ingroup BBSControl
+  // @{
+
   // Specialization of writeVector for vector of string. We need this, because
   // we want to enclose each string with quotes.
   template<>
@@ -44,7 +47,9 @@ namespace LOFAR
     ostringstream oss;
     oss << vec;
     return oss.str();
-  } 
+  }
+
+  // @}
 
 } // namespace LOFAR
 

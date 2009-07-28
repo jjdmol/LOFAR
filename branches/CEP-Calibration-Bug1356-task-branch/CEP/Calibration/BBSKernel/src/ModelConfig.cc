@@ -98,6 +98,7 @@ double FlaggerConfig::getThreshold() const
 }
 
 ModelConfig::ModelConfig()
+    :   itsBeamType(UNKNOWN_BEAM_TYPE)
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
 }

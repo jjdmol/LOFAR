@@ -42,8 +42,8 @@
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/PiercePoint.h>
 #include <BBSKernel/Expr/MIM.h>
-//#include <BBSKernel/Expr/YatawattaDipole.h>
-//#include <BBSKernel/Expr/HamakerDipole.h>
+#include <BBSKernel/Expr/YatawattaDipole.h>
+#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/PhaseRef.h>
 //#include <BBSKernel/Expr/UVW.h>
 #include <BBSKernel/Expr/SpectralIndex.h>
@@ -215,12 +215,12 @@ void Model::makeForwardExpr(const ModelConfig &config,
         exprAzEl = makeAzElExpr(stations, sources);
     }
 
-//    // Create a dipole beam node per (station0, source) combination.
-//    casa::Matrix<Expr<Vector<2> >::Ptr> exprBeam;
-//    if(config.useBeam())
-//    {
-//        exprBeam = makeBeamExpr(config, stations, exprAzEl);
-//    }
+    // Create a beam expression per (station, source) combination.
+    casa::Matrix<Expr<JonesMatrix>::Ptr> exprBeam;
+    if(config.useBeam())
+    {
+        exprBeam = makeDipoleBeamExpr(config, stations, exprAzEl);
+    }
 
     // Create a MIM expression per (station, source) combination.
     casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
@@ -247,11 +247,11 @@ void Model::makeForwardExpr(const ModelConfig &config,
                         exprAnisotropicGain(j, i));
                 }
 
-//                if(config.useBeam())
-//                {
-//                    anisoTransform(j, i) = corrupt(anisoTransform(j, i),
-//                        exprDipoleBeam(j, i));
-//                }
+                if(config.useBeam())
+                {
+                    anisoTransform(j, i) = corrupt(anisoTransform(j, i),
+                        exprBeam(j, i));
+                }
 
                 if(config.useIonosphere())
                 {
@@ -418,12 +418,12 @@ void Model::makeInverseExpr(const ModelConfig &config,
             exprAzEl = makeAzElExpr(stations, sources);
         }
 
-//        // Create a dipole beam node per (station0, source) combination.
-//        casa::Matrix<Expr<Vector<2> >::Ptr> exprBeam;
-//        if(config.useBeam())
-//        {
-//            exprBeam = makeBeamExpr(config, stations, exprAzEl);
-//        }
+        // Create a beam expression per (station, source) combination.
+        casa::Matrix<Expr<JonesMatrix>::Ptr> exprBeam;
+        if(config.useBeam())
+        {
+            exprBeam = makeDipoleBeamExpr(config, stations, exprAzEl);
+        }
 
         // Create a MIM expression per (station, source) combination.
         casa::Matrix<Expr<JonesMatrix>::Ptr> exprIonosphere;
@@ -442,10 +442,10 @@ void Model::makeInverseExpr(const ModelConfig &config,
                 transform(i) = corrupt(transform(i), exprAnisotropicGain(0, i));
             }
 
-//            if(config.useBeam())
-//            {
-//                transform(i) = corrupt(transform(0, i), exprDipoleBeam(0, i));
-//            }
+            if(config.useBeam())
+            {
+                transform(i) = corrupt(transform(i), exprBeam(0, i));
+            }
 
             if(config.useIonosphere())
             {
@@ -1214,44 +1214,86 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
     return expr;
 }
 
-//void Model::makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
-//    const ModelConfig &config, const boost::multi_array<Expr, 2> &azel)
-//{
-//    ASSERT(config.beamConfig);
-//    ASSERT(config.beamConfig->type() == "HamakerDipole"
-//        || config.beamConfig->type() == "YatawattaDipole");
-//    ASSERT(azel.shape()[0] == itsInstrument.stations.size());
-//
-//    const size_t nStations = azel.shape()[0];
-//    const size_t nSources = azel.shape()[1];
+casa::Matrix<Expr<JonesMatrix>::Ptr>
+Model::makeDipoleBeamExpr(const ModelConfig &config,
+    const vector<unsigned int> &stations,
+    const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
+{
+    ASSERT(config.useBeam() && config.getBeamType()
+        != ModelConfig::UNKNOWN_BEAM_TYPE);
 
-//    // TODO: This code uses station 0 as reference position on earth
-//    // (see global_model.py in EJones_HBA). Is this accurate enough?
+    const unsigned int nSources = azel.shape()(0);
+    const unsigned int nStations = azel.shape()(1);
+    ASSERT(nStations == stations.size());
 
-//    if(config.beamConfig->type() == "HamakerDipole")
-//    {
-//        HamakerDipoleConfig::ConstPtr beamConfig =
-//            dynamic_pointer_cast<const HamakerDipoleConfig>(config.beamConfig);
-//        ASSERT(beamConfig);
-//
-//        // Read beam model coefficients.
-//        BeamCoeff coeff = readBeamCoeffFile(beamConfig->coeffFile);
+    // Allocate result.
+    casa::Matrix<Expr<JonesMatrix>::Ptr> expr(nSources, nStations);
 
-//        // Create a beam node for each source-station combination.
-//        result.resize(boost::extents[nStations][nSources]);
-//        for(size_t i = 0; i < nStations; ++i)
-//        {
-//            // Get dipole orientation.
-//            Expr orientation(makeExprParm(INSTRUMENT, "Orientation:"
-//                + itsInstrument.stations[i].name));
+    switch(config.getBeamType())
+    {
+        case ModelConfig::HAMAKER_DIPOLE:
+        {
+            HamakerDipoleConfig beamConfig;
+            config.getBeamConfig(beamConfig);
 
-//            for(size_t j = 0; j < nSources; ++j)
-//            {
-//                result[i][j] = new HamakerDipole(coeff, azel[0][j],
-//                    orientation);
-//            }
-//        }
-//    }
+            // Read beam coefficients from file.
+            HamakerBeamCoeff coeff;
+            coeff.init(beamConfig.getCoeffFile());
+
+            // Create a dipole beam expression per (station, source)
+            // combination.
+            for(unsigned int i = 0; i < nStations; ++i)
+            {
+                // Get dipole orientation.
+                const unsigned int station = stations[i];
+                Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
+                    "Orientation:" + itsInstrument.stations[station].name);
+
+                for(unsigned int j = 0; j < nSources; ++j)
+                {
+                    expr(j, i) = Expr<JonesMatrix>::Ptr(new HamakerDipole(coeff,
+                        azel(j, i), orientation));
+                }
+            }
+            break;
+        }
+
+        case ModelConfig::YATAWATTA_DIPOLE:
+        {
+            YatawattaDipoleConfig beamConfig;
+            config.getBeamConfig(beamConfig);
+
+            // TODO: Where is this scale factor coming from (see global_model.py
+            // in EJones_droopy_comp and EJones_HBA)?
+//            const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
+//                : 1.0 / 600.0;
+
+            // Create a dipole beam expression per (station, source)
+            // combination.
+            for(unsigned int i = 0; i < nStations; ++i)
+            {
+                // Get dipole orientation.
+                const unsigned int station = stations[i];
+                Expr<Scalar>::Ptr orientation = makeExprParm(INSTRUMENT,
+                    "Orientation:" + itsInstrument.stations[station].name);
+
+                for(unsigned int j = 0; j < nSources; ++j)
+                {
+                    expr(j, i) = Expr<JonesMatrix>::Ptr
+                        (new YatawattaDipole(beamConfig.getModuleTheta(),
+                            beamConfig.getModulePhi(), 1.0, azel(j, i),
+                            orientation));
+                }
+            }
+            break;
+        }
+
+        default:
+            THROW(BBSKernelException, "Unsupported beam type encountered.");
+    }
+
+    return expr;
+
 //    else if(config.beamConfig->type() == "YatawattaDipole")
 //    {
 //        YatawattaDipoleConfig::ConstPtr beamConfig =
@@ -1259,29 +1301,8 @@ Model::makeAzElExpr(const vector<unsigned int> &stations,
 //                (config.beamConfig);
 //        ASSERT(beamConfig);
 
-//        // TODO: Where is this scale factor coming from (see global_model.py
-//        // in EJones_droopy_comp and EJones_HBA)?
-////        const double scaleFactor = options[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
-////            : 1.0 / 600.0;
-
-//        // Create a beam node for each source-station combination.
-//        result.resize(boost::extents[nStations][nSources]);
-//        for(size_t i = 0; i < nStations; ++i)
-//        {
-//            // Get dipole orientation.
-//            Expr orientation(makeExprParm(INSTRUMENT, "Orientation:"
-//                + itsInstrument.stations[i].name));
-
-//            for(size_t j = 0; j < nSources; ++j)
-//            {
-////                result[i][j] = new DipoleBeam(azel[j], 1.706, 1.38,
-////                    casa::C::pi / 4.001, -casa::C::pi_4);
-//                result[i][j] = new YatawattaDipole(beamConfig->moduleTheta,
-//                    beamConfig->modulePhi, azel[0][j], orientation, 1.0);
-//            }
-//        }
 //    }
-//}
+}
 
 casa::Matrix<Expr<JonesMatrix>::Ptr>
 Model::makeIonosphereNodes(const ModelConfig &config,
@@ -1289,6 +1310,9 @@ Model::makeIonosphereNodes(const ModelConfig &config,
     const casa::Matrix<Expr<Vector<2> >::Ptr> &azel)
 {
     // Use station 0 as reference position on earth.
+    // TODO: Is station 0 a sensible choice for the reference position? Should
+    // we use the array reference position instead? Or should it be different
+    // for each station?
     casa::MPosition reference = itsInstrument.stations[0].position;
 
     // Get ionosphere model parameters.
@@ -1310,7 +1334,7 @@ Model::makeIonosphereNodes(const ModelConfig &config,
     {
         for(unsigned int j = 0; j < degree; ++j)
         {
-            // For the moment we do not include MIM:0:0 (i.e. absolute TEC).
+            // For the moment we do not include MIM:0:0 (absolute TEC).
             if(i == 0 && j == 0)
             {
                 continue;
@@ -1323,7 +1347,7 @@ Model::makeIonosphereNodes(const ModelConfig &config,
         }
     }
 
-    // Create a MIM node per (station, source) combination.
+    // Create a MIM expression per (station, source) combination.
     unsigned int nSources = azel.shape()(0);
     unsigned int nStations = azel.shape()(1);
     ASSERT(nStations == stations.size());
@@ -1347,96 +1371,6 @@ Model::makeIonosphereNodes(const ModelConfig &config,
     return expr;
 }
 
-//BeamCoeff Model::readBeamCoeffFile(const string &filename) const
-//{
-//    LOG_DEBUG_STR("Reading beam coefficients...");
-
-//    // Open file.
-//    ifstream in(filename.c_str());
-//    if(!in)
-//    {
-//        THROW(BBSKernelException, "Unable to open file: " << filename << ".");
-//    }
-
-//    // Read file header.
-//    string header, token0, token1, token2, token3, token4, token5;
-//    getline(in, header);
-//
-//    size_t nElements, nHarmonics, nPowerTime, nPowerFreq;
-//    double freqAvg, freqRange;
-//
-//    istringstream iss(header);
-//    iss >> token0 >> nElements >> token1 >> nHarmonics >> token2 >> nPowerTime
-//        >> token3 >> nPowerFreq >> token4 >> freqAvg >> token5 >> freqRange;
-
-//    if(!in || !iss || token0 != "d" || token1 != "k" || token2 != "pwrT"
-//        || token3 != "pwrF" || token4 != "freqAvg" || token5 != "freqRange")
-//    {
-//        THROW(BBSKernelException, "Unable to parse header");
-//    }
-
-//    if(nElements * nHarmonics * nPowerTime * nPowerFreq == 0)
-//    {
-//        THROW(BBSKernelException, "The number of coefficients should be larger"
-//            " than zero.");
-//    }
-
-//    LOG_DEBUG_STR("nElements: " << nElements << " nHarmonics: " << nHarmonics
-//        << " nPowerTime: " << nPowerTime << " nPowerFreq: " << nPowerFreq);
-
-//    // Allocate coefficient matrix.
-//    shared_ptr<boost::multi_array<dcomplex, 4> > coeff
-//        (new boost::multi_array<dcomplex, 4>(boost::extents[nElements]
-//            [nHarmonics][nPowerTime][nPowerFreq]));
-
-//    size_t nCoeff = 0;
-//    while(in.good())
-//    {
-//        // Read line from file.
-//        string line;
-//        getline(in, line);
-
-//        // Skip lines that contain only whitespace.
-//        if(line.find_last_not_of(" ") == string::npos)
-//        {
-//            continue;
-//        }
-
-//        // Parse line.
-//        size_t element, harmonic, powerTime, powerFreq;
-//        double re, im;
-//
-//        iss.clear();
-//        iss.str(line);
-//        iss >> element >> harmonic >> powerTime >> powerFreq >> re >> im;
-//
-//        if(!iss || element >= nElements || harmonic >= nHarmonics
-//            || powerTime >= nPowerTime || powerFreq >= nPowerFreq)
-//        {
-//            THROW(BBSKernelException, "Error reading file.");
-//        }
-//
-//        // Store coefficient.
-//        (*coeff)[element][harmonic][powerTime][powerFreq] =
-//            makedcomplex(re, im);
-
-//        // Update coefficient counter.
-//        ++nCoeff;
-//    }
-
-//    if(!in.eof())
-//    {
-//        THROW(BBSKernelException, "Error reading file.");
-//    }
-
-//    if(nCoeff != nElements * nHarmonics * nPowerTime * nPowerFreq)
-//    {
-//        THROW(BBSKernelException, "Number of coefficients in header does not"
-//            " match number of coefficients in file.");
-//    }
-
-//    return BeamCoeff(freqAvg, freqRange, coeff);
-//}
 
 } // namespace BBS
 } // namespace LOFAR

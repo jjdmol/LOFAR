@@ -34,28 +34,33 @@ namespace LOFAR
 {
 namespace BBS
 {
-    using std::pair;
+using std::pair;
 
-    typedef double                  real_t;
-    typedef dcomplex                complex_t;
-    typedef fcomplex                sample_t;
-    typedef uint8                   flag_t;
-    typedef uint8                   tslot_flag_t;
-    typedef pair<uint32, uint32>    baseline_t;
+// \ingroup BBSKernel
+// @{
 
-    enum AxisName
-    {
-        FREQ,
-        TIME,
-        N_AxisName
-    };
-    
-    enum ParmCategory
-    {
-        INSTRUMENT,
-        SKY,
-        N_ParmCategory
-    };
+typedef double                  real_t;
+typedef dcomplex                complex_t;
+typedef fcomplex                sample_t;
+typedef uint8                   flag_t;
+typedef uint8                   tslot_flag_t;
+typedef pair<uint32, uint32>    baseline_t;
+
+enum AxisName
+{
+    FREQ,
+    TIME,
+    N_AxisName
+};
+
+enum ParmCategory
+{
+    INSTRUMENT,
+    SKY,
+    N_ParmCategory
+};
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

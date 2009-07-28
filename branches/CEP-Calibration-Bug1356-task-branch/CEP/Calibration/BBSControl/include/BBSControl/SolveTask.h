@@ -48,7 +48,7 @@ namespace LOFAR
     class SolutionMsg;
     class ChunkDoneMsg;
 
-    // \addtogroup BBS
+    // \ingroup BBSControl
     // @{
 
     // Group of kernels that share one (global) solver. This class implements

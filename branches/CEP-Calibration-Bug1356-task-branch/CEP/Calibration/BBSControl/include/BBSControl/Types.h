@@ -38,7 +38,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // Typedefs

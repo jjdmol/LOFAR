@@ -53,7 +53,7 @@ namespace LOFAR
 {
 namespace BBS
 {
-// \addtogroup BBSControl
+// \ingroup BBSControl
 // @{
 
 // Implementation of the ProcessControl and the CommandVisitor interface for the

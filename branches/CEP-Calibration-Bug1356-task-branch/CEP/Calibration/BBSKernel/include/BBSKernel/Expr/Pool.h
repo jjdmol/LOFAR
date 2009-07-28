@@ -9,6 +9,9 @@ namespace LOFAR
 namespace BBS
 {
 
+// \ingroup Expr
+// @{
+
 // The Pool class is a very fast, stack-based allocator where objects can
 // be temporarily stored that would otherwise be deleted and allocated again.
 // To delete an object, use deallocate().  To allocate an object, use allocate()
@@ -53,6 +56,8 @@ template <class T> class Pool {
 
     T *top;
 };
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

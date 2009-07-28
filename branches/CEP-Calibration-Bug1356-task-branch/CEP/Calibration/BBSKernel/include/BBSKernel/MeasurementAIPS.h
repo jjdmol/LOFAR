@@ -45,6 +45,9 @@ namespace BBS
 {
 class VisSelection;
 
+// \ingroup BBSKernel
+// @{
+
 class MeasurementAIPS: public Measurement
 {
 public:
@@ -81,6 +84,8 @@ private:
     unsigned int            itsIdField;
     unsigned int            itsIdDataDescription;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

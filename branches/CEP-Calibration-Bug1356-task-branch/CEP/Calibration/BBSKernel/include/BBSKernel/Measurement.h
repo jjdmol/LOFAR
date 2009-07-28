@@ -34,40 +34,46 @@ namespace LOFAR
 {
 namespace BBS
 {
-    class Measurement
+
+// \ingroup BBSKernel
+// @{
+
+class Measurement
+{
+public:
+    typedef shared_ptr<Measurement>         Ptr;
+    typedef shared_ptr<const Measurement>   ConstPtr;
+
+    virtual ~Measurement()
     {
-    public:
-        typedef shared_ptr<Measurement>         Ptr;
-        typedef shared_ptr<const Measurement>   ConstPtr;
+    }
 
-        virtual ~Measurement()
-        {
-        }
+    virtual VisDimensions
+        getDimensions(const VisSelection &selection) const = 0;
 
-        virtual VisDimensions
-            getDimensions(const VisSelection &selection) const = 0;
+    virtual VisData::Ptr read(const VisSelection &selection,
+        const string &column = "DATA", bool readUVW = true) const = 0;
 
-        virtual VisData::Ptr read(const VisSelection &selection,
-            const string &column = "DATA", bool readUVW = true) const = 0;
+    virtual void write(const VisSelection &selection,
+        VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
+        bool writeFlags = true) = 0;
 
-        virtual void write(const VisSelection &selection,
-            VisData::Ptr buffer, const string &column = "CORRECTED_DATA",
-            bool writeFlags = true) = 0;
+    const Instrument &getInstrument() const
+    { return itsInstrument; }
 
-        const Instrument &getInstrument() const
-        { return itsInstrument; }
+    const casa::MDirection &getPhaseCenter() const
+    { return itsPhaseCenter; }
 
-        const casa::MDirection &getPhaseCenter() const
-        { return itsPhaseCenter; }
+    const VisDimensions &getDimensions() const
+    { return itsDimensions; }
 
-        const VisDimensions &getDimensions() const
-        { return itsDimensions; }
+protected:
+    Instrument              itsInstrument;
+    casa::MDirection        itsPhaseCenter;
+    VisDimensions           itsDimensions;
+};
 
-    protected:
-        Instrument              itsInstrument;
-        casa::MDirection        itsPhaseCenter;
-        VisDimensions           itsDimensions;
-    };
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

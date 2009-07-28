@@ -62,7 +62,7 @@ namespace BBS
 {
 class PQGetWorkerRegister;
 
-// \addtogroup BBSControl
+// \ingroup BBSControl
 // @{
 
 // ProcessId is an id that can be used to uniquely identify processes running on

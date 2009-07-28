@@ -1,4 +1,4 @@
-//# SolverInterfaceTypes.h: 
+//# SolverInterfaceTypes.h:
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,161 +30,166 @@
 
 #include <scimath/Fitting/LSQFit.h>
 
-    
+
 namespace LOFAR
 {
-    class BlobIStream;
-    class BlobOStream;
+class BlobIStream;
+class BlobOStream;
 
 namespace BBS
 {
-    class CoeffInterval
+
+// \ingroup BBSKernel
+// @{
+
+class CoeffInterval
+{
+public:
+    CoeffInterval()
+        :   start(0),
+            length(0)
     {
-    public:
-        CoeffInterval()
-            :   start(0),
-                length(0)
-        {
-        }
+    }
 
-        CoeffInterval(uint32 s, uint32 l)
-            :   start(s),
-                length(l)
-        {
-        }
-
-        bool operator==(const CoeffInterval &other) const
-        {
-            return (start == other.start && length == other.length);
-        }
-
-        uint32  start;
-        uint32  length;
-    };
-
-
-    class CoeffIndex
+    CoeffInterval(uint32 s, uint32 l)
+        :   start(s),
+            length(l)
     {
-    private:
-        typedef map<string, CoeffInterval>  IndexType;
-    
-    public:
-        typedef IndexType::const_iterator   const_iterator;
+    }
 
-        CoeffIndex()
-            : itsCount(0)
-        {}
+    bool operator==(const CoeffInterval &other) const
+    {
+        return (start == other.start && length == other.length);
+    }
 
-        void clear()
-        {
-            itsCount = 0;
-            itsIntervals.clear();
-        }
-        
-        const CoeffInterval &insert(const string &parm, uint32 length);
-        void set(const string &parm, const CoeffInterval &interval);
-        void set(const string &parm, uint32 start, uint32 length);
+    uint32  start;
+    uint32  length;
+};
 
-        const_iterator find(const string &parm) const
-        { return itsIntervals.find(parm); }
-        const_iterator begin() const
-        { return itsIntervals.begin(); }
-        const_iterator end() const
-        { return itsIntervals.end(); }
 
-        size_t getParmCount() const
-        { return itsIntervals.size(); }
-        
-        size_t getCoeffCount() const
-        { return itsCount; }
+class CoeffIndex
+{
+private:
+    typedef map<string, CoeffInterval>  IndexType;
 
-    private:
-        friend BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
-        friend BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
+public:
+    typedef IndexType::const_iterator   const_iterator;
 
-        uint32      itsCount;
-        IndexType   itsIntervals;
-    };
+    CoeffIndex()
+        : itsCount(0)
+    {}
 
-    // iostream I/O
-    ostream &operator<<(ostream &out, const CoeffIndex &obj);
+    void clear()
+    {
+        itsCount = 0;
+        itsIntervals.clear();
+    }
 
-    // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
-    BlobIStream &operator>>(BlobIStream &in, CoeffInterval &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CoeffInterval &obj);
+    const CoeffInterval &insert(const string &parm, uint32 length);
+    void set(const string &parm, const CoeffInterval &interval);
+    void set(const string &parm, uint32 start, uint32 length);
+
+    const_iterator find(const string &parm) const
+    { return itsIntervals.find(parm); }
+    const_iterator begin() const
+    { return itsIntervals.begin(); }
+    const_iterator end() const
+    { return itsIntervals.end(); }
+
+    size_t getParmCount() const
+    { return itsIntervals.size(); }
+
+    size_t getCoeffCount() const
+    { return itsCount; }
+
+private:
+    friend BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
+    friend BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
+
+    uint32      itsCount;
+    IndexType   itsIntervals;
+};
+
+// iostream I/O
+ostream &operator<<(ostream &out, const CoeffIndex &obj);
+
+// BlobStream I/O
+BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
+BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
+BlobIStream &operator>>(BlobIStream &in, CoeffInterval &obj);
+BlobOStream &operator<<(BlobOStream &out, const CoeffInterval &obj);
 
 
 // -----------------------------------------------------------------------------
-    class CellCoeff
-    {
-    public:
-        CellCoeff()
-            : id(0)
-        {}
-        
-        CellCoeff(uint32 id)
-            : id(id)
-        {}
+class CellCoeff
+{
+public:
+    CellCoeff()
+        : id(0)
+    {}
 
-        uint32          id;
-        vector<double>  coeff;
-    };
+    CellCoeff(uint32 id)
+        : id(id)
+    {}
 
-    // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CellCoeff &obj);
+    uint32          id;
+    vector<double>  coeff;
+};
 
-
-// -----------------------------------------------------------------------------
-    class CellEquation
-    {
-    public:
-        CellEquation()
-            : id(0)
-        {}
-        
-        CellEquation(uint32 id)
-            : id(id)
-        {}
-
-        uint32          id;
-        casa::LSQFit    equation;
-    };
-
-    // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellEquation &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CellEquation &obj);
+// BlobStream I/O
+BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj);
+BlobOStream &operator<<(BlobOStream &out, const CellCoeff &obj);
 
 
 // -----------------------------------------------------------------------------
-    class CellSolution
-    {
-    public:
-        CellSolution()
-            : id(0)
-        {}
-        
-        CellSolution(uint32 id)
-            : id(id)
-        {}
+class CellEquation
+{
+public:
+    CellEquation()
+        : id(0)
+    {}
 
-        uint32          id;
-        vector<double>  coeff;
-        uint32          result;
-        string          resultText;
-        uint32          rank;
-        double          chiSqr;
-        double          lmFactor;
-    };
+    CellEquation(uint32 id)
+        : id(id)
+    {}
 
-    // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
+    uint32          id;
+    casa::LSQFit    equation;
+};
+
+// BlobStream I/O
+BlobIStream &operator>>(BlobIStream &in, CellEquation &obj);
+BlobOStream &operator<<(BlobOStream &out, const CellEquation &obj);
+
+
+// -----------------------------------------------------------------------------
+class CellSolution
+{
+public:
+    CellSolution()
+        : id(0)
+    {}
+
+    CellSolution(uint32 id)
+        : id(id)
+    {}
+
+    uint32          id;
+    vector<double>  coeff;
+    uint32          result;
+    string          resultText;
+    uint32          rank;
+    double          chiSqr;
+    double          lmFactor;
+};
+
+// BlobStream I/O
+BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
+BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR
 
 #endif
-

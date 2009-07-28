@@ -37,7 +37,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     class SolveStep : public SingleStep

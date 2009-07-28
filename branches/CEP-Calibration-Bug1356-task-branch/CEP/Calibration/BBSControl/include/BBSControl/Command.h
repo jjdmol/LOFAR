@@ -40,7 +40,7 @@ namespace LOFAR
   {
     class CommandVisitor;
 
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // Base class for commands that can be sent to or retrieved from the

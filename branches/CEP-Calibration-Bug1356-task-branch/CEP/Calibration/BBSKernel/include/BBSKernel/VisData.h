@@ -40,6 +40,9 @@ namespace BBS
 {
 using std::pair;
 
+// \ingroup BBSKernel
+// @{
+
 class VisData
 {
 public:
@@ -69,6 +72,8 @@ private:
     // Description of the four dimensions (freq, time, baseline, polarization).
     VisDimensions                           itsDimensions;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -119,10 +119,10 @@ const Scalar::view MIM::evaluateImpl(const Request &request,
     ASSERT(static_cast<size_t>(pp(3).nelements()) == nTime);
 
     // Allocate space for the result.
-    Matrix out;
-    out.setDCMat(nFreq, nTime);
-    double *outRe, *outIm;
-    out.dcomplexStorage(outRe, outIm);
+    Matrix Z;
+    Z.setDCMat(nFreq, nTime);
+    double *Z_re, *Z_im;
+    Z.dcomplexStorage(Z_re, Z_im);
 
     // Compute polynomial degree.
     unsigned int degree =
@@ -185,13 +185,13 @@ const Scalar::view MIM::evaluateImpl(const Request &request,
         for(size_t f = 0; f < nFreq; ++f)
         {
     	    double phase = (75e8 / request[FREQ]->center(f)) * tec;
-            *outRe++ = std::cos(phase);
-            *outIm++ = std::sin(phase);
+            *Z_re++ = std::cos(phase);
+            *Z_im++ = std::sin(phase);
         }
     }
 
     Scalar::view result;
-    result.assign(out);
+    result.assign(Z);
 
     return result;
 }

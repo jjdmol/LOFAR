@@ -37,6 +37,9 @@ namespace LOFAR
     class SolutionMsg;
     class ChunkDoneMsg;
 
+    // \ingroup BBSControl
+    // @{
+
     // Abstract %Visitor classes KernelMessageHandler and SolverMessageHandler
     // declare handle() operations for each concrete Message class. Concrete
     // handler classes must implement a handle() method for each concrete
@@ -67,7 +70,9 @@ namespace LOFAR
       virtual void handle(const MergedCoeffIndexMsg &message) = 0;
       virtual void handle(const SolutionMsg &message) = 0;
     };
-    //@}
+    // @}
+
+    // @}
 
   } //# namespace BBS
 

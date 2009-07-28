@@ -55,7 +55,9 @@ class ModelConfig;
 class Instrument;
 class PhaseRef;
 class Request;
-//class BeamCoeff;
+
+// \ingroup BBSKernel
+// @{
 
 class Model
 {
@@ -118,8 +120,10 @@ private:
         makeAzElExpr(const vector<unsigned int> &stations,
             const vector<Source::Ptr> &sources) const;
 
-//    void makeDipoleBeamNodes(boost::multi_array<JonesExpr, 2> &result,
-//        const ModelConfig &config, const boost::multi_array<Expr, 2> &azel);
+    casa::Matrix<Expr<JonesMatrix>::Ptr>
+        makeDipoleBeamExpr(const ModelConfig &config,
+            const vector<unsigned int> &stations,
+            const casa::Matrix<Expr<Vector<2> >::Ptr> &azel);
 
     casa::Matrix<Expr<JonesMatrix>::Ptr>
         makeIonosphereNodes(const ModelConfig &config,
@@ -141,6 +145,8 @@ private:
     map<baseline_t, Expr<JonesMatrix>::Ptr> itsExpr;
     map<unsigned int, ExprParm::Ptr>        itsParms;
 };
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

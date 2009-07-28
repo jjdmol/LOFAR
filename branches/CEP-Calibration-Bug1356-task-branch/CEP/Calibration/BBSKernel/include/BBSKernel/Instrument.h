@@ -30,18 +30,24 @@ namespace LOFAR
 {
 namespace BBS
 {
-    struct Station
-    {
-        string              name;
-        casa::MPosition     position;
-    };
 
-    struct Instrument
-    {
-        string              name;
-        casa::MPosition     position;
-        vector<Station>     stations;
-    };
+// \ingroup BBSKernel
+// @{
+
+struct Station
+{
+    string              name;
+    casa::MPosition     position;
+};
+
+struct Instrument
+{
+    string              name;
+    casa::MPosition     position;
+    vector<Station>     stations;
+};
+
+// @}
 
 } // namespace BBS
 } // namespace LOFAR

@@ -20,40 +20,57 @@
 //#
 //# $Id$
 
-#ifndef EXPR_EXTERNALFUNCTION_H
-#define EXPR_EXTERNALFUNCTION_H
+#ifndef LOFAR_BBSKERNEL_EXPR_EXTERNALFUNCTION_H
+#define LOFAR_BBSKERNEL_EXPR_EXTERNALFUNCTION_H
 
 #include <Common/lofar_complex.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-    class ExternalFunction
-    {
-    public:
-        ExternalFunction(const string &module, const string &name);
-        ~ExternalFunction();
 
-        uint getParameterCount() const
-        { return itsNX + itsNPar; }
-        
-        dcomplex operator()(const vector<dcomplex> &parms) const;
+// \ingroup Expr
+// @{
 
-    private:
-        //# Define the signature of the external function.
-        typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
-        
-        // Try to find a specific symbol in the module.
-        void *getSymbol(const string &name) const;
-        
-        void            *itsModule;
-        signature_t     itsFunction;
-        int             itsNX, itsNPar;
-    };
+class ExternalFunction
+{
+public:
+    ExternalFunction(const string &module, const string &name);
+    ~ExternalFunction();
+
+    unsigned int nArguments() const;
+    dcomplex operator()(const vector<dcomplex> &args) const;
+
+private:
+    //# Define the signature of the external function.
+    typedef dcomplex (*signature_t)(const dcomplex *par, const dcomplex *x);
+
+    // Try to find a specific symbol in the module.
+    void *getSymbol(const string &name) const;
+
+    void            *itsModule;
+    signature_t     itsFunction;
+    int             itsNX, itsNPar;
+};
+
+inline unsigned int ExternalFunction::nArguments() const
+{
+    return itsNX + itsNPar;
+}
+
+inline dcomplex ExternalFunction::operator()(const vector<dcomplex> &args) const
+{
+    DBGASSERT(itsFunction);
+    DBGASSERT(args.size() == static_cast<size_t>(nArguments()));
+    return itsFunction(&args[itsNX], &args[0]);
+}
+
+// @}
 
 } //# namespace BBS
 } //# namespace LOFAR

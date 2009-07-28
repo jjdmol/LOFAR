@@ -21,12 +21,10 @@
 //#
 //# $Id$
 
-#ifndef EXPR_YATAWATTADIPOLE_H
-#define EXPR_YATAWATTADIPOLE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
+#define LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
 
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/JonesResult.h>
 #include <BBSKernel/Expr/ExternalFunction.h>
 
 namespace LOFAR
@@ -37,20 +35,16 @@ namespace BBS
 // \ingroup Expr
 // @{
 
-class YatawattaDipole: public JonesExprRep
+class YatawattaDipole: public BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>
 {
 public:
     YatawattaDipole(const string &moduleTheta, const string &modulePhi,
-        const Expr &azel, const Expr &orientation, double scaleFactor);
-
-    virtual JonesResult getJResult(const Request &request);
+        double scaleFactor, const Expr<Vector<2> >::ConstPtr &azel,
+        const Expr<Scalar>::ConstPtr &orientation);
 
 private:
-    void evaluate(const Request &request, const Matrix &in_az,
-        const Matrix &in_el, const Matrix &in_orientation,
-        Matrix &out_E11, Matrix &out_E12,
-        Matrix &out_E21, Matrix &out_E22);
-
+    virtual const JonesMatrix::view evaluateImpl(const Request &request,
+        const Vector<2>::view &azel, const Scalar::view &orientation) const;
 
     ExternalFunction    itsThetaFunction, itsPhiFunction;
     double              itsScaleFactor;

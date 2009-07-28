@@ -32,7 +32,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // Concrete \c finalize command. This command is sent to the local

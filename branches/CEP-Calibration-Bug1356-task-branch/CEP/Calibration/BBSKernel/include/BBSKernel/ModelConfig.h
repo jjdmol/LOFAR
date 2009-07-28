@@ -39,6 +39,7 @@ namespace BBS
 // \ingroup BBSKernel
 // @{
 
+// Configuration options specific to Hamaker's dipole beam model.
 class HamakerDipoleConfig
 {
 public:
@@ -51,6 +52,7 @@ private:
     string  itsCoeffFile;
 };
 
+// Configuration options specific to Yatawatta's dipole beam model.
 class YatawattaDipoleConfig
 {
 public:
@@ -65,6 +67,7 @@ private:
     string  itsModulePhi;
 };
 
+// Configuration options specific to Mevius' minimal ionospheric model.
 class IonosphereConfig
 {
 public:
@@ -77,6 +80,7 @@ private:
     unsigned int itsDegree;
 };
 
+// Configuration options specific to the condition number flagger.
 class FlaggerConfig
 {
 public:
@@ -89,6 +93,7 @@ private:
     double itsThreshold;
 };
 
+// Configuration of the LOFAR sky / environment / instrument model.
 class ModelConfig
 {
 public:

@@ -79,14 +79,14 @@ private:
     // to cell intervals in the observation (chunk) grid.
     void makeGridMapping();
 
-    // Create a mapping from cells of axis "from" to the cell intervals on axis
+    // Create a mapping from cells of axis "from" to cell intervals on axis
     // "to". Additionally, the interval of cells of axis "from" that intersect
     // axis "to" (the domain) is returned.
     pair<Interval, vector<Interval> > makeAxisMapping(const Axis::ShPtr &from,
         const Axis::ShPtr &to) const;
 
-    // Create a mapping that maps each (parmId, coeffId) combination to an
-    // index.
+    // Create a mapping from (parmId, coeffId) to a coefficient index in the
+    // normal equations.
     void makeCoeffMapping(const CoeffIndex &index);
 
     // Pre-allocate thread private casa::LSQFit instances.

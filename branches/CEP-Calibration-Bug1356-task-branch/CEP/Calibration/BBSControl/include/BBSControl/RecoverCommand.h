@@ -1,4 +1,4 @@
-//# RecoverCommand.h: 
+//# RecoverCommand.h:
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,6 +29,10 @@ namespace LOFAR
 {
   namespace BBS
   {
+
+    // \ingroup BBSControl
+    // @{
+
     class RecoverCommand : public Command
     {
     public:
@@ -50,8 +54,9 @@ namespace LOFAR
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual CommandResult accept(CommandVisitor &visitor) const;
-
     };
+
+    // @}
 
   } //# namespace BBS
 } //# namespace LOFAR

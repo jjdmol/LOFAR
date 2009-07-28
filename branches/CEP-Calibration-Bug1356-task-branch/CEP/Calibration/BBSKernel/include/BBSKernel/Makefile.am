@@ -5,7 +5,6 @@ pkginclude_Exprdir = $(pkgincludedir)/Expr
 #	Expr/ExternalFunction.h \
 #	Expr/GaussianCoherence.h \
 #	Expr/GaussianSource.h \
-#	Expr/HamakerDipole.h \
 #	Expr/JonesCMul2.h \
 #	Expr/JonesExpr.h \
 #	Expr/JonesMul2.h \
@@ -16,7 +15,6 @@ pkginclude_Exprdir = $(pkgincludedir)/Expr
 #	Expr/Result.h \
 #	Expr/ResultVec.h \
 #	Expr/Pool.h \
-#	Expr/YatawattaDipole.h
 #  	Expr/JonesCMul3.h \
 #	Expr/JonesMul.h \
 #	Expr/JonesSum.h \
@@ -52,7 +50,9 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/ExprAdaptors.h \
 	Expr/ExprParm.h \
 	Expr/ExprResult.h \
+	Expr/ExternalFunction.h \
 	Expr/FlagArray.h \
+	Expr/HamakerDipole.h \
 	Expr/JonesInvert.h \
 	Expr/JonesVisData.h \
 	Expr/LMN.h \
@@ -79,6 +79,7 @@ pkginclude_Expr_HEADERS	= 	\
 	Expr/Source.h \
 	Expr/SpectralIndex.h \
 	Expr/StationUVW.h \
-	Expr/Threshold.h
+	Expr/Threshold.h \
+	Expr/YatawattaDipole.h
 
 include $(top_srcdir)/Makefile.common

@@ -47,7 +47,7 @@ namespace LOFAR
     class ShiftStep;
     class RefitStep;
 
-    // \addtogroup BBSControl
+    // \ingroup BBSControl
     // @{
 
     // Abstract Visitor class, declares visit() operations for each concrete
