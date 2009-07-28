@@ -880,13 +880,15 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 		for(int nr = 0; nr < TS->maxBoards(); nr++) {
 			
 			if ((itsCmd != 0) && (itsCmd->getBoardNr() == nr)) { 
+				sendmask |= (1 << nr);
+				activeboards |= (1 << nr);
 				continue; // if board is busy, don't check alive
 			}
 			itsBoard[nr].send(tp_event);
 			sendmask |= (1 << nr);
 		}
-		// 1 time-out timer for al events
-		itsAliveTimer->setTimer(2.0);
+		// one time-out timer for al events
+		itsAliveTimer->setTimer(5.0);
 	} else {
 		if (event.signal == TP_ALIVE_ACK) {
 			boardnr = TS->port2Board(&port);
@@ -925,7 +927,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 			}
 
 			for (int board = 0; board < TS->maxBoards(); board++) {
-				if (~activeboards & (1 << board)) { // look for not active boards
+				if ((activeboards & (1 << board)) == 0) { // look for not active boards
 					TS->setBoardState(board, noBoard);
 				}
 			}
