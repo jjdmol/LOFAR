@@ -4,16 +4,16 @@ stationName			string
 # statistics of the 4 input streams
 stream0.blocksIn	int
 stream0.percBad		float
-stream0.rejected	float
+stream0.rejected	int
 stream1.blocksIn	int
 stream1.percBad		float
-stream1.rejected	float
+stream1.rejected	int
 stream2.blocksIn	int
 stream2.percBad		float
-stream2.rejected	float
+stream2.rejected	int
 stream3.blocksIn	int
 stream3.percBad		float
-stream3.rejected	float
+stream3.rejected	int
 
 # Info about the backside of the ringbuffer
 late				float
