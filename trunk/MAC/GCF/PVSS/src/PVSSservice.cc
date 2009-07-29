@@ -560,9 +560,10 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 	PVSSresult result(SA_NO_ERROR);
 
 	DpTypeId 			dpTypeId;
-	LangText 			dpNameLang(dpName.c_str());
+	LangText 			dpNameLang(PVSSinfo::getDPbasename(dpName).c_str());
 	GSAWaitForAnswer	*pWFA = new GSAWaitForAnswer(*this);
 	CharString 			pvssTypeName(typeName.c_str());
+	uint 				sysNr = PVSSinfo::getSysId(dpName);
 
 	LOG_TRACE_FLOW(formatString("Create DP '%s'", dpName.c_str()));
 
@@ -574,7 +575,7 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 		LOG_WARN(formatString ("DP '%s' already exists", dpName.c_str()));
   		result = SA_PROP_ALREADY_EXIST;
 	}
-	else if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_FALSE) {
+	else if (Manager::getTypeId(pvssTypeName, dpTypeId, sysNr) == PVSS_FALSE) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -590,7 +591,7 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 		result = SA_DPTYPE_UNKNOWN;
 
 	}
-	else if (Manager::dpCreate(dpNameLang, dpTypeId, pWFA) == PVSS_FALSE) {
+	else if (Manager::dpCreate(dpNameLang, dpTypeId, pWFA, sysNr) == PVSS_FALSE) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -605,8 +606,8 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 		result = SA_CREATEPROP_FAILED;
 	}
 	else {
-		LOG_DEBUG(formatString("Creation of DP '%s' was requested successful", 
-																dpName.c_str()));
+		LOG_DEBUG(formatString("Creation of DP '%s' at system %d was requested successful", 
+												PVSSinfo::getDPbasename(dpName).c_str(), sysNr));
 	}
 
 	// some error occured?

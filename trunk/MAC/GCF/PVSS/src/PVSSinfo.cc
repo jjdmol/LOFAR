@@ -103,12 +103,13 @@ bool PVSSinfo::propExists(const string& dpeName)
 {
 	DpIdentifier 	dpId;
 	CharString 		dpePvssName(dpeName.c_str());
-	LOG_TRACE_VAR_STR("propExists(" << dpeName << "):" << dpePvssName);
 
 	if (Manager::getId(dpePvssName, dpId) == PVSS_FALSE) {
+		LOG_TRACE_VAR_STR("propExists(" << dpeName << "): FALSE");
 		return false;
 	}
 
+	LOG_TRACE_VAR_STR("propExists(" << dpeName << "): OK");
 	return true;
 }
 
@@ -119,7 +120,13 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 {
 	CharString 	pvssTypeName(dpTypeName.c_str());
 	DpTypeId 	dpTypeId; 
-	return (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE);
+	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
+		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
+		return (false);
+	}
+
+	LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): OK");
+	return (true);
 }
 
 //
@@ -217,6 +224,20 @@ uint PVSSinfo::getSysId(const string& name)
 }
 
 //
+// getDPbasename(name)
+//
+// Strip off the system part when provided.
+//
+const string&  PVSSinfo::getDPbasename(const string& name)
+{
+	string::size_type index = name.find(':');
+	if (index == string::npos) {
+		return (name);
+	}
+	return (string(name.substr(index+1)));
+}
+
+//
 // getOwnManNum()
 //
 uint PVSSinfo::getOwnManNum()
@@ -231,6 +252,8 @@ void PVSSinfo::getAllProperties(const string& typeFilter,
                                 const string& dpFilter, 
                                 vector<string>& foundProperties)
 {
+//	LOG_TRACE_COND_STR("getAllProperties(" << typeFilter << "," << dpFilter << ")");
+
 	foundProperties.clear();
 	DpIdentification::TypeIdNamePair* 	typeArray(0);
 	DpIdentification::DpIdNamePair* 	dpIdArray(0);
@@ -239,6 +262,7 @@ void PVSSinfo::getAllProperties(const string& typeFilter,
 	// get all DP types which meet with a "typeFilter"
 	Manager::getDpIdentificationPtr()->
 			getSortedTypeNames(typeFilter.c_str(), typeArray, howManyTypes, PVSS_FALSE);
+//	LOG_TRACE_COND_STR("Found " << howManyTypes << " nr of types");
 
 	list<TPropertyInfo> propInfos;
 	string 				dpeName;
@@ -260,7 +284,7 @@ void PVSSinfo::getAllProperties(const string& typeFilter,
 				dpeName = formatString ("%s.%s", (const char *)dpIdArray[j].id.toString(),
 										iter->propName.c_str());
 
-				LOG_TRACE_FLOW(formatString("Found DPE: %s", dpeName.c_str()));
+				LOG_TRACE_COND(formatString("Found DPE: %s", dpeName.c_str()));
 				foundProperties.push_back(dpeName);
 			}
 		}
@@ -280,6 +304,8 @@ void PVSSinfo::getAllProperties(const string& typeFilter,
 void PVSSinfo::getAllTypes(const string& typeFilter, 
                            vector<string>& foundTypes)
 {
+//	LOG_TRACE_COND_STR("getAllTypes(" << typeFilter << ")");
+
 	foundTypes.clear();
 	DpIdentification::TypeIdNamePair* 	typeArray(0);
 	PVSSlong 							howManyTypes;
@@ -287,9 +313,10 @@ void PVSSinfo::getAllTypes(const string& typeFilter,
 	// get all DP types which meats with a "typeFilter"
 	Manager::getDpIdentificationPtr()->
 			getSortedTypeNames(typeFilter.c_str(), typeArray, howManyTypes, PVSS_FALSE);
+//	LOG_TRACE_COND_STR("Found " << howManyTypes << " nr of types");
 
 	for (PVSSlong i = 0; i < howManyTypes; i++) {
-		LOG_TRACE_FLOW(formatString("Found type: %s", (const char *)typeArray[i].text.getText()));
+//		LOG_TRACE_FLOW(formatString("Found type: %s", (const char *)typeArray[i].text.getText()));
 		foundTypes.push_back((const char *)typeArray[i].text.getText());
 	}
 	if (typeArray) {
@@ -298,7 +325,7 @@ void PVSSinfo::getAllTypes(const string& typeFilter,
 }                             
 
 // forward declaration
-void buildTypeStructTree(const string path, const DpType* pType, const DpElementId elId, list<TPropertyInfo>& propInfos);
+void buildTypeStructTree(const string path, const DpType* pType, const DpElementId elId, const uint sysNr, list<TPropertyInfo>& propInfos);
 
 //
 // getTypeStruct(typename, &propInfo, sysnr)
@@ -307,11 +334,12 @@ TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName,
 								  list<TPropertyInfo>& 	propInfos, 
 								  uint	 				sysNr)
 {
+	LOG_TRACE_COND_STR("getTypeStruct(" << typeName << "," << sysNr << ")");
+
 	propInfos.clear();
 
 	CharString 	pvssTypeName = typeName.c_str();
 	DpTypeId 	typeId;
-	DpType* 	pType;
 	if (Manager::getTypeId(pvssTypeName, typeId, sysNr) == PVSS_FALSE) {
 		string sysName = getSystemName(sysNr);
 		LOG_ERROR(formatString("PVSS could not find type %s on system %s(%d)", 
@@ -319,6 +347,8 @@ TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName,
 		return(GCF_PVSS_ERROR);
 	}
 
+	DpType* 	pType;
+//	LOG_TRACE_COND_STR("getTypeContainerPtr(" << sysNr << ")->getTypePtr(" << typeId << ")");
 	if ((pType = Manager::getTypeContainerPtr(sysNr)->getTypePtr(typeId)) == 0) {
 		LOG_ERROR(formatString("PVSS internal error on type information (%s:%s)",
 								getSystemName(sysNr).c_str(), typeName.c_str()));
@@ -327,7 +357,7 @@ TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName,
 
 	DpElementId elId = pType->getRootElement();
 	string 		path;
-	buildTypeStructTree(path, pType, elId, propInfos);
+	buildTypeStructTree(path, pType, elId, sysNr, propInfos);
 	return (GCF_NO_ERROR);  
 }
 
@@ -337,13 +367,18 @@ TGCFResult PVSSinfo::getTypeStruct(const string& 		typeName,
 void buildTypeStructTree(const string 			path, 
                          const DpType* 			pType, 
                          const DpElementId 		elId, 
+						 const uint				sysNr,
                          list<TPropertyInfo>& 	propInfos)
 {
+	LOG_TRACE_COND_STR("buildTypeStructTree(" << path << "," << elId << "," << sysNr << ")");
 	string 			propName = path;
 	DpElementType 	elType = pType->getTypeNodePtr(elId)->getElementType();
+//	LOG_TRACE_COND_STR("pType->getTypeNodePtr(" << elId << "))->getElementType():" << DpElType::getName(elType));
+
 	if (elId != pType->getRootElement()) {
 		char* elName;
-		Manager::getDpIdentificationPtr()->getElementName(pType->getName(), elId, elName);
+		Manager::getDpIdentificationPtr()->getElementName(pType->getName(), elId, elName, sysNr);
+//		LOG_TRACE_COND_STR("getDpIdentificationPtr()->getElementName" << pType->getName() << "," << elId << "): " << elName);
 		if (elType != DPELEMENT_TYPEREFERENCE) {
 			if (propName.length() > 0) {
 				propName += '.';
@@ -352,6 +387,7 @@ void buildTypeStructTree(const string 			path,
 		}
 		delete [] elName; 
 	}
+//	LOG_TRACE_COND_STR("propName=" << propName);
 
 	if (elType != DPELEMENT_RECORD && elType != DPELEMENT_TYPEREFERENCE) {
 		if (macValueTypes[elType] != NO_LPT) {      
@@ -363,7 +399,7 @@ void buildTypeStructTree(const string 			path,
 			}
 			else {
 				LOG_WARN(formatString ( 
-					"Property name %s meets not the name convention! Not add!!!",
+					"Property name %s does not meet the name convention! Not add!!!",
 					propName.c_str()));
 			}
 		}
@@ -378,7 +414,7 @@ void buildTypeStructTree(const string 			path,
 		DpElementId childElId;
 		for (DynPtrArrayIndex i = 0; i < nrOfChilds; i++) {
 			childElId = pType->getSon(elId, i);
-			buildTypeStructTree(propName, pType, childElId, propInfos);
+			buildTypeStructTree(propName, pType, childElId, sysNr, propInfos);
 		}
 	}
 }
