@@ -44,6 +44,7 @@ public:
 //	static bool EventPort::_askBrokerThePortNumber();
 	static bool isValidPropName(const char* propName);
 	static bool isValidScope   (const char* propName);
+	static const string&  getDPbasename(const string& name);	// strip off systemname
 
     static const string getSystemName(uint sysnr);
     static const string& getLocalSystemName();
