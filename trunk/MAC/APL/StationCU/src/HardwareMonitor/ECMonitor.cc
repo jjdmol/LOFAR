@@ -255,9 +255,9 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 		itsCabs.resize (itsNrCabs, 0);
 		
 		string  stationNameMask("MCU001:"+createPropertySetName(PSN_STATION, getName()));
-		LOG_DEBUG_STR("stationNameMask=" << stationNameMask);
+//		LOG_DEBUG_STR("stationNameMask=" << stationNameMask);
 		string  PSname(formatString(stationNameMask.c_str(), 0));
-		LOG_DEBUG_STR("PSname=" << PSname);
+//		LOG_DEBUG_STR("PSname=" << PSname);
 		itsStation = new RTDBPropertySet(PSname, PST_STATION, PSAT_WO | PSAT_CW, this);
 		itsStation->setConfirmation(false);
 
