@@ -22,10 +22,10 @@
 #define PN_STS_POWER220_ON	"power220On"
 
 // Station
-#define PSN_STATION	"LOFAR_PermSW_@ring@_@station@"
-#define PST_STATION	"Station"
-#define PN_STS_POWER48_ON	"power48On"
-#define PN_STS_POWER220_ON	"power220On"
+//#define PSN_STATION	"LOFAR_PermSW_@ring@_@station@"
+//#define PST_STATION	"Station"
+//#define PN_STS_POWER48_ON	"power48On"
+//#define PN_STS_POWER220_ON	"power220On"
 
 // MACScheduler
 #define PSN_MAC_SCHEDULER	"LOFAR_PermSW_MACScheduler"
