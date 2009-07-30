@@ -1,6 +1,6 @@
 # Storage
-time	string
-rank	int
-count	int
-dropped	int
+time	stringArr
+count	intArr
+dropped	stringArr
+
 
