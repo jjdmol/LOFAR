@@ -69,8 +69,6 @@ class Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
        
-	self['OLAP.CNProc.integrationSteps'] = int(round(self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband']) / 16)) * 16
-
 
     def getClockString(self):
         return self.clock
@@ -192,7 +190,13 @@ class Parset(LOFAR_Parset.Parset):
 
 
     def setIntegrationTime(self, integrationTime):
-	self['OLAP.IONProc.integrationSteps']     = integrationTime
+	maxCnIntegrationTime = 1.2 # seconds
+	ionIntegrationSteps = int(math.ceil(integrationTime / maxCnIntegrationTime))
+	cnIntegrationTime = integrationTime / ionIntegrationSteps
+	nrSamplesPerSecond = self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
+	cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
+	self['OLAP.IONProc.integrationSteps'] = ionIntegrationSteps
+	self['OLAP.CNProc.integrationSteps']  = cnIntegrationSteps
 
 
     def setMSName(self, msName):
