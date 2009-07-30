@@ -94,15 +94,29 @@ private:
 		int			outPtr;
 	} streamBuffer_t;
 
+	// internal structure for lse based logging
+	typedef struct {
+	    vector<string>              timeStr;
+	    vector<int>                 count;
+	    vector<string>              dropped;
+	} logBuffer_t;
+	  
+
+
 	// Map containing all the streambuffers.
 	map<GCFPortInterface*, streamBuffer_t>	itsLogStreams;
 
 	vector<RTDBPropertySet*>	itsInputBuffers;
 	vector<RTDBPropertySet*>	itsAdders;
+	vector<RTDBPropertySet*>	itsStorage;
+	vector<int>                 itsDroppingCount;
+    vector<logBuffer_t>         itsStorageBuf;
+
 
 	// values read from the conf file.
 	int					itsNrInputBuffers;
 	int					itsNrAdders;
+	int                 itsNrStorage;
 	int					itsBufferSize;
 };
 
