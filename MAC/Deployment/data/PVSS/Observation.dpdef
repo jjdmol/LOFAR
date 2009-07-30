@@ -1,6 +1,5 @@
 #ObservationControl.dpdef
 claim				:Claim
-receiverBitmap		string
 
 claimPeriod			int
 preparePeriod		int
