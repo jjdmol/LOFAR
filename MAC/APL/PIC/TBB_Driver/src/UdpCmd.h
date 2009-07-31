@@ -59,23 +59,6 @@ public:
 	virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 	
 private:
-	//private methods
-	
-	// Convert a string containing a Ethernet MAC address
-	// to an array of 6 bytes.
-	void string2mac(const char* macstring, uint32 mac[2]);
-	
-	// Convert a string containing an IP address
-	// to an array of 6 bytes.
-	uint32 string2ip(const char* ipstring);
-	
-	// Setup an appropriate UDP/IP header
-	void setup_udpip_header(uint32 boardnr, uint32 ip_hdr[6], uint32 udp_hdr[2]);
-	
-	// Compute the 16-bit 1-complements checksum for the IP header.
-	uint16 compute_ip_checksum(void* addr, int count);
-
-private:
 	TbbSettings *TS;
 	uint32	itsMode; // Transient or subbands
 };

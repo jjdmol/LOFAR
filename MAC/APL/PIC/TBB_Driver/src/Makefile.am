@@ -115,7 +115,8 @@ noinst_HEADERS = \
 	CepStatusCmd.h \
 	CepDelayCmd.h \
 	WatchDogCmd.h \
-	TempLimitCmd.h	
+	TempLimitCmd.h	\
+	UdpIpTools.h
 
 #NOINSTdir	=
 
