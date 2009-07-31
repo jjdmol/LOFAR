@@ -731,7 +731,7 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 
 //---- READ -------------------------------------------------------------------
 ReadCmd::ReadCmd(GCFPortInterface& port) : Command(port),
-	itsSecondsTime(0),itsSampleTime(0),itsPrePages(0),itsPostPages(0)
+	itsStage(0), itsSecondsTime(0),itsSampleTime(0),itsPrePages(0),itsPostPages(0)
 {
 	cout << endl;
 	cout << "== TBB ==============  transfer data to CEP for all selected rcu ====" << endl;
@@ -741,34 +741,66 @@ ReadCmd::ReadCmd(GCFPortInterface& port) : Command(port),
 //-----------------------------------------------------------------------------
 void ReadCmd::send()
 {
-	TBBReadEvent event;
-	event.rcu = (uint32)getRcu();
-	event.secondstime = itsSecondsTime;
-	event.sampletime = itsSampleTime;
-	event.prepages = itsPrePages;
-	event.postpages = itsPostPages;
-	itsPort.send(event);
-	itsPort.setTimer(DELAY);
+	switch (itsStage) {
+		case 0: {
+			TBBReadEvent event;
+			event.rcu = (uint32)getRcu();
+			event.secondstime = itsSecondsTime;
+			event.sampletime = itsSampleTime;
+			event.prepages = itsPrePages;
+			event.postpages = itsPostPages;
+			itsPort.send(event);
+			itsPort.setTimer(DELAY);
+		} break;
+		
+		case 1: {
+			TBBCepStatusEvent event;
+			event.boardmask = (1 << rcu2board(getRcu()));
+			itsPort.send(event);
+			itsPort.setTimer(DELAY);
+		} break;
+		
+		default : break;
+	}
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 {
-	TBBReadAckEvent ack(e);
-	cout << "RCU  Info" << endl;
-	cout << "---  -------------------------------------------------------" << endl;
-	for (int cnr=0; cnr < getMaxSelections(); cnr++) {
-		if (isSelected(cnr) ) {
-			if (ack.status_mask == TBB_SUCCESS) {
-				cout << formatString(" %2d  tranfering data to CEP",cnr ) << endl;
-			} else {
-				cout << formatString(" %2d  %s",cnr, getDriverErrorStr(ack.status_mask).c_str()) << endl;
+	switch (itsStage) {
+		case 0: {
+			TBBReadAckEvent ack(e);
+			cout << "RCU  Info" << endl;
+			cout << "---  -------------------------------------------------------" << endl;
+			for (int cnr=0; cnr < getMaxSelections(); cnr++) {
+				if (isSelected(cnr) ) {
+					if (ack.status_mask == TBB_SUCCESS) {
+						cout << formatString(" %2d  tranfering data to CEP [",cnr ) << flush;
+						setCmdSendNext(false);
+						itsCmdTimer->setTimer(1.0);
+						itsStage = 1;
+					} else {
+						cout << endl << formatString(" %2d  %s",cnr, getDriverErrorStr(ack.status_mask).c_str()) << endl;
+						setCmdDone(true);
+					}
+				}
 			}
-		}
+		} break;
+		
+		case 1: {
+			TBBCepStatusAckEvent ack(e);
+			if (ack.pages_left[rcu2board(getRcu())] != 0) {
+				cout << "*" << flush;
+				itsCmdTimer->setTimer(1.0);
+			}
+			else {
+				cout << "]" << endl;
+				setCmdDone(true);
+			}
+		} break;
+		
+		default : break;
 	}
-
-	setCmdDone(true);
-
 	return(GCFEvent::HANDLED);
 }
 
@@ -819,13 +851,20 @@ void ReadAllCmd::send()
 			} else {
 				event.prepages = itsPages - 1;
 			}
-			cout << "         wait while sending " << itsPages << " pages to cep" << endl;
+			cout << "         wait while sending " << itsPages << " pages to cep [" << flush;
 			event.postpages = 0;
 			itsPort.send(event);
-			itsPort.setTimer(600.0);
+			itsPort.setTimer(DELAY);
 		} break;
 
 		case 3: {
+			TBBCepStatusEvent event;
+			event.boardmask = (1 << rcu2board(getRcu()));
+			itsPort.send(event);
+			itsPort.setTimer(DELAY);
+		} break;
+
+		case 4: {
 			TBBRecordEvent event;
 			if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 
@@ -866,20 +905,47 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 
 		case 2: {
 			TBBReadAckEvent ack(e);
-			// look for next Rcu
-			itsRcu++;
-			itsStage = 1;
-			while (!isSelected(itsRcu)) {
-				itsRcu++;
-				if (itsRcu >= getMaxSelections()) {
-					itsStage = 3;
-					setCmdDone(true); // delete this line if new image with cep_status cmd is active
-					break;
-				}
+			if (ack.status_mask == TBB_SUCCESS) {
+				itsStage = 3;
+				setCmdSendNext(false);
+				itsCmdTimer->setTimer(1.0);
+			}
+			else {
+				cout << endl << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
+				setCmdDone(true);
 			}
 		} break;
 
 		case 3: {
+			TBBCepStatusAckEvent ack(e);
+			if (ack.status_mask[rcu2board(getRcu())] == TBB_SUCCESS) {
+				if (ack.pages_left[rcu2board(getRcu())] != 0) {
+					cout << "*" << flush;
+					itsCmdTimer->setTimer(1.0);
+				}
+				else {
+					setCmdSendNext(true);
+					cout << "]" << endl;
+					// look for next Rcu
+					itsRcu++;
+					itsStage = 1;
+					while (!isSelected(itsRcu)) {
+						itsRcu++;
+						if (itsRcu >= getMaxSelections()) {
+							itsStage = 4;
+							//setCmdDone(true); // delete this line if new image with cep_status cmd is active
+							break;
+						}
+					}
+				}
+			}
+			else {
+				cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask[rcu2board(getRcu())]).c_str()) << endl;
+				setCmdDone(true);
+			}
+		} break;
+
+		case 4: {
 			TBBRecordAckEvent ack(e);
 			cout << "all stopped channels are started again" << endl;
 			setCmdDone(true);

@@ -42,7 +42,9 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   namespace TbbCtl {
 
-static const int TBBCTL_VERSION = 212;
+GCFTimerPort* itsCmdTimer;
+
+static const int TBBCTL_VERSION = 215;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -520,6 +522,7 @@ public:
 	void setPrePages(uint32 prepages) { itsPrePages = prepages; }
 	void setPostPages(uint32 postpages) { itsPostPages = postpages; }
 private:
+	uint32 itsStage;
 	uint32 itsSecondsTime;
 	uint32 itsSampleTime;
 	uint32 itsPrePages;
@@ -925,7 +928,8 @@ public:
 	* Start the controller main loop.
 	*/
 	void mainloop();
-
+	
+	
 private:
 	// private methods
 	Command* parse_options(int argc, char** argv);
@@ -935,7 +939,6 @@ private:
 	void commandHelp(int level);
 private:
 	GCFPort       itsServerPort;
-	GCFTimerPort* itsCmdTimer;
 	Command*      itsCommand; // the command to execute
 
 	// commandline parameters

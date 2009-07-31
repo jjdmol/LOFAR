@@ -1,4 +1,4 @@
-//#  ReadCmd.cc: implementation of the ReadCmd class
+//#e   ReadCmd.cc: implementation of the ReadCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,7 +36,7 @@ using	namespace TBB;
 
 //--Constructors for a ReadCmd object.----------------------------------------
 ReadCmd::ReadCmd():
-	itsStage(0), itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0)
+	itsSecondstime(0), itsSampletime(0), itsPrepages(0), itsPostpages(0)
 {
 	TS = TbbSettings::instance();
 	setWaitAck(true);
@@ -80,31 +80,16 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadCmd::sendTpEvent()
 {
-	switch (itsStage) {
-		case 0: {
-			TPReadEvent tp_event;
-			
-			tp_event.opcode      = oc_READ;
-			tp_event.status      = 0;
-			tp_event.channel     = TS->getChInputNr(getChannelNr());
-			tp_event.secondstime = itsSecondstime;
-			tp_event.sampletime  = itsSampletime;
-			tp_event.prepages    = itsPrepages;
-			tp_event.postpages   = itsPostpages;
-			TS->boardPort(getBoardNr()).send(tp_event);
-		} break;
-		
-		case 1: {
-			TPCepStatusEvent tp_event;
-			
-			tp_event.opcode = oc_CEP_STATUS;
-			tp_event.status = 0;
-			TS->boardPort(getBoardNr()).send(tp_event);
-		} break;
-		
-		default: {
-		} break;
-	}
+	TPReadEvent tp_event;
+	
+	tp_event.opcode      = oc_READ;
+	tp_event.status      = 0;
+	tp_event.channel     = TS->getChInputNr(getChannelNr());
+	tp_event.secondstime = itsSecondstime;
+	tp_event.sampletime  = itsSampletime;
+	tp_event.prepages    = itsPrepages;
+	tp_event.postpages   = itsPostpages;
+	TS->boardPort(getBoardNr()).send(tp_event);
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -119,31 +104,21 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		TPReadAckEvent tp_ack(event);
 		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
 		LOG_DEBUG_STR(formatString("ReadAck.status=%d", tp_ack.status));
-				
+		/*
+		LOG_INFO_STR("ReadCmd Info: page-index     :" << tp_ack.page_index);
+		LOG_INFO_STR("              pages-left     :" << tp_ack.pages_left);
+		LOG_INFO_STR("              period-samples :" << tp_ack.period_samples);
+		LOG_INFO_STR("              period seconds :" << tp_ack.period_seconds);
+		LOG_INFO_STR("              page-offset    :" << tp_ack.page_offset);
+		*/
 		if (tp_ack.status == 0xfd) {
 			LOG_DEBUG_STR(formatString("TBB busy, %d pages left, trying until free", tp_ack.pages_left));
-			setSleepTime(0.1);		
-		} else {
-			if (tp_ack.status != 0) {
-				setStatus(getBoardNr(), (tp_ack.status << 24));
-				setDone(true);
-			}
-			itsStage = 1;
 		}
-	}
-	else if (event.signal == TP_CEP_STATUS_ACK) {
-		TPCepStatusAckEvent tp_ack(event);
-		
 		if (tp_ack.status != 0) {
 			setStatus(getBoardNr(), (tp_ack.status << 24));
-			setDone(true);
-		}
-		else if (tp_ack.pages_left == 0) {
-			setDone(true);
-		} else {
-			setSleepTime(0.1);
 		}
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------

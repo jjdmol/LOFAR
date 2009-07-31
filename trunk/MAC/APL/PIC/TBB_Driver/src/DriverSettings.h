@@ -34,9 +34,17 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 213; // 2.13 
+static const int DRIVER_VERSION = 215; // 2.15 
 
-enum BoardStateT {noBoard, setImage1, image1Set, clearBoard, boardCleared, setWatchdog, watchdogSet, freeBoard, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard,
+				  setImage1, image1Set,
+				  clearBoard, boardCleared,
+				  enableWatchdog, watchdogEnabled,
+				  setMode, modeSet,
+				  enableArp, arpEnabled,
+				  freeBoard, boardFreed,
+				  boardReady,
+				  boardError};
 
 // info for all channels
 struct ChannelInfo

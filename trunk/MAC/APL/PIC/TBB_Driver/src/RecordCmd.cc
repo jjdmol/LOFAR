@@ -58,14 +58,15 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 {
 	TBBRecordEvent tbb_event(event);
 	
-	setChannels(tbb_event.rcu_mask);
+	//setChannels(tbb_event.rcu_mask);
 	
 	int32 board;
+	int32 rcu;
 	for (int i = 0; i < TS->maxChannels(); i++) {
-		if (tbb_event.rcu_mask.test(i) == true) {
-			if ((TS->getChState(i) == 'F') || (TS->getChState(i) == 'E')) {
-				board = TS->getChBoardNr(i);
-				setStatus(board, TBB_CH_NOT_ALLOCATED);
+		TS->convertCh2Rcu(i,&rcu);
+		if (tbb_event.rcu_mask.test(rcu) == true) {
+			if (TS->getChState(i) == 'A') {
+				setChannel(rcu);
 			}
 		}
 	}
