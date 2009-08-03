@@ -77,10 +77,7 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
     sections.wait()
   except KeyboardInterrupt:
     # abort all sections
-    try:
-      sections.abort(True) # soft kill
-    except KeyboardInterrupt:
-      sections.abort(False) # hard kill
+    sections.abort()
 
   # let the sections clean up 
   sections.postProcess()
@@ -125,6 +122,16 @@ if __name__ == "__main__":
 			action = "append",
 			type = "string",
   			help = "override a parset parameter (syntax: key=value) [%default]" )
+  psgroup.add_option( "-i", "--integrationtime",
+  			dest = "integrationtime",
+			type = "string",
+                        default = None,
+  			help = "override the integration time (syntax: seconds) [%default]" )
+  psgroup.add_option( "-c", "--clock",
+  			dest = "clock",
+			type = "string",
+                        default = None,
+  			help = "override the clock frequency (syntax: MHz) [%default]" )
 
   psgroup.add_option( "-s", "--starttime",
   			dest = "starttime",
@@ -311,6 +318,13 @@ if __name__ == "__main__":
         parset[k] = v
       except ValueError,e:
         error("Cannot parse option %s: %s" % (opt,e,))
+
+  # set clock and integration time
+  if options.clock is not None:
+    parset.setClock( options.clock )
+
+  if options.integrationtime is not None:
+    parset.setIntegrationTime( options.integrationtime )
 
   # reserve an observation id
   try:

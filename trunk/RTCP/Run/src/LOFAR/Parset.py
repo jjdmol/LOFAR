@@ -15,6 +15,7 @@ class Parset(util.Parset.Parset):
 	self.stations = []
 	self.storagenodes = []
 	self.partition = ""
+        self.integrationtime = 1.0
 	self.psets = []
 
     def distillStations(self):
@@ -104,7 +105,23 @@ class Parset(util.Parset.Parset):
 	#print 'storageNodes: ' + str(self['OLAP.storageNodeList'])
 
 	# calculation configuration
-	self.setdefault('OLAP.CNProc.integrationSteps', int(round(self.getInt32('Observation.sampleClock') * 1e6 / 1024 / int(self.getInt32('Observation.channelsPerSubband')) / 16)) * 16 )
+
+        # integration times of CNProc and IONProc, based on self.integrationtime
+        # maximum amount of time CNProc can integrate
+        maxCnIntegrationTime = 1.2 # seconds
+
+        # (minimal) number of times the IONProc will have to integrate
+        ionIntegrationSteps = int(math.ceil(self.integrationtime / maxCnIntegrationTime))
+        self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
+
+        # the amount of time CNProc will integrate, translated into samples
+        cnIntegrationTime = integrationTime / int(self["OLAP.IONProc.integrationSteps"])
+        nrSamplesPerSecond = self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
+
+        cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
+        self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
+
+        # observation mode
 	self.setdefault('Observation.pulsar.mode',0)
 
 	# tied-array beam forming
@@ -236,6 +253,16 @@ class Parset(util.Parset.Parset):
 
       self["Observation.startTime"] = format( start )
       self["Observation.stopTime"] = format( stop )
+
+    def setClock( self, mhz ):
+      self['Observation.sampleClock'] = int( mhz )
+
+    def setIntegrationTime( self, integrationTime ):
+      self.integrationtime = integrationTime
+
+      # make sure these values will be recalculated in finalise()
+      self.pop('OLAP.IONProc.integrationSteps',0)
+      self.pop('OLAP.CNProc.integrationSteps',0)
 
     def check( self ):
       """ Check the Parset configuration for inconsistencies. """
