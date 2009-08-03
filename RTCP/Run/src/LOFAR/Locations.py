@@ -74,13 +74,16 @@ class Locations:
         # the observation ID is included to allow parallel observations
 	"parset":  "${RUNDIR}/RTCP-${MSNUMBER}.parset", 
 
-        # where to store logs and start the executables
-	"logdir":  "listfen:/log/L${YEAR}_${MSNUMBER}",
+        # where to store logs
+	"logdir":  "/log/L${YEAR}_${MSNUMBER}",
+
+        # where to start the executables. rundir needs to be reachable
+        # for all sections.
 	"rundir":  "${BASEDIR}",
 
         # locations of the observation id counter and tables
-	"mslist":       "listfen:/log/MSList",
-	"nextmsnumber": "listfen:/log/nextMSNumber",
+	"mslist":       "/log/MSList",
+	"nextmsnumber": "/log/nextMSNumber",
     } )
 
     self.nodes.update( {
