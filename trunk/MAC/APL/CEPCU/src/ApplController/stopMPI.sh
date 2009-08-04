@@ -5,6 +5,9 @@
 # Stops the given process by killing the process whose pid is in the
 # proces.pid file.
 
+# DISABLED this script: startBGL.sh starts all CEP processes
+exit
+
 # TODO: for some mpi versions it is not enough to kill mpirun
 #       we could "killall executable", but that would also kill
 #       processes started by another ApplicationController

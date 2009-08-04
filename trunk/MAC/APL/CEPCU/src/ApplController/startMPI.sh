@@ -9,6 +9,9 @@
 # calls mpirun and remembers the pid
 #
 
+# DISABLED this script: startBGL.sh starts all CEP processes
+exit
+
 # now all ACC processes expect to be started with ACC as first parameter
 
 # start process
