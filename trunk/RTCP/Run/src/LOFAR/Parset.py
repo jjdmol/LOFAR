@@ -115,8 +115,8 @@ class Parset(util.Parset.Parset):
         self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
 
         # the amount of time CNProc will integrate, translated into samples
-        cnIntegrationTime = integrationTime / int(self["OLAP.IONProc.integrationSteps"])
-        nrSamplesPerSecond = self['Observation.sampleClock'] * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
+        cnIntegrationTime = self.integrationtime / int(self["OLAP.IONProc.integrationSteps"])
+        nrSamplesPerSecond = int(self['Observation.sampleClock']) * 1e6 / 1024 / int(self['Observation.channelsPerSubband'])
 
         cnIntegrationSteps = int(round(nrSamplesPerSecond * cnIntegrationTime / 16)) * 16
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)

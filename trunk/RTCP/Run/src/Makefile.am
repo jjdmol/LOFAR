@@ -2,9 +2,9 @@
 # SUBDIRS = shmem .
 # endif
 
-lib_LTLIBRARIES         = libcs1_run.la
+#lib_LTLIBRARIES         = libcs1_run.la
 
-libcs1_run_la_SOURCES =
+#libcs1_run_la_SOURCES =
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize
@@ -24,17 +24,45 @@ bin_PROGRAMS =
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
 
-pythondir = $(bindir)
+pythondir = $(bindir)/Run
 dist_python_SCRIPTS = 	\
 			Commands.py \
+			getBGPStats.py \
+			Host_Names.py \
 			Hosts.py \
-			CS1_Hosts.py \
-			LOFAR_Parset.py \
-			CS1_Parset.py \
+			Parset.py \
+			runOLAP.py \
+			Run.py \
+			scanf.py \
+			Sections.py \
+			Stations.py \
+			BGPStats.sh \
+			getStats \
+			OLAP.parset
+
+lofarpythondir = $(bindir)/Run/LOFAR
+dist_lofarpython_SCRIPTS = 	\
+			LOFAR/BGcontrol.py \
+			LOFAR/__init__.py \
 			LOFAR_Jobs.py \
-			CS1_RSPCtl.py \
-			CS1_Run.py \
-			CS1_Sections.py
+			LOFAR/Locations.py \
+			LOFAR/Logger.py \
+			LOFAR/ObservationID.py \
+			LOFAR_Parset.py \
+			LOFAR/Parset.py \
+			LOFAR/Partitions.py \
+			LOFAR/Sections.py \
+			LOFAR/Stations.py
+
+utilpythondir = $(bindir)/Run/util
+dist_utilpython_SCRIPTS = 	\
+			util/Commands.py \
+			util/dateutil.py \
+			util/Hosts.py \
+			util/__init__.py \
+			util/Parset.py \
+			util/scanf.py \
+			util/tee.py
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = 
