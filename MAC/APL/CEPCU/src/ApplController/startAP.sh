@@ -8,6 +8,9 @@
 # start the given executable and creates a corresponding pid file for stopping the process.
 #
 
+# DISABLED this script: startBGL.sh starts all CEP processes
+exit
+
 # now all ACC processes expect to be started with "ACC" as first parameter
 
 # start process
