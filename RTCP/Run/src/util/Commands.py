@@ -68,11 +68,8 @@ class AsyncCommand(object):
         self.popen = Popen( self.cmd.split(), stdin=stdin, stdout=stdout, stderr=STDOUT )
         self.run()
 
-    def mergeOutputs( outputs ):
-      """ Merges outputs (a list of strings) into one file descriptor. """
-
-
-      return w
+    def __str__(self):
+        return "(%s) %s" % (self.__class__.__name__,self.cmd)
 
     def run(self):
         """ Will be called when the command has just been started. """

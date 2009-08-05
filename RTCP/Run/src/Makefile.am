@@ -56,6 +56,7 @@ dist_lofarpython_SCRIPTS = 	\
 
 utilpythondir = $(bindir)/Run/util
 dist_utilpython_SCRIPTS = 	\
+			util/Aborter.py \
 			util/Commands.py \
 			util/dateutil.py \
 			util/Hosts.py \

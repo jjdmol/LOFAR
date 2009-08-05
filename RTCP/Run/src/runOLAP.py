@@ -9,7 +9,7 @@ from LOFAR.Stations import Stations
 from util import Commands
 from util.dateutil import format
 from LOFAR.Locations import Locations,isDevelopment
-from util.Hosts import ropen,rmkdir,rexists
+from util.Hosts import ropen,rmkdir,rexists,runlink
 import sys
 
 DRYRUN = False
@@ -81,6 +81,9 @@ def runObservation( parset, start_cnproc = True, start_ionproc = True, start_sto
 
   # let the sections clean up 
   sections.postProcess()
+
+  # clean up the parset in the rundir
+  runlink( Locations.files["parset"] )
 
   info( "Done." )
 

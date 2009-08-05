@@ -84,3 +84,19 @@ def rexists( filename ):
     return os.path.exists( file )
 
   return int(subprocess.Popen( ["ssh",host,"[ ! -e %s ]; echo $?" % (file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
+
+def runlink( filename ):
+  """ Deletes a local or a remote file. A remote
+      file has the syntax host:filename. """
+
+  if ":" not in filename:
+    # a local file
+    return os.path.exists( filename )
+
+  host,file = filename.split(":",2)
+
+  if host in ["","localhost",HOSTNAME]:
+    # a local file
+    return os.unlink( file )
+
+  return int(subprocess.Popen( ["ssh",host,"rm -f %s" % (file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
