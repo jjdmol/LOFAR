@@ -48,6 +48,7 @@ namespace LOFAR {
       unsigned     itsMyNrSubbands;
       uint32       itsAlignment;       // alignment of userbuffers and
 				       // writes, for O_DIRECT
+      Matrix<int>  itsPreviousSequenceNumbers;
       
 
       NSTimer itsWriteTimer;
@@ -64,7 +65,8 @@ namespace LOFAR {
       void createInputThread();
       bool processSubband(unsigned subband);
       void writeLogMessage();
-
+      void checkForDroppedData(StreamableData *data, unsigned sb, unsigned output);
+      
     };
 
   } // namespace RTCP

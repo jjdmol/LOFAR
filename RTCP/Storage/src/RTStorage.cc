@@ -108,6 +108,14 @@ void RTStorage::preprocess()
     createInputStream(sb);
     itsInputThreads.push_back(new InputThread(itsInputStreams[sb], itsPS));
   }  
+
+  itsPreviousSequenceNumbers.resize(itsMyNrSubbands, itsNrOutputs);
+  for (unsigned i = 0; i < itsMyNrSubbands; i++) {
+    for (unsigned j = 0; j < itsNrOutputs; j++) {
+
+      itsPreviousSequenceNumbers[i][j] = -1;
+    }
+  }    
 }
 
 
@@ -148,6 +156,8 @@ void RTStorage::postprocess()
   itsInputThreads.clear();
   itsIsNullStream.clear();
   myFDs.resize(0, 0);  
+
+  itsPreviousSequenceNumbers.resize(0, 0);
 }
 
 
@@ -169,6 +179,26 @@ void RTStorage::writeLogMessage()
 }
 
 
+void RTStorage::checkForDroppedData(StreamableData *data, unsigned sb, unsigned output)
+{
+  unsigned expectedSequenceNumber = itsPreviousSequenceNumbers[sb][output] + 1;
+    
+  if (itsIsNullStream[sb]) {
+    data->sequenceNumber	           = expectedSequenceNumber;
+    itsPreviousSequenceNumbers[sb][output] = expectedSequenceNumber;
+  } else {
+    unsigned droppedBlocks = data->sequenceNumber - expectedSequenceNumber;
+
+    if (droppedBlocks > 0) {
+      unsigned subbandNumber = itsRank * itsNrSubbandsPerStorage + sb;
+      LOG_WARN_STR("MPI rank  " << itsRank << " dropped " << droppedBlocks << " block" << (droppedBlocks == 1 ? "" : "s") << " for subband " << subbandNumber << " and output " << output);
+    }
+
+    itsPreviousSequenceNumbers[sb][output] = data->sequenceNumber;
+  }
+}
+
+
 bool RTStorage::processSubband(unsigned sb)
 {
   unsigned o = itsInputThreads[sb]->itsReceiveQueueActivity.remove();
@@ -178,6 +208,7 @@ bool RTStorage::processSubband(unsigned sb)
   if (data == 0) 
     return false;
 
+  checkForDroppedData(data, sb, o);
 
   itsWriteTimer.start();
   /// write data to correct fd
