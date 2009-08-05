@@ -191,15 +191,18 @@ void SubbandWriter::preprocess()
     unsigned currentSubband = itsRank * itsNrSubbandsPerStorage + i;
     
     for (unsigned output = 0; output < itsNrOutputs; output++ ) {
+      
       string filename = itsPS->getMSname(currentSubband) + itsPipelineOutputSet[output].filenameSuffix();
       
       switch( itsPipelineOutputSet[output].writerType() ) {
       case PipelineOutput::CASAWRITER:
+	
 	itsWriters[i][output] = new MSWriterCasa(
 	  filename.c_str(),
 	  startTime, itsPS->IONintegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNStations, antPos,
 	  stationNames, itsWeightFactor);
+	
 	break;
 	
       case PipelineOutput::RAWWRITER:
@@ -222,7 +225,7 @@ void SubbandWriter::preprocess()
 	LOG_WARN_STR("unknown writer type!");
 	break;
       }
-      
+
       unsigned       beam    = subbandToBeamMapping[currentSubband];
       vector<double> beamDir = itsPS->getBeamDirection(beam);
       itsWriters[i][output]->addField(beamDir[0], beamDir[1], beam); // FIXME add 1???
