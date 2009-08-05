@@ -188,8 +188,8 @@ def defineStations( s ):
   # Special stations, one-time stations, etc.
   s.update( {
    "Pulsar": [Station('Pulsar', '10.170.0.30', ['tcp:0.0.0.0:4346'])],
-   "twoears":  [Station('CS302HBA0', '10.170.0.21', ['0.0.0.0:4346']),
-                Station('CS302HBA1', '10.170.0.22', ['0.0.0.0:4347'])],
+   "twoears":  [Station('CS302HBA0', '10.170.0.133', ['0.0.0.0:4346']),
+                Station('CS302HBA1', '10.170.0.134', ['0.0.0.0:4347'])],
   } )
 
   # Standard configurations

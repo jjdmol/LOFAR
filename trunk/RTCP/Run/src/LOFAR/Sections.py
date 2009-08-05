@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from util.Commands import SyncCommand,AsyncCommand,mpikill
+from util.Aborter import runUntilSuccess
 from Locations import Locations
 import os
 import BGcontrol
@@ -26,9 +27,26 @@ class Section:
   def postProcess(self):
     pass
 
-  def abort(self,soft=True):
+  def killSequence(self,name,killfunc,timeout):
+    killfuncs = [ lambda: kill(2), lambda: kill(9) ]
+
+    success = runUntilSuccess( killfuncs, timeout )
+
+    if not success:
+      warn( "%s: Could not kill %s" % (self,name) )
+
+    return success
+
+  def killCommand(self,cmd,timeout):
+    def kill( signal ):
+      cmd.abort( signal )
+      cmd.wait()
+
+    return self.killSequence(str(cmd),kill,timeout)
+
+  def abort(self,timeout):
     for c in self.commands:
-      c.abort([9,2][bool(soft)])
+      self.killCommand(c)
 
   def wait(self):
     for c in self.commands:
@@ -48,25 +66,11 @@ class SectionSet(list):
       info( "Post processing %s." % (s,) )
       s.postProcess()
 
+
   def abort(self):
-    def kill(s, soft):
-      info( "Killing %s [%s]." % (s,["hard","soft"][bool(soft)]) )
-      s.abort(soft)
-
     for s in self:
-      try:
-        kill( s, True )
-      except KeyboardInterrupt:
-        try:
-          kill( s, False )
-        except KeyboardInterrupt:
-          warn( "Could not kill %s" % (s,) )
-
-      try:
-        info( "Waiting for %s." % (s,) )
-        s.wait()
-      except KeyboardInterrupt:
-        warn( "Interrupted while waiting for %s to finish" % (s,) )
+      info( "Killing %s." % (s,) )
+      s.abort()
 
   def wait(self):
     for s in self:
@@ -142,15 +146,17 @@ class IONProcSection(Section):
 
       self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfiles ) )
 
-  def abort( self, soft = True ):
-    signal = [9,2][bool(soft)]
-    if soft:
-      # kill mpirun using the pid we stored locally
-      for node,pidfile in self.pidfiles.iteritems():
+  def abort( self, timeout ):
+    for node,pidfile in self.pidfiles.iteritems():
+      def kill( signal ):
+        # kill remote process using the pid we stored
         SyncCommand( "ssh %s kill -%s `cat %s`" % (node,signal,pidfile) )
-    else:
-      # kill commands locally
-      Section.abort( self, False )
+
+      self.killSequence( "IONProc process on %s" % (node,), kill, timeout )
+
+    # fallback: kill local commands
+    if not runUntilSuccess( [ self.wait ], timeout ):
+      Section.abort( self )
 
   def check(self):
     # I/O nodes need to be reachable
@@ -199,16 +205,23 @@ class StorageSection(Section):
 
     self.commands.append( AsyncCommand( "ssh %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
-  def abort( self, soft = True ):
-    signal = [9,2][bool(soft)]
-
+  def abort( self, timeout ):
     # kill mpirun using the pid we stored locally
-    SyncCommand( "ssh %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+    def kill( signal ):
+      SyncCommand( "ssh %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+
+    self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
     # kill Storage and orted processes on storage nodes
     for node in Locations.nodes["storage"]:
       # We kill the process group rooted at the orted process
       # (kill -PID) belonging to our MPI universe. This takes Storage with it.
-      SyncCommand( "ssh %s kill -%s -`ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }'`" % (
+      def kill( signal ):
+        SyncCommand( "ssh %s kill -%s -`ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }'`" % (
           node, signal, self.universe) )
 
+      self.killSequence( "orted process on %s" % (node,), kill, timeout )
+
+    # fallback: kill local commands
+    if not runUntilSuccess( [ self.wait ], timeout ):
+      Section.abort( self )
