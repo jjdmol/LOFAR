@@ -61,6 +61,7 @@ lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase,,1,AMCBase/Epoch.h,,)
 dnl lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 dnl lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(RTCP/Interface,Interface,,1,Interface/Parset.h,,)
+lofar_INTERNAL(RTCP/LofarStMan,LofarStMan,,1,LofarStMan/LofarStMan.h,,)
 dnl The property interface is not used right now
 dnl lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_PVString.h,gcfcommon)
 dnl lofar_INTERNAL(MAC/GCF/PALlight,PALlight,,1,GCF/PALlight/CEPPropertySet.h,gcfceppallight)
