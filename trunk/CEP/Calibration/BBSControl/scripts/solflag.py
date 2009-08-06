@@ -4,26 +4,6 @@ import pylab
 import pyrap.tables
 import solfetch
 
-def fetch(db, elements, stations, directions=[None]):
-    result = None
-
-    for i in range(0, len(elements)):
-        for j in range(0, len(directions)):
-            # Fetch solutions.
-            (ampl, phase) = solfetch.fetch(db, stations, parm="Gain:%s" %
-                elements[i], direction=directions[j])
-
-            # Allocate result array if necessary.
-            if result is None:
-                result = numpy.zeros((len(elements), len(directions),
-                    len(stations), ampl.shape[-1]))
-
-            # Copy solutions into result array.
-            assert(result[i][j].shape == ampl.shape)
-            result[i][j] = ampl
-
-    return result
-
 def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
     updateMain=True, cutoffLow=None, cutoffHigh=None, debug=False):
     """
@@ -70,7 +50,7 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
 
     print "fetching solutions from %s..." % dbName,
     sys.stdout.flush()
-    ampl = fetch(db, elements, stations, sources)
+    ampl = __fetch(db, elements, stations, sources)
     print "done."
     sys.stdout.flush()
 
@@ -132,10 +112,10 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
                     mask = ~sol_flag[half_window:half_window + n_samples]
                     x_axis = numpy.array(range(0, n_samples))
                     x_axis = x_axis[mask]
-                    
+
                     sol_masked = sol[half_window:half_window + n_samples]
                     sol_masked = sol_masked[mask]
-                    
+
                     fig_index = stat * len(sources) + src + 1
                     pylab.figure(fig_index)
                     if el == 0:
@@ -171,3 +151,23 @@ def flag(msName, dbName, half_window, threshold, sources=None, storeFlags=True,
                     baseline.putcol("FLAG", msFlags)
 
     print "done."
+
+def __fetch(db, elements, stations, directions=[None]):
+    result = None
+
+    for i in range(0, len(elements)):
+        for j in range(0, len(directions)):
+            # Fetch solutions.
+            (ampl, phase) = solfetch.fetch(db, stations, parm="Gain:%s" %
+                elements[i], direction=directions[j])
+
+            # Allocate result array if necessary.
+            if result is None:
+                result = numpy.zeros((len(elements), len(directions),
+                    len(stations), ampl.shape[-1]))
+
+            # Copy solutions into result array.
+            assert(result[i][j].shape == ampl.shape)
+            result[i][j] = ampl
+
+    return result

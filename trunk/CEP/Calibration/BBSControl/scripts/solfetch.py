@@ -2,6 +2,22 @@ import numpy
 
 def fetch(db, stations, phasors=False, parm="Gain:11", direction=None,
     asPolar=True):
+    """
+    Fetch the value of a complex, station bound, parameter from a LOFAR
+    parameter database.
+
+    db:         A lofar.parmdb.parmdb instance.
+    stations:   List of stations for which to retrieve the associated value
+                (will be added as an infix / suffix to the parameter base name).
+    phasors:    (default False) If set to true, use "Ampl", "Phase" infix
+                instead of "Real", "Imag".
+    parm:       (default "Gain:11") Base name of parameter to fetch.
+    direction:  (default None) Source name added to the parameter name as a
+                suffix.
+    asPolar:    (default True) Return value as (amplitude, phase) if set to
+                True, (real, imaginary) otherwise. Conversion is performed as
+                needed, depending on the value of 'phasors'.
+    """
 
     suffix = ""
     if direction:
@@ -15,10 +31,10 @@ def fetch(db, stations, phasors=False, parm="Gain:11", direction=None,
     el1 = []
     for station in stations:
         fqname = "%s:%s:%s%s" % (parm, infix[0], station, suffix)
-        el0.append(_fetch_value(db, fqname))
+        el0.append(__fetch_value(db, fqname))
 
         fqname = "%s:%s:%s%s" % (parm, infix[1], station, suffix)
-        el1.append(_fetch_value(db, fqname))
+        el1.append(__fetch_value(db, fqname))
 
     el0 = numpy.array(el0)
     el1 = numpy.array(el1)
@@ -45,10 +61,10 @@ def fetch(db, stations, phasors=False, parm="Gain:11", direction=None,
 
     return (el0, el1)
 
-def _fetch_value(db, parm):
+def __fetch_value(db, parm):
     tmp = db.getValuesGrid(parm)[parm]
     if type(tmp) is dict:
         return numpy.squeeze(tmp["values"])
-    
+
     # Old parmdb interface.
     return numpy.squeeze(tmp)

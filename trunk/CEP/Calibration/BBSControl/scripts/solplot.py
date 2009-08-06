@@ -1,10 +1,9 @@
 import math
 import numpy
 import pylab
-from solfetch import fetch
 
-styles = ["%s%s" % (x, y) for y in ["-", ":"] for x in ["b", "g", "r", "c", "m",
-    "y", "k"]]
+__styles = ["%s%s" % (x, y) for y in ["-", ":"] for x in ["b", "g", "r", "c",
+    "m", "y", "k"]]
 
 def unwrap(phase, tol=0.25, delta_tol=0.25):
     """
@@ -92,9 +91,9 @@ def unwrap_windowed(phase, window_size=5):
 
     return out
 
-def phase_normalize(phase):
+def normalize(phase):
     """
-    Normalize input phase to the range [-pi, pi].
+    Normalize phase to the range [-pi, pi].
     """
 
     # Convert to range [-2*pi, 2*pi].
@@ -113,12 +112,21 @@ def plot(sol, fig=None, sub=None, scatter=False, stack=False, sep=5.0,
 
     If 'fig' is equal to None, a new figure will be created. Otherwise, the
     specified figure number is used. The 'sub' argument can be used to create
-    subplots. The 'sep' and 'stack' argument can be used to control placement
-    of the plots in the list.
+    subplots.
+
+    The 'scatter' argument selects between scatter and line plots.
+
+    The 'stack', 'sep', and 'sep_abs' arguments can be used to control placement
+    of the plots in the list. If 'stack' is set to True, each plot will be
+    offset by the mean plus sep times the standard deviation of the previous
+    plot. If 'sep_abs' is set to True, 'sep' is used as is.
+
+    The 'labels' argument can be set to a list of labels and 'show_legend' can
+    be set to True to show a legend inside the plot.
 
     The figure number of the figure used to plot in is returned.
     """
-    global styles
+    global __styles
 
     cf = pylab.figure(fig)
 
@@ -133,16 +141,17 @@ def plot(sol, fig=None, sub=None, scatter=False, stack=False, sep=5.0,
         if labels is None:
             if scatter:
                 pylab.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=styles[i % len(styles)][0], marker="o")
+                    edgecolors="None", c=__styles[i % len(__styles)][0],
+                    marker="o")
             else:
-                pylab.plot(sol[i] + offset, styles[i % len(styles)])
+                pylab.plot(sol[i] + offset, __styles[i % len(__styles)])
         else:
             if scatter:
                 pylab.scatter(range(0, len(sol[i])), sol[i] + offset,
-                    edgecolors="None", c=styles[i % len(styles)][0], marker="o",
-                    label=labels[i])
+                    edgecolors="None", c=__styles[i % len(__styles)][0],
+                    marker="o", label=labels[i])
             else:
-                pylab.plot(sol[i] + offset, styles[i % len(styles)],
+                pylab.plot(sol[i] + offset, __styles[i % len(__styles)],
                     label=labels[i])
 
         if stack:
