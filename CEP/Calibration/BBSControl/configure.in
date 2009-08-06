@@ -37,6 +37,12 @@ lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h)
 lofar_INTERNAL(CEP/MWCommon,MWCommon,,1,MWCommon/VdsDesc.h)
 lofar_INTERNAL(CEP/Calibration/BBSKernel,BBSKernel,,1,BBSKernel/Equator.h)
 
+dnl
+dnl Python is only needed for the utility scripts in scripts/
+dnl
+lofar_PYTHON
+lofar_INTERNAL(LCS/pytools,pytools,,,,"")
+
 lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
 lofar_EXTERNAL(pgsql,1,pgsql/libpq-fe.h,pq)
 lofar_EXTERNAL(pqxx,1,pqxx/pqxx, pqxx)
@@ -53,6 +59,7 @@ include/Makefile
 include/BBSControl/Makefile
 src/Makefile
 test/Makefile
+scripts/Makefile
 Makefile
 BBSControl.spec
 )

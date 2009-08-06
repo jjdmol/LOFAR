@@ -1,4 +1,4 @@
-SUBDIRS = include src test
+SUBDIRS = include src test scripts
 
 ACLOCAL_AMFLAGS = -I autoconf_share
 
