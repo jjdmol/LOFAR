@@ -1,7 +1,7 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
-import nl.astron.wsrt.util.WsrtConverter;
-import nl.astron.wsrt.util.WsrtValidator;
+import nl.astron.util.AstronConverter;
+import nl.astron.util.AstronValidator;
 
 /**
  * Converts mom2 values to otdb values
@@ -26,7 +26,7 @@ public class Mom2OtdbConverter {
 			String subbandPlacement, Integer startFrequency, Integer spacing) {
 		if (samplingFrequency == null 
 				|| numberOfBands == null
-				|| WsrtValidator.isBlankOrNull(subbandPlacement)
+				|| AstronValidator.isBlankOrNull(subbandPlacement)
 				|| startFrequency == null
 				|| spacing == null){
 			return null;
@@ -98,7 +98,7 @@ public class Mom2OtdbConverter {
 		 * check if filter is not null
 		 */
 
-		if (!WsrtValidator.isBlankOrNull(filter)) {
+		if (!AstronValidator.isBlankOrNull(filter)) {
 			/*
 			 * filter looks like 10-70 (160 MHz sampling rate) split it into:
 			 * '10-70 ' '160 MHz sampling rate)'
@@ -120,13 +120,13 @@ public class Mom2OtdbConverter {
 			String endFrequency = frequencies[1];
 			int startFreq = 0;
 			int endFreq = 0;
-			if (WsrtValidator.isPositiveInt(startFrequency)){
+			if (AstronValidator.isPositiveInt(startFrequency)){
 	
-				startFreq = WsrtConverter.toInt(WsrtConverter.toInteger(startFrequency));
+				startFreq = AstronConverter.toInt(AstronConverter.toInteger(startFrequency));
 			}
-			if (WsrtValidator.isPositiveInt(endFrequency)){
+			if (AstronValidator.isPositiveInt(endFrequency)){
 				
-				endFreq = WsrtConverter.toInt(WsrtConverter.toInteger(endFrequency));
+				endFreq = AstronConverter.toInt(AstronConverter.toInteger(endFrequency));
 			}
 			if (startFreq >= 10 && endFreq <= 90){
 				return "LB_10_90";
@@ -153,7 +153,7 @@ public class Mom2OtdbConverter {
 		 * check if filter is not null
 		 */
 
-		if (!WsrtValidator.isBlankOrNull(filter)) {
+		if (!AstronValidator.isBlankOrNull(filter)) {
 			/*
 			 * filter looks like 10-70 (160 MHz sampling rate) split it into:
 			 * '10-70 ' '160 MHz sampling rate)'
@@ -174,11 +174,11 @@ public class Mom2OtdbConverter {
 			/*
 			 * if it is a positive int
 			 */
-			if (WsrtValidator.isPositiveInt(samplingFrequency)) {
+			if (AstronValidator.isPositiveInt(samplingFrequency)) {
 				/*
 				 * convert it to an integer
 				 */
-				int number = WsrtConverter.toInteger(samplingFrequency)
+				int number = AstronConverter.toInteger(samplingFrequency)
 						.intValue();
 				/*
 				 * convert it from MHz to Hz
@@ -194,7 +194,7 @@ public class Mom2OtdbConverter {
 	 * @return OTDB frequency
 	 */
 	public static Integer getOTDBFrequency(String frequency){
-		Double freq = WsrtConverter.toDouble(frequency);
+		Double freq = AstronConverter.toDouble(frequency);
 		return new Integer((int)freq.doubleValue()*1000000);
 	}
 	/**

@@ -1,4 +1,4 @@
-package nl.astron.lofar.odtb.mom2otdbadapter.test;
+package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import junit.framework.TestCase;
 import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.Mom2OtdbConverter;

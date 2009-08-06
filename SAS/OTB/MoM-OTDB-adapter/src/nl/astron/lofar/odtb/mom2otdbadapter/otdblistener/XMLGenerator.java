@@ -7,8 +7,8 @@ import java.util.Date;
 import javax.xml.parsers.ParserConfigurationException;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
-import nl.astron.wsrt.util.WsrtConverter;
-import nl.astron.wsrt.util.XMLBuilder;
+import nl.astron.util.AstronConverter;
+import nl.astron.util.XMLBuilder;
 
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
@@ -95,9 +95,9 @@ public class XMLGenerator {
 		String[] ids = getArray(observation.getMeasurementMom2Ids());
 		String[] angleTimes = getArray(observation.getAngleTimes());
 		String status = observation.getStatus();
-		Date startTime = WsrtConverter.toDate(observation.getStartTime(),
+		Date startTime = AstronConverter.toDate(observation.getStartTime(),
 				OTDB_DATETIME_FORMAT);
-		Date endTime = WsrtConverter.toDate(observation.getEndTime(),
+		Date endTime = AstronConverter.toDate(observation.getEndTime(),
 				OTDB_DATETIME_FORMAT);
 
 		for (int i = 0; i < ids.length; i++) {
@@ -159,11 +159,11 @@ public class XMLGenerator {
 		if (startTime != null && endTime != null) {
 			if (startTime != null) {
 				xmlBuilder.addTextElement(measurementAttributes, "startTime",
-						WsrtConverter.toXmlDateTimeString(startTime));
+						AstronConverter.toXmlDateTimeString(startTime));
 			}
 			if (endTime != null) {
 				xmlBuilder.addTextElement(measurementAttributes, "endTime",
-						WsrtConverter.toXmlDateTimeString(endTime));
+						AstronConverter.toXmlDateTimeString(endTime));
 			}
 		}
 	}
