@@ -1,13 +1,6 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
 
-import jOTDB.jConverterInterface;
-import jOTDB.jOTDBinterface;
-import jOTDB.jOTDBnode;
-import jOTDB.jTreeMaintenanceInterface;
-import jOTDB.jTreeState;
-import jOTDB.jOTDBtree;
-
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -17,7 +10,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
-import nl.astron.wsrt.util.WsrtConverter;
+import nl.astron.lofar.sas.otb.jotdb2.jConverterInterface;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBinterface;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
+import nl.astron.lofar.sas.otb.jotdb2.jTreeMaintenanceInterface;
+import nl.astron.lofar.sas.otb.jotdb2.jTreeState;
+import nl.astron.util.AstronConverter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +37,9 @@ public class OTDBRepository {
 	
 	private jConverterInterface converter = null;
 
-	private static final int TEMPLATE_ID = 2;
+	private static final int TEMPLATE_ID = 5009;
+	
+	//private static final int TEMPLATE_ID = 50091980;
 	
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -90,8 +91,14 @@ public class OTDBRepository {
 		 * add a01 parameters
 		 */
 		jOTDBnode a01Node = getNode(observationNode, "AO1");
-		storeParam(a01Node, "samplingFrequency", lofarObservation
-				.getSamplingFrequency().toString());
+		if (lofarObservation.getSamplingFrequency() != null){
+			storeParam(a01Node, "samplingFrequency", lofarObservation
+					.getSamplingFrequency().toString());
+			
+		}else{
+			storeParam(a01Node, "samplingFrequency", null);
+
+		}
 		/*
 		 * add arg1 parameters
 		 */
@@ -177,8 +184,8 @@ public class OTDBRepository {
 	 * @throws RemoteException
 	 */
 	public List getLatestChanges(Date startDate, Date endDate) throws RemoteException {
-		String startTime = WsrtConverter.toDateString(startDate,DATE_TIME_FORMAT);
-		String endTime = WsrtConverter.toDateString(endDate,DATE_TIME_FORMAT);
+		String startTime = AstronConverter.toDateString(startDate,DATE_TIME_FORMAT);
+		String endTime = AstronConverter.toDateString(endDate,DATE_TIME_FORMAT);
 		log.info("Retrieve latest changes between:" + startTime + " and " + endTime);
 		remoteOTDB.connect();
 		List result = new ArrayList();

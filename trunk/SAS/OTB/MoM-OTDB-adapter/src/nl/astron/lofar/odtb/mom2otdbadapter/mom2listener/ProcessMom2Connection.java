@@ -10,7 +10,7 @@ import java.net.Socket;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
-import nl.astron.wsrt.util.WsrtValidator;
+import nl.astron.util.AstronValidator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -135,7 +135,7 @@ public class ProcessMom2Connection extends Thread {
 			document.appendChild(result);
 			Element errorsElement = document.createElement("errors");
 
-			if (!WsrtValidator.isBlankOrNull(errors)) {
+			if (!AstronValidator.isBlankOrNull(errors)) {
 				errorsElement.appendChild(document.createTextNode(errors));
 			}
 			result.appendChild(errorsElement);

@@ -1,14 +1,16 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
-import java.io.IOException;
 import java.io.StringReader;
 
-import nl.astron.util.http.AstronHttpClient;
+import nl.astron.util.AstronValidator;
+import nl.astron.util.http.client.AstronHttpClient;
+import nl.astron.util.http.client.HttpClientConfig;
+import nl.astron.util.http.client.handler.StringResponseHandler;
 import nl.astron.util.http.exception.AstronHttpException;
-import nl.astron.wsrt.util.WsrtValidator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.params.BasicHttpParams;
 import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -33,7 +35,7 @@ public class TaskExecutor extends Thread {
 
 	private String password = null;
 
-	private String momUrl = null;
+	private String importXMLUrl = null;
 
 	/*
 	 * seconds to wait
@@ -50,9 +52,10 @@ public class TaskExecutor extends Thread {
 			String authUrl, String momUrl) {
 		this.username = username;
 		this.password = password;
-		this.momUrl = momUrl;
+		this.importXMLUrl = momUrl + "/interface/importMom2XML.do";
 		this.queue = queue;
-		httpClient = new AstronHttpClient(authUrl);
+		HttpClientConfig config = new HttpClientConfig(authUrl);
+		httpClient = new AstronHttpClient(config);
 	}
 	/**
 	 * start the taskExecutor thread
@@ -88,21 +91,17 @@ public class TaskExecutor extends Thread {
 		boolean succeed = false;
 		try {
 			httpClient.login(username, password);
-			String[] paramNames = new String[] { "command", "xmlcontent" };
-			String[] paramValues = new String[] { "importxml2", task.getXml() };
-
-			String result = httpClient.getResponseAsString(momUrl
-					+ "/interface/importMom2XML.do", paramNames, paramValues);
+			BasicHttpParams params = new BasicHttpParams();
+			params.setParameter("command", "xmlcontent");
+			params.setParameter("importxml2",task.getXml());
+			String result = httpClient.doPost(importXMLUrl, params,null, new StringResponseHandler());
 			log.info(result);
 			httpClient.logout();
 			return isSucceed(result);
 		} catch (AstronHttpException ahe) {
 			log.error("AstronHttpException:" + ahe.getMessage(), ahe);
 			sleep();
-		} catch (IOException ahe) {
-			log.error("IOException:" + ahe.getMessage(), ahe);
-			sleep();
-		}
+		} 
 		return succeed;
 	}
 
@@ -131,7 +130,7 @@ public class TaskExecutor extends Thread {
 					Node nodeChild = element.getChildNodes().item(i);
 					if (equal(nodeChild, "errors")) {
 						String value = getValue(nodeChild);
-						if (!WsrtValidator.isBlankOrNull(value)) {
+						if (!AstronValidator.isBlankOrNull(value)) {
 							log.error("Mom2 returns errors: "
 									+ value);
 							return false;

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import nl.astron.wsrt.util.WsrtConverter;
+import nl.astron.util.AstronConverter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -131,7 +131,7 @@ public class Queue {
 		if (content != null) {
 			String[] time = content.split(",");
 			// long newStartTime = new Long().longValue();
-			startTime = WsrtConverter.toDate(time[1], DATE_TIME_FORMAT);
+			startTime = AstronConverter.toDate(time[1], DATE_TIME_FORMAT);
 			// startTime.setTime(newStartTime);
 
 		} else {
@@ -154,9 +154,9 @@ public class Queue {
 	 */
 	public synchronized void saveTimePeriod() throws IOException {
 		String fileName = taskDir + File.separator + "last_time_period.txt";
-		String content = WsrtConverter
+		String content = AstronConverter
 				.toDateString(startTime, DATE_TIME_FORMAT)
-				+ "," + WsrtConverter.toDateString(endTime, DATE_TIME_FORMAT);
+				+ "," + AstronConverter.toDateString(endTime, DATE_TIME_FORMAT);
 		File file = new File(fileName);
 		if (!file.exists()) {
 			file.createNewFile();
@@ -215,9 +215,9 @@ public class Queue {
 	 */
 	protected void storeTask(Task task) throws FileNotFoundException,
 			IOException {
-		Date date = WsrtConverter.toDate(task.getTime(), OTDB_TIME_FORMAT);
+		Date date = AstronConverter.toDate(task.getTime(), OTDB_TIME_FORMAT);
 		String fileName = taskDir + File.separator
-				+ WsrtConverter.toDateString(date, FILE_DATE_TIME_FORMAT)
+				+ AstronConverter.toDateString(date, FILE_DATE_TIME_FORMAT)
 				+ "mom2id_" + task.getMom2Id() + ".xml";
 		task.setFileName(fileName);
 		File file = new File(fileName);

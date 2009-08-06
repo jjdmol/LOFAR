@@ -1,8 +1,8 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
-import nl.astron.wsrt.util.WsrtConverter;
-import nl.astron.wsrt.util.WsrtValidator;
+import nl.astron.util.AstronConverter;
+import nl.astron.util.AstronValidator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -84,13 +84,13 @@ public class XMLParser {
 		if (equal(element, withPrefix(OBSERVATION))) {
 			String mom2Id = getAttribute(element.getAttributes(),
 					MOM2_ID);
-			lofarObservation.setMom2Id(WsrtConverter.toInt(WsrtConverter.toInteger(mom2Id)));
+			lofarObservation.setMom2Id(AstronConverter.toInt(AstronConverter.toInteger(mom2Id)));
 			for (int i = 0; i < element.getChildNodes().getLength(); i++) {
 				Node nodeChild = element.getChildNodes().item(i);
 				/*
 				 * if child is an element
 				 */
-				if (WsrtValidator.implementsInterface(Element.class, nodeChild
+				if (AstronValidator.implementsInterface(Element.class, nodeChild
 						.getClass())) {
 
 					if (equal(nodeChild, CURRENT_STATUS)) {
@@ -139,7 +139,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equal(nodeChild, ARRAY_CONFIGURATION)) {
@@ -151,13 +151,13 @@ public class XMLParser {
 				} else if (equal(nodeChild, SUBBAND_PLACEMENT)) {
 					subbandPlacement = getValue(nodeChild);
 				} else if (equal(nodeChild, NUMBER_OF_BANDS)) {
-					numberOfBands = WsrtConverter
+					numberOfBands = AstronConverter
 							.toInteger(getValue(nodeChild));
 				} else if (equal(nodeChild, START_FREQUENCY)) {
 					startFrequency = Mom2OtdbConverter
 							.getOTDBFrequency(getValue(nodeChild));
 				} else if (equal(nodeChild, SPACING)) {
-					spacing = WsrtConverter.toInteger(getValue(nodeChild));
+					spacing = AstronConverter.toInteger(getValue(nodeChild));
 				} else if (equal(nodeChild, BACKEND)) {
 					lofarObservation.setBackend(getValue(nodeChild));
 				}
@@ -184,7 +184,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equal(nodeChild, DEFAULT_ARRAY_CONFIGURATION)) {
@@ -212,7 +212,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equal(nodeChild, STATION)) {
@@ -242,7 +242,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 				String nodeName = removePrefix(nodeChild);
 				if (nodeName.endsWith("Status")){
@@ -262,7 +262,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild, ITEM)) {
@@ -283,7 +283,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild, MEASUREMENT)) {
@@ -313,7 +313,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild,
@@ -335,7 +335,7 @@ public class XMLParser {
 			/*
 			 * if child is an element
 			 */
-			if (WsrtValidator.implementsInterface(Element.class, nodeChild
+			if (AstronValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild, RA)) {
@@ -422,7 +422,7 @@ public class XMLParser {
 		String seconds = splitted[splitted.length - 1];
 		if (seconds.endsWith("S")) {
 			seconds = seconds.substring(0, seconds.length() - 1);
-			int sec = WsrtConverter.toDouble(seconds).intValue();
+			int sec = AstronConverter.toDouble(seconds).intValue();
 			return new Integer(sec);
 		}
 		return null;
