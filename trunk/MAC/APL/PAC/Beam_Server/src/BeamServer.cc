@@ -66,7 +66,10 @@ int g_bf_gain = 0;
 // BeamServer(name, argc, argv)
 //
 BeamServer::BeamServer(string name, int argc, char** argv) : 
-	GCFTask((State)&BeamServer::initial, name),
+	GCFTask((State)&BeamServer::con2rspdriver, name),
+	itsListener				(0),
+	itsRSPDriver			(0),
+	itsCalServer			(0),
 	m_beams_modified		(false),
 	m_beams		  			(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
 	m_converter	  			("localhost"),
@@ -90,9 +93,12 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 	}
 
 	// startup TCP connections
-	m_acceptor.init (*this, MAC_SVCMASK_BEAMSERVER+ instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
-	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER + instanceID, GCFPortInterface::SAP,  RSP_PROTOCOL);
-	m_calserver.init(*this, MAC_SVCMASK_CALSERVER + instanceID, GCFPortInterface::SAP,  CAL_PROTOCOL);
+	itsListener  = new GCFTCPPort(*this, MAC_SVCMASK_BEAMSERVER+ instanceID, GCFPortInterface::MSPP, BS_PROTOCOL);
+	itsRSPDriver = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER + instanceID, GCFPortInterface::SAP,  RSP_PROTOCOL);
+	itsCalServer = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER + instanceID, GCFPortInterface::SAP,  CAL_PROTOCOL);
+	ASSERTSTR(itsListener,  "Cannot allocate port to start listener");
+	ASSERTSTR(itsRSPDriver, "Cannot allocate port for RSPDriver");
+	ASSERTSTR(itsCalServer, "Cannot allocate port for CalServer");
 
 	// alloc a general purpose timer.
 	itsUpdateTimer = new GCFTimerPort(*this, "UpdateTimer");
@@ -120,19 +126,22 @@ BeamServer::BeamServer(string name, int argc, char** argv) :
 // ~BeamServer
 //
 BeamServer::~BeamServer()
-{}
+{
+	if (itsCalServer)	 { delete itsCalServer; }
+	if (itsRSPDriver)	 { delete itsRSPDriver; }
+	if (itsListener)	 { delete itsListener; }
+}
 
 // ------------------------------ State machines ------------------------------
 
 //
-// initial(event, port)
+// con2rspdriver(event, port)
 //
-// Get connected to RSPDriver and Calserver and resize arrays with info
-// from RSPDriver.
+// Get connected to RSPDriver.
 //
-GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR("initial:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("con2rspdriver:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -151,24 +160,13 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	} break;
 
 	case F_ENTRY: {
-		// Check explicitly for S_DISCONNECTED state instead of !isConnected()
-		// because a transition from ::enabled into ::initial will have state S_CLOSING
-		// which is also !isConnected() but in this case we don't want to open the port
-		// until after we have handled F_CLOSED for that port.
-		if (m_rspdriver.getState() == GCFPortInterface::S_DISCONNECTED) {
-			m_rspdriver.open();
-		}
-		if (m_calserver.getState() == GCFPortInterface::S_DISCONNECTED) {
-			m_calserver.open();
-		}
+		itsRSPDriver->autoOpen(30, 0, 2);	// try max 30 times every 2 seconds than report DISCO
 	}
 	break;
 
 	case F_CONNECTED: {
-		if (isEnabled()) {					// all connections made?
-			RSPGetconfigEvent getconfig;	// ask RSPDriver current config
-			m_rspdriver.send(getconfig);
-		}
+		RSPGetconfigEvent getconfig;	// ask RSPDriver current config
+		itsRSPDriver->send(getconfig);
 	}
 	break;
 
@@ -184,35 +182,26 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 		m_weights   = complex<double>(0,0);
 		m_weights16 = complex<int16_t>(0,0);
 
-		// start update timer and start accepting clients
-		LOG_DEBUG_STR("Starting Update timer with interval: " << itsUpdateInterval << " secs");
-		itsUpdateTimer->setTimer(0, 0, itsUpdateInterval, 0);
-
-		if (m_acceptor.getState() == GCFPortInterface::S_DISCONNECTED) {
-			m_acceptor.open();
-		}
-		TRAN(BeamServer::enabled);
+		TRAN(BeamServer::con2calserver);
 	}
 	break;
 
 	case F_DISCONNECTED: {
 		port.close();
-		// try connecting again in 2 seconds
-		port.setTimer((long)2);
-		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
+		port.setTimer(10.0);
+		LOG_INFO(formatString("port '%s' disconnected, retry in 10 seconds...", port.getName().c_str()));
 	}
 	break;
 
 	case F_TIMER: {
-		if (port.getState() == GCFPortInterface::S_DISCONNECTED) {
-			LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
-			port.open();
-		}
+		LOG_INFO_STR("port.getState()=" << port.getState());
+		LOG_INFO(formatString("port '%s' retry to open...", port.getName().c_str()));
+		itsRSPDriver->autoOpen(30, 0, 2);	// try max 30 times every 2 seconds than report DISCO
 	}
 	break;
 
 	default:
-		LOG_DEBUG("initial:default");
+		LOG_DEBUG("con2rspdriver:default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -220,6 +209,57 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	return (status);
 }
 
+//
+// con2calserver(event, port)
+//
+// Get connected to CalServer.
+//
+GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("con2calserver:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch(event.signal) {
+	case F_ENTRY: {
+		itsCalServer->autoOpen(30, 0, 2);	// try max 30 times every 2 seconds than report DISCO
+	}
+	break;
+
+	case F_CONNECTED: {
+		// start update timer and start accepting clients
+		LOG_DEBUG_STR("Starting Update timer with interval: " << itsUpdateInterval << " secs");
+		itsUpdateTimer->setTimer(0, 0, itsUpdateInterval, 0);
+
+		if (itsListener->getState() == GCFPortInterface::S_DISCONNECTED) {
+			itsListener->open();
+		}
+		TRAN(BeamServer::enabled);
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		port.setTimer(10.0);
+		LOG_INFO(formatString("port '%s' disconnected, retry in 10 seconds...", port.getName().c_str()));
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_INFO_STR("port.getState()=" << port.getState());
+		LOG_INFO(formatString("port '%s' retry to open...", port.getName().c_str()));
+		itsCalServer->autoOpen(30, 0, 2);	// try max 30 times every 2 seconds than report DISCO
+	}
+	break;
+
+	default:
+		LOG_DEBUG("con2calserver:default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
 //
 // enabled(event, port)
 //
@@ -235,14 +275,14 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	switch (event.signal) {
 	case F_ENTRY: {
-		m_calserver.setTimer((long)0); // trigger single recall
+		itsCalServer->setTimer((long)0); // trigger single recall
 	}
 	break;
 
 	case F_ACCEPT_REQ: {
 		GCFTCPPort* client = new GCFTCPPort();
 		client->init(*this, "client", GCFPortInterface::SPP, BS_PROTOCOL);
-		if (!m_acceptor.accept(*client)) {
+		if (!itsListener->accept(*client)) {
 			delete client;
 		} else {
 			m_client_list.push_back(client);
@@ -257,10 +297,10 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 	case F_TIMER: {
 		// Calserver timer?
-		if (&port == &m_calserver) {
+		if (&port == itsCalServer) {
 			// recall one deferred event, set timer again if an event was handled
 			if (recall(port) == GCFEvent::HANDLED) {
-				m_calserver.setTimer((long)0);
+				itsCalServer->setTimer((long)0);
 			}
 		} 
 		// Update timer?
@@ -354,7 +394,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	break;
 
 	case F_DISCONNECTED: {
-		if (&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port) {
+		if (&port == itsListener || &port == itsRSPDriver || &port == itsCalServer) {
 			LOG_WARN("Lost connection with CalServer or RSPDriver, going to 'cleanup'");
 			TRAN(BeamServer::cleanup);
 		} else {	// some client
@@ -402,18 +442,18 @@ GCFEvent::TResult BeamServer::cleanup(GCFEvent& event, GCFPortInterface& port)
 			}
 		}
 
-		m_rspdriver.cancelAllTimers();
-		m_rspdriver.close();
-		m_acceptor.close();
-		m_calserver.close();
+		itsRSPDriver->cancelAllTimers();
+		itsRSPDriver->close();
+		itsListener->close();
+		itsCalServer->close();
 		itsUpdateTimer->cancelAllTimers();
 		itsUpdateTimer->setTimer(2.0);		// give ports time to close.
 	}
 	break;
 
 	case F_TIMER: {
-		LOG_DEBUG("closed all TCP ports, going to 'initial' state again");
-		TRAN(BeamServer::initial);
+		LOG_DEBUG("closed all TCP ports, going to 'con2rspdriver' state again");
+		TRAN(BeamServer::con2rspdriver);
 	}
 	break;
 
@@ -443,7 +483,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		subscribe.subbandset = m_bt.getBeam()->getAllocation().getAsBitset();
 
 		LOG_INFO_STR("Subscribing to subarray: " << subscribe.name);
-		m_calserver.send(subscribe);
+		itsCalServer->send(subscribe);
 	}
 	break;
 
@@ -531,7 +571,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		unsubscribe.name 	= m_bt.getBeam()->getSubarrayName();
 		unsubscribe.handle  = m_beams.findCalibrationHandle(m_bt.getBeam());
 		ASSERT(unsubscribe.handle != 0);
-		m_calserver.send(unsubscribe);
+		itsCalServer->send(unsubscribe);
 	}
 	break;
 
@@ -625,14 +665,6 @@ void BeamServer::parseOptions(int	argc, char**	argv)
 			ASSERT(false);
 		} // switch
 	} // for loop
-}
-
-//
-// isEnabled()
-//
-bool BeamServer::isEnabled()
-{
-	return (m_rspdriver.isConnected() && m_calserver.isConnected());
 }
 
 //
@@ -920,7 +952,7 @@ void BeamServer::send_HBAdelays(Timestamp	time)
 	// because only the beam-factory has access to all beams. So we must
 	// implement the sending of the HBA delays in the beamfactory!
 //	LOG_INFO_STR("sending hba delays for interval " << time << " : " << time + (long)(itsComputeInterval-1));
-	m_beams.sendHBAdelays(time, m_rspdriver);
+	m_beams.sendHBAdelays(time, *itsRSPDriver);
 }
 
 //
@@ -971,7 +1003,7 @@ void BeamServer::send_weights(Timestamp time)
 //	sample = m_weights16(0, Range(64,74), Range(0,40));
 //	LOG_DEBUG_STR("weights sample=" << sample);
 
-	m_rspdriver.send(sw);
+	itsRSPDriver->send(sw);
 }
 
 //
@@ -1023,7 +1055,7 @@ void BeamServer::send_sbselection()
 		ss.subbands()(0, (int)sel->first) = sel->second;
 	}
 
-	m_rspdriver.send(ss);
+	itsRSPDriver->send(ss);
 }
 
 //

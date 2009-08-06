@@ -35,6 +35,7 @@
 namespace LOFAR {
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   namespace BS {
 
@@ -62,10 +63,11 @@ namespace LOFAR {
 	  /**
 	   * The states.
 	   */
-	  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult con2calserver  (GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult con2beamserver (GCFEvent& e, GCFPortInterface &p);
 	  GCFEvent::TResult create_subarray(GCFEvent& e, GCFPortInterface &p);
-	  GCFEvent::TResult create_beam(GCFEvent& e, GCFPortInterface &p);
-	  GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult create_beam	   (GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult final		   (GCFEvent& e, GCFPortInterface &p);
 	  /*@}*/
 
 	  /**
@@ -77,8 +79,8 @@ namespace LOFAR {
 
 	private:
 	  // ports
-	  GCFPort m_calserver;
-	  GCFPort m_beamserver;
+	  GCFTCPPort*	itsCalServer;
+	  GCFTCPPort*	itsBeamServer;
 
 	  // handles
 	  BS_Protocol::memptr_t m_beamhandle;

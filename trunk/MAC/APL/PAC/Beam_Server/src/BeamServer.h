@@ -101,14 +101,11 @@ public:
 	// @param bt the beamtransaction specifying the beam to destroy
 	void deleteBeam(BeamTransaction& bt);
 
-	// @return true if ready to transition to the enabled
-	// state.
-	bool isEnabled();
+	// The initial state. This state is used to connect to the RSPDriver.
+	GCFEvent::TResult con2rspdriver(GCFEvent& e, GCFPortInterface& p);
 
-	// The initial state. This state is used to connect to
-	// the RSPDriver and the CalibrationServer. When both 
-	// are connected a transition to the enabled state is made.
-	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+	// Try to connect to the CalServer
+	GCFEvent::TResult con2calserver(GCFEvent& e, GCFPortInterface& p);
 
 	// The enabled state. In this state the BeamServer can accept
 	// client connections.
@@ -180,7 +177,7 @@ private:
 	blitz::Array<double, 1>		itsElementDelays; // [N_HBA_DELAYS] = [32,1] 	
 
 	// ports
-	GCFTCPPort       			 m_acceptor; 	 // list for clients on this port
+	GCFTCPPort*       			 itsListener; 	 // list for clients on this port
 	std::list<GCFPortInterface*> m_client_list;  // list of currently connected clients
 	std::list<GCFPortInterface*> m_dead_clients; // list of discon. clients to be removed
 
@@ -189,8 +186,8 @@ private:
 
 	BeamTransaction	m_bt; // current beam transaction
 
-	GCFPort  				m_rspdriver;			// connection to RSPDriver
-	GCFPort  				m_calserver;  			// connection to CalServer
+	GCFTCPPort* 			itsRSPDriver;			// connection to RSPDriver
+	GCFTCPPort*				itsCalServer;  			// connection to CalServer
 	GCFTimerPort*  			itsUpdateTimer;  		//
 	bool     				m_beams_modified;		//
 	bool					itsSetHBAEnabled;		//
