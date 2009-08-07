@@ -3,7 +3,7 @@
 # Send delays from RCU to HBA and compare results with the expected golden result.
 # To verify modem communication between RCU and HBA
 #
-# Version 1.0   13 feb 2009   M.J.Norden
+# Version 1.1   55555 2009   M.J.Norden
 
 rm -f hba_modem*.log
 rm -f hba_modem*.diff
@@ -13,6 +13,8 @@ declare ontime=4
 let hbamode=5
 
 eval "rspctl --rcumode=$hbamode"
+sleep 2
+eval "rspctl --rcuenable=1"
 
 echo "The rcumode is "$hbamode 
 sleep 2
