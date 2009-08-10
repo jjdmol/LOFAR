@@ -68,6 +68,7 @@ class PipelineOutputSet
 {
   public:
     PipelineOutputSet( const Parset &ps, Allocator &allocator = heapAllocator );
+    virtual ~PipelineOutputSet();
 
     size_t                              size() const { return itsOutputs.size(); }
     PipelineOutput 			&operator[]( unsigned index ) { return *(itsOutputs[index]); }
@@ -169,6 +170,13 @@ inline PipelineOutputSet::PipelineOutputSet( const Parset &ps, Allocator &alloca
 
   for( unsigned i = 0; i < itsOutputs.size(); i++ ) {
     itsOutputs[i]->data()->allocate( allocator );
+  }
+}
+
+inline PipelineOutputSet::~PipelineOutputSet()
+{
+  for( unsigned i = 0; i < itsOutputs.size(); i++ ) {
+    delete itsOutputs[i];
   }
 }
 
