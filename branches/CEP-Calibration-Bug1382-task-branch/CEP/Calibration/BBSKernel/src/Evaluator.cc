@@ -27,7 +27,7 @@
 
 namespace LOFAR
 {
-namespace BBS 
+namespace BBS
 {
 
 Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
@@ -42,11 +42,11 @@ Evaluator::Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
 #ifndef _OPENMP
     // Ignore thread count specified in constructor.
     itsThreadCount = 1;
-#endif    
-    
+#endif
+
     // By default, select all the baselines and polarizations products
     // available.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     setSelection(dims.getBaselines(), dims.getPolarizations());
 }
 
@@ -58,7 +58,7 @@ void Evaluator::setSelection(const vector<baseline_t> &baselines,
         const vector<string> &products)
 {
     itsBaselines = baselines;
-    
+
     // Determine product mask.
     const VisDimensions &dims = itsChunk->getDimensions();
 
@@ -91,25 +91,28 @@ void Evaluator::setSelection(const vector<baseline_t> &baselines,
 
 void Evaluator::process(Mode mode)
 {
+    itsTimers[ALL].reset();
+    itsTimers[ALL].start();
+
     BlProcessor blProcessor = 0;
     switch(mode)
     {
     case ASSIGN:
         blProcessor = &Evaluator::blAssign;
         break;
-    case SUBTRACT:        
+    case SUBTRACT:
         blProcessor = &Evaluator::blSubtract;
         break;
-    case ADD:        
+    case ADD:
         blProcessor = &Evaluator::blAdd;
         break;
     default:
         THROW(BBSKernelException, "Invalid mode specified.");
-    }            
+    }
 
     // Create a request.
     Request request(itsChunk->getDimensions().getGrid());
-    
+
     // Precompute.
     LOG_DEBUG_STR("Precomputing...");
     itsTimers[PRECOMPUTE].reset();
@@ -131,18 +134,24 @@ void Evaluator::process(Mode mode)
     }
     itsTimers[COMPUTE].stop();
 
-    LOG_DEBUG("Timings:");
-    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
-        * 1000.0 << " ms");
-    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
-        * 1000.0 << " ms");
+    itsTimers[ALL].stop();
+
+//    LOG_DEBUG("Timings:");
+//    LOG_DEBUG_STR("> Precomputation: " << itsTimers[PRECOMPUTE].getElapsed()
+//        * 1000.0 << " ms");
+//    LOG_DEBUG_STR("> Computation: " << itsTimers[COMPUTE].getElapsed()
+//        * 1000.0 << " ms");
+
+    LOG_DEBUG_STR("Precomputation: " << itsTimers[PRECOMPUTE]);
+    LOG_DEBUG_STR("Computation: " << itsTimers[COMPUTE]);
+    LOG_DEBUG_STR("All: " << itsTimers[ALL]);
 }
 
 void Evaluator::blAssign(uint, const baseline_t &baseline,
     const Request &request)
 {
     // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
@@ -164,11 +173,11 @@ void Evaluator::blAssign(uint, const baseline_t &baseline,
         {
             continue;
         }
-        
+
         // Get a view on the relevant slice of the chunk.
         typedef boost::multi_array<sample_t, 4>::index_range Range;
         typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
+
         View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
             [itsProductMask[i]]]);
 
@@ -193,7 +202,7 @@ void Evaluator::blSubtract(uint, const baseline_t &baseline,
     const Request &request)
 {
     // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
@@ -215,11 +224,11 @@ void Evaluator::blSubtract(uint, const baseline_t &baseline,
         {
             continue;
         }
-        
+
         // Get a view on the relevant slice of the chunk.
         typedef boost::multi_array<sample_t, 4>::index_range Range;
         typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
+
         View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
             [itsProductMask[i]]]);
 
@@ -244,7 +253,7 @@ void Evaluator::blAdd(uint, const baseline_t &baseline,
     const Request &request)
 {
     // Find baseline index.
-    const VisDimensions &dims = itsChunk->getDimensions();    
+    const VisDimensions &dims = itsChunk->getDimensions();
     const uint blIndex = dims.getBaselineIndex(baseline);
 
     // Evaluate the model.
@@ -266,11 +275,11 @@ void Evaluator::blAdd(uint, const baseline_t &baseline,
         {
             continue;
         }
-        
+
         // Get a view on the relevant slice of the chunk.
         typedef boost::multi_array<sample_t, 4>::index_range Range;
         typedef boost::multi_array<sample_t, 4>::array_view<2>::type View;
-        
+
         View vdata(itsChunk->vis_data[boost::indices[blIndex][Range()][Range()]
             [itsProductMask[i]]]);
 

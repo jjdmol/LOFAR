@@ -51,7 +51,7 @@ public:
         ADD,
         N_Mode
     };
-    
+
     // Constructor. NB: nThreads is ignored when compiled without OPENMP.
     Evaluator(const VisData::Pointer &chunk, const Model::Pointer &model,
         uint nThreads = 1);
@@ -70,7 +70,7 @@ private:
     typedef void (Evaluator::*BlProcessor) (uint threadId,
         const baseline_t &baseline, const Request &request);
 
-    void blAssign(uint threadId, const baseline_t &baseline, 
+    void blAssign(uint threadId, const baseline_t &baseline,
         const Request &request);
     void blSubtract(uint threadId, const baseline_t &baseline,
         const Request &request);
@@ -80,14 +80,15 @@ private:
     VisData::Pointer    itsChunk;
     Model::Pointer      itsModel;
     uint                itsThreadCount;
-    
+
     vector<baseline_t>  itsBaselines;
     int                 itsProductMask[4];
-    
+
     enum Timer
     {
         PRECOMPUTE,
         COMPUTE,
+        ALL,
         N_Timer
     };
 

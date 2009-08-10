@@ -37,6 +37,8 @@
 #include <casa/Quanta/MVuvw.h>
 #include <stdint.h>
 
+#include <Common/Timer.h>
+
 using namespace casa;
 
 namespace LOFAR
@@ -62,6 +64,9 @@ StatUVW::~StatUVW()
 
 void StatUVW::calculate(const Request &request) const
 {
+    static NSTimer timer("StatUVW::calculate", true, true);
+    timer.start();
+
     // Allocate result.
     size_t nTime = request.getTimeslotCount();
 
@@ -91,6 +96,7 @@ void StatUVW::calculate(const Request &request) const
     if(nDone == nTime)
     {
         itsLastReqId = request.getId();
+        timer.stop();
         return;
     }
 
@@ -141,6 +147,7 @@ void StatUVW::calculate(const Request &request) const
     }
 
     itsLastReqId = request.getId();
+    timer.stop();
 }
 
 } // namespace BBS
