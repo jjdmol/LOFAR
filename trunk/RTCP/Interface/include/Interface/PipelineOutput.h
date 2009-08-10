@@ -178,6 +178,7 @@ inline PipelineOutputSet::~PipelineOutputSet()
   for( unsigned i = 0; i < itsOutputs.size(); i++ ) {
     delete itsOutputs[i];
   }
+  itsOutputs.clear();
 }
 
 } // namespace RTCP
