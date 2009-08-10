@@ -304,7 +304,8 @@ string Parset::getMSname(unsigned sb) const
   replace_all(name, "${SECONDS}", splitStartTime[5]);
 
   replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsID")));
-  replace_all(name, "${SUBBAND}", str(format("%d") % sb));
+  replace_all(name, "${SUBBAND}", str(format("%u") % sb));
+  replace_all(name, "${BEAM}", str(format("%u") % subbandToBeamMapping()[sb]));
 
   return name;
 }
