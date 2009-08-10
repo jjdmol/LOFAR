@@ -103,28 +103,35 @@ void OutputThread::mainLoop()
   doNotRunOnCore0();
 #endif
 
+  // set the maximum number of concurrent writers
   static Semaphore semaphore(1);
 
   while ((o = itsSendQueueActivity.remove()) >= 0) {
     struct OutputThread::SingleOutput &output = itsOutputs[o];
 
+    std::cout << "OutputThread: pop queue " << o << std::endl;
     data = output.sendQueue.remove();
 
+    std::cout << "OutputThread: lower semaphore " << std::endl;
+    semaphore.down();
+
     try {
-      semaphore.down();
+      std::cout << "OutputThread: write data for queue " << o << std::endl;
 
       // write header: nr of output
       itsStreamToStorage->write( &o, sizeof o );
 
       // write data, including serial nr
       data->write(itsStreamToStorage, true);
-
-      semaphore.up();
-      output.freeQueue.append(data);
     } catch (...) {
+      semaphore.up();
       output.freeQueue.append(data);
       throw;
     }
+
+    std::cout << "OutputThread: raise semaphore and wait for next element " << std::endl;
+    semaphore.up();
+    output.freeQueue.append(data);
   }
 }
 

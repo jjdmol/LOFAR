@@ -461,7 +461,7 @@ void *master_thread(void *)
 	exit(1);
       }
 
-      LOG_DEBUG("lofar__fini: output thread joined");
+      LOG_DEBUG("lofar__fini: output section joined");
     }
 
 #if defined FLAT_MEMORY
