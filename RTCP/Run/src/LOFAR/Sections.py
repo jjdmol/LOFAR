@@ -67,10 +67,10 @@ class SectionSet(list):
       s.postProcess()
 
 
-  def abort(self):
+  def abort(self, timeout=5):
     for s in self:
       info( "Killing %s." % (s,) )
-      s.abort()
+      s.abort(timeout)
 
   def wait(self):
     for s in self:
