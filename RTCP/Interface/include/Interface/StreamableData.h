@@ -109,6 +109,8 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber, c
   if( withSequenceNumber ) {
 #if !defined WORDS_BIGENDIAN
     if (align > 1) {
+      if (align < sizeof(uint32_t)) THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
+
       void *sn_buf;
       uint32_t sn = sequenceNumber;
 
@@ -118,6 +120,7 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber, c
       memcpy(sn_buf, &sn, sizeof(uint32_t));
 
       str->write( sn_buf, align );
+      free(sn_buf);
     } else {
       uint32_t sn = sequenceNumber;
 
@@ -126,18 +129,20 @@ inline void StreamableData::write( Stream *str, const bool withSequenceNumber, c
     }
 #else
     if (align > 1) {
+      if (align < sizeof(uint32_t)) THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
+
       void *sn_buf;
       posix_memalign(&sn_buf, align, align);
       memcpy(sn_buf, &sequenceNumber, sizeof(sequenceNumber));
 
       str->write( sn_buf, align );
+      free(sn_buf);
     } else {
       str->write( &sequenceNumber, sizeof sequenceNumber );
     }
 
 #endif
   }
-
   writeData( str );
 }
 
