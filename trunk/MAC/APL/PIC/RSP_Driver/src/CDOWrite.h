@@ -122,9 +122,6 @@ namespace LOFAR {
 	  unsigned hdrchksum:16;    /* [9]  Header checksum, 16 bit one's complement checksum of IP header and IP options */
 	  unsigned srcip:32;        /* [10] Source IP-address */
 	  unsigned dstip:32;        /* [11] Destinatino IP-address */
-	  unsigned options:32;      /* [12] IP options
-				     *      Suggested options value = 0 (meaning no options)
-				     */
 	} ip;
 	struct { // UDP header
 	  uint16 srcport;  /* The port number of the sender.

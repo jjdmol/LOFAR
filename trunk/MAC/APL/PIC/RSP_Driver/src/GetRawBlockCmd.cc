@@ -59,6 +59,7 @@ GetRawBlockCmd::~GetRawBlockCmd()
 //
 void GetRawBlockCmd::ack(CacheBuffer& cache)
 {
+#if 0
 	RSPGetblockackEvent ack;
 	RawDataBlock_t&		rdb = cache.getRawDataBlock();
 	ack.timestamp = getTimestamp();
@@ -68,6 +69,7 @@ void GetRawBlockCmd::ack(CacheBuffer& cache)
 	memcpy(ack.data, rdb.data, ack.dataLen);
 
 	getPort()->send(ack);
+#endif
 }
 
 //
@@ -76,8 +78,8 @@ void GetRawBlockCmd::ack(CacheBuffer& cache)
 void GetRawBlockCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	// fill the cache with the request and tickle it.
-//	LOG_INFO(formatString("@@@GetRawBlockCmd::apply(%d,%0X,%d,%d)", 
-//			itsEvent->boardID, itsEvent->address, itsEvent->offset, itsEvent->dataLen));
+//	LOG_INFO(formatString("@@@GetRawBlockCmd::apply(%d,%0X,%d,%d,%s)", 
+//			itsEvent->boardID, itsEvent->address, itsEvent->offset, itsEvent->dataLen, setModFlag ? "T" : "F"));
 
 	// NOTE: [REO] I expected that the next 4 lines could also be in the if(setModFlag)
 	//		 but it turned out that the info is than in the front cache when the RawDataBlockRead
@@ -101,7 +103,18 @@ void GetRawBlockCmd::apply(CacheBuffer& cache, bool setModFlag)
 //
 void GetRawBlockCmd::complete(CacheBuffer& cache)
 {
-	ack(cache);
+//	ack(cache);
+#if 1
+	RSPGetblockackEvent ack;
+	RawDataBlock_t&		rdb = cache.getRawDataBlock();
+	ack.timestamp = getTimestamp();
+	ack.boardID	  = itsEvent->boardID;
+	ack.status 	  = RSP_SUCCESS;
+	ack.dataLen   = rdb.dataLen;
+	memcpy(ack.data, rdb.data, ack.dataLen);
+
+	getPort()->send(ack);
+#endif
 }
 
 //
