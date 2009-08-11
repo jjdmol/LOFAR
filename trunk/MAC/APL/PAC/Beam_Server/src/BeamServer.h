@@ -76,7 +76,7 @@ public:
 	// @param name The name of the task. The name is used for looking
 	// up connection establishment information using the GTMNameService and
 	// GTMTopologyService classes.
-	BeamServer(string name, int argc, char** argc);
+	BeamServer(string name, int argc, char** argv);
 	virtual ~BeamServer();
 
 	// Parse the commandline options

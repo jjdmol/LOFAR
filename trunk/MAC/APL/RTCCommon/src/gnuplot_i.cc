@@ -27,6 +27,7 @@
 
 #include <lofar_config.h>
 #include <APL/RTCCommon/gnuplot_i.h>
+#include <cstring>
 #include <unistd.h>
 
 // to find Array type in blitz namespace
