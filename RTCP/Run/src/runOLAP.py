@@ -139,7 +139,7 @@ if __name__ == "__main__":
   psgroup.add_option( "-s", "--starttime",
   			dest = "starttime",
 			type = "string",
-                        default = "+00:00:15",
+                        default = "+30",
   			help = "set the start time (syntax: timestamp, [YYYY-MM-DD] HH:MM[:SS], +seconds or +HH:MM[:SS]) [%default]" )
 
   psgroup.add_option( "-r", "--runtime",

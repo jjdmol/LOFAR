@@ -33,39 +33,6 @@ class Locations:
 	"Storage": "gnu_openmpi-opt",
     } )
 
-    if self.isproduction:
-      self.files.update( {
-        # the base directory most paths will be related to
-	"basedir": "/cephome/lofar-prod/lofar",
-
-        # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bin/CN_Processing",
-	"ionproc": "${BASEDIR}/bin/IONProc",
-	"storage": "${BASEDIR}/bin/Storage",
-      } )
-      
-      self.nodes.update( {
-        # which storage nodes to use
-	"storage": ["list001","list002"],
-
-        # default log server address
-        "logserver": "tcp:127.0.0.1:24500"
-      } )
-    else:
-      self.files.update( {
-	"basedir": "${HOME}/projects/LOFAR",
-	"cnproc":  "${BASEDIR}/installed/%s/bin/CN_Processing" % (self.buildvars["CNProc"],),
-	"ionproc": "${BASEDIR}/installed/%s/bin/IONProc" % (self.buildvars["IONProc"],),
-	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
-      } )
-
-      self.nodes.update( {
-	"storage": ["list003","list004"],
-
-        # no external log server
-        "logserver": "",
-      } )
-
     self.files.update( {
         # allows ${HOME} to be resolved in other paths
         "home":    homeDir(),
@@ -90,6 +57,43 @@ class Locations:
         # on which node to start the mpirun for Storage
         "storagemaster": "listfen",
     } )
+
+    if self.isproduction:
+      self.files.update( {
+        # the base directory most paths will be related to
+	"basedir": "/cephome/lofar-prod/lofar",
+
+        # the locations of the main executables
+	"cnproc":  "${BASEDIR}/bin/CN_Processing",
+	"ionproc": "${BASEDIR}/bin/IONProc",
+	"storage": "${BASEDIR}/bin/Storage",
+
+        # where to start the executables. rundir needs to be reachable
+        # for all sections.
+	"rundir":  "${BASEDIR}/share",
+      } )
+      
+      self.nodes.update( {
+        # which storage nodes to use
+	"storage": ["list001","list002"],
+
+        # default log server address
+        "logserver": "tcp:127.0.0.1:24500"
+      } )
+    else:
+      self.files.update( {
+	"basedir": "${HOME}/projects/LOFAR",
+	"cnproc":  "${BASEDIR}/installed/%s/bin/CN_Processing" % (self.buildvars["CNProc"],),
+	"ionproc": "${BASEDIR}/installed/%s/bin/IONProc" % (self.buildvars["IONProc"],),
+	"storage": "${BASEDIR}/installed/%s/bin/Storage" % (self.buildvars["Storage"],),
+      } )
+
+      self.nodes.update( {
+	"storage": ["list003","list004"],
+
+        # no external log server
+        "logserver": "",
+      } )
 
   def setFilename(self,name,path):
     self.files[name] = path 
