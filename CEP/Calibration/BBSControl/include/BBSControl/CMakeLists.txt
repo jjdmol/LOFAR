@@ -18,8 +18,13 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# List of header files that will be installed.
-set(inst_HEADERS
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+
+# Install header files.
+install(FILES 
   AddStep.h
   BlobStreamableConnection.h
   CalSession.h
@@ -39,7 +44,6 @@ set(inst_HEADERS
   MessageHandlers.h
   MultiStep.h
   NextChunkCommand.h
-  NoiseStep.h
   PredictStep.h
   RecoverCommand.h
   RefitStep.h
@@ -52,12 +56,5 @@ set(inst_HEADERS
   Strategy.h
   SubtractStep.h
   SynchronizeCommand.h
-  Types.h)
-
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
-
-# Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
+  Types.h
+  DESTINATION include/${PROJECT_NAME})

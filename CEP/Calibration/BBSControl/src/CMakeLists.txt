@@ -20,7 +20,7 @@
 
 include(LofarPackageVersion)
 
-set(bbscontrol_LIB_SRCS
+lofar_add_library(bbscontrol
   Package__Version.cc
   AddStep.cc
   BlobStreamableConnection.cc
@@ -39,7 +39,6 @@ set(bbscontrol_LIB_SRCS
   Messages.cc
   MultiStep.cc
   NextChunkCommand.cc
-  NoiseStep.cc
   PredictStep.cc
   RecoverCommand.cc
   RefitStep.cc
@@ -55,17 +54,10 @@ set(bbscontrol_LIB_SRCS
   SynchronizeCommand.cc
   Types.cc)
 
-set(bbscontrol_PROGRAMS
-  versionbbscontrol
-  GlobalControl
-  KernelControl
-  SolverControl)
-
-lofar_add_library(bbscontrol ${bbscontrol_LIB_SRCS})
-
-foreach(prog ${bbscontrol_PROGRAMS})
-  lofar_add_bin_program(${prog} ${prog}.cc)
-endforeach(prog ${bbscontrol_PROGRAMS})
+lofar_add_bin_program(versionbbscontrol versionbbscontrol.cc)
+lofar_add_bin_program(GlobalControl GlobalControl.cc)
+lofar_add_bin_program(KernelControl KernelControl.cc)
+lofar_add_bin_program(SolverControl SolverControl.cc)
 
 install(PROGRAMS
   calibrate

@@ -18,6 +18,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-lofar_add_sbin_program(ppsctl ppsctl.c)
+if(HAVE_SYS_TIMEPPS_H)
+  lofar_add_sbin_program(ppsctl ppsctl.c)
+endif(HAVE_SYS_TIMEPPS_H)
 
 install(PROGRAMS plotclock DESTINATION sbin)
