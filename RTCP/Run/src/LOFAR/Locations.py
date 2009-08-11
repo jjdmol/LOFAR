@@ -39,9 +39,9 @@ class Locations:
 	"basedir": "/cephome/lofar-prod/lofar",
 
         # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bin/CN_Processing.cnk",
-	"ionproc": "${BASEDIR}/bin/IONProc.ppc",
-	"storage": "${BASEDIR}/bin/Storage.x86_64",
+	"cnproc":  "${BASEDIR}/bin/CN_Processing",
+	"ionproc": "${BASEDIR}/bin/IONProc",
+	"storage": "${BASEDIR}/bin/Storage",
       } )
       
       self.nodes.update( {
