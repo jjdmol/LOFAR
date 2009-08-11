@@ -255,7 +255,7 @@ void Scheduler::addSyncAction(SyncAction* action)
 }
 
 //
-// enter(command, queue)
+// enter(command, queue[LATER|PERIODIC], immediateAllowed)
 //
 void Scheduler::enter(Ptr<Command> command, QueueID queue, bool immediateApplyAllowed)
 {
@@ -268,7 +268,7 @@ void Scheduler::enter(Ptr<Command> command, QueueID queue, bool immediateApplyAl
 		(queue != Scheduler::PERIODIC)) {
 		LOG_INFO_STR("Applying command " << command->name() << " immediately");
 		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
-		command->ack		 (Cache::getInstance().getFront());
+		command->ack 		 (Cache::getInstance().getFront());
 		return;
 	}
 

@@ -83,7 +83,7 @@ void RawBlockRead::sendrequest()
 
 //	string	hDump;	// DEBUG
 //	hexdump(hDump, (void*)&m_hdr.m_fields, MEPHeader::SIZE); // DEBUG
-//	LOG_INFO (hDump);
+//	LOG_INFO_STR ("RAWBLOCKREAD: "  << hDump);
 
 	// finally send the message
 	getBoardPort().send(rawData);
@@ -111,7 +111,7 @@ GCFEvent::TResult RawBlockRead::handleack(GCFEvent& event, GCFPortInterface& /*p
 
 //	string	hDump;		/// DEBUG
 //	hexdump(hDump, (void*)&(ack.hdr.m_fields), MEPHeader::SIZE);
-//	LOG_INFO (hDump);
+//	LOG_INFO_STR ("RAWBLOCKREAD REPLY: " << hDump);
 
 	// check result
 	if (!ack.hdr.isValidAck(m_hdr)) {

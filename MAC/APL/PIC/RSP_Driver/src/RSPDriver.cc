@@ -2251,7 +2251,7 @@ void RSPDriver::rsp_getspustatus(GCFEvent& event, GCFPortInterface& port)
 //
 void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port) 
 {
-	Ptr<GetRawBlockCmd> command = new GetRawBlockCmd(event, port, Command::READ);
+	Ptr<GetRawBlockCmd> command = new GetRawBlockCmd(event, port, Command::WRITE);
 
 	if (!command->validate()) {
 		LOG_ERROR("GetRawBlock: invalid parameter");
@@ -2268,7 +2268,8 @@ void RSPDriver::rsp_getRawBlock(GCFEvent& event, GCFPortInterface& port)
 //	LOG_INFO(formatString("@@@Scheduling GetRawBlockCmd(%d,%x,%d,%d)", e.boardID, e.address, e.offset, e.dataLen));
 
 	// command is ok, schedule it.
-	m_scheduler.enter(Ptr<Command>(&(*command)));
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::LATER, false);
+//	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //
@@ -2293,7 +2294,8 @@ void RSPDriver::rsp_setRawBlock(GCFEvent& event, GCFPortInterface& port)
 //	LOG_INFO(formatString("@@@Scheduling SetRawBlockCmd(%d,%x,%d,%d)", e.boardID, e.address, e.offset, e.dataLen));
 
 	// command is ok, schedule it in next second.
-	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::LATER, false);
+//	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::LATER, false);
+	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
 
 //

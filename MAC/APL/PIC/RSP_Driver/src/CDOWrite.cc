@@ -97,7 +97,6 @@ void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
   m_udpip_hdr.ip.hdrchksum    = 0; // set to zero for checksum computation
   m_udpip_hdr.ip.srcip        = htonl(l_srcip);
   m_udpip_hdr.ip.dstip        = htonl(l_dstip);
-  m_udpip_hdr.ip.options      = 0; // no options
 
   // compute header checksum
   m_udpip_hdr.ip.hdrchksum = compute_ip_checksum(&m_udpip_hdr.ip, sizeof(m_udpip_hdr.ip));
@@ -107,6 +106,7 @@ void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
   m_udpip_hdr.udp.length      = htons(sizeof(m_udpip_hdr.udp) + payload_size);
   m_udpip_hdr.udp.checksum    = htons(0); // disable check summing
 }
+
 
 CDOWrite::CDOWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, MEPHeader::N_CDO_REGISTERS)
