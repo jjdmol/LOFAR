@@ -5,7 +5,7 @@ from util.Aborter import runUntilSuccess
 from Locations import Locations
 import os
 import BGcontrol
-from Logger import debug,info
+from Logger import debug,info,warning
 
 class Section:
   """ A 'section' is a set of commands which together perform a certain function. """
@@ -28,12 +28,12 @@ class Section:
     pass
 
   def killSequence(self,name,killfunc,timeout):
-    killfuncs = [ lambda: kill(2), lambda: kill(9) ]
+    killfuncs = [ lambda: killfunc(2), lambda: killfunc(9) ]
 
     success = runUntilSuccess( killfuncs, timeout )
 
     if not success:
-      warn( "%s: Could not kill %s" % (self,name) )
+      warning( "%s: Could not kill %s" % (self,name) )
 
     return success
 
@@ -46,7 +46,7 @@ class Section:
 
   def abort(self,timeout):
     for c in self.commands:
-      self.killCommand(c)
+      self.killCommand(c,timeout)
 
   def wait(self):
     for c in self.commands:
