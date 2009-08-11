@@ -20,14 +20,11 @@
 
 include(LofarPackageVersion)
 
-set(bbskernel_LIB_SRCS
+lofar_add_library(bbskernel
   Package__Version.cc
-  BlobIOExtensions.cc
   Evaluator.cc
   Equator.cc
-  Instrument.cc
   MeasurementAIPS.cc
-  MetaMeasurement.cc
   Model.cc
   ModelConfig.cc
   ParmManager.cc
@@ -74,15 +71,8 @@ set(bbskernel_LIB_SRCS
   Expr/Result.cc
   Expr/ResultVec.cc
   Expr/Source.cc
+  Expr/SpectralIndex.cc
   Expr/StatUVW.cc
   Expr/YatawattaDipole.cc)
 
-set(bbskernel_PROGRAMS
-  versionbbskernel
-  metams)
-
-lofar_add_library(bbskernel ${bbskernel_LIB_SRCS})
-
-foreach(prog ${bbskernel_PROGRAMS})
-  lofar_add_bin_program(${prog} ${prog}.cc)
-endforeach(prog ${bbskernel_PROGRAMS})
+lofar_add_bin_program(versionbbskernel versionbbskernel.cc)

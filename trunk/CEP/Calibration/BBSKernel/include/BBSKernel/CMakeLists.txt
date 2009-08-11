@@ -18,16 +18,19 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# List of header files that will be installed.
-set(inst_HEADERS
-  BlobIOExtensions.h
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+
+# Install header files.
+install(FILES
   Evaluator.h
   Equator.h
   Exceptions.h
   Instrument.h
   Measurement.h
   MeasurementAIPS.h
-  MetaMeasurement.h
   Model.h
   ModelConfig.h
   ParmManager.h
@@ -78,13 +81,8 @@ set(inst_HEADERS
   Expr/ResultVec.h
   Expr/Pool.h
   Expr/Source.h
+  Expr/SpectralIndex.h
   Expr/StatUVW.h
-  Expr/YatawattaDipole.h)
+  Expr/YatawattaDipole.h
+  DESTINATION include/${PROJECT_NAME})
 
-# Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
-
-# Install header files.
-install(FILES ${inst_HEADERS} DESTINATION include/${PROJECT_NAME})
