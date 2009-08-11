@@ -16,7 +16,7 @@ class Section:
 
     self.logoutputs = []
     if Locations.nodes["logserver"]:
-      self.logoutputs.append( "tcp:%s" % (Locations.nodes["logserver"],) )
+      self.logoutputs.append( "%s" % (Locations.nodes["logserver"],) )
 
   def __str__(self):
     return self.__class__.__name__
@@ -112,6 +112,7 @@ class CNProcSection(Section):
     self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill ) )
 
   def check(self):
+    return
     # we have to own the partition
     owner = BGcontrol.owner( self.parset.partition )
     me = os.environ["USER"]
