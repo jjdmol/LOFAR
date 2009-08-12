@@ -92,9 +92,6 @@ int main(int argc, char *argv[])
   traceProp.setProperty("log4cplus.appender.STDOUT", "log4cplus::ConsoleAppender");
   traceProp.setProperty("log4cplus.appender.STDOUT.layout", "log4cplus::PatternLayout");
   traceProp.setProperty("log4cplus.appender.STDOUT.layout.ConversionPattern", "%-5p|%x|%m%n");
-  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1", "log4cplus::spi::StringMatchFilter");
-  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.AcceptOnMatch", "false");
-  traceProp.setProperty("log4cplus.appender.STDOUT.filters.1.StringToMatch", "data");
   
   PropertyConfigurator(traceProp).configure();
 #else
