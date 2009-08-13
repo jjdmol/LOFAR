@@ -298,7 +298,7 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, int nrRSPs, b
 {
 	#define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
-	if (antennaSet.empty()) {		// old ParameterSet?
+	if (antennaSet.empty() || ((nrLBAs+nrHBAs+nrRSPs) == 0)) {		// old ParameterSet or force no interpretation?
 		return (RCUset);			// return old info.
 	}
 
