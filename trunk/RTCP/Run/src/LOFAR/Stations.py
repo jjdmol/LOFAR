@@ -63,88 +63,28 @@ class Stations(dict):
 def defineStations( s ):
   # Actual, physical stations. """
 
-  defaultInputs = ['0.0.0.0:%s' % (4346+i) for i in xrange(4)]
+  def ports( portnrs ):
+    return ['0.0.0.0:%s' % (port,) for port in portnrs]
+
+  defaultPorts = ports( [4346, 4347, 4348, 4349] )
 
   s.update( {
-    # CS001
-    "CS001_lba0":  [Station('CS001LBA_LBA0',  '10.170.0.1',  ['0.0.0.0:4346'])],
-    "CS001_lba2":  [Station('CS001LBA_LBA2',  '10.170.0.1',  ['0.0.0.0:4346'])],
-    "CS001_lba4":  [Station('CS001LBA_LBA4',  '10.170.0.2',  ['0.0.0.0:4347'])],
-    "CS001_lba6":  [Station('CS001LBA_LBA6',  '10.170.0.2',  ['0.0.0.0:4347'])],
-    "CS001_lba8":  [Station('CS001LBA_LBA8',  '10.170.0.17', ['0.0.0.0:4348'])],
-    "CS001_lba10": [Station('CS001LBA_LBA10', '10.170.0.17', ['0.0.0.0:4348'])],
-    "CS001_lba12": [Station('CS001LBA_LBA12', '10.170.0.18', ['0.0.0.0:4349'])],
-    "CS001_lba14": [Station('CS001LBA_LBA14', '10.170.0.18', ['0.0.0.0:4349'])],
-    "CS001_lba":   "CS001_lba0 + CS001_lba4 + CS001_lba8 + CS001_lba12",
-    "CS001_lba_rotated": "CS001_lba2 + CS001_lba6 + CS001_lba10 + CS001_lba14",
-
-    "CS001_hba0":  [Station('CS001HBA_HBA0', '10.170.0.1',  ['0.0.0.0:4346'])],
-    "CS001_hba1":  [Station('CS001HBA_HBA1', '10.170.0.2',  ['0.0.0.0:4347'])],
-    "CS001_hba2":  [Station('CS001HBA_HBA2', '10.170.0.17', ['0.0.0.0:4348'])],
-    "CS001_hba3":  [Station('CS001HBA_HBA3', '10.170.0.18', ['0.0.0.0:4349'])],
-    "CS001_hba":   "CS001_hba0 + CS001_hba1 + CS001_hba2 + CS001_hba3",
-
-    "CS001":       [Station('CS001', '10.170.0.1', defaultInputs)],
-
-    # CS010
-    "CS010_lba0":  [Station('CS010LBA_LBA0',  '10.170.0.5',  ['0.0.0.0:4346'])],
-    "CS010_lba2":  [Station('CS010LBA_LBA2',  '10.170.0.5',  ['0.0.0.0:4346'])],
-    "CS010_lba4":  [Station('CS010LBA_LBA4',  '10.170.0.6',  ['0.0.0.0:4351'])],
-    "CS010_lba6":  [Station('CS010LBA_LBA6',  '10.170.0.6',  ['0.0.0.0:4351'])],
-    "CS010_lba8":  [Station('CS010LBA_LBA8',  '10.170.0.21', ['0.0.0.0:4352'])],
-    "CS010_lba10": [Station('CS010LBA_LBA10', '10.170.0.21', ['0.0.0.0:4352'])],
-    "CS010_lba12": [Station('CS010LBA_LBA12', '10.170.0.22', ['0.0.0.0:4353'])],
-    "CS010_lba14": [Station('CS010LBA_LBA14', '10.170.0.22', ['0.0.0.0:4353'])],
-    "CS010_lba":   "CS010_lba0 + CS010_lba4 + CS010_lba8 + CS010_lba12",
-    "CS010_lba_rotated": "CS010_lba",
-
-    "CS010_hba0":  [Station('CS010HBA_HBA0', '10.170.0.5',  ['0.0.0.0:4346'])],
-    "CS010_hba1":  [Station('CS010HBA_HBA1', '10.170.0.6',  ['0.0.0.0:4351'])],
-    "CS010_hba2":  [Station('CS010HBA_HBA2', '10.170.0.21', ['0.0.0.0:4352'])],
-    "CS010_hba3":  [Station('CS010HBA_HBA3', '10.170.0.22', ['0.0.0.0:4353'])],
-    "CS010_hba":   "CS010_hba0 + CS010_hba1 + CS010_hba2 + CS010_hba3",
-
-    "CS010_TILE1": [Station('CS010HBA_TILE1', '10.170.0.5',  ['0.0.0.0:4346'])],
-    "CS010_TILE2": [Station('CS010HBA_TILE2', '10.170.0.6',  ['0.0.0.0:4351'])],
-    "CS010_TILE5": [Station('CS010HBA_TILE5', '10.170.0.21', ['0.0.0.0:4352'])],
-    "CS010_TILE6": [Station('CS010HBA_TILE6', '10.170.0.22', ['0.0.0.0:4353'])],
-    "CS010_tiles": "CS010_TILE1 + CS010_TILE2 + CS010_TILE5 + CS010_TILE6",
-
-    "CS010":       [Station('CS010', '10.170.0.5', ['0.0.0.0:4346', '0.0.0.0:4351', '0.0.0.0:4352', '0.0.0.0:4353'])],
-
-    # CS016
-    "CS016_lba0":  [Station('CS016LBA_LBA0', '10.170.0.9', ['0.0.0.0:4346'])],
-    "CS016_lba2":  [Station('CS016LBA_LBA2', '10.170.0.9', ['0.0.0.0:4346'])],
-    "CS016_lba4":  [Station('CS016LBA_LBA4', '10.170.0.10', ['0.0.0.0:4347'])],
-    "CS016_lba6":  [Station('CS016LBA_LBA6', '10.170.0.10', ['0.0.0.0:4347'])],
-    "CS016_lba8":  [Station('CS016LBA_LBA8', '10.170.0.25', ['0.0.0.0:4348'])],
-    "CS016_lba10": [Station('CS016LBA_LBA10', '10.170.0.25', ['0.0.0.0:4348'])],
-    "CS016_lba12": [Station('CS016LBA_LBA12', '10.170.0.26', ['0.0.0.0:4349'])],
-    "CS016_lba14": [Station('CS016LBA_LBA14', '10.170.0.26', ['0.0.0.0:4349'])],
-    "CS016_lba":   "CS016_lba0 + CS016_lba4 + CS016_lba8 + CS016_lba12",
-    "CS016_lba_rotated": "CS016_lba2 + CS016_lba6 + CS016_lba10 + CS016_lba14",
-
-    "CS016_hba0":  [Station('CS016_HBA0', '10.170.0.9',  ['0.0.0.0:4346'])],
-    "CS016_hba1":  [Station('CS016_HBA1', '10.170.0.10', ['0.0.0.0:4347'])],
-    "CS016_hba2":  [Station('CS016_HBA2', '10.170.0.25', ['0.0.0.0:4348'])],
-    "CS016_hba3":  [Station('CS016_HBA3', '10.170.0.26', ['0.0.0.0:4349'])],
-    "CS016_hba":   "CS016_hba0 + CS016_hba1 + CS016_hba2 + CS016_hba3",
-
-    "CS016":       [Station('CS016', '10.170.0.9', defaultInputs)],
-
     # CS302
-    "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', defaultInputs)],
-    "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', defaultInputs)],
-    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', defaultInputs)],
-    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.21', defaultInputs)],
+    "CS302LBA":    [Station('CS302LBA',  '10.170.0.21', defaultPorts)],
+    "CS302HBA":    [Station('CS302HBA',  '10.170.0.21', defaultPorts)],
+    "CS302HBA0":   [Station('CS302HBA0', '10.170.0.21', defaultPorts)],
+    "CS302HBA1":   [Station('CS302HBA1', '10.170.0.22', ports( [4352,4353,4354,4355] ))],
 
     # RS307
-    "RS307LBA":   [Station('RS307LBA',  '10.170.0.189', defaultInputs)],
-    "RS307HBA":   [Station('RS307HBA',  '10.170.0.189', defaultInputs)],
+    "RS307LBA":   [Station('RS307LBA',  '10.170.0.189', defaultPorts)],
+    "RS307HBA":   [Station('RS307HBA',  '10.170.0.189', defaultPorts)],
 
     # RS503
-    "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultInputs)],
-    "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultInputs)],
+    "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultPorts)],
+    "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultPorts)],
+
+    # DE601, a.k.a. Effelsberg
+    "DE601LBA"    [Station('DE601LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] )],
   } )
 
   # Simulated stations for experimentation.
@@ -157,12 +97,12 @@ def defineStations( s ):
      ip = "10.170.0.%s" % (suffix,)
 
      # sXX_1, sXX: 1 full station (1 RSP board), starting from 10.170.0.XX, input received from station
-     inputs = ["0.0.0.0:4346"]
+     inputs = ports( [4346] )
      s["s%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
      s["s%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
      # SXX_1, SXX: 1 full station (4 RSP boards), starting from 10.170.0.XX, input received from station
-     inputs = ["0.0.0.0:%s" % (port,) for port in [4346,4347,4348,4349]]
+     inputs = defaultPorts
      s["S%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
      s["S%s"   % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
@@ -170,11 +110,11 @@ def defineStations( s ):
      ip = "10.170.1.%s" % (suffix,)
 
      # tXX_1: 1 full station (1 RSP board), starting from 10.170.1.XX, input received from station
-     inputs = ["0.0.0.0:4346"]
+     inputs = ports( [4346] )
      s["t%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
      # TXX_1: 1 full station (4 RSP boards), starting from 10.170.1.XX, input received from station
-     inputs = ["0.0.0.0:%s" % (port,) for port in [4346,4347,4348,4349]]
+     inputs = defaultPorts
      s["T%s_1" % (suffix,)] = [Station("S%s" % (suffix,), ip, inputs)]
 
   # define sets of various sizes 
@@ -187,7 +127,7 @@ def defineStations( s ):
 
   # Special stations, one-time stations, etc.
   s.update( {
-   "Pulsar": [Station('Pulsar', '10.170.0.30', ['tcp:0.0.0.0:4346'])],
+   "Pulsar": [Station('Pulsar', '10.170.0.30', ['0.0.0.0:4346'])],
    "twoears":  [Station('CS302HBA0', '10.170.0.133', ['0.0.0.0:4346']),
                 Station('CS302HBA1', '10.170.0.134', ['0.0.0.0:4347'])],
   } )
