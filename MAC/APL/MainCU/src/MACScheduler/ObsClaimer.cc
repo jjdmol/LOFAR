@@ -238,9 +238,13 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			theObsPS->setValue(PN_OBS_BGL_NODE_LIST, 	GCFPVString (theObs.BGLNodeList), 	  0.0, false);
 			theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
 
+#if defined(THERE_IS_NO_REMOTE_STATION_CONFIG_ON_MCU001)
 			// the receiver bitmap can be derived from the RCUset.
 			StationConfig		config;
 			bitset<MAX_RCUS>	theRCUs(theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, config.nrRSPs, config.hasSplitters));
+#endif
+			// TODO: this code should be moved to the StationController
+			bitset<MAX_RCUS>	theRCUs(theObs.getRCUbitset(96, 48, 12, true));
 			string	rbm;
 			rbm.resize(MAX_RCUS, '0');
 			for (int i = 0; i < MAX_RCUS; i++) {

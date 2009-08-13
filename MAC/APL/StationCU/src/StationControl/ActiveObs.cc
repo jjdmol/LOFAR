@@ -31,6 +31,8 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/StationConfig.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -43,6 +45,7 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace MACIO;
 	using namespace GCF::TM;
+	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
 	namespace StationCU {
 
@@ -166,6 +169,22 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 
 	switch (event.signal) {
 	case F_ENTRY:  {
+		// first make a mapping of the receivers that are used.
+		// the StationController already modified the set to reflect the available receivers
+		// So askfor this 'core' set by passed zeros.
+		// the receiver bitmap can be derived from the RCUset.
+		StationConfig		config;
+		bitset<MAX_RCUS>	theRCUs(itsObsPar.getRCUbitset(0, 0, 0, config.hasSplitters));
+		string	rbm;
+		rbm.resize(MAX_RCUS, '0');
+		for (int i = 0; i < MAX_RCUS; i++) {
+			if (theRCUs[i]) {
+				rbm[i] = '1';
+			}
+		}
+		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm), 0.0, false);
+
+		// Startup the right controllers.
 		itsReqState = CTState::CREATED;
 		LOG_DEBUG_STR("Starting controller " << itsCalCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_CALIBRATIONCTRL,

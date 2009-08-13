@@ -1069,6 +1069,7 @@ LOG_DEBUG_STR("theOBS=" << theObs);
 	LOG_INFO_STR("Available receivers for observation " << theObs.obsID << ":" << 
 				string(realReceivers.to_string<char,char_traits<char>,allocator<char> >()));
 
+
 	// create an activeObservation object that will manage the child controllers.
 	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
 	if (!theNewObs) {
