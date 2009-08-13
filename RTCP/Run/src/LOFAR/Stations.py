@@ -84,7 +84,7 @@ def defineStations( s ):
     "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultPorts)],
 
     # DE601, a.k.a. Effelsberg
-    "DE601LBA"    [Station('DE601LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] )],
+    "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] ))],
   } )
 
   # Simulated stations for experimentation.
@@ -134,11 +134,6 @@ def defineStations( s ):
 
   # Standard configurations
   s.update( {
-    "LBA":          "CS001_lba + CS010_lba + CS016_lba",
-    "LBAROTATED":   "CS001_lba_rotated + CS010_lba_rotated + CS016_lba_rotated",
-    "HBA":          "CS001_hba + CS010_hba + CS016_hba",
-    "HBATILES":     "CS001_hba + CS010_tiles + CS016_hba",
-    "HBATILESONLY": "CS010_tiles",
   } )
 
 # Construct everything
