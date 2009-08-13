@@ -33,7 +33,8 @@ include(FindPackageHandleStandardArgs)
 # Furthermore:
 # - Add preprocessor definitions that are defined in <PKG>_DEFINITIONS.
 # - Add include directories that are defined <PKG>_INCLUDE_DIRS.
-# - Add <PKG>_LIBRARIES to the list of LOFAR_LIBRARIES, needed for linking.
+# - Add <PKG>_LIBRARIES to the list of LOFAR_EXTRA_LIBRARIES, needed for
+#   linking.
 # - Add cache variable HAVE_<PKG>, which indicates whether the package was 
 #   found. It can be used with #cmakedefine.
 # Note: <PKG> equals <package> in uppercase.
@@ -70,7 +71,8 @@ function(lofar_find_package _package)
       endif(NOT DEFINED HAVE_${_PKG})
       add_definitions(${${_PKG}_DEFINITIONS})
       include_directories(${${_PKG}_INCLUDE_DIRS})
-      set(LOFAR_LIBRARIES ${LOFAR_LIBRARIES} ${${_PKG}_LIBRARIES} PARENT_SCOPE)
+      set(LOFAR_EXTRA_LIBRARIES ${LOFAR_EXTRA_LIBRARIES} ${${_PKG}_LIBRARIES}
+        PARENT_SCOPE)
     else(${_PKG}_FOUND)
       set(HAVE_${_PKG} FALSE CACHE INTERNAL "Have ${_package}?")
     endif(${_PKG}_FOUND)

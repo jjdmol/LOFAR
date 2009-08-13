@@ -4,8 +4,10 @@
 ==============================================================================
 
 * Define ${PROJECT_NAME}_LINK_LIBRARIES in LofarAddPackage.cmake, which can
-  then be used by lofar_add_library() and lofar_add_executable() in 
-  LofarMacros.cmake.
+  then be used by lofar_add_library() and lofar_add_executable() in
+  LofarMacros.cmake. This avoids the need to create a "dummy" project library,
+  solely to resolve all library dependencies on other packages when linking
+  executables. 
 
 * Rename LOFAR_LIBRARIES to something like LOFAR_EXTRA_LIBRARIES, or
   LOFAR_EXTERNAL_LIBRARIES, or LOFAR_EXTRA_LINK_LIBRARIES. This affects
@@ -37,4 +39,6 @@
 
 * Python package are not yet part of the CMake build.
 
-
+* Turn makeversion into a real CMake macro and merge it with
+  LofarPackageVersion. Generate the Package__Version.{h,cc} files in the
+  binary directory, instead of the source directory.

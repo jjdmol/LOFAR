@@ -307,7 +307,7 @@ if [ $? != 0 ]; then
   cat src/CMakeLists.txt > version.mf.tmp
   cat >> version.mf.tmp <<EOF
 add_executable(${versmainname} ${versmainname}.cc)
-target_link_libraries(${versmainname} ${lpkg} \${LOFAR_LIBRARIES})
+target_link_libraries(${versmainname} ${lpkg} \${LOFAR_EXTRA_LIBRARIES})
 install(TARGETS ${versmainname} DESTINATION bin)
 
 EOF
