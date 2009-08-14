@@ -35,7 +35,7 @@ namespace LOFAR {
   namespace ACC {
     namespace PLC {
 
-static	char*	PlcCmdNames[] = {
+static	const char*	PlcCmdNames[] = {
 		"Boot",
 		"Quit", 		"Define",
 		"Init", 		"Pause",
