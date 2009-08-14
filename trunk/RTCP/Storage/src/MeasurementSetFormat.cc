@@ -101,6 +101,7 @@ void MeasurementSetFormat::createMSTables(unsigned subband)
 
     TableDesc td = MS::requiredTableDesc();
     MS::addColumnToDesc(td, MS::DATA, 2);
+    MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
 
     string MSname =  itsPS->getMSname(subband);
 
