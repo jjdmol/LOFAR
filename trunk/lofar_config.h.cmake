@@ -120,6 +120,9 @@
 /* Define if we have an MPI implementation installed */
 #cmakedefine HAVE_MPI 1
 
+/* Define if MASS is installed */ 
+#cmakedefine HAVE_MASS 1
+
 /* Define if MPICH is installed */
 #cmakedefine HAVE_MPICH 1
 
