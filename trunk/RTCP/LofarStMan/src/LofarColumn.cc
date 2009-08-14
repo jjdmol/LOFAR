@@ -282,23 +282,14 @@ namespace LOFAR {
   {}
   IPosition WeightColumn::shape (uInt)
   {
-    return IPosition(1, itsParent->nchan());
+    return IPosition(1, itsParent->npol());
   }
-  void WeightColumn::getArrayfloatV (uInt rownr, Array<Float>* dataPtr)
+  void WeightColumn::getArrayfloatV (uInt, Array<Float>* dataPtr)
   {
-    Double maxn = itsParent->maxnSample();
-    const uShort* data = itsParent->getNSample (rownr, True);
-    const uShort* dataEnd = data + dataPtr->size();
-    if (dataPtr->contiguousStorage()) {
-      for (Array<Float>::contiter iter=dataPtr->cbegin();
-           data<dataEnd; ++data, ++iter) {
-        *iter = *data / maxn;
-      }
-    } else {
-      for (Array<Float>::iterator iter=dataPtr->begin();
-           data<dataEnd; ++data, ++iter) {
-        *iter = *data / maxn;
-      }
+    Array<Float>::iterator iterend = dataPtr->end();
+    for (Array<Float>::iterator iter=dataPtr->begin();
+         iter != iterend; ++iter) {
+      *iter = 1.;
     }
   }
 
@@ -306,7 +297,7 @@ namespace LOFAR {
   {}
   IPosition SigmaColumn::shape (uInt)
   {
-    return IPosition(1, itsParent->nchan());
+    return IPosition(1, itsParent->npol());
   }
   void SigmaColumn::getArrayfloatV (uInt, Array<Float>* dataPtr)
   {
@@ -314,6 +305,37 @@ namespace LOFAR {
     for (Array<Float>::iterator iter=dataPtr->begin();
          iter != iterend; ++iter) {
       *iter = 1.;
+    }
+  }
+
+  WSpectrumColumn::~WSpectrumColumn()
+  {}
+  IPosition WSpectrumColumn::shape (uInt)
+  {
+    return IPosition(2, itsParent->npol(), itsParent->nchan());
+  }
+  void WSpectrumColumn::getArrayfloatV (uInt rownr, Array<Float>* dataPtr)
+  {
+    double maxn = itsParent->maxnSample();
+    uInt npol = itsParent->npol();
+    const uShort* data = itsParent->getNSample (rownr, True);
+    const uShort* dataEnd = data + itsParent->nchan();
+    if (dataPtr->contiguousStorage()) {
+      for (Array<Float>::contiter iter=dataPtr->cbegin();
+           data<dataEnd; ++data) {
+        Float weight = *data / maxn;
+        for (uInt i=0; i<npol; ++i, ++iter) {
+          *iter = weight;
+        }
+      }
+    } else {
+      for (Array<Float>::iterator iter=dataPtr->begin();
+           data<dataEnd; ++data, ++iter) {
+        Float weight = *data / maxn;
+        for (uInt i=0; i<npol; ++i, ++iter) {
+          *iter = weight;
+        }
+      }
     }
   }
 

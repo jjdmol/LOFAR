@@ -138,6 +138,8 @@ DataManagerColumn* LofarStMan::makeIndArrColumn (const String& name,
     col = new WeightColumn(this, dtype);
   } else if (name == "SIGMA") {
     col = new SigmaColumn(this, dtype);
+  } else if (name == "WEIGHT_SPECTRUM") {
+    col = new WSpectrumColumn(this, dtype);
   } else {
     throw DataManError (name + " is unknown column for LofarStMan");
   }

@@ -84,6 +84,7 @@ void createTable()
   td.addColumn (ArrayColumnDesc<Complex>("DATA"));
   td.addColumn (ArrayColumnDesc<Float>("SIGMA"));
   td.addColumn (ArrayColumnDesc<Float>("WEIGHT"));
+  td.addColumn (ArrayColumnDesc<Float>("WEIGHT_SPECTRUM"));
   td.addColumn (ArrayColumnDesc<Bool>("FLAG"));
   td.addColumn (ArrayColumnDesc<Bool>("FLAG_CATEGORY"));
   // Now create a new table from the description.
@@ -188,6 +189,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   // Create objects for all mandatory MS columns.
   ROArrayColumn<Complex> dataCol(tab, "DATA");
   ROArrayColumn<Float> weightCol(tab, "WEIGHT");
+  ROArrayColumn<Float> wspecCol(tab, "WEIGHT_SPECTRUM");
   ROArrayColumn<Float> sigmaCol(tab, "SIGMA");
   ROArrayColumn<Double> uvwCol(tab, "UVW");
   ROArrayColumn<Bool> flagCol(tab, "FLAG");
@@ -211,7 +213,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   // Create and initialize expected data and weight.
   Array<Complex> dataExp(IPosition(2,npol,nchan));
   indgen (dataExp, startValue, Complex(0.01, 0.01));
-  Array<Float> weightExp(IPosition(1,nchan));
+  Array<Float> weightExp(IPosition(2,1,nchan));
   indgen (weightExp, Float(0), Float(1./32768));
   // Loop through all rows in the table and check the data.
   uInt row=0;
@@ -221,28 +223,30 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         // Contents must be present except for FLAG_CATEGORY.
         AlwaysAssertExit (dataCol.isDefined (row));
         AlwaysAssertExit (weightCol.isDefined (row));
+        AlwaysAssertExit (wspecCol.isDefined (row));
         AlwaysAssertExit (sigmaCol.isDefined (row));
         AlwaysAssertExit (flagCol.isDefined (row));
         AlwaysAssertExit (!flagcatCol.isDefined (row));
-        // Check data, weight, sigma, flag
+        // Check data, weight, sigma, weight_spectrum, flag
         AlwaysAssertExit (allNear (dataCol(row), dataExp, 1e-7));
-        Array<Float> weights = weightCol(row);
-        AlwaysAssertExit (allNear (weights, weightExp, 1e-7));
-        dataExp += Complex(0.01, 0.02);
-        weightExp += Float(1./32768);
-        AlwaysAssertExit (sigmaCol.shape(row) == IPosition(1,nchan));
+        AlwaysAssertExit (weightCol.shape(row) == IPosition(1,npol));
+        AlwaysAssertExit (allEQ (weightCol(row), Float(1)));
+        AlwaysAssertExit (sigmaCol.shape(row) == IPosition(1,npol));
         AlwaysAssertExit (allEQ (sigmaCol(row), Float(1)));
-        Array<Bool> flagExp (weights == Float(0));
-        Array<Bool> flagExp2 (flagExp.reform(IPosition(2,1,nchan)));
-        Array<Bool> flags = flagCol(row);
-        AlwaysAssertExit (flags.shape() == IPosition(2,npol,nchan));
+        Array<Float> weights = wspecCol(row);
+        AlwaysAssertExit (weights.shape() == IPosition(2,npol,nchan));
         for (uInt p=0; p<npol; ++p) {
-          AlwaysAssertExit (allEQ (flags(IPosition(2,p,0),
-                                         IPosition(2,p,nchan-1)), flagExp2));
+          AlwaysAssertExit (allNear (weights(IPosition(2,p,0),
+                                             IPosition(2,p,nchan-1)),
+                                     weightExp, 1e-7));
         }
+        Array<Bool> flagExp (weights == Float(0));
+        AlwaysAssertExit (allEQ (flagCol(row), flagExp));
         // Check ANTENNA1 and ANTENNA2
         AlwaysAssertExit (ant1Col(row) == int32(j));
         AlwaysAssertExit (ant2Col(row) == int32(k));
+        dataExp += Complex(0.01, 0.02);
+        weightExp += Float(1./32768);
         ++row;
       }
     }

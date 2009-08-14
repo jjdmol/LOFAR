@@ -81,7 +81,7 @@ class LofarColumn;
 //    <li> 4-byte sequence number defining the time stamp.
 //    <li> Complex data with shape [npol,nchan,nbasel].
 //    <li> Unsigned short nr of samples used in each data point. It has shape
-//         [nchan,nbasel]. It defines WEIGHT and FLAG.
+//         [nchan,nbasel]. It defines WEIGHT_SPECTRUM and FLAG.
 //    <li> Filler bytes to align the blocks as given in the meta info.
 //   </ul>
 //   The sequence numbers are ascending, but there can be holes due to
