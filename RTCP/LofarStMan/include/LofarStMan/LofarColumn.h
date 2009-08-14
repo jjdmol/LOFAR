@@ -230,6 +230,19 @@ public:
                                casa::Array<casa::Float>* dataPtr);
 };
 
+// <summary>WEIGHT_SPECTRUM column in the LOFAR Storage Manager.</summary>
+// <use visibility=local>
+class WSpectrumColumn : public LofarColumn
+{
+public:
+  explicit WSpectrumColumn (LofarStMan* parent, int dtype)
+    : LofarColumn(parent, dtype) {}
+  virtual ~WSpectrumColumn();
+  virtual casa::IPosition shape (casa::uInt rownr);
+  virtual void getArrayfloatV (casa::uInt rowNr,
+                               casa::Array<casa::Float>* dataPtr);
+};
+
 // <summary>FLAG_CATEGORY column in the LOFAR Storage Manager.</summary>
 // <use visibility=local>
 class FlagCatColumn : public LofarColumn
