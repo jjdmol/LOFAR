@@ -35,9 +35,9 @@
 using namespace LOFAR;
 using namespace casa;
 
-// This program tests the class LofarStMan and related classes.
-// The results are written to stdout. The script executing this program,
-// compares the results with the reference output file.
+// This program adds column WEIGHT_SPECTRUM using LofarStMan.
+// It adds it to the existing LofarStMan data manager in an MS, otherwise
+// another data manager is created whih will not be able to find the data files.
 
 
 void fixTable (const String& name)
@@ -48,6 +48,7 @@ void fixTable (const String& name)
   } else {
     TableDesc td;
     ArrayColumnDesc<Float> cd("WEIGHT_SPECTRUM");
+    //# Note: True means add to existing LofarStMan.
     t.addColumn (cd, "LofarStMan", True);
     cout << "Added column WEIGHT_SPECTRUM to the MS" << endl;
   }
