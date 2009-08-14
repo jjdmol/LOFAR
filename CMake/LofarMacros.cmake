@@ -24,6 +24,7 @@
 # Generic CMake macros for LOFAR
 #
 # Defines the following macros:
+#   force_option(var doc-string [value])
 #   join_arguments(var)
 #   list_append_if(condition var value1..valuen)
 #   lofar_add_bin_program(name)
@@ -39,6 +40,32 @@
 if(NOT DEFINED LOFAR_MACROS_INCLUDED)
 
   set(LOFAR_MACROS_INCLUDED TRUE)
+
+  # --------------------------------------------------------------------------
+  # force_option(option doc-string [value])
+  #
+  # The built-in CMake option() command will not let you modify an already set
+  # option. With this macro you can forcibly set <option> to <value>.
+  # --------------------------------------------------------------------------
+  macro(force_option _option _doc)
+    if(${ARGC} GREATER 3)
+      message(SEND_ERROR 
+        "force_option invoked with incorrect number of arguments")
+    endif()
+    string(TOUPPER "${ARGV2}" _value)
+    # Test if value is really ON like option() does; 
+    # ref. CMake sources cmOptionCommand.cxx and cmSystemTools.cxx
+    if( _value STREQUAL "ON" OR
+        _value STREQUAL "1" OR
+        _value STREQUAL "YES" OR
+        _value STREQUAL "TRUE" OR
+        _value STREQUAL "Y" )
+      set(${_option} ON CACHE BOOL "${_doc}" FORCE)
+    else()
+      set(${_option} OFF CACHE BOOL "${_doc}" FORCE)
+    endif()
+  endmacro(force_option)
+
 
   # --------------------------------------------------------------------------
   # join_arguments(var)
