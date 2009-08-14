@@ -1,7 +1,8 @@
 """RSP board register access functions
 
-  def rspctl(tc, arg)
-
+  def rspctl(tc, arg, applev=22)
+  def rspctl_write_sleep()
+  
   def i2bb(s)
   def i2bbbb(s)
   def calculate_next_sequence_value(in_word, seq='PRSG', width=12)
@@ -42,6 +43,7 @@
 ################################################################################
 # System imports
 import math
+import time
 
 # User imports
 import cli
@@ -315,6 +317,17 @@ def rspctl(tc, arg, applev=22):
     return res
   else:
     return cli.command(cmd)
+    
+
+def rspctl_write_sleep():
+  """ 
+  The RSPDriver issues all --writeblock immediately to speed up the test case.
+  Therefore sleep > 1 sec between rspctl --writeblock accesses to the same RSP
+  to avoid that they get overwritten in the same pps interval. The RSPDriver
+  can still only issue one --readblock per pps interval, because otherwise the
+  read result gets lost. Hence for --readblock the test case is not speed up.
+  """
+  time.sleep(1.010)
 
 
 def i2bb(s):
@@ -418,10 +431,12 @@ def write_mem(tc, msg, pid, regid, data, blpId=['blp0'], rspId=['rsp0'], width=2
         for bi in blpId:
           msg.packAddr([bi], pid, regid)
           rspctl(tc, '--writeblock=%s,%s,%d,%s' % (ri[3:], msg.hexAddr, offset+i, hexData))
+          rspctl_write_sleep()
       else:
         # Make use of MEP broadcast to BLPs on an RSP board
         rspctl(tc, '--writeblock=%s,%s,%d,%s' % (ri[3:], msg.hexAddr, offset+i, hexData))
       i = i + n
+  rspctl_write_sleep()
 
 
 def read_mem(tc, msg, pid, regid, nof, blpId=['blp0'], rspId=['rsp0'], sign='+', width=2, offset=0):
@@ -470,6 +485,7 @@ def write_cr_syncoff(tc, msg, blpId=['blp0'], rspId=['rsp0']):
     msg.packAddr(blpId, 'cr', 'syncoff')
     msg.packPayload([1],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
   
 
 def write_cr_syncon(tc, msg, blpId=['blp0'], rspId=['rsp0']):
@@ -486,6 +502,7 @@ def write_cr_syncon(tc, msg, blpId=['blp0'], rspId=['rsp0']):
     msg.packAddr(blpId, 'cr', 'syncoff')
     msg.packPayload([0],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
 
 
 def write_cr_sync_delay(tc, msg, syncdelay=0, syncedge=0, blpId=['blp0'], rspId=['rsp0']):
@@ -507,6 +524,7 @@ def write_cr_sync_delay(tc, msg, syncdelay=0, syncedge=0, blpId=['blp0'], rspId=
     msg.packAddr(blpId, 'cr', 'syncdelay')
     msg.packPayload([syncdata],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
 
 
 def read_cr_sync_delay(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
@@ -571,6 +589,7 @@ def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21
     msg.packAddr(blpId, 'diag', 'bypass')
     msg.packPayload([bypass],2)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
   
 
 def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
@@ -626,6 +645,7 @@ def write_diag_selftest(tc, msg, selftest, blpId=['rsp'], rspId=['rsp0'], applev
     msg.packAddr(blpId, 'diag', 'selftest')
     msg.packPayload(selftest,1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
     
 
 def read_diag_result_buffer(tc, msg, nof, width, blpId=['blp0'], rspId=['rsp0']):
@@ -657,6 +677,7 @@ def write_rsu_altsync(tc, msg, rspId=['rsp0']):
     msg.packAddr(['rsp'], 'rsu', 'sysctrl')
     msg.packPayload([1],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
   
 
 def write_rd_smbh_protocol_list(tc, msg, smbh, protocol_list,  polId=['x', 'y'], blpId=['blp0'], rspId=['rsp0']):
@@ -779,9 +800,7 @@ def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0']):
   status = []
   for i in range(size):
     status.append(value)
-    
-  for ri in rspId:
-    write_mem(tc, msg, 'rsr', 'status', status, ['rsp'], [ri], 1, offset)
+  write_mem(tc, msg, 'rsr', 'status', status, ['rsp'], rspId, 1, offset)
 
 
 def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
@@ -1154,6 +1173,7 @@ def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21):
     msg.packAddr(['rsp'], 'rad', 'settings')
     msg.packPayload([settings],4)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
 
 
 def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21):
@@ -1269,8 +1289,7 @@ def write_cdo_ctrl(tc, msg, ctrl, rspId=['rsp0'], applev=21):
   
   width = 2   # ctrl field is 2 bytes wide
   bc = 0      # access bp, so no BLP broadcast on RSP
-  for ri in rspId:
-    write_mem(tc, msg, 'cdo', 'settings', [ctrl], ['rsp'], rspId, width, c_cdo_settings_ctrl_offset, bc)
+  write_mem(tc, msg, 'cdo', 'settings', [ctrl], ['rsp'], rspId, width, c_cdo_settings_ctrl_offset, bc)
 
     
 def read_cdo_ctrl(tc, msg, rspId=['rsp0'], applev=21):
