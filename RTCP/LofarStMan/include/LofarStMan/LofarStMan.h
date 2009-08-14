@@ -156,7 +156,7 @@ public:
   // The storage manager cannot delete rows.
   virtual casa::Bool canRemoveRow() const;
   
-  // The storage manager cannot add columns.
+  // The storage manager can add columns, which does not really do something.
   virtual casa::Bool canAddColumn() const;
   
   // Columns can be removed, but it does not do anything at all.
@@ -243,7 +243,7 @@ private:
   virtual void removeRow (casa::uInt rowNr);
   
   // Do the final addition of a column.
-  // It cannot do it, so throws an exception.
+  // It won't do anything.
   virtual void addColumn (casa::DataManagerColumn*);
   
   // Remove a column from the data file.

@@ -168,7 +168,7 @@ Bool LofarStMan::canRemoveRow() const
 }
 Bool LofarStMan::canAddColumn() const
 {
-  return False;
+  return True;
 }
 Bool LofarStMan::canRemoveColumn() const
 {
@@ -184,9 +184,7 @@ void LofarStMan::removeRow (uInt)
   throw DataManError ("LofarStMan cannot remove rows");
 }
 void LofarStMan::addColumn (DataManagerColumn*)
-{
-  throw DataManError ("LofarStMan cannot add columns");
-}
+{}
 void LofarStMan::removeColumn (DataManagerColumn*)
 {}
 
