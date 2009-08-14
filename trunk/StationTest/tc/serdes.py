@@ -97,8 +97,7 @@ else:
       rsp.read_rsr(tc, msg, 'diag', [ri], 31)
 
     # Configure DIAG tst
-    for ri in rspId:
-      rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], [ri], 99)
+    rsp.write_diag_selftest(tc, msg, selftest, ['rsp'], rspId, 99)
 
     tc.sleep(100)        # wait DIAG ack_period_done
 
