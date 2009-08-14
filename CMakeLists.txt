@@ -36,7 +36,7 @@ include(LofarGeneral)
 ## ---------------------------------------------------------------------------
 lofar_add_subdirectory(LCS)
 lofar_add_subdirectory(CEP)
-#lofar_add_subdirectory(RTCP)
+lofar_add_subdirectory(RTCP)
 lofar_add_subdirectory(SAS)
 lofar_add_subdirectory(MAC)
 

@@ -26,7 +26,7 @@ option(BUILD_STATIC_EXECUTABLES "Build static executables" ON)
 set(GNUBGP_COMPILERS GNUBGP_C GNUBGP_CXX GNUBGP_ASM)
 set(GNUBGP_C         /usr/bin/gcc)
 set(GNUBGP_CXX       /usr/bin/g++)
-set(GNUBGP_ASM       /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc)
+set(GNUBGP_ASM       /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++)
 
 set(GNUBGP_C_FLAGS)
 set(GNUBGP_C_FLAGS_DEBUG "-g")
@@ -50,6 +50,13 @@ set(GNUBGP_COMPILE_DEFINITIONS
   -I/bgsys/drivers/ppcfloor/arch/include)
 set(GNUBGP_COMPILE_DEFINITIONS_CN -DHAVE_BGP_CN)
 set(GNUBGP_COMPILE_DEFINITIONS_ION -DHAVE_BGP_ION)
+
+# Re-root search to this directory first; needed for cross-compilation
+#set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/linux/OS)
+set(CMAKE_FIND_ROOT_PATH /bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux)
+#set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+#set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+#set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 
 # Host specific paths to third party packages
 set(CASACORE_PREFIX_PATH /cephome/romein/packages/casacore-0.3.0/stage)
