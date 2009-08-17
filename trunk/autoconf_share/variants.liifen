@@ -7,8 +7,8 @@ gnu.compiler.aipspp.var: --with-casacore=/app/aips++/casacore_64 --with-wcs=/app
 mpich.var:                --with-mpich=/usr/local/ofed/mpi/gcc/mvapich-0.9.7-mlx2.2.0
 openmpi.var:              --with-mpich=/usr/local/ofed/mpi/gcc/openmpi-1.1.1-1
 
-openmpi.variant.conf:	  $(standard) $(openmpi)
-openmpi-opt.variant.conf: $(standard) $(openmpi) $(optimize)
+openmpi.variant.conf:	  $(standard) $(openmpi) $(cppopt)
+openmpi-opt.variant.conf: $(standard) $(openmpi) $(cppopt) $(optimize)
 
 mpich.variant.conf:       $(standard) $(mpich) $(debug)
 mpich-opt.variant.conf:   $(standard) $(mpich) $(optimize)
@@ -16,3 +16,4 @@ mpich-opt.variant.conf:   $(standard) $(mpich) $(optimize)
 lofar_root.var:
 
 backtrace.var:          --enable-backtrace	 
+cppopt.var:		--with-cppflags="-fPIC" --with-casacore=/cephome/broekema/packages/casa
