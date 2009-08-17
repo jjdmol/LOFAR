@@ -37,16 +37,7 @@ class Job(object):
 	self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
 	
 	interfaces = IONodes.get(self.partition)
-	
-	for IONode in interfaces:
-            ionode = Host(name = IONode, \
-                          address = IONode)
-	    runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1]) + ' ' + parsetfile.split('/')[-1] + ')" > ' + self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ) + ' 2>&1'
-	    if self.logdest != None:
-	        runCmd = '( cd '+ self.workingDir + '; ' + os.path.join(self.workingDir, self.executable.split('/')[-1]) + ' ' + parsetfile.split('/')[-1] + ')" 2>&1 | tee ' + self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ) + ' | ' + os.environ.get('HOME', 'default') + '/src/udp-copy.ppc stdin: ' + self.logdest.strip('[').rstrip(']') + ' 1> /dev/null 2>&1'
-
-	    self.runCommand = ionode.executeAsyncRTCPApps(runCmd, timeout = timeOut)
-	    time.sleep(.1)
+        Job.run(self, runlog, parsetfile, timeOut, '/bgsys/LOFAR/openmpi-ion/bin/mpirun -host ' + ','.join(interfaces) + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]) + ' ' + parsetfile.split('/')[-1])
 
     def isDone(self):
         ret = self.runCommand.isDone()
@@ -61,17 +52,7 @@ class Job(object):
     def isSuccess(self):
         self.waitForDone()
         if not self.runLogRetreived:
-	    if (self.name == 'IONProc'):
-	        interfaces = IONodes.get(self.partition)
-                for IONode in interfaces:
-	            remoteRunLogIONProc = self.workingDir + 'run.IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) )
-		    runlogIONProc = '/' + self.runlog.split('/')[1] + '/' + self.runlog.split('/')[2] + '/IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ) + '.runlog'
-		    ionode = Host(name = IONode, \
-                                  address = IONode)
-		    listfen.sput(remoteRunLogIONProc,runlogIONProc)
-	    else:		    
-                listfen.sput(self.remoteRunLog, self.runlog)
-		
+	    listfen.sput(self.remoteRunLog, self.runlog)
             self.runLogRetreived = True
         return self.runCommand.isSuccess()
 
@@ -83,13 +64,9 @@ class Job(object):
     def abort(self):
         print('Aborting ' + self.name)
 	if (self.name == 'IONProc'):
-	    interfaces = IONodes.get(self.partition)
-            for IONode in interfaces:
-		ionode = Host(name = IONode, \
-                              address = IONode)
-		ionode.executeAsync('killall IONProc').waitForDone()
+	    bgfen0.executeAsync('killall mpirun').waitForDone() # also kills CNProc
 	elif (self.name == 'CNProc'):
-	    bgfen0.executeAsync('killall mpirun').waitForDone()
+	    bgfen0.executeAsync('killall mpirun').waitForDone() # also kills IONProc
 	else:  
             self.host.executeAsync('killall ' + self.name).waitForDone()
 

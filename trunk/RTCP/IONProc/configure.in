@@ -63,6 +63,7 @@ lofar_INTERNAL(RTCP/FCNP,FCNP,,0,FCNP/fcnp_ion.h,fcnp_ion)
 lofar_INTERNAL(LCS/ApplCommon,ApplCommon,,1,ApplCommon/Observation.h,,)
 lofar_EXTERNAL(boost,1,boost/date_time/date.hpp,boost_date_time)
 dnl lofar_EXTERNAL(fcnp,0,fcnp_ion.h,fcnp_ion,/cephome/romein/packages/fcnp)
+lofar_EXTERNAL(mpi,0,mpi.h,"mpi_cxx mpi open-rte open-pal",/bgsys/LOFAR/openmpi-ion)
 
 dnl
 dnl Output Makefiles
