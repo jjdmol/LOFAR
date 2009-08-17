@@ -33,7 +33,6 @@
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
-#include <Common/Lock.h>
 #include <Common/Exceptions.h>
 //#include <TH_ZoidServer.h>
 #if !defined HAVE_PKVERSION
@@ -623,8 +622,6 @@ int main(int argc, char **argv)
 #if !defined CATCH_EXCEPTIONS
   std::set_terminate(terminate_with_backtrace);
 #endif
-  pthread_mutex_t mutex  = PTHREAD_MUTEX_INITIALIZER;
-  Lock::setMutex(mutex);
   
   tryToGetPersonality();
   

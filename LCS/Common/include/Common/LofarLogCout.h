@@ -31,17 +31,12 @@
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <Common/Lock.h>
 
 #include <libgen.h>
 
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
 #include <Common/StringUtil.h>
-#endif
-
-#if HAVE_BGP
-extern char* gBGPSysinfo;
 #endif
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -149,7 +144,7 @@ public: \
 
 //# The numbering of trace levels in log4cplus is reversed compared to Debug.
 //# This macro converts the Debug trace level to the log4cplus trace level.
-#define LOG4CPLUS_LEVEL(level) TRACE_LEVEL_LOOP-level+1
+#define LOG4CPLUS_LEVEL(level) (TRACE_LEVEL_LOOP-(level)+1)
 
 //#
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
@@ -225,10 +220,7 @@ public: \
 #define INIT_BGP(sinfo) \
         getLFDebugContext().initialize(); \
 	::LOFAR::LFDebug::setLevel("Global",8); \
-	char buffer[100] = ""; \
-	strcpy(buffer, sinfo.c_str());\
-	gBGPSysinfo = buffer;
-	
+	::LOFAR::LFDebug::gBGPSysinfo = sinfo;
 #endif
 
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
@@ -245,77 +237,64 @@ public: \
 	std::ostringstream	lfr_log_oss; \
 	lfr_log_oss << stream
 
-#if defined USE_THREADS && defined HAVE_BGP
-#define	cLog(level,levelname,message) do { \
-	::LOFAR::Locker l; \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
-	} while(0)
-#elif defined HAVE_BGP
-#define	cLog(level,levelname,message) do { \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
+#if defined HAVE_BGP
+#define	thread_unsafe_cLog(level,levelname,message) \
+	do { \
+		DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
+			<< "|" << ::LOFAR::LFDebug::gBGPSysinfo << "|" << message \
+			<< std::endl; \
+	} while (0)
+#else
+#define	thread_unsafe_cLog(level,levelname,message) \
+	do { \
+		DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
+			<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
+			<< "|" << __FILE__ << ":" << __LINE__ \
+			<< std::endl; \
+	} while (0)
+#endif
+
+#if defined USE_THREADS
+#define	cLog(level,levelname,message) \
+	do { \
+		pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
+		thread_unsafe_cLog(level,levelname,message); \
+		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
 	} while(0)
 #else
-#define	cLog(level,levelname,message) do { \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
-		<< "|" << __FILE__ << ":" << __LINE__ \
-		<< std::endl; \
+#define	cLog(level,levelname,message) \
+	do { \
+		thread_unsafe_cLog(level,levelname,message); \
 	} while(0)
 #endif
 
-#define cLogstr(level,levelname,stream) do { \
+#define cLogstr(level,levelname,stream) \
+	do { \
 		constructStream(stream); \
 		cLog(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
-#if defined USE_THREADS && defined HAVE_BGP
-#define	cDebug(level,levelname,message) do { \
-        ::LOFAR::Locker l; \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-                << "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
-	} while(0)
-#elif defined HAVE_BGP
-#define	cDebug(level,levelname,message) do { \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-                << "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
-	} while(0)
-#else
-#define	cDebug(level,levelname,message) do { \
-	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
-		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
-		<< "|" << __FILE__ << ":" << __LINE__ \
-		<< std::endl; \
-	} while(0)
-#endif
 
-#define cDebugstr(level,levelname,stream) do { \
+#define	cDebug(level,levelname,message) \
+	cLog(level,levelname,message)
+
+#define cDebugstr(level,levelname,stream) \
+	do { \
 		constructStream(stream); \
 		cDebug(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
-#if defined USE_THREADS && defined HAVE_BGP
-#define cTrace(level,message) do { \
-        ::LOFAR::Locker l; \
-	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
-		<< " TRC." << getLFDebugContext().name() \
-		<< "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
-	} while(0)
-#elif defined HAVE_BGP
-#define cTrace(level,message) do { \
-	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
-		<< " TRC." << getLFDebugContext().name() \
-		<< "|" << gBGPSysinfo << "|" << message \
-		<< std::endl; \
+
+#if defined HAVE_BGP
+#define thread_unsafe_cTrace(level,message) \
+	do { \
+		TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
+			<< " TRC." << getLFDebugContext().name() \
+			<< "|" << ::LOFAR::LFDebug::gBGPSysinfo << "|" << message \
+			<< std::endl; \
 	} while(0)
 #else
-#define cTrace(level,message) do { \
+#define thread_unsafe_cTrace(level,message) do { \
 	TraceTestAndLog(level) << "TRACE" << LOG4CPLUS_LEVEL(level) \
 		<< " TRC." << getLFDebugContext().name() \
 		<< "|" << LOFARLOGGER_FULLPACKAGE << "|" << message \
@@ -324,7 +303,22 @@ public: \
 	} while(0)
 #endif
 
-#define cTracestr(level,stream) do { \
+#if defined USE_THREADS
+#define cTrace(level,message) \
+	do { \
+		pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
+		thread_unsafe_cTrace(level,message); \
+		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
+	} while(0)
+#else
+#define cTrace(level,message) \
+	do { \
+		thread_unsafe_cTrace(level,message); \
+	} while(0)
+#endif
+
+#define cTracestr(level,stream) \
+	do { \
 		constructStream(stream); \
 		cTrace(level,lfr_log_oss.str()); \
 	} while(0)
@@ -335,6 +329,14 @@ namespace LOFAR
 {
   namespace LFDebug
   {
+#if defined HAVE_BGP
+    extern string gBGPSysinfo;
+#endif
+
+#if defined USE_THREADS
+    extern pthread_mutex_t mutex;
+#endif
+
     extern std::ostream * dbg_stream_p;
   
     inline std::ostream & getDebugStream () { return *dbg_stream_p; }
