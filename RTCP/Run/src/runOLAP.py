@@ -148,6 +148,12 @@ if __name__ == "__main__":
                         default = "00:01:00",
   			help = "set the run time (syntax: seconds or HH:MM[:SS]) [%default]" )
 
+  psgroup.add_option( "-e", "--stoptime",
+  			dest = "stoptime",
+			type = "string",
+                        default = None,
+  			help = "set the stop time (syntax: timestamp, [YYYY-MM-DD] HH:MM[:SS], +seconds or +HH:MM[:SS]) [%default]" )
+
   psgroup.add_option( "-t", "--tcp-input",
   			dest = "tcpinput",
 			action = "store_true",
@@ -309,7 +315,10 @@ if __name__ == "__main__":
   parset.setStations( stationList )
 
   # set runtime
-  parset.setStartRunTime( options.starttime, options.runtime )
+  if options.stoptime is not None:
+    parset.setStartStopTime( options.starttime, options.stoptime )
+  else:
+    parset.setStartRunTime( options.starttime, options.runtime )
   info( "Running from %s to %s." % (parset["Observation.startTime"], parset["Observation.stopTime"] ) )
 
   # parse specific parset values from the command line

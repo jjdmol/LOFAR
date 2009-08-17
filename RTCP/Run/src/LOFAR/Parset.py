@@ -241,8 +241,8 @@ class Parset(util.Parset.Parset):
       return mask
 
     def setStartStopTime( self, starttime, stoptime ):
-      start = parse( starttime )
-      stop  = parse( stoptime )
+      start = timestamp( parse( starttime ) )
+      stop  = timestamp( parse( stoptime ) )
 
       self["Observation.startTime"] = format( start )
       self["Observation.stopTime"] = format( stop )

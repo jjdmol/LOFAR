@@ -145,13 +145,13 @@ class IONProcSection(Section):
 
       logfiles = ["%s/run.IONProc.%s.%s" % (Locations.files["logdir"],self.parset.partition,nodenr)] + self.logoutputs
 
-      self.commands.append( AsyncCommand( "ssh %s %s" % (node,cmd,), logfiles ) )
+      self.commands.append( AsyncCommand( "ssh -q %s %s" % (node,cmd,), logfiles ) )
 
   def abort( self, timeout ):
     for node,pidfile in self.pidfiles.iteritems():
       def kill( signal ):
         # kill remote process using the pid we stored
-        SyncCommand( "ssh %s kill -%s `cat %s`" % (node,signal,pidfile) )
+        SyncCommand( "ssh -q %s kill -%s `cat %s`" % (node,signal,pidfile) )
 
       self.killSequence( "IONProc process on %s" % (node,), kill, timeout )
 
@@ -179,7 +179,7 @@ class StorageSection(Section):
 
     # create the target directories
     for n in Locations.nodes["storage"]:
-      self.commands.append( SyncCommand( "ssh %s mkdir %s" % (n,os.path.dirname(self.parset.parseMask()),), logfiles ) )
+      self.commands.append( SyncCommand( "ssh -q %s mkdir %s" % (n,os.path.dirname(self.parset.parseMask()),), logfiles ) )
 
     # Storage is started on LIIFEN, which has mpirun (Open MPI) 1.1.1
     mpiparams = [
@@ -204,23 +204,28 @@ class StorageSection(Section):
       "%s" % (Locations.files["parset"],),
     ]
 
-    self.commands.append( AsyncCommand( "ssh %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
+    self.commands.append( AsyncCommand( "ssh -q %s echo $$ > %s;exec mpirun %s" % (Locations.nodes["storagemaster"],self.pidfile," ".join(mpiparams),), logfiles ) )
 
   def abort( self, timeout ):
     # kill mpirun using the pid we stored locally
     def kill( signal ):
-      SyncCommand( "ssh %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
+      SyncCommand( "ssh -q %s kill -%s `cat %s`" % (Locations.nodes["storagemaster"],signal,self.pidfile) )
 
     self.killSequence( "mpirun process on %s" % (Locations.nodes["storagemaster"],), kill, timeout )
 
     # kill Storage and orted processes on storage nodes
     for node in Locations.nodes["storage"]:
-      # We kill the process group rooted at the orted process
-      # (kill -PID) belonging to our MPI universe. This takes Storage with it.
       def kill( signal ):
-        SyncCommand( "ssh %s kill -%s -`ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }'`" % (
-          node, signal, self.universe) )
+        # We kill the process group rooted at the orted process
+        # (kill -PID) belonging to our MPI universe. This should take Storage with it.
+        SyncCommand( "ssh -q %s ps --no-heading -o pid,cmd -ww -C orted | grep %s | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+          node, self.universe, signal) )
 
+        # Sometimes it does not though, so send Storage (identified by parset file on command line, which is unique) the same signal
+        SyncCommand( "ssh -q %s ps --no-heading -o pid,cmd -ww -C Storage | grep '%s' | awk '{ print $1; }' | xargs -I foo kill -%s -foo" % (
+          node, Locations.files["parset"], signal) )
+
+      self.killSequence( "orted process on %s" % (node,), kill, timeout )
       self.killSequence( "orted process on %s" % (node,), kill, timeout )
 
     # fallback: kill local commands
