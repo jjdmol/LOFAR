@@ -53,6 +53,10 @@
 #include <unistd.h>
 #include <stdarg.h>
 
+#if defined HAVE_MPI
+#include <mpi.h>
+#endif
+
 #if defined HAVE_ZOID
 extern "C" {
 #include <lofar.h>
@@ -628,6 +632,19 @@ int main(int argc, char **argv)
   sysInfo << basename(argv[0]) << "@" << myPsetNumber;
  
   INIT_BGP_LOGGER(sysInfo.str());
+
+#if defined HAVE_MPI
+  MPI_Init(&argc, &argv);
+
+  int myRank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+
+  if (static_cast<unsigned>(myRank) != myPsetNumber) {
+    LOG_ERROR_STR("myRank (" << myRank << ") != myPsetNumber (" << myPsetNumber << ')');
+    exit(1);
+  }
+#endif
   
   global_argv = argv;
   
@@ -641,6 +658,11 @@ int main(int argc, char **argv)
   
   master_thread(0);
   deleteClientStreams();
+
+#if defined HAVE_MPI
+  MPI_Finalize();
+#endif
+
   return 0;
 }
 
