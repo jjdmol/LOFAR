@@ -85,6 +85,12 @@ public:
 	RawDataBlock_t&			getRawDataBlock() 		{ return (itsRawDataBlock); } 
 	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); } 
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
+	
+	bool isSplitterActive() { return(itsSplitterActive); }
+	void setSplitterActive(bool active) { itsSplitterActive = active; }
+
+	bool isCepEnabled() { return(itsCepEnabled); }
+	void setCepEnabled(bool enable) { itsCepEnabled = enable; }
 
 	I2Cuser getI2Cuser() { return (itsI2Cuser); }
 	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
@@ -133,7 +139,9 @@ private:
 	RawDataBlock_t					itsRawDataBlock;
 	SerdesBuffer					itsSdsWriteBuffer;
 	SerdesBuffer					itsSdsReadBuffer[MAX_N_RSPBOARDS];
-
+	bool							itsSplitterActive;
+	bool							itsCepEnabled;
+	
 	Cache* m_cache;		// pointer to container
 };
 
