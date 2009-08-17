@@ -29,13 +29,19 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-#if HAVE_BGP
-char * gBGPSysinfo;
-#endif
+
 namespace LOFAR {
 
 namespace LFDebug 
 {
+#if defined HAVE_BGP
+  string gBGPSysinfo;
+#endif
+
+#if defined USE_THREADS
+  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
   static class MakeLineBuffered {
     public:
       MakeLineBuffered() {

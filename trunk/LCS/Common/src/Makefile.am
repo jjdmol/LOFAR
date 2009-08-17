@@ -15,7 +15,6 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	FileLocator.cc \
 	hexdump.cc \
 	KVpair.cc \
-	Lock.cc \
 	lofar_bitset.cc \
 	LofarLogCout.cc \
 	LofarLogger.cc \
