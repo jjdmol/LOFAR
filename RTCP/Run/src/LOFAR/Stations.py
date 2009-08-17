@@ -91,8 +91,8 @@ def defineStations( s ):
     "RS503LBA":   [Station('RS503LBA',  '10.170.0.170', defaultPorts)],
     "RS503HBA":   [Station('RS503HBA',  '10.170.0.170', defaultPorts)],
 
-    # DE001, a.k.a. Effelsberg
-    "DE001LBA":   [Station('DE001LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] ))],
+    # DE601, a.k.a. Effelsberg
+    "DE601LBA":   [Station('DE601LBA',  '10.170.0.178', ports( [4358,4359,4363,4364] ))],
   } )
 
   # Simulated stations for experimentation.
