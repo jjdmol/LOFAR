@@ -105,9 +105,11 @@ void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 	SerdesBuf.setRSPmask(itsEvent->rspmask);
 	if (itsEvent->switch_on) {
 		SerdesBuf.newCommand(SERDES_ON_CMD, SERDES_ON_CMD_LEN);
+		cache.setSplitterActive(true); // set number of serdes lanes to 8
 	}
 	else {
 		SerdesBuf.newCommand(SERDES_OFF_CMD, SERDES_OFF_CMD_LEN);
+		cache.setSplitterActive(false); // set number of serdes lanes to 4
 	}
 	string	hd;
 	hexdump(hd, SerdesBuf.getBufferPtr(), SerdesBuf.getDataLen());
@@ -118,6 +120,8 @@ void SetSplitterCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 		for (int b = 0; b < MAX_N_RSPBOARDS; b++) {
 			if (SerdesBuf.hasRSP(b)) {
 				cache.getCache().getState().sbwState().write(b);
+				cache.getCache().getState().cdo().write(b);
+				cache.getCache().getState().rad().write(b);
 			}
 		}
 	}

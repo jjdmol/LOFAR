@@ -259,6 +259,11 @@ void CacheBuffer::reset(void)
 
 	// clear I2C flag
 	itsI2Cuser = NONE;
+	
+	// set Splitter not active
+	itsSplitterActive = false;
+	// set CEP port enabled
+	itsCepEnabled = true;
 }
 
 
