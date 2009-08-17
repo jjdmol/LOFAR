@@ -9,5 +9,5 @@ ion.variant.conf:       $(lofar_root) $(debugopt) $(threads) $(noshmem) $(ion_cp
 cn_cpp.var:             --with-cppflags='-B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin -DHAVE_BGP -DHAVE_BGP_CN -I/bgsys/drivers/ppcfloor/comm/include -I/bgsys/drivers/ppcfloor/arch/include'
 cn_ldd.var:             --with-ldflags='-B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin -L/bgsys/drivers/ppcfloor/comm/lib -L/bgsys/drivers/ppcfloor/runtime/SPI -L/cephome/romein/lib.bgp -Wl,-rpath -Wl,/cephome/romein/lib.bgp' --with-libs='-lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt -lSPI.cna -lm'
 
-ion_cpp.var:             --with-cppflags='-B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin -DHAVE_BGP -DHAVE_BGP_ION -I/bgsys/drivers/ppcfloor/comm/include -I/bgsys/drivers/ppcfloor/arch/include'
+ion_cpp.var:             --with-cppflags='-B/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/bin -DHAVE_BGP -DHAVE_BGP_ION -I/bgsys/drivers/ppcfloor/arch/include'
 ion_ldd.var:             --with-ldflags='-L/cephome/romein/lib.bgp -Wl,-rpath -Wl,/cephome/romein/lib.bgp'
