@@ -73,6 +73,8 @@ OutputThread::OutputThread(Stream *streamToStorage, const Parset &ps )
 
 OutputThread::~OutputThread()
 {
+  LOG_DEBUG("OutputThread::~OutputThread");
+
   if (pthread_join(thread, 0) != 0)
     throw SystemCallException("pthread_join output thread", errno, THROW_ARGS);
 
@@ -109,14 +111,14 @@ void OutputThread::mainLoop()
   while ((o = itsSendQueueActivity.remove()) >= 0) {
     struct OutputThread::SingleOutput &output = itsOutputs[o];
 
-    std::cout << "OutputThread: pop queue " << o << std::endl;
+    //std::cout << "OutputThread: pop queue " << o << std::endl;
     data = output.sendQueue.remove();
 
-    std::cout << "OutputThread: lower semaphore " << std::endl;
+    //std::cout << "OutputThread: lower semaphore " << std::endl;
     semaphore.down();
 
     try {
-      std::cout << "OutputThread: write data for queue " << o << std::endl;
+      //std::cout << "OutputThread: write data for queue " << o << std::endl;
 
       // write header: nr of output
       itsStreamToStorage->write( &o, sizeof o );
@@ -124,15 +126,18 @@ void OutputThread::mainLoop()
       // write data, including serial nr
       data->write(itsStreamToStorage, true);
     } catch (...) {
+      //std::cout << "OutputThread: exception: raise semaphore" << std::endl;
+
       semaphore.up();
       output.freeQueue.append(data);
       throw;
     }
 
-    std::cout << "OutputThread: raise semaphore and wait for next element " << std::endl;
+    //std::cout << "OutputThread: raise semaphore and wait for next element " << std::endl;
     semaphore.up();
     output.freeQueue.append(data);
   }
+  //std::cout << "OutputThread: caught end of stream" << std::endl;
 }
 
 
