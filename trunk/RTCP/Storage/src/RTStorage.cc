@@ -58,6 +58,14 @@ RTStorage::~RTStorage()
   
 void RTStorage::preprocess() 
 {
+  const double startTime    = itsPS->startTime();
+  const double sampleFreq   = itsPS->sampleRate();
+  const unsigned seconds    = static_cast<unsigned>(floor(startTime));
+  const unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
+
+  itsSyncedStamp.setStationClockSpeed(static_cast<unsigned>(sampleFreq * 1024));
+  itsSyncedStamp = TimeStamp(seconds, samples);
+
   /// Get various observation parameters
   itsNrSubbands = itsPS->nrSubbands();
   if (itsNrSubbands % itsSize == 0) {
@@ -115,7 +123,7 @@ void RTStorage::preprocess()
 
       itsPreviousSequenceNumbers[i][j] = -1;
     }
-  }    
+  }
 }
 
 
@@ -175,7 +183,10 @@ void RTStorage::writeLogMessage()
 #if defined HAVE_MPI
 	       ", rank = " << itsRank <<
 #endif
-	       ", count = " << counter ++);
+	       ", count = " << counter ++ <<
+	       ", timestamp = " << itsSyncedStamp);
+
+  itsSyncedStamp += itsPS->nrSubbandSamples() * itsPS->IONintegrationSteps();
 }
 
 
@@ -213,7 +224,7 @@ bool RTStorage::processSubband(unsigned sb)
   itsWriteTimer.start();
   /// write data to correct fd
   for (unsigned i = 0; i < itsNrOutputs; i++) {
-    data->write( myFDs[sb][i], true, itsAlignment);
+    data->write( myFDs[sb][i], true, itsAlignment );
   }
   itsWriteTimer.stop();
 

@@ -38,6 +38,7 @@
 #include <Interface/PipelineOutput.h>
 #include <Interface/StreamableData.h>
 #include <Interface/Queue.h>
+#include <Interface/RSPTimeStamp.h>
 #include <Storage/InputThread.h>
 #include <Stream/Stream.h>
 
@@ -95,6 +96,8 @@ class SubbandWriter
     float		    itsWeightFactor;
 
     NSTimer		    itsWriteTimer;
+
+    TimeStamp               itsSyncedStamp;
 
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;

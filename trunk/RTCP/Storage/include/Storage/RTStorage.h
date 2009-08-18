@@ -18,6 +18,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/PipelineOutput.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/RSPTimeStamp.h>
 
 #include <Storage/Format.h>
 #include <Storage/InputThread.h>
@@ -50,6 +51,7 @@ namespace LOFAR {
 				       // writes, for O_DIRECT
       Matrix<int>  itsPreviousSequenceNumbers;
       
+      TimeStamp    itsSyncedStamp;
 
       NSTimer itsWriteTimer;
       double  bytesWritten;
