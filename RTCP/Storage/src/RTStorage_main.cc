@@ -119,27 +119,27 @@ int main (int argc, char *argv[])
   // writers.  It is better to let the other members continue, to minimize the
   // amount of data loss during an observation.
 
-  child(argc, argv, rank, size);
+//   child(argc, argv, rank, size);
 
-//   int status;
+  int status;
   
-//   switch (fork()) {
-//     case -1 : perror("fork");
-// 	      break;
+  switch (fork()) {
+    case -1 : perror("fork");
+	      break;
 
-//     case 0  : child(argc, argv, rank, size);
-// 	      exit(0);
+    case 0  : child(argc, argv, rank, size);
+	      exit(0);
 
-//     default : if (wait(&status) < 0)
-// 		perror("wait");
-// 	      else if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-// 		LOG_ERROR_STR("child returned exit status " << WEXITSTATUS(status));
+    default : if (wait(&status) < 0)
+		perror("wait");
+	      else if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+		LOG_ERROR_STR("child returned exit status " << WEXITSTATUS(status));
 		
-// 	      else if (WIFSIGNALED(status))
-// 	        LOG_ERROR_STR("child killed by signal " << WTERMSIG(status));
+	      else if (WIFSIGNALED(status))
+	        LOG_ERROR_STR("child killed by signal " << WTERMSIG(status));
 
-// 	      break;
-//   }
+	      break;
+  }
 
 #if defined HAVE_MPI
   MPI_Finalize();
